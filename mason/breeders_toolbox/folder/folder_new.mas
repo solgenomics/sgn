@@ -6,6 +6,8 @@ $breeding_program_id => undef
 $breeding_program_name => undef
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
+
 <div class="modal fade" id="new_folder_dialog" name="set_folder_dialog" tabindex="-1" role="dialog" aria-labelledby="newFolderDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -60,6 +62,29 @@ $breeding_program_name => undef
   </div>
 </div>
 
+<div class="modal fade" id="new_folder_success_dialog_message" name="new_folder_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="newFolderSuccessDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="newFolderSuccessDialog">New Folder Successful</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The folder was created successfully
+                    </p>
+                    <button class="btn btn-primary" name="refresh_jstree_html">Refresh Trial Tree</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_new_folder_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 jQuery(document).ready(function() {
@@ -104,8 +129,8 @@ function new_trial_folder() {
         alert(response.error);
         jQuery('#new_folder_dialog').modal("hide");
       } else {
-        alert("Successfully created new folder.");
         jQuery('#new_folder_dialog').modal("hide");
+        jQuery('#new_folder_success_dialog_message').modal("show");
         //location.reload();
       }
     },
