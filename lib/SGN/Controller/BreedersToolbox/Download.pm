@@ -3,6 +3,7 @@
 
 package SGN::Controller::BreedersToolbox::Download;
 
+
 use Moose;
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -25,6 +26,13 @@ use CXGN::Trial::Download;
 use POSIX qw(strftime);
 use Sort::Maker;
 use DateTime;
+
+use SGN::Controller::Pedigree;
+use CXGN::Chado::Stock;
+
+
+
+
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -503,6 +511,89 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     }
 }
 
+# pedigree download -- begin
+
+sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
+my $self = shift;
+my $c = shift;
+my $dl_token = $c->req->param("token");
+my $dl_cookie = "download".$dl_token;
+my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedigree_stock_id, $accession_name, $female_parent, $male_parent);
+
+    $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
+    $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);  
+    @accession_list = map { $_->[1] } @$accession_data;
+   
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $t = CXGN::List::Transform->new();
+    my $acc_t = $t->can_transform("accessions", "accession_ids");
+    my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
+
+    @accession_ids = @{$accession_id_hash->{transform}};    
+
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
+
+  print STDERR "tempfile===== $tempfile \n";
+   print STDERR "uri===== $uri \n";
+
+    open my $TEMP, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
+
+	print $TEMP "Accession\tFemale_Parent\tMale_Parent\n";
+ 	print $TEMP "\n";
+
+
+	#open(my $fh, '>', '/home/production/host/prasad_pedigree.txt');
+	#my $output = read_file($tempfile);
+        #print $fh "Accession\tFemale_Parent\tMale_Parent\n";
+
+
+      
+	
+	
+
+#  foreach my $pedigree_stock_id (@accession_ids) {
+ for (my $i=0 ; $i <= @accession_ids; $i++)
+{
+my $accession_name = @accession_list[$i];
+my $pedigree_stock_id = @accession_ids[$i];
+
+
+  my @pedigree_parents = CXGN::Chado::Stock->new ($schema, $pedigree_stock_id)->get_direct_parents();
+  print STDERR "Accession ids= $pedigree_stock_id \n";
+
+  print STDERR "STOCK PEDIGREE: ". Data::Dumper::Dumper(@pedigree_parents);
+
+  $male_parent = $pedigree_parents[0][1] || '';
+  $female_parent = $pedigree_parents[1][1] || '';
+ print $TEMP "$accession_name \t  $female_parent \t $male_parent\n";
+ 
+  }
+
+# close $TEMP;
+
+ my $filename = "pedigree.txt";
+	
+ $c->res->content_type("application/text");
+
+  $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
+  my $output = read_file($tempfile);
+
+
+
+  #      $c->res->content_type("application/text");  
+       
+
+ # $c->res->body(@accession_ids);
+ 
+ 
+
+}
+
+
+# pedigree download -- end
+
+
 #=pod
 sub download_gbs_action : Path('/breeders/download_gbs_action') {
   my ($self, $c) = @_;
@@ -623,7 +714,6 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   };
   $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
   my $output = read_file($tempfile);
-  $c->res->body($output);
 }
 
 #=pod

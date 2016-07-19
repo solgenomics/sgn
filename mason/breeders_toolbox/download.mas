@@ -154,6 +154,99 @@ $(document).ready(function() {
 
 </script>
 
+
+<!-- start of code for pedigree download -->
+
+<div class="well well-sm">
+<form id="download_pedigree" action="/breeders/download_pedigree_action" method="POST">
+<table class="table"  cellpadding="10">
+  <thead>
+  <tr><td colspan="2"><h4>Download Pedigree </h4><p>Select parameter:</p></tr>
+  <tr>
+    <th>
+      Accessions
+    </th>
+    <th>
+      Action
+    </th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td>
+      <div id="accession_list4">
+      </div>      
+    </td>
+    <td>
+      <input class="btn btn-primary" type="button" id="pedigree" value="Download" />
+    </td>
+  </tr>
+  </tbody>
+  </table>
+</form>
+</div>
+
+
+<script>
+  $(document).ready(function() { 
+
+      var lo = new CXGN.List();
+
+      $('#accession_list4').html(lo.listSelect('pedigree_accession_list', [ 'accessions' ], 'select'));
+
+      $('#pedigree').click(function() {
+
+      disable_ui();
+
+      var accession_list_id = $('#pedigree_accession_list_list_select').val();
+      var trial_list_id = $('#genotype_trial_list_list_select').val();
+
+
+      var accession_validation = 1;
+      if (accession_list_id) { 
+        accession_validation = lo.validate(accession_list_id, 'accessions', true); 
+
+      }
+
+   if (! accession_list_id) { 
+        alert("You need to select an accession!");
+        return; 
+      }
+
+      var problem_lists = new Array();
+
+      if (accession_validation != 1) { 
+        problem_lists.push('accessions');
+      }
+
+   console.log(problem_lists);
+
+      if (problem_lists.length > 0) { 
+        alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
+        return;
+      }
+    
+     jQuery('#download_pedigree').submit();
+
+      enable_ui()
+
+    });
+
+function disable_ui() {
+	$('#working_modal').modal("show");
+	}
+
+	function enable_ui() {
+	$('#working_modal').modal("hide");
+	}
+
+  });
+    
+</script>
+
+<!-- end of code for pedigree download -->
+
+
 <div class="well well-sm">
 <form id="download_gbs" action="/breeders/download_gbs_action" method="POST">
 <table class="table"  cellpadding="10">
@@ -304,7 +397,7 @@ $(document).ready(function() {
 
       var lo = new CXGN.List();
 
-      $('#accession_list3').html(lo.listSelect('genotype_accession_list', [ 'accessions' ], 'select'));
+      $('#accession_list3').html(lo.listSelect('genotype_qc_accession_list', [ 'accessions' ], 'select'));
       $('#trial_list3').html(lo.listSelect('genotype_trial_list', [ 'trials' ], 'select' ));
 
       $('#genotype_qc').click(function() {
