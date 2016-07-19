@@ -51,6 +51,7 @@ my $is_obsolete = $cvterm->get_obsolete();
 my @synonyms    = $cvterm->get_synonyms();
 my @def_dbxrefs = $cvterm->get_def_dbxref();
 my @secondary_dbxrefs = $cvterm->get_secondary_dbxrefs();
+my @image_objects;
 
 my @def_accessions = map( $_->get_db_name . ":" . $_->get_accession , @def_dbxrefs);
 
@@ -309,12 +310,24 @@ LOAD...
   
     jQuery('#trial_data').DataTable( { 
       'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/direct_trials',
-     });
+       }
+     );
   });
 
 </script>
 
 </&>
 
+<&| /page/info_section.mas, 
+    title => "Images and figures",
+    subtitle      => '',
+    collapsible   => 1,
+    collapsed     => 1,
+    hide_if_empty => 1,
+&>
+
+<& /image/print_images.mas, image_objects => \@image_objects &>
+
+</&>
 
 <& /qtl/waitmessage.mas &>
