@@ -164,10 +164,10 @@ sub get_annotated_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/an
     my $cvterm_id = $cvterm->get_cvterm_id;
     my $q = <<'';
 SELECT DISTINCT
-        type.name
-        stock_id
-      , stock.uniquename
-      , stock.description
+    type.name,
+    stock_id,
+    stock.uniquename,
+    stock.description
 FROM cvtermpath
 JOIN cvterm on (cvtermpath.object_id = cvterm.cvterm_id OR cvtermpath.subject_id = cvterm.cvterm_id )
 JOIN stock_cvterm on (stock_cvterm.cvterm_id = cvterm.cvterm_id)

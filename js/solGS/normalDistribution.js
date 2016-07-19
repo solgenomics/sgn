@@ -135,6 +135,21 @@ solGS.normalDistribution.prototype.getYValuesP = function (normalData) {
 }
 
 
+solGS.normalDistribution.prototype.getObsValueZScore = function (obsValuesZScores, zScore) {
+
+	var obsValue;
+	for (var i=0; i < obsValuesZScores.length; i++) {
+	 
+	    var j =  obsValuesZScores[i];
+	    if (d3.format('.1f')(obsValuesZScores[i][1]) == d3.format('.1f')(zScore)) {		
+		obsValue = obsValuesZScores[i][0];
+	    }
+	}
+  
+    return [obsValue, zScore];
+}
+
+
      
 
  
