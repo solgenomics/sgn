@@ -51,6 +51,7 @@ my $is_obsolete = $cvterm->get_obsolete();
 my @synonyms    = $cvterm->get_synonyms();
 my @def_dbxrefs = $cvterm->get_def_dbxref();
 my @secondary_dbxrefs = $cvterm->get_secondary_dbxrefs();
+my @image_objects;
 
 my @def_accessions = map( $_->get_db_name . ":" . $_->get_accession , @def_dbxrefs);
 
@@ -63,7 +64,7 @@ if ( @qtl_pops )
     foreach my $pop (@qtl_pops)
     {
       my $pop_id   = $pop->get_population_id();
-      my $name     = $pop->get_name(); 
+      my $name     = $pop->get_name();
       my $desc     = $pop->get_description();
       my $qtl_link = qq | <a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$cvterm_id" onClick="Qtl.waitPage()">$name</a> |;
       push @qtl_data, [ $qtl_link, $desc ];
@@ -82,7 +83,7 @@ if ( @qtl_pops )
       jQuery.ajax( { url:      a.url+"?cvterm_id=<% $cvterm_id %>" ,
                      dataType: "json",
                      success: function(response) {
-                              jQuery("#"+a.content_id).html(response.html);
+                              //jQuery("#"+a.content_id).html(response.html);
                               jQuery("#"+a.count_id).html( response.count + ' ' + a.inflect[ response.count == 1 ? 0 : 1 ]);
                        if( response.error )  {
                              alert(response.error);
@@ -128,7 +129,7 @@ if ( @qtl_pops )
 
 <h4>Add this term to a list</h4>
 
-<div id="cvterm_id" style="display:none" ><% $db_name %>:<% $accession %></div>
+<div id="cvterm_id" style="display:none" ><% $cvterm_name %>|<% $db_name %>:<% $accession %></div>
 
 <&| /page/info_section.mas, title=>"Add to list", collapsible=>1, collapsed=>1 &>
 <div id="paste_to_list">
@@ -138,13 +139,13 @@ LOAD...
 </&>
 <script>
 
-  if (isLoggedIn()) { 
+  if (isLoggedIn()) {
     addToListMenu('paste_to_list', 'cvterm_id', { listType: 'traits' } );
   }
-  else { 
+  else {
     jQuery('#paste_to_list').html("&nbsp;Please log in to use lists.");
   }
-  
+
 </script>
 
 <br />
@@ -175,8 +176,8 @@ LOAD...
 <script>
 
   jQuery(document).ready(function () {
-  
-    jQuery('#loci_data').DataTable( { 
+
+    jQuery('#loci_data').DataTable( {
       'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/annotated_loci',
      });
   });
@@ -210,8 +211,8 @@ LOAD...
 <script>
 
   jQuery(document).ready(function () {
-  
-    jQuery('#annotated_stocks_data').DataTable( { 
+
+    jQuery('#annotated_stocks_data').DataTable( {
       'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/annotated_stocks',
      });
   });
@@ -230,7 +231,7 @@ LOAD...
         collapsible => 1,
    &>
      <& /page/columnar_table.mas,
-        headings     => ["Analyze QTL in population", "Population description"], 
+        headings     => ["Analyze QTL in population", "Population description"],
         data         => \@qtl_data,
         __alt_freq   => 2,
         __align      =>'l',
@@ -262,8 +263,8 @@ LOAD...
 <script>
 
   jQuery(document).ready(function () {
-  
-    jQuery('#phen_stocks_data').DataTable( { 
+
+    jQuery('#phen_stocks_data').DataTable( {
       'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/phenotyped_stocks',
      });
   });
@@ -281,19 +282,52 @@ LOAD...
       collapsed=>1,
       subtitle    => '<span id="trial_count"></span>',
 &>
-<div id="trial_div">
-   [Loading...]
+
 <script language="javascript">
-  recursiveAnnotations({
-                         url:        "/ajax/cvterm/trials",
+    recursiveAnnotations({
+                         url:        "/cvterm/"+<% $cvterm_id %>+"/datatables/direct_trials",
                          content_id: "trial_div",
                          count_id:   "trial_count",
                          inflect:    [ 'trial', 'trials' ],
                        });
 </script>
-</div>
+
+
+
+<table id="trial_data" class="display">
+<thead>
+  <tr>
+     <th>Trial name</th>
+     <th>Description</th>
+  </tr>
+</thead>
+
+</table>
+
+<script>
+
+  jQuery(document).ready(function () {
+
+    jQuery('#trial_data').DataTable( {
+      'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/direct_trials',
+       }
+     );
+  });
+
+</script>
 
 </&>
 
+<&| /page/info_section.mas,
+    title => "Images and figures",
+    subtitle      => '',
+    collapsible   => 1,
+    collapsed     => 1,
+    hide_if_empty => 1,
+&>
+
+<& /image/print_images.mas, image_objects => \@image_objects &>
+
+</&>
 
 <& /qtl/waitmessage.mas &>

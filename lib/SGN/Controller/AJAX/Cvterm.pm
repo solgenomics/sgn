@@ -164,10 +164,10 @@ sub get_annotated_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/an
     my $cvterm_id = $cvterm->get_cvterm_id;
     my $q = <<'';
 SELECT DISTINCT
-        type.name
-        stock_id
-      , stock.uniquename
-      , stock.description
+    type.name,
+    stock_id,
+    stock.uniquename,
+    stock.description
 FROM cvtermpath
 JOIN cvterm on (cvtermpath.object_id = cvterm.cvterm_id OR cvtermpath.subject_id = cvterm.cvterm_id )
 JOIN stock_cvterm on (stock_cvterm.cvterm_id = cvterm.cvterm_id)
@@ -266,12 +266,10 @@ sub get_phenotyped_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/p
     $c->stash->{rest} = { data => \@data, };
 }
 
-
-sub trials : Local : ActionClass('REST') { }
-
-sub trials_GET :Args(0) {
+sub get_direct_trials :Chained('/cvterm/get_cvterm') :PathPart('datatables/direct_trials') Args(0) {
     my ($self, $c) = @_;
-    my $cvterm_id = $c->request->param("cvterm_id");
+    my $cvterm = $c->stash->{cvterm};
+    my $cvterm_id = $cvterm->get_cvterm_id;
     my $q = "SELECT DISTINCT project_id, project.name, project.description
              FROM public.project
               JOIN nd_experiment_project USING (project_id)  
@@ -282,25 +280,18 @@ sub trials_GET :Args(0) {
              WHERE observable_id = ? 
     ";
  
-
     my $sth = $c->dbc->dbh->prepare($q);
-    $c->stash->{rest}{count} = 0 + $sth->execute($cvterm_id );
+    my $count = 0 + $sth->execute($cvterm_id );
     my @data;
     while ( my ($project_id, $project_name, $description) = $sth->fetchrow_array ) {
         my $link = qq|<a href="/breeders/trial/$project_id">$project_name</a> |;
         push @data,
         [
-         (
-          $link,
-          $description,
-         )
-        ];
+	 $link,
+	 $description,
+          ];
     }
-    $c->stash->{rest}{html} = @data ?
-        columnar_table_html(
-            headings     =>  [ "trial name", "Description" ],
-            data         => \@data,
-        )  : undef ;
+    $c->stash->{rest} = { data => \@data, count => $count };
 }
 
 1;

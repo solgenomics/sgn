@@ -13,5 +13,5 @@ $f->add_field(
     length      => 10,
 );
 
-
-cmp_ok ( $f->as_table_string(), '=~' , qr!<table>.*test1 contents!, "as_table_string");
+#print STDERR $f->as_table_string();
+cmp_ok($f->as_table_string(), '=~', '<br/><div class="panel panel-info"><table class="table table-hover"> <tr><td></td><td><b>test1 contents', "test as_table_string");
