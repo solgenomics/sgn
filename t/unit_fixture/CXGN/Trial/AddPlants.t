@@ -281,6 +281,150 @@ is_deeply(\@plot_names, [
         ],"check plot_names after plant addition");
 
 
+
+
+my $tempfile = "/tmp/test_create_trial_fieldbook_plots.xls";
+
+my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
+    bcs_schema => $f->bcs_schema,
+    metadata_schema => $f->metadata_schema,
+    phenome_schema => $f->phenome_schema,
+    trial_id => $trial_id,
+    tempfile => $tempfile,
+    archive_path => $f->config->{archive_path},
+    user_id => 41,
+    user_name => "janedoe",
+    data_level => 'plots',
+});
+
+my $create_fieldbook_return = $create_fieldbook->download();
+ok($create_fieldbook_return, "check that download trial fieldbook returns something.");
+
+my @contents = ReadData ($create_fieldbook_return->{'file'});
+
+#print STDERR Dumper @contents->[0]->[0];
+is_deeply(@contents->[0]->[0], {
+          'version' => '0.65',
+          'sheets' => 1,
+          'sheet' => {
+                       'Sheet1' => 1
+                     },
+          'type' => 'xls',
+          'parser' => 'Spreadsheet::ParseExcel',
+          'error' => undef
+      }, "check fieldbook creation of plots after plant addition");
+
+my $columns = @contents->[0]->[1]->{'cell'};
+#print STDERR Dumper scalar(@$columns);
+ok(scalar(@$columns) == 7, "check number of col in created file.");
+
+#print STDERR Dumper $columns;
+is_deeply($columns, [
+          [],
+          [
+            undef,
+            'plot_id',
+            'test_trial21',
+            'test_trial22',
+            'test_trial23',
+            'test_trial24',
+            'test_trial25',
+            'test_trial26',
+            'test_trial27',
+            'test_trial28',
+            'test_trial29',
+            'test_trial210',
+            'test_trial211',
+            'test_trial212',
+            'test_trial213',
+            'test_trial214',
+            'test_trial215'
+          ],
+          [
+            undef,
+            'range',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1',
+            '1'
+          ],
+          [
+            undef,
+            'plot',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+            '6',
+            '7',
+            '8',
+            '9',
+            '10',
+            '11',
+            '12',
+            '13',
+            '14',
+            '15'
+          ],
+          [
+            undef,
+            'rep',
+            '1',
+            '1',
+            '1',
+            '2',
+            '1',
+            '2',
+            '2',
+            '2',
+            '1',
+            '3',
+            '3',
+            '3',
+            '2',
+            '3',
+            '3'
+          ],
+          [
+            undef,
+            'accession',
+            'test_accession4',
+            'test_accession5',
+            'test_accession3',
+            'test_accession3',
+            'test_accession1',
+            'test_accession4',
+            'test_accession5',
+            'test_accession1',
+            'test_accession2',
+            'test_accession3',
+            'test_accession1',
+            'test_accession5',
+            'test_accession2',
+            'test_accession4',
+            'test_accession2'
+          ],
+          [
+            undef,
+            'is_a_control'
+          ]
+        ], "check fieldbook creation of plots after plants created");
+
+
+
+
 my $tempfile = "/tmp/test_create_trial_fieldbook_plants.xls";
 
 my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
@@ -310,7 +454,7 @@ is_deeply(@contents->[0]->[0], {
           'type' => 'xls',
           'version' => '0.65',
           'error' => undef
-      }, "check fieldbook plant file");
+      }, "check fieldbook creation of plant file");
 
 my $columns = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
@@ -533,6 +677,560 @@ is_deeply($columns->[7],[
             'is_a_control'
           ], "check contents of 7th col");
 
+
+my @trait_list = ("dry matter content percentage|CO:0000092", "fresh root weight|CO:0000012");
+my $tempfile = "/tmp/test_create_pheno_spreadsheet_plots_after_plants.xls";
+my $format = 'ExcelBasic';
+my $create_spreadsheet = CXGN::Trial::Download->new( 
+  { 
+  bcs_schema => $f->bcs_schema,
+  trial_id => $trial_id,
+  trait_list => \@trait_list,
+  filename => $tempfile,
+  format => $format,
+  data_level => 'plots',
+  });
+
+$create_spreadsheet->download();
+my @contents = ReadData ($tempfile);
+
+my $columns = @contents->[0]->[1]->{'cell'};
+#print STDERR Dumper scalar(@$columns);
+ok(scalar(@$columns) == 9, "check number of col in created file.");
+
+#print STDERR Dumper @contents->[0]->[0];
+is_deeply(@contents->[0]->[0], {
+              'version' => '0.65',
+              'sheets' => 1,
+              'error' => undef,
+              'type' => 'xls',
+              'sheet' => {
+                           'Sheet1' => 1
+                         },
+              'parser' => 'Spreadsheet::ParseExcel'
+          }, "check spreadsheet creation for plots after plants added");
+
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[1];
+is_deeply(@contents->[0]->[1]->{'cell'}->[1], [
+                            undef,
+                            'Spreadsheet ID',
+                            'Trial name',
+                            'Description',
+                            'Trial location',
+                            'Predefined Columns',
+                            undef,
+                            'plot_name',
+                            'test_trial21',
+                            'test_trial22',
+                            'test_trial23',
+                            'test_trial24',
+                            'test_trial25',
+                            'test_trial26',
+                            'test_trial27',
+                            'test_trial28',
+                            'test_trial29',
+                            'test_trial210',
+                            'test_trial211',
+                            'test_trial212',
+                            'test_trial213',
+                            'test_trial214',
+                            'test_trial215'
+                          ], "check 1st col");
+
+my $contents_col_2 = @contents->[0]->[1]->{'cell'}->[2];
+#remove unique ID number from test...
+splice @$contents_col_2, 0, 2;
+#print STDERR Dumper $contents_col_2;
+is_deeply($contents_col_2, ['test_trial',
+                            'test trial',
+                            'test_location',
+                            '[]',
+                            undef,
+                            'accession_name',
+                            'test_accession4',
+                            'test_accession5',
+                            'test_accession3',
+                            'test_accession3',
+                            'test_accession1',
+                            'test_accession4',
+                            'test_accession5',
+                            'test_accession1',
+                            'test_accession2',
+                            'test_accession3',
+                            'test_accession1',
+                            'test_accession5',
+                            'test_accession2',
+                            'test_accession4',
+                            'test_accession2'
+                          ], "check 2nd col");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
+                            undef,
+                            'Spreadsheet format',
+                            'Operator',
+                            'Date',
+                            undef,
+                            undef,
+                            undef,
+                            'plot_number',
+                            '1',
+                            '2',
+                            '3',
+                            '4',
+                            '5',
+                            '6',
+                            '7',
+                            '8',
+                            '9',
+                            '10',
+                            '11',
+                            '12',
+                            '13',
+                            '14',
+                            '15'
+                          ], "check thrid col");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[4], [
+                            undef,
+                            'BasicExcel',
+                            'Enter operator here',
+                            'Enter date here',
+                            undef,
+                            undef,
+                            undef,
+                            'block_number',
+                            '1',
+                            '1',
+                            '1',
+                            '1',
+                            '1',
+                            '1',
+                            '1',
+                            '1',
+                            '1',
+                            '1',
+                            '1',
+                            '1',
+                            '1',
+                            '1',
+                            '1'
+                          ], "check 4th col");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[5], [
+                            undef,
+                            undef,
+                            undef,
+                            undef,
+                            undef,
+                            undef,
+                            undef,
+                            'is_a_control'
+                          ], "check 5th col");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[6], [
+                            undef,
+                            undef,
+                            undef,
+                            undef,
+                            undef,
+                            undef,
+                            undef,
+                            'rep_number',
+                            '1',
+                            '1',
+                            '1',
+                            '2',
+                            '1',
+                            '2',
+                            '2',
+                            '2',
+                            '1',
+                            '3',
+                            '3',
+                            '3',
+                            '2',
+                            '3',
+                            '3'
+                          ], "check 6th col");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
+                            undef,
+                            undef,
+                            undef,
+                            undef,
+                            undef,
+                            undef,
+                            undef,
+                            'dry matter content percentage|CO:0000092'
+                          ], "check 7th col");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
+                            undef,
+                            undef,
+                            undef,
+                            undef,
+                            undef,
+                            undef,
+                            undef,
+                            'fresh root weight|CO:0000012'
+                          ], "check 8th col");
+
+
+my @trait_list = ("dry matter content percentage|CO:0000092", "fresh root weight|CO:0000012");
+my $tempfile = "/tmp/test_create_pheno_spreadsheet_plots_after_plants.xls";
+my $format = 'ExcelBasic';
+my $create_spreadsheet = CXGN::Trial::Download->new( 
+{ 
+bcs_schema => $f->bcs_schema,
+trial_id => $trial_id,
+trait_list => \@trait_list,
+filename => $tempfile,
+format => $format,
+data_level => 'plants',
+sample_number => '2',
+predefined_columns => {'plant_age' => '2 weeks'},
+});
+
+$create_spreadsheet->download();
+my @contents = ReadData ($tempfile);
+
+my $columns = @contents->[0]->[1]->{'cell'};
+#print STDERR Dumper scalar(@$columns);
+ok(scalar(@$columns) == 11, "check number of col in created file.");
+
+#print STDERR Dumper @contents->[0];
+is_deeply(@contents->[0]->[0], {
+            'version' => '0.65',
+            'sheet' => {
+                         'Sheet1' => 1
+                       },
+            'sheets' => 1,
+            'error' => undef,
+            'type' => 'xls',
+            'parser' => 'Spreadsheet::ParseExcel'
+        }, "check spreadsheet creation for plants after plants added");
+
+#print STDERR Dumper @contents->[0]->[1]->{'cell'}->[1];
+is_deeply(@contents->[0]->[1]->{'cell'}->[1], [
+                          undef,
+                          'Spreadsheet ID',
+                          'Trial name',
+                          'Description',
+                          'Trial location',
+                          'Predefined Columns',
+                          undef,
+                          'plant_name',
+                          'test_trial21_plant_1',
+                          'test_trial21_plant_2',
+                          'test_trial22_plant_1',
+                          'test_trial22_plant_2',
+                          'test_trial23_plant_1',
+                          'test_trial23_plant_2',
+                          'test_trial24_plant_1',
+                          'test_trial24_plant_2',
+                          'test_trial25_plant_1',
+                          'test_trial25_plant_2',
+                          'test_trial26_plant_1',
+                          'test_trial26_plant_2',
+                          'test_trial27_plant_1',
+                          'test_trial27_plant_2',
+                          'test_trial28_plant_1',
+                          'test_trial28_plant_2',
+                          'test_trial29_plant_1',
+                          'test_trial29_plant_2',
+                          'test_trial210_plant_1',
+                          'test_trial210_plant_2',
+                          'test_trial211_plant_1',
+                          'test_trial211_plant_2',
+                          'test_trial212_plant_1',
+                          'test_trial212_plant_2',
+                          'test_trial213_plant_1',
+                          'test_trial213_plant_2',
+                          'test_trial214_plant_1',
+                          'test_trial214_plant_2',
+                          'test_trial215_plant_1',
+                          'test_trial215_plant_2'
+                        ], "check col1");
+
+my $contents_col_2 = @contents->[0]->[1]->{'cell'}->[2];
+#remove unique ID number from test...
+splice @$contents_col_2, 0, 2;
+#print STDERR Dumper $contents_col_2;
+is_deeply($contents_col_2, ['test_trial',
+                          'test trial',
+                          'test_location',
+                          '["plant_age"]',
+                          undef,
+                          'plot_name',
+                          'test_trial21',
+                          'test_trial21',
+                          'test_trial22',
+                          'test_trial22',
+                          'test_trial23',
+                          'test_trial23',
+                          'test_trial24',
+                          'test_trial24',
+                          'test_trial25',
+                          'test_trial25',
+                          'test_trial26',
+                          'test_trial26',
+                          'test_trial27',
+                          'test_trial27',
+                          'test_trial28',
+                          'test_trial28',
+                          'test_trial29',
+                          'test_trial29',
+                          'test_trial210',
+                          'test_trial210',
+                          'test_trial211',
+                          'test_trial211',
+                          'test_trial212',
+                          'test_trial212',
+                          'test_trial213',
+                          'test_trial213',
+                          'test_trial214',
+                          'test_trial214',
+                          'test_trial215',
+                          'test_trial215'
+                        ], "check col2");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
+                          undef,
+                          'Spreadsheet format',
+                          'Operator',
+                          'Date',
+                          undef,
+                          undef,
+                          undef,
+                          'accession_name',
+                          'test_accession4',
+                          'test_accession4',
+                          'test_accession5',
+                          'test_accession5',
+                          'test_accession3',
+                          'test_accession3',
+                          'test_accession3',
+                          'test_accession3',
+                          'test_accession1',
+                          'test_accession1',
+                          'test_accession4',
+                          'test_accession4',
+                          'test_accession5',
+                          'test_accession5',
+                          'test_accession1',
+                          'test_accession1',
+                          'test_accession2',
+                          'test_accession2',
+                          'test_accession3',
+                          'test_accession3',
+                          'test_accession1',
+                          'test_accession1',
+                          'test_accession5',
+                          'test_accession5',
+                          'test_accession2',
+                          'test_accession2',
+                          'test_accession4',
+                          'test_accession4',
+                          'test_accession2',
+                          'test_accession2'
+                        ], "check col3");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[4], [
+                          undef,
+                          'BasicExcel',
+                          'Enter operator here',
+                          'Enter date here',
+                          undef,
+                          undef,
+                          undef,
+                          'plot_number',
+                          '1',
+                          '1',
+                          '2',
+                          '2',
+                          '3',
+                          '3',
+                          '4',
+                          '4',
+                          '5',
+                          '5',
+                          '6',
+                          '6',
+                          '7',
+                          '7',
+                          '8',
+                          '8',
+                          '9',
+                          '9',
+                          '10',
+                          '10',
+                          '11',
+                          '11',
+                          '12',
+                          '12',
+                          '13',
+                          '13',
+                          '14',
+                          '14',
+                          '15',
+                          '15'
+                        ], "check col4");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[5], [
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          'block_number',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1'
+                        ], "check col5");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[6], [
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          'is_a_control'
+                        ], "check col6");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          'rep_number',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '1',
+                          '2',
+                          '2',
+                          '1',
+                          '1',
+                          '2',
+                          '2',
+                          '2',
+                          '2',
+                          '2',
+                          '2',
+                          '1',
+                          '1',
+                          '3',
+                          '3',
+                          '3',
+                          '3',
+                          '3',
+                          '3',
+                          '2',
+                          '2',
+                          '3',
+                          '3',
+                          '3',
+                          '3'
+                        ], "check col7");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          'plant_age',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks',
+                          '2 weeks'
+                        ], "check col8");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          'dry matter content percentage|CO:0000092'
+                        ], "check col9");
+
+is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          undef,
+                          'fresh root weight|CO:0000012'
+                        ], "check col10");
 
 done_testing();
 

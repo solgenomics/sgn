@@ -64,8 +64,8 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
       $predefined_columns = decode_json($predefined_columns);
   }
   
-  print STDERR Dumper $sample_number;
-  print STDERR Dumper $predefined_columns;
+  #print STDERR Dumper $sample_number;
+  #print STDERR Dumper $predefined_columns;
 
   if ($data_level eq 'plants') {
       my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
