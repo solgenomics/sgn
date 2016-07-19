@@ -22,8 +22,8 @@ sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
 
     my $complete_list = $stock_names ."\n".$stock_names_file;
 
-    $complete_list =~ s/\r//g; 
-    
+    $complete_list =~ s/\r//g;
+
     my @names = split /\n/, $complete_list;
 
     my @not_found;
@@ -31,18 +31,18 @@ sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
     my @labels;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    
-    foreach my $name (@names) { 
+
+    foreach my $name (@names) {
 
 	# skip empty lines
 	#
-	if (!$name) { 
-	    next; 
+	if (!$name) {
+	    next;
 	}
 
 	my $stock = $schema->resultset("Stock::Stock")->find( { name=>$name });
 
-	if (!$stock) { 
+	if (!$stock) {
 	    push @not_found, $name;
 	    next;
 	}
@@ -64,7 +64,7 @@ sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
     my $dir = $c->tempfiles_subdir('zpl');
     my ($FH, $filename) = $c->tempfile(TEMPLATE=>"zpl/zpl-XXXXX", UNLINK=>0);
 
-    foreach my $label (@labels) { 
+    foreach my $label (@labels) {
         print $FH $label->render();
     }
     close($FH);
@@ -77,9 +77,9 @@ sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
 
 }
 
-sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) { 
+sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my ($self, $c) = @_;
-    
+
     my $stock_names = $c->req->param("stock_names");
     my $stock_names_file = $c->req->upload("stock_names_file");
     my $labels_per_page = $c->req->param("label_rows") || 10;
@@ -94,56 +94,45 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     print "MY PLOT VALUE: $plot\n";
     # convert mm into pixels
     #
-    my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } ($top_margin_mm, 
-											$left_margin_mm, 
-											$bottom_margin_mm, 
-											$right_margin_mm);   
+    my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } ($top_margin_mm,
+											$left_margin_mm,
+											$bottom_margin_mm,
+											$right_margin_mm);
 
     # read file if upload
     #
-    if ($stock_names_file) { 
+    if ($stock_names_file) {
 	my $stock_file_contents = read_file($stock_names_file->{tempname});
 	$stock_names = $stock_names ."\n".$stock_file_contents;
     }
 
-    $stock_names =~ s/\r//g; 
+    $stock_names =~ s/\r//g;
     my @names = split /\n/, $stock_names;
 
     my @not_found;
     my @found;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
-<<<<<<< Updated upstream
-    
-    foreach my $name (@names) { 
-=======
 
     my @plot_field_data;
     my ($plot_data, @rows, $row, @field_data, @factors, @values, %hash, @plot_field_data_hash, $stockprop_name, $value, $fdata, $accession_name);
 
     foreach my $name (@names) {
->>>>>>> Stashed changes
 
 	# skip empty lines
 	#
-	if (!$name) { 
-	    next; 
+	if (!$name) {
+	    next;
 	}
 
 	my $stock = $schema->resultset("Stock::Stock")->find( { name=>$name });
 
-	if (!$stock) { 
+	if (!$stock) {
 	    push @not_found, $name;
 	    next;
 	}
 
 	my $stock_id = $stock->stock_id();
-
-<<<<<<< Updated upstream
-	push @found, [ $c->config->{identifier_prefix}.$stock_id, $name ];
-	print "STOCK FOUND: $stock_id, $name.\n";
-	
-=======
 
   if ($plot){
 
@@ -182,19 +171,15 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
   push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata];
 	print "STOCK FOUND: $stock_id, $name, $accession_name.\n";
 
-#	push @found, [ $c->config->{identifier_prefix}.$stock_id, $name ];
-#	print "STOCK FOUND: $stock_id, $name.\n";
-
->>>>>>> Stashed changes
     }
 
     my $dir = $c->tempfiles_subdir('pdfs');
     my ($FH, $filename) = $c->tempfile(TEMPLATE=>"pdfs/pdf-XXXXX", SUFFIX=>".pdf", UNLINK=>0);
     print STDERR "FILENAME: $filename \n\n\n";
-    my $pdf = PDF::Create->new(filename=>$c->path_to($filename), 
+    my $pdf = PDF::Create->new(filename=>$c->path_to($filename),
 			       Author=>$c->config->{project_name},
 			       Title=>'Labels',
-			       CreationDate => [ localtime ], 
+			       CreationDate => [ localtime ],
 			       Version=>1.2,
 	);
 
@@ -203,25 +188,25 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     print STDERR "PAGE FORMAT IS: $page_format. LABELS PER PAGE: $labels_per_page\n";
 
-    my $base_page = $pdf->new_page(Mediabox=>$pdf->get_page_size($page_format));
-    
+    my $base_page = $pdf->new_page(MediaBox=>$pdf->get_page_size($page_format));
+
     my ($page_width, $page_height) = @{$pdf->get_page_size($page_format)}[2,3];
 
     my $label_height = int( ($page_height - $top_margin - $bottom_margin) / $labels_per_page);
 
     my @pages;
-    foreach my $page (1..$self->label_to_page($labels_per_page, scalar(@found))) { 
+    foreach my $page (1..$self->label_to_page($labels_per_page, scalar(@found))) {
 	print STDERR "Generating page $page...\n";
 	push @pages, $base_page->new_page();
     }
-    
-    for (my $i=0; $i<@found; $i++) { 
+
+    for (my $i=0; $i<@found; $i++) {
 	my $label_count = $i + 1;
 
 	my $page_nr = $self->label_to_page($labels_per_page, $label_count);
 
 	my $label_on_page = ($label_count -1) % $labels_per_page;
-	
+
 	# generate barcode
 	#
   #####
@@ -253,12 +238,11 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
 	$pages[$page_nr-1]->line($page_width -100, $label_boundary, $page_width, $label_boundary);
 
-	foreach my $label_count (1..$labels_per_row) { 
+	foreach my $label_count (1..$labels_per_row) {
 	    $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
 
 	}
-  #print STDERR Dumper(@factors);
-#  print STDERR Dumper(@values);
+
 #	$pages[$page_nr-1]->image(image=>$image, xpos=>$page_width - $final_barcode_width - 5, ypos=>$ypos , xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
 
     }
@@ -273,7 +257,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 }
 
 # maps the label number to a page number
-sub label_to_page { 
+sub label_to_page {
     my $self = shift;
     my $labels_per_page = shift;
     my $label_count = shift;
@@ -288,15 +272,15 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
     my @contents = split /\n/, $upload->slurp;
     my $basename = $upload->basename;
     my $tempfile = $upload->tempname; #create a tempfile with the uploaded file
-    if (! -e $tempfile) { 
+    if (! -e $tempfile) {
         die "The file does not exist!\n\n";
     }
     print STDERR "***Basename= $basename, tempfile = $tempfile \n\n"; ##OK
     my $archive_path = $c->config->{archive_path};
- 
+
     $tempfile = $archive_path . "/" . $basename ;
     print STDERR "**tempfile = $tempfile \n\n"; ##OK
-    #chack for write permissions in $archive_path !    
+    #chack for write permissions in $archive_path !
     my $upload_success = $upload->copy_to($archive_path . "/" . $basename); #returns false for failure, true for success
     if (!$upload_success) { die "Could not upload!\n $upload_success" ; }
     my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado') });
@@ -323,7 +307,7 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
 sub store_barcode_output  : Path('/barcode/stock/store') :Args(0) {
     my ($self, $c) = @_;
     my $filename = $c->req->param('tempfile');
-    
+
     my @contents = read_file($filename);
 
     my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado') });
