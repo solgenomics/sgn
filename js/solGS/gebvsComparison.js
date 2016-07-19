@@ -154,6 +154,12 @@ function gebvsComparison () {
 	var xValuesT =  normalDistTraining
 	    .getYValues(trainingGEBVs);
 
+	var trMean = ss.mean(xValuesT);
+
+	var stdT = trMean <= 0 ? -1.0 : 1.0;
+
+	var xMT = normalDistTraining.getObsValueZScore(gebvZScoresT, stdT);
+
 	var normalDistSelection = new solGS.normalDistribution();
 
 	var selectionNormalDistData = normalDistSelection
@@ -161,7 +167,7 @@ function gebvsComparison () {
 
 	var gebvZScoresS = normalDistSelection 
 	    .getYValuesZScores(selectionNormalDistData);
-	
+		
 	var yValuesS = normalDistSelection
 	    .getPValues(selectionNormalDistData);
 	
@@ -173,6 +179,12 @@ function gebvsComparison () {
 	
 	var xValuesS = normalDistSelection
 	    .getYValues(selectionGEBVs);
+	
+	var slMean = ss.mean(xValuesS);
+
+	var stdS = slMean <= 0 ? -1.0 : 1.0;
+
+	var xMS = normalDistTraining.getObsValueZScore(gebvZScoresS, stdS);
 
 	var svgId  = '#compare_gebvs_canvas';
 	var plotId = '#compare_gebvs_plot';
@@ -186,7 +198,6 @@ function gebvsComparison () {
 	var title = 'Normal distribution curves of GEBVs ' 
 	    + 'for the training and selection populations.';
 	
-
 	var allData =  {
 	    'div_id': svgId, 
 	    'plot_title': title, 
@@ -196,12 +207,12 @@ function gebvsComparison () {
 	    'lines' : 
 	    [ 		
 		{
-		    'data'  : xYT, 
+		    'data'  : xYT,
 		    'legend': 'Training population' ,
 		    'color' : trColor,
 		},	
 		{
-		    'data'  : xYS, 
+		    'data'  : xYS,
 		    'legend': 'Selection population',
 		    'color' : slColor,
 		},		    
@@ -211,8 +222,7 @@ function gebvsComparison () {
 
 
 	var linePlot  = solGS.linePlot(allData);
-	var trMean = ss.mean(xValuesT);
-	var slMean = ss.mean(xValuesS);
+
 	var trainingMidlineData  = [
 	    [trMean, d3.min(yValuesT)], 
 	    [trMean, d3.max(yValuesT)]
@@ -231,7 +241,6 @@ function gebvsComparison () {
 		return linePlot.yScale(d[1]); 
 	    });
 	   
-	    	
 	linePlot.graph.append("path")
 	    .attr("d", midLine(trainingMidlineData))
 	    .attr("stroke", trColor)
@@ -246,14 +255,16 @@ function gebvsComparison () {
 			    "fill"       : trColor, 
 			    "font-weight": "bold"
 			}) 
-			.attr("x", linePlot.xScale(trMean - 3))
-                        .attr("y", linePlot.yScale(0.47))                     
+			.attr("x", linePlot.xScale(xMT[0]))
+                        .attr("y", linePlot.yScale(d3.max(yValuesT) * 0.5))                     
                 }
             })                
             .on("mouseout", function() {
                 d3.selectAll("text#tr_mean").remove();
             });
 
+	console.log('std tr ' + xMT[0] + '  ' + xMT[1])
+	console.log('std sl ' + xMS[0] + '  ' + xMS[1])
 
 	linePlot.graph.append("path")
 	    .attr("d", midLine(selectionMidlineData))
@@ -269,16 +280,14 @@ function gebvsComparison () {
 			    "fill"       : slColor, 
 			    "font-weight": "bold"
 			})  
-                        .attr("x", linePlot.xScale(slMean + 2))
-                        .attr("y", linePlot.yScale(0.47))
+                        .attr("x", linePlot.xScale(xMS[0]))
+                        .attr("y", linePlot.yScale(d3.max(yValuesS) * 0.5))
                              
                 }
             })                
             .on("mouseout", function() {
 		d3.selectAll("text#sl_mean").remove(); 
             });
-
-
     }
 
 //////////

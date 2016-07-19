@@ -163,6 +163,7 @@ solGS.linePlot = function (allData) {
 	    .range([height, 0]);
 	
 	var line = d3.svg.line()
+	    .interpolate('basis')
 	    .x(function(d) { 
 		return xScale(d[0]); 
 	    })
