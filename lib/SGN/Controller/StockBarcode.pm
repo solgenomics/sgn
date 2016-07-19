@@ -89,7 +89,9 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $left_margin_mm = $c->req->param("left_margin");
     my $bottom_margin_mm = $c->req->param("bottom_margin");
     my $right_margin_mm = $c->req->param("right_margin");
+    my $plot = $c->req->param("plots");
 
+    print "MY PLOT VALUE: $plot\n";
     # convert mm into pixels
     #
     my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } ($top_margin_mm, 
@@ -111,8 +113,16 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my @found;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
+<<<<<<< Updated upstream
     
     foreach my $name (@names) { 
+=======
+
+    my @plot_field_data;
+    my ($plot_data, @rows, $row, @field_data, @factors, @values, %hash, @plot_field_data_hash, $stockprop_name, $value, $fdata, $accession_name);
+
+    foreach my $name (@names) {
+>>>>>>> Stashed changes
 
 	# skip empty lines
 	#
@@ -129,9 +139,53 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
 	my $stock_id = $stock->stock_id();
 
+<<<<<<< Updated upstream
 	push @found, [ $c->config->{identifier_prefix}.$stock_id, $name ];
 	print "STOCK FOUND: $stock_id, $name.\n";
 	
+=======
+
+  if ($plot){
+
+  my $dbh = $c->dbc->dbh();
+  my $h = $dbh->prepare("select name, value from cvterm inner join stockprop on cvterm.cvterm_id = stockprop.type_id where stockprop.stock_id=?;");
+
+  $h->execute($stock_id);
+
+  my %stockprop_hash;
+   while (($stockprop_name, $value) = $h->fetchrow_array) {
+     $stockprop_hash{$stock_id}->{$stockprop_name} = $value;
+
+  }
+  print "rep: $stockprop_hash{$stock_id}->{'replicate'}\n";
+  print "block: $stockprop_hash{$stock_id}->{'block'}\n";
+  print "plot: $stockprop_hash{$stock_id}->{'plot number'}\n";
+  $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."block:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
+  print "MY FDATA: $fdata\n";
+  print STDERR Dumper \%stockprop_hash;
+
+  my $h_acc = $dbh->prepare("select stock.uniquename AS acesssion_name FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
+
+  $h_acc->execute($stock_id);
+  while (my($accession) = $h_acc->fetchrow_array) {
+    $accession_name = $accession;
+  }
+  print "MY ACCESSION: $accession_name\n";
+
+  }
+  else{
+
+  }
+
+# print STDERR Dumper(@found);
+
+  push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata];
+	print "STOCK FOUND: $stock_id, $name, $accession_name.\n";
+
+#	push @found, [ $c->config->{identifier_prefix}.$stock_id, $name ];
+#	print "STOCK FOUND: $stock_id, $name.\n";
+
+>>>>>>> Stashed changes
     }
 
     my $dir = $c->tempfiles_subdir('pdfs');
@@ -170,9 +224,18 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 	
 	# generate barcode
 	#
-	my $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0],  $found[$i]->[1],  'large',  20  ]);
-	my $image = $pdf->image($tempfile);
+  #####
+  my $tempfile;
+  if ($plot){
+     $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[2]." ".$found[$i]->[3],  'large',  20  ]);
+  }
+  else {
+  #####
+	 $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[0], $found[$i]->[1], 'large',  20  ]);
+  }
+  my $image = $pdf->image($tempfile);
 	print STDERR "IMAGE: ".Data::Dumper::Dumper($image);
+
 
 	# note: pdf coord system zero is lower left corner
 	#
@@ -194,7 +257,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 	    $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
 
 	}
-
+  #print STDERR Dumper(@factors);
+#  print STDERR Dumper(@values);
 #	$pages[$page_nr-1]->image(image=>$image, xpos=>$page_width - $final_barcode_width - 5, ypos=>$ypos , xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
 
     }

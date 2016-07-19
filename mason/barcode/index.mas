@@ -167,6 +167,12 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
     <div class="col-sm-8">
       <input type="checkbox" name="duplicate_labels_per_row" checked="1" disabled="1" />
     </div>
+    </div>
+    <div class="form-group form-group-sm">
+    <label class="col-sm-4 control-label">Print Field Data For Plots: </label>
+    <div class="col-sm-8">
+      <input type="checkbox" name="plots" value="plots" />
+    </div>
   </div>
 
   <& /barcode/printer_settings.mas &>
