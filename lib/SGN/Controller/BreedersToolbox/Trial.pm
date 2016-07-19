@@ -71,7 +71,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     $c->stash->{trial_name} = $trial->get_name();
 
-    $c->stash->{trial_type} = $trial->get_project_type()->[1];
+    my $trial_type_data = $trial->get_project_type();
+    $c->stash->{trial_type} = $trial_type_data->[1];
 
     $c->stash->{planting_date} = $trial->get_planting_date();
 

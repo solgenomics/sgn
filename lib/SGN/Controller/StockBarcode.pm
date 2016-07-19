@@ -114,6 +114,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
+
     my @plot_field_data;
     my ($plot_data, @rows, $row, @field_data, @factors, @values, %hash, @plot_field_data_hash, $stockprop_name, $value, $fdata, $accession_name);
 

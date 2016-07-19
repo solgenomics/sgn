@@ -5,7 +5,7 @@
   $inflect_count => undef
 </%args>
 \
-<a title="<% $definition |h %>" href="/chado/cvterm?cvterm_id=<% $id |u %>"><% $name |h %></a>\
+<a title="<% $definition |h %>" href="/cvterm/<% $id |u %>/view"><% $name |h %></a>\
 \
 <%init>
         use Lingua::EN::Inflect ();

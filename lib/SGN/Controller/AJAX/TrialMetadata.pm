@@ -175,14 +175,14 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $dbh = $c->dbc->dbh();
     my $trial_id = $c->stash->{trial_id};
 
-    my $h = $dbh->prepare("SELECT cvterm.name, cvterm.cvterm_id, count(phenotype.value), to_char(avg(phenotype.value::real), 'FM999990.990'), to_char(max(phenotype.value::real), 'FM999990.990'), to_char(min(phenotype.value::real), 'FM999990.990'), to_char(stddev(phenotype.value::real), 'FM999990.990') FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and phenotype.value~? GROUP BY cvterm.name, cvterm.cvterm_id;");
+    my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value), to_char(avg(phenotype.value::real), 'FM999990.990'), to_char(max(phenotype.value::real), 'FM999990.990'), to_char(min(phenotype.value::real), 'FM999990.990'), to_char(stddev(phenotype.value::real), 'FM999990.990') FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id WHERE project_id=? and phenotype.value~? GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     $h->execute($c->stash->{trial_id}, $numeric_regex );
 
     my @phenotype_data;
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev) = $h->fetchrow_array()) {
-	push @phenotype_data, [ qq{<a href="/chado/cvterm?cvterm_id=$trait_id">$trait</a>}, $average, $min, $max, $stddev, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} ];
+	push @phenotype_data, [ qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} ];
     }
 
     $c->stash->{rest} = { data => \@phenotype_data };

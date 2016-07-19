@@ -80,7 +80,7 @@ window.onload = function initialize() {
 	      window.open("../../breeders/locations");
 	      break;
 	  case "traits":
-	      window.open("../../chado/cvterm?action=view&cvterm_id="+this.value);
+	      window.open("../../cvterm/"+this.value+"/view");
 	      break;
 	  default:
 	      if (window.console) console.log("no link for this category");

@@ -185,7 +185,7 @@ sub display_ontologies_GET  {
         $db_accession = $cvterm_id if $db_name eq $trait_db_name;
         my $url = $_->[0]->get_urlprefix() . $_->[0]->get_url();
         my $cvterm_link =
-            qq |<a href="/chado/cvterm?cvterm_id=$cvterm_id" target="blank">$cvterm_name</a>|;
+            qq |<a href="/cvterm/$cvterm_id/view" target="blank">$cvterm_name</a>|;
         my $locus_dbxref = $locus->get_locus_dbxref( $_->[0] );
         my @AoH = $locus_dbxref->evidence_details();
         for my $href (@AoH) {

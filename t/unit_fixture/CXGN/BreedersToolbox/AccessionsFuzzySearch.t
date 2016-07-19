@@ -6,14 +6,14 @@ use warnings;
 
 use lib 't/lib';
 use Test::More tests=>12;
-use SGN::Test::WWW::Mechanize;
+use SGN::Test::Fixture;
 
 BEGIN {use_ok('CXGN::BreedersToolbox::AccessionsFuzzySearch');}
 BEGIN {use_ok('CXGN::DB::Connection');}
 BEGIN {require_ok('Moose');}
 
-my $test = SGN::Test::WWW::Mechanize->new();
-my $schema = $test->context->dbic_schema('Bio::Chado::Schema');
+my $f = SGN::Test::Fixture->new();
+my $schema = $f->bcs_schema();
 my $accession_name = "testing";
 my $max_distance = 1;
 my @accession_list;

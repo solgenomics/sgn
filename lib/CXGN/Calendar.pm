@@ -252,7 +252,7 @@ sub populate_calendar_events {
 	$property =~ s/([\w']+)/\u\L$1/g;
 
 	#Variables are pushed into the event array and will become properties of Fullcalendar events, like event.start, event.cvterm_url, etc.
-	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$title, property=>$property, start=>$start_time, start_drag=>$start_time, start_display=>$start_display, end=>$end_time, end_drag=>$end_drag, end_display=>$end_display, project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_id=>$result->get_column('cvterm_id'), cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cvterm_id'), allDay=>$allday, p_description=>$result->description, event_description=>$calendar_array[2], event_url=>$calendar_array[3]});
+	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$title, property=>$property, start=>$start_time, start_drag=>$start_time, start_display=>$start_display, end=>$end_time, end_drag=>$end_drag, end_display=>$end_display, project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_id=>$result->get_column('cvterm_id'), cvterm_url=>'/cvterm/'.$result->get_column('cvterm_id').'/view', allDay=>$allday, p_description=>$result->description, event_description=>$calendar_array[2], event_url=>$calendar_array[3]});
     }
     return \@events;
 }
