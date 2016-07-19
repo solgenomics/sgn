@@ -3,7 +3,6 @@
 
 package SGN::Controller::BreedersToolbox::Download;
 
-
 use Moose;
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -26,13 +25,6 @@ use CXGN::Trial::Download;
 use POSIX qw(strftime);
 use Sort::Maker;
 use DateTime;
-
-use SGN::Controller::Pedigree;
-use CXGN::Chado::Stock;
-
-
-
-
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -511,6 +503,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     }
 }
 
+
 # pedigree download -- begin
 
 sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
@@ -532,28 +525,39 @@ my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedig
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
 
-  
-
     open my $TEMP, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
 
 	print $TEMP "Accession\tFemale_Parent\tMale_Parent";
  	print $TEMP "\n";
+       my $check_pedigree = "FALSE";
+       my $len;
 
-   
-	
-	
 
-	for (my $i=0 ; $i <= @accession_ids; $i++)
+	for (my $i=0 ; $i<scalar(@accession_ids); $i++)
 	{
+
 	 $accession_name = @accession_list[$i];
 	my $pedigree_stock_id = @accession_ids[$i];
 	my @pedigree_parents = CXGN::Chado::Stock->new ($schema, $pedigree_stock_id)->get_direct_parents();
+	$len = scalar(@pedigree_parents);
+	if($len > 0)
+	{
+      		$check_pedigree = "TRUE";
+	}	
+
+        
 	    
-	    $male_parent = $pedigree_parents[0][1] || '';
-	    $female_parent = $pedigree_parents[1][1] || '';
+	    $female_parent = $pedigree_parents[0][1] || '';
+	    $male_parent = $pedigree_parents[1][1] || '';
 	  print $TEMP "$accession_name \t  $female_parent \t $male_parent\n";
  
   	}
+
+if ($check_pedigree eq "FALSE")
+{
+print $TEMP "\n";
+print $TEMP "No pedigrees found in the Database for the accessions searched. \n";
+}
 
  close $TEMP;
 
@@ -562,18 +566,13 @@ my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedig
  $c->res->content_type("application/text");
  $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
   my $output = read_file($tempfile);
-#print STDERR "output..... ...  $output \n";
 
   $c->res->body($output);
-
-
-
 
 }
 
 
 # pedigree download -- end
-
 
 #=pod
 sub download_gbs_action : Path('/breeders/download_gbs_action') {
@@ -597,7 +596,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   }
   elsif ($format eq 'list_id') {        #get accession names from list and tranform them to ids
 
-    $protocol_id = 1;
+    $protocol_id = 2;
     my $accession_list_id = $c->req->param("genotype_accession_list_list_select");
 
     if ($accession_list_id) {
@@ -695,6 +694,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   };
   $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
   my $output = read_file($tempfile);
+  $c->res->body($output);
 }
 
 #=pod
