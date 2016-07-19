@@ -2064,8 +2064,500 @@ while (my $rs = $exp_md_files_table_tail->next() ) {
 #print STDERR Dumper \@exp_md_files_table;
 
 
+if (!$tn->has_plant_entries) {
+	$tn->create_plant_entities(2);
+}
 
-#Verify Database Tables State
+#check that parse fails for plant spreadsheet file when using plot parser
+$parser = CXGN::Phenotypes::ParseUpload->new();
+$filename = "t/data/trial/upload_phenotypin_spreadsheet_plants.xls";
+$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plots');
+ok($validate_file != 1, "Check if parse validate plot fails for plant spreadsheet file");
+
+$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plants');
+ok($validate_file == 1, "Check if parse validate works for plant spreadsheet file");
+
+$parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0, 'plants');
+ok($parsed_file, "Check if parse parse phenotype plant spreadsheet works");
+
+#print STDERR Dumper $parsed_file;
+
+is_deeply($parsed_file, {
+          'plots' => [
+                       'test_trial210_plant_1',
+                       'test_trial210_plant_2',
+                       'test_trial211_plant_1',
+                       'test_trial211_plant_2',
+                       'test_trial212_plant_1',
+                       'test_trial212_plant_2',
+                       'test_trial213_plant_1',
+                       'test_trial213_plant_2',
+                       'test_trial214_plant_1',
+                       'test_trial214_plant_2',
+                       'test_trial215_plant_1',
+                       'test_trial215_plant_2',
+                       'test_trial21_plant_1',
+                       'test_trial21_plant_2',
+                       'test_trial22_plant_1',
+                       'test_trial22_plant_2',
+                       'test_trial23_plant_1',
+                       'test_trial23_plant_2',
+                       'test_trial24_plant_1',
+                       'test_trial24_plant_2',
+                       'test_trial25_plant_1',
+                       'test_trial25_plant_2',
+                       'test_trial26_plant_1',
+                       'test_trial26_plant_2',
+                       'test_trial27_plant_1',
+                       'test_trial27_plant_2',
+                       'test_trial28_plant_1',
+                       'test_trial28_plant_2',
+                       'test_trial29_plant_1',
+                       'test_trial29_plant_2'
+                     ],
+          'data' => {
+                      'test_trial27_plant_2' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '23',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '33',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial29_plant_1' => {
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '36',
+                                                                                      ''
+                                                                                    ],
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '26',
+                                                                                                  ''
+                                                                                                ]
+                                                },
+                      'test_trial29_plant_2' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '27',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '37',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial212_plant_1' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '32',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '42',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial25_plant_1' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '18',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '28',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial22_plant_2' => {
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '23',
+                                                                                      ''
+                                                                                    ],
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '13',
+                                                                                                  ''
+                                                                                                ]
+                                                },
+                      'test_trial213_plant_1' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '34',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '44',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial211_plant_2' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '31',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '41',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial27_plant_1' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '22',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '32',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial28_plant_2' => {
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '35',
+                                                                                      ''
+                                                                                    ],
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '25',
+                                                                                                  ''
+                                                                                                ]
+                                                },
+                      'test_trial25_plant_2' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '29',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial210_plant_1' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '28',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '38',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial212_plant_2' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '33',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '43',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial21_plant_1' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '10',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '20',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial24_plant_1' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '16',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '26',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial210_plant_2' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '29',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial23_plant_2' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '15',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '25',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial214_plant_1' => {
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '46',
+                                                                                       ''
+                                                                                     ],
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '36',
+                                                                                                   ''
+                                                                                                 ]
+                                                 },
+                      'test_trial215_plant_2' => {
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '49',
+                                                                                       ''
+                                                                                     ],
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '39',
+                                                                                                   ''
+                                                                                                 ]
+                                                 },
+                      'test_trial211_plant_1' => {
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '40',
+                                                                                       ''
+                                                                                     ],
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '30',
+                                                                                                   ''
+                                                                                                 ]
+                                                 },
+                      'test_trial23_plant_1' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '14',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '24',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial28_plant_1' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '0',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '34',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial26_plant_2' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '21',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '0',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial213_plant_2' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '35',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '45',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial22_plant_1' => {
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '22',
+                                                                                      ''
+                                                                                    ],
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '12',
+                                                                                                  ''
+                                                                                                ]
+                                                },
+                      'test_trial215_plant_1' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '38',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '48',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial26_plant_1' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '20',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '30',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial214_plant_2' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '37',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '47',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial24_plant_2' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '17',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '27',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial21_plant_2' => {
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '21',
+                                                                                      ''
+                                                                                    ],
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '11',
+                                                                                                  ''
+                                                                                                ]
+                                                }
+                    },
+          'traits' => [
+                        'dry matter content percentage|CO:0000092',
+                        'fresh root weight|CO:0000012'
+                      ]
+        }, "check plant spreadsheet file was parsed");
+
+$phenotype_metadata{'archived_file'} = $filename;
+$phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
+$phenotype_metadata{'operator'}="janedoe";
+$phenotype_metadata{'date'}="2016-02-16_05:55:55";
+%parsed_data = %{$parsed_file->{'data'}};
+@plots = @{$parsed_file->{'plots'}};
+@traits = @{$parsed_file->{'traits'}};
+
+$store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
+$size = scalar(@plots) * scalar(@traits);
+$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plants');
+ok(!$stored_phenotype_error_msg, "check that store large pheno spreadsheet works");
+
+$tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
+	trial_id => 137 });
+
+$traits_assayed  = $tn->get_traits_assayed();
+@traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
+#print STDERR Dumper \@traits_assayed_sorted;
+is_deeply(\@traits_assayed_sorted, [[70666, 'Fresh root weight'], [70668, 'Harvest index variable'], [70681,'Top yield'], [ 70700, 'Sprouting proportion'], [70706,'Root number counting'],[70713,'Flower'],[  70727, 'Dry yield'  ], [70741,'Dry matter content percentage'  ], [ 70773, 'Fresh shoot weight measurement in kg' ] ], 'check traits assayed after plant upload' );
+
+@pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
+@pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
+#print STDERR Dumper \@pheno_for_trait_sorted;
+is_deeply(\@pheno_for_trait_sorted, [
+          0,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          32,
+          33,
+          34,
+          35,
+          36,
+          36,
+          37,
+          37,
+          38,
+          38,
+          39,
+          40,
+          40,
+          41,
+          41,
+          42,
+          42,
+          43,
+          43,
+          44,
+          45,
+          45,
+          46,
+          46,
+          47,
+          47,
+          48,
+          48,
+          49,
+          49,
+          50
+        ], 'check pheno traits 70666 after plant upload' );
+
+@pheno_for_trait = $tn->get_phenotypes_for_trait(70727);
+@pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
+#print STDERR Dumper \@pheno_for_trait_sorted;
+is_deeply(\@pheno_for_trait, [
+          0,
+          0,
+          12,
+          13,
+          14,
+          24,
+          25,
+          31,
+          32,
+          35,
+          41,
+          41,
+          42,
+          42,
+          45
+        ], "check pheno trait 70727 after plant upload.");
 
 
 
