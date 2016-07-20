@@ -316,7 +316,7 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 
     my $design = $layout-> get_design();
 
-    print STDERR Dumper($design);
+    #print STDERR Dumper($design);
 
     my @layout_info;
     foreach my $plot_number (keys %{$design}) {
@@ -378,11 +378,12 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 
     my $max_col = 0;
     $max_col = max( @col_numbers ) if (@col_numbers);
-    print "$max_col\n";
+    #print "$max_col\n";
     my $max_row = 0;
     $max_row = max( @row_numbers ) if (@row_numbers);
-    print "$max_row\n";
+    #print "$max_row\n";
 
+    #print STDERR Dumper \@layout_info;
 
 	$c->stash->{rest} = { coord_row =>  \@row_numbers,
 			      coords =>  \@layout_info,
