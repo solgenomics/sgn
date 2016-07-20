@@ -2541,7 +2541,7 @@ is_deeply(\@pheno_for_trait_sorted, [
 @pheno_for_trait = $tn->get_phenotypes_for_trait(70727);
 @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
 #print STDERR Dumper \@pheno_for_trait_sorted;
-is_deeply(\@pheno_for_trait, [
+is_deeply(\@pheno_for_trait_sorted, [
           0,
           0,
           12,
