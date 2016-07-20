@@ -199,7 +199,8 @@ sub get_phenotype_info {
     my $rep_type_id = $self->get_stockprop_type_id("replicate");
     my $block_number_type_id = $self -> get_stockprop_type_id("block");
     my $year_type_id = $self->get_projectprop_type_id("project year");
-
+    my $plot_type_id = $self->get_stock_type_id("plot");
+    my $accession_type_id = $self->get_stock_type_id("accession");
 
     my @where_clause = ();
     if ($accession_sql) { push @where_clause,  "stock.stock_id in ($accession_sql)"; }
@@ -210,6 +211,7 @@ sub get_phenotype_info {
 
     if (@where_clause>0) {
 	$where_clause .= $rep_type_id ? "WHERE (stockprop.type_id = $rep_type_id OR stockprop.type_id IS NULL) " : "WHERE stockprop.type_id IS NULL";
+	$where_clause .= "AND plot.type_id = $plot_type_id AND stock.type_id = $accession_type_id";
 	$where_clause .= $block_number_type_id  ? " AND (block_number.type_id = $block_number_type_id OR block_number.type_id IS NULL)" : " AND block_number.type_id IS NULL";
 	$where_clause .= $year_type_id ? " AND projectprop.type_id = $year_type_id" :"" ;
 	$where_clause .= " AND " . (join (" AND " , @where_clause));
@@ -423,7 +425,6 @@ sub get_genotype_info {
       push @result, [ $uniquename, $genotype_string ];
       $protocol_name = $name;
     }
-    print STDERR "Protocol Name: $protocol_name\n";
 
     return {
       protocol_name => $protocol_name,

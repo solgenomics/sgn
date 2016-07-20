@@ -12,15 +12,18 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-	  <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_fieldbook_phenotype_file_form" name="upload_fieldbook_phenotype_file_form">
-	    <div class="form-group">
-      	      <label class="col-sm-3 control-label">Fieldbook File: </label>
-      	      <div class="col-sm-9" >
-	        <input type="file" id="upload_fieldbook_phenotype_file_input" name="upload_fieldbook_phenotype_file_input" encoding="multipart/form-data" />
-              </div>
-	    </div>
-	  </form><br/>
-	  <div id="upload_phenotype_fieldbook_verify_status"></div>
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_fieldbook_phenotype_file_form" name="upload_fieldbook_phenotype_file_form">
+                <div class="well well-sm">
+                    <h4>Upload Exported Fieldbook Phenotype File for Plots or Plants</h4>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Fieldbook File: </label>
+                    <div class="col-sm-9" >
+                        <input type="file" id="upload_fieldbook_phenotype_file_input" name="upload_fieldbook_phenotype_file_input" encoding="multipart/form-data" />
+                    </div>
+                </div>
+            </form><br/>
+            <div id="upload_phenotype_fieldbook_verify_status"></div>
         </div>
       </div>
       <div class="modal-footer">

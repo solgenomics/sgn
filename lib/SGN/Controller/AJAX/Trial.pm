@@ -285,6 +285,8 @@ sub save_experimental_design_POST : Args(0) {
 
   my $design = _parse_design_from_json($c->req->param('design_json'));
 
+  #print STDERR Dumper $design;
+
   my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	   chado_schema => $chado_schema,
@@ -452,6 +454,12 @@ sub upload_trial_file_POST : Args(0) {
 
   print STDERR "Check 2: ".localtime();
 
+  if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
+      print STDERR "File name must not have spaces or slashes.\n";
+      $c->stash->{rest} = {error => "Uploaded file name must not contain spaces or slashes." };
+      return;
+  }
+
   if (!$c->user()) {
     print STDERR "User not logged in... not adding a crosses.\n";
     $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
@@ -509,6 +517,8 @@ sub upload_trial_file_POST : Args(0) {
   }
 
   print STDERR "Check 4: ".localtime();
+
+  #print STDERR Dumper $parsed_data;
 
   my $trial_create = CXGN::Trial::TrialCreate
     ->new({

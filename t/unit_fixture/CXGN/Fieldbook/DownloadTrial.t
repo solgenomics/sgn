@@ -31,6 +31,7 @@ my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
     archive_path => $f->config->{archive_path},
     user_id => 41,
     user_name => "janedoe",
+    data_level => 'plots',
 });
 
 my $create_fieldbook_return = $create_fieldbook->download();
@@ -160,5 +161,7 @@ is_deeply($columns->[6], [
     undef,
     'is_a_control'
 ], "check contents of sixth col.");
+
+
 
 done_testing();

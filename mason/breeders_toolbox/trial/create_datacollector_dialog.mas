@@ -1,0 +1,106 @@
+
+<%args>
+$trial_id
+$trial_name => undef
+</%args>
+
+
+<div class="modal fade" id="download_datacollector_dialog" name="download_datacollector_dialog" tabindex="-1" role="dialog" aria-labelledby="downloadDatacollectorDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="downloadDatacollectorDialog">Download Datacollector for <% $trial_name %></h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+	       <form class="form-horizontal" role="form" method="post" >
+	        <div class="form-group">
+                <label class="col-sm-3 control-label">Trait List: </label>
+                <div class="col-sm-9" >
+                    <div id ="trait_list_dc">
+                    </div>
+                </div>
+	        </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Data Level: </label>
+                <div class="col-sm-9" >
+                    <select class="form-control" id="download_datacollector_data_level">
+                        <option value="plots">Plots</option>
+                        <option value="plants">Plants</option>
+                    </select>
+                </div>
+	        </div>
+	       </form><br/>
+         
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="download_datacollector_cancel_button" id="download_datacollector_cancel_button" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="create_DataCollector_submit_button" id="create_DataCollector_submit_button" title="Submit">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+
+  jQuery('#create_DataCollector_link').click( function () {
+    jQuery('#download_datacollector_dialog').modal("show");
+    var list = new CXGN.List();
+    jQuery("#trait_list_dc").html(list.listSelect("trait_list_dc", [ 'traits' ]));
+  });
+  
+  jQuery('#create_DataCollector_submit_button').click( function () {
+    create_DataCollector();
+  });
+
+});
+
+
+function create_DataCollector() {
+    var list = new CXGN.List();
+    var trait_list_id = jQuery('#trait_list_dc_list_select').val();
+    var trait_list;
+    if (! trait_list_id == "") {
+        trait_list = JSON.stringify(list.getList(trait_list_id));
+    }
+    
+    jQuery.ajax({
+        type: 'POST',
+        url: '/ajax/phenotype/create_DataCollector',
+        dataType: "json",
+        data: {
+            'trial_id': <% $trial_id %>,
+            'trait_list': trait_list,
+            'data_level': jQuery("#download_datacollector_data_level").val(),
+        },
+        beforeSend: function() {
+            jQuery('#working_modal').modal("show");
+        },
+        success: function (response) {
+            jQuery('#working_modal').modal("hide");
+
+            if (response.error) {
+                alert("Error: "+response.error);
+                jQuery('#download_datacollector_dialog').modal("hide");
+            } else {
+                //alert("success: "+response.filename);
+                jQuery('#download_datacollector_dialog').modal("hide");
+                jQuery('#working_modal').modal("hide");
+                window.location.href = "/download/"+response.filename;
+            }
+        },
+        error: function () {
+            jQuery('#working_modal').modal("hide");
+            alert('An error occurred creating a DataCollector file.');
+            jQuery('#download_datacollector_dialog').modal("hide");
+        }
+    });
+}
+
+
+</script>
