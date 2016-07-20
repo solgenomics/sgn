@@ -324,19 +324,19 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 <&| /page/info_section.mas, title=>"Files", collapsible=>1, collapsed=>0 &>
   <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a name="create_spreadsheet_link">Create Spreadsheet</a>]' &>
+    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a name="create_spreadsheet_link">Create Spreadsheet</a>]' &>
     </&>
-    <&| /page/info_section.mas, title=>"Android Field Book Layout", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a name="create_fieldbook_link">Create Field Book</a>]' &>
+    <&| /page/info_section.mas, title=>"Android Field Book Layout", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a name="create_fieldbook_link">Create Field Book</a>]' &>
     </&>
-    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=> '[<a id="create_DataCollector_link">Create DataCollector Spreadsheet</a>]' &>
+    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=> '[<a id="create_DataCollector_link">Create DataCollector Spreadsheet</a>]' &>
     </&>
   </&>
   <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link">Upload</a>]'&>
+    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link">Upload</a>]'&>
     </&>
-    <&| /page/info_section.mas, title=>"Android Field Book Exported", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_fieldbook_phenotypes_link">Upload</a>]'&>
+    <&| /page/info_section.mas, title=>"Android Field Book Exported", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_fieldbook_phenotypes_link">Upload</a>]'&>
     </&>
-    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_datacollector_phenotypes_link">Upload</a>]'&>
+    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_datacollector_phenotypes_link">Upload</a>]'&>
     </&>
   </&>
 </&>

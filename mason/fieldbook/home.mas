@@ -26,7 +26,7 @@ $user_id => undef
 
 <& /fieldbook/create_fieldbook_dialog.mas &>
 
-<&| /page/info_section.mas, title=>'Field Layout Files', collapsible=>1, collapsed=>0, subtitle=>'[<a name="create_fieldbook_link">New</a>]' &>
+<&| /page/info_section.mas, title=>'Field Layout Files', empty_message=>'', collapsible=>1, collapsed=>0, subtitle=>'[<a name="create_fieldbook_link">New</a>]' &>
 <%perl>
 #my @breeding_programs = @{$programs};
 #foreach my $prog (@breeding_programs) {
@@ -35,14 +35,14 @@ $user_id => undef
 foreach my $file (@file_metadata) {
    my @trial_array = @{$file};
    my $file_name = $trial_array[1];
-   my $trial_layout_download = '[<a href="/fieldbook/trial_download/'.$trial_array[2].'">Download</a>]  |   [<a id="delete_fieldbook_layout_link" href="/fieldbook/delete_FB_layout/'.$trial_array[2].'">Delete Layout</a>]'; 
+   my $trial_layout_download = '[<a href="/fieldbook/trial_download/'.$trial_array[2].'">Download File</a>]  |   [<a id="delete_fieldbook_layout_link" href="/fieldbook/delete_FB_layout/'.$trial_array[2].'">Delete Layout File</a>]';
    print $trial_array[1]."$trial_layout_download<br>"; 
    #print $trial_array[2]."</br>"; 
 }
 </%perl>
 </&>
 
-<&| /page/info_section.mas, title=>'Trait Files', collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_new_trait_file_link">New</a>]' &>
+<&| /page/info_section.mas, title=>'Trait Files', empty_message=>'', collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_new_trait_file_link">New</a>]' &>
   <%perl>
   foreach my $trait_ref (@trait_files) {
     my @trait_array = @{$trait_ref};
