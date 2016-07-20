@@ -536,8 +536,8 @@ my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedig
 	for (my $i=0 ; $i<scalar(@accession_ids); $i++)
 	{
 
-	 $accession_name = @accession_list[$i];
-	my $pedigree_stock_id = @accession_ids[$i];
+	$accession_name = $accession_list[$i];
+	my $pedigree_stock_id = $accession_ids[$i];
 	my @pedigree_parents = CXGN::Chado::Stock->new ($schema, $pedigree_stock_id)->get_direct_parents();
 	$len = scalar(@pedigree_parents);
 	if($len > 0)
