@@ -48,7 +48,7 @@ sub verify {
     #print STDERR Dumper \%plot_trait_value;
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
-    my @plots_missing = @{$plot_validator->validate($schema,'plots',\@plot_list)->{'missing'}};
+    my @plots_missing = @{$plot_validator->validate($schema,'plots_or_plants',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
     my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type');
     my $error_message;
@@ -174,6 +174,7 @@ sub store {
     #####
 
     my $phenotype_metadata = shift;
+    my $data_level = shift;
     my $error_message;
     my $transaction_error;
     my @plot_list = @{$plot_list_ref};
@@ -209,11 +210,23 @@ sub store {
             my $plot_stock = $schema->resultset("Stock::Stock")->find( { uniquename => $plot_name});
             my $plot_stock_id = $plot_stock->stock_id;
 
-            my $field_layout_experiment = $plot_stock
-            ->search_related('nd_experiment_stocks')
-            ->search_related('nd_experiment')
-            ->find({'type.name' => 'field_layout' },
-            { join => 'type' });
+            my $field_layout_experiment;
+            if ($data_level eq 'plots') {
+                $field_layout_experiment = $plot_stock
+                ->search_related('nd_experiment_stocks')
+                ->search_related('nd_experiment')
+                ->find({'type.name' => 'field_layout' },
+                { join => 'type' });
+            } elsif ($data_level eq 'plants') {
+                my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+                my $plot_of_plant = $schema->resultset("Stock::StockRelationship")->find({ type_id=>$plot_of_cvterm_id, object_id=>$plot_stock_id })->subject;
+
+                $field_layout_experiment = $plot_of_plant
+                ->search_related('nd_experiment_stocks')
+                ->search_related('nd_experiment')
+                ->find({'type.name' => 'field_layout' },
+                { join => 'type' });
+            }
 
             my $location_id = $field_layout_experiment->nd_geolocation_id;
             my $project = $field_layout_experiment->nd_experiment_projects->single ; #there should be one project linked with the field experiment
@@ -291,17 +304,37 @@ sub store {
     #For storing files where num_plots * num_traits > 100.
     my $coderef_large_file = sub {
 
-	my $rs = $schema->resultset('Stock::Stock')->search(
-	    {'type.name' => 'field_layout'},
-	    {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
-	     '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'], 
-	     '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
-	    }
-	);
-	my %data;
-	while (my $s = $rs->next()) { 
-	    $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
-	}
+        my $rs;
+        my %data;
+        if ($data_level eq 'plots') {
+            $rs = $schema->resultset('Stock::Stock')->search(
+                {'type.name' => 'field_layout'},
+                {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
+                    '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'],
+                    '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
+                }
+            );
+            while (my $s = $rs->next()) {
+                $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
+            }
+        } elsif ($data_level eq 'plants') {
+            my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+            my $plots_of_plants = $schema->resultset("Stock::StockRelationship")->search({ type_id=>$plot_of_cvterm_id });
+
+            while (my $p = $plots_of_plants->next()) {
+                my $plant = $p->object();
+                my $plot_of_plant = $p->subject();
+                my $field_layout_experiment = $plot_of_plant
+                ->search_related('nd_experiment_stocks')
+                ->search_related('nd_experiment')
+                ->find({'type.name' => 'field_layout' },
+                { join => 'type' });
+                my $location_id = $field_layout_experiment->nd_geolocation_id;
+                my $project = $field_layout_experiment->nd_experiment_projects->single ; #there should be one project linked with the field experiment
+                my $project_id = $project->project_id;
+                $data{$plant->uniquename()} = [$plant->stock_id(), $location_id, $project_id];
+            }
+        }
 
 	foreach my $plot_name (@plot_list) {
 

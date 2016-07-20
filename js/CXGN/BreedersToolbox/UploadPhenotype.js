@@ -82,15 +82,15 @@ jQuery( document ).ready( function() {
         }
     });
 
-	jQuery('#upload_phenotype_spreadsheet_dialog').on('hidden.bs.modal', function () {
-		location.reload();
-	})
-	jQuery('#upload_datacollector_phenotypes_dialog').on('hidden.bs.modal', function () {
-		location.reload();
-	})
-	jQuery('#upload_fieldbook_phenotypes_dialog').on('hidden.bs.modal', function () {
-		location.reload();
-	})
+//	jQuery('#upload_phenotype_spreadsheet_dialog').on('hidden.bs.modal', function () {
+//		location.reload();
+//	})
+//	jQuery('#upload_datacollector_phenotypes_dialog').on('hidden.bs.modal', function () {
+//		location.reload();
+//	})
+//	jQuery('#upload_fieldbook_phenotypes_dialog').on('hidden.bs.modal', function () {
+//		location.reload();
+//	})
 
 	jQuery('#delete_pheno_file_link').click( function() { 
 		alert('Deleted successfully.');

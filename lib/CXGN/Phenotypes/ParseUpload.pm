@@ -10,11 +10,12 @@ sub validate {
     my $type = shift;
     my $filename = shift;
     my $timestamp_included = shift;
+    my $data_level = shift;
     my $validate_result;
 
     foreach my $p ($self->plugins()) {
         if ($type eq $p->name()) {
-	     $validate_result = $p->validate($filename, $timestamp_included);
+	     $validate_result = $p->validate($filename, $timestamp_included, $data_level);
 	}
     }
     return $validate_result;

@@ -6,7 +6,7 @@ use Data::Dumper;
 use List::Util 'max';
 use Bio::Chado::Schema;
 use List::Util qw | any |;
-
+use CXGN::Trial;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -249,6 +249,18 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     $c->stash->{rest} = { plots => \@data };
 }
 
+sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_plants();
+
+    $c->stash->{rest} = { plants => \@data };
+}
+
 sub trial_design : Chained('trial') PathPart('design') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -388,6 +400,33 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 
 }
 
+sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $plants_per_plot = $c->req->param("plants_per_plot") || 8;
+
+    if (my $error = $self->delete_privileges_denied($c)) { 
+	$c->stash->{rest} = { error => $error };
+	return;
+    }
+
+    if (!$plants_per_plot || $plants_per_plot > 50) { 
+	$c->stash->{rest} = { error => "Plants per plot number is required and must be smaller than 20." };
+	return;
+    }
+
+    my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
+    
+    if ($t->create_plant_entities($plants_per_plot)) {
+        $c->stash->{rest} = {success => 1};
+        return;
+    } else {
+        $c->stash->{rest} = { error => "Error creating plant entries in controller." };
+    	return;
+    }
+    
+}
+
 
 sub delete_privileges_denied {
     my $self = shift;
@@ -407,7 +446,7 @@ sub delete_privileges_denied {
     if ( ($c->user->check_roles('submitter')) && ( $c->user->check_roles($breeding_programs->[0]->[1]))) {
 	return 0;
     }
-    return "You have insufficient privileges to delete a trial.";
+    return "You have insufficient privileges to modify or delete this trial.";
 }
 
 # loading field coordinates
@@ -487,5 +526,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
 
 
 }
+
+
 
 1;

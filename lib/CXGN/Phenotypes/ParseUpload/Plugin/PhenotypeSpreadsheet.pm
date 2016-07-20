@@ -3,6 +3,7 @@ package CXGN::Phenotypes::ParseUpload::Plugin::PhenotypeSpreadsheet;
 use Moose;
 #use File::Slurp;
 use Spreadsheet::ParseExcel;
+use JSON;
 
 sub name {
     return "phenotype spreadsheet";
@@ -12,6 +13,7 @@ sub validate {
     my $self = shift;
     my $filename = shift;
     my $timestamp_included = shift;
+    my $data_level = shift;
     my @file_lines;
     my $delimiter = ',';
     my $header;
@@ -38,23 +40,63 @@ sub validate {
         return \%parse_result;
     }
 
-    my $plot_name_head;
-    if ($worksheet->get_cell(0,0)) {
-      $plot_name_head  = $worksheet->get_cell(0,0)->value();
+    my $name_head;
+    if ($worksheet->get_cell(6,0)) {
+      $name_head  = $worksheet->get_cell(6,0)->value();
     }
 
-    if (!$plot_name_head || $plot_name_head ne 'plot_name') {
-        $parse_result{'error'} = "No plot_name in header.";
+    if (!$name_head || ($name_head ne 'plot_name' && $name_head ne 'plant_name')) {
+        $parse_result{'error'} = "No plot_name or plant_name in header.";
         print STDERR "No plot name in header\n";
         return \%parse_result;
     }
-    
-    for (my $row=1; $row<$row_max; $row++) {
-        for (my $col=1; $col<$col_max; $col++) {
+    if ($data_level eq 'plots' && ( $worksheet->get_cell(6,0)->value() ne 'plot_name' ||
+                                    $worksheet->get_cell(6,1)->value() ne 'accession_name' ||
+                                    $worksheet->get_cell(6,2)->value() ne 'plot_number' ||
+                                    $worksheet->get_cell(6,3)->value() ne 'block_number' ||
+                                    $worksheet->get_cell(6,4)->value() ne 'is_a_control' ||
+                                    $worksheet->get_cell(6,5)->value() ne 'rep_number' ) ) {
+        $parse_result{'error'} = "Data columns must be in this order for uploading Plots: plot_name, accession_name, plot_number, block_number, is_a_control,  rep_number. If you are uploading plant level phenotypes, make sure to select Data Level: Plants.";
+        print STDERR "Columns not correct and data_level is plots\n";
+        return \%parse_result;
+    }
+    if ($data_level eq 'plants' && ($worksheet->get_cell(6,0)->value() ne 'plant_name' ||
+                                    $worksheet->get_cell(6,1)->value() ne 'plot_name' ||
+                                    $worksheet->get_cell(6,2)->value() ne 'accession_name' ||
+                                    $worksheet->get_cell(6,3)->value() ne 'plot_number' ||
+                                    $worksheet->get_cell(6,4)->value() ne 'block_number' ||
+                                    $worksheet->get_cell(6,5)->value() ne 'is_a_control' ||
+                                    $worksheet->get_cell(6,6)->value() ne 'rep_number' ) ) {
+        $parse_result{'error'} = "Data columns must be in this order for uploading Plants: plant_name, plot_name, accession_name, plot_number, block_number, is_a_control, rep_number. If you are uploading plot level phenotypes, make sure to select Data Level: Plots.";
+        print STDERR "Columns not correct and data_level is plants\n";
+        return \%parse_result;
+    }
+
+    my @fixed_columns;
+    if ($name_head eq 'plot_name') {
+        @fixed_columns = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
+    } elsif ($name_head eq 'plant_name') {
+        @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+    }
+    my $num_fixed_col = scalar(@fixed_columns);
+
+    my $predefined_columns;
+    my $num_predef_col = 0;
+    my $json = JSON->new();
+    if ($worksheet->get_cell(4,1)) {
+      $predefined_columns  = $json->decode($worksheet->get_cell(4,1)->value());
+      $num_predef_col = scalar(@$predefined_columns);
+    }
+
+    my $num_col_before_traits = $num_fixed_col + $num_predef_col;
+
+    for (my $row=7; $row<$row_max; $row++) {
+        for (my $col=$num_col_before_traits; $col<=$col_max; $col++) {
             my $value_string = '';
             my $value = '';
             if ($worksheet->get_cell($row,$col)) {
                 $value_string = $worksheet->get_cell($row,$col)->value();
+                #print STDERR $value_string."\n";
                 my ($value, $timestamp) = split /,/, $value_string;
                 if (!$timestamp_included) {
                     if ($timestamp) {
@@ -108,19 +150,39 @@ sub parse {
     $excel_obj = $parser->parse($filename);
     if ( !$excel_obj ) {
         $parse_result{'error'} = $parser->error();
-        print STDERR "Could not open excel file";
+        print STDERR "validate error: ".$parser->error()."\n";
         return \%parse_result;
     }
 
-    $worksheet = ( $excel_obj->worksheets() )[0];
+    $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
+    my $name_head  = $worksheet->get_cell(6,0)->value();
+
+    my @fixed_columns;
+    if ($name_head eq 'plot_name') {
+        @fixed_columns = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
+    } elsif ($name_head eq 'plant_name') {
+        @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+    }
+    my $num_fixed_col = scalar(@fixed_columns);
+
+    my $predefined_columns;
+    my $num_predef_col = 0;
+    my $json = JSON->new();
+    if ($worksheet->get_cell(4,1)) {
+      $predefined_columns  = $json->decode($worksheet->get_cell(4,1)->value());
+      $num_predef_col = scalar(@$predefined_columns);
+    }
+
+    my $num_col_before_traits = $num_fixed_col + $num_predef_col;
+
     #get trait names and column numbers;
-    for my $col (1 .. $col_max) {
+    for my $col ($num_col_before_traits .. $col_max) {
         my $cell_val;
-        if ($worksheet->get_cell(0,$col)) {
-            $cell_val = $worksheet->get_cell(0,$col)->value();
+        if ($worksheet->get_cell(6,$col)) {
+            $cell_val = $worksheet->get_cell(6,$col)->value();
         }
         if ($cell_val) {
             $header_column_info{$cell_val} = $col;
@@ -128,7 +190,7 @@ sub parse {
         }
     }
 
-    for my $row ( 1 .. $row_max ) {
+    for my $row ( 7 .. $row_max ) {
         my $plot_name;
 
         if ($worksheet->get_cell($row,0)) {

@@ -46,11 +46,11 @@ sub old_trial_url : Path('/breeders_toolbox/trial') Args(1) {
 }
 
 sub trial_info : Chained('trial_init') PathPart('') Args(0) {
-    print STDERR "Check 1: ".localtime()."\n";
+    #print STDERR "Check 1: ".localtime()."\n";
     my $self = shift;
     my $c = shift;
     my $format = $c->req->param("format");
-    print STDERR $format;
+    #print STDERR $format;
     my $user = $c->user();
     if (!$user) {
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
@@ -91,6 +91,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{year} = $trial->get_year();
 
     $c->stash->{trial_id} = $c->stash->{trial_id};
+
+    $c->stash->{has_plant_entries} = $trial->has_plant_entries();
 
     $c->stash->{hidap_enabled} = $c->config->{hidap_enabled};
 
@@ -168,8 +170,18 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my $format = $c->req->param("format") || "xls";
+    my $data_level = $c->req->param("dataLevel") || "plots";
     my $timestamp_option = $c->req->param("timestamp") || 0;
     my $trait_list = $c->req->param("trait_list") || "";
+
+    if ($data_level eq 'plants') {
+        my $trial = $c->stash->{trial};
+        if (!$trial->has_plant_entries()) {
+            $c->stash->{template} = 'generic_message.mas';
+            $c->stash->{message} = "The requested trial (".$trial->get_name().") does not have plant entries. Please create the plant entries first.";
+            return;
+        }
+    }
 
     my @trait_list;
     if ($trait_list) {
@@ -212,6 +224,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 	    trait_list => \@trait_list,
 	    filename => $tempfile,
 	    format => $plugin,
+        data_level => $data_level,
         include_timestamp => $timestamp_option,
       });
 

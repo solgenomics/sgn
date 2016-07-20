@@ -56,6 +56,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_id = $c->req->param('trial_id');
+  my $data_level = $c->req->param('data_level') || 'plots';
   my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
   my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
 
@@ -77,6 +78,14 @@ sub create_fieldbook_from_trial_POST : Args(0) {
     $c->stash->{rest} = {error =>  "Trial does not exist with id $trial_id." };
     return;
   }
+    if ($data_level eq 'plants') {
+        my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+        if (!$trial->has_plant_entries()){
+            $c->stash->{rest} = {error =>  "Trial does not have plant entries. You must first create plant entries." };
+            return;
+        }
+    }
+
   my $dir = $c->tempfiles_subdir('/other');
   my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'other/excelXXXX');
   
@@ -89,6 +98,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         archive_path => $c->config->{archive_path},
         user_id => $c->user()->get_object()->get_sp_person_id(),
         user_name => $c->user()->get_object()->get_username(),
+        data_level => $data_level,
     });
 
     my $create_fieldbook_return = $create_fieldbook->download();
