@@ -7,6 +7,7 @@ use PDF::Create;
 use Bio::Chado::Schema::Result::Stock::Stock;
 use CXGN::Stock::StockBarcode;
 use Data::Dumper;
+use CXGN::Chado::Stock;
 
 BEGIN { extends "Catalyst::Controller"; }
 
@@ -90,8 +91,10 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $bottom_margin_mm = $c->req->param("bottom_margin");
     my $right_margin_mm = $c->req->param("right_margin");
     my $plot = $c->req->param("plots");
+    my $nursery = $c->req->param("nursery");
 
     print "MY PLOT VALUE: $plot\n";
+    print "MY Nursery VALUE: $nursery\n";
     # convert mm into pixels
     #
     my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } ($top_margin_mm,
@@ -116,7 +119,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
 
     my @plot_field_data;
-    my ($plot_data, @rows, $row, @field_data, @factors, @values, %hash, @plot_field_data_hash, $stockprop_name, $value, $fdata, $accession_name);
+    my ($plot_data, @rows, $row, @field_data, @factors, @values, %hash, @plot_field_data_hash, $stockprop_name, $value, $fdata, $accession_name, $female_parent, $male_parent, @parents_info, $parents);
 
     foreach my $name (@names) {
 
@@ -167,9 +170,19 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
   }
 
+  if ($nursery){
+    @parents_info = CXGN::Chado::Stock->new ($schema, $stock_id)->get_direct_parents();
+    $male_parent = $parents_info[0][1] || '';
+    $female_parent = $parents_info[1][1] || '';
+
+  }
+  print STDERR Dumper(@parents_info);
+  print "MY male $male_parent and female $female_parent\n";
+  $parents = $female_parent."/".$male_parent;
+  print "MY parents: $parents\n";
 # print STDERR Dumper(@found);
 
-  push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata];
+  push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents];
 	print "STOCK FOUND: $stock_id, $name, $accession_name.\n";
 
     }
@@ -212,8 +225,11 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 	#
   #####
   my $tempfile;
-  if ($plot){
+  if ($accession_name != ' '){
      $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[2]." ".$found[$i]->[3],  'large',  20  ]);
+  }
+  elsif ($parents != ' '){
+    $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[1]." ".$found[$i]->[4],  'large',  20  ]);
   }
   else {
   #####
