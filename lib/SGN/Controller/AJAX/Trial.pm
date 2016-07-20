@@ -94,11 +94,11 @@ sub generate_experimental_design_POST : Args(0) {
   if ($c->req->param('stock_list')) {
       @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
 #       my $data = $self->transform_stock_list($c, \@raw_stock_names);
-#    if (exists($data->{missing}) && ref($data->{missing}) && @{$data->{missing}} >0) { 
+#    if (exists($data->{missing}) && ref($data->{missing}) && @{$data->{missing}} >0) {
 #	$c->stash->{rest} = { error => "Some stocks were not found. Please edit the list and try again." };
 #	return;
 #    }
-#    if ($data->{transform} && @{$data->{transform}}>0) { 
+#    if ($data->{transform} && @{$data->{transform}}>0) {
 #	@stock_names = @{$data->{transform}};
 #    }
   }
@@ -114,7 +114,7 @@ sub generate_experimental_design_POST : Args(0) {
   my $row_number = $c->req->param('row_number');
   my $block_row_number=$c->req->param('row_number_per_block');
   my $block_col_number=$c->req->param('col_number_per_block');
-  my $col_number =$c->req->param('col_number'); 
+  my $col_number =$c->req->param('col_number');
 
   my $block_size =  $c->req->param('block_size');
   my $max_block_size =  $c->req->param('max_block_size');
@@ -129,7 +129,7 @@ sub generate_experimental_design_POST : Args(0) {
 
    print STDERR join "\n",$design_type;
    print STDERR "\n";
-   
+
    print STDERR join "\n",$block_number;
    print STDERR "\n";
 
@@ -341,11 +341,11 @@ sub verify_stock_list_POST : Args(0) {
   if ($c->req->param('stock_list')) {
     @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
     #my $data = $self->transform_stock_list($c, \@raw_stock_names);
-    #if (exists($data->{missing}) && ref($data->{missing}) && @{$data->{missing}} >0) { 
+    #if (exists($data->{missing}) && ref($data->{missing}) && @{$data->{missing}} >0) {
 #	$c->stash->{rest} = { error => "Some stocks were not found. Please edit the list and try again." };
 #	return;
  #   }
-  #  if ($data->{transform} && @{$data->{transform}}>0) { 
+  #  if ($data->{transform} && @{$data->{transform}}>0) {
 #	@stock_names = @{$data->{transform}};
  #   }
   }
@@ -354,7 +354,7 @@ sub verify_stock_list_POST : Args(0) {
     $c->stash->{rest} = {error => "No stock names supplied"};
     return;
   }
-  
+
 
   foreach my $stock_name (@stock_names) {
 
@@ -452,7 +452,7 @@ sub upload_trial_file_POST : Args(0) {
 
   print STDERR "Check 2: ".localtime();
 
-  if (!$c->user()) { 
+  if (!$c->user()) {
     print STDERR "User not logged in... not adding a crosses.\n";
     $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
     return;
@@ -497,12 +497,14 @@ sub upload_trial_file_POST : Args(0) {
 
     else {
       $parse_errors = $parser->get_parse_errors();
-      foreach my $error_string (@{$parse_errors}){
-	$return_error=$return_error.$error_string."<br>";
+      #print STDERR Dumper $parse_errors;
+
+      foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+          $return_error=$return_error.$error_string."<br>";
       }
     }
 
-    $c->stash->{rest} = {error_string => $return_error,};
+    $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}};
     return;
   }
 
@@ -530,7 +532,7 @@ sub upload_trial_file_POST : Args(0) {
       $c->stash->{rest} = {error => "Error saving trial in the database $_"};
       $error = 1;
   };
-  
+
   print STDERR "Check 5: ".localtime();
 
   if ($error) {return;}
@@ -682,7 +684,7 @@ sub _add_trial_layout_to_database {
     } else {
       die ("no stocks found matching $stock_name");
     }
-    my $unique_plot_name = 
+    my $unique_plot_name =
       $project_name."_".$stock_name."_plot_".$plot_name."_block_".$block_number."_rep_".$rep_number."_".$year."_".$location;
     my $plot = $schema->resultset("Stock::Stock")
       ->find_or_create({
@@ -862,7 +864,7 @@ sub _formatted_string_from_error_hash_by_type {
 
 
 ### The following was moved to TrialMetadata.
-# sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) { 
+# sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
 #     my $self = shift;
 #     my $c = shift;
 #     my $trial_id = shift;
@@ -871,11 +873,11 @@ sub _formatted_string_from_error_hash_by_type {
 #     $c->stash->{trial_id} = $trial_id;
 #     $c->stash->{trial} = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
 
-#     if (!$c->stash->{trial}) { 
+#     if (!$c->stash->{trial}) {
 # 	$c->stash->{rest} = { error => "The specified trial with id $trial_id does not exist" };
 # 	return;
 #     }
-    
+
 # }
 
 
@@ -890,33 +892,33 @@ sub _formatted_string_from_error_hash_by_type {
 
 # =cut
 
-# sub delete_trial_by_file : Path('/breeders/trial/delete/file') Args(1) { 
+# sub delete_trial_by_file : Path('/breeders/trial/delete/file') Args(1) {
 #     my $self = shift;
 #     my $c = shift;
-    
+
 #     my $file_id = shift;
-    
-#     if (!$c->user()) { 
+
+#     if (!$c->user()) {
 # 	$c->stash->{rest} = { error => 'You must be logged in to delete a trial' };
 # 	return;
 #     }
 
-#     if (! ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))) { 
+#     if (! ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))) {
 # 	$c->stash->{rest} = { error => 'You do not have sufficient privileges to delete a trial.' };
 #     }
 
-#     my $del = CXGN::BreedersToolbox::Delete->new( 
+#     my $del = CXGN::BreedersToolbox::Delete->new(
 # 	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
 # 	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
 # 	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
 # 	);
-	
-#     if ($del->delete_experiments_by_file($c->user->get_object()->get_sp_person_id(), $file_id)) { 
+
+#     if ($del->delete_experiments_by_file($c->user->get_object()->get_sp_person_id(), $file_id)) {
 # 	$c->stash->{rest} = { success => 1 };
 #     }
-#     else { 
+#     else {
 # 	$c->stash->{rest} = { error => "The trial information could not be removed from the database." };
-#     }    
+#     }
 # }
 
 
@@ -931,7 +933,7 @@ sub _formatted_string_from_error_hash_by_type {
 
 # =cut
 
-# sub delete_trial_by_trial_id : Path('/breeders/trial/delete/id') Args(1) { 
+# sub delete_trial_by_trial_id : Path('/breeders/trial/delete/id') Args(1) {
 #     my $self = shift;
 #     my $c = shift;
 
@@ -939,11 +941,11 @@ sub _formatted_string_from_error_hash_by_type {
 
 #     print STDERR "DELETING trial $trial_id\n";
 
-#     if (!$c->user()) { 
+#     if (!$c->user()) {
 # 	$c->stash->{rest} = { error => 'You must be logged in to delete a trial' };
 # 	return;
 #     }
-    
+
 #     my $user_id = $c->user->get_object()->get_sp_person_id();
 
 #     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -954,17 +956,17 @@ sub _formatted_string_from_error_hash_by_type {
 
 #     my $breeding_program_name = $breeding_program_rs->first()->name();
 
-#     my $trial_organization_id = $schema->resultset("Project::Projectprop")->search( 
-# 	{ 
-# 	    project_id => $trial_id, 
-# 	    type_id=>$breeding_program_id 
+#     my $trial_organization_id = $schema->resultset("Project::Projectprop")->search(
+# 	{
+# 	    project_id => $trial_id,
+# 	    type_id=>$breeding_program_id
 # 	});
 
-#     if (! ($c->user->check_roles('curator') || ( $c->user->check_roles('submitter') && $c->roles($breeding_program_name) ))) { 
+#     if (! ($c->user->check_roles('curator') || ( $c->user->check_roles('submitter') && $c->roles($breeding_program_name) ))) {
 # 	$c->stash->{rest} = { error => 'You do not have sufficient privileges to delete a trial.' };
 #     }
-    
-# #    my $del = CXGN::BreedersToolbox::Delete->new( 
+
+# #    my $del = CXGN::BreedersToolbox::Delete->new(
 # #	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
 # #	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
 # #	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
@@ -989,7 +991,7 @@ sub _formatted_string_from_error_hash_by_type {
 
 # =cut
 
-# sub delete_phenotype_data_by_trial_id : Path('/breeders/trial/phenotype/delete/id') Args(1) { 
+# sub delete_phenotype_data_by_trial_id : Path('/breeders/trial/phenotype/delete/id') Args(1) {
 #     my $self = shift;
 #     my $c = shift;
 
@@ -997,11 +999,11 @@ sub _formatted_string_from_error_hash_by_type {
 
 #     print STDERR "DELETING phenotypes of trial $trial_id\n";
 
-#     if (!$c->user()) { 
+#     if (!$c->user()) {
 # 	$c->stash->{rest} = { error => 'You must be logged in to delete a trial' };
 # 	return;
 #     }
-    
+
 #     my $user_id = $c->user->get_object()->get_sp_person_id();
 
 #     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -1012,28 +1014,28 @@ sub _formatted_string_from_error_hash_by_type {
 
 #     my $breeding_program_name = $breeding_program_rs->first()->name();
 
-#     my $trial_organization_id = $schema->resultset("Project::Projectprop")->search( 
-# 	{ 
-# 	    project_id => $trial_id, 
-# 	    type_id=>$breeding_program_id 
+#     my $trial_organization_id = $schema->resultset("Project::Projectprop")->search(
+# 	{
+# 	    project_id => $trial_id,
+# 	    type_id=>$breeding_program_id
 # 	});
 
-#     if (! ($c->user->check_roles('curator') || ( $c->user->check_roles('submitter') && $c->roles($breeding_program_name) ))) { 
+#     if (! ($c->user->check_roles('curator') || ( $c->user->check_roles('submitter') && $c->roles($breeding_program_name) ))) {
 # 	$c->stash->{rest} = { error => 'You do not have sufficient privileges to delete a trial.' };
 #     }
-    
+
 #     my $t = CXGN::Trial->new( { trial_id => $trial_id, bcs_schema => $c->dbic_schema("Bio::Chado::Schema") });
-    
+
 #     my $error = $t->delete_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
 
 #     print STDERR "ERROR DELETING METADATA: $error\n";
 #     my $error = $t->delete_phenotype_data($trial_id);
 
 #     print STDERR "ERROR DELETING PHENOTYPES: $error\n";
-#     if ($error) { 
+#     if ($error) {
 # 	$c->stash->{rest} = { error => $error };
 #     }
-#     else { 
+#     else {
 # 	$c->stash->{rest} = { success => "1" };
 #     }
 # }
@@ -1049,7 +1051,7 @@ sub _formatted_string_from_error_hash_by_type {
 
 # =cut
 
-# sub delete_trial_layout_by_trial_id : Path('/breeders/trial/layout/delete/id') Args(1) { 
+# sub delete_trial_layout_by_trial_id : Path('/breeders/trial/layout/delete/id') Args(1) {
 #     my $self = shift;
 #     my $c = shift;
 
@@ -1057,11 +1059,11 @@ sub _formatted_string_from_error_hash_by_type {
 
 #     print STDERR "DELETING trial layout $trial_id\n";
 
-#     if (!$c->user()) { 
+#     if (!$c->user()) {
 # 	$c->stash->{rest} = { error => 'You must be logged in to delete a trial layout' };
 # 	return;
 #     }
-    
+
 #     my $user_id = $c->user->get_object()->get_sp_person_id();
 
 #     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -1072,17 +1074,17 @@ sub _formatted_string_from_error_hash_by_type {
 
 #     my $breeding_program_name = $breeding_program_rs->first()->name();
 
-#     my $trial_organization_id = $schema->resultset("Project::Projectprop")->search( 
-# 	{ 
-# 	    project_id => $trial_id, 
-# 	    type_id=>$breeding_program_id 
+#     my $trial_organization_id = $schema->resultset("Project::Projectprop")->search(
+# 	{
+# 	    project_id => $trial_id,
+# 	    type_id=>$breeding_program_id
 # 	});
 
-#     if (! ($c->user->check_roles('curator') || ( $c->user->check_roles('submitter') && $c->roles($breeding_program_name) ))) { 
+#     if (! ($c->user->check_roles('curator') || ( $c->user->check_roles('submitter') && $c->roles($breeding_program_name) ))) {
 # 	$c->stash->{rest} = { error => 'You do not have sufficient privileges to delete a trial.' };
 #     }
-    
-#     #my $del = CXGN::BreedersToolbox::Delete->new( 
+
+#     #my $del = CXGN::BreedersToolbox::Delete->new(
 # #	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
 # #	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
 # #	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
@@ -1092,7 +1094,7 @@ sub _formatted_string_from_error_hash_by_type {
 #     #my $error =  $del->delete_field_layout_by_trial($trial_id);
 
 #     my $error = $t->delete_field_layout();
-#     if ($error) { 
+#     if ($error) {
 # 	$c->stash->{rest} = { error => $error };
 #     }
 #     $c->stash->{rest} = { success => 1 };
@@ -1103,24 +1105,24 @@ sub _formatted_string_from_error_hash_by_type {
 
 # sub trial_description : Local() ActionClass('REST');
 
-# sub trial_description_GET : Chained('trial') PathPart('description') Args(0) { 
+# sub trial_description_GET : Chained('trial') PathPart('description') Args(0) {
 #     my $self = shift;
 #     my $c = shift;
-    
+
 #     my $trial = $c->stash->{trial};
 
 #     print STDERR "TRIAL: ".$trial->get_description()."\n";
 
 #     $c->stash->{rest} = { description => $trial->get_description() };
-   
+
 # }
 
-# sub trial_description_POST : Chained('trial') PathPart('description') Args(1) {  
+# sub trial_description_POST : Chained('trial') PathPart('description') Args(1) {
 #     my $self = shift;
 #     my $c = shift;
 #     my $description = shift;
-    
-#     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) { 
+
+#     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
 # 	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
 # 	return;
 #     }
@@ -1132,17 +1134,17 @@ sub _formatted_string_from_error_hash_by_type {
 
 #     my $breeding_program = $p->get_breeding_programs_by_trial($trial_id);
 
-#     if (! ($c->user() &&  ($c->user->check_roles("curator") || $c->user->check_roles($breeding_program)))) { 
+#     if (! ($c->user() &&  ($c->user->check_roles("curator") || $c->user->check_roles($breeding_program)))) {
 # 	$c->stash->{rest} = { error => "You need to be logged in with sufficient privileges to change the description of a trial." };
 # 	return;
 #     }
-    
+
 #     $trial->set_description($description);
 
 #     $c->stash->{rest} = { success => 1 };
 # }
 
-# # sub get_trial_type :Path('/ajax/breeders/trial/type') Args(1) { 
+# # sub get_trial_type :Path('/ajax/breeders/trial/type') Args(1) {
 # #     my $self = shift;
 # #     my $c = shift;
 # #     my $trial_id = shift;
@@ -1152,26 +1154,26 @@ sub _formatted_string_from_error_hash_by_type {
 # #     $c->stash->{rest} = { type => $t->get_project_type() };
 
 # # }
-    
+
 
 # sub trial_location : Local() ActionClass('REST');
 
-# sub trial_location_GET : Chained('trial') PathPart('location') Args(0) { 
+# sub trial_location_GET : Chained('trial') PathPart('location') Args(0) {
 #     my $self = shift;
 #     my $c = shift;
-    
+
 #     my $t = $c->stash->{trial};
 
 #     $c->stash->{rest} = { location => [ $t->get_location()->[0], $t->get_location()->[1] ] };
-    
+
 # }
 
-# sub trial_location_POST : Chained('trial') PathPart('location') Args(1) { 
+# sub trial_location_POST : Chained('trial') PathPart('location') Args(1) {
 #     my $self = shift;
 #     my $c = shift;
 #     my $location_id = shift;
 
-#     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) { 
+#     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
 # 	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
 # 	return;
 #     }
@@ -1189,7 +1191,7 @@ sub _formatted_string_from_error_hash_by_type {
 
 #     # add new one
 #     #
-#     $t->add_location($location_id);
+#     $t->set_location($location_id);
 
 #     $c->stash->{rest} =  { message => "Successfully stored location for trial $trial_id",
 # 			   trial_id => $trial_id };
@@ -1198,26 +1200,26 @@ sub _formatted_string_from_error_hash_by_type {
 
 # sub trial_year : Local()  ActionClass('REST');
 
-# sub trial_year_GET : Chained('trial') PathPart('year') Args(0) { 
+# sub trial_year_GET : Chained('trial') PathPart('year') Args(0) {
 #     my $self = shift;
 #     my $c = shift;
 
 #     my $t = $c->stash->{trial};
-    
+
 #     $c->stash->{rest} = { year => $t->get_year() };
-    
+
 # }
 
-# sub trial_year_POST : Chained('trial') PathPart('year') Args(1) { 
+# sub trial_year_POST : Chained('trial') PathPart('year') Args(1) {
 #     my $self = shift;
 #     my $c = shift;
 #     my $year = shift;
-    
-#     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) { 
+
+#     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
 # 	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
 # 	return;
 #     }
-    
+
 #     my $t = $c->stash->{trial};
 
 #     $t->set_year($year);
@@ -1227,37 +1229,33 @@ sub _formatted_string_from_error_hash_by_type {
 
 # sub trial_type : Local() ActionClass('REST');
 
-# sub trial_type_GET : Chained('trial') PathPart('type') Args(0) { 
+# sub trial_type_GET : Chained('trial') PathPart('type') Args(0) {
 #     my $self = shift;
 #     my $c = shift;
 
 #     my $t = $c->stash->{trial};
-    
+
 #     my $type = $t->get_project_type();
 #     $c->stash->{rest} = { type => $type };
 # }
 
-# sub trial_type_POST : Chained('trial') PathPart('type') Args(1) { 
+# sub trial_type_POST : Chained('trial') PathPart('type') Args(1) {
 #     my $self = shift;
 #     my $c = shift;
 #     my $type = shift;
 
-#     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) { 
+#     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
 # 	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
 # 	return;
 #     }
 
 #     my $t = $c->stash->{trial};
-#     my $trial_id = $c->stash->{trial_id}; 
+#     my $trial_id = $c->stash->{trial_id};
 
-#     # remove previous associations
-#     #
-#     $t->dissociate_project_type();
-    
 #     # set the new trial type
 #     #
-#     $t->associate_project_type($type);
-    
+#     $t->set_project_type($type);
+
 #     $c->stash->{rest} = { success => 1 };
 # }
 

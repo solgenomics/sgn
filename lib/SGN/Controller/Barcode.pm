@@ -136,21 +136,15 @@ sub barcode {
     my $text_width = gdLargeFont->width()*length($text);
     $barcode->string(gdLargeFont,int(($barcode->width()-$text_width)/2),10,$text, $barcode->colorAllocate(0, 0, 0));
     return $barcode;
-
 }
-
-
-
-
     
-
 #deprecated
 sub code128_png :Path('/barcode/code128png') :Args(2) { 
     my $self = shift;
     my $c = shift;
     my $identifier = shift;
     my $text = shift;
-    
+     
     $text =~ s/\+/ /g;
     $identifier =~ s/\+/ /g;
 
@@ -199,7 +193,7 @@ sub barcode_element : Path('/barcode/element/') :Args(2) {
 
     print STDERR "Creating barcode with width ".($barcode->width)." and height $height\n";
     $barcode_slice->copy($barcode, 0, 0, 0, 0, $barcode->width, $height);
-
+    
     $c->res->headers->content_type('image/png');
     
     $c->res->body($barcode_slice->png());    
@@ -216,7 +210,7 @@ sub qrcode_png :Path('/barcode/qrcodepng') :Args(2) {
 
     my $bc = GD::Barcode::QRcode->new($link, { Ecc => 'L', Version=>2, ModuleSize => 2 });
     my $image = $bc->plot();
-
+    
     $c->res->headers->content_type('image/png');    
     $c->res->body($image->png());			      
 }

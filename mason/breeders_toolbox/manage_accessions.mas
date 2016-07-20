@@ -1,11 +1,10 @@
 
 <%args>
 $accessions
-$population_groups
 $preferred_species => ""
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery','jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery.dataTables' ] &>
+<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery.dataTables-bootstrap-min' ] &>
 
 <& /page/page_title.mas, title=>"Manage Accessions" &>
 
@@ -28,12 +27,9 @@ $preferred_species => ""
 
 </&>
 
-% #### Will not appear unless populations exist - in use with ricebase
-% if (scalar(@$population_groups) > 0) {
-<&| /page/info_section.mas, title=>"Populations", collapsible=>1, collapsed=>0, &>
-    <& /breeders_toolbox/accession_population_groups.mas, population_groups=>$population_groups&>
+<&| /page/info_section.mas, title=>"Populations", id=> "manage_accessions_populations", collapsible=>1, collapsed=>1, subtitle=>"<i>Maximize to see population info</i>"&>
+<div class="panel-group" id="accordion"></div>
 </&>
-% }
 
 </div>
 

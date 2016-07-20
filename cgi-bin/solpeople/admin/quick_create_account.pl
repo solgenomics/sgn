@@ -14,12 +14,10 @@ my $logged_in_user=CXGN::People::Person->new($dbh, $logged_in_person_id);
 my $logged_in_person_id=$logged_in_user->get_sp_person_id();
 my $logged_in_username=$logged_in_user->get_first_name()." ".$logged_in_user->get_last_name();
 my $logged_in_user_type=$logged_in_user->get_user_type();
-if($logged_in_user_type eq 'curator')
-{
+if($logged_in_user_type eq 'curator') {
     my($username,$password,$confirm_password,$email_address,$new_user_type,$first_name,$last_name)=$page->get_arguments(qw(username password confirm_password email_address user_type first_name last_name));
     my $new_user_login=CXGN::People::Login->new($dbh);
-    if($username)
-    {
+    if($username) {
         my @fail=();
         if(length($username)<7){push @fail,"Username is too short. Username must be 7 or more characters";} 
         my $existing_login=CXGN::People::Login->get_login($dbh, $username);
@@ -51,8 +49,7 @@ print <<END_HTML;
 END_HTML
             $page->footer();
         }
-        else
-        {
+        else {
             $new_user_login->set_username(encode_entities($username));
             $new_user_login->set_password($password);
             $new_user_login->set_private_email(encode_entities($email_address));
@@ -88,8 +85,8 @@ print <<END_HTML;
         <tr><td colspan="2"><b>Curators may use this form to create accounts for new users.<br />&nbsp;</b></td></tr>
         <tr><td>First Name</td><td><input type="text" name="first_name" size="20" value=""></td></tr>
         <tr><td>Last Name</td><td><input type="text" name="last_name" size="20" value=""></td></tr>
-        <tr><td>Username</td><td><input type="text" name="username" size="12" value=""></td></tr>
-        <tr><td>Password</td><td><input type="password" name="password" size="12" value=""></td></tr>
+        <tr><td>Username (at least 7 characters)</td><td><input type="text" name="username" size="12" value=""></td></tr>
+        <tr><td>Password (at least 7 characters)</td><td><input type="password" name="password" size="12" value=""></td></tr>
         <tr><td>Confirm Password</td><td><input type="password" name="confirm_password" size="12" value=""></td></tr>
         <tr><td>Private Email Address</td><td><input type="text" name="confirm_email" size="40" value=""></td></tr>
         <tr><td>User Type</td><td><input type="text" name="user_type" size="10" value=""></td></tr>
@@ -100,6 +97,7 @@ print <<END_HTML;
 
 END_HTML
     }
+    $page->footer();
 
 }
 else

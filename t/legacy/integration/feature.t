@@ -47,7 +47,7 @@ for my $url ( "/feature/".$poly_feature->name.'/details',  "/feature/".$poly_fea
     like( $mech->findvalue( '/html/body//div[@class="info_table_fieldval"]'), qr/polypeptide/i, "Found the polypeptide cvterm");
 
     ok($mech->exists(
-        sprintf '/html/body//div[@class="info_table_fieldval"]/a[@href="/chado/cvterm?cvterm_id=%s"]',
+        sprintf '/html/body//div[@class="info_table_fieldval"]/a[@href="/cvterm/%s/view"]',
         $poly_cvterm->cvterm_id
        ),'the proper cvterm id link exists');
 

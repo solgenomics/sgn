@@ -84,7 +84,7 @@ sub TEST_CVTERM_LINK : Tests {
     my $f = $self->{feature};
     my ($id,$name) = ($f->type->cvterm_id,$f->type->name);
     $name =~ s/_/ /g;
-    my $link = qq{<a href="/chado/cvterm?cvterm_id=$id">$name</a>};
+    my $link = qq{<a href="/cvterm/$id/view">$name</a>};
     is(cvterm_link($f->type),$link, 'cvterm link');
 }
 

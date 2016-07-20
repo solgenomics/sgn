@@ -54,6 +54,7 @@ my @secondary_dbxrefs = $cvterm->get_secondary_dbxrefs();
 
 my @def_accessions = map( $_->get_db_name . ":" . $_->get_accession , @def_dbxrefs);
 
+
 my @qtl_pops = CXGN::Phenome::Qtl::Tools->new()->is_from_qtl( $cvterm_id );
 my @qtl_data;
 
@@ -73,7 +74,7 @@ if ( @qtl_pops )
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => [qw [CXGN.AJAX.Ontology jquery CXGN.Phenome.Qtl] ] &>
+<& /util/import_javascript.mas, classes => [qw [CXGN.AJAX.Ontology jquery CXGN.Phenome.Qtl jquery jquery.dataTables] ] &>
 
 
 <script language="javascript">
@@ -81,13 +82,13 @@ if ( @qtl_pops )
       jQuery.ajax( { url:      a.url+"?cvterm_id=<% $cvterm_id %>" ,
                      dataType: "json",
                      success: function(response) {
-                         jQuery("#"+a.content_id).html(response.html);
-                         jQuery("#"+a.count_id).html( response.count + ' ' + a.inflect[ response.count == 1 ? 0 : 1 ]);
-                         if( response.error )
+                              //jQuery("#"+a.content_id).html(response.html);
+                              jQuery("#"+a.count_id).html( response.count + ' ' + a.inflect[ response.count == 1 ? 0 : 1 ]);
+                       if( response.error )  {
                              alert(response.error);
+                      }
                      }
-                   }
-                 );
+                  });
   }
 </script>
 
@@ -151,45 +152,76 @@ LOAD...
 
 <& /ontology/embedded_browser.mas, cvterm => $cvterm &>
 
+
+
 <&| /page/info_section.mas,
     title=> "Annotated loci",
-    subtitle => '<span id="loci_count"></span>',
+    subtitle => '',
     collapsible => 1,
-    collapsed=>1
+    collapsed   => 1,
 &>
-<div id="loci_div">
-   [Loading...]
-<script language="javascript">
-  recursiveAnnotations({
-                         url:        "/ajax/cvterm/recursive_loci",
-                         content_id: "loci_div",
-                         count_id:   "loci_count",
-                         inflect:    [ 'locus', 'loci' ],
-                       });
+
+<table id="loci_data" class="display">
+<thead>
+  <tr>
+    <th>Organism</th>
+    <th>Locus symbol</th>
+    <th>Locus name</th>
+  </tr>
+</thead>
+
+</table>
+
+<script>
+
+  jQuery(document).ready(function () {
+  
+    jQuery('#loci_data').DataTable( { 
+      'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/annotated_loci',
+     });
+  });
+
 </script>
-</div>
+
 
 </&>
+
+
 
 <&| /page/info_section.mas,
        title=> "Annotated stocks",
        collapsible => 1,
        collapsed=>1,
-       subtitle => '<span id="stocks_count"></span>',
+       subtitle => '',
+       hide_if_empty => 1,
  &>
-<div id="stocks_div">
-   [Loading...]
-<script language="javascript">
-  recursiveAnnotations({
-                         url:        "/ajax/cvterm/recursive_stocks",
-                         content_id: "stocks_div",
-                         count_id:   "stocks_count",
-                         inflect:    [ 'stock', 'stocks' ],
-                       });
+
+<table id="annotated_stocks_data" class="display">
+<thead>
+  <tr>
+     <th>Type</th>
+    <th>Stock name</th>
+    <th>Description</th>
+  </tr>
+</thead>
+
+</table>
+
+<script>
+
+  jQuery(document).ready(function () {
+  
+    jQuery('#annotated_stocks_data').DataTable( { 
+      'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/annotated_stocks',
+     });
+  });
+
 </script>
-</div>
+
 
 </&>
+
+
 
 % if ( @qtl_pops )
 % {
@@ -206,25 +238,41 @@ LOAD...
   </&>
 % }
 
+
+
 <&| /page/info_section.mas,
       title       => "Phenotyped accessions",
       collapsible => 1,
       collapsed=>1,
-      subtitle    => '<span id="pheno_count"></span>',
+      subtitle    => '' ,
 &>
-<div id="pheno_div">
-   [Loading...]
-<script language="javascript">
-  recursiveAnnotations({
-                         url:        "/ajax/cvterm/phenotyped_stocks",
-                         content_id: "pheno_div",
-                         count_id:   "pheno_count",
-                         inflect:    [ 'accession', 'accessions' ],
-                       });
+
+
+<table id="phen_stocks_data" class="display">
+<thead>
+  <tr>
+     <th>Type</th>
+    <th>Stock name</th>
+    <th>Description</th>
+  </tr>
+</thead>
+
+</table>
+
+<script>
+
+  jQuery(document).ready(function () {
+  
+    jQuery('#phen_stocks_data').DataTable( { 
+      'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/phenotyped_stocks',
+     });
+  });
+
 </script>
-</div>
+
 
 </&>
+
 
 
 <&| /page/info_section.mas,
@@ -233,18 +281,40 @@ LOAD...
       collapsed=>1,
       subtitle    => '<span id="trial_count"></span>',
 &>
-<div id="trial_div">
-   [Loading...]
+
 <script language="javascript">
-  recursiveAnnotations({
-                         url:        "/ajax/cvterm/trials",
+    recursiveAnnotations({
+                         url:        "/cvterm/"+<% $cvterm_id %>+"/datatables/direct_trials",
                          content_id: "trial_div",
                          count_id:   "trial_count",
                          inflect:    [ 'trial', 'trials' ],
                        });
 </script>
-</div>
+
+
+
+<table id="trial_data" class="display">
+<thead>
+  <tr>
+     <th>Trial name</th>
+     <th>Description</th>
+  </tr>
+</thead>
+
+</table>
+
+<script>
+
+  jQuery(document).ready(function () {
+  
+    jQuery('#trial_data').DataTable( { 
+      'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/direct_trials',
+     });
+  });
+
+</script>
 
 </&>
+
 
 <& /qtl/waitmessage.mas &>
