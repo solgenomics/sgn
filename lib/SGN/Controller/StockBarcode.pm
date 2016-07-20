@@ -93,8 +93,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $plot = $c->req->param("plots");
     my $nursery = $c->req->param("nursery");
 
-    print "MY PLOT VALUE: $plot\n";
-    print "MY Nursery VALUE: $nursery\n";
     # convert mm into pixels
     #
     my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } ($top_margin_mm,
@@ -117,9 +115,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
-
-    my @plot_field_data;
-    my ($plot_data, @rows, $row, @field_data, @factors, @values, %hash, @plot_field_data_hash, $stockprop_name, $value, $fdata, $accession_name, $female_parent, $male_parent, @parents_info, $parents);
+    my ($row, $stockprop_name, $value, $fdata, $accession_name, $female_parent, $male_parent, @parents_info, $parents);
 
     foreach my $name (@names) {
 
@@ -150,12 +146,14 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
      $stockprop_hash{$stock_id}->{$stockprop_name} = $value;
 
   }
-  print "rep: $stockprop_hash{$stock_id}->{'replicate'}\n";
-  print "block: $stockprop_hash{$stock_id}->{'block'}\n";
-  print "plot: $stockprop_hash{$stock_id}->{'plot number'}\n";
+  $row = $stockprop_hash{$stock_id}->{'replicate'};
+  # print "TTTTTTTTTTTT.......: $row\n";
+  # print "rep: $stockprop_hash{$stock_id}->{'replicate'}\n";
+  # print "block: $stockprop_hash{$stock_id}->{'block'}\n";
+  # print "plot: $stockprop_hash{$stock_id}->{'plot number'}\n";
   $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."block:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
-  print "MY FDATA: $fdata\n";
-  print STDERR Dumper \%stockprop_hash;
+  # print "MY FDATA: $fdata\n";
+  # print STDERR Dumper \%stockprop_hash;
 
   my $h_acc = $dbh->prepare("select stock.uniquename AS acesssion_name FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
 
@@ -225,16 +223,17 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 	#
   #####
   my $tempfile;
-  if ($accession_name != ' '){
-     $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[2]." ".$found[$i]->[3],  'large',  20  ]);
-  }
-  elsif ($parents != ' '){
-    $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[1]." ".$found[$i]->[4],  'large',  20  ]);
-  }
-  else {
-  #####
-	 $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[0], $found[$i]->[1], 'large',  20  ]);
-  }
+   if (defined $row){
+     print "ACCESSION IS NOT EMPTY........ $row\n";
+      $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[2]." ".$found[$i]->[3],  'large',  20  ]);
+   }
+   elsif ($female_parent =~ m/^\d+/ || $female_parent =~ m/^\w+/){
+     $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[1]." ".$found[$i]->[4],  'large',  20  ]);
+   }
+   else {
+  # #####
+	  $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[0], $found[$i]->[1], 'large',  20  ]);
+   }
   my $image = $pdf->image($tempfile);
 	print STDERR "IMAGE: ".Data::Dumper::Dumper($image);
 
