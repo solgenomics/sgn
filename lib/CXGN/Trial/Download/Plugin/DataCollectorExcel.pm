@@ -64,7 +64,7 @@ sub download {
     $ws1->write(26, 0, 'Identifier'); $ws1->write(26, 1, 'to be done: doi');
     $ws1->write(27, 0, 'Language'); $ws1->write(27, 1, 'en');
     $ws1->write(28, 0, 'Relation'); $ws1->write(28, 1, 'NA');
-    $ws1->write(29, 0, 'License'); $ws1->write(29, 1, '© International Potato Center');
+    $ws1->write(29, 0, 'License'); $ws1->write(29, 1, "\x{a9} International Potato Center");
     $ws1->write(30, 0, 'Audience'); $ws1->write(30, 1, 'Breeder');
     $ws1->write(31, 0, 'Provenance'); $ws1->write(31, 1, 'original');
     $ws1->write(32, 0, 'Embargo till'); $ws1->write(32, 1, '2012-12-31');
@@ -171,11 +171,11 @@ sub download {
     # add information to Weather_data (sheet5)
     #
     $ws5->write(0, 0, 'Date of weather observation', $bold); $ws5->write(0, 1, 'Hour of weather observation', $bold);
-    $ws5->write(0, 2, 'Rainfall (mm)', $bold); $ws5->write(0, 3, 'Average temperature (°C)', $bold);
-    $ws5->write(0, 4, 'Minimum temperature (°C)', $bold); $ws5->write(0, 5, 'Maximum temperature (°C)', $bold);
-    $ws5->write(0, 6, 'Temperature amplitude °C ', $bold); $ws5->write(0, 7, 'Relative humidity (%)', $bold);
+    $ws5->write(0, 2, 'Rainfall (mm)', $bold); $ws5->write(0, 3, "Average temperature (\x{b0}C)", $bold);
+    $ws5->write(0, 4, "Minimum temperature (\x{b0}C)", $bold); $ws5->write(0, 5, "Maximum temperature (\x{b0}C)", $bold);
+    $ws5->write(0, 6, "Temperature amplitude \x{b0}C ", $bold); $ws5->write(0, 7, 'Relative humidity (%)', $bold);
     $ws5->write(0, 8, 'Solar Radiation (w/m2)', $bold); $ws5->write(0, 9, 'Barometric Pressure (mm)', $bold);
-    $ws5->write(0, 10, 'Dew point (°C) ', $bold); $ws5->write(0, 11, 'Wind speed (m/s)', $bold);
+    $ws5->write(0, 10, "Dew point (\x{b0}C) ", $bold); $ws5->write(0, 11, 'Wind speed (m/s)', $bold);
     $ws5->write(0, 12, 'Gust speed', $bold); $ws5->write(0, 13, 'Wind direction', $bold);
 
     # add information to Crop_management (sheet6)
@@ -281,23 +281,52 @@ sub download {
    #$ws->write(1, 2, 'Operator');       $ws->write(1, 3, "Enter operator here");
    #$ws->write(2, 2, 'Date');           $ws->write(2, 3, "Enter date here");
    #$ws->data_validation(2,3, { validate => "date" });
+    
+    my $num_col_before_traits;
+    if ($self->data_level eq 'plots') {
+        $num_col_before_traits = 6;
+        my @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
+        for(my $n=0; $n<@column_headers; $n++) { 
+            $ws->write(0, $n, $column_headers[$n]);
+        }
+        
+        my @ordered_plots = sort { $a <=> $b} keys(%design);        
+        for(my $n=0; $n<@ordered_plots; $n++) { 
+            my %design_info = %{$design{$ordered_plots[$n]}};
 
+            $ws->write($n+1, 0, $design_info{plot_name});
+            $ws->write($n+1, 1, $design_info{accession_name});
+            $ws->write($n+1, 2, $design_info{plot_number});
+            $ws->write($n+1, 3, $design_info{block_number});
+            $ws->write($n+1, 4, $design_info{is_a_control});
+            $ws->write($n+1, 5, $design_info{rep_number});
+        }
+    } elsif ($self->data_level eq 'plants') {
+        $num_col_before_traits = 7;
+        my @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+        for(my $n=0; $n<@column_headers; $n++) { 
+            $ws->write(0, $n, $column_headers[$n]);
+        }
+        
+        my @ordered_plots = sort { $a <=> $b} keys(%design);
+        my $line = 1;
+        for(my $n=0; $n<@ordered_plots; $n++) { 
+            my %design_info = %{$design{$ordered_plots[$n]}};
 
-    my @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
-    for(my $n=0; $n<@column_headers; $n++) {
-	$ws->write(0, $n, $column_headers[$n]);
+            my $plant_names = $design_info{plant_names};
+            foreach (@$plant_names) {
+                $ws->write($line, 0, $_);
+                $ws->write($line, 1, $design_info{plot_name});
+                $ws->write($line, 2, $design_info{accession_name});
+                $ws->write($line, 3, $design_info{plot_number});
+                $ws->write($line, 4, $design_info{block_number});
+                $ws->write($line, 5, $design_info{is_a_control});
+                $ws->write($line, 6, $design_info{rep_number});
+                $line++;
+            }
+        }
     }
-    my @ordered_plots = sort { $a <=> $b} keys(%design);
-    for(my $n=0; $n<@ordered_plots; $n++) {
-	my %design_info = %{$design{$ordered_plots[$n]}};
-
-	$ws->write($n+1, 0, $design_info{plot_name});
-	$ws->write($n+1, 1, $design_info{accession_name});
-	$ws->write($n+1, 2, $design_info{plot_number});
-	$ws->write($n+1, 3, $design_info{block_number});
-	$ws->write($n+1, 4, $design_info{is_a_control});
-	$ws->write($n+1, 5, $design_info{rep_number});
-    }
+    
 
     # write traits and format trait columns
     #
@@ -305,40 +334,42 @@ sub download {
 
     my $transform = $lt->transform($schema, "traits_2_trait_ids", \@trait_list);
 
-    if (@{$transform->{missing}}>0) {
-	print STDERR "Warning: Some traits could not be found. ".join(",",@{$transform->{missing}})."\n";
+    if (@{$transform->{missing}}>0) { 
+        print STDERR "Warning: Some traits could not be found. ".join(",",@{$transform->{missing}})."\n";
     }
     my @trait_ids = @{$transform->{transform}};
 
     my %cvinfo = ();
-    foreach my $t (@trait_ids) {
-	my $trait = CXGN::Trait->new( { bcs_schema=> $schema, cvterm_id => $t });
-	$cvinfo{$trait->display_name()} = $trait;
+    foreach my $t (@trait_ids) { 
+        my $trait = CXGN::Trait->new( { bcs_schema=> $schema, cvterm_id => $t });
+        $cvinfo{$trait->display_name()} = $trait;
     }
 
-    for (my $i = 0; $i < @trait_list; $i++) {
-	if (exists($cvinfo{$trait_list[$i]})) {
-	    $ws->write(0, $i+6, $cvinfo{$trait_list[$i]}->display_name());
-	}
-	else {
-	    print STDERR "Skipping output of trait $trait_list[$i] because it does not exist\n";
-	}
+    for (my $i = 0; $i < @trait_list; $i++) { 
+        #if (exists($cvinfo{$trait_list[$i]})) { 
+            #$ws->write(0, $i+6, $cvinfo{$trait_list[$i]}->display_name());
+            $ws->write(0, $i+$num_col_before_traits, $trait_list[$i]);
+        #}
+        #else { 
+        #    print STDERR "Skipping output of trait $trait_list[$i] because it does not exist\n";
+        #}
 
-	my $plot_count = scalar(keys(%design));
+        my $plot_count = scalar(keys(%design));
 
-	for (my $n = 0; $n < $plot_count; $n++) {
-	    my $format = $cvinfo{$trait_list[$i]}->format();
-	    if ($format eq "numeric") {
-		$ws->data_validation($n+1, $i+1, { validate => "any" });
-	    }
-	    elsif ($format =~ /\,/) {  # is a list
-		$ws->data_validation($n+1, $i+1,
-				     {
-					 validate => 'list',
-					 value    => [ split ",", $format ]
-				     });
-	    }
-	}
+        for (my $n = 1; $n < $plot_count; $n++) {
+            if ($cvinfo{$trait_list[$i]}) {
+                my $format = $cvinfo{$trait_list[$i]}->format();
+                if ($format eq "numeric") { 
+                    $ws->data_validation($n, $i+$num_col_before_traits, { validate => "any" });
+                }
+                elsif ($format =~ /\,/) {  # is a list
+                    $ws->data_validation($n, $i+$num_col_before_traits, {
+                        validate => 'list',
+                        value    => [ split ",", $format ]
+                    });
+                }
+            }
+        }
     }
     $workbook->close();
     print STDERR "DataCollector File created!\n";

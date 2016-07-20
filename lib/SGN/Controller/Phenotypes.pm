@@ -54,6 +54,23 @@ sub submission_guidelines :Path('/phenotype/submission_guide') Args(0) {
 
 }
 
+sub delete_uploaded_phenotype_files : Path('/breeders/phenotyping/delete/') Args(1) {
+     my $self  =shift;
+     my $c = shift;
+     my $json = new JSON;
+     my $file_id = shift;
+     my $decoded;
+     if ($file_id){
+		 $decoded = $json->allow_nonref->utf8->decode($file_id);
+     }
+	#print STDERR Dumper($file_id);
+	print "File ID: $file_id\n"; 
+     my $dbh = $c->dbc->dbh();
+     my $h = $dbh->prepare("delete from metadata.md_files where file_id=?;");
+     $h->execute($decoded);
+     print STDERR "Layout deleted successfully.\n";
+	$c->response->redirect('/breeders/phenotyping');	
+}
 
 #
 return 1;

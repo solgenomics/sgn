@@ -199,7 +199,8 @@ sub get_phenotype_info {
     my $rep_type_id = $self->get_stockprop_type_id("replicate");
     my $block_number_type_id = $self -> get_stockprop_type_id("block");
     my $year_type_id = $self->get_projectprop_type_id("project year");
-
+    my $plot_type_id = $self->get_stock_type_id("plot");
+    my $accession_type_id = $self->get_stock_type_id("accession");
 
     my @where_clause = ();
     if ($accession_sql) { push @where_clause,  "stock.stock_id in ($accession_sql)"; }
@@ -210,6 +211,7 @@ sub get_phenotype_info {
 
     if (@where_clause>0) {
 	$where_clause .= $rep_type_id ? "WHERE (stockprop.type_id = $rep_type_id OR stockprop.type_id IS NULL) " : "WHERE stockprop.type_id IS NULL";
+	$where_clause .= "AND plot.type_id = $plot_type_id AND stock.type_id = $accession_type_id";
 	$where_clause .= $block_number_type_id  ? " AND (block_number.type_id = $block_number_type_id OR block_number.type_id IS NULL)" : " AND block_number.type_id IS NULL";
 	$where_clause .= $year_type_id ? " AND projectprop.type_id = $year_type_id" :"" ;
 	$where_clause .= " AND " . (join (" AND " , @where_clause));
@@ -218,7 +220,7 @@ sub get_phenotype_info {
     }
 
     my $order_clause = " order by project.name, plot.uniquename";
-    my $q = "SELECT projectprop.value, project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, db.name ||  ':' || dbxref.accession AS accession, stockprop.value, block_number.value AS rep, cvterm.cvterm_id, project.project_id, nd_geolocation.nd_geolocation_id, stock.stock_id, plot.stock_id
+    my $q = "SELECT projectprop.value, project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, db.name ||  ':' || dbxref.accession AS accession, stockprop.value, block_number.value AS rep, cvterm.cvterm_id, project.project_id, nd_geolocation.nd_geolocation_id, stock.stock_id, plot.stock_id, phenotype.uniquename
              FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)
              JOIN stock ON (object_id=stock.stock_id)
              LEFT JOIN stockprop ON (plot.stock_id=stockprop.stock_id)
@@ -242,8 +244,8 @@ sub get_phenotype_info {
     $h->execute();
 
     my $result = [];
-    while (my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id) = $h->fetchrow_array()) {
-	push @$result, [ $year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id ];
+    while (my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename) = $h->fetchrow_array()) {
+	push @$result, [ $year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename ];
 
     }
     #print STDERR Dumper $result;
@@ -305,9 +307,10 @@ sub get_extended_phenotype_info_matrix {
     my $accession_sql = shift;
     my $trial_sql = shift;
     my $trait_sql = shift;
+    my $include_timestamp = shift // 0;
 
     my $data = $self->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
-    #data contains [$year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id]
+    #data contains [$year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename]
 
     my %plot_data;
     my %traits;
@@ -315,28 +318,39 @@ sub get_extended_phenotype_info_matrix {
     print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
     foreach my $d (@$data) {
 
-	my ($year, $project_name, $stock_name, $location, $trait, $trait_data, $plot, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id) = @$d;
+        my ($year, $project_name, $stock_name, $location, $trait, $trait_data, $plot, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename) = @$d;
 
-	my $cvterm = $d->[4]."|".$d->[8];
-	if (!defined($rep)) { $rep = ""; }
-	$plot_data{$plot}->{$cvterm} = $trait_data;
-	$plot_data{$plot}->{metadata} = {
-	    rep => $rep,
-	    studyName => $project_name,
-	    germplasmName => $stock_name,
-	    locationName => $location,
-	    blockNumber => $block_number,
-	    plotName => $plot,
-	    cvterm => $cvterm,
-	    trait_data => $trait_data,
-	    year => $year,
-      cvterm_id => $trait_id,
-      studyDbId => $project_id,
-      locationDbId => $location_id,
-      germplasmDbId => $stock_id,
-      plotDbId => $plot_id
-	};
-	$traits{$cvterm}++;
+        my $cvterm = $d->[4]."|".$d->[8];
+        if ($include_timestamp) {
+            my ($p1, $p2) = split /date: /, $phenotype_uniquename;
+            my ($timestamp, $p3) = split /  operator/, $p2;
+            if( $timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+                $plot_data{$plot}->{$cvterm} = "$trait_data,$timestamp";
+            } else {
+                $plot_data{$plot}->{$cvterm} = $trait_data;
+            }
+        } else {
+            $plot_data{$plot}->{$cvterm} = $trait_data;
+        }
+
+        if (!defined($rep)) { $rep = ""; }
+        $plot_data{$plot}->{metadata} = {
+            rep => $rep,
+            studyName => $project_name,
+            germplasmName => $stock_name,
+            locationName => $location,
+            blockNumber => $block_number,
+            plotName => $plot,
+            cvterm => $cvterm,
+            trait_data => $trait_data,
+            year => $year,
+            cvterm_id => $trait_id,
+            studyDbId => $project_id,
+            locationDbId => $location_id,
+            germplasmDbId => $stock_id,
+            plotDbId => $plot_id
+        };
+        $traits{$cvterm}++;
     }
 
     my @info = ();
@@ -411,7 +425,6 @@ sub get_genotype_info {
       push @result, [ $uniquename, $genotype_string ];
       $protocol_name = $name;
     }
-    print STDERR "Protocol Name: $protocol_name\n";
 
     return {
       protocol_name => $protocol_name,

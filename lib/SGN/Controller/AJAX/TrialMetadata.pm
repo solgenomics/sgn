@@ -6,7 +6,7 @@ use Data::Dumper;
 use List::Util 'max';
 use Bio::Chado::Schema;
 use List::Util qw | any |;
-
+use CXGN::Trial;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -87,292 +87,77 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     $c->stash->{rest} = { message => "Successfully deleted trial data.", success => 1 };
 }
 
-sub trial_description : Chained('trial') PathPart('description') Args(0) ActionClass('REST') {};
+sub trial_details : Chained('trial') PathPart('details') Args(0) ActionClass('REST') {};
 
-sub trial_description_GET   {
+sub trial_details_GET   {
     my $self = shift;
     my $c = shift;
 
     my $trial = $c->stash->{trial};
 
-    $c->stash->{rest} = { description => $trial->get_description() };
+    $c->stash->{rest} = { details => $trial->get_details() };
 
 }
 
-sub trial_description_POST  {
+sub trial_details_POST  {
     my $self = shift;
     my $c = shift;
-    my $description = $c->req->param('description');
+
+    my @categories = $c->req->param("categories[]");
+
+    my $details = {};
+    foreach my $category (@categories) {
+      $details->{$category} = $c->req->param("details[$category]");
+    }
+
+    if (!%{$details}) {
+      $c->stash->{rest} = { error => "No values were edited, so no changes could be made for this trial's details." };
+      return;
+    }
+    else {
+    print STDERR "Here are the deets: " . Dumper($details) . "\n";
+    }
+
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
-	return;
+	    $c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial details of this trial.' };
+	    return;
     }
 
     my $trial_id = $c->stash->{trial_id};
     my $trial = $c->stash->{trial};
-
-    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->stash->{schema} });
-
-    my $breeding_program = $p->get_breeding_programs_by_trial($trial_id);
+    my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $c->stash->{schema} });
+    my $breeding_program = $program_object->get_breeding_programs_by_trial($trial_id);
 
     if (! ($c->user() &&  ($c->user->check_roles("curator") || $c->user->check_roles($breeding_program)))) {
-	$c->stash->{rest} = { error => "You need to be logged in with sufficient privileges to change the description of a trial." };
-	return;
+	    $c->stash->{rest} = { error => "You need to be logged in with sufficient privileges to change the details of this trial." };
+	    return;
     }
 
-    $trial->set_description($description);
-
-    $c->stash->{rest} = { success => 1 };
-}
-
-
-sub trial_name : Chained('trial') PathPart('names') Args(0) ActionClass('REST') {};
-
-sub trial_name_POST {
-	my $self = shift;
-	my $c = shift;
-	#my $name = shift;
-	my $name = $c->req->param("names");
-
-	print STDERR "TRIAL NAME POST with $name\n";
-	if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-		$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial name of this trial.' };
-		return;
-   	}
-
- 	my $trial_id = $c->stash->{trial_id};
-    	my $trial = $c->stash->{trial};
-
-      	my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
-
-	my $breeding_program = $p->get_breeding_programs_by_trial($trial_id);
-
-    	if (! ($c->user() &&  ($c->user->check_roles("curator") || $c->user->check_roles($breeding_program)))) {
-		$c->stash->{rest} = { error => "You need to be logged in with sufficient privileges to change the name of a trial." };
-		return;
-    	}
-
-	$trial->set_name($name);
-
-    $c->stash->{rest} = { success => 1 };
-}
-
-sub trial_name_GET {
-	my $self = shift;
-	my $c = shift;
-
-	my $trial = $c->stash->{trial};
-
-	$c->stash->{rest} = {names => $trial->get_name() };
-
-}
-
-
-
-
-
-sub harvest_date  : Chained('trial') PathPart('harvest_date') Args(0) ActionClass('REST') {};
-
-
-sub harvest_date_POST {
-    my $self = shift;
-    my $c = shift;
-    my $harvest_date = $c->req->param("harvest_date");
-
-    print STDERR "HARVEST DATE POST with $harvest_date\n";
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the harvest date of this trial.' };
-	return;
-    }
-
-    my $trial_id = $c->stash->{trial_id};
-    my $trial = $c->stash->{trial};
-
+    # set each new detail that is defined
     eval {
-
-	$c->stash->{trial}->set_harvest_date($harvest_date);
+      if ($details->{name}) { $trial->set_name($details->{name}); }
+      if ($details->{breeding_program}) { $trial->set_breeding_program($details->{breeding_program}); }
+      if ($details->{location}) { $trial->set_location($details->{location}); }
+      if ($details->{year}) { $trial->set_year($details->{year}); }
+      if ($details->{type}) { $trial->set_project_type($details->{type}); }
+      if ($details->{planting_date}) {
+        if ($details->{planting_date} eq 'remove') { $trial->remove_planting_date($trial->get_planting_date()); }
+        else { $trial->set_planting_date($details->{planting_date}); }
+      }
+      if ($details->{harvest_date}) {
+        if ($details->{harvest_date} eq 'remove') { $trial->remove_harvest_date($trial->get_harvest_date()); }
+        else { $trial->set_harvest_date($details->{harvest_date}); }
+      }
+      if ($details->{description}) { $trial->set_description($details->{description}); }
     };
+
     if ($@) {
-	$c->stash->{rest} = { error => "An error occurred setting the harvest date $harvest_date $@" };
+	    $c->stash->{rest} = { error => "An error occurred setting the new trial details: $@" };
     }
     else {
-	$c->stash->{rest} = { success => 1 };
+	    $c->stash->{rest} = { success => 1 };
     }
 }
-
-
-sub harvest_date_GET {
-    my $self = shift;
-    my $c = shift;
-
-    print STDERR "HARVEST DATE GET\n";
-    my $harvest_date = $c->stash->{trial}->get_harvest_date();
-
-    $c->stash->{rest} = { harvest_date => $harvest_date };
-}
-
-
-sub planting_date  : Chained('trial') PathPart('planting_date') Args(0) ActionClass('REST') {};
-
-
-sub planting_date_POST {
-    my $self = shift;
-    my $c = shift;
-    my $planting_date = $c->req->param("planting_date");
-
-    print STDERR "PLANTING DATE POST with $planting_date\n";
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the planting date of this trial.' };
-	return;
-    }
-
-    my $trial_id = $c->stash->{trial_id};
-    my $trial = $c->stash->{trial};
-
-    eval {
-
-	$c->stash->{trial}->set_planting_date($planting_date);
-    };
-    if ($@) {
-	$c->stash->{rest} = { error => "An error occurred setting the planting date $planting_date $@" };
-    }
-    else {
-	$c->stash->{rest} = { success => 1 };
-    }
-}
-
-
-sub planting_date_GET {
-    my $self = shift;
-    my $c = shift;
-
-    print STDERR "PLANTING DATE GET\n";
-    my $planting_date = $c->stash->{trial}->get_planting_date();
-
-    $c->stash->{rest} = { planting_date => $planting_date };
-}
-
-# sub get_trial_type :Path('/ajax/breeders/trial/type') Args(1) {
-#     my $self = shift;
-#     my $c = shift;
-#     my $trial_id = shift;
-
-#     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id } );
-
-#     $c->stash->{rest} = { type => $t->get_project_type() };
-
-# }
-
-
-sub trial_location : Local() ActionClass('REST');
-
-sub trial_location_GET : Chained('trial') PathPart('location') Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    my $t = $c->stash->{trial};
-
-    $c->stash->{rest} = { location => [ $t->get_location()->[0], $t->get_location()->[1] ] };
-
-}
-
-sub trial_location_POST : Chained('trial') PathPart('location') Args(1) {
-    my $self = shift;
-    my $c = shift;
-    my $location_id = shift;
-
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
-	return;
-    }
-
-    my $t = $c->stash->{trial};
-    my $trial_id = $c->stash->{trial_id};
-
-    # remove old location
-    #
-    $t->remove_location($t->get_location()->[0]);
-
-    # add new one
-    #
-    $t->add_location($location_id);
-
-    $c->stash->{rest} =  { message => "Successfully stored location for trial $trial_id",
-			   trial_id => $trial_id };
-
-}
-
-sub trial_year : Local()  ActionClass('REST');
-
-sub trial_year_GET : Chained('trial') PathPart('year') Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    my $t = $c->stash->{trial};
-
-    $c->stash->{rest} = { year => $t->get_year() };
-
-}
-
-sub trial_year_POST : Chained('trial') PathPart('year') Args(1) {
-    my $self = shift;
-    my $c = shift;
-    my $year = shift;
-
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
-	return;
-    }
-
-    my $t = $c->stash->{trial};
-
-    eval {
-	$t->set_year($year);
-    };
-    if ($@) {
-	$c->stash->{rest} = { error => "An error occurred. $@" };
-	return;
-    }
-
-    $c->stash->{rest} = { message => "Year set successfully" };
-}
-
-sub trial_type : Local() ActionClass('REST');
-
-sub trial_type_GET : Chained('trial') PathPart('type') Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    my $t = $c->stash->{trial};
-
-    my $type = $t->get_project_type();
-    $c->stash->{rest} = { type => $type };
-}
-
-sub trial_type_POST : Chained('trial') PathPart('type') Args(1) {
-    my $self = shift;
-    my $c = shift;
-    my $type = shift;
-
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
-	return;
-    }
-
-    my $t = $c->stash->{trial};
-    my $trial_id = $c->stash->{trial_id};
-
-    # remove previous associations
-    #
-    $t->dissociate_project_type();
-
-    # set the new trial type
-    #
-    $t->associate_project_type($type);
-
-    $c->stash->{rest} = { success => 1 };
-}
-
 
 sub traits_assayed : Chained('trial') PathPart('traits_assayed') Args(0) {
     my $self = shift;
@@ -390,14 +175,14 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $dbh = $c->dbc->dbh();
     my $trial_id = $c->stash->{trial_id};
 
-    my $h = $dbh->prepare("SELECT cvterm.name, cvterm.cvterm_id, count(phenotype.value), to_char(avg(phenotype.value::real), 'FM999990.990'), to_char(max(phenotype.value::real), 'FM999990.990'), to_char(min(phenotype.value::real), 'FM999990.990'), to_char(stddev(phenotype.value::real), 'FM999990.990') FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and phenotype.value~? GROUP BY cvterm.name, cvterm.cvterm_id;");
+    my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value), to_char(avg(phenotype.value::real), 'FM999990.990'), to_char(max(phenotype.value::real), 'FM999990.990'), to_char(min(phenotype.value::real), 'FM999990.990'), to_char(stddev(phenotype.value::real), 'FM999990.990') FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id WHERE project_id=? and phenotype.value~? GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     $h->execute($c->stash->{trial_id}, $numeric_regex );
 
     my @phenotype_data;
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev) = $h->fetchrow_array()) {
-	push @phenotype_data, [ qq{<a href="/chado/cvterm?cvterm_id=$trait_id">$trait</a>}, $average, $min, $max, $stddev, $count, qq{<a href="/breeders/trial/$trial_id/trait/$trait_id"><span class="glyphicon glyphicon-stats"></span></a>} ];
+	push @phenotype_data, [ qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} ];
     }
 
     $c->stash->{rest} = { data => \@phenotype_data };
@@ -433,8 +218,9 @@ sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
-    my @data = $layout->get_accession_names();
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_accessions();
 
     $c->stash->{rest} = { accessions => \@data };
 }
@@ -444,8 +230,9 @@ sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
-    my @data = $layout->get_control_names();
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_controls();
 
     $c->stash->{rest} = { accessions => \@data };
 }
@@ -455,10 +242,23 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
-    my @data = $layout->get_plot_names();
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_plots();
 
     $c->stash->{rest} = { plots => \@data };
+}
+
+sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_plants();
+
+    $c->stash->{rest} = { plants => \@data };
 }
 
 sub trial_design : Chained('trial') PathPart('design') Args(0) {
@@ -600,6 +400,33 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 
 }
 
+sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $plants_per_plot = $c->req->param("plants_per_plot") || 8;
+
+    if (my $error = $self->delete_privileges_denied($c)) { 
+	$c->stash->{rest} = { error => $error };
+	return;
+    }
+
+    if (!$plants_per_plot || $plants_per_plot > 50) { 
+	$c->stash->{rest} = { error => "Plants per plot number is required and must be smaller than 20." };
+	return;
+    }
+
+    my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
+    
+    if ($t->create_plant_entities($plants_per_plot)) {
+        $c->stash->{rest} = {success => 1};
+        return;
+    } else {
+        $c->stash->{rest} = { error => "Error creating plant entries in controller." };
+    	return;
+    }
+    
+}
+
 
 sub delete_privileges_denied {
     my $self = shift;
@@ -619,7 +446,7 @@ sub delete_privileges_denied {
     if ( ($c->user->check_roles('submitter')) && ( $c->user->check_roles($breeding_programs->[0]->[1]))) {
 	return 0;
     }
-    return "You have insufficient privileges to delete a trial.";
+    return "You have insufficient privileges to modify or delete this trial.";
 }
 
 # loading field coordinates
@@ -699,5 +526,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
 
 
 }
+
+
 
 1;

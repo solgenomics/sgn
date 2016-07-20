@@ -260,22 +260,35 @@ sub projects_links {
 	unless ($dummy_name || $dummy_desc || !$pr_name )
 	{   
 	    $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
-	    
-	    if (!$is_gs || $is_gs !~ /genomic selection/)
+	 
+	    if ($is_gs =~ /genomic selection|training population/)
 	    {
-		my $pheno_file = $self->grep_file($c->stash->{solgs_cache_dir}, "phenotype_data_${pr_id}.txt");		 		 
-		if (-e $pheno_file)
-		{
-		    $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
-		}
-		else 
-		{		 
-		    $has_phenotype = 1;
-		}
+		$has_phenotype = 1; 
 	    }
 	    else 
 	    {
-		$has_phenotype = 1;
+		my $pheno_file = $self->grep_file($c->stash->{solgs_cache_dir}, "phenotype_data_${pr_id}.txt");
+		if (!-e $pheno_file)
+		{
+		    $has_phenotype = $c->model("solGS::solGS")->has_phenotype($pr_id);
+
+		    if (!$has_phenotype)
+		    {
+			my $cache_dir = $c->stash->{solgs_cache_dir};
+			my $file_cache  = Cache::File->new(cache_root => $cache_dir);
+			$file_cache->purge();
+
+			my $key        = "phenotype_data_" . $pr_id;
+			my $pheno_file = $file_cache->get($key);
+
+			no warnings 'uninitialized';
+
+			$pheno_file = catfile($cache_dir, "phenotype_data_${pr_id}.txt");
+
+			write_file($pheno_file, "");
+			$file_cache->set($key, $pheno_file, '5 days');
+		    }
+		}
 	    }
 	}
 
@@ -1729,8 +1742,6 @@ sub download_prediction_GEBVs :Path('/solgs/download/prediction/model') Args(4) 
  
     $self->get_trait_details($c, $trait_id);
     $c->stash->{pop_id} = $pop_id;
-
-    my $path = $c->req->path; my $referer= $c->req->referer;
    
     my $identifier = $pop_id . "_" . $prediction_id;
     $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
@@ -1932,11 +1943,36 @@ sub model_parameters {
 }
 
 
+sub solgs_details_trait :Path('/solgs/details/trait/') Args(1) {
+    my ($self, $c, $trait_id) = @_;
+    
+    $trait_id = $c->req->param('trait_id') if !$trait_id;
+    
+    my $ret->{status} = undef;
+    
+    if ($trait_id) 
+    {
+	$self->get_trait_details($c, $trait_id);
+	$ret->{name} = $c->stash->{trait_name};
+	$ret->{abbr} = $c->stash->{trait_abbr};
+	$ret->{id}   = $c->stash->{trait_id};
+	$ret->{status}     = 1;
+    }
+
+    $ret = to_json($ret);
+       
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+
+}
+
+
 sub get_trait_details {
     my ($self, $c, $trait_id) = @_;
 
-    my $trait_name = $c->model('solGS::solGS')->trait_name($trait_id);
-  
+    $trait_id = $c->stash->{trait_id} if !$trait_id;
+
+    my $trait_name = $c->model('solGS::solGS')->trait_name($trait_id); 
     my $abbr = $self->abbreviate_term($trait_name);
    
     $c->stash->{trait_id}   = $trait_id;
@@ -2693,7 +2729,7 @@ sub build_multiple_traits_models {
 
     my $pop_id = $c->stash->{pop_id};
     my $prediction_id = $c->stash->{prediction_pop_id};
-   
+    
     my @selected_traits = $c->req->param('trait_id');
 
     if (!@selected_traits) 
@@ -2701,11 +2737,11 @@ sub build_multiple_traits_models {
 	my $params = $c->stash->{analysis_profile};
 	my $args = $params->{arguments};
 
+	my $json = JSON->new();
+	$args = $json->decode($args);
+
 	if (keys %{$args}) 
-	{
-	    my $json = JSON->new();
-	    $args = $json->decode($args);
-      
+	{     
 	    foreach my $k ( keys %{$args} ) 
 	    {
 		if ($k eq 'trait_id') 
@@ -2811,8 +2847,8 @@ sub build_multiple_traits_models {
 			
                             $traits    .= $r->[0];
                             $traits    .= "\t" unless ($i == $#selected_traits);
-                            $trait_ids .= $trait_id;                                                        
-                        }
+                            $trait_ids .= $trait_id;    
+			}
                     }
                 }
             }
@@ -4246,8 +4282,26 @@ sub all_gs_traits_list {
 	}
     }
 
-    $traits = $c->model('solGS::solGS')->all_gs_traits();
+    try
+    {
+        $traits = $c->model('solGS::solGS')->all_gs_traits();
+    }
+    catch
+    {
+
+	if ($_ =~ /materialized view \"all_gs_traits\" has not been populated/)
+        {           
+            try
+            {
+                $c->model('solGS::solGS')->refresh_materialized_view_all_gs_traits();
+                $c->model('solGS::solGS')->update_matview_public($mv_name);
+                $traits = $c->model('solGS::solGS')->all_gs_traits();
+            };
+        }
+    };
+
     $c->stash->{all_gs_traits} = $traits;
+
 }
 
 
@@ -5219,7 +5273,7 @@ sub run_r_script {
 	    };
             
 	    $c->stash->{script_error} = "$r_script";
-	}   
+	};  
     }
    
 }

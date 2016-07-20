@@ -185,20 +185,18 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     if ($c->stash->{dependency})
     {
     	my $dependency = $c->stash->{dependency};
-    	print STDERR "\nanalysis profile: depenencies... $dependency ..\n"; 
     	my $report_file = $c->stash->{report_file};
     	nstore $output_details,  $report_file 
     	    or croak "check_analysis_status: $! serializing output_details to $report_file";	
     }
     else  
     {
-	print STDERR "\nanalysis profile: running analysis report call..\n";
 	my $output_details_file = $c->controller('solGS::solGS')->create_tempfile($c, 'analysis_report_args');
 	nstore $output_details, $output_details_file 
 	    or croak "check_analysis_status: $! serializing output_details to $output_details_file";
 	
 	my $cmd = 'mx-run solGS::AnalysisReport --output_details_file ' . $output_details_file;
-	print STDERR "analysis report cmd: $cmd\n";
+
 	my $async =  CXGN::Tools::Run->run_async($cmd,
 			     {
 				 working_dir      => $c->stash->{solgs_tempfiles_dir},
@@ -545,7 +543,7 @@ sub run_analysis {
     my @selected_traits = @{$c->stash->{selected_traits}} if $c->stash->{selected_traits};
  
     if ($analysis_page =~ /solgs\/analyze\/traits\//) 
-    {  	
+    {  
 	$c->controller('solGS::solGS')->build_multiple_traits_models($c);	
     } 
     elsif ($analysis_page =~  /solgs\/models\/combined\/trials\// )

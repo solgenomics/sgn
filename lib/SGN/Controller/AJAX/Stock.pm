@@ -318,7 +318,7 @@ sub display_ontologies_GET  {
         $db_accession = $cvterm_id if $db_name eq $trait_db_name;
         my $url = $_->cvterm->dbxref->db->urlprefix . $_->cvterm->dbxref->db->url;
         my $cvterm_link =
-            qq |<a href="/chado/cvterm?cvterm_id=$cvterm_id" target="blank">$cvterm_name</a>|;
+            qq |<a href="/cvterm/$cvterm_id/view" target="blank">$cvterm_name</a>|;
         # the stock_cvtermprop objects have all the evidence and metadata for the annotation
         my $props = $_->stock_cvtermprops;
         my ($relationship_id) = $props->search( { type_id =>$rel_cvterm->cvterm_id} )->single ? $props->search( { type_id =>$rel_cvterm->cvterm_id} )->single->value : undef; # should be 1 relationship per annotation
@@ -964,16 +964,18 @@ sub add_stock_parent_GET :Args(0) {
     print STDERR "PARENT_NAME = $parent_name STOCK_ID $stock_id  $cvterm_name\n";
 
     my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id });
-    my $parent = $schema->resultset("Stock::Stock")->find( { name => $parent_name } );
+    
+   my $parent = $schema->resultset("Stock::Stock")->find( { uniquename => $parent_name } );
+
+
 
     if (!$stock) { 
 	$c->stash->{rest} = { error => "Stock with $stock_id is not found in the database!"}; 
 	return; 
     }
     if (!$parent) { 
-	$c->stash->{rest} = { error => "Stock with name $parent_name is not in the database!"}; 
-	return; 
-    }
+	$c->stash->{rest} = { error => "Stock with uniquename $parent_name was not found, Either this is not unique name or it is not in the database!"}; 
+	return;     }
 
     my $new_row = $schema->resultset("Stock::StockRelationship")->new( 
 	{ 
@@ -1250,7 +1252,7 @@ sub get_stock_trait_list :Chained('/stock/get_stock') PathPart('datatables/trait
     my @formatted_list; 
     foreach my $t (@trait_list) { 
 	print STDERR Dumper($t);
-	push @formatted_list, [ '<a href="/chado/cvterm?cvterm_id='.$t->[0].'">'.$t->[1].'</a>', $t->[2], sprintf("%3.1f", $t->[3]), sprintf("%3.1f", $t->[4]) ];
+	push @formatted_list, [ '<a href="/cvterm/'.$t->[0].'/view">'.$t->[1].'</a>', $t->[2], sprintf("%3.1f", $t->[3]), sprintf("%3.1f", $t->[4]) ];
     }
     print STDERR Dumper(\@formatted_list);
 
@@ -1269,7 +1271,7 @@ sub get_phenotypes_by_stock_and_trial :Chained('/stock/get_stock') PathPart('dat
     
     my @phenotypes;
     while (my ($stock_id, $stock_name, $cvterm_id, $cvterm_name, $avg, $stddev) = $h->fetchrow_array()) { 
-	push @phenotypes, [ "<a href=\"/chado/cvterm?action=view&cvterm_id=$cvterm_id\">$cvterm_name</a>", sprintf("%.2f", $avg), sprintf("%.2f", $stddev) ];
+	push @phenotypes, [ "<a href=\"/cvterm/$cvterm_id/view\">$cvterm_name</a>", sprintf("%.2f", $avg), sprintf("%.2f", $stddev) ];
     }
     
     $c->stash->{rest} = { data => \@phenotypes };      

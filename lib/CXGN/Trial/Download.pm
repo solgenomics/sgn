@@ -52,6 +52,12 @@ has 'trial_download_logfile' => (
 ## defines the plugin with which the download will be processed
 has 'format' => (isa => 'Str', is => 'ro', required => 1);
 
+has 'data_level' => (isa => 'Str | Undef', is => 'ro', default => 'plots');
+
+has 'sample_number' => (isa => 'Int | Undef', is => 'ro', default => 0);
+
+has 'predefined_columns' => (isa => 'HashRef | Undef', is => 'ro');
+
 has 'trait_list' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_trait_list' );
 
 has 'filename' => (isa => 'Str', is => 'ro',
@@ -60,6 +66,9 @@ has 'filename' => (isa => 'Str', is => 'ro',
 		  );
 
 has 'file_metadata' => (isa => 'Str', is => 'rw', predicate => 'has_file_metadata');
+
+## used when downloading phenotypes as either csv or xls.
+has 'include_timestamp' => (isa => 'Bool', is => 'ro', default => 0);
 
 
 sub BUILD { 

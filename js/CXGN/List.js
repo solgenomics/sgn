@@ -270,28 +270,30 @@ CXGN.List.prototype = {
     },
 
     addBulk: function(list_id, items) {
+        var elements = items.join("\t");
 
-	var elements = items.join("\t");
-
-	var count;
-	jQuery.ajax( {
-	    async: false,
-	    method: 'POST',
-	    url: '/list/add/bulk',
-	    data:  { 'list_id': list_id, 'elements': elements },
-	    success: function(response) {
-		if (response.error) {
-		    alert(response.error);
-		}
-		else {
-		    if (response.duplicates) {
-			alert("The following items are already in the list and were not added: "+response.duplicates.join(", "));
-		    }
-		    count = response.success;
-		}
-	    }
-	});
-	return count;
+        var count;
+        jQuery.ajax( {
+            async: false,
+            method: 'POST',
+            url: '/list/add/bulk',
+            data:  { 'list_id': list_id, 'elements': elements },
+            success: function(response) {
+                if (response.error) {
+                    alert(response.error);
+                }
+                else {
+                    if (response.duplicates) {
+                        alert("The following items are already in the list and were not added: "+response.duplicates.join(", "));
+                    }
+                    count = response.success;
+                }
+            },
+            error: function(response) {
+                alert("ERROR: "+response);
+            }
+        });
+        return count;
     },
 
     removeItem: function(list_id, item_id) {
@@ -418,6 +420,7 @@ CXGN.List.prototype = {
     },
 
     renderItems: function(div, list_id) {
+
 	var list_data = this.getListData(list_id);
 	var items = list_data.elements;
 	var list_type = list_data.type_name;
@@ -462,11 +465,9 @@ CXGN.List.prototype = {
 
 	jQuery('#dialog_add_list_item_button').click(
 	    function() {
-                jQuery('#working_modal').modal("show");
 		addMultipleItemsToList('dialog_add_list_item', list_id);
 		var lo = new CXGN.List();
 		lo.renderItems(div, list_id);
-		jQuery('#working_modal').modal("hide");
 	    }
 	);
 
@@ -628,8 +629,33 @@ CXGN.List.prototype = {
 	    return 1;
 	}
 	else {
-	    alert("List validation failed. Elements not found: "+ missing.join(","));
-	    return 0;
+
+	    jQuery("#validate_accession_error_display tbody").html('');
+	    
+            var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing accessions to a list</h3><div id='validate_stock_missing_accessions' style='display:none'></div><div id='validate_stock_add_missing_accessions'></div><hr><h4>Go to <a href='/breeders/accessions'>Manage Accessions</a> to add these new accessions.</h4></div><br/>";
+	    
+
+	    jQuery("#validate_stock_add_missing_accessions_html").html(missing_accessions_html);
+
+                var missing_accessions_vals = '';
+		if (missing){
+                for(var i=0; i<missing.length; i++) {
+                    missing_accessions_vals = missing_accessions_vals + missing[i] + '\n';
+                }
+		}
+                jQuery("#validate_stock_missing_accessions").html(missing_accessions_vals);
+                addToListMenu('validate_stock_add_missing_accessions', 'validate_stock_missing_accessions', {
+          selectText: true,
+          listType: 'accessions'
+        });
+            
+
+            jQuery("#validate_accession_error_display tbody").append(missing.join(","));
+            jQuery('#validate_accession_error_display').modal("show");
+	    return;
+	
+	    //alert("List validation failed. Elements not found: "+ missing.join(","));
+	    //return 0;
 	}
     },
 
@@ -721,14 +747,16 @@ function pasteListMenu (div_name, menu_div, button_name) {
 function pasteList(div_name) {
     var lo = new CXGN.List();
     var list_id = jQuery('#'+div_name+'_list_select').val();
+	console.log(list_id);
     var list = lo.getList(list_id);
-
+	console.log(list);
     // textify list
     var list_text = '';
     for (var n=0; n<list.length; n++) {
-      list_text = list_text + list[n][1]+"\r\n";
+      list_text = list_text + list[n]+"\r\n";
     }
-    jQuery('#'+div_name).text(list_text);
+	console.log(list_text);
+    jQuery('#'+div_name).val(list_text);
   }
 
 /*
@@ -943,7 +971,7 @@ return;
     //if (duplicates.length >0) {
 //	alert("The following items were not added because they are already in the list: "+ duplicates.join(", "));
   //  }
-lo.renderLists('list_dialog');
+//lo.renderLists('list_dialog');
 }
 
 /* deprecated */
@@ -1055,10 +1083,20 @@ function deleteItemLink(list_item_id) {
     lo.renderLists('list_dialog');
 }
 
+function working_modal_show() {
+    jQuery("#working_modal").modal('show');
+}
+
+function working_modal_hide() {
+    jQuery("#working_modal").modal('hide');
+}
+
 function showListItems(div, list_id) {
+    working_modal_show();
     var l = new CXGN.List();
-    jQuery('#'+div).modal("show");
     l.renderItems(div, list_id);
+    jQuery('#'+div).modal("show");
+    working_modal_hide();
 }
 
 function showPublicListItems(div, list_id) {

@@ -260,7 +260,6 @@ jQuery(document).ready(function ($) {
 		    $("#create_cross").modal("hide");
 		    //alert("The cross has been added.");
 		    $('#cross_saved_dialog_message').modal("show");
-		    location.reload();
 		}
             }, 
             //complete: function(response) { 
@@ -269,6 +268,9 @@ jQuery(document).ready(function ($) {
 	});
     }
 
+    jQuery('#dismiss_cross_saved_dialog').click( function() {
+        window.location.reload();
+    });
 
 //    $( "#cross_saved_dialog_message" ).dialog({
 //	autoOpen: false,

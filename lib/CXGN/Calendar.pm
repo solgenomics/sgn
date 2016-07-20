@@ -161,7 +161,7 @@ sub get_calendar_events_personal {
     my $person_id = $c->user->get_object->get_sp_person_id;
     my @roles = $c->user->get_roles();
     #print STDERR Dumper \@roles;
-    
+
     my @search_project_ids = '-1';
     foreach (@roles) {
     	my $q="SELECT project_id FROM project WHERE name=?";
@@ -229,7 +229,7 @@ sub populate_calendar_events {
 	$formatted_time = $self->format_time($calendar_array[0]);
 	$start_time = $formatted_time->datetime;
 	$start_display = $self->format_display_date($formatted_time);
-	
+
 	#Because fullcalendar does not allow event resizing of allDay=false events in the month view, the allDay parameter must be set depending on the view. The allDay parameter for the agendaWeek view is important and is set using determine_allday().
 	if ($view eq 'month') {
 	    $allday = 1;
@@ -242,7 +242,7 @@ sub populate_calendar_events {
 	$end_time = $self->calendar_end_display($formatted_time, $view, $allday);
 	$end_display = $self->format_display_date($formatted_time);
 
-	#Because FullCallendar's end date is exclusive, an end datetime with 00:00:00 will be displayed as one day short on the calendar, and so corrections to the event's end must be made. To facilitate event dragging, an event.end_drag property is used. 
+	#Because FullCallendar's end date is exclusive, an end datetime with 00:00:00 will be displayed as one day short on the calendar, and so corrections to the event's end must be made. To facilitate event dragging, an event.end_drag property is used.
 	$end_drag = $formatted_time->datetime;
 
 	#To display the project name and project properties nicely in the mouseover and more info, we capitalize the first letter of each word.
@@ -252,7 +252,7 @@ sub populate_calendar_events {
 	$property =~ s/([\w']+)/\u\L$1/g;
 
 	#Variables are pushed into the event array and will become properties of Fullcalendar events, like event.start, event.cvterm_url, etc.
-	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$title, property=>$property, start=>$start_time, start_drag=>$start_time, start_display=>$start_display, end=>$end_time, end_drag=>$end_drag, end_display=>$end_display, project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_id=>$result->get_column('cvterm_id'), cvterm_url=>'/chado/cvterm?cvterm_id='.$result->get_column('cvterm_id'), allDay=>$allday, p_description=>$result->description, event_description=>$calendar_array[2], event_url=>$calendar_array[3]});
+	push(@events, {projectprop_id=>$result->get_column('pp_id'), title=>$title, property=>$property, start=>$start_time, start_drag=>$start_time, start_display=>$start_display, end=>$end_time, end_drag=>$end_drag, end_display=>$end_display, project_id=>$result->project_id, project_url=>'/breeders_toolbox/trial/'.$result->project_id.'/', cvterm_id=>$result->get_column('cvterm_id'), cvterm_url=>'/cvterm/'.$result->get_column('cvterm_id').'/view', allDay=>$allday, p_description=>$result->description, event_description=>$calendar_array[2], event_url=>$calendar_array[3]});
     }
     return \@events;
 }
@@ -338,7 +338,7 @@ sub display_url {
 #For displaying the breeding program role permissions for the calendar.
 sub get_breeding_program_roles {
     my $self = shift;
-    my $c = shift; 
+    my $c = shift;
 
     my @breeding_program_roles;
     my $q="SELECT username, sp_person_id, name FROM sgn_people.sp_person_roles JOIN sgn_people.sp_person using(sp_person_id) JOIN sgn_people.sp_roles using(sp_role_id)";
