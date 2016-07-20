@@ -425,7 +425,6 @@ sub get_genotype_info {
       push @result, [ $uniquename, $genotype_string ];
       $protocol_name = $name;
     }
-    print STDERR "Protocol Name: $protocol_name\n";
 
     return {
       protocol_name => $protocol_name,
