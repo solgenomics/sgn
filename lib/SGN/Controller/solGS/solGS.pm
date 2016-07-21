@@ -1555,7 +1555,7 @@ sub predict_selection_pop_single_pop_model {
     }   
 
 }
- 
+
 
 sub predict_selection_pop_combined_pops_model {
     my ($self, $c) = @_;
@@ -2729,10 +2729,10 @@ sub build_multiple_traits_models {
 
     my $pop_id = $c->stash->{pop_id};
     my $prediction_id = $c->stash->{prediction_pop_id};
-    
+   
     my @selected_traits = $c->req->param('trait_id');
-
-    if (!@selected_traits) 
+  
+    if (!@selected_traits && $c->stash->{background_job}) 
     { 
 	my $params = $c->stash->{analysis_profile};
 	my $args = $params->{arguments};
@@ -2757,133 +2757,144 @@ sub build_multiple_traits_models {
 			$c->stash->{pop_id} = $pop_ids[0];
 		    }
 		}
+		
+		if ($k eq 'selection_pop_id') 
+		{
+		    $prediction_id = $args->{$k};
+		}
 	    }	    
 	} 
     }       
-
-    my $single_trait_id;
+     
     if (!@selected_traits)
     {
-        $c->stash->{model_id} = $pop_id; 
-        
-        $self->traits_with_valid_models($c);
-        @selected_traits = @ {$c->stash->{traits_with_valid_models}};
+	if ($prediction_id) 
+	{
+	    $c->stash->{model_id} = $pop_id; 
+	    
+	    $self->traits_with_valid_models($c);
+	    @selected_traits = @ {$c->stash->{traits_with_valid_models}};
+	}
+	else 
+	{
+	    $c->res->redirect("/solgs/population/$pop_id/selecttraits");
+	    $c->detach(); 
+	}
     }
-
-    if (!@selected_traits)
-    {
-        $c->res->redirect("/solgs/population/$pop_id/selecttraits");
-        $c->detach(); 
-    }
-    elsif (scalar(@selected_traits) == 1)
-    {
-        $single_trait_id = $selected_traits[0];
-	 if ($single_trait_id =~ /\D/)
-	 {
-	     my $acronym_pairs = $self->get_acronym_pairs($c);                   
-	     if ($acronym_pairs)
-	     {
-		 foreach my $r (@$acronym_pairs) 
-		 {
-		     if ($r->[0] eq $single_trait_id) 
-		     {
-			 my $trait_name =  $r->[1];
-			 $trait_name    =~ s/\n//g;                                
-			 $single_trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
-		     }
-		 }
-	     }
-	 }
-  
-        if (!$prediction_id)
-        { 
-	    $c->res->redirect("/solgs/trait/$single_trait_id/population/$pop_id");
-	    $c->detach();              
-        } 
-        else
-        {
-            my $name  = "trait_info_${single_trait_id}_pop_${pop_id}";
-            my $file2 = $self->create_tempfile($c, $name);
-       
-            $c->stash->{trait_file} = $file2;
-            $c->stash->{trait_abbr} = $selected_traits[0];
-           
-            my $acronym_pairs = $self->get_acronym_pairs($c);                   
-            if ($acronym_pairs)
-            {
-                foreach my $r (@$acronym_pairs) 
-                {
-                    if ($r->[0] eq $selected_traits[0]) 
-                    {
-                        my $trait_name =  $r->[1];
-                        $trait_name    =~ s/\n//g;                                
-                        my $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
-                        $self->get_trait_details($c, $trait_id);
-                    }
-                }
-            }
-              
-	     $self->get_rrblup_output($c); 
-        }
-    }
-    elsif (scalar(@selected_traits) > 1) 
-    {
-        my ($traits, $trait_ids);    
-        
-        for (my $i = 0; $i <= $#selected_traits; $i++)
-        {  
-            if ($selected_traits[$i] =~ /\D/)
-            {    
-                my $acronym_pairs = $self->get_acronym_pairs($c);                   
-                if ($acronym_pairs)
-                {
-                    foreach my $r (@$acronym_pairs) 
-                    {
-                        if ($r->[0] eq $selected_traits[$i]) 
-                        {
-                            my $trait_name =  $r->[1];
-                            $trait_name    =~ s/\n//g; 
-                            my $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
-			
-                            $traits    .= $r->[0];
-                            $traits    .= "\t" unless ($i == $#selected_traits);
-                            $trait_ids .= $trait_id;    
+    else 
+    {  
+	my $single_trait_id;
+   
+	if (scalar(@selected_traits) == 1)
+	{
+	    $single_trait_id = $selected_traits[0];
+	    if ($single_trait_id =~ /\D/)
+	    {
+		my $acronym_pairs = $self->get_acronym_pairs($c);                   
+		if ($acronym_pairs)
+		{
+		    foreach my $r (@$acronym_pairs) 
+		    {
+			if ($r->[0] eq $single_trait_id) 
+			{
+			    my $trait_name =  $r->[1];
+			    $trait_name    =~ s/\n//g;                                
+			    $single_trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
 			}
-                    }
-                }
-            }
-            else 
-            {
-                my $tr = $c->model('solGS::solGS')->trait_name($selected_traits[$i]);
-                my $abbr = $self->abbreviate_term($tr);
-                $traits .= $abbr;
-                $traits .= "\t" unless ($i == $#selected_traits); 
+		    }
+		}
+	    }
+  
+	    if (!$prediction_id)
+	    { 
+		$c->res->redirect("/solgs/trait/$single_trait_id/population/$pop_id");
+		$c->detach();              
+	    } 
+	    else
+	    {
+		my $name  = "trait_info_${single_trait_id}_pop_${pop_id}";
+		my $file2 = $self->create_tempfile($c, $name);
+		
+		$c->stash->{trait_file} = $file2;
+		$c->stash->{trait_abbr} = $selected_traits[0];
+		
+		my $acronym_pairs = $self->get_acronym_pairs($c);                   
+		if ($acronym_pairs)
+		{
+		    foreach my $r (@$acronym_pairs) 
+		    {
+			if ($r->[0] eq $selected_traits[0]) 
+			{
+			    my $trait_name =  $r->[1];
+			    $trait_name    =~ s/\n//g;                                
+			    my $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
+			    $self->get_trait_details($c, $trait_id);
+			}
+		    }
+		}
+              
+		$self->get_rrblup_output($c); 
+	    }
+	}
+	else 
+	{
+	    my ($traits, $trait_ids);    
+        
+	    for (my $i = 0; $i <= $#selected_traits; $i++)
+	    {  
+		if ($selected_traits[$i] =~ /\D/)
+		{    
+		    my $acronym_pairs = $self->get_acronym_pairs($c);                   
+		    if ($acronym_pairs)
+		    {
+			foreach my $r (@$acronym_pairs) 
+			{
+			    if ($r->[0] eq $selected_traits[$i]) 
+			    {
+				my $trait_name =  $r->[1];
+				$trait_name    =~ s/\n//g; 
+				my $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
+				
+				$traits    .= $r->[0];
+				$traits    .= "\t" unless ($i == $#selected_traits);
+				$trait_ids .= $trait_id;    
+			    }
+			}
+		    }
+		}
+		else 
+		{
+		    my $tr = $c->model('solGS::solGS')->trait_name($selected_traits[$i]);
+		    my $abbr = $self->abbreviate_term($tr);
+		    $traits .= $abbr;
+		    $traits .= "\t" unless ($i == $#selected_traits); 
 
                     
-                foreach my $tr_id (@selected_traits)
-                {
-                    $trait_ids .= $tr_id;
-                }
-            }                 
-        } 
+		    foreach my $tr_id (@selected_traits)
+		    {
+			$trait_ids .= $tr_id;
+		    }
+		}                 
+	    } 
     
-	if ($c->stash->{data_set_type} =~ /combined populations/)
-	{
-	    my $identifier = crc($trait_ids);
-	    $self->combined_gebvs_file($c, $identifier);
-	}  
-      
-        my $name = "selected_traits_pop_${pop_id}";
-        my $file = $self->create_tempfile($c, $name);
-        
-	write_file($file, $traits);
-        $c->stash->{selected_traits_file} = $file;
+	    if ($c->stash->{data_set_type} =~ /combined populations/)
+	    {
+		my $identifier = crc($trait_ids);
+		$self->combined_gebvs_file($c, $identifier);
+	    }  
+	    
+	    my $name = "selected_traits_pop_${pop_id}";
+	    my $file = $self->create_tempfile($c, $name);
+	    
+	    write_file($file, $traits);
+	    $c->stash->{selected_traits_file} = $file;
 
-        $name     = "trait_info_${single_trait_id}_pop_${pop_id}";
-        my $file2 = $self->create_tempfile($c, $name);
-       
-        $c->stash->{trait_file} = $file2;
-	$self->get_rrblup_output($c); 
+	    $name     = "trait_info_${single_trait_id}_pop_${pop_id}";
+	    my $file2 = $self->create_tempfile($c, $name);
+	    
+	    $c->stash->{trait_file} = $file2;
+	    $self->get_rrblup_output($c); 
+	}
     }
 
 }
@@ -2893,7 +2904,7 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
     my ($self, $c) = @_; 
    
     my ($pop_id, $prediction_id) = @{$c->req->captures};
-   
+ 
     $c->stash->{pop_id} = $pop_id;
     $c->stash->{prediction_pop_id} = $prediction_id;
    
