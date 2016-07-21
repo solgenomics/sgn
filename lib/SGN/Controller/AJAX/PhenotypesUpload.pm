@@ -122,6 +122,7 @@ sub _prep_upload {
         $metadata_file_type = "tablet phenotype file";
         $timestamp_included = 1;
         $upload = $c->req->upload('upload_fieldbook_phenotype_file_input');
+        $data_level = $c->req->param('upload_fieldbook_phenotype_data_level') || 'plots';
     }
     elsif ($file_type eq "datacollector") {
         print STDERR "Datacollector \n";

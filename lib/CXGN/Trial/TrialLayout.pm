@@ -233,6 +233,12 @@ sub _get_design_from_trial {
     if ($block_number_prop) {
       $design_info{"block_number"}=$block_number_prop->value();
     }
+	if ($row_number_prop) {
+      $design_info{"row_number"}=$row_number_prop->value();
+    }
+	if ($col_number_prop) {
+      $design_info{"col_number"}=$col_number_prop->value();
+    }
     if ($replicate_number_prop) {
       $design_info{"rep_number"}=$replicate_number_prop->value();
     }
