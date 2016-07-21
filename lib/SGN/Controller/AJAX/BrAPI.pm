@@ -1763,8 +1763,14 @@ sub studies_table_GET {
     #print STDERR Dumper \@data;
 
     my $total_count = scalar(@data)-1;
-    my @header_ids;
     my @header_names = split /\t/, $data[0];
+    #print STDERR Dumper \@header_names;
+    my @trait_names = @header_names[11 .. $#header_names];
+    #print STDERR Dumper \@trait_names;
+    my @header_ids;
+    foreach my $t (@trait_names) {
+        push @header_ids, SGN::Model::Cvterm->get_cvterm_row_from_trait_name($self->bcs_schema, $t)->cvterm_id();
+    }
 
     my $start = $c->stash->{page_size}*($c->stash->{current_page}-1)+1;
     my $end = $c->stash->{page_size}*$c->stash->{current_page}+1;
