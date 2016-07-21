@@ -22,8 +22,13 @@ solGS.waitPage = function (page, args) {
 	+ '|solgs/model/\\d+/prediction/'
      	+ '|solgs/analyze/traits/';
    		    
-    if ( page.match(matchItems)) {
-    	askUser(page, args);
+    if (page.match(matchItems)) {
+	if (window.location.href.match(/solgs\/traits\/all\/population\//) 
+	   && page.match(/solgs\/model\/\d+\/prediction\//)) {	    
+	    blockPage(page);
+	} else {	    	
+    	    askUser(page, args);
+	}
     }
     else {
     	blockPage(page);
@@ -164,7 +169,8 @@ solGS.waitPage = function (page, args) {
     }
 
 
-    function goToPage (page, args) {    
+    function goToPage (page, args) { 
+
 	var matchItems = 'solgs/population/'
 	    + '|solgs/confirm/request'
 	    + '|solgs/trait/'
@@ -392,7 +398,7 @@ solGS.waitPage = function (page, args) {
 
 	    if (window.location.href.match(/solgs\/model\/combined\/populations\//)) {
 		dataSetType = 'combined populations';
-	    } else if (window.location.href.match(/solgs\/trait\//)) {
+	    } else if (window.location.href.match(/solgs\/trait\/|solgs\/traits\/all\/population\//)) {
 		dataSetType = 'single population';
 	    }
 
