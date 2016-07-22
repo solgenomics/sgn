@@ -54,10 +54,12 @@ sub patch {
 
 DROP MATERIALIZED VIEW public.materialized_fullview CASCADE;
 CREATE MATERIALIZED VIEW public.materialized_phenoview AS
- SELECT plot.uniquename AS plot_name,
-    stock_relationship.subject_id AS plot_id,
+ SELECT plant.uniquename AS plant_name,
+    plant.stock_id AS plant_id,
+    plot.uniquename AS plot_name,
+    plot.stock_id AS plot_id,
     accession.uniquename AS accession_name,
-    stock_relationship.object_id AS accession_id,
+    accession.stock_id AS accession_id,
     nd_experiment.nd_geolocation_id AS location_id,
     nd_geolocation.description AS location_name,
     projectprop.value AS year_id,
@@ -75,9 +77,11 @@ CREATE MATERIALIZED VIEW public.materialized_phenoview AS
     phenotype.phenotype_id,
     phenotype.value AS phenotype_value
    FROM stock accession
-     LEFT JOIN stock_relationship ON accession.stock_id = stock_relationship.object_id
-     LEFT JOIN stock plot ON stock_relationship.subject_id = plot.stock_id
-     LEFT JOIN nd_experiment_stock nd_experiment_plot ON stock_relationship.subject_id = nd_experiment_plot.stock_id
+     LEFT JOIN stock_relationship plot_relationship ON accession.stock_id = plot_relationship.object_id
+     LEFT JOIN stock plot ON plot_relationship.subject_id = plot.stock_id AND plot.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plot')
+     LEFT JOIN stock_relationship plant_relationship ON plot.stock_id = plant_relationship.subject_id
+     LEFT JOIN stock plant ON plant_relationship.object_id = plant.stock_id AND plant.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plant')
+     LEFT JOIN nd_experiment_stock nd_experiment_plot ON plot.stock_id = nd_experiment_plot.stock_id
      LEFT JOIN nd_experiment_stock nd_experiment_accession ON accession.stock_id = nd_experiment_accession.stock_id
      LEFT JOIN nd_experiment ON nd_experiment_plot.nd_experiment_id = nd_experiment.nd_experiment_id
      LEFT JOIN nd_geolocation ON nd_experiment.nd_geolocation_id = nd_geolocation.nd_geolocation_id
@@ -95,19 +99,20 @@ CREATE MATERIALIZED VIEW public.materialized_phenoview AS
      LEFT JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id
      LEFT JOIN db ON dbxref.db_id = db.db_id
   WHERE accession.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'accession')
-  GROUP BY stock_relationship.subject_id, cvterm.cvterm_id, plot.uniquename, accession.uniquename, stock_relationship.object_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, trial.name, trial.project_id, breeding_program.name, project_relationship.object_project_id, projectprop.value, trialdesign.value, trialterm.cvterm_id, trialterm.name, nd_experiment.nd_geolocation_id, nd_geolocation.description, phenotype.phenotype_id, phenotype.value;
+  GROUP BY plant.stock_id, plant.uniquename, plot.stock_id, plot.uniquename, accession.uniquename, accession.stock_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id, trial.name, trial.project_id, breeding_program.name, project_relationship.object_project_id, projectprop.value, trialdesign.value, trialterm.cvterm_id, trialterm.name, nd_experiment.nd_geolocation_id, nd_geolocation.description, phenotype.phenotype_id, phenotype.value;
 
-CREATE UNIQUE INDEX unq_pheno_idx ON public.materialized_phenoview(accession_id,plot_id,phenotype_id) WITH (fillfactor=100);
+CREATE UNIQUE INDEX unq_pheno_idx ON public.materialized_phenoview(accession_id,plot_id,plant_id,phenotype_id) WITH (fillfactor=100);
 CREATE INDEX accession_id_pheno_idx ON public.materialized_phenoview(accession_id) WITH (fillfactor=100);
 CREATE INDEX breeding_program_id_idx ON public.materialized_phenoview(breeding_program_id) WITH (fillfactor=100);
 CREATE INDEX location_id_idx ON public.materialized_phenoview(location_id) WITH (fillfactor=100);
 CREATE INDEX plot_id_idx ON public.materialized_phenoview(plot_id) WITH (fillfactor=100);
+CREATE INDEX plant_id_idx ON public.materialized_phenoview(plant_id) WITH (fillfactor=100);
 CREATE INDEX trait_id_idx ON public.materialized_phenoview(trait_id) WITH (fillfactor=100);
 CREATE INDEX trial_id_idx ON public.materialized_phenoview(trial_id) WITH (fillfactor=100);
 CREATE INDEX trial_type_id_idx ON public.materialized_phenoview(trial_type_id) WITH (fillfactor=100);
 CREATE INDEX trial_design_id_idx ON public.materialized_phenoview(trial_design_id) WITH (fillfactor=100);
 CREATE INDEX year_id_idx ON public.materialized_phenoview(year_id) WITH (fillfactor=100);
-GRANT SELECT ON materialized_phenoview to web_usr;
+ALTER MATERIALIZED VIEW materialized_phenoview OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.materialized_genoview AS
  SELECT stock.uniquename AS accession_name,
@@ -129,7 +134,7 @@ CREATE UNIQUE INDEX unq_geno_idx ON public.materialized_genoview(accession_id,ge
 CREATE INDEX accession_id_geno_idx ON public.materialized_genoview(accession_id) WITH (fillfactor=100);
 CREATE INDEX genotyping_protocol_id_idx ON public.materialized_genoview(genotyping_protocol_id) WITH (fillfactor=100);
 CREATE INDEX genotype_id_idx ON public.materialized_genoview(genotype_id) WITH (fillfactor=100);
-GRANT SELECT ON materialized_genoview to web_usr;
+ALTER MATERIALIZED VIEW materialized_genoview OWNER TO web_usr;
 
 DROP TABLE public.matviews;
 CREATE TABLE public.matviews (
@@ -139,10 +144,10 @@ CREATE TABLE public.matviews (
   , currently_refreshing BOOLEAN
   , last_refresh TIMESTAMP WITH TIME ZONE
 );
-GRANT SELECT, UPDATE ON TABLE public.matviews to web_usr;
+ALTER TABLE public.matviews OWNER TO web_usr;
 
-INSERT INTO matviews (mv_name, mv_dependents, currently_refreshing, last_refresh) VALUES ('materialized_phenoview', '{"accessionsXbreeding_programs","accessionsXlocations","accessionsXplots","accessionsXtraits","accessionsXtrials","accessionsXtrial_designs","accessionsXtrial_types","accessionsXyears","breeding_programsXgenotyping_protocols","breeding_programsXlocations","breeding_programsXplots","breeding_programsXtraits","breeding_programsXtrials","breeding_programsXtrial_designs","breeding_programsXtrial_types","breeding_programsXyears","genotyping_protocolsXlocations","genotyping_protocolsXplots","genotyping_protocolsXtraits","genotyping_protocolsXtrials","genotyping_protocolsXtrial_designs","genotyping_protocolsXtrial_types","genotyping_protocolsXyears","locationsXplots","locationsXtraits","locationsXtrials","locationsXtrial_designs","locationsXtrial_types","locationsXyears","plotsXtraits","plotsXtrials","plotsXtrial_designs","plotsXtrial_types","plotsXyears","traitsXtrials","traitsXtrial_designs","traitsXtrial_types","traitsXyears","trial_designsXtrials","trial_typesXtrials","trialsXyears","trial_designsXtrial_types","trial_designsXyears","trial_typesXyears"}', FALSE, CURRENT_TIMESTAMP);
-INSERT INTO matviews (mv_name, mv_dependents, currently_refreshing, last_refresh) VALUES ('materialized_genoview', '{"accessionsXgenotyping_protocols","breeding_programsXgenotyping_protocols","genotyping_protocolsXlocations","genotyping_protocolsXplots","genotyping_protocolsXtraits","genotyping_protocolsXtrials","genotyping_protocolsXtrial_designs","genotyping_protocolsXtrial_types","genotyping_protocolsXyears"}', FALSE, CURRENT_TIMESTAMP);
+INSERT INTO matviews (mv_name, mv_dependents, currently_refreshing, last_refresh) VALUES ('materialized_phenoview', '{"accessionsXbreeding_programs","accessionsXlocations","accessionsXplants","accessionsXplots","accessionsXtraits","accessionsXtrials","accessionsXtrial_designs","accessionsXtrial_types","accessionsXyears","breeding_programsXgenotyping_protocols","breeding_programsXlocations","breeding_programsXplants","breeding_programsXplots","breeding_programsXtraits","breeding_programsXtrials","breeding_programsXtrial_designs","breeding_programsXtrial_types","breeding_programsXyears","genotyping_protocolsXlocations","genotyping_protocolsXplants""genotyping_protocolsXplots","genotyping_protocolsXtraits","genotyping_protocolsXtrials","genotyping_protocolsXtrial_designs","genotyping_protocolsXtrial_types","genotyping_protocolsXyears","locationsXplants","locationsXplots","locationsXtraits","locationsXtrials","locationsXtrial_designs","locationsXtrial_types","locationsXyears","plantsXplots","plantsXtraits","plantsXtrials","plantsXtrial_designs","plantsXtrial_types","plantsXyears","plotsXtraits","plotsXtrials","plotsXtrial_designs","plotsXtrial_types","plotsXyears","traitsXtrials","traitsXtrial_designs","traitsXtrial_types","traitsXyears","trial_designsXtrials","trial_typesXtrials","trialsXyears","trial_designsXtrial_types","trial_designsXyears","trial_typesXyears"}', FALSE, CURRENT_TIMESTAMP);
+INSERT INTO matviews (mv_name, mv_dependents, currently_refreshing, last_refresh) VALUES ('materialized_genoview', '{"accessionsXgenotyping_protocols","breeding_programsXgenotyping_protocols","genotyping_protocolsXlocations","genotyping_protocolsXplants","genotyping_protocolsXplots","genotyping_protocolsXtraits","genotyping_protocolsXtrials","genotyping_protocolsXtrial_designs","genotyping_protocolsXtrial_types","genotyping_protocolsXyears"}', FALSE, CURRENT_TIMESTAMP);
 
 CREATE MATERIALIZED VIEW public.accessions AS
   SELECT stock.stock_id AS accession_id,
@@ -151,7 +156,7 @@ CREATE MATERIALIZED VIEW public.accessions AS
   WHERE stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'accession')
   GROUP BY stock.stock_id, stock.uniquename;
 CREATE UNIQUE INDEX accessions_idx ON public.accessions(accession_id) WITH (fillfactor=100);
-GRANT SELECT ON accessions to web_usr;
+ALTER MATERIALIZED VIEW accessions OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('accessions', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.accessionsXbreeding_programs AS
 SELECT public.materialized_phenoview.accession_id,
@@ -159,7 +164,7 @@ SELECT public.materialized_phenoview.accession_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.breeding_program_id;
 CREATE UNIQUE INDEX accessionsXbreeding_programs_idx ON public.accessionsXbreeding_programs(accession_id, breeding_program_id) WITH (fillfactor=100);
-GRANT SELECT ON accessionsXbreeding_programs to web_usr;
+ALTER MATERIALIZED VIEW accessionsXbreeding_programs OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('accessionsXbreeding_programs', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.accessionsXgenotyping_protocols AS
 SELECT public.materialized_genoview.accession_id,
@@ -167,7 +172,7 @@ SELECT public.materialized_genoview.accession_id,
    FROM public.materialized_genoview
   GROUP BY public.materialized_genoview.accession_id, public.materialized_genoview.genotyping_protocol_id;
 CREATE UNIQUE INDEX accessionsXgenotyping_protocols_idx ON public.accessionsXgenotyping_protocols(accession_id, genotyping_protocol_id) WITH (fillfactor=100);
-GRANT SELECT ON accessionsXgenotyping_protocols to web_usr;
+ALTER MATERIALIZED VIEW accessionsXgenotyping_protocols OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('accessionsXgenotyping_protocols', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.accessionsXlocations AS
 SELECT public.materialized_phenoview.accession_id,
@@ -175,15 +180,23 @@ SELECT public.materialized_phenoview.accession_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.location_id;
 CREATE UNIQUE INDEX accessionsXlocations_idx ON public.accessionsXlocations(accession_id, location_id) WITH (fillfactor=100);
-GRANT SELECT ON accessionsXlocations to web_usr;
+ALTER MATERIALIZED VIEW accessionsXlocations OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('accessionsXlocations', FALSE, CURRENT_TIMESTAMP);
+CREATE MATERIALIZED VIEW public.accessionsXplants AS
+SELECT public.materialized_phenoview.accession_id,
+    public.materialized_phenoview.plant_id
+   FROM public.materialized_phenoview
+  GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.plant_id;
+CREATE UNIQUE INDEX accessionsXplants_idx ON public.accessionsXplants(accession_id, plant_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW accessionsXplants OWNER TO web_usr;
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('accessionsXplants', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.accessionsXplots AS
 SELECT public.materialized_phenoview.accession_id,
     public.materialized_phenoview.plot_id
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.plot_id;
 CREATE UNIQUE INDEX accessionsXplots_idx ON public.accessionsXplots(accession_id, plot_id) WITH (fillfactor=100);
-GRANT SELECT ON accessionsXplots to web_usr;
+ALTER MATERIALIZED VIEW accessionsXplots OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('accessionsXplots', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.accessionsXtraits AS
 SELECT public.materialized_phenoview.accession_id,
@@ -191,7 +204,7 @@ SELECT public.materialized_phenoview.accession_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.trait_id;
 CREATE UNIQUE INDEX accessionsXtraits_idx ON public.accessionsXtraits(accession_id, trait_id) WITH (fillfactor=100);
-GRANT SELECT ON accessionsXtraits to web_usr;
+ALTER MATERIALIZED VIEW accessionsXtraits OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('accessionsXtraits', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.accessionsXtrials AS
 SELECT public.materialized_phenoview.accession_id,
@@ -199,7 +212,7 @@ SELECT public.materialized_phenoview.accession_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.trial_id;
 CREATE UNIQUE INDEX accessionsXtrials_idx ON public.accessionsXtrials(accession_id, trial_id) WITH (fillfactor=100);
-GRANT SELECT ON accessionsXtrials to web_usr;
+ALTER MATERIALIZED VIEW accessionsXtrials OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('accessionsXtrials', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.accessionsXtrial_designs AS
 SELECT public.materialized_phenoview.accession_id,
@@ -207,7 +220,7 @@ SELECT public.materialized_phenoview.accession_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.trial_design_id;
 CREATE UNIQUE INDEX accessionsXtrial_designs_idx ON public.accessionsXtrial_designs(accession_id, trial_design_id) WITH (fillfactor=100);
-GRANT SELECT ON accessionsXtrial_designs to web_usr;
+ALTER MATERIALIZED VIEW accessionsXtrial_designs OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('accessionsXtrial_designs', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.accessionsXtrial_types AS
 SELECT public.materialized_phenoview.accession_id,
@@ -215,7 +228,7 @@ SELECT public.materialized_phenoview.accession_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.trial_type_id;
 CREATE UNIQUE INDEX accessionsXtrial_types_idx ON public.accessionsXtrial_types(accession_id, trial_type_id) WITH (fillfactor=100);
-GRANT SELECT ON accessionsXtrial_types to web_usr;
+ALTER MATERIALIZED VIEW accessionsXtrial_types OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('accessionsXtrial_types', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.accessionsXyears AS
 SELECT public.materialized_phenoview.accession_id,
@@ -223,7 +236,7 @@ SELECT public.materialized_phenoview.accession_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.accession_id, public.materialized_phenoview.year_id;
 CREATE UNIQUE INDEX accessionsXyears_idx ON public.accessionsXyears(accession_id, year_id) WITH (fillfactor=100);
-GRANT SELECT ON accessionsXyears to web_usr;
+ALTER MATERIALIZED VIEW accessionsXyears OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('accessionsXyears', FALSE, CURRENT_TIMESTAMP);
 
 CREATE MATERIALIZED VIEW public.breeding_programs AS
@@ -233,7 +246,7 @@ SELECT project.project_id AS breeding_program_id,
    WHERE projectprop.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'breeding_program')
   GROUP BY project.project_id, project.name;
 CREATE UNIQUE INDEX breeding_programs_idx ON public.breeding_programs(breeding_program_id) WITH (fillfactor=100);
-GRANT SELECT ON breeding_programs to web_usr;
+ALTER MATERIALIZED VIEW breeding_programs OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('breeding_programs', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.breeding_programsXgenotyping_protocols AS
 SELECT public.materialized_phenoview.breeding_program_id,
@@ -242,7 +255,7 @@ SELECT public.materialized_phenoview.breeding_program_id,
    JOIN public.materialized_genoview USING(accession_id)
   GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_genoview.genotyping_protocol_id;
 CREATE UNIQUE INDEX breeding_programsXgenotyping_protocols_idx ON public.breeding_programsXgenotyping_protocols(breeding_program_id, genotyping_protocol_id) WITH (fillfactor=100);
-GRANT SELECT ON breeding_programsXgenotyping_protocols to web_usr;
+ALTER MATERIALIZED VIEW breeding_programsXgenotyping_protocols OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('breeding_programsXgenotyping_protocols', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.breeding_programsXlocations AS
 SELECT public.materialized_phenoview.breeding_program_id,
@@ -250,15 +263,23 @@ SELECT public.materialized_phenoview.breeding_program_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_phenoview.location_id;
 CREATE UNIQUE INDEX breeding_programsXlocations_idx ON public.breeding_programsXlocations(breeding_program_id, location_id) WITH (fillfactor=100);
-GRANT SELECT ON breeding_programsXlocations to web_usr;
+ALTER MATERIALIZED VIEW breeding_programsXlocations OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('breeding_programsXlocations', FALSE, CURRENT_TIMESTAMP);
+CREATE MATERIALIZED VIEW public.breeding_programsXplants AS
+SELECT public.materialized_phenoview.breeding_program_id,
+    public.materialized_phenoview.plant_id
+   FROM public.materialized_phenoview
+  GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_phenoview.plant_id;
+CREATE UNIQUE INDEX breeding_programsXplants_idx ON public.breeding_programsXplants(breeding_program_id, plant_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW breeding_programsXplants OWNER TO web_usr;
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('breeding_programsXplants', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.breeding_programsXplots AS
 SELECT public.materialized_phenoview.breeding_program_id,
     public.materialized_phenoview.plot_id
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_phenoview.plot_id;
 CREATE UNIQUE INDEX breeding_programsXplots_idx ON public.breeding_programsXplots(breeding_program_id, plot_id) WITH (fillfactor=100);
-GRANT SELECT ON breeding_programsXplots to web_usr;
+ALTER MATERIALIZED VIEW breeding_programsXplots OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('breeding_programsXplots', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.breeding_programsXtraits AS
 SELECT public.materialized_phenoview.breeding_program_id,
@@ -266,7 +287,7 @@ SELECT public.materialized_phenoview.breeding_program_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_phenoview.trait_id;
 CREATE UNIQUE INDEX breeding_programsXtraits_idx ON public.breeding_programsXtraits(breeding_program_id, trait_id) WITH (fillfactor=100);
-GRANT SELECT ON breeding_programsXtraits to web_usr;
+ALTER MATERIALIZED VIEW breeding_programsXtraits OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('breeding_programsXtraits', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.breeding_programsXtrials AS
 SELECT public.materialized_phenoview.breeding_program_id,
@@ -274,7 +295,7 @@ SELECT public.materialized_phenoview.breeding_program_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_phenoview.trial_id;
 CREATE UNIQUE INDEX breeding_programsXtrials_idx ON public.breeding_programsXtrials(breeding_program_id, trial_id) WITH (fillfactor=100);
-GRANT SELECT ON breeding_programsXtrials to web_usr;
+ALTER MATERIALIZED VIEW breeding_programsXtrials OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('breeding_programsXtrials', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.breeding_programsXtrial_designs AS
 SELECT public.materialized_phenoview.breeding_program_id,
@@ -282,7 +303,7 @@ SELECT public.materialized_phenoview.breeding_program_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_phenoview.trial_design_id;
 CREATE UNIQUE INDEX breeding_programsXtrial_designs_idx ON public.breeding_programsXtrial_designs(breeding_program_id, trial_design_id) WITH (fillfactor=100);
-GRANT SELECT ON breeding_programsXtrial_designs to web_usr;
+ALTER MATERIALIZED VIEW breeding_programsXtrial_designs OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('breeding_programsXtrial_designs', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.breeding_programsXtrial_types AS
 SELECT public.materialized_phenoview.breeding_program_id,
@@ -290,7 +311,7 @@ SELECT public.materialized_phenoview.breeding_program_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_phenoview.trial_type_id;
 CREATE UNIQUE INDEX breeding_programsXtrial_types_idx ON public.breeding_programsXtrial_types(breeding_program_id, trial_type_id) WITH (fillfactor=100);
-GRANT SELECT ON breeding_programsXtrial_types to web_usr;
+ALTER MATERIALIZED VIEW breeding_programsXtrial_types OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('breeding_programsXtrial_types', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.breeding_programsXyears AS
 SELECT public.materialized_phenoview.breeding_program_id,
@@ -298,7 +319,7 @@ SELECT public.materialized_phenoview.breeding_program_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.breeding_program_id, public.materialized_phenoview.year_id;
 CREATE UNIQUE INDEX breeding_programsXyears_idx ON public.breeding_programsXyears(breeding_program_id, year_id) WITH (fillfactor=100);
-GRANT SELECT ON breeding_programsXyears to web_usr;
+ALTER MATERIALIZED VIEW breeding_programsXyears OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('breeding_programsXyears', FALSE, CURRENT_TIMESTAMP);
 
 CREATE MATERIALIZED VIEW public.genotyping_protocols AS
@@ -307,7 +328,7 @@ SELECT nd_protocol.nd_protocol_id AS genotyping_protocol_id,
    FROM nd_protocol
   GROUP BY public.nd_protocol.nd_protocol_id, public.nd_protocol.name;
 CREATE UNIQUE INDEX genotyping_protocols_idx ON public.genotyping_protocols(genotyping_protocol_id) WITH (fillfactor=100);
-GRANT SELECT ON genotyping_protocols to web_usr;
+ALTER MATERIALIZED VIEW genotyping_protocols OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('genotyping_protocols', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXlocations AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
@@ -316,8 +337,17 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
    JOIN public.materialized_phenoview USING(accession_id)
   GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.location_id;
 CREATE UNIQUE INDEX genotyping_protocolsXlocations_idx ON public.genotyping_protocolsXlocations(genotyping_protocol_id, location_id) WITH (fillfactor=100);
-GRANT SELECT ON genotyping_protocolsXlocations to web_usr;
+ALTER MATERIALIZED VIEW genotyping_protocolsXlocations OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('genotyping_protocolsXlocations', FALSE, CURRENT_TIMESTAMP);
+CREATE MATERIALIZED VIEW public.genotyping_protocolsXplants AS
+SELECT public.materialized_genoview.genotyping_protocol_id,
+    public.materialized_phenoview.plant_id
+   FROM public.materialized_genoview
+   JOIN public.materialized_phenoview USING(accession_id)
+  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.plant_id;
+CREATE UNIQUE INDEX genotyping_protocolsXplants_idx ON public.genotyping_protocolsXplants(genotyping_protocol_id, plant_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW genotyping_protocolsXplants OWNER TO web_usr;
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('genotyping_protocolsXplants', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXplots AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
     public.materialized_phenoview.plot_id
@@ -325,7 +355,7 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
    JOIN public.materialized_phenoview USING(accession_id)
   GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.plot_id;
 CREATE UNIQUE INDEX genotyping_protocolsXplots_idx ON public.genotyping_protocolsXplots(genotyping_protocol_id, plot_id) WITH (fillfactor=100);
-GRANT SELECT ON genotyping_protocolsXplots to web_usr;
+ALTER MATERIALIZED VIEW genotyping_protocolsXplots OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('genotyping_protocolsXplots', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXtraits AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
@@ -334,7 +364,7 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
    JOIN public.materialized_phenoview USING(accession_id)
   GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.trait_id;
 CREATE UNIQUE INDEX genotyping_protocolsXtraits_idx ON public.genotyping_protocolsXtraits(genotyping_protocol_id, trait_id) WITH (fillfactor=100);
-GRANT SELECT ON genotyping_protocolsXtraits to web_usr;
+ALTER MATERIALIZED VIEW genotyping_protocolsXtraits OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('genotyping_protocolsXtraits', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXtrials AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
@@ -343,7 +373,7 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
    JOIN public.materialized_phenoview USING(accession_id)
   GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.trial_id;
 CREATE UNIQUE INDEX genotyping_protocolsXtrials_idx ON public.genotyping_protocolsXtrials(genotyping_protocol_id, trial_id) WITH (fillfactor=100);
-GRANT SELECT ON genotyping_protocolsXtrials to web_usr;
+ALTER MATERIALIZED VIEW genotyping_protocolsXtrials OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('genotyping_protocolsXtrials', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXtrial_designs AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
@@ -352,7 +382,7 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
    JOIN public.materialized_phenoview USING(accession_id)
   GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.trial_design_id;
 CREATE UNIQUE INDEX genotyping_protocolsXtrial_designs_idx ON public.genotyping_protocolsXtrial_designs(genotyping_protocol_id, trial_design_id) WITH (fillfactor=100);
-GRANT SELECT ON genotyping_protocolsXtrial_designs to web_usr;
+ALTER MATERIALIZED VIEW genotyping_protocolsXtrial_designs OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('genotyping_protocolsXtrial_designs', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXtrial_types AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
@@ -361,7 +391,7 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
    JOIN public.materialized_phenoview USING(accession_id)
   GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.trial_type_id;
 CREATE UNIQUE INDEX genotyping_protocolsXtrial_types_idx ON public.genotyping_protocolsXtrial_types(genotyping_protocol_id, trial_type_id) WITH (fillfactor=100);
-GRANT SELECT ON genotyping_protocolsXtrial_types to web_usr;
+ALTER MATERIALIZED VIEW genotyping_protocolsXtrial_types OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('genotyping_protocolsXtrial_types', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXyears AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
@@ -370,7 +400,7 @@ SELECT public.materialized_genoview.genotyping_protocol_id,
    JOIN public.materialized_phenoview USING(accession_id)
   GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.year_id;
 CREATE UNIQUE INDEX genotyping_protocolsXyears_idx ON public.genotyping_protocolsXyears(genotyping_protocol_id, year_id) WITH (fillfactor=100);
-GRANT SELECT ON genotyping_protocolsXyears to web_usr;
+ALTER MATERIALIZED VIEW genotyping_protocolsXyears OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('genotyping_protocolsXyears', FALSE, CURRENT_TIMESTAMP);
 
 CREATE MATERIALIZED VIEW public.locations AS
@@ -379,15 +409,23 @@ SELECT nd_geolocation.nd_geolocation_id AS location_id,
    FROM nd_geolocation
   GROUP BY public.nd_geolocation.nd_geolocation_id, public.nd_geolocation.description;
 CREATE UNIQUE INDEX locations_idx ON public.locations(location_id) WITH (fillfactor=100);
-GRANT SELECT ON locations to web_usr;
+ALTER MATERIALIZED VIEW locations OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('locations', FALSE, CURRENT_TIMESTAMP);
+CREATE MATERIALIZED VIEW public.locationsXplants AS
+SELECT public.materialized_phenoview.location_id,
+    public.materialized_phenoview.plant_id
+   FROM public.materialized_phenoview
+  GROUP BY public.materialized_phenoview.location_id, public.materialized_phenoview.plant_id;
+CREATE UNIQUE INDEX locationsXplants_idx ON public.locationsXplants(location_id, plant_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW locationsXplants OWNER TO web_usr;
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('locationsXplants', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.locationsXplots AS
 SELECT public.materialized_phenoview.location_id,
     public.materialized_phenoview.plot_id
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.location_id, public.materialized_phenoview.plot_id;
 CREATE UNIQUE INDEX locationsXplots_idx ON public.locationsXplots(location_id, plot_id) WITH (fillfactor=100);
-GRANT SELECT ON locationsXplots to web_usr;
+ALTER MATERIALIZED VIEW locationsXplots OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('locationsXplots', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.locationsXtraits AS
 SELECT public.materialized_phenoview.location_id,
@@ -395,7 +433,7 @@ SELECT public.materialized_phenoview.location_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.location_id, public.materialized_phenoview.trait_id;
 CREATE UNIQUE INDEX locationsXtraits_idx ON public.locationsXtraits(location_id, trait_id) WITH (fillfactor=100);
-GRANT SELECT ON locationsXtraits to web_usr;
+ALTER MATERIALIZED VIEW locationsXtraits OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('locationsXtraits', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.locationsXtrials AS
 SELECT public.materialized_phenoview.location_id,
@@ -403,7 +441,7 @@ SELECT public.materialized_phenoview.location_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.location_id, public.materialized_phenoview.trial_id;
 CREATE UNIQUE INDEX locationsXtrials_idx ON public.locationsXtrials(location_id, trial_id) WITH (fillfactor=100);
-GRANT SELECT ON locationsXtrials to web_usr;
+ALTER MATERIALIZED VIEW locationsXtrials OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('locationsXtrials', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.locationsXtrial_designs AS
 SELECT public.materialized_phenoview.location_id,
@@ -411,7 +449,7 @@ SELECT public.materialized_phenoview.location_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.location_id, public.materialized_phenoview.trial_design_id;
 CREATE UNIQUE INDEX locationsXtrial_designs_idx ON public.locationsXtrial_designs(location_id, trial_design_id) WITH (fillfactor=100);
-GRANT SELECT ON locationsXtrial_designs to web_usr;
+ALTER MATERIALIZED VIEW locationsXtrial_designs OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('locationsXtrial_designs', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.locationsXtrial_types AS
 SELECT public.materialized_phenoview.location_id,
@@ -419,7 +457,7 @@ SELECT public.materialized_phenoview.location_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.location_id, public.materialized_phenoview.trial_type_id;
 CREATE UNIQUE INDEX locationsXtrial_types_idx ON public.locationsXtrial_types(location_id, trial_type_id) WITH (fillfactor=100);
-GRANT SELECT ON locationsXtrial_types to web_usr;
+ALTER MATERIALIZED VIEW locationsXtrial_types OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('locationsXtrial_types', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.locationsXyears AS
 SELECT public.materialized_phenoview.location_id,
@@ -427,8 +465,66 @@ SELECT public.materialized_phenoview.location_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.location_id, public.materialized_phenoview.year_id;
 CREATE UNIQUE INDEX locationsXyears_idx ON public.locationsXyears(location_id, year_id) WITH (fillfactor=100);
-GRANT SELECT ON locationsXyears to web_usr;
+ALTER MATERIALIZED VIEW locationsXyears OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('locationsXyears', FALSE, CURRENT_TIMESTAMP);
+
+CREATE MATERIALIZED VIEW public.plants AS
+SELECT stock.stock_id AS plant_id,
+    stock.uniquename AS plant_name
+   FROM stock
+   WHERE stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plant')
+  GROUP BY public.stock.stock_id, public.stock.uniquename;
+CREATE UNIQUE INDEX plants_idx ON public.plants(plant_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW plants OWNER TO web_usr;
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plants', FALSE, CURRENT_TIMESTAMP);
+CREATE MATERIALIZED VIEW public.plantsXplots AS
+SELECT public.materialized_phenoview.plant_id,
+    public.materialized_phenoview.plot_id
+   FROM public.materialized_phenoview
+  GROUP BY public.materialized_phenoview.plant_id, public.materialized_phenoview.plot_id;
+CREATE UNIQUE INDEX plantsXplots_idx ON public.plantsXplots(plant_id, plot_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW plantsXplots OWNER TO web_usr;
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plantsXtraits', FALSE, CURRENT_TIMESTAMP);
+CREATE MATERIALIZED VIEW public.plantsXtraits AS
+SELECT public.materialized_phenoview.plant_id,
+    public.materialized_phenoview.trait_id
+   FROM public.materialized_phenoview
+  GROUP BY public.materialized_phenoview.plant_id, public.materialized_phenoview.trait_id;
+CREATE UNIQUE INDEX plantsXtraits_idx ON public.plantsXtraits(plant_id, trait_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW plantsXtraits OWNER TO web_usr;
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plantsXtraits', FALSE, CURRENT_TIMESTAMP);
+CREATE MATERIALIZED VIEW public.plantsXtrials AS
+SELECT public.materialized_phenoview.plant_id,
+    public.materialized_phenoview.trial_id
+   FROM public.materialized_phenoview
+  GROUP BY public.materialized_phenoview.plant_id, public.materialized_phenoview.trial_id;
+CREATE UNIQUE INDEX plantsXtrials_idx ON public.plantsXtrials(plant_id, trial_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW plantsXtrials OWNER TO web_usr;
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plantsXtrials', FALSE, CURRENT_TIMESTAMP);
+CREATE MATERIALIZED VIEW public.plantsXtrial_designs AS
+SELECT public.materialized_phenoview.plant_id,
+    public.materialized_phenoview.trial_design_id
+   FROM public.materialized_phenoview
+  GROUP BY public.materialized_phenoview.plant_id, public.materialized_phenoview.trial_design_id;
+CREATE UNIQUE INDEX plantsXtrial_designs_idx ON public.plantsXtrial_designs(plant_id, trial_design_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW plantsXtrial_designs OWNER TO web_usr;
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plantsXtrial_designs', FALSE, CURRENT_TIMESTAMP);
+CREATE MATERIALIZED VIEW public.plantsXtrial_types AS
+SELECT public.materialized_phenoview.plant_id,
+    public.materialized_phenoview.trial_type_id
+   FROM public.materialized_phenoview
+  GROUP BY public.materialized_phenoview.plant_id, public.materialized_phenoview.trial_type_id;
+CREATE UNIQUE INDEX plantsXtrial_types_idx ON public.plantsXtrial_types(plant_id, trial_type_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW plantsXtrial_types OWNER TO web_usr;
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plantsXtrial_types', FALSE, CURRENT_TIMESTAMP);
+CREATE MATERIALIZED VIEW public.plantsXyears AS
+SELECT public.materialized_phenoview.plant_id,
+    public.materialized_phenoview.year_id
+   FROM public.materialized_phenoview
+  GROUP BY public.materialized_phenoview.plant_id, public.materialized_phenoview.year_id;
+CREATE UNIQUE INDEX plantsXyears_idx ON public.plantsXyears(plant_id, year_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW plantsXyears OWNER TO web_usr;
+INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plantsXyears', FALSE, CURRENT_TIMESTAMP);
 
 CREATE MATERIALIZED VIEW public.plots AS
 SELECT stock.stock_id AS plot_id,
@@ -437,7 +533,7 @@ SELECT stock.stock_id AS plot_id,
    WHERE stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plot')
   GROUP BY public.stock.stock_id, public.stock.uniquename;
 CREATE UNIQUE INDEX plots_idx ON public.plots(plot_id) WITH (fillfactor=100);
-GRANT SELECT ON plots to web_usr;
+ALTER MATERIALIZED VIEW plots OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plots', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.plotsXtraits AS
 SELECT public.materialized_phenoview.plot_id,
@@ -445,7 +541,7 @@ SELECT public.materialized_phenoview.plot_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.plot_id, public.materialized_phenoview.trait_id;
 CREATE UNIQUE INDEX plotsXtraits_idx ON public.plotsXtraits(plot_id, trait_id) WITH (fillfactor=100);
-GRANT SELECT ON plotsXtraits to web_usr;
+ALTER MATERIALIZED VIEW plotsXtraits OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plotsXtraits', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.plotsXtrials AS
 SELECT public.materialized_phenoview.plot_id,
@@ -453,7 +549,7 @@ SELECT public.materialized_phenoview.plot_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.plot_id, public.materialized_phenoview.trial_id;
 CREATE UNIQUE INDEX plotsXtrials_idx ON public.plotsXtrials(plot_id, trial_id) WITH (fillfactor=100);
-GRANT SELECT ON plotsXtrials to web_usr;
+ALTER MATERIALIZED VIEW plotsXtrials OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plotsXtrials', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.plotsXtrial_designs AS
 SELECT public.materialized_phenoview.plot_id,
@@ -461,7 +557,7 @@ SELECT public.materialized_phenoview.plot_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.plot_id, public.materialized_phenoview.trial_design_id;
 CREATE UNIQUE INDEX plotsXtrial_designs_idx ON public.plotsXtrial_designs(plot_id, trial_design_id) WITH (fillfactor=100);
-GRANT SELECT ON plotsXtrial_designs to web_usr;
+ALTER MATERIALIZED VIEW plotsXtrial_designs OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plotsXtrial_designs', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.plotsXtrial_types AS
 SELECT public.materialized_phenoview.plot_id,
@@ -469,7 +565,7 @@ SELECT public.materialized_phenoview.plot_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.plot_id, public.materialized_phenoview.trial_type_id;
 CREATE UNIQUE INDEX plotsXtrial_types_idx ON public.plotsXtrial_types(plot_id, trial_type_id) WITH (fillfactor=100);
-GRANT SELECT ON plotsXtrial_types to web_usr;
+ALTER MATERIALIZED VIEW plotsXtrial_types OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plotsXtrial_types', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.plotsXyears AS
 SELECT public.materialized_phenoview.plot_id,
@@ -477,7 +573,7 @@ SELECT public.materialized_phenoview.plot_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.plot_id, public.materialized_phenoview.year_id;
 CREATE UNIQUE INDEX plotsXyears_idx ON public.plotsXyears(plot_id, year_id) WITH (fillfactor=100);
-GRANT SELECT ON plotsXyears to web_usr;
+ALTER MATERIALIZED VIEW plotsXyears OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plotsXyears', FALSE, CURRENT_TIMESTAMP);
 
 CREATE MATERIALIZED VIEW public.traits AS
@@ -496,7 +592,7 @@ SELECT   cvterm.cvterm_id AS trait_id,
    JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id LIMIT 1)
    GROUP BY public.cvterm.cvterm_id, trait_name;
 CREATE UNIQUE INDEX traits_idx ON public.traits(trait_id) WITH (fillfactor=100);
-GRANT SELECT ON traits to web_usr;
+ALTER MATERIALIZED VIEW traits OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('traits', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.traitsXtrials AS
 SELECT public.materialized_phenoview.trait_id,
@@ -504,7 +600,7 @@ SELECT public.materialized_phenoview.trait_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.trait_id, public.materialized_phenoview.trial_id;
 CREATE UNIQUE INDEX traitsXtrials_idx ON public.traitsXtrials(trait_id, trial_id) WITH (fillfactor=100);
-GRANT SELECT ON traitsXtrials to web_usr;
+ALTER MATERIALIZED VIEW traitsXtrials OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('traitsXtrials', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.traitsXtrial_designs AS
 SELECT public.materialized_phenoview.trait_id,
@@ -512,7 +608,7 @@ SELECT public.materialized_phenoview.trait_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.trait_id, public.materialized_phenoview.trial_design_id;
 CREATE UNIQUE INDEX traitsXtrial_designs_idx ON public.traitsXtrial_designs(trait_id, trial_design_id) WITH (fillfactor=100);
-GRANT SELECT ON traitsXtrial_designs to web_usr;
+ALTER MATERIALIZED VIEW traitsXtrial_designs OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('traitsXtrial_designs', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.traitsXtrial_types AS
 SELECT public.materialized_phenoview.trait_id,
@@ -520,7 +616,7 @@ SELECT public.materialized_phenoview.trait_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.trait_id, public.materialized_phenoview.trial_type_id;
 CREATE UNIQUE INDEX traitsXtrial_types_idx ON public.traitsXtrial_types(trait_id, trial_type_id) WITH (fillfactor=100);
-GRANT SELECT ON traitsXtrial_types to web_usr;
+ALTER MATERIALIZED VIEW traitsXtrial_types OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('traitsXtrial_types', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.traitsXyears AS
 SELECT public.materialized_phenoview.trait_id,
@@ -528,7 +624,7 @@ SELECT public.materialized_phenoview.trait_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.trait_id, public.materialized_phenoview.year_id;
 CREATE UNIQUE INDEX traitsXyears_idx ON public.traitsXyears(trait_id, year_id) WITH (fillfactor=100);
-GRANT SELECT ON traitsXyears to web_usr;
+ALTER MATERIALIZED VIEW traitsXyears OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('traitsXyears', FALSE, CURRENT_TIMESTAMP);
 
 CREATE MATERIALIZED VIEW public.trial_designs AS
@@ -539,7 +635,7 @@ SELECT projectprop.value AS trial_design_id,
    WHERE cvterm.name = 'design'
    GROUP BY projectprop.value;
 CREATE UNIQUE INDEX trial_designs_idx ON public.trial_designs(trial_design_id) WITH (fillfactor=100);
-GRANT SELECT ON trial_designs to web_usr;
+ALTER MATERIALIZED VIEW trial_designs OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trial_designs', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.trial_designsXtrial_types AS
 SELECT public.materialized_phenoview.trial_design_id,
@@ -547,7 +643,7 @@ SELECT public.materialized_phenoview.trial_design_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.trial_design_id, public.materialized_phenoview.trial_type_id;
 CREATE UNIQUE INDEX trial_designsXtrial_types_idx ON public.trial_designsXtrial_types(trial_design_id, trial_type_id) WITH (fillfactor=100);
-GRANT SELECT ON trial_designsXtrial_types to web_usr;
+ALTER MATERIALIZED VIEW trial_designsXtrial_types OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trial_designsXtrial_types', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.trial_designsXtrials AS
 SELECT public.materialized_phenoview.trial_id,
@@ -555,7 +651,7 @@ SELECT public.materialized_phenoview.trial_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.trial_id, public.materialized_phenoview.trial_design_id;
 CREATE UNIQUE INDEX trial_designsXtrials_idx ON public.trial_designsXtrials(trial_id, trial_design_id) WITH (fillfactor=100);
-GRANT SELECT ON trial_designsXtrials to web_usr;
+ALTER MATERIALIZED VIEW trial_designsXtrials OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trial_designsXtrials', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.trial_designsXyears AS
 SELECT public.materialized_phenoview.trial_design_id,
@@ -563,7 +659,7 @@ SELECT public.materialized_phenoview.trial_design_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.trial_design_id, public.materialized_phenoview.year_id;
 CREATE UNIQUE INDEX trial_designsXyears_idx ON public.trial_designsXyears(trial_design_id, year_id) WITH (fillfactor=100);
-GRANT SELECT ON trial_designsXyears to web_usr;
+ALTER MATERIALIZED VIEW trial_designsXyears OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trial_designsXyears', FALSE, CURRENT_TIMESTAMP);
 
 CREATE MATERIALIZED VIEW public.trial_types AS
@@ -574,7 +670,7 @@ SELECT cvterm.cvterm_id AS trial_type_id,
    WHERE cv.name = 'project_type'
    GROUP BY cvterm.cvterm_id;
 CREATE UNIQUE INDEX trial_types_idx ON public.trial_types(trial_type_id) WITH (fillfactor=100);
-GRANT SELECT ON trial_types to web_usr;
+ALTER MATERIALIZED VIEW trial_types OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trial_types', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.trial_typesXtrials AS
 SELECT public.materialized_phenoview.trial_id,
@@ -582,7 +678,7 @@ SELECT public.materialized_phenoview.trial_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.trial_id, public.materialized_phenoview.trial_type_id;
 CREATE UNIQUE INDEX trial_typesXtrials_idx ON public.trial_typesXtrials(trial_id, trial_type_id) WITH (fillfactor=100);
-GRANT SELECT ON trial_typesXtrials to web_usr;
+ALTER MATERIALIZED VIEW trial_typesXtrials OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trial_typesXtrials', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.trial_typesXyears AS
 SELECT public.materialized_phenoview.trial_type_id,
@@ -590,7 +686,7 @@ SELECT public.materialized_phenoview.trial_type_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.trial_type_id, public.materialized_phenoview.year_id;
 CREATE UNIQUE INDEX trial_typesXyears_idx ON public.trial_typesXyears(trial_type_id, year_id) WITH (fillfactor=100);
-GRANT SELECT ON trial_typesXyears to web_usr;
+ALTER MATERIALIZED VIEW trial_typesXyears OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trial_typesXyears', FALSE, CURRENT_TIMESTAMP);
 
 CREATE MATERIALIZED VIEW public.trials AS
@@ -601,7 +697,7 @@ SELECT project.project_id AS trial_id,
    AND projectprop.type_id IS DISTINCT FROM (SELECT cvterm_id from cvterm where cvterm.name = 'trial_folder')
   GROUP BY public.project.project_id, public.project.name;
 CREATE UNIQUE INDEX trials_idx ON public.trials(trial_id) WITH (fillfactor=100);
-GRANT SELECT ON trials to web_usr;
+ALTER MATERIALIZED VIEW trials OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trials', FALSE, CURRENT_TIMESTAMP);
 CREATE MATERIALIZED VIEW public.trialsXyears AS
 SELECT public.materialized_phenoview.trial_id,
@@ -609,7 +705,7 @@ SELECT public.materialized_phenoview.trial_id,
    FROM public.materialized_phenoview
   GROUP BY public.materialized_phenoview.trial_id, public.materialized_phenoview.year_id;
 CREATE UNIQUE INDEX trialsXyears_idx ON public.trialsXyears(trial_id, year_id) WITH (fillfactor=100);
-GRANT SELECT ON trialsXyears to web_usr;
+ALTER MATERIALIZED VIEW trialsXyears OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trialsXyears', FALSE, CURRENT_TIMESTAMP);
 
 CREATE MATERIALIZED VIEW public.years AS
@@ -619,7 +715,7 @@ SELECT projectprop.value AS year_id,
    WHERE projectprop.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'project year')
   GROUP BY public.projectprop.value;
 CREATE UNIQUE INDEX years_idx ON public.years(year_id) WITH (fillfactor=100);
-GRANT SELECT ON years to web_usr;
+ALTER MATERIALIZED VIEW years OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('years', FALSE, CURRENT_TIMESTAMP);
 
 CREATE OR REPLACE FUNCTION public.refresh_materialized_views() RETURNS VOID AS '
