@@ -1191,6 +1191,7 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
   my @status = @$status;
 
   my @profile_ids = $c->req->param('markerprofileDbId');
+  my $data_format = $c->req->param('format');
   #print STDERR Dumper \@profile_ids;
   #my @profile_ids = split ",", $markerprofile_ids;
 
@@ -1212,11 +1213,12 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
     }
     #print Dumper(\@ordered_refmarkers);
 
+    my $json = JSON->new();
     $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
     while (my $profile = $rs->next()) {
       foreach my $m (@ordered_refmarkers) {
         my $markers_json = $profile->value();
-        $markers = JSON::Any->decode($markers_json);
+        $markers = $json->decode($markers_json);
 
         $scores{$profile->genotypeprop_id()}->{$m} = $self->convert_dosage_to_genotype($markers->{$m});
       }
@@ -1229,31 +1231,70 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
   foreach my $line (keys %scores) {
     push @lines, $line;
   }
-
+  
+  my @json_lines;
+  my $fh;
+  my $file_path;
   my %markers_seen;
-  for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
+  my $data_file_path;
+  my @marker_score_json_lines;
+  if (!$data_format || $data_format eq 'json' ){
+      @json_lines = @lines;
+      for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
 
-    my %markers_by_line;
-    my $m = $ordered_refmarkers[$n];
-      foreach my $line (keys %scores) {
-        push @{$markers_by_line{$m}}, $scores{$line}->{$m};
-        if (!exists $markers_seen{$m} ) {
-          $markers_seen{$m} = \@{$markers_by_line{$m}};
-          #push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
+        my %markers_by_line;
+        my $m = $ordered_refmarkers[$n];
+          foreach my $line (keys %scores) {
+            push @{$markers_by_line{$m}}, $scores{$line}->{$m};
+            if (!exists $markers_seen{$m} ) {
+              $markers_seen{$m} = \@{$markers_by_line{$m}};
+              #push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
+            }
+          }
+
+      }
+      foreach my $marker_name (sort keys %markers_seen) {
+          my $marker_scores = $markers_seen{$marker_name};
+          push @marker_score_json_lines, { $marker_name => $marker_scores };
+      }
+      
+      
+  } elsif ($data_format eq 'tsv') {
+      my $dir = $c->tempfiles_subdir('download');
+      my ($fh, $tempfile) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$data_format.'_'.'XXXXX');
+      $file_path = $c->config->{basepath}."/".$tempfile.".tsv";
+      #open(my $fh, "<", $filename);
+      print STDERR $file_path."\n";
+      print $fh "markerprofileDbId\t", join("\t", @lines), "\n";
+      
+      my %markers_by_line;
+      foreach my $m (@ordered_refmarkers) {
+        foreach my $line (keys %scores) {
+          push @{$markers_by_line{$m}}, $scores{$line}->{$m};
+          if (!exists $markers_seen{$m} ) {
+            $markers_seen{$m} = \@{$markers_by_line{$m}};
+            #push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
+          }
         }
       }
 
+      foreach my $marker_name (sort keys %markers_seen) {
+          my $marker_scores = $markers_seen{$marker_name};
+          print $fh "$marker_name\t", join("\t", @{$marker_scores}),"\n";
+      }
+      
+      
+      close $fh;
+      $data_file_path = $file_path;
   }
-
-  foreach my $marker_name (sort keys %markers_seen) {
-    push @marker_score_lines, { $marker_name => $markers_seen{$marker_name} };
-  }
+  
+  
 
   $total_count = scalar(keys %$markers);
 
   $c->stash->{rest} = {
-    metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => \@status },
-    result => {markerprofileDbIds => \@lines, data => \@marker_score_lines},
+    metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => \@status, datafiles=>$data_file_path },
+    result => {markerprofileDbIds => \@json_lines, data => \@marker_score_json_lines},
   };
 
 }
