@@ -146,7 +146,7 @@ CREATE TABLE public.matviews (
 );
 ALTER TABLE public.matviews OWNER TO web_usr;
 
-INSERT INTO matviews (mv_name, mv_dependents, currently_refreshing, last_refresh) VALUES ('materialized_phenoview', '{"accessionsXbreeding_programs","accessionsXlocations","accessionsXplants","accessionsXplots","accessionsXtraits","accessionsXtrials","accessionsXtrial_designs","accessionsXtrial_types","accessionsXyears","breeding_programsXgenotyping_protocols","breeding_programsXlocations","breeding_programsXplants","breeding_programsXplots","breeding_programsXtraits","breeding_programsXtrials","breeding_programsXtrial_designs","breeding_programsXtrial_types","breeding_programsXyears","genotyping_protocolsXlocations","genotyping_protocolsXplants""genotyping_protocolsXplots","genotyping_protocolsXtraits","genotyping_protocolsXtrials","genotyping_protocolsXtrial_designs","genotyping_protocolsXtrial_types","genotyping_protocolsXyears","locationsXplants","locationsXplots","locationsXtraits","locationsXtrials","locationsXtrial_designs","locationsXtrial_types","locationsXyears","plantsXplots","plantsXtraits","plantsXtrials","plantsXtrial_designs","plantsXtrial_types","plantsXyears","plotsXtraits","plotsXtrials","plotsXtrial_designs","plotsXtrial_types","plotsXyears","traitsXtrials","traitsXtrial_designs","traitsXtrial_types","traitsXyears","trial_designsXtrials","trial_typesXtrials","trialsXyears","trial_designsXtrial_types","trial_designsXyears","trial_typesXyears"}', FALSE, CURRENT_TIMESTAMP);
+INSERT INTO matviews (mv_name, mv_dependents, currently_refreshing, last_refresh) VALUES ('materialized_phenoview', '{"accessionsXbreeding_programs","accessionsXlocations","accessionsXplants","accessionsXplots","accessionsXtraits","accessionsXtrials","accessionsXtrial_designs","accessionsXtrial_types","accessionsXyears","breeding_programsXgenotyping_protocols","breeding_programsXlocations","breeding_programsXplants","breeding_programsXplots","breeding_programsXtraits","breeding_programsXtrials","breeding_programsXtrial_designs","breeding_programsXtrial_types","breeding_programsXyears","genotyping_protocolsXlocations","genotyping_protocolsXplants","genotyping_protocolsXplots","genotyping_protocolsXtraits","genotyping_protocolsXtrials","genotyping_protocolsXtrial_designs","genotyping_protocolsXtrial_types","genotyping_protocolsXyears","locationsXplants","locationsXplots","locationsXtraits","locationsXtrials","locationsXtrial_designs","locationsXtrial_types","locationsXyears","plantsXplots","plantsXtraits","plantsXtrials","plantsXtrial_designs","plantsXtrial_types","plantsXyears","plotsXtraits","plotsXtrials","plotsXtrial_designs","plotsXtrial_types","plotsXyears","traitsXtrials","traitsXtrial_designs","traitsXtrial_types","traitsXyears","trial_designsXtrials","trial_typesXtrials","trialsXyears","trial_designsXtrial_types","trial_designsXyears","trial_typesXyears"}', FALSE, CURRENT_TIMESTAMP);
 INSERT INTO matviews (mv_name, mv_dependents, currently_refreshing, last_refresh) VALUES ('materialized_genoview', '{"accessionsXgenotyping_protocols","breeding_programsXgenotyping_protocols","genotyping_protocolsXlocations","genotyping_protocolsXplants","genotyping_protocolsXplots","genotyping_protocolsXtraits","genotyping_protocolsXtrials","genotyping_protocolsXtrial_designs","genotyping_protocolsXtrial_types","genotyping_protocolsXyears"}', FALSE, CURRENT_TIMESTAMP);
 
 CREATE MATERIALIZED VIEW public.accessions AS
@@ -725,6 +725,7 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessions;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXbreeding_programs;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXlocations;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXgenotyping_protocols;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXplants;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXplots;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXtraits;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXtrial_designs;
@@ -734,6 +735,7 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXyears;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programs;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXlocations;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXgenotyping_protocols;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXplants;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXplots;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXtraits;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXtrial_designs;
@@ -742,6 +744,7 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXtrials;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXyears;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocols;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXlocations;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXplants;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXplots;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXtraits;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXtrial_designs;
@@ -749,12 +752,20 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXtrial_types;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXtrials;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXyears;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.locations;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXplants;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXplots;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXtraits;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXtrial_designs;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXtrial_types;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXtrials;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXyears;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plants;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plantsXplots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plantsXtraits;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plantsXtrial_designs;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plantsXtrial_types;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plantsXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plantsXyears;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.plots;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXtraits;
 REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXtrial_designs;
@@ -779,7 +790,7 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY public.years;
 UPDATE public.matviews SET currently_refreshing=FALSE, last_refresh=CURRENT_TIMESTAMP;'
     LANGUAGE SQL;
 
-
+ALTER FUNCTION public.refresh_materialized_views() OWNER TO web_usr;
 --
 
 EOSQL
