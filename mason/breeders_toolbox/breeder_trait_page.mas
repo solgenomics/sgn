@@ -1,0 +1,14 @@
+
+<& /page/page_title.mas, title=>"Traits Query Wizard" &>
+
+<&| /page/info_section.mas, title=>"Explore the database using metadata" &>
+  
+  <& /breeders_toolbox/breeder_trait_search.mas &>
+
+</&>
+
+<&| /page/info_section.mas, title=>"Download selected data" &>
+
+  <& /breeders_toolbox/breeder_search_download.mas &>
+
+</&>
