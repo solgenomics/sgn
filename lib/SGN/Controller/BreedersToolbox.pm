@@ -425,6 +425,14 @@ sub breeder_search : Path('/breeders/search/') :Args(0) {
 }
 
 
+sub breeder_traits : Path('/breeders/traits/') :Args(0) {
+    my ($self, $c) = @_;
+    $c->stash->{template} = '/breeders_toolbox/breeder_trait_page.mas';
+}
+
+
+
+
 sub get_crosses : Private {
     my $self = shift;
     my $c = shift;
