@@ -401,23 +401,53 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 
 }
 
+sub compute_derive_traits : Path('/ajax/phenotype/delete_field_coords') Args(0) {
+
+  my $self = shift;
+	my $c = shift;
+	my $trial_id = $c->req->param('trial_id');
+  print "TRIALID: $trial_id\n";
+
+  my $schema = $c->dbic_schema('Bio::Chado::Schema');
+  my $dbh = $c->dbc->dbh();
+
+  if (!$c->user()) {
+		print STDERR "User not logged in... not deleting field map.\n";
+		$c->stash->{rest} = {error => "You need to be logged in to delete field map." };
+		return;
+    	}
+
+	if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+		$c->stash->{rest} = {error =>  "You have insufficient privileges to delete field map." };
+		return;
+    	}
+
+  my $h = $dbh->prepare("delete from stockprop where stockprop.stockprop_id IN (select stockprop.stockprop_id from project join nd_experiment_project using(project_id) join nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) join stockprop on(stock.stock_id=stockprop.stock_id) where (stockprop.type_id IN (select cvterm_id from cvterm where name='col_number') or stockprop.type_id IN (select cvterm_id from cvterm where name='row_number')) and project.project_id=? and stock.type_id IN (select cvterm_id from cvterm join cv using(cv_id) where cv.name = 'stock_type' and cvterm.name ='plot'));");
+  my ($row_number, $col_number, $cvterm_id, @cvterm );
+  $h->execute($trial_id);
+
+  $c->stash->{rest} = {success => 1};
+  
+}
+
+
 sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0) {
     my $self = shift;
     my $c = shift;
     my $plants_per_plot = $c->req->param("plants_per_plot") || 8;
 
-    if (my $error = $self->delete_privileges_denied($c)) { 
+    if (my $error = $self->delete_privileges_denied($c)) {
 	$c->stash->{rest} = { error => $error };
 	return;
     }
 
-    if (!$plants_per_plot || $plants_per_plot > 50) { 
+    if (!$plants_per_plot || $plants_per_plot > 50) {
 	$c->stash->{rest} = { error => "Plants per plot number is required and must be smaller than 20." };
 	return;
     }
 
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
-    
+
     if ($t->create_plant_entities($plants_per_plot)) {
         $c->stash->{rest} = {success => 1};
         return;
@@ -425,7 +455,7 @@ sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0)
         $c->stash->{rest} = { error => "Error creating plant entries in controller." };
     	return;
     }
-    
+
 }
 
 

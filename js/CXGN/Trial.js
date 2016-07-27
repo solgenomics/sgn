@@ -220,6 +220,36 @@ function compute_derived_trait() {
 }
 
 
+function delete_field_map() {
+    jQuery('#working_modal').modal("show");
+
+  var trialID = parseInt(jQuery('#trialIDDiv').text());
+  alert("MY ID: "+trialID);
+  new jQuery.ajax({
+	 type: 'POST',
+	 url: '/ajax/phenotype/delete_field_coords',
+	 dataType: "json",
+	 data: {
+             'trial_id': trialID,
+	 },
+
+	 success: function (response) {
+	     jQuery('#working_modal').modal("hide");
+
+      if (response.error) {
+		      alert("Error Deleting Field Map: "+response.error);
+      } else {
+          //alert("Field map deletion Successful...");
+		      jQuery('#delete_field_map_dialog_message').dialog("open");
+          }
+	 },
+	 error: function () {
+	     jQuery('#working_modal').modal("hide");
+             alert('An error occurred deleting field map.');
+	 }
+  });
+}
+
 function trial_detail_page_setup_dialogs() {
 
      jQuery('#compute_derived_trait_dialog').dialog({
@@ -372,7 +402,6 @@ function trial_detail_page_setup_dialogs() {
 	    delete_project_entry_by_trial_id(trial_id);
 	});
 
-
     jQuery('#view_layout_link').click(function () {
         jQuery('#trial_design_view_layout').dialog("open");
     });
@@ -406,6 +435,42 @@ function trial_detail_page_setup_dialogs() {
 		alert("An error occurred trying to retrieve derived traits.");
 	    }
 	});
+
+});
+
+jQuery("#delete_field_map_dialog").dialog({
+autoOpen: false,
+modal: true,
+autoResize:true,
+    width: 500,
+    position: ['top', 75],
+buttons: {
+        "Cancel": function () {
+            jQuery('#delete_field_map_dialog').dialog("close");
+        },
+  "Ok": {text: "Ok", id:"delete_field_coords_ok_button", click:function () {
+delete_field_map();
+            jQuery('#delete_field_map_dialog').dialog("close");
+    }
+  }
+}
+});
+
+jQuery('#delete_field_map_link').click(function () {
+    jQuery('#delete_field_map_dialog').dialog("open");
+});
+
+jQuery("#delete_field_map_dialog_message").dialog({
+autoOpen: false,
+modal: true,
+buttons: {
+        Ok: { id: "dismiss_delete_field_map_dialog",
+              click: function() {
+                location.reload();
+              },
+              text: "OK"
+            }
+    }
 
 });
 
