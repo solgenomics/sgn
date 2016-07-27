@@ -182,9 +182,15 @@ print STDERR "Protocol hash created...\n";
 my $json_obj = JSON::Any->new;
 my $json_string = $json_obj->encode(\%protocolprop_json);
 my $last_protocolprop_rs = $schema->resultset("NaturalDiversity::NdProtocolprop")->search({}, {order_by=> { -desc => 'nd_protocolprop_id' }, rows=>1});
-my $new_protocolprop_id = $last_protocolprop_rs->first()->nd_protocolprop_id() + 1;
+my $last_protocolprop = $last_protocolprop_rs->first();
+my $new_protocolprop_id;
+if ($last_protocolprop) {
+    $new_protocolprop_id = $last_protocolprop->nd_protocolprop_id() + 1;
+} else {
+    $new_protocolprop_id = 1;
+}
 my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocolprop_id, nd_protocol_id, type_id, value) VALUES ('$new_protocolprop_id', '$protocol_id', '$vcf_map_details_id', '$json_string');";
-$dbh->do($new_protocolprop_sql);
+$dbh->do($new_protocolprop_sql) or die "DBI::errstr";
 
 #my $add_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->create({ nd_protocol_id => $protocol_id, type_id => $vcf_map_details->cvterm_id(), value => $json_string });
 undef %protocolprop_json;
@@ -322,7 +328,3 @@ foreach (@$accessions) {
 
 print STDERR "Complete!\n";
 
-
-    
-    
-    
