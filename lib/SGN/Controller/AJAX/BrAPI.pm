@@ -1240,13 +1240,17 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
   my @marker_score_json_lines;
   if (!$data_format || $data_format eq 'json' ){
       @json_lines = @lines;
+      print STDERR scalar(@ordered_refmarkers)."\n";
+
       for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
 
         my %markers_by_line;
         my $m = $ordered_refmarkers[$n];
+        #print STDERR Dumper $m;
           foreach my $line (keys %scores) {
             push @{$markers_by_line{$m}}, $scores{$line}->{$m};
             if (!exists $markers_seen{$m} ) {
+                #print STDERR Dumper \@{$markers_by_line{$m}};
               $markers_seen{$m} = \@{$markers_by_line{$m}};
               #push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
             }
@@ -1255,6 +1259,7 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
       }
       foreach my $marker_name (sort keys %markers_seen) {
           my $marker_scores = $markers_seen{$marker_name};
+          #print STDERR Dumper $marker_scores;
           push @marker_score_json_lines, { $marker_name => $marker_scores };
       }
       
@@ -1263,15 +1268,18 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
       my $dir = $c->tempfiles_subdir('download');
       my ($fh, $tempfile) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$data_format.'_'.'XXXXX');
       $file_path = $c->config->{basepath}."/".$tempfile.".tsv";
-      #open(my $fh, "<", $filename);
+      open(my $fh, ">", $file_path);
       print STDERR $file_path."\n";
-      print $fh "markerprofileDbId\t", join("\t", @lines), "\n";
+      print $fh "markerprofileDbIds\t", join("\t", @lines), "\n";
       
       my %markers_by_line;
+      print STDERR scalar(@ordered_refmarkers)."\n";
       foreach my $m (@ordered_refmarkers) {
+          #print STDERR Dumper $m;
         foreach my $line (keys %scores) {
           push @{$markers_by_line{$m}}, $scores{$line}->{$m};
           if (!exists $markers_seen{$m} ) {
+              #print STDERR Dumper \@{$markers_by_line{$m}};
             $markers_seen{$m} = \@{$markers_by_line{$m}};
             #push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
           }
@@ -1280,6 +1288,7 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
 
       foreach my $marker_name (sort keys %markers_seen) {
           my $marker_scores = $markers_seen{$marker_name};
+          #print STDERR Dumper $marker_scores;
           print $fh "$marker_name\t", join("\t", @{$marker_scores}),"\n";
       }
       
