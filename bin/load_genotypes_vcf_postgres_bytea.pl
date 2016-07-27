@@ -42,6 +42,7 @@ use JSON::PP;
 use Carp qw /croak/ ;
 use Try::Tiny;
 use Pod::Usage;
+use Storable qw(nfreeze thaw);
 
 use Bio::Chado::Schema;
 use CXGN::People::Person;
@@ -189,8 +190,11 @@ if ($last_protocolprop) {
 } else {
     $new_protocolprop_id = 1;
 }
-my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocolprop_id, nd_protocol_id, type_id, value) VALUES ('$new_protocolprop_id', '$protocol_id', '$vcf_map_details_id', '$json_string');";
-$dbh->do($new_protocolprop_sql) or die "DBI::errstr";
+#my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocolprop_id, nd_protocol_id, type_id, value) VALUES ('$new_protocolprop_id', '$protocol_id', '$vcf_map_details_id', '$json_string');";
+#$dbh->do($new_protocolprop_sql) or die "DBI::errstr";
+my $sth = $dbh->prepare("INSERT INTO nd_protocolprop (nd_protocolprop_id, nd_protocol_id, type_id, value) VALUES ('?', '?', '?', '?')");
+$sth->bind_param($new_protocolprop_id, $protocol_id, $vcf_map_details_id, nfreeze($json_string), { pg_type => DBD::Pg::PG_BYTEA });
+$sth->execute();
 
 #my $add_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->create({ nd_protocol_id => $protocol_id, type_id => $vcf_map_details->cvterm_id(), value => $json_string });
 undef %protocolprop_json;
