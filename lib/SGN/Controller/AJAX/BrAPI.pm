@@ -1201,7 +1201,7 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
   my $total_count;
   my @marker_score_lines;
   my @ordered_refmarkers;
-
+  my $markers;
   if ($rs->count() > 0) {
     while (my $profile = $rs->next()) {
       my $profile_json = $profile->value();
@@ -1216,7 +1216,7 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
     while (my $profile = $rs->next()) {
       foreach my $m (@ordered_refmarkers) {
         my $markers_json = $profile->value();
-        my $markers = JSON::Any->decode($markers_json);
+        $markers = JSON::Any->decode($markers_json);
 
         $scores{$profile->genotypeprop_id()}->{$m} = $self->convert_dosage_to_genotype($markers->{$m});
       }
@@ -1249,7 +1249,7 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
     push @marker_score_lines, { $marker_name => $markers_seen{$marker_name} };
   }
 
-  $total_count = scalar(@marker_score_lines);
+  $total_count = scalar(keys %$markers);
 
   $c->stash->{rest} = {
     metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => \@status },
@@ -1763,8 +1763,14 @@ sub studies_table_GET {
     #print STDERR Dumper \@data;
 
     my $total_count = scalar(@data)-1;
-    my @header_ids;
     my @header_names = split /\t/, $data[0];
+    #print STDERR Dumper \@header_names;
+    my @trait_names = @header_names[11 .. $#header_names];
+    #print STDERR Dumper \@trait_names;
+    my @header_ids;
+    foreach my $t (@trait_names) {
+        push @header_ids, SGN::Model::Cvterm->get_cvterm_row_from_trait_name($self->bcs_schema, $t)->cvterm_id();
+    }
 
     my $start = $c->stash->{page_size}*($c->stash->{current_page}-1)+1;
     my $end = $c->stash->{page_size}*$c->stash->{current_page}+1;

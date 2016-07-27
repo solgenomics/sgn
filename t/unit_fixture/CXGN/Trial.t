@@ -149,7 +149,7 @@ my $plotlist_ref = [ 'anothertrial1', 'anothertrial2', 'anothertrial3', 'another
 
 my $traitlist_ref = [ 'root number|CO:0000011', 'dry yield|CO:0000014' ];
 
-my %plot_trait_value = ( 'anothertrial1' => { 'root number|CO:0000011'  => [12,''], 'dry yield|CO:0000014' => [30,''] },
+my %plot_trait_value = ( 'anothertrial1' => { 'root number|CO:0000011'  => [0,''], 'dry yield|CO:0000014' => [30,''] },
 			   'anothertrial2' => { 'root number|CO:0000011'  => [10,''], 'dry yield|CO:0000014' => [40,''] },
 			   'anothertrial3' => { 'root number|CO:0000011'  => [20,''], 'dry yield|CO:0000014' => [50,''] },
     );
@@ -159,13 +159,15 @@ my %metadata = ( operator => 'johndoe', date => '20141223' );
 
 my $size = scalar(@$plotlist_ref) * scalar(@$traitlist_ref);
 
-$lp->store($c, $size, $plotlist_ref, $traitlist_ref, \%plot_trait_value, \%metadata);
+$lp->store($c, $size, $plotlist_ref, $traitlist_ref, \%plot_trait_value, \%metadata, 'plots');
 
 my $total_phenotypes = $trial->total_phenotypes();
 
 my $trial_phenotype_count = $trial->phenotype_count();
 
 print STDERR "Total phentoypes: $total_phenotypes\n";
+print STDERR "Trial phentoypes: $trial_phenotype_count\n";
+is($total_phenotypes, 3310, "total phenotype data");
 is($trial_phenotype_count, 6, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -288,6 +290,142 @@ my $trial_controls = $trial->get_controls();
 is_deeply($trial_controls, [], "check get_controls");
 
 
+
+#add plant entries
+$trial->create_plant_entities(3);
+
+ok($trial->has_plant_entries(), "check if plant entries created.");
+
+my $trial = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),	trial_id => $trial_id });
+my $plants = $trial->get_plants();
+#print STDERR Dumper $plants;
+is(scalar(@$plants), $number_of_plots*3, "check if the right number of plants was created");
+
+my $plantlist_ref = [ 'anothertrial9_plant_2', 'anothertrial8_plant_3', 'anothertrial2_plant_2' ];
+
+my $traitlist_ref = [ 'root number|CO:0000011', 'dry yield|CO:0000014', 'harvest index|CO:0000015' ];
+
+my %plant_trait_value = ( 'anothertrial9_plant_2' => { 'root number|CO:0000011'  => [12,''], 'dry yield|CO:0000014' => [30,''], 'harvest index|CO:0000015' => [2,''] },
+    'anothertrial8_plant_3' => { 'root number|CO:0000011'  => [10,''], 'dry yield|CO:0000014' => [40,''], 'harvest index|CO:0000015' => [3,''] },
+    'anothertrial2_plant_2' => { 'root number|CO:0000011'  => [20,''], 'dry yield|CO:0000014' => [50,''], 'harvest index|CO:0000015' => [7,''] },
+);
+
+my %metadata = ( operator => 'johndoe', date => '20141225' );
+
+my $size = scalar(@$plantlist_ref) * scalar(@$traitlist_ref);
+
+$lp->store($c, $size, $plantlist_ref, $traitlist_ref, \%plant_trait_value, \%metadata, 'plants');
+
+my $total_phenotypes = $trial->total_phenotypes();
+
+my $trial_phenotype_count = $trial->phenotype_count();
+
+print STDERR "Total phentoypes: $total_phenotypes\n";
+print STDERR "Trial phentoypes: $trial_phenotype_count\n";
+is($total_phenotypes, 3319, "total phenotype data");
+is($trial_phenotype_count, 15, "trial has phenotype data");
+
+my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
+				trial_id => $trial_id });
+
+my $traits_assayed  = $tn->get_traits_assayed();
+my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
+#print STDERR Dumper \@traits_assayed_sorted;
+
+my @traits_assayed_check = (['70668','Harvest index variable'],['70706','Root number counting'],['70727','Dry yield']);
+
+#is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed' );
+
+my @pheno_for_trait = $tn->get_phenotypes_for_trait(70706);
+my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
+#print STDERR Dumper \@pheno_for_trait_sorted;
+my @pheno_for_trait_check = (0, 10, 10, 12, 20, 20);
+is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check traits assayed' );
+
+my @pheno_for_trait = $tn->get_phenotypes_for_trait(70668);
+my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
+#print STDERR Dumper \@pheno_for_trait_sorted;
+my @pheno_for_trait_check = (2,3,7);
+is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check traits assayed' );
+
+my @pheno_for_trait = $tn->get_phenotypes_for_trait(70727);
+my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
+#print STDERR Dumper \@pheno_for_trait_sorted;
+my @pheno_for_trait_check = (30,30,40,40,50,50);
+is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check traits assayed' );
+
+
+my $retrieve_accessions = $trial->get_accessions();
+#print STDERR Dumper $retrieve_accessions;
+my @get_accessions_names;
+foreach (@$retrieve_accessions){
+    push @get_accessions_names, $_->{'accession_name'};
+}
+@get_accessions_names = sort @get_accessions_names;
+#print STDERR Dumper \@get_accessions_names;
+is_deeply(\@get_accessions_names, [
+          'test_accession1',
+          'test_accession2',
+          'test_accession3'
+        ], 'check get_accessions');
+
+my $retrieve_plots = $trial->get_plots();
+#print STDERR Dumper $retrieve_plots;
+my @get_plot_names;
+foreach (@$retrieve_plots){
+    push @get_plot_names, $_->[1];
+}
+@get_plot_names = sort @get_plot_names;
+#print STDERR Dumper \@get_plot_names;
+is_deeply(\@get_plot_names, [
+          'anothertrial1',
+          'anothertrial2',
+          'anothertrial3',
+          'anothertrial4',
+          'anothertrial5',
+          'anothertrial6',
+          'anothertrial7',
+          'anothertrial8',
+          'anothertrial9'
+        ], "check get_plots");
+
+my $retrieve_plants = $trial->get_plants();
+#print STDERR Dumper $retrieve_plants;
+my @get_plant_names;
+foreach (@$retrieve_plants){
+    push @get_plant_names, $_->{'plant_name'};
+}
+@get_plant_names = sort @get_plant_names;
+#print STDERR Dumper \@get_plant_names;
+is_deeply(\@get_plant_names, [
+          'anothertrial1_plant_1',
+          'anothertrial1_plant_2',
+          'anothertrial1_plant_3',
+          'anothertrial2_plant_1',
+          'anothertrial2_plant_2',
+          'anothertrial2_plant_3',
+          'anothertrial3_plant_1',
+          'anothertrial3_plant_2',
+          'anothertrial3_plant_3',
+          'anothertrial4_plant_1',
+          'anothertrial4_plant_2',
+          'anothertrial4_plant_3',
+          'anothertrial5_plant_1',
+          'anothertrial5_plant_2',
+          'anothertrial5_plant_3',
+          'anothertrial6_plant_1',
+          'anothertrial6_plant_2',
+          'anothertrial6_plant_3',
+          'anothertrial7_plant_1',
+          'anothertrial7_plant_2',
+          'anothertrial7_plant_3',
+          'anothertrial8_plant_1',
+          'anothertrial8_plant_2',
+          'anothertrial8_plant_3',
+          'anothertrial9_plant_1',
+          'anothertrial9_plant_2',
+          'anothertrial9_plant_3'
+        ], "check get_plants()");
 
 
 # check trial deletion - first, delete associated phenotypes

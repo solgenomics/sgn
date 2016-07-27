@@ -71,10 +71,10 @@ ok($validate_file != 1, "Check if parse validate phenotype spreadsheet fails for
 #Now parse phenotyping spreadsheet file using correct parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/upload_phenotypin_spreadsheet.xls";
-$validate_file = $parser->validate('phenotype spreadsheet', $filename, 1);
+$validate_file = $parser->validate('phenotype spreadsheet', $filename, 1, 'plots');
 ok($validate_file == 1, "Check if parse validate works for phenotype file");
 
-my $parsed_file = $parser->parse('phenotype spreadsheet', $filename, 1);
+my $parsed_file = $parser->parse('phenotype spreadsheet', $filename, 1, 'plots');
 ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
 #print STDERR Dumper $parsed_file;
@@ -389,7 +389,7 @@ my @traits = @{$parsed_file->{'traits'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 my $size = scalar(@plots) * scalar(@traits);
-my $stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
+my $stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
 ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -487,10 +487,10 @@ ok($post1_exp_md_files_diff == 60, "Check num rows in NdExperimentMdFIles table 
 
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/upload_phenotypin_spreadsheet_duplicate.xls";
-$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0);
+$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plots');
 ok($validate_file == 1, "Check if parse validate works for phenotype file");
 
-my $parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0);
+my $parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0), 'plots';
 ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
 my %phenotype_metadata;
@@ -503,7 +503,7 @@ my @plots = @{$parsed_file->{'plots'}};
 my @traits = @{$parsed_file->{'traits'}};
 
 $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
-$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
+$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
 ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
 my $traits_assayed  = $tn->get_traits_assayed();
@@ -609,7 +609,7 @@ $filename = "t/data/trial/data_collector_upload.xls";
 $validate_file = $parser->validate('field book', $filename, 1);
 ok($validate_file != 1, "Check if parse validate fieldbook fails for datacollector");
 
-#Now parse phenotyping spreadsheet file using correct parser
+#Now parse fieldbook file using correct parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/fieldbook/fieldbook_phenotype_file.csv";
 $validate_file = $parser->validate('field book', $filename, 1);
@@ -620,9 +620,181 @@ ok($parsed_file, "Check if parse parse fieldbook works");
 
 #print STDERR Dumper $parsed_file;
 
-#is_deeply($parsed_file, {
-
-#        }, "Check parse fieldbook");
+is_deeply($parsed_file, {
+          'plots' => [
+                       'test_trial21',
+                       'test_trial210',
+                       'test_trial211',
+                       'test_trial212',
+                       'test_trial213',
+                       'test_trial214',
+                       'test_trial215',
+                       'test_trial22',
+                       'test_trial23',
+                       'test_trial24',
+                       'test_trial25',
+                       'test_trial26',
+                       'test_trial27',
+                       'test_trial28',
+                       'test_trial29'
+                     ],
+          'data' => {
+                      'test_trial22' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '45',
+                                                                      '2016-01-07 12:08:26-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '45',
+                                                                               '2016-01-07 12:08:26-0500'
+                                                                             ]
+                                        },
+                      'test_trial27' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '0',
+                                                                      '2016-01-07 12:08:51-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '52',
+                                                                               '2016-01-07 12:08:51-0500'
+                                                                             ]
+                                        },
+                      'test_trial214' => {
+                                           'dry yield|CO:0000014' => [
+                                                                       '32',
+                                                                       '2016-01-07 12:09:05-0500'
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '32',
+                                                                                '2016-01-07 12:09:05-0500'
+                                                                              ]
+                                         },
+                      'test_trial21' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '42',
+                                                                      '2016-01-07 12:08:24-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '42',
+                                                                               '2016-01-07 12:08:24-0500'
+                                                                             ]
+                                        },
+                      'test_trial28' => {
+                                          'dry matter content|CO:0000092' => [
+                                                                               '41',
+                                                                               '2016-01-07 12:08:53-0500'
+                                                                             ],
+                                          'dry yield|CO:0000014' => [
+                                                                      '41',
+                                                                      '2016-01-07 12:08:53-0500'
+                                                                    ]
+                                        },
+                      'test_trial23' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '41',
+                                                                      '2016-01-07 12:08:27-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '41',
+                                                                               '2016-01-07 12:08:27-0500'
+                                                                             ]
+                                        },
+                      'test_trial215' => {
+                                           'dry matter content|CO:0000092' => [
+                                                                                '31',
+                                                                                '2016-01-07 12:09:07-0500'
+                                                                              ],
+                                           'dry yield|CO:0000014' => [
+                                                                       '31',
+                                                                       '2016-01-07 12:09:07-0500'
+                                                                     ]
+                                         },
+                      'test_trial24' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '14',
+                                                                      '2016-01-07 12:08:46-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '14',
+                                                                               '2016-01-07 12:08:46-0500'
+                                                                             ]
+                                        },
+                      'test_trial213' => {
+                                           'dry yield|CO:0000014' => [
+                                                                       '35',
+                                                                       '2016-01-07 12:09:04-0500'
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '35',
+                                                                                '2016-01-07 12:09:04-0500'
+                                                                              ]
+                                         },
+                      'test_trial212' => {
+                                           'dry yield|CO:0000014' => [
+                                                                       '42',
+                                                                       '2016-01-07 12:09:02-0500'
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '42',
+                                                                                '2016-01-07 12:09:02-0500'
+                                                                              ]
+                                         },
+                      'test_trial210' => {
+                                           'dry yield|CO:0000014' => [
+                                                                       '12',
+                                                                       '2016-01-07 12:08:56-0500'
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '12',
+                                                                                '2016-01-07 12:08:56-0500'
+                                                                              ]
+                                         },
+                      'test_trial25' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '25',
+                                                                      '2016-01-07 12:08:48-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '25',
+                                                                               '2016-01-07 12:08:48-0500'
+                                                                             ]
+                                        },
+                      'test_trial211' => {
+                                           'dry matter content|CO:0000092' => [
+                                                                                '13',
+                                                                                '2016-01-07 12:08:58-0500'
+                                                                              ],
+                                           'dry yield|CO:0000014' => [
+                                                                       '13',
+                                                                       '2016-01-07 12:08:58-0500'
+                                                                     ]
+                                         },
+                      'test_trial29' => {
+                                          'dry matter content|CO:0000092' => [
+                                                                               '',
+                                                                               '2016-01-07 12:08:55-0500'
+                                                                             ],
+                                          'dry yield|CO:0000014' => [
+                                                                      '24',
+                                                                      '2016-01-07 12:08:55-0500'
+                                                                    ]
+                                        },
+                      'test_trial26' => {
+                                          'dry matter content|CO:0000092' => [
+                                                                               '',
+                                                                               '2016-01-07 12:08:49-0500'
+                                                                             ],
+                                          'dry yield|CO:0000014' => [
+                                                                      '0',
+                                                                      '2016-01-07 12:08:49-0500'
+                                                                    ]
+                                        }
+                    },
+          'traits' => [
+                        'dry matter content|CO:0000092',
+                        'dry yield|CO:0000014'
+                      ]
+        }, "Check parse fieldbook");
 
 
 $phenotype_metadata{'archived_file'} = $filename;
@@ -635,7 +807,7 @@ $phenotype_metadata{'date'}="2016-01-16_03:15:26";
 
 $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 $size = scalar(@plots) * scalar(@traits);
-$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
+$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
 ok(!$stored_phenotype_error_msg, "check that store fieldbook works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -1053,7 +1225,7 @@ $phenotype_metadata{'date'}="2016-02-16_07:11:98";
 
 $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 $size = scalar(@plots) * scalar(@traits);
-$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
+$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
 ok(!$stored_phenotype_error_msg, "check that store fieldbook works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -1151,10 +1323,10 @@ ok($post1_exp_md_files_diff == 205, "Check num rows in NdExperimentMdFIles table
 
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/upload_phenotypin_spreadsheet_large.xls";
-$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0);
+$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plots');
 ok($validate_file == 1, "Check if parse validate works for large phenotype file");
 
-$parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0);
+$parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0, 'plots');
 ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
 #print STDERR Dumper $parsed_file;
@@ -1712,7 +1884,7 @@ $phenotype_metadata{'date'}="2016-02-16_05:55:55";
 
 $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 $size = scalar(@plots) * scalar(@traits);
-$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata);
+$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
 ok(!$stored_phenotype_error_msg, "check that store large pheno spreadsheet works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -1892,9 +2064,838 @@ while (my $rs = $exp_md_files_table_tail->next() ) {
 #print STDERR Dumper \@exp_md_files_table;
 
 
+if (!$tn->has_plant_entries) {
+	$tn->create_plant_entities(2);
+}
 
-#Verify Database Tables State
+#check that parse fails for plant spreadsheet file when using plot parser
+$parser = CXGN::Phenotypes::ParseUpload->new();
+$filename = "t/data/trial/upload_phenotypin_spreadsheet_plants.xls";
+$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plots');
+ok($validate_file != 1, "Check if parse validate plot fails for plant spreadsheet file");
 
+$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plants');
+ok($validate_file == 1, "Check if parse validate works for plant spreadsheet file");
+
+$parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0, 'plants');
+ok($parsed_file, "Check if parse parse phenotype plant spreadsheet works");
+
+#print STDERR Dumper $parsed_file;
+
+is_deeply($parsed_file, {
+          'plots' => [
+                       'test_trial210_plant_1',
+                       'test_trial210_plant_2',
+                       'test_trial211_plant_1',
+                       'test_trial211_plant_2',
+                       'test_trial212_plant_1',
+                       'test_trial212_plant_2',
+                       'test_trial213_plant_1',
+                       'test_trial213_plant_2',
+                       'test_trial214_plant_1',
+                       'test_trial214_plant_2',
+                       'test_trial215_plant_1',
+                       'test_trial215_plant_2',
+                       'test_trial21_plant_1',
+                       'test_trial21_plant_2',
+                       'test_trial22_plant_1',
+                       'test_trial22_plant_2',
+                       'test_trial23_plant_1',
+                       'test_trial23_plant_2',
+                       'test_trial24_plant_1',
+                       'test_trial24_plant_2',
+                       'test_trial25_plant_1',
+                       'test_trial25_plant_2',
+                       'test_trial26_plant_1',
+                       'test_trial26_plant_2',
+                       'test_trial27_plant_1',
+                       'test_trial27_plant_2',
+                       'test_trial28_plant_1',
+                       'test_trial28_plant_2',
+                       'test_trial29_plant_1',
+                       'test_trial29_plant_2'
+                     ],
+          'data' => {
+                      'test_trial27_plant_2' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '23',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '33',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial29_plant_1' => {
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '36',
+                                                                                      ''
+                                                                                    ],
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '26',
+                                                                                                  ''
+                                                                                                ]
+                                                },
+                      'test_trial29_plant_2' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '27',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '37',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial212_plant_1' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '32',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '42',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial25_plant_1' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '18',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '28',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial22_plant_2' => {
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '23',
+                                                                                      ''
+                                                                                    ],
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '13',
+                                                                                                  ''
+                                                                                                ]
+                                                },
+                      'test_trial213_plant_1' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '34',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '44',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial211_plant_2' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '31',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '41',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial27_plant_1' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '22',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '32',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial28_plant_2' => {
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '35',
+                                                                                      ''
+                                                                                    ],
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '25',
+                                                                                                  ''
+                                                                                                ]
+                                                },
+                      'test_trial25_plant_2' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '29',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial210_plant_1' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '28',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '38',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial212_plant_2' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '33',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '43',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial21_plant_1' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '10',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '20',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial24_plant_1' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '16',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '26',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial210_plant_2' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '29',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial23_plant_2' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '15',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '25',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial214_plant_1' => {
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '46',
+                                                                                       ''
+                                                                                     ],
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '36',
+                                                                                                   ''
+                                                                                                 ]
+                                                 },
+                      'test_trial215_plant_2' => {
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '49',
+                                                                                       ''
+                                                                                     ],
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '39',
+                                                                                                   ''
+                                                                                                 ]
+                                                 },
+                      'test_trial211_plant_1' => {
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '40',
+                                                                                       ''
+                                                                                     ],
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '30',
+                                                                                                   ''
+                                                                                                 ]
+                                                 },
+                      'test_trial23_plant_1' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '14',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '24',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial28_plant_1' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '0',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '34',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial26_plant_2' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '21',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '0',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial213_plant_2' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '35',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '45',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial22_plant_1' => {
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '22',
+                                                                                      ''
+                                                                                    ],
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '12',
+                                                                                                  ''
+                                                                                                ]
+                                                },
+                      'test_trial215_plant_1' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '38',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '48',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial26_plant_1' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '20',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '30',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial214_plant_2' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '37',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '47',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial24_plant_2' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '17',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '27',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial21_plant_2' => {
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '21',
+                                                                                      ''
+                                                                                    ],
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '11',
+                                                                                                  ''
+                                                                                                ]
+                                                }
+                    },
+          'traits' => [
+                        'dry matter content percentage|CO:0000092',
+                        'fresh root weight|CO:0000012'
+                      ]
+        }, "check plant spreadsheet file was parsed");
+
+$phenotype_metadata{'archived_file'} = $filename;
+$phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
+$phenotype_metadata{'operator'}="janedoe";
+$phenotype_metadata{'date'}="2016-02-16_05:15:21";
+%parsed_data = %{$parsed_file->{'data'}};
+@plots = @{$parsed_file->{'plots'}};
+@traits = @{$parsed_file->{'traits'}};
+
+$store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
+$size = scalar(@plots) * scalar(@traits);
+$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plants');
+ok(!$stored_phenotype_error_msg, "check that store large pheno spreadsheet works");
+
+$tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
+	trial_id => 137 });
+
+$traits_assayed  = $tn->get_traits_assayed();
+@traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
+#print STDERR Dumper \@traits_assayed_sorted;
+is_deeply(\@traits_assayed_sorted, [[70666, 'Fresh root weight'], [70668, 'Harvest index variable'], [70681,'Top yield'], [ 70700, 'Sprouting proportion'], [70706,'Root number counting'],[70713,'Flower'],[  70727, 'Dry yield'  ], [70741,'Dry matter content percentage'  ], [ 70773, 'Fresh shoot weight measurement in kg' ] ], 'check traits assayed after plant upload' );
+
+@pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
+@pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
+#print STDERR Dumper \@pheno_for_trait_sorted;
+is_deeply(\@pheno_for_trait_sorted, [
+          0,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          32,
+          33,
+          34,
+          35,
+          36,
+          36,
+          37,
+          37,
+          38,
+          38,
+          39,
+          40,
+          40,
+          41,
+          41,
+          42,
+          42,
+          43,
+          43,
+          44,
+          45,
+          45,
+          46,
+          46,
+          47,
+          47,
+          48,
+          48,
+          49,
+          49,
+          50
+        ], 'check pheno traits 70666 after plant upload' );
+
+@pheno_for_trait = $tn->get_phenotypes_for_trait(70727);
+@pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
+#print STDERR Dumper \@pheno_for_trait_sorted;
+is_deeply(\@pheno_for_trait_sorted, [
+          0,
+          0,
+          12,
+          13,
+          14,
+          24,
+          25,
+          31,
+          32,
+          35,
+          41,
+          41,
+          42,
+          42,
+          45
+        ], "check pheno trait 70727 after plant upload.");
+
+
+$experiment = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id}, {order_by => {-asc => 'nd_experiment_id'}});
+$post1_experiment_count = $experiment->count();
+$post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
+print STDERR "Experiment count: ".$post1_experiment_diff."\n";
+ok($post1_experiment_diff == 381, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
+
+my @nd_experiment_table;
+my $nd_experiment_table_tail = $experiment->slice($post1_experiment_count-323, $post1_experiment_count);
+while (my $rs = $nd_experiment_table_tail->next() ) {
+  push @nd_experiment_table, [nd_experiment_id=> $rs->nd_experiment_id(), nd_geolocation_id=> $rs->nd_geolocation_id(), type_id=> $rs->type_id()];
+}
+#print STDERR Dumper \@nd_experiment_table;
+
+$phenotype_rs = $c->bcs_schema->resultset('Phenotype::Phenotype')->search({});
+$post1_phenotype_count = $phenotype_rs->count();
+$post1_phenotype_diff = $post1_phenotype_count - $pre_phenotype_count;
+print STDERR "Phenotype count: ".$post1_phenotype_diff."\n";
+ok($post1_phenotype_diff == 381, "Check num rows in Phenotype table after addition of large phenotyping spreadsheet upload");
+
+my @pheno_table;
+my $pheno_table_tail = $phenotype_rs->slice($post1_phenotype_count-323, $post1_phenotype_count);
+while (my $rs = $pheno_table_tail->next() ) {
+  push @pheno_table, [phenotype_id=> $rs->phenotype_id(), observable_id=> $rs->observable_id(), attr_id=> $rs->attr_id(), value=> $rs->value(), cvalue_id=>$rs->cvalue_id(), assay_id=>$rs->assay_id()];
+}
+#print STDERR Dumper \@pheno_table;
+
+$exp_prop_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
+$post1_exp_prop_count = $exp_prop_rs->count();
+$post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
+print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
+ok($post1_exp_prop_diff == 762, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
+
+my @exp_prop_table;
+my $exp_prop_table_tail = $exp_prop_rs->slice($post1_exp_prop_count-646, $post1_exp_prop_count);
+while (my $rs = $exp_prop_table_tail->next() ) {
+  push @exp_prop_table, [nd_experimentprop_id=> $rs->nd_experimentprop_id(), nd_experiment_id=> $rs->nd_experiment_id(), type_id=> $rs->type_id(), value=> $rs->value(), rank=> $rs->rank()];
+}
+#print STDERR Dumper \@exp_prop_table;
+
+$exp_proj_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
+$post1_exp_proj_count = $exp_proj_rs->count();
+$post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
+print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
+ok($post1_exp_proj_diff == 381, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
+
+my @exp_proj_table;
+my $exp_proj_table_tail = $exp_proj_rs->slice($post1_exp_proj_count-323, $post1_exp_proj_count);
+while (my $rs = $exp_proj_table_tail->next() ) {
+  push @exp_proj_table, [nd_experiment_project_id=> $rs->nd_experiment_project_id(), nd_experiment_id=> $rs->nd_experiment_id(), project_id=> $rs->project_id()];
+}
+#print STDERR Dumper \@exp_proj_table;
+
+$exp_stock_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
+$post1_exp_stock_count = $exp_stock_rs->count();
+$post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
+print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
+ok($post1_exp_stock_diff == 381, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
+
+my @exp_stock_table;
+my $exp_stock_table_tail = $exp_stock_rs->slice($post1_exp_stock_count-323, $post1_exp_stock_count);
+while (my $rs = $exp_stock_table_tail->next() ) {
+  push @exp_stock_table, [nd_experiment_stock_id=> $rs->nd_experiment_stock_id(), nd_experiment_id=> $rs->nd_experiment_id(), stock_id=> $rs->stock_id(), type_id=> $rs->type_id()];
+}
+#print STDERR Dumper \@exp_stock_table;
+
+$exp_pheno_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
+$post1_exp_pheno_count = $exp_pheno_rs->count();
+$post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
+print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
+ok($post1_exp_pheno_diff == 381, "Check num rows in NdExperimentphenotype table after addition of large phenotyping spreadsheet upload");
+
+my @exp_pheno_table;
+my $exp_pheno_table_tail = $exp_pheno_rs->slice($post1_exp_pheno_count-323, $post1_exp_pheno_count);
+while (my $rs = $exp_pheno_table_tail->next() ) {
+  push @exp_pheno_table, [nd_experiment_phenotype_id=> $rs->nd_experiment_phenotype_id(), nd_experiment_id=> $rs->nd_experiment_id(), phenotype_id=> $rs->phenotype_id()];
+}
+#print STDERR Dumper \@exp_pheno_table;
+
+$md_rs = $c->metadata_schema->resultset('MdMetadata')->search({});
+$post1_md_count = $md_rs->count();
+$post1_md_diff = $post1_md_count - $pre_md_count;
+print STDERR "MdMetadata count: ".$post1_md_diff."\n";
+ok($post1_md_diff == 6, "Check num rows in MdMetadata table after addition of phenotyping spreadsheet upload");
+
+my @md_table;
+my $md_table_tail = $md_rs->slice($post1_md_count-5, $post1_md_count);
+while (my $rs = $md_table_tail->next() ) {
+  push @md_table, [metadata_id => $rs->metadata_id(), create_person_id=> $rs->create_person_id()];
+}
+#print STDERR Dumper \@md_table;
+
+$md_files_rs = $c->metadata_schema->resultset('MdFiles')->search({});
+$post1_md_files_count = $md_files_rs->count();
+$post1_md_files_diff = $post1_md_files_count - $pre_md_files_count;
+print STDERR "MdFiles count: ".$post1_md_files_diff."\n";
+ok($post1_md_files_diff == 6, "Check num rows in MdFiles table after addition of large phenotyping spreadsheet upload");
+
+my @md_files_table;
+my $md_files_table_tail = $md_files_rs->slice($post1_md_files_count-5, $post1_md_files_count);
+while (my $rs = $md_files_table_tail->next() ) {
+  push @md_files_table, [file_id => $rs->file_id(), basename=> $rs->basename(), dirname=> $rs->dirname(), filetype=> $rs->filetype(), alt_filename=>$rs->alt_filename(), comment=>$rs->comment(), urlsource=>$rs->urlsource()];
+}
+#print STDERR Dumper \@md_files_table;
+
+$exp_md_files_rs = $c->phenome_schema->resultset('NdExperimentMdFiles')->search({});
+$post1_exp_md_files_count = $exp_md_files_rs->count();
+$post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
+print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
+ok($post1_exp_md_files_diff == 381, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
+
+my @exp_md_files_table;
+my $exp_md_files_table_tail = $exp_md_files_rs->slice($post1_exp_md_files_count-324, $post1_exp_md_files_count-1);
+while (my $rs = $exp_md_files_table_tail->next() ) {
+  push @exp_md_files_table, [nd_experiment_md_files_id => $rs->nd_experiment_md_files_id(), nd_experiment_id=> $rs->nd_experiment_id(), file_id=> $rs->file_id()];
+}
+#print STDERR Dumper \@exp_md_files_table;
+
+
+
+$parser = CXGN::Phenotypes::ParseUpload->new();
+$filename = "t/data/fieldbook/fieldbook_phenotype_plants_file.csv";
+
+$validate_file = $parser->validate('field book', $filename, 1);
+ok($validate_file == 1, "Check if parse validate works for plant fieldbook file");
+
+$parsed_file = $parser->parse('field book', $filename, 1);
+ok($parsed_file, "Check if parse parse phenotype plant fieldbook works");
+
+#print STDERR Dumper $parsed_file;
+
+is_deeply($parsed_file, {
+          'data' => {
+                      'test_trial23_plant_1' => {
+                                                  'dry matter content|CO:0000092' => [
+                                                                                       '41',
+                                                                                       '2016-01-07 12:08:27-0500'
+                                                                                     ]
+                                                },
+                      'test_trial22_plant_2' => {
+                                                  'dry yield|CO:0000014' => [
+                                                                              '0',
+                                                                              '2016-01-07 12:08:26-0500'
+                                                                            ],
+                                                  'dry matter content|CO:0000092' => [
+                                                                                       '45',
+                                                                                       '2016-01-07 12:08:26-0500'
+                                                                                     ]
+                                                },
+                      'test_trial21_plant_2' => {
+                                                  'dry matter content|CO:0000092' => [
+                                                                                       '42',
+                                                                                       '2016-01-07 12:08:24-0500'
+                                                                                     ],
+                                                  'dry yield|CO:0000014' => [
+                                                                              '0',
+                                                                              '2016-01-07 12:08:24-0500'
+                                                                            ]
+                                                },
+                      'test_trial21_plant_1' => {
+                                                  'dry yield|CO:0000014' => [
+                                                                              '42',
+                                                                              '2016-01-07 12:08:24-0500'
+                                                                            ],
+                                                  'dry matter content|CO:0000092' => [
+                                                                                       '42',
+                                                                                       '2016-01-07 12:08:24-0500'
+                                                                                     ]
+                                                },
+                      'test_trial23_plant_2' => {
+                                                  'dry matter content|CO:0000092' => [
+                                                                                       '41',
+                                                                                       '2016-01-07 12:08:27-0500'
+                                                                                     ]
+                                                },
+                      'test_trial22_plant_1' => {
+                                                  'dry yield|CO:0000014' => [
+                                                                              '45',
+                                                                              '2016-01-07 12:08:26-0500'
+                                                                            ],
+                                                  'dry matter content|CO:0000092' => [
+                                                                                       '45',
+                                                                                       '2016-01-07 12:08:26-0500'
+                                                                                     ]
+                                                }
+                    },
+          'traits' => [
+                        'dry matter content|CO:0000092',
+                        'dry yield|CO:0000014'
+                      ],
+          'plots' => [
+                       'test_trial21_plant_1',
+                       'test_trial21_plant_2',
+                       'test_trial22_plant_1',
+                       'test_trial22_plant_2',
+                       'test_trial23_plant_1',
+                       'test_trial23_plant_2'
+                     ]
+        }, "check parse fieldbook plant file");
+
+$phenotype_metadata{'archived_file'} = $filename;
+$phenotype_metadata{'archived_file_type'}="tablet phenotype file";
+$phenotype_metadata{'operator'}="janedoe";
+$phenotype_metadata{'date'}="2016-02-16_05:55:17";
+%parsed_data = %{$parsed_file->{'data'}};
+@plots = @{$parsed_file->{'plots'}};
+@traits = @{$parsed_file->{'traits'}};
+
+$store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
+$size = scalar(@plots) * scalar(@traits);
+$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plants');
+ok(!$stored_phenotype_error_msg, "check that store fieldbook plants works");
+
+$tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
+	trial_id => 137 });
+
+$traits_assayed  = $tn->get_traits_assayed();
+@traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
+#print STDERR Dumper \@traits_assayed_sorted;
+is_deeply(\@traits_assayed_sorted, [[70666, 'Fresh root weight'], [70668, 'Harvest index variable'], [70681,'Top yield'], [ 70700, 'Sprouting proportion'], [70706,'Root number counting'],[70713,'Flower'],[  70727, 'Dry yield'  ], [70741,'Dry matter content percentage'  ], [ 70773, 'Fresh shoot weight measurement in kg' ] ], 'check traits assayed after plant upload' );
+
+$experiment = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id}, {order_by => {-asc => 'nd_experiment_id'}});
+$post1_experiment_count = $experiment->count();
+$post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
+print STDERR "Experiment count: ".$post1_experiment_diff."\n";
+ok($post1_experiment_diff == 391, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
+
+my @nd_experiment_table;
+my $nd_experiment_table_tail = $experiment->slice($post1_experiment_count-323, $post1_experiment_count);
+while (my $rs = $nd_experiment_table_tail->next() ) {
+  push @nd_experiment_table, [nd_experiment_id=> $rs->nd_experiment_id(), nd_geolocation_id=> $rs->nd_geolocation_id(), type_id=> $rs->type_id()];
+}
+#print STDERR Dumper \@nd_experiment_table;
+
+$phenotype_rs = $c->bcs_schema->resultset('Phenotype::Phenotype')->search({});
+$post1_phenotype_count = $phenotype_rs->count();
+$post1_phenotype_diff = $post1_phenotype_count - $pre_phenotype_count;
+print STDERR "Phenotype count: ".$post1_phenotype_diff."\n";
+ok($post1_phenotype_diff == 391, "Check num rows in Phenotype table after addition of large phenotyping spreadsheet upload");
+
+my @pheno_table;
+my $pheno_table_tail = $phenotype_rs->slice($post1_phenotype_count-323, $post1_phenotype_count);
+while (my $rs = $pheno_table_tail->next() ) {
+  push @pheno_table, [phenotype_id=> $rs->phenotype_id(), observable_id=> $rs->observable_id(), attr_id=> $rs->attr_id(), value=> $rs->value(), cvalue_id=>$rs->cvalue_id(), assay_id=>$rs->assay_id()];
+}
+#print STDERR Dumper \@pheno_table;
+
+$exp_prop_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
+$post1_exp_prop_count = $exp_prop_rs->count();
+$post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
+print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
+ok($post1_exp_prop_diff == 782, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
+
+my @exp_prop_table;
+my $exp_prop_table_tail = $exp_prop_rs->slice($post1_exp_prop_count-646, $post1_exp_prop_count);
+while (my $rs = $exp_prop_table_tail->next() ) {
+  push @exp_prop_table, [nd_experimentprop_id=> $rs->nd_experimentprop_id(), nd_experiment_id=> $rs->nd_experiment_id(), type_id=> $rs->type_id(), value=> $rs->value(), rank=> $rs->rank()];
+}
+#print STDERR Dumper \@exp_prop_table;
+
+$exp_proj_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
+$post1_exp_proj_count = $exp_proj_rs->count();
+$post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
+print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
+ok($post1_exp_proj_diff == 391, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
+
+my @exp_proj_table;
+my $exp_proj_table_tail = $exp_proj_rs->slice($post1_exp_proj_count-323, $post1_exp_proj_count);
+while (my $rs = $exp_proj_table_tail->next() ) {
+  push @exp_proj_table, [nd_experiment_project_id=> $rs->nd_experiment_project_id(), nd_experiment_id=> $rs->nd_experiment_id(), project_id=> $rs->project_id()];
+}
+#print STDERR Dumper \@exp_proj_table;
+
+$exp_stock_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
+$post1_exp_stock_count = $exp_stock_rs->count();
+$post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
+print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
+ok($post1_exp_stock_diff == 391, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
+
+my @exp_stock_table;
+my $exp_stock_table_tail = $exp_stock_rs->slice($post1_exp_stock_count-323, $post1_exp_stock_count);
+while (my $rs = $exp_stock_table_tail->next() ) {
+  push @exp_stock_table, [nd_experiment_stock_id=> $rs->nd_experiment_stock_id(), nd_experiment_id=> $rs->nd_experiment_id(), stock_id=> $rs->stock_id(), type_id=> $rs->type_id()];
+}
+#print STDERR Dumper \@exp_stock_table;
+
+$exp_pheno_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
+$post1_exp_pheno_count = $exp_pheno_rs->count();
+$post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
+print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
+ok($post1_exp_pheno_diff == 391, "Check num rows in NdExperimentphenotype table after addition of large phenotyping spreadsheet upload");
+
+my @exp_pheno_table;
+my $exp_pheno_table_tail = $exp_pheno_rs->slice($post1_exp_pheno_count-323, $post1_exp_pheno_count);
+while (my $rs = $exp_pheno_table_tail->next() ) {
+  push @exp_pheno_table, [nd_experiment_phenotype_id=> $rs->nd_experiment_phenotype_id(), nd_experiment_id=> $rs->nd_experiment_id(), phenotype_id=> $rs->phenotype_id()];
+}
+#print STDERR Dumper \@exp_pheno_table;
+
+$md_rs = $c->metadata_schema->resultset('MdMetadata')->search({});
+$post1_md_count = $md_rs->count();
+$post1_md_diff = $post1_md_count - $pre_md_count;
+print STDERR "MdMetadata count: ".$post1_md_diff."\n";
+ok($post1_md_diff == 7, "Check num rows in MdMetadata table after addition of phenotyping spreadsheet upload");
+
+my @md_table;
+my $md_table_tail = $md_rs->slice($post1_md_count-5, $post1_md_count);
+while (my $rs = $md_table_tail->next() ) {
+  push @md_table, [metadata_id => $rs->metadata_id(), create_person_id=> $rs->create_person_id()];
+}
+#print STDERR Dumper \@md_table;
+
+$md_files_rs = $c->metadata_schema->resultset('MdFiles')->search({});
+$post1_md_files_count = $md_files_rs->count();
+$post1_md_files_diff = $post1_md_files_count - $pre_md_files_count;
+print STDERR "MdFiles count: ".$post1_md_files_diff."\n";
+ok($post1_md_files_diff == 7, "Check num rows in MdFiles table after addition of large phenotyping spreadsheet upload");
+
+my @md_files_table;
+my $md_files_table_tail = $md_files_rs->slice($post1_md_files_count-5, $post1_md_files_count);
+while (my $rs = $md_files_table_tail->next() ) {
+  push @md_files_table, [file_id => $rs->file_id(), basename=> $rs->basename(), dirname=> $rs->dirname(), filetype=> $rs->filetype(), alt_filename=>$rs->alt_filename(), comment=>$rs->comment(), urlsource=>$rs->urlsource()];
+}
+#print STDERR Dumper \@md_files_table;
+
+$exp_md_files_rs = $c->phenome_schema->resultset('NdExperimentMdFiles')->search({});
+$post1_exp_md_files_count = $exp_md_files_rs->count();
+$post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
+print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
+ok($post1_exp_md_files_diff == 391, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
+
+my @exp_md_files_table;
+my $exp_md_files_table_tail = $exp_md_files_rs->slice($post1_exp_md_files_count-324, $post1_exp_md_files_count-1);
+while (my $rs = $exp_md_files_table_tail->next() ) {
+  push @exp_md_files_table, [nd_experiment_md_files_id => $rs->nd_experiment_md_files_id(), nd_experiment_id=> $rs->nd_experiment_id(), file_id=> $rs->file_id()];
+}
+#print STDERR Dumper \@exp_md_files_table;
 
 
 done_testing();

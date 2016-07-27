@@ -29,6 +29,14 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="col-sm-3 control-label">Data Level: </label>
+                    <div class="col-sm-9" >
+                        <select class="form-control" id="upload_phenotype_datacollector_data_level">
+                            <option value="plots">Plots</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label class="col-sm-3 control-label">Data Collector File: </label>
                     <div class="col-sm-9" >
                         <input type="file" id="upload_datacollector_phenotype_file_input" name="upload_datacollector_phenotype_file_input" encoding="multipart/form-data" />

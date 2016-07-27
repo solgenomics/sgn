@@ -79,87 +79,42 @@ function delete_project_entry_by_trial_id(trial_id) {
 
 }
 
-function open_create_spreadsheet_dialog() {
-    //jQuery('#working').dialog("open");
-    jQuery('#working_modal').modal("show");
-    var list = new CXGN.List();
-    jQuery("#trait_list").html(list.listSelect("trait_list", [ 'traits' ]));
-    //jQuery('#working').dialog("close");
-    jQuery('#working_modal').modal("hide");
-    jQuery('#create_spreadsheet_dialog').dialog("open");
-}
+function associate_breeding_program() {
+    var program = jQuery('#breeding_program_select').val();
 
-function create_spreadsheet() {
-    //jQuery('#working').dialog("open");
-    jQuery('#working_modal').modal("show");
-    var trialID = parseInt(jQuery('#trialIDDiv').text());
-    var list = new CXGN.List();
-    var trait_list_id = jQuery('#trait_list_list_select').val();
-    var trait_list;
-    if (! trait_list_id == "") {
-	trait_list = JSON.stringify(list.getList(trait_list_id));
-    }
-     new jQuery.ajax({
-	 type: 'POST',
-	 url: '/ajax/phenotype/create_spreadsheet',
-	 dataType: "json",
-	 data: {
-             'trial_id': trialID,
-             'trait_list': trait_list,
-	 },
-	 success: function (response) {
-	    // jQuery('#working').dialog("close");
-	     jQuery('#working_modal').modal("hide");
-             if (response.error) {
-		 alert(response.error);
-		 jQuery('#open_create_spreadsheet_dialog').dialog("close");
-             } else {
-		 //alert(response.filename);
-		 jQuery('#open_create_spreadsheet_dialog').dialog("close");
-		 jQuery('#working_modal').modal("hide");
-		 window.location.href = "/download/"+response.filename;
-             }
-	 },
-	 error: function () {
-	     //jQuery('#working').dialog("close");
-	     jQuery('#working_modal').modal("hide");
-             alert('An error occurred creating a phenotype file.');
-             jQuery('#open_download_spreadsheet_dialog').dialog("close");
-	 }
-     });
-}
+    var trial_id = get_trial_id();
+    jQuery.ajax( {
+	url: '/breeders/program/associate/'+program+'/'+ trial_id,
+	async: false,
+	success: function(response) {
+            alert("Associated program with id "+program + " to trial with id "+ trial_id);
 
-function open_create_fieldbook_dialog() {
-    var trialID = parseInt(jQuery('#trialIDDiv').text());
-    new jQuery.ajax({
-	type: 'POST',
-	url: '/ajax/fieldbook/create',
-	dataType: "json",
-	data: {
-            'trial_id': trialID,
-	},
-	beforeSend: function() {
-		jQuery("#working_modal").modal("show");
-	},
-	success: function (response) {
-		jQuery("#working_modal").modal("hide");
-            if (response.error) {
-		alert(response.error);
-		jQuery('#open_create_fieldbook_dialog').dialog("close");
-            } else {
-		jQuery('#tablet_layout_download_link').attr('href',"/fieldbook");
-		jQuery("#tablet_field_layout_saved_dialog_message").dialog("open");
-		//alert(response.file);
-		jQuery('#open_create_fieldbook_dialog').dialog("close");
-            }
-	},
-	error: function () {
-		jQuery("#working_modal").modal("hide");
-            alert('Missing trial design.');
-            jQuery('#open_create_fieldbook_dialog').dialog("close");
 	}
     });
 }
+
+function load_breeding_program_info(trial_id) {
+    jQuery.ajax( {
+	url:'/breeders/programs_by_trial/'+trial_id,
+	success: function(response) {
+            if (response.error) {
+		jQuery('#breeding_programs').html('[ An error occurred fetching the breeding program information ]');
+            }
+            else {
+		var programs = response.projects;
+		for (var i=0; i< programs.length; i++) {
+		    var html =  programs[0][1] + ' (' + programs[0][2] + ') ';
+		}
+		if (programs.length == 0) { html = "(none)"; }
+		jQuery('#breeding_programs').html(html);
+            }
+	},
+	error: function() {
+	    jQuery('#breeding_programs').html('[ An error occurred ]');
+	}
+    });
+}
+
 
 function open_create_DataCollector_dialog() {
     //jQuery('#working').dialog("open");
@@ -265,71 +220,36 @@ function compute_derived_trait() {
 }
 
 
+function delete_field_map() {
+    jQuery('#working_modal').modal("show");
+
+  var trialID = parseInt(jQuery('#trialIDDiv').text());
+  new jQuery.ajax({
+	 type: 'POST',
+	 url: '/ajax/phenotype/delete_field_coords',
+	 dataType: "json",
+	 data: {
+             'trial_id': trialID,
+	 },
+
+	 success: function (response) {
+	     jQuery('#working_modal').modal("hide");
+
+      if (response.error) {
+		      alert("Error Deleting Field Map: "+response.error);
+      } else {
+          //alert("Field map deletion Successful...");
+		      jQuery('#delete_field_map_dialog_message').dialog("open");
+          }
+	 },
+	 error: function () {
+	     jQuery('#working_modal').modal("hide");
+             alert('An error occurred deleting field map.');
+	 }
+  });
+}
+
 function trial_detail_page_setup_dialogs() {
-
-    jQuery( "#tablet_field_layout_saved_dialog_message" ).dialog({
-	autoOpen: false,
-	modal: true,
-	buttons: {
-	    Ok: function() {
-		jQuery( this ).dialog( "close" );
-		location.reload();
-	    }
-	}
-    });
-
-    jQuery( "#data_collector_saved_dialog_message" ).dialog({
-	autoOpen: false,
-	modal: true,
-	buttons: {
-	    Ok: function() {
-		jQuery( this ).dialog( "close" );
-		location.reload();
-	    }
-	}
-    });
-
-    jQuery('#create_spreadsheet_dialog').dialog({
-	autoOpen: false,
-	modal: true,
-	autoResize:true,
-	width: 500,
-	position: ['top', 75],
-	modal: true,
-	buttons: {
-	    Cancel: function() {
-		jQuery( this ).dialog( "close" );
-		return;
-	    },
-	    Create: {text: "Ok", id:"create_phenotyping_ok_button", click:function() {
-		create_spreadsheet();
-		//save_experimental_design(design_json);
-		jQuery( this ).dialog( "close" );
-	       },
-	    },
-	},
-    });
-
-    jQuery('#create_DataCollector_dialog').dialog({
-	autoOpen: false,
-	modal: true,
-	autoResize:true,
-	width: 500,
-	position: ['top', 75],
-	modal: true,
-	buttons: {
-	    Cancel: function() {
-		jQuery( this ).dialog( "close" );
-		return;
-	    },
-	    Create: {text: "Create", id:"create_DataCollector_submit_button", click:function() {
-		create_DataCollector();
-		//save_experimental_design(design_json);
-		jQuery( this ).dialog( "close" );
-		}
-	    },
-	},
-    });
 
      jQuery('#compute_derived_trait_dialog').dialog({
 	autoOpen: false,
@@ -481,17 +401,8 @@ function trial_detail_page_setup_dialogs() {
 	    delete_project_entry_by_trial_id(trial_id);
 	});
 
-
-    jQuery('#create_spreadsheet_link').click(function () {
-	open_create_spreadsheet_dialog();
-    });
-
-    jQuery('#create_fieldbook_link').click(function () {
-	open_create_fieldbook_dialog();
-    });
-
-    jQuery('#create_DataCollector_link').click(function () {
-	open_create_DataCollector_dialog();
+    jQuery('#view_layout_link').click(function () {
+        jQuery('#trial_design_view_layout').dialog("open");
     });
 
     jQuery('#compute_derived_trait_link').click( function () {
@@ -523,6 +434,42 @@ function trial_detail_page_setup_dialogs() {
 		alert("An error occurred trying to retrieve derived traits.");
 	    }
 	});
+
+});
+
+jQuery("#delete_field_map_dialog").dialog({
+autoOpen: false,
+modal: true,
+autoResize:true,
+    width: 500,
+    position: ['top', 75],
+buttons: {
+        "Cancel": function () {
+            jQuery('#delete_field_map_dialog').dialog("close");
+        },
+  "Ok": {text: "Ok", id:"delete_field_coords_ok_button", click:function () {
+delete_field_map();
+            jQuery('#delete_field_map_dialog').dialog("close");
+    }
+  }
+}
+});
+
+jQuery('#delete_field_map_link').click(function () {
+    jQuery('#delete_field_map_dialog').dialog("open");
+});
+
+jQuery("#delete_field_map_dialog_message").dialog({
+autoOpen: false,
+modal: true,
+buttons: {
+        Ok: { id: "dismiss_delete_field_map_dialog",
+              click: function() {
+                location.reload();
+              },
+              text: "OK"
+            }
+    }
 
 });
 
@@ -603,7 +550,6 @@ function get_trial_id() {
 var $j = jQuery.noConflict();
 
 jQuery(document).ready(function ($) {
-
 
     $('#upload_trial_coords_link').click(function () {
         open_upload_trial_coord_dialog();
@@ -718,4 +664,56 @@ jQuery(document).ready(function ($) {
 
     }
 
+
+    jQuery("[name='create_spreadsheet_link']").click( function () {
+      jQuery('#create_spreadsheet_dialog').modal("show");
+      jQuery('#phenotype_upload_spreadsheet_info_dialog').modal("hide");
+      jQuery('#upload_phenotype_spreadsheet_dialog').modal("hide");
+      var list = new CXGN.List();
+      jQuery("#trait_list_spreadsheet").html(list.listSelect("trait_list_spreadsheet", [ 'traits' ]));
+    });
+
+    jQuery('#create_phenotyping_ok_button').click( function () {
+      create_phenotype_spreadsheet();
+    });
+
 });
+
+function create_phenotype_spreadsheet() {
+    var list = new CXGN.List();
+    var trait_list_id = jQuery('#trait_list_spreadsheet_list_select').val();
+    var trait_list;
+    if (! trait_list_id == "") {
+        trait_list = JSON.stringify(list.getList(trait_list_id));
+    }
+    new jQuery.ajax({
+        type: 'POST',
+        url: '/ajax/phenotype/create_spreadsheet',
+        dataType: "json",
+        data: {
+            'trial_id': jQuery("#html_select_trial_for_create_spreadsheet").val(),
+            'trait_list': trait_list,
+            'data_level': jQuery("#create_spreadsheet_data_level").val(),
+        },
+        beforeSend: function() {
+            jQuery('#working_modal').modal("show");
+        },
+        success: function (response) {
+            jQuery('#working_modal').modal("hide");
+            if (response.error) {
+                alert(response.error);
+                jQuery('#create_spreadsheet_dialog').modal("hide");
+            } else {
+                //alert(response.filename);
+                jQuery('#create_spreadsheet_dialog').modal("hide");
+                jQuery('#working_modal').modal("hide");
+                window.location.href = "/download/"+response.filename;
+            }
+        },
+        error: function () {
+            jQuery('#working_modal').modal("hide");
+            alert('An error occurred creating a phenotype file.');
+            jQuery('#create_spreadsheet_dialog').modal("hide");
+        }
+    });
+}
