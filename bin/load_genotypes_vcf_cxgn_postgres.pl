@@ -80,18 +80,22 @@ if (!$opt_H || !$opt_D || !$opt_i || !$opt_g) {
     pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), -i (input file) , -g (populations name for associating accessions in your SNP file), -p (project name), -y (project year), -l (location of project), -m (map protocol name), -o (organism genus), -q (organism species) \n");
 }
 
-my $dbh = CXGN::DB::InsertDBH->new({ 
-    dbhost=>$dbhost,
-    dbname=>$dbname,
-    dbargs => {AutoCommit => 1, RaiseError => 1}
-});
+#print "Password for $opt_H / $opt_D: \n";
+#my $pw = <>;
+#chomp($pw);
+my $pw='postgres';
 
-my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
+print STDERR "Connecting to database...\n";
+my $dsn = 'dbi:Pg:database='.$opt_D.";host=".$opt_H.";port=5432";
+
+my $schema = Bio::Chado::Schema->connect($dsn, "postgres", $pw);
+my $dbh = DBI->connect($dsn, "postgres", $pw);
 $dbh->do('SET search_path TO public,sgn');
 
 my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 my $population_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'training population', 'stock_type')->cvterm_id();
-my $igd_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'igd number', 'genotype_property');
+my $igd_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'igd number', 'genotype_property')->cvterm_id();
+my $snp_genotypingprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
 my $geno_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
 my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
 my $population_members_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
@@ -259,6 +263,7 @@ foreach (@$accessions) {
             description => "SNP genotypes for stock " . "(name = " . $stock_name . ", id = " . $stock_id . ")",
             type_id     => $snp_genotype_id,
     });
+    my $genotype_id = $genotype->genotype_id();
     
     my $json_obj = JSON::Any->new;
     my $genotypeprop_json = $genotypeprop_accessions{$_};
@@ -266,11 +271,11 @@ foreach (@$accessions) {
     my $json_string = $json_obj->encode($genotypeprop_json);
     
     #Store json for genotype. Has all markers and scores for this stock.
-    $genotype->create_genotypeprops( { 'snp genotyping' => $json_string } , {autocreate =>1 , allow_duplicate_values => 1 } );
+    my $add_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->create({ genotype_id => $genotype_id, type_id => $snp_genotypingprop_cvterm_id, value => $json_string });
     
     #Store IGD number if the option is given.
     if ($opt_z) {
-        $genotype->create_genotypeprops( { 'igd number' => $igd_number } , {autocreate =>1 , allow_duplicate_values => 1 } );
+        $add_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->create({ genotype_id => $genotype_id, type_id => $igd_number_cvterm_id, value => $igd_number });
     }
     
     #link the genotype to the nd_experiment

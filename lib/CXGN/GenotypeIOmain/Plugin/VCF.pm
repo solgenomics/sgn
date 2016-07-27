@@ -87,7 +87,7 @@ sub next {
 		my @marker_info = @fields[ 0..8 ];
 		my @values = @fields[ 9..$#fields ];
 
-		$self->current( $self->current()+1 );
+		#$self->current( $self->current()+1 );
 		return (\@marker_info, \@values);
     }
     return undef;
