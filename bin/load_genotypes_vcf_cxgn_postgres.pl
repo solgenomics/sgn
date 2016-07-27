@@ -144,12 +144,11 @@ my $population_stock_id = $population_stock->stock_id();
 print STDERR "Reading genotype information...\n";
 my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "vcf" });
 
-my %genotypeprop_accessions;
-
 my %protocolprop_json;
 
 my $accessions = $gtio->accessions();
 my $number_accessions = scalar(@$accessions);
+print STDERR "Number accessions: $number_accessions...\n";
 
 while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
 
@@ -175,6 +174,37 @@ while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
         format => $marker_info_p8,
     );
     $protocolprop_json{$marker_name} = \%marker;
+}
+print STDERR "Protocol hash created...\n";
+
+#Save the protocolprop. This json string contains the details for the maarkers used in the map.
+my $json_obj = JSON::Any->new;
+my $json_string = $json_obj->encode(\%protocolprop_json);
+my $add_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->create({ nd_protocol_id => $protocol_id, type_id => $vcf_map_details->cvterm_id(), value => $json_string });
+undef %protocolprop_json;
+undef $json_string;
+undef $add_protocolprop;
+
+print STDERR "Protocolprop stored...\n";
+print STDERR "Reading genotype information...\n";
+my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "vcf" });
+
+my %genotypeprop_accessions;
+
+my $number_accessions = scalar(@$accessions);
+print STDERR "Number accessions: $number_accessions...\n";
+
+while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
+
+    #print STDERR Dumper $marker_info;
+    my $marker_name;
+    my $marker_info_p2 = $marker_info->[2];
+    my $marker_info_p8 = $marker_info->[8];
+    if ($marker_info_p2 eq '.') {
+        $marker_name = $marker_info->[0]."_".$marker_info->[1];
+    } else {
+        $marker_name = $marker_info_p2;
+    }
 
     my @format =  split /:/,  $marker_info_p8;
     #As it goes down the rows, it contructs a separate json object for each accession column. They are all stored in the %genotypeprop_accessions. Later this hash is iterated over and actually stores the json object in the database. 
@@ -189,10 +219,7 @@ while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
     }
 }
 
-#Save the protocolprop. This json string contains the details for the maarkers used in the map.
-my $json_obj = JSON::Any->new;
-my $json_string = $json_obj->encode(\%protocolprop_json);
-my $add_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->create({ nd_protocol_id => $protocol_id, type_id => $vcf_map_details->cvterm_id(), value => $json_string });
+print STDERR "Genotypeprop accessions hash created\n";
 
 foreach (@$accessions) {
     
@@ -277,6 +304,9 @@ foreach (@$accessions) {
     if ($opt_z) {
         $add_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->create({ genotype_id => $genotype_id, type_id => $igd_number_cvterm_id, value => $igd_number });
     }
+    undef $genotypeprop_json;
+    undef $json_string;
+    undef $add_genotypeprop;
     
     #link the genotype to the nd_experiment
     my $nd_experiment_genotype = $experiment->create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );
