@@ -104,7 +104,8 @@ my $vcf_map_details = $schema->resultset("Cv::Cvterm")->create_with({
     name => 'vcf_map_details',
     cv   => 'protocol_property',
 });
-    
+my $vcf_map_details_id = $vcf_map_details->cvterm_id();
+
 #store a project
 my $project = $schema->resultset("Project::Project")->find_or_create({
     name => $opt_p,
@@ -180,10 +181,16 @@ print STDERR "Protocol hash created...\n";
 #Save the protocolprop. This json string contains the details for the maarkers used in the map.
 my $json_obj = JSON::Any->new;
 my $json_string = $json_obj->encode(\%protocolprop_json);
-my $add_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->create({ nd_protocol_id => $protocol_id, type_id => $vcf_map_details->cvterm_id(), value => $json_string });
+my $last_protocolprop_rs = $schema->resultset("NaturalDiversity::NdProtocolprop")->search({}, {order_by=> { -desc => 'nd_protocolprop_id' }, rows=>1});
+my $new_protocolprop_id = $last_protocolprop_rs->first()->nd_protocolprop_id() + 1;
+my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocolprop_id, nd_protocol_id, type_id, value) VALUES ('$new_protocolprop_id', '$protocol_id', '$vcf_map_details_id', '$json_string');";
+$dbh->do($new_protocolprop_sql);
+
+#my $add_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->create({ nd_protocol_id => $protocol_id, type_id => $vcf_map_details->cvterm_id(), value => $json_string });
 undef %protocolprop_json;
 undef $json_string;
-undef $add_protocolprop;
+#undef $add_protocolprop;
+undef $new_protocolprop_sql;
 
 print STDERR "Protocolprop stored...\n";
 print STDERR "Reading genotype information...\n";
