@@ -224,7 +224,6 @@ function delete_field_map() {
     jQuery('#working_modal').modal("show");
 
   var trialID = parseInt(jQuery('#trialIDDiv').text());
-  alert("MY ID: "+trialID);
   new jQuery.ajax({
 	 type: 'POST',
 	 url: '/ajax/phenotype/delete_field_coords',
