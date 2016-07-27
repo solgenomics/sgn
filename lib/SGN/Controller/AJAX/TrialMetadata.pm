@@ -6,7 +6,7 @@ use Data::Dumper;
 use List::Util 'max';
 use Bio::Chado::Schema;
 use List::Util qw | any |;
-
+use CXGN::Trial;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -249,6 +249,18 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     $c->stash->{rest} = { plots => \@data };
 }
 
+sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_plants();
+
+    $c->stash->{rest} = { plants => \@data };
+}
+
 sub trial_design : Chained('trial') PathPart('design') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -304,7 +316,7 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 
     my $design = $layout-> get_design();
 
-    print STDERR Dumper($design);
+    #print STDERR Dumper($design);
 
     my @layout_info;
     foreach my $plot_number (keys %{$design}) {
@@ -366,11 +378,12 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 
     my $max_col = 0;
     $max_col = max( @col_numbers ) if (@col_numbers);
-    print "$max_col\n";
+    #print "$max_col\n";
     my $max_row = 0;
     $max_row = max( @row_numbers ) if (@row_numbers);
-    print "$max_row\n";
+    #print "$max_row\n";
 
+    #print STDERR Dumper \@layout_info;
 
 	$c->stash->{rest} = { coord_row =>  \@row_numbers,
 			      coords =>  \@layout_info,
@@ -385,6 +398,63 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 			      plot_id => \@plot_id,
 			      plot_number => \@plot_number
 	};
+
+}
+
+sub compute_derive_traits : Path('/ajax/phenotype/delete_field_coords') Args(0) {
+
+  my $self = shift;
+	my $c = shift;
+	my $trial_id = $c->req->param('trial_id');
+  print "TRIALID: $trial_id\n";
+
+  my $schema = $c->dbic_schema('Bio::Chado::Schema');
+  my $dbh = $c->dbc->dbh();
+
+  if (!$c->user()) {
+		print STDERR "User not logged in... not deleting field map.\n";
+		$c->stash->{rest} = {error => "You need to be logged in to delete field map." };
+		return;
+    	}
+
+	if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+		$c->stash->{rest} = {error =>  "You have insufficient privileges to delete field map." };
+		return;
+    	}
+
+  my $h = $dbh->prepare("delete from stockprop where stockprop.stockprop_id IN (select stockprop.stockprop_id from project join nd_experiment_project using(project_id) join nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) join stockprop on(stock.stock_id=stockprop.stock_id) where (stockprop.type_id IN (select cvterm_id from cvterm where name='col_number') or stockprop.type_id IN (select cvterm_id from cvterm where name='row_number')) and project.project_id=? and stock.type_id IN (select cvterm_id from cvterm join cv using(cv_id) where cv.name = 'stock_type' and cvterm.name ='plot'));");
+  my ($row_number, $col_number, $cvterm_id, @cvterm );
+  $h->execute($trial_id);
+
+  $c->stash->{rest} = {success => 1};
+  
+}
+
+
+sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $plants_per_plot = $c->req->param("plants_per_plot") || 8;
+
+    if (my $error = $self->delete_privileges_denied($c)) {
+	$c->stash->{rest} = { error => $error };
+	return;
+    }
+
+    if (!$plants_per_plot || $plants_per_plot > 50) {
+	$c->stash->{rest} = { error => "Plants per plot number is required and must be smaller than 20." };
+	return;
+    }
+
+    my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
+
+    if ($t->create_plant_entities($plants_per_plot)) {
+        $c->stash->{rest} = {success => 1};
+        return;
+    } else {
+        $c->stash->{rest} = { error => "Error creating plant entries in controller." };
+    	return;
+    }
 
 }
 
@@ -407,7 +477,7 @@ sub delete_privileges_denied {
     if ( ($c->user->check_roles('submitter')) && ( $c->user->check_roles($breeding_programs->[0]->[1]))) {
 	return 0;
     }
-    return "You have insufficient privileges to delete a trial.";
+    return "You have insufficient privileges to modify or delete this trial.";
 }
 
 # loading field coordinates
@@ -487,5 +557,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
 
 
 }
+
+
 
 1;

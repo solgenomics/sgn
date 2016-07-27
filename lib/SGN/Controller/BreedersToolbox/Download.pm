@@ -467,9 +467,9 @@ sub download_action : Path('/breeders/download_action') Args(0) {
                 my $ss = Spreadsheet::WriteExcel->new($tempfile);
                 my $ws = $ss->add_worksheet();
 
-                for (my $line =0; $line< @data; $line++) { 
+                for (my $line =0; $line< @data; $line++) {
                     my @columns = split /\t/, $data[$line];
-                    for(my $col = 0; $col<@columns; $col++) { 
+                    for(my $col = 0; $col<@columns; $col++) {
                         $ws->write($line, $col, $columns[$col]);
                     }
                 }
@@ -503,6 +503,77 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     }
 }
 
+
+# pedigree download -- begin
+
+sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
+my $self = shift;
+my $c = shift;
+my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedigree_stock_id, $accession_name, $female_parent, $male_parent);
+
+    $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
+    $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);  
+    @accession_list = map { $_->[1] } @$accession_data;
+   
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $t = CXGN::List::Transform->new();
+    my $acc_t = $t->can_transform("accessions", "accession_ids");
+    my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
+
+    @accession_ids = @{$accession_id_hash->{transform}};    
+
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
+
+    open my $TEMP, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
+
+	print $TEMP "Accession\tFemale_Parent\tMale_Parent";
+ 	print $TEMP "\n";
+       my $check_pedigree = "FALSE";
+       my $len;
+
+
+	for (my $i=0 ; $i<scalar(@accession_ids); $i++)
+	{
+
+	$accession_name = $accession_list[$i];
+	my $pedigree_stock_id = $accession_ids[$i];
+	my @pedigree_parents = CXGN::Chado::Stock->new ($schema, $pedigree_stock_id)->get_direct_parents();
+	$len = scalar(@pedigree_parents);
+	if($len > 0)
+	{
+      		$check_pedigree = "TRUE";
+	}	
+
+        
+	    
+	    $female_parent = $pedigree_parents[0][1] || '';
+	    $male_parent = $pedigree_parents[1][1] || '';
+	  print $TEMP "$accession_name \t  $female_parent \t $male_parent\n";
+ 
+  	}
+
+if ($check_pedigree eq "FALSE")
+{
+print $TEMP "\n";
+print $TEMP "No pedigrees found in the Database for the accessions searched. \n";
+}
+
+ close $TEMP;
+
+ my $filename = "pedigree.txt";
+	
+ $c->res->content_type("application/text");
+ $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
+  my $output = read_file($tempfile);
+
+  $c->res->body($output);
+
+}
+
+
+# pedigree download -- end
+
 #=pod
 sub download_gbs_action : Path('/breeders/download_gbs_action') {
   my ($self, $c) = @_;
@@ -510,7 +581,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   print STDERR "Collecting download parameters ...  ".localtime()."\n";
   my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
   my $format = $c->req->param("format") || "list_id";
-  my $dl_token = $c->req->param("token");
+  my $dl_token = $c->req->param("token") || "no_token";
   my $dl_cookie = "download".$dl_token;
   my $snp_genotype_row = $schema->resultset("Cv::Cvterm")->find({ name => 'snp genotyping' });
   my $snp_genotype_id = $snp_genotype_row->cvterm_id();
@@ -525,8 +596,10 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   }
   elsif ($format eq 'list_id') {        #get accession names from list and tranform them to ids
 
-    $protocol_id = 2;
+
     my $accession_list_id = $c->req->param("genotype_accession_list_list_select");
+    $protocol_id = $c->req->param("genotyping_protocol_select");
+    #$protocol_id = 2;
 
     if ($accession_list_id) {
 	    $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
@@ -551,6 +624,15 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   print STDERR "Snp genotype id= $snp_genotype_id \n";
 
   my $resultset = $bs->get_genotype_info(\@accession_ids, $protocol_id, $snp_genotype_id); #retrieve genotype resultset
+  my $genotypes = $resultset->{genotypes};
+
+  if (scalar(@$genotypes) == 0) {
+    my $error = "No genotype data was found for @accession_list, and protocol with id $protocol_id. You can determine which accessions have been genotyped with a given protocol by using the search wizard.";
+    $c->res->content_type("application/text");
+    $c->res->header('Content-Disposition', qq[attachment; filename="Download error details"]);
+    $c->res->body($error);
+    return;
+  }
 
   print $TEMP "# Downloaded from ".$c->config->{project_name}.": ".localtime()."\n"; # print header info
   print $TEMP "# Protocol: id=$protocol_id, name=".$resultset->{protocol_name}."\n";
@@ -558,7 +640,6 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
 
   print STDERR "Decoding genotype data ...".localtime()."\n";
   my $json = JSON::XS->new->allow_nonref;
-  my $genotypes = $resultset->{genotypes};
 
   for (my $i=0; $i < scalar(@$genotypes) ; $i++) {       # loop through resultset, printing accession uniquenames as column headers and storing decoded gt strings in array of hashes
     print $TEMP $genotypes->[$i][0] . "\t";
@@ -606,6 +687,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     }
   }
 
+  close $TEMP;
   print STDERR "Downloading file ... ".localtime()."\n";
 
   my $filename;
@@ -638,8 +720,6 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     my $trial_list_id     = $c->req->param("genotype_trial_list_list_select");
     my $data_type         = $c->req->param("data_type") || "genotype";
     my $format            = $c->req->param("format");
-
-
 
     my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
     my $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);

@@ -41,7 +41,7 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
     my $warning_status;
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included) = _prep_upload($c, $file_type);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $data_level) = _prep_upload($c, $file_type);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -66,7 +66,7 @@ sub upload_phenotype_store_POST : Args(1) {
     my ($self, $c, $file_type) = @_;
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included) = _prep_upload($c, $file_type);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $data_level) = _prep_upload($c, $file_type);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -83,7 +83,7 @@ sub upload_phenotype_store_POST : Args(1) {
 
 
     my $size = scalar(@$plots) * scalar(@$traits);
-    my $stored_phenotype_error = $store_phenotypes->store($c, $size, $plots, $traits, $parsed_data, $phenotype_metadata);
+    my $stored_phenotype_error = $store_phenotypes->store($c, $size, $plots, $traits, $parsed_data, $phenotype_metadata, $data_level);
 
     if ($stored_phenotype_error) {
         push @$error_status, $stored_phenotype_error;
@@ -105,12 +105,14 @@ sub _prep_upload {
     my $subdirectory;
     my $validate_type;
     my $metadata_file_type;
+    my $data_level;
     if ($file_type eq "spreadsheet") {
         print STDERR "Spreadsheet \n";
         $subdirectory = "spreadsheet_phenotype_upload";
         $validate_type = "phenotype spreadsheet";
         $metadata_file_type = "spreadsheet phenotype file";
         $timestamp_included = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
+        $data_level = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
         $upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
     } 
     elsif ($file_type eq "fieldbook") {
@@ -120,6 +122,7 @@ sub _prep_upload {
         $metadata_file_type = "tablet phenotype file";
         $timestamp_included = 1;
         $upload = $c->req->upload('upload_fieldbook_phenotype_file_input');
+        $data_level = $c->req->param('upload_fieldbook_phenotype_data_level') || 'plots';
     }
     elsif ($file_type eq "datacollector") {
         print STDERR "Datacollector \n";
@@ -148,7 +151,7 @@ sub _prep_upload {
     unlink $upload_tempfile;
 
     ## Validate and parse uploaded file
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
     }
@@ -186,7 +189,7 @@ sub _prep_upload {
         }
     }
 
-    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included);
+    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $data_level);
 }
 
 #########
