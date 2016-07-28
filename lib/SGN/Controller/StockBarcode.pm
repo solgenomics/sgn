@@ -212,25 +212,28 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 	my $page_nr = $self->label_to_page($labels_per_page, $label_count);
 
 	my $label_on_page = ($label_count -1) % $labels_per_page;
-
+print "MMMMMMMMMMMMMM.............. $found[$i]->[1]\n";
 	# generate barcode
 	#
   #####
   my $tempfile;
    if (defined $row){
      print "ACCESSION IS NOT EMPTY........ $row\n";
-      $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[2]." ".$found[$i]->[3],  'large',  20  ]);
+      #$tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[2]." ".$found[$i]->[3],  'large',  20  ]);
+      $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $found[$i]->[2]." ".$found[$i]->[3],  'large',  20  ]);
    }
    elsif ($female_parent =~ m/^\d+/ || $female_parent =~ m/^\w+/){
      if ($found[$i]->[4] =~ m/^\//) {
        print "I SEE SLASH: $found[$i]->[4]\n";
        ($found[$i]->[4] = $found[$i]->[4]) =~ s/\///;
      }
-     $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[1]." ".$found[$i]->[4],  'large',  20  ]);
+     #$tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[1]." ".$found[$i]->[4],  'large',  20  ]);
+     $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $found[$i]->[4],  'large',  20  ]);
    }
    else {
   # #####
-	  $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[0], $found[$i]->[1], 'large',  20  ]);
+	  #$tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[0], $found[$i]->[1], 'large',  20  ]);
+    $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[1], $found[$i]->[0], 'large',  20  ]);
    }
   my $image = $pdf->image($tempfile);
 	print STDERR "IMAGE: ".Data::Dumper::Dumper($image);
