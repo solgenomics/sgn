@@ -120,47 +120,50 @@ while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
 }
 
 #Save the protocolprop. This json string contains the details for the maarkers used in the map.
-my $json_obj = JSON::Any->new;
-my $json_string = $json_obj->encode(\%protocolprop_json);
+#my $json_obj = JSON::Any->new;
+#my $json_string = $json_obj->encode(\%protocolprop_json);
 
-### CREATE Mongodb Protocol Document
-my $result = $protocol_collection->insert_one( {
-    "project_name" => $project_name,
-    "project_year" => $project_year,
-    "project_location" => $location,
-    "protocol_name" => $map_protocol_name,
-    "markers" => $json_string
-});
-my $protocol_doc_id = $result->inserted_id;
+foreach my $marker (keys %protocolprop_json) {
+    ### CREATE Mongodb Protocol Document
+    my $result = $protocol_collection->insert_one( {
+      "project_name" => $project_name,
+      "project_year" => $project_year,
+      "project_location" => $location,
+      "protocol_name" => $map_protocol_name,
+      "marker" => $protocolprop_json{$marker}
+    });
+}
 
 
-print "Stored Protocol Document (doc_id: $protocol_doc_id) for $map_protocol_name \n";
+print "Stored Protocol Document for $map_protocol_name \n";
 
 my $stock_id = 1;
 foreach my $accession_name (@$accessions) {
 
-    my $json_obj = JSON::Any->new;
-    my $genotypeprop_json = $genotypeprop_accessions{$accession_name};
+    #my $json_obj = JSON::Any->new;
+    my $genotypeprop_hash_ref = $genotypeprop_accessions{$accession_name};
     #print STDERR Dumper \%genotypeprop_accessions;
-    my $json_string = $json_obj->encode($genotypeprop_json);
+    #my $json_string = $json_obj->encode($genotypeprop_json);
 
-    ##CREATE Mongodb Genotye Document
-    my $result = $genotype_collection->insert_one( {
-        "project_name" => $project_name,
-        "project_year" => $project_year,
-        "project_location" => $location,
-        "protocol_name" => $map_protocol_name,
-        "protocol_id" => $protocol_doc_id,
-        "population_name" => $population_name,
-        "genus" => $organism_genus,
-        "species" => $organism_species,
-        "stock_id" => $stock_id,
-        "accession_name" => $accession_name,
-        "marker_scores" => $json_string
-    });
-    my $genotye_doc_id = $result->inserted_id;
-    $stock_id++;
-    print "Stored Genotype Document (doc_id: $genotye_doc_id) for $accession_name \n";
+    foreach my $marker (keys %{$genotypeprop_hash_ref}) {
+        ##CREATE Mongodb Genotye Document
+        my $result = $genotype_collection->insert_one( {
+            "project_name" => $project_name,
+            "project_year" => $project_year,
+            "project_location" => $location,
+            "protocol_name" => $map_protocol_name,
+            "population_name" => $population_name,
+            "genus" => $organism_genus,
+            "species" => $organism_species,
+            "stock_id" => $stock_id,
+            "accession_name" => $accession_name,
+            "marker" => $marker,
+            "marker_score" => $genotypeprop_hash_ref->{$marker}
+        });
+        my $genotye_doc_id = $result->inserted_id;
+        $stock_id++;
+    }
+    print "Stored Genotype Documents for $accession_name \n";
 
 }
 
