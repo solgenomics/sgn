@@ -43,6 +43,7 @@ use Carp qw /croak/ ;
 use Try::Tiny;
 use Pod::Usage;
 use Storable qw(nfreeze thaw);
+use DBD::Pg;
 
 use Bio::Chado::Schema;
 use CXGN::People::Person;
