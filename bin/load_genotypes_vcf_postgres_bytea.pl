@@ -200,7 +200,7 @@ $sth->execute();
 undef %protocolprop_json;
 undef $json_string;
 #undef $add_protocolprop;
-undef $new_protocolprop_sql;
+#undef $new_protocolprop_sql;
 
 print STDERR "Protocolprop stored...\n";
 print STDERR "Reading genotype information...\n";
@@ -337,7 +337,7 @@ foreach (@$accessions) {
     }
     undef $genotypeprop_json;
     undef $json_string;
-    undef $new_genotypeprop_sql;
+    #undef $new_genotypeprop_sql;
     #undef $add_genotypeprop;
 
     #link the genotype to the nd_experiment
