@@ -7,6 +7,7 @@ use PDF::Create;
 use Bio::Chado::Schema::Result::Stock::Stock;
 use CXGN::Stock::StockBarcode;
 use Data::Dumper;
+use CXGN::Chado::Stock;
 
 BEGIN { extends "Catalyst::Controller"; }
 
@@ -89,6 +90,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $left_margin_mm = $c->req->param("left_margin");
     my $bottom_margin_mm = $c->req->param("bottom_margin");
     my $right_margin_mm = $c->req->param("right_margin");
+    my $plot = $c->req->param("plots");
+    my $nursery = $c->req->param("nursery");
 
     # convert mm into pixels
     #
@@ -112,6 +115,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
+    my ($row, $stockprop_name, $value, $fdata, $accession_name, $female_parent, $male_parent, @parents_info, $parents);
+
     foreach my $name (@names) {
 
 	# skip empty lines
@@ -129,8 +134,48 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
 	my $stock_id = $stock->stock_id();
 
-	push @found, [ $c->config->{identifier_prefix}.$stock_id, $name ];
-	print "STOCK FOUND: $stock_id, $name.\n";
+  if ($plot){
+
+  my $dbh = $c->dbc->dbh();
+  my $h = $dbh->prepare("select name, value from cvterm inner join stockprop on cvterm.cvterm_id = stockprop.type_id where stockprop.stock_id=?;");
+
+  $h->execute($stock_id);
+
+  my %stockprop_hash;
+   while (($stockprop_name, $value) = $h->fetchrow_array) {
+     $stockprop_hash{$stock_id}->{$stockprop_name} = $value;
+
+  }
+  $row = $stockprop_hash{$stock_id}->{'replicate'};
+  # print "rep: $stockprop_hash{$stock_id}->{'replicate'}\n";
+  # print "block: $stockprop_hash{$stock_id}->{'block'}\n";
+  # print "plot: $stockprop_hash{$stock_id}->{'plot number'}\n";
+  $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."block:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
+
+  my $h_acc = $dbh->prepare("select stock.uniquename AS acesssion_name FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
+
+  $h_acc->execute($stock_id);
+  while (my($accession) = $h_acc->fetchrow_array) {
+    $accession_name = $accession;
+    }
+
+  }
+  else{
+
+  }
+
+  if ($nursery){
+    @parents_info = CXGN::Chado::Stock->new ($schema, $stock_id)->get_direct_parents();
+    $male_parent = $parents_info[0][1] || '';
+    $female_parent = $parents_info[1][1] || '';
+  }
+
+  print "MY male $male_parent and female $female_parent\n";
+  $parents = $female_parent."/".$male_parent;
+  print "MY parents: $parents\n";
+
+  push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents];
+	print "STOCK FOUND: $stock_id, $name, $accession_name.\n";
 
     }
 
@@ -170,9 +215,26 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
 	# generate barcode
 	#
-	my $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0],  $found[$i]->[1],  'large',  20  ]);
-	my $image = $pdf->image($tempfile);
+  #####
+  my $tempfile;
+   if (defined $row){
+     print "ACCESSION IS NOT EMPTY........ $row\n";
+      $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[2]." ".$found[$i]->[3],  'large',  20  ]);
+   }
+   elsif ($female_parent =~ m/^\d+/ || $female_parent =~ m/^\w+/){
+     if ($found[$i]->[4] =~ m/^\//) {
+       print "I SEE SLASH: $found[$i]->[4]\n";
+       ($found[$i]->[4] = $found[$i]->[4]) =~ s/\///;
+     }
+     $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[1]." ".$found[$i]->[4],  'large',  20  ]);
+   }
+   else {
+  # #####
+	  $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[0], $found[$i]->[1], 'large',  20  ]);
+   }
+  my $image = $pdf->image($tempfile);
 	print STDERR "IMAGE: ".Data::Dumper::Dumper($image);
+
 
 	# note: pdf coord system zero is lower left corner
 	#
