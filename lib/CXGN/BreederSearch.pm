@@ -66,7 +66,7 @@ sub metadata_query {
     $status = $sth->execute();
   } catch {
     print STDERR $@ . "\n" . "Status: $status";
-    my $message = $self->populate_matviews();
+    my $message = $self->refresh_matviews('basic');
     print STDERR "$message \nProceeding with query.";
   };
 
@@ -146,9 +146,9 @@ returns: success or error message
 
 Side Effects: refreshes matertialized_fullview and all of the smaller materialized views that are based on it and used in the wizard.
 
-=cut
 
-sub refresh_matviews {
+
+sub refresh_matviews_old {
   my $self = shift;
 
   my $q = "SELECT currently_refreshing FROM public.matviews WHERE mv_id=?";
@@ -187,18 +187,24 @@ sub refresh_matviews {
   }
 }
 
-=head2 populate_matviews
+=cut
 
-parameters: None.
+=head2 refresh_matviews
+
+parameters: string to specify desired refresh type, basic or concurrent. defaults to concurrent
 
 returns: message detailing success or error
 
-Side Effects: populates matertialized_fullview and all of the smaller materialized views that are based on it using a non-concurrent refresh function. Is needed the first time the search wizard is used after loading from a dump
+Side Effects: Refreshes materialized views
 
 =cut
 
-sub populate_matviews {
+sub refresh_matviews {
+
   my $self = shift;
+  my $refresh_type = shift || 'concurrent';
+  my $refresh_finished = 0;
+  my $async_refresh;
 
   my $q = "SELECT currently_refreshing FROM public.matviews WHERE mv_id=?";
   my $h = $self->dbh->prepare($q);
@@ -211,27 +217,34 @@ sub populate_matviews {
   }
   else {
 
-    $q = "UPDATE public.matviews SET currently_refreshing=?";
-    my $true = 'TRUE';
-    $h = $self->dbh->prepare($q);
-    $h->execute($true);
+    try {
 
-    print STDERR "Refreshing materialized views . . .\n";
+      my $dbh = $self->dbh;
+      if ($refresh_type == 'concurrent') {
+        $async_refresh = CXGN::Tools::Run->run_async("perl refresh_matviews.pl", "-D $dbh", "-c");
+      } else {
+        $async_refresh = CXGN::Tools::Run->run_async("perl refresh_matviews.pl", "-D $dbh");
+      }
 
-    my $refresh = 'SELECT refresh_materialized_views()';
-    my $h = $self->dbh->prepare($refresh);
-    my $status = $h->execute();
+      for (my $i = 1; $i < 10; $i++) {
+        my $time = $i/10;
+        sleep($time);
+        if ($async_refresh->alive) {
+          next;
+        } else {
+          $refresh_finished = 1;
+        }
+      }
 
-    if ($status != 1) {
-      $q = "UPDATE public.matviews SET currently_refreshing=?";
-      my $true = 'FALSE';
-      my $h = $self->dbh->prepare($q);
-      $h->execute($true);
+      if ($refresh_finished) {
+        return { success => 'Wizard update completed!' };
+      } else {
+        return { message => 'Wizard update initiated' };
+      }
 
-      return { message => 'Database was recently restored from a dump. Attempted to rebuild search indexes but failed.'};
-    }
-    else {
-      return { message => 'Rebuilding missing search indexes - database was recently restored from a dump. Depending on database size, this will take from a few seconds to an hour.' };
+    } catch {
+      print STDERR 'Error initiating wizard update.' . $@ . "\n";
+      return { error => 'Error initiating wizard update.' . $@ };
     }
   }
 }

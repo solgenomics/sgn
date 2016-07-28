@@ -66,7 +66,6 @@ sub patch {
 
       #update the list of possible trial types by adding/updating to standardized names and removing duplicates
       my $SN_id = &update_or_create_type('%seedling%', 'Seedling Nursery', $cvterm_rs, $cv_id, $db_id);
-      my $CE_id = &update_or_create_type('%clonal%', 'Clonal Evaluation', $cvterm_rs, $cv_id, $db_id);
       my $VR_id = &update_or_create_type('%variety%', 'Variety Release Trial', $cvterm_rs, $cv_id, $db_id);
 
       my $CE_id = &update_or_create_type('%Clonal Evaluation%', 'Clonal Evaluation', $cvterm_rs, $cv_id, $db_id);

@@ -70,7 +70,7 @@ CREATE MATERIALIZED VIEW public.materialized_phenoview AS
     trialterm.name AS trial_type_name,
     trialdesign.value AS trial_design_id,
     trialdesign.value AS trial_design_value,
-    project_relationship.object_project_id AS breeding_program_id,
+    breeding_program.project_id AS breeding_program_id,
     breeding_program.name AS breeding_program_name,
     cvterm.cvterm_id AS trait_id,
     (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name,
@@ -88,7 +88,8 @@ CREATE MATERIALIZED VIEW public.materialized_phenoview AS
      LEFT JOIN nd_experiment_project ON nd_experiment_plot.nd_experiment_id = nd_experiment_project.nd_experiment_id
      LEFT JOIN project trial ON nd_experiment_project.project_id = trial.project_id
      LEFT JOIN project_relationship ON trial.project_id = project_relationship.subject_project_id
-     LEFT JOIN project breeding_program ON project_relationship.object_project_id = breeding_program.project_id
+     LEFT JOIN projectprop breeding_programprop ON project_relationship.object_project_id = breeding_programprop.project_id
+     LEFT JOIN project breeding_program ON breeding_programprop.project_id = breeding_program.project_id
      LEFT JOIN projectprop ON trial.project_id = projectprop.project_id AND projectprop.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'project year' )
      LEFT JOIN projectprop trialdesign ON trial.project_id = trialdesign.project_id AND trialdesign.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'design' )
      LEFT JOIN projectprop trialprop ON trial.project_id = trialprop.project_id AND trialprop.type_id IN (SELECT cvterm_id from cvterm JOIN cv USING(cv_id) WHERE cv.name = 'project_type' )
@@ -98,8 +99,8 @@ CREATE MATERIALIZED VIEW public.materialized_phenoview AS
      LEFT JOIN cvterm ON phenotype.cvalue_id = cvterm.cvterm_id
      LEFT JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id
      LEFT JOIN db ON dbxref.db_id = db.db_id
-  WHERE accession.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'accession')
-  GROUP BY plant.stock_id, plant.uniquename, plot.stock_id, plot.uniquename, accession.uniquename, accession.stock_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id, trial.name, trial.project_id, breeding_program.name, project_relationship.object_project_id, projectprop.value, trialdesign.value, trialterm.cvterm_id, trialterm.name, nd_experiment.nd_geolocation_id, nd_geolocation.description, phenotype.phenotype_id, phenotype.value
+  WHERE accession.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'accession') AND breeding_programprop.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'breeding_program')
+  GROUP BY plant.stock_id, plant.uniquename, plot.stock_id, plot.uniquename, accession.uniquename, accession.stock_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id, trial.name, trial.project_id, breeding_program.name, breeding_program.project_id, projectprop.value, trialdesign.value, trialterm.cvterm_id, trialterm.name, nd_experiment.nd_geolocation_id, nd_geolocation.description, phenotype.phenotype_id, phenotype.value
   WITH DATA;
 
 CREATE UNIQUE INDEX unq_pheno_idx ON public.materialized_phenoview(accession_id,plot_id,plant_id,phenotype_id) WITH (fillfactor=100);
