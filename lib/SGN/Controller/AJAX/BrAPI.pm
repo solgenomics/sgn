@@ -179,6 +179,85 @@ sub authenticate_token_POST {
     $c->stash->{rest} = \%response;
 }
 
+
+=head2 /brapi/v1/calls
+
+ Usage: For determining which calls have been implemented and with which datafile types and methods
+ Desc:
+ 
+ GET Request:
+ 
+ GET Response:
+{
+  "metadata": {
+    "pagination": {
+      "pageSize": 3,
+      "currentPage": 0,
+      "totalCount": 3,
+      "totalPages": 1
+    },
+    "status": {},
+    "datafiles": []
+  },
+  "result": {
+    "data": [
+      {
+        "call": "allelematrix",
+        "datatypes": [
+          "json",
+          "tsv"
+        ],
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "call": "germplasm/id/mcpd",
+        "datatypes": [
+          "json"
+        ],
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "call": "doesntexistyet",
+        "datatypes": [
+          "png",
+          "jpg"
+        ],
+        "methods": [
+          "GET"
+        ]
+      }
+    ]
+  }
+}
+
+=cut
+
+sub calls : Chained('brapi') PathPart('calls') Args(0) : ActionClass('REST') { }
+
+sub calls_GET {
+    my $self = shift;
+    my $c = shift;
+
+    my $status = $c->stash->{status};
+    my @status = @$status;
+    my @data;
+    push @data, {call=>'token', datatypes=>['json'], methods=>['POST','DELETE']};
+    push @data, {call=>'calls', datatypes=>['json'], methods=>['GET']};
+
+    my %pagination = ();
+    my %result = (data=>\@data);
+    my @data_files;
+    my %metadata = (pagination=>\%pagination, status=>\@status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+
 sub pagination_response {
     my $data_count = shift;
     my $page_size = shift;

@@ -5,5 +5,10 @@
 
 <hr>
 <& /brapiclient/authentication.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/calls.mas &>
+<br/>
 
 <hr>
