@@ -1,0 +1,24 @@
+<%args>
+</%args>
+
+<div id="brapi_calls_home_div">
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery.ajax( {
+      'url': '/brapi/v1/calls',
+      'method': 'GET',
+      'success': function(response) {
+        console.log(response);
+        jQuery("#brapi_calls_home_div").html(response);
+      },
+      error: function(response) {
+        alert('An error occurred getting calls');
+      }
+    });
+});
+
+</script>
