@@ -66,63 +66,117 @@ sub _authenticate_user {
     return 1;
 }
 
-=head2 /brapi/v1/token?grant_type=password&username=USERNAME&password=PASSWORD&client_id=CLIENT_ID
+=head2 /brapi/v1/token
 
- Usage: For logging a user in through the API http://docs.brapi.apiary.io/#authentication
+ Usage: For logging a user in and loggin a user out through the API
  Desc:
- Return JSON example:
+
+For Logging In 
+POST Request: 
+{
+ "grant_type" : "password", //(optional, text, `password`) ... The grant type, only allowed value is password, but can be ignored
+ "username" : "user38", // (required, text, `thepoweruser`) ... The username
+ "password" : "secretpw", // (optional, text, `mylittlesecret`) ... The password
+ "client_id" : "blabla" // (optional, text, `blabla`) ... The client id, currently ignored.
+}
+ 
+POST Response:
+ {
+   "metadata": {
+     "pagination": {},
+     "status": {},
+     "datafiles": []
+   },
+   "userDisplayName": "John Smith",
+   "access_token": "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4",
+   "expires_in": "The lifetime in seconds of the access token"
+ }
+ 
+For Logging out
+DELETE Request:
+ 
+{ 
+    "access_token" : "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4" // (optional, text, `R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4`) ... The user access token. Default: current user token.
+}
+
+DELETE Response:
 {
     "metadata": {
-        "pagination" : {},
-        "status" : []
-        },
-    "session_token": "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4"
+            "pagination" : {},
+            "status" : { "message" : "User has been logged out successfully."},
+            "datafiles": []
+        }
+    "result" : {}
 }
- Args:
- Side Effects:
 
 =cut
 
-sub authenticate_token : Chained('brapi') PathPart('token') Args(0) {
+sub authenticate_token : Chained('brapi') PathPart('token') Args(0) : ActionClass('REST') { }
+
+sub authenticate_token_DELETE {
     my $self = shift;
     my $c = shift;
+
+    my $login_controller = CXGN::Login->new($c->dbc->dbh);
+
+    my $status = $c->stash->{status};
+    my @status = @$status;
+    
+    $login_controller->logout_user();
+
+    my %pagination = ();
+    my %result;
+    my @data_files;
+    my %metadata = (pagination=>\%pagination, status=>\@status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+sub authenticate_token_POST {
+    my $self = shift;
+    my $c = shift;
+
     my $login_controller = CXGN::Login->new($c->dbc->dbh);
     my $params = $c->req->params();
 
     my $status = $c->stash->{status};
     my @status = @$status;
     my $cookie = '';
+    my $first_name = '';
+    my $last_name = '';
 
     if ( $login_controller->login_allowed() ) {
-	if ($params->{grant_type} eq 'password' || !$params->{grant_type}) {
-	    my $login_info = $login_controller->login_user( $params->{username}, $params->{password} );
-	    if ($login_info->{account_disabled}) {
-		push(@status, 'Account Disabled');
-	    }
-	    if ($login_info->{incorrect_password}) {
-		push(@status, 'Incorrect Password');
-	    }
-	    if ($login_info->{duplicate_cookie_string}) {
-		push(@status, 'Duplicate Cookie String');
-	    }
-	    if ($login_info->{logins_disabled}) {
-		push(@status, 'Logins Disabled');
-	    }
-	    if ($login_info->{person_id}) {
-		push(@status, 'Login Successfull');
-		$cookie = $login_info->{cookie_string};
-	    }
-	} else {
-	    push(@status, 'Grant Type Not Supported. Valid grant type: password');
-	}
+        if ($params->{grant_type} eq 'password' || !$params->{grant_type}) {
+            my $login_info = $login_controller->login_user( $params->{username}, $params->{password} );
+            if ($login_info->{account_disabled}) {
+                push(@status, 'Account Disabled');
+            }
+            if ($login_info->{incorrect_password}) {
+                push(@status, 'Incorrect Password');
+            }
+            if ($login_info->{duplicate_cookie_string}) {
+                push(@status, 'Duplicate Cookie String');
+            }
+            if ($login_info->{logins_disabled}) {
+                push(@status, 'Logins Disabled');
+            }
+            if ($login_info->{person_id}) {
+                push(@status, 'Login Successfull');
+                $cookie = $login_info->{cookie_string};
+                $first_name = $login_info->{first_name};
+                $last_name = $login_info->{last_name};
+            }
+        } else {
+            push(@status, 'Grant Type Not Supported. Valid grant type: password');
+        }
     } else {
-	push(@status, 'Login Not Allowed');
+        push(@status, 'Login Not Allowed');
     }
     my %pagination = ();
-    my %metadata = (pagination=>\%pagination, status=>\@status);
-    my %result = (metadata=>\%metadata, session_token=>$cookie);
-
-    $c->stash->{rest} = \%result;
+    my @data_files;
+    my %metadata = (pagination=>\%pagination, status=>\@status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, access_token=>$cookie, userDisplayName=>"$first_name $last_name", expires_in=>$CXGN::Login::LOGIN_TIMEOUT);
+    $c->stash->{rest} = \%response;
 }
 
 sub pagination_response {
