@@ -315,15 +315,30 @@ foreach (@$accessions) {
     my $json_string = $json_obj->encode($genotypeprop_json);
 
     #Store json for genotype. Has all markers and scores for this stock.
-    my $add_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->create({ genotype_id => $genotype_id, type_id => $snp_genotypingprop_cvterm_id, value => $json_string });
+    #Store json for genotype. Has all markers and scores for this stock.
+    my $last_genotypeprop_rs = $schema->resultset("Genetic::Genotypeprop")->search({}, {order_by=> { -desc => 'genotypeprop_id' }, rows=>1});
+    my $last_genotypeprop = $last_genotypeprop_rs->first();
+    my $new_genotypeprop_id;
+    if ($last_genotypeprop) {
+        $new_genotypeprop_id = $last_genotypeprop->genotypeprop_id() + 1;
+    } else {
+        $new_genotypeprop_id = 1;
+    }
+    my $sth = $dbh->prepare("INSERT INTO genotypeprop (genotypeprop_id, genotype_id, type_id, value) VALUES ('?', '?', '?', '?')");
+    $sth->bind_param($new_genotypeprop_id, $genotype_id, $snp_genotypingprop_cvterm_id, nfreeze($json_string), { pg_type => DBD::Pg::PG_BYTEA });
+    $sth->execute();
+    #my $new_genotypeprop_sql = "INSERT INTO genotypeprop (genotypeprop_id, genotype_id, type_id, value) VALUES ('$new_genotypeprop_id', '$genotype_id', '$snp_genotypingprop_cvterm_id', '$json_string');";
+    #$dbh->do($new_genotypeprop_sql) or die "DBI::errstr";
+    #my $add_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->create({ genotype_id => $genotype_id, type_id => $snp_genotypingprop_cvterm_id, value => $json_string });
 
     #Store IGD number if the option is given.
     if ($opt_z) {
-        $add_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->create({ genotype_id => $genotype_id, type_id => $igd_number_cvterm_id, value => $igd_number });
+        my $add_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->create({ genotype_id => $genotype_id, type_id => $igd_number_cvterm_id, value => $igd_number });
     }
     undef $genotypeprop_json;
     undef $json_string;
-    undef $add_genotypeprop;
+    undef $new_genotypeprop_sql;
+    #undef $add_genotypeprop;
 
     #link the genotype to the nd_experiment
     my $nd_experiment_genotype = $experiment->create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );

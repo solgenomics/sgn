@@ -18,16 +18,16 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
  -l location name (required) e.g. "Cornell Biotech".  Will be found or created in NdGeolocation table.
  -o organism genus name (required) e.g. "Manihot".  Along with organism species name, this will be found or created in Organism table.
  -q organism species name (required) e.g. "Manihot esculenta".
-
+ 
   FLAGS
  -x delete old genotypes for accessions that have new genotypes
  -a add accessions that are not in the database
- -z if accession names include an IGD number. Accession names are in format 'accession_name:IGD_number'. The IGD number will be parsed and stored as a genotypeprop.
+ -z if accession names include an IGD number. Accession names are in format 'accession_name:IGD_number'. The IGD number will be parsed and stored as a genotypeprop. 
  -t Test run . Rolling back at the end.
-
+  
 
 =head1 DESCRIPTION
-This script loads genotype data into the Chado genotype table it encodes the genotype + marker name in a json format in the genotyope.uniquename field for easy parsing by a Perl program. The genotypes are linked to the relevant stock using nd_experiment_genotype. Each column in the spreadsheet, which represents a single accession (stock) is stored as a single genotype entry and linked to the stock via nd_experiment_genotype. Stock names are stored in the stock table if cannot be found, and linked to a population stock with the name supplied in opt_g. Map details (chromosome, position, ref, alt, qual, filter, info, and format) are stored in json format in the protocolprop table.
+This script loads genotype data into the Chado genotype table it encodes the genotype + marker name in a json format in the genotyope.uniquename field for easy parsing by a Perl program. The genotypes are linked to the relevant stock using nd_experiment_genotype. Each column in the spreadsheet, which represents a single accession (stock) is stored as a single genotype entry and linked to the stock via nd_experiment_genotype. Stock names are stored in the stock table if cannot be found, and linked to a population stock with the name supplied in opt_g. Map details (chromosome, position, ref, alt, qual, filter, info, and format) are stored in json format in the protocolprop table. 
 
 =head1 AUTHOR
  Nicolas Morales (nm529@cornell.edu) May 2016
@@ -220,12 +220,12 @@ while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
     }
 
     my @format =  split /:/,  $marker_info_p8;
-    #As it goes down the rows, it contructs a separate json object for each accession column. They are all stored in the %genotypeprop_accessions. Later this hash is iterated over and actually stores the json object in the database.
+    #As it goes down the rows, it contructs a separate json object for each accession column. They are all stored in the %genotypeprop_accessions. Later this hash is iterated over and actually stores the json object in the database. 
     for (my $i = 0; $i < $number_accessions; $i++ ) {
         my @fvalues = split /:/, $values->[$i];
         my %value;
         #for (my $fv = 0; $fv < scalar(@format); $fv++ ) {
-        #    $value{@format[$fv]} = @fvalues[$fv];
+        #    $value{@format[$fv]} = @fvalues[$fv]; 
         #}
         @value{@format} = @fvalues;
         $genotypeprop_accessions{$accessions->[$i]}->{$marker_name} = \%value;
@@ -235,14 +235,14 @@ while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
 print STDERR "Genotypeprop accessions hash created\n";
 
 foreach (@$accessions) {
-
+    
     my ($accession_name, $igd_number) = split(/:/, $_);
-
+    
     #print STDERR "Looking for accession $accession_name\n";
     my $stock;
     my $stock_rs = $schema->resultset("Stock::Stock")->search({ 'lower(me.uniquename)' => { like => lc($accession_name) }, organism_id => $organism_id });
 
-    if ($stock_rs->count() == 1) {
+    if ($stock_rs->count() == 1) { 
         $stock = $stock_rs->first();
     }
 
@@ -289,7 +289,7 @@ foreach (@$accessions) {
     $experiment->create_related('nd_experiment_projects', {
         project_id => $project_id
     });
-
+    
     #link the experiment to the stock
     $experiment->create_related('nd_experiment_stocks' , {
         stock_id => $stock_id,
@@ -311,15 +311,26 @@ foreach (@$accessions) {
     my $json_string = $json_obj->encode($genotypeprop_json);
 
     #Store json for genotype. Has all markers and scores for this stock.
-    my $add_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->create({ genotype_id => $genotype_id, type_id => $snp_genotypingprop_cvterm_id, value => $json_string });
+    my $last_genotypeprop_rs = $schema->resultset("Genetic::Genotypeprop")->search({}, {order_by=> { -desc => 'genotypeprop_id' }, rows=>1});
+    my $last_genotypeprop = $last_genotypeprop_rs->first();
+    my $new_genotypeprop_id;
+    if ($last_genotypeprop) {
+        $new_genotypeprop_id = $last_genotypeprop->genotypeprop_id() + 1;
+    } else {
+        $new_genotypeprop_id = 1;
+    }
+    my $new_genotypeprop_sql = "INSERT INTO genotypeprop (genotypeprop_id, genotype_id, type_id, value) VALUES ('$new_genotypeprop_id', '$genotype_id', '$snp_genotypingprop_cvterm_id', '$json_string');";
+    $dbh->do($new_genotypeprop_sql) or die "DBI::errstr";
+    #my $add_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->create({ genotype_id => $genotype_id, type_id => $snp_genotypingprop_cvterm_id, value => $json_string });
 
     #Store IGD number if the option is given.
     if ($opt_z) {
-        $add_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->create({ genotype_id => $genotype_id, type_id => $igd_number_cvterm_id, value => $igd_number });
+        my $add_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->create({ genotype_id => $genotype_id, type_id => $igd_number_cvterm_id, value => $igd_number });
     }
     undef $genotypeprop_json;
     undef $json_string;
-    undef $add_genotypeprop;
+    undef $new_genotypeprop_sql;
+    #undef $add_genotypeprop;
 
     #link the genotype to the nd_experiment
     my $nd_experiment_genotype = $experiment->create_related('nd_experiment_genotypes', { genotype_id => $genotype->genotype_id() } );
@@ -327,3 +338,4 @@ foreach (@$accessions) {
 }
 
 print STDERR "Complete!\n";
+
