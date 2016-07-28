@@ -181,8 +181,8 @@ while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
 print STDERR "Protocol hash created...\n";
 
 #Save the protocolprop. This json string contains the details for the maarkers used in the map.
-my $json_obj = JSON::Any->new;
-my $json_string = $json_obj->encode(\%protocolprop_json);
+#my $json_obj = JSON::Any->new;
+#my $json_string = $json_obj->encode(\%protocolprop_json);
 my $last_protocolprop_rs = $schema->resultset("NaturalDiversity::NdProtocolprop")->search({}, {order_by=> { -desc => 'nd_protocolprop_id' }, rows=>1});
 my $last_protocolprop = $last_protocolprop_rs->first();
 my $new_protocolprop_id;
@@ -193,13 +193,16 @@ if ($last_protocolprop) {
 }
 #my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocolprop_id, nd_protocol_id, type_id, value) VALUES ('$new_protocolprop_id', '$protocol_id', '$vcf_map_details_id', '$json_string');";
 #$dbh->do($new_protocolprop_sql) or die "DBI::errstr";
-my $sth = $dbh->prepare("INSERT INTO nd_protocolprop (nd_protocolprop_id, nd_protocol_id, type_id, value) VALUES ('?', '?', '?', '?')");
-$sth->bind_param($new_protocolprop_id, $protocol_id, $vcf_map_details_id, nfreeze($json_string), { pg_type => DBD::Pg::PG_BYTEA });
-$sth->execute();
+my $sth = $dbh->prepare("INSERT INTO nd_protocolprop (nd_protocolprop_id, nd_protocol_id, type_id, value) VALUES (?, ?, ?, ?)");
+$sth->bind_param(1, $new_protocolprop_id);
+$sth->bind_param(2, $protocol_id);
+$sth->bind_param(3, $vcf_map_details_id);
+$sth->bind_param(4, nfreeze(\%protocolprop_json), { pg_type => DBD::Pg::PG_BYTEA });
+$sth->execute(); 
 
 #my $add_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->create({ nd_protocol_id => $protocol_id, type_id => $vcf_map_details->cvterm_id(), value => $json_string });
 undef %protocolprop_json;
-undef $json_string;
+#undef $json_string;
 #undef $add_protocolprop;
 #undef $new_protocolprop_sql;
 
@@ -310,10 +313,10 @@ foreach (@$accessions) {
     });
     my $genotype_id = $genotype->genotype_id();
 
-    my $json_obj = JSON::Any->new;
+    #my $json_obj = JSON::Any->new;
     my $genotypeprop_json = $genotypeprop_accessions{$_};
     #print STDERR Dumper \%genotypeprop_accessions;
-    my $json_string = $json_obj->encode($genotypeprop_json);
+    #my $json_string = $json_obj->encode($genotypeprop_json);
 
     #Store json for genotype. Has all markers and scores for this stock.
     #Store json for genotype. Has all markers and scores for this stock.
@@ -325,8 +328,14 @@ foreach (@$accessions) {
     } else {
         $new_genotypeprop_id = 1;
     }
-    my $sth = $dbh->prepare("INSERT INTO genotypeprop (genotypeprop_id, genotype_id, type_id, value) VALUES ('?', '?', '?', '?')");
-    $sth->bind_param($new_genotypeprop_id, $genotype_id, $snp_genotypingprop_cvterm_id, nfreeze($json_string), { pg_type => DBD::Pg::PG_BYTEA });
+    #my $sth = $dbh->prepare("INSERT INTO genotypeprop (genotypeprop_id, genotype_id, type_id, value) VALUES ('?', '?', '?', '?')");
+    #$sth->bind_param($new_genotypeprop_id, $genotype_id, $snp_genotypingprop_cvterm_id, nfreeze($json_string), { pg_type => DBD::Pg::PG_BYTEA });
+    #$sth->execute();
+    my $sth = $dbh->prepare("INSERT INTO genotypeprop (genotypeprop_id, genotype_id, type_id, value) VALUES (?, ?, ?, ?)");
+    $sth->bind_param(1, $new_genotypeprop_id);
+    $sth->bind_param(2, $genotype_id);
+    $sth->bind_param(3, $snp_genotypingprop_cvterm_id);
+    $sth->bind_param(4, nfreeze($genotypeprop_json), { pg_type => DBD::Pg::PG_BYTEA });
     $sth->execute();
     #my $new_genotypeprop_sql = "INSERT INTO genotypeprop (genotypeprop_id, genotype_id, type_id, value) VALUES ('$new_genotypeprop_id', '$genotype_id', '$snp_genotypingprop_cvterm_id', '$json_string');";
     #$dbh->do($new_genotypeprop_sql) or die "DBI::errstr";
@@ -337,7 +346,7 @@ foreach (@$accessions) {
         my $add_genotypeprop = $schema->resultset("Genetic::Genotypeprop")->create({ genotype_id => $genotype_id, type_id => $igd_number_cvterm_id, value => $igd_number });
     }
     undef $genotypeprop_json;
-    undef $json_string;
+    #undef $json_string;
     #undef $new_genotypeprop_sql;
     #undef $add_genotypeprop;
 
