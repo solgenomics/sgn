@@ -66,64 +66,197 @@ sub _authenticate_user {
     return 1;
 }
 
-=head2 /brapi/v1/token?grant_type=password&username=USERNAME&password=PASSWORD&client_id=CLIENT_ID
+=head2 /brapi/v1/token
 
- Usage: For logging a user in through the API http://docs.brapi.apiary.io/#authentication
+ Usage: For logging a user in and loggin a user out through the API
  Desc:
- Return JSON example:
+
+For Logging In 
+POST Request: 
+{
+ "grant_type" : "password", //(optional, text, `password`) ... The grant type, only allowed value is password, but can be ignored
+ "username" : "user38", // (required, text, `thepoweruser`) ... The username
+ "password" : "secretpw", // (optional, text, `mylittlesecret`) ... The password
+ "client_id" : "blabla" // (optional, text, `blabla`) ... The client id, currently ignored.
+}
+ 
+POST Response:
+ {
+   "metadata": {
+     "pagination": {},
+     "status": {},
+     "datafiles": []
+   },
+   "userDisplayName": "John Smith",
+   "access_token": "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4",
+   "expires_in": "The lifetime in seconds of the access token"
+ }
+ 
+For Logging out
+DELETE Request:
+ 
+{ 
+    "access_token" : "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4" // (optional, text, `R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4`) ... The user access token. Default: current user token.
+}
+
+DELETE Response:
 {
     "metadata": {
-        "pagination" : {},
-        "status" : []
-        },
-    "session_token": "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4"
+            "pagination" : {},
+            "status" : { "message" : "User has been logged out successfully."},
+            "datafiles": []
+        }
+    "result" : {}
 }
- Args:
- Side Effects:
 
 =cut
 
-sub authenticate_token : Chained('brapi') PathPart('token') Args(0) {
+sub authenticate_token : Chained('brapi') PathPart('token') Args(0) : ActionClass('REST') { }
+
+sub authenticate_token_DELETE {
     my $self = shift;
     my $c = shift;
+
+    my $login_controller = CXGN::Login->new($c->dbc->dbh);
+
+    my $status = $c->stash->{status};
+    my @status = @$status;
+    
+    $login_controller->logout_user();
+
+    my %pagination = ();
+    my %result;
+    my @data_files;
+    my %metadata = (pagination=>\%pagination, status=>\@status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+sub authenticate_token_POST {
+    my $self = shift;
+    my $c = shift;
+
     my $login_controller = CXGN::Login->new($c->dbc->dbh);
     my $params = $c->req->params();
 
     my $status = $c->stash->{status};
     my @status = @$status;
     my $cookie = '';
+    my $first_name = '';
+    my $last_name = '';
 
     if ( $login_controller->login_allowed() ) {
-	if ($params->{grant_type} eq 'password' || !$params->{grant_type}) {
-	    my $login_info = $login_controller->login_user( $params->{username}, $params->{password} );
-	    if ($login_info->{account_disabled}) {
-		push(@status, 'Account Disabled');
-	    }
-	    if ($login_info->{incorrect_password}) {
-		push(@status, 'Incorrect Password');
-	    }
-	    if ($login_info->{duplicate_cookie_string}) {
-		push(@status, 'Duplicate Cookie String');
-	    }
-	    if ($login_info->{logins_disabled}) {
-		push(@status, 'Logins Disabled');
-	    }
-	    if ($login_info->{person_id}) {
-		push(@status, 'Login Successfull');
-		$cookie = $login_info->{cookie_string};
-	    }
-	} else {
-	    push(@status, 'Grant Type Not Supported. Valid grant type: password');
-	}
+        if ($params->{grant_type} eq 'password' || !$params->{grant_type}) {
+            my $login_info = $login_controller->login_user( $params->{username}, $params->{password} );
+            if ($login_info->{account_disabled}) {
+                push(@status, 'Account Disabled');
+            }
+            if ($login_info->{incorrect_password}) {
+                push(@status, 'Incorrect Password');
+            }
+            if ($login_info->{duplicate_cookie_string}) {
+                push(@status, 'Duplicate Cookie String');
+            }
+            if ($login_info->{logins_disabled}) {
+                push(@status, 'Logins Disabled');
+            }
+            if ($login_info->{person_id}) {
+                push(@status, 'Login Successfull');
+                $cookie = $login_info->{cookie_string};
+                $first_name = $login_info->{first_name};
+                $last_name = $login_info->{last_name};
+            }
+        } else {
+            push(@status, 'Grant Type Not Supported. Valid grant type: password');
+        }
     } else {
-	push(@status, 'Login Not Allowed');
+        push(@status, 'Login Not Allowed');
     }
     my %pagination = ();
-    my %metadata = (pagination=>\%pagination, status=>\@status);
-    my %result = (metadata=>\%metadata, session_token=>$cookie);
-
-    $c->stash->{rest} = \%result;
+    my @data_files;
+    my %metadata = (pagination=>\%pagination, status=>\@status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, access_token=>$cookie, userDisplayName=>"$first_name $last_name", expires_in=>$CXGN::Login::LOGIN_TIMEOUT);
+    $c->stash->{rest} = \%response;
 }
+
+
+=head2 /brapi/v1/calls
+
+ Usage: For determining which calls have been implemented and with which datafile types and methods
+ Desc:
+ 
+ GET Request:
+ 
+ GET Response:
+{
+  "metadata": {
+    "pagination": {
+      "pageSize": 3,
+      "currentPage": 0,
+      "totalCount": 3,
+      "totalPages": 1
+    },
+    "status": {},
+    "datafiles": []
+  },
+  "result": {
+    "data": [
+      {
+        "call": "allelematrix",
+        "datatypes": [
+          "json",
+          "tsv"
+        ],
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "call": "germplasm/id/mcpd",
+        "datatypes": [
+          "json"
+        ],
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "call": "doesntexistyet",
+        "datatypes": [
+          "png",
+          "jpg"
+        ],
+        "methods": [
+          "GET"
+        ]
+      }
+    ]
+  }
+}
+
+=cut
+
+sub calls : Chained('brapi') PathPart('calls') Args(0) : ActionClass('REST') { }
+
+sub calls_GET {
+    my $self = shift;
+    my $c = shift;
+
+    my $status = $c->stash->{status};
+    my @status = @$status;
+    my @data;
+    push @data, {call=>'token', datatypes=>['json'], methods=>['POST','DELETE']};
+    push @data, {call=>'calls', datatypes=>['json'], methods=>['GET']};
+
+    my %pagination = ();
+    my %result = (data=>\@data);
+    my @data_files;
+    my %metadata = (pagination=>\%pagination, status=>\@status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
 
 sub pagination_response {
     my $data_count = shift;
@@ -1191,6 +1324,7 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
   my @status = @$status;
 
   my @profile_ids = $c->req->param('markerprofileDbId');
+  my $data_format = $c->req->param('format');
   #print STDERR Dumper \@profile_ids;
   #my @profile_ids = split ",", $markerprofile_ids;
 
@@ -1212,11 +1346,12 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
     }
     #print Dumper(\@ordered_refmarkers);
 
+    my $json = JSON->new();
     $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
     while (my $profile = $rs->next()) {
       foreach my $m (@ordered_refmarkers) {
         my $markers_json = $profile->value();
-        $markers = JSON::Any->decode($markers_json);
+        $markers = $json->decode($markers_json);
 
         $scores{$profile->genotypeprop_id()}->{$m} = $self->convert_dosage_to_genotype($markers->{$m});
       }
@@ -1229,31 +1364,79 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
   foreach my $line (keys %scores) {
     push @lines, $line;
   }
-
+  
+  my @json_lines;
+  my $fh;
+  my $file_path;
   my %markers_seen;
-  for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
+  my $data_file_path;
+  my @marker_score_json_lines;
+  if (!$data_format || $data_format eq 'json' ){
+      @json_lines = @lines;
+      print STDERR scalar(@ordered_refmarkers)."\n";
 
-    my %markers_by_line;
-    my $m = $ordered_refmarkers[$n];
-      foreach my $line (keys %scores) {
-        push @{$markers_by_line{$m}}, $scores{$line}->{$m};
-        if (!exists $markers_seen{$m} ) {
-          $markers_seen{$m} = \@{$markers_by_line{$m}};
-          #push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
+      for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
+
+        my %markers_by_line;
+        my $m = $ordered_refmarkers[$n];
+        #print STDERR Dumper $m;
+          foreach my $line (keys %scores) {
+            push @{$markers_by_line{$m}}, $scores{$line}->{$m};
+            if (!exists $markers_seen{$m} ) {
+                #print STDERR Dumper \@{$markers_by_line{$m}};
+              $markers_seen{$m} = \@{$markers_by_line{$m}};
+              #push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
+            }
+          }
+
+      }
+      foreach my $marker_name (sort keys %markers_seen) {
+          my $marker_scores = $markers_seen{$marker_name};
+          #print STDERR Dumper $marker_scores;
+          push @marker_score_json_lines, { $marker_name => $marker_scores };
+      }
+      
+      
+  } elsif ($data_format eq 'tsv') {
+      my $dir = $c->tempfiles_subdir('download');
+      my ($fh, $tempfile) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$data_format.'_'.'XXXXX');
+      $file_path = $c->config->{basepath}."/".$tempfile.".tsv";
+      open(my $fh, ">", $file_path);
+      print STDERR $file_path."\n";
+      print $fh "markerprofileDbIds\t", join("\t", @lines), "\n";
+      
+      my %markers_by_line;
+      print STDERR scalar(@ordered_refmarkers)."\n";
+      foreach my $m (@ordered_refmarkers) {
+          #print STDERR Dumper $m;
+        foreach my $line (keys %scores) {
+          push @{$markers_by_line{$m}}, $scores{$line}->{$m};
+          if (!exists $markers_seen{$m} ) {
+              #print STDERR Dumper \@{$markers_by_line{$m}};
+            $markers_seen{$m} = \@{$markers_by_line{$m}};
+            #push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
+          }
         }
       }
 
+      foreach my $marker_name (sort keys %markers_seen) {
+          my $marker_scores = $markers_seen{$marker_name};
+          #print STDERR Dumper $marker_scores;
+          print $fh "$marker_name\t", join("\t", @{$marker_scores}),"\n";
+      }
+      
+      
+      close $fh;
+      $data_file_path = $file_path;
   }
-
-  foreach my $marker_name (sort keys %markers_seen) {
-    push @marker_score_lines, { $marker_name => $markers_seen{$marker_name} };
-  }
+  
+  
 
   $total_count = scalar(keys %$markers);
 
   $c->stash->{rest} = {
-    metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => \@status },
-    result => {markerprofileDbIds => \@lines, data => \@marker_score_lines},
+    metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => \@status, datafiles=>$data_file_path },
+    result => {markerprofileDbIds => \@json_lines, data => \@marker_score_json_lines},
   };
 
 }
