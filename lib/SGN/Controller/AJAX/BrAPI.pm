@@ -420,7 +420,7 @@ sub germplasm_list_POST {
         $germplasm_id =~ tr/*?/%_/;
         $search_params{'me.stock_id'} = { 'ilike' => $germplasm_id };
     }
-    print STDERR Dumper \%search_params;
+    #print STDERR Dumper \%search_params;
     my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, { '+select'=> \@select_list, '+as'=> \@sselect_as_list, order_by=> \%order_params } );
     my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'stock_synonym', 'stock_property')->cvterm_id();
     if ($accession_number) {

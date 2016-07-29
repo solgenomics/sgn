@@ -16,7 +16,7 @@
 <input name="brapi_germplasm_search_germplasmPUI" id="brapi_germplasm_search_germplasmPUI" class="form-control" type="text" placeholder="GermplasmPUI" />
 <select name="brapi_germplasm_search_matchMethod" id="brapi_germplasm_search_matchMethod" class="form-control" />
     <option value="exact">Exact</option>
-    <option value="wilcard">Wildcard. Wildcard allows % or * for multiple characters and ? for single characters.</option>
+    <option value="wildcard">Wildcard. Wildcard allows % or * for multiple characters and ? for single characters.</option>
 </select>
 <button class="btn btn-primary" name="brapi_germplasm_search_submit" id="brapi_germplasm_search_submit">Search</button>
 
