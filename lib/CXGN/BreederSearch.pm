@@ -50,6 +50,7 @@ has 'dbname' => (
 
 sub metadata_query {
   my $self = shift;
+  my $c = shift;
   my $criteria_list = shift;
   my $dataref = shift;
   my $queryref = shift;
@@ -64,10 +65,14 @@ sub metadata_query {
     my $populated_query = "select * from materialized_phenoview limit 1";
     my $sth = $self->dbh->prepare($populated_query);
     $status = $sth->execute();
-  } catch {
-    print STDERR $@ . "\n" . "Status: $status";
-    my $message = $self->refresh_matviews('basic');
-    print STDERR "$message \nProceeding with query.";
+  } catch { #if test query fails because views aren't populated
+    my $message = $self->refresh_matviews($c->config->{dbhost}, $c->config->{dbname},'basic');
+    print STDERR "Message: $message \n";
+    if (%$message{'success'}) {
+      print STDERR "Proceeding with query . . . .\n";
+    } else {
+      return $message;
+    }
   };
 
   my $target_table = $criteria_list->[-1];
@@ -202,6 +207,8 @@ Side Effects: Refreshes materialized views
 sub refresh_matviews {
 
   my $self = shift;
+  my $dbhost = shift;
+  my $dbname = shift;
   my $refresh_type = shift || 'concurrent';
   my $refresh_finished = 0;
   my $async_refresh;
@@ -217,13 +224,11 @@ sub refresh_matviews {
   }
   else {
 
-    try {
-
       my $dbh = $self->dbh;
-      if ($refresh_type == 'concurrent') {
-        $async_refresh = CXGN::Tools::Run->run_async("perl refresh_matviews.pl", "-D $dbh", "-c");
+      if ($refresh_type eq 'concurrent') {
+        $async_refresh = CXGN::Tools::Run->run_async("perl refresh_matviews.pl", "-H $dbhost", "-D $dbname", "-c");
       } else {
-        $async_refresh = CXGN::Tools::Run->run_async("perl refresh_matviews.pl", "-D $dbh");
+        $async_refresh = CXGN::Tools::Run->run_async("perl refresh_matviews.pl", "-H $dbhost", "-D $dbname");
       }
 
       for (my $i = 1; $i < 10; $i++) {
@@ -242,10 +247,10 @@ sub refresh_matviews {
         return { message => 'Wizard update initiated' };
       }
 
-    } catch {
+
       print STDERR 'Error initiating wizard update.' . $@ . "\n";
       return { error => 'Error initiating wizard update.' . $@ };
-    }
+
   }
 }
 

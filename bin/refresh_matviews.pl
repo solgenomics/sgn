@@ -6,11 +6,12 @@ refresh_matviews.pl - run PL/pgSQL functions to do a basic or concurrent refresh
 
 =head1 DESCRIPTION
 
-refresh_matviews.pl -D [database handle]  -c [ to run concurrent refresh ]
+refresh_matviews.pl -H [database handle] -D [database name]  -c [to run concurrent refresh]
 
 Options:
 
- -D the database handle
+ -H the database host
+ -D the database name
  -c flag; if present, run concurrent refresh
 
 All materialized views that are included in the refresh function will be refreshed
@@ -24,44 +25,43 @@ Bryan Ellerbrock <bje24@cornell.edu>
 
 use strict;
 use warnings;
-
 use Getopt::Std;
-use Try::Tiny;
-use CXGN::Tools::Run;
 use CXGN::DB::InsertDBH;
-use CXGN::DB::Connection;
 
-our ($opt_D, $opt_c);
-getopts('Dc');
+our ($opt_H, $opt_D, $opt_c, $refresh);
+getopts('H:D:c');
 
-my $dbh = $opt_D;
-
-sub print_help {
-  print STDERR "A script to refresh materialized views\nUsage: refresh_matviews.pl -D [database handle]\n-w\trun refresh concurrently (optional)\n";
-}
-
-
-if (!$opt_D) {
-  print_help();
-  die("Exiting: Database handle option missing\n");
-}
-
+my $dbh = CXGN::DB::InsertDBH->new({
+    dbhost => $opt_H,
+    dbname => $opt_D,
+    dbargs => {AutoCommit => 0,
+               RaiseError => 1}
+                                   });
+eval {
   my $q = "UPDATE public.matviews SET currently_refreshing=?";
   my $state = 'TRUE';
-  my $h = $self->dbh->prepare($q);
+  my $h = $dbh->prepare($q);
   $h->execute($state);
 
   print STDERR "Refreshing materialized views . . ." . localtime() . "\n";
 
-  my $refresh = 'SELECT refresh_materialized_views()';
-  my $h = $self->dbh->prepare($refresh);
+  if ($opt_c) {
+    $refresh = 'SELECT refresh_materialized_views_concurrently()';
+  } else {
+    $refresh = 'SELECT refresh_materialized_views()';
+  }
+
+  my $h = $dbh->prepare($refresh);
   my $status = $h->execute();
 
   print STDERR "Materialized views refreshed! Status: $status" . localtime() . "\n";
 
   $q = "UPDATE public.matviews SET currently_refreshing=?";
   $state = 'FALSE';
-  my $h = $self->dbh->prepare($q);
+  my $h = $dbh->prepare($q);
   $h->execute($state);
 
   print STDERR "Done, exiting refresh_matviews.pl \n";
+};
+
+warn $@ if $@;

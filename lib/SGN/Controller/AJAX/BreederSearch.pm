@@ -77,7 +77,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   my $dbh = $c->dbc->dbh();
   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
 
-  my $results_ref = $bs->metadata_query(\@criteria_list, $dataref, $queryref);
+  my $results_ref = $bs->metadata_query($c, \@criteria_list, $dataref, $queryref);
 
   print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
 
@@ -101,7 +101,7 @@ sub refresh_matviews : Path('/ajax/breeder/refresh') Args(0) {
 
   my $dbh = $c->dbc->dbh();
   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-  my $refresh = $bs->refresh_matviews();
+  my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname});
 
   if ($refresh->{error}) {
     print STDERR "Returning with error . . .\n";
