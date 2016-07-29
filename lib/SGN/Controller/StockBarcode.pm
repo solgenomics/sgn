@@ -92,6 +92,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $right_margin_mm = $c->req->param("right_margin");
     my $plot = $c->req->param("plots");
     my $nursery = $c->req->param("nursery");
+    my $added_text = $c->req->param("text_margin");
 
     # convert mm into pixels
     #
@@ -233,7 +234,7 @@ print "MMMMMMMMMMMMMM.............. $found[$i]->[1]\n";
    else {
   # #####
 	  #$tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[0], $found[$i]->[1], 'large',  20  ]);
-    $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[1], $found[$i]->[0], 'large',  20  ]);
+    $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[1], $added_text, 'large',  20  ]);
    }
   my $image = $pdf->image($tempfile);
 	print STDERR "IMAGE: ".Data::Dumper::Dumper($image);
