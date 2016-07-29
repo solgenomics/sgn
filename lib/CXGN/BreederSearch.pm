@@ -66,8 +66,8 @@ sub metadata_query {
     my $sth = $self->dbh->prepare($populated_query);
     $status = $sth->execute();
   } catch { #if test query fails because views aren't populated
-    my $message = $self->refresh_matviews($c->config->{dbhost}, $c->config->{dbname},'basic');
-    print STDERR "Message: $message \n";
+    my $message = $self->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'basic');
+    print STDERR "Message: " . Dumper($message) . "\n";
     if (%$message{'success'}) {
       print STDERR "Proceeding with query . . . .\n";
     } else {
@@ -209,6 +209,8 @@ sub refresh_matviews {
   my $self = shift;
   my $dbhost = shift;
   my $dbname = shift;
+  my $dbuser = shift;
+  my $dbpass = shift;
   my $refresh_type = shift || 'concurrent';
   my $refresh_finished = 0;
   my $async_refresh;
@@ -226,9 +228,11 @@ sub refresh_matviews {
 
       my $dbh = $self->dbh;
       if ($refresh_type eq 'concurrent') {
-        $async_refresh = CXGN::Tools::Run->run_async("perl refresh_matviews.pl", "-H $dbhost", "-D $dbname", "-c");
+        print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -c";
+        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl", "-H $dbhost", "-D $dbname", "-U $dbuser", "-P $dbpass", "-c");
       } else {
-        $async_refresh = CXGN::Tools::Run->run_async("perl refresh_matviews.pl", "-H $dbhost", "-D $dbname");
+        print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass";
+        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl", "-H $dbhost", "-D $dbname", "-U $dbuser", "-P $dbpass");
       }
 
       for (my $i = 1; $i < 10; $i++) {

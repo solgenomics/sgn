@@ -26,17 +26,16 @@ Bryan Ellerbrock <bje24@cornell.edu>
 use strict;
 use warnings;
 use Getopt::Std;
-use CXGN::DB::InsertDBH;
+use DBI;
+#use CXGN::DB::InsertDBH;
 
-our ($opt_H, $opt_D, $opt_c, $refresh);
-getopts('H:D:c');
+our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_c, $refresh);
+getopts('H:D:U:P:c');
 
-my $dbh = CXGN::DB::InsertDBH->new({
-    dbhost => $opt_H,
-    dbname => $opt_D,
-    dbargs => {AutoCommit => 0,
-               RaiseError => 1}
-                                   });
+print STDERR "Connecting to database...\n";
+my $dsn = 'dbi:Pg:database='.$opt_D.";host=".$opt_H.";port=5432";
+my $dbh = DBI->connect($dsn, $opt_U, $opt_P);
+
 eval {
   my $q = "UPDATE public.matviews SET currently_refreshing=?";
   my $state = 'TRUE';
@@ -51,17 +50,20 @@ eval {
     $refresh = 'SELECT refresh_materialized_views()';
   }
 
-  my $h = $dbh->prepare($refresh);
+  $h = $dbh->prepare($refresh);
   my $status = $h->execute();
 
   print STDERR "Materialized views refreshed! Status: $status" . localtime() . "\n";
 
   $q = "UPDATE public.matviews SET currently_refreshing=?";
   $state = 'FALSE';
-  my $h = $dbh->prepare($q);
+  $h = $dbh->prepare($q);
   $h->execute($state);
-
-  print STDERR "Done, exiting refresh_matviews.pl \n";
 };
 
-warn $@ if $@;
+if ($@) {
+  $dbh->rollback();
+  print STDERR $@;
+} else {
+  print STDERR "Done, exiting refresh_matviews.pl \n";
+}
