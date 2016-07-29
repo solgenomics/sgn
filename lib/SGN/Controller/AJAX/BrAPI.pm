@@ -258,6 +258,7 @@ sub calls_GET {
 }
 
 
+
 sub pagination_response {
     my $data_count = shift;
     my $page_size = shift;
@@ -269,48 +270,72 @@ sub pagination_response {
 }
 
 
-=head2 brapi/v1/germplasm?name=*Mo?re%&matchMethod=wildcard&include=&pageSize=1000&page=10
+=head2 /brapi/v1/germplasm-search?germplasmName=&germplasmGenus=&germplasmSubTaxa=&germplasmDbId&germplasmPUI=http://data.inra.fr/accession/234Col342&germplasmSpecies=Triticum&panel=diversitypanel1&collection=none&pageSize=pageSize&page=page
 
  Usage: For searching a germplasm by name. Allows for exact and wildcard match methods. http://docs.brapi.apiary.io/#germplasm
  Desc:
- Return JSON example:
+ 
+ POST Request:
+ 
+{
+    "germplasmPUI" : "http://...", // (optional, text, `http://data.inra.fr/accession/234Col342`) ... The name or synonym of external genebank accession identifier
+    "germplasmDbId" : 986, // (optional, text, `986`) ... The name or synonym of external genebank accession identifier
+    "germplasmSpecies" : "tomato", // (optional, text, `aestivum`) ... The name or synonym of genus or species ( merge with below ?)
+    "germplasmGenus" : "Solanum lycopersicum", //(optional, text, `Triticum, Hordeum`) ... The name or synonym of genus or species
+    "germplasmName" : "XYZ1", // (optional, text, `Triticum, Hordeum`) ... The name or synonym of the accession
+    "accessionNumber" : "ITC1234" // optional
+    "pageSize" : 100, // (optional, integer, `1000`) ... The size of the pages to be returned. Default is `1000`.
+    "page":  1 (optional, integer, `10`) ... Which result page is requested
+}
+
+
+POST Response:
 {
     "metadata": {
+        "status": {},
+        "datafiles": [],
         "pagination": {
-            "pageSize": 1000,
-            "currentPage": 10,
-            "totalCount": 27338,
-            "totalPages": 28
-        },
-        "status": []
+        "pageSize": 10,
+        "currentPage": 1,
+        "totalCount": 2,
+        "totalPages": 1
+        }
     },
-    "result" : {
-        "data": [
+    "result": {
+        "data":[
             {
-                "germplasmDbId": "382",
+                "germplasmDbId": "01BEL084609",
                 "defaultDisplayName": "Pahang",
-                "germplasmName": "Pahang",
                 "accessionNumber": "ITC0609",
+                "germplasmName": "Pahang",
                 "germplasmPUI": "http://www.crop-diversity.org/mgis/accession/01BEL084609",
                 "pedigree": "TOBA97/SW90.1057",
-                "seedSource": "",
-                "synonyms": ["01BEL084609"],
-            },
-            {
-                "germplasmDbId": "394",
-                "defaultDisplayName": "Pahang",
-                "germplasmName": "Pahang",
-                "accessionNumber": "ITC0727",
-                "germplasmPUI": "http://www.crop-diversity.org/mgis/accession/01BEL084727",
-                "pedigree": "TOBA97/SW90.1057",
-                "seedSource": "",
-                "synonyms": [ "01BEL084727"],
+                "germplasmSeedSource": "Female GID:4/Male GID:4",
+                "synonyms": [ ],
+                "commonCropName": "banana",
+                "instituteCode": "01BEL084",
+                "instituteName": "ITC",
+                "biologicalStatusOfAccessionCode": 412,
+                "countryOfOriginCode": "UNK",
+                "typeOfGermplasmStorageCode": 10,
+                "genus": "Musa",
+                "species": "acuminata",
+                "speciesAuthority": "",
+                "subtaxa": "sp malaccensis var pahang",
+                "subtaxaAuthority": "",
+                "donors": 
+                [
+                    {
+                        "donorAccessionNumber": "",
+                        "donorInstituteCode": "",
+                        "germplasmPUI": ""
+                    }
+                ],
+                "acquisitionDate": "19470131"
             }
         ]
     }
 }
- Args:
- Side Effects:
 
 =cut
 
@@ -335,20 +360,20 @@ sub germplasm_pedigree_string {
     return $pedigree_string;
 }
 
-sub germplasm_list  : Chained('brapi') PathPart('germplasm') Args(0) : ActionClass('REST') { }
+sub germplasm_list  : Chained('brapi') PathPart('germplasm-search') Args(0) : ActionClass('REST') { }
+
+#sub germplasm_list_POST {
+#    my $self = shift;
+#    my $c = shift;
+#    my $auth = _authenticate_user($c);
+#
+#    my $status = $c->stash->{status};
+#    my @status = @$status;
+
+#    $c->stash->{rest} = {status => \@status};
+#}
 
 sub germplasm_list_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-
-    my $status = $c->stash->{status};
-    my @status = @$status;
-
-    $c->stash->{rest} = {status => \@status};
-}
-
-sub germplasm_list_GET {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
@@ -357,28 +382,42 @@ sub germplasm_list_GET {
     my $status = $c->stash->{status};
     my @status = @$status;
 
-    if ($params->{include}) {
-	push (@status, 'include not implemented');
+    my $germplasm_name = $params->{germplasmName};
+    my $accession_number->{accessionNumber};
+    my $genus = $params->{germplasmGenus};
+    my $subtaxa = $params->{germplasmSubTaxa};
+    my $species = $params->{germplasmSpecies};
+    my $stock_id = $params->{germplasmDbId};
+    my $permplasm_pui = $params->{germplasmPUI};
+    my $germplasm_panel = $params->{panel};
+    my $germplasm_collection = $params->{collection};
+    my $match_method = $params->{matchMethod};
+    if ($match_method && ($match_method ne 'exact' || $match_method ne 'wildcard')) {
+        push(@status, "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters.");
     }
-    my $rs;
+
     my $total_count = 0;
     my %result;
-    my $type_id = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { name => "accession" })->cvterm_id();
 
-    if (!$params->{name}) {
-	$rs = $self->bcs_schema()->resultset("Stock::Stock")->search( {type_id=>$type_id}, { '+select'=> ['stock_id', 'name', 'uniquename'], '+as'=> ['stock_id', 'name', 'uniquename'], order_by=>{ -asc=>'stock_id' } } );
-    } else {
-	if (!$params->{matchMethod} || $params->{matchMethod} eq "exact") {
-	    $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( {type_id=>$type_id, uniquename=>$params->{name} }, { '+select'=> ['stock_id', 'name', 'uniquename'], '+as'=> ['stock_id', 'name', 'uniquename'], order_by=>{ -asc=>'stock_id' } } );
-	}
-	elsif ($params->{matchMethod} eq "wildcard") {
-	    $params->{name} =~ tr/*?/%_/;
-	    $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( {type_id=>$type_id, uniquename=>{ ilike => $params->{name} } }, { '+select'=> ['stock_id', 'name', 'uniquename'], '+as'=> ['stock_id', 'name', 'uniquename'],  order_by=>{ -asc=>'stock_id' } } );
-	}
-	else {
-	    push(@status, "matchMethod '$params->{matchMethod}' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters.");
-	}
+    my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+    my %search_params;
+    my %order_params;
+    my @select_list = ['stock_id', 'name', 'uniquename'];
+    my @sselect_as_list = ['stock_id', 'name', 'uniquename'];
+
+    $search_params{'type_id'} = $accession_type_cvterm_id;
+    $order_params{'-asc'} = 'stock_id';
+    
+    if ($germplasm_name && (!$match_method || $match_method eq 'exact')) {
+        $search_params{'uniquename'} = $germplasm_name;
     }
+    if ($germplasm_name && $match_method eq 'wildcard') {
+        $germplasm_name =~ tr/*?/%_/;
+        $search_params{'uniquename'} = { 'ilike' => $germplasm_name };
+    }
+    
+    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, { '+select'=> \@select_list, '+as'=> \@sselect_as_list, order_by=> \%order_params } );
+
     if ($rs) {
 	my @data;
 	$total_count = $rs->count();

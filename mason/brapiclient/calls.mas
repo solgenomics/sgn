@@ -1,6 +1,8 @@
 <%args>
 </%args>
 
+<h4>Calls</h4>
+
 <div id="brapi_calls_home_div">
 <button class="btn btn-primary" id="brapi_home_show_calls">Show Calls</button>
 
@@ -16,7 +18,7 @@ jQuery("#brapi_home_show_calls").click(function() {
       'method': 'GET',
       'success': function(response) {
         console.log(response);
-        var html = '<h4>Calls</h4><br/><ul>';
+        var html = '<br/><ul>';
         for(var i = 0; i < response.result.data.length; i++) {
             html = html+'<li>'+response.result.data[i].call+'</li>';
             html = html+'<ul>';
