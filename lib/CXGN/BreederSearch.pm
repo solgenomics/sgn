@@ -68,10 +68,11 @@ sub metadata_query {
   } catch { #if test query fails because views aren't populated
     my $message = $self->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'basic');
     print STDERR "Message: " . Dumper($message) . "\n";
-    if (%$message{'success'}) {
+    my %response = %$message;
+    if ($response{'success'}) {
       print STDERR "Proceeding with query . . . .\n";
     } else {
-      return $message;
+      return %response;
     }
   };
 
