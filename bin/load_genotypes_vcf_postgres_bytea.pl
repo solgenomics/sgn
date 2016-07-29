@@ -183,7 +183,7 @@ print STDERR "Protocol hash created...\n";
 #Save the protocolprop. This json string contains the details for the maarkers used in the map.
 #my $json_obj = JSON::Any->new;
 #my $json_string = $json_obj->encode(\%protocolprop_json);
-my $last_protocolprop_rs = $schema->resultset("NaturalDiversity::NdProtocolprop")->search({}, {order_by=> { -desc => 'nd_protocolprop_id' }, rows=>1});
+my $last_protocolprop_rs = $schema->resultset("NaturalDiversity::NdProtocolprop")->search({}, {order_by=> { -desc => 'nd_protocolprop_id' }, select=>['nd_protocolprop_id'], rows=>1});
 my $last_protocolprop = $last_protocolprop_rs->first();
 my $new_protocolprop_id;
 if ($last_protocolprop) {
@@ -198,7 +198,7 @@ $sth->bind_param(1, $new_protocolprop_id);
 $sth->bind_param(2, $protocol_id);
 $sth->bind_param(3, $vcf_map_details_id);
 $sth->bind_param(4, nfreeze(\%protocolprop_json), { pg_type => DBD::Pg::PG_BYTEA });
-$sth->execute(); 
+$sth->execute();
 
 #my $add_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->create({ nd_protocol_id => $protocol_id, type_id => $vcf_map_details->cvterm_id(), value => $json_string });
 undef %protocolprop_json;

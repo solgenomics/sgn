@@ -161,8 +161,8 @@ foreach my $accession_name (@$accessions) {
             "marker_score" => $genotypeprop_hash_ref->{$marker}
         });
         my $genotye_doc_id = $result->inserted_id;
-        $stock_id++;
     }
+    $stock_id++;
     print "Stored Genotype Documents for $accession_name \n";
 
 }
