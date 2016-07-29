@@ -64,12 +64,16 @@ if ( @qtl_pops )
     foreach my $pop (@qtl_pops)
     {
       my $pop_id   = $pop->get_population_id();
-      my $name     = $pop->get_name();
+      my $name     = $pop->get_name(); 
       my $desc     = $pop->get_description();
       my $qtl_link = qq | <a href="/phenome/qtl_analysis.pl?population_id=$pop_id&amp;cvterm_id=$cvterm_id" onClick="Qtl.waitPage()">$name</a> |;
       push @qtl_data, [ $qtl_link, $desc ];
     }
  }
+
+my $this_page = "/cvterm/$cvterm_id/view/";
+my $image_subtitle =
+   " <a href=\"/image/add?type_id=$cvterm_id&type=cvterm&refering_page=$this_page\">[Add image]</a>" ;
 
 
 </%perl>
@@ -129,7 +133,7 @@ if ( @qtl_pops )
 
 <h4>Add this term to a list</h4>
 
-<div id="cvterm_id" style="display:none" ><% $cvterm_name %>|<% $db_name %>:<% $accession %></div>
+<div id="cvterm_id" style="display:none" ><% $db_name %>:<% $accession %></div>
 
 <&| /page/info_section.mas, title=>"Add to list", collapsible=>1, collapsed=>1 &>
 <div id="paste_to_list">
@@ -139,13 +143,13 @@ LOAD...
 </&>
 <script>
 
-  if (isLoggedIn()) {
+  if (isLoggedIn()) { 
     addToListMenu('paste_to_list', 'cvterm_id', { listType: 'traits' } );
   }
-  else {
+  else { 
     jQuery('#paste_to_list').html("&nbsp;Please log in to use lists.");
   }
-
+  
 </script>
 
 <br />
@@ -176,8 +180,8 @@ LOAD...
 <script>
 
   jQuery(document).ready(function () {
-
-    jQuery('#loci_data').DataTable( {
+  
+    jQuery('#loci_data').DataTable( { 
       'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/annotated_loci',
      });
   });
@@ -211,8 +215,8 @@ LOAD...
 <script>
 
   jQuery(document).ready(function () {
-
-    jQuery('#annotated_stocks_data').DataTable( {
+  
+    jQuery('#annotated_stocks_data').DataTable( { 
       'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/annotated_stocks',
      });
   });
@@ -231,7 +235,7 @@ LOAD...
         collapsible => 1,
    &>
      <& /page/columnar_table.mas,
-        headings     => ["Analyze QTL in population", "Population description"],
+        headings     => ["Analyze QTL in population", "Population description"], 
         data         => \@qtl_data,
         __alt_freq   => 2,
         __align      =>'l',
@@ -263,8 +267,8 @@ LOAD...
 <script>
 
   jQuery(document).ready(function () {
-
-    jQuery('#phen_stocks_data').DataTable( {
+  
+    jQuery('#phen_stocks_data').DataTable( { 
       'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/phenotyped_stocks',
      });
   });
@@ -307,8 +311,8 @@ LOAD...
 <script>
 
   jQuery(document).ready(function () {
-
-    jQuery('#trial_data').DataTable( {
+  
+    jQuery('#trial_data').DataTable( { 
       'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/direct_trials',
        }
      );
@@ -318,9 +322,9 @@ LOAD...
 
 </&>
 
-<&| /page/info_section.mas,
+<&| /page/info_section.mas, 
     title => "Images and figures",
-    subtitle      => '',
+    subtitle      => $image_subtitle,
     collapsible   => 1,
     collapsed     => 1,
     hide_if_empty => 1,
