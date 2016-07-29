@@ -1,6 +1,8 @@
 <%args>
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'brapi.Table' ] &>
+
 <h4>Germplasm Search</h4>
 
 <div id="brapi_germplasm_search_home_div">
@@ -12,13 +14,13 @@
 <input name="brapi_germplasm_search_germplasmSpecies" id="brapi_germplasm_search_germplasmSpecies" class="form-control" type="text" placeholder="GermplasmSpecies" />
 <input name="brapi_germplasm_search_germplasmDbId" id="brapi_germplasm_search_germplasmDbId" class="form-control" type="text" placeholder="GermplasmDbId" />
 <input name="brapi_germplasm_search_germplasmPUI" id="brapi_germplasm_search_germplasmPUI" class="form-control" type="text" placeholder="GermplasmPUI" />
-<input name="brapi_germplasm_search_panel" id="brapi_germplasm_search_panel" class="form-control" type="text" placeholder="GermplasmPanel" />
-<input name="brapi_germplasm_search_collection" id="brapi_germplasm_search_collection" class="form-control" type="text" placeholder="GermplasmCollectionD" />
 <select name="brapi_germplasm_search_matchMethod" id="brapi_germplasm_search_matchMethod" class="form-control" />
     <option value="exact">Exact</option>
     <option value="wilcard">Wildcard. Wildcard allows % or * for multiple characters and ? for single characters.</option>
 </select>
 <button class="btn btn-primary" name="brapi_germplasm_search_submit" id="brapi_germplasm_search_submit">Search</button>
+
+<br/><br/>
 
 <div id="brapi_germplasm_search_result_div">
 
@@ -41,14 +43,13 @@ jQuery(document).ready(function() {
             'germplasmSpecies' : jQuery("#brapi_germplasm_search_germplasmSpecies").val(),
             'germplasmDbId' : jQuery("#brapi_germplasm_search_germplasmDbId").val(),
             'germplasmPUI' : jQuery("#brapi_germplasm_search_germplasmPUI").val(),
-            'panel' : jQuery("#brapi_germplasm_search_panel").val(),
-            'collection' : jQuery("#brapi_germplasm_search_collection").val(),
             'matchMethod' : jQuery("#brapi_germplasm_search_matchMethod").val(),
           },
           'success': function(response) {
             console.log(response);
-            var html = '';
-            jQuery("#brapi_germplasm_search_result_div").empty().html(html);
+            var data = getGermplasmData();
+            brapi_create_table(response.result.data, response.metadata.pagination, 'brapi_germplasm_search_result_div', '/brapi/v1/germplasm-search', undefined, undefined);
+            
           },
           error: function(response) {
             alert('An error occurred');
@@ -56,5 +57,20 @@ jQuery(document).ready(function() {
         });
     });
 });
+
+function getGermplasmData() {
+    var data = {'germplasmName' :  jQuery("#brapi_germplasm_search_germplasmname").val(),
+    'accessionNumber' : jQuery("#brapi_germplasm_search_accessionNumber").val(),
+    'germplasmGenus' : jQuery("#brapi_germplasm_search_germplasmGenus").val(),
+    'germplasmSubTaxa' : jQuery("#brapi_germplasm_search_germplasmSubTaxa").val(),
+    'germplasmSpecies' : jQuery("#brapi_germplasm_search_germplasmSpecies").val(),
+    'germplasmDbId' : jQuery("#brapi_germplasm_search_germplasmDbId").val(),
+    'germplasmPUI' : jQuery("#brapi_germplasm_search_germplasmPUI").val(),
+    'panel' : jQuery("#brapi_germplasm_search_panel").val(),
+    'collection' : jQuery("#brapi_germplasm_search_collection").val(),
+    'matchMethod' : jQuery("#brapi_germplasm_search_matchMethod").val()};
+    
+    return data;
+}
 
 </script>

@@ -15,12 +15,13 @@
 //  as well as optionally, a link js object, which will be used to construct links in the table. e.g. { "name": ["mapId", "/maps/protocols/"] }
 
 
-function create_table(data, pagination, div_id, return_url, link) {
+function brapi_create_table(data, pagination, div_id, return_url, link, params) {
     console.log(data);
     console.log(pagination);
     console.log(div_id);
     console.log(return_url);
     console.log(link);
+    console.log(params);
     var current_page = pagination.currentPage;
     var next_page = current_page + 1;
     var previous_page = current_page - 1;
@@ -71,7 +72,9 @@ function create_table(data, pagination, div_id, return_url, link) {
                         if (header[col] == link_header) {
                             html = html+"<td><a href='"+link[link_header][1]+data[row][link[link_header][0]]+"'>"+data[row][link_header]+"</a></td>";
                         } else {
-                            html = html+"<td>"+data[row][header[col]]+"</td>";
+                            if (data[row][header[col]].length == 0) {
+                                html = html+"<td>"+data[row][header[col]]+"</td>";
+                            }
                         }
                     }
                 }
@@ -115,8 +118,13 @@ jQuery(document).ready(function () {
     
     jQuery(document).on( 'click', "#table_next_page_button", function() {
         jQuery.ajax( {
-            url: jQuery("#table_return_url_input").val()+"?currentPage="+jQuery("#table_next_page_input").val()+"&pageSize="+jQuery("#table_page_size_input").val(),
+            url: jQuery("#table_return_url_input").val(),
             dataType: 'json',
+            method: 'POST',
+            data: {
+                'currentPage':jQuery("#table_next_page_input").val(),
+                'pageSize':jQuery("#table_page_size_input").val(),
+            },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -131,7 +139,7 @@ jQuery(document).ready(function () {
                     var links = jQuery("#table_links_input").val();
                 }
                 jQuery("#"+jQuery("#table_div_id_input").val()).empty();
-                create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
+                brapi_create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
@@ -142,8 +150,13 @@ jQuery(document).ready(function () {
     
     jQuery(document).on( 'click', "#table_previous_page_button", function() {
         jQuery.ajax( {
-            url: jQuery("#table_return_url_input").val()+"?currentPage="+jQuery("#table_previous_page_input").val()+"&pageSize="+jQuery("#table_page_size_input").val(),
+            url: jQuery("#table_return_url_input").val(),
             dataType: 'json',
+            method: 'POST',
+            data: {
+                'currentPage':jQuery("#table_previous_page_input").val(),
+                'pageSize':jQuery("#table_page_size_input").val(),
+            },
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -158,7 +171,7 @@ jQuery(document).ready(function () {
                     var links = jQuery("#table_links_input").val();
                 }
                 jQuery("#"+jQuery("#table_div_id_input").val()).empty();
-                create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
+                brapi_create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
@@ -186,7 +199,7 @@ jQuery(document).ready(function () {
                         var links = jQuery("#table_links_input").val();
                     }
                     jQuery("#"+jQuery("#table_div_id_input").val()).empty();
-                    create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
+                    brapi_create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
                 },
                 error: function(response) {
                     jQuery("#working_modal").modal("hide");
@@ -215,7 +228,7 @@ jQuery(document).ready(function () {
                         var links = jQuery("#table_links_input").val();
                     }
                     jQuery("#"+jQuery("#table_div_id_input").val()).empty();
-                    create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
+                    brapi_create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
                 },
                 error: function(response) {
                     jQuery("#working_modal").modal("hide");

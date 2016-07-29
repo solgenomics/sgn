@@ -383,14 +383,12 @@ sub germplasm_list_POST {
     my @status = @$status;
 
     my $germplasm_name = $params->{germplasmName};
-    my $accession_number->{accessionNumber};
+    my $accession_number = $params->{accessionNumber};
     my $genus = $params->{germplasmGenus};
     my $subtaxa = $params->{germplasmSubTaxa};
     my $species = $params->{germplasmSpecies};
-    my $stock_id = $params->{germplasmDbId};
+    my $germplasm_id = $params->{germplasmDbId};
     my $permplasm_pui = $params->{germplasmPUI};
-    my $germplasm_panel = $params->{panel};
-    my $germplasm_collection = $params->{collection};
     my $match_method = $params->{matchMethod};
     if ($match_method && ($match_method ne 'exact' || $match_method ne 'wildcard')) {
         push(@status, "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters.");
@@ -402,33 +400,54 @@ sub germplasm_list_POST {
     my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
     my %search_params;
     my %order_params;
-    my @select_list = ['stock_id', 'name', 'uniquename'];
+    my @select_list = ['me.stock_id', 'me.name', 'me.uniquename'];
     my @sselect_as_list = ['stock_id', 'name', 'uniquename'];
 
-    $search_params{'type_id'} = $accession_type_cvterm_id;
-    $order_params{'-asc'} = 'stock_id';
+    $search_params{'me.type_id'} = $accession_type_cvterm_id;
+    $order_params{'-asc'} = 'me.stock_id';
     
     if ($germplasm_name && (!$match_method || $match_method eq 'exact')) {
-        $search_params{'uniquename'} = $germplasm_name;
+        $search_params{'me.uniquename'} = $germplasm_name;
     }
     if ($germplasm_name && $match_method eq 'wildcard') {
         $germplasm_name =~ tr/*?/%_/;
-        $search_params{'uniquename'} = { 'ilike' => $germplasm_name };
+        $search_params{'me.uniquename'} = { 'ilike' => $germplasm_name };
     }
-    
+    if ($germplasm_id && (!$match_method || $match_method eq 'exact')) {
+        $search_params{'me.stock_id'} = $germplasm_id;
+    }
+    if ($germplasm_id && $match_method eq 'wildcard') {
+        $germplasm_id =~ tr/*?/%_/;
+        $search_params{'me.stock_id'} = { 'ilike' => $germplasm_id };
+    }
+    print STDERR Dumper \%search_params;
     my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, { '+select'=> \@select_list, '+as'=> \@sselect_as_list, order_by=> \%order_params } );
-
-    if ($rs) {
-	my @data;
-	$total_count = $rs->count();
-	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
-	my $synonym_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
-	while (my $stock = $rs_slice->next()) {
-	    push @data, { germplasmDbId=>$stock->get_column('stock_id'), defaultDisplayName=>$stock->get_column('name'), germplasmName=>$stock->get_column('uniquename'), accessionNumber=>'', germplasmPUI=>$stock->get_column('uniquename'), pedigree=>germplasm_pedigree_string($self->bcs_schema(), $stock->get_column('stock_id')), seedSource=>'', synonyms=>germplasm_synonyms($self->bcs_schema(), $stock->get_column('stock_id'), $synonym_id) };
-	}
-	%result = (data => \@data);
+    my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'stock_synonym', 'stock_property')->cvterm_id();
+    if ($accession_number) {
+        $search_params{'stockprops.type_id'} = $synonym_id;
+        $search_params{'stockprops.value'} = $accession_number;
+        $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, { join=>{'stockprops'}, '+select'=> \@select_list, '+as'=> \@sselect_as_list, order_by=> \%order_params } );
     }
 
+    my @data;
+    if ($rs) {
+    	$total_count = $rs->count();
+    	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+    	while (my $stock = $rs_slice->next()) {
+    	    push @data, { 
+                germplasmDbId=>$stock->get_column('stock_id'), 
+                defaultDisplayName=>$stock->get_column('name'), 
+                germplasmName=>$stock->get_column('uniquename'), 
+                accessionNumber=>'', 
+                germplasmPUI=>$stock->get_column('uniquename'), 
+                pedigree=>germplasm_pedigree_string($self->bcs_schema(), $stock->get_column('stock_id')), 
+                seedSource=>'', 
+                synonyms=>germplasm_synonyms($self->bcs_schema(), $stock->get_column('stock_id'), $synonym_id),
+            };
+        }
+    }
+
+    %result = (data => \@data);
     my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
