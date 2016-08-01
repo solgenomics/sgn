@@ -18,16 +18,16 @@ load_genotypes_vcf_cxgn_postgres.pl - loading genotypes into cxgn databases, bas
  -l location name (required) e.g. "Cornell Biotech".  Will be found or created in NdGeolocation table.
  -o organism genus name (required) e.g. "Manihot".  Along with organism species name, this will be found or created in Organism table.
  -q organism species name (required) e.g. "Manihot esculenta".
- 
+
   FLAGS
  -x delete old genotypes for accessions that have new genotypes
  -a add accessions that are not in the database
- -z if accession names include an IGD number. Accession names are in format 'accession_name:IGD_number'. The IGD number will be parsed and stored as a genotypeprop. 
+ -z if accession names include an IGD number. Accession names are in format 'accession_name:IGD_number'. The IGD number will be parsed and stored as a genotypeprop.
  -t Test run . Rolling back at the end.
-  
+
 
 =head1 DESCRIPTION
-This script loads genotype data into the Chado genotype table it encodes the genotype + marker name in a json format in the genotyope.uniquename field for easy parsing by a Perl program. The genotypes are linked to the relevant stock using nd_experiment_genotype. Each column in the spreadsheet, which represents a single accession (stock) is stored as a single genotype entry and linked to the stock via nd_experiment_genotype. Stock names are stored in the stock table if cannot be found, and linked to a population stock with the name supplied in opt_g. Map details (chromosome, position, ref, alt, qual, filter, info, and format) are stored in json format in the protocolprop table. 
+This script loads genotype data into the Chado genotype table it encodes the genotype + marker name in a json format in the genotyope.uniquename field for easy parsing by a Perl program. The genotypes are linked to the relevant stock using nd_experiment_genotype. Each column in the spreadsheet, which represents a single accession (stock) is stored as a single genotype entry and linked to the stock via nd_experiment_genotype. Stock names are stored in the stock table if cannot be found, and linked to a population stock with the name supplied in opt_g. Map details (chromosome, position, ref, alt, qual, filter, info, and format) are stored in json format in the protocolprop table.
 
 =head1 AUTHOR
  Nicolas Morales (nm529@cornell.edu) May 2016
@@ -115,7 +115,7 @@ my $project_id = $project->project_id();
 $project->create_projectprops( { 'project year' => $opt_y }, { autocreate => 1 } );
 
 #store Map name using protocol
-my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find_or_create({
+my $protocol_row = $schema->resultset("NaturalDiversity::NdProtocol")->find_or_new({
     name => $map_protocol_name,
     type_id => $geno_cvterm_id
 });
@@ -142,65 +142,74 @@ my $population_stock = $schema->resultset("Stock::Stock")->find_or_create({
 });
 my $population_stock_id = $population_stock->stock_id();
 
-print STDERR "Reading genotype information...\n";
-my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "vcf" });
+if( !$protocol_row->in_storage ) {
+    $protocol_row->insert;
+    $protocol_id = $protocol_row->nd_protocol_id();
 
-my %protocolprop_json;
+    print STDERR "Reading genotype information for protocolprop storage...\n";
+    my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "vcf" });
+
+    my %protocolprop_json;
+
+    my $accessions = $gtio->accessions();
+    my $number_accessions = scalar(@$accessions);
+    print STDERR "Number accessions: $number_accessions...\n";
+
+    while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
+
+        #print STDERR Dumper $marker_info;
+        my $marker_name;
+        my $marker_info_p2 = $marker_info->[2];
+        my $marker_info_p8 = $marker_info->[8];
+        if ($marker_info_p2 eq '.') {
+            $marker_name = $marker_info->[0]."_".$marker_info->[1];
+        } else {
+            $marker_name = $marker_info_p2;
+        }
+
+        #As it goes down the rows, it appends the info from cols 0-8 into the protocolprop json object.
+        my %marker = (
+            chrom => $marker_info->[0],
+            pos => $marker_info->[1],
+            ref => $marker_info->[3],
+            alt => $marker_info->[4],
+            qual => $marker_info->[5],
+            filter => $marker_info->[6],
+            info => $marker_info->[7],
+            format => $marker_info_p8,
+        );
+        $protocolprop_json{$marker_name} = \%marker;
+    }
+    print STDERR "Protocol hash created...\n";
+
+    #Save the protocolprop. This json string contains the details for the maarkers used in the map.
+    my $json_obj = JSON::Any->new;
+    my $json_string = $json_obj->encode(\%protocolprop_json);
+    my $last_protocolprop_rs = $schema->resultset("NaturalDiversity::NdProtocolprop")->search({}, {order_by=> { -desc => 'nd_protocolprop_id' }, rows=>1});
+    my $last_protocolprop = $last_protocolprop_rs->first();
+    my $new_protocolprop_id;
+    if ($last_protocolprop) {
+        $new_protocolprop_id = $last_protocolprop->nd_protocolprop_id() + 1;
+    } else {
+        $new_protocolprop_id = 1;
+    }
+    my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocolprop_id, nd_protocol_id, type_id, value) VALUES ('$new_protocolprop_id', '$protocol_id', '$vcf_map_details_id', '$json_string');";
+    $dbh->do($new_protocolprop_sql) or die "DBI::errstr";
+
+    #my $add_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->create({ nd_protocol_id => $protocol_id, type_id => $vcf_map_details->cvterm_id(), value => $json_string });
+    undef %protocolprop_json;
+    undef $json_string;
+    #undef $add_protocolprop;
+    undef $new_protocolprop_sql;
+
+    print STDERR "Protocolprop stored...\n";
+}
+$protocol_id = $protocol_row->nd_protocol_id();
+
+print STDERR "Reading genotype information for genotyeprop...\n";
+my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "vcf" });
 
 my $accessions = $gtio->accessions();
-my $number_accessions = scalar(@$accessions);
-print STDERR "Number accessions: $number_accessions...\n";
-
-while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
-
-    #print STDERR Dumper $marker_info;
-    my $marker_name;
-    my $marker_info_p2 = $marker_info->[2];
-    my $marker_info_p8 = $marker_info->[8];
-    if ($marker_info_p2 eq '.') {
-        $marker_name = $marker_info->[0]."_".$marker_info->[1];
-    } else {
-        $marker_name = $marker_info_p2;
-    }
-
-    #As it goes down the rows, it appends the info from cols 0-8 into the protocolprop json object.
-    my %marker = (
-        chrom => $marker_info->[0],
-        pos => $marker_info->[1],
-        ref => $marker_info->[3],
-        alt => $marker_info->[4],
-        qual => $marker_info->[5],
-        filter => $marker_info->[6],
-        info => $marker_info->[7],
-        format => $marker_info_p8,
-    );
-    $protocolprop_json{$marker_name} = \%marker;
-}
-print STDERR "Protocol hash created...\n";
-
-#Save the protocolprop. This json string contains the details for the maarkers used in the map.
-my $json_obj = JSON::Any->new;
-my $json_string = $json_obj->encode(\%protocolprop_json);
-my $last_protocolprop_rs = $schema->resultset("NaturalDiversity::NdProtocolprop")->search({}, {order_by=> { -desc => 'nd_protocolprop_id' }, rows=>1});
-my $last_protocolprop = $last_protocolprop_rs->first();
-my $new_protocolprop_id;
-if ($last_protocolprop) {
-    $new_protocolprop_id = $last_protocolprop->nd_protocolprop_id() + 1;
-} else {
-    $new_protocolprop_id = 1;
-}
-my $new_protocolprop_sql = "INSERT INTO nd_protocolprop (nd_protocolprop_id, nd_protocol_id, type_id, value) VALUES ('$new_protocolprop_id', '$protocol_id', '$vcf_map_details_id', '$json_string');";
-$dbh->do($new_protocolprop_sql) or die "DBI::errstr";
-
-#my $add_protocolprop = $schema->resultset("NaturalDiversity::NdProtocolprop")->create({ nd_protocol_id => $protocol_id, type_id => $vcf_map_details->cvterm_id(), value => $json_string });
-undef %protocolprop_json;
-undef $json_string;
-#undef $add_protocolprop;
-undef $new_protocolprop_sql;
-
-print STDERR "Protocolprop stored...\n";
-print STDERR "Reading genotype information...\n";
-my $gtio = CXGN::GenotypeIO->new( { file => $file, format => "vcf" });
 
 my %genotypeprop_accessions;
 
@@ -220,12 +229,12 @@ while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
     }
 
     my @format =  split /:/,  $marker_info_p8;
-    #As it goes down the rows, it contructs a separate json object for each accession column. They are all stored in the %genotypeprop_accessions. Later this hash is iterated over and actually stores the json object in the database. 
+    #As it goes down the rows, it contructs a separate json object for each accession column. They are all stored in the %genotypeprop_accessions. Later this hash is iterated over and actually stores the json object in the database.
     for (my $i = 0; $i < $number_accessions; $i++ ) {
         my @fvalues = split /:/, $values->[$i];
         my %value;
         #for (my $fv = 0; $fv < scalar(@format); $fv++ ) {
-        #    $value{@format[$fv]} = @fvalues[$fv]; 
+        #    $value{@format[$fv]} = @fvalues[$fv];
         #}
         @value{@format} = @fvalues;
         $genotypeprop_accessions{$accessions->[$i]}->{$marker_name} = \%value;
@@ -235,14 +244,14 @@ while (my ($marker_info, $values) = $gtio->next_vcf_row() ) {
 print STDERR "Genotypeprop accessions hash created\n";
 
 foreach (@$accessions) {
-    
+
     my ($accession_name, $igd_number) = split(/:/, $_);
-    
+
     #print STDERR "Looking for accession $accession_name\n";
     my $stock;
     my $stock_rs = $schema->resultset("Stock::Stock")->search({ 'lower(me.uniquename)' => { like => lc($accession_name) }, organism_id => $organism_id });
 
-    if ($stock_rs->count() == 1) { 
+    if ($stock_rs->count() == 1) {
         $stock = $stock_rs->first();
     }
 
@@ -289,7 +298,7 @@ foreach (@$accessions) {
     $experiment->create_related('nd_experiment_projects', {
         project_id => $project_id
     });
-    
+
     #link the experiment to the stock
     $experiment->create_related('nd_experiment_stocks' , {
         stock_id => $stock_id,
@@ -338,4 +347,3 @@ foreach (@$accessions) {
 }
 
 print STDERR "Complete!\n";
-
