@@ -130,7 +130,8 @@ foreach my $marker (keys %protocolprop_json) {
       "project_year" => $project_year,
       "project_location" => $location,
       "protocol_name" => $map_protocol_name,
-      "marker" => $protocolprop_json{$marker}
+      "marker_name" => $marker,
+      "marker_info" => $protocolprop_json{$marker}
     });
 }
 
@@ -157,7 +158,7 @@ foreach my $accession_name (@$accessions) {
             "species" => $organism_species,
             "stock_id" => $stock_id,
             "accession_name" => $accession_name,
-            "marker" => $marker,
+            "marker_name" => $marker,
             "marker_score" => $genotypeprop_hash_ref->{$marker}
         });
         my $genotye_doc_id = $result->inserted_id;
