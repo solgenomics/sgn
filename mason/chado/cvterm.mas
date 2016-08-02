@@ -51,7 +51,7 @@ my $is_obsolete = $cvterm->get_obsolete();
 my @synonyms    = $cvterm->get_synonyms();
 my @def_dbxrefs = $cvterm->get_def_dbxref();
 my @secondary_dbxrefs = $cvterm->get_secondary_dbxrefs();
-my @image_objects = $cvterm->get_image_ids;
+my @image_ids = $cvterm->get_image_ids;
 
 my @def_accessions = map( $_->get_db_name . ":" . $_->get_accession , @def_dbxrefs);
 
@@ -330,7 +330,7 @@ LOAD...
     hide_if_empty => 1,
 &>
 
-<& /image/print_images.mas, image_objects => \@image_objects &>
+<& /image/print_images.mas, images => \@image_ids &>
 
 </&>
 
