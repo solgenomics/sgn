@@ -42,17 +42,17 @@ This patch updates the list of possible trial types by removing duplicates, stan
 
 
 sub patch {
-    my $self=shift;
+  my $self=shift;
 
-    print STDOUT "Executing the patch:\n " .   $self->name . ".\n\nDescription:\n  ".  $self->description . ".\n\nExecuted by:\n " .  $self->username . " .";
+  print STDOUT "Executing the patch:\n " .   $self->name . ".\n\nDescription:\n  ".  $self->description . ".\n\nExecuted by:\n " .  $self->username . " .";
 
-    print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
+  print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
 
-    print STDOUT "\nExecuting the SQL commands.\n";
+  print STDOUT "\nExecuting the SQL commands.\n";
 
-    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
+  my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
-    my $coderef = sub {
+  my $coderef = sub {
       #get resultsets and cv_id for project types
       my $cv_rs = $schema->resultset("Cv::Cv");
       my $cvterm_rs = $schema->resultset("Cv::Cvterm");
@@ -93,10 +93,11 @@ sub patch {
       &delete_old_type('Uniform Yield Trials', $cvterm_rs, $cv_id);
 
       #delete any types not among the standard 6
+      my $all_ids = [$SN_id, $CE_id, $VR_id, $PYT_id, $AYT_id, $UYT_id ];
       my $obsolete_types = $cvterm_rs->search(
         {
           cv_id => $cv_id,
-          cvterm_id => { 'not in' => [$SN_id, $CE_id, $VR_id, $PYT_id, $AYT_id, $UYT_id ]}
+          cvterm_id => { 'not in' => $all_ids}
         });
       my $num_to_delete = $obsolete_types->count;
       print STDERR "Deleting $num_to_delete additional obsolete trial types . . .\n";
@@ -106,74 +107,30 @@ sub patch {
       # get all projects
       my $all_trial_rs = $schema->resultset('Project::Project')->search;
 
-      # get ids of all projects with types
-      my $trials_with_types_rs = $schema->resultset('Project::Project')->search({
-        'type.cv_id'   => $cv_id
-      }, {
-        join => { 'projectprops' => 'type' }
-      });
-      my @typed_trials_ids;
-      while (my $trial = $trials_with_types_rs->next) {
-        push @typed_trials_ids, $trial->project_id;
-      }
-      my %typed_trials = map { $_ => 1 } @typed_trials_ids;
-
-      #loop through all projects, and if they aren't in the set that has a type, use regex on trial name. if matches type abbrevation, add type.
+      #loop through all projects and use regex on trial name. if matches type abbrevation, set type.
       while (my $trial = $all_trial_rs->next) {
-        unless(exists($typed_trials{$trial->project_id})) {
-          my $trial_name = $trial->name;
-          for ($trial_name) {
-          if (/seedling/) {
-              print STDERR "trial $trial_name matched 'seedling', type being set to Seedling Nursery\n";
-              $schema->resultset('Project::Projectprop')->create(
-              {
-                project_id => $trial->project_id,
-                type_id => $SN_id,
-                value => 'Seedling Nursery'
-              });
-            } elsif (/clonal/) {
-              print STDERR "trial $trial_name matched 'clonal', type being set to Clonal Evaluation\n";
-              $schema->resultset('Project::Projectprop')->create(
-              {
-                project_id => $trial->project_id,
-                type_id => $CE_id,
-                value => 'Clonal Evaluation'
-              });
-            } elsif (/pyt/) {
-              print STDERR "trial $trial_name matched 'pyt', type being set to Preliminary Yield Trial\n";
-              $schema->resultset('Project::Projectprop')->create(
-              {
-                project_id => $trial->project_id,
-                type_id => $PYT_id,
-                value => 'Preliminary Yield Trial'
-              });
-            } elsif (/ayt/) {
-              print STDERR "trial $trial_name matched 'ayt', type being set to Advanced Yield Trial\n";
-              $schema->resultset('Project::Projectprop')->create(
-              {
-                project_id => $trial->project_id,
-                type_id => $AYT_id,
-                value => 'Advanced Yield Trial'
-              });
-            } elsif (/uyt/) {
-              print STDERR "trial $trial_name matched 'uyt', type being set to Uniform Yield Trial\n";
-              $schema->resultset('Project::Projectprop')->create(
-              {
-                project_id => $trial->project_id,
-                type_id => $UYT_id,
-                value => 'Uniform Yield Trial'
-              });
-            } elsif (/variety/) {
-              print STDERR "trial $trial_name matched 'variety', type being set to Variety Release Trial\n";
-              $schema->resultset('Project::Projectprop')->create(
-              {
-                project_id => $trial->project_id,
-                type_id => $VR_id,
-                value => 'Variety Release Trial'
-              });
-            } else {
-              print STDERR "no indication of type found in name of trial $trial_name\n";
-            }
+        my $trial_name = $trial->name;
+        for ($trial_name) {
+          if (/seedling/i) {
+            my $action = &update_or_create_prop($schema, $trial->project_id, $all_ids, $SN_id, 'Seedling Nursery');
+            print STDERR "trial $trial_name matched '/seedling/i', $action\n";
+          } elsif (/clonal/i) {
+            my $action = &update_or_create_prop($schema, $trial->project_id, $all_ids, $CE_id, 'Clonal Evaluation');
+            print STDERR "trial $trial_name matched '/clonal/i', $action\n";
+          } elsif (/pyt/i) {
+            my $action = &update_or_create_prop($schema, $trial->project_id, $all_ids, $PYT_id, 'Preliminary Yield Trial');
+            print STDERR "trial $trial_name matched '/pyt/i', $action\n";
+          } elsif (/ayt/i) {
+            my $action = &update_or_create_prop($schema, $trial->project_id, $all_ids, $AYT_id, 'Advanced Yield Trial');
+            print STDERR "trial $trial_name matched '/ayt/i', $action\n";
+          } elsif (/uyt/i) {
+            my $action = &update_or_create_prop($schema, $trial->project_id, $all_ids, $UYT_id, 'Uniform Yield Trial');
+            print STDERR "trial $trial_name matched '/uyt/i', $action\n";
+          } elsif (/variety/i) {
+            my $action = &update_or_create_prop($schema, $trial->project_id, $all_ids, $VR_id, 'Variety Release Trial');
+            print STDERR "trial $trial_name matched '/variety/i', $action\n";
+          } else {
+            print STDERR "no indication of type found in name of trial $trial_name\n";
           }
         }
       }
@@ -265,16 +222,41 @@ sub patch {
             }
           }
 
-    };
+          sub update_or_create_prop () {
+            my ($schema, $project_id, $all_ids, $type_id, $value) = @_;
+            my $exisiting_type = $schema->resultset('Project::Projectprop')->search(
+              {
+                project_id => $project_id,
+                type_id => { -in => $all_ids}
+              });
+            if ($exisiting_type->first) {
+              if ($exisiting_type->first->type_id eq $type_id) {
+                return "and type is already set to $value";
+              } else {
+                my $old_type = $schema->resultset("Cv::Cvterm")->search({ cvterm_id => $exisiting_type->first->type_id() })->first()->name();
+                $exisiting_type->first->update( { type_id => $type_id, value => $value }, );
+                return "type updated from $old_type to $value";
+              }
+            } else {
+              my $new_type = $schema->resultset('Project::Projectprop')->create(
+              {
+                project_id => $project_id,
+                type_id => $type_id,
+                value => $value
+              });
+              return "type set to $value";
+            }
+          }
+  };
 
-    try {
-      $schema->txn_do($coderef);
+  try {
+    $schema->txn_do($coderef);
+  } catch {
+    die "FixTrialTypes patch failed! " . $_ .  "\n" ;
+  };
 
-    } catch {
-      die "FixTrialTypes patch failed! " . $_ .  "\n" ;
-    };
+  print "You're done!\n";
 
-    print "You're done!\n";
 }
 
 ####

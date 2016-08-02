@@ -59,22 +59,24 @@ sub metadata_query {
   print STDERR "dataref=" . Dumper($dataref);
   print STDERR "queryref=" . Dumper($queryref);
 
-  # Checks if matviews are populated, and runs refresh if they aren't. Which, as of postgres 9.5, will be the case when our databases are loaded from a dump. This will no longer be necessary once this bug is fixed in newer postgres versions
-  my $status;
+  # Check if matviews are populated, and run refresh if they aren't. Which, as of postgres 9.5, will be the case when our databases are loaded from a dump. This should no longer be necessary once this bug is fixed in newer postgres versions
+  my ($status, %response_hash);
   try {
     my $populated_query = "select * from materialized_phenoview limit 1";
     my $sth = $self->dbh->prepare($populated_query);
-    $status = $sth->execute();
+    $sth->execute();
   } catch { #if test query fails because views aren't populated
-    my $message = $self->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'basic');
-    print STDERR "Message: " . Dumper($message) . "\n";
-    my %response = %$message;
-    if ($response{'success'}) {
-      print STDERR "Proceeding with query . . . .\n";
-    } else {
-      return %response;
-    }
+    $status = $self->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'basic');
+    %response_hash = %$status;
   };
+
+  if (%response_hash && $response_hash{'message'} eq 'Wizard update completed!') {
+    print STDERR "Populated views, now proceeding with query . . . .\n";
+  } elsif (%response_hash && $response_hash{'message'} eq 'Wizard update initiated.') {
+    return { error => "The search wizard is temporarily unavailable while database indexes are being repopulated. Please try again later. Depending on the size of the database, it will be ready within a few minutes to an hour."};
+  } elsif (%response_hash && $response_hash{'error'}) {
+    return { error => $response_hash{'error'} };
+  }
 
   my $target_table = $criteria_list->[-1];
   print STDERR "target_table=". $target_table . "\n";
@@ -146,57 +148,6 @@ sub metadata_query {
 
 =head2 refresh_matviews
 
-parameters: None.
-
-returns: success or error message
-
-Side Effects: refreshes matertialized_fullview and all of the smaller materialized views that are based on it and used in the wizard.
-
-
-
-sub refresh_matviews_old {
-  my $self = shift;
-
-  my $q = "SELECT currently_refreshing FROM public.matviews WHERE mv_id=?";
-  my $h = $self->dbh->prepare($q);
-  $h->execute(1);
-
-  my $refreshing = $h->fetchrow_array();
-
-  if ($refreshing) {
-    return { error => 'Wizard update already in progress . . . ' };
-  }
-  else {
-
-    $q = "UPDATE public.matviews SET currently_refreshing=?";
-    my $true = 'TRUE';
-    my $h = $self->dbh->prepare($q);
-    $h->execute($true);
-
-    print STDERR "Refreshing materialized views concurrently . . .\n";
-
-    my $refresh = 'SELECT refresh_materialized_views_concurrently()';
-    $h = $self->dbh->prepare($refresh);
-    my $status = $h->execute();
-
-    if ($status != 1) {
-      $q = "UPDATE public.matviews SET currently_refreshing=?";
-      my $true = 'FALSE';
-      my $h = $self->dbh->prepare($q);
-      $h->execute($true);
-
-      return { error => 'Error initiating wizard update.'};
-    }
-    else {
-      return { message => 'Wizard update initiated' };
-    }
-  }
-}
-
-=cut
-
-=head2 refresh_matviews
-
 parameters: string to specify desired refresh type, basic or concurrent. defaults to concurrent
 
 returns: message detailing success or error
@@ -226,19 +177,18 @@ sub refresh_matviews {
     return { error => 'Wizard update already in progress . . . ' };
   }
   else {
-
+    try {
       my $dbh = $self->dbh;
       if ($refresh_type eq 'concurrent') {
-        print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -c";
+        #print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -c";
         $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -c");
       } else {
-        print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass";
+        #print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass";
         $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
       }
 
       for (my $i = 1; $i < 10; $i++) {
-        my $time = $i/10;
-        sleep($time);
+        sleep($i/5);
         if ($async_refresh->alive) {
           next;
         } else {
@@ -247,15 +197,14 @@ sub refresh_matviews {
       }
 
       if ($refresh_finished) {
-        return { success => 'Wizard update completed!' };
+        return { message => 'Wizard update completed!' };
       } else {
-        return { message => 'Wizard update initiated' };
+        return { message => 'Wizard update initiated.' };
       }
-
-
+    } catch {
       print STDERR 'Error initiating wizard update.' . $@ . "\n";
       return { error => 'Error initiating wizard update.' . $@ };
-
+    }
   }
 }
 

@@ -201,7 +201,7 @@ function retrieve_and_display_set(categories, data, this_section) {
 		    jQuery('#'+selectall_id).before(error_html);
 		} else {
                     // report unspecified error occured
-		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Unspecified error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
+		    var error_html = '<div class="well well-sm" id="response_error"><font color="red">Error. If this problem persists, please <a href="../../contact/form">contact developers</a></font></div>';
 		    var selectall_id = "c"+this_section+"_select_all";
 		    jQuery('#'+selectall_id).before(error_html);
 		}

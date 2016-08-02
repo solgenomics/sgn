@@ -51,7 +51,7 @@ sub patch {
 
     $self->dbh->do(<<EOSQL);
 --do your SQL here
-
+DROP EXTENSION dblink;
 DROP MATERIALIZED VIEW public.materialized_fullview CASCADE;
 CREATE MATERIALIZED VIEW public.materialized_phenoview AS
  SELECT plant.uniquename AS plant_name,
