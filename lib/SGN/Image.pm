@@ -774,7 +774,7 @@ sub get_cvterms {
     my $schema = $self->config->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
     my $query = "SELECT cvterm_id FROM metadata.md_image_cvterm WHERE md_image_cvterm.obsolete != 't' and md_image_cvterm.image_id=?";
     my $sth = $self->get_dbh()->prepare($query);
-    $sth->execute( $self->get_cvterm_id() );
+    $sth->execute( $self->get_image_id() );
     my @cvterms = ();
     while (my ($cvterm_id) = $sth->fetchrow_array ) {
         push @cvterms, $schema->resultset("Cv::Cvterm")->find(
