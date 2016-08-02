@@ -326,7 +326,7 @@ LOAD...
     title => "Images and figures",
     subtitle      => $image_subtitle,
     collapsible   => 1,
-    collapsed     => 1,
+    collapsed     => 0,
     hide_if_empty => 1,
 &>
 
