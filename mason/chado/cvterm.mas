@@ -79,7 +79,7 @@ my $image_subtitle =
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => [qw [CXGN.AJAX.Ontology jquery CXGN.Phenome.Qtl jquery jquery.dataTables] ] &>
+<& /util/import_javascript.mas, classes => [qw [CXGN.AJAX.Ontology  CXGN.Phenome.Qtl thickbox jquery  jquery.dataTables] ] &>
 
 
 <script language="javascript">
