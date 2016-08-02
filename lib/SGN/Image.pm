@@ -736,7 +736,7 @@ sub associate_cvterm {
     my $self = shift;
     my $cvterm_id = shift;
     my $sp_person_id= $self->get_sp_person_id();
-    my $query = "INSERT INTO metadata.md_cvterm_organism
+    my $query = "INSERT INTO metadata.md_image_cvterm
                    (image_id,
                    sp_person_id,
                    cvterm_id)
