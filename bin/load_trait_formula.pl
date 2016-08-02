@@ -1,5 +1,29 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+load_trait_formula.pl - loads formulas for computing derived traits
+
+=head1 DESCRIPTION
+
+load_trait_formula.pl -H [database host] -D [database name] load_trait_formula_file.txt
+
+Options:
+
+ -H the database host
+ -D the database name
+
+load_trait_formula_file.txt: A file with two columns: trait name, trait formula.
+
+If the trait name is found in the database, formula for computing the trait will be added as a cvtermprops.
+
+=head1 AUTHOR
+
+Alex Ogbonna <aco46@cornell.edu>
+
+=cut
+
+
 use strict;
 use warnings;
 use Bio::Chado::Schema;

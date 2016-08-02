@@ -69,64 +69,198 @@ sub _authenticate_user {
     return 1;
 }
 
-=head2 /brapi/v1/token?grant_type=password&username=USERNAME&password=PASSWORD&client_id=CLIENT_ID
+=head2 /brapi/v1/token
 
- Usage: For logging a user in through the API http://docs.brapi.apiary.io/#authentication
+ Usage: For logging a user in and loggin a user out through the API
  Desc:
- Return JSON example:
+
+For Logging In 
+POST Request: 
+{
+ "grant_type" : "password", //(optional, text, `password`) ... The grant type, only allowed value is password, but can be ignored
+ "username" : "user38", // (required, text, `thepoweruser`) ... The username
+ "password" : "secretpw", // (optional, text, `mylittlesecret`) ... The password
+ "client_id" : "blabla" // (optional, text, `blabla`) ... The client id, currently ignored.
+}
+ 
+POST Response:
+ {
+   "metadata": {
+     "pagination": {},
+     "status": {},
+     "datafiles": []
+   },
+   "userDisplayName": "John Smith",
+   "access_token": "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4",
+   "expires_in": "The lifetime in seconds of the access token"
+ }
+ 
+For Logging out
+DELETE Request:
+ 
+{ 
+    "access_token" : "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4" // (optional, text, `R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4`) ... The user access token. Default: current user token.
+}
+
+DELETE Response:
 {
     "metadata": {
-        "pagination" : {},
-        "status" : []
-        },
-    "session_token": "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4"
+            "pagination" : {},
+            "status" : { "message" : "User has been logged out successfully."},
+            "datafiles": []
+        }
+    "result" : {}
 }
- Args:
- Side Effects:
 
 =cut
 
-sub authenticate_token : Chained('brapi') PathPart('token') Args(0) {
+sub authenticate_token : Chained('brapi') PathPart('token') Args(0) : ActionClass('REST') { }
+
+sub authenticate_token_DELETE {
     my $self = shift;
     my $c = shift;
+
+    my $login_controller = CXGN::Login->new($c->dbc->dbh);
+
+    my $status = $c->stash->{status};
+    my @status = @$status;
+    
+    $login_controller->logout_user();
+
+    my %pagination = ();
+    my %result;
+    my @data_files;
+    my %metadata = (pagination=>\%pagination, status=>\@status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+sub authenticate_token_POST {
+    my $self = shift;
+    my $c = shift;
+
     my $login_controller = CXGN::Login->new($c->dbc->dbh);
     my $params = $c->req->params();
 
     my $status = $c->stash->{status};
     my @status = @$status;
     my $cookie = '';
+    my $first_name = '';
+    my $last_name = '';
 
     if ( $login_controller->login_allowed() ) {
-	if ($params->{grant_type} eq 'password' || !$params->{grant_type}) {
-	    my $login_info = $login_controller->login_user( $params->{username}, $params->{password} );
-	    if ($login_info->{account_disabled}) {
-		push(@status, 'Account Disabled');
-	    }
-	    if ($login_info->{incorrect_password}) {
-		push(@status, 'Incorrect Password');
-	    }
-	    if ($login_info->{duplicate_cookie_string}) {
-		push(@status, 'Duplicate Cookie String');
-	    }
-	    if ($login_info->{logins_disabled}) {
-		push(@status, 'Logins Disabled');
-	    }
-	    if ($login_info->{person_id}) {
-		push(@status, 'Login Successfull');
-		$cookie = $login_info->{cookie_string};
-	    }
-	} else {
-	    push(@status, 'Grant Type Not Supported. Valid grant type: password');
-	}
+        if ($params->{grant_type} eq 'password' || !$params->{grant_type}) {
+            my $login_info = $login_controller->login_user( $params->{username}, $params->{password} );
+            if ($login_info->{account_disabled}) {
+                push(@status, 'Account Disabled');
+            }
+            if ($login_info->{incorrect_password}) {
+                push(@status, 'Incorrect Password');
+            }
+            if ($login_info->{duplicate_cookie_string}) {
+                push(@status, 'Duplicate Cookie String');
+            }
+            if ($login_info->{logins_disabled}) {
+                push(@status, 'Logins Disabled');
+            }
+            if ($login_info->{person_id}) {
+                push(@status, 'Login Successfull');
+                $cookie = $login_info->{cookie_string};
+                $first_name = $login_info->{first_name};
+                $last_name = $login_info->{last_name};
+            }
+        } else {
+            push(@status, 'Grant Type Not Supported. Valid grant type: password');
+        }
     } else {
-	push(@status, 'Login Not Allowed');
+        push(@status, 'Login Not Allowed');
     }
     my %pagination = ();
-    my %metadata = (pagination=>\%pagination, status=>\@status);
-    my %result = (metadata=>\%metadata, session_token=>$cookie);
-
-    $c->stash->{rest} = \%result;
+    my @data_files;
+    my %metadata = (pagination=>\%pagination, status=>\@status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, access_token=>$cookie, userDisplayName=>"$first_name $last_name", expires_in=>$CXGN::Login::LOGIN_TIMEOUT);
+    $c->stash->{rest} = \%response;
 }
+
+
+=head2 /brapi/v1/calls
+
+ Usage: For determining which calls have been implemented and with which datafile types and methods
+ Desc:
+ 
+ GET Request:
+ 
+ GET Response:
+{
+  "metadata": {
+    "pagination": {
+      "pageSize": 3,
+      "currentPage": 0,
+      "totalCount": 3,
+      "totalPages": 1
+    },
+    "status": {},
+    "datafiles": []
+  },
+  "result": {
+    "data": [
+      {
+        "call": "allelematrix",
+        "datatypes": [
+          "json",
+          "tsv"
+        ],
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
+        "call": "germplasm/id/mcpd",
+        "datatypes": [
+          "json"
+        ],
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "call": "doesntexistyet",
+        "datatypes": [
+          "png",
+          "jpg"
+        ],
+        "methods": [
+          "GET"
+        ]
+      }
+    ]
+  }
+}
+
+=cut
+
+sub calls : Chained('brapi') PathPart('calls') Args(0) : ActionClass('REST') { }
+
+sub calls_GET {
+    my $self = shift;
+    my $c = shift;
+
+    my $status = $c->stash->{status};
+    my @status = @$status;
+    my @data;
+    push @data, {call=>'token', datatypes=>['json'], methods=>['POST','DELETE']};
+    push @data, {call=>'calls', datatypes=>['json'], methods=>['GET']};
+
+    my %pagination = ();
+    my %result = (data=>\@data);
+    my @data_files;
+    my %metadata = (pagination=>\%pagination, status=>\@status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+
 
 sub pagination_response {
     my $data_count = shift;
@@ -139,48 +273,72 @@ sub pagination_response {
 }
 
 
-=head2 brapi/v1/germplasm?name=*Mo?re%&matchMethod=wildcard&include=&pageSize=1000&page=10
+=head2 /brapi/v1/germplasm-search?germplasmName=&germplasmGenus=&germplasmSubTaxa=&germplasmDbId&germplasmPUI=http://data.inra.fr/accession/234Col342&germplasmSpecies=Triticum&panel=diversitypanel1&collection=none&pageSize=pageSize&page=page
 
  Usage: For searching a germplasm by name. Allows for exact and wildcard match methods. http://docs.brapi.apiary.io/#germplasm
  Desc:
- Return JSON example:
+ 
+ POST Request:
+ 
+{
+    "germplasmPUI" : "http://...", // (optional, text, `http://data.inra.fr/accession/234Col342`) ... The name or synonym of external genebank accession identifier
+    "germplasmDbId" : 986, // (optional, text, `986`) ... The name or synonym of external genebank accession identifier
+    "germplasmSpecies" : "tomato", // (optional, text, `aestivum`) ... The name or synonym of genus or species ( merge with below ?)
+    "germplasmGenus" : "Solanum lycopersicum", //(optional, text, `Triticum, Hordeum`) ... The name or synonym of genus or species
+    "germplasmName" : "XYZ1", // (optional, text, `Triticum, Hordeum`) ... The name or synonym of the accession
+    "accessionNumber" : "ITC1234" // optional
+    "pageSize" : 100, // (optional, integer, `1000`) ... The size of the pages to be returned. Default is `1000`.
+    "page":  1 (optional, integer, `10`) ... Which result page is requested
+}
+
+
+POST Response:
 {
     "metadata": {
+        "status": {},
+        "datafiles": [],
         "pagination": {
-            "pageSize": 1000,
-            "currentPage": 10,
-            "totalCount": 27338,
-            "totalPages": 28
-        },
-        "status": []
+        "pageSize": 10,
+        "currentPage": 1,
+        "totalCount": 2,
+        "totalPages": 1
+        }
     },
-    "result" : {
-        "data": [
+    "result": {
+        "data":[
             {
-                "germplasmDbId": "382",
+                "germplasmDbId": "01BEL084609",
                 "defaultDisplayName": "Pahang",
-                "germplasmName": "Pahang",
                 "accessionNumber": "ITC0609",
+                "germplasmName": "Pahang",
                 "germplasmPUI": "http://www.crop-diversity.org/mgis/accession/01BEL084609",
                 "pedigree": "TOBA97/SW90.1057",
-                "seedSource": "",
-                "synonyms": ["01BEL084609"],
-            },
-            {
-                "germplasmDbId": "394",
-                "defaultDisplayName": "Pahang",
-                "germplasmName": "Pahang",
-                "accessionNumber": "ITC0727",
-                "germplasmPUI": "http://www.crop-diversity.org/mgis/accession/01BEL084727",
-                "pedigree": "TOBA97/SW90.1057",
-                "seedSource": "",
-                "synonyms": [ "01BEL084727"],
+                "germplasmSeedSource": "Female GID:4/Male GID:4",
+                "synonyms": [ ],
+                "commonCropName": "banana",
+                "instituteCode": "01BEL084",
+                "instituteName": "ITC",
+                "biologicalStatusOfAccessionCode": 412,
+                "countryOfOriginCode": "UNK",
+                "typeOfGermplasmStorageCode": 10,
+                "genus": "Musa",
+                "species": "acuminata",
+                "speciesAuthority": "",
+                "subtaxa": "sp malaccensis var pahang",
+                "subtaxaAuthority": "",
+                "donors": 
+                [
+                    {
+                        "donorAccessionNumber": "",
+                        "donorInstituteCode": "",
+                        "germplasmPUI": ""
+                    }
+                ],
+                "acquisitionDate": "19470131"
             }
         ]
     }
 }
- Args:
- Side Effects:
 
 =cut
 
@@ -205,20 +363,20 @@ sub germplasm_pedigree_string {
     return $pedigree_string;
 }
 
-sub germplasm_list  : Chained('brapi') PathPart('germplasm') Args(0) : ActionClass('REST') { }
+sub germplasm_list  : Chained('brapi') PathPart('germplasm-search') Args(0) : ActionClass('REST') { }
+
+#sub germplasm_list_POST {
+#    my $self = shift;
+#    my $c = shift;
+#    my $auth = _authenticate_user($c);
+#
+#    my $status = $c->stash->{status};
+#    my @status = @$status;
+
+#    $c->stash->{rest} = {status => \@status};
+#}
 
 sub germplasm_list_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-
-    my $status = $c->stash->{status};
-    my @status = @$status;
-
-    $c->stash->{rest} = {status => \@status};
-}
-
-sub germplasm_list_GET {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
@@ -227,39 +385,72 @@ sub germplasm_list_GET {
     my $status = $c->stash->{status};
     my @status = @$status;
 
-    if ($params->{include}) {
-	push (@status, 'include not implemented');
+    my $germplasm_name = $params->{germplasmName};
+    my $accession_number = $params->{accessionNumber};
+    my $genus = $params->{germplasmGenus};
+    my $subtaxa = $params->{germplasmSubTaxa};
+    my $species = $params->{germplasmSpecies};
+    my $germplasm_id = $params->{germplasmDbId};
+    my $permplasm_pui = $params->{germplasmPUI};
+    my $match_method = $params->{matchMethod};
+    if ($match_method && ($match_method ne 'exact' || $match_method ne 'wildcard')) {
+        push(@status, "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters.");
     }
-    my $rs;
+
     my $total_count = 0;
     my %result;
-    my $type_id = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { name => "accession" })->cvterm_id();
 
-    if (!$params->{name}) {
-	$rs = $self->bcs_schema()->resultset("Stock::Stock")->search( {type_id=>$type_id}, { '+select'=> ['stock_id', 'name', 'uniquename'], '+as'=> ['stock_id', 'name', 'uniquename'], order_by=>{ -asc=>'stock_id' } } );
-    } else {
-	if (!$params->{matchMethod} || $params->{matchMethod} eq "exact") {
-	    $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( {type_id=>$type_id, uniquename=>$params->{name} }, { '+select'=> ['stock_id', 'name', 'uniquename'], '+as'=> ['stock_id', 'name', 'uniquename'], order_by=>{ -asc=>'stock_id' } } );
-	}
-	elsif ($params->{matchMethod} eq "wildcard") {
-	    $params->{name} =~ tr/*?/%_/;
-	    $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( {type_id=>$type_id, uniquename=>{ ilike => $params->{name} } }, { '+select'=> ['stock_id', 'name', 'uniquename'], '+as'=> ['stock_id', 'name', 'uniquename'],  order_by=>{ -asc=>'stock_id' } } );
-	}
-	else {
-	    push(@status, "matchMethod '$params->{matchMethod}' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters.");
-	}
+    my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+    my %search_params;
+    my %order_params;
+    my @select_list = ['me.stock_id', 'me.name', 'me.uniquename'];
+    my @sselect_as_list = ['stock_id', 'name', 'uniquename'];
+
+    $search_params{'me.type_id'} = $accession_type_cvterm_id;
+    $order_params{'-asc'} = 'me.stock_id';
+    
+    if ($germplasm_name && (!$match_method || $match_method eq 'exact')) {
+        $search_params{'me.uniquename'} = $germplasm_name;
     }
+    if ($germplasm_name && $match_method eq 'wildcard') {
+        $germplasm_name =~ tr/*?/%_/;
+        $search_params{'me.uniquename'} = { 'ilike' => $germplasm_name };
+    }
+    if ($germplasm_id && (!$match_method || $match_method eq 'exact')) {
+        $search_params{'me.stock_id'} = $germplasm_id;
+    }
+    if ($germplasm_id && $match_method eq 'wildcard') {
+        $germplasm_id =~ tr/*?/%_/;
+        $search_params{'me.stock_id'} = { 'ilike' => $germplasm_id };
+    }
+    #print STDERR Dumper \%search_params;
+    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, { '+select'=> \@select_list, '+as'=> \@sselect_as_list, order_by=> \%order_params } );
+    my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'stock_synonym', 'stock_property')->cvterm_id();
+    if ($accession_number) {
+        $search_params{'stockprops.type_id'} = $synonym_id;
+        $search_params{'stockprops.value'} = $accession_number;
+        $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, { join=>{'stockprops'}, '+select'=> \@select_list, '+as'=> \@sselect_as_list, order_by=> \%order_params } );
+    }
+
+    my @data;
     if ($rs) {
-	my @data;
-	$total_count = $rs->count();
-	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
-	my $synonym_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
-	while (my $stock = $rs_slice->next()) {
-	    push @data, { germplasmDbId=>$stock->get_column('stock_id'), defaultDisplayName=>$stock->get_column('name'), germplasmName=>$stock->get_column('uniquename'), accessionNumber=>'', germplasmPUI=>$stock->get_column('uniquename'), pedigree=>germplasm_pedigree_string($self->bcs_schema(), $stock->get_column('stock_id')), seedSource=>'', synonyms=>germplasm_synonyms($self->bcs_schema(), $stock->get_column('stock_id'), $synonym_id) };
-	}
-	%result = (data => \@data);
+    	$total_count = $rs->count();
+    	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+    	while (my $stock = $rs_slice->next()) {
+    	    push @data, { 
+                germplasmDbId=>$stock->get_column('stock_id'), 
+                defaultDisplayName=>$stock->get_column('name'), 
+                germplasmName=>$stock->get_column('uniquename'), 
+                accessionNumber=>'', 
+                germplasmPUI=>$stock->get_column('uniquename'), 
+                pedigree=>germplasm_pedigree_string($self->bcs_schema(), $stock->get_column('stock_id')), 
+                seedSource=>'', 
+                synonyms=>germplasm_synonyms($self->bcs_schema(), $stock->get_column('stock_id'), $synonym_id),
+            };
+        }
     }
 
+    %result = (data => \@data);
     my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
@@ -1193,6 +1384,7 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
   my @status = @$status;
 
   my @profile_ids = $c->req->param('markerprofileDbId');
+  my $data_format = $c->req->param('format');
   #print STDERR Dumper \@profile_ids;
   #my @profile_ids = split ",", $markerprofile_ids;
 
@@ -1215,6 +1407,7 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
     @unique_markers = uniq @all_markers;
     #print STDERR Dumper(\@unique_markers);
 
+    my $json = JSON->new();
     $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
     while (my $profile = $rs->next()) {
         my $markers_json = $profile->value();
@@ -1232,7 +1425,10 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
   foreach my $line (keys %scores) {
     push @lines, $line;
   }
-
+  
+  my @json_lines;
+  my $fh;
+  my $file_path;
   my %markers_seen;
   for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
 
@@ -1246,7 +1442,18 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
         }
       }
 
+      foreach my $marker_name (sort keys %markers_seen) {
+          my $marker_scores = $markers_seen{$marker_name};
+          #print STDERR Dumper $marker_scores;
+          print $fh "$marker_name\t", join("\t", @{$marker_scores}),"\n";
+      }
+      
+      
+      close $fh;
+      $data_file_path = $file_path;
   }
+  
+  
 
   foreach my $marker_name (sort keys %markers_seen) {
     push @marker_score_lines, { $marker_name => $markers_seen{$marker_name} };
@@ -1255,8 +1462,8 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
   $total_count = scalar(@unique_markers);
 
   $c->stash->{rest} = {
-    metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => \@status },
-    result => {markerprofileDbIds => \@lines, data => \@marker_score_lines},
+    metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => \@status, datafiles=>$data_file_path },
+    result => {markerprofileDbIds => \@json_lines, data => \@marker_score_json_lines},
   };
 
 }

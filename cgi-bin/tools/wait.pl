@@ -26,7 +26,9 @@ my ($tmp_app_dir, $job_file, $redirect, $out_file_override, $extra_params)
 
 if( $out_file_override ) {
     $out_file_override = realpath( $out_file_override );
-    $out_file_override =~ m!/(data|export)/(prod|shared)/! && $out_file_override !~ /\.\./
+
+    print STDERR "OUTFILE: $out_file_override\n";
+    $out_file_override =~ m!/(data|export)/(prod|shared)|(/tmp)! && $out_file_override !~ /\.\./
         or die "is someone trying to do something nasty? illegal out_file_override '$out_file_override'";
 }
 
