@@ -567,6 +567,10 @@ sub get_associated_objects {
     foreach my $o ($self->get_organisms ) {
         push @associations, ["organism", $o->organism_id, $o->species];
     }
+
+    foreach my $cvterm ( $self->get_cvterms ) {
+	push @associations, ["cvterm" , $cvterm->cvterm_id, $cvterm->name];
+    }
     return @associations;
 }
 
@@ -716,6 +720,9 @@ sub get_associated_object_links {
         if ($assoc->[0] eq "organism" ) {
             $s .= qq { <a href="/organism/$assoc->[1]/view/">Organism name:$assoc->[2]</a> };
         }
+	if ($assoc->[0] eq "cvterm" ) {
+	    $s .= qq { <a href="/cvterm/$assoc->[1]/view/">Cvterm: $assoc->[2]</a> };
+	}
     }
     return $s;
 }
