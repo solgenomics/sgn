@@ -66,6 +66,7 @@ sub metadata_query {
     my $sth = $self->dbh->prepare($populated_query);
     $sth->execute();
   } catch { #if test query fails because views aren't populated
+    print STDERR "Using basic refresh to populate views . . .\n";
     $status = $self->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'basic');
     %response_hash = %$status;
   };
@@ -73,7 +74,7 @@ sub metadata_query {
   if (%response_hash && $response_hash{'message'} eq 'Wizard update completed!') {
     print STDERR "Populated views, now proceeding with query . . . .\n";
   } elsif (%response_hash && $response_hash{'message'} eq 'Wizard update initiated.') {
-    return { error => "The search wizard is temporarily unavailable while database indexes are being repopulated. Please try again later. Depending on the size of the database, it will be ready within a few minutes to an hour."};
+    return { error => "The search wizard is temporarily unavailable while database indexes are being repopulated. Please try again later. Depending on the size of the database, it will be ready within a few seconds to an hour."};
   } elsif (%response_hash && $response_hash{'error'}) {
     return { error => $response_hash{'error'} };
   }
@@ -178,12 +179,12 @@ sub refresh_matviews {
   }
   else {
     try {
-      my $dbh = $self->dbh;
+      my $dbh = $self->dbh();
       if ($refresh_type eq 'concurrent') {
         #print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -c";
         $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -c");
       } else {
-        #print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass";
+        print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass";
         $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
       }
 
