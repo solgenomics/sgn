@@ -1,10 +1,20 @@
 use lib 't/lib';
 
 use Test::More;
-
 use SGN::Test::WWW::WebDriver;
+use SGN::Test::Fixture;
+use CXGN::BreederSearch;
+
+my $f = SGN::Test::Fixture->new();
+
+my $bs = CXGN::BreederSearch->new( { dbh=> $f->dbh() });
+
+my $refresh = 'SELECT refresh_materialized_views()';
+my $h = $f->dbh->prepare($refresh);
+$h->execute();
 
 my $t = SGN::Test::WWW::WebDriver->new();
+#$t->driver->set_implicit_wait_timeout(5);
 
 $t->get_ok('/breeders/search');
 
@@ -125,6 +135,8 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("c1_data", "id", "select pasted list accession")->send_keys('UG120001');
 
+    sleep(1);
+
     $t->find_element_ok("select1", "id", "retrieve breeding programs")->send_keys('breeding_programs');
 
     sleep(2);
@@ -132,6 +144,8 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok("c1_data", "id", "select specific breeding_program")->send_keys('test');
 
     $t->find_element_ok("c2_querytype_or", "id", "toggle c2_querytype to intersect")->click();
+
+    sleep(1);
 
     $t->find_element_ok("c1_select_all", "id", "select all breeding programs")->click();
 
