@@ -67,7 +67,7 @@ CREATE TABLE metadata.md_image_cvterm (
 );
 
 
-    GRANT select ON metadata.md_image_cvterm TO web_usr;
+    GRANT select,insert ON metadata.md_image_cvterm TO web_usr;
     GRANT USAGE ON metadata.md_image_cvterm_md_image_cvterm_id_seq to web_usr;
     
 EOSQL

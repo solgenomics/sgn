@@ -148,6 +148,10 @@ sub process_image {
     elsif ( $type eq "organism" ) {
         $self->associate_organism($type_id);
     } 
+    elsif ( $type eq "cvterm" ) {
+	$self->associate_cvterm($type_id);
+    }
+
     elsif ( $type eq "test") { 
 	# need to return something to make this function happy
 	return 1;
@@ -563,6 +567,10 @@ sub get_associated_objects {
     foreach my $o ($self->get_organisms ) {
         push @associations, ["organism", $o->organism_id, $o->species];
     }
+
+    foreach my $cvterm ( $self->get_cvterms ) {
+	push @associations, ["cvterm" , $cvterm->cvterm_id, $cvterm->name];
+    }
     return @associations;
 }
 
@@ -712,8 +720,69 @@ sub get_associated_object_links {
         if ($assoc->[0] eq "organism" ) {
             $s .= qq { <a href="/organism/$assoc->[1]/view/">Organism name:$assoc->[2]</a> };
         }
+	if ($assoc->[0] eq "cvterm" ) {
+	    $s .= qq { <a href="/cvterm/$assoc->[1]/view/">Cvterm: $assoc->[2]</a> };
+	}
     }
     return $s;
 }
+
+
+=head2 associate_cvterm
+
+ Usage: $image->associate_cvterm($cvterm_id)
+ Desc:  link uploaded image with a cvterm        
+ Ret:   database ID md_image_cvterm_id
+ Args:  $cvterm_id
+ Side Effects: Insert database row
+ Example:
+
+=cut
+
+sub associate_cvterm {
+    my $self = shift;
+    my $cvterm_id = shift;
+    my $sp_person_id= $self->get_sp_person_id();
+    my $query = "INSERT INTO metadata.md_image_cvterm
+                   (image_id,
+                   sp_person_id,
+                   cvterm_id)
+                 VALUES (?, ?, ?) RETURNING md_image_cvterm_id";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute(
+        $self->get_image_id,
+        $sp_person_id,
+        $cvterm_id,
+        );
+    my ($image_cvterm_id) = $sth->fetchrow_array;
+    return $image_cvterm_id;
+}
+
+=head2 get_cvterms
+
+ Usage:   $self->get_cvterms
+ Desc:    find the cvterm objects asociated with this image
+ Ret:     a list of BCS Cvterm objects
+ Args:    none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_cvterms {
+    my $self = shift;
+    my $schema = $self->config->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
+    my $query = "SELECT cvterm_id FROM metadata.md_image_cvterm WHERE md_image_cvterm.obsolete != 't' and md_image_cvterm.image_id=?";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute( $self->get_image_id() );
+    my @cvterms = ();
+    while (my ($cvterm_id) = $sth->fetchrow_array ) {
+        push @cvterms, $schema->resultset("Cv::Cvterm")->find(
+            { cvterm_id => $cvterm_id } );
+    }
+    return @cvterms;
+}
+
+
 
 1;

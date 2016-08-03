@@ -314,7 +314,7 @@ sub login_user {
         my $sth = $self->get_sql("user_from_uname_pass");
         my $num_rows = $sth->execute( $username, $password );
 
-        my ( $person_id, $disabled, $user_prefs ) = $sth->fetchrow_array();
+        my ( $person_id, $disabled, $user_prefs, $first_name, $last_name ) = $sth->fetchrow_array();
         if ( $num_rows > 1 ) {
             die "Duplicate entries found for username '$username'";
         }
@@ -343,6 +343,8 @@ sub login_user {
                         $new_cookie_string );
                     CXGN::Cookie::set_cookie( "user_prefs", $user_prefs );
                     $login_info->{person_id}     = $person_id;
+                    $login_info->{first_name}     = $first_name;
+                    $login_info->{last_name}     = $last_name;
                     $login_info->{cookie_string} = $new_cookie_string;
                 }
             }
@@ -458,7 +460,7 @@ sub set_sql {
         user_from_uname_pass =>
 
           "	SELECT 
-				sp_person_id, disabled, user_prefs 
+				sp_person_id, disabled, user_prefs, first_name, last_name
 			FROM 
 				sgn_people.sp_person 
 			WHERE 
