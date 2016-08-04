@@ -271,7 +271,8 @@ sub parse_arguments {
 
 	  if ($k eq 'combo_pops_id') 
 	  {
-	      $c->stash->{combo_pops_id} = @{ $arguments->{$k} }[0];
+	      $c->stash->{combo_pops_id}   = @{ $arguments->{$k} }[0];
+	      $c->stash->{training_pop_id} = @{ $arguments->{$k} }[0];	      
 	  }
 
 	  if ($k eq 'selection_pop_id') 
@@ -531,15 +532,17 @@ sub structure_output_details {
 
 sub run_analysis {
     my ($self, $c) = @_;
- 
+
+    $c->stash->{background_job} = 1;
+
     my $analysis_profile = $c->stash->{analysis_profile};
     my $analysis_page    = $analysis_profile->{analysis_page};
+    my $base             =   $c->req->base;
+    $analysis_page       =~ s/$base/\//; 
+    my $referer          = $c->req->referer; 
 
-    my $base =   $c->req->base;
-    $analysis_page =~ s/$base/\//;
-   
-    $c->stash->{background_job} = 1;
     
+     
     my @selected_traits = @{$c->stash->{selected_traits}} if $c->stash->{selected_traits};
  
     if ($analysis_page =~ /solgs\/analyze\/traits\//) 
@@ -549,9 +552,7 @@ sub run_analysis {
     elsif ($analysis_page =~  /solgs\/models\/combined\/trials\// )
     {
 	if ($c->stash->{data_set_type} =~ /combined populations/)
-	{
-	   # $c->stash->{combo_pops_id} = $c->stash->{pop_id};
-	   
+	{	   
 	    foreach my $trait_id (@selected_traits)		
 	    {		
 		$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);   	
@@ -602,13 +603,19 @@ sub run_analysis {
     {
 	if ($c->stash->{data_set_type} =~ /single population/)
 	{
-	    $c->controller('solGS::solGS')->predict_selection_pop_single_pop_model($c);
+	    if ($referer =~ /solgs\/trait\//)
+	    {
+		$c->controller('solGS::solGS')->predict_selection_pop_single_pop_model($c);
+	    }
+	    elsif ($referer =~ /solgs\/traits\/all\/population\//) 
+	    {
+		$c->controller('solGS::solGS')->predict_selection_pop_multi_traits($c);
+	    }
 	}
 	elsif ($c->stash->{data_set_type} =~ /combined populations/) 
 	{
 	    $c->controller('solGS::solGS')->predict_selection_pop_combined_pops_model($c);
-	}
-	
+	}	
     }
     else 
     {
