@@ -21,7 +21,7 @@ $breeding_programs
   <thead>
     <tr>
       <th>Information</th>
-      <th>Breeding Programs -- Folders -- Trials&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" name="refresh_jstree_html">Refresh</button></th>
+      <th>Breeding Programs -- Folders -- Trials&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_jstree_html_trialtree_button" name="refresh_jstree_html">Refresh</button></th>
     </tr>
   </thead>
   <tbody>

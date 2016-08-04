@@ -1,0 +1,17 @@
+<%args>
+</%args>
+
+<h3>BrAPI</h3>
+
+<hr>
+<& /brapiclient/authentication.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/calls.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/germplasm_search.mas &>
+<br/>
+

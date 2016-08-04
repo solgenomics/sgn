@@ -14,5 +14,5 @@ my $person_id = $login->has_session();
 
 my ($image_id, $size) = ($q->param("image_id"), $q->param("size"));
 
-$c->forward_to_mason_view('/image/index.mas', object_id=>$image_id, size=>$size, person_id=>$person_id, dbh=>$dbh);
 
+print $q->redirect("/image/view/$image_id", 301);

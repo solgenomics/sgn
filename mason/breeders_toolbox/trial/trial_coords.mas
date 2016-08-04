@@ -1,6 +1,6 @@
 
 <%args>
-$trial_id 
+$trial_id
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'kinetics.kinetic.js' ] &>
@@ -30,7 +30,7 @@ $trial_id
 	.row_desc {
 		transform: rotate(-270deg);
 		/*transform-origin: left top;*/
-		transform-origin: 0% 4%; 
+		transform-origin: 0% 4%;
 		float: left;
 	}
 
@@ -42,21 +42,25 @@ $trial_id
 
  <div id="container" ></div>
  <div id="trial_coords" >loading...</div>
- <div id="trial_no_coordsMSG" >Upload physical field coordinates for this trial</div>  
+ <div id="trial_no_coordsMSG" >Upload physical field coordinates for this trial</div>
+ <div class="col-sm-4" id="delete_button" style="display:none";>
+   <a id="delete_field_map_link"><button class="button"  type="button" id="delete_map_button" value="delete_cords" >Delete Field Map</button></a>
+ </div>
+
 
  <script defer="defer">
 var trial_id = <% $trial_id %>;
 //alert("trial_id: "+trial_id)
-   jQuery(document).ready( function() { 
+   jQuery(document).ready( function() {
 
      jQuery('#physical_layout_onswitch').click( function() {
 
-	jQuery.ajax( { 
+	jQuery.ajax( {
 	     url: '/ajax/breeders/trial/'+trial_id+'/coords',
 	     beforeSend: function() {
 	       jQuery("#working_modal").modal("show");
 	     },
-	     success: function(response) { 
+	     success: function(response) {
 	        jQuery("#working_modal").modal("hide");
 			//alert("coordfile: "+response.coord_row);
 		if (response.coord_col[0] && response.coord_row[0]){
@@ -64,10 +68,11 @@ var trial_id = <% $trial_id %>;
 			//$("#container").css({"display": "inline-block", "overflow": "auto"});
 			jQuery("#row_desc").css("display","inline-block");
 			jQuery("#col_desc").css("display","inline-block");
-           		jQuery("#trial_coords").css("display", "none"); 
-		} 
-		
-		else  { 
+      jQuery("#trial_coords").css("display", "none");
+      jQuery("#delete_button").css("display", "inline-block");
+		}
+
+		else  {
 			jQuery("#trial_coords").css("display", "none");
    			//jQuery("#trial_coords").html('Upload physical field coordinates');
 			jQuery("#trial_no_coordsMSG").css("display", "inline-block");
@@ -84,20 +89,20 @@ var trial_id = <% $trial_id %>;
         	//height: 2000,
 		width: max_col * width + 65,
         	height: max_row * width + 65,
-	
+
      		});
 
      		var plot_layer = new Kinetic.Layer();
-      		var popup_layer = new Kinetic.Layer();	
-      		
+      		var popup_layer = new Kinetic.Layer();
+
 		for  (y = 0; y < max_row; y = y + 1) {
 			for ( x = 0; x < max_col; x = x + 1){
 				plot_counter++;
-				if (response.plot_number[y][x]){ 
-					
-				} else { 
-					response.plot_number[y][x] = ''; 
-					}				
+				if (response.plot_number[y][x]){
+
+				} else {
+					response.plot_number[y][x] = '';
+					}
 				draw_rect(stage, plot_layer, popup_layer, response.plot_msg[y][x], x, y, max_col, response.coord_col[x], response.coord_row[y], plot_counter, response.plot_id[y][x], response.plot_number[y][x]);
 			}
 		}
@@ -105,7 +110,7 @@ var trial_id = <% $trial_id %>;
 		stage.add(popup_layer);
 
 	    },
-             error: function(reponse) { 
+             error: function(reponse) {
 	       jQuery("#working_modal").modal("hide");
               // alert('an error occurred');
              }
@@ -120,7 +125,7 @@ var trial_id = <% $trial_id %>;
 	y = y * width;
 	if (x + width > max_col * width / 2){
 		popup_x = -1 * popup_width;
-	}	
+	}
 	var myRectangle = new Kinetic.Rect({
 	x:x,
 	y:y,
@@ -130,20 +135,20 @@ var trial_id = <% $trial_id %>;
 	stroke:'black',
 	strokeWidth:3,
       });
-	
+
 	var plot_txt_info = new Kinetic.Text({
         x:x +10,
         y:y + width/2,
         //text: plot_counter,
 	text: plot_number,
-        fontSize: 20, 
+        fontSize: 20,
         fontFamily: 'Arial',
         fill: "white"
       });
-	
-	
+
+
       myRectangle.on('mouseover', function() {
-	
+
 	this.setFill('#ddd');
 	plot_layer.draw();
 
@@ -151,7 +156,7 @@ var trial_id = <% $trial_id %>;
         x: x+popup_x+5+10,
         y: y+14,
         text: plot_msg,
-        fontSize: 14, 
+        fontSize: 14,
         fontFamily: 'Arial',
         fill: "white"
       });
@@ -166,7 +171,7 @@ var trial_id = <% $trial_id %>;
          cornerRadius: 10
       });
 
-      
+
       popup_layer.add(plot_popup);
       popup_layer.add(plot_txt);
       popup_layer.draw();
@@ -187,14 +192,30 @@ var trial_id = <% $trial_id %>;
 
 	window.location.href = '/stock/'+plot_id+'/view';
 	//window.location.href = 'http://cassavabase.org/stock/'+plot_id+'/view';
-	
+
       });
 
       plot_layer.add(myRectangle);
       plot_layer.add(plot_txt_info);
 
  }
-     
+
 });
 
 </script>
+
+<div id="delete_field_map_dialog_message" title="Physical Field Map Deletion" style="display:none;">
+   <p>
+       <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+       The field coordinates were deleted successfully...
+   </p>
+</div>
+
+<div id="delete_field_map_dialog" title="Physical Field Map Deletion" style="display:none;">
+   <div id="trait_list_dc" name="trait_list">
+       <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;">Please, confirm field map deletion... <br />
+
+       </label>
+
+   </div>
+</div>

@@ -40,14 +40,12 @@ foreach (@project_types) {
 @all_project_types = sort @all_project_types;
 #print STDERR Dumper \@all_project_types;
 is_deeply(\@all_project_types, [
-          'AYT',
-          'Advance Yield Trial',
-          'PYT',
+          'Advanced Yield Trial',
+          'Clonal Evaluation',
           'Preliminary Yield Trial',
-          'UYT',
+          'Seedling Nursery',
           'Uniform Yield Trial',
-          'clonal',
-          'seedling'
+          'Variety Release Trial'
         ], "check get_all_project_types");
 
 
@@ -507,9 +505,9 @@ is_deeply($trial->get_location(), [ 23, 'test_location' ], "set location");
 #
 is($trial->get_project_type(), undef, "get type test");
 
-my $error = $trial->set_project_type("76463");
+my $error = $trial->set_project_type("77106");
 
-is($trial->get_project_type()->[1], "clonal", "set type test");
+is($trial->get_project_type()->[1], "Clonal Evaluation", "set type test");
 
 $trial->delete_project_entry();
 
