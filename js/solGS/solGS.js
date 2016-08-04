@@ -379,11 +379,12 @@ solGS.waitPage = function (page, args) {
 	    var urlStr = url.split(/\/+/);
 
 	    if (args === undefined) {
-		args = { 'population_id' : [ urlStr[4] ], 
-			 'analysis_type' : 'population download',
-			 'data_set_type' : 'single population'};
-	    } else {
-		
+		args = { 
+		    'population_id' : [ urlStr[4] ], 
+		    'analysis_type' : 'population download',
+		    'data_set_type' : 'single population'
+		};
+	    } else {		
 		args['population_id'] = [ urlStr[4] ];
 		args['analysis_type'] = 'population download';
 		args['data_set_type'] = 'single population';	
