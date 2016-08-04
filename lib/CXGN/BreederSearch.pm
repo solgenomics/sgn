@@ -270,12 +270,13 @@ sub get_phenotype_info {
 	#$where_clause = "where (stockprop.type_id=$rep_type_id or stockprop.type_id IS NULL) AND (block_number.type_id=$block_number_type_id or block_number.type_id IS NULL) AND  ".(join (" and ", @where_clause));
     }
 
-    my $order_clause = " order by project.name, plot.uniquename";
-    my $q = "SELECT projectprop.value, project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, db.name ||  ':' || dbxref.accession AS accession, stockprop.value, block_number.value AS rep, cvterm.cvterm_id, project.project_id, nd_geolocation.nd_geolocation_id, stock.stock_id, plot.stock_id, phenotype.uniquename
+    my $order_clause = " order by project.name, string_to_array(plot_number.value, '.')::int[]";
+    my $q = "SELECT projectprop.value, project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, db.name ||  ':' || dbxref.accession AS accession, stockprop.value, block_number.value, cvterm.cvterm_id, project.project_id, nd_geolocation.nd_geolocation_id, stock.stock_id, plot.stock_id, phenotype.uniquename
              FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)
              JOIN stock ON (object_id=stock.stock_id)
              LEFT JOIN stockprop ON (plot.stock_id=stockprop.stock_id)
              LEFT JOIN stockprop AS block_number ON (plot.stock_id=block_number.stock_id)
+             LEFT JOIN stockprop AS plot_number ON (plot.stock_id=plot_number.stock_id) AND plot_number.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plot number')
              JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id)
              JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
              JOIN nd_geolocation USING(nd_geolocation_id)
