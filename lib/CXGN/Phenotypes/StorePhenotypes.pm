@@ -193,6 +193,8 @@ sub store {
     my $upload_date = $phenotype_metadata->{'date'};
 
     my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type');
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
 
     ## Track experiments seen to allow for multiple trials and experiments to exist in an uploaded file.
     ## Used later to attach file metadata.
@@ -207,26 +209,14 @@ sub store {
         foreach my $plot_name (@plot_list) {
 
             #print STDERR "plot: $plot_name\n";
-            my $plot_stock = $schema->resultset("Stock::Stock")->find( { uniquename => $plot_name});
-            my $plot_stock_id = $plot_stock->stock_id;
+            my $stock = $schema->resultset("Stock::Stock")->find( { uniquename => $plot_name, 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] } );
+            my $stock_id = $stock->stock_id;
 
-            my $field_layout_experiment;
-            if ($data_level eq 'plots') {
-                $field_layout_experiment = $plot_stock
+            my $field_layout_experiment = $stock
                 ->search_related('nd_experiment_stocks')
                 ->search_related('nd_experiment')
                 ->find({'type.name' => 'field_layout' },
                 { join => 'type' });
-            } elsif ($data_level eq 'plants') {
-                my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
-                my $plot_of_plant = $schema->resultset("Stock::StockRelationship")->find({ type_id=>$plot_of_cvterm_id, object_id=>$plot_stock_id })->subject;
-
-                $field_layout_experiment = $plot_of_plant
-                ->search_related('nd_experiment_stocks')
-                ->search_related('nd_experiment')
-                ->find({'type.name' => 'field_layout' },
-                { join => 'type' });
-            }
 
             my $location_id = $field_layout_experiment->nd_geolocation_id;
             my $project = $field_layout_experiment->nd_experiment_projects->single ; #there should be one project linked with the field experiment
@@ -248,7 +238,7 @@ sub store {
                 if ($trait_value || $trait_value eq '0') {
 
 		    my $plot_trait_uniquename = "Stock: " .
-		    $plot_stock_id . ", trait: " .
+		    $stock_id . ", trait: " .
 			$trait_cvterm->name .
 			    " date: $timestamp" .
 				"  operator = $operator" ;
@@ -289,7 +279,7 @@ sub store {
                     $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
 
                     # Link the experiment to the stock
-                    $experiment->create_related('nd_experiment_stocks', {stock_id => $plot_stock_id, type_id => $phenotyping_experiment_cvterm->cvterm_id});
+                    $experiment->create_related('nd_experiment_stocks', {stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm->cvterm_id});
 
                     ## Link the phenotype to the experiment
                     $experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
@@ -306,58 +296,40 @@ sub store {
 
         my $rs;
         my %data;
-        if ($data_level eq 'plots') {
-            $rs = $schema->resultset('Stock::Stock')->search(
-                {'type.name' => 'field_layout'},
-                {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
-                    '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'],
-                    '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
-                }
-            );
-            while (my $s = $rs->next()) {
-                $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
+            
+        $rs = $schema->resultset('Stock::Stock')->search(
+            {'type.name' => 'field_layout', 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] },
+            {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
+                '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'],
+                '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
             }
-        } elsif ($data_level eq 'plants') {
-            my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
-            my $plots_of_plants = $schema->resultset("Stock::StockRelationship")->search({ type_id=>$plot_of_cvterm_id });
-
-            while (my $p = $plots_of_plants->next()) {
-                my $plant = $p->object();
-                my $plot_of_plant = $p->subject();
-                my $field_layout_experiment = $plot_of_plant
-                ->search_related('nd_experiment_stocks')
-                ->search_related('nd_experiment')
-                ->find({'type.name' => 'field_layout' },
-                { join => 'type' });
-                my $location_id = $field_layout_experiment->nd_geolocation_id;
-                my $project = $field_layout_experiment->nd_experiment_projects->single ; #there should be one project linked with the field experiment
-                my $project_id = $project->project_id;
-                $data{$plant->uniquename()} = [$plant->stock_id(), $location_id, $project_id];
-            }
+        );
+        while (my $s = $rs->next()) {
+            $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
         }
 
-	foreach my $plot_name (@plot_list) {
+        foreach my $plot_name (@plot_list) {
 
-	    my $plot_stock_id = $data{$plot_name}[0];
-	    my $location_id = $data{$plot_name}[1];
-	    my $project_id = $data{$plot_name}[2];
+            my $stock_id = $data{$plot_name}[0];
+            my $location_id = $data{$plot_name}[1];
+            my $project_id = $data{$plot_name}[2];
 
-	    foreach my $trait_name (@trait_list) {
+            foreach my $trait_name (@trait_list) {
 
-		my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
+                my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
         
-        my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
-        #print STDERR Dumper $value_array;
-        my $trait_value = $value_array->[0];
-        my $timestamp = $value_array->[1];
-        if (!$timestamp) {
-            $timestamp = 'NA';
-        }
+                my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
+                #print STDERR Dumper $value_array;
+                my $trait_value = $value_array->[0];
+                my $timestamp = $value_array->[1];
+                if (!$timestamp) {
+                    $timestamp = 'NA';
+                }
 
 		if ($trait_value || $trait_value eq '0') {
 
 		    my $plot_trait_uniquename = "Stock: " .
-		    $plot_stock_id . ", trait: " .
+		    $stock_id . ", trait: " .
 			$trait_cvterm->name .
 			    " date: $timestamp" .
 				"  operator = $operator" ;
@@ -387,27 +359,23 @@ sub store {
 
 		    # Create a new experiment, if one does not exist
 		    if (!$experiment) {
-			$experiment = $schema->resultset('NaturalDiversity::NdExperiment')
-			    ->create({nd_geolocation_id => $location_id, type_id => $phenotyping_experiment_cvterm->cvterm_id()});
-			$experiment->create_nd_experimentprops({date => $upload_date},{autocreate => 1, cv_name => 'local'});
-			$experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
-		    }
+                $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
+                    ->create({nd_geolocation_id => $location_id, type_id => $phenotyping_experiment_cvterm->cvterm_id()});
+                $experiment->create_nd_experimentprops({date => $upload_date},{autocreate => 1, cv_name => 'local'});
+                $experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
+            }
 
-		    ## Link the experiment to the project
-		    $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
+            ## Link the experiment to the project
+            $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
 
-		    # Link the experiment to the stock
-		    $experiment->create_related('nd_experiment_stocks', 
-						{
-						 stock_id => $plot_stock_id,
-						 type_id => $phenotyping_experiment_cvterm->cvterm_id
-						});
+            # Link the experiment to the stock
+            $experiment->create_related('nd_experiment_stocks', { stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm->cvterm_id });
 
-		    ## Link the phenotype to the experiment
-		    $experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
-		    #print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
+            ## Link the phenotype to the experiment
+            $experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
+            #print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
 
-		    $experiment_ids{$experiment->nd_experiment_id()}=1;
+            $experiment_ids{$experiment->nd_experiment_id()}=1;
 		}
 	    }
 	}
