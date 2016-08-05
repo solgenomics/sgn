@@ -1211,18 +1211,9 @@ sub get_shared_trials_GET :Args(1) {
                   };
 
     my $trial_query = $bs->metadata_query($c, $criteria_list, $dataref, $queryref);
-    #my $reftype = reftype $trial_query;
-    #print STDERR "refype = $reftype\n";
     my %query_response = %$trial_query;
-    #print STDERR "trial query = " . Dumper($trial_query);
     my $shared_trials = $query_response{'results'};
-    print STDERR "shared trials = $shared_trials \n" . Dumper($shared_trials);
 
-
-
-  #  my $initial_stock = CXGN::Chado::Stock->new($schema, $stock_ids[0]);
-  #  my @shared_trials= $initial_stock->get_trials();
-    print STDERR "shared trials = " . Dumper($shared_trials);
     my @formatted_rows = ();
 
     foreach my $stock_id (@stock_ids) {
@@ -1236,29 +1227,15 @@ sub get_shared_trials_GET :Args(1) {
                 };
         $trial_query = $bs->metadata_query($c, $criteria_list, $dataref, $queryref);
         %query_response = %$trial_query;
-        #print STDERR "trial query = " . Dumper($trial_query);
         my $current_trials = $query_response{'results'};
-       	#my @current_trials = %$trial_query{'results'};
-        print STDERR "current trials = " . Dumper($current_trials);
 	      my $num_trials = scalar @$current_trials;
+
 	      foreach my $t (@$current_trials) {
           print STDERR "t = " . Dumper($t);
           $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
 	      }
 	      $trials_string =~ s/,\s+$//;
 	      push @formatted_rows, ['<a href="/stock/'.$stock_id.'/view">'.$uniquename.'</a>', $num_trials, $trials_string ];
-        #my @intersection = ();
-        #my @difference = ();
-	#my %count = ();
-	#my %arrays = ();
-
-	#foreach my $trial_id (@current_trials, @shared_trials) { $count{@$trial_id[0]}++ }
-	#foreach my $array (@current_trials, @shared_trials) { $arrays{@$array[0]} = $array }
-
-	#foreach my $key (keys %count) {
-	#    push @{ $count{$key} > 1 ? \@intersection : \@difference}, $arrays{$key};
-	#}
-	#@shared_trials = @intersection;
     }
 
     my $num_trials = scalar @$shared_trials;
@@ -1276,6 +1253,7 @@ sub get_shared_trials_GET :Args(1) {
     $c->stash->{rest} = { data => \@formatted_rows, shared_trials => $shared_trials };
   }
 }
+
 =head2 action get_stock_trait_list()
 
  Usage:        /stock/<stock_id>/datatables/traitlist
