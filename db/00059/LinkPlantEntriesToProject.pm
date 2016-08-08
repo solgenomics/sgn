@@ -53,22 +53,31 @@ sub patch {
 
     my $coderef = sub {
 
-        my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plant", "stock_type")->cvterm_id();
-        my $plant_stocks = $schema->resultset("Stock::Stock")->search({ type_id=>$plant_cvterm_id });
+        my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+        my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
 
-        #Get project of plant from plot
-        while (my $plant = $plant_stocks->next() ) {
-            my $plot = $plant->search_related('stock_relationship_object_ids')->subject()->single();
-            
+        my $plots_of_plants = $schema->resultset("Stock::StockRelationship")->search({ type_id=>$plot_of_cvterm_id });
+
+        while (my $p = $plots_of_plants->next() ) {
+            #Get project of plant from plot
+            my $plant = $p->object();
+            my $plot_of_plant = $p->subject();
+            my $field_layout_experiment = $plot_of_plant
+            ->search_related('nd_experiment_stocks')
+            ->search_related('nd_experiment')
+            ->find({'type.cvterm_id' => $field_layout_cvterm },
+            { join => 'type' });
+            my $project = $field_layout_experiment->nd_experiment_projects->single ; #there should be one project linked with the field experiment
+            my $project_id = $project->project_id;
+
+            #store nd_experiment_stock entry in same way as it is done when plant entries are created now.
+            $field_layout_experiment = $schema->resultset("Project::Project")->search( { 'me.project_id' => $project_id }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $field_layout_cvterm })->single();
+            my $plant_nd_experiment_stock = $schema->resultset("NaturalDiversity::NdExperimentStock")->create({
+                nd_experiment_id => $field_layout_experiment->nd_experiment_id(),
+                type_id => $field_layout_cvterm,
+                stock_id => $plant->stock_id(),
+            });
         }
-
-        #link plant to project through nd_experiment. also add nd_genolocation_id of plot to nd_experiment for the plant
-        my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $field_layout_cvterm })->single();
-        my $plant_nd_experiment_stock = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
-            nd_experiment_id => $field_layout_experiment->nd_experiment_id(),
-            type_id => $field_layout_cvterm,
-            stock_id => $plant->stock_id(),
-        });
     };
 
     try {
