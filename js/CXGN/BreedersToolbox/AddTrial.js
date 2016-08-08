@@ -207,10 +207,10 @@ jQuery(document).ready(function ($) {
     $("#format_type_radio").change();
 
 
-    $("#select_design_method").change(function () {
-	//$("#add_project_dialog").dialog("option", "height","auto");
+    $(document).on('change', '#select_design_method', function () {
+        //$("#add_project_dialog").dialog("option", "height","auto");
 
-	var design_method = $("#select_design_method").val();
+        var design_method = $("#select_design_method").val();
         if (design_method == "CRD") {
             $("#trial_design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
@@ -225,6 +225,7 @@ jQuery(document).ready(function ($) {
             $("#col_number_section").hide();
             $("#row_number_per_block_section").hide();
             $("#other_parameter_section").hide();
+            $("#greenhouse_num_plants_per_accession_section").hide();
         } else if (design_method == "RCBD") {
             $("#trial_design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
@@ -239,6 +240,7 @@ jQuery(document).ready(function ($) {
             $("#col_number_section").hide();
             $("#row_number_per_block_section").hide();
             $("#other_parameter_section").hide();
+            $("#greenhouse_num_plants_per_accession_section").hide();
         } else if (design_method == "Alpha") {
             $("#trial_design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
@@ -253,6 +255,7 @@ jQuery(document).ready(function ($) {
             $("#col_number_section").hide();
             $("#row_number_per_block_section").hide();
             $("#other_parameter_section").hide();
+            $("#greenhouse_num_plants_per_accession_section").hide();
         } else if (design_method == "Augmented") {
             $("#trial_design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
@@ -267,6 +270,7 @@ jQuery(document).ready(function ($) {
             $("#col_number_section").hide();
             $("#row_number_per_block_section").hide();
             $("#other_parameter_section").hide();
+            $("#greenhouse_num_plants_per_accession_section").hide();
         } else if (design_method == "") {
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").hide();
@@ -282,39 +286,62 @@ jQuery(document).ready(function ($) {
             $("#row_number_per_block_section").show();
             $("#other_parameter_section").hide();
             $("#other_parameter_section2").hide();
+            $("#greenhouse_num_plants_per_accession_section").hide();
         }
 
-	else if (design_method == "MAD") {
-	    $("#trial_design_more_info").show();
-	    //$("#add_project_dialog").dialog("option", "height","auto");
+        else if (design_method == "MAD") {
+            $("#trial_design_more_info").show();
+            //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").show();
             $("#rep_count_section").hide();
-	    $("#row_number_section").show();
+            $("#row_number_section").show();
             $("#block_number_section").hide();
             $("#block_size_section").hide();
             $("#row_number_per_block_section").show();
-	    $("#col_number_per_block_section").show();
+            $("#col_number_per_block_section").show();
             $("#col_number_section").show();
             $("#max_block_size_section").hide();
-	    $("#row_number_per_block_section").show();
+            $("#row_number_per_block_section").show();
             $("#other_parameter_section").show();
 
-             $("#show_other_parameter_options").click(function () {
-		 if ($('#show_other_parameter_options').is(':checked')) {
-		     $("#other_parameter_options").show();
-		     //$("#add_project_dialog").dialog("option", "height","auto");
-		 }
-		 else {
-		     $("#other_parameter_options").hide();
-		     //$("#add_project_dialog").dialog("option", "height","auto");
-		 }
-	     });
+            $("#show_other_parameter_options").click(function () {
+                if ($('#show_other_parameter_options').is(':checked')) {
+                    $("#other_parameter_options").show();
+                    //$("#add_project_dialog").dialog("option", "height","auto");
+                }
+                else {
+                    $("#other_parameter_options").hide();
+                    //$("#add_project_dialog").dialog("option", "height","auto");
+                }
+            });
+            $("#greenhouse_num_plants_per_accession_section").hide();
+        }
 
-	}
+        else if (design_method == 'greenhouse') {
+            $("#trial_design_more_info").show();
+            $("#show_list_of_checks_section").hide();
+            $("#rep_count_section").hide();
+            $("#block_number_section").hide();
+            $("#block_size_section").hide();
+            $("#max_block_section").hide();
+            $("#row_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#col_number_per_block_section").hide();
+            $("#col_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#other_parameter_section").hide();
+            $("#design_info").hide();
+            $("#greenhouse_num_plants_per_accession_section").show();
+            greenhouse_show_num_plants_section();
+        }
 
-else {
+        else {
             alert("Unsupported design method");
         }
+    });
+
+    jQuery(document).on('change', '#select_list_list_select', function() {
+        greenhouse_show_num_plants_section();
     });
 
     $("#show_plot_naming_options").click(function () {
@@ -528,3 +555,18 @@ else {
     });
 
 });
+
+function greenhouse_show_num_plants_section(){
+    var list = new CXGN.List();
+    var stock_list_id = jQuery('#select_list_list_select').val();
+    if (stock_list_id != "") {
+        stock_list = list.getList(stock_list_id);
+        //console.log(stock_list);
+        var html = '<form class="form-horizontal">';
+        for (var i=0; i<stock_list.length; i++){
+            html = html + '<div class="form-group"><label class="col-sm-3 control-label">' + stock_list[i] + ': </label><div class="col-sm-9"><input class="form-control" id="greenhouse_num_plants_input_' + stock_list[i] + '" name="greenhouse_num_plants_input_' + stock_list[i] + '" type="text" placeholder="1" /></div></div>';
+        }
+        html = html + '</form>';
+        jQuery("#greenhouse_num_plants_per_accession").empty().html(html);
+    }
+}
