@@ -430,7 +430,9 @@ sub _get_plots {
       print STDERR "No field layout experiment found!\n";
       return;
   }
-  @plots = $field_layout_experiment->nd_experiment_stocks->search_related('stock');
+  my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "plot", "stock_type")->cvterm_id();
+  my $tissue_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), "tissue_sample", "stock_type")->cvterm_id();
+  @plots = $field_layout_experiment->nd_experiment_stocks->search_related('stock', {'stock.type_id' => [$plot_cvterm_id, $tissue_cvterm_id] });
 
   #debug...
   #print STDERR "PLOT LIST: \n";
@@ -530,9 +532,6 @@ sub _get_trial_accession_names_and_control_names {
   @plots = @{$plots_ref};
   $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
   $sample_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'tissue_sample_of'});
-  my $plant_of_cv = $schema->resultset("Cv::Cvterm")->find({name=>'plant_of'});
-  my $plant_of_id = 0;
-  if ($plant_of_cv) { $plant_of_id = $plant_of_cv->cvterm_id(); }
   foreach $plot (@plots) {
     my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => [$plot_of_cv->cvterm_id(),$sample_of_cv->cvterm_id() ]})->object;
     my $is_a_control_prop = $plot->stockprops->find( { 'type.name' => 'is a control' }, { join => 'type'} );

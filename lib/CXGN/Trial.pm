@@ -1296,6 +1296,7 @@ sub create_plant_entities {
 		my $plant_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of', 'stock_relationship')->cvterm_id();
 		my $plant_index_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_index_number', 'stock_property')->cvterm_id();
 		my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
+		my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
 		#my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
 
 		my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
@@ -1304,7 +1305,6 @@ sub create_plant_entities {
 			project_id => $self->get_trial_id(),
 		});
 
-		my $field_layout_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id;
 
 		foreach my $plot (keys %$design) {
 			print STDERR " ... creating plants for plot $plot...\n";
@@ -1340,6 +1340,14 @@ sub create_plant_entities {
 					subject_id => $parent_plot,
 					object_id => $plant->stock_id(),
 					type_id => $plant_relationship_cvterm,
+				});
+
+				#link plant to project through nd_experiment. also add nd_genolocation_id of plot to nd_experiment for the plant
+				my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $field_layout_cvterm })->single();
+				my $plant_nd_experiment_stock = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
+					nd_experiment_id => $field_layout_experiment->nd_experiment_id(),
+					type_id => $field_layout_cvterm,
+					stock_id => $plant->stock_id(),
 				});
 			}
 		}

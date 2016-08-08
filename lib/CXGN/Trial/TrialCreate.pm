@@ -205,32 +205,31 @@ sub save_trial {
 
   $project->create_projectprops( { 'project year' => $self->get_trial_year(),'design' => $self->get_design_type()}, {autocreate=>1});
 
-  # instead of
-  my $rs = $chado_schema->resultset('Stock::Stock')->search(
-	{ 'me.is_obsolete' => { '!=' => 't' } },
-        { join => [ 'stock_relationship_objects', 'nd_experiment_stocks' ],
-	 '+select'=> ['me.stock_id', 'me.uniquename', 'me.organism_id', 'stock_relationship_objects.type_id', 'stock_relationship_objects.subject_id', 'nd_experiment_stocks.nd_experiment_id', 'nd_experiment_stocks.type_id'],
-	 '+as'=> ['stock_id', 'uniquename', 'organism_id', 'stock_relationship_type_id', 'stock_relationship_subject_id', 'stock_experiment_id', 'stock_experiment_type_id']
+	my $rs = $chado_schema->resultset('Stock::Stock')->search(
+		{ 'me.is_obsolete' => { '!=' => 't' }, 'me.type_id' => $accession_cvterm->cvterm_id },
+		{ join => [ 'stock_relationship_objects', 'nd_experiment_stocks' ],
+		'+select'=> ['me.stock_id', 'me.uniquename', 'me.organism_id', 'stock_relationship_objects.type_id', 'stock_relationship_objects.subject_id', 'nd_experiment_stocks.nd_experiment_id', 'nd_experiment_stocks.type_id'],
+		'+as'=> ['stock_id', 'uniquename', 'organism_id', 'stock_relationship_type_id', 'stock_relationship_subject_id', 'stock_experiment_id', 'stock_experiment_type_id']
+		}
+	);
+
+	my %stock_data;
+	my %stock_relationship_data;
+	my %stock_experiment_data;
+	while (my $s = $rs->next()) {
+		$stock_data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('organism_id') ];
+		if ($s->get_column('stock_relationship_type_id') && $s->get_column('stock_relationship_subject_id') ) {
+			$stock_relationship_data{$s->get_column('stock_id'), $s->get_column('stock_relationship_type_id'), $s->get_column('stock_relationship_subject_id') } = 1;
+		}
+		if ($s->get_column('stock_experiment_id') && $s->get_column('stock_experiment_type_id') ) {
+			$stock_experiment_data{$s->get_column('stock_id'), $s->get_column('stock_experiment_id'), $s->get_column('stock_experiment_type_id')} = 1;
+		}
 	}
-  );
 
-  my %stock_data;
-  my %stock_relationship_data;
-  my %stock_experiment_data;
-  while (my $s = $rs->next()) {
-     $stock_data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('organism_id') ];
-     if ($s->get_column('stock_relationship_type_id') && $s->get_column('stock_relationship_subject_id') ) {
-	 $stock_relationship_data{$s->get_column('stock_id'), $s->get_column('stock_relationship_type_id'), $s->get_column('stock_relationship_subject_id') } = 1;
-     }
-     if ($s->get_column('stock_experiment_id') && $s->get_column('stock_experiment_type_id') ) {
-	 $stock_experiment_data{$s->get_column('stock_id'), $s->get_column('stock_experiment_id'), $s->get_column('stock_experiment_type_id')} = 1;
-     }
-  }
+	my $stock_id_checked;
+	my $organism_id_checked;
 
-    my $stock_id_checked;
-    my $organism_id_checked;
-
-  foreach my $key (sort { $a cmp $b} keys %design) {
+	foreach my $key (sort { $a cmp $b} keys %design) {
 
       #print STDERR "Check 01: ".localtime();
 
