@@ -61,6 +61,7 @@ has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', 
 has 'design' => (isa => 'HashRef[HashRef[Str]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
 #has 'breeding_program_id' => (isa => 'Int', is => 'rw', predicate => 'has_breeding_program_id', required => 1);
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 0,);
+has 'greenhouse_num_plants' => (isa => 'ArrayRef[Int]|Undef', is => 'rw', predicate => 'has_greenhouse_num_plants', required => 0,);
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
 has 'genotyping_user_id' => (isa => 'Str', is => 'rw');
 

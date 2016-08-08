@@ -74,30 +74,43 @@ sub trial_detail_design_view {
 
 
 sub design_layout_view {
-  my $design_ref = shift;
-  my $design_info_ref = shift;
-  my %design = %{$design_ref};
-  my %design_info = %{$design_info_ref};
-  my $design_result_html;
+    my $design_ref = shift;
+    my $design_info_ref = shift;
+    my $design_type = shift;
+    my %design = %{$design_ref};
+    my %design_info = %{$design_info_ref};
+    my $design_result_html;
 
-  $design_result_html .= '<table border="1">';
-  $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th></tr>};
-  foreach my $key (sort { $a <=> $b} keys %design) {
-      my $plot_name = $design{$key}->{plot_name} || '';
-      my $stock_name = $design{$key}->{stock_name} || '';
-      my $check_name = $design{$key}->{check_name} || '';
-      my $row_number = $design{$key}->{row_number} || '';
-      my $col_number = $design{$key}->{col_number} || '';
-      my $block_number = $design{$key}->{block_number} || '';
-      my $block_row_number = $design{$key}->{block_row_number} || '';
-      my $block_col_number = $design{$key}->{block_col_number} || '';
-      my $rep_number = $design{$key}->{rep_number} || '';
+    $design_result_html .= '<table border="1">';
+    if ($design_type eq 'greenhouse') {
+        $design_result_html .= qq{<tr><th>Plant Name</th><th>Accession Name</th></tr>};
 
-    $design_result_html .= "<tr><td>".$plot_name."</td><td>".$stock_name."</td><td>".$check_name."</td><td>".$row_number."</td><td>".$col_number."</td><td>".$block_number."</td><td>".$block_row_number."</td><td>".$block_col_number."</td><td>".$rep_number."</td></tr>";
-  }
-  $design_result_html .= "</table>";
-  return  "$design_result_html";
+        foreach my $key (sort { $a <=> $b} keys %design) {
+            my $plant_name = $design{$key}->{plant_name} || '';
+            my $stock_name = $design{$key}->{stock_name} || '';
 
+            $design_result_html .= "<tr><td>".$plant_name."</td><td>".$stock_name."</td></tr>";
+        }
+    } else {
+        $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th></tr>};
+
+        foreach my $key (sort { $a <=> $b} keys %design) {
+            my $plot_name = $design{$key}->{plot_name} || '';
+            my $stock_name = $design{$key}->{stock_name} || '';
+            my $check_name = $design{$key}->{check_name} || '';
+            my $row_number = $design{$key}->{row_number} || '';
+            my $col_number = $design{$key}->{col_number} || '';
+            my $block_number = $design{$key}->{block_number} || '';
+            my $block_row_number = $design{$key}->{block_row_number} || '';
+            my $block_col_number = $design{$key}->{block_col_number} || '';
+            my $rep_number = $design{$key}->{rep_number} || '';
+
+            $design_result_html .= "<tr><td>".$plot_name."</td><td>".$stock_name."</td><td>".$check_name."</td><td>".$row_number."</td><td>".$col_number."</td><td>".$block_number."</td><td>".$block_row_number."</td><td>".$block_col_number."</td><td>".$rep_number."</td></tr>";
+        }
+    }
+
+    $design_result_html .= "</table>";
+    return  "$design_result_html";
 }
 
 sub design_info_view {
@@ -130,6 +143,9 @@ sub design_info_view {
     if ($design_info{'design_type'} eq "MAD") {
       $design_description = "Modified Augmented Design";
     }
+    if ($design_info{'design_type'} eq "greenhouse") {
+      $design_description = "Greenhouse Design";
+    }
 #    if ($design_info{'design_type'} eq "MADII") {
 #      $design_description = "Modified Augmented Design II";
 #    }
@@ -151,10 +167,12 @@ sub design_info_view {
   foreach my $key (sort { $a <=> $b} keys %design) {
     my $current_block_number = $design{$key}->{block_number};
     my $current_rep_number;
-    if ($block_hash{$current_block_number}) {
-      $block_hash{$current_block_number} += 1;
-    } else {
-      $block_hash{$current_block_number} = 1;
+    if ($current_block_number) {
+        if ($block_hash{$current_block_number}) {
+          $block_hash{$current_block_number} += 1;
+        } else {
+          $block_hash{$current_block_number} = 1;
+        }
     }
     if ($design{$key}->{rep_number}) {
       $current_rep_number = $design{$key}->{rep_number};
