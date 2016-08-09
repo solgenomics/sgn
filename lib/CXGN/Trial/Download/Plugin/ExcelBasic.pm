@@ -16,16 +16,10 @@ sub download {
     my $trial_id = $self->trial_id();
     my @trait_list = @{$self->trait_list()};
     my $spreadsheet_metadata = $self->file_metadata();
-    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
 
-    my $design = $trial_layout->get_design();
-
-    if (! $design) {
-	return "No design found for this trial.";
-    }
-	
-    my %design = %{$trial_layout->get_design()};
-    my @plot_names = @{$trial_layout->get_plot_names};
+    my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $trial_id} );
+    my $design_type = $trial->get_design_type();
+    print STDERR $design_type."\n";
 
     my $workbook = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $workbook->add_worksheet();
@@ -46,7 +40,6 @@ sub download {
     }
     my $predefined_columns_json = $json->encode(\@predefined_columns);
 
-    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
     $ws->write(0, 0, 'Spreadsheet ID'); $ws->write('0', '1', 'ID'.$$.time());
     $ws->write(0, 2, 'Spreadsheet format'); $ws->write(0, 3, "BasicExcel");
     $ws->write(1, 0, 'Trial name'); $ws->write(1, 1, $trial->get_name(), $bold);
@@ -56,16 +49,28 @@ sub download {
     $ws->write(1, 2, 'Operator');       $ws->write(1, 3, "Enter operator here");
     $ws->write(2, 2, 'Date');           $ws->write(2, 3, "Enter date here");
     $ws->data_validation(2,3, { validate => "date", criteria => '>', value=>'1000-01-01' });
-    
+
 
     my $num_col_before_traits;
+    my $line = 7;
+
     if ($self->data_level eq 'plots') {
         $num_col_before_traits = 6;
         my @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
         for(my $n=0; $n<@column_headers; $n++) { 
             $ws->write(6, $n, $column_headers[$n]);
         }
-        
+
+        my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
+        my $design = $trial_layout->get_design();
+
+        if (! $design) {
+            return "No design found for this trial.";
+        }
+
+        my %design = %{$design};
+        my @plot_names = @{$trial_layout->get_plot_names};
+    
         my @ordered_plots = sort { $a <=> $b} keys(%design);
         for(my $n=0; $n<@ordered_plots; $n++) { 
             my %design_info = %{$design{$ordered_plots[$n]}};
@@ -76,61 +81,48 @@ sub download {
             $ws->write($n+7, 3, $design_info{block_number});
             $ws->write($n+7, 4, $design_info{is_a_control});
             $ws->write($n+7, 5, $design_info{rep_number});
+            $line++;
         }
         
     } elsif ($self->data_level eq 'plants') {
-        $num_col_before_traits = 7;
         my $pre_col = $self->predefined_columns;
-        if ($pre_col) {
-            my $num_predefined_col = scalar keys %$pre_col;
-            my @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
-            foreach (keys %$pre_col) {
-                if ($pre_col->{$_}) {
-                    push @column_headers, $_;
-                    $num_col_before_traits++;
-                }
-            }
-            for(my $n=0; $n<scalar(@column_headers); $n++) { 
-                $ws->write(6, $n, $column_headers[$n]);
-            }
-        } else {
-            my @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
-            for(my $n=0; $n<@column_headers; $n++) { 
-                $ws->write(6, $n, $column_headers[$n]);
-            }
-        }
-        
-        my @ordered_plots = sort { $a <=> $b} keys(%design);
-        my $line = 7;
-        for(my $n=0; $n<@ordered_plots; $n++) { 
-            my %design_info = %{$design{$ordered_plots[$n]}};
-            my $plant_names = $design_info{plant_names};
-            
-            my $sampled_plant_names;
-            if ($self->sample_number) {
-                my $sample_number = $self->sample_number;
-                foreach (@$plant_names) {
-                    if ( $_ =~ m/_plant_(\d+)/) {
-                        if ($1 <= $sample_number) {
-                            push @$sampled_plant_names, $_;
-                        }
+
+        if ($design_type eq 'greenhouse') {
+            $num_col_before_traits = 1;
+            my @column_headers = qw | plant_name |;
+            if ($pre_col) {
+                my $num_predefined_col = scalar keys %$pre_col;
+                foreach (keys %$pre_col) {
+                    if ($pre_col->{$_}) {
+                        push @column_headers, $_;
+                        $num_col_before_traits++;
                     }
                 }
+                for(my $n=0; $n<scalar(@column_headers); $n++) { 
+                    $ws->write(6, $n, $column_headers[$n]);
+                }
             } else {
-                $sampled_plant_names = $plant_names;
+                for(my $n=0; $n<@column_headers; $n++) { 
+                    $ws->write(6, $n, $column_headers[$n]);
+                }
             }
-
-            foreach (@$sampled_plant_names) {
-                $ws->write($line, 0, $_);
-                $ws->write($line, 1, $design_info{plot_name});
-                $ws->write($line, 2, $design_info{accession_name});
-                $ws->write($line, 3, $design_info{plot_number});
-                $ws->write($line, 4, $design_info{block_number});
-                $ws->write($line, 5, $design_info{is_a_control});
-                $ws->write($line, 6, $design_info{rep_number});
-                
+            my @plants = @{ $trial->get_plants() };
+            @plants = sort @plants;
+            my $sample_number;
+            if ($self->sample_number) {
+                $sample_number = $self->sample_number;
+            }
+            foreach my $plant (@plants) {
+                my $plant_name = $plant->[1];
+                if ($sample_number) {
+                    $plant_name =~ m/_plant_(\d+)/;
+                    if ($1 > $sample_number) {
+                        next;
+                    }
+                }
+                $ws->write($line, 0, $plant_name);
                 if ($pre_col) {
-                    my $pre_col_ind = 7;
+                    my $pre_col_ind = 1;
                     foreach (keys %$pre_col) {
                         if ($pre_col->{$_}) {
                             $ws->write($line, $pre_col_ind, $pre_col->{$_});
@@ -138,8 +130,77 @@ sub download {
                         }
                     }
                 }
-                
+
                 $line++;
+            }
+        } else {
+            $num_col_before_traits = 7;
+            my @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+            if ($pre_col) {
+                my $num_predefined_col = scalar keys %$pre_col;
+                foreach (keys %$pre_col) {
+                    if ($pre_col->{$_}) {
+                        push @column_headers, $_;
+                        $num_col_before_traits++;
+                    }
+                }
+                for(my $n=0; $n<scalar(@column_headers); $n++) { 
+                    $ws->write(6, $n, $column_headers[$n]);
+                }
+            } else {
+                for(my $n=0; $n<@column_headers; $n++) { 
+                    $ws->write(6, $n, $column_headers[$n]);
+                }
+            }
+            my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
+            my $design = $trial_layout->get_design();
+
+            if (! $design) {
+                return "No design found for this trial.";
+            }
+
+            my %design = %{$design};
+            my @plot_names = @{$trial_layout->get_plot_names};
+            my @ordered_plots = sort { $a <=> $b} keys(%design);
+            for(my $n=0; $n<@ordered_plots; $n++) { 
+                my %design_info = %{$design{$ordered_plots[$n]}};
+                my $plant_names = $design_info{plant_names};
+
+                my $sampled_plant_names;
+                if ($self->sample_number) {
+                    my $sample_number = $self->sample_number;
+                    foreach (@$plant_names) {
+                        if ( $_ =~ m/_plant_(\d+)/) {
+                            if ($1 <= $sample_number) {
+                                push @$sampled_plant_names, $_;
+                            }
+                        }
+                    }
+                } else {
+                    $sampled_plant_names = $plant_names;
+                }
+
+                foreach (@$sampled_plant_names) {
+                    $ws->write($line, 0, $_);
+                    $ws->write($line, 1, $design_info{plot_name});
+                    $ws->write($line, 2, $design_info{accession_name});
+                    $ws->write($line, 3, $design_info{plot_number});
+                    $ws->write($line, 4, $design_info{block_number});
+                    $ws->write($line, 5, $design_info{is_a_control});
+                    $ws->write($line, 6, $design_info{rep_number});
+
+                    if ($pre_col) {
+                        my $pre_col_ind = 7;
+                        foreach (keys %$pre_col) {
+                            if ($pre_col->{$_}) {
+                                $ws->write($line, $pre_col_ind, $pre_col->{$_});
+                                $pre_col_ind++;
+                            }
+                        }
+                    }
+
+                    $line++;
+                }
             }
         }
     }
@@ -171,10 +232,8 @@ sub download {
         #    print STDERR "Skipping output of trait $trait_list[$i] because it does not exist\n";
         #    next;
         #}
-    
-        my $plot_count = scalar(keys(%design));
 
-        for (my $n = 0; $n < $plot_count; $n++) { 
+        for (my $n = 0; $n < $line; $n++) { 
             if ($cvinfo{$trait_list[$i]}) {
                 my $format = $cvinfo{$trait_list[$i]}->format();
                 if ($format eq "numeric") { 
