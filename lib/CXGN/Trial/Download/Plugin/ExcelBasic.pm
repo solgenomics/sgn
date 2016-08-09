@@ -43,6 +43,7 @@ sub download {
     $ws->write(0, 0, 'Spreadsheet ID'); $ws->write('0', '1', 'ID'.$$.time());
     $ws->write(0, 2, 'Spreadsheet format'); $ws->write(0, 3, "BasicExcel");
     $ws->write(1, 0, 'Trial name'); $ws->write(1, 1, $trial->get_name(), $bold);
+    $ws->write(1, 2, 'Design Type'); $ws->write(1, 3, $design_type, $bold);
     $ws->write(2, 0, 'Description'); $ws->write(2, 1, $trial->get_description(), $bold);
     $ws->write(3, 0, "Trial location");  $ws->write(3, 1, $trial->get_location()->[1], $bold);
     $ws->write(4, 0, "Predefined Columns");  $ws->write(4, 1, $predefined_columns_json, $bold);
