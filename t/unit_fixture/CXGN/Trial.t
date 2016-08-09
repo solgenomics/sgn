@@ -391,7 +391,7 @@ my $retrieve_plants = $trial->get_plants();
 #print STDERR Dumper $retrieve_plants;
 my @get_plant_names;
 foreach (@$retrieve_plants){
-    push @get_plant_names, $_->{'plant_name'};
+    push @get_plant_names, $_->[1];
 }
 @get_plant_names = sort @get_plant_names;
 #print STDERR Dumper \@get_plant_names;
