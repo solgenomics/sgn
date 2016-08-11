@@ -38,6 +38,7 @@ has 'number_of_rows' => (isa => 'Int',is => 'rw',predicate => 'has_number_of_row
 has 'number_of_cols' => (isa => 'Int',is => 'rw',predicate => 'has_number_of_cols',clearer => 'clear_number_of_cols');
 has 'number_of_reps' => (isa => 'Int', is => 'rw', predicate => 'has_number_of_reps', clearer => 'clear_number_of_reps');
 has 'block_size' => (isa => 'Int', is => 'rw', predicate => 'has_block_size', clearer => 'clear_block_size');
+has 'greenhouse_num_plants' => (isa => 'ArrayRef[Int]', is => 'rw', predicate => 'has_greenhouse_num_plants', clearer => 'clear_greenhouse_num_plants');
 has 'maximum_block_size' => (isa => 'Int', is => 'rw', predicate => 'has_maximum_block_size', clearer => 'clear_maximum_block_size');
 has 'plot_name_prefix' => (isa => 'Str', is => 'rw', predicate => 'has_plot_name_prefix', clearer => 'clear_plot_name_prefix');
 has 'plot_name_suffix' => (isa => 'Str', is => 'rw', predicate => 'has_plot_name_suffix', clearer => 'clear_plot_name_suffix');
@@ -56,7 +57,7 @@ has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', def
 
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" },
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" },
   message { "The string, $_, was not a valid design type" };
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
@@ -100,7 +101,9 @@ sub calculate_design {
 #    elsif($self->get_design_type() eq "MADIV") {
 #        $design = _get_madiv_design($self);
 #    }
-
+    elsif($self->get_design_type() eq "greenhouse") {
+        $design = _get_greenhouse_design($self);
+    }
     else {
       die "Trial design" . $self->get_design_type() ." not supported\n";
     }
@@ -1283,6 +1286,24 @@ sub _build_plot_names {
     $design{$key}->{plot_number} = $key;
   }
   return \%design;
+}
+
+sub _get_greenhouse_design {
+    my $self = shift;
+    my %greenhouse_design;
+    my @num_plants = @{ $self->get_greenhouse_num_plants() };
+    my @accession_list = @{ $self->get_stock_list() };
+    my $trial_name = $self->get_trial_name;
+    my %num_accession_hash;
+    @num_accession_hash{@accession_list} = @num_plants;
+    foreach my $key (keys %num_accession_hash) {
+        for my $n (1..$num_accession_hash{$key}) {
+            my $plant_name = $trial_name."_".$key."_plant_".$n;
+            $greenhouse_design{$plant_name}->{plant_name} = $plant_name;
+            $greenhouse_design{$plant_name}->{stock_name} = $key;
+        }
+    }
+    return \%greenhouse_design;
 }
 
 1;

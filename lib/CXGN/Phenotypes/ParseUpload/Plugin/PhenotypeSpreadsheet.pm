@@ -44,9 +44,17 @@ sub validate {
     if ($worksheet->get_cell(6,0)) {
       $name_head  = $worksheet->get_cell(6,0)->value();
     }
-
+    my $design_type;
+    if ($worksheet->get_cell(3,3)) {
+      $design_type  = $worksheet->get_cell(3,3)->value();
+    }
+    if (!$design_type ) {
+        $parse_result{'error'} = "No design type in header. Make sure you are using the correct spreadsheet format.";
+        print STDERR "No design type in header\n";
+        return \%parse_result;
+    }
     if (!$name_head || ($name_head ne 'plot_name' && $name_head ne 'plant_name')) {
-        $parse_result{'error'} = "No plot_name or plant_name in header.";
+        $parse_result{'error'} = "No plot_name or plant_name in header. Make sure you are using the correct spreadsheet format.";
         print STDERR "No plot name in header\n";
         return \%parse_result;
     }
@@ -56,18 +64,23 @@ sub validate {
                                     $worksheet->get_cell(6,3)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,4)->value() ne 'is_a_control' ||
                                     $worksheet->get_cell(6,5)->value() ne 'rep_number' ) ) {
-        $parse_result{'error'} = "Data columns must be in this order for uploading Plots: plot_name, accession_name, plot_number, block_number, is_a_control,  rep_number. If you are uploading plant level phenotypes, make sure to select Data Level: Plants.";
+        $parse_result{'error'} = "Data columns must be in this order for uploading Plot phenotypes: plot_name, accession_name, plot_number, block_number, is_a_control,  rep_number. If you are uploading plant level phenotypes, make sure to select Data Level: Plants.";
         print STDERR "Columns not correct and data_level is plots\n";
         return \%parse_result;
     }
-    if ($data_level eq 'plants' && ($worksheet->get_cell(6,0)->value() ne 'plant_name' ||
+    if ($data_level eq 'plants' && $design_type ne 'greenhouse' && ($worksheet->get_cell(6,0)->value() ne 'plant_name' ||
                                     $worksheet->get_cell(6,1)->value() ne 'plot_name' ||
                                     $worksheet->get_cell(6,2)->value() ne 'accession_name' ||
                                     $worksheet->get_cell(6,3)->value() ne 'plot_number' ||
                                     $worksheet->get_cell(6,4)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,5)->value() ne 'is_a_control' ||
                                     $worksheet->get_cell(6,6)->value() ne 'rep_number' ) ) {
-        $parse_result{'error'} = "Data columns must be in this order for uploading Plants: plant_name, plot_name, accession_name, plot_number, block_number, is_a_control, rep_number. If you are uploading plot level phenotypes, make sure to select Data Level: Plots.";
+        $parse_result{'error'} = "Data columns must be in this order for uploading Plant phenotypes: plant_name, plot_name, accession_name, plot_number, block_number, is_a_control, rep_number. If you are uploading plot level phenotypes, make sure to select Data Level: Plots.";
+        print STDERR "Columns not correct and data_level is plants\n";
+        return \%parse_result;
+    }
+    if ($data_level eq 'plants' && $design_type eq 'greenhouse' && $worksheet->get_cell(6,0)->value() ne 'plant_name') {
+        $parse_result{'error'} = "Data columns must be in this order for uploading Plant phenotypes to a Greenhouse trial: plant_name. If you are uploading plot level phenotypes, make sure to select Data Level: Plots.";
         print STDERR "Columns not correct and data_level is plants\n";
         return \%parse_result;
     }
@@ -76,7 +89,11 @@ sub validate {
     if ($name_head eq 'plot_name') {
         @fixed_columns = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
     } elsif ($name_head eq 'plant_name') {
-        @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+        if ($design_type eq 'greenhouse') {
+            @fixed_columns = qw | plant_name |;
+        } else {
+            @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+        }
     }
     my $num_fixed_col = scalar(@fixed_columns);
 
@@ -159,12 +176,17 @@ sub parse {
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
     my $name_head  = $worksheet->get_cell(6,0)->value();
+    my $design_type = $worksheet->get_cell(3,3)->value();
 
     my @fixed_columns;
     if ($name_head eq 'plot_name') {
         @fixed_columns = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
     } elsif ($name_head eq 'plant_name') {
-        @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+        if ($design_type eq 'greenhouse') {
+            @fixed_columns = qw | plant_name |;
+        } else {
+            @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+        }
     }
     my $num_fixed_col = scalar(@fixed_columns);
 
