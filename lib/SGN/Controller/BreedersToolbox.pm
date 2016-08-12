@@ -120,6 +120,8 @@ sub manage_locations : Path("/breeders/locations") Args(0) {
 
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
 
+    print STDERR "Locations: " . Dumper($locations);
+
     $c->stash->{locations} = $locations;
 
     $c->stash->{template} = '/breeders_toolbox/manage_locations.mas';
@@ -363,7 +365,30 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     }
 }
 
+sub selection_index : Path("/selection/index") :Args(0) {
+    my $self = shift;
+    my $c = shift;
 
+    if (!$c->user()) {
+
+	# redirect to login page
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+#    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+  #  my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
+
+#    my $breeding_programs = $projects->get_breeding_programs();
+
+  #  $c->stash->{breeding_programs} = $breeding_programs;
+    $c->stash->{user} = $c->user();
+
+    $c->stash->{template} = '/breeders_toolbox/selection_index.mas';
+
+
+}
 
 
 sub breeder_home :Path("/breeders/home") Args(0) {

@@ -1,0 +1,45 @@
+
+<%args>
+$trial_id => undef
+$trial_name => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.SelectionIndex', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+<& /page/page_title.mas, title=>"Selection Index" &>
+
+<div class="container-fluid">
+   <form class="form-horizontal" role="form" method="post" >
+        <div class="form-group">
+            <label class="col-sm-3 control-label">Pick a Trial: </label>
+            <div class="col-sm-9" >
+              <select class="form-control" id="select_trial_for_selection_index" size="10" style="min-width: 200px;overflow:auto;"></select>
+            </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-3 control-label">Select Traits and Weights: </label>
+          <div class="col-sm-9" >
+            <div id="trait_list1"></div>
+            <div id="trait_list2"></div>
+            <div id="trait_list3"></div>
+          </div>
+        </div>
+
+    </form><br/>
+    <div class="panel">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a>Selection Index table</a>
+      </h4>
+    </div>
+    <div class="panel-body" id="table_panel" style="overflow:hidden">
+    </div>
+</div>
+
+<script>
+    jQuery(document).ready(function() {
+        get_select_box('trials', 'select_trial_for_selection_index', { 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' });
+    });
+
+
+
+</script>
