@@ -3,6 +3,8 @@ jQuery(document).ready(function() {
     jQuery('#select_trial_for_selection_index').change( // update wizard panels and categories when data selections change
     	function() {
 
+      var trial_name = jQuery("option:selected", this).text();
+      this.options[this.selectedIndex].innerHTML
 	    var data = [ [ jQuery(this).val() ] ];
       console.log("data="+data);
       var categories = [ 'trials', 'traits' ];
@@ -18,7 +20,7 @@ jQuery(document).ready(function() {
     		enable_ui();
                 },
     	    success: function(response) {
-            console.log(response.list);
+            console.log("traits="+JSON.stringify(response.list));
             var list = response.list || [];
             data_html = format_options_list(list);
             jQuery('#trait_list1').html(data_html);
@@ -27,6 +29,49 @@ jQuery(document).ready(function() {
           },
     error: function(response) { alert("An error occurred while transforming the list "+list_id); }
     });
+
+
+    var categories = [ 'trials', 'accessions' ];
+    jQuery.ajax({   // get accessions phenotyped in trial
+    url: '/ajax/breeder/search',
+    method: 'POST',
+    data: {'categories': categories, 'data': data, 'querytypes': 0 },
+        beforeSend: function(){
+      disable_ui();
+              },
+              complete : function(){
+      enable_ui();
+              },
+        success: function(response) {
+          var accessions_list = response.list || [];
+          for (i = 0; i < accessions_list.length; i++) {
+              accessions_list[i][0] = '<a href="/stock/'+accessions_list[i][0]+'/view">'+accessions_list[i][1]+'</a>';
+              accessions_list[i][1] = [];
+          }
+          //console.log("accessions_list="+accessions_list);
+          jQuery('#table_panel').html('');
+          var table_html = '<ul class="nav nav-tabs"><li class="active"><a data-toggle="tab" href="#summary">Selection Index</a></li><li><a data-toggle="tab" href="#raw">Ranking</a></li></ul><div class="tab-content">';
+          table_html += '<div id="selection_index" class="tab-pane fade in active"><div class="table-responsive" style="margin-top: 10px;"><table id="selection_table" class="table table-hover table-striped table-bordered" width="100%"><caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Table description: <i>Selection index for trial '+trial_name+'.</i></center></caption></table></div></div>';
+          table_html += '<div id="ranking" class="tab-pane fade"><div class="table-responsive" style="margin-top: 10px;"><table id="ranking_table" class="table table-hover table-striped table-bordered" width="100%"><thead><tr>';
+          jQuery('#table_panel').html(table_html);
+
+          var summary_table = jQuery('#selection_table').DataTable( {
+            dom: 'Bfrtip',
+            buttons: ['copy', 'excel', 'csv', 'print' ],
+            data: accessions_list,
+            destroy: true,
+            paging: true,
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            columns: [
+              { title: "Accession" },
+              { title: "Trait 1" }
+            ]
+          });
+        },
+  error: function(response) { alert("An error occurred while transforming the list "+list_id); }
+  });
+
+
     });
       });
 
