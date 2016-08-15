@@ -147,6 +147,39 @@ sub metadata_query {
   }
 }
 
+=head2 avg_phenotypes_query
+
+parameters: trait_id, trial_id
+
+returns: avg pheno value of each accession in a trial for the given trait
+
+Side Effects: none
+
+=cut
+
+sub avg_phenotypes_query {
+  my $self = shift;
+  my $trial_id = shift;
+  my $trait_id = shift;
+
+  my $query = "SELECT accession_id, accession_name, avg(phenotype_value::real) FROM materialized_phenoview WHERE trial_id = ? AND trait_id = ? GROUP BY 1,2 ORDER BY 1";
+
+  print STDERR "Trait id is $trait_id and trial id is $trial_id and query is $query\n";
+
+  my $h = $self->dbh->prepare($query);
+  $h->execute($trial_id,$trait_id);
+
+  my @values;
+  while (my ($id, $name, $avg_value) = $h->fetchrow_array()) {
+    print STDERR "$id and $name and $avg_value\n";
+    push @values, [ $id, $name, $avg_value ];
+  }
+
+  print STDERR "avg_phenotypes: ".Dumper(@values);
+  return { values => \@values };
+
+}
+
 =head2 refresh_matviews
 
 parameters: string to specify desired refresh type, basic or concurrent. defaults to concurrent

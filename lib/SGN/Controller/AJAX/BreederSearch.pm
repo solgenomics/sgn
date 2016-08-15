@@ -92,6 +92,24 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   }
 }
 
+sub get_avg_phenotypes : Path('/ajax/breeder/search/avg_phenotypes') Args(0) {
+  my $self = shift;
+  my $c = shift;
+
+  my $trial_id = $c->req->param('trial_id');
+  my $trait_id = $c->req->param('trait_id');
+
+  my $dbh = $c->dbc->dbh();
+  my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
+
+  my $results_ref = $bs->avg_phenotypes_query($trial_id, $trait_id);
+
+  print STDERR "Avg Phenos: ".Data::Dumper::Dumper($results_ref);
+
+  $c->stash->{rest} = { values => $results_ref->{'values'} };
+  return;
+  
+}
 
 sub refresh_matviews : Path('/ajax/breeder/refresh') Args(0) {
   my $self = shift;
