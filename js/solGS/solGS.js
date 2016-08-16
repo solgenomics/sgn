@@ -13,7 +13,7 @@ JSAN.use('jquery.form');
 var solGS = solGS || function solGS () {};
 
 solGS.waitPage = function (page, args) {
-   
+  
     var matchItems = 'solgs/population/'
 	+ '|solgs/populations/combined/' 
 	+ '|solgs/trait/' 
@@ -153,14 +153,14 @@ solGS.waitPage = function (page, args) {
     function blockPage (page, args) {
 
 	goToPage(page, args);
-	
+		
 	jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
 	jQuery.blockUI({message: 'Please wait..'});
         
 	jQuery(window).unload(function()  {
 	    jQuery.unblockUI();            
 	}); 
-	
+
     }
 
 
@@ -197,8 +197,8 @@ solGS.waitPage = function (page, args) {
     function submitTraitSelections (page, args) {
 	
 	wrapTraitsForm();
-	
-	if ( typeof args.analysis_name == 'undefined') {
+
+	if (args == 'undefined') {
 	    document.getElementById('traits_selection_form').submit(); 
 	    document.getElementById('traits_selection_form').reset(); 
 	} else {  
