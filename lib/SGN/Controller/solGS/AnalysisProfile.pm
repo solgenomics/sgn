@@ -180,32 +180,33 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
    
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $status;
-   
-
-    if ($c->stash->{dependency})
-    {
-    	my $dependency = $c->stash->{dependency};
+     
+    my $dependency = $c->stash->{dependency};
+  
+    if ($dependency)
+    { 
     	my $report_file = $c->stash->{report_file};
     	nstore $output_details,  $report_file 
     	    or croak "check_analysis_status: $! serializing output_details to $report_file";	
     }
     else  
-    {
+    { 
 	my $output_details_file = $c->controller('solGS::solGS')->create_tempfile($c, 'analysis_report_args');
 	nstore $output_details, $output_details_file 
 	    or croak "check_analysis_status: $! serializing output_details to $output_details_file";
 	
-	my $cmd = 'mx-run solGS::AnalysisReport --output_details_file ' . $output_details_file;
+      my $cmd = 'mx-run solGS::AnalysisReport --output_details_file ' . $output_details_file;
 
-	my $async =  CXGN::Tools::Run->run_async($cmd,
-			     {
-				 working_dir      => $c->stash->{solgs_tempfiles_dir},
-				 temp_base        => $c->stash->{solgs_tempfiles_dir},
-				 max_cluster_jobs => 1_000_000_000,
-				 out_file         => $out_temp_file,
-				 err_file         => $err_temp_file,
-			     }
-     );
+      my $async =  CXGN::Tools::Run->run_async($cmd,
+					       {
+						   working_dir      => $c->stash->{solgs_tempfiles_dir},
+						   temp_base        => $c->stash->{solgs_tempfiles_dir},
+						   max_cluster_jobs => 1_000_000_000,
+						   out_file         => $out_temp_file,
+						   err_file         => $err_temp_file,
+					       }
+	  );
+
 	# try 
 	# { 
 	#     my $job = CXGN::Tools::Run->run_cluster_perl({           
@@ -335,7 +336,7 @@ sub structure_output_details {
 
     my $analysis_data =  $c->stash->{analysis_profile};
     my $arguments = $analysis_data->{arguments};
- 
+    
     $self->parse_arguments($c);
    
     my @traits_ids;
@@ -348,18 +349,24 @@ sub structure_output_details {
     my $pop_id        = $c->stash->{pop_id}; 
     my $combo_pops_id = $c->stash->{combo_pops_id};
     
-    my $base = $c->req->base;    
-    if ( $base !~ /localhost/)
+    my $referer = $c->req->referer;
+    $referer=~ s/\/$//;
+
+    my $base    = $c->req->base;   
+ 
+    if ($base !~ /localhost/)
     {
-	$base =~ s/:\d+//;    
+	$referer =~ s/$base//;
+	$base =~ s/:\d+//;
+	$referer = $base . $referer;
     } 
-           
+              
     my %output_details = ();
 
     my $solgs_controller = $c->controller('solGS::solGS');
     my $analysis_page = $analysis_data->{analysis_page};
-
-    $analysis_page =~ s/$base/\//;
+  
+    $analysis_page =~ s/$base//;
 
     if ($analysis_page =~ m/(solgs\/analyze\/traits\/|solgs\/trait\/|solgs\/model\/combined\/trials\/)/) 
     {	
@@ -370,10 +377,9 @@ sub structure_output_details {
 	    $solgs_controller->get_trait_details($c, $trait_id);	    
 	    $solgs_controller->gebv_kinship_file($c);
 	 
-	    my$trait_abbr = $c->stash->{trait_abbr};
-	    my $trait_page;
-	    my $referer = $c->req->referer;   
-	    
+	    my $trait_abbr = $c->stash->{trait_abbr};
+	    my $trait_page;     
+
 	    if ( $referer =~ m/solgs\/population\// ) 
 	    {
 		$trait_page = $base . "solgs/trait/$trait_id/population/$pop_id";
@@ -396,7 +402,7 @@ sub structure_output_details {
 		$c->stash->{combo_pops_id} = $combo_pops_id;
 		$solgs_controller->cache_combined_pops_data($c);		
 	    }
-	    
+
 	    $output_details{'trait_id_' . $trait_abbr} = {
 		'trait_id'       => $trait_id, 
 		'trait_name'     => $c->stash->{trait_name}, 
@@ -408,12 +414,10 @@ sub structure_output_details {
 		'data_set_type'  => $c->stash->{data_set_type},
 	    };
 	}
-
     }
     elsif ( $analysis_page =~ m/solgs\/population\// ) 
     {
 	my $population_page = $base . "solgs/population/$pop_id";
-
 	$c->stash->{pop_id} = $pop_id;
 
 	$solgs_controller->phenotype_file($c);	
@@ -431,48 +435,57 @@ sub structure_output_details {
     }
     elsif ( $analysis_page =~ m/solgs\/model\/\d+\/prediction\// ) 
     {
-	my $trait_id = $c->stash->{trait_id};
-	$solgs_controller->get_trait_details($c, $trait_id);
-	my $trait_abbr = $c->stash->{trait_abbr};
-
-	my $training_pop_id   = $c->stash->{training_pop_id};
-	my $prediction_pop_id = $c->stash->{prediction_pop_id};
-
-	my $training_pop_page   = $base . "solgs/population/$pop_id";
-	my $model_page          = $base . "solgs/trait/$trait_id/population/$pop_id";
-	my $prediction_pop_page = $base . "solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id";
-
-	my $training_pop_name;
-
-	if ($c->stash->{data_set_type} =~ /combined populations/)
+	my @traits_with_valid_models = @{$c->controller('solGS::solGS')->traits_with_valid_models($c)};
+	
+	foreach my $trait_abbr (@traits_with_valid_models)
 	{
-	    $training_pop_name = 'Training population ' . $training_pop_id;
-	}
-	else
-	{	    
-	    $solgs_controller->get_project_details($c, $training_pop_id);
-	    $training_pop_name = $c->stash->{project_name};
-	}
-	
-	$solgs_controller->get_project_details($c, $prediction_pop_id);
-	my $prediction_pop_name = $c->stash->{project_name};
-	
-	my $identifier = $training_pop_id . '_' . $prediction_pop_id;
-	$solgs_controller->prediction_pop_gebvs_file($c, $identifier, $trait_id);
-	my $gebv_file = $c->stash->{prediction_pop_gebvs_file};
-	
-	$output_details{'trait_id_' . $trait_id} = {
+	    $c->stash->{trait_abbr} = $trait_abbr;
+	    $c->controller('solGS::solGS')->get_trait_details_of_trait_abbr($c);   	
+	    my $trait_id = $c->stash->{trait_id};
+	    $solgs_controller->get_trait_details($c, $trait_id);
+	    my $trait_abbr = $c->stash->{trait_abbr};
+	    my $trait_name = $c->stash->{trait_name};
+	    
+	    my $training_pop_id   = $c->stash->{training_pop_id};
+	    my $prediction_pop_id = $c->stash->{prediction_pop_id};
+
+	    my $training_pop_page   = $base . "solgs/population/$pop_id";
+	    my $model_page          = $base . "solgs/trait/$trait_id/population/$pop_id";
+	    my $prediction_pop_page = $base . "solgs/selection/$prediction_pop_id/model/$training_pop_id/trait/$trait_id";
+
+	    my $training_pop_name;
+	    my $data_set_type = $c->stash->{data_set_type};
+	    
+	    if ($data_set_type =~ /combined populations/)
+	    {
+		$training_pop_name = 'Training population ' . $training_pop_id;
+	    }
+	    else
+	    {	    
+		$solgs_controller->get_project_details($c, $training_pop_id);
+		$training_pop_name = $c->stash->{project_name};
+	    }
+	    
+	    $solgs_controller->get_project_details($c, $prediction_pop_id);
+	    my $prediction_pop_name = $c->stash->{project_name};
+	    
+	    my $identifier = $training_pop_id . '_' . $prediction_pop_id;
+	    $solgs_controller->prediction_pop_gebvs_file($c, $identifier, $trait_id);
+	    my $gebv_file = $c->stash->{prediction_pop_gebvs_file};
+	    
+	    $output_details{'trait_id_' . $trait_id} = {
 		'training_pop_page'   => $training_pop_page,
 		'training_pop_id'     => $training_pop_id,
 		'training_pop_name'   => $training_pop_name,
 		'prediction_pop_name' => $prediction_pop_name,
 		'prediction_pop_page' => $prediction_pop_page,
-		'trait_name'          => $c->stash->{trait_name},
+		'trait_name'          => $trait_name,
 		'trait_id'            => $trait_id,
 		'model_page'          => $model_page,	
-		'gebv_file'           => $c->stash->{prediction_pop_gebvs_file},
-		'data_set_type'       => $c->stash->{data_set_type},
-	};		
+		'gebv_file'           => $gebv_file,
+		'data_set_type'       => $data_set_type,
+	    };
+	}		
     }
     elsif ($analysis_page =~ m/solgs\/populations\/combined\//) 
     {
@@ -514,19 +527,21 @@ sub structure_output_details {
 	$output_details{no_match}           = $match_status;
 	$output_details{combined_pops_page} = $combined_pops_page;
     }
-
+  
     $self->analysis_log_file($c);
     my $log_file = $c->stash->{analysis_log_file};
-
+   
     $output_details{analysis_profile}  = $analysis_data;
     $output_details{r_job_tempdir}     = $c->stash->{r_job_tempdir};
     $output_details{contact_page}      = $base . 'contact/form';
     $output_details{data_set_type}     = $c->stash->{data_set_type};
     $output_details{analysis_log_file} = $log_file;
     $output_details{async_pid}         = $c->stash->{async_pid};
-    $output_details{host}              = $base;
+    $output_details{host}              = qq | $base |;
+    $output_details{referer}           = qq | $referer |;
+ 
     $c->stash->{bg_job_output_details} = \%output_details;
-   
+
 }
 
 
@@ -537,11 +552,9 @@ sub run_analysis {
 
     my $analysis_profile = $c->stash->{analysis_profile};
     my $analysis_page    = $analysis_profile->{analysis_page};
-    my $base             =   $c->req->base;
-    $analysis_page       =~ s/$base/\//; 
+    my $base             = $c->req->base;
+    $analysis_page       =~ s/$base//; 
     my $referer          = $c->req->referer; 
-
-    
      
     my @selected_traits = @{$c->stash->{selected_traits}} if $c->stash->{selected_traits};
  
@@ -601,21 +614,22 @@ sub run_analysis {
     }
     elsif ($analysis_page =~ /solgs\/model\/\d+\/prediction\//)
     {
-	if ($c->stash->{data_set_type} =~ /single population/)
-	{
+#	if ($c->stash->{data_set_type} =~ /single population/)
+#	{
 	    if ($referer =~ /solgs\/trait\//)
 	    {
-		$c->controller('solGS::solGS')->predict_selection_pop_single_pop_model($c);
+		$c->controller('solGS::solGS')->predict_selection_pop_single_trait($c);
 	    }
 	    elsif ($referer =~ /solgs\/traits\/all\/population\//) 
 	    {
 		$c->controller('solGS::solGS')->predict_selection_pop_multi_traits($c);
 	    }
-	}
-	elsif ($c->stash->{data_set_type} =~ /combined populations/) 
-	{
-	    $c->controller('solGS::solGS')->predict_selection_pop_combined_pops_model($c);
-	}	
+#	}
+	# elsif ($c->stash->{data_set_type} =~ /combined populations/) 
+	# {
+	#     $c->controller('solGS::solGS')->predict_selection_pop_combined_pops_model($c);
+	# }
+	
     }
     else 
     {
