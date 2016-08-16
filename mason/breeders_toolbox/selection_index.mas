@@ -17,12 +17,16 @@ $trial_name => undef
         </div>
       <div class="form-group">
         <label>Trait</label>
-        <select class="form-control" id="trait_list"></select>
+        <select multiple class="form-control" id="trait_list"></select>
       </div>
       <div class="form-group">
         <label>Relative Weight (1-100)</label>
         <select class="form-control" id="weight_list"></select>
       </div>
+      <div class="form-group">
+        <label><input type="checkbox" id="allow_missing" value="">Include accessions with phenotypes missing for one or more trait</label>
+      </div>
+
       <button type="button" class="btn btn-default" id="submit_trait">Submit</button>
     </form>
     <button class="btn btn-default" id="add_trait">Add another trait to Ranking</button>
@@ -36,7 +40,7 @@ $trial_name => undef
     </div>
     <div class="panel-body" id="table_panel" style="overflow:hidden">
       <ul class="nav nav-tabs"><li class="active"><a data-toggle="tab" href="#summary">Selection Index</a></li><li><a data-toggle="tab" href="#raw">Ranking</a></li></ul><div class="tab-content">
-      <div id="selection_index" class="tab-pane fade in active"><div class="table-responsive" style="margin-top: 10px;"><table id="selection_table" class="table table-hover table-striped table-bordered" width="100%"><caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Table description: <i>Selection index for trial.</i></center></caption></table></div></div>
+      <div id="selection_index" class="tab-pane fade in active"></div>
       <div id="ranking" class="tab-pane fade"><div class="table-responsive" style="margin-top: 10px;"><table id="ranking_table" class="table table-hover table-striped table-bordered" width="100%"><thead><tr>
     </div>
 </div>

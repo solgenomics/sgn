@@ -3,10 +3,8 @@ jQuery(document).ready(function() {
     jQuery('#select_trial_for_selection_index').change( // update wizard panels and categories when data selections change
     	function() {
 
-      var trial_name = jQuery("option:selected", this).text();
-      this.options[this.selectedIndex].innerHTML
+      jQuery('#selection_index').html("");
 	    var data = [ [ jQuery(this).val() ] ];
-      //console.log("data="+data);
       var categories = [ 'trials', 'traits' ];
 
       jQuery.ajax({   // get traits phenotyped in trial
@@ -20,13 +18,10 @@ jQuery(document).ready(function() {
     		enable_ui();
                 },
     	    success: function(response) {
-            //console.log("traits="+JSON.stringify(response.list));
             var list = response.list || [];
             data_html = format_options_list(list);
             jQuery('#trait_list').html(data_html);
             add_weights("#weight_list");
-            //jQuery('#trait_list2').html(data_html);
-            //jQuery('#trait_list3').html(data_html);
           },
     error: function(response) { alert("An error occurred while transforming the list "+list_id); }
     });
@@ -44,8 +39,17 @@ jQuery(document).ready(function() {
       enable_ui();
               },
         success: function(response) {
-          var accessions_list = response.list || [];
-          build_table(accessions_list);
+          var accessions = response.list || [];
+          var links = [];
+          for (i = 0; i < accessions.length; i++) {
+            links.push(['<a href="/stock/'+accessions[i][0]+'/view">'+accessions[i][1]+'</a>', '']);
+          }
+          var column_names = [
+            { title: "Accession" },
+            { title: "Trait" }
+          ];
+          var trial_name = jQuery('#select_trial_for_selection_index option:selected').text();
+          build_table(links, column_names, trial_name);
         },
   error: function(response) { alert("An error occurred while transforming the list "+list_id); }
   });
@@ -54,23 +58,33 @@ jQuery(document).ready(function() {
     });
 
       jQuery('#submit_trait').click( function() {
+        jQuery('#selection_index').html("");
         var trial_id = jQuery("#select_trial_for_selection_index option:selected").val();
-        var trait_id = jQuery("#trait_list").val();
+
+        var selected_traits = jQuery('#trait_list option:selected');
+        var trait_ids = [];
+        var column_names = [];
+        column_names.push( { title: "Accession" } );
+        jQuery(selected_traits).each(function(index, selected_traits){
+            trait_ids.push(jQuery(this).val());
+            var trait_name = jQuery(this).text();
+            var parts = trait_name.split("|");
+            column_names.push( { title: parts[0] } );
+        });
+        var allow_missing = jQuery("#allow_missing").is(':checked');
 
         jQuery.ajax({   // get traits phenotyped in trial
         url: '/ajax/breeder/search/avg_phenotypes',
         method: 'POST',
-      	data: {'trial_id': trial_id, 'trait_id': trait_id },
+      	data: {'trial_id': trial_id, 'trait_ids': trait_ids, 'allow_missing': allow_missing },
       	    success: function(response) {
-              //console.log("traits="+JSON.stringify(response.list));
               var values = response.values || [];
-              console.log("Success! Values ="+JSON.stringify(values));
-              build_table(values);
+              var trial_name = jQuery('#select_trial_for_selection_index option:selected').text();
+              build_table(values, column_names, trial_name);
             },
       error: function(response) { alert("An error occurred while retrieving average phenotypes"); }
       });
-
-    });
+  });
 });
 
 
@@ -88,27 +102,18 @@ function range(start, count) {
   });
 }
 
-function build_table(data, trial_name) {
-  var columns = [];
-  for (i = 0; i < data.length; i++) {
-      columns[i] = [];
-      columns[i][0] = '<a href="/stock/'+data[i][0]+'/view">'+data[i][1]+'</a>';
-      columns[i][1] = data[i][2] || [];
-  }
-  console.log("columns="+columns);
+function build_table(data, column_names, trial_name) {
 
-  //summary_table.destroy();
-  jQuery('#selection_table').empty();
+  var table_html = '<div class="table-responsive" style="margin-top: 10px;"><table id="selection_table" class="table table-hover table-striped table-bordered" width="100%"><caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Table description: <i>Selection index for trial '+trial_name+'.</i></center></caption></table></div>'
+  jQuery('#selection_index').html(table_html);
+
   var summary_table = jQuery('#selection_table').DataTable( {
     dom: 'Bfrtip',
     buttons: ['copy', 'excel', 'csv', 'print' ],
-    data: columns,
+    data: data,
     destroy: true,
     paging: true,
     lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-    columns: [
-      { title: "Accession" },
-      { title: "Trait 1" }
-    ]
+    columns: column_names
   });
 }
