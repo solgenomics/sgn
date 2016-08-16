@@ -7,11 +7,10 @@ use SGN::Test::Fixture;
 my $t = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
-$t->while_logged_in_as("curator", sub { 
-
+    $t->login_as("curator");
     #Upload New Trial
     $t->get_ok('/breeders/trials');
-    my $refresh_tree = $t->find_element_ok("refresh_jstree_html", "id", "refresh tree")->click();
+    my $refresh_tree = $t->find_element_ok("refresh_jstree_html_trialtree_button", "id", "refresh tree")->click();
     sleep(3);
     $t->find_element_ok("upload_trial_link", "id", "click on upload_trial_link ")->click();
     sleep(2);
@@ -40,7 +39,7 @@ $t->while_logged_in_as("curator", sub {
     $t->find_element_ok("close_trial_upload_dialog", "id", "close trial upload dialog")->click();
     sleep(1);
 
-    my $refresh_tree = $t->find_element_ok("refresh_jstree_html", "id", "refresh tree")->click();
+    my $refresh_tree = $t->find_element_ok("refresh_jstree_html_trialtree_button", "id", "refresh tree")->click();
     sleep(3);
     my $open_tree = $t->find_element_ok("jstree-icon", "class", "open up tree")->click();
     sleep(2);
@@ -71,7 +70,7 @@ $t->while_logged_in_as("curator", sub {
     
     sleep(3);
     $t->find_element_ok("//div[contains(., 'T100')]", "xpath", "verify trial name")->get_text();
-    $t->find_element_ok("//div[contains(., 'test (test)')]", "xpath", "verify breeding program")->get_text();
+    $t->find_element_ok("//div[contains(., 'test')]", "xpath", "verify breeding program")->get_text();
     $t->find_element_ok("//div[contains(., 'test_location')]", "xpath", "verify trial location")->get_text();
     $t->find_element_ok("//div[contains(., '2016')]", "xpath", "verify trial year")->get_text();
     $t->find_element_ok("//div[contains(., '[Type not set]')]", "xpath", "verify trial type")->get_text();
@@ -122,7 +121,7 @@ $t->while_logged_in_as("curator", sub {
     $t->find_element_ok("//div[contains(., 'T100_plot_08')]", "xpath", "verify plots")->get_text();
 
 
-    $t->find_element_ok("//div[contains(., 'test (test)')]", "xpath", "verify breeding program")->get_text();
+    $t->find_element_ok("//div[contains(., 'test')]", "xpath", "verify breeding program")->get_text();
 
     $t->find_element_ok("//div[contains(., 'T100')]", "xpath", "verify trial name")->get_text();
 
@@ -136,10 +135,5 @@ $t->while_logged_in_as("curator", sub {
 
 
 
-
-    }
-
-
-);
 
 done_testing();

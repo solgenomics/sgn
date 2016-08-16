@@ -9,6 +9,7 @@ use File::Basename qw | basename dirname|;
 use Digest::MD5;
 use CXGN::List::Validate;
 use Data::Dumper;
+use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use Spreadsheet::WriteExcel;
 use CXGN::Trait;

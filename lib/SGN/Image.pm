@@ -567,6 +567,10 @@ sub get_associated_objects {
     foreach my $o ($self->get_organisms ) {
         push @associations, ["organism", $o->organism_id, $o->species];
     }
+
+    foreach my $cvterm ( $self->get_cvterms ) {
+	push @associations, ["cvterm" , $cvterm->cvterm_id, $cvterm->name];
+    }
     return @associations;
 }
 
@@ -716,6 +720,9 @@ sub get_associated_object_links {
         if ($assoc->[0] eq "organism" ) {
             $s .= qq { <a href="/organism/$assoc->[1]/view/">Organism name:$assoc->[2]</a> };
         }
+	if ($assoc->[0] eq "cvterm" ) {
+	    $s .= qq { <a href="/cvterm/$assoc->[1]/view/">Cvterm: $assoc->[2]</a> };
+	}
     }
     return $s;
 }
@@ -736,7 +743,7 @@ sub associate_cvterm {
     my $self = shift;
     my $cvterm_id = shift;
     my $sp_person_id= $self->get_sp_person_id();
-    my $query = "INSERT INTO metadata.md_cvterm_organism
+    my $query = "INSERT INTO metadata.md_image_cvterm
                    (image_id,
                    sp_person_id,
                    cvterm_id)
@@ -767,7 +774,7 @@ sub get_cvterms {
     my $schema = $self->config->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
     my $query = "SELECT cvterm_id FROM metadata.md_image_cvterm WHERE md_image_cvterm.obsolete != 't' and md_image_cvterm.image_id=?";
     my $sth = $self->get_dbh()->prepare($query);
-    $sth->execute( $self->get_cvterm_id() );
+    $sth->execute( $self->get_image_id() );
     my @cvterms = ();
     while (my ($cvterm_id) = $sth->fetchrow_array ) {
         push @cvterms, $schema->resultset("Cv::Cvterm")->find(
