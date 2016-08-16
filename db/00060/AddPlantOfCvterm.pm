@@ -3,22 +3,23 @@
 
 =head1 NAME
 
- AddMdImageCvtermTable.pm
+ AddPlantOfCvterm.pm
 
 =head1 SYNOPSIS
 
-mx-run ThisPackageName [options] -H hostname -D dbname -u username [-F]
+mx-run AddPlantOfCvterm [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
+This patch adds the cvterm plant_of into the stock_relationship cv. plant_of is similar to plot_of, and is used to describe plant entities which are plants of accessions.
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
- Naama Menda<nm249@cornell.edu>
+ Nicolas Morales <nm529@cornell.edu>
 
 =head1 COPYRIGHT & LICENSE
 
@@ -30,18 +31,20 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddMdImageCvtermTable;
+package AddPlantOfCvterm;
 
 use Moose;
+use Bio::Chado::Schema;
+use Try::Tiny;
 extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-Adds a linking table between the metadata.md_image and cvterm table
+This patch will find_or_create a cvterm name of vector, which is a new stock type
 
 has '+prereq' => (
     default => sub {
-        [ ],
+        ['AddVectorStockType'],
     },
   );
 
@@ -54,28 +57,29 @@ sub patch {
 
     print STDOUT "\nExecuting the SQL commands.\n";
 
-    $self->dbh->do(<<EOSQL);
---do your SQL here
---
+    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
-CREATE TABLE metadata.md_image_cvterm (
-    md_image_cvterm_id serial primary key,
-    image_id bigint REFERENCES metadata.md_image(image_id) NOT NULL,
-    cvterm_id bigint REFERENCES cvterm(cvterm_id) NOT NULL,
-    sp_person_id bigint REFERENCES sgn_people.sp_person(sp_person_id),
-    obsolete boolean DEFAULT false
-);
+    my $coderef = sub {
 
+        my $cvterm = $schema->resultset("Cv::Cvterm")->create_with({
+            name => 'plant_of',
+            cv   => 'stock_relationship',
+        });
 
-    GRANT select,insert ON metadata.md_image_cvterm TO web_usr;
-    GRANT USAGE ON metadata.md_image_cvterm_md_image_cvterm_id_seq to web_usr;
+    };
+
+    try {
+        $schema->txn_do($coderef);
     
-EOSQL
+    } catch {
+        die "Load failed! " . $_ .  "\n" ;
+    };
 
-print "You're done!\n";
+    print "You're done!\n";
 }
 
 
 ####
 1; #
 ####
+ 

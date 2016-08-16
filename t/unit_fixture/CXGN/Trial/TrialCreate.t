@@ -111,7 +111,7 @@ ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
 
 						    }), "create trial layout object");
 
-ok(my $accession_names = $trial_layout->get_accession_names(), "retrieve accession names");
+ok(my $accession_names = $trial_layout->get_accession_names(), "retrieve accession names1");
 
 my %stocks = map { $_ => 1 } @stock_names;
 
@@ -163,7 +163,7 @@ ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
 
 						    }), "create trial layout object");
 
-ok(my $accession_names = $trial_layout->get_accession_names(), "retrieve accession names");
+ok(my $accession_names = $trial_layout->get_accession_names(), "retrieve accession names2");
 
 my %stocks = map { $_ => 1 } @stock_names;
 
@@ -215,7 +215,7 @@ ok(my $genotyping_trial_layout = CXGN::Trial::TrialLayout->new({
     trial_id => $genotyping_trial_id,
 
 						    }), "create trial layout object for genotyping trial");
-ok(my $genotyping_accession_names = $genotyping_trial_layout->get_accession_names(), "retrieve accession names");
+ok(my $genotyping_accession_names = $genotyping_trial_layout->get_accession_names(), "retrieve accession names3");
 my %genotyping_stocks = map { $_ => 1 } @genotyping_stock_names;
 foreach my $acc (@$genotyping_accession_names) { 
     ok(exists($genotyping_stocks{$acc->{accession_name}}), "check existence of accession names $acc->{accession_name}");

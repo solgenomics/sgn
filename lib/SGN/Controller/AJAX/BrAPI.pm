@@ -438,14 +438,27 @@ sub germplasm_list_POST {
     	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
     	while (my $stock = $rs_slice->next()) {
     	    push @data, { 
-                germplasmDbId=>$stock->get_column('stock_id'), 
-                defaultDisplayName=>$stock->get_column('name'), 
-                germplasmName=>$stock->get_column('uniquename'), 
-                accessionNumber=>'', 
-                germplasmPUI=>$stock->get_column('uniquename'), 
-                pedigree=>germplasm_pedigree_string($self->bcs_schema(), $stock->get_column('stock_id')), 
-                seedSource=>'', 
+                germplasmDbId=>$stock->get_column('stock_id'),
+                defaultDisplayName=>$stock->get_column('name'),
+                germplasmName=>$stock->get_column('uniquename'),
+                accessionNumber=>$accession_number,
+                germplasmPUI=>$stock->get_column('uniquename'),
+                pedigree=>germplasm_pedigree_string($self->bcs_schema(), $stock->get_column('stock_id')),
+                germplasmSeedSource=>'',
                 synonyms=>germplasm_synonyms($self->bcs_schema(), $stock->get_column('stock_id'), $synonym_id),
+                commonCropName=>'',
+                instituteCode=>'',
+                instituteName=>'',
+                biologicalStatusOfAccessionCode=>'',
+                countryOfOriginCode=>'',
+                typeOfGermplasmStorageCode=>'',
+                genus=>'',
+                species=>'',
+                speciesAuthority=>'',
+                subtaxa=>'',
+                subtaxaAuthority=>'',
+                donors=>'',
+                acquisitionDate=>'',
             };
         }
     }

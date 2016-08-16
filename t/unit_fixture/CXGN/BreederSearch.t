@@ -12,19 +12,27 @@ my $f = SGN::Test::Fixture->new();
 
 my $bs = CXGN::BreederSearch->new( { dbh=> $f->dbh() });
 
+my $refresh = 'SELECT refresh_materialized_views()';
+my $h = $f->dbh->prepare($refresh);
+$h->execute();
+
 my $criteria_list = [
                'years'
              ];
 my $dataref = {};
 my $queryref = {};
 
-my $results = $bs->metadata_query($criteria_list, $dataref, $queryref);
+my $results = $bs->metadata_query($f, $criteria_list, $dataref, $queryref);
 #print STDERR Dumper $results;
 is_deeply($results, {
                'results' => [
                               [
                                 '2014',
                                 '2014'
+                              ],
+                              [
+                                '2015',
+                                '2015'
                               ],
                               [
                                 '2016',
@@ -48,7 +56,7 @@ $queryref = {
                             }
              };
 
-$results = $bs->metadata_query($criteria_list, $dataref, $queryref);
+$results = $bs->metadata_query($f, $criteria_list, $dataref, $queryref);
 is_deeply($results, {
                'results' => [
                               [
@@ -75,7 +83,7 @@ $queryref = {
                            'years' => 0
                          }
              };
-$results = $bs ->metadata_query($criteria_list, $dataref, $queryref);
+$results = $bs ->metadata_query($f, $criteria_list, $dataref, $queryref);
 is_deeply($results, {
                'results' => [
                               [
@@ -113,7 +121,7 @@ $queryref = {
                                          'years' => 0
                                        }
              };
-$results = $bs ->metadata_query($criteria_list, $dataref, $queryref);
+$results = $bs ->metadata_query($f, $criteria_list, $dataref, $queryref);
 is_deeply($results, {
                'results' => [
                               [
@@ -140,7 +148,7 @@ $queryref = {
                            'breeding_programs' => 0
                          }
              };
-$results = $bs ->metadata_query($criteria_list, $dataref, $queryref);
+$results = $bs ->metadata_query($f, $criteria_list, $dataref, $queryref);
 is_deeply($results, {
                'results' => [
                               [
@@ -175,7 +183,7 @@ $queryref = {
                           'accessions' => 1
                         }
              };
-$results = $bs ->metadata_query($criteria_list, $dataref, $queryref);
+$results = $bs ->metadata_query($f, $criteria_list, $dataref, $queryref);
 is_deeply($results, {
                'error' => '0 matches. No results to display'
              }, "wizard 0 results error query");

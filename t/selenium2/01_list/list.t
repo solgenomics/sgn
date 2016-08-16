@@ -28,8 +28,12 @@ print "Adding new list...\n";
 
 $d->find_element_ok("add_list_input", "id", "find add list input");
 
+sleep(1);
+
 my $add_list_input = $d->find_element_ok("add_list_input", "id", "find add list input test");
-   
+
+sleep(1);
+
 $add_list_input->send_keys("new_test_list");
 
 $d->find_element_ok("add_list_button", "id", "find add list button test")->click();
