@@ -1522,19 +1522,40 @@ sub download_validation :Path('/solgs/download/validation/pop') Args(3) {
 }
 
 
+sub predict_selection_pop_single_trait {
+    my ($self, $c) = @_;
+    
+    if ($c->stash->{data_set_type} =~ /single population/)
+    {
+	$self->predict_selection_pop_single_pop_model($c)
+    }
+    else
+    {    
+	$self->predict_selection_pop_combined_pops_model($c);
+    }
+
+
+}
+
+
 sub predict_selection_pop_multi_traits {
     my ($self, $c) = @_;
     
-    my $data_set_type   = $c->stash->{data_set_type};
-    my $training_pop_id = $c->stash->{training_pop_id};
+    my $data_set_type    = $c->stash->{data_set_type};
+    my $training_pop_id  = $c->stash->{training_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
     
-    $c->analyzed_traits($c);
-    my $traits_with_valid_models = $c->stash->{traits_with_valid_models};
+    $c->stash->{pop_id} = $training_pop_id;    
+    $self->traits_with_valid_models($c);
+    my @traits_with_valid_models = @{$c->stash->{traits_with_valid_models}};
 
+    foreach my $trait_abbr (@traits_with_valid_models) 
+    {
+	$c->stash->{trait_abbr} = $trait_abbr;
+	$self->get_trait_details_of_trait_abbr($c);
+	$self->predict_selection_pop_single_trait($c);
+    }
     
-    
-    
-
 }
 
 
@@ -2761,7 +2782,7 @@ sub get_trait_details_of_trait_abbr {
 	    if ($r->[0] eq $trait_abbr) 
 	    {
 		my $trait_name =  $r->[1];
-		$trait_name    =~ s/\s+//g;                                
+		$trait_name    =~ s/^\s+|\s+$//g;                                
 		
 		$trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
 		$self->get_trait_details($c, $trait_id);
@@ -3078,8 +3099,8 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
 sub traits_with_valid_models {
     my ($self, $c) = @_;
    
-    my $pop_id = $c->stash->{pop_id};
-    
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
+ 
     $self->analyzed_traits($c);
     
     my @analyzed_traits = @{$c->stash->{analyzed_traits}};  
