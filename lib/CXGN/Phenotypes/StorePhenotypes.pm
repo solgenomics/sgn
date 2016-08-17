@@ -225,8 +225,14 @@ sub store {
             foreach my $trait_name (@trait_list) {
 
                 #print STDERR "trait: $trait_name\n";
-
-                my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
+                my $trait_cvterm;
+                #For multiterm traits of the form trait1|CO:0000001||trait2|CO:00000002
+                if ($trait_name =~ /\|\|/ ) {
+                    print STDERR $trait_name."\n";
+                    $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name, 'cassava_trait');
+                } else {
+                    $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
+                }
                 my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
                 #print STDERR Dumper $value_array;
                 my $trait_value = $value_array->[0];
