@@ -60,11 +60,11 @@ jQuery(document).ready(function() {
       function() {
         var trait_id = jQuery('option:selected', this).val();
         var trait_name = jQuery('option:selected', this).text();
-        var trait_html = "<tr><td><a href='/cvterm/"+trait_id+"/view'>"+trait_name+"</a></td><td><select class='form-control' id='"+trait_id+"_weight'></select></td></tr>";
+        var trait_html = "<tr><td><a href='/cvterm/"+trait_id+"/view' data-value='"+trait_id+"'>"+trait_name+"</a></td><td><select class='form-control' id='"+trait_id+"_weight'></select></td></tr>";
         jQuery('#trait_table').append(trait_html);
         add_weights("#"+trait_id+"_weight");
-        jQuery(this).val('');
-        jQuery(this).text('Select another trait');
+        jQuery('option:selected', this).val('');
+        jQuery('option:selected', this).text('Select another trait');
       });
 
 
@@ -72,13 +72,16 @@ jQuery(document).ready(function() {
         jQuery('#selection_index').html("");
         var trial_id = jQuery("#select_trial_for_selection_index option:selected").val();
 
-        var selected_traits = jQuery('#trait_list option:selected');
+        var selected_trait_rows = jQuery('#trait_table').children();
+        console.log("selected_trait_rows="+JSON.stringify(selected_trait_rows));
         var trait_ids = [];
         var column_names = [];
         column_names.push( { title: "Accession" } );
-        jQuery(selected_traits).each(function(index, selected_traits){
-            trait_ids.push(jQuery(this).val());
-            var trait_name = jQuery(this).text();
+        jQuery(selected_trait_rows).each(function(index, selected_trait_rows){
+            console.log("onetrait_id="+JSON.stringify(jQuery('a', this).data("value")));
+            trait_ids.push(jQuery('a', this).data("value"));
+            console.log("onetrait_name="+JSON.stringify(jQuery('a', this).text()));
+            var trait_name = jQuery('a', this).text();
             var parts = trait_name.split("|");
             column_names.push( { title: parts[0] } );
         });
