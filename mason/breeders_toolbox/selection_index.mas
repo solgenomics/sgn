@@ -21,7 +21,8 @@ $trial_name => undef
         <table class="table table-bordered table-striped table-highlight">
             <thead>
                 <th>Trait</th>
-                <th>Relative Weight (out of 100)</th>
+                <th>Weight</th>
+                <th>Add/Subtract</th>
             </thead>
             <tbody id ="trait_table">
             </tbody>

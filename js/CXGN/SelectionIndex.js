@@ -60,8 +60,9 @@ jQuery(document).ready(function() {
       function() {
         var trait_id = jQuery('option:selected', this).val();
         var trait_name = jQuery('option:selected', this).text();
-        var trait_html = "<tr><td><a href='/cvterm/"+trait_id+"/view' data-value='"+trait_id+"'>"+trait_name+"</a></td><td><select class='form-control' id='"+trait_id+"_weight'></select></td></tr>";
+        var trait_html = "<tr><td><a href='/cvterm/"+trait_id+"/view' data-value='"+trait_id+"'>"+trait_name+"</a></td><td><input type='text' id='"+trait_id+"_weight' class='form-control' placeholder='Enter weight' onkeypress='return event.charCode >= 48 && event.charCode <= 57'></input></td><td><div><input type='checkbox' id='"+trait_id+"_sign' data-size='small' data-toggle='toggle' data-off='Add' data-on='Subtract'></div></td></tr>";
         jQuery('#trait_table').append(trait_html);
+        jQuery('#'+trait_id+'_sign').bootstrapToggle();
         add_weights("#"+trait_id+"_weight");
         jQuery('option:selected', this).val('');
         jQuery('option:selected', this).text('Select another trait');
