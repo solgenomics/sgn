@@ -21,16 +21,9 @@ solGS.waitPage = function (page, args) {
 	+ '|solgs/search/trials/trait/'
 	+ '|solgs/model/\\d+/prediction/'
      	+ '|solgs/analyze/traits/';
-   		    
-    if (page.match(matchItems)) {
-
-	if (window.location.href.match(/solgs\/traits\/all\/population\//) 
-	   && page.match(/solgs\/model\/\d+\/prediction\//)) {
-
-	    blockPage(page);
-	} else {
-    	    askUser(page, args);
-	}
+  		    
+    if (page.match(matchItems)) {	    	
+    	askUser(page, args);
     }
     else {
     	blockPage(page);
@@ -381,11 +374,12 @@ solGS.waitPage = function (page, args) {
 	    var urlStr = url.split(/\/+/);
 
 	    if (args === undefined) {
-		args = { 'population_id' : [ urlStr[4] ], 
-			 'analysis_type' : 'population download',
-			 'data_set_type' : 'single population'};
-	    } else {
-		
+		args = { 
+		    'population_id' : [ urlStr[4] ], 
+		    'analysis_type' : 'population download',
+		    'data_set_type' : 'single population'
+		};
+	    } else {		
 		args['population_id'] = [ urlStr[4] ];
 		args['analysis_type'] = 'population download';
 		args['data_set_type'] = 'single population';	
