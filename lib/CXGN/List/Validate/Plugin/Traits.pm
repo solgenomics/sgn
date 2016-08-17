@@ -18,7 +18,7 @@ sub validate {
     my @missing = ();
     my $rs;
     foreach my $term (@$list) {
-        my @components = split /||/, $term;
+        my @components = split /\|\|/, $term;
         foreach (@components) {
 
             my ($trait_name, $full_accession) = split (/\|/, $_);
