@@ -60,10 +60,8 @@ jQuery(document).ready(function() {
       function() {
         var trait_id = jQuery('option:selected', this).val();
         var trait_name = jQuery('option:selected', this).text();
-        var trait_html = "<tr><td><a href='/cvterm/"+trait_id+"/view' data-value='"+trait_id+"'>"+trait_name+"</a></td><td><input type='text' id='"+trait_id+"_weight' class='form-control' placeholder='Enter weight' onkeypress='return event.charCode >= 48 && event.charCode <= 57'></input></td><td><div><input type='checkbox' id='"+trait_id+"_sign' data-size='small' data-toggle='toggle' data-off='Add' data-on='Subtract'></div></td></tr>";
+        var trait_html = "<tr><td><a href='/cvterm/"+trait_id+"/view' data-value='"+trait_id+"'>"+trait_name+"</a></td><td><input type='text' id='"+trait_id+"_weight' class='form-control' placeholder='1'></input></td></tr>";
         jQuery('#trait_table').append(trait_html);
-        jQuery('#'+trait_id+'_sign').bootstrapToggle();
-        add_weights("#"+trait_id+"_weight");
         jQuery('option:selected', this).val('');
         jQuery('option:selected', this).text('Select another trait');
       });
@@ -77,23 +75,28 @@ jQuery(document).ready(function() {
         console.log("selected_trait_rows="+JSON.stringify(selected_trait_rows));
         var trait_ids = [];
         var column_names = [];
+        var weights = [];
         column_names.push( { title: "Accession" } );
         jQuery(selected_trait_rows).each(function(index, selected_trait_rows){
             console.log("onetrait_id="+JSON.stringify(jQuery('a', this).data("value")));
-            trait_ids.push(jQuery('a', this).data("value"));
+            var trait_id = jQuery('a', this).data("value");
+            trait_ids.push(trait_id);
             console.log("onetrait_name="+JSON.stringify(jQuery('a', this).text()));
             var trait_name = jQuery('a', this).text();
             var parts = trait_name.split("|");
             column_names.push( { title: parts[0] } );
+            var weight = jQuery('#'+trait_id+'_weight').val();
+            weights.push(weight);
         });
         var allow_missing = jQuery("#allow_missing").is(':checked');
+        column_names.push( { title: "Sum of weighted values" } );
 
         jQuery.ajax({   // get traits phenotyped in trial
         url: '/ajax/breeder/search/avg_phenotypes',
         method: 'POST',
-      	data: {'trial_id': trial_id, 'trait_ids': trait_ids, 'allow_missing': allow_missing },
+      	data: {'trial_id': trial_id, 'trait_ids': trait_ids, 'weights': weights, 'allow_missing': allow_missing },
       	    success: function(response) {
-              var values = response.values || [];
+              var values = response.weighted_values || [];
               var trial_name = jQuery('#select_trial_for_selection_index option:selected').text();
               build_table(values, column_names, trial_name);
             },
@@ -101,21 +104,6 @@ jQuery(document).ready(function() {
       });
   });
 });
-
-
-
-
-function add_weights(select_id) {
-  var weight_html = format_options(range(1,100));
-  jQuery(select_id).html(weight_html);
-}
-
-function range(start, count) {
-  return Array.apply(0, Array(count))
-    .map(function (element, index) {
-      return index + start;
-  });
-}
 
 function build_table(data, column_names, trial_name) {
 

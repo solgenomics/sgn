@@ -161,6 +161,7 @@ sub avg_phenotypes_query {
   my $self = shift;
   my $trial_id = shift;
   my $trait_ids = shift;
+  my $weights = shift;
   my $allow_missing = shift;
 
   my $select = "SELECT table0.accession_id, table0.accession_name";
@@ -175,17 +176,28 @@ sub avg_phenotypes_query {
   my $h = $self->dbh->prepare($query);
   $h->execute(@$trait_ids);
 
-  my @values;
+  my @weights = @$weights;
+  my (@raw_avg_values, @weighted_values);
   while (my ($id, $name, @avg_values) = $h->fetchrow_array()) {
     #print STDERR "$id and $name and @avg_values\n";
+    my @values_to_weight = @avg_values;
     unshift @avg_values, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
-    push @values, [@avg_values];
+    push @raw_avg_values, [@avg_values];
+
+    @values_to_weight = map {$values_to_weight[$_] * $weights[$_]} 0..$#values_to_weight;
+    my $sum;
+    map { $sum += $_ } @values_to_weight;
+    unshift @values_to_weight, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
+    push @values_to_weight, $sum;
+    push @weighted_values, [@values_to_weight];
   }
 
-  print STDERR "avg_phenotypes: ".Dumper(@values);
+  print STDERR "avg_phenotypes: ".Dumper(@raw_avg_values);
+  print STDERR "avg_phenotypes: ".Dumper(@weighted_values);
 
   return {
-    values => \@values,
+    raw_avg_values => \@raw_avg_values,
+    weighted_values => \@weighted_values
   };
 
 }

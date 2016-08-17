@@ -22,7 +22,6 @@ $trial_name => undef
             <thead>
                 <th>Trait</th>
                 <th>Weight</th>
-                <th>Add/Subtract</th>
             </thead>
             <tbody id ="trait_table">
             </tbody>

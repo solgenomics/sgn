@@ -98,14 +98,18 @@ sub get_avg_phenotypes : Path('/ajax/breeder/search/avg_phenotypes') Args(0) {
 
   my $trial_id = $c->req->param('trial_id');
   my @trait_ids = $c->req->param('trait_ids[]');
+  my @weights = $c->req->param('weights[]');
   my $allow_missing = $c->req->param('allow_missing');
 
   my $dbh = $c->dbc->dbh();
   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
 
-  my $results_ref = $bs->avg_phenotypes_query($trial_id, \@trait_ids, $allow_missing);
+  my $results_ref = $bs->avg_phenotypes_query($trial_id, \@trait_ids, \@weights, $allow_missing);
 
-  $c->stash->{rest} = { values => $results_ref->{'values'} };
+  $c->stash->{rest} = {
+    raw_avg_values => $results_ref->{'raw_avg_values'},
+    weighted_values => $results_ref->{'weighted_values'}
+  };
 
   return;
 
