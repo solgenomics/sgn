@@ -52,6 +52,7 @@ use CXGN::DB::InsertDBH;
 use CXGN::DB::Connection;
 use Data::Dumper;
 use SGN::Model::Cvterm;
+use Try::Tiny;
 
 our ($opt_H, $opt_D, $opt_l, $opt_d, $opt_c);
 getopts('H:D:l:d:c:');
@@ -121,23 +122,35 @@ foreach my $a (@$first_term) {
 print scalar(@{$children_array[0]}) * scalar(@{$children_array[1]}) * scalar(@{$children_array[2]}) * scalar(@{$children_array[3]}) * scalar(@{$children_array[4]})."\n";
 print scalar(@concatenated_terms)."\n";
 
-my $db = $schema->resultset("General::Db")->create({name=>$opt_d});
-my $db_id = $db->db_id();
-my $cv = $schema->resultset("Cv::Cv")->find_or_create({name=>$opt_c});
-my $cv_id = $cv->cv_id();
+my $coderef = sub {
+    my $db = $schema->resultset("General::Db")->create({name=>$opt_d});
+    my $db_id = $db->db_id();
+    my $cv = $schema->resultset("Cv::Cv")->find_or_create({name=>$opt_c});
+    my $cv_id = $cv->cv_id();
 
-my $accession = 0;
-foreach (@concatenated_terms) {
-    my $accession_string = sprintf("%07d",$accession);
-    my $dbxref = $schema->resultset("General::Dbxref")->create({db_id=>$db_id, accession=>$accession_string});
-    my $dbxref_id = $dbxref->dbxref_id();
-    my $cvterm = $schema->resultset("Cv::Cvterm")->create({cv_id=>$cv_id, name=>$_, dbxref_id=>$dbxref_id});
-    $accession++;
-    $count++;
+    my $accession = 0;
+    foreach (@concatenated_terms) {
+        my $accession_string = sprintf("%07d",$accession);
+        my $dbxref = $schema->resultset("General::Dbxref")->create({db_id=>$db_id, accession=>$accession_string});
+        my $dbxref_id = $dbxref->dbxref_id();
+        my $cvterm = $schema->resultset("Cv::Cvterm")->create({cv_id=>$cv_id, name=>$_, dbxref_id=>$dbxref_id});
+        $accession++;
+        $count++;
+    }
 }
 
+my $transaction_error;
+try {
+    $schema->txn_do($coderef);
+} catch {
+    $transaction_error =  $_;
+};
 
-print "Complete!\nAdded $count new terms.\n";
+if ($transaction_error) {
+    print STDERR "Transaction error storing terms: $transaction_error\n";
+} else {
+    print STDERR "Complete!\nAdded $count new terms.\n";
+}
 
 
 
