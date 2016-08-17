@@ -7,8 +7,13 @@ $trial_name => undef
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.SelectionIndex', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 <& /page/page_title.mas, title=>"Selection Index" &>
 
-<div class="container-fluid">
-   <form class="form-horizontal" role="form" method="post" >
+<div class="panel panel-default">
+  <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse1">
+    <div class="panel-title"><a href="#form" class="accordion-toggle">Parameters</a></div>
+  </div>
+  <div id="collapse1" class="panel-collapse collapse">
+    <div class="panel-body" style="overflow:hidden">
+      <form class="form-horizontal" role="form" id="form" method="post" >
         <div class="form-group">
             <label for="select_trial_for_selection_index">Select a Trial: </label>
             <select class="form-control" id="select_trial_for_selection_index"></select>
@@ -35,20 +40,26 @@ $trial_name => undef
       </div>
       <button type="button" class="btn btn-default" id="submit_trait">Submit</button>
     </form>
-    <br/>
-
-    <div class="panel">
-    <div class="panel-heading">
-      <h4 class="panel-title">
-        <a>Selection Index table</a>
-      </h4>
     </div>
-    <div class="panel-body" id="table_panel" style="overflow:hidden">
-      <ul class="nav nav-tabs"><li class="active"><a data-toggle="tab" href="#summary">Selection Index</a></li><li><a data-toggle="tab" href="#raw">Ranking</a></li></ul><div class="tab-content">
-      <div id="selection_index" class="tab-pane fade in active"></div>
-      <div id="ranking" class="tab-pane fade"><div class="table-responsive" style="margin-top: 10px;"><table id="ranking_table" class="table table-hover table-striped table-bordered" width="100%"><thead><tr>
-    </div>
+  </div>
 </div>
+<br/>
+
+<div class="panel panel-default">
+  <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse2">
+    <div class="panel-title"><a href="#table_panel" class="accordion-toggle">Results</a></div>
+  </div>
+  <div id="collapse2" class="panel-collapse collapse">
+    <div class="panel-body" id="table_panel" style="overflow:hidden">
+      <ul class="nav nav-tabs"><li class="active"><a data-toggle="tab" href="#weighted_values_div">Selection Index</a></li><li><a data-toggle="tab" href="#raw_avgs_div">Raw Averages</a></li></ul><div class="tab-content">
+        <div id="weighted_values_div" class="tab-pane fade in active"></div>
+        <div id="raw_avgs_div" class="tab-pane fade"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<br/>
+
 
 <script>
     jQuery(document).ready(function() {

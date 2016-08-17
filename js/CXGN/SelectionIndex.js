@@ -48,7 +48,7 @@ jQuery(document).ready(function() {
             { title: "Trait" }
           ];
           var trial_name = jQuery('#select_trial_for_selection_index option:selected').text();
-          build_table(links, column_names, trial_name);
+          build_table(links, column_names, trial_name, 'weighted_values_div');
         },
   error: function(response) { alert("An error occurred while transforming the list "+list_id); }
   });
@@ -68,7 +68,8 @@ jQuery(document).ready(function() {
 
 
       jQuery('#submit_trait').click( function() {
-        jQuery('#selection_index').html("");
+        jQuery('#raw_avgs_div').html("");
+        jQuery('#weighted_values_div').html("");
         var trial_id = jQuery("#select_trial_for_selection_index option:selected").val();
 
         var selected_trait_rows = jQuery('#trait_table').children();
@@ -89,28 +90,33 @@ jQuery(document).ready(function() {
             weights.push(weight);
         });
         var allow_missing = jQuery("#allow_missing").is(':checked');
-        column_names.push( { title: "Sum of weighted values" } );
-
         jQuery.ajax({   // get traits phenotyped in trial
         url: '/ajax/breeder/search/avg_phenotypes',
         method: 'POST',
       	data: {'trial_id': trial_id, 'trait_ids': trait_ids, 'weights': weights, 'allow_missing': allow_missing },
       	    success: function(response) {
-              var values = response.weighted_values || [];
+              var raw_avgs = response.raw_avg_values || [];
+              var weighted_values = response.weighted_values || [];
               var trial_name = jQuery('#select_trial_for_selection_index option:selected').text();
-              build_table(values, column_names, trial_name);
+
+              build_table(raw_avgs, column_names, trial_name, 'raw_avgs_div');
+              column_names.push( { title: "Sum of weighted values" } );
+              build_table(weighted_values, column_names, trial_name, 'weighted_values_div');
             },
       error: function(response) { alert("An error occurred while retrieving average phenotypes"); }
       });
   });
 });
 
-function build_table(data, column_names, trial_name) {
+function build_table(data, column_names, trial_name, target_div) {
 
-  var table_html = '<div class="table-responsive" style="margin-top: 10px;"><table id="selection_table" class="table table-hover table-striped table-bordered" width="100%"><caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Table description: <i>Selection index for trial '+trial_name+'.</i></center></caption></table></div>'
-  jQuery('#selection_index').html(table_html);
+  var table_id = target_div.replace("div", "table");
+  console.log('table_id='+table_id);
+  var table_type = target_div.replace("_div", "");
+  var table_html = '<div class="table-responsive" style="margin-top: 10px;"><table id="'+table_id+'" class="table table-hover table-striped table-bordered" width="100%"><caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Table description: <i>'+table_type+' for trial '+trial_name+'.</i></center></caption></table></div>'
+  jQuery('#'+target_div).html(table_html);
 
-  var summary_table = jQuery('#selection_table').DataTable( {
+  var new_table = jQuery('#'+table_id).DataTable( {
     dom: 'Bfrtip',
     buttons: ['copy', 'excel', 'csv', 'print' ],
     data: data,
