@@ -16,7 +16,7 @@ concatenate_cvterms_into_multi_term_traits.pl
  -H  host name
  -D  database name
  -l  comma separated list of parent cvterms. all children of the parent term (is_a relationship) will be concatenated together and saved.
- -d  the db name that the new cvterms will be stored under. in this implementation, this should be a new db
+ -d  the db name that the new cvterms will be stored under. Must be a new db name in this implementation.
  -c  the cv name that the new cvterms will be stored under.
 
 =head2 DESCRIPTION
@@ -121,6 +121,20 @@ foreach my $a (@$first_term) {
 print scalar(@{$children_array[0]}) * scalar(@{$children_array[1]}) * scalar(@{$children_array[2]}) * scalar(@{$children_array[3]}) * scalar(@{$children_array[4]})."\n";
 print scalar(@concatenated_terms)."\n";
 
+my $db = $schema->resultset("General::Db")->create({name=>$opt_d});
+my $db_id = $db->db_id();
+my $cv = $schema->resultset("Cv::Cv")->find_or_create({name=>$opt_c});
+my $cv_id = $cv->cv_id();
+
+my $accession = 0;
+foreach (@concatenated_terms) {
+    my $accession_string = sprintf("%07d",$accession);
+    my $dbxref = $schema->resultset("General::Dbxref")->create({db_id=>$db_id, accession=>$accession_string});
+    my $dbxref_id = $dbxref->dbxref_id();
+    my $cvterm = $schema->resultset("Cv::Cvterm")->create({cv_id=>$cv_id, name=>$_, dbxref_id=>$dbxref_id});
+    $accession++;
+    $count++;
+}
 
 
 print "Complete!\nAdded $count new terms.\n";
