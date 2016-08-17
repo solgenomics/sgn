@@ -21,7 +21,6 @@ jQuery(document).ready(function() {
             var list = response.list || [];
             data_html = format_options_list(list);
             jQuery('#trait_list').html(data_html);
-            add_weights("#weight_list");
           },
     error: function(response) { alert("An error occurred while transforming the list "+list_id); }
     });
@@ -56,6 +55,18 @@ jQuery(document).ready(function() {
 
 
     });
+
+    jQuery('#trait_list').change( // add selected trait to trait table
+      function() {
+        var trait_id = jQuery('option:selected', this).val();
+        var trait_name = jQuery('option:selected', this).text();
+        var trait_html = "<tr><td><a href='/cvterm/"+trait_id+"/view'>"+trait_name+"</a></td><td><select class='form-control' id='"+trait_id+"_weight'></select></td></tr>";
+        jQuery('#trait_table').append(trait_html);
+        add_weights("#"+trait_id+"_weight");
+        jQuery(this).val('');
+        jQuery(this).text('Select another trait');
+      });
+
 
       jQuery('#submit_trait').click( function() {
         jQuery('#selection_index').html("");

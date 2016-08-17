@@ -10,26 +10,31 @@ $trial_name => undef
 <div class="container-fluid">
    <form class="form-horizontal" role="form" method="post" >
         <div class="form-group">
-            <label class="col-sm-3 control-label">Pick a Trial: </label>
-            <div class="col-sm-9" >
-              <select class="form-control" id="select_trial_for_selection_index" size="10" style="min-width: 200px;overflow:auto;"></select>
-            </div>
+            <label for="select_trial_for_selection_index">Select a Trial: </label>
+            <select class="form-control" id="select_trial_for_selection_index"></select>
         </div>
       <div class="form-group">
-        <label>Trait</label>
-        <select multiple class="form-control" id="trait_list"></select>
+        <label for="trait_list">Select Traits: </label>
+        <select class="form-control" id="trait_list"></select>
       </div>
-      <div class="form-group">
-        <label>Relative Weight (1-100)</label>
-        <select class="form-control" id="weight_list"></select>
+      <div class="form-group table-responsive">
+        <table class="table table-bordered table-striped table-highlight">
+            <thead>
+                <th>Trait</th>
+                <th>Relative Weight (out of 100)</th>
+            </thead>
+            <tbody id ="trait_table">
+            </tbody>
+        </table>
       </div>
       <div class="form-group">
         <label><input type="checkbox" id="allow_missing" value="">Include accessions with phenotypes missing for one or more trait</label>
       </div>
-
+      <div class="form-group">
+        <label><input type="checkbox" id="scale_to_check" value="">Scale all phenotype values to % of a control accession</label>
+      </div>
       <button type="button" class="btn btn-default" id="submit_trait">Submit</button>
     </form>
-    <button class="btn btn-default" id="add_trait">Add another trait to Ranking</button>
     <br/>
 
     <div class="panel">
