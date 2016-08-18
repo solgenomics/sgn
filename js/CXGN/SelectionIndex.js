@@ -1,5 +1,15 @@
 jQuery(document).ready(function() {
 
+  jQuery(document)
+  .on('show.bs.collapse', '.panel-collapse', function () {
+      var $span = jQuery(this).parents('.panel').find('.panel-heading span.clickable');
+      $span.find('i').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+  })
+  .on('hide.bs.collapse', '.panel-collapse', function () {
+      var $span = jQuery(this).parents('.panel').find('.panel-heading span.clickable');
+      $span.find('i').removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+  })
+
     jQuery('#select_trial_for_selection_index').change( // update wizard panels and categories when data selections change
     	function() {
 
@@ -60,7 +70,7 @@ jQuery(document).ready(function() {
       function() {
         var trait_id = jQuery('option:selected', this).val();
         var trait_name = jQuery('option:selected', this).text();
-        var trait_html = "<tr><td><a href='/cvterm/"+trait_id+"/view' data-value='"+trait_id+"'>"+trait_name+"</a></td><td><input type='text' id='"+trait_id+"_weight' class='form-control' placeholder='1'></input></td></tr>";
+        var trait_html = "<tr><td><a href='/cvterm/"+trait_id+"/view' data-value='"+trait_id+"'>"+trait_name+"</a></td><td><input type='text' id='"+trait_id+"_weight' class='form-control' placeholder='Must be a number (+ or -), default = 1'></input></td></tr>";
         jQuery('#trait_table').append(trait_html);
         jQuery('option:selected', this).val('');
         jQuery('option:selected', this).text('Select another trait');
@@ -73,16 +83,13 @@ jQuery(document).ready(function() {
         var trial_id = jQuery("#select_trial_for_selection_index option:selected").val();
 
         var selected_trait_rows = jQuery('#trait_table').children();
-        console.log("selected_trait_rows="+JSON.stringify(selected_trait_rows));
         var trait_ids = [];
         var column_names = [];
         var weights = [];
         column_names.push( { title: "Accession" } );
         jQuery(selected_trait_rows).each(function(index, selected_trait_rows){
-            console.log("onetrait_id="+JSON.stringify(jQuery('a', this).data("value")));
             var trait_id = jQuery('a', this).data("value");
             trait_ids.push(trait_id);
-            console.log("onetrait_name="+JSON.stringify(jQuery('a', this).text()));
             var trait_name = jQuery('a', this).text();
             var parts = trait_name.split("|");
             column_names.push( { title: parts[0] } );
@@ -111,7 +118,6 @@ jQuery(document).ready(function() {
 function build_table(data, column_names, trial_name, target_div) {
 
   var table_id = target_div.replace("div", "table");
-  console.log('table_id='+table_id);
   var table_type = target_div.replace("_div", "");
   var table_html = '<div class="table-responsive" style="margin-top: 10px;"><table id="'+table_id+'" class="table table-hover table-striped table-bordered" width="100%"><caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Table description: <i>'+table_type+' for trial '+trial_name+'.</i></center></caption></table></div>'
   jQuery('#'+target_div).html(table_html);

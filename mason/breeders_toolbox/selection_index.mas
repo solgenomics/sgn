@@ -9,37 +9,36 @@ $trial_name => undef
 
 <div class="panel panel-default">
   <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse1">
-    <div class="panel-title"><a href="#form" class="accordion-toggle">Parameters</a></div>
+    <div class="panel-title"><a href="#form" class="accordion-toggle">Parameters</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
   </div>
-  <div id="collapse1" class="panel-collapse collapse">
+  <div id="collapse1" class="panel-collapse collapse in">
     <div class="panel-body" style="overflow:hidden">
       <form class="form-horizontal" role="form" id="form" method="post" >
         <div class="form-group">
-            <label for="select_trial_for_selection_index">Select a Trial: </label>
-            <select class="form-control" id="select_trial_for_selection_index"></select>
+          <label for="select_trial_for_selection_index">Select a Trial: </label>
+          <select class="form-control" id="select_trial_for_selection_index"></select>
         </div>
-      <div class="form-group">
-        <label for="trait_list">Select Traits: </label>
-        <select class="form-control" id="trait_list"></select>
-      </div>
-      <div class="form-group table-responsive">
-        <table class="table table-bordered table-striped table-highlight">
+        <div class="form-group">
+          <label for="trait_list">Select at least one trait: </label>
+          <select class="form-control" id="trait_list"></select>
+        </div>
+        <div class="form-group table-responsive">
+          <table class="table table-bordered table-striped table-highlight">
             <thead>
-                <th>Trait</th>
-                <th>Weight</th>
+              <th>Trait</th>
+              <th>Weight</th>
             </thead>
-            <tbody id ="trait_table">
-            </tbody>
-        </table>
-      </div>
-      <div class="form-group">
-        <label><input type="checkbox" id="allow_missing" value="">Include accessions with phenotypes missing for one or more trait</label>
-      </div>
-      <div class="form-group">
-        <label><input type="checkbox" id="scale_to_check" value="">Scale all phenotype values to % of a control accession</label>
-      </div>
-      <button type="button" class="btn btn-default" id="submit_trait">Submit</button>
-    </form>
+            <tbody id ="trait_table"></tbody>
+          </table>
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="allow_missing" value="">Include accessions with phenotypes missing for one or more trait</label>
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="scale_to_check" value="">Scale all phenotype values to % of a control accession</label>
+        </div>
+        <button type="button" class="btn btn-default" id="submit_trait">Submit</button>
+      </form>
     </div>
   </div>
 </div>
@@ -47,11 +46,12 @@ $trial_name => undef
 
 <div class="panel panel-default">
   <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse2">
-    <div class="panel-title"><a href="#table_panel" class="accordion-toggle">Results</a></div>
+    <div class="panel-title"><a href="#table_panel" class="accordion-toggle">Results</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
   </div>
-  <div id="collapse2" class="panel-collapse collapse">
+  <div id="collapse2" class="panel-collapse collapse in">
     <div class="panel-body" id="table_panel" style="overflow:hidden">
-      <ul class="nav nav-tabs"><li class="active"><a data-toggle="tab" href="#weighted_values_div">Selection Index</a></li><li><a data-toggle="tab" href="#raw_avgs_div">Raw Averages</a></li></ul><div class="tab-content">
+      <ul class="nav nav-tabs"><li class="active"><a data-toggle="tab" href="#weighted_values_div">Selection Index</a></li><li><a data-toggle="tab" href="#raw_avgs_div">Raw Averages</a></li></ul>
+      <div class="tab-content">
         <div id="weighted_values_div" class="tab-pane fade in active"></div>
         <div id="raw_avgs_div" class="tab-pane fade"></div>
       </div>
