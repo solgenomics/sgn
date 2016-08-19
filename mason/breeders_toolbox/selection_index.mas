@@ -25,7 +25,9 @@ $trial_name => undef
         <div class="form-group table-responsive">
           <table class="table table-bordered table-striped table-highlight">
             <thead>
-              <th>Trait</th>
+              <th>Trait name</th>
+              <th>Trait CO id</th>
+              <th>Trait synonym</th>
               <th>Weight</th>
             </thead>
             <tbody id ="trait_table"></tbody>
