@@ -6,17 +6,27 @@
 
 <& /page/page_title.mas, title=>"Genome: <i>Solanum pennellii</i>" &>
 
-<div class="page_introduction">
-
+<br>
+<p>
   <a href="/chado/organism.pl?organism_id=19"><i>Solanum
 pennellii</i></a> is a wild tomato that is relatively distant from the domesticated <a href="/chado/organism.pl?organism_id=1"><i>Solanum
   lycopersicum</i></a>.  It was sequenced by a group of scientists at
   MPI Golm and the Univeristy of Aachen and collaborators, under the direction of Alistair Fernie and Bj&ouml;rn Usadel.
-<br /><br />
-It has been widely used for the construction of <a href="/cview/map.pl?map_id=9&show_offsets=1&show_ruler=1">mapping populations</a> and <a href="/cview/map.pl?map_id=il6&show_offsets=1&show_ruler=1">inbred lines</a>.
-</div>
+<br>
+  It has been widely used for the construction of <a href="/cview/map.pl?map_id=9&show_offsets=1&show_ruler=1">mapping populations</a> and <a href="/cview/map.pl?map_id=il6&show_offsets=1&show_ruler=1">inbred lines</a>.
+</p>
 
+<br>
 
+<p>
+  <strong>Please, cite <i>Solanum pennellii</i> genome as:</strong><br>
+  Bolger, A., Scossa, F., Bolger, M. E., Lanz, C., Maumus, F., Tohge, T., ... & Fich, E. A. (2014). <a href="http://www.nature.com/ng/journal/v46/n9/full/ng.3046.html">The genome of the stress-tolerant wild tomato species Solanum pennellii.</a> Nature Genetics 46, 1034–1038
+</p>
+
+<br>
+<p><strong>Abstract</strong><br>Solanum pennellii is a wild tomato species endemic to Andean regions in South America, where it has evolved to thrive in arid habitats. Because of its extreme stress tolerance and unusual morphology, it is an important donor of germplasm for the cultivated tomato Solanum lycopersicum1. Introgression lines (ILs) in which large genomic regions of S. lycopersicum are replaced with the corresponding segments from S. pennellii can show remarkably superior agronomic performance2. Here we describe a high-quality genome assembly of the parents of the IL population. By anchoring the S. pennellii genome to the genetic map, we define candidate genes for stress tolerance and provide evidence that transposable elements had a role in the evolution of these traits. Our work paves a path toward further tomato improvement and for deciphering the mechanisms underlying the myriad other agronomic traits that can be improved with S. pennellii germplasm.</p>
+
+<br>
 <&| /page/info_section.mas, title => 'Available Data' &>
    <% info_table_html(
          __border   => 0,
