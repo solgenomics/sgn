@@ -5,24 +5,24 @@ $trial_name => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.SelectionIndex', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
-<& /page/page_title.mas, title=>"Selection Index" &>
+<& /page/page_title.mas, title=>"Ranking Tool" &>
 
 <div class="panel panel-default">
   <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse1">
     <div class="panel-title"><a href="#form" class="accordion-toggle">Parameters</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
   </div>
   <div id="collapse1" class="panel-collapse collapse in">
-    <div class="panel-body" style="overflow:hidden">
-      <form class="form-horizontal" role="form" id="form" method="post" >
-        <div class="form-group">
-          <label for="select_trial_for_selection_index">Select a Trial: </label>
-          <select class="form-control" id="select_trial_for_selection_index"></select>
+    <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
+        <div class="col-sm-6 col-md-6 col-lg-6">
+          <label for="select_trial_for_selection_index">Trial select: </label>
+          <select class="form-control" autofocus="autofocus" id="select_trial_for_selection_index"></select>
         </div>
-        <div class="form-group">
-          <label for="trait_list">Select at least one trait: </label>
+        <div class="col-sm-6 col-md-6 col-lg-6">
+          <label for="trait_list">Trait select: </label>
           <select class="form-control" id="trait_list"></select>
-        </div>
-        <div class="form-group table-responsive">
+        </div><br><br><br><br><br>
+        <div class="col-sm-12 col-md-12 col-lg-12 table-responsive">
+        <label>Traits and weights: </label>
           <table class="table table-bordered table-striped table-highlight">
             <thead>
               <th>Trait name</th>
@@ -32,19 +32,21 @@ $trial_name => undef
             </thead>
             <tbody id ="trait_table"></tbody>
           </table>
-        </div>
-        <div class="form-group">
+        </div><br><br><br><br><br>
+        <div class="col-sm-6 col-md-6 col-lg-6">
+        <label>Additional options: </label>
           <label><input type="checkbox" id="allow_missing" value="">Include accessions with phenotypes missing for one or more trait</label>
-        </div>
-        <div class="form-group">
           <label><input type="checkbox" id="scale_to_check" value="">Scale all phenotype values to % of a control accession</label>
+          <label><input type="checkbox" id="use_synonyms" value="">Use trait synonyms</label>
         </div>
-        <button type="button" class="btn btn-default" id="submit_trait">Submit</button>
-      </form>
+        <div class="col-sm-6 col-md-6 col-lg-6">
+        <label>Calculate rankings: </label>
+          <center><button type="button" class="btn btn-primary disabled" id="calculate_rankings">Submit</button></center>
+        </div>
+      </div>
     </div>
   </div>
-</div>
-<br/>
+
 
 <div class="panel panel-default">
   <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse2">
@@ -60,7 +62,6 @@ $trial_name => undef
     </div>
   </div>
 </div>
-<br/>
 
 
 <script>

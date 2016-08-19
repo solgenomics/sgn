@@ -55,6 +55,7 @@ jQuery(document).ready(function() {
                   trait_html += '<option value="'+trait_id+'" data-synonym="'+synonym_fixed+'" data-CO_id="'+CO_id+'" title="'+parts[0]+'">'+parts[0]+'</a>\n';
                 }
                 jQuery('#trait_list').html(trait_html);
+                jQuery('#trait_list').focus();
               },
               error: function(response) { alert("An error occurred while retrieving synonyms for traits with ids "+trait_ids); }
             });
@@ -66,17 +67,23 @@ jQuery(document).ready(function() {
     jQuery('#trait_list').change( // add selected trait to trait table
       function() {
         var trait_id = jQuery('option:selected', this).val();
+        var weight_id = trait_id+'_weight';
         var trait_name = jQuery('option:selected', this).text();
         var trait_synonym = jQuery('option:selected', this).data("synonym");
         var trait_CO_id = jQuery('option:selected', this).data("co_id");
-        var trait_html = "<tr><td><a href='/cvterm/"+trait_id+"/view' data-value='"+trait_id+"'>"+trait_name+"</a></td><td><p id='"+trait_id+"_CO_id'>"+trait_CO_id+"<p></td><td><p id='"+trait_id+"_synonym'>"+trait_synonym+"<p></td><td><input type='text' id='"+trait_id+"_weight' class='form-control' placeholder='Must be a number (+ or -), default = 1'></input></td></tr>";
+        var trait_html = "<tr><td><a href='/cvterm/"+trait_id+"/view' data-value='"+trait_id+"'>"+trait_name+"</a></td><td><p id='"+trait_id+"_CO_id'>"+trait_CO_id+"<p></td><td><p id='"+trait_id+"_synonym'>"+trait_synonym+"<p></td><td><input type='text' id='"+weight_id+"' class='form-control' placeholder='Must be a number (+ or -), default = 1'></input></td></tr>";
         jQuery('#trait_table').append(trait_html);
         jQuery('option:selected', this).val('');
         jQuery('option:selected', this).text('Select another trait');
+        jQuery('#'+weight_id).focus();
+        jQuery('#'+weight_id).change( //
+          function() {
+          jQuery('#trait_list').focus();
+        });
+        jQuery('#calculate_rankings').removeClass('disabled');
       });
 
-
-      jQuery('#submit_trait').click( function() {
+      jQuery('#calculate_rankings').click( function() {
         jQuery('#raw_avgs_div').html("");
         jQuery('#weighted_values_div').html("");
         var trial_id = jQuery("#select_trial_for_selection_index option:selected").val();
