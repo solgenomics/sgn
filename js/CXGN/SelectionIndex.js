@@ -127,6 +127,7 @@ function build_table(data, column_names, trial_name, target_div) {
   var table_html = '<div class="table-responsive" style="margin-top: 10px;"><table id="'+table_id+'" class="table table-hover table-striped table-bordered" width="100%"><caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Table description: <i>'+table_type+' for trial '+trial_name+'.</i></center></caption></table></div>'
   jQuery('#'+target_div).html(table_html);
 
+  var last_column = column_names.length - 1;
   var new_table = jQuery('#'+table_id).DataTable( {
     dom: 'Bfrtip',
     buttons: ['copy', 'excel', 'csv', 'print' ],
@@ -134,6 +135,7 @@ function build_table(data, column_names, trial_name, target_div) {
     destroy: true,
     paging: true,
     lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-    columns: column_names
+    columns: column_names,
+    order: [[ last_column, "desc" ]]
   });
 }
