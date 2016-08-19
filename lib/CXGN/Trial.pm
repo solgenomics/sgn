@@ -1464,6 +1464,17 @@ sub get_design_type {
 sub duplicate { 
 }
 
+=head2 get_accessions
+
+ Usage:        my $accessions = $t->get_accessions();
+ Desc:         retrieves the accessions used in this trial.
+ Ret:          an arrayref of { accession_name => acc_name, stock_id => stock_id }
+ Args:         none
+ Side Effects:
+ Example:
+
+=cut
+
 sub get_accessions {
 	my $self = shift;
 	my @accessions;
@@ -1491,6 +1502,17 @@ sub get_accessions {
 	return \@accessions;
 }
 
+=head2 get_plants
+
+ Usage:        $plants = $t->get_plants();
+ Desc:         retrieves that plants that are part of the design for this trial.
+ Ret:          an array ref containing [ plant_name, plant_stock_id ]
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub get_plants {
 	my $self = shift;
 	my @plants;
@@ -1512,6 +1534,19 @@ sub get_plants {
 
 	return \@plants;
 }
+
+
+=head2 get_plots
+
+ Usage:         my $plots = $trial->get_plots();
+ Desc:          returns a list of plots that are defined for the trial.
+ Ret:           an array ref of elements that contain 
+                [ plot_name, plot_stock_id ]
+ Args:          none
+ Side Effects:  db access
+ Example:
+
+=cut
 
 sub get_plots {
 	my $self = shift;
@@ -1536,6 +1571,18 @@ sub get_plots {
 	return \@plots;
 	 
 }
+
+=head2 get_controls
+
+ Usage:        my $controls = $t->get_controls();
+ Desc:         Returns the accessions that were used as controls in the design
+ Ret:          an arrayref containing 
+               { accession_name => control_name, stock_id => control_stock_id }
+ Args:         none
+ Side Effects:
+ Example:
+
+=cut
 
 sub get_controls {
 	my $self = shift;
