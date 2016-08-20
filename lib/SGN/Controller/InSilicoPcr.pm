@@ -381,7 +381,7 @@ sub _blast_to_pcr {
             	      -lane_length => 400,
             	      -lane_width => 100,
             	      -band_thickness => 2,
-            	      -min_frag => 1000,
+                    # -min_frag => 1000,
             	      -font_size => 16,
             	      -gelcolor => [240,240,240],
             	      -bandcolor => [170,170,170]
