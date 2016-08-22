@@ -9,20 +9,37 @@ $traits_list
 
 </%args>
 
-<& /page/page_title.mas, 
-   title=>'List of traits with GS data'
-&>
+<div class="container">
+  <& /page/page_title.mas, 
+     title=>'List of traits with GS data'
+    &>
 
-<&| /page/info_section.mas, 
-   title    => qq |Traits beginning with "$index" |
-&>
+    <&| /page/info_section.mas, 
+	title    => qq |Traits beginning with "$index" |
+      &>
 
-<&/page/columnar_table.mas,
-   data         => $traits_list,
-  __align       => 'l',
-  __alt_freq    => 2,
-  __alt_width   => 1,
-  __cellpadding => 20,
- &>
+      <div id="traits_starting_with_index_div">
+	%if (@$traits_list) {
+	<table id="traits_starting_with_index_table" class="table table-condensed table-striped" >
+	  <tbody>
+	    <thead>
+	      <tr>
+		<td>Trait</td>
+		<td>Definition</td>
+	      </tr>
+	    </thead>
+	    %foreach my $trait (@$traits_list) {
+	    <tr>
+	      <td><% $trait->[0] %></td>
+	      <td><% $trait->[1] %></td>
+	    </tr>
+	    %}
+	  </tbody>
+	</table>
+	%} else {
+	<p>There are no traits starting with <% $index %> </p>
+	%}
+      </div>
 
-</&>
+ </&>
+</div>

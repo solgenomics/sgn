@@ -14,8 +14,6 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$form
-$message
 $gs_traits_index
 
 </%args>
@@ -27,74 +25,27 @@ $gs_traits_index
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.searchTrials", "jquery.dataTables",  "solGS.combineTrials", "solGS.ajaxAutocomplete"] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.searchTraits",  
+  "solGS.searchTrials", "jquery.dataTables",  "solGS.combineTrials", 
+  "solGS.ajaxAutocomplete"] &>
 
-<p>&nbsp;</p>
+<div class="container">
 
-<& /page/page_title.mas, title => "solGS: start building a GS model by searching for a trait or selecting a training population" &>
-
-<&| /page/info_section.mas,
-  collapsible => 1, 
-  collapsed   => 0,
-  title => "Search for a trait ",
-&>
-
-%if ($message)
-%{
-<p style="color:red">There is no phenotype data for <b>'<% $message %>'</b>.</p>
-%}
-
-<p style="text-align:center">Traits index: <b><% $gs_traits_index %> </b></p>
-<p>&nbsp;</p>
-<p&nbsp;></p>
-
-
-<% $form %>
-
-
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-
-</&>
-
-<&| /page/info_section.mas, 
-    collapsible => 1, 
-    collapsed   => 1,
-    title       => "Select a training population or create a new one using one or more trials",
+<& /page/page_title.mas, 
+   title => "solGS: start building a GS model by searching for a trait or selecting a training population" 
   &>
 
+<& /solgs/search/trait_search_form.mas,
+   gs_traits_index => $gs_traits_index
+  &>
 
-  <div  class="form-inline">
-    <input  type="text" class="form-control" placeholder="search for a trial or training population" size="50" id="population_search_entry"/>   
-    <button type="submit" class="btn btn-primary" id="search_training_pop">
-      <span class="glyphicon glyphicon-search"></span>
-    </button>
-
-    <button id="search_all_training_pops" style="position:absolute;right:20px;" class="btn btn-success" type="submit"> 
-      <span value="Search for all training populations">Search for all training populations</span> 
-    </button>
-  </div>
-
-  <div id="searched_trials_message"  style="padding:20px 0px 10px 0px;font-weight:bold;text-align:center;color:#A7C942"></div>
-  <div id="searched_trials_div" style="display:none;"> 
-</div>
-  <br />
-
+<& /solgs/search/trial_search_form.mas &>
 
 <& /solgs/population/project_details_form.mas &>
+
 <& /solgs/search/combine_trials_table.mas &>
 
-</&>
-
-
-<&| /page/info_section.mas, 
-    collapsible => 1, 
-    collapsed   => 1,
-    title       => "Select a list-based training population or create a new one",
-  &>
-
-  <& /solgs/search/list_type_training_population.mas &>
+<& /solgs/search/list_type_training_population.mas &>
    
-</&>
-
+</div>
 

@@ -137,26 +137,26 @@ sub genotype_form : Path('/solgs/form/population/genotype') Args(0) {
 sub search : Path('/solgs/search') Args() {
     my ($self, $c) = @_;
 
-    $self->load_yaml_file($c, 'search/solgs.yml');
-    my $form = $c->stash->{form};
+  #  $self->load_yaml_file($c, 'search/solgs.yml');
+  #  my $form = $c->stash->{form};
 
     $self->gs_traits_index($c);
     my $gs_traits_index = $c->stash->{gs_traits_index};
         
-    my $query;
-    if ($form->submitted_and_valid) 
-    {
-        $query = $form->param_value('search.search_term');
-        $c->res->redirect("/solgs/search/result/traits/$query");       
-    }        
-    else
-    {
+   # my $query;
+   #  if ($form->submitted_and_valid) 
+   #  {
+   #      $query = $form->param_value('search.search_term');
+   # 	$c->res->redirect("/solgs/search/result/traits/$query");       
+   #  }        
+   #  else
+   #  {
         $c->stash(template        => $self->template('/search/solgs.mas'),
-                  form            => $form,
-                  message         => $query,                 
+              #    form            => $form,
+              #    message         => 'test',                 
                   gs_traits_index => $gs_traits_index,           
             );
-    }
+   # }
 
 }
 
@@ -612,12 +612,31 @@ sub store_project_marker_count {
 } 
 
 
+sub search_traits : Path('/solgs/search/traits/') Args(1) {
+    my ($self, $c, $query) = @_;
+     
+    my $traits = $c->model('solGS::solGS')->search_trait($query); 
+    my $result = $c->model('solGS::solGS')->trait_details($traits);
+    
+    my $ret->{status} = 0;
+    if ($result->first)
+    {
+	$ret->{status} = 1;      
+    }
+  
+    $ret = to_json($ret);
+                
+    $c->res->content_type('application/json');
+    $c->res->body($ret); 
+
+}
+
+
 sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
     my ($self, $c, $query) = @_;
-      
-    my $page = $c->req->param('page') || 1;
-    my $gs_traits = $c->model('solGS::solGS')->search_trait($query);
-    my $result = $c->model('solGS::solGS')->trait_details($gs_traits);
+   
+    my $traits = $c->model('solGS::solGS')->search_trait($query);
+    my $result    = $c->model('solGS::solGS')->trait_details($traits);
     
     my @rows;
     while (my $row = $result->next)
@@ -626,38 +645,15 @@ sub show_search_result_traits : Path('/solgs/search/result/traits') Args(1) {
         my $name = $row->name;
         my $def  = $row->definition;
        
-        my $checkbox;
         push @rows, [ qq |<a href="/solgs/search/trials/trait/$id"  onclick="solGS.waitPage()">$name</a>|, $def];      
     }
   
     if (@rows)
     {
-       $c->stash(template   => $self->template('/search/result/traits.mas'),
-                 result     => \@rows,
-                 query      => $query,
-           );
-    }
-    else
-    {
-        $self->gs_traits_index($c);
-        my $gs_traits_index = $c->stash->{gs_traits_index};
-        
-        my $page = $c->req->param('page') || 1;
-        my $project_rs = $c->model('solGS::solGS')->all_projects($page);
-        $self->projects_links($c, $project_rs);
-        my $projects = $c->stash->{projects_pages};
-       
-        $self->load_yaml_file($c, 'search/solgs.yml');
-        my $form = $c->stash->{form};
-
-        $c->stash(template        => $self->template('/search/solgs.mas'),
-                  form            => $form,
-                  message         => $query,
-                  gs_traits_index => $gs_traits_index,
-                  result          => $projects,
-                  pager           => $project_rs->pager,
-                  page_links      => sub {uri ( query => {  page => shift } ) }
-            );
+	$c->stash(template   => $self->template('/search/result/traits.mas'),
+		  result     => \@rows,
+		  query      => $query,
+	    );
     }
 
 } 
@@ -1990,10 +1986,11 @@ sub solgs_details_trait :Path('/solgs/details/trait/') Args(1) {
     if ($trait_id) 
     {
 	$self->get_trait_details($c, $trait_id);
-	$ret->{name} = $c->stash->{trait_name};
-	$ret->{abbr} = $c->stash->{trait_abbr};
-	$ret->{id}   = $c->stash->{trait_id};
-	$ret->{status}     = 1;
+	$ret->{name}    = $c->stash->{trait_name};
+	$ret->{def}     = $c->stash->{trait_def};
+	$ret->{abbr}    = $c->stash->{trait_abbr};
+	$ret->{id}      = $c->stash->{trait_id};
+	$ret->{status}  = 1;
     }
 
     $ret = to_json($ret);
@@ -2028,8 +2025,6 @@ sub get_trait_details {
 	    $trait_name = $row->name;
 	    $trait_def  = $row->definition;
 	    $trait_abbr = $self->abbreviate_term($trait_name);
-
-	    print STDERR "\n $trait_id - $trait_name - $trait_def - $trait_abbr\n";
 	}	
     } 
    
