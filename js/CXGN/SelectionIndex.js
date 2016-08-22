@@ -71,17 +71,23 @@ jQuery(document).ready(function() {
         var trait_name = jQuery('option:selected', this).text();
         var trait_synonym = jQuery('option:selected', this).data("synonym");
         var trait_CO_id = jQuery('option:selected', this).data("co_id");
-        var trait_html = "<tr><td><a href='/cvterm/"+trait_id+"/view' data-value='"+trait_id+"'>"+trait_name+"</a></td><td><p id='"+trait_id+"_CO_id'>"+trait_CO_id+"<p></td><td><p id='"+trait_id+"_synonym'>"+trait_synonym+"<p></td><td><input type='text' id='"+weight_id+"' class='form-control' placeholder='Must be a number (+ or -), default = 1'></input></td></tr>";
+        var trait_html = "<tr><td><a href='/cvterm/"+trait_id+"/view' data-value='"+trait_id+"'>"+trait_name+"</a></td><td><p id='"+trait_id+"_CO_id'>"+trait_CO_id+"<p></td><td><p id='"+trait_id+"_synonym'>"+trait_synonym+"<p></td><td><input type='text' id='"+weight_id+"' class='form-control weight' placeholder='Must be a number (+ or -), default = 1'></input></td></tr>";
         jQuery('#trait_table').append(trait_html);
         jQuery('option:selected', this).val('');
         jQuery('option:selected', this).text('Select another trait');
+        update_formula();
         jQuery('#'+weight_id).focus();
         jQuery('#'+weight_id).change( //
           function() {
+          update_formula();
           jQuery('#trait_list').focus();
         });
         jQuery('#calculate_rankings').removeClass('disabled');
       });
+
+//      jQuery(".weight").change(
+//        function() {
+
 
       jQuery('#calculate_rankings').click( function() {
         jQuery('#raw_avgs_div').html("");
@@ -99,7 +105,7 @@ jQuery(document).ready(function() {
             var trait_id = jQuery('a', this).data("value");
             trait_ids.push(trait_id);
             var trait_name = jQuery('a', this).text();
-            var weight = jQuery('#'+trait_id+'_weight').val();
+            var weight = jQuery('#'+trait_id+'_weight').val() || 1;  // default = 1
             weights.push(weight);
             var parts = trait_name.split("|");
             column_names.push( { title: parts[0] } );
@@ -145,4 +151,26 @@ function build_table(data, column_names, trial_name, target_div) {
     columns: column_names,
     order: [[ last_column, "desc" ]]
   });
+}
+
+function update_formula() {
+  var selected_trait_rows = jQuery('#trait_table').children();
+  var formula = "Sum(weighted values) = ";
+  var term_number = 0;
+  jQuery(selected_trait_rows).each(function(index, selected_trait_rows){
+      var trait_id = jQuery('a', this).data("value");
+      var trait_name = jQuery('a', this).text();
+      var weight = jQuery('#'+trait_id+'_weight').val() || 1;  // default = 1
+      var parts = trait_name.split("|");
+      if (weight >= 0 && term_number > 0) {
+        formula += " + "+weight+" * ("+parts[0]+") " ;
+      } else {
+        formula += weight+" * ("+parts[0]+") " ;
+      }
+      term_number++;
+      console.log("termnumber="+term_number);
+  });
+  console.log("formula="+formula);
+  jQuery('#ranking_formula').text(formula);
+  return;
 }

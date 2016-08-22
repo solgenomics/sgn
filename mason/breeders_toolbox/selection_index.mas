@@ -41,6 +41,7 @@ $trial_name => undef
         </div>
         <div class="col-sm-6 col-md-6 col-lg-6">
         <label>Calculate rankings: </label>
+          <p id="ranking_formula"></p>
           <center><button type="button" class="btn btn-primary disabled" id="calculate_rankings">Submit</button></center>
         </div>
       </div>
