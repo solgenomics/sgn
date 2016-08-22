@@ -266,4 +266,18 @@ is_deeply(\@lists_sorted, [
 
 
 
+my $list = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id });
+my $items = $list->retrieve_elements_with_ids($list_id);
+$error = $list->update_element_by_id($items->[0]->[0], 'updated name');
+ok(!$error, 'test update item');
+$items = $list->retrieve_elements_with_ids($list_id);
+#print STDERR Dumper $items;
+is_deeply($items, [
+          [
+            725,
+            'updated name'
+          ]
+        ], 'check updated list item');
+
+
 done_testing();
