@@ -64,7 +64,7 @@ sub autocomplete_GET :Args(1) {
         $sp_person_id = $print_id ? "," . $sp_person_id : undef;
         push @results , "$first_name, $last_name $sp_person_id";
     }
-    $c->{stash}->{rest} = \@results;
+    $c->stash->{rest} = \@results;
 }
 
 

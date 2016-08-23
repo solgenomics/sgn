@@ -649,6 +649,42 @@ sub search_stock_using_plot_name {
 }
 
 
+sub first_stock_genotype_data {
+    my ($self, $pr_id) = @_;
+    
+    my $stock_subj_rs = $self->project_subject_stocks_rs($pr_id);    
+    my $stock_obj_rs  = $self->stocks_object_rs($stock_subj_rs);
+   
+    my $geno_data;
+  
+    while (my $single_rs = $stock_obj_rs->next) 
+    {
+	my $stock_name = $single_rs->get_column('uniquename');  
+	my $stock_rs   = $self->search_stock($stock_name); 
+	my $geno       = $self->individual_stock_genotypes_rs($stock_rs)->first;
+  
+	if ($geno)
+	{  
+	    my $json_values  = $geno->get_column('value');
+	    my $values       = JSON::Any->decode($json_values);
+	    my @markers      = keys %$values;
+	    my $marker_count = scalar(@markers);
+
+	    my $header_markers = join("\t", @markers);
+	    $geno_data         = "\t" . $header_markers . "\n";
+	    
+	    my $geno_values = $self->stock_genotype_values($geno);             
+	    $geno_data     .= $geno_values;
+	    
+	    last; 
+	} 	
+    }
+ 
+    return $geno_data;
+
+}
+
+
 sub genotype_data {
     my ($self, $args) = @_;
 
@@ -656,6 +692,7 @@ sub genotype_data {
     my $prediction_id = $args->{prediction_id};
     my $data_set_type = $args->{data_set_type};
     my $cache_dir     = $args->{cache_dir};
+    my $geno_file     = $args->{genotype_file};
     my $trait_abbr    = $args->{trait_abbr};
     my $model_id      = ($args->{model_id} ? $args->{model_id} : $project_id);
 
@@ -673,7 +710,7 @@ sub genotype_data {
         {      
             $stock_genotype_rs = $self->prediction_genotypes_rs($project_id);
             my $stock_count = $stock_genotype_rs->count;
-            
+  
             unless ($header_markers) 
             {
                 if ($stock_count)
@@ -737,7 +774,6 @@ sub genotype_data {
         else 
         {          
             $stock_genotype_rs = $self->project_genotype_data_rs($project_id);
-           
             my $cnt = 0;
             while (my $geno = $stock_genotype_rs->next)
             { 
@@ -789,7 +825,7 @@ sub genotype_data {
                         They are excluded from the training set. \n\n";
     }
 
-    return  $geno_data;   
+    return  \$geno_data;   
 
 }
 
@@ -976,8 +1012,9 @@ sub project_genotype_data_rs {
 
 sub individual_stock_genotypes_rs {
     my ($self, $stock_rs) = @_;
-
-    my $stock_id = $stock_rs->first()->stock_id;    
+ 
+    my $stock_id = $stock_rs->first()->stock_id;  
+    
     my $nd_exp_rs = $self->genotypes_nd_experiment_ids_rs([$stock_id]);
     
     my @nd_exp_ids;
@@ -1148,10 +1185,12 @@ sub prediction_genotypes_rs {
     
     while (my $row = $pr_genotypes_rs->next)
     {
+	my $id = $row->get_column('stock_id');
 	push @genotypes_ids, $row->get_column('stock_id');
 
     }
 
+    my $number = scalar(@genotypes_ids);
     my $nd_exp_rs = $self->genotypes_nd_experiment_ids_rs(\@genotypes_ids);
 
     my @nd_exp_ids;
@@ -1171,6 +1210,8 @@ sub prediction_genotypes_rs {
         ->search_related('nd_experiment') 
         ->search_related('nd_experiment_stocks')
         ->search_related('stock')
+	->search_related('stock_relationship_subjects')
+        ->search_related('object')
         ->search_related('nd_experiment_stocks')
         ->search_related('nd_experiment') 
         ->search_related('nd_experiment_genotypes')
@@ -1178,12 +1219,13 @@ sub prediction_genotypes_rs {
         ->search_related('genotypeprops') 
 	->search_related('type',
 			 {}, 
-                         { 
-			     select   => [qw / genotypeprops.genotypeprop_id genotypeprops.value 
-                                            me.project_id me.name stock.stock_id stock.uniquename/ ],
-			     as       => [ qw / genotypeprop_id value project_id project_name stock_id stock_name / ],
-			     distinct => [ qw / stock_name /]
+
+			 { select => [qw / object.uniquename object.stock_id  me.name me.project_id 
+                                           genotypeprops.genotypeprop_id genotypeprops.value / ],
+			      as     => [ qw / stock_name stock_id project_name project_id genotypeprop_id value/ ],
+				     distinct => 1,
                          }
+
         );
 
     return $genotype_rs;
@@ -1342,7 +1384,6 @@ sub prediction_pops {
 			      my $genoprop = {'project_id' => $project_id, 'marker_count' => scalar(@pred_pop_markers)};
 			      $self->set_project_genotypeprop($genoprop);
 			  }
-
 
 			  print STDERR "\ncheck if prediction populations are genotyped using the same 
                                  set of markers as for the training population : " 

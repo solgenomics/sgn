@@ -8,6 +8,7 @@ use Bio::Chado::Schema;
 use List::Util qw | any |;
 use CXGN::Trial;
 use Math::Round::Var;
+use List::MoreUtils qw(uniq);
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -175,43 +176,59 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    my $schema = $c->stash->{schema};
     my $round = Math::Round::Var->new(0.01);
     my $dbh = $c->dbc->dbh();
     my $trial_id = $c->stash->{trial_id};
+    my $plot_of = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
-    my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) 
+    my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text)
                                       || dbxref.accession::text AS trait,
-                                     cvterm.cvterm_id, 
-                                     count(phenotype.value), 
-                                     to_char(avg(phenotype.value::real), 'FM999990.990'), 
-                                     to_char(max(phenotype.value::real), 'FM999990.990'), 
-                                     to_char(min(phenotype.value::real), 'FM999990.990'), 
-                                     to_char(stddev(phenotype.value::real), 'FM999990.990') 
-                                    FROM cvterm 
-                                    JOIN phenotype ON (cvterm_id=cvalue_id) 
-                                    JOIN nd_experiment_phenotype USING(phenotype_id) 
-                                    JOIN nd_experiment_project USING(nd_experiment_id) 
-                                    JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id 
-                                    WHERE project_id=? 
-                                          AND phenotype.value~? 
-                                    GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) 
-                                                || dbxref.accession::text, cvterm.cvterm_id;");
+                                     cvterm.cvterm_id,
+                                     count(phenotype.value),
+                                     to_char(avg(phenotype.value::real), 'FM999990.990'),
+                                     to_char(max(phenotype.value::real), 'FM999990.990'),
+                                     to_char(min(phenotype.value::real), 'FM999990.990'),
+                                     to_char(stddev(phenotype.value::real), 'FM999990.990'),
+                                     accession.uniquename,
+                                     accession.stock_id
+                                    FROM cvterm
+                                    JOIN phenotype ON (cvterm_id=cvalue_id)
+                                    JOIN nd_experiment_phenotype USING(phenotype_id)
+                                    JOIN nd_experiment_project USING(nd_experiment_id)
+                                    JOIN nd_experiment_stock USING(nd_experiment_id)
+                                    JOIN stock as plot USING(stock_id)
+                                    JOIN stock_relationship on (plot.stock_id = stock_relationship.subject_id)
+                                    JOIN stock as accession on (accession.stock_id = stock_relationship.object_id)
+                                    JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id
+                                    WHERE project_id=?
+                                          AND phenotype.value~?
+                                          AND stock_relationship.type_id=?
+                                          AND plot.type_id=?
+                                          AND accession.type_id=?
+                                    GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text)
+                                                || dbxref.accession::text, cvterm.cvterm_id, accession.stock_id, accession.uniquename;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    $h->execute($c->stash->{trial_id}, $numeric_regex);
+    $h->execute($c->stash->{trial_id}, $numeric_regex, $plot_of, $plot_type_id, $accesion_type_id);
 
     my @phenotype_data;
-    
-    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev) = $h->fetchrow_array()) {
 
-	my $cv   = ($stddev /  $average) * 100;
-	$cv      = $round->round($cv) . '%';
-	$average = $round->round($average);
-	$min     = $round->round($min);
-	$max     = $round->round($max);
-	$stddev  = $round->round($stddev);
+    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h->fetchrow_array()) {
 
-	push @phenotype_data, [ qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} ];
+        my $cv = 0;
+        if ($stddev && $average != 0) {
+            $cv = ($stddev /  $average) * 100;
+            $cv = $round->round($cv) . '%';
+        }
+        if ($average) { $average = $round->round($average); }
+        if ($min) { $min = $round->round($min); }
+        if ($max) { $max = $round->round($max); }
+        if ($stddev) { $stddev = $round->round($stddev); }
+
+	push @phenotype_data, [ qq{<a href="/stock/$stock_id/view">$stock_name</a>}, qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} ];
     }
 
     $c->stash->{rest} = { data => \@phenotype_data };
@@ -222,7 +239,7 @@ sub trait_histogram : Chained('trial') PathPart('trait_histogram') Args(1) {
     my $c = shift;
     my $trait_id = shift;
 
-    my @data = $c->stash->{trial}->get_phenotypes_for_trait($trait_id);
+    my @data = $c->stash->{trial}->get_phenotypes_for_trait($trait_id, 'plot');
 
     $c->stash->{rest} = { data => \@data };
 }
@@ -345,7 +362,7 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 
     my $design = $layout-> get_design();
 
-    #print STDERR Dumper($design);
+  #  print STDERR Dumper($design);
 
     my @layout_info;
     foreach my $plot_number (keys %{$design}) {
@@ -358,9 +375,10 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 			rep_number =>  $design->{$plot_number}-> {rep_number},
 			plot_name => $design->{$plot_number}-> {plot_name},
 			accession_name => $design->{$plot_number}-> {accession_name},
+      plant_names => $design->{$plot_number}-> {plant_names},
 
 	};
-
+#print STDERR Dumper(@layout_info);
     }
 
 	my @row_numbers = ();
@@ -370,20 +388,30 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	my @accession_name = ();
 	my @plot_name = ();
 	my @plot_id = ();
+  my @acc_name = ();
+  my @blk_no = ();
+  my @rep_no = ();
 	my @array_msg = ();
 	my @plot_number = ();
 	my $my_hash;
 
 	foreach $my_hash (@layout_info) {
 	    if ($my_hash->{'row_number'}) {
-		if ($my_hash->{'row_number'} =~ m/\d+/) {
-		$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'};
-
+		  if ($my_hash->{'row_number'} =~ m/\d+/) {
+      if (scalar(@{$my_hash->{"plant_names"}}) < 1) {
+        $array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'};
+      }
+      else{
+    		$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'}."\nnumber_of_plants:".scalar(@{$my_hash->{"plant_names"}});
+      }
 
 	$plot_id[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_id'};
 	#$plot_id[$my_hash->{'plot_number'}] = $my_hash->{'plot_id'};
 	$plot_number[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_number'};
 	#$plot_number[$my_hash->{'plot_number'}] = $my_hash->{'plot_number'};
+  $acc_name[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'accession_name'};
+  $blk_no[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'block_number'};
+  $rep_no[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'rep_number'};
 
 		}
 		else {
@@ -391,12 +419,13 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	    }
 	}
  # Looping through the hash and printing out all the hash elements.
-
+ my @plot_numbers_not_used;
+ my @plotcnt;
     foreach $my_hash (@layout_info) {
 	push @col_numbers, $my_hash->{'col_number'};
 	push @row_numbers, $my_hash->{'row_number'};
 	#push @plot_id, $my_hash->{'plot_id'};
-	#push @plot_number, $my_hash->{'plot_number'};
+	push @plot_numbers_not_used, $my_hash->{'plot_number'};
 	push @rep_numbers, $my_hash->{'rep_number'};
 	push @block_numbers, $my_hash->{'block_number'};
 	push @accession_name, $my_hash->{'accession_name'};
@@ -404,6 +433,19 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 
     }
 
+    my $plotcounter_nu = 0;
+    if ($plot_numbers_not_used[0] =~ m/^\d{3}/){
+      foreach my $plot (@plot_numbers_not_used) {
+        $plotcounter_nu++;
+      }
+      for my $n (1..$plotcounter_nu){
+        push @plotcnt, $n;
+      }
+
+    }
+
+    my @sorted_block = sort@block_numbers;
+    #my @uniq_block = uniq(@sorted_block);
 
     my $max_col = 0;
     $max_col = max( @col_numbers ) if (@col_numbers);
@@ -411,8 +453,24 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
     my $max_row = 0;
     $max_row = max( @row_numbers ) if (@row_numbers);
     #print "$max_row\n";
+    my $max_rep = 0;
+    $max_rep = max(@rep_numbers) if (@rep_numbers);
+    my $max_block = 0;
+    $max_block = max(@block_numbers) if (@block_numbers);
 
     #print STDERR Dumper \@layout_info;
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+    my $data = $trial->get_controls();
+
+    print STDERR Dumper($data);
+
+    my @control_name;
+    foreach my $cntrl (@{$data}) {
+	push @control_name, $cntrl->{'accession_name'};
+
+  }
+ print STDERR Dumper(@control_name);
 
 	$c->stash->{rest} = { coord_row =>  \@row_numbers,
 			      coords =>  \@layout_info,
@@ -421,11 +479,18 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 			      max_col => $max_col,
 			      plot_msg => \@array_msg,
 			      rep => \@rep_numbers,
-			      block => \@block_numbers,
+			      block => \@sorted_block,
 			      accessions => \@accession_name,
 			      plot_name => \@plot_name,
 			      plot_id => \@plot_id,
-			      plot_number => \@plot_number
+			      plot_number => \@plot_number,
+            max_rep => $max_rep,
+			      max_block => $max_block,
+            sudo_plot_no => \@plotcnt,
+            controls => \@control_name,
+            blk => \@blk_no,
+            acc => \@acc_name,
+            rep_no => \@rep_no
 	};
 
 }
@@ -456,7 +521,7 @@ sub compute_derive_traits : Path('/ajax/phenotype/delete_field_coords') Args(0) 
   $h->execute($trial_id);
 
   $c->stash->{rest} = {success => 1};
-  
+
 }
 
 

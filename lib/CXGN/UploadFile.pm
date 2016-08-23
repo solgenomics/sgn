@@ -77,7 +77,7 @@ sub archive {
 sub get_md5 {
     my $self = shift;
     my $file_name_and_location = shift;
-    #print STDERR $file_name_and_location;
+    print STDERR $file_name_and_location;
 
     open(my $F, "<", $file_name_and_location) || die "Can't open file ";
     binmode $F;

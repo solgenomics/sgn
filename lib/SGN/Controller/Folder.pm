@@ -28,7 +28,21 @@ sub folder_page :Path("/folder") Args(1) {
     my $folder_project = $self->schema->resultset("Project::Project")->find( { project_id => $folder_id } );
     my $folder = CXGN::Trial::Folder->new({ bcs_schema => $self->schema, folder_id => $folder_id });
 
-    $c->stash->{children} = $folder->children();
+    my $children = $folder->children();
+    my @crosses;
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'cross', 'stock_type')->cvterm_id();
+    foreach (@$children) {
+        if ($_->folder_type eq 'cross') {
+            my $cross_stock = $self->schema->resultset("Project::Project")->search({ 'me.project_id' => $_->folder_id() })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', {'stock.type_id'=>$cross_type_id})->first();
+            if ($cross_stock) {
+                push @crosses, [$cross_stock->stock_id(), $cross_stock->uniquename()];
+            }
+        }
+    }
+    #print STDERR Dumper \@crosses;
+
+    $c->stash->{children} = $children;
+    $c->stash->{crosses} = \@crosses;
     $c->stash->{project_parent} = $folder->project_parent();
     $c->stash->{breeding_program} = $folder->breeding_program();
     $c->stash->{folder_id} = $folder_id;

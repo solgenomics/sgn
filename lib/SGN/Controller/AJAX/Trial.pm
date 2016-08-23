@@ -212,15 +212,16 @@ my $location_number = scalar(@locations);
 
   $trial_design->set_trial_name($trial_name);
 
-   my $design_created = 0;
-    if ($use_same_layout) {
-      $design_created = 1;
+  my $design_created = 0;
+      if ($use_same_layout) {
+        $design_created = 1;
+      }
+
+    if ($design_created) {
+      $trial_design->set_randomization_seed($design_created);
+
     }
-
-  if ($design_created) {
-    $trial_design->set_randomization_seed($design_created);
-
-  }
+    
   if (@stock_names) {
     $trial_design->set_stock_list(\@stock_names);
     $design_info{'number_of_stocks'} = scalar(@stock_names);
@@ -306,6 +307,7 @@ my $location_number = scalar(@locations);
   if ($error) {return;}
   if ($trial_design->get_design()) {
     %design = %{$trial_design->get_design()};
+    print STDERR "DESIGN: ". Dumper(%design);
   } else {
     $c->stash->{rest} = {error => "Could not generate design" };
     return;
@@ -317,16 +319,16 @@ my $location_number = scalar(@locations);
   push @design_layout_view_html_array, $design_layout_view_html;
 }
 
-  $c->stash->{rest} = {
-		       success => "1",
-           design_layout_view_html => encode_json(\@design_layout_view_html_array),
-		       #design_layout_view_html => $design_layout_view_html,
-		       design_info_view_html => $design_info_view_html,
-		       #design_json => $design_json,
-           design_json =>  encode_json(\@design_array),
-		      };
+    $c->stash->{rest} = {
+        success => "1",
+        design_layout_view_html => encode_json(\@design_layout_view_html_array),
+        #design_layout_view_html => $design_layout_view_html,
+        design_info_view_html => $design_info_view_html,
+        #design_json => $design_json,
+        design_json =>  encode_json(\@design_array),
+    };
 
- }
+}
 
 
 
@@ -359,13 +361,18 @@ sub save_experimental_design_POST : Args(0) {
   my $error;
 
   my $design = _parse_design_from_json($c->req->param('design_json'));
-  print STDERR Dumper $design;
+  print STDERR "\nDesign: " . Dumper $design;
 
   my @locations;
   my $trial_location;
   my $multi_location;
   my $trial_locations = $c->req->param('trial_location');
   my $trial_name = $c->req->param('project_name');
+  my $breeding_program = $c->req->param('breeding_program_name');
+  my $schema = $c->dbic_schema("Bio::Chado::Schema");
+  my $breeding_program_id = $schema->resultset("Project::Project")->find({name=>$breeding_program})->project_id();
+  my $folder;
+  my $new_trial_id;
 
   try {
      $multi_location = decode_json($trial_locations);
@@ -377,6 +384,26 @@ sub save_experimental_design_POST : Args(0) {
   catch {
     push @locations, $trial_locations;
   };
+  my $folder_id;
+  my $parent_folder_id = 0;
+  if (scalar(@locations) > 1) {
+
+      my $existing = $schema->resultset("Project::Project")->find( { name => $trial_name });
+
+      if ($existing) {
+  	     $c->stash->{rest} = { error => "An folder or trial with that name already exists in the database. Please select another name." };
+  	      return;
+      }
+
+      $folder = CXGN::Trial::Folder->create(
+  	{
+  	    bcs_schema => $schema,
+  	    parent_folder_id => $parent_folder_id,
+  	    name => $trial_name,
+  	    breeding_program_id => $breeding_program_id,
+  	});
+    $folder_id = $folder->folder_id();
+  }
 
   my $design_index = 0;
 
@@ -401,7 +428,7 @@ sub save_experimental_design_POST : Args(0) {
     	   dbh => $dbh,
     	   user_name => $user_name,
     	   design => $trial_location_design,
-    	   program => $c->req->param('breeding_program_name'),
+    	   program => $breeding_program,
     	   trial_year => $c->req->param('year'),
     	   trial_description => $c->req->param('project_description'),
          trial_location => $trial_location,
@@ -437,6 +464,17 @@ sub save_experimental_design_POST : Args(0) {
     };
 
     $design_index++;
+
+    if ($folder_id) {
+      $new_trial_id = $schema->resultset("Project::Project")->find({name=>$trial_name})->project_id();
+
+      my $folder1 = CXGN::Trial::Folder->new(
+	 		{
+	 			bcs_schema => $chado_schema,
+	 			folder_id => $new_trial_id,
+			});
+      $folder1->associate_parent($folder_id);
+    }
   }
     if ($error) {return;}
     print STDERR "Trial saved successfully\n";
@@ -575,12 +613,12 @@ sub upload_trial_file_POST : Args(0) {
   }
 
   if (!$c->user()) {
-    print STDERR "User not logged in... not adding a crosses.\n";
-    $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
+    print STDERR "User not logged in... not uploading a trial.\n";
+    $c->stash->{rest} = {error => "You need to be logged in to upload a trial." };
     return;
   }
   if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a trial." };
     return;
   }
 
@@ -608,6 +646,8 @@ sub upload_trial_file_POST : Args(0) {
   $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
   $parser->load_plugin('TrialExcelFormat');
   $parsed_data = $parser->parse();
+
+
 
   if (!$parsed_data) {
     my $return_error = '';

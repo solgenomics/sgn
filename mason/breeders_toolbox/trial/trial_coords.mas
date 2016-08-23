@@ -3,7 +3,9 @@
 $trial_id
 </%args>
 
+
 <& /util/import_javascript.mas, classes => [ 'kinetics.kinetic.js' ] &>
+
 
 
     <style>
@@ -22,6 +24,7 @@ $trial_id
 		display: none;
 		margin: 10px;
 	}
+         #ligand_info { display: none;}
          #trial_coords {display: inline; }
          #trial_no_coordsMSG {display: none; }
 	 #row_desc {display: none; margin: 2px}
@@ -38,13 +41,26 @@ $trial_id
 
 
 <div id="row_desc" class="row_desc" >  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <b>Field Layout Rows </b></div>
-<p></br><div id="col_desc" class="col_desc"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <b>Field Layout Columns </b></div></p>
+<p></br><div id="col_desc" class="col_desc">  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <ul class="legend">
+  <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
+  <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
+  <li><span class="checks"></span> Checks</li>
+  <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
+  <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
+</ul> </br></br> <b>Field Layout Columns </b></div></p>
 
  <div id="container" ></div>
  <div id="trial_coords" >loading...</div>
  <div id="trial_no_coordsMSG" >Upload physical field coordinates for this trial</div>
- <div class="col-sm-4" id="delete_button" style="display:none";>
-   <a id="delete_field_map_link"><button class="button"  type="button" id="delete_map_button" value="delete_cords" >Delete Field Map</button></a>
+ <div class="col-sm-10" id="delete_button" style="display:none";>
+  <!--<ul class="legend">
+    <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
+    <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
+    <li><span class="checks"></span> Checks</li>
+    <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
+    <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
+  </ul> </br> -->
+   <a id="download" class="btn btn-primary">Download as Image</a> &nbsp; <a id="delete_field_map_link"><button class="btn btn-danger"  type="button" id="delete_map_button" value="delete_cords" >Delete Map</button></a>
  </div>
 
 
@@ -54,6 +70,20 @@ var trial_id = <% $trial_id %>;
    jQuery(document).ready( function() {
 
      jQuery('#physical_layout_onswitch').click( function() {
+
+//   jQuery(function() {
+  //  jQuery("#downloadImgLink").click(function() {
+    //    html2canvas(jQuery("#container"), {
+      //      onrendered: function(canvas) {
+        //        theCanvas = canvas;
+//
+//                canvas.toBlob(function(blob) {
+  //                  saveAs(blob, "Dashboard.png");
+    //            });
+      //      }
+      //  });
+  //  });
+//  });
 
 	jQuery.ajax( {
 	     url: '/ajax/breeders/trial/'+trial_id+'/coords',
@@ -77,12 +107,14 @@ var trial_id = <% $trial_id %>;
    			//jQuery("#trial_coords").html('Upload physical field coordinates');
 			jQuery("#trial_no_coordsMSG").css("display", "inline-block");
 		}
-		//alert("plot_id: "+response.plot_id);
-		//alert("plot_number: "+response.plot_number);
+
 		var width = 65;
 		var plot_counter = 0;
 	     	var max_row = response.max_row;
 	    	var max_col = response.max_col;
+        var max_rep = response.max_rep;
+        var max_block = response.max_block;
+
 		var stage = new Kinetic.Stage({
         	container: 'container',
         	//width: 2000,
@@ -93,19 +125,31 @@ var trial_id = <% $trial_id %>;
      		});
 
      		var plot_layer = new Kinetic.Layer();
-      		var popup_layer = new Kinetic.Layer();
+      	var popup_layer = new Kinetic.Layer();
 
+    var array_index;
 		for  (y = 0; y < max_row; y = y + 1) {
 			for ( x = 0; x < max_col; x = x + 1){
+
 				plot_counter++;
+        //array_index = response.plot_number[y][x] - 1;
+
+        //if (response.plot_number[y][x].match(/[0-9]{3}$/)){
+          //alert("single digit: "+response.plot_number[y][x]);
+        //  array_index = response.sudo_plot_no[plot_counter] - 2;
+        //}
+
 				if (response.plot_number[y][x]){
 
 				} else {
 					response.plot_number[y][x] = '';
 					}
-				draw_rect(stage, plot_layer, popup_layer, response.plot_msg[y][x], x, y, max_col, response.coord_col[x], response.coord_row[y], plot_counter, response.plot_id[y][x], response.plot_number[y][x]);
+
+				draw_rect(stage, plot_layer, popup_layer, response.plot_msg[y][x], x, y, max_col, response.coord_col[x], response.coord_row[y], plot_counter, response.plot_id[y][x], response.plot_number[y][x], max_rep, max_block, response.controls, response.acc[y][x], response.blk[y][x], response.rep_no[y][x]);
+
 			}
 		}
+
 		stage.add(plot_layer);
 		stage.add(popup_layer);
 
@@ -117,22 +161,71 @@ var trial_id = <% $trial_id %>;
         });
      });
 
-    function draw_rect(stage, plot_layer, popup_layer, plot_msg, x, y, max_col, col_number, row_number, plot_counter, plot_id, plot_number){
-	var width = 65;
+    function draw_rect(stage, plot_layer, popup_layer, plot_msg, x, y, max_col, col_number, row_number, plot_counter, plot_id, plot_number, max_rep, max_block, controls, accessions, blk, rep_no){
+
+  var width = 65;
 	var popup_x = width;
-        var popup_width = 200;
+  var popup_width = 200;
 	x = x * width;
 	y = y * width;
 	if (x + width > max_col * width / 2){
 		popup_x = -1 * popup_width;
 	}
+  if (x + width > max_col * width / 2 && max_col <= 5) {
+    popup_x = -1 * popup_width + 60;
+  }
+
+  var color;
+  if (max_block == 1){
+    color = '#C0C0C0';
+  }
+  else if (max_block > 1){
+    function isEven(blk){
+        if (blk % 2 == 0)
+          color = '#cca6ac';
+        else
+          color = '#C0C0C0';
+    }
+    isEven(blk);
+  }
+  else{
+    color = '#cca6ac';
+  }
+
+  if (controls) {
+  //alert("the control: "+controls);
+    for (var i = 0; i < controls.length; i++) {
+      if ( controls[i] == accessions) {
+        color = '#58d68d';
+      }
+    }
+  }
+
+  var stroke_col;
+  if (max_rep == 1) {
+    stroke_col = 'black';
+  }
+  else if (max_rep > 1){
+    function isEven(rep_no){
+        if (rep_no % 2 == 0)
+          stroke_col = ' #f4d03f ';
+        else
+          stroke_col = 'black';
+    }
+    isEven(rep_no);
+  }
+  else{
+      stroke_col = ' #f4d03f ';
+  }
+
 	var myRectangle = new Kinetic.Rect({
 	x:x,
 	y:y,
 	width:width,
 	height:width,
-	fill:'#C0C0C0',
-	stroke:'black',
+	//fill:'#C0C0C0',
+  fill: color,
+	stroke: stroke_col,
 	strokeWidth:3,
       });
 
@@ -149,8 +242,8 @@ var trial_id = <% $trial_id %>;
 
       myRectangle.on('mouseover', function() {
 
-	this.setFill('#ddd');
-	plot_layer.draw();
+	//this.setFill('#ddd');
+	//plot_layer.draw();
 
 	var plot_txt = new Kinetic.Text({
         x: x+popup_x+5+10,
@@ -166,8 +259,8 @@ var trial_id = <% $trial_id %>;
          y: y+8,
          fill: '#000',
       	     opacity: 0.6,
-         width: popup_width,
-         height: 80,
+         width: popup_width+10,
+         height: 90,
          cornerRadius: 10
       });
 
@@ -180,8 +273,8 @@ var trial_id = <% $trial_id %>;
 
       myRectangle.on('mouseout', function() {
 
-	this.setFill('#C0C0C0');
-	plot_layer.draw();
+	//this.setFill('#C0C0C0');
+	//plot_layer.draw();
 
        	popup_layer.removeChildren();
 	popup_layer.draw();
@@ -199,6 +292,19 @@ var trial_id = <% $trial_id %>;
       plot_layer.add(plot_txt_info);
 
  }
+
+ function downloadCanvas(link, canvasId, filename) {
+    //var canvas = document.getElementById(canvasId);
+    var canvas = document.getElementsByTagName('canvas')[0];
+    var dataurl = canvas.toDataURL();
+     link.href = dataurl;
+     link.download = filename;
+ }
+
+ document.getElementById('download').addEventListener('click', function() {
+       downloadCanvas(this, 'container', 'fieldMap.png');
+ }, false);
+
 
 });
 
@@ -218,4 +324,38 @@ var trial_id = <% $trial_id %>;
        </label>
 
    </div>
+</div>
+
+<style>
+#download {
+	    float:left;
+	    cursor:pointer;
+	    color:#ccc;
+	    padding:3px;
+	}
+	#download:hover {
+	    color:#fff;
+	}
+
+.legend { list-style: none; }
+.legend li { float: left; margin-right: 10px; }
+.legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
+/* your colors */
+.legend .block_even_number { background-color: #cca6ac; }
+.legend .block_odd_number { background-color: #C0C0C0; }
+.legend .checks { background-color: #58d68d; }
+.legend .rep_even_number { background-color: #f4d03f; height: 4px; width: 16px;}
+.legend .rep_odd_number { background-color: black; height: 4px; width: 16px;}
+</style>
+
+
+<!-- Not in use -->
+<div id="ligand_info" class="ligand_info">
+  <ul class="legend">
+    <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
+    <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
+    <li><span class="checks"></span> Checks</li>
+    <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
+    <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
+  </ul>
 </div>

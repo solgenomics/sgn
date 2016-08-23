@@ -30,8 +30,11 @@ subtype 'CrossType',
       $_ eq 'biparental' ||
       $_ eq 'self' ||
       $_ eq 'open' ||
-      $_ eq 'bulk' || 
-      $_ eq 'genetic_transformation' || 
+      $_ eq 'bulk' ||
+      $_ eq 'bulk_self' ||
+      $_ eq 'bulk_open' ||
+      $_ eq 'doubled_haploid' ||
+      $_ eq 'genetic_transformation' ||
       $_ eq 'unknown' };
 
 has 'name' => (isa => 'Str',is => 'rw', predicate => 'has_name', required => 1,);

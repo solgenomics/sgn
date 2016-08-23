@@ -2,7 +2,7 @@
 package CXGN::Trial::Download::Plugin::TrialLayoutExcel;
 
 use Moose::Role;
-
+use Data::Dumper;
 use Spreadsheet::WriteExcel;
 use CXGN::Trial::TrialLayout;
 
@@ -18,6 +18,7 @@ sub download {
     
     my $trial = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $self->trial_id() });
     my $design = $trial->get_design();
+    #print STDERR Dumper $design;
 
     if ($self->data_level eq 'plots') {
         $ws->write(0,0,"plot_name");

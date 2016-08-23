@@ -6,8 +6,21 @@ CXGN::Phenotypes::StorePhenotypes - an object to handle storing phenotypes for S
 
 =head1 USAGE
 
- my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
- $store_phenotypes->store($c,\@plot_list, \@trait_list, \%plot_trait_value, \%phenotype_metadata);
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    bcs_schema=>$schema,
+    metadata_schema=>$metadata_schema,
+    phenome_schema=>$phenome_schema,
+    user_id=>$user_id,
+    stock_list=>$plots,
+    trait_list=>$traits,
+    values_hash=>$parsed_data,
+    has_timestamps=>$timestamp_included,
+    overwrite_values=>$overwrite,
+    metadata_hash=>$phenotype_metadata,
+    image_zipfile_path=>$image_zip
+);
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+my $stored_phenotype_error = $store_phenotypes->store();
 
 =head1 DESCRIPTION
 
@@ -32,27 +45,121 @@ use Scalar::Util qw(looks_like_number);
 use SGN::Image;
 use CXGN::ZipFile;
 
+has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
+    is => 'rw',
+    required => 1,
+);
+
+has 'metadata_schema' => ( isa => 'CXGN::Metadata::Schema',
+    is => 'rw',
+    required => 1,
+);
+
+has 'phenome_schema' => ( isa => 'CXGN::Phenome::Schema',
+    is => 'rw',
+    required => 1,
+);
+
+has 'user_id' => (isa => "Int",
+    is => 'rw',
+    required => 1
+);
+
+has 'stock_list' => (isa => "ArrayRef",
+    is => 'rw',
+    required => 1
+);
+
+has 'trait_list' => (isa => "ArrayRef",
+    is => 'rw',
+    required => 1
+);
+
+has 'values_hash' => (isa => "HashRef",
+    is => 'rw',
+    required => 1
+);
+
+has 'has_timestamps' => (isa => "Bool",
+    is => 'rw',
+    default => 0
+);
+
+has 'overwrite_values' => (isa => "Bool",
+    is => 'rw',
+    default => 0
+);
+
+has 'metadata_hash' => (isa => "HashRef",
+    is => 'rw',
+    required => 1
+);
+
+has 'image_zipfile_path' => (isa => "Str | Undef",
+    is => 'rw',
+    required => 0
+);
+
+has 'trait_objs' => (isa => "HashRef",
+    is => 'rw',
+);
+
+has 'unique_value_trait_stock' => (isa => "HashRef",
+    is => 'rw',
+);
+
+has 'unique_trait_stock' => (isa => "HashRef",
+    is => 'rw',
+);
+
+#build is used for creating hash lookups in this case
+sub BUILD {
+    my $self = shift;
+
+    #Find trait cvterm objects and put them in a hash
+    my %trait_objs;
+    my @trait_list = @{$self->trait_list};
+    my $schema = $self->bcs_schema;
+    foreach my $trait_name (@trait_list) {
+        #print STDERR "trait: $trait_name\n";
+        my $trait_cvterm;
+        $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
+        $trait_objs{$trait_name} = $trait_cvterm;
+    }
+    $self->trait_objs(\%trait_objs);
+
+    #for checking if values in the file are already stored in the database or in the same file
+    my %check_unique_value_trait_stock;
+    my %check_unique_trait_stock;
+    my $sql = "SELECT value, cvalue_id, uniquename FROM phenotype WHERE value is not NULL; ";
+    my $sth = $schema->storage->dbh->prepare($sql);
+    $sth->execute();
+    while (my ($db_value, $db_cvalue_id, $db_uniquename) = $sth->fetchrow_array) {
+        my ($stock_string, $rest_of_name) = split( /,/, $db_uniquename);
+        $check_unique_value_trait_stock{$db_value, $db_cvalue_id, $stock_string} = 1;
+        $check_unique_trait_stock{$db_cvalue_id, $stock_string} = $db_value;
+    }
+    $self->unique_value_trait_stock(\%check_unique_value_trait_stock);
+    $self->unique_trait_stock(\%check_unique_trait_stock);
+
+}
+
 sub verify {
     my $self = shift;
-    my $c = shift;
-    my $plot_list_ref = shift;
-    my $trait_list_ref = shift;
-    my $plot_trait_value_hashref = shift;
-    my $phenotype_metadata_ref = shift;
-    my $timestamp_included = shift;
-    my $archived_image_zipfile_with_path = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my @plot_list = @{$self->stock_list};
+    my @trait_list = @{$self->trait_list};
+    my %trait_objs = %{$self->trait_objs};
+    my %plot_trait_value = %{$self->values_hash};
+    my %phenotype_metadata = %{$self->metadata_hash};
+    my $timestamp_included = $self->has_timestamps;
+    my $archived_image_zipfile_with_path = $self->image_zipfile_path;
+    my $schema = $self->bcs_schema;
     my $transaction_error;
-    my @plot_list = @{$plot_list_ref};
-    my @trait_list = @{$trait_list_ref};
-    my %phenotype_metadata = %{$phenotype_metadata_ref};
-    my %plot_trait_value = %{$plot_trait_value_hashref};
     #print STDERR Dumper \%plot_trait_value;
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
     my @plots_missing = @{$plot_validator->validate($schema,'plots_or_plants',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
-    my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type');
     my $error_message;
     my $warning_message;
 
@@ -65,21 +172,12 @@ sub verify {
         return ($warning_message, $error_message);
     }
 
-    my %check_unique_value_trait_stock;
-    my %check_unique_trait_stock;
-    my $sql = "SELECT value, cvalue_id, uniquename FROM phenotype WHERE value is not NULL; ";
-    my $sth = $c->dbc->dbh->prepare($sql);
-    $sth->execute();
-
-    while (my ($db_value, $db_cvalue_id, $db_uniquename) = $sth->fetchrow_array) {
-        my ($stock_string, $rest_of_name) = split( /,/, $db_uniquename);
-        $check_unique_value_trait_stock{$db_value, $db_cvalue_id, $stock_string} = 1;
-        $check_unique_trait_stock{$db_cvalue_id, $stock_string} = $db_value;
-    }
+    my %check_unique_value_trait_stock = %{$self->unique_value_trait_stock};
+    my %check_unique_trait_stock = %{$self->unique_trait_stock};
 
     my %check_trait_category;
-    $sql = "SELECT b.value, c.cvterm_id from cvtermprop as b join cvterm as a on (b.type_id = a.cvterm_id) join cvterm as c on (b.cvterm_id=c.cvterm_id) where a.name = 'trait_categories';";
-    $sth = $c->dbc->dbh->prepare($sql);
+    my $sql = "SELECT b.value, c.cvterm_id from cvtermprop as b join cvterm as a on (b.type_id = a.cvterm_id) join cvterm as c on (b.cvterm_id=c.cvterm_id) where a.name = 'trait_categories';";
+    my $sth = $schema->storage->dbh->prepare($sql);
     $sth->execute();
     while (my ($category_value, $cvterm_id) = $sth->fetchrow_array) {
         $check_trait_category{$cvterm_id} = $category_value;
@@ -87,7 +185,7 @@ sub verify {
 
     my %check_trait_format;
     $sql = "SELECT b.value, c.cvterm_id from cvtermprop as b join cvterm as a on (b.type_id = a.cvterm_id) join cvterm as c on (b.cvterm_id=c.cvterm_id) where a.name = 'trait_format';";
-    $sth = $c->dbc->dbh->prepare($sql);
+    $sth = $schema->storage->dbh->prepare($sql);
     $sth->execute();
     while (my ($format_value, $cvterm_id) = $sth->fetchrow_array) {
         $check_trait_format{$cvterm_id} = $format_value;
@@ -114,7 +212,6 @@ sub verify {
         }
     }
 
-
     #print STDERR Dumper \@trait_list;
     my %check_file_stock_trait_duplicates;
 
@@ -126,13 +223,8 @@ sub verify {
             my $timestamp = $value_array->[1];
 
             if ($trait_value) {
-                my $trait_cvterm_id;
-                #For multiterm traits of the form trait1|CO:0000001||trait2|CO:00000002
-                if ($trait_name =~ /\|\|/ ) {
-                    $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name, 'cassava_trait')->cvterm_id();
-                } else {
-                    $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
-                }
+                my $trait_cvterm = $trait_objs{$trait_name};
+                my $trait_cvterm_id = $trait_cvterm->cvterm_id();
                 my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
 
                 #check that trait value is valid for trait name
@@ -210,37 +302,27 @@ sub verify {
 
 sub store {
     my $self = shift;
-    my $c = shift;
-    my $size = shift;
-    my $plot_list_ref = shift;
-
-    ####
-    #specify a trait list in addition to the hash of plot->trait->value because not all traits need to be present for each plot
-    #the parser can decide to set an empty string as a trait value to create a record for missing data,
-    #or store nothing in the hash to create no phenotype record for missing data
-    my $trait_list_ref = shift;
-    my $plot_trait_value_hashref = shift;
-    #####
-
-    my $phenotype_metadata = shift;
-    my $data_level = shift;
-    my $overwrite_values = shift;
-    my $archived_image_zipfile_with_path = shift;
+    my @plot_list = @{$self->stock_list};
+    my @trait_list = @{$self->trait_list};
+    my %trait_objs = %{$self->trait_objs};
+    my %plot_trait_value = %{$self->values_hash};
+    my %phenotype_metadata = %{$self->metadata_hash};
+    my $timestamp_included = $self->has_timestamps;
+    my $archived_image_zipfile_with_path = $self->image_zipfile_path;
+    my $phenotype_metadata = $self->metadata_hash;
+    my $schema = $self->bcs_schema;
+    my $metadata_schema = $self->metadata_schema;
+    my $phenome_schema = $self->phenome_schema;
+    my $overwrite_values = $self->overwrite_values;
     my $error_message;
     my $transaction_error;
-    my @plot_list = @{$plot_list_ref};
-    my @trait_list = @{$trait_list_ref};
-    my %plot_trait_value = %{$plot_trait_value_hashref};
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
+    my $user_id = $self->user_id;
     my $archived_file = $phenotype_metadata->{'archived_file'};
     my $archived_file_type = $phenotype_metadata->{'archived_file_type'};
     my $operator = $phenotype_metadata->{'operator'};
     my $upload_date = $phenotype_metadata->{'date'};
 
-    my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type');
+    my $phenotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
 
@@ -249,50 +331,35 @@ sub store {
     my %experiment_ids;##
     ###
 
-    my %check_unique_trait_stock;
-    if ($overwrite_values) {
-        my $sql = "SELECT cvalue_id, uniquename FROM phenotype WHERE value is not NULL; ";
-        my $dbh = $schema->storage->dbh();
-        my $sth = $dbh->prepare($sql);
-        $sth->execute();
+    my %check_unique_trait_stock = %{$self->unique_trait_stock};
 
-        while (my ($db_cvalue_id, $db_uniquename) = $sth->fetchrow_array) {
-            my ($stock_string, $rest_of_name) = split( /,/, $db_uniquename);
-            $check_unique_trait_stock{$db_cvalue_id, $stock_string} = 1;
+    my $rs;
+    my %data;
+    $rs = $schema->resultset('Stock::Stock')->search(
+        {'type.name' => 'field_layout', 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] },
+        {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
+            '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'],
+            '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
         }
+    );
+    while (my $s = $rs->next()) {
+        $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
     }
 
     ## Use txn_do with the following coderef so that if any part fails, the entire transaction fails.
-
-    #For storing files where num_plots * num_traits <= 100.
-    my $coderef_small_file = sub {
+    my $coderef = sub {
 
         foreach my $plot_name (@plot_list) {
 
-            #print STDERR "plot: $plot_name\n";
-            my $stock = $schema->resultset("Stock::Stock")->find( { uniquename => $plot_name, 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] } );
-            my $stock_id = $stock->stock_id;
-
-            my $field_layout_experiment = $stock
-                ->search_related('nd_experiment_stocks')
-                ->search_related('nd_experiment')
-                ->find({'type.name' => 'field_layout' },
-                { join => 'type' });
-
-            my $location_id = $field_layout_experiment->nd_geolocation_id;
-            my $project = $field_layout_experiment->nd_experiment_projects->single ; #there should be one project linked with the field experiment
-            my $project_id = $project->project_id;
+            my $stock_id = $data{$plot_name}[0];
+            my $location_id = $data{$plot_name}[1];
+            my $project_id = $data{$plot_name}[2];
 
             foreach my $trait_name (@trait_list) {
 
                 #print STDERR "trait: $trait_name\n";
-                my $trait_cvterm;
-                #For multiterm traits of the form trait1|CO:0000001||trait2|CO:00000002
-                if ($trait_name =~ /\|\|/ ) {
-                    $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name, 'cassava_trait');
-                } else {
-                    $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
-                }
+                my $trait_cvterm = $trait_objs{$trait_name};
+
                 my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
                 #print STDERR Dumper $value_array;
                 my $trait_value = $value_array->[0];
@@ -306,29 +373,25 @@ sub store {
                     #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
                     if ($overwrite_values) {
                         if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), "Stock: ".$stock_id})) {
-                            my $overwrite_phenotypes_rs = $schema->resultset("Phenotype::Phenotype")->search({uniquename=>{'like' => 'Stock: '.$stock_id.'%'}, cvalue_id=>$trait_cvterm->cvterm_id() });
-                            while (my $previous_phenotype = $overwrite_phenotypes_rs->next()) {
-                                #print STDERR "removing phenotype: ".$previous_phenotype->uniquename()."\n";
-                                $previous_phenotype->delete();
-                            }
+                            $self->delete_previous_phenotypes($trait_cvterm->cvterm_id(), $stock_id);
                         }
                         $check_unique_trait_stock{$trait_cvterm->cvterm_id(), "Stock: ".$stock_id} = 1;
                     }
 
-		    my $plot_trait_uniquename = "Stock: " .
-		    $stock_id . ", trait: " .
-			$trait_cvterm->name .
-			    " date: $timestamp" .
-				"  operator = $operator" ;
-		    my $phenotype = $trait_cvterm
-		    ->find_or_create_related("phenotype_cvalues", {
-			observable_id => $trait_cvterm->cvterm_id,
-			value => $trait_value ,
-			uniquename => $plot_trait_uniquename,
-					     });
+                    my $plot_trait_uniquename = "Stock: " .
+                        $stock_id . ", trait: " .
+                        $trait_cvterm->name .
+                        " date: $timestamp" .
+                        "  operator = $operator" ;
 
-                     #print STDERR "\n[StorePhenotypes] Storing plot: $plot_name trait: $trait_name value: $trait_value:\n";
-                     my $experiment;
+                    my $phenotype = $trait_cvterm
+                        ->find_or_create_related("phenotype_cvalues", {
+                            observable_id => $trait_cvterm->cvterm_id,
+                            value => $trait_value ,
+                            uniquename => $plot_trait_uniquename,
+                        });
+
+                    my $experiment;
 
 		## Find the experiment that matches the location, type, operator, and date/timestamp if it exists
 		# my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
@@ -347,17 +410,17 @@ sub store {
 
                     # Create a new experiment, if one does not exist
                     if (!$experiment) {
-                        $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
-                        ->create({nd_geolocation_id => $location_id, type_id => $phenotyping_experiment_cvterm->cvterm_id()});
-                        $experiment->create_nd_experimentprops({date => $upload_date},{autocreate => 1, cv_name => 'local'});
-                        $experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
+                    $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
+                        ->create({nd_geolocation_id => $location_id, type_id => $phenotyping_experiment_cvterm_id});
+                    $experiment->create_nd_experimentprops({date => $upload_date},{autocreate => 1, cv_name => 'local'});
+                    $experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
                     }
 
                     ## Link the experiment to the project
                     $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
 
                     # Link the experiment to the stock
-                    $experiment->create_related('nd_experiment_stocks', {stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm->cvterm_id});
+                    $experiment->create_related('nd_experiment_stocks', { stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id });
 
                     ## Link the phenotype to the experiment
                     $experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
@@ -369,129 +432,11 @@ sub store {
         }
     };
 
-    #For storing files where num_plots * num_traits > 100.
-    my $coderef_large_file = sub {
-
-        my $rs;
-        my %data;
-
-        $rs = $schema->resultset('Stock::Stock')->search(
-            {'type.name' => 'field_layout', 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] },
-            {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
-                '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'],
-                '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
-            }
-        );
-        while (my $s = $rs->next()) {
-            $data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('nd_geolocation_id'), $s->get_column('project_id') ];
-        }
-
-        foreach my $plot_name (@plot_list) {
-
-            my $stock_id = $data{$plot_name}[0];
-            my $location_id = $data{$plot_name}[1];
-            my $project_id = $data{$plot_name}[2];
-
-            foreach my $trait_name (@trait_list) {
-
-                #print STDERR "trait: $trait_name\n";
-                my $trait_cvterm;
-                #For multiterm traits of the form trait1|CO:0000001||trait2|CO:00000002
-                if ($trait_name =~ /\|\|/ ) {
-                    $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name, 'cassava_trait');
-                } else {
-                    $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
-                }
-
-                my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
-                #print STDERR Dumper $value_array;
-                my $trait_value = $value_array->[0];
-                my $timestamp = $value_array->[1];
-                if (!$timestamp) {
-                    $timestamp = 'NA';
-                }
-
-		if (defined($trait_value) && length($trait_value)) {
-
-            #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
-            if ($overwrite_values) {
-                if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), "Stock: ".$stock_id})) {
-                    my $overwrite_phenotypes_rs = $schema->resultset("Phenotype::Phenotype")->search({uniquename=>{'like' => 'Stock: '.$stock_id.'%'}, cvalue_id=>$trait_cvterm->cvterm_id() });
-                    while (my $previous_phenotype = $overwrite_phenotypes_rs->next()) {
-                        #print STDERR "removing phenotype: ".$previous_phenotype->uniquename()."\n";
-                        $previous_phenotype->delete();
-                    }
-                }
-                $check_unique_trait_stock{$trait_cvterm->cvterm_id(), "Stock: ".$stock_id} = 1;
-            }
-
-		    my $plot_trait_uniquename = "Stock: " .
-		    $stock_id . ", trait: " .
-			$trait_cvterm->name .
-			    " date: $timestamp" .
-				"  operator = $operator" ;
-		    my $phenotype = $trait_cvterm
-		    ->find_or_create_related("phenotype_cvalues", {
-								   observable_id => $trait_cvterm->cvterm_id,
-								   value => $trait_value ,
-								   uniquename => $plot_trait_uniquename,
-								  });
-
-		    my $experiment;
-
-		## Find the experiment that matches the location, type, operator, and date/timestamp if it exists
-		# my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
-		#     ->find({
-		# 	    nd_geolocation_id => $location_id,
-		# 	    type_id => $phenotyping_experiment_cvterm->cvterm_id(),
-		# 	    'type.name' => 'operator',
-		# 	    'nd_experimentprops.value' => $operator,
-		# 	    'type_2.name' => 'date',
-		# 	    'nd_experimentprops_2.value' => $upload_date,
-		# 	   },
-		# 	   {
-		# 	    join => [{'nd_experimentprops' => 'type'},{'nd_experimentprops' => 'type'},{'nd_experiment_phenotypes' => 'type'}],
-		# 	   });
-
-
-		    # Create a new experiment, if one does not exist
-		    if (!$experiment) {
-                $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
-                    ->create({nd_geolocation_id => $location_id, type_id => $phenotyping_experiment_cvterm->cvterm_id()});
-                $experiment->create_nd_experimentprops({date => $upload_date},{autocreate => 1, cv_name => 'local'});
-                $experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
-            }
-
-            ## Link the experiment to the project
-            $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
-
-            # Link the experiment to the stock
-            $experiment->create_related('nd_experiment_stocks', { stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm->cvterm_id });
-
-            ## Link the phenotype to the experiment
-            $experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
-            #print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
-
-            $experiment_ids{$experiment->nd_experiment_id()}=1;
-		}
-	    }
-	}
+    try {
+        $schema->txn_do($coderef);
+    } catch {
+        $transaction_error =  $_;
     };
-
-    if ($size <= 100) {
-	try {
-	    $schema->txn_do($coderef_small_file);
-	} catch {
-	    $transaction_error =  $_;
-	};
-    }
-    elsif ($size > 100) {
-	try {
-	    $schema->txn_do($coderef_large_file);
-	} catch {
-	    $transaction_error =  $_;
-	};
-    }
 
     if ($transaction_error) {
         $error_message = $transaction_error;
@@ -499,70 +444,64 @@ sub store {
         return $error_message;
     }
 
-    my %image_plot_full_names;
-    if ($archived_image_zipfile_with_path) {
-        #print STDERR $archived_image_zipfile_with_path."\n";
-        my $dbh = $schema->storage->dbh;
-        my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$archived_image_zipfile_with_path);
-        my $file_members = $archived_zip->file_members();
-
-        foreach (@$file_members) {
-            my $image = SGN::Image->new( $dbh, undef, $c );
-            #print STDERR Dumper $_;
-            my $img_name = substr($_->fileName(), 0, -24);
-            $img_name =~ s/^.*photos\///;
-            my $stock = $schema->resultset("Stock::Stock")->find( { uniquename => $img_name, 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] } );
-            my $stock_id = $stock->stock_id;
-
-            my $temp_file = $image->upload_zipfile_images($_);
-
-            $image->set_sp_person_id($user_id);
-
-            my $ret = $image->process_image($temp_file, 'stock', $stock_id);
-            if (!$ret ) {
-                $error_message .= "Image processing for $temp_file did not work. Image not associated to stock_id $stock_id";
-            }
-        }
-    }
-
     if ($archived_file) {
-	## Insert metadata about the uploaded file only after a successful phenotype data transaction
-	my $md5 = Digest::MD5->new();
-	my $file_row;
-	my $md_row;
-	my $file_metadata_transaction_error;
-	if ($archived_file ne 'none') {
-		open(my $F, "<", $archived_file) || die "Can't open file ".$archived_file;
-		binmode $F;
-		$md5->addfile($F);
-		close($F);
-	}
-	$md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id,});
-	$md_row->insert();
-	$file_row = $metadata_schema->resultset("MdFiles")
-	    ->create({
-		      basename => basename($archived_file),
-		      dirname => dirname($archived_file),
-		      filetype => $archived_file_type,
-		      md5checksum => $md5->hexdigest(),
-		      metadata_id => $md_row->metadata_id(),
-		     });
-	$file_row->insert();
-	foreach my $nd_experiment_id (keys %experiment_ids) {
-	    ## Link the file to the experiment
-	   my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")
-		->create({
-			  nd_experiment_id => $nd_experiment_id,
-			  file_id => $file_row->file_id(),
-			 });
-	    $experiment_files->insert();
-	    #print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
-	}
+        $self->save_archived_file_metadata($archived_file, $archived_file_type, \%experiment_ids);
     }
 
     return $error_message;
 }
 
+
+sub delete_previous_phenotypes {
+    my $self = shift;
+    my $trait_cvterm_id = shift;
+    my $stock_id = shift;
+
+    my $overwrite_phenotypes_rs = $self->bcs_schema->resultset("Phenotype::Phenotype")->search({uniquename=>{'like' => 'Stock: '.$stock_id.'%'}, cvalue_id=>$trait_cvterm_id });
+    while (my $previous_phenotype = $overwrite_phenotypes_rs->next()) {
+        #print STDERR "removing phenotype: ".$previous_phenotype->uniquename()."\n";
+        $previous_phenotype->delete();
+    }
+}
+
+sub save_archived_file_metadata {
+    my $self = shift;
+    my $archived_file = shift;
+    my $archived_file_type = shift;
+    my $experiment_ids = shift;
+
+    ## Insert metadata about the uploaded file only after a successful phenotype data transaction
+    my $md5 = Digest::MD5->new();
+    if ($archived_file ne 'none') {
+        open(my $F, "<", $archived_file) || die "Can't open file ".$archived_file;
+        binmode $F;
+        $md5->addfile($F);
+        close($F);
+    }
+
+    my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id,});
+    $md_row->insert();
+    my $file_row = $self->metadata_schema->resultset("MdFiles")
+        ->create({
+            basename => basename($archived_file),
+            dirname => dirname($archived_file),
+            filetype => $archived_file_type,
+            md5checksum => $md5->hexdigest(),
+            metadata_id => $md_row->metadata_id(),
+        });
+    $file_row->insert();
+
+    foreach my $nd_experiment_id (keys %$experiment_ids) {
+        ## Link the file to the experiment
+        my $experiment_files = $self->phenome_schema->resultset("NdExperimentMdFiles")
+            ->create({
+                nd_experiment_id => $nd_experiment_id,
+                file_id => $file_row->file_id(),
+            });
+        $experiment_files->insert();
+        #print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
+    }
+}
 
 
 ###
