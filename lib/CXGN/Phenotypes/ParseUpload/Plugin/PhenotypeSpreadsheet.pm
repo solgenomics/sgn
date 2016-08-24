@@ -4,6 +4,7 @@ use Moose;
 #use File::Slurp;
 use Spreadsheet::ParseExcel;
 use JSON;
+use Data::Dumper;
 
 sub name {
     return "phenotype spreadsheet";
@@ -200,18 +201,6 @@ sub parse {
 
     my $num_col_before_traits = $num_fixed_col + $num_predef_col;
 
-    #get trait names and column numbers;
-    for my $col ($num_col_before_traits .. $col_max) {
-        my $cell_val;
-        if ($worksheet->get_cell(6,$col)) {
-            $cell_val = $worksheet->get_cell(6,$col)->value();
-        }
-        if ($cell_val) {
-            $header_column_info{$cell_val} = $col;
-            $traits_seen{$cell_val} = 1;
-        }
-    }
-
     for my $row ( 7 .. $row_max ) {
         my $plot_name;
 
@@ -220,30 +209,45 @@ sub parse {
             $plots_seen{$plot_name} = 1;
         }
 
-        foreach my $trait_key (sort keys %header_column_info) {
-            my $value_string = '';
-
-            if ($worksheet->get_cell($row,$header_column_info{$trait_key})){
-                $value_string = $worksheet->get_cell($row,$header_column_info{$trait_key})->value();
+        for my $col ($num_col_before_traits .. $col_max) {
+            my $trait_name;
+            if ($worksheet->get_cell(6,$col)) {
+                $trait_name = $worksheet->get_cell(6,$col)->value();
             }
-            my ($trait_value, $timestamp) = split /,/, $value_string;
-            if (!$timestamp) {
-                $timestamp = '';
-            }
-            if (!defined($trait_value)) {
-                $trait_value = '';
-            }
-            #print STDERR $trait_value." : ".$timestamp."\n";
-
-            if ( defined($trait_value) && defined($timestamp) ) {
-                if ($trait_value ne '.'){
-                    $data{$plot_name}->{$trait_key} = [$trait_value, $timestamp];
+            if ($trait_name) {
+                if ($num_predef_col > 0) {
+                    for my $predef_col ($num_fixed_col .. $num_col_before_traits-1) {
+                        #print STDERR $predef_col."\n";
+                        $trait_name = $trait_name.'||'.$worksheet->get_cell($row, $predef_col)->value();
+                    }
                 }
-            } else {
-                $parse_result{'error'} = "Value or timestamp missing.";
-                return \%parse_result;
+
+                $traits_seen{$trait_name} = 1;
+                my $value_string = '';
+
+                if ($worksheet->get_cell($row, $col)){
+                    $value_string = $worksheet->get_cell($row, $col)->value();
+                }
+                my ($trait_value, $timestamp) = split /,/, $value_string;
+                if (!$timestamp) {
+                    $timestamp = '';
+                }
+                if (!defined($trait_value)) {
+                    $trait_value = '';
+                }
+                #print STDERR $trait_value." : ".$timestamp."\n";
+
+                if ( defined($trait_value) && defined($timestamp) ) {
+                    if ($trait_value ne '.'){
+                        $data{$plot_name}->{$trait_name} = [$trait_value, $timestamp];
+                    }
+                } else {
+                    $parse_result{'error'} = "Value or timestamp missing.";
+                    return \%parse_result;
+                }
             }
         }
+
     }
 
     foreach my $plot (sort keys %plots_seen) {
@@ -256,6 +260,7 @@ sub parse {
     $parse_result{'data'} = \%data;
     $parse_result{'plots'} = \@plots;
     $parse_result{'traits'} = \@traits;
+    #print STDERR Dumper \%parse_result;
 
     return \%parse_result;
 }

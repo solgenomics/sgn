@@ -2,6 +2,7 @@ package CXGN::Trial::Download::Plugin::ExcelBasic;
 
 use Moose::Role;
 use JSON;
+use Data::Dumper;
 
 sub verify { 
     my $self = shift;
@@ -30,14 +31,20 @@ sub download {
     $bold->set_bold();
 
     my @predefined_columns;
+    my $submitted_predefined_columns;
     my $json = JSON->new();
     if ($self->predefined_columns) {
-        foreach (keys %{$self->predefined_columns}) {
-            if ($self->predefined_columns->{$_}) {
-                push @predefined_columns, $_;
+        $submitted_predefined_columns = $self->predefined_columns;
+        foreach (@$submitted_predefined_columns) {
+            foreach my $header_predef_col (keys $_) {
+                if ($_->{$header_predef_col}) {
+                    push @predefined_columns, $header_predef_col;
+                }
             }
         }
     }
+    #print STDERR Dumper \@predefined_columns;
+
     my $predefined_columns_json = $json->encode(\@predefined_columns);
 
     $ws->write(0, 0, 'Spreadsheet ID'); $ws->write('0', '1', 'ID'.$$.time());
@@ -86,27 +93,18 @@ sub download {
         }
         
     } elsif ($self->data_level eq 'plants') {
-        my $pre_col = $self->predefined_columns;
 
         if ($design_type eq 'greenhouse') {
             $num_col_before_traits = 1;
             my @column_headers = qw | plant_name |;
-            if ($pre_col) {
-                my $num_predefined_col = scalar keys %$pre_col;
-                foreach (keys %$pre_col) {
-                    if ($pre_col->{$_}) {
-                        push @column_headers, $_;
-                        $num_col_before_traits++;
-                    }
-                }
-                for(my $n=0; $n<scalar(@column_headers); $n++) { 
-                    $ws->write(6, $n, $column_headers[$n]);
-                }
-            } else {
-                for(my $n=0; $n<@column_headers; $n++) { 
-                    $ws->write(6, $n, $column_headers[$n]);
-                }
+            if (scalar(@predefined_columns) > 0) {
+                push (@column_headers, @predefined_columns);
+                $num_col_before_traits += scalar(@predefined_columns);
             }
+            for(my $n=0; $n<scalar(@column_headers); $n++) {
+                $ws->write(6, $n, $column_headers[$n]);
+            }
+
             my @plants = @{ $trial->get_plants() };
             @plants = sort @plants;
             my $sample_number;
@@ -122,12 +120,14 @@ sub download {
                     }
                 }
                 $ws->write($line, 0, $plant_name);
-                if ($pre_col) {
+                if (scalar(@predefined_columns) > 0) {
                     my $pre_col_ind = 1;
-                    foreach (keys %$pre_col) {
-                        if ($pre_col->{$_}) {
-                            $ws->write($line, $pre_col_ind, $pre_col->{$_});
-                            $pre_col_ind++;
+                    foreach (@$submitted_predefined_columns) {
+                        foreach my $header_predef_col (keys $_) {
+                            if ($_->{$header_predef_col}) {
+                                $ws->write($line, $pre_col_ind, $_->{$header_predef_col});
+                                $pre_col_ind++;
+                            }
                         }
                     }
                 }
@@ -137,21 +137,12 @@ sub download {
         } else {
             $num_col_before_traits = 7;
             my @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
-            if ($pre_col) {
-                my $num_predefined_col = scalar keys %$pre_col;
-                foreach (keys %$pre_col) {
-                    if ($pre_col->{$_}) {
-                        push @column_headers, $_;
-                        $num_col_before_traits++;
-                    }
-                }
-                for(my $n=0; $n<scalar(@column_headers); $n++) { 
-                    $ws->write(6, $n, $column_headers[$n]);
-                }
-            } else {
-                for(my $n=0; $n<@column_headers; $n++) { 
-                    $ws->write(6, $n, $column_headers[$n]);
-                }
+            if (scalar(@predefined_columns) > 0) {
+                push (@column_headers, @predefined_columns);
+                $num_col_before_traits += scalar(@predefined_columns);
+            }
+            for(my $n=0; $n<scalar(@column_headers); $n++) {
+                $ws->write(6, $n, $column_headers[$n]);
             }
             my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
             my $design = $trial_layout->get_design();
@@ -190,12 +181,14 @@ sub download {
                     $ws->write($line, 5, $design_info{is_a_control});
                     $ws->write($line, 6, $design_info{rep_number});
 
-                    if ($pre_col) {
+                    if (scalar(@predefined_columns) > 0) {
                         my $pre_col_ind = 7;
-                        foreach (keys %$pre_col) {
-                            if ($pre_col->{$_}) {
-                                $ws->write($line, $pre_col_ind, $pre_col->{$_});
-                                $pre_col_ind++;
+                        foreach (@$submitted_predefined_columns) {
+                            foreach my $header_predef_col (keys $_) {
+                                if ($_->{$header_predef_col}) {
+                                    $ws->write($line, $pre_col_ind, $_->{$header_predef_col});
+                                    $pre_col_ind++;
+                                }
                             }
                         }
                     }
