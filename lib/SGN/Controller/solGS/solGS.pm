@@ -137,26 +137,12 @@ sub genotype_form : Path('/solgs/form/population/genotype') Args(0) {
 sub search : Path('/solgs/search') Args() {
     my ($self, $c) = @_;
 
-  #  $self->load_yaml_file($c, 'search/solgs.yml');
-  #  my $form = $c->stash->{form};
-
     $self->gs_traits_index($c);
     my $gs_traits_index = $c->stash->{gs_traits_index};
-        
-   # my $query;
-   #  if ($form->submitted_and_valid) 
-   #  {
-   #      $query = $form->param_value('search.search_term');
-   # 	$c->res->redirect("/solgs/search/result/traits/$query");       
-   #  }        
-   #  else
-   #  {
-        $c->stash(template        => $self->template('/search/solgs.mas'),
-              #    form            => $form,
-              #    message         => 'test',                 
-                  gs_traits_index => $gs_traits_index,           
+          
+    $c->stash(template        => $self->template('/search/solgs.mas'),               
+	      gs_traits_index => $gs_traits_index,           
             );
-   # }
 
 }
 
