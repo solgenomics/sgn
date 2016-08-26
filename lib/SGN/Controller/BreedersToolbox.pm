@@ -125,7 +125,38 @@ sub manage_locations : Path("/breeders/locations") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/manage_locations.mas';
 }
 
-sub manage_crosses : Path("/breeders/crosses") Args(0) {
+sub manage_nurseries : Path("/breeders/nurseries") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+
+	# redirect to login page
+	#
+	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
+    my $breeding_programs = $bp->get_breeding_programs();
+
+    $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
+
+    $c->stash->{locations} = $bp->get_all_locations($c);
+
+    #$c->stash->{projects} = $self->get_projects($c);
+
+    $c->stash->{programs} = $breeding_programs;
+
+    $c->stash->{roles} = $c->user()->roles();
+
+    $c->stash->{nurseries} = $self->get_nurseries($c);
+
+    $c->stash->{template} = '/breeders_toolbox/manage_nurseries.mas';
+
+}
+
+sub manage_crosses : Path("/breeders/nurseries_and_crosses") Args(0) {
     my $self = shift;
     my $c = shift;
 

@@ -144,6 +144,10 @@ jQuery(document).ready(function ($) {
 	add_cross();
     });
 
+    $('#create_nursery_submit').click(function () {
+      add_nursery();
+    });
+
     $("#cross_type").change(function(){
 	$("#get_maternal_parent").toggle($("#cross_type").val()=="biparental");  // show if biparental is cross type selected
 	$("#get_paternal_parent").toggle($("#cross_type").val()=="biparental");  // show if biparental is cross type selected
@@ -191,6 +195,14 @@ jQuery(document).ready(function ($) {
 
     $("#add_cross_link").click( function () {
 	$("#create_cross" ).modal("show");
+    });
+
+    $("#add_nursery_link").click( function () {
+  $("#create_nursery" ).modal("show");
+
+    var lo = new CXGN.List();
+    $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
+
     });
 
     function add_cross() {
@@ -268,7 +280,89 @@ jQuery(document).ready(function ($) {
 	});
     }
 
-    jQuery('#dismiss_cross_saved_dialog').click( function() {
+    function add_nursery() {
+
+  var nurseryName = $("#nursery_name").val();
+  if (!nurseryName) { alert("A nursery name is required"); return; }
+
+  var accession_list_id = $('#accession_list_list_select').val();
+  var lo = new CXGN.List();
+  var accession_validation = 1;
+  if (accession_list_id) { accession_validation = lo.validate(accession_list_id, 'accessions', true); }
+
+  if (!accession_list_id) {
+     alert("You need to select an accession, a trial, and a trait list!");
+     return;
+  }
+
+  if (accession_validation != 1) {
+    alert("The accession list did not pass validation. Please correct the list and try again");
+    return;
+  }
+
+  var list_data = lo.getListData(accession_list_id);
+  var accessions = list_data.elements;
+  console.log("accessions="+JSON.stringify(accessions));
+  var accession_names = [];
+  for ( i=0; i < accessions.length; i++) {
+    console.log("accessions member"+accessions[i][1]);
+    accession_names.push(accessions[i][1]);
+  }
+
+  console.log("Accessions = "+accession_names);
+
+  var visibleToRole = $("#visible_to_role").val();
+  var location = $("#location").val();
+  var program = $("#program").val();
+
+  // create population with these accessions , name it as nursery name
+
+  var populationName = nurseryName + '_population';
+  var paternalParent = '';
+  $.ajax({
+          url: '/ajax/population/new',
+          timeout: 60000,
+        	method: 'POST',
+          async: false,
+        	data: {'population_name': populationName, 'accessions': accession_names},
+          success: function(response) {
+            paternalParent = populationName;
+          },
+          error: function(response) { alert("An error occurred creating population "+populationName+". Please try again later!"+response); },
+          });
+
+  for ( i=0; i < accession_names.length; i++) {
+
+    var maternalParent = accession_names[i];
+    var crossName = nurseryName + '_' + accession_names[i] + '_polycross';
+    var crossType = 'biparental';
+
+
+    $.ajax({
+            url: '/ajax/cross/add_cross',
+            timeout: 3000000,
+            dataType: "json",
+            type: 'POST',
+            async: false,
+            data: 'cross_name='+crossName+'&cross_type='+crossType+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&visible_to_role'+visibleToRole+'&program='+program+'&location='+location,
+            error: function(response) { alert("An error occurred creating cross "+crossName+". Please try again later!"+response); },
+            parseerror: function(response) { alert("A parse error occurred while creating cross "+crossName+". Please try again."+response); },
+            success: function(response) {
+
+      if (response.error) { alert(response.error); }
+
+      }
+    });
+
+        $("#create_nursery").modal("hide");
+        alert("The nursery crosses have been added.");
+        $('#nursery_saved_dialog_message').modal("show");
+    }
+
+
+    }
+
+    jQuery('#dismiss_nursery_saved_dialog').click( function() {
         window.location.reload();
     });
 
