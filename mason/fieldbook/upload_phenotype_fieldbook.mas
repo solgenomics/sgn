@@ -31,8 +31,9 @@
                         <input type="file" id="upload_fieldbook_phenotype_file_input" name="upload_fieldbook_phenotype_file_input" encoding="multipart/form-data" />
                     </div>
                 </div>
+
+                <div id="upload_phenotype_fieldbook_verify_status"></div>
             </form><br/>
-            <div id="upload_phenotype_fieldbook_verify_status"></div>
         </div>
       </div>
       <div class="modal-footer">

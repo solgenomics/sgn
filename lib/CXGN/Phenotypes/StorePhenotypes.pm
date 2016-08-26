@@ -63,14 +63,16 @@ sub verify {
         return ($warning_message, $error_message);
     }
 
-    my %check_unique_db;
+    my %check_unique_value_trait_stock;
+    my %check_unique_trait_stock;
     my $sql = "SELECT value, cvalue_id, uniquename FROM phenotype WHERE value is not NULL; ";
     my $sth = $c->dbc->dbh->prepare($sql);
     $sth->execute();
 
     while (my ($db_value, $db_cvalue_id, $db_uniquename) = $sth->fetchrow_array) {
         my ($stock_string, $rest_of_name) = split( /,/, $db_uniquename);
-        $check_unique_db{$db_value, $db_cvalue_id, $stock_string} = 1;
+        $check_unique_value_trait_stock{$db_value, $db_cvalue_id, $stock_string} = 1;
+        $check_unique_trait_stock{$db_cvalue_id, $stock_string} = $db_value;
     }
 
     my %check_trait_category;
@@ -89,6 +91,9 @@ sub verify {
         $check_trait_format{$cvterm_id} = $format_value;
     }
 
+    #print STDERR Dumper \@trait_list;
+    my %check_file_stock_trait_duplicates;
+
     foreach my $plot_name (@plot_list) {
         foreach my $trait_name (@trait_list) {
             my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
@@ -97,7 +102,13 @@ sub verify {
             my $timestamp = $value_array->[1];
 
             if ($trait_value) {
-                my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
+                my $trait_cvterm_id;
+                #For multiterm traits of the form trait1|CO:0000001||trait2|CO:00000002
+                if ($trait_name =~ /\|\|/ ) {
+                    $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name, 'cassava_trait')->cvterm_id();
+                } else {
+                    $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
+                }
                 my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
 
                 #check that trait value is valid for trait name
@@ -117,10 +128,18 @@ sub verify {
                     }
                 }
 
-                #check if the plot_name, trait_name, trait_value combination already exists in database.
-                if (exists($check_unique_db{$trait_value, $trait_cvterm_id, "Stock: ".$stock_id})) {
-                    $warning_message = $warning_message."<small>This combination exists in database: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+                #check if the plot_name, trait_name combination already exists in database.
+                if (exists($check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, "Stock: ".$stock_id})) {
+                    $warning_message = $warning_message."<small>$plot_name already has the same value as in your file ($trait_value) stored for the trait $trait_name.</small><hr>";
+                } elsif (exists($check_unique_trait_stock{$trait_cvterm_id, "Stock: ".$stock_id})) {
+                    $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock{$trait_cvterm_id, 'Stock: '.$stock_id}) than in your file ($trait_value) stored in the database for the trait $trait_name.</small><hr>";
                 }
+
+                #check if the plot_name, trait_name combination already exists in same file.
+                if (exists($check_file_stock_trait_duplicates{$trait_cvterm_id, $stock_id})) {
+                    $warning_message = $warning_message."<small>$plot_name already has a value for the trait $trait_name in your file. Possible duplicate in your file?</small><hr>";
+                }
+                $check_file_stock_trait_duplicates{$trait_cvterm_id, $stock_id} = 1;
             }
 
             if ($timestamp_included) {
@@ -175,6 +194,7 @@ sub store {
 
     my $phenotype_metadata = shift;
     my $data_level = shift;
+    my $overwrite_values = shift;
     my $error_message;
     my $transaction_error;
     my @plot_list = @{$plot_list_ref};
@@ -200,6 +220,18 @@ sub store {
     ## Used later to attach file metadata.
     my %experiment_ids;##
     ###
+
+    my %check_unique_trait_stock;
+    if ($overwrite_values) {
+        my $sql = "SELECT cvalue_id, uniquename FROM phenotype WHERE value is not NULL; ";
+        my $sth = $c->dbc->dbh->prepare($sql);
+        $sth->execute();
+
+        while (my ($db_cvalue_id, $db_uniquename) = $sth->fetchrow_array) {
+            my ($stock_string, $rest_of_name) = split( /,/, $db_uniquename);
+            $check_unique_trait_stock{$db_cvalue_id, $stock_string} = 1;
+        }
+    }
 
     ## Use txn_do with the following coderef so that if any part fails, the entire transaction fails.
 
@@ -228,7 +260,6 @@ sub store {
                 my $trait_cvterm;
                 #For multiterm traits of the form trait1|CO:0000001||trait2|CO:00000002
                 if ($trait_name =~ /\|\|/ ) {
-                    print STDERR $trait_name."\n";
                     $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name, 'cassava_trait');
                 } else {
                     $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
@@ -242,6 +273,18 @@ sub store {
                 }
 
                 if ($trait_value || $trait_value eq '0') {
+
+                    #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
+                    if ($overwrite_values) {
+                        if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), "Stock: ".$stock_id})) {
+                            my $overwrite_phenotypes_rs = $schema->resultset("Phenotype::Phenotype")->search({uniquename=>{'like' => 'Stock: '.$stock_id.'%'}, cvalue_id=>$trait_cvterm->cvterm_id() });
+                            while (my $previous_phenotype = $overwrite_phenotypes_rs->next()) {
+                                #print STDERR "removing phenotype: ".$previous_phenotype->uniquename()."\n";
+                                $previous_phenotype->delete();
+                            }
+                        }
+                        $check_unique_trait_stock{$trait_cvterm->cvterm_id(), "Stock: ".$stock_id} = 1;
+                    }
 
 		    my $plot_trait_uniquename = "Stock: " .
 		    $stock_id . ", trait: " .
@@ -322,7 +365,14 @@ sub store {
 
             foreach my $trait_name (@trait_list) {
 
-                my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
+                #print STDERR "trait: $trait_name\n";
+                my $trait_cvterm;
+                #For multiterm traits of the form trait1|CO:0000001||trait2|CO:00000002
+                if ($trait_name =~ /\|\|/ ) {
+                    $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name, 'cassava_trait');
+                } else {
+                    $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
+                }
         
                 my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
                 #print STDERR Dumper $value_array;
@@ -333,6 +383,18 @@ sub store {
                 }
 
 		if ($trait_value || $trait_value eq '0') {
+
+            #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
+            if ($overwrite_values) {
+                if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), "Stock: ".$stock_id})) {
+                    my $overwrite_phenotypes_rs = $schema->resultset("Phenotype::Phenotype")->search({uniquename=>{'like' => 'Stock: '.$stock_id.'%'}, cvalue_id=>$trait_cvterm->cvterm_id() });
+                    while (my $previous_phenotype = $overwrite_phenotypes_rs->next()) {
+                        #print STDERR "removing phenotype: ".$previous_phenotype->uniquename()."\n";
+                        $previous_phenotype->delete();
+                    }
+                }
+                $check_unique_trait_stock{$trait_cvterm->cvterm_id(), "Stock: ".$stock_id} = 1;
+            }
 
 		    my $plot_trait_uniquename = "Stock: " .
 		    $stock_id . ", trait: " .
