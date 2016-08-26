@@ -147,6 +147,61 @@ sub metadata_query {
   }
 }
 
+=head2 avg_phenotypes_query
+
+parameters: trait_id, trial_id, allow_missing
+
+returns: values, the avg pheno value of each accession in a trial for the given trait, and column_names, an array of the trait names
+
+Side Effects: none
+
+=cut
+
+sub avg_phenotypes_query {
+  my $self = shift;
+  my $trial_id = shift;
+  my $trait_ids = shift;
+  my $weights = shift;
+  my $allow_missing = shift;
+
+  my $select = "SELECT table0.accession_id, table0.accession_name";
+  my $from = " FROM (SELECT accession_id, accession_name FROM materialized_phenoview WHERE trial_id = $trial_id GROUP BY 1,2) AS table0";
+  for (my $i = 1; $i <= scalar @$trait_ids; $i++) {
+    $select .= ", table$i.trait$i";
+    $from .= " JOIN (SELECT accession_id, accession_name, avg(phenotype_value::real) AS trait$i FROM materialized_phenoview WHERE trial_id = $trial_id AND trait_id = ? group by 1,2) as table$i using (accession_id)";
+  }
+  my $query = $select . $from . " ORDER BY 2";
+  if ($allow_missing) { $query =~ s/JOIN/FULL OUTER JOIN/g; }
+
+  my $h = $self->dbh->prepare($query);
+  $h->execute(@$trait_ids);
+
+  my @weights = @$weights;
+  my (@raw_avg_values, @weighted_values);
+  while (my ($id, $name, @avg_values) = $h->fetchrow_array()) {
+    #print STDERR "$id and $name and @avg_values\n";
+    my @values_to_weight = @avg_values;
+    unshift @avg_values, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
+    push @raw_avg_values, [@avg_values];
+
+    @values_to_weight = map {$values_to_weight[$_] * $weights[$_]} 0..$#values_to_weight;
+    my $sum;
+    map { $sum += $_ } @values_to_weight;
+    unshift @values_to_weight, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
+    push @values_to_weight, $sum;
+    push @weighted_values, [@values_to_weight];
+  }
+
+  print STDERR "avg_phenotypes: ".Dumper(@raw_avg_values);
+  print STDERR "avg_phenotypes: ".Dumper(@weighted_values);
+
+  return {
+    raw_avg_values => \@raw_avg_values,
+    weighted_values => \@weighted_values
+  };
+
+}
+
 =head2 refresh_matviews
 
 parameters: string to specify desired refresh type, basic or concurrent. defaults to concurrent
