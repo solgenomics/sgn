@@ -317,7 +317,7 @@ jQuery(document).ready(function ($) {
 
   // create population with these accessions , name it as nursery name
 
-  var populationName = nurseryName + '_population';
+  var populationName = nurseryName + '_parents';
   var paternalParent = '';
   $.ajax({
           url: '/ajax/population/new',
@@ -354,11 +354,11 @@ jQuery(document).ready(function ($) {
       }
     });
 
-        $("#create_nursery").modal("hide");
-        alert("The nursery crosses have been added.");
-        $('#nursery_saved_dialog_message').modal("show");
     }
 
+    $("#create_nursery").modal("hide");
+    //alert("The nursery crosses have been added.");
+    $('#nursery_saved_dialog_message').modal("show");
 
     }
 
