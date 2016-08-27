@@ -25,6 +25,7 @@ use Try::Tiny;
 use Data::Dumper;
 use CXGN::Trial::Folder;
 use CXGN::Trial::TrialLayout;
+use CXGN::Trial::TrialCreate;
 use SGN::Model::Cvterm;
 use Time::Piece;
 use Time::Seconds;
@@ -54,7 +55,15 @@ sub BUILD {
     }
 
     if (!$row) {
-	die "The trial ".$self->get_trial_id()." does not exist";
+	#die "The trial ".$self->get_trial_id()." does not exist";
+	print STDERR "Creating empty trial entry...\n";
+	my $project = $self->bcs_schema->resultset("Project::Project")->create( 
+	    { 
+		name => "Untitled Trial",
+		description => "Trial without description",
+	    });
+       
+	$self->set_trial_id($project->project_id());
     }
 }
 
@@ -1430,6 +1439,51 @@ sub get_design_type {
 
 
 sub duplicate { 
+    my $self = shift;
+    my $new_name = shift;
+
+        my $design = $self->get_layout()->get_design();;
+
+    print STDERR Dumper($design);
+
+    my $i = 1;
+    my %new_design;
+
+    foreach my $k (sort keys %$design)  { 
+	my $new_plot_name = $new_name."_".$i;
+	#foreach my $d (@{$design->{$k}}) { 
+
+	foreach my $p (keys %{$design->{$k}}) { 
+	    print STDERR "Transferring $design->{$k}->{$p}...\n";
+	    $new_design{$k}->{$p} = $design->{$k}->{$p};
+
+	}
+	delete($new_design{$k}->{plant_ids});
+	delete($new_design{$k}->{plot_ids});
+	delete($new_design{$k}->{plant_names});
+	$new_design{$k}->{plot_name} = $new_name."_".$i;
+
+	$i++;
+    }
+    print STDERR Dumper(\%new_design);
+
+
+    
+    my $new_trial = CXGN::Trial::TrialCreate->new( 
+	{ bcs_schema => $self->bcs_schema(), 
+
+	  dbh => $self->bcs_schema()->storage->dbh(),
+	  trial_name => $new_name,
+	  trial_description => $self->get_description(),
+	  location => $self->get_location(),
+	  trial_year => $self->get_year(),
+	  program => $self->get_breeding_programs()->[0]->[2],
+	  design_type => $self->get_design_type(),
+	  design => \%new_design,
+	});
+
+    
+    $new_trial->save_trial();
 }
 
 sub get_accessions {
