@@ -1,7 +1,7 @@
 
 <%args>
 $breeding_program_name
-$breding_program_id
+$breeding_program_id
 $trial_name
 $trial_id
 </%args>
