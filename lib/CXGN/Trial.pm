@@ -1293,8 +1293,12 @@ sub create_plant_entities {
 
 		my $plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
 		my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
+		my $plot_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id();
 		my $plant_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of', 'stock_relationship')->cvterm_id();
 		my $plant_index_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_index_number', 'stock_property')->cvterm_id();
+		my $block_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id();
+		my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id();
+		my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
 		my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
 		my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
 		#my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
@@ -1336,9 +1340,29 @@ sub create_plant_entities {
 					value => $number,
 				});
 
+				#The plant inherits the properties of the plot.
+				my $plot_props = $chado_schema->resultset("Stock::Stockprop")->search({ stock_id => $parent_plot, type_id => [$block_cvterm, $plot_number_cvterm, $replicate_cvterm] });
+				while (my $prop = $plot_props->next() ) {
+					#print STDERR $plant->uniquename()." ".$prop->type_id()."\n";
+					$plantprop = $chado_schema->resultset("Stock::Stockprop")->find_or_create( {
+						stock_id => $plant->stock_id(),
+						type_id => $prop->type_id(),
+						value => $prop->value(),
+					});
+				}
+
+				#the plant has a relationship to the plot
 				my $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
 					subject_id => $parent_plot,
 					object_id => $plant->stock_id(),
+					type_id => $plant_relationship_cvterm,
+				});
+
+				#the plant has a relationship to the accession
+				my $plot_accession = $self->bcs_schema()->resultset("Stock::StockRelationship")->find({subject_id=>$parent_plot, type_id=>$plot_relationship_cvterm })->object();
+				$stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
+					subject_id => $plant->stock_id(),
+					object_id => $plot_accession->stock_id(),
 					type_id => $plant_relationship_cvterm,
 				});
 
