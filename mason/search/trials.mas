@@ -30,14 +30,26 @@
 
 jQuery(document).ready(function () {
 
-   jQuery('#search_results').DataTable( { 
-       'ajax': '/ajax/search/trials' 
+var nd_geolocation = getUrlVars()["nd_geolocation"] || 'not_provided';
+console.log("location="+location);
+
+   jQuery('#search_results').DataTable( {
+       'ajax': '/ajax/search/trials?nd_geolocation='+nd_geolocation
    });
-
-
 
 });
 
+function getUrlVars()
+{
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+    }
+    return vars;
+}
 
-  
 </script>
