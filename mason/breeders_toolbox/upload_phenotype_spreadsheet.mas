@@ -44,10 +44,12 @@
                         <input type="file" id="upload_spreadsheet_phenotype_file_input" name="upload_spreadsheet_phenotype_file_input" encoding="multipart/form-data" />
                     </div>
                 </div>
+
+
+                <div id="upload_phenotype_spreadsheet_verify_status"></div>
+                </div>
             </form><br/>
 
-            <div id="upload_phenotype_spreadsheet_verify_status"></div>
-            </div>
         </div>
         
         <div class="modal-footer">

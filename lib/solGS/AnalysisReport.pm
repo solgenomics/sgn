@@ -26,7 +26,6 @@ sub run {
  my $self = shift;   
 
  my $output_details = retrieve($self->output_details_file);
-
  $self->check_analysis_status($output_details);
 
 }
@@ -572,40 +571,39 @@ sub multi_modeling_message {
 
     foreach my $k (keys %{$output_details}) 
     {
-	if ($k =~ /trait_id/)
-	{
-	    my $all_success;
+    	if ($k =~ /trait_id/)
+    	{
+    	    my $all_success;
 	    
-	    if (ref $output_details->{$k} eq 'HASH')
-	    {
-		if ($output_details->{$k}->{trait_id})
-		{	  
-		    if ($output_details->{$k}->{success})
-		    {
-			$cnt++;
-			$all_success = 1;
-			my $trait_name = uc($output_details->{$k}->{trait_name});
-			my $trait_page = $output_details->{$k}->{trait_page};
-			$message .= "The analysis for $trait_name is done."
-			    ." You can view the model output here:"
-			    ."\n\n$trait_page.\n\n";
-		    }
-		    else 
-		    {  
-			$all_success = 0; 
-			my $trait_name = uc($output_details->{$k}->{trait_name});
-			$message .= "The analysis for $trait_name failed.\n\n";	 
-		    }		
-		}
-	    }
-	}
+    	    if (ref $output_details->{$k} eq 'HASH')
+    	    {
+    		if ($output_details->{$k}->{trait_id})
+    		{	  
+    		    if ($output_details->{$k}->{success})
+    		    {
+    			$cnt++;
+    			$all_success = 1;
+    			my $trait_name = uc($output_details->{$k}->{trait_name});
+    			my $trait_page = $output_details->{$k}->{trait_page};
+    			$message .= "The analysis for $trait_name is done."
+    			    ." You can view the model output here:"
+    			    ."\n\n$trait_page\n\n";
+    		    }
+    		    else 
+    		    {  
+    			$all_success = 0; 
+    			my $trait_name = uc($output_details->{$k}->{trait_name});
+    			$message .= "The analysis for $trait_name failed.\n\n";	 
+    		    }		
+    		}
+    	    }
+    	}
     }
     if ($cnt > 1 ) 
     {
-	$message .= "You can also view the summary of all the analyses in the page below."
-	    ."\nAdditionally, you may find the analytical features in the page useful.\n"
-	    . $output_details->{analysis_profile}->{analysis_page}
-	    . "\n\n";
+    	$message .= "You can also view the summary of all the analyses in the page below."
+    	    ."\nAdditionally, you may find the analytical features in the page useful.\n"
+    	    . $output_details->{analysis_profile}->{analysis_page} ."\n\n";
     }
 
     return  $message;
@@ -634,7 +632,7 @@ sub single_modeling_message {
 		    {		
 			$message = "The analysis for $trait_name is done."
 			    ."\nYou can view the model output here:"
-			    ."\n\n$trait_page.\n\n";
+			    ."\n\n$trait_page\n\n";
 		    }
 		    else 
 		    {  
@@ -655,36 +653,49 @@ sub selection_prediction_message {
     my ($self, $output_details) = @_;
     
     my $message;
+    my $cnt = 0;
     foreach my $k (keys %{$output_details}) 
     {
-	if ($k =~ /trait_id/)
-	{
-	    my $gebv_file;
-	    if (ref $output_details->{$k} eq 'HASH')
-	    {
-		if ($output_details->{$k}->{trait_id})
-		{
-		    my $trait_name          = uc($output_details->{$k}->{trait_name});
-		    my $training_pop_page   = $output_details->{$k}->{training_pop_page};
-		    my $model_page          = $output_details->{$k}->{model_page};
-		    my $prediction_pop_name = $output_details->{$k}->{prediction_pop_name};
+    	if ($k =~ /trait_id/)
+    	{
+    	    my $gebv_file;
+    	    if (ref $output_details->{$k} eq 'HASH')
+    	    {
+    		if ($output_details->{$k}->{trait_id})
+    		{
+    		    my $trait_name          = uc($output_details->{$k}->{trait_name});
+    		    my $training_pop_page   = $output_details->{$k}->{training_pop_page};
+    		    my $model_page          = $output_details->{$k}->{model_page};
+    		    my $prediction_pop_name = $output_details->{$k}->{prediction_pop_name};
 		    
-		    if ($output_details->{$k}->{success})		
-		    {		
-			$message = "The prediction of selection population $prediction_pop_name is done."
-			    . "\nYou can view the prediction output by clicking the trait name "
-			    . "\nat the bottom of the model page:"
-			    . "\n\n$model_page.\n\n";
-		    }
-		    else 
-		    {  
-			$message = "The analysis for $trait_name failed."
-			    ."\n\nWe are troubleshooting the cause. " 
-			    . "We will contact you when we find out more.";	 
-		    }		
-		}
-	    }
-	}
+    		    if ($output_details->{$k}->{success})		
+    		    {		
+    			$cnt++;	
+    			if($cnt == 1) 
+    			{
+    			    $message .= "The prediction of selection population $prediction_pop_name is done."
+    				. "\nYou can view the prediction output by clicking the trait name "
+    				. "\nat the bottom of the model page(s):\n\n";
+    			}
+       
+    			$message .= "$model_page\n\n";
+    		    }
+    		    else 
+    		    {  
+    			$message .= "The analysis for $trait_name failed."
+    			    ."\n\nWe are troubleshooting the cause. " 
+    			    . "We will contact you when we find out more.";	 
+    		    }
+
+    		    if ($cnt > 1) 
+    		    {
+    			$message .= "You can also view the summary of all the analyses in the page below."
+    			    ."\nAdditionally, you may find the analytical features in the page useful.\n"
+    			    . $output_details->{referer} . "\n\n";	
+    		    }
+    		}
+    	    }
+    	}
     }
 
     return  $message;

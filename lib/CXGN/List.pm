@@ -353,7 +353,23 @@ sub remove_element_by_id {
     }
     
     return 0;
-}   
+}
+
+sub update_element_by_id {
+	my $self = shift;
+	my $element_id = shift;
+	my $content = shift;
+	my $h = $self->dbh()->prepare("UPDATE sgn_people.list_item SET content=? where list_id=? and list_item_id=?");
+
+	eval { 
+		$h->execute($content, $self->list_id(), $element_id);
+	};
+	if ($@) {
+		return "An error occurred while attempting to update item $element_id";
+	}
+
+	return;
+}
 
 sub list_size { 
     my $self = shift;

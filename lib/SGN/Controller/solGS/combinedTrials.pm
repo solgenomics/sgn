@@ -214,7 +214,7 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
         foreach my $trait_id (@traits_ids) 
         {
             $c->stash->{trait_id} = $trait_id;
-            $solgs_controller->get_trait_name($c, $trait_id);
+            $solgs_controller->get_trait_details($c, $trait_id);
             my $tr_abbr = $c->stash->{trait_abbr};
 	    
 	    $self->combine_trait_data($c);  

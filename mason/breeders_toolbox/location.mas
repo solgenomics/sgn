@@ -28,7 +28,7 @@ foreach my $prog (sort keys %$locations) {
       $delete_link = "&nbsp;&nbsp;&nbsp;<a href=\"javascript:delete_location($loc->[0])\"><font style=\"color: red; font-weight: bold\">X</a>";
     }
 
-    print "<tr><td>".$loc->[1]."</td><td>(<a href=\"\">".$loc->[2]." trials</a>) $delete_link</td></tr>";
+    print "<tr><td>".$loc->[1]."</td><td>(<a href=\"/search/trials?nd_geolocation=$loc->[1]\">".$loc->[2]." trials</a>) $delete_link</td></tr>";
    }
 
    print "</tbody><thead><tr style=\"height:30px\"><td colspan=\"2\"></td></tr></thead>";

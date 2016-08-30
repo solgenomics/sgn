@@ -228,7 +228,6 @@ sub get_genotyping_protocols_select : Path('/ajax/html/select/genotyping_protoco
 sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(0) {
     my ($self, $c) = @_;
     my $parent_node_cvterm = $c->request->param("parent_node_cvterm");
-    my $parent_node_cv = $c->request->param("parent_node_cv");
     my $rel_cvterm = $c->request->param("rel_cvterm");
     my $rel_cv = $c->request->param("rel_cv");
 
@@ -238,7 +237,7 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
     my $empty = $c->request->param("empty") || '';
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $parent_node_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $parent_node_cvterm, $parent_node_cv)->cvterm_id();
+    my $parent_node_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $parent_node_cvterm)->cvterm_id();
     my $rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $rel_cvterm, $rel_cv)->cvterm_id();
 
     my $ontology_children_ref = $schema->resultset("Cv::CvtermRelationship")->search({type_id => $rel_cvterm_id, object_id => $parent_node_cvterm_id})->search_related('subject');
