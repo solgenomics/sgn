@@ -7,8 +7,6 @@ concatenate_cvterms_into_multi_term_traits.pl
 
     this script is very specific to cassbase ontologies, but could possibly be generalized through more sophisticated recursion.
 
-    concatenate_cvterms_into_multiterm_traits.pl -H [dbhost] -D [dbname] -l CHEBI:00000,cass_tissue|CASSTISS:000000,cass time of day|CASSTIME:0000001 -d CASSFT -c cassava_trait
-    
     perl concatenate_cvterms_into_multiterm_traits.pl -H localhost -D fixture2 -l 'chebi_compounds|CHEBI:00000,cass_tissues|CASSTISS:0000000,cass time of day|CASSTIME:0000001,cass number of weeks|CASSTIME:0000005,cass_units|CASSUNIT:0000000' -d CASSFT -c cassava_trait
 
 =head1 COMMAND-LINE OPTIONS
@@ -32,7 +30,7 @@ April 2014
 
 The CASS project requires traits to be composed of many separate terms. This script concatenates cvterms into multi-term traits. A list of parent cvterms is given using the -l parameter. The script then finds all child terms that are of 'is_a' relationship to the parent terms given. All the children terms are then linearly combined in the order that the parent terms are in. The cvterms are separated by || in the concatenated string. 
 
-The new concatenated strings are stored as cvterms, with cv = and dbxref = 
+The new concatenated strings are stored as cvterms, with cv = $opt_c and db = $opt_d
 
 
 
@@ -122,36 +120,22 @@ foreach my $a (@$first_term) {
 print scalar(@{$children_array[0]}) * scalar(@{$children_array[1]}) * scalar(@{$children_array[2]}) * scalar(@{$children_array[3]}) * scalar(@{$children_array[4]})."\n";
 print scalar(@concatenated_terms)."\n";
 
-my $coderef = sub {
-    my $db = $schema->resultset("General::Db")->create({name=>$opt_d});
-    my $db_id = $db->db_id();
-    my $cv = $schema->resultset("Cv::Cv")->find_or_create({name=>$opt_c});
-    my $cv_id = $cv->cv_id();
+my $db = $schema->resultset("General::Db")->create({name=>$opt_d});
+my $db_id = $db->db_id();
+my $cv = $schema->resultset("Cv::Cv")->find_or_create({name=>$opt_c});
+my $cv_id = $cv->cv_id();
 
-    my $accession = 0;
-    foreach (@concatenated_terms) {
-        my $accession_string = sprintf("%07d",$accession);
-        my $dbxref = $schema->resultset("General::Dbxref")->create({db_id=>$db_id, accession=>$accession_string});
-        my $dbxref_id = $dbxref->dbxref_id();
-        my $cvterm = $schema->resultset("Cv::Cvterm")->create({cv_id=>$cv_id, name=>$_, dbxref_id=>$dbxref_id});
-        $accession++;
-        $count++;
-    }
+my $accession = 0;
+foreach (@concatenated_terms) {
+    my $accession_string = sprintf("%07d",$accession);
+    my $dbxref = $schema->resultset("General::Dbxref")->create({db_id=>$db_id, accession=>$accession_string});
+    my $dbxref_id = $dbxref->dbxref_id();
+    my $cvterm = $schema->resultset("Cv::Cvterm")->create({cv_id=>$cv_id, name=>$_, dbxref_id=>$dbxref_id});
+    $accession++;
+    $count++;
 }
 
-my $transaction_error;
-try {
-    $schema->txn_do($coderef);
-} catch {
-    $transaction_error =  $_;
-};
-
-if ($transaction_error) {
-    print STDERR "Transaction error storing terms: $transaction_error\n";
-} else {
-    print STDERR "Complete!\nAdded $count new terms.\n";
-}
-
+print STDERR "Complete!\nAdded $count new terms.\n";
 
 
 sub get_children {

@@ -13,17 +13,16 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-sub search :Path('/ajax/search/trials') Args(0) { 
+sub search :Path('/ajax/search/trials') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $params = $c->req->params();
+    my $nd_geolocation= $c->req->param('nd_geolocation');
 
-    $params->{page_size} = 20 if (! $params->{page_size});
-    $params->{page} = 1 if (! $params->{page});
- 
+    print STDERR "location: ".$nd_geolocation."\n";
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    
+
     # pre-fetch some information; more efficient
     #
     my $breeding_program_cvterm_id  = $self->get_breeding_program_cvterm_id($c);
@@ -33,20 +32,20 @@ sub search :Path('/ajax/search/trials') Args(0) {
     my $project_type_cv_id = $schema->resultset("Cv::Cv")->find( { name => "project_type" } )->cv_id();
     my %project_types;
     my $project_type_rs = $schema->resultset("Cv::Cvterm")->search( { cv_id => $project_type_cv_id });
-    while (my $row = $project_type_rs->next()) { 
+    while (my $row = $project_type_rs->next()) {
 	$project_types{$row->cvterm_id} = $row->name();
     }
     my %projects;
     my $project_rs = $schema->resultset("Project::Project")->search( {} );
-    while (my $p = $project_rs->next()) { 
+    while (my $p = $project_rs->next()) {
 	$projects{$p->project_id} = $p->name();
     }
-  
+
     my %parent_projects;
     my $parent_project_rs = $schema->resultset("Project::Project")
-	->search( {}, {  join =>  "project_relationship_subject_projects", 
-			 '+select' => [ 'project_relationship_subject_projects.object_project_id'], 
-			 '+as' => [ 'parent_project_id' ] 
+	->search( {}, {  join =>  "project_relationship_subject_projects",
+			 '+select' => [ 'project_relationship_subject_projects.object_project_id'],
+			 '+as' => [ 'parent_project_id' ]
 		  });
 
     while (my $row = $parent_project_rs->next()) {
@@ -55,41 +54,14 @@ sub search :Path('/ajax/search/trials') Args(0) {
 
     my %locations;
     my $location_rs = $schema->resultset("NaturalDiversity::NdGeolocation")->search( { } );
-    while (my $row = $location_rs->next()) { 
+    while (my $row = $location_rs->next()) {
 	$locations{$row->nd_geolocation_id()} = $row->description();
     }
 
-    # don't need these really for the simple dataTables search
-    #
-#    my ( $or_conditions, $and_conditions);
-
-# ##############################
-#     if ($params->{trial_name} && ($params->{trial_name} ne "all")) { 
-# 	$and_conditions->{'project.name'} = { 'ilike' => '%'.$params->{trial_name}.'%' } ; 
-#     }
-	
-
-#    if ($params->{location} && ($params->{location} ne "all")) {
-#        my $row = $c->dbic_schema("Bio::Chado::Schema")->resultset("NaturalDiversity::NdGeolocation")->find( { description => $params->{location} } );
-#        if ($row) { 
-# 	   $and_conditions->{'location.value'} = { -in => [ $row->nd_geolocation_id->as_query, 'NULL' ] }; 
-#        }
-#    }
-#     if ($params->{year} && ($params->{year} ne "all")) { 
-# 	$and_conditions->{'year.value'} = { 'ilike' => $params->{year}.'%' } ;
-#     }
-
-#     if ($params->{breeding_program} && ($params->{breeding_program} ne "all")) { 
-# 	$and_conditions->{'program.name'} = { 'ilike' => '%'.$params->{breeding_program}.'%' } ;
-#     }
-
-  
-# ################################################
-
     my $projects_rs = $schema->resultset("Project::Project")
-	->search( {}, { join => 'projectprops', 
-			'+select' => [ 'projectprops.type_id', 'projectprops.value' ], 
-			'+as' => ['projectprop_type_id', 'projectprop_value'] 
+	->search( {}, { join => 'projectprops',
+			'+select' => [ 'projectprops.type_id', 'projectprops.value' ],
+			'+as' => ['projectprop_type_id', 'projectprop_value']
 		  });
 
     my @result;
@@ -110,41 +82,43 @@ sub search :Path('/ajax/search/trials') Args(0) {
 
 	print STDERR "READ: $project_name, $type_id, $value\n";
 
-	if ($type_id == $trial_folder_cvterm_id) { 
+	if ($type_id == $trial_folder_cvterm_id) {
 	    $trials{$project_name}->{trial_folder} = "FOLDER";
 	}
-	if ($type_id == $location_cvterm_id) { 
+	if ($type_id == $location_cvterm_id) {
 	    $trials{$project_name}->{location} = $locations{$value};
 	}
-	if ($type_id == $year_cvterm_id) { 
+	if ($type_id == $year_cvterm_id) {
 	    $trials{$project_name}->{year} = $value;
 	}
-	
+
 	print "$type_id corresponds to project type $project_types{$type_id}\n";
 	$trials{$project_name}->{project_type} = $project_types{$type_id};
 
 	$trials{$project_name}->{breeding_program} = $parent_projects{$project_id};
     }
-    
+
     foreach my $t (sort(keys(%trials))) {
-	
-	push @result, [ 
-	    "<a href=\"/breeders_toolbox/trial/$trials{$t}->{project_id}\">$t</a>", 
-	    $trials{$t}->{project_description}, 
-	    $trials{$t}->{breeding_program}, 
-	    $trials{$t}->{year}, 
-	    $trials{$t}->{location}, 
-	    $trials{$t}->{project_type} 
+      print STDERR "trial location = $trials{$t}->{location} \n";
+      next unless ($nd_geolocation eq 'not_provided' || $trials{$t}->{location} eq $nd_geolocation);
+      print STDERR "matched trial location = $trials{$t}->{location} \n";
+	push @result, [
+	    "<a href=\"/breeders_toolbox/trial/$trials{$t}->{project_id}\">$t</a>",
+	    $trials{$t}->{project_description},
+	    $trials{$t}->{breeding_program},
+	    $trials{$t}->{year},
+	    $trials{$t}->{location},
+	    $trials{$t}->{project_type}
 	];
     }
 
     $c->stash->{rest} = { data => \@result };
 }
 
-sub get_project_year_cvterm_id { 
+sub get_project_year_cvterm_id {
     my $self = shift;
     my $c = shift;
-    
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $row = $schema->resultset("Cv::Cvterm")->find( { name => 'project year' });
@@ -152,10 +126,10 @@ sub get_project_year_cvterm_id {
     return $row->cvterm_id();
 }
 
-sub get_project_location_cvterm_id { 
+sub get_project_location_cvterm_id {
    my $self = shift;
     my $c = shift;
-    
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $row = $schema->resultset("Cv::Cvterm")->find( { name => 'project location' });
@@ -163,21 +137,21 @@ sub get_project_location_cvterm_id {
     return $row->cvterm_id();
 }
 
-sub get_breeding_program_cvterm_id { 
+sub get_breeding_program_cvterm_id {
    my $self = shift;
    my $c = shift;
    my $schema = $c->dbic_schema("Bio::Chado::Schema");
    my $row = $schema->resultset("Cv::Cvterm")->find( { name => 'breeding_program' });
-   
+
    return $row->cvterm_id();
 }
 
 
-sub get_trial_folder_cvterm_id { 
+sub get_trial_folder_cvterm_id {
    my $self = shift;
    my $c = shift;
    my $schema = $c->dbic_schema("Bio::Chado::Schema");
    my $row = $schema->resultset("Cv::Cvterm")->find( { name => 'trial_folder' });
-   
+
    return $row->cvterm_id();
 }

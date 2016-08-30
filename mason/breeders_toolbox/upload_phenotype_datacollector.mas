@@ -42,9 +42,10 @@
                         <input type="file" id="upload_datacollector_phenotype_file_input" name="upload_datacollector_phenotype_file_input" encoding="multipart/form-data" />
                     </div>
                 </div>
+
+                <div id="upload_phenotype_datacollector_verify_status"></div>
             </form><br/>
-      
-            <div id="upload_phenotype_datacollector_verify_status"></div>
+
         </div>
       </div>
       

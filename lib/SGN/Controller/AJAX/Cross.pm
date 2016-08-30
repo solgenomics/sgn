@@ -75,7 +75,7 @@ sub upload_cross_file_POST : Args(0) {
   my $owner_name;
   my $upload_file_type = "crosses excel";#get from form when more options are added
 
-  if (!$c->user()) { 
+  if (!$c->user()) {
     print STDERR "User not logged in... not adding a crosses.\n";
     $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
     return;
@@ -233,7 +233,7 @@ sub add_cross_POST :Args(0) {
 
     print STDERR "Adding Cross... Maternal: $maternal Paternal: $paternal Cross Type: $cross_type\n";
 
-    if (!$c->user()) { 
+    if (!$c->user()) {
 	print STDERR "User not logged in... not adding a cross.\n";
 	$c->stash->{rest} = {error => "You need to be logged in to add a cross." };
 	return;
@@ -303,11 +303,11 @@ sub add_cross_POST :Args(0) {
       $cross_to_add->set_male_parent($male_individual);
     }
 
-    
+
     $cross_to_add->set_cross_type($cross_type);
     $cross_to_add->set_name($cross_name);
 
-    eval { 
+    eval {
 	#create array of pedigree objects to add, in this case just one pedigree
 	@array_of_pedigree_objects = ($cross_to_add);
 	$cross_add = CXGN::Pedigree::AddCrosses
@@ -321,20 +321,20 @@ sub add_cross_POST :Args(0) {
 		crosses =>  \@array_of_pedigree_objects,
 		owner_name => $owner_name,
 		  });
-	
-	
+
+
 	#add the crosses
 	$cross_add->add_crosses();
     };
-    if ($@) { 
+    if ($@) {
 	$c->stash->{rest} = { error => "Error creating the cross: $@" };
 	return;
     }
-    
+
     eval {
 	#create progeny if specified
 	if ($progeny_number) {
-	    
+
 	    #create array of progeny names to add for this cross
 	    while ($progeny_increment < $progeny_number + 1) {
 		$progeny_increment = sprintf "%03d", $progeny_increment;
@@ -342,7 +342,7 @@ sub add_cross_POST :Args(0) {
 		push @progeny_names, $stock_name;
 		$progeny_increment++;
 	    }
-	    
+
 	    #add array of progeny to the cross
 	    $progeny_add = CXGN::Pedigree::AddProgeny
 		->new({
@@ -354,23 +354,23 @@ sub add_cross_POST :Args(0) {
 		    owner_name => $owner_name,
 		      });
 	    $progeny_add->add_progeny();
-	    
+
 	}
-	
+
 	#add number of flowers as an experimentprop if specified
 	if ($number_of_flowers) {
 	    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
 	    $cross_add_info->set_number_of_flowers($number_of_flowers);
 	    $cross_add_info->add_info();
 	}
-	
+
 	#add number of seeds as an experimentprop if specified
 	if ($number_of_seeds) {
 	    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
 	    $cross_add_info->set_number_of_seeds($number_of_seeds);
 	    $cross_add_info->add_info();
 	}
-	
+
     };
     if ($@) {
 	$c->stash->{rest} = { error => "An error occurred: $@"};
@@ -380,7 +380,7 @@ sub add_cross_POST :Args(0) {
     $c->stash->{rest} = { error => '', };
   }
 
-sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) { 
+sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) {
     my $self = shift;
     my $c = shift;
     my $cross_id = shift;
@@ -389,7 +389,7 @@ sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) {
 
     my $cross = $schema->resultset("Stock::Stock")->find( { stock_id => $cross_id });
 
-    if ($cross && $cross->type()->name() ne "cross") { 
+    if ($cross && $cross->type()->name() ne "cross") {
 	$c->stash->{rest} = { error => 'This entry is not of type cross and cannot be displayed using this page.' };
 	return;
     }
@@ -400,16 +400,16 @@ sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) {
     my $paternal_parent = "";
     my @progeny = ();
 
-    foreach my $child ($crs->all()) { 
-	if ($child->type->name() eq "female_parent") { 
+    foreach my $child ($crs->all()) {
+	if ($child->type->name() eq "female_parent") {
 	    $maternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
 	}
-	if ($child->type->name() eq "male_parent") { 
+	if ($child->type->name() eq "male_parent") {
 	    $paternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
 	}
-	if ($child->type->name() eq "member_of") { 
+	if ($child->type->name() eq "member_of") {
 	    push @progeny, [ $child->subject->name, $child->subject->stock_id() ];
-	}	
+	}
     }
 
     $c->stash->{rest} = { maternal_parent => $maternal_parent,
@@ -419,20 +419,20 @@ sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) {
 }
 
 
-sub get_cross_properties :Path('/cross/ajax/properties') Args(1) { 
+sub get_cross_properties :Path('/cross/ajax/properties') Args(1) {
     my $self = shift;
     my $c = shift;
     my $cross_id = shift;
-    
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    
+
     my $rs = $schema->resultset("NaturalDiversity::NdExperimentprop")->search( { 'nd_experiment_stocks.stock_id' => $cross_id }, { join => { 'nd_experiment' =>  'nd_experiment_stocks' }});
 
     my $props = {};
 
     print STDERR "PROPS LEN ".$rs->count()."\n";
 
-    while (my $prop = $rs->next()) { 
+    while (my $prop = $rs->next()) {
 	push @{$props->{$prop->type->name()}}, [ $prop->get_column('value'), $prop->get_column('nd_experimentprop_id') ];
     }
 
@@ -442,7 +442,7 @@ sub get_cross_properties :Path('/cross/ajax/properties') Args(1) {
 
 }
 
-sub save_property_check :Path('/cross/property/check') Args(1) { 
+sub save_property_check :Path('/cross/property/check') Args(1) {
     my $self = shift;
     my $c = shift;
     my $cross_id = shift;
@@ -453,12 +453,12 @@ sub save_property_check :Path('/cross/property/check') Args(1) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $type_row = $schema->resultset('Cv::Cvterm')->find( { name => $type } );
-    
-    if (! $type_row) { 
+
+    if (! $type_row) {
 	$c->stash->{rest} = { error => "The type '$type' does not exist in the database" };
 	return;
     }
-    
+
     my $type_id = $type_row->cvterm_id();
 
     my %suggested_values = (
@@ -471,7 +471,7 @@ sub save_property_check :Path('/cross/property/check') Args(1) {
 	cross_name => '.*',
 	);
 
-    my %example_values = ( 
+    my %example_values = (
 	date => '2014/03/29',
 	time => '10:00',
 	number_of_flowers => 23,
@@ -480,14 +480,14 @@ sub save_property_check :Path('/cross/property/check') Args(1) {
 	cross_name => 'nextgen_cross',
 	);
 
-    if (ref($suggested_values{$type})) { 
+    if (ref($suggested_values{$type})) {
 	if (!exists($suggested_values{$type}->{$value})) { # don't make this case insensitive!
 	    $c->stash->{rest} =  { message => 'The provided value is not in the suggested list of terms. This could affect downstream data processing.' };
 	    return;
 	}
     }
-    else { 
-	if ($value !~ m/^$suggested_values{$type}$/) { 
+    else {
+	if ($value !~ m/^$suggested_values{$type}$/) {
 	    $c->stash->{rest} = { error => 'The provided value is not of the correct type. Format example: "'.$example_values{$type}.'"' };
 	    return;
 	}
@@ -495,15 +495,15 @@ sub save_property_check :Path('/cross/property/check') Args(1) {
     $c->stash->{rest} = { success => 1 };
 }
 
-sub cross_property_save :Path('/cross/property/save') Args(1) { 
+sub cross_property_save :Path('/cross/property/save') Args(1) {
     my $self = shift;
     my $c = shift;
-    
-    if (!$c->user()) { 
+
+    if (!$c->user()) {
 	$c->stash->{rest} = { error => "You must be logged in add properties." };
 	return;
     }
-    if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) { 
+    if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
 	$c->stash->{rest} = { error => "You do not have sufficient privileges to add properties." };
 	return;
     }
@@ -515,55 +515,55 @@ sub cross_property_save :Path('/cross/property/save') Args(1) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $exp_id = $schema->resultset("NaturalDiversity::NdExperiment")->search( { 'nd_experiment_stocks.stock_id' => $cross_id }, { join => 'nd_experiment_stocks' })->first()->get_column('nd_experiment_id');
-    
+
     my $type_id;
-    my $type_row = $schema->resultset("Cv::Cvterm")->find( { 'me.name' => $type, 'cv.name' => 'local' }, { join => { 'cv'}});
-    if ($type_row) { 
+    my $type_row = $schema->resultset("Cv::Cvterm")->find( { 'me.name' => $type, 'cv.name' => 'nd_experiment_property' }, { join => { 'cv'}});
+    if ($type_row) {
 	$type_id = $type_row->cvterm_id();
     }
-    else { 
+    else {
 	$c->stash->{rest} = { error => "The type $type does not exist in the database." };
 	return;
     }
-    
+
     my $rs = $schema->resultset("NaturalDiversity::NdExperimentprop")->search( { 'nd_experiment_stocks.stock_id' => $cross_id, 'me.type_id' => $type_id }, { join => { 'nd_experiment' => { 'nd_experiment_stocks' }}});
 
     my $row = $rs->first();
-    if (!$row) { 
+    if (!$row) {
 	$row = $schema->resultset("NaturalDiversity::NdExperimentprop")->create( { 'nd_experiment_stocks.stock_id' => $cross_id, 'me.type_id' => $type_id, 'me.value'=>$value, 'me.nd_experiment_id' => $exp_id }, { join => {'nd_experiment' => {'nd_experiment_stocks' }}});
 	$row->insert();
     }
-    else { 
-	
+    else {
+
 	$row->set_column( 'value' => $value );
 	$row->update();
     }
-    
+
     $c->stash->{rest} = { success => 1 };
 }
 
 
-sub add_more_progeny :Path('/cross/progeny/add') Args(1) { 
+sub add_more_progeny :Path('/cross/progeny/add') Args(1) {
     my $self = shift;
     my $c = shift;
     my $cross_id = shift;
 
-    if (!$c->user()) { 
+    if (!$c->user()) {
 	$c->stash->{rest} = { error => "You must be logged in add progeny." };
 	return;
     }
-    if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) { 
+    if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
 	$c->stash->{rest} = { error => "You do not have sufficient privileges to add progeny." };
 	return;
     }
-    
+
     my $basename = $c->req->param("basename");
     my $start_number = $c->req->param("start_number");
     my $progeny_count = $c->req->param("progeny_count");
     my $cross_name = $c->req->param("cross_name");
 
     my @progeny_names = ();
-    foreach my $n (1..$progeny_count) { 
+    foreach my $n (1..$progeny_count) {
 	push @progeny_names, $basename. (sprintf "%03d", $n + $start_number -1);
     }
 
@@ -575,7 +575,7 @@ sub add_more_progeny :Path('/cross/progeny/add') Args(1) {
     my $dbh = $c->dbc->dbh;
 
     my $owner_name = $c->user()->get_object()->get_username();
-    
+
     my $progeny_add = CXGN::Pedigree::AddProgeny
 	->new({
 	    chado_schema => $chado_schema,
@@ -592,7 +592,7 @@ sub add_more_progeny :Path('/cross/progeny/add') Args(1) {
     }
 
     $c->stash->{rest} = { success => 1};
-    
+
 }
 
 
