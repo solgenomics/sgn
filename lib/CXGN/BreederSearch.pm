@@ -164,14 +164,17 @@ sub avg_phenotypes_query {
   my $weights = shift;
   my $allow_missing = shift;
 
+
   my $select = "SELECT table0.accession_id, table0.accession_name";
   my $from = " FROM (SELECT accession_id, accession_name FROM materialized_phenoview WHERE trial_id = $trial_id GROUP BY 1,2) AS table0";
   for (my $i = 1; $i <= scalar @$trait_ids; $i++) {
-    $select .= ", table$i.trait$i";
-    $from .= " JOIN (SELECT accession_id, accession_name, avg(phenotype_value::real) AS trait$i FROM materialized_phenoview WHERE trial_id = $trial_id AND trait_id = ? group by 1,2) as table$i using (accession_id)";
+    $select .= ",  ROUND( CAST(table$i.trait$i AS NUMERIC), 2)";
+    $from .= " JOIN (SELECT accession_id, accession_name, AVG(phenotype_value::REAL) AS trait$i FROM materialized_phenoview WHERE trial_id = $trial_id AND trait_id = ? GROUP BY 1,2) AS table$i USING (accession_id)";
   }
   my $query = $select . $from . " ORDER BY 2";
-  if ($allow_missing) { $query =~ s/JOIN/FULL OUTER JOIN/g; }
+  if ($allow_missing eq 'true') { $query =~ s/JOIN/FULL OUTER JOIN/g; }
+
+  print STDERR "QUERY: $query\n";
 
   my $h = $self->dbh->prepare($query);
   $h->execute(@$trait_ids);
@@ -188,7 +191,8 @@ sub avg_phenotypes_query {
     my $sum;
     map { $sum += $_ } @values_to_weight;
     unshift @values_to_weight, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
-    push @values_to_weight, $sum;
+    my $rounded_sum = sprintf("%.2f", $sum);
+    push @values_to_weight, $rounded_sum;
     push @weighted_values, [@values_to_weight];
   }
 
