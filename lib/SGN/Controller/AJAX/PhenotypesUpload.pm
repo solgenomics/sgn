@@ -25,6 +25,7 @@ use DateTime;
 use File::Slurp;
 use File::Spec::Functions;
 use File::Copy;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -66,7 +67,7 @@ sub upload_phenotype_store_POST : Args(1) {
     my ($self, $c, $file_type) = @_;
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $data_level) = _prep_upload($c, $file_type);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $data_level, $overwrite_values) = _prep_upload($c, $file_type);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -83,7 +84,7 @@ sub upload_phenotype_store_POST : Args(1) {
 
 
     my $size = scalar(@$plots) * scalar(@$traits);
-    my $stored_phenotype_error = $store_phenotypes->store($c, $size, $plots, $traits, $parsed_data, $phenotype_metadata, $data_level);
+    my $stored_phenotype_error = $store_phenotypes->store($c, $size, $plots, $traits, $parsed_data, $phenotype_metadata, $data_level, $overwrite_values);
 
     if ($stored_phenotype_error) {
         push @$error_status, $stored_phenotype_error;
@@ -100,6 +101,8 @@ sub _prep_upload {
     my ($c, $file_type) = @_;
     my $uploader = CXGN::UploadFile->new();
     my $parser = CXGN::Phenotypes::ParseUpload->new();
+    my @success_status;
+    my @error_status;
     my $timestamp_included;
     my $upload;
     my $subdirectory;
@@ -133,13 +136,20 @@ sub _prep_upload {
         $upload = $c->req->upload('upload_datacollector_phenotype_file_input');
     }
 
+    my $overwrite_values = $c->req->param('phenotype_upload_overwrite_values');
+    if ($overwrite_values) {
+        my $user_type = $c->user()->get_object->get_user_type();
+        print STDERR $user_type."\n";
+        if ($user_type ne 'curator') {
+            push @error_status, 'Must be a curator to overwrite values! Please contact us!';
+        }
+    }
+
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
     my %phenotype_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
-    my @success_status;
-    my @error_status;
 
     my $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
     my $md5 = $uploader->get_md5($archived_filename_with_path);
@@ -189,7 +199,7 @@ sub _prep_upload {
         }
     }
 
-    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $data_level);
+    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $data_level, $overwrite_values);
 }
 
 #########

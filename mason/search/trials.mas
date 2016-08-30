@@ -1,6 +1,6 @@
 
 <%args>
-
+$nd_geolocation => 'not_provided'
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -30,14 +30,10 @@
 
 jQuery(document).ready(function () {
 
-   jQuery('#search_results').DataTable( { 
-       'ajax': '/ajax/search/trials' 
+   jQuery('#search_results').DataTable( {
+       'ajax': '/ajax/search/trials?nd_geolocation=<% $nd_geolocation %>'
    });
-
-
 
 });
 
-
-  
 </script>

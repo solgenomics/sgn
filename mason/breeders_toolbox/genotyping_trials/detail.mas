@@ -1,7 +1,6 @@
 
 <%args>
 $trial_id
-$breeding_program
 $trial_name
 $location_data => undef
 $year => undef

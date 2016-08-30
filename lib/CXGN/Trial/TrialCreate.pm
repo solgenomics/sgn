@@ -30,6 +30,7 @@ use CXGN::BreedersToolbox::Projects;
 use CXGN::People::Person;
 use CXGN::Trial;
 use SGN::Model::Cvterm;
+use Data::Dumper;
 
 has 'chado_schema' => (
 		 is       => 'rw',
@@ -243,6 +244,8 @@ sub save_trial {
 	my $stock_id_checked;
 	my $organism_id_checked;
 
+	#print STDERR Dumper \%design;
+	my $number = 1;
 	foreach my $key (sort { $a cmp $b} keys %design) {
 
 		#print STDERR "Check 01: ".localtime();
@@ -380,6 +383,11 @@ sub save_trial {
 				type_id => $plant_index_number_cvterm,
 				value => 1,
 			});
+
+			$plant->create_stockprops({'plot number' => $number}, {autocreate => 1});
+			$plant->create_stockprops({'replicate' => 1}, {autocreate => 1} );
+			$plant->create_stockprops({'block' => 1}, {autocreate => 1} );
+			$number ++;
 
 			#create the stock_relationship of the accession with the plant, if it does not exist already
 			if (!$stock_relationship_data{$stock_id_checked, $plot_of->cvterm_id(), $plant->stock_id()} ) {
