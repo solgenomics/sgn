@@ -144,8 +144,8 @@ jQuery(document).ready(function ($) {
 	add_cross();
     });
 
-    $('#create_nursery_submit').click(function () {
-      add_nursery();
+    $('#create_polycross_nursery_submit').click(function () {
+      add_polycross_nursery();
     });
 
     $("#cross_type").change(function(){
@@ -197,8 +197,8 @@ jQuery(document).ready(function ($) {
 	$("#create_cross" ).modal("show");
     });
 
-    $("#add_nursery_link").click( function () {
-  $("#create_nursery" ).modal("show");
+    $("#add_polycross_nursery_link").click( function () {
+  $("#create_polycross_nursery" ).modal("show");
 
     var lo = new CXGN.List();
     $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
@@ -280,7 +280,7 @@ jQuery(document).ready(function ($) {
 	});
     }
 
-    function add_nursery() {
+    function add_polycross_nursery() {
 
   var nurseryName = $("#nursery_name").val();
   if (!nurseryName) { alert("A nursery name is required"); return; }
@@ -312,8 +312,8 @@ jQuery(document).ready(function ($) {
   console.log("Accessions = "+accession_names);
 
   var visibleToRole = $("#visible_to_role").val();
-  var location = $("#location").val();
-  var program = $("#program").val();
+  var location = $("#polycross_location").val();
+  var program = $("#polycross_program").val();
 
   // create population with these accessions , name it as nursery name
 
@@ -356,7 +356,7 @@ jQuery(document).ready(function ($) {
 
     }
 
-    $("#create_nursery").modal("hide");
+    $("#create_polycross_nursery").modal("hide");
     //alert("The nursery crosses have been added.");
     $('#nursery_saved_dialog_message').modal("show");
 
