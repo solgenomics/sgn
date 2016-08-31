@@ -13,7 +13,7 @@ library(stringr)
 library(lme4)
 library(randomForest)
 library(data.table)
-
+library(genetics)
 
 allArgs <- commandArgs()
 
@@ -215,10 +215,15 @@ if (datasetInfo == 'combined populations') {
 genoFile <- grep("genotype_data", inputFiles, ignore.case = TRUE, value = TRUE)
 genoData <- fread(genoFile, na.strings = c("NA", " ", "--", "-"),  header = TRUE)
 
+#remove markers with > 60% missing marker data
+message('no of markers before filtering out: ', ncol(genoData))
+genoData[, which(colSums(is.na(genoData)) >= nrow(genoData) * 0.6) := NULL]
+message('no of markers after filtering out ones with 60% missing: ', ncol(genoData))
+stop()
+
 genoData           <- as.data.frame(genoData)
 rownames(genoData) <- genoData[, 1]
 genoData[, 1]      <- NULL
-genoData           <- genoData[, colSums(is.na(genoData)) < nrow(genoData) * 0.5]
 
 predictionTempFile <- grep("prediction_population", inputFiles, ignore.case = TRUE, value = TRUE)
 predictionFile     <- c()
@@ -271,11 +276,13 @@ commonObs <- data.frame(commonObs)
 rownames(commonObs)<-commonObs[, 1]
 
 message('lines with both genotype and phenotype data: ', length(row.names(commonObs)))
+
 #include in the genotype dataset only observation lines
 #with phenotype data
 message("genotype lines before filtering for phenotyped only: ", length(row.names(genoData)))        
 genoDataFiltered <- genoData[(rownames(genoData) %in% rownames(commonObs)), ]
 message("genotype lines after filtering for phenotyped only: ", length(row.names(genoDataFiltered)))
+
 #drop observation lines without genotype data
 message("phenotype lines before filtering for genotyped only: ", length(row.names(phenoTrait)))        
 phenoTrait <- merge(data.frame(phenoTrait), commonObs, by=0, all=FALSE)
@@ -322,6 +329,7 @@ if (length(relationshipMatrixFile) != 0) {
   }
 }
 
+
 #change genotype coding to [-1, 0, 1], to use the A.mat ) if  [0, 1, 2]
 genoTrCode <- grep("2", genoDataFiltered[1, ], value = TRUE)
 if(length(genoTrCode) != 0) {
@@ -334,6 +342,8 @@ if (length(predictionData) != 0 ) {
     predictionData <- predictionData - 1
   }
 }
+
+#MAF calculation
 
 ordered.markerEffects <- c()
 if ( length(predictionData) == 0 ) {
