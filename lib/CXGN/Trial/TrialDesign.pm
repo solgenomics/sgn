@@ -31,6 +31,7 @@ use POSIX;
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', clearer => 'clear_trial_name');
 has 'stock_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_stock_list', clearer => 'clear_stock_list');
 has 'control_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_control_list', clearer => 'clear_control_list');
+has 'control_list_crbd' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_control_list_crbd', clearer => 'clear_control_list_crbd');
 has 'number_of_blocks' => (isa => 'Int', is => 'rw', predicate => 'has_number_of_blocks', clearer => 'clear_number_of_blocks');
 has 'block_row_numbers' => (isa => 'Int', is => 'rw', predicate => 'has_block_row_numbers', clearer => 'clear_block_row_numbers');
 has 'block_col_numbers' => (isa => 'Int', is => 'rw', predicate => 'has_block_col_numbers', clearer => 'clear_block_col_numbers');
@@ -94,7 +95,7 @@ sub calculate_design {
     elsif($self->get_design_type() eq "MAD") {
 	$design = _get_madiii_design($self);
     }
-    elsif ($self->get_design_type() eq "genotyping_plate") { 
+    elsif ($self->get_design_type() eq "genotyping_plate") {
 	$design = $self->_get_genotyping_plate();
     }
 #    elsif($self->get_design_type() eq "MADIV") {
@@ -112,35 +113,35 @@ sub calculate_design {
   }
 }
 
-sub _get_genotyping_plate { 
+sub _get_genotyping_plate {
     my $self = shift;
     my %gt_design;
     my @stock_list;
     my $number_of_stocks;
-    if ($self->has_stock_list()) { 
+    if ($self->has_stock_list()) {
 	@stock_list = @{$self->get_stock_list()};
 	$number_of_stocks = scalar(@stock_list);
-	if ($number_of_stocks > 95) { 
+	if ($number_of_stocks > 95) {
 	    die "Need fewer than 96 stocks per plate (at least one blank!)";
 	}
     }
-    else { 
+    else {
 	die "No stock list specified\n";
     }
-    
+
     my $blank = "";
-    if ($self->has_blank()) { 
+    if ($self->has_blank()) {
 	$blank = $self->get_blank();
 	print STDERR "Using previously set blank $blank\n";
     }
-    else { 
+    else {
 	my $well_no = int(rand() * $number_of_stocks)+1;
 	my $well_row = chr(int(($well_no-1) / 12) + 65);
 	my $well_col = ($well_no -1) % 12 +1;
 	$blank = sprintf "%s%02d", $well_row, $well_col;
 	print STDERR "Using randomly assigned blank $blank\n";
     }
-    
+
     my $count = 0;
 
     foreach my $row ("A".."H") {
@@ -148,16 +149,16 @@ sub _get_genotyping_plate {
 	    $count++;
 	    my $well= sprintf "%s%02d", $row, $col;
 	    #my $well = $row.$col;
-	    
-	    if ($well eq $blank) { 
-		$gt_design{$well} = { 
+
+	    if ($well eq $blank) {
+		$gt_design{$well} = {
 		    plot_name => $self->get_trial_name()."_".$well."_BLANK",
 		    stock_name => "BLANK",
 		};
 	    }
-	    elsif (@stock_list) { 
-		$gt_design{$well} = 
-		{ plot_name => $self->get_trial_name()."_".$well, 
+	    elsif (@stock_list) {
+		$gt_design{$well} =
+		{ plot_name => $self->get_trial_name()."_".$well,
 		  stock_name => shift(@stock_list),
 		};
 	    }
@@ -165,7 +166,7 @@ sub _get_genotyping_plate {
 	}
     }
     return \%gt_design;
-    
+
 }
 
 sub _get_crd_design {
@@ -269,13 +270,26 @@ sub _get_rcbd_design {
   my $result_matrix;
   my @plot_numbers;
   my @stock_names;
+  my @control_names_crbd;
   my @block_numbers;
   my @converted_plot_numbers;
+  my @control_list_crbd;
+  my %control_names_lookup;
+  my $stock_name_iter;
 
   if ($self->has_stock_list()) {
     @stock_list = @{$self->get_stock_list()};
   } else {
     die "No stock list specified\n";
+  }
+  if ($self->has_control_list_crbd()) {
+    @control_list_crbd = @{$self->get_control_list_crbd()};
+    %control_names_lookup = map { $_ => 1 } @control_list_crbd;
+    foreach $stock_name_iter (@stock_names) {
+      if (exists($control_names_lookup{$stock_name_iter})) {
+	die "Names in stock list cannot be used also as controls\n";
+      }
+    }
   }
   if ($self->has_number_of_blocks()) {
     $number_of_blocks = $self->get_number_of_blocks();
@@ -291,6 +305,7 @@ sub _get_rcbd_design {
 							data => \@stock_list,
 						       }
 						      );
+
   $r_block = $rbase->create_block('r_block');
   $stock_data_matrix->send_rbase($rbase, 'r_block');
   $r_block->add_command('library(agricolae)');
@@ -318,6 +333,7 @@ sub _get_rcbd_design {
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'rep_number'} = 1;
+    $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
     $rcbd_design{$converted_plot_numbers[$i]} = \%plot_info;
   }
   %rcbd_design = %{_build_plot_names($self,\%rcbd_design)};
@@ -356,7 +372,7 @@ sub _get_alpha_lattice_design {
       #die "Number of stocks (".scalar(@stock_list).") for alpha lattice design is not divisible by the block size ($block_size)\n";
 	}
     else {
-		my $dummy_var = scalar(@stock_list) % $block_size;		  
+		my $dummy_var = scalar(@stock_list) % $block_size;
 		my $stocks_to_add = $block_size - $dummy_var;
 #		print "$stock_list\n";
 		foreach my $stock_list_rep(1..$stocks_to_add) {
@@ -364,7 +380,7 @@ sub _get_alpha_lattice_design {
 		}
 		$self->set_stock_list(\@stock_list);
 	}
-   
+
     $number_of_blocks = scalar(@stock_list)/$block_size;
     if ($number_of_blocks < $block_size) {
       die "The number of blocks ($number_of_blocks) for alpha lattice design must not be less than the block size ($block_size)\n";
@@ -412,7 +428,7 @@ sub _get_alpha_lattice_design {
 
 
   $r_block->run_block();
- 
+
   $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','alpha_book');
   @plot_numbers = $result_matrix->get_column("plots");
   @block_numbers = $result_matrix->get_column("block");
@@ -539,9 +555,9 @@ sub _get_augmented_design {
 sub _get_madii_design {
     my $self = shift;
     my %madii_design;
- 
+
     my $rbase = R::YapRI::Base->new();
-  
+
     my @stock_list;
     my @control_list;
     my $maximum_block_size;
@@ -693,7 +709,7 @@ sub _get_madii_design {
  #$r_block->add_command('test.ma<-design.dma(entries=c(seq(1,330,1)),chk.names=c(seq(1,4,1)),num.rows=9, num.cols=NULL, num.sec.chk=3)');
 
 # $r_block->add_command('test.ma<-design.dma(entries=trt,chk.names=control_trt,num.rows=number_of_rows, num.cols=NULL, num.sec.chk=3)');
- 
+
 #  $r_block->add_command('test.ma<-design.dma.0(entries=trt,chk.names=control_trt, nFieldRow=number_of_rows)');
 
    $r_block->add_command('test.ma<-design.dma(entries=trt,chk.names=control_trt, nFieldRow=number_of_rows)');
@@ -705,7 +721,7 @@ sub _get_madii_design {
 # $r_block->add_command('augmented<-augmented$book'); #added for agricolae 1.1-8 changes in output
 
   $r_block->add_command('augmented<-test.ma[[2]]'); #added for agricolae 1.1-8 changes in output
-#  $r_block->add_command('print(augmented)'); 
+#  $r_block->add_command('print(augmented)');
   $r_block->add_command('augmented<-as.matrix(augmented)');
  # $r_block->add_command('augmented<-as.data.frame(augmented)');
 
@@ -765,9 +781,9 @@ sub _get_madiii_design {
 
     my $self = shift;
     my %madiii_design;
- 
+
     my $rbase = R::YapRI::Base->new();
-  
+
     my @stock_list;
     my @control_list;
     my $maximum_block_size;
@@ -876,7 +892,7 @@ sub _get_madiii_design {
 
   print "@stock_list\n";
 
- 
+
   $stock_data_matrix =  R::YapRI::Data::Matrix->new(
 						       {
 							name => 'stock_data_matrix',
@@ -924,10 +940,10 @@ sub _get_madiii_design {
  # }
 
  #$r_block->add_command('test.ma<-design.dma(entries=c(seq(1,330,1)),chk.names=c(seq(1,4,1)),num.rows=9, num.cols=NULL, num.sec.chk=3)');
- 
+
   $r_block->add_command('number_of_rows <- '.$number_of_rows);
   $r_block->add_command('number_of_cols <- '.$number_of_cols);
-  $r_block->add_command('number_of_rows_per_block <- '.$number_of_rows_per_block); 
+  $r_block->add_command('number_of_rows_per_block <- '.$number_of_rows_per_block);
   $r_block->add_command('number_of_cols_per_block <- '.$number_of_cols_per_block);
 
   $r_block->add_command('test.ma<-design.dma(entries=trt,chk.names=control_trt,nFieldRow=number_of_rows,nFieldCols=number_of_cols,nRowsPerBlk=number_of_rows_per_block, nColsPerBlk=number_of_cols_per_block)');
@@ -1005,9 +1021,9 @@ sub _get_madiv_design {
 
     my $self = shift;
     my %madiv_design;
- 
+
     my $rbase = R::YapRI::Base->new();
-  
+
     my @stock_list;
     my @control_list;
     my $maximum_block_size;
@@ -1116,7 +1132,7 @@ sub _get_madiv_design {
 
   print "@stock_list\n";
 
- 
+
   $stock_data_matrix =  R::YapRI::Data::Matrix->new(
 						       {
 							name => 'stock_data_matrix',
@@ -1164,10 +1180,10 @@ sub _get_madiv_design {
  # }
 
  #$r_block->add_command('test.ma<-design.dma(entries=c(seq(1,330,1)),chk.names=c(seq(1,4,1)),num.rows=9, num.cols=NULL, num.sec.chk=3)');
- 
+
   $r_block->add_command('number_of_rows <- '.$number_of_rows);
  # $r_block->add_command('number_of_cols <- '.$number_of_cols);
-  $r_block->add_command('number_of_rows_per_block <- '.$number_of_rows_per_block); 
+  $r_block->add_command('number_of_rows_per_block <- '.$number_of_rows_per_block);
  # $r_block->add_command('number_of_cols_per_block <- '.$number_of_cols_per_block);
 
   #$r_block->add_command('test.ma<-design.dma(entries=trt,chk.names=control_trt,nFieldRow=number_of_rows,nFieldCols=number_of_cols,nRowsPerBlk=number_of_rows_per_block, nColsPerBlk=number_of_cols_per_block)');
