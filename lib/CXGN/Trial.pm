@@ -1464,6 +1464,17 @@ sub get_design_type {
 sub duplicate { 
 }
 
+=head2 get_accessions
+
+ Usage:        my $accessions = $t->get_accessions();
+ Desc:         retrieves the accessions used in this trial.
+ Ret:          an arrayref of { accession_name => acc_name, stock_id => stock_id }
+ Args:         none
+ Side Effects:
+ Example:
+
+=cut
+
 sub get_accessions {
 	my $self = shift;
 	my @accessions;
