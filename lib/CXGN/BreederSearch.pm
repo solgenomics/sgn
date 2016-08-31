@@ -147,6 +147,107 @@ sub metadata_query {
   }
 }
 
+=head2 avg_phenotypes_query
+
+parameters: trait_id, trial_id, allow_missing
+
+returns: values, the avg pheno value of each accession in a trial for the given trait, and column_names, an array of the trait names
+
+Side Effects: none
+
+=cut
+
+sub avg_phenotypes_query {
+  my $self = shift;
+  my $trial_id = shift;
+  my $trait_ids = shift;
+  my $weights = shift;
+  my $allow_missing = shift;
+  my $reference_accession = shift;
+
+
+  my $select = "SELECT table0.accession_id, table0.accession_name";
+  my $from = " FROM (SELECT accession_id, accession_name FROM materialized_phenoview WHERE trial_id = $trial_id GROUP BY 1,2) AS table0";
+  for (my $i = 1; $i <= scalar @$trait_ids; $i++) {
+    $select .= ",  ROUND( CAST(table$i.trait$i AS NUMERIC), 2)";
+    $from .= " JOIN (SELECT accession_id, accession_name, AVG(phenotype_value::REAL) AS trait$i FROM materialized_phenoview WHERE trial_id = $trial_id AND trait_id = ? GROUP BY 1,2) AS table$i USING (accession_id)";
+  }
+  my $query = $select . $from . " ORDER BY 2";
+  if ($allow_missing eq 'true') { $query =~ s/JOIN/FULL OUTER JOIN/g; }
+
+  print STDERR "QUERY: $query\n";
+
+  my $h = $self->dbh->prepare($query);
+  $h->execute(@$trait_ids);
+
+  my @weights = @$weights;
+  my (@raw_avg_values, @reference_values, @rows_to_scale, @weighted_values);
+
+  if ($reference_accession) {
+
+    while (my @row = $h->fetchrow_array()) {
+      push @rows_to_scale, @row;
+      my ($id, $name, @avg_values) = @row;
+      if ($id == $reference_accession) { @reference_values = @avg_values; }
+    }
+
+    print STDERR "reference accession id = $reference_accession and reference values = @reference_values\n";
+
+    $h->execute(@$trait_ids);
+    while (my ($id, $name, @avg_values) = $h->fetchrow_array()) {
+
+      my @scaled_values = map {sprintf("%.2f", $avg_values[$_] / $reference_values[$_])} 0..$#avg_values;
+      my @scaled_and_weighted = map {sprintf("%.2f", $scaled_values[$_] * $weights[$_])} 0..$#scaled_values;
+      unshift @scaled_values, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
+      unshift @scaled_and_weighted, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
+
+      push @raw_avg_values, [@scaled_values];
+
+      my $sum;
+      map { $sum += $_ } @scaled_and_weighted;
+      my $rounded_sum = sprintf("%.2f", $sum);
+      push @scaled_and_weighted, $rounded_sum;
+      push @weighted_values, [@scaled_and_weighted];
+    }
+
+  } else {
+
+  while (my ($id, $name, @avg_values) = $h->fetchrow_array()) {
+
+    my @values_to_weight = @avg_values;
+    unshift @avg_values, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
+    push @raw_avg_values, [@avg_values];
+
+    @values_to_weight = map {$values_to_weight[$_] * $weights[$_]} 0..$#values_to_weight;
+    my $sum;
+    map { $sum += $_ } @values_to_weight;
+    unshift @values_to_weight, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
+    my $rounded_sum = sprintf("%.2f", $sum);
+    push @values_to_weight, $rounded_sum;
+    push @weighted_values, [@values_to_weight];
+  }
+
+}
+
+  my @weighted_values2 = sort { $b->[-1] <=> $a->[-1] } @weighted_values;
+  my @weighted_values3;
+  for (my $i = 0; $i < scalar @weighted_values2; $i++ ) {
+    my $temp_array = $weighted_values2[$i];
+    my @temp_array = @$temp_array;
+    push @temp_array, $i+1;
+    push @weighted_values3, [@temp_array];
+  }
+
+  print STDERR "avg_phenotypes: ".Dumper(@raw_avg_values);
+  print STDERR "avg_phenotypes: ".Dumper(@weighted_values3);
+
+  return {
+    raw_avg_values => \@raw_avg_values,
+    weighted_values => \@weighted_values3
+  };
+
+}
+
 =head2 refresh_matviews
 
 parameters: string to specify desired refresh type, basic or concurrent. defaults to concurrent

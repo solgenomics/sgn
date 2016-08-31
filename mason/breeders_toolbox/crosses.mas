@@ -17,11 +17,11 @@ $user_id => undef
   </thead>
   <tbody>
   <%perl>
-    if (!@cross_populations) { 
+    if (!@cross_populations) {
       print "<tr><td>No crosses available for your account.</td></tr>";
     }
 
-    foreach my $cross_pop (@cross_populations) { 
+    foreach my $cross_pop (@cross_populations) {
       print "<tr><td><a href=\"/cross/".$cross_pop->[1]."\">".$cross_pop->[0]."</a></td></tr>";
     }
   </%perl>
@@ -45,6 +45,64 @@ $user_id => undef
 </style>
 
 <!-- Modal Dialogs Below Here -->
+
+<div class="modal fade" id="create_polycross_nursery" name="create_polycross_nursery" tabindex="-1" role="dialog" aria-labelledby="addNurseryDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content ui-front">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addNurseryDialog">Add New Polycross Nursery</h4>
+      </div
+      <div class="modal-body">
+        <div class="container-fluid">
+	       <form class="form-horizontal" role="form" name="create_polycross_nursery_form" id="create_polycross_nursery_form">
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Nursery Name: </label>
+      	      <div class="col-sm-10">
+	        <input class="form-control" type="text" id="nursery_name" name="nursery_name"/>
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">List of Accessions in Nursery: </label>
+      	      <div class="col-sm-10">
+              <div id="accession_list"></div>
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Breeding Program: </label>
+      	      <div class="col-sm-10">
+	        <select class="form-control" id="polycross_program" name="polycross_program">
+	  	<%perl>
+	    	  foreach my $program (@programs) {
+	    	    print "<option value=".'"'.@$program[1].'"'.">".@$program[1]."</option>";
+	    	  }
+          	</%perl>
+       		</select>
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Location: </label>
+      	      <div class="col-sm-10">
+	        <select class="form-control" id="polycross_location" name="polycross_location">
+	  	<%perl>
+	    	  foreach my $location (@locations) {
+	      	    print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
+	    	  }
+         	</%perl>
+      		</select>
+              </div>
+	    </div>
+	  </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="create_polycross_nursery_submit" id="create_polycross_nursery_submit">Add Nursery Crosses</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <div class="modal fade" id="create_cross" name="create_cross" tabindex="-1" role="dialog" aria-labelledby="addCrossDialog">
   <div class="modal-dialog" role="document">
@@ -192,7 +250,7 @@ $user_id => undef
 	    	</td>
 	      </tr>
 	    </table>
-	  </form>      
+	  </form>
         </div>
       </div>
       <div class="modal-footer">
@@ -240,8 +298,8 @@ $user_id => undef
       	      <div class="col-sm-10">
 	        <select class="form-control" id="cross_upload_location" name="cross_upload_location">
       		<%perl>
-		  foreach my $location (@locations) { 
-		    print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; 
+		  foreach my $location (@locations) {
+		    print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
 		  }
       		</%perl>
     		</select>
@@ -252,7 +310,7 @@ $user_id => undef
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">Prefix: </label>
       	      <div class="col-sm-10">
-	        <input class="form-control" id="upload_prefix" name="upload_prefix" value="P" /> 
+	        <input class="form-control" id="upload_prefix" name="upload_prefix" value="P" />
               </div>
 	    </div>
 	    <div class="form-group">
@@ -312,7 +370,7 @@ $user_id => undef
     <br><br>
     Progeny naming:
     <br>
-    Prefix <input id="upload_prefix" name="upload_prefix" value="P" size="5" /> 
+    Prefix <input id="upload_prefix" name="upload_prefix" value="P" size="5" />
     Suffix <input id="upload_suffix" name="upload_suffix" size="5" />
     <br><br>
 
@@ -500,6 +558,28 @@ $user_id => undef
 </div>
 -->
 
+<div class="modal fade" id="nursery_saved_dialog_message" name="nursery_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="nurserySavedDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="nurserySavedDialog">Success</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <p>
+    	  <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+    	  The nursery was saved successfully
+  	  </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="dismiss_nursery_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="cross_saved_dialog_message" name="cross_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="crossSavedDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -561,4 +641,3 @@ $user_id => undef
   </p>
 </div>
 -->
-
