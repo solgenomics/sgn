@@ -352,6 +352,7 @@ sub get_phenotype_info {
     my $block_number_type_id = $self -> get_stockprop_type_id("block");
     my $year_type_id = $self->get_projectprop_type_id("project year");
     my $plot_type_id = $self->get_stock_type_id("plot");
+    my $plant_type_id = $self->get_stock_type_id("plant");
     my $accession_type_id = $self->get_stock_type_id("accession");
 
     my @where_clause = ();
@@ -363,7 +364,7 @@ sub get_phenotype_info {
 
     if (@where_clause>0) {
 	$where_clause .= $rep_type_id ? "WHERE (stockprop.type_id = $rep_type_id OR stockprop.type_id IS NULL) " : "WHERE stockprop.type_id IS NULL";
-	$where_clause .= "AND plot.type_id = $plot_type_id AND stock.type_id = $accession_type_id";
+	$where_clause .= "AND (plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id) AND stock.type_id = $accession_type_id";
 	$where_clause .= $block_number_type_id  ? " AND (block_number.type_id = $block_number_type_id OR block_number.type_id IS NULL)" : " AND block_number.type_id IS NULL";
 	$where_clause .= $year_type_id ? " AND projectprop.type_id = $year_type_id" :"" ;
 	$where_clause .= " AND " . (join (" AND " , @where_clause));
@@ -505,6 +506,7 @@ sub get_extended_phenotype_info_matrix {
         };
         $traits{$cvterm}++;
     }
+    #print STDERR Dumper \%plot_data;
 
     my @info = ();
     my $line = join "\t", qw | studyYear studyDbId studyName locationDbId locationName germplasmDbId germplasmName plotDbId plotName rep blockNumber |;
@@ -522,14 +524,10 @@ sub get_extended_phenotype_info_matrix {
     my $count2 = 0;
 
     my @unique_plot_list = ();
-    my $previous_plot = "";
-    foreach my $d (@$data) {
-	my $plot = $d->[6];
-	if ($plot ne $previous_plot) {
-	    push @unique_plot_list, $plot;
-	}
-	$previous_plot = $plot;
+    foreach my $d (keys \%plot_data) {
+        push @unique_plot_list, $d;
     }
+    #print STDERR Dumper \@unique_plot_list;
 
     foreach my $p (@unique_plot_list) {
       #$line = join "\t", map { $plot_data{$p}->{metadata}->{$_} } ( "year", "trial_name", "location", "accession", "plot", "rep", "block_number" );
