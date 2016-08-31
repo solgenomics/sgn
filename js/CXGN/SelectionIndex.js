@@ -15,12 +15,11 @@ jQuery(document).ready(function() {
 
       jQuery('#selection_index').html("");
 	    var data = [ [ jQuery(this).val() ] ];
-      var categories = [ 'trials', 'traits' ];
 
       jQuery.ajax({   // get traits phenotyped in trial
       url: '/ajax/breeder/search',
       method: 'POST',
-    	data: {'categories': categories, 'data': data, 'querytypes': 0 },
+    	data: {'categories': [ 'trials', 'traits' ], 'data': data, 'querytypes': 0 },
     	    beforeSend: function(){
     		disable_ui();
                 },
@@ -62,7 +61,24 @@ jQuery(document).ready(function() {
           },
     error: function(response) { alert("An error occurred while transforming the list "+list_id); }
     });
-  });
+
+
+     jQuery.ajax({   // get accessions phenotyped in trial
+       url: '/ajax/breeder/search',
+       method: 'POST',
+       data: {'categories': [ 'trials', 'accessions' ], 'data': data, 'querytypes': 0 },
+       success: function(response) {
+         var accessions = response.list || [];
+         var accession_html = '<option value="" title="Select a reference accession">Select a reference accession</a>\n';
+         for (i = 0; i < accessions.length; i++) {
+           accession_html += '<option value="'+accessions[i][0]+'" title="'+accessions[i][1]+'">'+accessions[i][1]+'</a>\n';
+         }
+         jQuery('#reference_accession_list').html(accession_html);
+       },
+       error: function(response) { jQuery('#reference_accession_list').html('<option>No accessions retrieved from this trial</a>'); }
+     });
+
+ });
 
     jQuery('#trait_list').change( // add selected trait to trait table
       function() {
@@ -85,14 +101,15 @@ jQuery(document).ready(function() {
         jQuery('#calculate_rankings').removeClass('disabled');
       });
 
-//      jQuery(".weight").change(
-//        function() {
-
-
       jQuery('#calculate_rankings').click( function() {
         jQuery('#raw_avgs_div').html("");
         jQuery('#weighted_values_div').html("");
         var trial_id = jQuery("#select_trial_for_selection_index option:selected").val();
+
+        var reference_accession_id;
+        if (jQuery("#use_reference_accession").is(':checked')) {
+          reference_accession_id = jQuery("#reference_accession_list option:selected").val();
+        }
 
         var selected_trait_rows = jQuery('#trait_table').children();
         var trait_ids = [],
@@ -111,13 +128,14 @@ jQuery(document).ready(function() {
             column_names.push( { title: parts[0] } );
             weighted_column_names.push( { title: weight+" * ("+parts[0]+")" } );
         });
-        weighted_column_names.push( { title: "&#931; (weighted values)" } );
+        weighted_column_names.push( { title: "SIN" }, { title: "SIN Rank" } );
+        //weighted_column_names.push( { title: "SIN Rank" } );
         var allow_missing = jQuery("#allow_missing").is(':checked');
 
-      jQuery.ajax({   // get traits phenotyped in trial
+      jQuery.ajax({   // get raw averaged and weighted phenotypes from trial
         url: '/ajax/breeder/search/avg_phenotypes',
         method: 'POST',
-      	data: {'trial_id': trial_id, 'trait_ids': trait_ids, 'weights': weights, 'allow_missing': allow_missing },
+      	data: {'trial_id': trial_id, 'trait_ids': trait_ids, 'weights': weights, 'allow_missing': allow_missing, 'reference_accession' : reference_accession_id },
       	  success: function(response) {
             var raw_avgs = response.raw_avg_values || [];
             var weighted_values = response.weighted_values || [];
@@ -140,22 +158,23 @@ function build_table(data, column_names, trial_name, target_div) {
   var table_html = '<div class="table-responsive" style="margin-top: 10px;"><table id="'+table_id+'" class="table table-hover table-striped table-bordered" width="100%"><caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Table description: <i>'+table_type+' for trial '+trial_name+'.</i></center></caption></table></div>'
   jQuery('#'+target_div).html(table_html);
 
-  var last_column = column_names.length - 1;
-  var new_table = jQuery('#'+table_id).DataTable( {
+  var penultimate_column = column_names.length - 2;
+  jQuery('#'+table_id).DataTable( {
     dom: 'Bfrtip',
     buttons: ['copy', 'excel', 'csv', 'print' ],
     data: data,
     destroy: true,
     paging: true,
+    order: [[ 1, 'asc' ]],
     lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
     columns: column_names,
-    order: [[ last_column, "desc" ]]
+    order: [[ penultimate_column, "desc" ]],
   });
 }
 
 function update_formula() {
   var selected_trait_rows = jQuery('#trait_table').children();
-  var formula = "Sum(weighted values) = ";
+  var formula = "SIN = ";
   var term_number = 0;
   jQuery(selected_trait_rows).each(function(index, selected_trait_rows){
       var trait_id = jQuery('a', this).data("value");
