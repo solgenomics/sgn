@@ -107,9 +107,6 @@ my $stockprops = $stockref->{props};
 #my $stock_pedigree = $stockref->{stock_pedigree};
 #my $stock_descendants = $stockref->{stock_descendants};
 
-
-my $experiment = ['year', 'location', 'replicate']; # these values should be in nd_experimentprop ?
-
 my $resources = [ 'stock_synonym', 'solcap number'];
 
 my $allele_div = "stock_alleles";
@@ -264,9 +261,7 @@ function jqueryStuff() {
 </&>
 
 
-<&| /page/info_section.mas, title => "Experimental data" , collapsible=> 1, is_subsection => 0 &>
-      <& /stock/stockprops.mas, stock_id=>$stock_id, props=> $stockprops, subset=> $experiment  &>
-</&>
+
 
 % if($is_owner) {
 <&| /page/info_section.mas, title=>"Stock history", collapsible=>1, collapsed=>1 &>
@@ -275,6 +270,18 @@ function jqueryStuff() {
 
 
 % }
+
+<&| /page/info_section.mas, title => "Trials" &>
+
+  <& /stock/trials.mas, stock_id => $stock_id &>
+
+</&>
+
+<&| /page/info_section.mas, title => "Traits assayed" &>
+
+  <& /stock/traits.mas, stock_id => $stock_id &>
+
+</&>
 
 <%perl>
  my $collapsible = 0;
@@ -293,6 +300,7 @@ if ($person_id && ($submitter || $curator || $sequencer)) { $remove_parent_link 
 Remove a parent (this will only remove the link to the parent, not the parent accession itself).<br /><br />
   <div id="remove_parent_list">[loading parent list...]</div>
 </div>
+
 
 
 <&| /page/info_section.mas, title=>"Pedigree" , collapsible=> $collapsible, collapsed=>0, subtitle=>"[$add_parent_link] [$remove_parent_link]" &>
@@ -409,17 +417,7 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
 
-<&| /page/info_section.mas, title => "Trials" &>
 
-  <& /stock/trials.mas, stock_id => $stock_id &>
-
-</&>
-
-<&| /page/info_section.mas, title => "Traits assayed" &>
-
-  <& /stock/traits.mas, stock_id => $stock_id &>
-
-</&>
 
 %#<&| /page/info_section.mas, title => "Phenotypic data" &>
 
