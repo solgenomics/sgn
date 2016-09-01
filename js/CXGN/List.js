@@ -304,6 +304,14 @@ CXGN.List.prototype = {
 	});
     },
 
+    updateItem: function(list_id, item_id, content) {
+        jQuery.ajax( {
+            async: false,
+            url: '/list/item/update',
+            data: { 'list_id': list_id, 'item_id': item_id, 'content':content }
+        });
+    },
+
     deleteList: function(list_id) {
 	jQuery.ajax( {
 	    url: '/list/delete',
@@ -436,7 +444,7 @@ CXGN.List.prototype = {
 	html += '<table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
 
 	for(var n=0; n<items.length; n++) {
-	    html = html +'<tr><td>'+ items[n][1] + '</td><td><input id="'+items[n][0]+'" type="button" class="btn btn-default btn-xs" value="Remove" /></td></tr>';
+	    html = html +'<tr><td id="list_item_toggle_edit_div_'+items[n][0]+'" ><div name="list_item_toggle_edit" data-listitemdiv="list_item_toggle_edit_div_'+items[n][0]+'" data-listitemid="'+items[n][0]+'" data-listitemname="'+items[n][1]+'" >'+ items[n][1] + '</div></td><td><input id="'+items[n][0]+'" type="button" class="btn btn-default btn-xs" value="Remove" /></td></tr>';
 	}
 	html += '</tbody></table>';
 
@@ -480,6 +488,22 @@ CXGN.List.prototype = {
 		alert("Changed name to "+new_name+" for list id "+list_id);
 	    }
 	);
+
+        jQuery('div[name="list_item_toggle_edit"]').click(function() {
+            var list_item_id = jQuery(this).data('listitemid');
+            var list_item_name = jQuery(this).data('listitemname');
+            var list_item_div = jQuery(this).data('listitemdiv');
+            var list_item_edit_html = '<div class="input-group"><input type="text" class="form-control" value="'+list_item_name+'" placeholder="'+list_item_name+'" id="list_item_edit_input_'+list_item_id+'" data-listitemid="'+list_item_id+'" /><span class="input-group-btn"><button class="btn btn-default" type="button" name="list_item_edit_submit" data-inputid="list_item_edit_input_'+list_item_id+'">Ok</button></span></div>';
+            jQuery("#"+list_item_div).empty().html(list_item_edit_html);
+        });
+
+        jQuery(document).on('click', 'button[name="list_item_edit_submit"]', function() {
+            var lo = new CXGN.List();
+            var list_id = jQuery('#list_id_div').html();
+            var input_id = jQuery(this).data('inputid');
+            lo.updateItem(list_id, jQuery("#"+input_id).data('listitemid'), jQuery("#"+input_id).val());
+            lo.renderItems(div, list_id);
+        });
     },
 
     renderPublicItems: function(div, list_id) {

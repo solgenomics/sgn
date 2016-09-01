@@ -9,6 +9,7 @@ use File::Basename qw | basename dirname|;
 use Digest::MD5;
 use CXGN::List::Validate;
 use Data::Dumper;
+use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use Spreadsheet::WriteExcel;
 use CXGN::Trait;
@@ -56,7 +57,7 @@ has 'data_level' => (isa => 'Str | Undef', is => 'ro', default => 'plots');
 
 has 'sample_number' => (isa => 'Int | Undef', is => 'ro', default => 0);
 
-has 'predefined_columns' => (isa => 'HashRef | Undef', is => 'ro');
+has 'predefined_columns' => (isa => 'ArrayRef[HashRef] | Undef', is => 'ro');
 
 has 'trait_list' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_trait_list' );
 

@@ -43,6 +43,7 @@ use CXGN::UploadFile;
 use CXGN::Trial::ParseUpload;
 use CXGN::List::Transform;
 use SGN::Model::Cvterm;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -129,6 +130,7 @@ sub generate_experimental_design_POST : Args(0) {
   my $increment =  $c->req->param('increment');
   my $trial_location = $c->req->param('trial_location');
   my $trial_name = $c->req->param('project_name');
+  my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
   #my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
   if ($design_type = 'RCBD') {
       @stock_names = (@stock_names, @control_names_crbd);
@@ -231,6 +233,10 @@ sub generate_experimental_design_POST : Args(0) {
   if ($max_block_size) {
     $trial_design->set_maximum_block_size($max_block_size);
   }
+  if ($greenhouse_num_plants) {
+      my $json = JSON->new();
+    $trial_design->set_greenhouse_num_plants($json->decode($greenhouse_num_plants));
+  }
   if ($design_type) {
     $trial_design->set_design_type($design_type);
     $design_info{'design_type'} = $design_type;
@@ -257,7 +263,7 @@ sub generate_experimental_design_POST : Args(0) {
     $c->stash->{rest} = {error => "Could not generate design" };
     return;
   }
-  $design_layout_view_html = design_layout_view(\%design, \%design_info);
+  $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type);
   $design_info_view_html = design_info_view(\%design, \%design_info);
   my $design_json = encode_json(\%design);
   $c->stash->{rest} = {
@@ -297,9 +303,13 @@ sub save_experimental_design_POST : Args(0) {
   my $error;
 
   my $design = _parse_design_from_json($c->req->param('design_json'));
-
   #print STDERR Dumper $design;
 
+  my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
+  my $json = JSON->new();
+  if ($greenhouse_num_plants) {
+      $greenhouse_num_plants = $json->decode($greenhouse_num_plants);
+  }
   my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	   chado_schema => $chado_schema,
@@ -313,6 +323,7 @@ sub save_experimental_design_POST : Args(0) {
 	   trial_location => $c->req->param('trial_location'),
 	   trial_name => $c->req->param('project_name'),
 	   design_type => $c->req->param('design_type'),
+	   greenhouse_num_plants => $greenhouse_num_plants,
 	  });
 
   #$trial_create->set_user($c->user()->id());

@@ -162,9 +162,9 @@ function displayPhenotypeUploadVerifyResponse(response, upload_type) {
     if (response.warning) {
         var warningarrayLength = response.warning.length;
 	if (warningarrayLength > 0) {
-	    message_text += "<li class='list-group-item list-group-item-danger'>";
+	    message_text += "<li class='list-group-item list-group-item-warning'>";
 	    message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
-	    message_text += "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.<hr>'This combination exists in the database' can be disregarded if the values in your file are indeed new.";
+	    message_text += "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.<hr>Warnings notifying you that values already exist in the database can be disregarded if your data is indeed new.<hr>To overwrite previously stored values: <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' /><br><br>";
 	    message_text += "</li>";
 	    for (var i = 0; i < warningarrayLength; i++) {
 	        message_text += "<li class='list-group-item list-group-item-warning'>";

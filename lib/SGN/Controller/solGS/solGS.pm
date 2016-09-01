@@ -1522,6 +1522,43 @@ sub download_validation :Path('/solgs/download/validation/pop') Args(3) {
 }
 
 
+sub predict_selection_pop_single_trait {
+    my ($self, $c) = @_;
+    
+    if ($c->stash->{data_set_type} =~ /single population/)
+    {
+	$self->predict_selection_pop_single_pop_model($c)
+    }
+    else
+    {    
+	$self->predict_selection_pop_combined_pops_model($c);
+    }
+
+
+}
+
+
+sub predict_selection_pop_multi_traits {
+    my ($self, $c) = @_;
+    
+    my $data_set_type    = $c->stash->{data_set_type};
+    my $training_pop_id  = $c->stash->{training_pop_id};
+    my $selection_pop_id = $c->stash->{selection_pop_id};
+    
+    $c->stash->{pop_id} = $training_pop_id;    
+    $self->traits_with_valid_models($c);
+    my @traits_with_valid_models = @{$c->stash->{traits_with_valid_models}};
+
+    foreach my $trait_abbr (@traits_with_valid_models) 
+    {
+	$c->stash->{trait_abbr} = $trait_abbr;
+	$self->get_trait_details_of_trait_abbr($c);
+	$self->predict_selection_pop_single_trait($c);
+    }
+    
+}
+
+
 sub predict_selection_pop_single_pop_model {
     my ($self, $c) = @_;
 
@@ -2724,6 +2761,38 @@ sub get_combined_pops_list {
 }
 
 
+sub get_trait_details_of_trait_abbr {
+    my ($self, $c) = @_;
+    
+    my $trait_abbr = $c->stash->{trait_abbr};
+  
+    if (!$c->stash->{pop_id}) 
+    {	
+	$c->stash->{pop_id} = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id}; 
+    }
+
+    my $trait_id;
+   
+    my $acronym_pairs = $self->get_acronym_pairs($c);                   
+    
+    if ($acronym_pairs)
+    {
+	foreach my $r (@$acronym_pairs) 
+	{
+	    if ($r->[0] eq $trait_abbr) 
+	    {
+		my $trait_name =  $r->[1];
+		$trait_name    =~ s/^\s+|\s+$//g;                                
+		
+		$trait_id = $c->model('solGS::solGS')->get_trait_id($trait_name);
+		$self->get_trait_details($c, $trait_id);
+	    }
+	}
+    }
+
+}
+
+
 sub build_multiple_traits_models {
     my ($self, $c) = @_;
 
@@ -2790,19 +2859,9 @@ sub build_multiple_traits_models {
 	    $single_trait_id = $selected_traits[0];
 	    if ($single_trait_id =~ /\D/)
 	    {
-		my $acronym_pairs = $self->get_acronym_pairs($c);                   
-		if ($acronym_pairs)
-		{
-		    foreach my $r (@$acronym_pairs) 
-		    {
-			if ($r->[0] eq $single_trait_id) 
-			{
-			    my $trait_name =  $r->[1];
-			    $trait_name    =~ s/\n//g;                                
-			    $single_trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
-			}
-		    }
-		}
+		$c->stash->{trait_abbr} = $single_trait_id;
+		$self->get_trait_details_of_trait_abbr($c);
+		$single_trait_id = $c->stash->{trait_id};
 	    }
   
 	    if (!$prediction_id)
@@ -2817,22 +2876,8 @@ sub build_multiple_traits_models {
 		
 		$c->stash->{trait_file} = $file2;
 		$c->stash->{trait_abbr} = $selected_traits[0];
-		
-		my $acronym_pairs = $self->get_acronym_pairs($c);                   
-		if ($acronym_pairs)
-		{
-		    foreach my $r (@$acronym_pairs) 
-		    {
-			if ($r->[0] eq $selected_traits[0]) 
-			{
-			    my $trait_name =  $r->[1];
-			    $trait_name    =~ s/\n//g;                                
-			    my $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
-			    $self->get_trait_details($c, $trait_id);
-			}
-		    }
-		}
-              
+		$self->get_trait_details_of_trait_abbr($c);
+
 		$self->get_rrblup_output($c); 
 	    }
 	}
@@ -2843,24 +2888,12 @@ sub build_multiple_traits_models {
 	    for (my $i = 0; $i <= $#selected_traits; $i++)
 	    {  
 		if ($selected_traits[$i] =~ /\D/)
-		{    
-		    my $acronym_pairs = $self->get_acronym_pairs($c);                   
-		    if ($acronym_pairs)
-		    {
-			foreach my $r (@$acronym_pairs) 
-			{
-			    if ($r->[0] eq $selected_traits[$i]) 
-			    {
-				my $trait_name =  $r->[1];
-				$trait_name    =~ s/\n//g; 
-				my $trait_id   =  $c->model('solGS::solGS')->get_trait_id($trait_name);
-				
-				$traits    .= $r->[0];
-				$traits    .= "\t" unless ($i == $#selected_traits);
-				$trait_ids .= $trait_id;    
-			    }
-			}
-		    }
+		{  
+		    $c->stash->{trait_abbr} = $selected_traits[$i];
+		    $self->get_trait_details_of_trait_abbr($c);
+		    $traits    .= $c->stash->{trait_abbr};
+		    $traits    .= "\t" unless ($i == $#selected_traits);
+		    $trait_ids .= $c->stash->{trait_id};
 		}
 		else 
 		{
@@ -3066,8 +3099,8 @@ sub selection_index_form :Path('/solgs/selection/index/form') Args(0) {
 sub traits_with_valid_models {
     my ($self, $c) = @_;
    
-    my $pop_id = $c->stash->{pop_id};
-    
+    my $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id};
+ 
     $self->analyzed_traits($c);
     
     my @analyzed_traits = @{$c->stash->{analyzed_traits}};  
@@ -4145,18 +4178,18 @@ sub traits_acronym_file {
 sub analyzed_traits {
     my ($self, $c) = @_;
     
-    my $model_id = $c->stash->{model_id}; 
+    my $training_pop_id = $c->stash->{model_id} || $c->stash->{training_pop_id}; 
 
     my $dir = $c->stash->{solgs_cache_dir};
     opendir my $dh, $dir or die "can't open $dir: $!\n";
     
+    my @all_files = grep { /gebv_kinship_[a-zA-Z0-9]/ && -f "$dir/$_" } 
+    readdir($dh); 
 
-    my @all_files =   grep { /gebv_kinship_[a-zA-Z0-9]/ && -f "$dir/$_" } 
-                  readdir($dh); 
     closedir $dh;
    
     my @traits_files = map { catfile($dir, $_)} 
-                       grep {/($model_id)/} 
+                       grep {/($training_pop_id)/} 
                        @all_files;
     
     my @traits;
@@ -4170,7 +4203,7 @@ sub analyzed_traits {
         { 
             my $trait = $trait_file;
             $trait =~ s/gebv_kinship_//;
-            $trait =~ s/$model_id|_|combined_pops//g;
+            $trait =~ s/$training_pop_id|_|combined_pops//g;
             $trait =~ s/$dir|\///g;
 
             my $acronym_pairs = $self->get_acronym_pairs($c);                   
@@ -4189,7 +4222,7 @@ sub analyzed_traits {
                 }
             }
             
-            $self->get_model_accuracy_value($c, $model_id, $trait);
+            $self->get_model_accuracy_value($c, $training_pop_id, $trait);
             my $av = $c->stash->{accuracy_value};
                       
             if ($av && $av =~ m/\d+/ && $av > 0) 

@@ -35,8 +35,8 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   print STDERR "Validating criteria_list\n";
   foreach my $select (@criteria_list) { #ensure criteria list arguments are one of the possible categories
     chomp($select);
-    if (! any { $select eq $_ } ('accessions', 'breeding_programs', 'genotyping_protocols', 'locations', 'plots', 'traits', 'trials', 'years', undef)) {
-      $error = "Valid keys are accessions, breeding_programs, 'genotyping_protocols', locations, plots, traits, trials and years or undef";
+    if (! any { $select eq $_ } ('accessions', 'breeding_programs', 'genotyping_protocols', 'locations', 'plants', 'plots', 'traits', 'trials', 'trial_designs', 'trial_types', 'years', undef)) {
+      $error = "Valid keys are accessions, breeding_programs, 'genotyping_protocols', locations, 'plants', plots, traits, trials, trial_designs, trial_types and years or undef";
       $c->stash->{rest} = { error => $error };
       return;
     }
@@ -77,7 +77,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   my $dbh = $c->dbc->dbh();
   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
 
-  my $results_ref = $bs->metadata_query(\@criteria_list, $dataref, $queryref);
+  my $results_ref = $bs->metadata_query($c, \@criteria_list, $dataref, $queryref);
 
   print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
 
@@ -92,6 +92,29 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   }
 }
 
+sub get_avg_phenotypes : Path('/ajax/breeder/search/avg_phenotypes') Args(0) {
+  my $self = shift;
+  my $c = shift;
+
+  my $trial_id = $c->req->param('trial_id');
+  my @trait_ids = $c->req->param('trait_ids[]');
+  my @weights = $c->req->param('weights[]');
+  my $allow_missing = $c->req->param('allow_missing');
+  my $reference_accession = $c->req->param('reference_accession');
+
+  my $dbh = $c->dbc->dbh();
+  my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
+
+  my $results_ref = $bs->avg_phenotypes_query($trial_id, \@trait_ids, \@weights, $allow_missing, $reference_accession);
+
+  $c->stash->{rest} = {
+    raw_avg_values => $results_ref->{'raw_avg_values'},
+    weighted_values => $results_ref->{'weighted_values'}
+  };
+
+  return;
+
+}
 
 sub refresh_matviews : Path('/ajax/breeder/refresh') Args(0) {
   my $self = shift;
@@ -101,7 +124,7 @@ sub refresh_matviews : Path('/ajax/breeder/refresh') Args(0) {
 
   my $dbh = $c->dbc->dbh();
   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-  my $refresh = $bs->refresh_matviews();
+  my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
 
   if ($refresh->{error}) {
     print STDERR "Returning with error . . .\n";

@@ -4,6 +4,7 @@ use Moose;
 #use File::Slurp;
 use Spreadsheet::ParseExcel;
 use JSON;
+use Data::Dumper;
 
 sub name {
     return "phenotype spreadsheet";
@@ -44,9 +45,17 @@ sub validate {
     if ($worksheet->get_cell(6,0)) {
       $name_head  = $worksheet->get_cell(6,0)->value();
     }
-
+    my $design_type;
+    if ($worksheet->get_cell(3,3)) {
+      $design_type  = $worksheet->get_cell(3,3)->value();
+    }
+    if (!$design_type ) {
+        $parse_result{'error'} = "No design type in header. Make sure you are using the correct spreadsheet format.";
+        print STDERR "No design type in header\n";
+        return \%parse_result;
+    }
     if (!$name_head || ($name_head ne 'plot_name' && $name_head ne 'plant_name')) {
-        $parse_result{'error'} = "No plot_name or plant_name in header.";
+        $parse_result{'error'} = "No plot_name or plant_name in header. Make sure you are using the correct spreadsheet format.";
         print STDERR "No plot name in header\n";
         return \%parse_result;
     }
@@ -56,18 +65,23 @@ sub validate {
                                     $worksheet->get_cell(6,3)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,4)->value() ne 'is_a_control' ||
                                     $worksheet->get_cell(6,5)->value() ne 'rep_number' ) ) {
-        $parse_result{'error'} = "Data columns must be in this order for uploading Plots: plot_name, accession_name, plot_number, block_number, is_a_control,  rep_number. If you are uploading plant level phenotypes, make sure to select Data Level: Plants.";
+        $parse_result{'error'} = "Data columns must be in this order for uploading Plot phenotypes: plot_name, accession_name, plot_number, block_number, is_a_control,  rep_number. If you are uploading plant level phenotypes, make sure to select Data Level: Plants.";
         print STDERR "Columns not correct and data_level is plots\n";
         return \%parse_result;
     }
-    if ($data_level eq 'plants' && ($worksheet->get_cell(6,0)->value() ne 'plant_name' ||
+    if ($data_level eq 'plants' && $design_type ne 'greenhouse' && ($worksheet->get_cell(6,0)->value() ne 'plant_name' ||
                                     $worksheet->get_cell(6,1)->value() ne 'plot_name' ||
                                     $worksheet->get_cell(6,2)->value() ne 'accession_name' ||
                                     $worksheet->get_cell(6,3)->value() ne 'plot_number' ||
                                     $worksheet->get_cell(6,4)->value() ne 'block_number' ||
                                     $worksheet->get_cell(6,5)->value() ne 'is_a_control' ||
                                     $worksheet->get_cell(6,6)->value() ne 'rep_number' ) ) {
-        $parse_result{'error'} = "Data columns must be in this order for uploading Plants: plant_name, plot_name, accession_name, plot_number, block_number, is_a_control, rep_number. If you are uploading plot level phenotypes, make sure to select Data Level: Plots.";
+        $parse_result{'error'} = "Data columns must be in this order for uploading Plant phenotypes: plant_name, plot_name, accession_name, plot_number, block_number, is_a_control, rep_number. If you are uploading plot level phenotypes, make sure to select Data Level: Plots.";
+        print STDERR "Columns not correct and data_level is plants\n";
+        return \%parse_result;
+    }
+    if ($data_level eq 'plants' && $design_type eq 'greenhouse' && $worksheet->get_cell(6,0)->value() ne 'plant_name') {
+        $parse_result{'error'} = "Data columns must be in this order for uploading Plant phenotypes to a Greenhouse trial: plant_name. If you are uploading plot level phenotypes, make sure to select Data Level: Plots.";
         print STDERR "Columns not correct and data_level is plants\n";
         return \%parse_result;
     }
@@ -76,7 +90,11 @@ sub validate {
     if ($name_head eq 'plot_name') {
         @fixed_columns = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
     } elsif ($name_head eq 'plant_name') {
-        @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+        if ($design_type eq 'greenhouse') {
+            @fixed_columns = qw | plant_name |;
+        } else {
+            @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+        }
     }
     my $num_fixed_col = scalar(@fixed_columns);
 
@@ -159,12 +177,17 @@ sub parse {
     my ( $col_min, $col_max ) = $worksheet->col_range();
 
     my $name_head  = $worksheet->get_cell(6,0)->value();
+    my $design_type = $worksheet->get_cell(3,3)->value();
 
     my @fixed_columns;
     if ($name_head eq 'plot_name') {
         @fixed_columns = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
     } elsif ($name_head eq 'plant_name') {
-        @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+        if ($design_type eq 'greenhouse') {
+            @fixed_columns = qw | plant_name |;
+        } else {
+            @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+        }
     }
     my $num_fixed_col = scalar(@fixed_columns);
 
@@ -178,18 +201,6 @@ sub parse {
 
     my $num_col_before_traits = $num_fixed_col + $num_predef_col;
 
-    #get trait names and column numbers;
-    for my $col ($num_col_before_traits .. $col_max) {
-        my $cell_val;
-        if ($worksheet->get_cell(6,$col)) {
-            $cell_val = $worksheet->get_cell(6,$col)->value();
-        }
-        if ($cell_val) {
-            $header_column_info{$cell_val} = $col;
-            $traits_seen{$cell_val} = 1;
-        }
-    }
-
     for my $row ( 7 .. $row_max ) {
         my $plot_name;
 
@@ -198,30 +209,45 @@ sub parse {
             $plots_seen{$plot_name} = 1;
         }
 
-        foreach my $trait_key (sort keys %header_column_info) {
-            my $value_string = '';
-
-            if ($worksheet->get_cell($row,$header_column_info{$trait_key})){
-                $value_string = $worksheet->get_cell($row,$header_column_info{$trait_key})->value();
+        for my $col ($num_col_before_traits .. $col_max) {
+            my $trait_name;
+            if ($worksheet->get_cell(6,$col)) {
+                $trait_name = $worksheet->get_cell(6,$col)->value();
             }
-            my ($trait_value, $timestamp) = split /,/, $value_string;
-            if (!$timestamp) {
-                $timestamp = '';
-            }
-            if (!defined($trait_value)) {
-                $trait_value = '';
-            }
-            #print STDERR $trait_value." : ".$timestamp."\n";
-
-            if ( defined($trait_value) && defined($timestamp) ) {
-                if ($trait_value ne '.'){
-                    $data{$plot_name}->{$trait_key} = [$trait_value, $timestamp];
+            if ($trait_name) {
+                if ($num_predef_col > 0) {
+                    for my $predef_col ($num_fixed_col .. $num_col_before_traits-1) {
+                        #print STDERR $predef_col."\n";
+                        $trait_name = $trait_name.'||'.$worksheet->get_cell($row, $predef_col)->value();
+                    }
                 }
-            } else {
-                $parse_result{'error'} = "Value or timestamp missing.";
-                return \%parse_result;
+
+                $traits_seen{$trait_name} = 1;
+                my $value_string = '';
+
+                if ($worksheet->get_cell($row, $col)){
+                    $value_string = $worksheet->get_cell($row, $col)->value();
+                }
+                my ($trait_value, $timestamp) = split /,/, $value_string;
+                if (!$timestamp) {
+                    $timestamp = '';
+                }
+                if (!defined($trait_value)) {
+                    $trait_value = '';
+                }
+                #print STDERR $trait_value." : ".$timestamp."\n";
+
+                if ( defined($trait_value) && defined($timestamp) ) {
+                    if ($trait_value ne '.'){
+                        $data{$plot_name}->{$trait_name} = [$trait_value, $timestamp];
+                    }
+                } else {
+                    $parse_result{'error'} = "Value or timestamp missing.";
+                    return \%parse_result;
+                }
             }
         }
+
     }
 
     foreach my $plot (sort keys %plots_seen) {
@@ -234,6 +260,7 @@ sub parse {
     $parse_result{'data'} = \%data;
     $parse_result{'plots'} = \@plots;
     $parse_result{'traits'} = \@traits;
+    #print STDERR Dumper \%parse_result;
 
     return \%parse_result;
 }

@@ -651,6 +651,33 @@ sub remove_element_action :Path('/list/item/remove') Args(0) {
     
 }
 
+sub update_element_action :Path('/list/item/update') Args(0) {
+    my $self = shift;
+    my $c = shift;
+ 
+    my $list_id = $c->req->param("list_id");
+    my $item_id = $c->req->param("item_id");
+    my $content = $c->req->param("content");
+    print STDERR "update ".$list_id." ".$item_id." ".$content."\n";
+
+    my $error = $self->check_user($c, $list_id);
+
+    if ($error) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+    $error = $list->update_element_by_id($item_id, $content);
+
+    if ($error) {
+        $c->stash->{rest} = { error => "An error occurred while attempting to update item $item_id" };
+    }
+    else {
+        $c->stash->{rest} = { success => 1 };
+    }
+}
+
 sub new_list : Private { 
     my $self = shift;
     my $c = shift;

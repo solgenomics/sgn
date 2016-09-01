@@ -96,7 +96,9 @@ $breeding_programs
                                         <option title="creates alpha designs starting from the alpha design fixing under the 4 series formulated by Patterson and Williams." value=Alpha>Alpha Lattice</option>
                                         <option title="some  treatments  (checks)  are  replicate  r  times  and  other  treatments  (new)  are replicated once." value=Augmented>Augmented</option>
                                         <option title="Adjustments are calculated using data from all checks" value=MAD>Modified Augmented Design </option>
-
+                                        <!--
+                                        <option title="A greenhouse houses plants in no particular layout design." value="greenhouse" >Greenhouse </option>
+                                        -->
                                         <!--<option value=MADIII>MADIII</option>-->
                                         <!--<option value=MADIV>MADIV</option>-->
                                         <!--<option value=MADV>MADV</option>-->
@@ -114,6 +116,12 @@ $breeding_programs
                             <div class="form-group form-group-sm" id="show_list_of_checks_section" style="display: none" >
                                 <label class="col-sm-7 control-label">List of checks to include (required): </label>
                                 <div class="col-sm-5" id="list_of_checks_section" >
+                                </div>
+                            </div>
+                            <div class="form-group form-group-sm" id="greenhouse_num_plants_per_accession_section" style="display: none" >
+                                <hr>
+                                <label class="col-sm-3 control-label">Number of Plants: </label>
+                                <div class="col-sm-9" id="greenhouse_num_plants_per_accession" >
                                 </div>
                             </div>
 
