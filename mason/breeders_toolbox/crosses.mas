@@ -336,52 +336,6 @@ $user_id => undef
   </div>
 </div>
 
-<!--
-<div id="upload_crosses_dialog"  class="ui-widget" title="Upload a list of crosses" >
-
-  <&| /page/explanation.mas, title=>'Template information' &>
-    <p>
-      <b>File format information</b>
-      <br>
-      <a id="cross_upload_spreadsheet_format_info">Spreadsheet format</a>
-      <br>
-      <a id="cross_upload_barcode_format_info" style = "display: none">Barcode format (Not currently supported)</a>
-    </p>
-  </&>
-
-  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
-
-    <label for="cross_upload_breeding_program" style="display: inline-block; width: 100px;">Breeding Program:</label>
-    <select id="cross_upload_breeding_program" name="cross_upload_breeding_program">
-      <%perl>
-        foreach my $program (@programs) {
-        print "<option value=".@$program[1].">".@$program[1]."</option>";
-        }
-      </%perl>
-    </select>
-    <br>
-
-    <label for="cross_upload_location" style="display: inline-block; width: 100px;">Location:</label>
-    <select id="cross_upload_location" name="cross_upload_location">
-      <%perl>foreach my $location (@locations) { print "
-        <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
-      </%perl>
-    </select>
-    <br><br>
-    Progeny naming:
-    <br>
-    Prefix <input id="upload_prefix" name="upload_prefix" value="P" size="5" />
-    Suffix <input id="upload_suffix" name="upload_suffix" size="5" />
-    <br><br>
-
-    <label for="crosses_upload_file">Upload file:</label>
-    <input type="file" name="crosses_upload_file" id="crosses_upload_file" encoding="multipart/form-data" />
-
-  </form>
-
-</div>
--->
-
 <div class="modal fade" id="upload_cross_error_display" name="upload_cross_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesErrorDialog">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
@@ -403,14 +357,6 @@ $user_id => undef
   </div>
 </div>
 
-<!--
-<div id="upload_cross_error_display" class="ui-widget">
-  <table>
-    <tbody></tbody>
-  </table>
-</div>
--->
-
 <div class="modal fade" id="cross_upload_spreadsheet_info_dialog" name="cross_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesInfoDialog">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
@@ -431,132 +377,6 @@ $user_id => undef
   </div>
 </div>
 
-<!--
-<div id="cross_upload_spreadsheet_info_dialog" title="Format for uploading crosses in a spreadsheet">
-  <&| /breeders_toolbox/spreadsheet_upload_format_info.mas &>
-  </&>
-</div>
--->
-
-<!--
-<div id="create_cross" title="Add cross" >
-  <table cellspacing="0" cellpadding="1" >
-
-    <tr><td>Cross name</td><td><input type="text" id="cross_name" name="cross_name" size="30"/></td></tr>
-    <tr><td>Cross type</td><td>
-	<select id="cross_type">
-	  <option value = "biparental" title="An individual plant pollinated by another individual plant">biparental</option>
-	  <option value = "self" title="A self pollinated individual plant">self</option>
-	  <option value = "open" title="An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members)">open pollinated</option>
-	  <option value = "bulk" title="A group of plants (usually a related family) pollinated by an individual plant">bulk</option>
-	  <option value = "bulk_self" title="A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen)">bulk selfed</option>
-	  <option value = "bulk_open" title="A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members)">bulk and open pollinated</option>
-	  <option value = "doubled_haploid" title="Plants derived from doubling the chromosome number of haploid tissue">doubled haplotype</option>
-	</select>
-      </td>
-    </tr>
-    <tr id="get_maternal_parent" ><td>Maternal parent</td><td><input id="maternal_parent" type="text" name="maternal" size="30"/></td></tr>
-    <tr id="get_paternal_parent" ><td>Paternal parent</td><td><input id="paternal_parent" type="text" name="paternal" size="30"/></td></tr>
-    <tr id="get_selfed_parent" style = "display: none"><td>Selfed parent</td><td><input id="selfed_parent" type="text" name="selfed_parent" size="30"/></td></tr>
-    <tr id="get_bulked_selfed_population" style = "display: none"><td>Bulked selfed <em>population</em></td><td><input id="bulked_selfed_population" type="text" name="bulked_selfed_population" size="30"/></td></tr>
-    <tr id="get_doubled_haploid_parent" style = "display: none"><td>Doubled haploid parent</td><td><input id="doubled_haploid_parent" type="text" name="doubled_haploid_parent" size="30"/></td></tr>
-    <tr id="get_bulk_maternal_population" style = "display: none"><td>Bulked maternal <em>population</em></td><td><input id="bulked_maternal_population" type="text" name="bulked_maternal_population" size="30"/></td></tr>
-    <tr id="get_bulk_paternal_parent" style = "display: none"><td>Bulked paternal parent</td><td><input id="bulked_paternal_parent" type="text" name="bulked_paternal_parent" size="30"/></td></tr>
-    <tr id="get_bulk_open_maternal_population" style = "display: none"><td>Bulked maternal <em>population</em></td><td><input id="bulked_open_maternal_population" type="text" name="bulked_open_maternal_population" size="30"/></td></tr>
-
-    <tr id="select_bulk_open_paternal_population" style = "display: none">
-      <td>Specify paternal population<input id="specify_bulk_open_paternal_population_checkbox" type="checkbox"/></td>
-      <td id="get_bulk_open_paternal_population" style = "display: none">
-	<input id="bulked_open_paternal_population" type="text" name="bulked_open_paternal_population" size="30"/>
-      </td>
-    </tr>
-
-    <tr id="get_open_pollinated_maternal_parent" style = "display: none"><td>Open pollinated maternal parent</td><td><input id="open_pollinated_maternal_parent" type="text" name="open_pollinated_maternal_parent" size="30"/></td></tr>
-
-    <tr id="get_open_pollinated_population" style = "display: none">
-      <td>Specify paternal population<input id="specify_paternal_population_checkbox" type="checkbox"/></td>
-      <td id="get_paternal_population" style = "display: none">
-	<input id="paternal_population" type="text" name="paternal_population" size="30"/>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-	<br>
-    </td>
-    </tr>
-
-    <tr>
-      <td>Breeding Program</td>
-      <td>
-	<select id="program" name="program">
-	  <%perl>
-	    foreach my $program (@programs) {
-	    print "<option value=".'"'.@$program[1].'"'.">".@$program[1]."</option>";
-	    }
-          </%perl>
-       </select>
-     </td>
-    </tr>
-
-    <tr>
-      <td>Location
-      </td>
-      <td>
-	<select id="location" name="location">
-	  <%perl>
-	    foreach my $location (@locations) {
-	      print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
-	    }
-         </%perl>
-      </select>
-    </td>
-  </tr>
-
-  <tr>
-    <td>
-      <br>
-    </td>
-  </tr>
-
-  <tr>
-    <td>Specify number of flowers<input id= "flower_number_checkbox" type="checkbox" /></td>
-    <td id="get_flower_number" style="display: none">How many flowers?<input type="text" id="flower_number" size="4" /></td>
-  </tr>
-
-  <tr>
-    <td>Specify number of seeds<input id= "seed_number_checkbox" type="checkbox" /></td>
-    <td id="get_seed_number" style="display: none">How many seeds?<input type="text" id="seed_number" size="4" /></td>
-  </tr>
-
-  <tr>
-    <td title="You may choose to create accessions for the progeny of the cross at this time.">Create accessions for progeny<input id="create_progeny_checkbox" type="checkbox"/></td>
-    <td id="create_progeny_number" style = "display: none"> How many progeny?<input type="text" id="progeny_number" size="4" /></td>
-  </tr>
-
-  <tr id="use_prefix_suffix" style = "display: none">
-    <td>Use prefix and/or suffix<input id="use_prefix_suffix_checkbox" type="checkbox" checked/></td>
-    <td id="get_prefix_suffix" style = "display: none">Prefix <input id="prefix" name="prefix" value="P" size="5" /> Suffix <input id="suffix" name="suffix" size="5" /></td>
-  </tr>
-
-  <div style="display: none">
-    <tr><td style="display: none">Data access restrictions<input disabled id="data_access_checkbox" type="checkbox" style="display: none"/> </td>
-  </div>
-
-  <td id="show_visible_to_role_selection" style="display: none">
-    <select id="visible_to_role">
-      <option value = "" >none</option>
-      <%perl>
-      foreach my $role (@roles) {
-        print "<option value=".$role.">".$role."</option>";
-      }
-     </%perl>
-    </select>
-  </td>
-
-</table>
-</div>
--->
 
 <div class="modal fade" id="nursery_saved_dialog_message" name="nursery_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="nurserySavedDialog">
   <div class="modal-dialog" role="document">
@@ -602,14 +422,6 @@ $user_id => undef
   </div>
 </div>
 
-<!--
-<div id="cross_saved_dialog_message" title="Cross saved">
-  <p>
-    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    The cross was saved successfully
-  </p>
-</div>
--->
 
 <div class="modal fade" id="cross_upload_success_dialog_message" name="cross_upload_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="uploadCrossSavedDialog">
   <div class="modal-dialog" role="document">
@@ -633,11 +445,4 @@ $user_id => undef
   </div>
 </div>
 
-<!--
-<div id="cross_upload_success_dialog_message" title="Cross file uploaded">
-  <p>
-    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    The cross file was uploaded successfully
-  </p>
-</div>
--->
+
