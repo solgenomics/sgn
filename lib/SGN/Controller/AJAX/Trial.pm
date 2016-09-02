@@ -114,7 +114,6 @@ sub generate_experimental_design_POST : Args(0) {
   }
 
   my $design_type =  $c->req->param('design_type');
-  print "MY DESIGN TYPE: $design_type\n";
   my $rep_count =  $c->req->param('rep_count');
   my $block_number =  $c->req->param('block_number');
 
@@ -132,11 +131,11 @@ sub generate_experimental_design_POST : Args(0) {
   my $trial_name = $c->req->param('project_name');
   my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
   #my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
-  if ($design_type = 'RCBD') {
-      @stock_names = (@stock_names, @control_names_crbd);
-      print Dumper(@stock_names);
+  if ($design_type eq "RCBD" || $design_type eq "Alpha") {
+    if (@control_names_crbd) {
+        @stock_names = (@stock_names, @control_names_crbd);
+    }
   }
-
 
    print STDERR join "\n",$design_type;
    print STDERR "\n";
