@@ -1,5 +1,6 @@
 
 <%args>
+$project_type => 'Trial'
 $trial_id => undef
 $trial_name => undef
 $folder_id => undef
@@ -7,6 +8,10 @@ $folder_name => undef
 $breeding_program_id => undef
 $breeding_program_name => undef
 </%args>
+
+% my $js_project_type;
+% if ($project_type eq 'Trial') { $js_project_type = 'trials'; }
+% if ($project_type eq 'Cross') { $js_project_type = 'crosses'; }
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
 
@@ -50,7 +55,7 @@ $breeding_program_name => undef
              </div>
          </div>
 	        <div class="form-group">
-      	      <label class="col-sm-3 control-label">Trial: </label>
+      	      <label class="col-sm-3 control-label"><% $project_type %>: </label>
       	      <div class="col-sm-9" >
                 <div id="select_trial_for_folder">
 % if ($trial_id) {
@@ -134,7 +139,7 @@ function breeding_program_change_folders() {
 
 function breeding_program_change_trials() {
   var breeding_program_id = jQuery("#folder_set_breeding_program_id").val();
-  get_select_box('trials', 'select_trial_for_folder', { 'name' : 'html_select_trial_for_folder', 'id' : 'html_select_trial_for_folder', 'breeding_program_id' : breeding_program_id });
+  get_select_box('<% $js_project_type %>', 'select_trial_for_folder', { 'name' : 'html_select_trial_for_folder', 'id' : 'html_select_trial_for_folder', 'breeding_program_id' : breeding_program_id });
 }
 
 function set_trial_folder() {

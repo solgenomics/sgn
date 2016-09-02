@@ -193,6 +193,39 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_trials_select : Path('/ajax/html/select/crosses') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
+
+    my $breeding_program_id = $c->req->param("breeding_program_id");
+    my $projects;
+    if (!$breeding_program_id) {
+      $projects = $p->get_breeding_programs();
+    } else {
+      push @$projects, [$breeding_program_id];
+    }
+
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+    my @crosses;
+    foreach my $project (@$projects) {
+      my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
+      foreach (@$cross_trials) {
+          push @crosses, $_;
+      }
+    }
+
+    my $html = simple_selectbox_html(
+      multiple => 1,
+      name => $name,
+      id => $id,
+      choices => \@crosses,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_genotyping_protocols_select : Path('/ajax/html/select/genotyping_protocols') Args(0) {
     my $self = shift;
     my $c = shift;
