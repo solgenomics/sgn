@@ -218,8 +218,13 @@ genoData <- fread(genoFile, na.strings = c("NA", " ", "--", "-"),  header = TRUE
 #remove markers with > 60% missing marker data
 message('no of markers before filtering out: ', ncol(genoData))
 genoData[, which(colSums(is.na(genoData)) >= nrow(genoData) * 0.6) := NULL]
-message('no of markers after filtering out ones with 60% missing: ', ncol(genoData))
-stop()
+message('no of markers after filtering out 60% missing: ', ncol(genoData))
+
+#remove indls with > 80% missing marker data
+genoData[, noMissing := apply(.SD, 1, function(x) sum(is.na(x)))]
+genoData <- genoData[noMissing <= ncol(genoData) * 0.8]
+genoData[, noMissing := NULL]
+message('no of indls after filtering out ones with 80% missing: ', nrow(genoData))
 
 genoData           <- as.data.frame(genoData)
 rownames(genoData) <- genoData[, 1]
@@ -243,11 +248,14 @@ predictionData <- c()
 
 if (length(predictionFile) !=0 ) {
 
-  predictionData <- as.data.frame(fread(predictionFile, na.strings = c("NA", " ", "--", "-"),))
- 
+  predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
+  message('selection population: no of markers before filtering out: ', ncol(genoData))
+  predictionData[, which(colSums(is.na(predictionData)) >= nrow(predictionData) * 0.6) := NULL]
+
+  predictionData           <- as.data.frame(predictionData)
   rownames(predictionData) <- predictionData[, 1]
   predictionData[, 1]      <- NULL
-  predictionData           <- predictionData[, colSums(is.na(predictionData)) < nrow(predictionData) * 0.5]
+ 
 }
 
 #impute genotype values for obs with missing values,
@@ -286,7 +294,7 @@ message("genotype lines after filtering for phenotyped only: ", length(row.names
 #drop observation lines without genotype data
 message("phenotype lines before filtering for genotyped only: ", length(row.names(phenoTrait)))        
 phenoTrait <- merge(data.frame(phenoTrait), commonObs, by=0, all=FALSE)
-rownames(phenoTrait) <-phenoTrait[, 1]
+rownames(phenoTrait) <- phenoTrait[, 1]
 phenoTrait <- subset(phenoTrait, select=trait)
 
 message("phenotype lines after filtering for genotyped only: ", length(row.names(phenoTrait)))
