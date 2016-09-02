@@ -359,10 +359,22 @@ sub _get_alpha_lattice_design {
   my @block_numbers;
   my @rep_numbers;
   my @converted_plot_numbers;
+  my @control_list_crbd;
+  my %control_names_lookup;
+  my $stock_name_iter;
   if ($self->has_stock_list()) {
     @stock_list = @{$self->get_stock_list()};
   } else {
     die "No stock list specified\n";
+  }
+  if ($self->has_control_list_crbd()) {
+    @control_list_crbd = @{$self->get_control_list_crbd()};
+    %control_names_lookup = map { $_ => 1 } @control_list_crbd;
+    foreach $stock_name_iter (@stock_names) {
+      if (exists($control_names_lookup{$stock_name_iter})) {
+	die "Names in stock list cannot be used also as controls\n";
+      }
+    }
   }
   if ($self->has_block_size()) {
     $block_size = $self->get_block_size();
@@ -444,6 +456,7 @@ sub _get_alpha_lattice_design {
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'rep_number'} = $rep_numbers[$i];
+    $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
     $alpha_design{$converted_plot_numbers[$i]} = \%plot_info;
   }
   %alpha_design = %{_build_plot_names($self,\%alpha_design)};
