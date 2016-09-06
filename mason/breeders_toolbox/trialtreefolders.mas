@@ -52,12 +52,14 @@ $breeding_programs
   </tr>
   </tbody>
 </table>
+
+
 <script>
 
   jQuery.noConflict();
 
   jQuery(document).ready(function($) {
-  
+
     jQuery.ajax( {
       url: '/ajax/breeders/get_trials_with_folders_cached',
       success: function(response) {
@@ -79,8 +81,8 @@ $breeding_programs
                     "icon": 'glyphicon glyphicon-leaf text-success',
                 }
             },
-            "search" : {  
-                 "case_insensitive" : true,    
+            "search" : {
+                 "case_insensitive" : true,
              },
           "plugins" : ["html_data","types","search"],
 
@@ -91,7 +93,7 @@ $breeding_programs
         alert("An error occurred while loading the trial data.");
       }
   });
-  
+
     jQuery("#trial_tree_search").keyup(function() {
         var v = jQuery("#trial_tree_search").val();
         jQuery("#trial_list").jstree(true).search(v);
@@ -126,4 +128,3 @@ $breeding_programs
   });
 
 </script>
-

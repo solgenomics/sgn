@@ -193,7 +193,7 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
-sub get_trials_select : Path('/ajax/html/select/crosses') Args(0) {
+sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
     my $self = shift;
     my $c = shift;
 

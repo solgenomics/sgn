@@ -34,6 +34,10 @@ use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddProgeny;
 use CXGN::Pedigree::AddCrossInfo;
 use CXGN::Pedigree::ParseUpload;
+use CXGN::Trial::Folder;
+use Carp;
+use File::Path qw(make_path);
+use File::Spec::Functions qw / catfile catdir/;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -595,7 +599,53 @@ sub add_more_progeny :Path('/cross/progeny/add') Args(1) {
 
 }
 
+sub get_crosses_with_folders : Path('/ajax/breeders/get_crosses_with_folders') Args(0) {
+    my $self = shift;
+    my $c = shift;
 
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
+
+    my $projects = $p->get_breeding_programs();
+
+    my $html = "";
+    foreach my $project (@$projects) {
+	   my $folder = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => $project->[0] });
+	   $html .= $folder->get_jstree_html('breeding_program', 'cross');
+    }
+
+    my $dir = catdir($c->site_cluster_shared_dir, "folder");
+    eval { make_path($dir) };
+    if ($@) {
+        print "Couldn't create $dir: $@";
+    }
+    my $filename = $dir."/entire_crosses_jstree_html.txt";
+
+    my $OUTFILE;
+    open $OUTFILE, '>', $filename or die "Error opening $filename: $!";
+    print { $OUTFILE } $html or croak "Cannot write to $filename: $!";
+    close $OUTFILE or croak "Cannot close $filename: $!";
+
+    $c->stash->{rest} = { status => 1 };
+}
+
+sub get_crosses_with_folders_cached : Path('/ajax/breeders/get_crosses_with_folders_cached') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $dir = catdir($c->site_cluster_shared_dir, "folder");
+    my $filename = $dir."/entire_crosses_jstree_html.txt";
+    my $html = '';
+    open(my $fh, '<', $filename) or die "cannot open file $filename";
+    {
+        local $/;
+        $html = <$fh>;
+    }
+    close($fh);
+
+    #print STDERR $html;
+    $c->stash->{rest} = { html => $html };
+}
 
 ###
 1;#
