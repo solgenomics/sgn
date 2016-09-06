@@ -408,7 +408,7 @@ sub _jstree_li_html {
     } elsif ($type eq 'folder') {
     	$url = "/folder/".$id;
     } elsif ($type eq 'cross') {
-    	$url = "/cross/".$id;
+    	$url = "/breeders/trial/".$id;
     }
 
     return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\"><a href=\"$url\">".$name.'</a>';
