@@ -13,7 +13,7 @@ library(stringr)
 library(lme4)
 library(randomForest)
 library(data.table)
-library(genetics)
+#library(genetics)
 
 allArgs <- commandArgs()
 
@@ -66,15 +66,36 @@ formattedPhenoFile <- grep("formatted_phenotype_data", inputFiles, ignore.case =
 formattedPhenoData <- c()
 phenoData          <- c()
 
+genoFile <- grep("genotype_data", inputFiles, ignore.case = TRUE, value = TRUE)
+
+if (is.null(genoFile)) {
+  stop("genotype data file is missing.")
+}
+
+if (file.info(genoFile)$size == 0) {
+  stop("genotype data file is empty.")
+}
+
+genoData <- fread(genoFile, na.strings = c("NA", " ", "--", "-"),  header = TRUE)
+
 if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) {
-    formattedPhenoData <- as.data.frame(fread(formattedPhenoFile,
-                                              na.strings = c("NA", " ", "--", "-", ".")
-                                              ))
+  formattedPhenoData <- as.data.frame(fread(formattedPhenoFile,
+                                            na.strings = c("NA", " ", "--", "-", ".")
+                                            ))
       
-    row.names(formattedPhenoData) <- formattedPhenoData[, 1]
-    formattedPhenoData[, 1]       <- NULL    
+  row.names(formattedPhenoData) <- formattedPhenoData[, 1]
+  formattedPhenoData[, 1]       <- NULL    
 } else {
   phenoFile <- grep("\\/phenotype_data", inputFiles, ignore.case = TRUE, value = TRUE, perl = TRUE)
+
+  if (is.null(phenoFile)) {
+    stop("phenotype data file is missing.")
+  }
+
+  if (file.info(phenoFile)$size == 0) {
+    stop("phenotype data file is empty.")
+  }
+  
   phenoData <- fread(phenoFile, na.strings = c("NA", " ", "--", "-", "."), header = TRUE) 
 }
 
@@ -212,8 +233,7 @@ if (datasetInfo == 'combined populations') {
   }
 }
 
-genoFile <- grep("genotype_data", inputFiles, ignore.case = TRUE, value = TRUE)
-genoData <- fread(genoFile, na.strings = c("NA", " ", "--", "-"),  header = TRUE)
+
 
 #remove markers with > 60% missing marker data
 message('no of markers before filtering out: ', ncol(genoData))
@@ -225,6 +245,31 @@ genoData[, noMissing := apply(.SD, 1, function(x) sum(is.na(x)))]
 genoData <- genoData[noMissing <= ncol(genoData) * 0.8]
 genoData[, noMissing := NULL]
 message('no of indls after filtering out ones with 80% missing: ', nrow(genoData))
+
+### MAF calculation ###
+calculateMAF <- function(x) {
+  mafThreshold <- c(0.05)
+ 
+  a0 <-  length(x[x==0])
+  a1 <-  length(x[x==1])
+  a2 <-  length(x[x==2])
+  aT <- a0 + a1 + a2
+
+  message('a0: ', a0, ' a1: ', a1, ' a2:', a2, ' aT: ', aT)
+  p   <- ((2*a0)+a1)/(2*aT)
+  q   <- 1- p
+  maf <- min(p, q)
+  
+  return (maf)
+
+}
+
+#remove monomorphic markers
+#genoData[, which(apply(.SD, 2,  function(x) length(unique(x)) == 1 )) ]
+
+#remove markers with MAF < 5%
+genoData[, which(apply(genoData, 2,  calculateMAF) < 0.05) := NULL ]
+message('marker no after MAF cleaning ', ncol(genoData))
 
 genoData           <- as.data.frame(genoData)
 rownames(genoData) <- genoData[, 1]
@@ -252,6 +297,13 @@ if (length(predictionFile) !=0 ) {
   message('selection population: no of markers before filtering out: ', ncol(genoData))
   predictionData[, which(colSums(is.na(predictionData)) >= nrow(predictionData) * 0.6) := NULL]
 
+  #remove indls with > 80% missing marker data
+  predictionData[, noMissing := apply(.SD, 1, function(x) sum(is.na(x)))]
+  predictionData <- predictionData[noMissing <= ncol(predictionData) * 0.8]
+  predictionData[, noMissing := NULL]
+  
+  predictionData[, which(apply(predictionData, 2,  calculateMAF) < 0.05) := NULL ]
+  message('selection pop marker no after MAF cleaning ', ncol(preditionData))
   predictionData           <- as.data.frame(predictionData)
   rownames(predictionData) <- predictionData[, 1]
   predictionData[, 1]      <- NULL
@@ -350,8 +402,6 @@ if (length(predictionData) != 0 ) {
     predictionData <- predictionData - 1
   }
 }
-
-#MAF calculation
 
 ordered.markerEffects <- c()
 if ( length(predictionData) == 0 ) {
