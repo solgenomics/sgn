@@ -29,7 +29,7 @@ use Digest::MD5;
 use CXGN::List::Validate;
 use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
-
+use Archive::Zip;
 
 sub verify {
     my $self = shift;
@@ -39,6 +39,7 @@ sub verify {
     my $plot_trait_value_hashref = shift;
     my $phenotype_metadata_ref = shift;
     my $timestamp_included = shift;
+    my $image_zip = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $transaction_error;
     my @plot_list = @{$plot_list_ref};
@@ -89,6 +90,14 @@ sub verify {
     $sth->execute();
     while (my ($format_value, $cvterm_id) = $sth->fetchrow_array) {
         $check_trait_format{$cvterm_id} = $format_value;
+    }
+
+    if ($image_zip) {
+        my $zipmod = Archive::Zip->new();
+        unless ( $zipmod->read( $image_zip ) == AZ_OK ) {
+            $error_message = $error_message." Reading zipfile failed!";
+            return ($warning_message, $error_message);
+        }
     }
 
     #print STDERR Dumper \@trait_list;
@@ -157,7 +166,7 @@ sub verify {
                     $error_message = $error_message."<small>Timestamps found in file, but 'Timestamps Included' is not selected.</small><hr>";
                 }
             }
-            
+
         }
     }
 
@@ -300,7 +309,7 @@ sub store {
 
                      #print STDERR "\n[StorePhenotypes] Storing plot: $plot_name trait: $trait_name value: $trait_value:\n";
                      my $experiment;
-		
+
 		## Find the experiment that matches the location, type, operator, and date/timestamp if it exists
 		# my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
 		#     ->find({
@@ -345,7 +354,7 @@ sub store {
 
         my $rs;
         my %data;
-            
+
         $rs = $schema->resultset('Stock::Stock')->search(
             {'type.name' => 'field_layout', 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] },
             {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
@@ -373,7 +382,7 @@ sub store {
                 } else {
                     $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
                 }
-        
+
                 my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
                 #print STDERR Dumper $value_array;
                 my $trait_value = $value_array->[0];
