@@ -385,7 +385,7 @@ sub get_jstree_html {
 				$html .= $child->get_jstree_html('folder', $project_type_of_interest);
 			}
 			else {
-				#Only display "trial" types.
+				#Only display $project of interest types.
 				if ($child->folder_type eq $project_type_of_interest) {
 					$html .= $self->_jstree_li_html($child->folder_type(), $child->folder_id(), $child->name())."</li>";
 				}
@@ -414,7 +414,6 @@ sub _jstree_li_html {
 		if ($cross_stock) {
 			$id = $cross_stock->stock_id();
     		$url = "/cross/".$id;
-			return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\"><a href=\"$url\">".$name.'</a>';
 		} else {
 			return;
 		}
