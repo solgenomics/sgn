@@ -677,7 +677,7 @@ function greenhouse_show_num_plants_section(){
         //console.log(stock_list);
         var html = '<form class="form-horizontal">';
         for (var i=0; i<stock_list.length; i++){
-            html = html + '<div class="form-group"><label class="col-sm-3 control-label">' + stock_list[i] + ': </label><div class="col-sm-9"><input class="form-control" id="greenhouse_num_plants_input_' + i + '" type="text" placeholder="'+default_num+'" value="'+default_num+'" /></div></div>';
+            html = html + '<div class="form-group"><label class="col-sm-9 control-label">' + stock_list[i] + ': </label><div class="col-sm-3"><input class="form-control" id="greenhouse_num_plants_input_' + i + '" type="text" placeholder="'+default_num+'" value="'+default_num+'" /></div></div>';
         }
         html = html + '</form>';
         jQuery("#greenhouse_num_plants_per_accession").empty().html(html);

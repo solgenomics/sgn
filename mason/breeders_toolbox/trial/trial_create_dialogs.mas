@@ -125,8 +125,8 @@ $breeding_programs
                             </div>
                             <div class="form-group form-group-sm" id="greenhouse_num_plants_per_accession_section" style="display: none" >
                                 <hr>
-                                <label class="col-sm-3 control-label">Number of Plants: </label>
-                                <div class="col-sm-9" id="greenhouse_num_plants_per_accession" >
+                                <center><h4>Number of Plants:</h4></center>
+                                <div id="greenhouse_num_plants_per_accession" >
                                 </div>
                             </div>
 
