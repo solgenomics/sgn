@@ -11,6 +11,7 @@ $user_id => undef
 
 <link rel="stylesheet" href="/static/documents/inc/jstree_theme/jstree-bstheme-min.css" />
 
+<!--
 <center>
 <h3>Crosses</h3>
 </center>
@@ -33,14 +34,14 @@ $user_id => undef
   </%perl>
   </tbody>
 </table>
-
+-->
 
 <& /breeders_toolbox/folder/folder_set.mas, project_type=>'Cross' &>
 <& /breeders_toolbox/folder/folder_new.mas &>
 <& /breeders_toolbox/folder/folder_move.mas &>
 
 <center>
-<h3>Nurseries</h3>
+<h3>Crosses</h3>
 </center>
 
 <table class="table table-bordered">
@@ -555,7 +556,7 @@ jQuery(document).ready(function($) {
                 window.open('/folder/'+node.id);
                 event.stopPropagation();
             } else if (node.type == 'cross') {
-                window.open('/breeders_toolbox/trial/'+node.id);
+                window.open('/cross/'+node.id);
                 event.stopPropagation();
             }
         }
