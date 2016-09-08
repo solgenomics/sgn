@@ -29,7 +29,7 @@ use Digest::MD5;
 use CXGN::List::Validate;
 use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
-use Archive::Zip;
+use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 
 sub verify {
     my $self = shift;
@@ -92,11 +92,21 @@ sub verify {
         $check_trait_format{$cvterm_id} = $format_value;
     }
 
+    my %zip_members;
     if ($image_zip) {
         my $zipmod = Archive::Zip->new();
         unless ( $zipmod->read( $image_zip ) == AZ_OK ) {
             $error_message = $error_message." Reading zipfile failed!";
             return ($warning_message, $error_message);
+        }
+        my $read_image_zip = $zipmod->new($image_zip);
+        foreach my $m ($read_image_zip->members) {
+            if ($m->isDirectory) {
+                $error_message = $error_message." Image Zipfile cannot have nested directories. It should be a flat list of images.";
+                return ($warning_message, $error_message);
+            }
+            (my $extract_name = $m->fileName) =~ s{.*/}{};
+            $zip_members{$extract_name} = 1;
         }
     }
 
@@ -126,6 +136,11 @@ sub verify {
                         my $trait_format_checked = looks_like_number($trait_value);
                         if (!$trait_format_checked) {
                             $error_message = $error_message."<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+                        }
+                    }
+                    if ($check_trait_format{$trait_cvterm_id} eq 'image') {
+                        if (!exists($zip_members{$trait_value})) {
+                            $error_message = $error_message."<small>$trait_value not found in provided zipfile! Image names in zipfile should match value.</small><hr>";
                         }
                     }
                 }
