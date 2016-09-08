@@ -257,6 +257,8 @@ sub projects_links {
        
 	my ($has_genotype, $has_phenotype, $is_gs);
         
+	no warnings 'uninitialized';
+
 	unless ($dummy_name || $dummy_desc || !$pr_name )
 	{   
 	    $is_gs = $c->model("solGS::solGS")->get_project_type($pr_id);
@@ -5326,7 +5328,7 @@ sub run_r_script {
 sub get_solgs_dirs {
     my ($self, $c) = @_;
    
-    my $tmp_dir         = $c->site_cluster_shared_dir;       
+    my $tmp_dir         = $c->site_cluster_shared_dir;      
     my $solgs_dir       = catdir($tmp_dir, "solgs");
     my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
     my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  

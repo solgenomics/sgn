@@ -75,6 +75,137 @@ jQuery(document).ready(function ($) {
 	return return_val;
     }
 
+    function verify_stock_list(control_list_crbd) {
+	var return_val = 0;
+	$.ajax({
+            type: 'POST',
+	    timeout: 3000000,
+            url: '/ajax/trial/verify_stock_list',
+	    dataType: "json",
+            data: {
+                //'stock_list': stock_list.join(","),
+                'stock_list': control_list_crbd,
+            },
+            success: function (response) {
+                if (response.error) {
+                    alert(response.error);
+		    verify_stock_list.return_val = 0;
+                } else {
+		    verify_stock_list.return_val = 1;
+                }
+            },
+            error: function () {
+                alert('An error occurred. sorry');
+	    verify_stock_list.return_val = 0;
+            }
+	});
+	return return_val;
+    }
+
+    function generate_experimental_design() {
+        var name = $('#new_trial_name').val();
+        var year = $('#add_project_year').val();
+        var desc = $('#add_project_description').val();
+        var trial_location = $('#add_project_location').val();
+        var block_number = $('#block_number').val();
+
+        //alert(block_number);
+
+        var row_number= $('#row_number').val();
+	var row_number_per_block=$('#row_number_per_block').val();
+	var col_number_per_block=$('#col_number_per_block').val();
+	var col_number=$('#col_number').val();
+
+
+       // alert(row_number);
+
+        var stock_list_id = $('#select_list_list_select').val();
+        var control_list_id = $('#list_of_checks_section_list_select').val();
+        var control_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
+
+  var control_list_crbd;
+  if (control_list_id_crbd != ""){
+            control_list_crbd = JSON.stringify(list.getList(control_list_id_crbd));
+  }
+	var stock_list;
+	if (stock_list_id != "") {
+            stock_list = JSON.stringify(list.getList(stock_list_id));
+	}
+	var control_list;
+	if (control_list_id != "") {
+            control_list = JSON.stringify(list.getList(control_list_id));
+	}
+
+        var design_type = $('#select_design_method').val();
+	var rep_count = $('#rep_count').val();
+	var block_size = $('#block_size').val();
+	var max_block_size = $('#max_block_size').val();
+	var plot_prefix = $('#plot_prefix').val();
+	var start_number = $('#start_number').val();
+	var increment = $('#increment').val();
+
+	//var stock_verified = verify_stock_list(stock_list);
+
+        //alert(design_type);
+
+       if (name == '') {
+            alert('Trial name required');
+            return;
+        }
+
+        if (desc == '' || year == '') {
+            alert('Year and description are required.');
+            return;
+        }
+
+	$('#working_modal').modal("show");
+
+        $.ajax({
+            type: 'POST',
+	    timeout: 3000000,
+            url: '/ajax/trial/generate_experimental_design',
+	    dataType: "json",
+            data: {
+                'project_name': name,
+                'project_description': desc,
+                'year': year,
+                'trial_location': trial_location,
+                'stock_list': stock_list,
+		'control_list': control_list,
+    'control_list_crbd': control_list_crbd,
+		'design_type': design_type,
+		'rep_count': rep_count,
+		'block_number': block_number,
+                'row_number': row_number,
+		'row_number_per_block': row_number_per_block,
+		'col_number_per_block': col_number_per_block,
+		'col_number': col_number,
+		'block_size': block_size,
+		'max_block_size': max_block_size,
+		'plot_prefix': plot_prefix,
+		'start_number': start_number,
+		'increment': increment,
+            },
+            success: function (response) {
+                if (response.error) {
+                    alert(response.error);
+		    $('#working_modal').modal("hide");
+                } else {
+		    $('#trial_design_information').html(response.design_info_view_html);
+                    $('#trial_design_view_layout_return').html(response.design_layout_view_html);
+
+		    $('#working_modal').modal("hide");
+                    $('#trial_design_confirm').modal("show");
+		    design_json = response.design_json;
+                }
+            },
+            error: function () {
+		$('#working_modal').modal("hide");
+                alert('An error occurred. sorry. test');
+            }
+       });
+    }
+
     $('#new_trial_submit').click(function () {
           var name = $('#new_trial_name').val();
           var year = $('#add_project_year').val();
@@ -120,6 +251,7 @@ jQuery(document).ready(function ($) {
             $("#trial_design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").hide();
+            $("#crbd_show_list_of_checks_section").hide();
             $("#rep_count_section").show();
             $("#block_number_section").hide();
             $("#block_size_section").hide();
@@ -135,6 +267,7 @@ jQuery(document).ready(function ($) {
         } else if (design_method == "RCBD") {
             $("#trial_design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
+            $("#crbd_show_list_of_checks_section").show();
             $("#show_list_of_checks_section").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").show();
@@ -151,6 +284,7 @@ jQuery(document).ready(function ($) {
         } else if (design_method == "Alpha") {
             $("#trial_design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
+            $("#crbd_show_list_of_checks_section").show();
             $("#show_list_of_checks_section").hide();
             $("#rep_count_section").show();
             $("#block_number_section").hide();
@@ -168,6 +302,7 @@ jQuery(document).ready(function ($) {
             $("#trial_design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").show();
+            $("#crbd_show_list_of_checks_section").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").hide();
             $("#block_size_section").hide();
@@ -183,6 +318,7 @@ jQuery(document).ready(function ($) {
         } else if (design_method == "") {
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").hide();
+            $("#crbd_show_list_of_checks_section").hide();
             $("#trial_design_more_info").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").hide();
@@ -203,6 +339,7 @@ jQuery(document).ready(function ($) {
             $("#trial_design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").show();
+            $("#crbd_show_list_of_checks_section").hide();
             $("#rep_count_section").hide();
             $("#row_number_section").show();
             $("#block_number_section").hide();
@@ -268,37 +405,23 @@ jQuery(document).ready(function ($) {
 	}
     });
 
-    jQuery('#new_trial_confirm_submit').click(function () {
-        save_experimental_design(design_json);
-    });
-
-    function generate_experimental_design() {
-        var list = new CXGN.List();
-        var name = jQuery('#new_trial_name').val();
-        var year = jQuery('#add_project_year').val();
-        var desc = jQuery('#add_project_description').val();
-        var trial_location = jQuery('#add_project_location').val();
-        var block_number = jQuery('#block_number').val();
-
-        //alert(block_number);
-
-        var row_number= jQuery('#row_number').val();
-        var row_number_per_block=jQuery('#row_number_per_block').val();
-        var col_number_per_block=jQuery('#col_number_per_block').val();
-        var col_number=jQuery('#col_number').val();
-
-
-       // alert(row_number);
-
-        var stock_list_id = jQuery('#select_list_list_select').val();
-        var control_list_id = jQuery('#list_of_checks_section_list_select').val();
-        var stock_list;
-        if (stock_list_id != "") {
-            stock_list_array = list.getList(stock_list_id);
-            stock_list = JSON.stringify(stock_list_array);
-        }
-        var control_list;
-        if (control_list_id != "") {
+//<<<<<<< HEAD
+ function save_experimental_design(design_json) {
+     $('#working_modal').modal("show");
+        var name = $('#new_trial_name').val();
+        var year = $('#add_project_year').val();
+        var desc = $('#add_project_description').val();
+        var trial_location = $('#add_project_location').val();
+        var block_number = $('#block_number').val();
+        var stock_list_id = $('#select_list_list_select').val();
+        var control_list_id = $('#list_of_checks_section_list_select').val();
+        var control_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
+	var stock_list;
+	if (stock_list_id != "") {
+            stock_list = JSON.stringify(list.getList(stock_list_id));
+	}
+	var control_list;
+	if (control_list_id != "") {
             control_list = JSON.stringify(list.getList(control_list_id));
         }
         var design_type = jQuery('#select_design_method').val();
@@ -476,6 +599,10 @@ jQuery(document).ready(function ($) {
         });
     }
 
+    jQuery('#new_trial_confirm_submit').click(function () {
+            save_experimental_design(design_json);
+    });
+
     $('#view_trial_layout_button').click(function () {
 	$('#trial_design_view_layout').modal("show");
     });
@@ -514,9 +641,16 @@ jQuery(document).ready(function ($) {
 	$("#select_list_list_select").remove();
 	$("#list_of_checks_section_list_select").remove();
 
+  $("#select_list_list_select").remove();
+	$("#crbd_list_of_checks_section_list_select").remove();
+
 	//add lists to the list select and list of checks select dropdowns.
 	$("#select_list").append(list.listSelect("select_list", [ 'accessions' ] ));
 	$("#list_of_checks_section").append(list.listSelect("list_of_checks_section", [ 'accessions' ]));
+
+  //add lists to the list select and list of checks select dropdowns for CRBD.
+  $("#crbd_select_list").append(list.listSelect("crbd_select_list", [ 'accessions' ] ));
+	$("#crbd_list_of_checks_section").append(list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list"));
 
 	//add a blank line to location select dropdown that dissappears when dropdown is opened
 	$("#add_project_location").prepend("<option value=''></option>").val('');
@@ -545,8 +679,22 @@ jQuery(document).ready(function ($) {
             $("option:first", this).remove();
 	});
 
+  $("#crbd_list_of_checks_section_list_select").prepend("<option value=''></option>").val('');
+  $("#crbd_list_of_checks_section_list_select").one('mousedown', function () {
+            $("option:first", this).remove();
+  });
+
 	$("#list_of_checks_section_list_select").focusout(function() {
 	    var stock_list_id = $('#list_of_checks_section_list_select').val();
+	    var stock_list;
+	    if (stock_list_id != "") {
+		stock_list = JSON.stringify(list.getList(stock_list_id));
+	    }
+	    verify_stock_list(stock_list);
+	});
+
+  $("#crbd_list_of_checks_section_list_select").focusout(function() {
+	    var stock_list_id = $('#crbd_list_of_checks_section_list_select').val();
 	    var stock_list;
 	    if (stock_list_id != "") {
 		stock_list = JSON.stringify(list.getList(stock_list_id));
