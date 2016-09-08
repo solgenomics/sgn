@@ -108,6 +108,11 @@ sub generate_experimental_design_POST : Args(0) {
     @control_names = @{_parse_list_from_json($c->req->param('control_list'))};
   }
 
+  my @control_names_crbd;
+  if ($c->req->param('control_list_crbd')) {
+    @control_names_crbd = @{_parse_list_from_json($c->req->param('control_list_crbd'))};
+  }
+
   my $design_type =  $c->req->param('design_type');
   my $rep_count =  $c->req->param('rep_count');
   my $block_number =  $c->req->param('block_number');
@@ -126,8 +131,11 @@ sub generate_experimental_design_POST : Args(0) {
   my $trial_name = $c->req->param('project_name');
   my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
   #my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
-
-
+  if ($design_type eq "RCBD" || $design_type eq "Alpha") {
+    if (@control_names_crbd) {
+        @stock_names = (@stock_names, @control_names_crbd);
+    }
+  }
 
    print STDERR join "\n",$design_type;
    print STDERR "\n";
@@ -177,6 +185,10 @@ sub generate_experimental_design_POST : Args(0) {
   if (@control_names) {
     $trial_design->set_control_list(\@control_names);
     $design_info{'number_of_controls'} = scalar(@control_names);
+  }
+  if (@control_names_crbd) {
+    $trial_design->set_control_list_crbd(\@control_names_crbd);
+    $design_info{'number_of_controls_crbd'} = scalar(@control_names_crbd);
   }
   if ($start_number) {
     $trial_design->set_plot_start_number($start_number);
