@@ -217,6 +217,8 @@ jQuery(document).ready(function ($) {
   var nurseryName = $("#nursery_name").val();
   if (!nurseryName) { alert("A nursery name is required"); return; }
 
+  var breeding_program_id = $("#polycross_program").val();
+
   var accession_list_id = $('#accession_list_list_select').val();
   var lo = new CXGN.List();
   var accession_validation = 1;
@@ -234,63 +236,80 @@ jQuery(document).ready(function ($) {
 
   var list_data = lo.getListData(accession_list_id);
   var accessions = list_data.elements;
-  console.log("accessions="+JSON.stringify(accessions));
   var accession_names = [];
   for ( i=0; i < accessions.length; i++) {
-    console.log("accessions member"+accessions[i][1]);
     accession_names.push(accessions[i][1]);
   }
 
-  console.log("Accessions = "+accession_names);
-
   var visibleToRole = $("#visible_to_role").val();
   var location = $("#polycross_location").val();
-  var program = $("#polycross_program").val();
+  var program = $("#polycross_program option:selected").text();
+  var folder_id;
 
-  // create population with these accessions , name it as nursery name
+  //create population with these accessions, name it as nursery name
 
-  var populationName = nurseryName + '_parents';
-  var paternalParent = '';
-  $.ajax({
-          url: '/ajax/population/new',
-          timeout: 60000,
-        	method: 'POST',
-          async: false,
-        	data: {'population_name': populationName, 'accessions': accession_names},
-          success: function(response) {
-            paternalParent = populationName;
-          },
-          error: function(response) { alert("An error occurred creating population "+populationName+". Please try again later!"+response); },
-          });
-
-  for ( i=0; i < accession_names.length; i++) {
-
-    var maternalParent = accession_names[i];
-    var crossName = nurseryName + '_' + accession_names[i] + '_polycross';
-    var crossType = 'biparental';
-
-
-    $.ajax({
-            url: '/ajax/cross/add_cross',
-            timeout: 3000000,
-            dataType: "json",
-            type: 'POST',
-            async: false,
-            data: 'cross_name='+crossName+'&cross_type='+crossType+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&visible_to_role'+visibleToRole+'&program='+program+'&location='+location,
-            error: function(response) { alert("An error occurred creating cross "+crossName+". Please try again later!"+response); },
-            parseerror: function(response) { alert("A parse error occurred while creating cross "+crossName+". Please try again."+response); },
-            success: function(response) {
-
-      if (response.error) { alert(response.error); }
-
+  jQuery.ajax( {
+    'url': '/ajax/folder/new',
+    'data': {
+      'parent_folder_id' : 0,
+      async: false,
+      'folder_name' :  nurseryName,
+      'breeding_program_id' : breeding_program_id
+    },
+    'success': function(response) {
+      folder_id = response.folder_id;
+      if (response.error){
+        alert(response.error);
       }
-    });
 
+      var populationName = nurseryName + '_parents';
+      var paternalParent = '';
+      $.ajax({
+              url: '/ajax/population/new',
+              timeout: 60000,
+              method: 'POST',
+              async: false,
+              data: {'population_name': populationName, 'accessions': accession_names},
+              success: function(response) {
+                paternalParent = populationName;
+              },
+              error: function(response) { alert("An error occurred creating population "+populationName+". Please try again later!"+response); },
+              });
+
+      for ( i=0; i < accession_names.length; i++) {
+
+        var maternalParent = accession_names[i];
+        var crossName = nurseryName + '_' + accession_names[i] + '_polycross';
+        var crossType = 'biparental';
+
+
+        $.ajax({
+                url: '/ajax/cross/add_cross',
+                timeout: 3000000,
+                dataType: "json",
+                type: 'POST',
+                async: false,
+                data: 'cross_name='+crossName+'&cross_type='+crossType+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&visible_to_role'+visibleToRole+'&program='+program+'&location='+location+'&folder_id='+folder_id,
+                error: function(response) { alert("An error occurred creating cross "+crossName+". Please try again later!"+response); },
+                parseerror: function(response) { alert("A parse error occurred while creating cross "+crossName+". Please try again."+response); },
+                success: function(response) {
+                  if (response.error) { alert(response.error); }
+                  if (response.project_id) { // move cross to folder
+
+                  }
+
+          }
+        });
+
+        }
+            jQuery("#create_polycross_nursery").modal("hide");
+            //alert("The nursery crosses have been added.");
+            jQuery('#nursery_saved_dialog_message').modal("show");
+    },
+    error: function(response) {
+      alert('An error occurred creating the folder for this group of crosses');
     }
-
-    $("#create_polycross_nursery").modal("hide");
-    //alert("The nursery crosses have been added.");
-    $('#nursery_saved_dialog_message').modal("show");
+  });
 
     }
 

@@ -30,6 +30,7 @@ use CXGN::Stock::StockLookup;
 use CXGN::Location::LocationLookup;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial;
+use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
 
 class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
@@ -56,6 +57,7 @@ has 'crosses' => (isa =>'ArrayRef[Pedigree]', is => 'rw', predicate => 'has_cros
 has 'location' => (isa =>'Str', is => 'rw', predicate => 'has_location', required => 1,);
 has 'program' => (isa =>'Str', is => 'rw', predicate => 'has_program', required => 1,);
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
+has 'parent_folder_id' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 0,);
 
 sub add_crosses {
   my $self = shift;
@@ -68,9 +70,11 @@ sub add_crosses {
   my $program_lookup;
   my $transaction_error;
   my @added_stock_ids;
+	my $parent_folder_id;
 
   #lookup user by name
-  my $owner_name = $self->get_owner_name();;
+  my $owner_name = $self->get_owner_name();
+	my $parent_folder_id = $self->get_parent_folder_id() || 0;
   my $dbh = $self->get_dbh();
   my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name); #add person id as an option.
 
@@ -162,6 +166,17 @@ sub add_crosses {
 		       });
 
 	  #add error if cross name exists
+
+		#add cross to folder if one was specified
+		if ($parent_folder_id) {
+			my $folder = CXGN::Trial::Folder->new(
+			{
+				bcs_schema => $chado_schema,
+				folder_id => $project->project_id(),
+			});
+
+			$folder->associate_parent($parent_folder_id);
+		}
 
 	  #set projectprop so that projects corresponding to crosses can be identified
 	  my $prop_row = $chado_schema->resultset("Project::Projectprop")

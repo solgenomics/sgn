@@ -221,6 +221,7 @@ sub add_cross_POST :Args(0) {
     my $number_of_flowers = $c->req->param('number_of_flowers');
     my $number_of_seeds = $c->req->param('number_of_seeds');
     my $visible_to_role = $c->req->param('visible_to_role');
+    my $parent_folder_id = $c->req->param('folder_id');
     my $cross_add;
     my $progeny_add;
     my @progeny_names;
@@ -324,6 +325,7 @@ sub add_cross_POST :Args(0) {
 		program => $program,
 		crosses =>  \@array_of_pedigree_objects,
 		owner_name => $owner_name,
+    parent_folder_id => $parent_folder_id
 		  });
 
 
