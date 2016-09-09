@@ -39,7 +39,7 @@ sub verify {
     my $plot_trait_value_hashref = shift;
     my $phenotype_metadata_ref = shift;
     my $timestamp_included = shift;
-    my $image_zip = shift;
+    my $archived_image_zipfile_with_path = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $transaction_error;
     my @plot_list = @{$plot_list_ref};
@@ -93,22 +93,41 @@ sub verify {
     }
 
     my %zip_members;
-    if ($image_zip) {
-        my $zipmod = Archive::Zip->new();
-        unless ( $zipmod->read( $image_zip ) == AZ_OK ) {
-            $error_message = $error_message." Reading zipfile failed!";
-            return ($warning_message, $error_message);
+    my %image_plot_full_names;
+    if ($archived_image_zipfile_with_path) {
+        print STDERR $archived_image_zipfile_with_path."\n";
+        my $archived_zip = Archive::Zip->new();
+        unless ( $archived_zip->read( $archived_image_zipfile_with_path ) == AZ_OK ) {
+            $error_message = $error_message."<small>Image zipfile cannot be read!</small><hr>";
         }
-        my $read_image_zip = $zipmod->new($image_zip);
-        foreach my $m ($read_image_zip->members) {
-            if ($m->isDirectory) {
-                $error_message = $error_message." Image Zipfile cannot have nested directories. It should be a flat list of images.";
-                return ($warning_message, $error_message);
+        my @file_names = $archived_zip->memberNames();
+        my @image_plot_names;
+        foreach (@file_names) {
+            my @zip_names_split = split(/\//, $_);
+            if ($zip_names_split[1] ne '' && $zip_names_split[1] ne '.DS_Store') {
+                my @zip_names_split_ext = split(/\./, $zip_names_split[1]);
+                $zip_members{$zip_names_split_ext[0]} = 1;
+                if ($zip_names_split_ext[1] ne 'jpg' && $zip_names_split_ext[1] ne 'png') {
+                    $error_message = $error_message."<small>Image ".$zip_names_split[1]." in images zip file should be .jpg or .png!</small><hr>";
+                }
+                push @image_plot_names, $zip_names_split_ext[0];
+                $image_plot_full_names{$zip_names_split[1]} = 1;
             }
-            (my $extract_name = $m->fileName) =~ s{.*/}{};
-            $zip_members{$extract_name} = 1;
+        }
+
+        my %plot_name_check;
+        foreach (@plot_list) {
+            $plot_name_check{$_} = 1;
+        }
+        foreach (@image_plot_names) {
+            if (!exists($plot_name_check{$_})) {
+                $error_message = $error_message."<small>Image ".$_." in images zip file does not reference a plot or plant_name!</small><hr>";
+            }
         }
     }
+
+    print STDERR Dumper \%zip_members;
+
 
     #print STDERR Dumper \@trait_list;
     my %check_file_stock_trait_duplicates;
@@ -139,8 +158,8 @@ sub verify {
                         }
                     }
                     if ($check_trait_format{$trait_cvterm_id} eq 'image') {
-                        if (!exists($zip_members{$trait_value})) {
-                            $error_message = $error_message."<small>$trait_value not found in provided zipfile! Image names in zipfile should match value.</small><hr>";
+                        if (!exists($image_plot_full_names{$trait_value})) {
+                            $error_message = $error_message."<small>For Plot Name: $plot_name there should be a corresponding image named in the zipfile as $plot_name.jpg. </small><hr>";
                         }
                     }
                 }

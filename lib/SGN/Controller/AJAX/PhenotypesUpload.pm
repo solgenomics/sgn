@@ -162,6 +162,23 @@ sub _prep_upload {
     }
     unlink $upload_tempfile;
 
+    my $archived_image_zipfile_with_path;
+    if ($image_zip) {
+        my $upload_original_name = $image_zip->filename();
+        my $upload_tempfile = $image_zip->tempname;
+        my %phenotype_metadata;
+        my $time = DateTime->now();
+
+        $archived_image_zipfile_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+        my $md5 = $uploader->get_md5($archived_image_zipfile_with_path);
+        if (!$archived_image_zipfile_with_path) {
+            push @error_status, "Could not save images zipfile $upload_original_name in archive.";
+        } else {
+            push @success_status, "Images Zip File $upload_original_name saved in archive.";
+        }
+        unlink $upload_tempfile;
+    }
+
     ## Validate and parse uploaded file
     my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level);
     if (!$validate_file) {
@@ -201,7 +218,7 @@ sub _prep_upload {
         }
     }
 
-    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $data_level, $overwrite_values, $image_zip);
+    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $data_level, $overwrite_values, $archived_image_zipfile_with_path);
 }
 
 #########
