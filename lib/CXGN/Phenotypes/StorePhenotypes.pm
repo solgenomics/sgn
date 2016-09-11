@@ -30,6 +30,7 @@ use CXGN::List::Validate;
 use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
+use SGN::Image;
 
 sub verify {
     my $self = shift;
@@ -95,7 +96,7 @@ sub verify {
     my %zip_members;
     my %image_plot_full_names;
     if ($archived_image_zipfile_with_path) {
-        print STDERR $archived_image_zipfile_with_path."\n";
+        #print STDERR $archived_image_zipfile_with_path."\n";
         my $archived_zip = Archive::Zip->new();
         unless ( $archived_zip->read( $archived_image_zipfile_with_path ) == AZ_OK ) {
             $error_message = $error_message."<small>Image zipfile cannot be read!</small><hr>";
@@ -125,8 +126,7 @@ sub verify {
             }
         }
     }
-
-    print STDERR Dumper \%zip_members;
+    #print STDERR Dumper \%zip_members;
 
 
     #print STDERR Dumper \@trait_list;
@@ -238,6 +238,7 @@ sub store {
     my $phenotype_metadata = shift;
     my $data_level = shift;
     my $overwrite_values = shift;
+    my $archived_image_zipfile_with_path = shift;
     my $error_message;
     my $transaction_error;
     my @plot_list = @{$plot_list_ref};
@@ -512,6 +513,43 @@ sub store {
 	print STDERR "Transaction error storing phenotypes: $transaction_error\n";
 	return $error_message;
     }
+
+    my %zip_members;
+    my %image_plot_full_names;
+    if ($archived_image_zipfile_with_path) {
+        #print STDERR $archived_image_zipfile_with_path."\n";
+
+        my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
+        my $archived_zip = Archive::Zip->new();
+        unless ( $archived_zip->read( $archived_image_zipfile_with_path ) == AZ_OK ) {
+            $error_message = $error_message."<small>Image zipfile cannot be read!</small><hr>";
+        }
+        my @file_names = $archived_zip->memberNames();
+        my @image_plot_names;
+        foreach (@file_names) {
+            my @zip_names_split = split(/\//, $_);
+            if ($zip_names_split[1] ne '' && $zip_names_split[1] ne '.DS_Store') {
+                my @zip_names_split_ext = split(/\./, $zip_names_split[1]);
+                $zip_members{$zip_names_split_ext[0]} = 1;
+                if ($zip_names_split_ext[1] ne 'jpg' && $zip_names_split_ext[1] ne 'png') {
+                    $error_message = $error_message."<small>Image ".$zip_names_split[1]." in images zip file should be .jpg or .png!</small><hr>";
+                }
+                push @image_plot_names, $zip_names_split_ext[0];
+                $image_plot_full_names{$zip_names_split[1]} = 1;
+            }
+        }
+
+        my %plot_name_check;
+        foreach (@plot_list) {
+            $plot_name_check{$_} = 1;
+        }
+        foreach (@image_plot_names) {
+            if (!exists($plot_name_check{$_})) {
+                $error_message = $error_message."<small>Image ".$_." in images zip file does not reference a plot or plant_name!</small><hr>";
+            }
+        }
+    }
+    #print STDERR Dumper \%zip_members;
 
     if ($archived_file) {
 	## Insert metadata about the uploaded file only after a successful phenotype data transaction
