@@ -40,6 +40,8 @@ The following functions are provided in this class:
 
 use Modern::Perl;
 
+use IO::File;
+use File::Path 'make_path';
 use File::Temp qw/ tempfile tempdir /;
 use File::Copy qw/ copy move /;
 use File::Basename qw/ basename /;
@@ -293,6 +295,8 @@ sub apache_upload_image {
         $upload_filename = $upload->filename;
     }
 
+    my $upload_fh = $upload->fh;
+
     my $temp_file =
         $self->config()->get_conf("basepath") . "/"
       . $self->config()->get_conf("tempfiles_subdir")
@@ -300,7 +304,42 @@ sub apache_upload_image {
       . $ENV{REMOTE_ADDR} . "-"
       . $upload_filename;
 
-    my $upload_fh = $upload->fh;
+    my $temp_file = $self->upload_image($temp_file, $upload_fh);
+    return $temp_file;
+
+}
+
+
+sub upload_zipfile_images {
+    my $self   = shift;
+    my $file_member = shift;
+
+    my $fh = IO::File->new_tmpfile or print "Unable to make new temp file: $!";
+    binmode($fh);
+    my $filename = $file_member->fileName();
+    if ($file_member->extractToFileHandle($fh) != 0){
+        die "Error in $filename\n";
+    }
+
+    my $zipfile_image_temp_path = $self->config()->get_conf("basepath") . $self->config()->get_conf("tempfiles_subdir") . "/temp_images/photo";
+    make_path($zipfile_image_temp_path);
+    my $temp_file =
+        $self->config()->get_conf("basepath")
+      . $self->config()->get_conf("tempfiles_subdir")
+      . "/temp_images/"
+      . $filename;
+    system("chmod 775 $zipfile_image_temp_path");
+    open my $fileHandle, ">>", "$temp_file" or die "Can't open $tempfile \n";
+    close $fileHandle;
+    my $ret_temp_file = $self->upload_image($temp_file, $fh);
+    return $ret_temp_file;
+}
+
+
+sub upload_image {
+    my $self = shift;
+    my $temp_file = shift;
+    my $upload_fh = shift;
 
     ### 11/30/07 - change this so it removes existing file
     #     -deanx
@@ -322,7 +361,6 @@ sub apache_upload_image {
     warn "Done uploading.\n";
 
     return $temp_file;
-
 }
 
 =head2 associate_stock

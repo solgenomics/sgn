@@ -15,21 +15,26 @@ has 'extract_directory' => (isa => 'Str',
 	is => 'rw',
 );
 
+has 'archived_zip' => (isa => 'Archive::Zip::Archive',
+	is => 'rw',
+);
+
+
+my $archived_zip = Archive::Zip->new();
 
 sub BUILD {
 	my $self = shift;
-
+	unless ( $archived_zip->read( $self->archived_zipfile_path() ) == AZ_OK ) {
+		die "cannot read given zipfile";
+	}
+	$self->archived_zip($archived_zip);
 }
 
 
 #Assuming that zipfile is a flat list of files. 
 sub file_names {
 	my $self = shift;
-	my $archived_zip = Archive::Zip->new();
-	unless ( $archived_zip->read( $self->archived_zipfile_path() ) == AZ_OK ) {
-		die "cannot read given zipfile";
-	}
-	my @file_names = $archived_zip->memberNames();
+	my @file_names = $self->archived_zip()->memberNames();
 	my @file_names_stripped;
 	my @file_names_full;
 	foreach (@file_names) {
@@ -44,6 +49,27 @@ sub file_names {
 	}
 	
 	return (\@file_names_stripped, \@file_names_full);
+}
+
+sub file_members {
+	my $self = shift;
+	my @ret_members;
+	my @file_members = $self->archived_zip()->members();
+	#print STDERR Dumper \@file_members;
+	foreach (@file_members) {
+		if ($_->{'compressedSize'} == 0 || index($_->{'fileName'}, '.DS_Store') != -1) {
+			next;
+		} else {
+			push @ret_members, $_;
+		}
+	}
+	return \@ret_members;
+}
+
+sub extract_files_into_tempdir {
+	my $self = shift;
+	my $temp_dir = shift;
+	
 }
 
 1;
