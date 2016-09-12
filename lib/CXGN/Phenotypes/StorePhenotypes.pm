@@ -29,8 +29,8 @@ use Digest::MD5;
 use CXGN::List::Validate;
 use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
-use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 use SGN::Image;
+use CXGN::ZipFile;
 
 sub verify {
     my $self = shift;
@@ -93,40 +93,26 @@ sub verify {
         $check_trait_format{$cvterm_id} = $format_value;
     }
 
-    my %zip_members;
     my %image_plot_full_names;
     if ($archived_image_zipfile_with_path) {
-        #print STDERR $archived_image_zipfile_with_path."\n";
-        my $archived_zip = Archive::Zip->new();
-        unless ( $archived_zip->read( $archived_image_zipfile_with_path ) == AZ_OK ) {
-            $error_message = $error_message."<small>Image zipfile cannot be read!</small><hr>";
-        }
-        my @file_names = $archived_zip->memberNames();
-        my @image_plot_names;
-        foreach (@file_names) {
-            my @zip_names_split = split(/\//, $_);
-            if ($zip_names_split[1] ne '' && $zip_names_split[1] ne '.DS_Store') {
-                my @zip_names_split_ext = split(/\./, $zip_names_split[1]);
-                $zip_members{$zip_names_split_ext[0]} = 1;
-                if ($zip_names_split_ext[1] ne 'jpg' && $zip_names_split_ext[1] ne 'png') {
-                    $error_message = $error_message."<small>Image ".$zip_names_split[1]." in images zip file should be .jpg or .png!</small><hr>";
-                }
-                push @image_plot_names, $zip_names_split_ext[0];
-                $image_plot_full_names{$zip_names_split[1]} = 1;
-            }
-        }
 
+        my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$archived_image_zipfile_with_path);
+        my ($file_names_stripped, $file_names_full) = $archived_zip->file_names();
+
+        foreach (@$file_names_full) {
+            $image_plot_full_names{$_} = 1;
+        }
         my %plot_name_check;
         foreach (@plot_list) {
             $plot_name_check{$_} = 1;
         }
-        foreach (@image_plot_names) {
-            if (!exists($plot_name_check{$_})) {
-                $error_message = $error_message."<small>Image ".$_." in images zip file does not reference a plot or plant_name!</small><hr>";
+        foreach my $img_name (@$file_names_stripped) {
+            $img_name = substr($img_name, 0, -20);
+            if (!exists($plot_name_check{$img_name})) {
+                $error_message = $error_message."<small>Image ".$img_name." in images zip file does not reference a plot or plant_name!</small><hr>";
             }
         }
     }
-    #print STDERR Dumper \%zip_members;
 
 
     #print STDERR Dumper \@trait_list;
@@ -158,8 +144,9 @@ sub verify {
                         }
                     }
                     if ($check_trait_format{$trait_cvterm_id} eq 'image') {
+                        $trait_value =~ s/^.*photos\///;
                         if (!exists($image_plot_full_names{$trait_value})) {
-                            $error_message = $error_message."<small>For Plot Name: $plot_name there should be a corresponding image named in the zipfile as $plot_name.jpg. </small><hr>";
+                            $error_message = $error_message."<small>For Plot Name: $plot_name there should be a corresponding image named in the zipfile called $trait_value. </small><hr>";
                         }
                     }
                 }
@@ -509,47 +496,35 @@ sub store {
     }
 
     if ($transaction_error) {
-	$error_message = $transaction_error;
-	print STDERR "Transaction error storing phenotypes: $transaction_error\n";
-	return $error_message;
+        $error_message = $transaction_error;
+        print STDERR "Transaction error storing phenotypes: $transaction_error\n";
+        return $error_message;
     }
 
-    my %zip_members;
     my %image_plot_full_names;
     if ($archived_image_zipfile_with_path) {
         #print STDERR $archived_image_zipfile_with_path."\n";
 
         my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
-        my $archived_zip = Archive::Zip->new();
-        unless ( $archived_zip->read( $archived_image_zipfile_with_path ) == AZ_OK ) {
-            $error_message = $error_message."<small>Image zipfile cannot be read!</small><hr>";
-        }
-        my @file_names = $archived_zip->memberNames();
-        my @image_plot_names;
-        foreach (@file_names) {
-            my @zip_names_split = split(/\//, $_);
-            if ($zip_names_split[1] ne '' && $zip_names_split[1] ne '.DS_Store') {
-                my @zip_names_split_ext = split(/\./, $zip_names_split[1]);
-                $zip_members{$zip_names_split_ext[0]} = 1;
-                if ($zip_names_split_ext[1] ne 'jpg' && $zip_names_split_ext[1] ne 'png') {
-                    $error_message = $error_message."<small>Image ".$zip_names_split[1]." in images zip file should be .jpg or .png!</small><hr>";
-                }
-                push @image_plot_names, $zip_names_split_ext[0];
-                $image_plot_full_names{$zip_names_split[1]} = 1;
-            }
-        }
+        my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$archived_image_zipfile_with_path);
+        my ($file_names_stripped, $file_names_full) = $archived_zip->file_names();
 
-        my %plot_name_check;
-        foreach (@plot_list) {
-            $plot_name_check{$_} = 1;
-        }
-        foreach (@image_plot_names) {
-            if (!exists($plot_name_check{$_})) {
-                $error_message = $error_message."<small>Image ".$_." in images zip file does not reference a plot or plant_name!</small><hr>";
-            }
+        foreach (@$file_names_stripped) {
+            my $img_name = substr($_, 0, -20);
+            my $stock = $schema->resultset("Stock::Stock")->find( { uniquename => $img_name, 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] } );
+            my $stock_id = $stock->stock_id;
+
+            #my $temp_file = $image->apache_upload_image($_);
+            
+            #$image->set_sp_person_id($user_id);
+
+            #my $temp_image_dir = $c->get_conf("basepath")."/".$c->get_conf("tempfiles_subdir") ."/temp_images";
+            #my $temp_image_file = $temp_image_dir."/".$temp_file;
+            #print STDERR $temp_image_file."\n";
+            
+            #my $err = $image->process_image($temp_image_file, 'stock', $stock_id);
         }
     }
-    #print STDERR Dumper \%zip_members;
 
     if ($archived_file) {
 	## Insert metadata about the uploaded file only after a successful phenotype data transaction
