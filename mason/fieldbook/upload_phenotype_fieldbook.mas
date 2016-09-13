@@ -14,7 +14,7 @@
         <div class="container-fluid">
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_fieldbook_phenotype_file_form" name="upload_fieldbook_phenotype_file_form">
                 <div class="well well-sm">
-                    <h4>Upload Exported Fieldbook Phenotype File for Plots or Plants</h4>
+                    <h5>Upload Exported Fieldbook Phenotype File in Database Format for Plots or Plants</h5>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Data Level: </label>
