@@ -40,7 +40,7 @@ sub file_names {
 	foreach (@file_names) {
 		my @zip_names_split = split(/\//, $_);
 		if ($zip_names_split[1]) {
-			if ($zip_names_split[1] ne '.DS_Store') {
+			if ($zip_names_split[1] ne '.DS_Store' && $zip_names_split[1] ne '.fieldbook' && $zip_names_split[1] ne '.thumbnails') {
 				my @zip_names_split_ext = split(/\./, $zip_names_split[1]);
 				push @file_names_stripped, $zip_names_split_ext[0];
 				push @file_names_full, $zip_names_split[1];
@@ -57,7 +57,7 @@ sub file_members {
 	my @file_members = $self->archived_zip()->members();
 	#print STDERR Dumper \@file_members;
 	foreach (@file_members) {
-		if ($_->{'compressedSize'} == 0 || index($_->{'fileName'}, '.DS_Store') != -1) {
+		if ($_->{'compressedSize'} == 0 || index($_->{'fileName'}, '.DS_Store') != -1 || index($_->{'fileName'}, '.fieldbook') != -1 || index($_->{'fileName'}, '.thumbnails') != -1) {
 			next;
 		} else {
 			push @ret_members, $_;
