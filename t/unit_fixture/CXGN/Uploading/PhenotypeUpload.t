@@ -621,6 +621,166 @@ ok($parsed_file, "Check if parse parse fieldbook works");
 #print STDERR Dumper $parsed_file;
 
 is_deeply($parsed_file, {
+          'data' => {
+                      'test_trial26' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '0',
+                                                                      '2016-01-07 12:08:49-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '',
+                                                                               '2016-01-07 12:08:49-0500'
+                                                                             ]
+                                        },
+                      'test_trial21' => {
+                                          'fieldbook_image|CO:0010472' => [
+                                                                            '/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial21_2016-09-12-11-15-12.jpg',
+                                                                            '2016-01-07 12:10:24-0500'
+                                                                          ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '42',
+                                                                               '2016-01-07 12:08:24-0500'
+                                                                             ],
+                                          'dry yield|CO:0000014' => [
+                                                                      '42',
+                                                                      '2016-01-07 12:08:24-0500'
+                                                                    ]
+                                        },
+                      'test_trial25' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '25',
+                                                                      '2016-01-07 12:08:48-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '25',
+                                                                               '2016-01-07 12:08:48-0500'
+                                                                             ]
+                                        },
+                      'test_trial28' => {
+                                          'dry matter content|CO:0000092' => [
+                                                                               '41',
+                                                                               '2016-01-07 12:08:53-0500'
+                                                                             ],
+                                          'dry yield|CO:0000014' => [
+                                                                      '41',
+                                                                      '2016-01-07 12:08:53-0500'
+                                                                    ]
+                                        },
+                      'test_trial211' => {
+                                           'dry matter content|CO:0000092' => [
+                                                                                '13',
+                                                                                '2016-01-07 12:08:58-0500'
+                                                                              ],
+                                           'dry yield|CO:0000014' => [
+                                                                       '13',
+                                                                       '2016-01-07 12:08:58-0500'
+                                                                     ]
+                                         },
+                      'test_trial24' => {
+                                          'dry matter content|CO:0000092' => [
+                                                                               '14',
+                                                                               '2016-01-07 12:08:46-0500'
+                                                                             ],
+                                          'dry yield|CO:0000014' => [
+                                                                      '14',
+                                                                      '2016-01-07 12:08:46-0500'
+                                                                    ]
+                                        },
+                      'test_trial212' => {
+                                           'dry yield|CO:0000014' => [
+                                                                       '42',
+                                                                       '2016-01-07 12:09:02-0500'
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '42',
+                                                                                '2016-01-07 12:09:02-0500'
+                                                                              ]
+                                         },
+                      'test_trial27' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '0',
+                                                                      '2016-01-07 12:08:51-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '52',
+                                                                               '2016-01-07 12:08:51-0500'
+                                                                             ]
+                                        },
+                      'test_trial210' => {
+                                           'dry yield|CO:0000014' => [
+                                                                       '12',
+                                                                       '2016-01-07 12:08:56-0500'
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '12',
+                                                                                '2016-01-07 12:08:56-0500'
+                                                                              ]
+                                         },
+                      'test_trial22' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '45',
+                                                                      '2016-01-07 12:08:26-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '45',
+                                                                               '2016-01-07 12:08:26-0500'
+                                                                             ],
+                                          'fieldbook_image|CO:0010472' => [
+                                                                            '/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial22_2016-09-12-11-15-26.jpg',
+                                                                            '2016-01-07 12:10:25-0500'
+                                                                          ]
+                                        },
+                      'test_trial213' => {
+                                           'dry yield|CO:0000014' => [
+                                                                       '35',
+                                                                       '2016-01-07 12:09:04-0500'
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '35',
+                                                                                '2016-01-07 12:09:04-0500'
+                                                                              ]
+                                         },
+                      'test_trial215' => {
+                                           'dry matter content|CO:0000092' => [
+                                                                                '31',
+                                                                                '2016-01-07 12:09:07-0500'
+                                                                              ],
+                                           'dry yield|CO:0000014' => [
+                                                                       '31',
+                                                                       '2016-01-07 12:09:07-0500'
+                                                                     ]
+                                         },
+                      'test_trial23' => {
+                                          'dry matter content|CO:0000092' => [
+                                                                               '41',
+                                                                               '2016-01-07 12:08:27-0500'
+                                                                             ],
+                                          'dry yield|CO:0000014' => [
+                                                                      '41',
+                                                                      '2016-01-07 12:08:27-0500'
+                                                                    ]
+                                        },
+                      'test_trial29' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '24',
+                                                                      '2016-01-07 12:08:55-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '',
+                                                                               '2016-01-07 12:08:55-0500'
+                                                                             ]
+                                        },
+                      'test_trial214' => {
+                                           'dry yield|CO:0000014' => [
+                                                                       '32',
+                                                                       '2016-01-07 12:09:05-0500'
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '32',
+                                                                                '2016-01-07 12:09:05-0500'
+                                                                              ]
+                                         }
+                    },
           'plots' => [
                        'test_trial21',
                        'test_trial210',
@@ -638,161 +798,10 @@ is_deeply($parsed_file, {
                        'test_trial28',
                        'test_trial29'
                      ],
-          'data' => {
-                      'test_trial22' => {
-                                          'dry yield|CO:0000014' => [
-                                                                      '45',
-                                                                      '2016-01-07 12:08:26-0500'
-                                                                    ],
-                                          'dry matter content|CO:0000092' => [
-                                                                               '45',
-                                                                               '2016-01-07 12:08:26-0500'
-                                                                             ]
-                                        },
-                      'test_trial27' => {
-                                          'dry yield|CO:0000014' => [
-                                                                      '0',
-                                                                      '2016-01-07 12:08:51-0500'
-                                                                    ],
-                                          'dry matter content|CO:0000092' => [
-                                                                               '52',
-                                                                               '2016-01-07 12:08:51-0500'
-                                                                             ]
-                                        },
-                      'test_trial214' => {
-                                           'dry yield|CO:0000014' => [
-                                                                       '32',
-                                                                       '2016-01-07 12:09:05-0500'
-                                                                     ],
-                                           'dry matter content|CO:0000092' => [
-                                                                                '32',
-                                                                                '2016-01-07 12:09:05-0500'
-                                                                              ]
-                                         },
-                      'test_trial21' => {
-                                          'dry yield|CO:0000014' => [
-                                                                      '42',
-                                                                      '2016-01-07 12:08:24-0500'
-                                                                    ],
-                                          'dry matter content|CO:0000092' => [
-                                                                               '42',
-                                                                               '2016-01-07 12:08:24-0500'
-                                                                             ]
-                                        },
-                      'test_trial28' => {
-                                          'dry matter content|CO:0000092' => [
-                                                                               '41',
-                                                                               '2016-01-07 12:08:53-0500'
-                                                                             ],
-                                          'dry yield|CO:0000014' => [
-                                                                      '41',
-                                                                      '2016-01-07 12:08:53-0500'
-                                                                    ]
-                                        },
-                      'test_trial23' => {
-                                          'dry yield|CO:0000014' => [
-                                                                      '41',
-                                                                      '2016-01-07 12:08:27-0500'
-                                                                    ],
-                                          'dry matter content|CO:0000092' => [
-                                                                               '41',
-                                                                               '2016-01-07 12:08:27-0500'
-                                                                             ]
-                                        },
-                      'test_trial215' => {
-                                           'dry matter content|CO:0000092' => [
-                                                                                '31',
-                                                                                '2016-01-07 12:09:07-0500'
-                                                                              ],
-                                           'dry yield|CO:0000014' => [
-                                                                       '31',
-                                                                       '2016-01-07 12:09:07-0500'
-                                                                     ]
-                                         },
-                      'test_trial24' => {
-                                          'dry yield|CO:0000014' => [
-                                                                      '14',
-                                                                      '2016-01-07 12:08:46-0500'
-                                                                    ],
-                                          'dry matter content|CO:0000092' => [
-                                                                               '14',
-                                                                               '2016-01-07 12:08:46-0500'
-                                                                             ]
-                                        },
-                      'test_trial213' => {
-                                           'dry yield|CO:0000014' => [
-                                                                       '35',
-                                                                       '2016-01-07 12:09:04-0500'
-                                                                     ],
-                                           'dry matter content|CO:0000092' => [
-                                                                                '35',
-                                                                                '2016-01-07 12:09:04-0500'
-                                                                              ]
-                                         },
-                      'test_trial212' => {
-                                           'dry yield|CO:0000014' => [
-                                                                       '42',
-                                                                       '2016-01-07 12:09:02-0500'
-                                                                     ],
-                                           'dry matter content|CO:0000092' => [
-                                                                                '42',
-                                                                                '2016-01-07 12:09:02-0500'
-                                                                              ]
-                                         },
-                      'test_trial210' => {
-                                           'dry yield|CO:0000014' => [
-                                                                       '12',
-                                                                       '2016-01-07 12:08:56-0500'
-                                                                     ],
-                                           'dry matter content|CO:0000092' => [
-                                                                                '12',
-                                                                                '2016-01-07 12:08:56-0500'
-                                                                              ]
-                                         },
-                      'test_trial25' => {
-                                          'dry yield|CO:0000014' => [
-                                                                      '25',
-                                                                      '2016-01-07 12:08:48-0500'
-                                                                    ],
-                                          'dry matter content|CO:0000092' => [
-                                                                               '25',
-                                                                               '2016-01-07 12:08:48-0500'
-                                                                             ]
-                                        },
-                      'test_trial211' => {
-                                           'dry matter content|CO:0000092' => [
-                                                                                '13',
-                                                                                '2016-01-07 12:08:58-0500'
-                                                                              ],
-                                           'dry yield|CO:0000014' => [
-                                                                       '13',
-                                                                       '2016-01-07 12:08:58-0500'
-                                                                     ]
-                                         },
-                      'test_trial29' => {
-                                          'dry matter content|CO:0000092' => [
-                                                                               '',
-                                                                               '2016-01-07 12:08:55-0500'
-                                                                             ],
-                                          'dry yield|CO:0000014' => [
-                                                                      '24',
-                                                                      '2016-01-07 12:08:55-0500'
-                                                                    ]
-                                        },
-                      'test_trial26' => {
-                                          'dry matter content|CO:0000092' => [
-                                                                               '',
-                                                                               '2016-01-07 12:08:49-0500'
-                                                                             ],
-                                          'dry yield|CO:0000014' => [
-                                                                      '0',
-                                                                      '2016-01-07 12:08:49-0500'
-                                                                    ]
-                                        }
-                    },
           'traits' => [
                         'dry matter content|CO:0000092',
-                        'dry yield|CO:0000014'
+                        'dry yield|CO:0000014',
+                        'fieldbook_image|CO:0010472'
                       ]
         }, "Check parse fieldbook");
 
@@ -836,37 +845,37 @@ $experiment = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 148, "Check num rows in NdExperiment table after addition of fieldbook upload");
+ok($post1_experiment_diff == 150, "Check num rows in NdExperiment table after addition of fieldbook upload");
 
 $phenotype_rs = $c->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 $post1_phenotype_count = $phenotype_rs->count();
 $post1_phenotype_diff = $post1_phenotype_count - $pre_phenotype_count;
 print STDERR "Phenotype count: ".$post1_phenotype_diff."\n";
-ok($post1_phenotype_diff == 148, "Check num rows in Phenotype table after addition of fieldbook upload");
+ok($post1_phenotype_diff == 150, "Check num rows in Phenotype table after addition of fieldbook upload");
 
 $exp_prop_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 296, "Check num rows in Experimentprop table after addition of fieldbook upload");
+ok($post1_exp_prop_diff == 300, "Check num rows in Experimentprop table after addition of fieldbook upload");
 
 $exp_proj_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 148, "Check num rows in NdExperimentproject table after addition of fieldbook upload");
+ok($post1_exp_proj_diff == 150, "Check num rows in NdExperimentproject table after addition of fieldbook upload");
 
 $exp_stock_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 148, "Check num rows in NdExperimentstock table after addition of fieldbook upload");
+ok($post1_exp_stock_diff == 150, "Check num rows in NdExperimentstock table after addition of fieldbook upload");
 
 $exp_pheno_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $post1_exp_pheno_count = $exp_pheno_rs->count();
 my $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
-ok($post1_exp_pheno_diff == 148, "Check num rows in NdExperimentphenotype table after addition of fieldbook upload");
+ok($post1_exp_pheno_diff == 150, "Check num rows in NdExperimentphenotype table after addition of fieldbook upload");
 
 $md_rs = $c->metadata_schema->resultset('MdMetadata')->search({});
 my $post1_md_count = $md_rs->count();
@@ -884,7 +893,7 @@ $exp_md_files_rs = $c->phenome_schema->resultset('NdExperimentMdFiles')->search(
 my $post1_exp_md_files_count = $exp_md_files_rs->count();
 my $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 148, "Check num rows in NdExperimentMdFIles table after addition fieldbook upload");
+ok($post1_exp_md_files_diff == 150, "Check num rows in NdExperimentMdFIles table after addition fieldbook upload");
 
 
 
@@ -1266,37 +1275,37 @@ $experiment = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 205, "Check num rows in NdExperiment table after addition of datacollector upload");
+ok($post1_experiment_diff == 207, "Check num rows in NdExperiment table after addition of datacollector upload");
 
 $phenotype_rs = $c->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 $post1_phenotype_count = $phenotype_rs->count();
 $post1_phenotype_diff = $post1_phenotype_count - $pre_phenotype_count;
 print STDERR "Phenotype count: ".$post1_phenotype_diff."\n";
-ok($post1_phenotype_diff == 205, "Check num rows in Phenotype table after addition of datacollector upload");
+ok($post1_phenotype_diff == 207, "Check num rows in Phenotype table after addition of datacollector upload");
 
 $exp_prop_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 410, "Check num rows in Experimentprop table after addition of datacollector upload");
+ok($post1_exp_prop_diff == 414, "Check num rows in Experimentprop table after addition of datacollector upload");
 
 $exp_proj_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 205, "Check num rows in NdExperimentproject table after addition of datacollector upload");
+ok($post1_exp_proj_diff == 207, "Check num rows in NdExperimentproject table after addition of datacollector upload");
 
 $exp_stock_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 205, "Check num rows in NdExperimentstock table after addition of datacollector upload");
+ok($post1_exp_stock_diff == 207, "Check num rows in NdExperimentstock table after addition of datacollector upload");
 
 $exp_pheno_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $post1_exp_pheno_count = $exp_pheno_rs->count();
 my $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
-ok($post1_exp_pheno_diff == 205, "Check num rows in NdExperimentphenotype table after addition of datacollector upload");
+ok($post1_exp_pheno_diff == 207, "Check num rows in NdExperimentphenotype table after addition of datacollector upload");
 
 $md_rs = $c->metadata_schema->resultset('MdMetadata')->search({});
 my $post1_md_count = $md_rs->count();
@@ -1314,7 +1323,7 @@ $exp_md_files_rs = $c->phenome_schema->resultset('NdExperimentMdFiles')->search(
 my $post1_exp_md_files_count = $exp_md_files_rs->count();
 my $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 205, "Check num rows in NdExperimentMdFIles table after addition datacollector upload");
+ok($post1_exp_md_files_diff == 207, "Check num rows in NdExperimentMdFIles table after addition datacollector upload");
 
 
 
@@ -1950,7 +1959,7 @@ $experiment = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 323, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
+ok($post1_experiment_diff == 325, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
 
 my @nd_experiment_table;
 my $nd_experiment_table_tail = $experiment->slice($post1_experiment_count-323, $post1_experiment_count);
@@ -1963,7 +1972,7 @@ $phenotype_rs = $c->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 $post1_phenotype_count = $phenotype_rs->count();
 $post1_phenotype_diff = $post1_phenotype_count - $pre_phenotype_count;
 print STDERR "Phenotype count: ".$post1_phenotype_diff."\n";
-ok($post1_phenotype_diff == 323, "Check num rows in Phenotype table after addition of large phenotyping spreadsheet upload");
+ok($post1_phenotype_diff == 325, "Check num rows in Phenotype table after addition of large phenotyping spreadsheet upload");
 
 my @pheno_table;
 my $pheno_table_tail = $phenotype_rs->slice($post1_phenotype_count-323, $post1_phenotype_count);
@@ -1976,7 +1985,7 @@ $exp_prop_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 646, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_prop_diff == 650, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
 
 my @exp_prop_table;
 my $exp_prop_table_tail = $exp_prop_rs->slice($post1_exp_prop_count-646, $post1_exp_prop_count);
@@ -1989,7 +1998,7 @@ $exp_proj_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject'
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 323, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_proj_diff == 325, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
 
 my @exp_proj_table;
 my $exp_proj_table_tail = $exp_proj_rs->slice($post1_exp_proj_count-323, $post1_exp_proj_count);
@@ -2002,7 +2011,7 @@ $exp_stock_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 323, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_stock_diff == 325, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
 
 my @exp_stock_table;
 my $exp_stock_table_tail = $exp_stock_rs->slice($post1_exp_stock_count-323, $post1_exp_stock_count);
@@ -2015,7 +2024,7 @@ $exp_pheno_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenoty
 $post1_exp_pheno_count = $exp_pheno_rs->count();
 $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
-ok($post1_exp_pheno_diff == 323, "Check num rows in NdExperimentphenotype table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_pheno_diff == 325, "Check num rows in NdExperimentphenotype table after addition of large phenotyping spreadsheet upload");
 
 my @exp_pheno_table;
 my $exp_pheno_table_tail = $exp_pheno_rs->slice($post1_exp_pheno_count-323, $post1_exp_pheno_count);
@@ -2054,7 +2063,7 @@ $exp_md_files_rs = $c->phenome_schema->resultset('NdExperimentMdFiles')->search(
 $post1_exp_md_files_count = $exp_md_files_rs->count();
 $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 323, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_md_files_diff == 325, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
 
 my @exp_md_files_table;
 my $exp_md_files_table_tail = $exp_md_files_rs->slice($post1_exp_md_files_count-324, $post1_exp_md_files_count-1);
@@ -2564,7 +2573,7 @@ $experiment = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 381, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
+ok($post1_experiment_diff == 383, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
 
 my @nd_experiment_table;
 my $nd_experiment_table_tail = $experiment->slice($post1_experiment_count-323, $post1_experiment_count);
@@ -2577,7 +2586,7 @@ $phenotype_rs = $c->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 $post1_phenotype_count = $phenotype_rs->count();
 $post1_phenotype_diff = $post1_phenotype_count - $pre_phenotype_count;
 print STDERR "Phenotype count: ".$post1_phenotype_diff."\n";
-ok($post1_phenotype_diff == 381, "Check num rows in Phenotype table after addition of large phenotyping spreadsheet upload");
+ok($post1_phenotype_diff == 383, "Check num rows in Phenotype table after addition of large phenotyping spreadsheet upload");
 
 my @pheno_table;
 my $pheno_table_tail = $phenotype_rs->slice($post1_phenotype_count-323, $post1_phenotype_count);
@@ -2590,7 +2599,7 @@ $exp_prop_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 762, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_prop_diff == 766, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
 
 my @exp_prop_table;
 my $exp_prop_table_tail = $exp_prop_rs->slice($post1_exp_prop_count-646, $post1_exp_prop_count);
@@ -2603,7 +2612,7 @@ $exp_proj_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject'
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 381, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_proj_diff == 383, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
 
 my @exp_proj_table;
 my $exp_proj_table_tail = $exp_proj_rs->slice($post1_exp_proj_count-323, $post1_exp_proj_count);
@@ -2616,7 +2625,7 @@ $exp_stock_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 381, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_stock_diff == 383, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
 
 my @exp_stock_table;
 my $exp_stock_table_tail = $exp_stock_rs->slice($post1_exp_stock_count-323, $post1_exp_stock_count);
@@ -2629,7 +2638,7 @@ $exp_pheno_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenoty
 $post1_exp_pheno_count = $exp_pheno_rs->count();
 $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
-ok($post1_exp_pheno_diff == 381, "Check num rows in NdExperimentphenotype table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_pheno_diff == 383, "Check num rows in NdExperimentphenotype table after addition of large phenotyping spreadsheet upload");
 
 my @exp_pheno_table;
 my $exp_pheno_table_tail = $exp_pheno_rs->slice($post1_exp_pheno_count-323, $post1_exp_pheno_count);
@@ -2668,7 +2677,7 @@ $exp_md_files_rs = $c->phenome_schema->resultset('NdExperimentMdFiles')->search(
 $post1_exp_md_files_count = $exp_md_files_rs->count();
 $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 381, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_md_files_diff == 383, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
 
 my @exp_md_files_table;
 my $exp_md_files_table_tail = $exp_md_files_rs->slice($post1_exp_md_files_count-324, $post1_exp_md_files_count-1);
@@ -2784,7 +2793,7 @@ $experiment = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->searc
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 391, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
+ok($post1_experiment_diff == 393, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
 
 my @nd_experiment_table;
 my $nd_experiment_table_tail = $experiment->slice($post1_experiment_count-323, $post1_experiment_count);
@@ -2797,7 +2806,7 @@ $phenotype_rs = $c->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 $post1_phenotype_count = $phenotype_rs->count();
 $post1_phenotype_diff = $post1_phenotype_count - $pre_phenotype_count;
 print STDERR "Phenotype count: ".$post1_phenotype_diff."\n";
-ok($post1_phenotype_diff == 391, "Check num rows in Phenotype table after addition of large phenotyping spreadsheet upload");
+ok($post1_phenotype_diff == 393, "Check num rows in Phenotype table after addition of large phenotyping spreadsheet upload");
 
 my @pheno_table;
 my $pheno_table_tail = $phenotype_rs->slice($post1_phenotype_count-323, $post1_phenotype_count);
@@ -2810,7 +2819,7 @@ $exp_prop_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 782, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_prop_diff == 786, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
 
 my @exp_prop_table;
 my $exp_prop_table_tail = $exp_prop_rs->slice($post1_exp_prop_count-646, $post1_exp_prop_count);
@@ -2823,7 +2832,7 @@ $exp_proj_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject'
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 391, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_proj_diff == 393, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
 
 my @exp_proj_table;
 my $exp_proj_table_tail = $exp_proj_rs->slice($post1_exp_proj_count-323, $post1_exp_proj_count);
@@ -2836,7 +2845,7 @@ $exp_stock_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 391, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_stock_diff == 393, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
 
 my @exp_stock_table;
 my $exp_stock_table_tail = $exp_stock_rs->slice($post1_exp_stock_count-323, $post1_exp_stock_count);
@@ -2849,7 +2858,7 @@ $exp_pheno_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenoty
 $post1_exp_pheno_count = $exp_pheno_rs->count();
 $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
-ok($post1_exp_pheno_diff == 391, "Check num rows in NdExperimentphenotype table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_pheno_diff == 393, "Check num rows in NdExperimentphenotype table after addition of large phenotyping spreadsheet upload");
 
 my @exp_pheno_table;
 my $exp_pheno_table_tail = $exp_pheno_rs->slice($post1_exp_pheno_count-323, $post1_exp_pheno_count);
@@ -2888,7 +2897,7 @@ $exp_md_files_rs = $c->phenome_schema->resultset('NdExperimentMdFiles')->search(
 $post1_exp_md_files_count = $exp_md_files_rs->count();
 $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 391, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_md_files_diff == 393, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
 
 my @exp_md_files_table;
 my $exp_md_files_table_tail = $exp_md_files_rs->slice($post1_exp_md_files_count-324, $post1_exp_md_files_count-1);
