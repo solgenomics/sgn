@@ -505,11 +505,11 @@ sub store {
     if ($archived_image_zipfile_with_path) {
         #print STDERR $archived_image_zipfile_with_path."\n";
 
-        my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
         my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$archived_image_zipfile_with_path);
         my $file_members = $archived_zip->file_members();
 
         foreach (@$file_members) {
+            my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
             #print STDERR Dumper $_;
             my $img_name = substr($_->fileName(), 0, -24);
             $img_name =~ s/^.*photos\///;
