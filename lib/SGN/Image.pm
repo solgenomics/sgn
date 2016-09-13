@@ -304,8 +304,8 @@ sub apache_upload_image {
       . $ENV{REMOTE_ADDR} . "-"
       . $upload_filename;
 
-    my $temp_file = $self->upload_image($temp_file, $upload_fh);
-    return $temp_file;
+    my $ret_temp_file = $self->upload_image($temp_file, $upload_fh);
+    return $ret_temp_file;
 
 }
 
@@ -314,14 +314,9 @@ sub upload_zipfile_images {
     my $self   = shift;
     my $file_member = shift;
 
-    my $fh = IO::File->new_tmpfile or print "Unable to make new temp file: $!";
-    binmode($fh);
     my $filename = $file_member->fileName();
-    if ($file_member->extractToFileHandle($fh) != 0){
-        die "Error in $filename\n";
-    }
 
-    my $zipfile_image_temp_path = $self->config()->get_conf("basepath") . $self->config()->get_conf("tempfiles_subdir") . "/temp_images/photo";
+    my $zipfile_image_temp_path = $self->config()->get_conf("basepath") . $self->config()->get_conf("tempfiles_subdir") . "/temp_images/photos";
     make_path($zipfile_image_temp_path);
     my $temp_file =
         $self->config()->get_conf("basepath")
@@ -329,10 +324,9 @@ sub upload_zipfile_images {
       . "/temp_images/"
       . $filename;
     system("chmod 775 $zipfile_image_temp_path");
-    open my $fileHandle, ">>", "$temp_file" or die "Can't open $tempfile \n";
-    close $fileHandle;
-    my $ret_temp_file = $self->upload_image($temp_file, $fh);
-    return $ret_temp_file;
+    $file_member->extractToFileNamed($temp_file);
+    print STDERR "Temp Image: ".$temp_file."\n";
+    return $temp_file;
 }
 
 

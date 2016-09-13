@@ -510,31 +510,17 @@ sub store {
         my $file_members = $archived_zip->file_members();
 
         foreach (@$file_members) {
-            print STDERR Dumper $_;
-            print STDERR $_->fileName()."\n";
+            #print STDERR Dumper $_;
             my $img_name = substr($_->fileName(), 0, -24);
             $img_name =~ s/^.*photos\///;
-            print STDERR $img_name."\n";
             my $stock = $schema->resultset("Stock::Stock")->find( { uniquename => $img_name, 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] } );
             my $stock_id = $stock->stock_id;
-            
-            my $temp_file = $image->upload_zipfile_images($_);
-            
-            #my $img_dir = $context->get_conf('static_datasets_path')."/".$context->get_conf('image_dir');
-            #make_path( $img_dir );
-            #my ($processing_dir) = File::Temp::tempdir( "process_XXXXXX", DIR => $img_dir );
-            #system("chmod 775 $processing_dir");
-            
 
-            #my $temp_file = $image->apache_upload_image($_);
-            
+            my $temp_file = $image->upload_zipfile_images($_);
+
             $image->set_sp_person_id($user_id);
 
-            my $temp_image_dir = $c->get_conf("basepath")."/".$c->get_conf("tempfiles_subdir") ."/temp_images";
-            my $temp_image_file = $temp_image_dir."/".$temp_file;
-            print STDERR $temp_image_file."\n";
-            
-            my $err = $image->process_image($temp_image_file, 'stock', $stock_id);
+            my $err = $image->process_image($temp_file, 'stock', $stock_id);
         }
     }
 
