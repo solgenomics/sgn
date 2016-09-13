@@ -31,10 +31,11 @@ $trial_id
      <thead>
      <tr>
      <th>Trait</th>
-     <th>Average</th>
+     <th>Mean</th>
      <th>Min</th>
      <th>Max</th>
      <th>Std Dev</th>
+     <th>CV</th>
      <th>Count</th>
      <th>Histogram</th>
      </tr>
