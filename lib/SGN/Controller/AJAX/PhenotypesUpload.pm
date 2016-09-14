@@ -42,13 +42,13 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
     my $warning_status;
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $data_level) = _prep_upload($c, $file_type);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $data_level, $overwrite_values, $image_zip) = _prep_upload($c, $file_type);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
     }
 
-    my ($verified_warning, $verified_error) = $store_phenotypes->verify($c, $plots, $traits, $parsed_data, $phenotype_metadata, $timestamp_included);
+    my ($verified_warning, $verified_error) = $store_phenotypes->verify($c, $plots, $traits, $parsed_data, $phenotype_metadata, $timestamp_included, $image_zip);
     if ($verified_error) {
         push @$error_status, $verified_error;
         $c->stash->{rest} = {success => $success_status, error => $error_status };
@@ -67,7 +67,7 @@ sub upload_phenotype_store_POST : Args(1) {
     my ($self, $c, $file_type) = @_;
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $data_level, $overwrite_values) = _prep_upload($c, $file_type);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $data_level, $overwrite_values, $image_zip) = _prep_upload($c, $file_type);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -84,7 +84,7 @@ sub upload_phenotype_store_POST : Args(1) {
 
 
     my $size = scalar(@$plots) * scalar(@$traits);
-    my $stored_phenotype_error = $store_phenotypes->store($c, $size, $plots, $traits, $parsed_data, $phenotype_metadata, $data_level, $overwrite_values);
+    my $stored_phenotype_error = $store_phenotypes->store($c, $size, $plots, $traits, $parsed_data, $phenotype_metadata, $data_level, $overwrite_values, $image_zip);
 
     if ($stored_phenotype_error) {
         push @$error_status, $stored_phenotype_error;
@@ -109,6 +109,7 @@ sub _prep_upload {
     my $validate_type;
     my $metadata_file_type;
     my $data_level;
+    my $image_zip;
     if ($file_type eq "spreadsheet") {
         print STDERR "Spreadsheet \n";
         $subdirectory = "spreadsheet_phenotype_upload";
@@ -117,7 +118,7 @@ sub _prep_upload {
         $timestamp_included = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
         $data_level = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
         $upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
-    } 
+    }
     elsif ($file_type eq "fieldbook") {
         print STDERR "Fieldbook \n";
         $subdirectory = "tablet_phenotype_upload";
@@ -125,6 +126,7 @@ sub _prep_upload {
         $metadata_file_type = "tablet phenotype file";
         $timestamp_included = 1;
         $upload = $c->req->upload('upload_fieldbook_phenotype_file_input');
+        $image_zip = $c->req->upload('upload_fieldbook_phenotype_images_zipfile');
         $data_level = $c->req->param('upload_fieldbook_phenotype_data_level') || 'plots';
     }
     elsif ($file_type eq "datacollector") {
@@ -160,6 +162,23 @@ sub _prep_upload {
     }
     unlink $upload_tempfile;
 
+    my $archived_image_zipfile_with_path;
+    if ($image_zip) {
+        my $upload_original_name = $image_zip->filename();
+        my $upload_tempfile = $image_zip->tempname;
+        my %phenotype_metadata;
+        my $time = DateTime->now();
+
+        $archived_image_zipfile_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+        my $md5 = $uploader->get_md5($archived_image_zipfile_with_path);
+        if (!$archived_image_zipfile_with_path) {
+            push @error_status, "Could not save images zipfile $upload_original_name in archive.";
+        } else {
+            push @success_status, "Images Zip File $upload_original_name saved in archive.";
+        }
+        unlink $upload_tempfile;
+    }
+
     ## Validate and parse uploaded file
     my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level);
     if (!$validate_file) {
@@ -167,7 +186,7 @@ sub _prep_upload {
     }
     if ($validate_file == 1){
         push @success_status, "File valid: $upload_original_name.";
-    } else { 
+    } else {
         if ($validate_file->{'error'}) {
             push @error_status, $validate_file->{'error'};
         }
@@ -177,7 +196,7 @@ sub _prep_upload {
     $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
     $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
     my $operator = $c->user()->get_object()->get_username();
-    $phenotype_metadata{'operator'} = $operator; 
+    $phenotype_metadata{'operator'} = $operator;
     $phenotype_metadata{'date'} = $timestamp;
 
     my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included);
@@ -199,7 +218,7 @@ sub _prep_upload {
         }
     }
 
-    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $data_level, $overwrite_values);
+    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $data_level, $overwrite_values, $archived_image_zipfile_with_path);
 }
 
 #########
