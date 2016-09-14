@@ -38,6 +38,7 @@ use CXGN::Trial::Folder;
 use Carp;
 use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
+use CXGN::Cross;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -400,27 +401,13 @@ sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) {
 	return;
     }
 
-    my $crs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $cross_id } );
+    my $cross_obj = CXGN::Cross->new({bcs_schema=>$schema, cross_stock_id=>$cross_id});
+    my ($maternal_parent, $paternal_parent, $progeny) = $cross_obj->get_cross_relationships();
 
-    my $maternal_parent = "";
-    my $paternal_parent = "";
-    my @progeny = ();
-
-    foreach my $child ($crs->all()) {
-	if ($child->type->name() eq "female_parent") {
-	    $maternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
-	}
-	if ($child->type->name() eq "male_parent") {
-	    $paternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
-	}
-	if ($child->type->name() eq "member_of") {
-	    push @progeny, [ $child->subject->name, $child->subject->stock_id() ];
-	}
-    }
-
-    $c->stash->{rest} = { maternal_parent => $maternal_parent,
-			  paternal_parent => $paternal_parent,
-			  progeny => \@progeny,
+    $c->stash->{rest} = {
+        maternal_parent => $maternal_parent,
+        paternal_parent => $paternal_parent,
+        progeny => $progeny,
     };
 }
 

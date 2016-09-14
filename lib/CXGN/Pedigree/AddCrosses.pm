@@ -57,7 +57,7 @@ has 'crosses' => (isa =>'ArrayRef[Pedigree]', is => 'rw', predicate => 'has_cros
 has 'location' => (isa =>'Str', is => 'rw', predicate => 'has_location', required => 1,);
 has 'program' => (isa =>'Str', is => 'rw', predicate => 'has_program', required => 1,);
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
-has 'parent_folder_id' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 0,);
+has 'parent_folder_id' => (isa => 'Str', is => 'rw', predicate => 'has_parent_folder_id', required => 0,);
 
 sub add_crosses {
   my $self = shift;
@@ -74,7 +74,7 @@ sub add_crosses {
 
   #lookup user by name
   my $owner_name = $self->get_owner_name();
-	my $parent_folder_id = $self->get_parent_folder_id() || 0;
+  $parent_folder_id = $self->get_parent_folder_id() || 0;
   my $dbh = $self->get_dbh();
   my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name); #add person id as an option.
 

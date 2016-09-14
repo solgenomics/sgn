@@ -18,6 +18,7 @@ $folder_id
 $folder_name
 $folder_description
 $children
+$crosses
 $project_parent => undef
 $breeding_program => undef
 </%args>
@@ -74,13 +75,20 @@ foreach (@$children) {
         <h3>Crosses in Folder</h3>
         <table class="table table-hover table-bordered">
         <tbody>
-% foreach (@$children) {
-%   if ($_->folder_type eq 'cross') {
-    <tr><td><a href="/cross/<% $_->folder_id() %>"><% $_->name() %></a></td></tr>
-% }
+% foreach (@$crosses) {
+            <tr><td><a href="/cross/<% $_->[0] %>"><% $_->[1] %></a></td></tr>
 % }
         </tbody>
         </table>
+
+        <hr>
+        <h4>Add All Cross Progeny to a List</h4>
+        <div id="add_all_cross_progeny_in_folder_to_list"></div>
+        <div id="add_all_cross_progeny_in_folder_to_list_data" style="display:none">
+% foreach (@$crosses) {
+<% $_->[0] %>
+% }
+</div>
 
       </div>
     </div>
@@ -156,6 +164,8 @@ jQuery(document).ready(function() {
             });
         }
     });
+    
+    addToListMenu('add_all_cross_progeny_in_folder_to_list', 'add_all_cross_progeny_in_folder_to_list_data', { listType: 'accessions', additionType: 'cross_progeny' } );
 
 });
 

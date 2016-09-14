@@ -20,7 +20,7 @@ $breeding_program_name => undef
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="setFolderDialog">Place trial in folder</h4>
+        <h4 class="modal-title" id="setFolderDialog">Place <% $project_type %> in folder</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -83,15 +83,19 @@ $breeding_program_name => undef
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="setFolderSuccessDialog">Trial Move Successful</h4>
+                <h4 class="modal-title" id="setFolderSuccessDialog"><% $project_type %> Move Successful</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The trial was moved into the folder successfully
+                        The <% $project_type %> was moved into the folder successfully
                     </p>
-                    <button class="btn btn-primary" name="refresh_jstree_html">Refresh Trial Tree</button>
+%  if ($project_type eq 'Trial') {
+                    <button class="btn btn-primary" name="refresh_jstree_html">Refresh <% $project_type %> Tree</button>
+%  } elsif ($project_type eq 'Cross') {
+                    <button class="btn btn-primary" name="refresh_crosses_jstree_html">Refresh <% $project_type %> Tree</button>
+%  }
                 </div>
             </div>
             <div class="modal-footer">
