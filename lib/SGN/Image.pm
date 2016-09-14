@@ -48,6 +48,7 @@ use File::Basename qw/ basename /;
 use File::Spec;
 use CXGN::DB::Connection;
 use CXGN::Tag;
+use CXGN::Metadata::Metadbdata;
 
 use CatalystX::GlobalContext '$c';
 
@@ -372,10 +373,10 @@ sub associate_stock  {
     my $self = shift;
     my $stock_id = shift;
     if ($stock_id) {
-        my $user = $self->config->user_exists;
-        if ($user) {
+        my $username = $self->config->can('user_exists') ? $self->config->user->get_object->get_username : $self->config->username;
+        if ($username) {
             my $metadata_schema = $self->config->dbic_schema('CXGN::Metadata::Schema');
-            my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema, $self->config->user->get_object->get_username);
+            my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema, $username);
             my $metadata_id = $metadata->store()->get_metadata_id();
 
             my $q = "INSERT INTO phenome.stock_image (stock_id, image_id, metadata_id) VALUES (?,?,?) RETURNING stock_image_id";

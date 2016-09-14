@@ -234,10 +234,7 @@ sub store {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    if (!$user_id) { #For unit_test, SimulateC
-        $user_id = $c->sp_person_id();
-    }
+    my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
     my $archived_file = $phenotype_metadata->{'archived_file'};
     my $archived_file_type = $phenotype_metadata->{'archived_file_type'};
     my $operator = $phenotype_metadata->{'operator'};
@@ -303,7 +300,7 @@ sub store {
                     $timestamp = 'NA'.$upload_date;
                 }
 
-                if ($trait_value || $trait_value eq '0') {
+                if (defined($trait_value) && length($trait_value)) {
 
                     #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
                     if ($overwrite_values) {
@@ -413,7 +410,7 @@ sub store {
                     $timestamp = 'NA';
                 }
 
-		if ($trait_value || $trait_value eq '0') {
+		if (defined($trait_value) && length($trait_value)) {
 
             #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
             if ($overwrite_values) {
@@ -504,12 +501,12 @@ sub store {
     my %image_plot_full_names;
     if ($archived_image_zipfile_with_path) {
         #print STDERR $archived_image_zipfile_with_path."\n";
-
+        my $dbh = $schema->storage->dbh;
         my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$archived_image_zipfile_with_path);
         my $file_members = $archived_zip->file_members();
 
         foreach (@$file_members) {
-            my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
+            my $image = SGN::Image->new( $dbh, undef, $c );
             #print STDERR Dumper $_;
             my $img_name = substr($_->fileName(), 0, -24);
             $img_name =~ s/^.*photos\///;
