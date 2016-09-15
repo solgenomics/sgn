@@ -517,7 +517,10 @@ sub store {
 
             $image->set_sp_person_id($user_id);
 
-            my $err = $image->process_image($temp_file, 'stock', $stock_id);
+            my $ret = $image->process_image($temp_file, 'stock', $stock_id);
+            if (!$ret ) {
+                $error_message .= "Image processing for $temp_file did not work. Image not associated to stock_id $stock_id";
+            }
         }
     }
 
