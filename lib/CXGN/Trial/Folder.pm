@@ -414,6 +414,7 @@ sub _jstree_li_html {
 		if ($cross_stock) {
 			$id = $cross_stock->stock_id();
     		$url = "/cross/".$id;
+			return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\"><a href=\"$url\">".$name.'</a>';
 		} else {
 			return;
 		}

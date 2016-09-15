@@ -664,7 +664,7 @@ sub trait_autocomplete_GET :Args(0) {
     while  (my ($term_name) = $sth->fetchrow_array ) {
         push @response_list, $term_name;
     }
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 =head2 project_autocomplete
@@ -697,7 +697,7 @@ sub project_autocomplete_GET :Args(0) {
     while  (my ($project_name) = $sth->fetchrow_array ) {
         push @response_list, $project_name;
     }
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 =head2 project_year_autocomplete
@@ -731,7 +731,7 @@ sub project_year_autocomplete_GET :Args(0) {
     while  (my ($project_name) = $sth->fetchrow_array ) {
         push @response_list, $project_name;
     }
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 =head2 geolocation_autocomplete
@@ -764,7 +764,7 @@ sub geolocation_autocomplete_GET :Args(0) {
     while  (my ($location) = $sth->fetchrow_array ) {
         push @response_list, $location;
     }
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 =head2 stock_autocomplete
@@ -798,7 +798,7 @@ sub stock_autocomplete_GET :Args(0) {
 
     print STDERR "stock_autocomplete RESPONSELIST = ".join ", ", @response_list;
 
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 =head2 accession_autocomplete
@@ -832,7 +832,7 @@ sub accession_autocomplete_GET :Args(0) {
 
     #print STDERR "stock_autocomplete RESPONSELIST = ".join ", ", @response_list;
 
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 sub parents : Local : ActionClass('REST') {}

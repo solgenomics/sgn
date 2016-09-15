@@ -40,9 +40,6 @@ $user_id => undef
 <& /breeders_toolbox/folder/folder_new.mas &>
 <& /breeders_toolbox/folder/folder_move.mas &>
 
-<center>
-<h3>Crosses</h3>
-</center>
 
 <table class="table table-bordered">
     <thead>

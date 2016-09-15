@@ -9,7 +9,6 @@ $user_id
 
 <br />
 <& /page/page_title.mas, title => "Manage Crosses" &>
-<br/>
 
 <div class="container-fluid">
 

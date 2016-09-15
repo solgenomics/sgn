@@ -39,7 +39,7 @@ sub folder_page :Path("/folder") Args(1) {
             }
         }
     }
-    print STDERR Dumper \@crosses;
+    #print STDERR Dumper \@crosses;
 
     $c->stash->{children} = $children;
     $c->stash->{crosses} = \@crosses;
