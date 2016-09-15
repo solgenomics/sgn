@@ -5,12 +5,34 @@ $trial_id
 
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.iframe-post-form' ] &>
 
-<div class="container">
- 
-  	<div class="col-sm-4" id="create_button">
-		<a id="compute_derived_trait_link"><button class="button"  type="button" id="derived_button" value="Create_Trait" >Derive Trait</button></a>
- 	</div>
-</div>
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="well">
+                <h4>Derive Trait Phenotypes</h4>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <a id="compute_derived_trait_link"><button class="button" type="button" id="derived_button" value="Create_Trait" >Derive Trait</button></a>
+                    </div>
+                    <div class="col-sm-8">
+                        <p><b>P <sub>Calculated</sub></b> = <i>f</i> ( <b>P <sub>Trait1</sub></b> , <b>P <sub>Trait2</sub></b> )</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="well">
+                <h4>Calculate Plot Phenotypes from Plant Phenotypes</h4>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <a id="generate_plot_pheno_link"><button class="button" type="button" >Calculate</button></a>
+                    </div>
+                    <div class="col-sm-8">
+                        <p><b>P <sub>Plot</sub></b> = <i>average</i> ( <b>P <sub>Plants</sub></b> )</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 <div id="compute_derived_trait_dialog" title="Compute Derived Traits" style="display:none;">
   	<div id="trait_list_dc" name="trait_list">
