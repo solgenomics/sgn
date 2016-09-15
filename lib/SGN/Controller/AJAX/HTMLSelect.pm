@@ -176,6 +176,7 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
 
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
+    my $size = $c->req->param("size");
     my @trials;
     foreach my $project (@$projects) {
       my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
@@ -188,6 +189,7 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
       multiple => 1,
       name => $name,
       id => $id,
+      size => $size,
       choices => \@trials,
     );
     $c->stash->{rest} = { select => $html };
@@ -209,6 +211,7 @@ sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
 
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
+    my $size = $c->req->param("size");
     my @crosses;
     foreach my $project (@$projects) {
       my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
@@ -221,6 +224,7 @@ sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
       multiple => 1,
       name => $name,
       id => $id,
+      size => $size,
       choices => \@crosses,
     );
     $c->stash->{rest} = { select => $html };

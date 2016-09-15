@@ -143,7 +143,7 @@ function breeding_program_change_folders() {
 
 function breeding_program_change_trials() {
   var breeding_program_id = jQuery("#folder_set_breeding_program_id").val();
-  get_select_box('<% $js_project_type %>', 'select_trial_for_folder', { 'name' : 'html_select_trial_for_folder', 'id' : 'html_select_trial_for_folder', 'breeding_program_id' : breeding_program_id });
+  get_select_box('<% $js_project_type %>', 'select_trial_for_folder', { 'name' : 'html_select_trial_for_folder', 'id' : 'html_select_trial_for_folder', 'breeding_program_id' : breeding_program_id, 'size':'20' });
 }
 
 function set_trial_folder() {
