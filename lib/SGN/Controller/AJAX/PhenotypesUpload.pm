@@ -161,6 +161,7 @@ sub _prep_upload {
         push @success_status, "File $upload_original_name saved in archive.";
     }
     unlink $upload_tempfile;
+    #print STDERR "Archived Phenotype File: $archived_filename_with_path\n";
 
     my $archived_image_zipfile_with_path;
     if ($image_zip) {
@@ -177,6 +178,7 @@ sub _prep_upload {
             push @success_status, "Images Zip File $upload_original_name saved in archive.";
         }
         unlink $upload_tempfile;
+        #print STDERR "Archived Zipfile: $archived_image_zipfile_with_path\n";
     }
 
     ## Validate and parse uploaded file
