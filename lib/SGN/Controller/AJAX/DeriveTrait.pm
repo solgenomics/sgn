@@ -4,11 +4,12 @@ use Moose;
 use Data::Dumper;
 use List::Util 'max';
 use Bio::Chado::Schema;
-use List::Util qw | any |;
+use List::Util qw | any sum |;
 use DBI;
 use DBIx::Class;
 use SGN::Model::Cvterm;
-
+use JSON;
+use POSIX;
 
 BEGIN {extends 'Catalyst::Controller::REST'}
 
@@ -273,5 +274,136 @@ project.project_id=? ) );");
 	$c->stash->{rest} = {success => 1};
 }
 
+
+sub generate_plot_phenotypes : Path('/ajax/breeders/trial/generate_plot_phenotypes') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->req->param('trial_id');
+    my $trait_id = $c->req->param('trait_id');
+    my $method = $c->req->param('method');
+    my $rounding = $c->req->param('rounding');
+    print STDERR "Trial: $trial_id\n";
+    print STDERR "Trait: $trait_id\n";
+    print STDERR "Method: $method\n";
+    print STDERR "Round: $rounding\n";
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+    my $plant_phenotypes_for_trait = $trial->get_stock_phenotypes_for_trait($trait_id, 'plant', 'plant_of', 'plot');
+    print STDERR Dumper $plant_phenotypes_for_trait;
+
+    my %plot_plant_values;
+    foreach (@$plant_phenotypes_for_trait) {
+        my @value_array;
+        my $plot_id = $_->[5];
+        if (exists($plot_plant_values{$plot_id})) {
+            @value_array = @{$plot_plant_values{$plot_id}};
+        }
+        push @value_array, $_->[4];
+        $plot_plant_values{$plot_id} = \@value_array;
+    }
+    print STDERR Dumper \%plot_plant_values;
+    
+    my @return;
+    foreach my $plot_id (keys %plot_plant_values) {
+        my %info;
+        $info{'method'} = $method;
+        if ($method eq 'arithmetic_mean') {
+            my $average = $self->_get_mean($plot_plant_values{$plot_id});
+            $info{'plant_values'} = $plot_plant_values{$plot_id};
+            $info{'output'} = $average;
+            $info{'value_to_store'} = $average;
+            $info{'notes'} = '';
+        }
+        if ($method eq 'mode') {
+            my $modes = $self->_get_mode($plot_plant_values{$plot_id});
+            $info{'plant_values'} = $plot_plant_values{$plot_id};
+            $info{'output'} = encode_json($modes);
+            if (scalar(@$modes > 1)) {
+                $info{'notes'} = 'More than one mode!';
+                $info{'value_to_store'} = '';
+            } else {
+                $info{'notes'} = 'A single mode was found!';
+                $info{'value_to_store'} = $modes->[0];
+            }
+        }
+        if ($method eq 'maximum') {
+            my $maximum = $self->_get_max($plot_plant_values{$plot_id});
+            $info{'plant_values'} = $plot_plant_values{$plot_id};
+            $info{'output'} = $maximum;
+            $info{'value_to_store'} = $maximum;
+            $info{'notes'} = '';
+        }
+        if ($method eq 'minimum') {
+            my $minimum = $self->_get_min($plot_plant_values{$plot_id});
+            $info{'plant_values'} = $plot_plant_values{$plot_id};
+            $info{'output'} = $minimum;
+            $info{'value_to_store'} = $minimum;
+            $info{'notes'} = '';
+        }
+        if ($method eq 'median') {
+            my $median = $self->_get_median(@{$plot_plant_values{$plot_id}});
+            $info{'plant_values'} = $plot_plant_values{$plot_id};
+            $info{'output'} = $median;
+            $info{'value_to_store'} = $median;
+            $info{'notes'} = '';
+        }
+        push @return, \%info;
+    }
+    print STDERR Dumper \@return;
+    $c->stash->{rest} = {success => 1, info=>\@return};
+}
+
+sub _get_mean {
+    my $self = shift;
+    my $array = shift;
+    my $sum = 0;
+    foreach (@$array) {
+        $sum += $_;
+    }
+    my $average = $sum/scalar(@$array);
+    return $average;
+}
+
+sub _get_max {
+    my $self = shift;
+    my $array = shift;
+    my @sorted = sort {$b <=> $a} @$array; 
+    my $max = $sorted[0];
+    return $max;
+}
+
+sub _get_min {
+    my $self = shift;
+    my $array = shift;
+    my @sorted = sort {$a <=> $b} @$array; 
+    my $min = $sorted[0];
+    return $min;
+}
+
+sub _get_mode {
+    my $self = shift;
+    my $array = shift;
+    my %count;
+    my @modes;
+    map{ $count{$_}++ } @$array;
+    my @values;
+    my $top=0;
+    for my $k ( sort {$count{$b} <=> $count{$a}} keys %count ) {
+        #first element has highest count
+        if ($count{$k} >= $top) {
+            $top = $count{$k};
+            push @modes, $k;
+        }
+    }
+    return \@modes;
+}
+
+sub _get_median {
+    my $self = shift;
+    my $median = sum( ( sort { $a <=> $b } @_ )[ int( $#_/2 ), ceil( $#_/2 ) ] )/2;
+
+    return $median;
+}
 
 1;

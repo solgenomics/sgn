@@ -50,4 +50,128 @@ $trial_id
   	</p>
 </div>
 
+<div class="modal fade" id="generate_plot_pheno_modal" name="generate_plot_pheno_modal" tabindex="-1" role="dialog" aria-labelledby="generatePlotPhenoDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="generatePlotPhenoDialog">Generate Plot Phenotypes from Plant Phenotypes</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-9">
 
+                    <form class="form-horizontal" role="form" method="post" id="generate_plot_pheno_dialog_form" name="generate_plot_pheno_dialog_form">
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Trait: </label>
+                            <div class="col-sm-9" >
+                                <div id="generate_plot_pheno_trait_select_dropdown">
+                                    [No Plants Phenotyped]
+                                    <!--ajax populated -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Method: </label>
+                            <div class="col-sm-9" >
+                                <select id="generate_plot_pheno_method_select" class="form-control">
+                                    <option value="arithmetic_mean">Arithmetic Mean (Average)</option>
+                                    <option value="mode">Mode</option>
+                                    <option value="maximum">Maximum</option>
+                                    <option value="minimum">Minimum</option>
+                                    <option value="median">Median</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Rounding: </label>
+                            <div class="col-sm-9" >
+                                <select id="generate_plot_pheno_rounding_select" class="form-control">
+                                    <option value="no_rounding">No rounding</option>
+                                    <option value="round_up">Round up to nearest integer</option>
+                                    <option value="round_down">Round down to nearest integer</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </form><br/>
+                </div>
+                <div class="col-sm-3">
+                    <div id="generate_plot_pheno_trait_select_definition">
+                        <!--ajax populated -->
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="generate_plot_pheno_calc_submit" id="generate_plot_pheno_calc_submit" title="Calculate">View Calculation (Does Not Save)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#generate_plot_pheno_link').click( function() {
+        jQuery('#generate_plot_pheno_modal').modal('show');
+    });
+
+    jQuery('#compute_derived_traits_onswitch').click( function() {
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type=plant',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                //console.log(response);
+                jQuery("#working_modal").modal("hide");
+                if (response.traits_assayed[0][0]) {
+                    var traits_assayed_html = "<select class='form-control' id='generate_plot_pheno_trait_select' onchange='generate_plot_pheno_trait_change(this.value)'>";
+                    for (i=0; i<response.traits_assayed[0].length; i++) {
+                        traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
+                    }
+                    traits_assayed_html = traits_assayed_html +"</select>";
+
+                    jQuery("#generate_plot_pheno_trait_select_dropdown").html(traits_assayed_html);
+
+                    jQuery('#generate_plot_pheno_trait_select_definition').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+"/view'>Definition</a>");
+                }
+            }
+        });
+    });
+    
+    jQuery('#generate_plot_pheno_calc_submit').click( function() {
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/generate_plot_phenotypes',
+            type: 'POST',
+            data: {
+                'trial_id':<% $trial_id %>,
+                'trait_id':jQuery('#generate_plot_pheno_trait_select').val(),
+                'method':jQuery('#generate_plot_pheno_method_select').val(),
+                'rounding':jQuery('#generate_plot_pheno_rounding_select').val()
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+            }
+        });
+    });
+
+});
+
+function generate_plot_pheno_trait_change(trait_id) {
+    jQuery('#generate_plot_pheno_trait_select_definition').html("<a href='/cvterm/"+trait_id+"/view'>Definition</a>");
+}
+
+</script>

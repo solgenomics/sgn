@@ -405,6 +405,10 @@ function trial_detail_page_setup_dialogs() {
         jQuery('#trial_design_view_layout').dialog("open");
     });
 
+    jQuery('#generate_plot_pheno_link').click( function() {
+        
+    });
+
     jQuery('#compute_derived_trait_link').click( function () {
 	jQuery('#compute_derived_trait_dialog').dialog("open");
 	jQuery.ajax( {
