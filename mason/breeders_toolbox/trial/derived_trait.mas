@@ -175,9 +175,9 @@ jQuery(document).ready(function () {
             },
             success: function(response){
                 console.log(response);
-                var html = '<hr><table class="table table-hover"><thead><tr><th>Method</th><th>Plant Values</th><th>Calculation Output</th><th>Value to Store</th><th>Notes</th></tr></thead><tbody>';
+                var html = '<hr><h5>Trait: '+response.trait_name+'</h5><h5>Method: '+response.method+'</h5><h5>Rounding: '+response.rounding+'</h5><table class="table table-hover"><thead><tr><th>Plot</th><th>Plant Values</th><th>Calculation Output</th><th>Value to Store</th><th>Notes</th></tr></thead><tbody>';
                 for (var i=0; i<response.info.length; i++) {
-                    html = html + '<tr><td>'+response.info[i].method+'</td><td>'+response.info[i].plant_values+'</td><td>'+response.info[i].output+'</td><td>'+response.info[i].value_to_store+'</td><td>'+response.info[i].notes+'</td></tr>';
+                    html = html + '<tr><td>'+response.info[i].plot_name+'</td><td>'+response.info[i].plant_values+'</td><td>'+response.info[i].output+'</td><td>'+response.info[i].value_to_store+'</td><td>'+response.info[i].notes+'</td></tr>';
                 }
                 html = html +'</tbody></table>';
                 jQuery('#generate_plot_pheno_preview').empty().html(html);

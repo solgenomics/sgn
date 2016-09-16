@@ -313,7 +313,7 @@ sub generate_plot_phenotypes : Path('/ajax/breeders/trial/generate_plot_phenotyp
         my %info;
         my $plot_name = $schema->resultset("Stock::Stock")->find({stock_id=>$plot_id})->uniquename();
         push @plots, $plot_name;
-        $info{'method'} = $method;
+        $info{'plot_name'} = $plot_name;
         $info{'plant_values'} = encode_json($plot_plant_values{$plot_id});
         if ($method eq 'arithmetic_mean') {
             my $average = $self->_get_mean($plot_plant_values{$plot_id});
@@ -366,7 +366,7 @@ sub generate_plot_phenotypes : Path('/ajax/breeders/trial/generate_plot_phenotyp
     }
     #print STDERR Dumper \%store_hash;
     #print STDERR Dumper \@return;
-    $c->stash->{rest} = {success => 1, info=>\@return, store_plots=>encode_json(\@plots), store_traits=>encode_json(\@traits), store_data=>encode_json(\%store_hash)};
+    $c->stash->{rest} = {success => 1, info=>\@return, method=>$method, trait_name=>$trait_name, rounding=>$rounding, store_plots=>encode_json(\@plots), store_traits=>encode_json(\@traits), store_data=>encode_json(\%store_hash)};
 }
 
 
