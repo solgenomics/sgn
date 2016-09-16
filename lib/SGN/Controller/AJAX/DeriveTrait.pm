@@ -362,7 +362,6 @@ sub generate_plot_phenotypes : Path('/ajax/breeders/trial/generate_plot_phenotyp
         }
 
         $store_hash{$plot_name}->{$trait_name} = [$info{'value_to_store'}, ''];
-        $store_hash{$plot_name}->{$trait_name} = [$info{'value_to_store'}, ''];
         push @return, \%info;
     }
     #print STDERR Dumper \%store_hash;
