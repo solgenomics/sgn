@@ -15,41 +15,35 @@ use Data::Dumper;
 
 my $f = SGN::Test::Fixture->new();
 
-my $c = SimulateC->new( { dbh => $f->dbh(), 
-			  bcs_schema => $f->bcs_schema(), 
-			  metadata_schema => $f->metadata_schema(),
-			  phenome_schema => $f->phenome_schema(),
-			  sp_person_id => 41 });
-
 #######################################
 #Find out table counts before adding anything, so that changes can be compared
 
-my $phenotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($c->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
-my $experiment = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id});
+my $phenotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+my $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id});
 my $pre_experiment_count = $experiment->count();
 
-my $phenotype_rs = $c->bcs_schema->resultset('Phenotype::Phenotype')->search({});
+my $phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 my $pre_phenotype_count = $phenotype_rs->count();
 
-my $exp_prop_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
+my $exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
 my $pre_exp_prop_count = $exp_prop_rs->count();
 
-my $exp_stock_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
+my $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 my $pre_exp_stock_count = $exp_stock_rs->count();
 
-my $exp_proj_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
+my $exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 my $pre_exp_proj_count = $exp_proj_rs->count();
 
-my $exp_pheno_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
+my $exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $pre_exp_pheno_count = $exp_pheno_rs->count();
 
-my $md_rs = $c->metadata_schema->resultset('MdMetadata')->search({});
+my $md_rs = $f->metadata_schema->resultset('MdMetadata')->search({});
 my $pre_md_count = $md_rs->count();
 
-my $md_files_rs = $c->metadata_schema->resultset('MdFiles')->search({});
+my $md_files_rs = $f->metadata_schema->resultset('MdFiles')->search({});
 my $pre_md_files_count = $md_files_rs->count();
 
-my $exp_md_files_rs = $c->phenome_schema->resultset('NdExperimentMdFiles')->search({});
+my $exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search({});
 my $pre_exp_md_files_count = $exp_md_files_rs->count();
 
 
@@ -389,7 +383,7 @@ my @traits = @{$parsed_file->{'traits'}};
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 my $size = scalar(@plots) * scalar(@traits);
-my $stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
+my $stored_phenotype_error_msg = $store_phenotypes->store($f,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
 ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -426,55 +420,55 @@ is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70773 from phenotyping spreadsheet upload' );
 
 
-$experiment = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id});
+$experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id});
 my $post1_experiment_count = $experiment->count();
 my $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
 ok($post1_experiment_diff == 60, "Check num rows in NdExperiment table after addition of phenotyping spreadsheet upload");
 
-$phenotype_rs = $c->bcs_schema->resultset('Phenotype::Phenotype')->search({});
+$phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 my $post1_phenotype_count = $phenotype_rs->count();
 my $post1_phenotype_diff = $post1_phenotype_count - $pre_phenotype_count;
 print STDERR "Phenotype count: ".$post1_phenotype_diff."\n";
 ok($post1_phenotype_diff == 60, "Check num rows in Phenotype table after addition of phenotyping spreadsheet upload");
 
-$exp_prop_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
+$exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
 my $post1_exp_prop_count = $exp_prop_rs->count();
 my $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
 ok($post1_exp_prop_diff == 120, "Check num rows in Experimentprop table after addition of phenotyping spreadsheet upload");
 
-$exp_proj_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
+$exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 my $post1_exp_proj_count = $exp_proj_rs->count();
 my $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
 ok($post1_exp_proj_diff == 60, "Check num rows in NdExperimentproject table after addition of phenotyping spreadsheet upload");
 
-$exp_stock_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
+$exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 my $post1_exp_stock_count = $exp_stock_rs->count();
 my $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
 ok($post1_exp_stock_diff == 60, "Check num rows in NdExperimentstock table after addition of phenotyping spreadsheet upload");
 
-$exp_pheno_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
+$exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $post1_exp_pheno_count = $exp_pheno_rs->count();
 my $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
 ok($post1_exp_pheno_diff == 60, "Check num rows in NdExperimentphenotype table after addition of phenotyping spreadsheet upload");
 
-$md_rs = $c->metadata_schema->resultset('MdMetadata')->search({});
+$md_rs = $f->metadata_schema->resultset('MdMetadata')->search({});
 my $post1_md_count = $md_rs->count();
 my $post1_md_diff = $post1_md_count - $pre_md_count;
 print STDERR "MdMetadata count: ".$post1_md_diff."\n";
 ok($post1_md_diff == 1, "Check num rows in MdMetadata table after addition of phenotyping spreadsheet upload");
 
-$md_files_rs = $c->metadata_schema->resultset('MdFiles')->search({});
+$md_files_rs = $f->metadata_schema->resultset('MdFiles')->search({});
 my $post1_md_files_count = $md_files_rs->count();
 my $post1_md_files_diff = $post1_md_files_count - $pre_md_files_count;
 print STDERR "MdFiles count: ".$post1_md_files_diff."\n";
 ok($post1_md_files_diff == 1, "Check num rows in MdFiles table after addition of phenotyping spreadsheet upload");
 
-$exp_md_files_rs = $c->phenome_schema->resultset('NdExperimentMdFiles')->search({});
+$exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search({});
 my $post1_exp_md_files_count = $exp_md_files_rs->count();
 my $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
@@ -503,7 +497,7 @@ my @plots = @{$parsed_file->{'plots'}};
 my @traits = @{$parsed_file->{'traits'}};
 
 $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
-$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
+$stored_phenotype_error_msg = $store_phenotypes->store($f,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
 ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
 my $traits_assayed  = $tn->get_traits_assayed();
@@ -537,55 +531,55 @@ is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70773 from phenotyping spreadsheet upload' );
 
 
-$experiment = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id});
+$experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id});
 my $post2_experiment_count = $experiment->count();
 my $post2_experiment_diff = $post2_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post2_experiment_diff."\n";
 ok($post2_experiment_diff == 120, "Check num rows in NdExperiment table after second addition of phenotyping spreadsheet upload");
 
-$phenotype_rs = $c->bcs_schema->resultset('Phenotype::Phenotype')->search({});
+$phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 my $post2_phenotype_count = $phenotype_rs->count();
 my $post2_phenotype_diff = $post2_phenotype_count - $pre_phenotype_count;
 print STDERR "Phenotype count: ".$post2_phenotype_diff."\n";
 ok($post2_phenotype_diff == 120, "Check num rows in Phenotype table after second addition of phenotyping spreadsheet upload");
 
-$exp_prop_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
+$exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
 my $post2_exp_prop_count = $exp_prop_rs->count();
 my $post2_exp_prop_diff = $post2_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post2_exp_prop_diff."\n";
 ok($post2_exp_prop_diff == 240, "Check num rows in Experimentprop table after second addition of phenotyping spreadsheet upload");
 
-$exp_proj_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
+$exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 my $post2_exp_proj_count = $exp_proj_rs->count();
 my $post2_exp_proj_diff = $post2_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post2_exp_proj_diff."\n";
 ok($post2_exp_proj_diff == 120, "Check num rows in NdExperimentproject table after second addition of phenotyping spreadsheet upload");
 
-$exp_stock_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
+$exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 my $post2_exp_stock_count = $exp_stock_rs->count();
 my $post2_exp_stock_diff = $post2_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post2_exp_stock_diff."\n";
 ok($post2_exp_stock_diff == 120, "Check num rows in NdExperimentstock table after second addition of phenotyping spreadsheet upload");
 
-$exp_pheno_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
+$exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $post2_exp_pheno_count = $exp_pheno_rs->count();
 my $post2_exp_pheno_diff = $post2_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post2_exp_pheno_diff."\n";
 ok($post2_exp_pheno_diff == 120, "Check num rows in NdExperimentphenotype table after second addition of phenotyping spreadsheet upload");
 
-$md_rs = $c->metadata_schema->resultset('MdMetadata')->search({});
+$md_rs = $f->metadata_schema->resultset('MdMetadata')->search({});
 my $post2_md_count = $md_rs->count();
 my $post2_md_diff = $post2_md_count - $pre_md_count;
 print STDERR "MdMetadata count: ".$post2_md_diff."\n";
 ok($post2_md_diff == 2, "Check num rows in MdMetadata table after second addition of phenotyping spreadsheet upload");
 
-$md_files_rs = $c->metadata_schema->resultset('MdFiles')->search({});
+$md_files_rs = $f->metadata_schema->resultset('MdFiles')->search({});
 my $post2_md_files_count = $md_files_rs->count();
 my $post2_md_files_diff = $post2_md_files_count - $pre_md_files_count;
 print STDERR "MdFiles count: ".$post2_md_files_diff."\n";
 ok($post2_md_files_diff == 2, "Check num rows in MdFiles table after second addition of phenotyping spreadsheet upload");
 
-$exp_md_files_rs = $c->phenome_schema->resultset('NdExperimentMdFiles')->search({});
+$exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search({});
 my $post2_exp_md_files_count = $exp_md_files_rs->count();
 my $post2_exp_md_files_diff = $post2_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post2_exp_md_files_diff."\n";
@@ -621,6 +615,166 @@ ok($parsed_file, "Check if parse parse fieldbook works");
 #print STDERR Dumper $parsed_file;
 
 is_deeply($parsed_file, {
+          'data' => {
+                      'test_trial26' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '0',
+                                                                      '2016-01-07 12:08:49-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '',
+                                                                               '2016-01-07 12:08:49-0500'
+                                                                             ]
+                                        },
+                      'test_trial21' => {
+                                          'fieldbook_image|CO:0010472' => [
+                                                                            '/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial21_2016-09-12-11-15-12.jpg',
+                                                                            '2016-01-07 12:10:24-0500'
+                                                                          ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '42',
+                                                                               '2016-01-07 12:08:24-0500'
+                                                                             ],
+                                          'dry yield|CO:0000014' => [
+                                                                      '42',
+                                                                      '2016-01-07 12:08:24-0500'
+                                                                    ]
+                                        },
+                      'test_trial25' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '25',
+                                                                      '2016-01-07 12:08:48-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '25',
+                                                                               '2016-01-07 12:08:48-0500'
+                                                                             ]
+                                        },
+                      'test_trial28' => {
+                                          'dry matter content|CO:0000092' => [
+                                                                               '41',
+                                                                               '2016-01-07 12:08:53-0500'
+                                                                             ],
+                                          'dry yield|CO:0000014' => [
+                                                                      '41',
+                                                                      '2016-01-07 12:08:53-0500'
+                                                                    ]
+                                        },
+                      'test_trial211' => {
+                                           'dry matter content|CO:0000092' => [
+                                                                                '13',
+                                                                                '2016-01-07 12:08:58-0500'
+                                                                              ],
+                                           'dry yield|CO:0000014' => [
+                                                                       '13',
+                                                                       '2016-01-07 12:08:58-0500'
+                                                                     ]
+                                         },
+                      'test_trial24' => {
+                                          'dry matter content|CO:0000092' => [
+                                                                               '14',
+                                                                               '2016-01-07 12:08:46-0500'
+                                                                             ],
+                                          'dry yield|CO:0000014' => [
+                                                                      '14',
+                                                                      '2016-01-07 12:08:46-0500'
+                                                                    ]
+                                        },
+                      'test_trial212' => {
+                                           'dry yield|CO:0000014' => [
+                                                                       '42',
+                                                                       '2016-01-07 12:09:02-0500'
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '42',
+                                                                                '2016-01-07 12:09:02-0500'
+                                                                              ]
+                                         },
+                      'test_trial27' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '0',
+                                                                      '2016-01-07 12:08:51-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '52',
+                                                                               '2016-01-07 12:08:51-0500'
+                                                                             ]
+                                        },
+                      'test_trial210' => {
+                                           'dry yield|CO:0000014' => [
+                                                                       '12',
+                                                                       '2016-01-07 12:08:56-0500'
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '12',
+                                                                                '2016-01-07 12:08:56-0500'
+                                                                              ]
+                                         },
+                      'test_trial22' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '45',
+                                                                      '2016-01-07 12:08:26-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '45',
+                                                                               '2016-01-07 12:08:26-0500'
+                                                                             ],
+                                          'fieldbook_image|CO:0010472' => [
+                                                                            '/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial22_2016-09-12-11-15-26.jpg',
+                                                                            '2016-01-07 12:10:25-0500'
+                                                                          ]
+                                        },
+                      'test_trial213' => {
+                                           'dry yield|CO:0000014' => [
+                                                                       '35',
+                                                                       '2016-01-07 12:09:04-0500'
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '35',
+                                                                                '2016-01-07 12:09:04-0500'
+                                                                              ]
+                                         },
+                      'test_trial215' => {
+                                           'dry matter content|CO:0000092' => [
+                                                                                '31',
+                                                                                '2016-01-07 12:09:07-0500'
+                                                                              ],
+                                           'dry yield|CO:0000014' => [
+                                                                       '31',
+                                                                       '2016-01-07 12:09:07-0500'
+                                                                     ]
+                                         },
+                      'test_trial23' => {
+                                          'dry matter content|CO:0000092' => [
+                                                                               '41',
+                                                                               '2016-01-07 12:08:27-0500'
+                                                                             ],
+                                          'dry yield|CO:0000014' => [
+                                                                      '41',
+                                                                      '2016-01-07 12:08:27-0500'
+                                                                    ]
+                                        },
+                      'test_trial29' => {
+                                          'dry yield|CO:0000014' => [
+                                                                      '24',
+                                                                      '2016-01-07 12:08:55-0500'
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '',
+                                                                               '2016-01-07 12:08:55-0500'
+                                                                             ]
+                                        },
+                      'test_trial214' => {
+                                           'dry yield|CO:0000014' => [
+                                                                       '32',
+                                                                       '2016-01-07 12:09:05-0500'
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '32',
+                                                                                '2016-01-07 12:09:05-0500'
+                                                                              ]
+                                         }
+                    },
           'plots' => [
                        'test_trial21',
                        'test_trial210',
@@ -638,161 +792,10 @@ is_deeply($parsed_file, {
                        'test_trial28',
                        'test_trial29'
                      ],
-          'data' => {
-                      'test_trial22' => {
-                                          'dry yield|CO:0000014' => [
-                                                                      '45',
-                                                                      '2016-01-07 12:08:26-0500'
-                                                                    ],
-                                          'dry matter content|CO:0000092' => [
-                                                                               '45',
-                                                                               '2016-01-07 12:08:26-0500'
-                                                                             ]
-                                        },
-                      'test_trial27' => {
-                                          'dry yield|CO:0000014' => [
-                                                                      '0',
-                                                                      '2016-01-07 12:08:51-0500'
-                                                                    ],
-                                          'dry matter content|CO:0000092' => [
-                                                                               '52',
-                                                                               '2016-01-07 12:08:51-0500'
-                                                                             ]
-                                        },
-                      'test_trial214' => {
-                                           'dry yield|CO:0000014' => [
-                                                                       '32',
-                                                                       '2016-01-07 12:09:05-0500'
-                                                                     ],
-                                           'dry matter content|CO:0000092' => [
-                                                                                '32',
-                                                                                '2016-01-07 12:09:05-0500'
-                                                                              ]
-                                         },
-                      'test_trial21' => {
-                                          'dry yield|CO:0000014' => [
-                                                                      '42',
-                                                                      '2016-01-07 12:08:24-0500'
-                                                                    ],
-                                          'dry matter content|CO:0000092' => [
-                                                                               '42',
-                                                                               '2016-01-07 12:08:24-0500'
-                                                                             ]
-                                        },
-                      'test_trial28' => {
-                                          'dry matter content|CO:0000092' => [
-                                                                               '41',
-                                                                               '2016-01-07 12:08:53-0500'
-                                                                             ],
-                                          'dry yield|CO:0000014' => [
-                                                                      '41',
-                                                                      '2016-01-07 12:08:53-0500'
-                                                                    ]
-                                        },
-                      'test_trial23' => {
-                                          'dry yield|CO:0000014' => [
-                                                                      '41',
-                                                                      '2016-01-07 12:08:27-0500'
-                                                                    ],
-                                          'dry matter content|CO:0000092' => [
-                                                                               '41',
-                                                                               '2016-01-07 12:08:27-0500'
-                                                                             ]
-                                        },
-                      'test_trial215' => {
-                                           'dry matter content|CO:0000092' => [
-                                                                                '31',
-                                                                                '2016-01-07 12:09:07-0500'
-                                                                              ],
-                                           'dry yield|CO:0000014' => [
-                                                                       '31',
-                                                                       '2016-01-07 12:09:07-0500'
-                                                                     ]
-                                         },
-                      'test_trial24' => {
-                                          'dry yield|CO:0000014' => [
-                                                                      '14',
-                                                                      '2016-01-07 12:08:46-0500'
-                                                                    ],
-                                          'dry matter content|CO:0000092' => [
-                                                                               '14',
-                                                                               '2016-01-07 12:08:46-0500'
-                                                                             ]
-                                        },
-                      'test_trial213' => {
-                                           'dry yield|CO:0000014' => [
-                                                                       '35',
-                                                                       '2016-01-07 12:09:04-0500'
-                                                                     ],
-                                           'dry matter content|CO:0000092' => [
-                                                                                '35',
-                                                                                '2016-01-07 12:09:04-0500'
-                                                                              ]
-                                         },
-                      'test_trial212' => {
-                                           'dry yield|CO:0000014' => [
-                                                                       '42',
-                                                                       '2016-01-07 12:09:02-0500'
-                                                                     ],
-                                           'dry matter content|CO:0000092' => [
-                                                                                '42',
-                                                                                '2016-01-07 12:09:02-0500'
-                                                                              ]
-                                         },
-                      'test_trial210' => {
-                                           'dry yield|CO:0000014' => [
-                                                                       '12',
-                                                                       '2016-01-07 12:08:56-0500'
-                                                                     ],
-                                           'dry matter content|CO:0000092' => [
-                                                                                '12',
-                                                                                '2016-01-07 12:08:56-0500'
-                                                                              ]
-                                         },
-                      'test_trial25' => {
-                                          'dry yield|CO:0000014' => [
-                                                                      '25',
-                                                                      '2016-01-07 12:08:48-0500'
-                                                                    ],
-                                          'dry matter content|CO:0000092' => [
-                                                                               '25',
-                                                                               '2016-01-07 12:08:48-0500'
-                                                                             ]
-                                        },
-                      'test_trial211' => {
-                                           'dry matter content|CO:0000092' => [
-                                                                                '13',
-                                                                                '2016-01-07 12:08:58-0500'
-                                                                              ],
-                                           'dry yield|CO:0000014' => [
-                                                                       '13',
-                                                                       '2016-01-07 12:08:58-0500'
-                                                                     ]
-                                         },
-                      'test_trial29' => {
-                                          'dry matter content|CO:0000092' => [
-                                                                               '',
-                                                                               '2016-01-07 12:08:55-0500'
-                                                                             ],
-                                          'dry yield|CO:0000014' => [
-                                                                      '24',
-                                                                      '2016-01-07 12:08:55-0500'
-                                                                    ]
-                                        },
-                      'test_trial26' => {
-                                          'dry matter content|CO:0000092' => [
-                                                                               '',
-                                                                               '2016-01-07 12:08:49-0500'
-                                                                             ],
-                                          'dry yield|CO:0000014' => [
-                                                                      '0',
-                                                                      '2016-01-07 12:08:49-0500'
-                                                                    ]
-                                        }
-                    },
           'traits' => [
                         'dry matter content|CO:0000092',
-                        'dry yield|CO:0000014'
+                        'dry yield|CO:0000014',
+                        'fieldbook_image|CO:0010472'
                       ]
         }, "Check parse fieldbook");
 
@@ -807,7 +810,7 @@ $phenotype_metadata{'date'}="2016-01-16_03:15:26";
 
 $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 $size = scalar(@plots) * scalar(@traits);
-$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
+$stored_phenotype_error_msg = $store_phenotypes->store($f,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots', 0, 't/data/fieldbook/photos.zip');
 ok(!$stored_phenotype_error_msg, "check that store fieldbook works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -832,59 +835,59 @@ my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70741 from phenotyping spreadsheet upload' );
 
 
-$experiment = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id});
+$experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id});
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 148, "Check num rows in NdExperiment table after addition of fieldbook upload");
+ok($post1_experiment_diff == 150, "Check num rows in NdExperiment table after addition of fieldbook upload");
 
-$phenotype_rs = $c->bcs_schema->resultset('Phenotype::Phenotype')->search({});
+$phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 $post1_phenotype_count = $phenotype_rs->count();
 $post1_phenotype_diff = $post1_phenotype_count - $pre_phenotype_count;
 print STDERR "Phenotype count: ".$post1_phenotype_diff."\n";
-ok($post1_phenotype_diff == 148, "Check num rows in Phenotype table after addition of fieldbook upload");
+ok($post1_phenotype_diff == 150, "Check num rows in Phenotype table after addition of fieldbook upload");
 
-$exp_prop_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
+$exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 296, "Check num rows in Experimentprop table after addition of fieldbook upload");
+ok($post1_exp_prop_diff == 300, "Check num rows in Experimentprop table after addition of fieldbook upload");
 
-$exp_proj_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
+$exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 148, "Check num rows in NdExperimentproject table after addition of fieldbook upload");
+ok($post1_exp_proj_diff == 150, "Check num rows in NdExperimentproject table after addition of fieldbook upload");
 
-$exp_stock_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
+$exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 148, "Check num rows in NdExperimentstock table after addition of fieldbook upload");
+ok($post1_exp_stock_diff == 150, "Check num rows in NdExperimentstock table after addition of fieldbook upload");
 
-$exp_pheno_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
+$exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $post1_exp_pheno_count = $exp_pheno_rs->count();
 my $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
-ok($post1_exp_pheno_diff == 148, "Check num rows in NdExperimentphenotype table after addition of fieldbook upload");
+ok($post1_exp_pheno_diff == 150, "Check num rows in NdExperimentphenotype table after addition of fieldbook upload");
 
-$md_rs = $c->metadata_schema->resultset('MdMetadata')->search({});
+$md_rs = $f->metadata_schema->resultset('MdMetadata')->search({});
 my $post1_md_count = $md_rs->count();
 my $post1_md_diff = $post1_md_count - $pre_md_count;
 print STDERR "MdMetadata count: ".$post1_md_diff."\n";
-ok($post1_md_diff == 3, "Check num rows in MdMetadata table after addition of fieldbook upload");
+ok($post1_md_diff == 5, "Check num rows in MdMetadata table after addition of fieldbook upload");
 
-$md_files_rs = $c->metadata_schema->resultset('MdFiles')->search({});
+$md_files_rs = $f->metadata_schema->resultset('MdFiles')->search({});
 my $post1_md_files_count = $md_files_rs->count();
 my $post1_md_files_diff = $post1_md_files_count - $pre_md_files_count;
 print STDERR "MdFiles count: ".$post1_md_files_diff."\n";
 ok($post1_md_files_diff == 3, "Check num rows in MdFiles table after addition of fieldbook upload");
 
-$exp_md_files_rs = $c->phenome_schema->resultset('NdExperimentMdFiles')->search({});
+$exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search({});
 my $post1_exp_md_files_count = $exp_md_files_rs->count();
 my $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 148, "Check num rows in NdExperimentMdFIles table after addition fieldbook upload");
+ok($post1_exp_md_files_diff == 150, "Check num rows in NdExperimentMdFIles table after addition fieldbook upload");
 
 
 
@@ -1225,7 +1228,7 @@ $phenotype_metadata{'date'}="2016-02-16_07:11:98";
 
 $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 $size = scalar(@plots) * scalar(@traits);
-$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
+$stored_phenotype_error_msg = $store_phenotypes->store($f,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
 ok(!$stored_phenotype_error_msg, "check that store fieldbook works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -1262,59 +1265,59 @@ is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70773 from phenotyping spreadsheet upload' );
 
 
-$experiment = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id});
+$experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id});
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 205, "Check num rows in NdExperiment table after addition of datacollector upload");
+ok($post1_experiment_diff == 207, "Check num rows in NdExperiment table after addition of datacollector upload");
 
-$phenotype_rs = $c->bcs_schema->resultset('Phenotype::Phenotype')->search({});
+$phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 $post1_phenotype_count = $phenotype_rs->count();
 $post1_phenotype_diff = $post1_phenotype_count - $pre_phenotype_count;
 print STDERR "Phenotype count: ".$post1_phenotype_diff."\n";
-ok($post1_phenotype_diff == 205, "Check num rows in Phenotype table after addition of datacollector upload");
+ok($post1_phenotype_diff == 207, "Check num rows in Phenotype table after addition of datacollector upload");
 
-$exp_prop_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
+$exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 410, "Check num rows in Experimentprop table after addition of datacollector upload");
+ok($post1_exp_prop_diff == 414, "Check num rows in Experimentprop table after addition of datacollector upload");
 
-$exp_proj_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
+$exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 205, "Check num rows in NdExperimentproject table after addition of datacollector upload");
+ok($post1_exp_proj_diff == 207, "Check num rows in NdExperimentproject table after addition of datacollector upload");
 
-$exp_stock_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
+$exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 205, "Check num rows in NdExperimentstock table after addition of datacollector upload");
+ok($post1_exp_stock_diff == 207, "Check num rows in NdExperimentstock table after addition of datacollector upload");
 
-$exp_pheno_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
+$exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 my $post1_exp_pheno_count = $exp_pheno_rs->count();
 my $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
-ok($post1_exp_pheno_diff == 205, "Check num rows in NdExperimentphenotype table after addition of datacollector upload");
+ok($post1_exp_pheno_diff == 207, "Check num rows in NdExperimentphenotype table after addition of datacollector upload");
 
-$md_rs = $c->metadata_schema->resultset('MdMetadata')->search({});
+$md_rs = $f->metadata_schema->resultset('MdMetadata')->search({});
 my $post1_md_count = $md_rs->count();
 my $post1_md_diff = $post1_md_count - $pre_md_count;
 print STDERR "MdMetadata count: ".$post1_md_diff."\n";
-ok($post1_md_diff == 4, "Check num rows in MdMetadata table after addition of datacollector upload");
+ok($post1_md_diff == 6, "Check num rows in MdMetadata table after addition of datacollector upload");
 
-$md_files_rs = $c->metadata_schema->resultset('MdFiles')->search({});
+$md_files_rs = $f->metadata_schema->resultset('MdFiles')->search({});
 my $post1_md_files_count = $md_files_rs->count();
 my $post1_md_files_diff = $post1_md_files_count - $pre_md_files_count;
 print STDERR "MdFiles count: ".$post1_md_files_diff."\n";
 ok($post1_md_files_diff == 4, "Check num rows in MdFiles table after addition of datacollector upload");
 
-$exp_md_files_rs = $c->phenome_schema->resultset('NdExperimentMdFiles')->search({});
+$exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search({});
 my $post1_exp_md_files_count = $exp_md_files_rs->count();
 my $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 205, "Check num rows in NdExperimentMdFIles table after addition datacollector upload");
+ok($post1_exp_md_files_diff == 207, "Check num rows in NdExperimentMdFIles table after addition datacollector upload");
 
 
 
@@ -1884,7 +1887,7 @@ $phenotype_metadata{'date'}="2016-02-16_05:55:55";
 
 $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 $size = scalar(@plots) * scalar(@traits);
-$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
+$stored_phenotype_error_msg = $store_phenotypes->store($f,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
 ok(!$stored_phenotype_error_msg, "check that store large pheno spreadsheet works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -1946,11 +1949,11 @@ is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits
 
 
 
-$experiment = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id}, {order_by => {-asc => 'nd_experiment_id'}});
+$experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id}, {order_by => {-asc => 'nd_experiment_id'}});
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 323, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
+ok($post1_experiment_diff == 325, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
 
 my @nd_experiment_table;
 my $nd_experiment_table_tail = $experiment->slice($post1_experiment_count-323, $post1_experiment_count);
@@ -1959,11 +1962,11 @@ while (my $rs = $nd_experiment_table_tail->next() ) {
 }
 #print STDERR Dumper \@nd_experiment_table;
 
-$phenotype_rs = $c->bcs_schema->resultset('Phenotype::Phenotype')->search({});
+$phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 $post1_phenotype_count = $phenotype_rs->count();
 $post1_phenotype_diff = $post1_phenotype_count - $pre_phenotype_count;
 print STDERR "Phenotype count: ".$post1_phenotype_diff."\n";
-ok($post1_phenotype_diff == 323, "Check num rows in Phenotype table after addition of large phenotyping spreadsheet upload");
+ok($post1_phenotype_diff == 325, "Check num rows in Phenotype table after addition of large phenotyping spreadsheet upload");
 
 my @pheno_table;
 my $pheno_table_tail = $phenotype_rs->slice($post1_phenotype_count-323, $post1_phenotype_count);
@@ -1972,11 +1975,11 @@ while (my $rs = $pheno_table_tail->next() ) {
 }
 #print STDERR Dumper \@pheno_table;
 
-$exp_prop_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
+$exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 646, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_prop_diff == 650, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
 
 my @exp_prop_table;
 my $exp_prop_table_tail = $exp_prop_rs->slice($post1_exp_prop_count-646, $post1_exp_prop_count);
@@ -1985,11 +1988,11 @@ while (my $rs = $exp_prop_table_tail->next() ) {
 }
 #print STDERR Dumper \@exp_prop_table;
 
-$exp_proj_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
+$exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 323, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_proj_diff == 325, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
 
 my @exp_proj_table;
 my $exp_proj_table_tail = $exp_proj_rs->slice($post1_exp_proj_count-323, $post1_exp_proj_count);
@@ -1998,11 +2001,11 @@ while (my $rs = $exp_proj_table_tail->next() ) {
 }
 #print STDERR Dumper \@exp_proj_table;
 
-$exp_stock_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
+$exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 323, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_stock_diff == 325, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
 
 my @exp_stock_table;
 my $exp_stock_table_tail = $exp_stock_rs->slice($post1_exp_stock_count-323, $post1_exp_stock_count);
@@ -2011,11 +2014,11 @@ while (my $rs = $exp_stock_table_tail->next() ) {
 }
 #print STDERR Dumper \@exp_stock_table;
 
-$exp_pheno_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
+$exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 $post1_exp_pheno_count = $exp_pheno_rs->count();
 $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
-ok($post1_exp_pheno_diff == 323, "Check num rows in NdExperimentphenotype table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_pheno_diff == 325, "Check num rows in NdExperimentphenotype table after addition of large phenotyping spreadsheet upload");
 
 my @exp_pheno_table;
 my $exp_pheno_table_tail = $exp_pheno_rs->slice($post1_exp_pheno_count-323, $post1_exp_pheno_count);
@@ -2024,11 +2027,11 @@ while (my $rs = $exp_pheno_table_tail->next() ) {
 }
 #print STDERR Dumper \@exp_pheno_table;
 
-$md_rs = $c->metadata_schema->resultset('MdMetadata')->search({});
+$md_rs = $f->metadata_schema->resultset('MdMetadata')->search({});
 $post1_md_count = $md_rs->count();
 $post1_md_diff = $post1_md_count - $pre_md_count;
 print STDERR "MdMetadata count: ".$post1_md_diff."\n";
-ok($post1_md_diff == 5, "Check num rows in MdMetadata table after addition of phenotyping spreadsheet upload");
+ok($post1_md_diff == 7, "Check num rows in MdMetadata table after addition of phenotyping spreadsheet upload");
 
 my @md_table;
 my $md_table_tail = $md_rs->slice($post1_md_count-5, $post1_md_count);
@@ -2037,7 +2040,7 @@ while (my $rs = $md_table_tail->next() ) {
 }
 #print STDERR Dumper \@md_table;
 
-$md_files_rs = $c->metadata_schema->resultset('MdFiles')->search({});
+$md_files_rs = $f->metadata_schema->resultset('MdFiles')->search({});
 $post1_md_files_count = $md_files_rs->count();
 $post1_md_files_diff = $post1_md_files_count - $pre_md_files_count;
 print STDERR "MdFiles count: ".$post1_md_files_diff."\n";
@@ -2050,11 +2053,11 @@ while (my $rs = $md_files_table_tail->next() ) {
 }
 #print STDERR Dumper \@md_files_table;
 
-$exp_md_files_rs = $c->phenome_schema->resultset('NdExperimentMdFiles')->search({});
+$exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search({});
 $post1_exp_md_files_count = $exp_md_files_rs->count();
 $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 323, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_md_files_diff == 325, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
 
 my @exp_md_files_table;
 my $exp_md_files_table_tail = $exp_md_files_rs->slice($post1_exp_md_files_count-324, $post1_exp_md_files_count-1);
@@ -2433,7 +2436,7 @@ $phenotype_metadata{'date'}="2016-02-16_05:15:21";
 
 $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 $size = scalar(@plots) * scalar(@traits);
-$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plants');
+$stored_phenotype_error_msg = $store_phenotypes->store($f,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plants');
 ok(!$stored_phenotype_error_msg, "check that store large pheno spreadsheet works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -2560,11 +2563,11 @@ is_deeply(\@pheno_for_trait_sorted, [
         ], "check pheno trait 70727 after plant upload.");
 
 
-$experiment = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id}, {order_by => {-asc => 'nd_experiment_id'}});
+$experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id}, {order_by => {-asc => 'nd_experiment_id'}});
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 381, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
+ok($post1_experiment_diff == 383, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
 
 my @nd_experiment_table;
 my $nd_experiment_table_tail = $experiment->slice($post1_experiment_count-323, $post1_experiment_count);
@@ -2573,11 +2576,11 @@ while (my $rs = $nd_experiment_table_tail->next() ) {
 }
 #print STDERR Dumper \@nd_experiment_table;
 
-$phenotype_rs = $c->bcs_schema->resultset('Phenotype::Phenotype')->search({});
+$phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 $post1_phenotype_count = $phenotype_rs->count();
 $post1_phenotype_diff = $post1_phenotype_count - $pre_phenotype_count;
 print STDERR "Phenotype count: ".$post1_phenotype_diff."\n";
-ok($post1_phenotype_diff == 381, "Check num rows in Phenotype table after addition of large phenotyping spreadsheet upload");
+ok($post1_phenotype_diff == 383, "Check num rows in Phenotype table after addition of large phenotyping spreadsheet upload");
 
 my @pheno_table;
 my $pheno_table_tail = $phenotype_rs->slice($post1_phenotype_count-323, $post1_phenotype_count);
@@ -2586,11 +2589,11 @@ while (my $rs = $pheno_table_tail->next() ) {
 }
 #print STDERR Dumper \@pheno_table;
 
-$exp_prop_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
+$exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 762, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_prop_diff == 766, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
 
 my @exp_prop_table;
 my $exp_prop_table_tail = $exp_prop_rs->slice($post1_exp_prop_count-646, $post1_exp_prop_count);
@@ -2599,11 +2602,11 @@ while (my $rs = $exp_prop_table_tail->next() ) {
 }
 #print STDERR Dumper \@exp_prop_table;
 
-$exp_proj_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
+$exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 381, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_proj_diff == 383, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
 
 my @exp_proj_table;
 my $exp_proj_table_tail = $exp_proj_rs->slice($post1_exp_proj_count-323, $post1_exp_proj_count);
@@ -2612,11 +2615,11 @@ while (my $rs = $exp_proj_table_tail->next() ) {
 }
 #print STDERR Dumper \@exp_proj_table;
 
-$exp_stock_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
+$exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 381, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_stock_diff == 383, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
 
 my @exp_stock_table;
 my $exp_stock_table_tail = $exp_stock_rs->slice($post1_exp_stock_count-323, $post1_exp_stock_count);
@@ -2625,11 +2628,11 @@ while (my $rs = $exp_stock_table_tail->next() ) {
 }
 #print STDERR Dumper \@exp_stock_table;
 
-$exp_pheno_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
+$exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 $post1_exp_pheno_count = $exp_pheno_rs->count();
 $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
-ok($post1_exp_pheno_diff == 381, "Check num rows in NdExperimentphenotype table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_pheno_diff == 383, "Check num rows in NdExperimentphenotype table after addition of large phenotyping spreadsheet upload");
 
 my @exp_pheno_table;
 my $exp_pheno_table_tail = $exp_pheno_rs->slice($post1_exp_pheno_count-323, $post1_exp_pheno_count);
@@ -2638,11 +2641,11 @@ while (my $rs = $exp_pheno_table_tail->next() ) {
 }
 #print STDERR Dumper \@exp_pheno_table;
 
-$md_rs = $c->metadata_schema->resultset('MdMetadata')->search({});
+$md_rs = $f->metadata_schema->resultset('MdMetadata')->search({});
 $post1_md_count = $md_rs->count();
 $post1_md_diff = $post1_md_count - $pre_md_count;
 print STDERR "MdMetadata count: ".$post1_md_diff."\n";
-ok($post1_md_diff == 6, "Check num rows in MdMetadata table after addition of phenotyping spreadsheet upload");
+ok($post1_md_diff == 8, "Check num rows in MdMetadata table after addition of phenotyping spreadsheet upload");
 
 my @md_table;
 my $md_table_tail = $md_rs->slice($post1_md_count-5, $post1_md_count);
@@ -2651,7 +2654,7 @@ while (my $rs = $md_table_tail->next() ) {
 }
 #print STDERR Dumper \@md_table;
 
-$md_files_rs = $c->metadata_schema->resultset('MdFiles')->search({});
+$md_files_rs = $f->metadata_schema->resultset('MdFiles')->search({});
 $post1_md_files_count = $md_files_rs->count();
 $post1_md_files_diff = $post1_md_files_count - $pre_md_files_count;
 print STDERR "MdFiles count: ".$post1_md_files_diff."\n";
@@ -2664,11 +2667,11 @@ while (my $rs = $md_files_table_tail->next() ) {
 }
 #print STDERR Dumper \@md_files_table;
 
-$exp_md_files_rs = $c->phenome_schema->resultset('NdExperimentMdFiles')->search({});
+$exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search({});
 $post1_exp_md_files_count = $exp_md_files_rs->count();
 $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 381, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_md_files_diff == 383, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
 
 my @exp_md_files_table;
 my $exp_md_files_table_tail = $exp_md_files_rs->slice($post1_exp_md_files_count-324, $post1_exp_md_files_count-1);
@@ -2769,7 +2772,7 @@ $phenotype_metadata{'date'}="2016-02-16_05:55:17";
 
 $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
 $size = scalar(@plots) * scalar(@traits);
-$stored_phenotype_error_msg = $store_phenotypes->store($c,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plants');
+$stored_phenotype_error_msg = $store_phenotypes->store($f,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plants');
 ok(!$stored_phenotype_error_msg, "check that store fieldbook plants works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -2780,11 +2783,11 @@ $traits_assayed  = $tn->get_traits_assayed();
 #print STDERR Dumper \@traits_assayed_sorted;
 is_deeply(\@traits_assayed_sorted, [[70666, 'Fresh root weight'], [70668, 'Harvest index variable'], [70681,'Top yield'], [ 70700, 'Sprouting proportion'], [70706,'Root number counting'],[70713,'Flower'],[  70727, 'Dry yield'  ], [70741,'Dry matter content percentage'  ], [ 70773, 'Fresh shoot weight measurement in kg' ] ], 'check traits assayed after plant upload' );
 
-$experiment = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id}, {order_by => {-asc => 'nd_experiment_id'}});
+$experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id}, {order_by => {-asc => 'nd_experiment_id'}});
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
 print STDERR "Experiment count: ".$post1_experiment_diff."\n";
-ok($post1_experiment_diff == 391, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
+ok($post1_experiment_diff == 393, "Check num rows in NdExperiment table after addition of large phenotyping spreadsheet upload");
 
 my @nd_experiment_table;
 my $nd_experiment_table_tail = $experiment->slice($post1_experiment_count-323, $post1_experiment_count);
@@ -2793,11 +2796,11 @@ while (my $rs = $nd_experiment_table_tail->next() ) {
 }
 #print STDERR Dumper \@nd_experiment_table;
 
-$phenotype_rs = $c->bcs_schema->resultset('Phenotype::Phenotype')->search({});
+$phenotype_rs = $f->bcs_schema->resultset('Phenotype::Phenotype')->search({});
 $post1_phenotype_count = $phenotype_rs->count();
 $post1_phenotype_diff = $post1_phenotype_count - $pre_phenotype_count;
 print STDERR "Phenotype count: ".$post1_phenotype_diff."\n";
-ok($post1_phenotype_diff == 391, "Check num rows in Phenotype table after addition of large phenotyping spreadsheet upload");
+ok($post1_phenotype_diff == 393, "Check num rows in Phenotype table after addition of large phenotyping spreadsheet upload");
 
 my @pheno_table;
 my $pheno_table_tail = $phenotype_rs->slice($post1_phenotype_count-323, $post1_phenotype_count);
@@ -2806,11 +2809,11 @@ while (my $rs = $pheno_table_tail->next() ) {
 }
 #print STDERR Dumper \@pheno_table;
 
-$exp_prop_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
+$exp_prop_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({});
 $post1_exp_prop_count = $exp_prop_rs->count();
 $post1_exp_prop_diff = $post1_exp_prop_count - $pre_exp_prop_count;
 print STDERR "Experimentprop count: ".$post1_exp_prop_diff."\n";
-ok($post1_exp_prop_diff == 782, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_prop_diff == 786, "Check num rows in Experimentprop table after addition of large phenotyping spreadsheet upload");
 
 my @exp_prop_table;
 my $exp_prop_table_tail = $exp_prop_rs->slice($post1_exp_prop_count-646, $post1_exp_prop_count);
@@ -2819,11 +2822,11 @@ while (my $rs = $exp_prop_table_tail->next() ) {
 }
 #print STDERR Dumper \@exp_prop_table;
 
-$exp_proj_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
+$exp_proj_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({});
 $post1_exp_proj_count = $exp_proj_rs->count();
 $post1_exp_proj_diff = $post1_exp_proj_count - $pre_exp_proj_count;
 print STDERR "Experimentproject count: ".$post1_exp_proj_diff."\n";
-ok($post1_exp_proj_diff == 391, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_proj_diff == 393, "Check num rows in NdExperimentproject table after addition of large phenotyping spreadsheet upload");
 
 my @exp_proj_table;
 my $exp_proj_table_tail = $exp_proj_rs->slice($post1_exp_proj_count-323, $post1_exp_proj_count);
@@ -2832,11 +2835,11 @@ while (my $rs = $exp_proj_table_tail->next() ) {
 }
 #print STDERR Dumper \@exp_proj_table;
 
-$exp_stock_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
+$exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({});
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 391, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_stock_diff == 393, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
 
 my @exp_stock_table;
 my $exp_stock_table_tail = $exp_stock_rs->slice($post1_exp_stock_count-323, $post1_exp_stock_count);
@@ -2845,11 +2848,11 @@ while (my $rs = $exp_stock_table_tail->next() ) {
 }
 #print STDERR Dumper \@exp_stock_table;
 
-$exp_pheno_rs = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
+$exp_pheno_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentPhenotype')->search({});
 $post1_exp_pheno_count = $exp_pheno_rs->count();
 $post1_exp_pheno_diff = $post1_exp_pheno_count - $pre_exp_pheno_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_pheno_diff."\n";
-ok($post1_exp_pheno_diff == 391, "Check num rows in NdExperimentphenotype table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_pheno_diff == 393, "Check num rows in NdExperimentphenotype table after addition of large phenotyping spreadsheet upload");
 
 my @exp_pheno_table;
 my $exp_pheno_table_tail = $exp_pheno_rs->slice($post1_exp_pheno_count-323, $post1_exp_pheno_count);
@@ -2858,11 +2861,11 @@ while (my $rs = $exp_pheno_table_tail->next() ) {
 }
 #print STDERR Dumper \@exp_pheno_table;
 
-$md_rs = $c->metadata_schema->resultset('MdMetadata')->search({});
+$md_rs = $f->metadata_schema->resultset('MdMetadata')->search({});
 $post1_md_count = $md_rs->count();
 $post1_md_diff = $post1_md_count - $pre_md_count;
 print STDERR "MdMetadata count: ".$post1_md_diff."\n";
-ok($post1_md_diff == 7, "Check num rows in MdMetadata table after addition of phenotyping spreadsheet upload");
+ok($post1_md_diff == 9, "Check num rows in MdMetadata table after addition of phenotyping spreadsheet upload");
 
 my @md_table;
 my $md_table_tail = $md_rs->slice($post1_md_count-5, $post1_md_count);
@@ -2871,7 +2874,7 @@ while (my $rs = $md_table_tail->next() ) {
 }
 #print STDERR Dumper \@md_table;
 
-$md_files_rs = $c->metadata_schema->resultset('MdFiles')->search({});
+$md_files_rs = $f->metadata_schema->resultset('MdFiles')->search({});
 $post1_md_files_count = $md_files_rs->count();
 $post1_md_files_diff = $post1_md_files_count - $pre_md_files_count;
 print STDERR "MdFiles count: ".$post1_md_files_diff."\n";
@@ -2884,11 +2887,11 @@ while (my $rs = $md_files_table_tail->next() ) {
 }
 #print STDERR Dumper \@md_files_table;
 
-$exp_md_files_rs = $c->phenome_schema->resultset('NdExperimentMdFiles')->search({});
+$exp_md_files_rs = $f->phenome_schema->resultset('NdExperimentMdFiles')->search({});
 $post1_exp_md_files_count = $exp_md_files_rs->count();
 $post1_exp_md_files_diff = $post1_exp_md_files_count - $pre_exp_md_files_count;
 print STDERR "Experimentphenotype count: ".$post1_exp_md_files_diff."\n";
-ok($post1_exp_md_files_diff == 391, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_md_files_diff == 393, "Check num rows in NdExperimentMdFIles table after addition of large phenotyping spreadsheet upload");
 
 my @exp_md_files_table;
 my $exp_md_files_table_tail = $exp_md_files_rs->slice($post1_exp_md_files_count-324, $post1_exp_md_files_count-1);

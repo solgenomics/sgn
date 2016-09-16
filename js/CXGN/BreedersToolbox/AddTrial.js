@@ -424,7 +424,6 @@ jQuery(document).ready(function ($) {
 	}
     });
 
-
     function save_experimental_design(design_json) {
         var list = new CXGN.List();
         var name = jQuery('#new_trial_name').val();
