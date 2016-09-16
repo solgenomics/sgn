@@ -51,7 +51,7 @@ $trial_id
 </div>
 
 <div class="modal fade" id="generate_plot_pheno_modal" name="generate_plot_pheno_modal" tabindex="-1" role="dialog" aria-labelledby="generatePlotPhenoDialog">
-  <div class="modal-dialog" role="document">
+  <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -90,9 +90,16 @@ $trial_id
                             <div class="col-sm-9" >
                                 <select id="generate_plot_pheno_rounding_select" class="form-control">
                                     <option value="no_rounding">No rounding</option>
-                                    <option value="round_up">Round up to nearest integer</option>
-                                    <option value="round_down">Round down to nearest integer</option>
+                                    <option value="round">Round to nearest integer</option>
+                                    <option value="round_up">Always round up to nearest integer</option>
+                                    <option value="round_down">Always round down to nearest integer</option>
                                 </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Overwrite Previous Plot Values for this Trait: </label>
+                            <div class="col-sm-9" >
+                                <input type='checkbox' id="generate_plot_pheno_overwrite" name="generate_plot_pheno_overwrite"/>
                             </div>
                         </div>
 
@@ -104,11 +111,14 @@ $trial_id
                     </div>
                 </div>
             </div>
+            <div id="generate_plot_pheno_preview">
+            </div>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary" name="generate_plot_pheno_calc_submit" id="generate_plot_pheno_calc_submit" title="Calculate">View Calculation (Does Not Save)</button>
+        <button disabled type="button" class="btn btn-primary" name="generate_plot_pheno_save" id="generate_plot_pheno_save" title="">Save</button>
       </div>
     </div>
   </div>
@@ -135,7 +145,7 @@ jQuery(document).ready(function () {
                 if (response.traits_assayed[0][0]) {
                     var traits_assayed_html = "<select class='form-control' id='generate_plot_pheno_trait_select' onchange='generate_plot_pheno_trait_change(this.value)'>";
                     for (i=0; i<response.traits_assayed[0].length; i++) {
-                        traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
+                        traits_assayed_html = traits_assayed_html + "<option value="+ encodeURI(response.traits_assayed[0][i][1]) + " >" + response.traits_assayed[0][i][1] + "</option>";
                     }
                     traits_assayed_html = traits_assayed_html +"</select>";
 
@@ -147,13 +157,16 @@ jQuery(document).ready(function () {
         });
     });
     
+    var generated_phenotypes_data;
+    var generated_plots_data;
+    var generated_traits_data;
     jQuery('#generate_plot_pheno_calc_submit').click( function() {
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/generate_plot_phenotypes',
             type: 'POST',
             data: {
                 'trial_id':<% $trial_id %>,
-                'trait_id':jQuery('#generate_plot_pheno_trait_select').val(),
+                'trait_name':jQuery('#generate_plot_pheno_trait_select').val(),
                 'method':jQuery('#generate_plot_pheno_method_select').val(),
                 'rounding':jQuery('#generate_plot_pheno_rounding_select').val()
             },
@@ -162,11 +175,43 @@ jQuery(document).ready(function () {
             },
             success: function(response){
                 console.log(response);
+                var html = '<hr><table class="table table-hover"><thead><tr><th>Method</th><th>Plant Values</th><th>Calculation Output</th><th>Value to Store</th><th>Notes</th></tr></thead><tbody>';
+                for (var i=0; i<response.info.length; i++) {
+                    html = html + '<tr><td>'+response.info[i].method+'</td><td>'+response.info[i].plant_values+'</td><td>'+response.info[i].output+'</td><td>'+response.info[i].value_to_store+'</td><td>'+response.info[i].notes+'</td></tr>';
+                }
+                html = html +'</tbody></table>';
+                jQuery('#generate_plot_pheno_preview').empty().html(html);
                 jQuery("#working_modal").modal("hide");
-
+                generated_phenotypes_data = response.store_data;
+                generated_plots_data = response.store_plots;
+                generated_traits_data = response.store_traits;
+                jQuery('#generate_plot_pheno_save').attr('disabled', false);
             }
         });
     });
+
+
+    jQuery('#generate_plot_pheno_save').click( function() {
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/store_generated_plot_phenotypes',
+            type: 'POST',
+            data: {
+                'overwrite_values':jQuery('#generate_plot_pheno_overwrite').val(),
+                'store_data':generated_phenotypes_data,
+                'store_plots':generated_plots_data,
+                'store_traits':generated_traits_data
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+                //alert('Successfully saved!');
+            }
+        });
+    });
+
 
 });
 

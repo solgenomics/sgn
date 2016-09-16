@@ -10,6 +10,7 @@ use DBIx::Class;
 use SGN::Model::Cvterm;
 use JSON;
 use POSIX;
+use URI::Encode qw(uri_encode uri_decode);
 
 BEGIN {extends 'Catalyst::Controller::REST'}
 
@@ -279,18 +280,17 @@ sub generate_plot_phenotypes : Path('/ajax/breeders/trial/generate_plot_phenotyp
     my $self = shift;
     my $c = shift;
     my $trial_id = $c->req->param('trial_id');
-    my $trait_id = $c->req->param('trait_id');
+    my $trait_name = uri_decode($c->req->param('trait_name'));
     my $method = $c->req->param('method');
     my $rounding = $c->req->param('rounding');
-    print STDERR "Trial: $trial_id\n";
-    print STDERR "Trait: $trait_id\n";
-    print STDERR "Method: $method\n";
-    print STDERR "Round: $rounding\n";
+    #print STDERR "Trial: $trial_id\n";
+    #print STDERR "Trait: $trait_name\n";
+    #print STDERR "Method: $method\n";
+    #print STDERR "Round: $rounding\n";
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    
+    my $trait_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
     my $plant_phenotypes_for_trait = $trial->get_stock_phenotypes_for_trait($trait_id, 'plant', 'plant_of', 'plot');
-    print STDERR Dumper $plant_phenotypes_for_trait;
 
     my %plot_plant_values;
     foreach (@$plant_phenotypes_for_trait) {
@@ -302,22 +302,27 @@ sub generate_plot_phenotypes : Path('/ajax/breeders/trial/generate_plot_phenotyp
         push @value_array, $_->[4];
         $plot_plant_values{$plot_id} = \@value_array;
     }
-    print STDERR Dumper \%plot_plant_values;
     
     my @return;
+    my %store_hash;
+    my @plots;
+    my @traits;
+    push @traits, $trait_name;
+
     foreach my $plot_id (keys %plot_plant_values) {
         my %info;
+        my $plot_name = $schema->resultset("Stock::Stock")->find({stock_id=>$plot_id})->uniquename();
+        push @plots, $plot_name;
         $info{'method'} = $method;
+        $info{'plant_values'} = encode_json($plot_plant_values{$plot_id});
         if ($method eq 'arithmetic_mean') {
             my $average = $self->_get_mean($plot_plant_values{$plot_id});
-            $info{'plant_values'} = $plot_plant_values{$plot_id};
             $info{'output'} = $average;
             $info{'value_to_store'} = $average;
             $info{'notes'} = '';
         }
         if ($method eq 'mode') {
             my $modes = $self->_get_mode($plot_plant_values{$plot_id});
-            $info{'plant_values'} = $plot_plant_values{$plot_id};
             $info{'output'} = encode_json($modes);
             if (scalar(@$modes > 1)) {
                 $info{'notes'} = 'More than one mode!';
@@ -329,30 +334,77 @@ sub generate_plot_phenotypes : Path('/ajax/breeders/trial/generate_plot_phenotyp
         }
         if ($method eq 'maximum') {
             my $maximum = $self->_get_max($plot_plant_values{$plot_id});
-            $info{'plant_values'} = $plot_plant_values{$plot_id};
             $info{'output'} = $maximum;
             $info{'value_to_store'} = $maximum;
             $info{'notes'} = '';
         }
         if ($method eq 'minimum') {
             my $minimum = $self->_get_min($plot_plant_values{$plot_id});
-            $info{'plant_values'} = $plot_plant_values{$plot_id};
             $info{'output'} = $minimum;
             $info{'value_to_store'} = $minimum;
             $info{'notes'} = '';
         }
         if ($method eq 'median') {
             my $median = $self->_get_median(@{$plot_plant_values{$plot_id}});
-            $info{'plant_values'} = $plot_plant_values{$plot_id};
             $info{'output'} = $median;
             $info{'value_to_store'} = $median;
             $info{'notes'} = '';
         }
+
+        if ($rounding eq 'round') {
+            $info{'value_to_store'} = ceil($info{'value_to_store'});
+        } elsif ($rounding eq 'round_up') {
+            my $n = $info{'value_to_store'};
+            my $ceiling = ($n == int $n) ? $n : int($n + 1);
+            $info{'value_to_store'} = $ceiling;
+        } elsif ($rounding eq 'round_down') {
+            $info{'value_to_store'} = floor($info{'value_to_store'});
+        }
+
+        $store_hash{$plot_name}->{$trait_name} = [$info{'value_to_store'}, ''];
+        $store_hash{$plot_name}->{$trait_name} = [$info{'value_to_store'}, ''];
         push @return, \%info;
     }
-    print STDERR Dumper \@return;
-    $c->stash->{rest} = {success => 1, info=>\@return};
+    #print STDERR Dumper \%store_hash;
+    #print STDERR Dumper \@return;
+    $c->stash->{rest} = {success => 1, info=>\@return, store_plots=>encode_json(\@plots), store_traits=>encode_json(\@traits), store_data=>encode_json(\%store_hash)};
 }
+
+
+
+sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated_plot_phenotypes') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my %parse_result;
+    my $data = decode_json($c->req->param('store_data'));
+    my $plots = decode_json($c->req->param('store_plots'));
+    my $traits = decode_json($c->req->param('store_traits'));
+    my $overwrite_values = $c->req->param('overwrite_values');
+    #print STDERR Dumper $data;
+    #print STDERR Dumper $plots;
+    #print STDERR Dumper $traits;
+    #print STDERR $overwrite_values;
+    
+    $parse_result{'data'} = $data;
+    $parse_result{'plots'} = $plots;
+    $parse_result{'traits'} = $traits;
+
+    my $size = scalar(@$plots) * scalar(@$traits);
+    my %phenotype_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    $phenotype_metadata{'archived_file'} = 'none';
+  	$phenotype_metadata{'archived_file_type'}="generated from plot from plant phenotypes";
+  	$phenotype_metadata{'operator'}=$c->user()->get_object()->get_sp_person_id();
+  	$phenotype_metadata{'date'}="$timestamp";
+
+    my $store_error = CXGN::Phenotypes::StorePhenotypes->store($c, $size, $plots, $traits, $data, \%phenotype_metadata, 'plot', $overwrite_values );
+    if ($store_error) {
+        $c->stash->{rest} = {error => $store_error}
+    }
+    $c->stash->{rest} = {success => 1};
+}
+
 
 sub _get_mean {
     my $self = shift;
