@@ -394,9 +394,9 @@ sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
     $phenotype_metadata{'archived_file'} = 'none';
-  	$phenotype_metadata{'archived_file_type'}="generated from plot from plant phenotypes";
-  	$phenotype_metadata{'operator'}=$c->user()->get_object()->get_sp_person_id();
-  	$phenotype_metadata{'date'}="$timestamp";
+    $phenotype_metadata{'archived_file_type'}="generated from plot from plant phenotypes";
+    $phenotype_metadata{'operator'}=$c->user()->get_object()->get_sp_person_id();
+    $phenotype_metadata{'date'}="$timestamp";
 
     my $store_error = CXGN::Phenotypes::StorePhenotypes->store($c, $size, $plots, $traits, $data, \%phenotype_metadata, 'plot', $overwrite_values );
     if ($store_error) {
