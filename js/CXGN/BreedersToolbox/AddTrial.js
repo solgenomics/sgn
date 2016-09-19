@@ -136,7 +136,10 @@ jQuery(document).ready(function ($) {
             control_list = JSON.stringify(list.getList(control_list_id));
 	}
 
-        var design_type = $('#select_design_method').val();
+  var design_type = $('#select_design_method').val();
+  if (design_type == "") {
+      var design_type = $('#select_multi-design_method').val();
+  }
 	var rep_count = $('#rep_count').val();
 	var block_size = $('#block_size').val();
 	var max_block_size = $('#max_block_size').val();
@@ -158,13 +161,14 @@ jQuery(document).ready(function ($) {
             return;
         }
 
-	$('#working_modal').modal("show");
-
         $.ajax({
             type: 'POST',
 	    timeout: 3000000,
             url: '/ajax/trial/generate_experimental_design',
 	    dataType: "json",
+      beforeSend: function () {
+        $('#working_modal').modal("show");
+      },
             data: {
                 'project_name': name,
                 'project_description': desc,
@@ -192,7 +196,15 @@ jQuery(document).ready(function ($) {
 		    $('#working_modal').modal("hide");
                 } else {
 		    $('#trial_design_information').html(response.design_info_view_html);
-                    $('#trial_design_view_layout_return').html(response.design_layout_view_html);
+        var layout_view = JSON.parse(response.design_layout_view_html);
+        console.log(layout_view);
+        var layout_html = '';
+        for (var i=0; i<layout_view.length; i++) {
+          console.log(layout_view[i]);
+          layout_html += layout_view[i] + '<br>';
+        }
+        $('#trial_design_view_layout_return').html(layout_html);
+        //$('#trial_design_view_layout_return').html(response.design_layout_view_html);
 
 		    $('#working_modal').modal("hide");
                     $('#trial_design_confirm').modal("show");
@@ -249,6 +261,7 @@ jQuery(document).ready(function ($) {
         var design_method = $("#select_design_method").val();
         if (design_method == "CRD") {
             $("#trial_design_more_info").show();
+            $("#trial_multi-design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").hide();
             $("#crbd_show_list_of_checks_section").hide();
@@ -266,6 +279,7 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").hide();
         } else if (design_method == "RCBD") {
             $("#trial_design_more_info").show();
+            $("#trial_multi-design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#crbd_show_list_of_checks_section").show();
             $("#show_list_of_checks_section").hide();
@@ -283,8 +297,9 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").hide();
         } else if (design_method == "Alpha") {
             $("#trial_design_more_info").show();
+            $("#trial_multi-design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
-            $("#crbd_show_list_of_checks_section").show();
+            $("#crbd_show_list_of_checks_section").hide();
             $("#show_list_of_checks_section").hide();
             $("#rep_count_section").show();
             $("#block_number_section").hide();
@@ -300,6 +315,7 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").hide();
         } else if (design_method == "Augmented") {
             $("#trial_design_more_info").show();
+            $("#trial_multi-design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").show();
             $("#crbd_show_list_of_checks_section").hide();
@@ -320,6 +336,7 @@ jQuery(document).ready(function ($) {
             $("#show_list_of_checks_section").hide();
             $("#crbd_show_list_of_checks_section").hide();
             $("#trial_design_more_info").hide();
+            $("#trial_multi-design_more_info").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").hide();
             $("#block_size_section").hide();
@@ -337,6 +354,7 @@ jQuery(document).ready(function ($) {
 
         else if (design_method == "MAD") {
             $("#trial_design_more_info").show();
+            $("#trial_multi-design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").show();
             $("#crbd_show_list_of_checks_section").hide();
@@ -367,6 +385,7 @@ jQuery(document).ready(function ($) {
 
         else if (design_method == 'greenhouse') {
             $("#trial_design_more_info").show();
+            $("#trial_multi-design_more_info").show();
             $("#show_list_of_checks_section").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").hide();
@@ -423,6 +442,9 @@ jQuery(document).ready(function ($) {
            control_list = JSON.stringify(list.getList(control_list_id));
         }
         var design_type = jQuery('#select_design_method').val();
+        if (design_type == "") {
+            var design_type = jQuery('#select_multi-design_method').val();
+        }
         var greenhouse_num_plants = [];
         if (stock_list_id != "" && design_type == 'greenhouse') {
             for (var i=0; i<stock_list_array.length; i++) {
@@ -634,13 +656,12 @@ jQuery(document).ready(function ($) {
         }
     }
 
-    $('#add_project_link').click(function () {
-        get_select_box('years', 'add_project_year', {'auto_generate': 1 });
-        open_project_dialog();
-    });
+     $('#add_project_link').click(function () {
+         get_select_box('years', 'add_project_year', {'auto_generate': 1 });
+         open_project_dialog();
+     });
 
 });
-
 
 function greenhouse_show_num_plants_section(){
     var list = new CXGN.List();
