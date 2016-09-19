@@ -327,6 +327,7 @@ sub generate_plot_phenotypes : Path('/ajax/breeders/trial/generate_plot_phenotyp
             if (scalar(@$modes > 1)) {
                 $info{'notes'} = 'More than one mode!';
                 $info{'value_to_store'} = '';
+                $info{'flag_notes'} = 1;
             } else {
                 $info{'notes'} = 'A single mode was found!';
                 $info{'value_to_store'} = $modes->[0];
@@ -383,7 +384,15 @@ sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated
     #print STDERR Dumper $plots;
     #print STDERR Dumper $traits;
     #print STDERR $overwrite_values;
-    
+
+    if ($overwrite_values) {
+        my $user_type = $c->user()->get_object->get_user_type();
+        #print STDERR $user_type."\n";
+        if ($user_type ne 'curator') {
+            $c->stash->{rest} = {error => 'Must be a curator to overwrite values! Please contact us!'};
+        }
+    }
+
     $parse_result{'data'} = $data;
     $parse_result{'plots'} = $plots;
     $parse_result{'traits'} = $traits;
@@ -399,7 +408,7 @@ sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated
 
     my $store_error = CXGN::Phenotypes::StorePhenotypes->store($c, $size, $plots, $traits, $data, \%phenotype_metadata, 'plot', $overwrite_values );
     if ($store_error) {
-        $c->stash->{rest} = {error => $store_error}
+        $c->stash->{rest} = {error => $store_error};
     }
     $c->stash->{rest} = {success => 1};
 }
