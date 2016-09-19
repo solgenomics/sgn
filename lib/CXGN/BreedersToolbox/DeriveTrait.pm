@@ -6,7 +6,6 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use JSON;
 use POSIX;
-use URI::Encode qw(uri_encode uri_decode);
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 	is => 'rw',
