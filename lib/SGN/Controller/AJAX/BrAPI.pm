@@ -1923,7 +1923,7 @@ sub studies_plot_phenotypes_GET {
     my %result;
 
     my $t = $c->stash->{study};
-    my $phenotype_data = $t->get_plot_phenotypes_for_trait($trait_id);
+    my $phenotype_data = $t->get_stock_phenotypes_for_trait($trait_id, 'plot');
 
     my $trait =$self->bcs_schema->resultset('Cv::Cvterm')->find({ cvterm_id => $trait_id });
 
