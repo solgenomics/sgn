@@ -40,12 +40,15 @@ The following functions are provided in this class:
 
 use Modern::Perl;
 
+use IO::File;
+use File::Path 'make_path';
 use File::Temp qw/ tempfile tempdir /;
 use File::Copy qw/ copy move /;
 use File::Basename qw/ basename /;
 use File::Spec;
 use CXGN::DB::Connection;
 use CXGN::Tag;
+use CXGN::Metadata::Metadbdata;
 
 use CatalystX::GlobalContext '$c';
 
@@ -293,6 +296,8 @@ sub apache_upload_image {
         $upload_filename = $upload->filename;
     }
 
+    my $upload_fh = $upload->fh;
+
     my $temp_file =
         $self->config()->get_conf("basepath") . "/"
       . $self->config()->get_conf("tempfiles_subdir")
@@ -300,7 +305,36 @@ sub apache_upload_image {
       . $ENV{REMOTE_ADDR} . "-"
       . $upload_filename;
 
-    my $upload_fh = $upload->fh;
+    my $ret_temp_file = $self->upload_image($temp_file, $upload_fh);
+    return $ret_temp_file;
+
+}
+
+
+sub upload_zipfile_images {
+    my $self   = shift;
+    my $file_member = shift;
+
+    my $filename = $file_member->fileName();
+
+    my $zipfile_image_temp_path = $self->config()->get_conf("basepath") . $self->config()->get_conf("tempfiles_subdir") . "/temp_images/photos";
+    make_path($zipfile_image_temp_path);
+    my $temp_file =
+        $self->config()->get_conf("basepath")
+      . $self->config()->get_conf("tempfiles_subdir")
+      . "/temp_images/"
+      . $filename;
+    system("chmod 775 $zipfile_image_temp_path");
+    $file_member->extractToFileNamed($temp_file);
+    print STDERR "Temp Image: ".$temp_file."\n";
+    return $temp_file;
+}
+
+
+sub upload_image {
+    my $self = shift;
+    my $temp_file = shift;
+    my $upload_fh = shift;
 
     ### 11/30/07 - change this so it removes existing file
     #     -deanx
@@ -322,7 +356,6 @@ sub apache_upload_image {
     warn "Done uploading.\n";
 
     return $temp_file;
-
 }
 
 =head2 associate_stock
@@ -340,10 +373,10 @@ sub associate_stock  {
     my $self = shift;
     my $stock_id = shift;
     if ($stock_id) {
-        my $user = $self->config->user_exists;
-        if ($user) {
+        my $username = $self->config->can('user_exists') ? $self->config->user->get_object->get_username : $self->config->username;
+        if ($username) {
             my $metadata_schema = $self->config->dbic_schema('CXGN::Metadata::Schema');
-            my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema, $self->config->user->get_object->get_username);
+            my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema, $username);
             my $metadata_id = $metadata->store()->get_metadata_id();
 
             my $q = "INSERT INTO phenome.stock_image (stock_id, image_id, metadata_id) VALUES (?,?,?) RETURNING stock_image_id";

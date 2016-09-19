@@ -14,7 +14,7 @@
         <div class="container-fluid">
             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_fieldbook_phenotype_file_form" name="upload_fieldbook_phenotype_file_form">
                 <div class="well well-sm">
-                    <h4>Upload Exported Fieldbook Phenotype File for Plots or Plants</h4>
+                    <h5>Upload Exported Fieldbook Phenotype File in Database Format for Plots or Plants</h5>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Data Level: </label>
@@ -31,8 +31,15 @@
                         <input type="file" id="upload_fieldbook_phenotype_file_input" name="upload_fieldbook_phenotype_file_input" encoding="multipart/form-data" />
                     </div>
                 </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Images ZipFile (Optional): </label>
+                    <div class="col-sm-9" >
+                        <input type="file" id="upload_fieldbook_phenotype_images_zipfile" name="upload_fieldbook_phenotype_images_zipfile" encoding="multipart/form-data" />
+                    </div>
+                </div>
+
+                <div id="upload_phenotype_fieldbook_verify_status"></div>
             </form><br/>
-            <div id="upload_phenotype_fieldbook_verify_status"></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -54,6 +61,6 @@ jQuery(document).ready(function() {
 	jQuery('#upload_fieldbook_phenotypes_dialog').modal("show");
     });
 
-});  
+});
 
 </script>

@@ -1293,8 +1293,12 @@ sub create_plant_entities {
 
 		my $plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
 		my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
+		my $plot_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id();
 		my $plant_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of', 'stock_relationship')->cvterm_id();
 		my $plant_index_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_index_number', 'stock_property')->cvterm_id();
+		my $block_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id();
+		my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id();
+		my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
 		my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
 		my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
 		#my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
@@ -1336,9 +1340,29 @@ sub create_plant_entities {
 					value => $number,
 				});
 
+				#The plant inherits the properties of the plot.
+				my $plot_props = $chado_schema->resultset("Stock::Stockprop")->search({ stock_id => $parent_plot, type_id => [$block_cvterm, $plot_number_cvterm, $replicate_cvterm] });
+				while (my $prop = $plot_props->next() ) {
+					#print STDERR $plant->uniquename()." ".$prop->type_id()."\n";
+					$plantprop = $chado_schema->resultset("Stock::Stockprop")->find_or_create( {
+						stock_id => $plant->stock_id(),
+						type_id => $prop->type_id(),
+						value => $prop->value(),
+					});
+				}
+
+				#the plant has a relationship to the plot
 				my $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
 					subject_id => $parent_plot,
 					object_id => $plant->stock_id(),
+					type_id => $plant_relationship_cvterm,
+				});
+
+				#the plant has a relationship to the accession
+				my $plot_accession = $self->bcs_schema()->resultset("Stock::StockRelationship")->find({subject_id=>$parent_plot, type_id=>$plot_relationship_cvterm })->object();
+				$stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
+					subject_id => $plant->stock_id(),
+					object_id => $plot_accession->stock_id(),
 					type_id => $plant_relationship_cvterm,
 				});
 
@@ -1440,6 +1464,17 @@ sub get_design_type {
 sub duplicate { 
 }
 
+=head2 get_accessions
+
+ Usage:        my $accessions = $t->get_accessions();
+ Desc:         retrieves the accessions used in this trial.
+ Ret:          an arrayref of { accession_name => acc_name, stock_id => stock_id }
+ Args:         none
+ Side Effects:
+ Example:
+
+=cut
+
 sub get_accessions {
 	my $self = shift;
 	my @accessions;
@@ -1467,6 +1502,17 @@ sub get_accessions {
 	return \@accessions;
 }
 
+=head2 get_plants
+
+ Usage:        $plants = $t->get_plants();
+ Desc:         retrieves that plants that are part of the design for this trial.
+ Ret:          an array ref containing [ plant_name, plant_stock_id ]
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub get_plants {
 	my $self = shift;
 	my @plants;
@@ -1489,15 +1535,39 @@ sub get_plants {
 	return \@plants;
 }
 
+
+=head2 get_plots
+
+ Usage:         my $plots = $trial->get_plots();
+ Desc:          returns a list of plots that are defined for the trial.
+ Ret:           an array ref of elements that contain 
+                [ plot_name, plot_stock_id ]
+ Args:          none
+ Side Effects:  db access
+ Example:
+
+=cut
+
 sub get_plots {
 	my $self = shift;
 	my @plots;
 
+	# note: this function also retrieves stocks of type tissue_sample (for genotyping trials).
 	my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type' )->cvterm_id();
+	my $tissue_sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type');
+	my $tissue_sample_cvterm_id;
+	if ($tissue_sample_cvterm) { 
+	    $tissue_sample_cvterm_id = $tissue_sample_cvterm->cvterm_id();
+	}
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 
-	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$plot_cvterm_id});
+	my @type_ids;
+	push @type_ids, $plot_cvterm_id if $plot_cvterm_id;
+	push @type_ids, $tissue_sample_cvterm_id if $tissue_sample_cvterm_id;
+
+	print STDERR "TYPE IDS: ".join(", ", @type_ids); 
+	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=> { in => [@type_ids] }});
 
 	my %unique_plots;
 	while(my $rs = $trial_plot_rs->next()) {
@@ -1512,6 +1582,18 @@ sub get_plots {
 	return \@plots;
 	 
 }
+
+=head2 get_controls
+
+ Usage:        my $controls = $t->get_controls();
+ Desc:         Returns the accessions that were used as controls in the design
+ Ret:          an arrayref containing 
+               { accession_name => control_name, stock_id => control_stock_id }
+ Args:         none
+ Side Effects:
+ Example:
+
+=cut
 
 sub get_controls {
 	my $self = shift;

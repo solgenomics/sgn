@@ -16,6 +16,7 @@ Jeremy Edwards <jde22@cornell.edu>
 =over 1
 
 =item stock
+
 a Bio::Chado::Schema::Stock::Stock object
 
 =back
