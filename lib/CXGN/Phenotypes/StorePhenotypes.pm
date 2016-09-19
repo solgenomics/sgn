@@ -252,7 +252,8 @@ sub store {
     my %check_unique_trait_stock;
     if ($overwrite_values) {
         my $sql = "SELECT cvalue_id, uniquename FROM phenotype WHERE value is not NULL; ";
-        my $sth = $c->dbc->dbh->prepare($sql);
+        my $dbh = $schema->storage->dbh();
+        my $sth = $dbh->prepare($sql);
         $sth->execute();
 
         while (my ($db_cvalue_id, $db_uniquename) = $sth->fetchrow_array) {
