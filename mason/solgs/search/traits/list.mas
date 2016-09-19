@@ -8,6 +8,28 @@ $index
 $traits_list
 
 </%args>
+<%perl>
+my $table;	
+
+if (@$traits_list) {
+  $table  = qq | <table id="traits_starting_with_index_table" class="table table-condensed table-striped"> |;
+  $table .= qq | <thead><tr><td>Trait</td><td>Definition</td></tr></thead><tbody> |;
+	
+  foreach my $trait (@$traits_list) {
+    $table .= qq | <tr> |;
+    $table .= qq | <td> $trait->[0] </td> |;
+    $table .= qq | <td> $trait->[1] </td> |;
+    $table .= qq | </tr> |;
+  }
+    
+  $table .= qq | </tbody> |;
+  $table .= qq | </table> |;
+
+} else {
+  $table = qq | <p>There are no traits starting with $index </p> |; 
+}
+
+</%perl>
 
 <div class="container">
   <& /page/page_title.mas, 
@@ -15,31 +37,12 @@ $traits_list
     &>
 
     <&| /page/info_section.mas, 
-	title    => qq |Traits beginning with "$index" |
+	title => qq |Traits beginning with "$index" |
       &>
 
       <div id="traits_starting_with_index_div">
-	%if (@$traits_list) {
-	<table id="traits_starting_with_index_table" class="table table-condensed table-striped" >
-	  <tbody>
-	    <thead>
-	      <tr>
-		<td>Trait</td>
-		<td>Definition</td>
-	      </tr>
-	    </thead>
-	    %foreach my $trait (@$traits_list) {
-	    <tr>
-	      <td><% $trait->[0] %></td>
-	      <td><% $trait->[1] %></td>
-	    </tr>
-	    %}
-	  </tbody>
-	</table>
-	%} else {
-	<p>There are no traits starting with <% $index %> </p>
-	%}
-      </div>
+	<% $table %>
+     </div>
 
  </&>
 </div>
