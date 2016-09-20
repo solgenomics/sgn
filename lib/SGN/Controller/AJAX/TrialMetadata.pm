@@ -164,8 +164,9 @@ sub trial_details_POST  {
 sub traits_assayed : Chained('trial') PathPart('traits_assayed') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $stock_type = $c->req->param('stock_type');
 
-    my @traits_assayed  = $c->stash->{trial}->get_traits_assayed();
+    my @traits_assayed  = $c->stash->{trial}->get_traits_assayed($stock_type);
     $c->stash->{rest} = { traits_assayed => \@traits_assayed };
 }
 
