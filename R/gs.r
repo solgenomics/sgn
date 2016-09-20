@@ -233,7 +233,10 @@ if (datasetInfo == 'combined populations') {
   }
 }
 
-
+#remove monomorphic markers
+message('marker no before monomorphic markers cleaning ', ncol(genoData))
+genoData[, which(apply(genoData, 2,  function(x) length(unique(x))) < 2) := NULL ]
+message('marker no after monomorphic markers cleaning ', ncol(genoData))
 
 #remove markers with > 60% missing marker data
 message('no of markers before filtering out: ', ncol(genoData))
@@ -248,8 +251,6 @@ message('no of indls after filtering out ones with 80% missing: ', nrow(genoData
 
 ### MAF calculation ###
 calculateMAF <- function(x) {
-  mafThreshold <- c(0.05)
- 
   a0 <-  length(x[x==0])
   a1 <-  length(x[x==1])
   a2 <-  length(x[x==2])
@@ -264,8 +265,6 @@ calculateMAF <- function(x) {
 
 }
 
-#remove monomorphic markers
-#genoData[, which(apply(.SD, 2,  function(x) length(unique(x)) == 1 )) ]
 
 #remove markers with MAF < 5%
 genoData[, which(apply(genoData, 2,  calculateMAF) < 0.05) := NULL ]
@@ -292,8 +291,11 @@ message("prediction gebv file: ",  predictionPopGEBVsFile)
 predictionData <- c()
 
 if (length(predictionFile) !=0 ) {
-
+  
   predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
+
+  predictionData[, which(apply(predictionData, 2,  function(x) length(unique(x))) < 2) := NULL ]
+  
   message('selection population: no of markers before filtering out: ', ncol(genoData))
   predictionData[, which(colSums(is.na(predictionData)) >= nrow(predictionData) * 0.6) := NULL]
 
