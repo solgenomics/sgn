@@ -129,7 +129,7 @@ sub verify {
                 my $trait_cvterm_id;
                 #For multiterm traits of the form trait1|CO:0000001||trait2|CO:00000002
                 if ($trait_name =~ /\|\|/ ) {
-                    $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name, 'cassava_trait')->cvterm_id();
+                    $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name, 'postcomposed_terms')->cvterm_id();
                 } else {
                     $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
                 }
@@ -289,7 +289,7 @@ sub store {
                 my $trait_cvterm;
                 #For multiterm traits of the form trait1|CO:0000001||trait2|CO:00000002
                 if ($trait_name =~ /\|\|/ ) {
-                    $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name, 'cassava_trait');
+                    $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name, 'postcomposed_terms');
                 } else {
                     $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
                 }
@@ -398,7 +398,7 @@ sub store {
                 my $trait_cvterm;
                 #For multiterm traits of the form trait1|CO:0000001||trait2|CO:00000002
                 if ($trait_name =~ /\|\|/ ) {
-                    $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name, 'cassava_trait');
+                    $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name, 'postcomposed_terms');
                 } else {
                     $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
                 }
