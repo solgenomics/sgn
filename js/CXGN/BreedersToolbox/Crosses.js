@@ -280,6 +280,10 @@ jQuery(document).ready(function ($) {
 	});
     }
 
+    $('#cross_saved_dialog_message').on('hidden.bs.modal', function () {
+        location.reload();
+    })
+
     function add_polycross_nursery() {
 
   var nurseryName = $("#nursery_name").val();
