@@ -233,10 +233,7 @@ if (datasetInfo == 'combined populations') {
   }
 }
 
-#remove monomorphic markers
-message('marker no before monomorphic markers cleaning ', ncol(genoData))
-genoData[, which(apply(genoData, 2,  function(x) length(unique(x))) < 2) := NULL ]
-message('marker no after monomorphic markers cleaning ', ncol(genoData))
+
 
 #remove markers with > 60% missing marker data
 message('no of markers before filtering out: ', ncol(genoData))
@@ -249,6 +246,11 @@ genoData <- genoData[noMissing <= ncol(genoData) * 0.8]
 genoData[, noMissing := NULL]
 message('no of indls after filtering out ones with 80% missing: ', nrow(genoData))
 
+                                        #remove monomorphic markers
+message('marker no before monomorphic markers cleaning ', ncol(genoData))
+genoData[, which(apply(genoData, 2,  function(x) length(unique(x))) < 2) := NULL ]
+message('marker no after monomorphic markers cleaning ', ncol(genoData))
+
 ### MAF calculation ###
 calculateMAF <- function(x) {
   a0 <-  length(x[x==0])
@@ -256,7 +258,6 @@ calculateMAF <- function(x) {
   a2 <-  length(x[x==2])
   aT <- a0 + a1 + a2
 
-  message('a0: ', a0, ' a1: ', a1, ' a2:', a2, ' aT: ', aT)
   p   <- ((2*a0)+a1)/(2*aT)
   q   <- 1- p
   maf <- min(p, q)
@@ -264,7 +265,6 @@ calculateMAF <- function(x) {
   return (maf)
 
 }
-
 
 #remove markers with MAF < 5%
 genoData[, which(apply(genoData, 2,  calculateMAF) < 0.05) := NULL ]
