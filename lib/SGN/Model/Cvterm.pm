@@ -69,7 +69,7 @@ sub get_cvterm_row_from_trait_name {
     #print STDERR $trait_name;
     #fieldbook trait string should be "$trait_name|$dbname:$trait_accession" e.g. plant height|CO:0000123
     my ( $full_cvterm_name, $full_accession) = split (/\|/, $trait_name);
-    my ( $db_name , $accession ) = split (/:/ , $full_accession);
+    my ( $db_name , $accession ) = split(/:([^:]+)$/, $full_accession);
 
     #check if the trait name string does have  
     $accession =~ s/\s+$//;

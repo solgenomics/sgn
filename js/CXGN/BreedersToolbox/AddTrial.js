@@ -130,6 +130,7 @@ jQuery(document).ready(function ($) {
 	var stock_list;
 	if (stock_list_id != "") {
             stock_list = JSON.stringify(list.getList(stock_list_id));
+            stock_list_array = list.getList(stock_list_id);
 	}
 	var control_list;
 	if (control_list_id != "") {
@@ -146,6 +147,18 @@ jQuery(document).ready(function ($) {
 	var plot_prefix = $('#plot_prefix').val();
 	var start_number = $('#start_number').val();
 	var increment = $('#increment').val();
+
+    var greenhouse_num_plants = [];
+    if (stock_list_id != "" && design_type == 'greenhouse') {
+        for (var i=0; i<stock_list_array.length; i++) {
+            var value = jQuery("input#greenhouse_num_plants_input_" + i).val();
+            if (value == '') {
+                value = 1;
+            }
+            greenhouse_num_plants.push(value);
+        }
+        //console.log(greenhouse_num_plants);
+    }
 
 	//var stock_verified = verify_stock_list(stock_list);
 
@@ -189,8 +202,10 @@ jQuery(document).ready(function ($) {
 		'plot_prefix': plot_prefix,
 		'start_number': start_number,
 		'increment': increment,
+        'greenhouse_num_plants': JSON.stringify(greenhouse_num_plants),
             },
             success: function (response) {
+                $('#working_modal').modal("hide");
                 if (response.error) {
                     alert(response.error);
 		    $('#working_modal').modal("hide");
@@ -398,6 +413,7 @@ jQuery(document).ready(function ($) {
             $("#row_number_per_block_section").hide();
             $("#other_parameter_section").hide();
             $("#design_info").hide();
+            $('#greenhouse_default_num_plants_per_accession').show();
             $("#greenhouse_num_plants_per_accession_section").show();
             greenhouse_show_num_plants_section();
         }
@@ -408,6 +424,12 @@ jQuery(document).ready(function ($) {
     });
 
     jQuery(document).on('change', '#select_list_list_select', function() {
+        if (jQuery("#select_design_method").val() == 'greenhouse') {
+            greenhouse_show_num_plants_section();
+        }
+    });
+
+    jQuery(document).on('keyup', '#greenhouse_default_num_plants_per_accession_val', function() {
         if (jQuery("#select_design_method").val() == 'greenhouse') {
             greenhouse_show_num_plants_section();
         }
@@ -435,6 +457,7 @@ jQuery(document).ready(function ($) {
         var control_list_id = jQuery('#list_of_checks_section_list_select').val();
         var stock_list;
         if (stock_list_id != "") {
+            stock_list_array = list.getList(stock_list_id);
            stock_list = JSON.stringify(list.getList(stock_list_id));
         }
         var control_list;
@@ -666,12 +689,13 @@ jQuery(document).ready(function ($) {
 function greenhouse_show_num_plants_section(){
     var list = new CXGN.List();
     var stock_list_id = jQuery('#select_list_list_select').val();
+    var default_num = jQuery('#greenhouse_default_num_plants_per_accession_val').val();
     if (stock_list_id != "") {
         stock_list = list.getList(stock_list_id);
         //console.log(stock_list);
         var html = '<form class="form-horizontal">';
         for (var i=0; i<stock_list.length; i++){
-            html = html + '<div class="form-group"><label class="col-sm-3 control-label">' + stock_list[i] + ': </label><div class="col-sm-9"><input class="form-control" id="greenhouse_num_plants_input_' + i + '" type="text" placeholder="1" /></div></div>';
+            html = html + '<div class="form-group"><label class="col-sm-9 control-label">' + stock_list[i] + ': </label><div class="col-sm-3"><input class="form-control" id="greenhouse_num_plants_input_' + i + '" type="text" placeholder="'+default_num+'" value="'+default_num+'" /></div></div>';
         }
         html = html + '</form>';
         jQuery("#greenhouse_num_plants_per_accession").empty().html(html);
