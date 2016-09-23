@@ -366,6 +366,11 @@ sub save_experimental_design_POST : Args(0) {
   my $multi_location;
   my $trial_locations = $c->req->param('trial_location');
   my $trial_name = $c->req->param('project_name');
+  my $breeding_program = $c->req->param('breeding_program_name');
+  my $schema = $c->dbic_schema("Bio::Chado::Schema");
+  my $breeding_program_id = $schema->resultset("Project::Project")->find({name=>$breeding_program})->project_id();
+  my $folder;
+  my $new_trial_id;
 
   try {
      $multi_location = decode_json($trial_locations);
@@ -377,6 +382,26 @@ sub save_experimental_design_POST : Args(0) {
   catch {
     push @locations, $trial_locations;
   };
+  my $folder_id;
+  my $parent_folder_id = 0;
+  if (scalar(@locations) > 1) {
+
+      my $existing = $schema->resultset("Project::Project")->find( { name => $trial_name });
+
+      if ($existing) {
+  	     $c->stash->{rest} = { error => "An folder or trial with that name already exists in the database. Please select another name." };
+  	      return;
+      }
+
+      $folder = CXGN::Trial::Folder->create(
+  	{
+  	    bcs_schema => $schema,
+  	    parent_folder_id => $parent_folder_id,
+  	    name => $trial_name,
+  	    breeding_program_id => $breeding_program_id,
+  	});
+    $folder_id = $folder->folder_id();
+  }
 
   my $design_index = 0;
 
@@ -401,7 +426,7 @@ sub save_experimental_design_POST : Args(0) {
     	   dbh => $dbh,
     	   user_name => $user_name,
     	   design => $trial_location_design,
-    	   program => $c->req->param('breeding_program_name'),
+    	   program => $breeding_program,
     	   trial_year => $c->req->param('year'),
     	   trial_description => $c->req->param('project_description'),
          trial_location => $trial_location,
@@ -437,6 +462,17 @@ sub save_experimental_design_POST : Args(0) {
     };
 
     $design_index++;
+
+    if ($folder_id) {
+      $new_trial_id = $schema->resultset("Project::Project")->find({name=>$trial_name})->project_id();
+
+      my $folder1 = CXGN::Trial::Folder->new(
+	 		{
+	 			bcs_schema => $chado_schema,
+	 			folder_id => $new_trial_id,
+			});
+      $folder1->associate_parent($folder_id);
+    }
   }
     if ($error) {return;}
     print STDERR "Trial saved successfully\n";
