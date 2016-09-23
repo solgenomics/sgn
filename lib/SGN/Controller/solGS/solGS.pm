@@ -832,10 +832,23 @@ sub project_description {
         $self->uploaded_population_summary($c);
     }
     
-    $self->genotype_file($c);
-    my $geno_file  = $c->stash->{genotype_file};
-    my @geno_lines = read_file($geno_file);
-    my $markers_no = scalar(split ('\t', $geno_lines[0])) - 1;
+    $self->filtered_genotype_file($c);
+    my $filtered_geno_file  = $c->stash->{filtered_genotype_file};
+
+    my $markers_no;
+    my @geno_lines;
+
+    if (-s $filtered_geno_file) {
+	@geno_lines = read_file($filtered_geno_file);
+	$markers_no = scalar(split('\t', $geno_lines[0])) - 1;
+    } 
+    else 
+    {
+	$self->genotype_file($c);
+	my $geno_file  = $c->stash->{genotype_file};
+	@geno_lines = read_file($geno_file);
+	$markers_no = scalar(split ('\t', $geno_lines[0])) - 1;	
+    }
 
     $self->trait_phenodata_file($c);
     my $trait_pheno_file  = $c->stash->{trait_phenodata_file};
@@ -1073,7 +1086,7 @@ sub gs_files {
 sub input_files {
     my ($self, $c) = @_;
     
-    $self->genotype_file($c);
+    $self->genotype_file($c);  
     $self->phenotype_file($c);
     $self->formatted_phenotype_file($c);
 
@@ -1087,7 +1100,7 @@ sub input_files {
     }
 
     my $formatted_phenotype_file  = $c->stash->{formatted_phenotype_file};
-
+   
     my $pheno_file  = $c->stash->{phenotype_file};
     my $geno_file   = $c->stash->{genotype_file};
     my $traits_file = $c->stash->{selected_traits_file};
@@ -1126,6 +1139,7 @@ sub output_files {
     $self->trait_phenodata_file($c);
     $self->variance_components_file($c);
     $self->relationship_matrix_file($c);
+    $self->filtered_genotype_file($c);
 
     my $prediction_id = $c->stash->{prediction_pop_id};
     if (!$pop_id) {$pop_id = $c->stash->{model_id};}
@@ -1151,6 +1165,7 @@ sub output_files {
                           $c->stash->{selected_traits_gebv_file},
                           $c->stash->{variance_components_file},
 			  $c->stash->{relationship_matrix_file},
+			  $c->stash->{filtered_genotype_file},
                           $pred_pop_gebvs_file
         );
                           
@@ -1260,6 +1275,22 @@ sub trait_phenodata_file {
 
     $self->cache_file($c, $cache_data);
 }
+
+
+sub filtered_genotype_file {
+    my ($self, $c) = @_;
+   
+    my $pop_id = $c->stash->{pop_id};
+    $pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
+
+    my $cache_data = { key       => 'filtered_genotype_data_' . $pop_id, 
+                       file      => 'filtered_genotype_data_' . $pop_id,
+                       stash_key => 'filtered_genotype_file'
+    };
+    
+    $self->cache_file($c, $cache_data);
+}
+
 
 
 sub formatted_phenotype_file {
@@ -4754,8 +4785,7 @@ sub genotype_file  {
     if ($pred_pop_id) 
     {      
         $pop_id = $c->stash->{prediction_pop_id};      
-        $geno_file = $c->stash->{user_selection_list_genotype_data_file};
-      
+        $geno_file = $c->stash->{user_selection_list_genotype_data_file};      
     } 
     
     die "Population id must be provided to get the genotype data set." if !$pop_id;
