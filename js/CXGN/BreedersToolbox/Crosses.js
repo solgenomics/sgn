@@ -76,7 +76,7 @@ jQuery(document).ready(function ($) {
 	add_cross();
     });
 
-    $('#create_polycross_nursery_submit').click(function () {
+    $('#create_crosses_submit').click(function () {
       add_polycross_nursery();
     });
 
@@ -129,8 +129,8 @@ jQuery(document).ready(function ($) {
 	$("#create_cross" ).modal("show");
     });
 
-    $("#add_polycross_nursery_link").click( function () {
-  $("#create_polycross_nursery" ).modal("show");
+    $("#add_crosses_link").click( function () {
+  $("#create_crosses" ).modal("show");
 
     var lo = new CXGN.List();
     $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
@@ -218,8 +218,8 @@ jQuery(document).ready(function ($) {
 
     function add_polycross_nursery() {
 
-  var nurseryName = $("#nursery_name").val();
-  if (!nurseryName) { alert("A nursery name is required"); return; }
+  var polycrossName = $("#cross_set_name").val();
+  if (!polycrossName) { alert("A polycross name is required"); return; }
 
   var breeding_program_id = $("#polycross_program").val();
 
@@ -250,14 +250,14 @@ jQuery(document).ready(function ($) {
   var program = $("#polycross_program option:selected").text();
   var folder_id;
 
-  //create population with these accessions, name it as nursery name
+  //create population with these accessions, name it as polycross name
 
   jQuery.ajax( {
     'url': '/ajax/folder/new',
     'data': {
       'parent_folder_id' : 0,
       async: false,
-      'folder_name' :  nurseryName,
+      'folder_name' :  polycrossName,
       'breeding_program_id' : breeding_program_id
     },
     'success': function(response) {
@@ -266,7 +266,7 @@ jQuery(document).ready(function ($) {
         alert(response.error);
       }
 
-      var populationName = nurseryName + '_parents';
+      var populationName = polycrossName + '_parents';
       var paternalParent = '';
       $.ajax({
               url: '/ajax/population/new',
@@ -283,7 +283,7 @@ jQuery(document).ready(function ($) {
       for ( i=0; i < accession_names.length; i++) {
 
         var maternalParent = accession_names[i];
-        var crossName = nurseryName + '_' + accession_names[i] + '_polycross';
+        var crossName = polycrossName + '_' + accession_names[i] + '_polycross';
         var crossType = 'biparental';
 
 
@@ -306,9 +306,9 @@ jQuery(document).ready(function ($) {
         });
 
         }
-            jQuery("#create_polycross_nursery").modal("hide");
-            //alert("The nursery crosses have been added.");
-            jQuery('#nursery_saved_dialog_message').modal("show");
+            jQuery("#create_crosses").modal("hide");
+            //alert("The polycross crosses have been added.");
+            jQuery('#crosses_saved_dialog_message').modal("show");
     },
     error: function(response) {
       alert('An error occurred creating the folder for this group of crosses');
@@ -317,7 +317,7 @@ jQuery(document).ready(function ($) {
 
     }
 
-    jQuery('#dismiss_nursery_saved_dialog').click( function() {
+    jQuery('#dismiss_crosses_saved_dialog').click( function() {
         window.location.reload();
     });
 
