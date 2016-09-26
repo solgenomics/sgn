@@ -611,12 +611,12 @@ sub upload_trial_file_POST : Args(0) {
   }
 
   if (!$c->user()) {
-    print STDERR "User not logged in... not adding a crosses.\n";
-    $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
+    print STDERR "User not logged in... not uploading a trial.\n";
+    $c->stash->{rest} = {error => "You need to be logged in to upload a trial." };
     return;
   }
   if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a trial." };
     return;
   }
 
@@ -644,6 +644,8 @@ sub upload_trial_file_POST : Args(0) {
   $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
   $parser->load_plugin('TrialExcelFormat');
   $parsed_data = $parser->parse();
+
+  
 
   if (!$parsed_data) {
     my $return_error = '';
