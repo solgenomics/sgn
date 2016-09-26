@@ -3347,42 +3347,6 @@ sub combine_populations :Path('/solgs/combine/populations/trait') Args(1) {
 }
 
 
-sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Args(3){
-    my ($self, $c,  $combo_pops_id, $trait_key,  $trait_id,) = @_;
-
-    $c->stash->{data_set_type} = 'combined populations';
-    $c->stash->{combo_pops_id} = $combo_pops_id;
-    
-    my $pops_cvs = $c->req->param('combined_populations');
-   
-    if ($pops_cvs)
-    {
-	my @pops = split(',', $pops_cvs);
-        $c->stash->{trait_combo_pops} = \@pops;
-    }
-    else
-    {
-        $self->get_combined_pops_list($c, $combo_pops_id);
-        #$pops_ids = $c->stash->{combined_pops_list};
-        $c->stash->{trait_combo_pops} = $c->stash->{combined_pops_list}; 
-    }
-
-    $self->get_trait_details($c, $trait_id);
-    $self->trait_phenotype_stat($c);    
-    $self->validation_file($c);
-    $self->model_accuracy($c);
-    $self->gebv_kinship_file($c);
-    $self->blups_file($c);
-    $self->download_urls($c);
-    $self->gebv_marker_file($c);
-    $self->top_markers($c);
-    $self->combined_pops_summary($c);
-    $self->model_parameters($c);
-    
-    $c->stash->{template} = $self->template('/model/combined/populations/trait.mas');
-}
-
-
 sub get_model_accuracy_value {
     my ($self, $c, $model_id, $trait_abbr) = @_;
  
@@ -3463,20 +3427,26 @@ sub combined_pops_summary {
     my $trait_abbr = $c->stash->{trait_abbr};
     my $trait_id = $c->stash->{trait_id};
   
-    my $dir = $c->{stash}->{solgs_cache_dir};
+    $self->filtered_genotype_file($c);
+    my $filtered_geno_file  = $c->stash->{filtered_genotype_file};
 
-    my $geno_exp  = "genotype_data_${combo_pops_id}_${trait_abbr}_combined";
-    my $geno_file = $self->grep_file($dir, $geno_exp);  
-   
-    my @geno_lines = read_file($geno_file);
-    my $markers_no = scalar(split ('\t', $geno_lines[0])) - 1;
+    $self->cache_combined_pops_data($c);
+    my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
+    my @unfiltered_geno_rows = read_file($combined_pops_geno_file);
+ 
+    my $markers_no;
+    my @geno_lines;
 
-    my $pheno_exp = "phenotype_trait_${trait_abbr}_${combo_pops_id}_combined";
-    my $trait_pheno_file = $self->grep_file($dir, $pheno_exp);  
-    
-    my @trait_pheno_lines = read_file($trait_pheno_file);
-    my $stocks_no =  scalar(@trait_pheno_lines) - 1;
+    if (-s $filtered_geno_file) {
+	my @rows = read_file($filtered_geno_file);
+	$markers_no = scalar(split('\t', $rows[0])) - 1;
+    } 
+    else 
+    {
+	$markers_no = scalar(split ('\t', $unfiltered_geno_rows[0])) - 1;	
+    }
 
+    my $stocks_no   =  scalar(@unfiltered_geno_rows) - 1;
     my $training_pop = "Training population $combo_pops_id";
     
     my $protocol = $c->config->{default_genotyping_protocol};
