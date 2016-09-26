@@ -204,12 +204,15 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev) = $h->fetchrow_array()) {
 
-	my $cv   = ($stddev /  $average) * 100;
-	$cv      = $round->round($cv) . '%';
-	$average = $round->round($average);
-	$min     = $round->round($min);
-	$max     = $round->round($max);
-	$stddev  = $round->round($stddev);
+        my $cv = 0;
+        if ($average != 0) {
+            $cv   = ($stddev /  $average) * 100;
+        }
+        $cv      = $round->round($cv) . '%';
+        $average = $round->round($average);
+        $min     = $round->round($min);
+        $max     = $round->round($max);
+        $stddev  = $round->round($stddev);
 
 	push @phenotype_data, [ qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} ];
     }

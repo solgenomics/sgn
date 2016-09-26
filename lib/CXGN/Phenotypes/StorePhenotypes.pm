@@ -114,6 +114,13 @@ sub verify {
         }
     }
 
+    my %trait_objs;
+    foreach my $trait_name (@trait_list) {
+        #print STDERR "trait: $trait_name\n";
+        my $trait_cvterm;
+        $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
+        $trait_objs{$trait_name} = $trait_cvterm;
+    }
 
     #print STDERR Dumper \@trait_list;
     my %check_file_stock_trait_duplicates;
@@ -126,9 +133,8 @@ sub verify {
             my $timestamp = $value_array->[1];
 
             if ($trait_value) {
-                my $trait_cvterm_id;
-                #For multiterm traits of the form trait1|CO:0000001||trait2|CO:00000002
-                $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
+                my $trait_cvterm = $trait_objs{$trait_name};
+                my $trait_cvterm_id = $trait_cvterm->cvterm_id();
                 my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
 
                 #check that trait value is valid for trait name
@@ -258,6 +264,14 @@ sub store {
         }
     }
 
+    my %trait_objs;
+    foreach my $trait_name (@trait_list) {
+        #print STDERR "trait: $trait_name\n";
+        my $trait_cvterm;
+        $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
+        $trait_objs{$trait_name} = $trait_cvterm;
+    }
+
     ## Use txn_do with the following coderef so that if any part fails, the entire transaction fails.
 
     #For storing files where num_plots * num_traits <= 100.
@@ -282,9 +296,7 @@ sub store {
             foreach my $trait_name (@trait_list) {
 
                 #print STDERR "trait: $trait_name\n";
-                my $trait_cvterm;
-                #For multiterm traits of the form trait1|CO:0000001||trait2|CO:00000002
-                $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
+                my $trait_cvterm = $trait_objs{$trait_name};
                 my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
                 #print STDERR Dumper $value_array;
                 my $trait_value = $value_array->[0];
@@ -387,9 +399,7 @@ sub store {
             foreach my $trait_name (@trait_list) {
 
                 #print STDERR "trait: $trait_name\n";
-                my $trait_cvterm;
-                #For multiterm traits of the form trait1|CO:0000001||trait2|CO:00000002
-                $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
+                my $trait_cvterm = $trait_objs{$trait_name};
 
                 my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
                 #print STDERR Dumper $value_array;
