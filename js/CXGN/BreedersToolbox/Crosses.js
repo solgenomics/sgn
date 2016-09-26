@@ -193,7 +193,7 @@ jQuery(document).ready(function ($) {
             timeout: 3000000,
             dataType: "json",
             type: 'POST',
-            data: 'cross_name='+crossName+'&cross_type='+crossType+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&progeny_number='+progenyNumber+'&flower_number='+flowerNumber+'&seed_number='+seedNumber+'&prefix='+prefix+'&suffix='+suffix+'&visible_to_role'+visibleToRole+'&program='+program+'&location='+location,
+            data: 'cross_name='+crossName+'&cross_type='+crossType+'&maternal_parent='+encodeURIComponent(maternalParent)+'&paternal_parent='+encodeURIComponent(paternalParent)+'&progeny_number='+progenyNumber+'&flower_number='+flowerNumber+'&seed_number='+seedNumber+'&prefix='+prefix+'&suffix='+suffix+'&visible_to_role'+visibleToRole+'&program='+program+'&location='+location,
             error: function(response) { alert("An error occurred. Please try again later!"+response); },
             parseerror: function(response) { alert("A parse error occurred. Please try again."+response); },
             success: function(response) {
@@ -211,6 +211,10 @@ jQuery(document).ready(function ($) {
             //}
 	});
     }
+
+    $('#cross_saved_dialog_message').on('hidden.bs.modal', function () {
+        location.reload();
+    })
 
     function add_polycross_nursery() {
 

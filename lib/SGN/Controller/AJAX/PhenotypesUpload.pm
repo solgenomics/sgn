@@ -141,7 +141,7 @@ sub _prep_upload {
     my $overwrite_values = $c->req->param('phenotype_upload_overwrite_values');
     if ($overwrite_values) {
         my $user_type = $c->user()->get_object->get_user_type();
-        print STDERR $user_type."\n";
+        #print STDERR $user_type."\n";
         if ($user_type ne 'curator') {
             push @error_status, 'Must be a curator to overwrite values! Please contact us!';
         }
@@ -161,6 +161,7 @@ sub _prep_upload {
         push @success_status, "File $upload_original_name saved in archive.";
     }
     unlink $upload_tempfile;
+    #print STDERR "Archived Phenotype File: $archived_filename_with_path\n";
 
     my $archived_image_zipfile_with_path;
     if ($image_zip) {
@@ -177,6 +178,7 @@ sub _prep_upload {
             push @success_status, "Images Zip File $upload_original_name saved in archive.";
         }
         unlink $upload_tempfile;
+        #print STDERR "Archived Zipfile: $archived_image_zipfile_with_path\n";
     }
 
     ## Validate and parse uploaded file

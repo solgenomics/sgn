@@ -4,7 +4,7 @@
 $breeding_programs
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'jstree.dist.jstree', 'CXGN.Trial', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.TrialTreeFolders' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'jstree.dist.jstree', 'CXGN.Trial', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.TrialTreeFolders','CXGN.BreedersToolbox.AddMultipleTrial' ] &>
 
 <link rel="stylesheet" href="/static/documents/inc/jstree_theme/jstree-bstheme-min.css" />
 
@@ -14,6 +14,7 @@ $breeding_programs
 
 <& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
 <& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/trial/trial_create_multiloc_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
 
 <& /breeders_toolbox/trial/download_trials_phenotypes_dialog.mas &>
 

@@ -290,6 +290,16 @@ sub save_trial {
 		if ($design{$key}->{is_a_control}) {
 			$is_a_control = $design{$key}->{is_a_control};
 		}
+		my $row_number;
+		if ($design{$key}->{row_number}) {
+			$row_number = $design{$key}->{row_number};
+		}
+		my $col_number;
+		if ($design{$key}->{col_number}) {
+			$col_number = $design{$key}->{col_number};
+		}
+
+
 
 		#check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database.
 		if ($stock_data{$stock_name}) {
@@ -344,6 +354,12 @@ sub save_trial {
 			}
 			if ($plate) {
 				$plot->create_stockprops({'plate' => $plate}, {autocreate => 1});
+			}
+			if ($row_number) {
+				$plot->create_stockprops({'row_number' => $row_number}, {autocreate => 1} );
+			}
+			if ($col_number) {
+				$plot->create_stockprops({'col_number' => $col_number}, {autocreate => 1} );
 			}
 
 			# print STDERR "Check 03: ".localtime();

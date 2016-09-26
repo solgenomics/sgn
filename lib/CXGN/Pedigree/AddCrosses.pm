@@ -419,6 +419,7 @@ sub _get_accession {
   my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
   my $stock;
   my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
+  my $vector_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'vector_construct', 'stock_type');
 	my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'population', 'stock_type');
 
   $stock_lookup->set_stock_name($accession_name);
@@ -429,8 +430,8 @@ sub _get_accession {
     return;
   }
 
-  if (($stock->type_id() != $accession_cvterm->cvterm_id()) && ($stock->type_id() != $population_cvterm->cvterm_id())  ) {
-    print STDERR "Name in pedigree is not a stock of type accession or population\n";
+  if (($stock->type_id() != $accession_cvterm->cvterm_id()) && ($stock->type_id() != $population_cvterm->cvterm_id())  && ($stock->type_id() != $vector_cvterm->cvterm_id()) ) {
+    print STDERR "Name in pedigree is not a stock of type accession or population or vector_construct\n";
     return;
   }
 

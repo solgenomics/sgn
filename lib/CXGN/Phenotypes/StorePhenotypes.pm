@@ -114,6 +114,13 @@ sub verify {
         }
     }
 
+    my %trait_objs;
+    foreach my $trait_name (@trait_list) {
+        #print STDERR "trait: $trait_name\n";
+        my $trait_cvterm;
+        $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
+        $trait_objs{$trait_name} = $trait_cvterm;
+    }
 
     #print STDERR Dumper \@trait_list;
     my %check_file_stock_trait_duplicates;
@@ -126,13 +133,8 @@ sub verify {
             my $timestamp = $value_array->[1];
 
             if ($trait_value) {
-                my $trait_cvterm_id;
-                #For multiterm traits of the form trait1|CO:0000001||trait2|CO:00000002
-                if ($trait_name =~ /\|\|/ ) {
-                    $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name, 'cassava_trait')->cvterm_id();
-                } else {
-                    $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
-                }
+                my $trait_cvterm = $trait_objs{$trait_name};
+                my $trait_cvterm_id = $trait_cvterm->cvterm_id();
                 my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
 
                 #check that trait value is valid for trait name
@@ -252,13 +254,22 @@ sub store {
     my %check_unique_trait_stock;
     if ($overwrite_values) {
         my $sql = "SELECT cvalue_id, uniquename FROM phenotype WHERE value is not NULL; ";
-        my $sth = $c->dbc->dbh->prepare($sql);
+        my $dbh = $schema->storage->dbh();
+        my $sth = $dbh->prepare($sql);
         $sth->execute();
 
         while (my ($db_cvalue_id, $db_uniquename) = $sth->fetchrow_array) {
             my ($stock_string, $rest_of_name) = split( /,/, $db_uniquename);
             $check_unique_trait_stock{$db_cvalue_id, $stock_string} = 1;
         }
+    }
+
+    my %trait_objs;
+    foreach my $trait_name (@trait_list) {
+        #print STDERR "trait: $trait_name\n";
+        my $trait_cvterm;
+        $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
+        $trait_objs{$trait_name} = $trait_cvterm;
     }
 
     ## Use txn_do with the following coderef so that if any part fails, the entire transaction fails.
@@ -285,13 +296,7 @@ sub store {
             foreach my $trait_name (@trait_list) {
 
                 #print STDERR "trait: $trait_name\n";
-                my $trait_cvterm;
-                #For multiterm traits of the form trait1|CO:0000001||trait2|CO:00000002
-                if ($trait_name =~ /\|\|/ ) {
-                    $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name, 'cassava_trait');
-                } else {
-                    $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
-                }
+                my $trait_cvterm = $trait_objs{$trait_name};
                 my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
                 #print STDERR Dumper $value_array;
                 my $trait_value = $value_array->[0];
@@ -394,13 +399,7 @@ sub store {
             foreach my $trait_name (@trait_list) {
 
                 #print STDERR "trait: $trait_name\n";
-                my $trait_cvterm;
-                #For multiterm traits of the form trait1|CO:0000001||trait2|CO:00000002
-                if ($trait_name =~ /\|\|/ ) {
-                    $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $trait_name, 'cassava_trait');
-                } else {
-                    $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
-                }
+                my $trait_cvterm = $trait_objs{$trait_name};
 
                 my $value_array = $plot_trait_value{$plot_name}->{$trait_name};
                 #print STDERR Dumper $value_array;
@@ -517,7 +516,10 @@ sub store {
 
             $image->set_sp_person_id($user_id);
 
-            my $err = $image->process_image($temp_file, 'stock', $stock_id);
+            my $ret = $image->process_image($temp_file, 'stock', $stock_id);
+            if (!$ret ) {
+                $error_message .= "Image processing for $temp_file did not work. Image not associated to stock_id $stock_id";
+            }
         }
     }
 
