@@ -76,10 +76,11 @@ if (file.info(genoFile)$size == 0) {
   stop("genotype data file is empty.")
 }
 
-
+usedFilteredGenoData <- c()
 filteredGenoData <- c()
-if (length(filteredGenoFile) != 0  && file.info(filteredGenoFile)$size != 0) {
+if (length(filteredGenoFile) != 0 && file.info(filteredGenoFile)$size != 0) {
   filteredGenoData <- fread(filteredGenoFile, na.strings = c("NA", " ", "--", "-"),  header = TRUE)
+  usedFilteredGenoData <- 1
   message('read in filtered geno data')
 }
 
@@ -280,17 +281,16 @@ if (is.null(filteredGenoData)) {
   #remove markers with MAF < 5%
   genoData[, which(apply(genoData, 2,  calculateMAF) < 0.05) := NULL ]
   message('marker no after MAF cleaning ', ncol(genoData))
-  filteredGenoData <- genoData
+
+  genoData           <- as.data.frame(genoData)
+  rownames(genoData) <- genoData[, 1]
+  genoData[, 1]      <- NULL
+  filteredGenoData   <- genoData 
 } else {
-
-  genoData <- filteredGenoData
-  
+  genoData           <- as.data.frame(filteredGenoData)
+  rownames(genoData) <- genoData[, 1]
+  genoData[, 1]      <- NULL
 }
-
-
-genoData           <- as.data.frame(genoData)
-rownames(genoData) <- genoData[, 1]
-genoData[, 1]      <- NULL
 
 predictionTempFile <- grep("prediction_population", inputFiles, ignore.case = TRUE, value = TRUE)
 predictionFile     <- c()
@@ -384,8 +384,6 @@ if (length(predictionData) != 0) {
   predictionData      <- subset(predictionData, select = commonMarkers)
   genoDataFilteredObs <- subset(genoDataFilteredObs, select= commonMarkers)
   
- # predictionData <- data.matrix(predictionData)
- 
   if (sum(is.na(predictionData)) > 0) {
     predictionDataMissing <- c('yes')
     message("sum of geno missing values, ", sum(is.na(predictionData)) )  
@@ -686,7 +684,7 @@ if (!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
                 )
 }
 
-if (!is.null(filteredGenoData)) {
+if (!is.null(filteredGenoData) && is.null(usedFilteredGenoData)) {
   write.table(filteredGenoData,
               file = filteredGenoFile,
               sep = "\t",
