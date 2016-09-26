@@ -179,29 +179,29 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $dbh = $c->dbc->dbh();
     my $trial_id = $c->stash->{trial_id};
 
-    my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) 
+    my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text)
                                       || dbxref.accession::text AS trait,
-                                     cvterm.cvterm_id, 
-                                     count(phenotype.value), 
-                                     to_char(avg(phenotype.value::real), 'FM999990.990'), 
-                                     to_char(max(phenotype.value::real), 'FM999990.990'), 
-                                     to_char(min(phenotype.value::real), 'FM999990.990'), 
-                                     to_char(stddev(phenotype.value::real), 'FM999990.990') 
-                                    FROM cvterm 
-                                    JOIN phenotype ON (cvterm_id=cvalue_id) 
-                                    JOIN nd_experiment_phenotype USING(phenotype_id) 
-                                    JOIN nd_experiment_project USING(nd_experiment_id) 
-                                    JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id 
-                                    WHERE project_id=? 
-                                          AND phenotype.value~? 
-                                    GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) 
+                                     cvterm.cvterm_id,
+                                     count(phenotype.value),
+                                     to_char(avg(phenotype.value::real), 'FM999990.990'),
+                                     to_char(max(phenotype.value::real), 'FM999990.990'),
+                                     to_char(min(phenotype.value::real), 'FM999990.990'),
+                                     to_char(stddev(phenotype.value::real), 'FM999990.990')
+                                    FROM cvterm
+                                    JOIN phenotype ON (cvterm_id=cvalue_id)
+                                    JOIN nd_experiment_phenotype USING(phenotype_id)
+                                    JOIN nd_experiment_project USING(nd_experiment_id)
+                                    JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id
+                                    WHERE project_id=?
+                                          AND phenotype.value~?
+                                    GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text)
                                                 || dbxref.accession::text, cvterm.cvterm_id;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     $h->execute($c->stash->{trial_id}, $numeric_regex);
 
     my @phenotype_data;
-    
+
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev) = $h->fetchrow_array()) {
 
         my $cv = 0;
@@ -348,7 +348,7 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 
     my $design = $layout-> get_design();
 
-    #print STDERR Dumper($design);
+    print STDERR Dumper($design);
 
     my @layout_info;
     foreach my $plot_number (keys %{$design}) {
@@ -361,6 +361,7 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 			rep_number =>  $design->{$plot_number}-> {rep_number},
 			plot_name => $design->{$plot_number}-> {plot_name},
 			accession_name => $design->{$plot_number}-> {accession_name},
+      plant_names => $design->{$plot_number}-> {plant_names},
 
 	};
 
@@ -380,7 +381,7 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	foreach $my_hash (@layout_info) {
 	    if ($my_hash->{'row_number'}) {
 		if ($my_hash->{'row_number'} =~ m/\d+/) {
-		$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'};
+		$array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'}."\nnumber_of_plants:".scalar(@{$my_hash->{"plant_names"}});
 
 
 	$plot_id[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_id'};
@@ -459,7 +460,7 @@ sub compute_derive_traits : Path('/ajax/phenotype/delete_field_coords') Args(0) 
   $h->execute($trial_id);
 
   $c->stash->{rest} = {success => 1};
-  
+
 }
 
 
