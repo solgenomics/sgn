@@ -71,6 +71,10 @@ jQuery(document).ready(function ($) {
 	$("#cross_upload_spreadsheet_info_dialog" ).modal("show");
     });
 
+    $("#group_cross_type_info").click( function () {
+  $("#create_crosses" ).modal("hide");
+  $("#group_cross_type_dialog" ).modal("show");
+    });
 
     $('#create_cross_submit').click(function () {
 	add_cross();
