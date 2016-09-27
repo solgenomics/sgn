@@ -1319,18 +1319,21 @@ sub _build_plot_names {
 
 sub _get_greenhouse_design {
     my $self = shift;
+    my $order = 1;
     my %greenhouse_design;
-    my @num_plants = @{ $self->get_greenhouse_num_plants() };
-    my @accession_list = @{ $self->get_stock_list() };
+  #  my @num_plants = @{ $self->get_greenhouse_num_plants() };
+    my @accession_list = sort @{ $self->get_stock_list() };
     my $trial_name = $self->get_trial_name;
-    my %num_accession_hash;
-    @num_accession_hash{@accession_list} = @num_plants;
-    foreach my $key (keys %num_accession_hash) {
-        for my $n (1..$num_accession_hash{$key}) {
-            my $plant_name = $trial_name."_".$key."_plant_".$n;
-            $greenhouse_design{$plant_name}->{plant_name} = $plant_name;
-            $greenhouse_design{$plant_name}->{stock_name} = $key;
-        }
+  #  my %num_accession_hash;
+  #  @num_accession_hash{@accession_list} = @num_plants;
+  #  foreach my $key (keys %num_accession_hash) {
+    foreach my $key (@accession_list) {
+  #      for my $n (1..$num_accession_hash{$key}) {
+            my $plant_name = $trial_name."_".$key."_plant_1";
+            $greenhouse_design{$order}->{plant_name} = $plant_name;
+            $greenhouse_design{$order}->{stock_name} = $key;
+            $order++;
+  #      }
     }
     return \%greenhouse_design;
 }
