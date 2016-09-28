@@ -601,9 +601,11 @@ sub multi_modeling_message {
     }
     if ($cnt > 1 ) 
     {
+	my $analysis_page = $output_details->{analysis_profile}->{analysis_page};
+	
     	$message .= "You can also view the summary of all the analyses in the page below."
     	    ."\nAdditionally, you may find the analytical features in the page useful.\n"
-    	    . $output_details->{analysis_profile}->{analysis_page} ."\n\n";
+    	    . $analysis_page ."\n\n";
     }
 
     return  $message;
