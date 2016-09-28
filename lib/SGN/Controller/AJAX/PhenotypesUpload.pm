@@ -141,7 +141,7 @@ sub _prep_upload {
     my $overwrite_values = $c->req->param('phenotype_upload_overwrite_values');
     if ($overwrite_values) {
         my $user_type = $c->user()->get_object->get_user_type();
-        print STDERR $user_type."\n";
+        #print STDERR $user_type."\n";
         if ($user_type ne 'curator') {
             push @error_status, 'Must be a curator to overwrite values! Please contact us!';
         }

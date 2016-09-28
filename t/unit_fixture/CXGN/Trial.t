@@ -179,14 +179,14 @@ foreach (@$traits_assayed) {
 }
 @traits_assayed_names = sort @traits_assayed_names;
 #print STDERR Dumper \@traits_assayed_names;
-is_deeply(\@traits_assayed_names, ['Dry yield', 'Root number counting'], 'check traits assayed' );
+is_deeply(\@traits_assayed_names, ['Dry yield|CO:0000014', 'Root number counting|CO:0000011'], 'check traits assayed' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70727);
 my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
 #print STDERR Dumper \@pheno_for_trait_sorted;
 is_deeply(\@pheno_for_trait_sorted, ['30','40','50'], 'check traits assayed' );
 
-my $plot_pheno_for_trait = $tn->get_plot_phenotypes_for_trait(70727);
+my $plot_pheno_for_trait = $tn->get_stock_phenotypes_for_trait(70727);
 #print STDERR Dumper $plot_pheno_for_trait;
 my @phenotyped_stocks;
 my @phenotyped_stocks_values;

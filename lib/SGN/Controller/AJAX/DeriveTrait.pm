@@ -4,11 +4,14 @@ use Moose;
 use Data::Dumper;
 use List::Util 'max';
 use Bio::Chado::Schema;
-use List::Util qw | any |;
+use List::Util qw | any sum |;
 use DBI;
 use DBIx::Class;
 use SGN::Model::Cvterm;
-
+use JSON;
+use POSIX;
+use URI::Encode qw(uri_encode uri_decode);
+use CXGN::BreedersToolbox::DeriveTrait;
 
 BEGIN {extends 'Catalyst::Controller::REST'}
 
@@ -272,6 +275,70 @@ project.project_id=? ) );");
 
 	$c->stash->{rest} = {success => 1};
 }
+
+
+sub generate_plot_phenotypes : Path('/ajax/breeders/trial/generate_plot_phenotypes') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->req->param('trial_id');
+    my $trait_name = uri_decode($c->req->param('trait_name'));
+    my $method = $c->req->param('method');
+    my $rounding = $c->req->param('rounding');
+    #print STDERR "Trial: $trial_id\n";
+    #print STDERR "Trait: $trait_name\n";
+    #print STDERR "Method: $method\n";
+    #print STDERR "Round: $rounding\n";
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $derive_trait = CXGN::BreedersToolbox::DeriveTrait->new({bcs_schema=>$schema, trait_name=>$trait_name, trial_id=>$trial_id, method=>$method, rounding=>$rounding});
+    my ($info, $plots, $traits, $store_hash) = $derive_trait->generate_plot_phenotypes();
+    #print STDERR Dumper \%store_hash;
+    #print STDERR Dumper \@return;
+    $c->stash->{rest} = {success => 1, info=>$info, method=>$method, trait_name=>$trait_name, rounding=>$rounding, store_plots=>encode_json($plots), store_traits=>encode_json($traits), store_data=>encode_json($store_hash)};
+}
+
+
+
+sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated_plot_phenotypes') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my %parse_result;
+    my $data = decode_json($c->req->param('store_data'));
+    my $plots = decode_json($c->req->param('store_plots'));
+    my $traits = decode_json($c->req->param('store_traits'));
+    my $overwrite_values = $c->req->param('overwrite_values');
+    #print STDERR Dumper $data;
+    #print STDERR Dumper $plots;
+    #print STDERR Dumper $traits;
+    #print STDERR $overwrite_values;
+
+    if ($overwrite_values) {
+        my $user_type = $c->user()->get_object->get_user_type();
+        #print STDERR $user_type."\n";
+        if ($user_type ne 'curator') {
+            $c->stash->{rest} = {error => 'Must be a curator to overwrite values! Please contact us!'};
+        }
+    }
+
+    $parse_result{'data'} = $data;
+    $parse_result{'plots'} = $plots;
+    $parse_result{'traits'} = $traits;
+
+    my $size = scalar(@$plots) * scalar(@$traits);
+    my %phenotype_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    $phenotype_metadata{'archived_file'} = 'none';
+    $phenotype_metadata{'archived_file_type'}="generated from plot from plant phenotypes";
+    $phenotype_metadata{'operator'}=$c->user()->get_object()->get_sp_person_id();
+    $phenotype_metadata{'date'}="$timestamp";
+
+    my $store_error = CXGN::Phenotypes::StorePhenotypes->store($c, $size, $plots, $traits, $data, \%phenotype_metadata, 'plot', $overwrite_values );
+    if ($store_error) {
+        $c->stash->{rest} = {error => $store_error};
+    }
+    $c->stash->{rest} = {success => 1};
+}
+
 
 
 1;

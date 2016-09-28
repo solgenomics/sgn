@@ -128,8 +128,9 @@ sub generate_experimental_design_POST : Args(0) {
   my $start_number =  $c->req->param('start_number');
   my $increment =  $c->req->param('increment');
   my $trial_location = $c->req->param('trial_location');
-  my $trial_name = $c->req->param('project_name');
+  #my $trial_name = $c->req->param('project_name');
   my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
+  my $use_same_layout = $c->req->param('use_same_layout');
   #my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
   if ($design_type eq "RCBD" || $design_type eq "Alpha") {
     if (@control_names_crbd) {
@@ -137,6 +138,24 @@ sub generate_experimental_design_POST : Args(0) {
     }
   }
 
+my @locations;
+my $trial_locations;
+my $multi_location;
+
+try {
+   $multi_location = decode_json($trial_location);
+   foreach my $loc (@$multi_location) {
+     push @locations, $loc;
+   }
+
+}
+catch {
+  push @locations, $trial_location;
+};
+
+my $location_number = scalar(@locations);
+
+#print STDERR Dumper(@locations);
    print STDERR join "\n",$design_type;
    print STDERR "\n";
 
@@ -144,6 +163,12 @@ sub generate_experimental_design_POST : Args(0) {
    print STDERR "\n";
 
    print STDERR join "\n",$row_number;
+   print STDERR "\n";
+
+   print STDERR join "\n",$use_same_layout;
+   print STDERR "\n";
+
+   print STDERR join "\n",$trial_location;
    print STDERR "\n";
 
 
@@ -158,12 +183,20 @@ sub generate_experimental_design_POST : Args(0) {
     return;
   }
 
-  my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
-  $geolocation_lookup->set_location_name($c->req->param('trial_location'));
-  if (!$geolocation_lookup->get_geolocation()){
-    $c->stash->{rest} = { error => "Trial location not found" };
-    return;
-  }
+  my @design_array;
+  my @design_layout_view_html_array;
+
+  foreach $trial_locations (@locations) {
+
+    my $trial_name = $c->req->param('project_name');
+    my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
+    #$geolocation_lookup->set_location_name($c->req->param('trial_location'));
+    $geolocation_lookup->set_location_name($trial_locations);
+    #print STDERR Dumper(\$geolocation_lookup);
+    if (!$geolocation_lookup->get_geolocation()){
+      $c->stash->{rest} = { error => "Trial location not found" };
+      return;
+    }
 
   # my $trial_create = CXGN::Trial::TrialCreate->new(chado_schema => $schema);
   # $trial_create->set_trial_year($c->req->param('year'));
@@ -173,8 +206,21 @@ sub generate_experimental_design_POST : Args(0) {
   #   return;
   # }
 
+  if (scalar(@locations) > 1) {
+    $trial_name = $trial_name."_".$trial_locations;
+  }
+
   $trial_design->set_trial_name($trial_name);
 
+   my $design_created = 0;
+    if ($use_same_layout) {
+      $design_created = 1;
+    }
+
+  if ($design_created) {
+    $trial_design->set_randomization_seed($design_created);
+
+  }
   if (@stock_names) {
     $trial_design->set_stock_list(\@stock_names);
     $design_info{'number_of_stocks'} = scalar(@stock_names);
@@ -236,6 +282,9 @@ sub generate_experimental_design_POST : Args(0) {
       my $json = JSON->new();
     $trial_design->set_greenhouse_num_plants($json->decode($greenhouse_num_plants));
   }
+  if ($location_number) {
+    $design_info{'number_of_locations'} = $location_number;
+  }
   if ($design_type) {
     $trial_design->set_design_type($design_type);
     $design_info{'design_type'} = $design_type;
@@ -247,7 +296,6 @@ sub generate_experimental_design_POST : Args(0) {
     $c->stash->{rest} = {error => "Design type not supported." };
     return;
   }
-
 
   try {
     $trial_design->calculate_design();
@@ -265,13 +313,22 @@ sub generate_experimental_design_POST : Args(0) {
   $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type);
   $design_info_view_html = design_info_view(\%design, \%design_info);
   my $design_json = encode_json(\%design);
+  push @design_array,  $design_json;
+  push @design_layout_view_html_array, $design_layout_view_html;
+}
+
   $c->stash->{rest} = {
 		       success => "1",
-		       design_layout_view_html => $design_layout_view_html,
+           design_layout_view_html => encode_json(\@design_layout_view_html_array),
+		       #design_layout_view_html => $design_layout_view_html,
 		       design_info_view_html => $design_info_view_html,
-		       design_json => $design_json,
+		       #design_json => $design_json,
+           design_json =>  encode_json(\@design_array),
 		      };
-}
+
+ }
+
+
 
 sub save_experimental_design : Path('/ajax/trial/save_experimental_design') : ActionClass('REST') { }
 
@@ -302,27 +359,82 @@ sub save_experimental_design_POST : Args(0) {
   my $error;
 
   my $design = _parse_design_from_json($c->req->param('design_json'));
-  #print STDERR Dumper $design;
+  print STDERR Dumper $design;
 
-  my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
-  my $json = JSON->new();
-  if ($greenhouse_num_plants) {
-      $greenhouse_num_plants = $json->decode($greenhouse_num_plants);
+  my @locations;
+  my $trial_location;
+  my $multi_location;
+  my $trial_locations = $c->req->param('trial_location');
+  my $trial_name = $c->req->param('project_name');
+  my $breeding_program = $c->req->param('breeding_program_name');
+  my $schema = $c->dbic_schema("Bio::Chado::Schema");
+  my $breeding_program_id = $schema->resultset("Project::Project")->find({name=>$breeding_program})->project_id();
+  my $folder;
+  my $new_trial_id;
+
+  try {
+     $multi_location = decode_json($trial_locations);
+     foreach my $loc (@$multi_location) {
+       push @locations, $loc;
+     }
+
   }
-  my $trial_create = CXGN::Trial::TrialCreate
-    ->new({
-	   chado_schema => $chado_schema,
-	   phenome_schema => $phenome_schema,
-	   dbh => $dbh,
-	   user_name => $user_name,
-	   design => $design,
-	   program => $c->req->param('breeding_program_name'),
-	   trial_year => $c->req->param('year'),
-	   trial_description => $c->req->param('project_description'),
-	   trial_location => $c->req->param('trial_location'),
-	   trial_name => $c->req->param('project_name'),
-	   design_type => $c->req->param('design_type'),
-	   greenhouse_num_plants => $greenhouse_num_plants,
+  catch {
+    push @locations, $trial_locations;
+  };
+  my $folder_id;
+  my $parent_folder_id = 0;
+  if (scalar(@locations) > 1) {
+
+      my $existing = $schema->resultset("Project::Project")->find( { name => $trial_name });
+
+      if ($existing) {
+  	     $c->stash->{rest} = { error => "An folder or trial with that name already exists in the database. Please select another name." };
+  	      return;
+      }
+
+      $folder = CXGN::Trial::Folder->create(
+  	{
+  	    bcs_schema => $schema,
+  	    parent_folder_id => $parent_folder_id,
+  	    name => $trial_name,
+  	    breeding_program_id => $breeding_program_id,
+  	});
+    $folder_id = $folder->folder_id();
+  }
+
+  my $design_index = 0;
+
+  foreach $trial_location (@locations) {
+    my $trial_name = $c->req->param('project_name');
+    if (scalar(@locations) > 1) {
+      $trial_name = $trial_name."_".$trial_location;
+    }
+
+    my $trial_location_design = decode_json($design->[$design_index]);
+    print STDERR Dumper $trial_location_design;
+
+    my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
+    my $json = JSON->new();
+    if ($greenhouse_num_plants) {
+        $greenhouse_num_plants = $json->decode($greenhouse_num_plants);
+      }
+
+      my $trial_create = CXGN::Trial::TrialCreate->new({
+	       chado_schema => $chado_schema,
+    	   phenome_schema => $phenome_schema,
+    	   dbh => $dbh,
+    	   user_name => $user_name,
+    	   design => $trial_location_design,
+    	   program => $breeding_program,
+    	   trial_year => $c->req->param('year'),
+    	   trial_description => $c->req->param('project_description'),
+         trial_location => $trial_location,
+    	   #trial_location => $c->req->param('trial_location'),
+         trial_name => $trial_name,
+    	   #trial_name => $c->req->param('project_name'),
+    	   design_type => $c->req->param('design_type'),
+    	   greenhouse_num_plants => $greenhouse_num_plants,
 	  });
 
   #$trial_create->set_user($c->user()->id());
@@ -336,22 +448,37 @@ sub save_experimental_design_POST : Args(0) {
   # if ($c->req->param('control_list')) {
   #   $trial_create->set_control_list(_parse_list_from_json($c->req->param('control_list')));
   # }
-  if ($trial_create->trial_name_already_exists()) {
-    $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
-    return;
-  }
+    if ($trial_create->trial_name_already_exists()) {
+      $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
+      return;
+    }
 
-  try {
-    $trial_create->save_trial();
-  } catch {
-    $c->stash->{rest} = {error => "Error saving trial in the database $_"};
-    print STDERR "ERROR SAVING TRIAL!\n";
-    $error = 1;
-  };
-  if ($error) {return;}
-  print STDERR "Trial saved successfully\n";
-  $c->stash->{rest} = {success => "1",};
-  return;
+    try {
+      $trial_create->save_trial();
+    } catch {
+      $c->stash->{rest} = {error => "Error saving trial in the database $_"};
+      print STDERR "ERROR SAVING TRIAL!\n";
+      $error = 1;
+    };
+
+    $design_index++;
+
+    if ($folder_id) {
+      $new_trial_id = $schema->resultset("Project::Project")->find({name=>$trial_name})->project_id();
+
+      my $folder1 = CXGN::Trial::Folder->new(
+	 		{
+	 			bcs_schema => $chado_schema,
+	 			folder_id => $new_trial_id,
+			});
+      $folder1->associate_parent($folder_id);
+    }
+  }
+    if ($error) {return;}
+    print STDERR "Trial saved successfully\n";
+    $c->stash->{rest} = {success => "1",};
+    return;
+
 }
 
 sub verify_stock_list : Path('/ajax/trial/verify_stock_list') : ActionClass('REST') { }
@@ -428,8 +555,8 @@ sub _parse_design_from_json {
   if ($design_json) {
     my $decoded_json = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
     #my $decoded_json = decode_json($design_json);
-    my %design = %{$decoded_json};
-    return \%design;
+    #my %design = %{$decoded_json};
+    return $decoded_json;
   }
   else {
     return;
@@ -484,12 +611,12 @@ sub upload_trial_file_POST : Args(0) {
   }
 
   if (!$c->user()) {
-    print STDERR "User not logged in... not adding a crosses.\n";
-    $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
+    print STDERR "User not logged in... not uploading a trial.\n";
+    $c->stash->{rest} = {error => "You need to be logged in to upload a trial." };
     return;
   }
   if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a trial." };
     return;
   }
 
@@ -517,6 +644,8 @@ sub upload_trial_file_POST : Args(0) {
   $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
   $parser->load_plugin('TrialExcelFormat');
   $parsed_data = $parser->parse();
+
+  
 
   if (!$parsed_data) {
     my $return_error = '';

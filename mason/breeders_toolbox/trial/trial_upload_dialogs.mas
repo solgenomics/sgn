@@ -127,6 +127,7 @@ $locations
                                 <td>rep_number</td>
                                 <td>range_number</td>
                                 <td>row_number</td>
+                                <td>col_number</td>
                             </tr>
                         </tbody>
                     </table>
@@ -149,8 +150,9 @@ $locations
                     <br />
                     range_number (range number, numeric)
                     <br />
-                    row_number (row number, numeric)
+                    row_number (row number, numeric, required for field map generation)
                     <br />
+                    col_number (column number, numeric, required for field map generation)
                 </div>
             </div>
             <div class="modal-footer">

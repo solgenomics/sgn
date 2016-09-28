@@ -34,7 +34,7 @@ sub trial_detail_design_view {
 	  $design_result_html .= "<td>".$design{$key}->{check_name}."</td>";
       } else {
 	  $design_result_html .= "<td></td>";
-      } 
+      }
       if ($design{key}->{row_number}) {
 	  $design_result_html .= "<td>".$design{$key}->{row_number}."</td>";
       } else {
@@ -156,6 +156,9 @@ sub design_info_view {
 #      $design_description = "Modified Augmented Design IV";
 #    }
     $design_info_html .= "<dt>Design type</dt><dd>".$design_description."</dd>";
+  }
+  if ($design_info{'number_of_locations'}) {
+    $design_info_html .= "<dt>Number of locations</dt><dd>".$design_info{'number_of_locations'}."</dd>";
   }
   if ($design_info{'number_of_stocks'}) {
     $design_info_html .= "<dt>Number of accessions</dt><dd>".$design_info{'number_of_stocks'}."</dd>";

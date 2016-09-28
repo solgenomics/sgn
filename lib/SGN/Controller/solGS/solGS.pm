@@ -2539,9 +2539,10 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 	if ($has_genotype)
 	{
 	    $c->stash->{pop_id} = $selection_pop_id;
-	    $self->genotype_file($c);
+
+	    $self->first_stock_genotype_data($c, $selection_pop_id);
 	    my $selection_pop_geno_file = $c->stash->{first_stock_genotype_file};
-		
+
 	    my $training_pop_geno_file;
 	
 	    if ($training_pop_id =~ /upload/) 
@@ -2555,7 +2556,7 @@ sub check_selection_population_relevance :Path('/solgs/check/selection/populatio
 	    {
 		my $dir = $c->stash->{solgs_cache_dir}; 
 		my $tr_geno_file = "genotype_data_${training_pop_id}";
-		$training_pop_geno_file = $self->grep_file($dir,  $tr_geno_file);  
+		$training_pop_geno_file = $self->grep_file($dir,  $tr_geno_file); 
 	    }
 
 	    $similarity = $self->compare_marker_set_similarity([$selection_pop_geno_file, $training_pop_geno_file]);
@@ -2716,6 +2717,19 @@ sub list_of_prediction_pops_file {
     my $cache_data = {key       => 'list_of_prediction_pops' . $training_pop_id,
                       file      => 'list_of_prediction_pops_' . $training_pop_id,
                       stash_key => 'list_of_prediction_pops_file'
+    };
+
+    $self->cache_file($c, $cache_data);
+
+}
+
+
+sub first_stock_genotype_file {
+    my ($self, $c, $pop_id) = @_;
+    
+    my $cache_data = {key       => 'first_stock_genotype_file'. $pop_id,
+                      file      => 'first_stock_genotype_file_' . $pop_id . '.txt',
+                      stash_key => 'first_stock_genotype_file'
     };
 
     $self->cache_file($c, $cache_data);
@@ -3756,7 +3770,7 @@ sub grep_file {
     opendir my $dh, $dir 
         or die "can't open $dir: $!\n";
 
-    my ($file)  = grep { /$exp/ && -f "$dir/$_" }  readdir($dh);
+    my ($file)  = grep { /^$exp/ && -f "$dir/$_" }  readdir($dh);
     close $dh;
    
     if ($file)    
@@ -4592,6 +4606,21 @@ sub prep_phenotype_file {
 
     $file_cache->set('phenotype_data_' . $pop_id, $pheno_file, '30 days');
     
+}
+
+
+sub first_stock_genotype_data {
+    my ($self, $c, $pr_id) = @_;
+ 
+    $self->first_stock_genotype_file($c, $pr_id);
+    my $geno_file  = $c->stash->{first_stock_genotype_file};
+ 
+    my $geno_data = $c->model('solGS::solGS')->first_stock_genotype_data($pr_id);
+
+    if ($geno_data)
+    {
+	write_file($geno_file, $geno_data);
+    }
 }
 
 
