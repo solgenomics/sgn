@@ -462,8 +462,8 @@ sub combined_trials_desc {
 	$s_pop_id =~ s/\s+//;
     }
        
-    $solgs_controller->filtered_genotype_file($c);
-    my $filtered_geno_file  = $c->stash->{filtered_genotype_file};
+    $solgs_controller->filtered_training_genotype_file($c);
+    my $filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
 
     $solgs_controller->cache_combined_pops_data($c);
     my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
