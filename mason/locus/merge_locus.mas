@@ -1,3 +1,5 @@
+
+
 <%doc>
 
 =head1 NAME
@@ -9,7 +11,7 @@
 
 Parameters:
 
-=over 2
+=over 3
 
 
 =item locus_id
@@ -20,8 +22,11 @@ a locus id
 
 the common name of the locus (only loci of the dame common name can be merged )
 
-=back
+=item curator
 
+Boolean. Only curators can merge loci
+
+=back
 
 =head1 AUTHOR
 
@@ -31,14 +36,24 @@ Naama Menda <nm249@cornell.edu>
 
 </%doc>
 
-
 <%args>
+
 $locus_id
 $common_name
+$curator => undef
+
+
 </%args>
 
+<%perl>
 
+</%perl>
+
+<& /util/import_javascript.mas, classes => ["CXGN.Phenome.Locus", "CXGN.Phenome.Locus"] &>
+
+<a href="javascript:Tools.toggleMergeFormDisplay()">[Merge locus]</a> Warning: Merged locus will be set to obsolete! Unobsoleting is possible only directly via the database! <br>
 <div id='mergeLocusForm' style="display:none">
+  
   <div id='locus_merge'>
     <input type="hidden" 
 	   value="<% $common_name %>"
@@ -48,22 +63,20 @@ $common_name
     <input type="text" 
 	   style="width: 50%"
 	   id="locus_input"
-	   onkeyup="Locus.getMergeLocus(this.value, '<% $locus_id %>' )"
-	   >
+	   onkeyup="Locus.getMergeLocus(this.value, '<% $locus_id %>')">
     <input type="button"
 	   id="merge_locus_button"
 	   value="merge locus"
            disabled="true"
-	   onclick="Locus.mergeLocus('<% $locus_id %>');this.disabled=false"
-	   >
+	   onclick="Locus.mergeLocus('<% $locus_id %>');this.disabled=false;">
+    
     <select id="locus_list"
 	    style="width: 100%"
-	    size="5"
-	    onchange= "jQuery('#merge_locus_button').disabled=false"
-	    > 
+	    onchange= "Locus.enableMergeButton();"
+	    size=5> 
     </select>
   </div>
 </div>
-
+<BR>
 
 
