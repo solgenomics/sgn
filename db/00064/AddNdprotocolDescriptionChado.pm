@@ -15,6 +15,9 @@ see the perldoc of parent class for more details.
 =head1 DESCRIPTION
 
 Add a description column to the Chado table nd_protocol
+This change will go into Chado version 1.4. See GMOD git repo for details.
+DO NOT ALTER CHADO TABLES WITHOUT COORDINATING WITH GMOD FIRST!
+
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -38,7 +41,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-patch for adding descriotion column to chado table nd_protocol. This change will go into Chado version 1.4. DO NOT ALTER CHADO TABLES WITHOUT COORDINATING FIRST WITH GMOD!
+This patch adds a description column to the nd_protocol table. This change has been coordinated with GMOD and will go into version 1.4 of Chado. DO NOT ALTER CHADO TABLES WITHOUT COORDINATING WITH GMOD. See the GMOD git repo for details.
 
 has '+prereq' => (
     default => sub {

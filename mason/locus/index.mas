@@ -118,6 +118,9 @@ my $collapsed = $locus->count_associated_loci() ? 1 : 0 ;
 my $network_sub = $collapsed ?
   "View <b>$locus_name</b> relationships in the stand-alone <a href=\"/tools/networkbrowser/?type=locus&name=$locus_id\">network browser</a>" : '';
 
+my $merge_locus_link = '<a href="javascript:Tools.toggleContent(\'mergeLocusForm\', \'locus_merge\')">[Merge locus]</a>';
+
+
 my $new_unigene_link =  $curator || $submitter || $sequencer  ?
   '<a href="javascript:Tools.toggleContent(\'associateUnigeneForm\', \'locus_unigenes\' )">[Associate new unigene]</a>' :
     '<span class= "ghosted">[Associate new unigene]</span> ';
@@ -273,8 +276,14 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 
 % }
 % if ( $locus_name && $curator ) {
-  <&| /page/info_section.mas, title=>"Curator tools",  collapsible=>1, collapsed=>1 &>
-       <& /locus/merge_locus.mas , locus_id=>"$locus_id" , common_name=>"$common_name" &>
+  <&| /page/info_section.mas,
+    title       =>"Curator tools",
+    collapsible =>1,
+    collapsed   =>1,
+    subtitle    =>$merge_locus_link
+&>
+
+  <& /locus/merge_locus.mas , locus_id=>"$locus_id" , common_name=>"$common_name" &>
 
   </&>
 % }

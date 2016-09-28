@@ -150,15 +150,19 @@ var Tools = {
     toggleContent: function(form,span,style) {
 	if (!style) { style = 'inline'; }
         var content= span + "_content";
-        var onswitch= span + "_onswitch";
+	var onswitch= span + "_onswitch";
         var offswitch= span + "_offswitch";
-        var form_disp = document.getElementById(form).style.display;
-        var content_disp = document.getElementById(content).style.display; 
+	var form_disp = document.getElementById(form).style.display;
+        var content_disp = document.getElementById(content).style.display;
+	alert("content DISPLAY= "+content_disp);
+	alert("form display= "+form_disp+" , content display= "+content_disp);
         Effects.showElement(content);
         Effects.swapElements(onswitch,offswitch);
         if (form_disp == 'none') {  //form is hidden, display both elements and change button to '-'
+	    alert("Displaying elements and form "+form+"   "+"content= "+content_disp);
             Effects.showElement(form);
         }else if (content_disp != 'none' ){  // form is visible. If content is hidden, open the span, but keep form open
+	    alert("Hiding element "+form);
             Effects.hideElement(form);
         }
     },
