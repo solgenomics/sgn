@@ -2747,11 +2747,11 @@ sub prediction_population_file {
         );
 
     $c->stash->{prediction_pop_id} = $pred_pop_id;
+
     $self->filtered_selection_genotype_file($c);
     my $filtered_geno_file = $c->stash->{filtered_selection_genotype_file};
 
-
-    my $geno_files .=  $filtered_geno_file;  
+    my $geno_files =  $filtered_geno_file;  
   
     $self->genotype_file($c, $pred_pop_id);
     $geno_files .= "\t" . $c->stash->{pred_genotype_file};   
@@ -4799,7 +4799,7 @@ sub genotype_file  {
     my $pop_id  = $c->stash->{pop_id};
   
     my $geno_file;
-   
+
     if ($pred_pop_id) 
     {      
         $pop_id = $c->stash->{prediction_pop_id};      
