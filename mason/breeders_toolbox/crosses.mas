@@ -383,6 +383,23 @@ $user_id => undef
     		</select>
               </div>
 	    </div>
+      <i>optional</i>
+      <p>Group Crosses together in a folder?</p>
+      <div class="form-group">
+            <label class="col-sm-2 control-label">Folder Name: </label>
+            <div class="col-sm-10">
+        <input class="form-control" type="text" id="upload_folder_name" name="upload_folder_name"/>
+            </div>
+      </div>
+      <p>Or add crosses to an existing folder?</p>
+      <div class="form-group">
+          <label class="col-sm-3 control-label">Folder: </label>
+          <div class="col-sm-9" >
+            <div id="cross_folder_select_div">
+              [Loading...]
+            </div>
+          </div>
+      </div>
 	    <hr>
 	    <h4>Progeny Naming: </h4>
 	    <div class="form-group">

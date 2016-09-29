@@ -558,6 +558,9 @@ jQuery(document).ready(function ($) {
 
 
     $("#upload_crosses_link").click( function () {
+
+      get_select_box('folders', 'cross_folder_select_div', { 'name' : 'html_select_folder_for_cross', 'id' : 'html_select_folder_for_cross', 'empty' : 1  });
+
 	$("#upload_crosses_dialog" ).modal("show");
     });
 
