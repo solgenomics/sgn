@@ -1113,10 +1113,21 @@ sub total_phenotypes {
 sub get_phenotypes_for_trait {
     my $self = shift;
     my $trait_id = shift;
+    my $stock_type = shift;
     my @data;
     my $dbh = $self->bcs_schema->storage()->dbh();
+	#my $schema = $self->bcs_schema();
 
-    my $h = $dbh->prepare("SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and cvterm.cvterm_id = ? and phenotype.value~?;");
+	my $h;
+	my $join_string = '';
+	my $where_string = '';
+	if ($stock_type) {
+		my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $stock_type, 'stock_type')->cvterm_id();
+		$join_string = 'JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id)';
+		$where_string = "stock.type_id=$stock_type_id and";
+	}
+	my $q = "SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) $join_string WHERE $where_string project_id=? and cvterm.cvterm_id = ? and phenotype.value~?;";
+	$h = $dbh->prepare($q);
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     $h->execute($self->get_trial_id(), $trait_id, $numeric_regex );

@@ -175,9 +175,13 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    my $schema = $c->stash->{schema};
     my $round = Math::Round::Var->new(0.01);
     my $dbh = $c->dbc->dbh();
     my $trial_id = $c->stash->{trial_id};
+    my $plot_of = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
     my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text)
                                       || dbxref.accession::text AS trait,
@@ -186,35 +190,44 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
                                      to_char(avg(phenotype.value::real), 'FM999990.990'),
                                      to_char(max(phenotype.value::real), 'FM999990.990'),
                                      to_char(min(phenotype.value::real), 'FM999990.990'),
-                                     to_char(stddev(phenotype.value::real), 'FM999990.990')
+                                     to_char(stddev(phenotype.value::real), 'FM999990.990'),
+                                     accession.uniquename,
+                                     accession.stock_id
                                     FROM cvterm
                                     JOIN phenotype ON (cvterm_id=cvalue_id)
                                     JOIN nd_experiment_phenotype USING(phenotype_id)
                                     JOIN nd_experiment_project USING(nd_experiment_id)
+                                    JOIN nd_experiment_stock USING(nd_experiment_id)
+                                    JOIN stock as plot USING(stock_id)
+                                    JOIN stock_relationship on (plot.stock_id = stock_relationship.subject_id)
+                                    JOIN stock as accession on (accession.stock_id = stock_relationship.object_id)
                                     JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id
                                     WHERE project_id=?
                                           AND phenotype.value~?
+                                          AND stock_relationship.type_id=?
+                                          AND plot.type_id=?
+                                          AND accession.type_id=?
                                     GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text)
-                                                || dbxref.accession::text, cvterm.cvterm_id;");
+                                                || dbxref.accession::text, cvterm.cvterm_id, accession.stock_id, accession.uniquename;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    $h->execute($c->stash->{trial_id}, $numeric_regex);
+    $h->execute($c->stash->{trial_id}, $numeric_regex, $plot_of, $plot_type_id, $accesion_type_id);
 
     my @phenotype_data;
 
-    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev) = $h->fetchrow_array()) {
+    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h->fetchrow_array()) {
 
         my $cv = 0;
-        if ($average != 0) {
-            $cv   = ($stddev /  $average) * 100;
+        if ($stddev && $average != 0) {
+            $cv = ($stddev /  $average) * 100;
+            $cv = $round->round($cv) . '%';
         }
-        $cv      = $round->round($cv) . '%';
-        $average = $round->round($average);
-        $min     = $round->round($min);
-        $max     = $round->round($max);
-        $stddev  = $round->round($stddev);
+        if ($average) { $average = $round->round($average); }
+        if ($min) { $min = $round->round($min); }
+        if ($max) { $max = $round->round($max); }
+        if ($stddev) { $stddev = $round->round($stddev); }
 
-	push @phenotype_data, [ qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} ];
+	push @phenotype_data, [ qq{<a href="/stock/$stock_id/view">$stock_name</a>}, qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} ];
     }
 
     $c->stash->{rest} = { data => \@phenotype_data };
@@ -225,7 +238,7 @@ sub trait_histogram : Chained('trial') PathPart('trait_histogram') Args(1) {
     my $c = shift;
     my $trait_id = shift;
 
-    my @data = $c->stash->{trial}->get_phenotypes_for_trait($trait_id);
+    my @data = $c->stash->{trial}->get_phenotypes_for_trait($trait_id, 'plot');
 
     $c->stash->{rest} = { data => \@data };
 }
