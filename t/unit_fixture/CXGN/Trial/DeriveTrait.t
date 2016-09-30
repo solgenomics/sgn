@@ -120,9 +120,20 @@ my $parsed_data = {
 my @plots = ( 'test_trial_derive_trait1_plant_1', 'test_trial_derive_trait1_plant_2', 'test_trial_derive_trait2_plant_1', 'test_trial_derive_trait2_plant_2' );
 my @traits = ( 'dry matter content|CO:0000092' );
 
-my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
-my $size = scalar(@plots) * scalar(@traits);
-my $stored_phenotype_error_msg = $store_phenotypes->store($fix,$size,\@plots,\@traits, $parsed_data, \%phenotype_metadata, 'plant');
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    bcs_schema=>$fix->bcs_schema,
+    metadata_schema=>$fix->metadata_schema,
+    phenome_schema=>$fix->phenome_schema,
+    user_id=>41,
+    stock_list=>\@plots,
+    trait_list=>\@traits,
+    values_hash=>$parsed_data,
+    has_timestamps=>1,
+    overwrite_values=>0,
+    metadata_hash=>\%phenotype_metadata
+);
+
+my $stored_phenotype_error_msg = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $fix->bcs_schema(),
@@ -189,8 +200,20 @@ my $size = scalar(@$plots) * scalar(@$traits);
 my %phenotype_metadata;
 $phenotype_metadata{'operator'}='janedoe';
 $phenotype_metadata{'date'}="2017-02-16_03:10:59";
-my $overwrite_values = 1;
-my $store_error = CXGN::Phenotypes::StorePhenotypes->store($fix, $size, $plots, $traits, $store_hash, \%phenotype_metadata, 'plot', $overwrite_values );
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    bcs_schema=>$fix->bcs_schema,
+    metadata_schema=>$fix->metadata_schema,
+    phenome_schema=>$fix->phenome_schema,
+    user_id=>41,
+    stock_list=>$plots,
+    trait_list=>$traits,
+    values_hash=>$store_hash,
+    has_timestamps=>0,
+    overwrite_values=>1,
+    metadata_hash=>\%phenotype_metadata
+);
+
+my $store_error = $store_phenotypes->store();
 ok(!$store_error, "check that store pheno spreadsheet works");
 
 my $trait_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($fix->bcs_schema, 'dry matter content|CO:0000092')->cvterm_id();

@@ -6,8 +6,21 @@ CXGN::Phenotypes::StorePhenotypes - an object to handle storing phenotypes for S
 
 =head1 USAGE
 
- my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
- $store_phenotypes->store($c,\@plot_list, \@trait_list, \%plot_trait_value, \%phenotype_metadata);
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    bcs_schema=>$schema,
+    metadata_schema=>$metadata_schema,
+    phenome_schema=>$phenome_schema,
+    user_id=>$user_id,
+    stock_list=>$plots,
+    trait_list=>$traits,
+    values_hash=>$parsed_data,
+    has_timestamps=>$timestamp_included,
+    overwrite_values=>$overwrite,
+    metadata_hash=>$phenotype_metadata,
+    image_zipfile_path=>$image_zip
+);
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+my $stored_phenotype_error = $store_phenotypes->store();
 
 =head1 DESCRIPTION
 
@@ -309,7 +322,7 @@ sub store {
     my $operator = $phenotype_metadata->{'operator'};
     my $upload_date = $phenotype_metadata->{'date'};
 
-    my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type');
+    my $phenotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
 
@@ -360,28 +373,25 @@ sub store {
                     #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
                     if ($overwrite_values) {
                         if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), "Stock: ".$stock_id})) {
-                            my $overwrite_phenotypes_rs = $schema->resultset("Phenotype::Phenotype")->search({uniquename=>{'like' => 'Stock: '.$stock_id.'%'}, cvalue_id=>$trait_cvterm->cvterm_id() });
-                            while (my $previous_phenotype = $overwrite_phenotypes_rs->next()) {
-                                #print STDERR "removing phenotype: ".$previous_phenotype->uniquename()."\n";
-                                $previous_phenotype->delete();
-                            }
+                            $self->delete_previous_phenotypes($trait_cvterm->cvterm_id(), $stock_id);
                         }
                         $check_unique_trait_stock{$trait_cvterm->cvterm_id(), "Stock: ".$stock_id} = 1;
                     }
 
-		    my $plot_trait_uniquename = "Stock: " .
-		    $stock_id . ", trait: " .
-			$trait_cvterm->name .
-			    " date: $timestamp" .
-				"  operator = $operator" ;
-		    my $phenotype = $trait_cvterm
-		    ->find_or_create_related("phenotype_cvalues", {
-								   observable_id => $trait_cvterm->cvterm_id,
-								   value => $trait_value ,
-								   uniquename => $plot_trait_uniquename,
-								  });
+                    my $plot_trait_uniquename = "Stock: " .
+                        $stock_id . ", trait: " .
+                        $trait_cvterm->name .
+                        " date: $timestamp" .
+                        "  operator = $operator" ;
 
-		    my $experiment;
+                    my $phenotype = $trait_cvterm
+                        ->find_or_create_related("phenotype_cvalues", {
+                            observable_id => $trait_cvterm->cvterm_id,
+                            value => $trait_value ,
+                            uniquename => $plot_trait_uniquename,
+                        });
+
+                    my $experiment;
 
 		## Find the experiment that matches the location, type, operator, and date/timestamp if it exists
 		# my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
@@ -398,26 +408,25 @@ sub store {
 		# 	   });
 
 
-		    # Create a new experiment, if one does not exist
-		    if (!$experiment) {
-                $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
-                    ->create({nd_geolocation_id => $location_id, type_id => $phenotyping_experiment_cvterm->cvterm_id()});
-                $experiment->create_nd_experimentprops({date => $upload_date},{autocreate => 1, cv_name => 'local'});
-                $experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
-            }
+                    # Create a new experiment, if one does not exist
+                    if (!$experiment) {
+                    $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
+                        ->create({nd_geolocation_id => $location_id, type_id => $phenotyping_experiment_cvterm_id});
+                    $experiment->create_nd_experimentprops({date => $upload_date},{autocreate => 1, cv_name => 'local'});
+                    $experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
+                    }
 
-            ## Link the experiment to the project
-            $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
+                    ## Link the experiment to the project
+                    $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
 
-            # Link the experiment to the stock
-            $experiment->create_related('nd_experiment_stocks', { stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm->cvterm_id });
+                    # Link the experiment to the stock
+                    $experiment->create_related('nd_experiment_stocks', { stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id });
 
-            ## Link the phenotype to the experiment
-            $experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
-            #print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
+                    ## Link the phenotype to the experiment
+                    $experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
+                    #print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
 
-            $experiment_ids{$experiment->nd_experiment_id()}=1;
-
+                    $experiment_ids{$experiment->nd_experiment_id()}=1;
                 }
             }
         }
@@ -436,43 +445,63 @@ sub store {
     }
 
     if ($archived_file) {
-	## Insert metadata about the uploaded file only after a successful phenotype data transaction
-	my $md5 = Digest::MD5->new();
-	my $file_row;
-	my $md_row;
-	my $file_metadata_transaction_error;
-	if ($archived_file ne 'none') {
-		open(my $F, "<", $archived_file) || die "Can't open file ".$archived_file;
-		binmode $F;
-		$md5->addfile($F);
-		close($F);
-	}
-	$md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id,});
-	$md_row->insert();
-	$file_row = $metadata_schema->resultset("MdFiles")
-	    ->create({
-		      basename => basename($archived_file),
-		      dirname => dirname($archived_file),
-		      filetype => $archived_file_type,
-		      md5checksum => $md5->hexdigest(),
-		      metadata_id => $md_row->metadata_id(),
-		     });
-	$file_row->insert();
-	foreach my $nd_experiment_id (keys %experiment_ids) {
-	    ## Link the file to the experiment
-	   my $experiment_files = $phenome_schema->resultset("NdExperimentMdFiles")
-		->create({
-			  nd_experiment_id => $nd_experiment_id,
-			  file_id => $file_row->file_id(),
-			 });
-	    $experiment_files->insert();
-	    #print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
-	}
+        $self->save_archived_file_metadata($archived_file, $archived_file_type, \%experiment_ids);
     }
 
     return $error_message;
 }
 
+
+sub delete_previous_phenotypes {
+    my $self = shift;
+    my $trait_cvterm_id = shift;
+    my $stock_id = shift;
+
+    my $overwrite_phenotypes_rs = $self->bcs_schema->resultset("Phenotype::Phenotype")->search({uniquename=>{'like' => 'Stock: '.$stock_id.'%'}, cvalue_id=>$trait_cvterm_id });
+    while (my $previous_phenotype = $overwrite_phenotypes_rs->next()) {
+        #print STDERR "removing phenotype: ".$previous_phenotype->uniquename()."\n";
+        $previous_phenotype->delete();
+    }
+}
+
+sub save_archived_file_metadata {
+    my $self = shift;
+    my $archived_file = shift;
+    my $archived_file_type = shift;
+    my $experiment_ids = shift;
+
+    ## Insert metadata about the uploaded file only after a successful phenotype data transaction
+    my $md5 = Digest::MD5->new();
+    if ($archived_file ne 'none') {
+        open(my $F, "<", $archived_file) || die "Can't open file ".$archived_file;
+        binmode $F;
+        $md5->addfile($F);
+        close($F);
+    }
+
+    my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id,});
+    $md_row->insert();
+    my $file_row = $self->metadata_schema->resultset("MdFiles")
+        ->create({
+            basename => basename($archived_file),
+            dirname => dirname($archived_file),
+            filetype => $archived_file_type,
+            md5checksum => $md5->hexdigest(),
+            metadata_id => $md_row->metadata_id(),
+        });
+    $file_row->insert();
+
+    foreach my $nd_experiment_id (keys %$experiment_ids) {
+        ## Link the file to the experiment
+        my $experiment_files = $self->phenome_schema->resultset("NdExperimentMdFiles")
+            ->create({
+                nd_experiment_id => $nd_experiment_id,
+                file_id => $file_row->file_id(),
+            });
+        $experiment_files->insert();
+        #print STDERR "[StorePhenotypes] Linking file: $archived_file \n\t to experiment id " . $nd_experiment_id . "\n";
+    }
+}
 
 
 ###

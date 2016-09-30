@@ -60,7 +60,7 @@ sub upload_phenotype_verify_POST : Args(1) {
         values_hash=>$parsed_data,
         has_timestamps=>$timestamp_included,
         metadata_hash=>$phenotype_metadata,
-        image_zipfile_path=>$image_zip
+        image_zipfile_path=>$image_zip,
     );
 
     my $warning_status;
@@ -107,7 +107,7 @@ sub upload_phenotype_store_POST : Args(1) {
         has_timestamps=>$timestamp_included,
         overwrite_values=>$overwrite,
         metadata_hash=>$phenotype_metadata,
-        image_zipfile_path=>$image_zip
+        image_zipfile_path=>$image_zip,
     );
 
     #upload_phenotype_store function redoes the same verification that upload_phenotype_verify does before actually uploading. maybe this should be commented out.
@@ -126,38 +126,10 @@ sub upload_phenotype_store_POST : Args(1) {
         return;
     }
 
-    if ($image_zip) {
-        #print STDERR $image_zip."\n";
-        my $schema = $c->dbic_schema("Bio::Chado::Schema");
-        my $dbh = $schema->storage->dbh;
-        my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$image_zip);
-        my $file_members = $archived_zip->file_members();
-        my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
-        my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
-
-        foreach (@$file_members) {
-            my $image = SGN::Image->new( $dbh, undef, $c );
-            #print STDERR Dumper $_;
-            my $img_name = substr($_->fileName(), 0, -24);
-            $img_name =~ s/^.*photos\///;
-            my $stock = $schema->resultset("Stock::Stock")->find( { uniquename => $img_name, 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] } );
-            my $stock_id = $stock->stock_id;
-
-            my $temp_file = $image->upload_zipfile_images($_);
-
-            #Check if image already stored in database
-            my $md5checksum = $image->calculate_md5sum($temp_file);
-            my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum});
-            if ($md_image) {
-                push @$success_status, "Image $temp_file has already been added to the database and will not be added again.";
-            } else {
-                $image->set_sp_person_id($user_id);
-                my $ret = $image->process_image($temp_file, 'stock', $stock_id);
-                if (!$ret ) {
-                    push @$error_status, "Image processing for $temp_file did not work. Image not associated to stock_id $stock_id.";
-                }
-            }
-        }
+    my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
+    my $image_error = $image->upload_fieldbook_zipfile($image_zip, $user_id);
+    if ($image_error) {
+        push @$error_status, $image_error;
     }
 
     push @$success_status, "Metadata saved for archived file.";
@@ -207,9 +179,13 @@ sub _prep_upload {
         $upload = $c->req->upload('upload_datacollector_phenotype_file_input');
     }
 
+    my $user_type = $c->user()->get_object->get_user_type();
+    if ($user_type ne 'submitter' && $user_type ne 'curator') {
+        push @error_status, 'Must have submitter privileges to upload phenotypes! Please contact us!';
+    }
+
     my $overwrite_values = $c->req->param('phenotype_upload_overwrite_values');
     if ($overwrite_values) {
-        my $user_type = $c->user()->get_object->get_user_type();
         #print STDERR $user_type."\n";
         if ($user_type ne 'curator') {
             push @error_status, 'Must be a curator to overwrite values! Please contact us!';
