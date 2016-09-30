@@ -145,11 +145,17 @@ sub upload_phenotype_store_POST : Args(1) {
 
             my $temp_file = $image->upload_zipfile_images($_);
 
-            $image->set_sp_person_id($user_id);
-
-            my $ret = $image->process_image($temp_file, 'stock', $stock_id);
-            if (!$ret ) {
-                $error_status .= "<small>Image processing for $temp_file did not work. Image not associated to stock_id $stock_id</small><hr>";
+            #Check if image already stored in database
+            my $md5checksum = $image->calculate_md5sum($temp_file);
+            my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum});
+            if ($md_image) {
+                push @$success_status, "Image $temp_file has already been added to the database and will not be added again.";
+            } else {
+                $image->set_sp_person_id($user_id);
+                my $ret = $image->process_image($temp_file, 'stock', $stock_id);
+                if (!$ret ) {
+                    push @$error_status, "Image processing for $temp_file did not work. Image not associated to stock_id $stock_id.";
+                }
             }
         }
     }
