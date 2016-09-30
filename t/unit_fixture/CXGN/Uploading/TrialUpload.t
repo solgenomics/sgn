@@ -13,12 +13,12 @@ use Data::Dumper;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
 use CXGN::List;
-use CXGN::Trial::TrialDesign; 
+use CXGN::Trial::TrialDesign;
 
 my $f = SGN::Test::Fixture->new();
 
-my $c = SimulateC->new( { dbh => $f->dbh(), 
-			  bcs_schema => $f->bcs_schema(), 
+my $c = SimulateC->new( { dbh => $f->dbh(),
+			  bcs_schema => $f->bcs_schema(),
 			  metadata_schema => $f->metadata_schema(),
 			  phenome_schema => $f->phenome_schema(),
 			  sp_person_id => 41 });
@@ -160,7 +160,7 @@ my $trial_create = CXGN::Trial::TrialCreate
 	   trial_description => "Trial Upload Test",
 	   trial_location => "test_location",
 	   trial_name => "Trial_upload_test",
-	   user_name => "janedoe", 
+	   user_name => "janedoe",
 	   design_type => "RCBD",
 	   design => $parsed_data,
 	   program => "test",
@@ -210,7 +210,7 @@ ok($post1_stock_diff == 8, "check stock table after upload excel trial");
 my $post_stock_prop_count = $c->bcs_schema->resultset('Stock::Stockprop')->search({})->count();
 my $post1_stock_prop_diff = $post_stock_prop_count - $pre_stock_prop_count;
 print STDERR "Stockprop: ".$post1_stock_prop_diff."\n";
-ok($post1_stock_prop_diff == 32, "check stockprop table after upload excel trial");
+ok($post1_stock_prop_diff == 40, "check stockprop table after upload excel trial");
 
 my $post_stock_relationship_count = $c->bcs_schema->resultset('Stock::StockRelationship')->search({})->count();
 my $post1_stock_relationship_diff = $post_stock_relationship_count - $pre_stock_relationship_count;
@@ -263,25 +263,25 @@ my $elements = $list->elements();
 
 my $slu = CXGN::Stock::StockLookup->new({ schema => $c->bcs_schema });
 
-# remove non-word characters from names as required by 
+# remove non-word characters from names as required by
 # IGD naming conventions. Store new names as synonyms.
 #
 
-foreach my $e (@$elements) { 
+foreach my $e (@$elements) {
 	my $submission_name = $e;
 	$submission_name =~ s/\W/\_/g;
-	
+
 	print STDERR "Replacing element $e with $submission_name\n";
 	$slu->set_stock_name($e);
 	my $s = $slu -> get_stock();
 	$slu->set_stock_name($submission_name);
-	
+
 	print STDERR "Storing synonym $submission_name for $e\n";
 	$slu->set_stock_name($e);
-	eval { 
+	eval {
 	    #my $rs = $slu->_get_stock_resultset();
-	    $s->create_stockprops( 
-		{ igd_synonym => $submission_name }, 
+	    $s->create_stockprops(
+		{ igd_synonym => $submission_name },
 		{  autocreate => 1,
 		   'cv.name' => 'local',
 		});
@@ -342,7 +342,7 @@ my $trial_create = CXGN::Trial::TrialCreate
      	user_name => 'janedoe',
      	trial_year => '2016',
 	trial_location => 'test_location',
-	program => 'test', 
+	program => 'test',
 	trial_description => "Test Genotyping Trial Upload",
 	design_type => 'genotyping_plate',
 	design => $design,
@@ -395,7 +395,7 @@ ok($post2_stock_diff == 14, "check stock table after upload igd trial");
 $post_stock_prop_count = $c->bcs_schema->resultset('Stock::Stockprop')->search({})->count();
 my $post2_stock_prop_diff = $post_stock_prop_count - $pre_stock_prop_count;
 print STDERR "Stockprop: ".$post2_stock_prop_diff."\n";
-ok($post2_stock_prop_diff == 55, "check stockprop table after upload igd trial");
+ok($post2_stock_prop_diff == 63, "check stockprop table after upload igd trial");
 
 $post_stock_relationship_count = $c->bcs_schema->resultset('Stock::StockRelationship')->search({})->count();
 my $post2_stock_relationship_diff = $post_stock_relationship_count - $pre_stock_relationship_count;
@@ -416,4 +416,3 @@ ok($post2_project_relationship_diff == 2, "check projectrelationship table after
 
 
 done_testing();
-
