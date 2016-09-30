@@ -383,6 +383,11 @@ sub structure_output_details {
 	    if ( $referer =~ m/solgs\/population\// ) 
 	    {
 		$trait_page = $base . "solgs/trait/$trait_id/population/$pop_id";
+		
+		if ($analysis_page =~ m/solgs\/analyze\/traits\//) 
+		{		    
+		   $analysis_data->{analysis_page} = $base . "solgs/traits/all/population/" . $pop_id;
+		} 
 	    }
 	    
 	    if ( $referer =~ m/solgs\/search\/trials\/trait\// && $analysis_page =~ m/solgs\/trait\// ) 

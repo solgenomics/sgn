@@ -13,19 +13,22 @@ JSAN.use('jquery.form');
 var solGS = solGS || function solGS () {};
 
 solGS.waitPage = function (page, args) {
-  
+
     var matchItems = 'solgs/population/'
 	+ '|solgs/populations/combined/' 
 	+ '|solgs/trait/' 
 	+ '|solgs/model/combined/trials/'
 	+ '|solgs/search/trials/trait/'
 	+ '|solgs/model/\\d+/prediction/'
+	+ '|solgs/models/combined/trials/'
      	+ '|solgs/analyze/traits/';
   		    
-    if (page.match(matchItems)) {	    	
+    if (page.match(matchItems)) {
+
     	askUser(page, args);
     }
     else {
+
     	blockPage(page);
     }
    
@@ -180,9 +183,16 @@ solGS.waitPage = function (page, args) {
 	    window.location = page;
 	    
 	} else if (page.match(multiTraitsUrls)) {
-
 	    submitTraitSelections(page, args);
-	    
+	
+	    if(page.match('solgs/analyze/traits/population/')) {
+		var popId  = jQuery('#population_id').val();
+		window.location = '/solgs/traits/all/population/' + popId;
+	    } else {
+		var comboPopsId = jQuery("#population_id").val();
+		window.location = '/solgs/models/combined/trials/' + comboPopsId;	
+	    }
+	   
 	}  else if (page.match(/solgs\/populations\/combined\//)) {
 	    retrievePopsData();  
 	    //window.location = page;

@@ -649,6 +649,42 @@ sub search_stock_using_plot_name {
 }
 
 
+sub first_stock_genotype_data {
+    my ($self, $pr_id) = @_;
+    
+    my $stock_subj_rs = $self->project_subject_stocks_rs($pr_id);    
+    my $stock_obj_rs  = $self->stocks_object_rs($stock_subj_rs);
+   
+    my $geno_data;
+  
+    while (my $single_rs = $stock_obj_rs->next) 
+    {
+	my $stock_name = $single_rs->get_column('uniquename');  
+	my $stock_rs   = $self->search_stock($stock_name); 
+	my $geno       = $self->individual_stock_genotypes_rs($stock_rs)->first;
+  
+	if ($geno)
+	{  
+	    my $json_values  = $geno->get_column('value');
+	    my $values       = JSON::Any->decode($json_values);
+	    my @markers      = keys %$values;
+	    my $marker_count = scalar(@markers);
+
+	    my $header_markers = join("\t", @markers);
+	    $geno_data         = "\t" . $header_markers . "\n";
+	    
+	    my $geno_values = $self->stock_genotype_values($geno);             
+	    $geno_data     .= $geno_values;
+	    
+	    last; 
+	} 	
+    }
+ 
+    return $geno_data;
+
+}
+
+
 sub genotype_data {
     my ($self, $args) = @_;
 
@@ -976,8 +1012,9 @@ sub project_genotype_data_rs {
 
 sub individual_stock_genotypes_rs {
     my ($self, $stock_rs) = @_;
-
-    my $stock_id = $stock_rs->first()->stock_id;    
+ 
+    my $stock_id = $stock_rs->first()->stock_id;  
+    
     my $nd_exp_rs = $self->genotypes_nd_experiment_ids_rs([$stock_id]);
     
     my @nd_exp_ids;

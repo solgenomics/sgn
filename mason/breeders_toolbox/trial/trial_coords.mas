@@ -126,6 +126,9 @@ var trial_id = <% $trial_id %>;
 	if (x + width > max_col * width / 2){
 		popup_x = -1 * popup_width;
 	}
+  if (x + width > max_col * width / 2 && max_col <= 5) {
+    popup_x = -1 * popup_width + 60;
+  }
 	var myRectangle = new Kinetic.Rect({
 	x:x,
 	y:y,
@@ -166,8 +169,8 @@ var trial_id = <% $trial_id %>;
          y: y+8,
          fill: '#000',
       	     opacity: 0.6,
-         width: popup_width,
-         height: 80,
+         width: popup_width+10,
+         height: 90,
          cornerRadius: 10
       });
 
