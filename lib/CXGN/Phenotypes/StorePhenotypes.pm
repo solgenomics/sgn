@@ -417,9 +417,10 @@ sub store {
             #print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
 
             $experiment_ids{$experiment->nd_experiment_id()}=1;
-		}
-	    }
-	}
+
+                }
+            }
+        }
     };
 
     try {
@@ -432,32 +433,6 @@ sub store {
         $error_message = $transaction_error;
         print STDERR "Transaction error storing phenotypes: $transaction_error\n";
         return $error_message;
-    }
-
-    my %image_plot_full_names;
-    if ($archived_image_zipfile_with_path) {
-        #print STDERR $archived_image_zipfile_with_path."\n";
-        my $dbh = $schema->storage->dbh;
-        my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$archived_image_zipfile_with_path);
-        my $file_members = $archived_zip->file_members();
-
-        foreach (@$file_members) {
-            my $image = SGN::Image->new( $dbh, undef, $c );
-            #print STDERR Dumper $_;
-            my $img_name = substr($_->fileName(), 0, -24);
-            $img_name =~ s/^.*photos\///;
-            my $stock = $schema->resultset("Stock::Stock")->find( { uniquename => $img_name, 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] } );
-            my $stock_id = $stock->stock_id;
-
-            my $temp_file = $image->upload_zipfile_images($_);
-
-            $image->set_sp_person_id($user_id);
-
-            my $ret = $image->process_image($temp_file, 'stock', $stock_id);
-            if (!$ret ) {
-                $error_message .= "Image processing for $temp_file did not work. Image not associated to stock_id $stock_id";
-            }
-        }
     }
 
     if ($archived_file) {
