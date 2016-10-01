@@ -43,7 +43,11 @@ $trial_id
  <div id="container" ></div>
  <div id="trial_coords" >loading...</div>
  <div id="trial_no_coordsMSG" >Upload physical field coordinates for this trial</div>
- <div class="col-sm-4" id="delete_button" style="display:none";>
+ <div class="col-sm-10" id="delete_button" style="display:none";>
+  <ul class="legend">
+    <li><span class="even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
+    <li><span class="odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
+  </ul> </br>
    <a id="delete_field_map_link"><button class="button"  type="button" id="delete_map_button" value="delete_cords" >Delete Field Map</button></a>
  </div>
 
@@ -83,6 +87,11 @@ var trial_id = <% $trial_id %>;
 		var plot_counter = 0;
 	     	var max_row = response.max_row;
 	    	var max_col = response.max_col;
+        var max_rep = response.max_rep;
+        var max_block = response.max_block;
+//var block1 = response.block;
+//alert("block_number: "+response.sudo_plot_no);
+//alert("plot_number: "+response.plot_number);
 		var stage = new Kinetic.Stage({
         	container: 'container',
         	//width: 2000,
@@ -95,17 +104,29 @@ var trial_id = <% $trial_id %>;
      		var plot_layer = new Kinetic.Layer();
       		var popup_layer = new Kinetic.Layer();
 
+    var array_index;
 		for  (y = 0; y < max_row; y = y + 1) {
 			for ( x = 0; x < max_col; x = x + 1){
+
 				plot_counter++;
+        array_index = response.plot_number[y][x] - 1;
+
+        if (response.plot_number[y][x].match(/[0-9]{3}$/)){
+          //alert("single digit: "+response.plot_number[y][x]);
+          array_index = response.sudo_plot_no[plot_counter] - 2;
+        }
+
 				if (response.plot_number[y][x]){
 
 				} else {
 					response.plot_number[y][x] = '';
 					}
-				draw_rect(stage, plot_layer, popup_layer, response.plot_msg[y][x], x, y, max_col, response.coord_col[x], response.coord_row[y], plot_counter, response.plot_id[y][x], response.plot_number[y][x]);
+
+				draw_rect(stage, plot_layer, popup_layer, response.plot_msg[y][x], x, y, max_col, response.coord_col[x], response.coord_row[y], plot_counter, response.plot_id[y][x], response.plot_number[y][x], response.rep[y], response.block[array_index], max_rep, max_block);
+
 			}
 		}
+
 		stage.add(plot_layer);
 		stage.add(popup_layer);
 
@@ -117,10 +138,11 @@ var trial_id = <% $trial_id %>;
         });
      });
 
-    function draw_rect(stage, plot_layer, popup_layer, plot_msg, x, y, max_col, col_number, row_number, plot_counter, plot_id, plot_number){
-	var width = 65;
+    function draw_rect(stage, plot_layer, popup_layer, plot_msg, x, y, max_col, col_number, row_number, plot_counter, plot_id, plot_number, rep, block, max_rep, max_block){
+
+  var width = 65;
 	var popup_x = width;
-        var popup_width = 200;
+  var popup_width = 200;
 	x = x * width;
 	y = y * width;
 	if (x + width > max_col * width / 2){
@@ -129,12 +151,39 @@ var trial_id = <% $trial_id %>;
   if (x + width > max_col * width / 2 && max_col <= 5) {
     popup_x = -1 * popup_width + 60;
   }
+
+  var color;
+  if (max_block == 1){
+    color = '#C0C0C0';
+  }
+  else if (max_block > 1){
+    function isEven(block){
+        if (block % 2 == 0)
+          color = '#cca6ac';
+        else
+          color = '#C0C0C0';
+    }
+    isEven(block);
+    var ttt = block % 2;
+  //  alert("block: "+block+", ttt: "+ttt);
+      //if (block % 2 == 1){
+        //color = '#cca6ac';
+      //} else {
+      //  color = '#C0C0C0';
+    //  }
+
+  }
+  else{
+    color = '#cca6ac';
+  }
+
 	var myRectangle = new Kinetic.Rect({
 	x:x,
 	y:y,
 	width:width,
 	height:width,
-	fill:'#C0C0C0',
+	//fill:'#C0C0C0',
+  fill: color,
 	stroke:'black',
 	strokeWidth:3,
       });
@@ -152,8 +201,8 @@ var trial_id = <% $trial_id %>;
 
       myRectangle.on('mouseover', function() {
 
-	this.setFill('#ddd');
-	plot_layer.draw();
+	//this.setFill('#ddd');
+	//plot_layer.draw();
 
 	var plot_txt = new Kinetic.Text({
         x: x+popup_x+5+10,
@@ -183,8 +232,8 @@ var trial_id = <% $trial_id %>;
 
       myRectangle.on('mouseout', function() {
 
-	this.setFill('#C0C0C0');
-	plot_layer.draw();
+	//this.setFill('#C0C0C0');
+	//plot_layer.draw();
 
        	popup_layer.removeChildren();
 	popup_layer.draw();
@@ -221,4 +270,19 @@ var trial_id = <% $trial_id %>;
        </label>
 
    </div>
+   <div class="Legend">
+    <div class="Blue">&nbsp;</div>
+      Blue
+    <div class="Green">&nbsp;</div>
+    Green
+  </div>
 </div>
+
+<style>
+.legend { list-style: none; }
+.legend li { float: left; margin-right: 10px; }
+.legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
+/* your colors */
+.legend .even_number { background-color: #cca6ac; }
+.legend .odd_number { background-color: #C0C0C0; }
+</style>
