@@ -26,6 +26,7 @@ use File::Slurp;
 use File::Spec::Functions;
 use File::Copy;
 use Data::Dumper;
+use CXGN::Phenotypes::StorePhenotypes;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -91,7 +92,7 @@ sub upload_phenotype_store_POST : Args(1) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
     }
-    my $overwrite;
+    my $overwrite = 0;
     if ($overwrite_values) {
         $overwrite = 1;
     }

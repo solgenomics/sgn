@@ -196,7 +196,6 @@ is_deeply($store_hash, {
                                         }
         }, "check returned values to store");
 
-my $size = scalar(@$plots) * scalar(@$traits);
 my %phenotype_metadata;
 $phenotype_metadata{'operator'}='janedoe';
 $phenotype_metadata{'date'}="2017-02-16_03:10:59";

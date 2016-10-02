@@ -336,8 +336,10 @@ sub upload_fieldbook_zipfile {
 
         #Check if image already stored in database
         my $md5checksum = $image->calculate_md5sum($temp_file);
-        my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum});
-        if ($md_image) {
+        #print STDERR "MD5: $md5checksum\n";
+        my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum})->count();
+        #print STDERR "Count: $md_image\n";
+        if ($md_image > 0) {
             $error_status .= "Image $temp_file has already been added to the database and will not be added again.<br/><br/>";
         } else {
             $image->set_sp_person_id($user_id);
