@@ -95,7 +95,7 @@ has 'metadata_hash' => (isa => "HashRef",
     required => 1
 );
 
-has 'image_zipfile_path' => (isa => "Str",
+has 'image_zipfile_path' => (isa => "Str | Undef",
     is => 'rw',
     required => 0
 );

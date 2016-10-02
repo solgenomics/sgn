@@ -51,6 +51,11 @@ sub upload_phenotype_verify_POST : Args(1) {
         return;
     }
 
+    my $timestamp = 0;
+    if ($timestamp_included) {
+        $timestamp = 1;
+    }
+
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
         bcs_schema=>$schema,
         metadata_schema=>$metadata_schema,
@@ -59,7 +64,7 @@ sub upload_phenotype_verify_POST : Args(1) {
         stock_list=>$plots,
         trait_list=>$traits,
         values_hash=>$parsed_data,
-        has_timestamps=>$timestamp_included,
+        has_timestamps=>$timestamp,
         metadata_hash=>$phenotype_metadata,
         image_zipfile_path=>$image_zip,
     );
@@ -96,6 +101,10 @@ sub upload_phenotype_store_POST : Args(1) {
     if ($overwrite_values) {
         $overwrite = 1;
     }
+    my $timestamp = 0;
+    if ($timestamp_included) {
+        $timestamp = 1;
+    }
 
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
         bcs_schema=>$schema,
@@ -105,7 +114,7 @@ sub upload_phenotype_store_POST : Args(1) {
         stock_list=>$plots,
         trait_list=>$traits,
         values_hash=>$parsed_data,
-        has_timestamps=>$timestamp_included,
+        has_timestamps=>$timestamp,
         overwrite_values=>$overwrite,
         metadata_hash=>$phenotype_metadata,
         image_zipfile_path=>$image_zip,
@@ -127,10 +136,12 @@ sub upload_phenotype_store_POST : Args(1) {
         return;
     }
 
-    my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
-    my $image_error = $image->upload_fieldbook_zipfile($image_zip, $user_id);
-    if ($image_error) {
-        push @$error_status, $image_error;
+    if ($image_zip) {
+        my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
+        my $image_error = $image->upload_fieldbook_zipfile($image_zip, $user_id);
+        if ($image_error) {
+            push @$error_status, $image_error;
+        }
     }
 
     push @$success_status, "Metadata saved for archived file.";
