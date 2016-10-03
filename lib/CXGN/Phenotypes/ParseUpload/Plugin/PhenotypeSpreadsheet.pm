@@ -69,7 +69,7 @@ sub validate {
         print STDERR "Columns not correct and data_level is plots\n";
         return \%parse_result;
     }
-    if ($data_level eq 'plants' && $design_type ne 'greenhouse' && ($worksheet->get_cell(6,0)->value() ne 'plant_name' ||
+    if ($data_level eq 'plants' && ($worksheet->get_cell(6,0)->value() ne 'plant_name' ||
                                     $worksheet->get_cell(6,1)->value() ne 'plot_name' ||
                                     $worksheet->get_cell(6,2)->value() ne 'accession_name' ||
                                     $worksheet->get_cell(6,3)->value() ne 'plot_number' ||
@@ -80,21 +80,12 @@ sub validate {
         print STDERR "Columns not correct and data_level is plants\n";
         return \%parse_result;
     }
-    if ($data_level eq 'plants' && $design_type eq 'greenhouse' && $worksheet->get_cell(6,0)->value() ne 'plant_name') {
-        $parse_result{'error'} = "Data columns must be in this order for uploading Plant phenotypes to a Greenhouse trial: plant_name. If you are uploading plot level phenotypes, make sure to select Data Level: Plots.";
-        print STDERR "Columns not correct and data_level is plants\n";
-        return \%parse_result;
-    }
 
     my @fixed_columns;
     if ($name_head eq 'plot_name') {
         @fixed_columns = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
     } elsif ($name_head eq 'plant_name') {
-        if ($design_type eq 'greenhouse') {
-            @fixed_columns = qw | plant_name |;
-        } else {
-            @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
-        }
+        @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
     }
     my $num_fixed_col = scalar(@fixed_columns);
 
@@ -183,11 +174,7 @@ sub parse {
     if ($name_head eq 'plot_name') {
         @fixed_columns = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
     } elsif ($name_head eq 'plant_name') {
-        if ($design_type eq 'greenhouse') {
-            @fixed_columns = qw | plant_name |;
-        } else {
-            @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
-        }
+        @fixed_columns = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
     }
     my $num_fixed_col = scalar(@fixed_columns);
 

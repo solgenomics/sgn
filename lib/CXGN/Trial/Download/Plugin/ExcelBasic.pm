@@ -94,34 +94,54 @@ sub download {
         
     } elsif ($self->data_level eq 'plants') {
 
-        if ($design_type eq 'greenhouse') {
-            $num_col_before_traits = 1;
-            my @column_headers = qw | plant_name |;
-            if (scalar(@predefined_columns) > 0) {
-                push (@column_headers, @predefined_columns);
-                $num_col_before_traits += scalar(@predefined_columns);
-            }
-            for(my $n=0; $n<scalar(@column_headers); $n++) {
-                $ws->write(6, $n, $column_headers[$n]);
-            }
+        $num_col_before_traits = 7;
+        my @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+        if (scalar(@predefined_columns) > 0) {
+            push (@column_headers, @predefined_columns);
+            $num_col_before_traits += scalar(@predefined_columns);
+        }
+        for(my $n=0; $n<scalar(@column_headers); $n++) {
+            $ws->write(6, $n, $column_headers[$n]);
+        }
+        my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
+        my $design = $trial_layout->get_design();
 
-            my @plants = @{ $trial->get_plants() };
-            @plants = sort @plants;
-            my $sample_number;
+        if (! $design) {
+            return "No design found for this trial.";
+        }
+
+        my %design = %{$design};
+        my @plot_names = @{$trial_layout->get_plot_names};
+        my @ordered_plots = sort { $a <=> $b} keys(%design);
+        for(my $n=0; $n<@ordered_plots; $n++) { 
+            my %design_info = %{$design{$ordered_plots[$n]}};
+            my $plant_names = $design_info{plant_names};
+
+            my $sampled_plant_names;
             if ($self->sample_number) {
-                $sample_number = $self->sample_number;
-            }
-            foreach my $plant (@plants) {
-                my $plant_name = $plant->[1];
-                if ($sample_number) {
-                    $plant_name =~ m/_plant_(\d+)/;
-                    if ($1 > $sample_number) {
-                        next;
+                my $sample_number = $self->sample_number;
+                foreach (@$plant_names) {
+                    if ( $_ =~ m/_plant_(\d+)/) {
+                        if ($1 <= $sample_number) {
+                            push @$sampled_plant_names, $_;
+                        }
                     }
                 }
-                $ws->write($line, 0, $plant_name);
+            } else {
+                $sampled_plant_names = $plant_names;
+            }
+
+            foreach (@$sampled_plant_names) {
+                $ws->write($line, 0, $_);
+                $ws->write($line, 1, $design_info{plot_name});
+                $ws->write($line, 2, $design_info{accession_name});
+                $ws->write($line, 3, $design_info{plot_number});
+                $ws->write($line, 4, $design_info{block_number});
+                $ws->write($line, 5, $design_info{is_a_control});
+                $ws->write($line, 6, $design_info{rep_number});
+
                 if (scalar(@predefined_columns) > 0) {
-                    my $pre_col_ind = 1;
+                    my $pre_col_ind = 7;
                     foreach (@$submitted_predefined_columns) {
                         foreach my $header_predef_col (keys $_) {
                             if ($_->{$header_predef_col}) {
@@ -133,68 +153,6 @@ sub download {
                 }
 
                 $line++;
-            }
-        } else {
-            $num_col_before_traits = 7;
-            my @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
-            if (scalar(@predefined_columns) > 0) {
-                push (@column_headers, @predefined_columns);
-                $num_col_before_traits += scalar(@predefined_columns);
-            }
-            for(my $n=0; $n<scalar(@column_headers); $n++) {
-                $ws->write(6, $n, $column_headers[$n]);
-            }
-            my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
-            my $design = $trial_layout->get_design();
-
-            if (! $design) {
-                return "No design found for this trial.";
-            }
-
-            my %design = %{$design};
-            my @plot_names = @{$trial_layout->get_plot_names};
-            my @ordered_plots = sort { $a <=> $b} keys(%design);
-            for(my $n=0; $n<@ordered_plots; $n++) { 
-                my %design_info = %{$design{$ordered_plots[$n]}};
-                my $plant_names = $design_info{plant_names};
-
-                my $sampled_plant_names;
-                if ($self->sample_number) {
-                    my $sample_number = $self->sample_number;
-                    foreach (@$plant_names) {
-                        if ( $_ =~ m/_plant_(\d+)/) {
-                            if ($1 <= $sample_number) {
-                                push @$sampled_plant_names, $_;
-                            }
-                        }
-                    }
-                } else {
-                    $sampled_plant_names = $plant_names;
-                }
-
-                foreach (@$sampled_plant_names) {
-                    $ws->write($line, 0, $_);
-                    $ws->write($line, 1, $design_info{plot_name});
-                    $ws->write($line, 2, $design_info{accession_name});
-                    $ws->write($line, 3, $design_info{plot_number});
-                    $ws->write($line, 4, $design_info{block_number});
-                    $ws->write($line, 5, $design_info{is_a_control});
-                    $ws->write($line, 6, $design_info{rep_number});
-
-                    if (scalar(@predefined_columns) > 0) {
-                        my $pre_col_ind = 7;
-                        foreach (@$submitted_predefined_columns) {
-                            foreach my $header_predef_col (keys $_) {
-                                if ($_->{$header_predef_col}) {
-                                    $ws->write($line, $pre_col_ind, $_->{$header_predef_col});
-                                    $pre_col_ind++;
-                                }
-                            }
-                        }
-                    }
-
-                    $line++;
-                }
             }
         }
     }
