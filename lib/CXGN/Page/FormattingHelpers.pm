@@ -527,7 +527,7 @@ sub simple_selectbox_html {
 		    last();
 		}
 	    }
-	    $retstring .= qq{<option value="$name"$selected>$text</option>};
+	    $retstring .= qq{<option title="$name" value="$name"$selected>$text</option>};
 	}
     }
     $retstring .= qq{</optgroup>} if $in_group;
