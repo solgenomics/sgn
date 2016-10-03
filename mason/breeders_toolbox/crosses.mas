@@ -135,7 +135,13 @@ $user_id => undef
        		</select>
                </div>
  	    </div>
-         <div class="form-group">
+      <div class="form-group">
+            <label class="col-sm-2 control-label">Group Name: </label>
+            <div class="col-sm-10">
+        <input class="form-control" type="text" id="crosses_set_name" name="cross_set_name"/>
+            </div>
+      </div>
+        <div class="form-group">
           <label class="col-sm-2 control-label">Cross Group Type: </label>
          	<div class="col-sm-10">
           <select class="form-control" id="crosses_set_type">
@@ -145,28 +151,28 @@ $user_id => undef
             <option>Multicross</option>
           </select></div>
    	    </div>
-	      <div class="form-group">
-      	      <label class="col-sm-2 control-label">Group Name: </label>
+	      <div class="form-group" id="polycross_accessions" style="display: none">
+      	      <label class="col-sm-2 control-label">Accessions to use in Polycross: </label>
       	      <div class="col-sm-10">
-	        <input class="form-control" type="text" id="crosses_set_name" name="cross_set_name"/>
+              <div id="polycross_accession_list"></div>
               </div>
 	      </div>
-	      <div class="form-group">
-      	      <label class="col-sm-2 control-label">List of Accessions in Polycross: </label>
+        <div class="form-group" id="reciprocal_accessions" style="display: none">
+      	      <label class="col-sm-2 control-label">Accessions to use in Reciprocal cross: </label>
       	      <div class="col-sm-10">
-              <div id="accession_list"></div>
+              <div id="reciprocal_accession_list"></div>
               </div>
 	      </div>
-        <div class="form-group">
-      	      <label class="col-sm-2 control-label">Maternal Parents: </label>
+        <div class="form-group" id="maternal_accessions" style="display: none">
+      	      <label class="col-sm-2 control-label">Multicross Maternal Parents: </label>
       	      <div class="col-sm-10">
-              <div id="maternal_list"></div>
+              <div id="maternal_accession_list"></div>
               </div>
 	      </div>
-        <div class="form-group">
-      	      <label class="col-sm-2 control-label">Paternal Parents: </label>
+        <div class="form-group" id="paternal_accessions" style="display: none">
+      	      <label class="col-sm-2 control-label">Multicross Paternal Parents: </label>
       	      <div class="col-sm-10">
-              <div id="paternal_list"></div>
+              <div id="paternal_accession_list"></div>
               </div>
 	      </div>
 
@@ -192,6 +198,30 @@ $user_id => undef
       <div class="modal-body">
         <div class="container-fluid">
 	  <form class="form-horizontal" role="form" name="create_cross_form" id="create_cross_form">
+    <div class="form-group">
+            <label class="col-sm-2 control-label">Breeding Program: </label>
+            <div class="col-sm-10">
+        <select class="form-control" id="program" name="program">
+    <%perl>
+        foreach my $program (@programs) {
+          print "<option value=".'"'.@$program[1].'"'.">".@$program[1]."</option>";
+        }
+          </%perl>
+        </select>
+            </div>
+    </div>
+    <div class="form-group">
+            <label class="col-sm-2 control-label">Location: </label>
+            <div class="col-sm-10">
+        <select class="form-control" id="location" name="location">
+    <%perl>
+        foreach my $location (@locations) {
+            print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
+        }
+        </%perl>
+        </select>
+            </div>
+    </div>
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">Cross Name: </label>
       	      <div class="col-sm-10">
@@ -222,30 +252,6 @@ $user_id => undef
       	      <label class="col-sm-2 control-label">Paternal Parent: </label>
       	      <div class="col-sm-10">
 	        <input class="form-control" id="paternal_parent" type="text" name="paternal" />
-              </div>
-	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Breeding Program: </label>
-      	      <div class="col-sm-10">
-	        <select class="form-control" id="program" name="program">
-	  	<%perl>
-	    	  foreach my $program (@programs) {
-	    	    print "<option value=".'"'.@$program[1].'"'.">".@$program[1]."</option>";
-	    	  }
-          	</%perl>
-       		</select>
-              </div>
-	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Location: </label>
-      	      <div class="col-sm-10">
-	        <select class="form-control" id="location" name="location">
-	  	<%perl>
-	    	  foreach my $location (@locations) {
-	      	    print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
-	    	  }
-         	</%perl>
-      		</select>
               </div>
 	    </div>
 	    <table>
@@ -383,25 +389,31 @@ $user_id => undef
     		</select>
               </div>
 	    </div>
-      <i>optional</i>
-      <p>Group Crosses together in a folder?</p>
+      <div class="form-group">
+      	      <label class="col-sm-2 control-label">Upload File: </label>
+      	      <div class="col-sm-10">
+	        <input type="file" name="crosses_upload_file" id="crosses_upload_file" encoding="multipart/form-data" />
+              </div>
+	    </div>
+	    <hr>
+      <h3>Additional options:</h3>
+      <p>Group Crosses together in a new folder:</p>
       <div class="form-group">
             <label class="col-sm-2 control-label">Folder Name: </label>
             <div class="col-sm-10">
         <input class="form-control" type="text" id="upload_folder_name" name="upload_folder_name"/>
             </div>
       </div>
-      <p>Or add crosses to an existing folder?</p>
+      <p>Or add crosses to an existing folder:</p>
       <div class="form-group">
-          <label class="col-sm-3 control-label">Folder: </label>
-          <div class="col-sm-9" >
+          <label class="col-sm-2 control-label">Folder: </label>
+          <div class="col-sm-10" >
             <div id="cross_folder_select_div">
               [Loading...]
             </div>
           </div>
       </div>
-	    <hr>
-	    <h4>Progeny Naming: </h4>
+	    <p>Progeny naming: <i>If generating progeny, use cross name and:</i></p>
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">Prefix: </label>
       	      <div class="col-sm-10">
@@ -412,12 +424,6 @@ $user_id => undef
       	      <label class="col-sm-2 control-label">Suffix: </label>
       	      <div class="col-sm-10">
 	        <input class="form-control" id="upload_suffix" name="upload_suffix" />
-              </div>
-	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Upload File: </label>
-      	      <div class="col-sm-10">
-	        <input type="file" name="crosses_upload_file" id="crosses_upload_file" encoding="multipart/form-data" />
               </div>
 	    </div>
     	  </form>
@@ -492,28 +498,6 @@ $user_id => undef
   </div>
 </div>
 
-<div class="modal fade" id="crosses_saved_dialog_message" name="crosses_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="crossesSavedDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="crossesSavedDialog">Success</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <p>
-    	  <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    	  The crosses were saved successfully
-  	  </p>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button id="dismiss_crosses_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <div class="modal fade" id="cross_saved_dialog_message" name="cross_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="crossSavedDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -523,37 +507,15 @@ $user_id => undef
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-	  <p>
+	    <p>
     	  <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    	  The cross was saved successfully
+    	  The cross or crosses were saved successfully.
   	  </p>
         </div>
       </div>
       <div class="modal-footer">
+        <button class="btn btn-sm btn-info" id="refresh_crosstree_button" name="refresh_crosstree_button">Close and Refresh tree</button>
         <button id="dismiss_cross_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<div class="modal fade" id="cross_upload_success_dialog_message" name="cross_upload_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="uploadCrossSavedDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadCrossSavedDialog">Success</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <p>
-    	  <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    	  The crosses from your file were saved successfully.
-  	  </p>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" id="cross_upload_success_dismiss" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>

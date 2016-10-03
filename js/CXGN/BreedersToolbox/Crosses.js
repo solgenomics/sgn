@@ -60,7 +60,7 @@ jQuery(document).ready(function ($) {
 		return;
 	    }
 	    if (response.success) {
-		$('#cross_upload_success_dialog_message').modal("show");
+		$('#cross_saved_dialog_message').modal("show");
 	    }
 	}
     });
@@ -154,15 +154,22 @@ jQuery(document).ready(function ($) {
 	$("#create_cross" ).modal("show");
     });
 
-    $("#add_crosses_link").click( function () {
-  $("#create_crosses" ).modal("show");
+  $("#add_crosses_link").click( function () {
+    $("#create_crosses" ).modal("show");
 
     var lo = new CXGN.List();
-    $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
-    $('#maternal_list').html(lo.listSelect('maternal_list', [ 'accessions' ], 'select'));
-    $('#paternal_list').html(lo.listSelect('paternal_list', [ 'accessions' ], 'select'));
+    $('#polycross_accession_list').html(lo.listSelect('polycross_accessions', [ 'accessions' ], 'select'));
+    $('#reciprocal_accession_list').html(lo.listSelect('reciprocal_accessions', [ 'accessions' ], 'select'));
+    $('#maternal_accession_list').html(lo.listSelect('maternal_accessions', [ 'accessions' ], 'select'));
+    $('#paternal_accession_list').html(lo.listSelect('paternal_accessions', [ 'accessions' ], 'select'));
 
+    $("#crosses_set_type").change(function(){
+      jQuery("#polycross_accessions").toggle(jQuery("#crosses_set_type").val()=="Polycross");
+      jQuery("#reciprocal_accessions").toggle(jQuery("#crosses_set_type").val()=="Reciprocal");
+      jQuery("#maternal_accessions").toggle(jQuery("#crosses_set_type").val()=="Multicross");
+      jQuery("#paternal_accessions").toggle(jQuery("#crosses_set_type").val()=="Multicross");
     });
+  });
 
     function add_cross() {
 
@@ -244,7 +251,7 @@ jQuery(document).ready(function ($) {
     })
 
 function add_reciprocal_crosses(crossName, breeding_program_id, folder_id) {
-  var accession_names =get_accession_names('accession_list_list_select');
+  var accession_names =get_accession_names('reciprocal_accessions_list_select');
 
   var visibleToRole = $("#visible_to_role").val();
   var location = $("#crosses_location").val();
@@ -268,17 +275,13 @@ function add_reciprocal_crosses(crossName, breeding_program_id, folder_id) {
       }
             jQuery("#create_crosses").modal("hide");
             //alert("The polycross crosses have been added.");
-            jQuery('#crosses_saved_dialog_message').modal("show");
+            jQuery('#cross_saved_dialog_message').modal("show");
 
     }
 
-    jQuery('#dismiss_crosses_saved_dialog').click( function() {
-        window.location.reload();
-    });
-
 function add_multicross(crossName, breeding_program_id, folder_id) {
-  var maternal_names = get_accession_names('maternal_list_list_select');
-  var paternal_names = get_accession_names('paternal_list_list_select');
+  var maternal_names = get_accession_names('maternal_accessions_list_select');
+  var paternal_names = get_accession_names('paternal_accessions_list_select');
 
   var visibleToRole = $("#visible_to_role").val();
   var location = $("#crosses_location").val();
@@ -297,17 +300,12 @@ function add_multicross(crossName, breeding_program_id, folder_id) {
 
             jQuery("#create_crosses").modal("hide");
             //alert("The polycross crosses have been added.");
-            jQuery('#crosses_saved_dialog_message').modal("show");
+            jQuery('#cross_saved_dialog_message').modal("show");
 
     }
 
-    jQuery('#dismiss_crosses_saved_dialog').click( function() {
-        window.location.reload();
-    });
-
-
 function add_polycross(crossName, breeding_program_id, folder_id) {
-  var accession_names = get_accession_names('accession_list_list_select');
+  var accession_names = get_accession_names('polycross_accessions_list_select');
   var visibleToRole = $("#visible_to_role").val();
   var location = $("#crosses_location").val();
   var program_name = $("#crosses_program option:selected").text();
@@ -334,21 +332,13 @@ function add_polycross(crossName, breeding_program_id, folder_id) {
   }
 
   jQuery("#create_crosses").modal("hide");
-  jQuery('#crosses_saved_dialog_message').modal("show");
+  jQuery('#cross_saved_dialog_message').modal("show");
 
 }
 
-    jQuery('#dismiss_crosses_saved_dialog').click( function() {
-        window.location.reload();
-    });
-
-
-
     $("#upload_crosses_link").click( function () {
-
       get_select_box('folders', 'cross_folder_select_div', { 'name' : 'upload_folder_id', 'id' : 'upload_folder_id', 'empty' : 1  });
-
-	$("#upload_crosses_dialog" ).modal("show");
+      $("#upload_crosses_dialog" ).modal("show");
     });
 
     function read_cross_upload() {
@@ -401,6 +391,23 @@ function add_polycross(crossName, breeding_program_id, folder_id) {
 
     $("#bulked_open_paternal_population").autocomplete( {
 	source: '/ajax/stock/stock_autocomplete'
+    });
+
+    jQuery("#refresh_crosstree_button").click( function() {
+        jQuery.ajax( {
+            url: '/ajax/breeders/get_crosses_with_folders',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                location.reload();
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred refreshing crosses jstree html');
+            }
+        });
     });
 
     function create_folder_and_add_crosses (folder_name, breeding_program_id, callback) {
