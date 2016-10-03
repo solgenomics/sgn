@@ -59,7 +59,7 @@ has 'trial_year' => (isa => 'Str', is => 'rw', predicate => 'has_trial_year', re
 has 'trial_description' => (isa => 'Str', is => 'rw', predicate => 'has_trial_description', required => 1,);
 has 'trial_location' => (isa => 'Str', is => 'rw', predicate => 'has_trial_location', required => 1,);
 has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', required => 1);
-has 'design' => (isa => 'HashRef[HashRef[Str]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
+has 'design' => (isa => 'HashRef[HashRef[Str|ArrayRef]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
 #has 'breeding_program_id' => (isa => 'Int', is => 'rw', predicate => 'has_breeding_program_id', required => 1);
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 0,);
 has 'greenhouse_num_plants' => (isa => 'ArrayRef[Int]|Undef', is => 'rw', predicate => 'has_greenhouse_num_plants', required => 0,);
@@ -245,7 +245,6 @@ sub save_trial {
 	my $organism_id_checked;
 
 	#print STDERR Dumper \%design;
-	my $number = 1;
 	foreach my $key (sort { $a cmp $b} keys %design) {
 
 		#print STDERR "Check 01: ".localtime();
@@ -258,9 +257,9 @@ sub save_trial {
 		if ($design{$key}->{plot_number}) {
 			$plot_number = $design{$key}->{plot_number};
 		}
-		my $plant_name;
-		if ($design{$key}->{plant_name}) {
-			$plant_name = $design{$key}->{plant_name};
+		my $plant_names;
+		if ($design{$key}->{plant_names}) {
+			$plant_names = $design{$key}->{plant_names};
 		}
 		my $stock_name;
 		if ($design{$key}->{stock_name}) {
@@ -322,8 +321,9 @@ sub save_trial {
 		#print STDERR "Check 02: ".localtime();
 
 		#create the plot, if plot given
+		my $plot;
 		if ($plot_name) {
-			my $plot = $chado_schema->resultset("Stock::Stock")
+			$plot = $chado_schema->resultset("Stock::Stock")
 			->find_or_create({
 				organism_id => $organism_id_checked,
 				name       => $plot_name,
@@ -385,42 +385,52 @@ sub save_trial {
 
 		#Create plant entry if given. Currently this is for the greenhouse trial creation.
 		#print STDERR "Check 04: ".localtime();
-		if ($plant_name) {
-			my $plant = $chado_schema->resultset("Stock::Stock")
-			->find_or_create({
-				organism_id => $organism_id_checked,
-				name       => $plant_name,
-				uniquename => $plant_name,
-				type_id => $plant_cvterm->cvterm_id,
-			});
-
-			my $plantprop = $chado_schema->resultset("Stock::Stockprop")->find_or_create( {
-				stock_id => $plant->stock_id(),
-				type_id => $plant_index_number_cvterm,
-				value => 1,
-			});
-
-			$plant->create_stockprops({'plot number' => $number}, {autocreate => 1});
-			$plant->create_stockprops({'replicate' => 1}, {autocreate => 1} );
-			$plant->create_stockprops({'block' => 1}, {autocreate => 1} );
-			$number ++;
-
-			#create the stock_relationship of the accession with the plant, if it does not exist already
-			if (!$stock_relationship_data{$stock_id_checked, $plot_of->cvterm_id(), $plant->stock_id()} ) {
-				my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
-					object_id => $stock_id_checked,
-					type_id => $plant_of->cvterm_id(),
-					subject_id => $plant->stock_id()
+		if ($plant_names) {
+			foreach my $plant_name (@$plant_names) {
+				my $plant = $chado_schema->resultset("Stock::Stock")
+				->find_or_create({
+					organism_id => $organism_id_checked,
+					name       => $plant_name,
+					uniquename => $plant_name,
+					type_id => $plant_cvterm->cvterm_id,
 				});
-			}
 
-			#link the experiment to the plant, if it is not already
-			if (!$stock_experiment_data{$plant->stock_id(), $field_layout_experiment->nd_experiment_id(), $field_layout_cvterm->cvterm_id()} ) {
-				my $stock_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
-					nd_experiment_id => $field_layout_experiment->nd_experiment_id(),
-					type_id => $field_layout_cvterm->cvterm_id(),
+				my $plantprop = $chado_schema->resultset("Stock::Stockprop")->find_or_create( {
 					stock_id => $plant->stock_id(),
+					type_id => $plant_index_number_cvterm,
+					value => 1,
 				});
+
+				$plant->create_stockprops({'plot number' => $plot_number}, {autocreate => 1});
+				$plant->create_stockprops({'replicate' => $rep_number}, {autocreate => 1} );
+				$plant->create_stockprops({'block' => $block_number}, {autocreate => 1} );
+
+				#the plant has a relationship to the plot
+				if (!$stock_relationship_data{$plant->stock_id(), $plant_of->cvterm_id(), $plot->stock_id()} ) {
+					my $stock_relationship = $chado_schema->resultset("Stock::StockRelationship")->create({
+						subject_id => $plot->stock_id,
+						object_id => $plant->stock_id(),
+						type_id => $plant_of->cvterm_id(),
+					});
+				}
+
+				#create the stock_relationship of the accession with the plant, if it does not exist already
+				if (!$stock_relationship_data{$stock_id_checked, $plant_of->cvterm_id(), $plant->stock_id()} ) {
+					my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
+						object_id => $stock_id_checked,
+						type_id => $plant_of->cvterm_id(),
+						subject_id => $plant->stock_id()
+					});
+				}
+
+				#link the experiment to the plant, if it is not already
+				if (!$stock_experiment_data{$plant->stock_id(), $field_layout_experiment->nd_experiment_id(), $field_layout_cvterm->cvterm_id()} ) {
+					my $stock_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
+						nd_experiment_id => $field_layout_experiment->nd_experiment_id(),
+						type_id => $field_layout_cvterm->cvterm_id(),
+						stock_id => $plant->stock_id(),
+					});
+				}
 			}
 		}
 	}
