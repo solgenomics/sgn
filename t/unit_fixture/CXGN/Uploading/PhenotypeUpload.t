@@ -381,9 +381,20 @@ my %parsed_data = %{$parsed_file->{'data'}};
 my @plots = @{$parsed_file->{'plots'}};
 my @traits = @{$parsed_file->{'traits'}};
 
-my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
-my $size = scalar(@plots) * scalar(@traits);
-my $stored_phenotype_error_msg = $store_phenotypes->store($f,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    bcs_schema=>$f->bcs_schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>\@plots,
+    trait_list=>\@traits,
+    values_hash=>\%parsed_data,
+    has_timestamps=>1,
+    overwrite_values=>0,
+    metadata_hash=>\%phenotype_metadata
+);
+
+my $stored_phenotype_error_msg = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -496,8 +507,20 @@ my %parsed_data = %{$parsed_file->{'data'}};
 my @plots = @{$parsed_file->{'plots'}};
 my @traits = @{$parsed_file->{'traits'}};
 
-$store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
-$stored_phenotype_error_msg = $store_phenotypes->store($f,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    bcs_schema=>$f->bcs_schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>\@plots,
+    trait_list=>\@traits,
+    values_hash=>\%parsed_data,
+    has_timestamps=>1,
+    overwrite_values=>0,
+    metadata_hash=>\%phenotype_metadata
+);
+
+$stored_phenotype_error_msg = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
 my $traits_assayed  = $tn->get_traits_assayed();
@@ -807,11 +830,26 @@ $phenotype_metadata{'date'}="2016-01-16_03:15:26";
 %parsed_data = %{$parsed_file->{'data'}};
 @plots = @{$parsed_file->{'plots'}};
 @traits = @{$parsed_file->{'traits'}};
+my $user_id = 41;
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    bcs_schema=>$f->bcs_schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>\@plots,
+    trait_list=>\@traits,
+    values_hash=>\%parsed_data,
+    has_timestamps=>1,
+    overwrite_values=>0,
+    metadata_hash=>\%phenotype_metadata,
+	image_zipfile_path=>'t/data/fieldbook/photos.zip',
+);
 
-$store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
-$size = scalar(@plots) * scalar(@traits);
-$stored_phenotype_error_msg = $store_phenotypes->store($f,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots', 0, 't/data/fieldbook/photos.zip');
+$stored_phenotype_error_msg = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store fieldbook works");
+my $image = SGN::Image->new( $f->dbh, undef, $f );
+my $image_error = $image->upload_fieldbook_zipfile('t/data/fieldbook/photos.zip', $user_id);
+ok(!$image_error, "check no error in image upload");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 				trial_id => 137 });
@@ -1226,9 +1264,20 @@ $phenotype_metadata{'date'}="2016-02-16_07:11:98";
 @plots = @{$parsed_file->{'plots'}};
 @traits = @{$parsed_file->{'traits'}};
 
-$store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
-$size = scalar(@plots) * scalar(@traits);
-$stored_phenotype_error_msg = $store_phenotypes->store($f,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    bcs_schema=>$f->bcs_schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>\@plots,
+    trait_list=>\@traits,
+    values_hash=>\%parsed_data,
+    has_timestamps=>0,
+    overwrite_values=>0,
+    metadata_hash=>\%phenotype_metadata,
+);
+
+$stored_phenotype_error_msg = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store fieldbook works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -1885,9 +1934,20 @@ $phenotype_metadata{'date'}="2016-02-16_05:55:55";
 @plots = @{$parsed_file->{'plots'}};
 @traits = @{$parsed_file->{'traits'}};
 
-$store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
-$size = scalar(@plots) * scalar(@traits);
-$stored_phenotype_error_msg = $store_phenotypes->store($f,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plots');
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    bcs_schema=>$f->bcs_schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>\@plots,
+    trait_list=>\@traits,
+    values_hash=>\%parsed_data,
+    has_timestamps=>0,
+    overwrite_values=>0,
+    metadata_hash=>\%phenotype_metadata,
+);
+
+$stored_phenotype_error_msg = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store large pheno spreadsheet works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -2434,9 +2494,20 @@ $phenotype_metadata{'date'}="2016-02-16_05:15:21";
 @plots = @{$parsed_file->{'plots'}};
 @traits = @{$parsed_file->{'traits'}};
 
-$store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
-$size = scalar(@plots) * scalar(@traits);
-$stored_phenotype_error_msg = $store_phenotypes->store($f,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plants');
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    bcs_schema=>$f->bcs_schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>\@plots,
+    trait_list=>\@traits,
+    values_hash=>\%parsed_data,
+    has_timestamps=>0,
+    overwrite_values=>0,
+    metadata_hash=>\%phenotype_metadata,
+);
+
+$stored_phenotype_error_msg = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store large pheno spreadsheet works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -2770,9 +2841,20 @@ $phenotype_metadata{'date'}="2016-02-16_05:55:17";
 @plots = @{$parsed_file->{'plots'}};
 @traits = @{$parsed_file->{'traits'}};
 
-$store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
-$size = scalar(@plots) * scalar(@traits);
-$stored_phenotype_error_msg = $store_phenotypes->store($f,$size,\@plots,\@traits, \%parsed_data, \%phenotype_metadata, 'plants');
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+    bcs_schema=>$f->bcs_schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>\@plots,
+    trait_list=>\@traits,
+    values_hash=>\%parsed_data,
+    has_timestamps=>1,
+    overwrite_values=>0,
+    metadata_hash=>\%phenotype_metadata,
+);
+
+$stored_phenotype_error_msg = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store fieldbook plants works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),

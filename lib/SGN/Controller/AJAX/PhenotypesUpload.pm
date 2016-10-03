@@ -26,6 +26,7 @@ use File::Slurp;
 use File::Spec::Functions;
 use File::Copy;
 use Data::Dumper;
+use CXGN::Phenotypes::StorePhenotypes;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -39,16 +40,37 @@ __PACKAGE__->config(
 sub upload_phenotype_verify :  Path('/ajax/phenotype/upload_verify') : ActionClass('REST') { }
 sub upload_phenotype_verify_POST : Args(1) {
     my ($self, $c, $file_type) = @_;
-    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
-    my $warning_status;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $data_level, $overwrite_values, $image_zip) = _prep_upload($c, $file_type);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip) = _prep_upload($c, $file_type);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
     }
 
-    my ($verified_warning, $verified_error) = $store_phenotypes->verify($c, $plots, $traits, $parsed_data, $phenotype_metadata, $timestamp_included, $image_zip);
+    my $timestamp = 0;
+    if ($timestamp_included) {
+        $timestamp = 1;
+    }
+
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        user_id=>$user_id,
+        stock_list=>$plots,
+        trait_list=>$traits,
+        values_hash=>$parsed_data,
+        has_timestamps=>$timestamp,
+        metadata_hash=>$phenotype_metadata,
+        image_zipfile_path=>$image_zip,
+    );
+
+    my $warning_status;
+    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
     if ($verified_error) {
         push @$error_status, $verified_error;
         $c->stash->{rest} = {success => $success_status, error => $error_status };
@@ -65,13 +87,38 @@ sub upload_phenotype_verify_POST : Args(1) {
 sub upload_phenotype_store :  Path('/ajax/phenotype/upload_store') : ActionClass('REST') { }
 sub upload_phenotype_store_POST : Args(1) {
     my ($self, $c, $file_type) = @_;
-    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $data_level, $overwrite_values, $image_zip) = _prep_upload($c, $file_type);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip) = _prep_upload($c, $file_type);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
     }
+    my $overwrite = 0;
+    if ($overwrite_values) {
+        $overwrite = 1;
+    }
+    my $timestamp = 0;
+    if ($timestamp_included) {
+        $timestamp = 1;
+    }
+
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        user_id=>$user_id,
+        stock_list=>$plots,
+        trait_list=>$traits,
+        values_hash=>$parsed_data,
+        has_timestamps=>$timestamp,
+        overwrite_values=>$overwrite,
+        metadata_hash=>$phenotype_metadata,
+        image_zipfile_path=>$image_zip,
+    );
 
     #upload_phenotype_store function redoes the same verification that upload_phenotype_verify does before actually uploading. maybe this should be commented out.
     #my ($verified_warning, $verified_error) = $store_phenotypes->verify($c,$plots,$traits, $parsed_data, $phenotype_metadata);
@@ -82,15 +129,21 @@ sub upload_phenotype_store_POST : Args(1) {
     #}
     #push @$success_status, "File data verified. Plot names and trait names are valid.";
 
-
-    my $size = scalar(@$plots) * scalar(@$traits);
-    my $stored_phenotype_error = $store_phenotypes->store($c, $size, $plots, $traits, $parsed_data, $phenotype_metadata, $data_level, $overwrite_values, $image_zip);
-
+    my $stored_phenotype_error = $store_phenotypes->store();
     if ($stored_phenotype_error) {
         push @$error_status, $stored_phenotype_error;
         $c->stash->{rest} = {success => $success_status, error => $error_status};
         return;
     }
+
+    if ($image_zip) {
+        my $image = SGN::Image->new( $c->dbc->dbh, undef, $c );
+        my $image_error = $image->upload_fieldbook_zipfile($image_zip, $user_id);
+        if ($image_error) {
+            push @$error_status, $image_error;
+        }
+    }
+
     push @$success_status, "Metadata saved for archived file.";
     push @$success_status, "File data successfully stored.";
 
@@ -138,9 +191,13 @@ sub _prep_upload {
         $upload = $c->req->upload('upload_datacollector_phenotype_file_input');
     }
 
+    my $user_type = $c->user()->get_object->get_user_type();
+    if ($user_type ne 'submitter' && $user_type ne 'curator') {
+        push @error_status, 'Must have submitter privileges to upload phenotypes! Please contact us!';
+    }
+
     my $overwrite_values = $c->req->param('phenotype_upload_overwrite_values');
     if ($overwrite_values) {
-        my $user_type = $c->user()->get_object->get_user_type();
         #print STDERR $user_type."\n";
         if ($user_type ne 'curator') {
             push @error_status, 'Must be a curator to overwrite values! Please contact us!';
@@ -220,7 +277,7 @@ sub _prep_upload {
         }
     }
 
-    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $data_level, $overwrite_values, $archived_image_zipfile_with_path);
+    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $archived_image_zipfile_with_path);
 }
 
 #########
