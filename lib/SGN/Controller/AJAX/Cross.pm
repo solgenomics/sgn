@@ -240,7 +240,7 @@ sub add_cross_POST :Args(0) {
     my $number_of_flowers = $c->req->param('number_of_flowers');
     my $number_of_seeds = $c->req->param('number_of_seeds');
     my $visible_to_role = $c->req->param('visible_to_role');
-    my $parent_folder_id = $c->req->param('folder_id');
+    my $parent_folder_id = $c->req->param('folder_id') || '';
     my $cross_add;
     my $progeny_add;
     my @progeny_names;
