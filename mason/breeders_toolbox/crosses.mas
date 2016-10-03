@@ -365,7 +365,7 @@ $user_id => undef
 	        <select class="form-control" id="cross_upload_breeding_program" name="cross_upload_breeding_program">
       		<%perl>
         	  foreach my $program (@programs) {
-        	    print "<option value=".@$program[1].">".@$program[1]."</option>";
+        	    print "<option value=".@$program[0].">".@$program[1]."</option>";
         	  }
       		</%perl>
     		</select>

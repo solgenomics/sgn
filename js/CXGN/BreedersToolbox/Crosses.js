@@ -24,7 +24,6 @@ jQuery(document).ready(function ($) {
 
     function upload_crosses_file() {
         var uploadFile = $("#crosses_upload_file").val();
-        var uploadFolderName = $("#upload_folder_name").val();
         $('#upload_crosses_form').attr("action", "/ajax/cross/upload_crosses_file");
         if (uploadFile === '') {
 	    alert("Please select a file");
@@ -347,7 +346,7 @@ function add_polycross(crossName, breeding_program_id, folder_id) {
 
     $("#upload_crosses_link").click( function () {
 
-      get_select_box('folders', 'cross_folder_select_div', { 'name' : 'html_select_folder_for_cross', 'id' : 'html_select_folder_for_cross', 'empty' : 1  });
+      get_select_box('folders', 'cross_folder_select_div', { 'name' : 'upload_folder_id', 'id' : 'upload_folder_id', 'empty' : 1  });
 
 	$("#upload_crosses_dialog" ).modal("show");
     });
