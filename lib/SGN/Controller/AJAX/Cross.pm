@@ -298,7 +298,7 @@ sub add_cross_POST :Args(0) {
       return;
     }
 
-    if (!$paternal_parent_not_required) {
+    if (!$paternal_parent_not_required || ($paternal && $paternal_parent_not_required)) {
       if (! $chado_schema->resultset("Stock::Stock")->find({name=>$paternal,})){
 	$c->stash->{rest} = {error =>  "paternal parent does not exist." };
 	return;
@@ -322,7 +322,7 @@ sub add_cross_POST :Args(0) {
     my $female_individual = Bio::GeneticRelationships::Individual->new(name => $maternal);
     $cross_to_add->set_female_parent($female_individual);
 
-    if (!$paternal_parent_not_required){
+    if (!$paternal_parent_not_required || ($paternal && $paternal_parent_not_required)){
       my $male_individual = Bio::GeneticRelationships::Individual->new(name => $paternal);
       $cross_to_add->set_male_parent($male_individual);
     }
