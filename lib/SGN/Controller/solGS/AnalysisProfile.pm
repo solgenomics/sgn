@@ -383,6 +383,11 @@ sub structure_output_details {
 	    if ( $referer =~ m/solgs\/population\// ) 
 	    {
 		$trait_page = $base . "solgs/trait/$trait_id/population/$pop_id";
+		
+		if ($analysis_page =~ m/solgs\/analyze\/traits\//) 
+		{		    
+		   $analysis_data->{analysis_page} = $base . "solgs/traits/all/population/" . $pop_id;
+		} 
 	    }
 	    
 	    if ( $referer =~ m/solgs\/search\/trials\/trait\// && $analysis_page =~ m/solgs\/trait\// ) 
@@ -434,13 +439,23 @@ sub structure_output_details {
 	};		
     }
     elsif ( $analysis_page =~ m/solgs\/model\/\d+\/prediction\// ) 
-    {
-	my @traits_with_valid_models = @{$c->controller('solGS::solGS')->traits_with_valid_models($c)};
+    {	
+	my @traits_with_valid_models;
+	if ($referer =~ /solgs\/trait\//) 
+	{
+	    my $trait_id  = $c->stash->{trait_id}; 
+	    $solgs_controller->get_trait_details($c, $trait_id);
+	    @traits_with_valid_models = $c->stash->{trait_abbr};
+	}
+	else 
+	{	
+	    @traits_with_valid_models = @{$solgs_controller->traits_with_valid_models($c)};
+	}
 	
 	foreach my $trait_abbr (@traits_with_valid_models)
 	{
 	    $c->stash->{trait_abbr} = $trait_abbr;
-	    $c->controller('solGS::solGS')->get_trait_details_of_trait_abbr($c);   	
+	    $solgs_controller->get_trait_details_of_trait_abbr($c);   	
 	    my $trait_id = $c->stash->{trait_id};
 	    $solgs_controller->get_trait_details($c, $trait_id);
 	    my $trait_abbr = $c->stash->{trait_abbr};
@@ -472,7 +487,7 @@ sub structure_output_details {
 	    my $identifier = $training_pop_id . '_' . $prediction_pop_id;
 	    $solgs_controller->prediction_pop_gebvs_file($c, $identifier, $trait_id);
 	    my $gebv_file = $c->stash->{prediction_pop_gebvs_file};
-	    
+	   
 	    $output_details{'trait_id_' . $trait_id} = {
 		'training_pop_page'   => $training_pop_page,
 		'training_pop_id'     => $training_pop_id,

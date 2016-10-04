@@ -310,6 +310,47 @@ sub apache_upload_image {
 
 }
 
+sub upload_fieldbook_zipfile {
+    my $self = shift;
+    my $image_zip = shift;
+    my $user_id = shift;
+    my $c = $self->config();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $dbh = $schema->storage->dbh;
+    my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$image_zip);
+    my $file_members = $archived_zip->file_members();
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $error_status;
+
+    foreach (@$file_members) {
+        my $image = SGN::Image->new( $dbh, undef, $c );
+        #print STDERR Dumper $_;
+        my $img_name = substr($_->fileName(), 0, -24);
+        $img_name =~ s/^.*photos\///;
+        my $stock = $schema->resultset("Stock::Stock")->find( { uniquename => $img_name, 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] } );
+        my $stock_id = $stock->stock_id;
+
+        my $temp_file = $image->upload_zipfile_images($_);
+
+        #Check if image already stored in database
+        my $md5checksum = $image->calculate_md5sum($temp_file);
+        #print STDERR "MD5: $md5checksum\n";
+        my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum})->count();
+        #print STDERR "Count: $md_image\n";
+        if ($md_image > 0) {
+            $error_status .= "Image $temp_file has already been added to the database and will not be added again.<br/><br/>";
+        } else {
+            $image->set_sp_person_id($user_id);
+            my $ret = $image->process_image($temp_file, 'stock', $stock_id);
+            if (!$ret ) {
+                $error_status .= "Image processing for $temp_file did not work. Image not associated to stock_id $stock_id.<br/><br/>";
+            }
+        }
+    }
+    return $error_status;
+}
 
 sub upload_zipfile_images {
     my $self   = shift;
