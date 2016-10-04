@@ -105,27 +105,26 @@ jQuery(document).ready(function ($) {
 
     });
 
-    $("#cross_type").change(function(){
-	$("#get_maternal_parent").toggle($("#cross_type").val()=="biparental");  // show if biparental is cross type selected
-	$("#get_paternal_parent").toggle($("#cross_type").val()=="biparental");  // show if biparental is cross type selected
-	$("#get_selfed_parent").toggle($("#cross_type").val()=="self");  // show if self is cross type selected
-	$("#get_bulked_selfed_population").toggle($("#cross_type").val()=="bulk_self");  // show if self is cross type selected
-	$("#get_open_pollinated_maternal_parent").toggle($("#cross_type").val()=="open");  // show if open is cross type selected
-	$("#get_open_pollinated_population").toggle($("#cross_type").val()=="open");  // show if open is cross type selected
-	$("#get_bulk_maternal_population").toggle($("#cross_type").val()=="bulk");  // show if biparental is cross type selected
-	$("#get_bulk_paternal_parent").toggle($("#cross_type").val()=="bulk");  // show if biparental is cross type selected
-	$("#get_bulk_open_maternal_population").toggle($("#cross_type").val()=="bulk_open");
-	$("#select_bulk_open_paternal_population").toggle($("#cross_type").val()=="bulk_open");
-	$("#get_doubled_haploid_parent").toggle($("#cross_type").val()=="doubled_haploid");  // show if doubled haploid is cross type selected
-
+    $("#cross_type").change(function(){  // show cross_type specific inputs depending on cross type selected
+      $("#maternal_parent").toggle($("#cross_type").val()=="biparental");
+	    $("#paternal_parent").toggle($("#cross_type").val()=="biparental");
+      $("#selfed_parent").toggle($("#cross_type").val()=="self");
+      $("#open_maternal_parent").toggle($("#cross_type").val()=="open");
+      $("#open_paternal_population_checkbox").toggle($("#cross_type").val()=="open");
+      $("#bulk_maternal_population").toggle($("#cross_type").val()=="bulk");
+      $("#bulk_paternal_parent").toggle($("#cross_type").val()=="bulk");
+      $("#bulked_selfed_population").toggle($("#cross_type").val()=="bulk_self");
+      $("#bulk_open_maternal_population").toggle($("#cross_type").val()=="bulk_open");
+      $("#bulk_open_paternal_population_checkbox").toggle($("#cross_type").val()=="bulk_open");
+      $("#doubled_haploid_parent").toggle($("#cross_type").val()=="doubled_haploid");
     });
 
-    $("#specify_paternal_population_checkbox").change(function(){
-	$("#get_paternal_population").toggle(this.checked);  // show if it is checked, otherwise hide
+    $("#open_paternal_population_checkbox").change(function(){
+	     $("open_paternal_population").toggle(this.checked);
     });
 
-    $("#specify_bulk_open_paternal_population_checkbox").change(function(){
-	$("#get_bulk_open_paternal_population").toggle(this.checked);  // show if it is checked, otherwise hide
+    $("#bulk_open_paternal_population_checkbox").change(function(){
+	     $("#bulk_open_paternal_population").toggle(this.checked);
     });
 
     $("#flower_number_checkbox").change(function(){
@@ -152,6 +151,32 @@ jQuery(document).ready(function ($) {
 
     $("#add_cross_link").click( function () {
 	$("#create_cross" ).modal("show");
+
+  $("#cross_type").change(function(){  // show cross_type specific inputs depending on cross type selected
+    $("#get_maternal_parent").toggle($("#cross_type").val()=="biparental");
+    $("#get_paternal_parent").toggle($("#cross_type").val()=="biparental");
+    $("#get_selfed_parent").toggle($("#cross_type").val()=="self");
+    $("#get_open_maternal_parent").toggle($("#cross_type").val()=="open");
+    $("#get_open_paternal_population").toggle($("#cross_type").val()=="open");
+    $("#get_bulk_maternal_population").toggle($("#cross_type").val()=="bulk");
+    $("#get_bulk_paternal_parent").toggle($("#cross_type").val()=="bulk");
+    $("#get_bulk_selfed_population").toggle($("#cross_type").val()=="bulk_self");
+    $("#get_bulk_open_maternal_population").toggle($("#cross_type").val()=="bulk_open");
+    $("#get_bulk_open_paternal_population").toggle($("#cross_type").val()=="bulk_open");
+    $("#get_doubled_haploid_parent").toggle($("#cross_type").val()=="doubled_haploid");
+  });
+
+  $("#open_paternal_population_checkbox").change(function(){
+    console.log("open checkbox checked = "+this.checked);
+    var open = this;
+     $("get_open_paternal_population").toggle($("#cross_type").val()=="open");
+  });
+
+  $("#bulk_open_paternal_population_checkbox").change(function(){
+    console.log("bulk open checkbox checked");
+     $("#get_bulk_open_paternal_population").toggle(this.checked);
+  });
+
     });
 
   $("#add_crosses_link").click( function () {

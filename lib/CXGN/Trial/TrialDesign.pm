@@ -1321,7 +1321,7 @@ sub _get_greenhouse_design {
     my $self = shift;
     my $order = 1;
     my %greenhouse_design;
-  #  my @num_plants = @{ $self->get_greenhouse_num_plants() };
+    my @num_plants = @{ $self->get_greenhouse_num_plants() };
     my @accession_list = sort @{ $self->get_stock_list() };
     my $trial_name = $self->get_trial_name;
     my %num_accession_hash;

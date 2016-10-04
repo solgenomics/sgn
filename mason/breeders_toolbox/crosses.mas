@@ -242,18 +242,84 @@ $user_id => undef
 		</select>
               </div>
 	    </div>
-	    <div class="form-group">
+	    <div class="form-group" id="get_maternal_parent" style="display: none">
       	      <label class="col-sm-2 control-label">Maternal Parent: </label>
       	      <div class="col-sm-10">
 	        <input class="form-control" id="maternal_parent" type="text" name="maternal" />
               </div>
 	    </div>
-	    <div class="form-group">
+	    <div class="form-group" id="get_paternal_parent" style="display: none">
       	      <label class="col-sm-2 control-label">Paternal Parent: </label>
       	      <div class="col-sm-10">
 	        <input class="form-control" id="paternal_parent" type="text" name="paternal" />
               </div>
 	    </div>
+      <div class="form-group" id="get_selfed_parent" style="display: none">
+              <label class="col-sm-2 control-label">Selfed Parent: </label>
+              <div class="col-sm-10">
+          <input class="form-control" id="selfed_parent" type="text" name="selfed" />
+              </div>
+      </div>
+      <div class="form-group" id="get_open_maternal_parent" style="display: none">
+              <label class="col-sm-2 control-label">Open Maternal Parent: </label>
+              <div class="col-sm-10">
+          <input class="form-control" id="open_maternal_parent" type="text" name="open maternal" />
+              </div>
+      </div>
+      <div class="form-group" id="get_open_paternal_population_checkbox" style="display: none">
+                <label class="col-sm-3 control-label">Specify Paternal Population: </label>
+                <div class="col-sm-9">
+            <input id="open_paternal_population_checkbox" type="checkbox" />
+                </div>
+      </div>
+      <div class="form-group" id="get_open_paternal_population" style="display: none">
+              <label class="col-sm-2 control-label">Open Paternal Population: <i>(optional)<i/></label>
+              <div class="col-sm-10">
+          <input class="form-control" id="open_paternal_population" type="text" name="open paternal" />
+              </div>
+      </div>
+      <div class="form-group" id="get_bulk_maternal_population" style="display: none">
+              <label class="col-sm-2 control-label">Bulk Maternal Population: </label>
+              <div class="col-sm-10">
+          <input class="form-control" id="bulk_maternal_population" type="text" name="bulk maternal" />
+              </div>
+      </div>
+      <div class="form-group" id="get_bulk_paternal_parent" style="display: none">
+              <label class="col-sm-2 control-label">Bulk Paternal Parent: </label>
+              <div class="col-sm-10">
+          <input class="form-control" id="bulk_paternal_parent" type="text" name="bulk paternal" />
+              </div>
+      </div>
+      <div class="form-group" id="get_bulk_selfed_population" style="display: none">
+              <label class="col-sm-2 control-label">Bulk Selfed Population: </label>
+              <div class="col-sm-10">
+          <input class="form-control" id="bulk_selfed_population" type="text" name="bulk selfed" />
+              </div>
+      </div>
+      <div class="form-group" id="get_bulk_open_maternal_population" style="display: none">
+              <label class="col-sm-2 control-label">Bulk Open Maternal Population: </label>
+              <div class="col-sm-10">
+          <input class="form-control" id="bulk_open_maternal_population" type="text" name="bulk open maternal" />
+              </div>
+      </div>
+      <div class="form-group" id="get_bulk_open_paternal_population_checkbox" style="display: none">
+                <label class="col-sm-3 control-label">Specify Paternal Population: </label>
+                <div class="col-sm-9">
+            <input id="bulk_open_paternal_population_checkbox" type="checkbox" />
+                </div>
+      </div>
+      <div class="form-group" id="get_bulk_open_paternal_population" style="display: none">
+              <label class="col-sm-2 control-label">Bulk Open Paternal Population: <i>(optional)<i/></label>
+              <div class="col-sm-10">
+          <input class="form-control" id="bulk_open_paternal_population" type="text" name="bulk open paternal" />
+              </div>
+      </div>
+      <div class="form-group" id="get_doubled_haploid_parent" style="display: none">
+              <label class="col-sm-2 control-label">Doubled Haploid Parent: </label>
+              <div class="col-sm-10">
+          <input class="form-control" id="doubled_haploid_parent" type="text" name="doubled haploid" />
+              </div>
+      </div>
 	    <table>
 	      <tr>
 	        <td>
