@@ -71,6 +71,8 @@ has 'file_metadata' => (isa => 'Str', is => 'rw', predicate => 'has_file_metadat
 ## used when downloading phenotypes as either csv or xls.
 has 'include_timestamp' => (isa => 'Bool', is => 'ro', default => 0);
 
+has 'trait_contains' => (isa => 'Str', is => 'rw');
+
 
 sub BUILD { 
     my $self = shift;

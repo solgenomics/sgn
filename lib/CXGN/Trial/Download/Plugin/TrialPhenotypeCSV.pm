@@ -14,14 +14,25 @@ sub download {
 
     my $schema = $self->bcs_schema();
     my $trial_id = $self->trial_id();
+    my $trait_list = $self->trait_list();
+    my @trait_contains = split /,/, $self->trait_contains();
+    my $data_level = $self->data_level();
     my $include_timestamp = $self->include_timestamp();
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
-
+    my $trait_list_search;
+    my $counter = 0;
+    foreach (@$trait_list) {
+        $trait_list_search .= $_;
+        $counter++;
+        if ($counter ne scalar(@$trait_list)) {
+            $trait_list_search .= ',';
+        }
+    }
     $self->trial_download_log($trial_id, "trial phenotypes");
 
     my $trial_sql = "\'$trial_id\'";
     my $bs = CXGN::BreederSearch->new( { dbh => $schema->storage->dbh() });
-    my @data = $bs->get_extended_phenotype_info_matrix(undef,$trial_sql, undef, $include_timestamp);
+    my @data = $bs->get_extended_phenotype_info_matrix(undef,$trial_sql, $trait_list_search, $include_timestamp, \@trait_contains, $data_level);
     
     #my $rs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_geolocation');
 

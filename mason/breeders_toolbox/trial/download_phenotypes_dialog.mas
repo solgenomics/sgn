@@ -50,6 +50,12 @@ $trial_name => undef
                     </div>
                 </div>
             </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Trait Name Contains: </label>
+                <div class="col-sm-9" >
+                    <input id="download_trial_phenotype_trait_contains" name="download_trial_phenotype_trait_contains" type="text" class="form-control" placeholder="Example: storage root,oxoglutarate"/>
+                </div>
+            </div>
 	       </form><br/>
          
         </div>
@@ -78,7 +84,10 @@ jQuery(document).ready(function() {
   jQuery('#download_trial_phenotypes_submit_button').click( function () {
     var format = jQuery("#download_trial_phenotypes_format").val();
     var timestamp = jQuery("#download_trial_phenotypes_timestamp_option").val();
-    window.open("/breeders/trial/<% $trial_id %>/download/phenotype?format="+format+"&timestamp="+timestamp);
+    var trait_contains = jQuery("#download_trial_phenotype_trait_contains").val();
+    var traits = jQuery("#download_trial_phenotypes_traits_select").val();
+    var data_level = jQuery("#download_trial_phenotypes_level_option").val();
+    window.open("/breeders/trial/<% $trial_id %>/download/phenotype?format="+format+"&timestamp="+timestamp+"&trait_contains="+trait_contains+"&trait_list="+JSON.stringify(traits)+"&dataLevel="+data_level );
 
   });
 

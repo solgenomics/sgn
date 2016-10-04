@@ -170,9 +170,11 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my $format = $c->req->param("format") || "xls";
-    my $data_level = $c->req->param("dataLevel") || "plots";
+    my $data_level = $c->req->param("dataLevel") || "plot";
     my $timestamp_option = $c->req->param("timestamp") || 0;
-    my $trait_list = $c->req->param("trait_list") || "";
+    my $trait_list = $c->req->param("trait_list");
+    $trait_list eq 'null' ? $trait_list = undef : print STDERR $trait_list."\n";
+    my $trait_contains = $c->req->param("trait_contains") || "";
 
     if ($data_level eq 'plants') {
         my $trial = $c->stash->{trial};
@@ -226,6 +228,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 	    format => $plugin,
         data_level => $data_level,
         include_timestamp => $timestamp_option,
+        trait_contains => $trait_contains,
       });
 
       my $error = $download->download();

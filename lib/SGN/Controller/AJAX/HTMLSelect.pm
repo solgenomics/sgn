@@ -204,7 +204,8 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $traits_assayed = $trial->get_traits_assayed($data_level);
     my @traits;
     foreach (@$traits_assayed) {
-        push @traits, $_->[1];
+        my @val = ($_->[0], $_->[1]);
+        push @traits, \@val;
     }
 
     my $id = $c->req->param("id") || "html_trial_select";

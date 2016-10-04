@@ -345,8 +345,10 @@ sub get_phenotype_info {
     my $accession_sql = shift;
     my $trial_sql = shift;
     my $trait_sql = shift;
+    my $trait_contains = shift;
+    my $data_level = shift;
 
-    print STDERR "GET_PHENOTYPE_INFO: $accession_sql - $trial_sql - $trait_sql \n\n";
+    print STDERR "GET_PHENOTYPE_INFO: $accession_sql - $trial_sql - $trait_sql - $trait_contains - $data_level\n\n";
 
     my $rep_type_id = $self->get_stockprop_type_id("replicate");
     my $block_number_type_id = $self -> get_stockprop_type_id("block");
@@ -359,18 +361,29 @@ sub get_phenotype_info {
     if ($accession_sql) { push @where_clause,  "stock.stock_id in ($accession_sql)"; }
     if ($trial_sql) { push @where_clause, "project.project_id in ($trial_sql)"; }
     if ($trait_sql) { push @where_clause, "cvterm.cvterm_id in ($trait_sql)"; }
+    if ($trait_contains) {
+        foreach (@$trait_contains) {
+            push @where_clause, "cvterm.name like '%".$_."%'";
+        }
+    }
 
     my $where_clause = "";
 
     if (@where_clause>0) {
-	$where_clause .= $rep_type_id ? "WHERE (stockprop.type_id = $rep_type_id OR stockprop.type_id IS NULL) " : "WHERE stockprop.type_id IS NULL";
-	$where_clause .= "AND (plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id) AND stock.type_id = $accession_type_id";
-	$where_clause .= $block_number_type_id  ? " AND (block_number.type_id = $block_number_type_id OR block_number.type_id IS NULL)" : " AND block_number.type_id IS NULL";
-	$where_clause .= $year_type_id ? " AND projectprop.type_id = $year_type_id" :"" ;
-	$where_clause .= " AND " . (join (" AND " , @where_clause));
+        $where_clause .= $rep_type_id ? "WHERE (stockprop.type_id = $rep_type_id OR stockprop.type_id IS NULL) " : "WHERE stockprop.type_id IS NULL";
+        if ($data_level) {
+            my $stock_type_id = $self->get_stock_type_id("$data_level");
+            $where_clause .= "AND (plot.type_id = $stock_type_id) AND stock.type_id = $accession_type_id";
+        } else {
+            $where_clause .= "AND (plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id) AND stock.type_id = $accession_type_id";
+        }
+        $where_clause .= $block_number_type_id  ? " AND (block_number.type_id = $block_number_type_id OR block_number.type_id IS NULL)" : " AND block_number.type_id IS NULL";
+        $where_clause .= $year_type_id ? " AND projectprop.type_id = $year_type_id" :"" ;
+        $where_clause .= " AND " . (join (" AND " , @where_clause));
 
 	#$where_clause = "where (stockprop.type_id=$rep_type_id or stockprop.type_id IS NULL) AND (block_number.type_id=$block_number_type_id or block_number.type_id IS NULL) AND  ".(join (" and ", @where_clause));
     }
+    print STDERR $where_clause."\n";
 
     my $order_clause = " order by project.name, string_to_array(plot_number.value, '.')::int[]";
     my $q = "SELECT projectprop.value, project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, db.name ||  ':' || dbxref.accession AS accession, stockprop.value, block_number.value, cvterm.cvterm_id, project.project_id, nd_geolocation.nd_geolocation_id, stock.stock_id, plot.stock_id, phenotype.uniquename
@@ -462,8 +475,10 @@ sub get_extended_phenotype_info_matrix {
     my $trial_sql = shift;
     my $trait_sql = shift;
     my $include_timestamp = shift // 0;
+    my $trait_contains = shift;
+    my $data_level = shift;
 
-    my $data = $self->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
+    my $data = $self->get_phenotype_info($accession_sql, $trial_sql, $trait_sql, $trait_contains, $data_level);
     #data contains [$year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename]
 
     my %plot_data;
