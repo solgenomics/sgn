@@ -1545,7 +1545,7 @@ sub predict_selection_pop_multi_traits {
     my $data_set_type    = $c->stash->{data_set_type};
     my $training_pop_id  = $c->stash->{training_pop_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};
-    
+  
     $c->stash->{pop_id} = $training_pop_id;    
     $self->traits_with_valid_models($c);
     my @traits_with_valid_models = @{$c->stash->{traits_with_valid_models}};
@@ -1574,8 +1574,8 @@ sub predict_selection_pop_single_pop_model {
     $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
     
     my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
-   
-    if (! -s $prediction_pop_gebvs_file)
+ 
+    if (!-s $prediction_pop_gebvs_file)
     {
 	my $dir = $c->stash->{solgs_cache_dir};
         
@@ -1633,7 +1633,7 @@ sub prediction_population :Path('/solgs/model') Args(3) {
     my $path    = $c->req->path;
     $path       =~ s/$base//;
     my $page    = 'solgs/model/combined/populations/';
-  
+
     if ($referer =~ /$page/)
     {   
         $model_id =~ s/combined_//;
@@ -1719,9 +1719,19 @@ sub prediction_population :Path('/solgs/model') Args(3) {
         $c->res->redirect("/solgs/models/combined/trials/$model_id");
         $c->detach();
     }
-    else 
+    elsif ($referer =~ /solgs\/traits\/all\/population\//) 
     {
-        $c->res->redirect("/solgs/analyze/traits/population/$model_id/$prediction_pop_id");
+	my ($training_pop_id, $prediction_pop_id) = $referer =~ m/(\d+)/g;
+	
+	$c->stash->{data_set_type}     = "single population"; 
+        $c->stash->{pop_id}            = $training_pop_id;
+        $c->stash->{model_id}          = $training_pop_id;
+	$c->stash->{training_pop_id}   = $training_pop_id;
+        $c->stash->{prediction_pop_id} = $prediction_pop_id; 
+
+	$self->predict_selection_pop_multi_traits($c);
+
+        $c->res->redirect("/solgs/analyze/traits/population/$training_pop_id/$prediction_pop_id");
         $c->detach();
     }
  
