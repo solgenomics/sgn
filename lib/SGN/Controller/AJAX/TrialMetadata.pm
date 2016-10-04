@@ -375,13 +375,16 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	my @accession_name = ();
 	my @plot_name = ();
 	my @plot_id = ();
+  my @acc_name = ();
+  my @blk_no = ();
+  my @rep_no = ();
 	my @array_msg = ();
 	my @plot_number = ();
 	my $my_hash;
 
 	foreach $my_hash (@layout_info) {
 	    if ($my_hash->{'row_number'}) {
-		if ($my_hash->{'row_number'} =~ m/\d+/) {
+		  if ($my_hash->{'row_number'} =~ m/\d+/) {
       if (scalar(@{$my_hash->{"plant_names"}}) < 1) {
         $array_msg[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = "rep_number: ".$my_hash->{'rep_number'}."\nblock_number: ".$my_hash->{'block_number'}."\nrow_number: ".$my_hash->{'row_number'}."\ncol_number: ".$my_hash->{'col_number'}."\naccession_name: ".$my_hash->{'accession_name'};
       }
@@ -393,6 +396,9 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	#$plot_id[$my_hash->{'plot_number'}] = $my_hash->{'plot_id'};
 	$plot_number[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_number'};
 	#$plot_number[$my_hash->{'plot_number'}] = $my_hash->{'plot_number'};
+  $acc_name[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'accession_name'};
+  $blk_no[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'block_number'};
+  $rep_no[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'rep_number'};
 
 		}
 		else {
@@ -441,6 +447,18 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 
     #print STDERR Dumper \@layout_info;
 
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+    my $data = $trial->get_controls();
+
+    print STDERR Dumper($data);
+
+    my @control_name;
+    foreach my $cntrl (@{$data}) {
+	push @control_name, $cntrl->{'accession_name'};
+
+  }
+ print STDERR Dumper(@control_name);
+
 	$c->stash->{rest} = { coord_row =>  \@row_numbers,
 			      coords =>  \@layout_info,
 			      coord_col =>  \@col_numbers,
@@ -455,7 +473,11 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 			      plot_number => \@plot_number,
             max_rep => $max_rep,
 			      max_block => $max_block,
-            sudo_plot_no => \@plotcnt
+            sudo_plot_no => \@plotcnt,
+            controls => \@control_name,
+            blk => \@blk_no,
+            acc => \@acc_name,
+            rep_no => \@rep_no
 	};
 
 }
