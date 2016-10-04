@@ -187,7 +187,7 @@ solGS.waitPage = function (page, args) {
 	
 	    if(page.match('solgs/analyze/traits/population/')) {
 		var popId  = jQuery('#population_id').val();
-		window.location = '/solgs/traits/all/population/' + popId;
+		window.location = '/solgs/analyze/traits/population/' + popId;
 	    } else {
 		var comboPopsId = jQuery("#population_id").val();
 		window.location = '/solgs/models/combined/trials/' + comboPopsId;	

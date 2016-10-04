@@ -319,16 +319,16 @@ my $location_number = scalar(@locations);
   push @design_layout_view_html_array, $design_layout_view_html;
 }
 
-  $c->stash->{rest} = {
-		       success => "1",
-           design_layout_view_html => encode_json(\@design_layout_view_html_array),
-		       #design_layout_view_html => $design_layout_view_html,
-		       design_info_view_html => $design_info_view_html,
-		       #design_json => $design_json,
-           design_json =>  encode_json(\@design_array),
-		      };
+    $c->stash->{rest} = {
+        success => "1",
+        design_layout_view_html => encode_json(\@design_layout_view_html_array),
+        #design_layout_view_html => $design_layout_view_html,
+        design_info_view_html => $design_info_view_html,
+        #design_json => $design_json,
+        design_json =>  encode_json(\@design_array),
+    };
 
- }
+}
 
 
 

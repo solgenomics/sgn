@@ -212,10 +212,10 @@ jQuery(document).ready(function ($) {
 
 		    $('#trial_design_information').html(response.design_info_view_html);
         var layout_view = JSON.parse(response.design_layout_view_html);
-        console.log(layout_view);
+        //console.log(layout_view);
         var layout_html = '';
         for (var i=0; i<layout_view.length; i++) {
-          console.log(layout_view[i]);
+          //console.log(layout_view[i]);
           layout_html += layout_view[i] + '<br>';
         }
         $('#trial_design_view_layout_return').html(layout_html);

@@ -82,29 +82,29 @@ sub design_layout_view {
     my $design_result_html;
 
     $design_result_html .= '<table border="1">';
+
     if ($design_type eq 'greenhouse') {
-        $design_result_html .= qq{<tr><th>Plant Name</th><th>Accession Name</th></tr>};
-
-        foreach my $key (sort { $a <=> $b} keys %design) {
-            my $plant_name = $design{$key}->{plant_name} || '';
-            my $stock_name = $design{$key}->{stock_name} || '';
-
-            $design_result_html .= "<tr><td>".$plant_name."</td><td>".$stock_name."</td></tr>";
-        }
+        $design_result_html .= qq{<tr><th>Plant Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th></tr>};
     } else {
         $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th></tr>};
+    }
 
-        foreach my $key (sort { $a <=> $b} keys %design) {
-            my $plot_name = $design{$key}->{plot_name} || '';
-            my $stock_name = $design{$key}->{stock_name} || '';
-            my $check_name = $design{$key}->{check_name} || '';
-            my $row_number = $design{$key}->{row_number} || '';
-            my $col_number = $design{$key}->{col_number} || '';
-            my $block_number = $design{$key}->{block_number} || '';
-            my $block_row_number = $design{$key}->{block_row_number} || '';
-            my $block_col_number = $design{$key}->{block_col_number} || '';
-            my $rep_number = $design{$key}->{rep_number} || '';
+    foreach my $key (sort { $a <=> $b} keys %design) {
+        my $plot_name = $design{$key}->{plot_name} || '';
+        my $stock_name = $design{$key}->{stock_name} || '';
+        my $check_name = $design{$key}->{check_name} || '';
+        my $row_number = $design{$key}->{row_number} || '';
+        my $col_number = $design{$key}->{col_number} || '';
+        my $block_number = $design{$key}->{block_number} || '';
+        my $block_row_number = $design{$key}->{block_row_number} || '';
+        my $block_col_number = $design{$key}->{block_col_number} || '';
+        my $rep_number = $design{$key}->{rep_number} || '';
 
+        if ($design{$key}->{plant_names}) {
+            foreach my $plant_name (@{$design{$key}->{plant_names}}) {
+                $design_result_html .= "<tr><td>".$plant_name."</td><td>".$plot_name."</td><td>".$stock_name."</td><td>".$check_name."</td><td>".$row_number."</td><td>".$col_number."</td><td>".$block_number."</td><td>".$block_row_number."</td><td>".$block_col_number."</td><td>".$rep_number."</td></tr>";
+            }
+        } else {
             $design_result_html .= "<tr><td>".$plot_name."</td><td>".$stock_name."</td><td>".$check_name."</td><td>".$row_number."</td><td>".$col_number."</td><td>".$block_number."</td><td>".$block_row_number."</td><td>".$block_col_number."</td><td>".$rep_number."</td></tr>";
         }
     }
