@@ -1091,7 +1091,8 @@ sub input_files {
     my $geno_file   = $c->stash->{genotype_file};
     my $traits_file = $c->stash->{selected_traits_file};
     my $trait_file  = $c->stash->{trait_file};
-   
+    my $pop_id      = $c->stash->{pop_id};
+
     no warnings 'uninitialized';
 
     my $input_files = join ("\t",
