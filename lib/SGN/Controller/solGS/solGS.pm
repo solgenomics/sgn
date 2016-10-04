@@ -1721,7 +1721,7 @@ sub prediction_population :Path('/solgs/model') Args(3) {
     }
     elsif ($referer =~ /solgs\/traits\/all\/population\//) 
     {
-	my ($training_pop_id, $prediction_pop_id) = $referer =~ m/(\d+)/g;
+	my ($training_pop_id, $prediction_pop_id) = $path =~ m/(\d+)/g;
 	
 	$c->stash->{data_set_type}     = "single population"; 
         $c->stash->{pop_id}            = $training_pop_id;
@@ -2964,7 +2964,7 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
     $c->stash->{prediction_pop_id} = $prediction_id;
    
     $self->build_multiple_traits_models($c);
- 
+  
     my $referer    = $c->req->referer;   
     my $base       = $c->req->base;
     $referer       =~ s/$base//;
