@@ -166,10 +166,10 @@ solGS.waitPage = function (page, args) {
 
     }
 
-
     function goToPage (page, args) { 
 
 	var matchItems = 'solgs/population/'
+	    + '|solgs/populations/combined/' 
 	    + '|solgs/confirm/request'
 	    + '|solgs/trait/'
 	    + '|solgs/model/combined/trials/'
@@ -183,14 +183,46 @@ solGS.waitPage = function (page, args) {
 	    window.location = page;
 	    
 	} else if (page.match(multiTraitsUrls)) {
-	    submitTraitSelections(page, args);
-	
-	    if(page.match('solgs/analyze/traits/population/')) {
+
+
+	   // submitTraitSelections(page, args);
+		    
+	    if (page.match('solgs/analyze/traits/population/')) {
 		var popId  = jQuery('#population_id').val();
-		window.location = '/solgs/analyze/traits/population/' + popId;
+		var traitIds = args.trait_id;
+	
+		jQuery.ajax({
+		    dataType: 'json',
+		    type    : 'POST',
+ 		    data    : {'trait_id': traitIds, 'source': 'AJAX'},
+		    url     : '/solgs/analyze/traits/population/' + popId,
+		    success : function (res){
+			if (res.status) {
+			    window.location = '/solgs/traits/all/population/' + popId;
+			} else	{
+			    window.location = window.location.href;
+			}				
+		    }
+		});
+		
 	    } else {
 		var comboPopsId = jQuery("#population_id").val();
-		window.location = '/solgs/models/combined/trials/' + comboPopsId;	
+		var traitIds = args.trait_id;
+	
+		jQuery.ajax({
+		    dataType: 'json',
+		    type    : 'POST',
+ 		    data    : {'trait_id': traitIds, 'source': 'AJAX'},
+		    url     : '/solgs/models/combined/trials/' + comboPopsId,
+		    success : function (res){			
+			if (res.status) {
+			    window.location = '/solgs/models/combined/trials/' + comboPopsId;			    
+			} else {
+			    window.location = window.location.href;
+			}				
+		    }
+		});
+		
 	    }
 	   
 	}  else if (page.match(/solgs\/populations\/combined\//)) {
@@ -211,6 +243,7 @@ solGS.waitPage = function (page, args) {
 	if (args == 'undefined') {
 	    document.getElementById('traits_selection_form').submit(); 
 	    document.getElementById('traits_selection_form').reset(); 
+
 	} else {  
 	    jQuery('#traits_selection_form').ajaxSubmit();
 	    jQuery('#traits_selection_form').resetForm();
@@ -320,7 +353,7 @@ solGS.waitPage = function (page, args) {
 	if (window.Prototype) {
 	    delete Array.prototype.toJSON;
 	}
-	
+
 	if (url.match(/solgs\/trait\//)) {
 	    
 	    var urlStr = url.split(/\/+/);
