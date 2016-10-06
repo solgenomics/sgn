@@ -32,7 +32,6 @@ BEGIN { extends 'Catalyst::Controller' }
 
 
 
-
 sub generate_check_value :Path('/solgs/generate/checkvalue') Args(0) {
     my ($self, $c) = @_;
     
@@ -263,7 +262,7 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
         $c->stash->{uploaded_prediction} = $uploaded_prediction;
         $c->stash->{list_source}         = $list_source;
 
-        $c->controller("solGS::solGS")->get_trait_name($c, $trait_id);
+        $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
         my $trait_abbr = $c->stash->{trait_abbr};
 
         my $identifier = $combo_pops_id. '_uploaded_' . $prediction_pop_id;
@@ -359,7 +358,7 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
              }
 
              $trait_id =  $c->model("solGS::solGS")->get_trait_id($trait_name);
-             $c->controller("solGS::solGS")->get_trait_name($c, $trait_id);
+             $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
              my $trait_abbr = $c->stash->{trait_abbr};
 
              my $identifier = $model_id . '_uploaded_' . $prediction_pop_id;
