@@ -169,7 +169,6 @@ solGS.waitPage = function (page, args) {
     function goToPage (page, args) { 
 
 	var matchItems = 'solgs/population/'
-	    + '|solgs/populations/combined/' 
 	    + '|solgs/confirm/request'
 	    + '|solgs/trait/'
 	    + '|solgs/model/combined/trials/'
