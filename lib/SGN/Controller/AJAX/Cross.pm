@@ -100,7 +100,7 @@ sub upload_cross_file_POST : Args(0) {
 
   my $breeding_program = $chado_schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
   my $program = $breeding_program->name();
-  print STDERR "Breeding program name = $program\n";
+  #print STDERR "Breeding program name = $program\n";
 
   $user_id = $c->user()->get_object()->get_sp_person_id();
 
@@ -230,7 +230,7 @@ sub add_cross_POST :Args(0) {
     my $dbh = $c->dbc->dbh;
     my $cross_name = $c->req->param('cross_name');
     my $cross_type = $c->req->param('cross_type');
-    my $program = $c->req->param('program');
+    my $breeding_program_id = $c->req->param('breeding_program_id');
     my $location = $c->req->param('location');
     my $maternal = $c->req->param('maternal_parent');
     my $paternal = $c->req->param('paternal_parent');
@@ -240,7 +240,8 @@ sub add_cross_POST :Args(0) {
     my $number_of_flowers = $c->req->param('number_of_flowers');
     my $number_of_seeds = $c->req->param('number_of_seeds');
     my $visible_to_role = $c->req->param('visible_to_role');
-    my $parent_folder_id = $c->req->param('folder_id') || '';
+    my $folder_name = $c->req->param('folder_name');
+    my $folder_id = $c->req->param('folder_id');
     my $cross_add;
     my $progeny_add;
     my @progeny_names;
@@ -250,10 +251,32 @@ sub add_cross_POST :Args(0) {
     my $number_of_flowers_cvterm;
     my $number_of_seeds_cvterm;
     my $owner_name;
+    my $folder;
 
     if ($cross_type eq "open" || $cross_type eq "bulk_open") {
       $paternal_parent_not_required = 1;
     }
+
+    if ($folder_name && !$folder_id) {
+      eval {
+        $folder = CXGN::Trial::Folder->create({
+          bcs_schema => $chado_schema,
+          parent_folder_id => '',
+          name => $folder_name,
+          breeding_program_id => $breeding_program_id,
+        });
+      };
+
+      if ($@) {
+        $c->stash->{rest} = {error => $@ };
+        return;
+      }
+
+      $folder_id = $folder->folder_id();
+    }
+
+    my $breeding_program = $chado_schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
+    my $program = $breeding_program->name();
 
     print STDERR "Adding Cross... Maternal: $maternal Paternal: $paternal Cross Type: $cross_type\n";
 
@@ -344,7 +367,7 @@ sub add_cross_POST :Args(0) {
 		program => $program,
 		crosses =>  \@array_of_pedigree_objects,
 		owner_name => $owner_name,
-    parent_folder_id => $parent_folder_id
+    parent_folder_id => $folder_id
 		  });
 
 
@@ -402,7 +425,10 @@ sub add_cross_POST :Args(0) {
 	return;
     }
 
-    $c->stash->{rest} = { error => '', };
+    $c->stash->{rest} = {
+      error => '',
+      folder_id => $folder_id,
+    };
   }
 
 sub get_cross_relationships :Path('/cross/ajax/relationships') :Args(1) {

@@ -135,7 +135,7 @@ sub create {
     my $check_rs = $args->{bcs_schema}->resultset('Project::Project')->search( { name => $args->{name} } );
 
     if ($check_rs->count() > 0) {
-	die "The name ".$args->{name}." cannot be used for a folder because it already exists.";
+	die "The name ".$args->{name}." cannot be used for a new folder because it already exists.";
     }
 
      my $folder_cvterm = SGN::Model::Cvterm->get_cvterm_row($args->{bcs_schema},'trial_folder', 'project_property');

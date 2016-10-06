@@ -146,6 +146,7 @@ $user_id => undef
       	      <label class="col-sm-2 control-label">Cross Type: </label>
       	      <div class="col-sm-10">
 	        <select class="form-control" id="cross_type">
+        <option value="">Select a cross type</option>
 	  	  <option value="biparental">biparental</option>
 	  	  <option value="self">self</option>
 	  	  <option value="open">open pollinated</option>

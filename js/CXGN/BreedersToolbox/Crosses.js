@@ -89,26 +89,27 @@ jQuery(document).ready(function ($) {
 
       var visibleToRole = $("#visible_to_role").val();
       var location = $("#location").val();
-      var breeding_program_name = $("#program option:selected").text();
+      var folder_name = $("#add_cross_folder_name").val();
+      var folder_id = $("#add_cross_folder_id").val();
 
       switch(crossType) {
-          case 'Polycross':
-            create_folder_and_add_crosses(crossName, breeding_program_id, visibleToRole, location, breeding_program_name, function(crossName, breeding_program_id, visibleToRole, location, breeding_program_name, result) { add_polycross(crossName, breeding_program_id, visibleToRole, location, breeding_program_name, result); });
+          case 'polycross':
+            add_polycross(crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id);
             jQuery("#create_cross").modal("hide");
             jQuery('#cross_saved_dialog_message').modal("show");
             break;
-          case 'Reciprocal':
-            create_folder_and_add_crosses(crossName, breeding_program_id, visibleToRole, location, breeding_program_name, function(crossName, breeding_program_id, visibleToRole, location, breeding_program_name, result) { add_reciprocal_crosses(crossName, breeding_program_id, visibleToRole, location, breeding_program_name, result); });
+          case 'reciprocal':
+            add_reciprocal_crosses(crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id);
             jQuery("#create_cross").modal("hide");
             jQuery('#cross_saved_dialog_message').modal("show");
             break;
-          case 'Multicross':
-            create_folder_and_add_crosses(crossName, breeding_program_id, visibleToRole, location, breeding_program_name, function(crossName, breeding_program_id, visibleToRole, location, breeding_program_name, result) { add_multicross(crossName, breeding_program_id, visibleToRole, location, breeding_program_name, result); });
+          case 'multicross':
+            add_multicross(crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id);
             jQuery("#create_cross").modal("hide");
             jQuery('#cross_saved_dialog_message').modal("show");
             break;
           default:
-            add_cross(crossType, crossName, visibleToRole, location, breeding_program_name);
+            add_cross(crossType, crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id);
       }
 
     });
@@ -178,7 +179,7 @@ jQuery(document).ready(function ($) {
 
   });
 
-  function add_cross(crossType, crossName, visibleToRole, location, breeding_program_name) {
+  function add_cross(crossType, crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id) {
 
     var progenyNumber = $("#progeny_number").val();
     var flowerNumber = $("#flower_number").val();
@@ -228,7 +229,7 @@ jQuery(document).ready(function ($) {
       timeout: 3000000,
       dataType: "json",
       type: 'POST',
-      data: 'cross_name='+crossName+'&cross_type='+crossType+'&maternal_parent='+encodeURIComponent(maternalParent)+'&paternal_parent='+encodeURIComponent(paternalParent)+'&progeny_number='+progenyNumber+'&flower_number='+flowerNumber+'&seed_number='+seedNumber+'&prefix='+prefix+'&suffix='+suffix+'&visible_to_role'+visibleToRole+'&program='+breeding_program_name+'&location='+location,
+      data: 'cross_name='+crossName+'&cross_type='+crossType+'&maternal_parent='+encodeURIComponent(maternalParent)+'&paternal_parent='+encodeURIComponent(paternalParent)+'&progeny_number='+progenyNumber+'&flower_number='+flowerNumber+'&seed_number='+seedNumber+'&prefix='+prefix+'&suffix='+suffix+'&visible_to_role'+visibleToRole+'&breeding_program_id='+breeding_program_id+'&location='+location+'&folder_name='+folder_name+'&folder_id='+folder_id,
       error: function(response) { alert("An error occurred. Please try again later!"+response); },
       parseerror: function(response) { alert("A parse error occurred. Please try again."+response); },
       success: function(response) {
@@ -246,7 +247,7 @@ jQuery(document).ready(function ($) {
     location.reload();
   })
 
-function add_reciprocal_crosses(crossName, breeding_program_id, visibleToRole, location, breeding_program_name, folder_id) {
+function add_reciprocal_crosses(crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id) {
   var accession_names =get_accession_names('reciprocal_accessions_list_select');
 
   for ( i=0; i < accession_names.length; i++) {
@@ -260,12 +261,12 @@ function add_reciprocal_crosses(crossName, breeding_program_id, visibleToRole, l
       var reciprocalcrossName = crossName + '_' + maternalParent + 'x' + accession_names[j] + '_reciprocalcross';
       var crossType = 'biparental';
 
-      ajax_add_cross (reciprocalcrossName, crossType, maternalParent, paternalParent, visibleToRole, program_name, location, folder_id);
+      folder_id = ajax_add_cross (reciprocalcrossName, crossType, maternalParent, paternalParent, visibleToRole, breeding_program_id, location, folder_name, folder_id);
     }
   }
 }
 
-function add_multicross(crossName, breeding_program_id, visibleToRole, location, breeding_program_name, folder_id) {
+function add_multicross(crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id) {
   var maternal_names = get_accession_names('maternal_accessions_list_select');
   var paternal_names = get_accession_names('paternal_accessions_list_select');
 
@@ -275,11 +276,11 @@ function add_multicross(crossName, breeding_program_id, visibleToRole, location,
     var multicrossName = crossName + '_' + maternalParent + 'x' + paternalParent + '_multicross';
     var crossType = 'biparental';
 
-    ajax_add_cross (multicrossName, crossType, maternalParent, paternalParent, visibleToRole, program_name, location, folder_id);
+    folder_id = ajax_add_cross (multicrossName, crossType, maternalParent, paternalParent, visibleToRole, breeding_program_id, location, folder_name, folder_id);
   }
 }
 
-function add_polycross(crossName, breeding_program_id, visibleToRole, location, breeding_program_name, folder_id) {
+function add_polycross(crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id) {
   var accession_names = get_accession_names('polycross_accessions_list_select');
   var populationName = crossName + '_parents';
   var paternalParent = '';
@@ -300,7 +301,7 @@ function add_polycross(crossName, breeding_program_id, visibleToRole, location, 
     var maternalParent = accession_names[i];
     var polycrossName = crossName + '_' + accession_names[i] + '_polycross';
     var crossType = 'biparental';
-    ajax_add_cross (polycrossName, crossType, maternalParent, paternalParent, visibleToRole, program_name, location, folder_id);
+    folder_id = ajax_add_cross(polycrossName, crossType, maternalParent, paternalParent, visibleToRole, breeding_program_id, location, folder_name, folder_id);
   }
 }
 
@@ -308,14 +309,6 @@ function add_polycross(crossName, breeding_program_id, visibleToRole, location, 
       get_select_box('folders', 'cross_folder_select_div', { 'name' : 'upload_folder_id', 'id' : 'upload_folder_id', 'empty' : 1  });
       $("#upload_crosses_dialog" ).modal("show");
     });
-
-    function read_cross_upload() {
-	var formatType = $('input[name=format_type]:checked').val();
-	var uploadFile = $("#upload_file").val();
-	if (!uploadFile) { alert("Please select a file");return;}
-	else if (!(formatType == "barcode" || formatType == "spreadsheet")) {alert("Please choose a format");return;}
-	else { $("#upload_form").submit();}
-    }
 
     $("#maternal_parent").autocomplete( {
 	source: '/ajax/stock/accession_autocomplete'
@@ -378,29 +371,6 @@ function add_polycross(crossName, breeding_program_id, visibleToRole, location, 
         });
     });
 
-    function create_folder_and_add_crosses (folder_name, breeding_program_id, visibleToRole, location, breeding_program_name, callback) {
-      jQuery.ajax( {
-        'url': '/ajax/folder/new',
-        'data': {
-          'parent_folder_id' : 0,
-          'async': false,
-          'folder_name' :  folder_name,
-          'breeding_program_id' : breeding_program_id
-        },
-        'success': function(response) {
-          if (response.error){
-            alert(response.error);
-          }
-          else {
-            callback(folder_name, breeding_program_id, visibleToRole, location, breeding_program_name, response.folder_id);
-          }
-        },
-        error: function(response) {
-          alert('An error occurred creating the folder '+folder_name);
-        }
-      });
-    }
-
   function get_accession_names (accession_select_id) {
 
     var accession_list_id = $('#'+accession_select_id).val();
@@ -427,20 +397,23 @@ function add_polycross(crossName, breeding_program_id, visibleToRole, location, 
     return names;
   }
 
-  function ajax_add_cross (crossName, crossType, maternalParent, paternalParent, visibleToRole, program, location, folder_id) {
+  function ajax_add_cross (crossName, crossType, maternalParent, paternalParent, visibleToRole, breeding_program_id, location, folder_name, folder_id) {
+    var new_folder_id;
     jQuery.ajax({
             url: '/ajax/cross/add_cross',
             timeout: 3000000,
             dataType: "json",
             type: 'POST',
             async: false,
-            data: 'cross_name='+crossName+'&cross_type='+crossType+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&visible_to_role'+visibleToRole+'&program='+program+'&location='+location+'&folder_id='+folder_id,
+            data: 'cross_name='+crossName+'&cross_type='+crossType+'&maternal_parent='+maternalParent+'&paternal_parent='+paternalParent+'&visible_to_role'+visibleToRole+'&breeding_program_id='+breeding_program_id+'&location='+location+'&folder_name='+folder_name+'&folder_id='+folder_id,
             error: function(response) { alert("An error occurred creating cross "+crossName+". Please try again later!"+response); },
             parseerror: function(response) { alert("A parse error occurred while creating cross "+crossName+". Please try again."+response); },
             success: function(response) {
               if (response.error) { alert(response.error); }
+              new_folder_id = response.folder_id;
             }
     });
+    return new_folder_id;
   }
 
 });
