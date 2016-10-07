@@ -111,22 +111,17 @@ sub download_trial_phenotypes {
     if ($self->phenotype_max_value) {
         push @where_clause, "phenotype.value < ".$self->phenotype_max_value;
     }
+    if ($self->data_level) {
+        my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $data_level, 'stock_type')->cvterm_id();
+        push @where_clause, "plot.type_id = $stock_type_id";
+    } else {
+        push @where_clause, "(plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id)";
+    }
 
-    my $where_clause = "";
+    my $where_clause = "WHERE (stockprop.type_id = $rep_type_id OR stockprop.type_id IS NULL) AND stock.type_id = $accession_type_id AND (block_number.type_id = $block_number_type_id OR block_number.type_id IS NULL) AND projectprop.type_id = $year_type_id";
 
     if (@where_clause>0) {
-        $where_clause .= $rep_type_id ? "WHERE (stockprop.type_id = $rep_type_id OR stockprop.type_id IS NULL) " : "WHERE stockprop.type_id IS NULL";
-        if ($data_level) {
-            my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $data_level, 'stock_type')->cvterm_id();
-            $where_clause .= "AND (plot.type_id = $stock_type_id) AND stock.type_id = $accession_type_id";
-        } else {
-            $where_clause .= "AND (plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id) AND stock.type_id = $accession_type_id";
-        }
-        $where_clause .= $block_number_type_id  ? " AND (block_number.type_id = $block_number_type_id OR block_number.type_id IS NULL)" : " AND block_number.type_id IS NULL";
-        $where_clause .= $year_type_id ? " AND projectprop.type_id = $year_type_id" :"" ;
         $where_clause .= " AND " . (join (" AND " , @where_clause));
-
-	#$where_clause = "where (stockprop.type_id=$rep_type_id or stockprop.type_id IS NULL) AND (block_number.type_id=$block_number_type_id or block_number.type_id IS NULL) AND  ".(join (" and ", @where_clause));
     }
     print STDERR $where_clause."\n";
 
@@ -163,16 +158,7 @@ sub download_trial_phenotypes {
 
 sub _sql_from_arrayref {
     my $arrayref = shift;
-    my $sql;
-    my $count = 1;
-    foreach (@$arrayref) {
-        if ($count < scalar(@$arrayref)) {
-            $sql .= "$_,";
-        } else {
-            $sql .= $_;
-        }
-        $count++;
-    }
+    my $sql = join ("," , @$arrayref);
     return $sql;
 }
 
