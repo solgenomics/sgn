@@ -3,7 +3,9 @@
 $trial_id
 </%args>
 
+
 <& /util/import_javascript.mas, classes => [ 'kinetics.kinetic.js' ] &>
+
 
 
     <style>
@@ -22,6 +24,7 @@ $trial_id
 		display: none;
 		margin: 10px;
 	}
+         #ligand_info { display: none;}
          #trial_coords {display: inline; }
          #trial_no_coordsMSG {display: none; }
 	 #row_desc {display: none; margin: 2px}
@@ -38,20 +41,26 @@ $trial_id
 
 
 <div id="row_desc" class="row_desc" >  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <b>Field Layout Rows </b></div>
-<p></br><div id="col_desc" class="col_desc"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <b>Field Layout Columns </b></div></p>
+<p></br><div id="col_desc" class="col_desc">  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  <ul class="legend">
+  <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
+  <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
+  <li><span class="checks"></span> Checks</li>
+  <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
+  <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
+</ul> </br></br> <b>Field Layout Columns </b></div></p>
 
  <div id="container" ></div>
  <div id="trial_coords" >loading...</div>
  <div id="trial_no_coordsMSG" >Upload physical field coordinates for this trial</div>
  <div class="col-sm-10" id="delete_button" style="display:none";>
-  <ul class="legend">
+  <!--<ul class="legend">
     <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
     <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
     <li><span class="checks"></span> Checks</li>
     <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
     <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
-  </ul> </br>
-   <a id="delete_field_map_link"><button class="button"  type="button" id="delete_map_button" value="delete_cords" >Delete Field Map</button></a>
+  </ul> </br> -->
+   <a id="download" class="btn btn-primary">Download as Image</a> &nbsp; <a id="delete_field_map_link"><button class="btn btn-danger"  type="button" id="delete_map_button" value="delete_cords" >Delete Map</button></a>
  </div>
 
 
@@ -61,6 +70,20 @@ var trial_id = <% $trial_id %>;
    jQuery(document).ready( function() {
 
      jQuery('#physical_layout_onswitch').click( function() {
+
+//   jQuery(function() {
+  //  jQuery("#downloadImgLink").click(function() {
+    //    html2canvas(jQuery("#container"), {
+      //      onrendered: function(canvas) {
+        //        theCanvas = canvas;
+//
+//                canvas.toBlob(function(blob) {
+  //                  saveAs(blob, "Dashboard.png");
+    //            });
+      //      }
+      //  });
+  //  });
+//  });
 
 	jQuery.ajax( {
 	     url: '/ajax/breeders/trial/'+trial_id+'/coords',
@@ -270,6 +293,19 @@ var trial_id = <% $trial_id %>;
 
  }
 
+ function downloadCanvas(link, canvasId, filename) {
+    //var canvas = document.getElementById(canvasId);
+    var canvas = document.getElementsByTagName('canvas')[0];
+    var dataurl = canvas.toDataURL();
+     link.href = dataurl;
+     link.download = filename;
+ }
+
+ document.getElementById('download').addEventListener('click', function() {
+       downloadCanvas(this, 'container', 'fieldMap.png');
+ }, false);
+
+
 });
 
 </script>
@@ -291,6 +327,16 @@ var trial_id = <% $trial_id %>;
 </div>
 
 <style>
+#download {
+	    float:left;
+	    cursor:pointer;
+	    color:#ccc;
+	    padding:3px;
+	}
+	#download:hover {
+	    color:#fff;
+	}
+
 .legend { list-style: none; }
 .legend li { float: left; margin-right: 10px; }
 .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
@@ -301,3 +347,15 @@ var trial_id = <% $trial_id %>;
 .legend .rep_even_number { background-color: #f4d03f; height: 4px; width: 16px;}
 .legend .rep_odd_number { background-color: black; height: 4px; width: 16px;}
 </style>
+
+
+<!-- Not in use -->
+<div id="ligand_info" class="ligand_info">
+  <ul class="legend">
+    <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
+    <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
+    <li><span class="checks"></span> Checks</li>
+    <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
+    <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
+  </ul>
+</div>
