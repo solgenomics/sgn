@@ -7,11 +7,11 @@ use Spreadsheet::WriteExcel;
 use CXGN::BreederSearch;
 use CXGN::Trial;
 
-sub verify { 
+sub verify {
     1;
 }
 
-sub download { 
+sub download {
     my $self = shift;
 
     my $schema = $self->bcs_schema();
@@ -33,19 +33,19 @@ sub download {
     $self->trial_download_log($trial_id, "trial phenotypes");
 
     my $trial_sql = "\'$trial_id\'";
-    my $bs = CXGN::BreederSearch->new( { dbh => $schema->storage->dbh() });
+    my $bs = CXGN::BreederSearch->new( { dbh => $schema->storage->dbh(), bcs_schema=>$schema });
     my @data = $bs->get_extended_phenotype_info_matrix(undef,$trial_sql, $trait_list_search, $include_timestamp, \@trait_contains, $data_level);
 
     #my $rs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_geolocation');
 
     #my $location = $rs->first()->get_column('description');
-    
+
     #my $bprs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id})->search_related_rs('project_relationship_subject_projects');
 
     #print STDERR "COUNT: ".$bprs->count()."  ". $bprs->get_column('project_relationship.object_project_id')."\n";
 
     #my $pbr = $schema->resultset("Project::Project")->search( { 'me.project_id'=> $bprs->get_column('project_relationship_subject_projects.object_project_id')->first() } );
-    
+
     #my $program_name = $pbr->first()->name();
     #my $year = $trial->get_year();
 
@@ -56,9 +56,9 @@ sub download {
     my $ss = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $ss->add_worksheet();
 
-    for (my $line =0; $line< @data; $line++) { 
+    for (my $line =0; $line< @data; $line++) {
 	my @columns = split /\t/, $data[$line];
-	for(my $col = 0; $col<@columns; $col++) { 
+	for(my $col = 0; $col<@columns; $col++) {
 	    $ws->write($line, $col, $columns[$col]);
 	}
     }

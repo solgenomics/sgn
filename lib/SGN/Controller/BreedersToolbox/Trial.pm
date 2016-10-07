@@ -175,6 +175,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $trait_list = $c->req->param("trait_list");
     $trait_list eq 'null' ? $trait_list = undef : print STDERR $trait_list."\n";
     my $trait_contains = $c->req->param("trait_contains") || "";
+    my $phenotype_min_value = $c->req->param("phenotype_min_value");
+    my $phenotype_max_value = $c->req->param("phenotype_max_value");
 
     if ($data_level eq 'plants') {
         my $trial = $c->stash->{trial};
@@ -229,6 +231,8 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         data_level => $data_level,
         include_timestamp => $timestamp_option,
         trait_contains => $trait_contains,
+        phenotype_min_value=>$phenotype_min_value,
+        phenotype_max_value=>$phenotype_max_value,
       });
 
       my $error = $download->download();
