@@ -2820,9 +2820,9 @@ sub build_multiple_traits_models {
 
     my $pop_id = $c->stash->{pop_id};
     my $prediction_id = $c->stash->{prediction_pop_id};
-   
-    my @selected_traits = $c->req->param('trait_id');
   
+    my @selected_traits = $c->req->param('trait_id[]');
+ 
     if (!@selected_traits && $c->stash->{background_job}) 
     { 
 	my $params = $c->stash->{analysis_profile};
@@ -2899,7 +2899,7 @@ sub build_multiple_traits_models {
 		$c->stash->{trait_file} = $file2;
 		$c->stash->{trait_abbr} = $selected_traits[0];
 		$self->get_trait_details_of_trait_abbr($c);
-
+ 
 		$self->get_rrblup_output($c); 
 	    }
 	}
@@ -2919,12 +2919,11 @@ sub build_multiple_traits_models {
 		}
 		else 
 		{
-		    my $tr = $c->model('solGS::solGS')->trait_name($selected_traits[$i]);
+		    my $tr   = $c->model('solGS::solGS')->trait_name($selected_traits[$i]);
 		    my $abbr = $self->abbreviate_term($tr);
 		    $traits .= $abbr;
 		    $traits .= "\t" unless ($i == $#selected_traits); 
-
-                    
+                
 		    foreach my $tr_id (@selected_traits)
 		    {
 			$trait_ids .= $tr_id;
@@ -2960,6 +2959,8 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
    
     my ($pop_id, $prediction_id) = @{$c->req->captures};
  
+    my $req = $c->req->param('source');
+    
     $c->stash->{pop_id} = $pop_id;
     $c->stash->{prediction_pop_id} = $prediction_id;
    
@@ -2980,8 +2981,17 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
                                  <p><a href=\"/solgs/population/$pop_id\">[ Go back ]</a></p>";
 
         $c->stash->{template} = "/generic_message.mas"; 
+    } 
+    elsif ($req =~ /AJAX/)
+    {     
+    	my $ret->{status} = 'success';
+  
+        $ret = to_json($ret);
+        
+        $c->res->content_type('application/json');
+        $c->res->body($ret);       
     }
-    else 
+     else
     {
         if ($referer =~ m/$trait_page/) 
         { 
@@ -3000,7 +3010,7 @@ sub traits_to_analyze :Regex('^solgs/analyze/traits/population/([\w|\d]+)(?:/([\
 
 sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+))?') {
      my ($self, $c) = @_;
-     
+         
      my ($pop_id, $pred_pop_id) = @{$c->req->captures};
 
      my @traits = $c->req->param; 
@@ -3073,7 +3083,7 @@ sub all_traits_output :Regex('^solgs/traits/all/population/([\w|\d]+)(?:/([\d+]+
      $self->project_description($c, $pop_id);
      my $project_name = $c->stash->{project_name};
      my $project_desc = $c->stash->{project_desc};
-  
+   
      my @model_desc = ([qq | <a href="/solgs/population/$pop_id">$project_name</a> |, $project_desc, \@trait_pages]);
      
      $c->stash->{template}    = $self->template('/population/multiple_traits_output.mas');

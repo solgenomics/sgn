@@ -275,7 +275,19 @@ sub parse_arguments {
 	      $c->stash->{combo_pops_id}   = @{ $arguments->{$k} }[0];
 	      $c->stash->{training_pop_id} = @{ $arguments->{$k} }[0];	      
 	  }
-
+	  if ($k eq 'population_id') 
+	  {	       
+	      if ($data_set_type =~ /combined populations/)
+	      {
+		  $c->stash->{combo_pops_id} = @{ $arguments->{$k} }[0];
+	      }
+	      else 
+	      {
+		  $c->stash->{pop_id}          = @{ $arguments->{$k} }[0];
+		  $c->stash->{training_pop_id} = @{ $arguments->{$k} }[0];
+	      }
+	     
+	  }
 	  if ($k eq 'selection_pop_id') 
 	  {
 	      $c->stash->{selection_pop_id}  = @{ $arguments->{$k} }[0];
@@ -348,7 +360,7 @@ sub structure_output_details {
    
     my $pop_id        = $c->stash->{pop_id}; 
     my $combo_pops_id = $c->stash->{combo_pops_id};
-    
+   
     my $referer = $c->req->referer;
     $referer=~ s/\/$//;
 
@@ -368,12 +380,12 @@ sub structure_output_details {
   
     $analysis_page =~ s/$base//;
 
-    if ($analysis_page =~ m/(solgs\/analyze\/traits\/|solgs\/trait\/|solgs\/model\/combined\/trials\/)/) 
+    if ($analysis_page =~ m/(solgs\/analyze\/traits\/|solgs\/trait\/|solgs\/model\/combined\/trials\/|solgs\/models\/combined\/trials\/)/) 
     {	
 	foreach my $trait_id (@traits_ids)
 	{	    
 	    $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
-
+ 
 	    $solgs_controller->get_trait_details($c, $trait_id);	    
 	    $solgs_controller->gebv_kinship_file($c);
 	 
@@ -580,9 +592,9 @@ sub run_analysis {
     elsif ($analysis_page =~  /solgs\/models\/combined\/trials\// )
     {
 	if ($c->stash->{data_set_type} =~ /combined populations/)
-	{	   
+	{
 	    foreach my $trait_id (@selected_traits)		
-	    {		
+	    {	
 		$c->controller('solGS::solGS')->get_trait_details($c, $trait_id);   	
 		$c->controller('solGS::combinedTrials')->combine_data_build_model($c);
 	    }

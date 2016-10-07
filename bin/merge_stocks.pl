@@ -13,7 +13,7 @@ Options:
  -D the database name
  -x flag; if present, delete the empty remaining accession
 
-mergefile.txt: A file with three columns: first column is ignored, bad name, good name.
+mergefile.txt: A file with three columns:  bad name, good name.
 
 All the metadata of bad name will be transferred to good name.
 If -x is used, stock with name bad name will be deleted.
@@ -60,15 +60,16 @@ my $header = <$F>;
 eval { 
     while (<$F>) { 
 	chomp;
-	my ($line_count, $merge_stock_name, $good_stock_name) = split /\t/;
+	my ($merge_stock_name, $good_stock_name) = split /\t/;
 	
-	my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => $good_stock_name });
+	my $stock_row = $schema->resultset("Stock::Stock")->find( { uniquename => { ilike => $good_stock_name } });
 	if (!$stock_row) { 
-	    print STDERR "Stock $good_stock_name not found. Skipping..\n";
+	    print STDERR "Stock $good_stock_name not found. Skipping...\n";
+	    
 	    next();
 	}
 	
-	my $merge_row = $schema->resultset("Stock::Stock")->find( { uniquename => $merge_stock_name });
+	my $merge_row = $schema->resultset("Stock::Stock")->find( { uniquename => { ilike => $merge_stock_name } });
 	if (!$merge_row) { 
 	    print STDERR "Stock $merge_stock_name not available for merging. Skipping\n";
 	    next();
