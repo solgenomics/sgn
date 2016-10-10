@@ -44,7 +44,7 @@ $trial_name => undef
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label">Traits: </label>
+                <label class="col-sm-3 control-label">Traits:<br/><small>(Select none for all traits)</small></label>
                 <div class="col-sm-9" >
                     <div id="download_trial_phenotypes_traits">
                     </div>
@@ -107,7 +107,9 @@ jQuery(document).ready(function() {
     var trait_contains = jQuery("#download_trial_phenotype_trait_contains").val();
     var traits = jQuery("#download_trial_phenotypes_traits_select").val();
     var data_level = jQuery("#download_trial_phenotypes_level_option").val();
-    window.open("/breeders/trial/<% $trial_id %>/download/phenotype?format="+format+"&timestamp="+timestamp+"&trait_contains="+trait_contains+"&trait_list="+JSON.stringify(traits)+"&dataLevel="+data_level );
+    var phenotype_min_value = jQuery("#download_trial_phenotype_phenotype_min").val();
+    var phenotype_max_value = jQuery("#download_trial_phenotype_phenotype_max").val();
+    window.open("/breeders/trial/<% $trial_id %>/download/phenotype?format="+format+"&timestamp="+timestamp+"&trait_contains="+trait_contains+"&trait_list="+JSON.stringify(traits)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value );
 
   });
 

@@ -223,11 +223,11 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
     my $download = CXGN::Trial::Download->new(
 	{
-	    bcs_schema => $c->stash->{schema},
-	    trial_id => $c->stash->{trial_id},
-	    trait_list => \@trait_list,
-	    filename => $tempfile,
-	    format => $plugin,
+        bcs_schema => $c->stash->{schema},
+        trial_id => $c->stash->{trial_id},
+        trait_list => \@trait_list,
+        filename => $tempfile,
+        format => $plugin,
         data_level => $data_level,
         include_timestamp => $timestamp_option,
         trait_contains => $trait_contains,

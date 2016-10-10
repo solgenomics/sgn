@@ -73,8 +73,8 @@ has 'include_timestamp' => (isa => 'Bool', is => 'ro', default => 0);
 
 has 'trait_contains' => (isa => 'Str', is => 'rw');
 
-has 'phenotype_min_value' => (isa => 'Int|Undef', is => 'rw');
-has 'phenotype_max_value' => (isa => 'Int|Undef', is => 'rw');
+has 'phenotype_min_value' => (isa => 'Str', is => 'rw');
+has 'phenotype_max_value' => (isa => 'Str', is => 'rw');
 
 sub BUILD {
     my $self = shift;
