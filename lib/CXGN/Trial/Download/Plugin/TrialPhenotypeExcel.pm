@@ -48,27 +48,7 @@ sub download {
     my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
     #print STDERR Dumper \@data;
 
-
-
-    ##my @data = $bs->get_extended_phenotype_info_matrix(undef,$trial_sql, $trait_list_search, $include_timestamp, \@trait_contains, $data_level);
-#------
-    #my $rs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_geolocation');
-
-    #my $location = $rs->first()->get_column('description');
-
-    #my $bprs = $schema->resultset("Project::Project")->search( { 'me.project_id' => $trial_id})->search_related_rs('project_relationship_subject_projects');
-
-    #print STDERR "COUNT: ".$bprs->count()."  ". $bprs->get_column('project_relationship.object_project_id')."\n";
-
-    #my $pbr = $schema->resultset("Project::Project")->search( { 'me.project_id'=> $bprs->get_column('project_relationship_subject_projects.object_project_id')->first() } );
-
-    #my $program_name = $pbr->first()->name();
-    #my $year = $trial->get_year();
-
-    #print STDERR "YEAR: $year\n";
-
-    #print STDERR "PHENOTYPE DATA MATRIX: ".Dumper(\@data);
-#---
+    print STDERR "Print Excel Start:".localtime."\n";
     my $ss = Spreadsheet::WriteExcel->new($self->filename());
     my $ws = $ss->add_worksheet();
     my $time = DateTime->now();
@@ -94,6 +74,7 @@ sub download {
     }
     #$ws->write(0, 0, "$program_name, $location ($year)");
     $ss ->close();
+    print STDERR "Print Excel End:".localtime."\n";
 }
 
 1;

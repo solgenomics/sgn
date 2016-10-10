@@ -173,7 +173,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $data_level = $c->req->param("dataLevel") || "plot";
     my $timestamp_option = $c->req->param("timestamp") || 0;
     my $trait_list = $c->req->param("trait_list");
-    $trait_list eq 'null' ? $trait_list = undef : print STDERR $trait_list."\n";
+    $trait_list = $trait_list eq 'null' ? undef : $trait_list;
     my $trait_contains = $c->req->param("trait_contains") || "";
     my $phenotype_min_value = $c->req->param("phenotype_min_value");
     my $phenotype_max_value = $c->req->param("phenotype_max_value");

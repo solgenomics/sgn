@@ -191,12 +191,10 @@ sub search {
              $where_clause
              $order_clause;";
 
-    print STDERR "Search Prepare:".localtime."\n";
     #print STDERR "QUERY: $q\n\n";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
-    print STDERR "Search Begin:".localtime."\n";
-    my $result;
+    my $result = [];
     while (my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename) = $h->fetchrow_array()) {
 
         my $timestamp_value;
@@ -210,7 +208,7 @@ sub search {
         my $synonyms = $synonym_hash_lookup{$stock_name};
         push @$result, [ $year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms ];
     }
-    print STDERR "Search result construct:".localtime."\n";
+    print STDERR "Search End:".localtime."\n";
     return $result;
 }
 
@@ -229,6 +227,7 @@ sub get_extended_phenotype_info_matrix {
     my $include_timestamp = $self->include_timestamp;
 
     print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
+    print STDERR "Construct Pheno Matrix Start:".localtime."\n";
     foreach my $d (@$data) {
 
         my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms) = @$d;
@@ -270,7 +269,7 @@ sub get_extended_phenotype_info_matrix {
     push @info, $line;
 
     my @unique_plot_list = ();
-    foreach my $d (keys \%plot_data) {
+    foreach my $d (keys %plot_data) {
         push @unique_plot_list, $d;
     }
     #print STDERR Dumper \@unique_plot_list;
@@ -284,7 +283,7 @@ sub get_extended_phenotype_info_matrix {
         }
         push @info, $line;
     }
-
+    print STDERR "Construct Pheno Matrix End:".localtime."\n";
     return @info;
 }
 
