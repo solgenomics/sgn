@@ -116,20 +116,7 @@ jQuery(document).ready(function($) {
         var location = $("#location").val();
         var folder_name = $("#add_cross_folder_name").val();
         var folder_id = $("#add_cross_folder_id").val();
-
-        switch (crossType) {
-            case 'polycross':
-                add_polycross(crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id);
-                break;
-            case 'reciprocal':
-                add_reciprocal_crosses(crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id);
-                break;
-            case 'multicross':
-                add_multicross(crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id);
-                break;
-            default:
-                add_cross(crossType, crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id);
-        }
+        add_cross(crossType, crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id);
 
     });
 
@@ -204,41 +191,56 @@ jQuery(document).ready(function($) {
         var seedNumber = $("#seed_number").val();
         var prefix = $("#prefix").val();
         var suffix = $("#suffix").val();
-
-        var maternalParent;
-        var paternalParent;
+        var maternal;
+        var paternal;
+        var maternal_parents;
+        var paternal_parents;
 
         switch (crossType) {
             case 'biparental':
-                maternalParent = $("#maternal_parent").val();
-                paternalParent = $("#paternal_parent").val();
+                maternal = $("#maternal_parent").val();
+                paternal = $("#paternal_parent").val();
                 break;
             case 'self':
                 var selfedParent = $("#selfed_parent").val();
-                maternalParent = selfedParent;
-                paternalParent = selfedParent;
+                maternal = selfedParent;
+                paternal = selfedParent;
                 break;
             case 'open':
-                maternalParent = $("#open_maternal_parent").val();
-                paternalParent = $("#open_paternal_population").val();
+                maternal = $("#open_maternal_parent").val();
+                paternal = $("#open_paternal_population").val();
                 break;
             case 'bulk':
-                maternalParent = $("#bulk_maternal_population").val();
-                paternalParent = $("#bulk_paternal_parent").val();
+                maternal = $("#bulk_maternal_population").val();
+                paternal = $("#bulk_paternal_parent").val();
                 break;
             case 'bulk_self':
                 var bulkedSelfedPopulation = $("#bulk_selfed_population").val();
-                maternalParent = bulkedSelfedPopulation;
-                paternalParent = bulkedSelfedPopulation;
+                maternal = bulkedSelfedPopulation;
+                paternal = bulkedSelfedPopulation;
                 break;
             case 'bulk_open':
-                maternalParent = $("#bulk_open_maternal_population").val();
-                paternalParent = $("#bulk_open_paternal_population").val();
+                maternal = $("#bulk_open_maternal_population").val();
+                paternal = $("#bulk_open_paternal_population").val();
                 break;
             case 'doubled_haploid':
                 var doubledHaploidParent = $("#doubled_haploid_parent").val();
-                maternalParent = doubledHaploidParent;
-                paternalParent = doubledHaploidParent;
+                maternal = doubledHaploidParent;
+                paternal = doubledHaploidParent;
+                break;
+            case 'polycross':
+                maternal_parents = get_accession_names('polycross_accessions_list_select');
+                if (!Array.isArray(maternal_parents)) { alert(maternal_parents); return; }
+                break;
+            case 'reciprocal':
+                maternal_parents = get_accession_names('reciprocal_accessions_list_select');
+                if (!Array.isArray(maternal_parents)) { alert(maternal_parents); return; }
+                break;
+            case 'multicross':
+                maternal_parents = get_accession_names('maternal_accessions_list_select');
+                if (!Array.isArray(maternal_parents)) { alert(maternal_parents); return; }
+                paternal_parents = get_accession_names('paternal_accessions_list_select');
+                if (!Array.isArray(paternal_parents)) { alert(paternal_parents); return; }
                 break;
         }
 
@@ -247,13 +249,13 @@ jQuery(document).ready(function($) {
             timeout: 3000000,
             dataType: "json",
             type: 'POST',
-            data: 'cross_name=' + crossName + '&cross_type=' + crossType + '&maternal_parent=' + encodeURIComponent(maternalParent) + '&paternal_parent=' + encodeURIComponent(paternalParent) + '&progeny_number=' + progenyNumber + '&flower_number=' + flowerNumber + '&seed_number=' + seedNumber + '&prefix=' + prefix + '&suffix=' + suffix + '&visible_to_role' + visibleToRole + '&breeding_program_id=' + breeding_program_id + '&location=' + location + '&folder_name=' + folder_name + '&folder_id=' + folder_id,
+            data: 'cross_name=' + crossName + '&cross_type=' + crossType + '&maternal=' + maternal + '&paternal=' + paternal + '&maternal_parents=' + maternal_parents + '&paternal_parents=' + paternal_parents + '&progeny_number=' + progenyNumber + '&flower_number=' + flowerNumber + '&seed_number=' + seedNumber + '&prefix=' + prefix + '&suffix=' + suffix + '&visible_to_role' + visibleToRole + '&breeding_program_id=' + breeding_program_id + '&location=' + location + '&folder_name=' + folder_name + '&folder_id=' + folder_id,
             beforeSend: function() {
                 jQuery("#create_cross").modal("hide");
                 jQuery("#working_modal").modal("show");
             },
             error: function(response) {
-                alert("An error occurred. Please try again later!" + response);
+                alert("An error occurred. Please try again later!" + JSON.stringify(response));
             },
             parseerror: function(response) {
                 alert("A parse error occurred. Please try again." + response);
@@ -268,83 +270,6 @@ jQuery(document).ready(function($) {
             },
         });
 
-    }
-
-    function add_reciprocal_crosses(crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id) {
-        var accession_names = get_accession_names('reciprocal_accessions_list_select');
-
-        for (i = 0; i < accession_names.length; i++) {
-            var maternalParent = accession_names[i];
-
-            for (j = 0; j < accession_names.length; j++) {
-                var paternalParent = accession_names[j];
-
-                if (maternalParent == paternalParent) {
-                    continue;
-                }
-
-                var reciprocalcrossName = crossName + '_' + maternalParent + 'x' + accession_names[j] + '_reciprocalcross';
-                var crossType = 'biparental';
-
-                folder_id = ajax_add_cross(reciprocalcrossName, crossType, maternalParent, paternalParent, visibleToRole, breeding_program_id, location, folder_name, folder_id);
-            }
-        }
-        jQuery("#working_modal").modal("hide");
-        $('#cross_saved_dialog_message').modal("show");
-    }
-
-    function add_multicross(crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id) {
-
-        var maternal_names = get_accession_names('maternal_accessions_list_select');
-        var paternal_names = get_accession_names('paternal_accessions_list_select');
-
-        for (i = 0; i < maternal_names.length; i++) {
-            var maternalParent = maternal_names[i];
-            var paternalParent = paternal_names[i];
-            var multicrossName = crossName + '_' + maternalParent + 'x' + paternalParent + '_multicross';
-            var crossType = 'biparental';
-
-            folder_id = ajax_add_cross(multicrossName, crossType, maternalParent, paternalParent, visibleToRole, breeding_program_id, location, folder_name, folder_id);
-        }
-        jQuery("#working_modal").modal("hide");
-        $('#cross_saved_dialog_message').modal("show");
-    }
-
-    function add_polycross(crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id) {
-
-        var accession_names = get_accession_names('polycross_accessions_list_select');
-        var populationName = crossName + '_parents';
-        var paternalParent = '';
-
-        jQuery.ajax({
-            url: '/ajax/population/new',
-            timeout: 60000,
-            method: 'POST',
-            async: false,
-            data: {
-                'population_name': populationName,
-                'accessions': accession_names
-            },
-            beforeSend: function() {
-                jQuery("#create_cross").modal("hide");
-                jQuery("#working_modal").modal("show");
-            },
-            success: function(response) {
-                paternalParent = populationName;
-            },
-            error: function(response) {
-                alert("An error occurred creating population " + populationName + ". Please try again later!" + response);
-            },
-        });
-
-        for (i = 0; i < accession_names.length; i++) {
-            var maternalParent = accession_names[i];
-            var polycrossName = crossName + '_' + accession_names[i] + '_polycross';
-            var crossType = 'biparental';
-            folder_id = ajax_add_cross(polycrossName, crossType, maternalParent, paternalParent, visibleToRole, breeding_program_id, location, folder_name, folder_id);
-        }
-        jQuery("#working_modal").modal("hide");
-        $('#cross_saved_dialog_message').modal("show");
     }
 
     function upload_crosses_file() {
@@ -367,13 +292,13 @@ jQuery(document).ready(function($) {
         }
 
         if (!accession_list_id) {
-            alert("You need to select an accession list!");
-            return;
+            //alert("You need to select an accession list!");
+            return "You need to select an accession list!";
         }
 
         if (accession_validation != 1) {
-            alert("The accession list did not pass validation. Please correct the list and try again");
-            return;
+            //alert("The accession list did not pass validation. Please correct the list and try again");
+            return "The accession list did not pass validation. Please correct the list and try again";
         }
 
         var list_data = lo.getListData(accession_list_id);
@@ -384,34 +309,4 @@ jQuery(document).ready(function($) {
         }
         return names;
     }
-
-    function ajax_add_cross(crossName, crossType, maternalParent, paternalParent, visibleToRole, breeding_program_id, location, folder_name, folder_id) {
-        var new_folder_id;
-        jQuery.ajax({
-            url: '/ajax/cross/add_cross',
-            timeout: 3000000,
-            dataType: "json",
-            type: 'POST',
-            async: false,
-            data: 'cross_name=' + crossName + '&cross_type=' + crossType + '&maternal_parent=' + maternalParent + '&paternal_parent=' + paternalParent + '&visible_to_role' + visibleToRole + '&breeding_program_id=' + breeding_program_id + '&location=' + location + '&folder_name=' + folder_name + '&folder_id=' + folder_id,
-            beforeSend: function() {
-                jQuery("#create_cross").modal("hide");
-                jQuery("#working_modal").modal("show");
-            },
-            error: function(response) {
-                alert("An error occurred creating cross " + crossName + ". Please try again later!" + response);
-            },
-            parseerror: function(response) {
-                alert("A parse error occurred while creating cross " + crossName + ". Please try again." + response);
-            },
-            success: function(response) {
-                if (response.error) {
-                    alert(response.error);
-                }
-                new_folder_id = response.folder_id;
-            }
-        });
-        return new_folder_id;
-    }
-
 });
