@@ -22,8 +22,10 @@ sub download {
     my @trait_contains = split /,/, $self->trait_contains();
     my $data_level = $self->data_level();
     my $include_timestamp = $self->include_timestamp();
-    my @trial_list;
-    push @trial_list, $trial_id;
+    my $trial_list = $self->trial_list();
+    if (!$trial_list) {
+        push @$trial_list, $trial_id;
+    }
     my $accession_list;
     my $plot_list;
     my $plant_list;
@@ -38,7 +40,7 @@ sub download {
         bcs_schema=>$schema,
         data_level=>$data_level,
         trait_list=>$trait_list,
-        trial_list=>\@trial_list,
+        trial_list=>$trial_list,
         accession_list=>$accession_list,
         plot_list=>$plot_list,
         plant_list=>$plant_list,
@@ -61,7 +63,7 @@ sub download {
     $ws->write(0, 1, $timestamp);
     $ws->write(1, 0, "Search Parameters:");
     my $trait_list_text = $trait_list ? join ("," , @$trait_list) : '';
-    my $trial_list_text = @trial_list ? join ("," , @trial_list) : '';
+    my $trial_list_text = $trial_list ? join ("," , @$trial_list) : '';
     my $accession_list_text = $accession_list ? join(",", @$accession_list) : '';
     my $plot_list_text = $plot_list ? join(",", @$plot_list) : '';
     my $plant_list_text = $plant_list ? join(",", @$plant_list) : '';

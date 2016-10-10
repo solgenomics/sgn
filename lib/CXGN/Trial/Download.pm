@@ -59,7 +59,13 @@ has 'sample_number' => (isa => 'Int | Undef', is => 'ro', default => 0);
 
 has 'predefined_columns' => (isa => 'ArrayRef[HashRef] | Undef', is => 'ro');
 
-has 'trait_list' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_trait_list' );
+has 'trait_list' => (isa => 'ArrayRef|Undef', is => 'rw', predicate => 'has_trait_list' );
+has 'trial_list' => (isa => 'ArrayRef|Undef', is => 'rw' );
+has 'accession_list' => (isa => 'ArrayRef|Undef', is => 'rw' );
+has 'plot_list' => (isa => 'ArrayRef|Undef', is => 'rw' );
+has 'plant_list' => (isa => 'ArrayRef|Undef', is => 'rw' );
+has 'location_list' => (isa => 'ArrayRef|Undef', is => 'rw' );
+has 'year_list' => (isa => 'ArrayRef|Undef', is => 'rw' );
 
 has 'filename' => (isa => 'Str', is => 'ro',
 		   predicate => 'has_filename',

@@ -251,7 +251,7 @@ sub get_extended_phenotype_info_matrix {
         my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms) = @$d;
 
         my $cvterm = $trait."|".$cvterm_accession;
-        if ($include_timestamp) {
+        if ($include_timestamp && $timestamp_value) {
             $plot_data{$plot_name}->{$cvterm} = "$value,$timestamp_value";
         } else {
             $plot_data{$plot_name}->{$cvterm} = $value;

@@ -39,6 +39,7 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
     $c->stash->{template} = '/breeders_toolbox/download.mas';
 }
 
+#Deprecated. Look t0 SGN::Controller::BreedersToolbox::Trial->trial_download
 sub download_trial_layout_action : Path('/breeders/trial/layout/download') Args(1) {
     my $self = shift;
     my $c = shift;
@@ -59,6 +60,7 @@ sub download_trial_layout_action : Path('/breeders/trial/layout/download') Args(
     }
 }
 
+#Deprecated by deprecation of download_trial_layout_action
 sub download_layout_csv {
     my $self = shift;
     my $c = shift;
@@ -92,6 +94,7 @@ sub download_layout_csv {
     $c->res->body($output);
 }
 
+#Deprecated by deprecation of download_trial_layout_action
 sub download_layout_excel {
     my $self = shift;
     my $c = shift;
@@ -199,7 +202,7 @@ sub download_multiple_trials_action : Path('/breeders/trials/phenotype/download'
     }
 }
 
-
+#Deprecated. Look to SGN::Controller::BreedersToolbox::Trial->trial_download
 sub download_trial_phenotype_action : Path('/breeders/trial/phenotype/download') Args(1) {
     my $self = shift;
     my $c = shift;
@@ -512,16 +515,16 @@ my $c = shift;
 my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedigree_stock_id, $accession_name, $female_parent, $male_parent);
 
     $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
-    $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);  
+    $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
     @accession_list = map { $_->[1] } @$accession_data;
-   
+
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $t = CXGN::List::Transform->new();
     my $acc_t = $t->can_transform("accessions", "accession_ids");
     my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
 
-    @accession_ids = @{$accession_id_hash->{transform}};    
+    @accession_ids = @{$accession_id_hash->{transform}};
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
 
@@ -543,14 +546,14 @@ my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedig
 	if($len > 0)
 	{
       		$check_pedigree = "TRUE";
-	}	
+	}
 
-        
-	    
+
+
 	    $female_parent = $pedigree_parents[0][1] || '';
 	    $male_parent = $pedigree_parents[1][1] || '';
 	  print $TEMP "$accession_name \t  $female_parent \t $male_parent\n";
- 
+
   	}
 
 if ($check_pedigree eq "FALSE")
@@ -562,7 +565,7 @@ print $TEMP "No pedigrees found in the Database for the accessions searched. \n"
  close $TEMP;
 
  my $filename = "pedigree.txt";
-	
+
  $c->res->content_type("application/text");
  $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
   my $output = read_file($tempfile);
