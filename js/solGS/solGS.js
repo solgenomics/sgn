@@ -19,6 +19,7 @@ solGS.waitPage = function (page, args) {
 	+ '|solgs/trait/' 
 	+ '|solgs/model/combined/trials/'
 	+ '|solgs/search/trials/trait/'
+	+ '|solgs/model/\\w+_\\d+/prediction/'
 	+ '|solgs/model/\\d+/prediction/'
 	+ '|solgs/models/combined/trials/'
      	+ '|solgs/analyze/traits/';
@@ -172,6 +173,7 @@ solGS.waitPage = function (page, args) {
 	    + '|solgs/confirm/request'
 	    + '|solgs/trait/'
 	    + '|solgs/model/combined/trials/'
+	    + '|solgs/model/\\w+_\\d+/prediction/'
 	    + '|solgs/model/\\d+/prediction/';
 	
 	var multiTraitsUrls = 'solgs/analyze/traits/population/'
@@ -285,6 +287,7 @@ solGS.waitPage = function (page, args) {
 	var matchItems = '/solgs/population/'
 	    + '|solgs/trait/' 
 	    + '|solgs/model/combined/trials/'
+	    + '|solgs/model/\\w+_\\d+/prediction/'
 	    + '|solgs/model/\\d+/prediction/';
 
 	if (page.match(matchItems) ) {
