@@ -76,6 +76,16 @@ has 'plant_list' => (
     is => 'rw',
 );
 
+has 'location_list' => (
+    isa => 'ArrayRef|Undef',
+    is => 'rw',
+);
+
+has 'year_list' => (
+    isa => 'ArrayRef|Undef',
+    is => 'rw',
+);
+
 has 'include_timestamp' => (
     isa => 'Bool|Undef',
     is => 'ro',
@@ -133,6 +143,14 @@ sub search {
         my $trait_sql = _sql_from_arrayref($self->trait_list);
         push @where_clause, "cvterm.cvterm_id in ($trait_sql)";
     }
+    if ($self->location_list && scalar(@{$self->location_list})>0) {
+        my $location_sql = _sql_from_arrayref($self->location_list);
+        push @where_clause, "nd_geolocation.nd_geolocation_id in ($location_sql)";
+    }
+    if ($self->year_list && scalar(@{$self->year_list})>0) {
+        my $year_sql = _sql_from_arrayref($self->year_list);
+        push @where_clause, "year.value in ($year_sql)";
+    }
     if ($self->trait_contains  && scalar(@{$self->trait_contains})>0) {
         foreach (@{$self->trait_contains}) {
             push @where_clause, "cvterm.name like '%".lc($_)."%'";
@@ -163,7 +181,7 @@ sub search {
     my $where_clause = "WHERE rep.type_id = $rep_type_id AND stock.type_id = $accession_type_id";
     $where_clause .= " AND block_number.type_id = $block_number_type_id";
     $where_clause .= " AND plot_number.type_id = $plot_number_type_id";
-    $where_clause .= " AND projectprop.type_id = $year_type_id";
+    $where_clause .= " AND year.type_id = $year_type_id";
 
     if (@where_clause>0) {
         $where_clause .= " AND " . (join (" AND " , @where_clause));
@@ -171,7 +189,7 @@ sub search {
     #print STDERR $where_clause."\n";
 
     my $order_clause = " ORDER BY project.name, plot.uniquename";
-    my $q = "SELECT projectprop.value, project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name ||  ':' || dbxref.accession AS accession, rep.value, block_number.value, cvterm.cvterm_id, project.project_id, nd_geolocation.nd_geolocation_id, stock.stock_id, plot.stock_id, phenotype.uniquename
+    my $q = "SELECT year.value, project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name ||  ':' || dbxref.accession AS accession, rep.value, block_number.value, cvterm.cvterm_id, project.project_id, nd_geolocation.nd_geolocation_id, stock.stock_id, plot.stock_id, phenotype.uniquename
              FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)
              JOIN stock ON (object_id=stock.stock_id)
              LEFT JOIN stockprop AS rep ON (plot.stock_id=rep.stock_id)
@@ -187,7 +205,7 @@ sub search {
              JOIN db USING(db_id)
              JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)
              JOIN project USING(project_id)
-             JOIN projectprop USING(project_id)
+             JOIN projectprop as year USING(project_id)
              $where_clause
              $order_clause;";
 

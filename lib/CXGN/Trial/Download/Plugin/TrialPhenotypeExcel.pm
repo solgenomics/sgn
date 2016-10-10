@@ -27,6 +27,8 @@ sub download {
     my $accession_list;
     my $plot_list;
     my $plant_list;
+    my $location_list;
+    my $year_list;
     my $phenotype_min_value = $self->phenotype_min_value();
     my $phenotype_max_value = $self->phenotype_max_value();
 
@@ -43,7 +45,9 @@ sub download {
         include_timestamp=>$include_timestamp,
         trait_contains=>\@trait_contains,
         phenotype_min_value=>$phenotype_min_value,
-        phenotype_max_value=>$phenotype_max_value
+        phenotype_max_value=>$phenotype_max_value,
+        location_list=>$location_list,
+        year_list=>$year_list
     });
     my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
     #print STDERR Dumper \@data;
