@@ -29,14 +29,6 @@ has 'bcs_schema' => (
 has 'trial_id'   => (
     isa => "Int",
     is => 'ro',
-    required => 1,
-    );
-
-
-has 'bcs_schema' => (
-    is       => 'ro',
-    isa      => 'DBIx::Class::Schema',
-    required => 1,
     );
 
 # can be provided for logging purposes
@@ -52,13 +44,9 @@ has 'trial_download_logfile' => (
 
 ## defines the plugin with which the download will be processed
 has 'format' => (isa => 'Str', is => 'ro', required => 1);
-
 has 'data_level' => (isa => 'Str | Undef', is => 'ro', default => 'plots');
-
 has 'sample_number' => (isa => 'Int | Undef', is => 'ro', default => 0);
-
 has 'predefined_columns' => (isa => 'ArrayRef[HashRef] | Undef', is => 'ro');
-
 has 'trait_list' => (isa => 'ArrayRef|Undef', is => 'rw', predicate => 'has_trait_list' );
 has 'trial_list' => (isa => 'ArrayRef|Undef', is => 'rw' );
 has 'accession_list' => (isa => 'ArrayRef|Undef', is => 'rw' );
@@ -66,6 +54,10 @@ has 'plot_list' => (isa => 'ArrayRef|Undef', is => 'rw' );
 has 'plant_list' => (isa => 'ArrayRef|Undef', is => 'rw' );
 has 'location_list' => (isa => 'ArrayRef|Undef', is => 'rw' );
 has 'year_list' => (isa => 'ArrayRef|Undef', is => 'rw' );
+has 'include_timestamp' => (isa => 'Bool', is => 'ro', default => 0);
+has 'trait_contains' => (isa => 'ArrayRef|Undef', is => 'rw');
+has 'phenotype_min_value' => (isa => 'Str', is => 'rw');
+has 'phenotype_max_value' => (isa => 'Str', is => 'rw');
 
 has 'filename' => (isa => 'Str', is => 'ro',
 		   predicate => 'has_filename',
@@ -74,13 +66,6 @@ has 'filename' => (isa => 'Str', is => 'ro',
 
 has 'file_metadata' => (isa => 'Str', is => 'rw', predicate => 'has_file_metadata');
 
-## used when downloading phenotypes as either csv or xls.
-has 'include_timestamp' => (isa => 'Bool', is => 'ro', default => 0);
-
-has 'trait_contains' => (isa => 'Str', is => 'rw');
-
-has 'phenotype_min_value' => (isa => 'Str', is => 'rw');
-has 'phenotype_max_value' => (isa => 'Str', is => 'rw');
 
 sub BUILD {
     my $self = shift;
