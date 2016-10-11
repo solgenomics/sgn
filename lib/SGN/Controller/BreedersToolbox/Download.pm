@@ -182,6 +182,7 @@ sub _parse_list_from_json {
 sub download_multiple_trials_action : Path('/breeders/trials/phenotype/download') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $user = $c->user();
     if (!$user) {
@@ -229,6 +230,17 @@ sub download_multiple_trials_action : Path('/breeders/trials/phenotype/download'
     my @plant_list;
     if ($plant_list && $plant_list ne 'null') { @plant_list = @{_parse_list_from_json($plant_list)}; }
 
+    #Input list arguments can be arrays of integer ids or strings; however, when fed to CXGN::Trial::Download, they must be arrayrefs of integer ids
+    my @trait_list_int;
+    foreach (@trait_list) {
+        if ($_ =~ m/^\d+$/) {
+            push @trait_list_int, $_;
+        } else {
+            my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $_)->cvterm_id();
+            push @trait_list_int, $cvterm_id;
+        }
+    }
+
     my $plugin = "";
     if ($format eq "xls") {
         $plugin = "TrialPhenotypeExcel";
@@ -237,7 +249,6 @@ sub download_multiple_trials_action : Path('/breeders/trials/phenotype/download'
         $plugin = "TrialPhenotypeCSV";
     }
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dir = $c->tempfiles_subdir('download');
     my $temp_file_name = "phenotype" . "XXXX";
     my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
@@ -246,9 +257,10 @@ sub download_multiple_trials_action : Path('/breeders/trials/phenotype/download'
 
     print STDERR "TEMPFILE : $tempfile\n";
 
+    #List arguments should be arrayrefs of integer ids
     my $download = CXGN::Trial::Download->new({
         bcs_schema => $schema,
-        trait_list => \@trait_list,
+        trait_list => \@trait_list_int,
         year_list => \@year_list,
         location_list => \@location_list,
         trial_list => \@trial_list,

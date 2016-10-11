@@ -26,11 +26,11 @@ sub download {
     if (!$trial_list) {
         push @$trial_list, $trial_id;
     }
-    my $accession_list;
-    my $plot_list;
-    my $plant_list;
-    my $location_list;
-    my $year_list;
+    my $accession_list = $self->accession_list;
+    my $plot_list = $self->plot_list;
+    my $plant_list = $self->plant_list;
+    my $location_list = $self->location_list;
+    my $year_list = $self->year_list;
     my $phenotype_min_value = $self->phenotype_min_value();
     my $phenotype_max_value = $self->phenotype_max_value();
 
