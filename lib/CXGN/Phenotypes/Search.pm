@@ -115,6 +115,7 @@ sub search {
     my $block_number_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'block', 'stock_property')->cvterm_id();
     my $plot_number_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property')->cvterm_id();
     my $year_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id();
+    my $design_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -182,6 +183,7 @@ sub search {
     $where_clause .= " AND block_number.type_id = $block_number_type_id";
     $where_clause .= " AND plot_number.type_id = $plot_number_type_id";
     $where_clause .= " AND year.type_id = $year_type_id";
+    $where_clause .= " AND design.type_id = $design_type_id";
 
     if (@where_clause>0) {
         $where_clause .= " AND " . (join (" AND " , @where_clause));
@@ -189,7 +191,7 @@ sub search {
     #print STDERR $where_clause."\n";
 
     my $order_clause = " ORDER BY project.name, plot.uniquename";
-    my $q = "SELECT year.value, project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name ||  ':' || dbxref.accession AS accession, rep.value, block_number.value, cvterm.cvterm_id, project.project_id, nd_geolocation.nd_geolocation_id, stock.stock_id, plot.stock_id, phenotype.uniquename
+    my $q = "SELECT year.value, project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name ||  ':' || dbxref.accession AS accession, rep.value, block_number.value, cvterm.cvterm_id, project.project_id, nd_geolocation.nd_geolocation_id, stock.stock_id, plot.stock_id, phenotype.uniquename, design.value
              FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)
              JOIN stock ON (object_id=stock.stock_id)
              LEFT JOIN stockprop AS rep ON (plot.stock_id=rep.stock_id)
@@ -206,6 +208,7 @@ sub search {
              JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)
              JOIN project USING(project_id)
              JOIN projectprop as year USING(project_id)
+             JOIN projectprop as design USING(project_id)
              $where_clause
              $order_clause;";
 
@@ -213,7 +216,7 @@ sub search {
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my $result = [];
-    while (my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename) = $h->fetchrow_array()) {
+    while (my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename, $design) = $h->fetchrow_array()) {
 
         my $timestamp_value;
         if ($include_timestamp) {
@@ -224,7 +227,7 @@ sub search {
             }
         }
         my $synonyms = $synonym_hash_lookup{$stock_name};
-        push @$result, [ $year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms ];
+        push @$result, [ $year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design ];
     }
     print STDERR "Search End:".localtime."\n";
     return $result;
@@ -248,7 +251,7 @@ sub get_extended_phenotype_info_matrix {
     print STDERR "Construct Pheno Matrix Start:".localtime."\n";
     foreach my $d (@$data) {
 
-        my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms) = @$d;
+        my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design) = @$d;
 
         my $cvterm = $trait."|".$cvterm_accession;
         if ($include_timestamp && $timestamp_value) {
@@ -269,14 +272,15 @@ sub get_extended_phenotype_info_matrix {
             locationDbId => $location_id,
             germplasmDbId => $stock_id,
             plotDbId => $plot_id,
-            germplasmSynonyms => $synonym_string
+            germplasmSynonyms => $synonym_string,
+            studyDesign => $design
         };
         $traits{$cvterm}++;
     }
     #print STDERR Dumper \%plot_data;
 
     my @info = ();
-    my $line = join "\t", qw | studyYear studyDbId studyName locationDbId locationName germplasmDbId germplasmName germplasmSynonyms plotDbId plotName rep blockNumber |;
+    my $line = join "\t", qw | studyYear studyDbId studyName studyDesign locationDbId locationName germplasmDbId germplasmName germplasmSynonyms plotDbId plotName rep blockNumber |;
 
     # generate header line
     #
@@ -293,7 +297,7 @@ sub get_extended_phenotype_info_matrix {
     #print STDERR Dumper \@unique_plot_list;
 
     foreach my $p (@unique_plot_list) {
-        $line = join "\t", map { $plot_data{$p}->{metadata}->{$_} } ( "year", "studyDbId", "studyName", "locationDbId", "locationName", "germplasmDbId", "germplasmName", "germplasmSynonyms", "plotDbId", "plotName", "rep", "blockNumber" );
+        $line = join "\t", map { $plot_data{$p}->{metadata}->{$_} } ( "year", "studyDbId", "studyName", "studyDesign", "locationDbId", "locationName", "germplasmDbId", "germplasmName", "germplasmSynonyms", "plotDbId", "plotName", "rep", "blockNumber" );
 
         foreach my $trait (@sorted_traits) {
             my $tab = $plot_data{$p}->{$trait};
