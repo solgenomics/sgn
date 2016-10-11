@@ -79,33 +79,58 @@ sub patch {
         cv   => 'nd_experiment_property',
     });
 
+    my $number_of_nonviable_seeds = $schema->resultset("Cv::Cvterm")->create_with({
+        name => 'number_of_nonviable_seeds',
+        cv   => 'nd_experiment_property',
+    });
+
     my $date_of_embryo_rescue  = $schema->resultset("Cv::Cvterm")->create_with({
-        name => '$date_of_embryo_rescue',
+        name => 'date_of_embryo_rescue',
         cv   => 'nd_experiment_property',
     });
 
     my $number_of_embryos_rescued  = $schema->resultset("Cv::Cvterm")->create_with({
-        name => '$number_of_embryos_rescued',
+        name => 'number_of_embryos_rescued',
         cv   => 'nd_experiment_property',
     });
 
     my $number_of_embryos_germinated  = $schema->resultset("Cv::Cvterm")->create_with({
-        name => '$number_of_embryos_germinated',
+        name => 'number_of_embryos_germinated',
         cv   => 'nd_experiment_property',
     });
 
-    my $number_of_contaminated_embryos  = $schema->resultset("Cv::Cvterm")->create_with({
-        name => '$number_of_contaminated_embryos',
+    my $number_of_embryos_contaminated  = $schema->resultset("Cv::Cvterm")->create_with({
+        name => 'number_of_embryos_contaminated',
         cv   => 'nd_experiment_property',
     });
 
     my $number_of_seeds_planted  = $schema->resultset("Cv::Cvterm")->create_with({
-        name => '$number_of_seeds_planted',
+        name => 'number_of_seeds_planted',
         cv   => 'nd_experiment_property',
     });
 
     my $number_of_seeds_germinated  = $schema->resultset("Cv::Cvterm")->create_with({
-        name => '$number_of_seeds_germinated',
+        name => 'number_of_seeds_germinated',
+        cv   => 'nd_experiment_property',
+    });
+
+    my $days_to_maturity = $schema->resultset("Cv::Cvterm")->create_with({
+        name => 'days_to_maturity',
+        cv   => 'nd_experiment_property',
+    });
+
+    my $days_from_harvest_to_extraction = $schema->resultset("Cv::Cvterm")->create_with({
+        name => 'days_from_harvest_to_extraction',
+        cv   => 'nd_experiment_property',
+    });
+
+    my $days_from_extraction_to_embryo_rescue = $schema->resultset("Cv::Cvterm")->create_with({
+        name => 'days_from_extraction_to_embryo_rescue',
+        cv   => 'nd_experiment_property',
+    });
+
+    my $number_of_progeny  = $schema->resultset("Cv::Cvterm")->create_with({
+        name => 'number_of_progeny',
         cv   => 'nd_experiment_property',
     });
 

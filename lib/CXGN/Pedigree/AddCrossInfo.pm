@@ -35,12 +35,15 @@ has 'chado_schema' => (
 		 required => 1,
 		);
 has 'cross_name' => (isa =>'Str', is => 'rw', predicate => 'has_cross_name', required => 1,);
-has 'number_of_flowers' => (isa =>'Str', is => 'rw', predicate => 'has_number_of_flowers',);
-has 'number_of_seeds' => (isa =>'Str', is => 'rw', predicate => 'has_number_of_seeds',);
+has 'info_type' => (isa =>'Str', is => 'rw', predicate => 'has_info_type', required => 1,);
+has 'value' => (isa =>'Str', is => 'rw', predicate => 'has_value', required => 1,);
+
 
 sub add_info {
   my $self = shift;
   my $schema = $self->get_chado_schema();
+#	my $info_type = $self->get_info_type();
+#	my $value = $self->get_value();
   my $transaction_error;
 
   #add all cross info in a single transaction
@@ -68,30 +71,17 @@ sub add_info {
       return;
     }
 
-    if ($self->has_number_of_seeds()) {
-      my $number_of_seeds_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'number_of_seeds', 'nd_experiment_property');
-      $experiment
-	  ->find_or_create_related('nd_experimentprops' , {
-	      nd_experiment_id => $experiment->nd_experiment_id(),
-	      type_id  =>  $number_of_seeds_cvterm->cvterm_id(),
-	      value  =>  $self->get_number_of_seeds(),
-				   });
-    }
-    
-    
-    if ($self->has_number_of_flowers()) {
-	my $number_of_flowers_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'number_of_flowers', 'nd_experiment_property');
+		print STDERR "Adding info type: " . $self->get_info_type() . " and vlaue: " . $self->get_value() . "\n";
+    my $info_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $self->get_info_type(), 'nd_experiment_property');
 
-	$experiment
-	    ->find_or_create_related('nd_experimentprops' , {
-		nd_experiment_id => $experiment->nd_experiment_id(),
-		type_id  =>  $number_of_flowers_cvterm->cvterm_id(),
-		value  =>  $self->get_number_of_flowers(),
-				     });
-    }
-    
+		$experiment->find_or_create_related('nd_experimentprops' , {
+	      nd_experiment_id => $experiment->nd_experiment_id(),
+	      type_id  =>  $info_type_cvterm->cvterm_id(),
+	      value  =>  $self->get_value(),
+		});
+
   };
-  
+
   #try to add all cross info in a transaction
   try {
     $schema->txn_do($coderef);

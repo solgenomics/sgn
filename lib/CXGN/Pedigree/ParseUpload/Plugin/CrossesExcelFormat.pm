@@ -20,6 +20,10 @@ sub _validate_with_plugin {
   $supported_cross_types{'biparental'} = 1; #both parents required
   $supported_cross_types{'self'} = 1; #only female parent required
   $supported_cross_types{'open'} = 1; #only female parent required
+  $supported_cross_types{'bulk'} = 1; #both parents required
+  $supported_cross_types{'bulk_self'} = 1; #only female parent required
+  $supported_cross_types{'bulk_open'} = 1; #only female parent required
+  $supported_cross_types{'doubled_haploid'} = 1; #only female parent required
 
   #try to open the excel file and report any errors
   $excel_obj = $parser->parse($filename);
@@ -32,7 +36,7 @@ sub _validate_with_plugin {
   $worksheet = ( $excel_obj->worksheets() )[0]; #support only one worksheet
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
-  if (($col_max - $col_min)  < 2 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of crosses
+  if (($col_max - $col_min)  < 4 || ($row_max - $row_min) < 1 ) { #must have header and at least one row of crosses
     push @errors, "Spreadsheet is missing header";
     $self->_set_parse_errors(\@errors);
     return;
@@ -43,9 +47,7 @@ sub _validate_with_plugin {
   my $cross_type_head;
   my $female_parent_head;
   my $male_parent_head;
-  my $number_of_progeny;
-  my $number_of_flowers;
-  my $number_of_seeds;
+
   if ($worksheet->get_cell(0,0)) {
     $cross_name_head  = $worksheet->get_cell(0,0)->value();
   }
@@ -58,14 +60,21 @@ sub _validate_with_plugin {
   if ($worksheet->get_cell(0,3)) {
     $male_parent_head  = $worksheet->get_cell(0,3)->value();
   }
-  if ($worksheet->get_cell(0,4)) {
-    $number_of_progeny  = $worksheet->get_cell(0,4)->value();
-  }
-  if ($worksheet->get_cell(0,5)) {
-    $number_of_flowers  = $worksheet->get_cell(0,5)->value();
-  }
-  if ($worksheet->get_cell(0,6)) {
-    $number_of_seeds  = $worksheet->get_cell(0,6)->value();
+
+  my $cv_id = $schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
+  my $cross_property_rs = $schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
+  for my $column ( 4 .. $col_max ) {
+    my $header_string = $worksheet->get_cell(0,$column)->value();
+    print STDERR "\n header_string:\t".$header_string."\n";
+    my $matching_cross_property_row = $cross_property_rs->search(
+      {
+        name => $header_string,
+      });
+    my $matching_term = $matching_cross_property_row->first->name;
+    print STDERR "matching_term: \t".$matching_term."\n";
+    if (!$matching_term) {
+      push @errors, "Header property $header_string is not supported\n";
+    }
   }
 
   if (!$cross_name_head || $cross_name_head ne 'cross_name' ) {
@@ -80,15 +89,6 @@ sub _validate_with_plugin {
   if (!$male_parent_head || $male_parent_head ne 'male_parent') {
     push @errors, "Cell D1: male_parent is missing from the header";
   }
-  if ($number_of_progeny && $number_of_progeny ne 'number_of_progeny') {
-    push @errors, "Cell E1: wrong header for number_of_progeny column";
-  }
-  if ($number_of_progeny && $number_of_flowers ne 'number_of_flowers') {
-    push @errors, "Cell F1: wrong header for number_of_flowers column";
-  }
-  if ($number_of_progeny && $number_of_seeds ne 'number_of_seeds') {
-    push @errors, "Cell G1: wrong header for number_of_seeds column";
-  }
 
   for my $row ( 1 .. $row_max ) {
     my $row_name = $row+1;
@@ -96,9 +96,6 @@ sub _validate_with_plugin {
     my $cross_type;
     my $female_parent;
     my $male_parent;
-    my $number_of_progeny;
-    my $number_of_flowers;
-    my $number_of_seeds;
     my $cross_stock;
 
     if ($worksheet->get_cell($row,0)) {
@@ -110,29 +107,35 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell($row,2)) {
       $female_parent =  $worksheet->get_cell($row,2)->value();
     }
-    if ($worksheet->get_cell($row,3)) {
-      $male_parent =  $worksheet->get_cell($row,3)->value();
-    }
-    if ($worksheet->get_cell($row,4)) {
-      $number_of_progeny =  $worksheet->get_cell($row,4)->value();
-    }
-    if ($worksheet->get_cell($row,5)) {
-      $number_of_flowers =  $worksheet->get_cell($row,5)->value();
-    }
-    if ($worksheet->get_cell($row,6)) {
-      $number_of_seeds =  $worksheet->get_cell($row,6)->value();
-    }
 
     #skip blank lines or lines with no name, type and parent
     if (!$cross_name && !$cross_type && !$female_parent) {
       next;
     }
 
+    if ($worksheet->get_cell($row,3)) {
+      $male_parent =  $worksheet->get_cell($row,3)->value();
+    }
+
+    for my $column ( 4 .. $col_max ) {
+      if ($worksheet->get_cell($row,$column)) {
+        my $info_value = $worksheet->get_cell($row,$column)->value();
+        my $info_type = $worksheet->get_cell(0,$column)->value();
+        if ( ($info_type =~ m/^days/  || $info_type =~ m/^number/) && !($info_value =~ /^\d+?$/) ) {
+          push @errors, "Cell $info_type:$row_name: is not a positive integer: $info_value";
+        }
+        elsif ( $info_type =~ m/^date/ && !($info_value =~ m/(\d{4})-(\d{2})-(\d{2})/) ) {
+          push @errors, "Cell $info_type:$row_name: is not a valid date: $info_value. Dates need to be of form YYYY-MM-DD";
+        }
+      }
+    }
+
     #cross name must not be blank
     if (!$cross_name || $cross_name eq '') {
       push @errors, "Cell A$row_name: cross name missing";
     } else {
-      #cross must not already exist in the database
+
+    #cross must not already exist in the database
       if ($self->_get_cross($cross_name)) {
 	push @errors, "Cell A$row_name: cross name already exists: $cross_name";
       }
@@ -162,10 +165,10 @@ sub _validate_with_plugin {
       }
     }
 
-    #male parent must not be blank if type is biparental
+    #male parent must not be blank if type is biparental or bulk
     if (!$male_parent || $male_parent eq '') {
-      if ($cross_type eq 'biparental') {
-	push @errors, "Cell D$row_name: male parent required for biparental cross";
+      if ($cross_type eq ( 'biparental' || 'bulk' )) {
+	push @errors, "Cell D$row_name: male parent required for biparental and bulk crosses";
       }
     } else {
       #male parent must exist in the database
@@ -173,20 +176,7 @@ sub _validate_with_plugin {
 	push @errors, "Cell D$row_name: male parent does not exist: $male_parent";
       }
     }
-
-    #numbers of progeny, flowers, and seeds must be positive integers
-    if ($number_of_progeny && !($number_of_progeny =~ /^\d+?$/)) {
-      push @errors, "Cell E$row_name: number of progeny is not a positive integer: $number_of_progeny";
-    }
-    if ($number_of_flowers && !($number_of_flowers =~ /^\d+?$/)) {
-      push @errors, "Cell F$row_name: number of flowers is not a positive integer: $number_of_flowers";
-    }
-    if ($number_of_seeds && !($number_of_seeds =~ /^\d+?$/)) {
-      push @errors, "Cell G$row_name: number of seeds is not a positive integer: $number_of_seeds";
-    }
-
   }
-
   #store any errors found in the parsed file to parse_errors accessor
   if (scalar(@errors) >= 1) {
     $self->_set_parse_errors(\@errors);
@@ -197,7 +187,6 @@ sub _validate_with_plugin {
 
 }
 
-
 sub _parse_with_plugin {
   my $self = shift;
   my $filename = $self->get_filename();
@@ -206,9 +195,6 @@ sub _parse_with_plugin {
   my $excel_obj;
   my $worksheet;
   my @pedigrees;
-  my %progeny;
-  my %flowers;
-  my %seeds;
   my %parsed_result;
 
   $excel_obj = $parser->parse($filename);
@@ -220,14 +206,27 @@ sub _parse_with_plugin {
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
 
+  my %additional_properties;
+  my $cv_id = $schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
+  my $cross_property_rs = $schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
+  for my $column ( 4 .. $col_max ) {
+    my $header_string = $worksheet->get_cell(0,$column)->value();
+    my $matching_cross_property_row = $cross_property_rs->search(
+      {
+        name => $header_string,
+      });
+    if ($matching_cross_property_row->first) {
+      $additional_properties{$column} = our %{header_string};
+    }
+    else {
+    }
+  }
+
   for my $row ( 1 .. $row_max ) {
     my $cross_name;
     my $cross_type;
     my $female_parent;
     my $male_parent;
-    my $number_of_progeny;
-    my $number_of_flowers;
-    my $number_of_seeds;
     my $cross_stock;
 
     if ($worksheet->get_cell($row,0)) {
@@ -239,22 +238,27 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,2)) {
       $female_parent =  $worksheet->get_cell($row,2)->value();
     }
-    if ($worksheet->get_cell($row,3)) {
-      $male_parent =  $worksheet->get_cell($row,3)->value();
-    }
-    if ($worksheet->get_cell($row,4)) {
-      $number_of_progeny =  $worksheet->get_cell($row,4)->value();
-    }
-    if ($worksheet->get_cell($row,5)) {
-      $number_of_flowers =  $worksheet->get_cell($row,5)->value();
-    }
-    if ($worksheet->get_cell($row,6)) {
-      $number_of_seeds =  $worksheet->get_cell($row,6)->value();
-    }
 
     #skip blank lines or lines with no name, type and parent
     if (!$cross_name && !$cross_type && !$female_parent) {
       next;
+    }
+
+    if ($worksheet->get_cell($row,3)) {
+      $male_parent =  $worksheet->get_cell($row,3)->value();
+    }
+
+    for my $column ( 4 .. $col_max ) {
+      if ($worksheet->get_cell($row,$column)) {
+        print STDERR "value =". $worksheet->get_cell($row,$column)->value()."\n";
+        print STDERR " additional_properties: %additional_properties column: $column cross_name: $cross_name \n";
+        $additional_properties{column}{$cross_name} = $worksheet->get_cell($row,$column)->value();
+        if ($row == $row_max) {
+          my $info_type = $worksheet->get_cell(0,$column)->value();
+          #print STDERR "dumper of final hash for $info_type:\t" . Dumper(%{info_type});
+          $parsed_result{$info_type} = $additional_properties{$column};
+        }
+      }
     }
 
     my $pedigree =  Bio::GeneticRelationships::Pedigree->new(name=>$cross_name, cross_type=>$cross_type);
@@ -269,22 +273,9 @@ sub _parse_with_plugin {
 
     push @pedigrees, $pedigree;
 
-    if ($number_of_progeny) {
-      $progeny{$cross_name} = $number_of_progeny;
-    }
-    if ($number_of_flowers) {
-      $flowers{$cross_name} = $number_of_flowers;
-    }
-    if ($number_of_seeds) {
-      $seeds{$cross_name} = $number_of_seeds;
-    }
-
   }
 
   $parsed_result{'crosses'} = \@pedigrees;
-  $parsed_result{'progeny'} = \%progeny;
-  $parsed_result{'flowers'} = \%flowers;
-  $parsed_result{'seeds'} = \%seeds;
 
   $self->_set_parsed_data(\%parsed_result);
 
@@ -336,4 +327,3 @@ sub _get_cross {
 
 
 1;
-

@@ -171,8 +171,9 @@ sub upload_cross_file_POST : Args(0) {
   }
 
   #add the progeny
-  foreach my $cross_name_key (keys %{$parsed_data->{progeny}}){
-    my $progeny_number = $parsed_data->{progeny}->{$cross_name_key};
+  if (%{$parsed_data->{number_of_progeny}}) {
+  foreach my $cross_name_key (keys %{$parsed_data->{number_of_progeny}}){
+    my $progeny_number = $parsed_data->{number_of_progeny}->{$cross_name_key};
     my $progeny_increment = 1;
     my @progeny_names;
 
@@ -200,21 +201,20 @@ sub upload_cross_file_POST : Args(0) {
       return;
     }
   }
+}
 
-  #add the number of flowers to crosses
-  foreach my $cross_name_key (keys %{$parsed_data->{flowers}}) {
-    my $number_of_flowers = $parsed_data->{flowers}->{$cross_name_key};
-    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key} );
-    $cross_add_info->set_number_of_flowers($number_of_flowers);
-    $cross_add_info->add_info();
-  }
-
-  #add the number of seeds to crosses
-  foreach my $cross_name_key (keys %{$parsed_data->{seeds}}) {
-    my $number_of_seeds = $parsed_data->{seeds}->{$cross_name_key};
-    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key} );
-    $cross_add_info->set_number_of_seeds($number_of_seeds);
-    $cross_add_info->add_info();
+  #add additional cross info to crosses
+  my $cv_id = $chado_schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
+  my $cross_property_rs = $chado_schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
+  while (my $cross_property_row = $cross_property_rs->next) {
+    my $info_type = $cross_property_row->name;
+    print STDERR "Handling info type $info_type\n";
+    foreach my $cross_name_key (keys %{$parsed_data->{$info_type}}) {
+      my $value = $parsed_data->{$info_type}->{$cross_name_key};
+      my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key, info_type => $info_type } );
+      $cross_add_info->set_value($value);
+      $cross_add_info->add_info();
+    }
   }
 
   $c->stash->{rest} = {success => "1",};
