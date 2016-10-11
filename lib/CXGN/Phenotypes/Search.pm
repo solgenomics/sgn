@@ -45,7 +45,7 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     required => 1,
 );
 
-#Not specifying data_level will given phenotypes for all data levels (plots, plants, etc)
+#Not specifying data_level will give phenotypes for all data levels (plots, plants, etc)
 has 'data_level' => (
     isa => 'Str|Undef',
     is => 'ro',

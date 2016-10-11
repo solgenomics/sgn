@@ -157,6 +157,8 @@ sub trial_tree : Path('/breeders/trialtree') Args(0) {
 
 }
 
+#For downloading trial layout in CSV and Excel, for downloading trial phenotypes in CSV and Excel, and for downloading trial phenotyping spreadsheets in Excel.
+#For phenotype download, better to use SGN::Controller::BreedersToolbox::Download->download_multiple_trials_action and provide a single trial_id in the trial_list argument. This is how the phenotype download works from the wizard page, the trial tree page, and the download page.
 sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;
@@ -173,15 +175,6 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $data_level = $c->req->param("dataLevel") || "plot";
     my $timestamp_option = $c->req->param("timestamp") || 0;
     my $trait_list = $c->req->param("trait_list");
-    my $year_list = $c->req->param("year_list");
-    my $location_list = $c->req->param("location_list");
-    my $trial_list = $c->req->param("trial_list");
-    my $accession_list = $c->req->param("accession_list");
-    my $plot_list = $c->req->param("plot_list");
-    my $plant_list = $c->req->param("plant_list");
-    my $trait_contains = $c->req->param("trait_contains") || "";
-    my $phenotype_min_value = $c->req->param("phenotype_min_value") || "";
-    my $phenotype_max_value = $c->req->param("phenotype_max_value") || "";
 
     if ($data_level eq 'plants') {
         my $trial = $c->stash->{trial};
@@ -193,19 +186,9 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my @trait_list;
-    if ($trait_list) { @trait_list = @{_parse_list_from_json($trait_list)}; }
-    my @year_list;
-    if ($year_list) { @year_list = @{_parse_list_from_json($year_list)}; }
-    my @location_list;
-    if ($location_list) { @location_list = @{_parse_list_from_json($location_list)}; }
-    my @trial_list;
-    if ($trial_list) { @trial_list = @{_parse_list_from_json($trial_list)}; }
-    my @accession_list;
-    if ($accession_list) { @accession_list = @{_parse_list_from_json($accession_list)}; }
-    my @plot_list;
-    if ($plot_list) { @plot_list = @{_parse_list_from_json($plot_list)}; }
-    my @plant_list;
-    if ($plant_list) { @plant_list = @{_parse_list_from_json($plant_list)}; }
+    if ($trait_list && $trait_list ne 'null') {
+        @trait_list = @{_parse_list_from_json($trait_list)};
+    }
 
     my $plugin = "";
     if ( ($format eq "xls") && ($what eq "layout")) {
@@ -240,26 +223,17 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         bcs_schema => $c->stash->{schema},
         trial_id => $c->stash->{trial_id},
         trait_list => \@trait_list,
-        year_list => \@year_list,
-        location_list => \@location_list,
-        trial_list => \@trial_list,
-        accession_list => \@accession_list,
-        plot_list => \@plot_list,
-        plant_list => \@plant_list,
         filename => $tempfile,
         format => $plugin,
         data_level => $data_level,
         include_timestamp => $timestamp_option,
-        trait_contains => $trait_contains,
-        phenotype_min_value=>$phenotype_min_value,
-        phenotype_max_value=>$phenotype_max_value,
-      });
+    });
 
-      my $error = $download->download();
+    my $error = $download->download();
 
-      my $file_name = $trial_id . "_" . "$what" . ".$format";
-     $c->res->content_type('Application/'.$format);
-     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+    my $file_name = $trial_id . "_" . "$what" . ".$format";
+    $c->res->content_type('Application/'.$format);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 
     my $output = read_file($tempfile);
 
