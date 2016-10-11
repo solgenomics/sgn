@@ -42,8 +42,6 @@ has 'value' => (isa =>'Str', is => 'rw', predicate => 'has_value', required => 1
 sub add_info {
   my $self = shift;
   my $schema = $self->get_chado_schema();
-#	my $info_type = $self->get_info_type();
-#	my $value = $self->get_value();
   my $transaction_error;
 
   #add all cross info in a single transaction
@@ -71,7 +69,7 @@ sub add_info {
       return;
     }
 
-		print STDERR "Adding info type: " . $self->get_info_type() . " and vlaue: " . $self->get_value() . "\n";
+		#print STDERR "Adding info type: " . $self->get_info_type() . " value: " . $self->get_value() . "\n";
     my $info_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $self->get_info_type(), 'nd_experiment_property');
 
 		$experiment->find_or_create_related('nd_experimentprops' , {

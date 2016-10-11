@@ -125,6 +125,7 @@ sub upload_cross_file_POST : Args(0) {
   $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
   $parser->load_plugin('CrossesExcelFormat');
   $parsed_data = $parser->parse();
+  print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
 
   if (!$parsed_data) {
     my $return_error = '';
@@ -171,9 +172,10 @@ sub upload_cross_file_POST : Args(0) {
   }
 
   #add the progeny
-  if (%{$parsed_data->{number_of_progeny}}) {
-  foreach my $cross_name_key (keys %{$parsed_data->{number_of_progeny}}){
-    my $progeny_number = $parsed_data->{number_of_progeny}->{$cross_name_key};
+  if ($parsed_data->{number_of_progeny}) {
+  my %progeny_hash = %{$parsed_data->{number_of_progeny}};
+  foreach my $cross_name_key (keys %progeny_hash){
+    my $progeny_number = $progeny_hash{$cross_name_key};
     my $progeny_increment = 1;
     my @progeny_names;
 
@@ -208,13 +210,15 @@ sub upload_cross_file_POST : Args(0) {
   my $cross_property_rs = $chado_schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
   while (my $cross_property_row = $cross_property_rs->next) {
     my $info_type = $cross_property_row->name;
+    if ($parsed_data->{$info_type}) {
     print STDERR "Handling info type $info_type\n";
-    foreach my $cross_name_key (keys %{$parsed_data->{$info_type}}) {
-      my $value = $parsed_data->{$info_type}->{$cross_name_key};
-      my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key, info_type => $info_type } );
-      $cross_add_info->set_value($value);
+    my %info_hash = %{$parsed_data->{$info_type}};
+    foreach my $cross_name_key (keys %info_hash) {
+      my $value = $info_hash{$cross_name_key};
+      my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name_key, info_type => $info_type, value => $value, } );
       $cross_add_info->add_info();
     }
+  }
   }
 
   $c->stash->{rest} = {success => "1",};

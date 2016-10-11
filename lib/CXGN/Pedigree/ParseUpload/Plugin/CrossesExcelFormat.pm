@@ -4,6 +4,7 @@ use Moose::Role;
 use Spreadsheet::ParseExcel;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
+use Data::Dumper;
 
 sub _validate_with_plugin {
   my $self = shift;
@@ -63,17 +64,15 @@ sub _validate_with_plugin {
 
   my $cv_id = $schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
   my $cross_property_rs = $schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
+
   for my $column ( 4 .. $col_max ) {
     my $header_string = $worksheet->get_cell(0,$column)->value();
-    print STDERR "\n header_string:\t".$header_string."\n";
-    my $matching_cross_property_row = $cross_property_rs->search(
-      {
-        name => $header_string,
-      });
-    my $matching_term = $matching_cross_property_row->first->name;
-    print STDERR "matching_term: \t".$matching_term."\n";
-    if (!$matching_term) {
-      push @errors, "Header property $header_string is not supported\n";
+    my $matching_cross_property_row = $cross_property_rs->search({ name => $header_string, });
+    if ($matching_cross_property_row->first) {
+      my $matching_term = $matching_cross_property_row->first->name;
+      if (!$matching_term) {
+        push @errors, "Header property $header_string is not supported\n";
+      }
     }
   }
 
@@ -107,12 +106,10 @@ sub _validate_with_plugin {
     if ($worksheet->get_cell($row,2)) {
       $female_parent =  $worksheet->get_cell($row,2)->value();
     }
-
     #skip blank lines or lines with no name, type and parent
     if (!$cross_name && !$cross_type && !$female_parent) {
       next;
     }
-
     if ($worksheet->get_cell($row,3)) {
       $male_parent =  $worksheet->get_cell($row,3)->value();
     }
@@ -195,6 +192,8 @@ sub _parse_with_plugin {
   my $excel_obj;
   my $worksheet;
   my @pedigrees;
+  my %additional_properties;
+  my %properties_columns;
   my %parsed_result;
 
   $excel_obj = $parser->parse($filename);
@@ -206,22 +205,19 @@ sub _parse_with_plugin {
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
 
-  my %additional_properties;
   my $cv_id = $schema->resultset('Cv::Cv')->search({name => 'nd_experiment_property', })->first()->cv_id();
   my $cross_property_rs = $schema->resultset('Cv::Cvterm')->search({ cv_id => $cv_id, });
+
   for my $column ( 4 .. $col_max ) {
     my $header_string = $worksheet->get_cell(0,$column)->value();
-    my $matching_cross_property_row = $cross_property_rs->search(
-      {
-        name => $header_string,
-      });
+    my $matching_cross_property_row = $cross_property_rs->search({ name => $header_string, });
     if ($matching_cross_property_row->first) {
-      $additional_properties{$column} = our %{header_string};
-    }
-    else {
+      $properties_columns{$column} = $header_string;
+      $additional_properties{$header_string} = ();
     }
   }
 
+  print STDERR "Dumper of additional properties hash:\t" . Dumper(\%additional_properties) ."\n";
   for my $row ( 1 .. $row_max ) {
     my $cross_name;
     my $cross_type;
@@ -250,13 +246,11 @@ sub _parse_with_plugin {
 
     for my $column ( 4 .. $col_max ) {
       if ($worksheet->get_cell($row,$column)) {
-        print STDERR "value =". $worksheet->get_cell($row,$column)->value()."\n";
-        print STDERR " additional_properties: %additional_properties column: $column cross_name: $cross_name \n";
-        $additional_properties{column}{$cross_name} = $worksheet->get_cell($row,$column)->value();
+        my $column_property = $properties_columns{$column};
+        $additional_properties{$column_property}{$cross_name} = $worksheet->get_cell($row,$column)->value();
         if ($row == $row_max) {
           my $info_type = $worksheet->get_cell(0,$column)->value();
-          #print STDERR "dumper of final hash for $info_type:\t" . Dumper(%{info_type});
-          $parsed_result{$info_type} = $additional_properties{$column};
+          $parsed_result{$info_type} = $additional_properties{$column_property};
         }
       }
     }
