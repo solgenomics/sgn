@@ -43,7 +43,7 @@ __PACKAGE__->config(
 
 sub create_phenotype_spreadsheet :  Path('/ajax/phenotype/create_spreadsheet') : ActionClass('REST') { }
 
-sub create_phenotype_spreadsheet_GET : Args(0) { 
+sub create_phenotype_spreadsheet_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     $c->forward('create_phenotype_spreadsheet_POST');
@@ -63,7 +63,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
   if ($predefined_columns) {
       $predefined_columns = decode_json($predefined_columns);
   }
-  
+
   #print STDERR Dumper $sample_number;
   #print STDERR Dumper $predefined_columns;
 
@@ -80,8 +80,8 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
   my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
   my $tempfile = $c->config->{basepath}."/".$rel_file.".xls";
 
-  my $create_spreadsheet = CXGN::Trial::Download->new( 
-      { 
+  my $create_spreadsheet = CXGN::Trial::Download->new(
+      {
 	  bcs_schema => $schema,
 	  trial_id => $trial_id,
 	  trait_list => \@trait_list,
@@ -97,7 +97,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
     print STDERR "DOWNLOAD FILENAME = ".$create_spreadsheet->filename()."\n";
     print STDERR "RELATIVE  = $rel_file\n";
 
-#if ($error) { 
+#if ($error) {
 #$c->stash->{rest} = { error => $error };
 #return;
 #}

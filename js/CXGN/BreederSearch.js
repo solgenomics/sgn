@@ -115,7 +115,6 @@ window.onload = function initialize() {
         var selected_plants = get_selected_results('plants');
         var selected_years = get_selected_results('years');
         if (selected_trials.length !== 0 || selected_locations.length !== 0 || selected_accessions.length !== 0 || selected_traits.length !== 0 || selected_plots.length !== 0 || selected_plants.length !== 0 || selected_years.length !== 0) {
-
             window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(selected_trials)+"&format=xls&trait_list="+JSON.stringify(selected_traits)+"&accession_list="+JSON.stringify(selected_accessions)+"&plot_list="+JSON.stringify(selected_plots)+"&plant_list="+JSON.stringify(selected_plants)+"&location_list="+JSON.stringify(selected_locations)+"&year_list="+JSON.stringify(selected_years)+"&dataLevel=plot" );
         } else {
             alert("No filters selected for download.");
@@ -132,7 +131,6 @@ window.onload = function initialize() {
         var selected_plants = get_selected_results('plants');
         var selected_years = get_selected_results('years');
         if (selected_trials.length !== 0 || selected_locations.length !== 0 || selected_accessions.length !== 0 || selected_traits.length !== 0 || selected_plots.length !== 0 || selected_plants.length !== 0 || selected_years.length !== 0) {
-
             window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(selected_trials)+"&format=csv&trait_list="+JSON.stringify(selected_traits)+"&accession_list="+JSON.stringify(selected_accessions)+"&plot_list="+JSON.stringify(selected_plots)+"&plant_list="+JSON.stringify(selected_plants)+"&location_list="+JSON.stringify(selected_locations)+"&year_list="+JSON.stringify(selected_years)+"&dataLevel=plot" );
         } else {
             alert("No filters selected for download.");
