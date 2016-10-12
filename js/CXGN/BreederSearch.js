@@ -106,34 +106,42 @@ window.onload = function initialize() {
     });
 
     jQuery('#download_button_excel').on('click', function (event) {
-      event.preventDefault();
-      var selected = get_selected_trials();
-      if (selected.length !== 0) {
-        var ladda = Ladda.create(this);
-        ladda.start();
-        var token = new Date().getTime(); //use the current timestamp as the token name and value
-        manage_dl_with_cookie(token, ladda);
-        window.location.href = '/breeders/trials/phenotype/download/'+selected.join(",")+'?format=xls&token='+token;
-      }
-      else { alert("No trials selected for download."); }
+        event.preventDefault();
+        var selected_trials = get_selected_results('trials');
+        var selected_locations = get_selected_results('locations');
+        var selected_accessions = get_selected_results('accessions');
+        var selected_traits = get_selected_results('traits');
+        var selected_plots = get_selected_results('plots');
+        var selected_plants = get_selected_results('plants');
+        var selected_years = get_selected_results('years');
+        if (selected_trials.length !== 0 || selected_locations.length !== 0 || selected_accessions.length !== 0 || selected_traits.length !== 0 || selected_plots.length !== 0 || selected_plants.length !== 0 || selected_years.length !== 0) {
+
+            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(selected_trials)+"&format=xls&trait_list="+JSON.stringify(selected_traits)+"&accession_list="+JSON.stringify(selected_accessions)+"&plot_list="+JSON.stringify(selected_plots)+"&plant_list="+JSON.stringify(selected_plants)+"&location_list="+JSON.stringify(selected_locations)+"&year_list="+JSON.stringify(selected_years)+"&dataLevel=plot" );
+        } else {
+            alert("No filters selected for download.");
+        }
     });
 
     jQuery('#download_button_csv').on('click', function (event) {
-      event.preventDefault();
-      var selected = get_selected_trials();
-      if (selected.length !== 0) {
-        var ladda = Ladda.create(this);
-        ladda.start();
-        var token = new Date().getTime(); //use the current timestamp as the token name and value
-        manage_dl_with_cookie(token, ladda);
-	      window.location.href = '/breeders/trials/phenotype/download/'+selected.join(",")+'?format=csv&token='+token;
-      }
-      else { alert("No trials selected for download."); }
+        event.preventDefault();
+        var selected_trials = get_selected_results('trials');
+        var selected_locations = get_selected_results('locations');
+        var selected_accessions = get_selected_results('accessions');
+        var selected_traits = get_selected_results('traits');
+        var selected_plots = get_selected_results('plots');
+        var selected_plants = get_selected_results('plants');
+        var selected_years = get_selected_results('years');
+        if (selected_trials.length !== 0 || selected_locations.length !== 0 || selected_accessions.length !== 0 || selected_traits.length !== 0 || selected_plots.length !== 0 || selected_plants.length !== 0 || selected_years.length !== 0) {
+
+            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(selected_trials)+"&format=csv&trait_list="+JSON.stringify(selected_traits)+"&accession_list="+JSON.stringify(selected_accessions)+"&plot_list="+JSON.stringify(selected_plots)+"&plant_list="+JSON.stringify(selected_plants)+"&location_list="+JSON.stringify(selected_locations)+"&year_list="+JSON.stringify(selected_years)+"&dataLevel=plot" );
+        } else {
+            alert("No filters selected for download.");
+        }
     });
 
     jQuery('#download_button_genotypes').on('click', function (event) {
       event.preventDefault();
-      var accession_ids = get_selected_accessions();
+      var accession_ids = get_selected_results('accessions');
       var protocol_id = get_selected_genotyping_protocols();
       if (accession_ids.length > 0 && protocol_id.length == 1) {
         var ladda = Ladda.create(this);
@@ -244,22 +252,17 @@ function get_selected_categories(this_section) {
   return selected_categories;
 }
 
-function get_selected_trials () {
+function get_selected_results (type) {
     var max_section = 4;
-    var selected_trials;
+    var selected = [];
     var categories = get_selected_categories(max_section);
     var data = get_selected_data(max_section);
     for (i=0; i < categories.length; i++) {
-	if (categories[i] === 'trials' && data[i]) {
-	    selected_trials = data[i];
-	} else {
-	}
+        if (categories[i] === type && data[i]) {
+            selected = data[i];
+        }
     }
-    if (selected_trials.length > 0) {
-	return selected_trials;
-    } else {
-	alert("No trials selected");
-    }
+    return selected;
 }
 
 function get_selected_genotyping_protocols () {
@@ -277,24 +280,6 @@ function get_selected_genotyping_protocols () {
     }
     else {
       alert("Please select a single genotyping protocol");
-    }
-}
-
-function get_selected_accessions () {
-    var max_section = 4;
-    var selected_accessions;
-    var categories = get_selected_categories(max_section);
-    var data = get_selected_data(max_section);
-    for (i=0; i < categories.length; i++) {
-	if (categories[i] === 'accessions' && data[i]) {
-	    selected_accessions = data[i];
-	} else {
-	}
-    }
-    if (selected_accessions.length > 0) {
-	return selected_accessions;
-    } else {
-	alert("No accessions selected");
     }
 }
 
