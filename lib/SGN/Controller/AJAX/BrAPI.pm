@@ -11,11 +11,11 @@ use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use CXGN::Chado::Stock;
 use CXGN::Login;
-use CXGN::BreederSearch;
 use CXGN::Trial::TrialCreate;
 use JSON qw( decode_json );
 use Data::Dumper;
 use Try::Tiny;
+use CXGN::Phenotypes::Search;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -71,15 +71,15 @@ sub _authenticate_user {
  Usage: For logging a user in and loggin a user out through the API
  Desc:
 
-For Logging In 
-POST Request: 
+For Logging In
+POST Request:
 {
  "grant_type" : "password", //(optional, text, `password`) ... The grant type, only allowed value is password, but can be ignored
  "username" : "user38", // (required, text, `thepoweruser`) ... The username
  "password" : "secretpw", // (optional, text, `mylittlesecret`) ... The password
  "client_id" : "blabla" // (optional, text, `blabla`) ... The client id, currently ignored.
 }
- 
+
 POST Response:
  {
    "metadata": {
@@ -91,11 +91,11 @@ POST Response:
    "access_token": "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4",
    "expires_in": "The lifetime in seconds of the access token"
  }
- 
+
 For Logging out
 DELETE Request:
- 
-{ 
+
+{
     "access_token" : "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4" // (optional, text, `R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4`) ... The user access token. Default: current user token.
 }
 
@@ -121,7 +121,7 @@ sub authenticate_token_DELETE {
 
     my $status = $c->stash->{status};
     my @status = @$status;
-    
+
     $login_controller->logout_user();
 
     my %pagination = ();
@@ -184,9 +184,9 @@ sub authenticate_token_POST {
 
  Usage: For determining which calls have been implemented and with which datafile types and methods
  Desc:
- 
+
  GET Request:
- 
+
  GET Response:
 {
   "metadata": {
@@ -274,9 +274,9 @@ sub pagination_response {
 
  Usage: For searching a germplasm by name. Allows for exact and wildcard match methods. http://docs.brapi.apiary.io/#germplasm
  Desc:
- 
+
  POST Request:
- 
+
 {
     "germplasmPUI" : "http://...", // (optional, text, `http://data.inra.fr/accession/234Col342`) ... The name or synonym of external genebank accession identifier
     "germplasmDbId" : 986, // (optional, text, `986`) ... The name or synonym of external genebank accession identifier
@@ -323,7 +323,7 @@ POST Response:
                 "speciesAuthority": "",
                 "subtaxa": "sp malaccensis var pahang",
                 "subtaxaAuthority": "",
-                "donors": 
+                "donors":
                 [
                     {
                         "donorAccessionNumber": "",
@@ -394,7 +394,7 @@ sub germplasm_list_GET {
 
     $search_params{'me.type_id'} = $accession_type_cvterm_id;
     $order_params{'-asc'} = 'me.stock_id';
-    
+
     if ($germplasm_name && (!$match_method || $match_method eq 'exact')) {
         $search_params{'me.uniquename'} = $germplasm_name;
     }
@@ -423,7 +423,7 @@ sub germplasm_list_GET {
     	$total_count = $rs->count();
     	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
     	while (my $stock = $rs_slice->next()) {
-    	    push @data, { 
+    	    push @data, {
                 germplasmDbId=>$stock->get_column('stock_id'),
                 defaultDisplayName=>$stock->get_column('name'),
                 germplasmName=>$stock->get_column('uniquename'),
@@ -487,7 +487,7 @@ sub germplasm_list_POST {
 
     $search_params{'me.type_id'} = $accession_type_cvterm_id;
     $order_params{'-asc'} = 'me.stock_id';
-    
+
     if ($germplasm_name && (!$match_method || $match_method eq 'exact')) {
         $search_params{'me.uniquename'} = $germplasm_name;
     }
@@ -516,7 +516,7 @@ sub germplasm_list_POST {
     	$total_count = $rs->count();
     	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
     	while (my $stock = $rs_slice->next()) {
-    	    push @data, { 
+    	    push @data, {
                 germplasmDbId=>$stock->get_column('stock_id'),
                 defaultDisplayName=>$stock->get_column('name'),
                 germplasmName=>$stock->get_column('uniquename'),
@@ -806,7 +806,7 @@ sub studies_list_POST {
     }
 
     my $trial_design;
-    my $trial_create = CXGN::Trial::TrialCreate->new({ 
+    my $trial_create = CXGN::Trial::TrialCreate->new({
         dbh => $c->dbc->dbh,
         chado_schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'),
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
@@ -1517,7 +1517,7 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
   foreach my $line (keys %scores) {
     push @lines, $line;
   }
-  
+
   my @json_lines;
   my $fh;
   my $file_path;
@@ -1548,8 +1548,8 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
           #print STDERR Dumper $marker_scores;
           push @marker_score_json_lines, { $marker_name => $marker_scores };
       }
-      
-      
+
+
   } elsif ($data_format eq 'tsv') {
       my $dir = $c->tempfiles_subdir('download');
       my ($fh, $tempfile) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$data_format.'_'.'XXXXX');
@@ -1557,7 +1557,7 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
       open(my $fh, ">", $file_path);
       print STDERR $file_path."\n";
       print $fh "markerprofileDbIds\t", join("\t", @lines), "\n";
-      
+
       my %markers_by_line;
       print STDERR scalar(@ordered_refmarkers)."\n";
       foreach my $m (@ordered_refmarkers) {
@@ -1577,13 +1577,13 @@ sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
           #print STDERR Dumper $marker_scores;
           print $fh "$marker_name\t", join("\t", @{$marker_scores}),"\n";
       }
-      
-      
+
+
       close $fh;
       $data_file_path = $file_path;
   }
-  
-  
+
+
 
   $total_count = scalar(keys %$markers);
 
@@ -2090,18 +2090,22 @@ sub studies_table_GET {
     my @status = @$status;
     my %result;
 
-    my $timestamp = $c->req->param("timestamp") || 0;
-    my $bs = CXGN::BreederSearch->new( { dbh => $self->bcs_schema->storage->dbh() });
+    my $include_timestamp = $c->req->param("timestamp") || 0;
     my $trial_id = $c->stash->{study_id};
-    my $trial_sql = "\'$trial_id\'";
-    my @data = $bs->get_extended_phenotype_info_matrix(undef,$trial_sql, undef, $timestamp);
+    my $phenotypes_search = CXGN::Phenotypes::Search->new({
+        bcs_schema=>$self->bcs_schema,
+        data_level=>'plot',
+        trial_list=>[$trial_id],
+        include_timestamp=>$include_timestamp,
+    });
+    my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 
     #print STDERR Dumper \@data;
 
     my $total_count = scalar(@data)-1;
     my @header_names = split /\t/, $data[0];
     #print STDERR Dumper \@header_names;
-    my @trait_names = @header_names[11 .. $#header_names];
+    my @trait_names = @header_names[13 .. $#header_names];
     #print STDERR Dumper \@trait_names;
     my @header_ids;
     foreach my $t (@trait_names) {

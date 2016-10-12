@@ -20,8 +20,8 @@ $trial_name => undef
                 <label class="col-sm-3 control-label">Format: </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_trial_phenotypes_format">
-                        <option value="csv">CSV</option>
                         <option value="xls">Excel (xls)</option>
+                        <option value="csv">CSV</option>
                     </select>
                 </div>
 	        </div>

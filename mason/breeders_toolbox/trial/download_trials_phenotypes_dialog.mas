@@ -155,7 +155,7 @@ jQuery(document).ready(function() {
             window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&format="+format+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_list="+JSON.stringify(traits)+"&accession_list="+JSON.stringify(accessions)+"&plot_list="+JSON.stringify(plots)+"&plant_list="+JSON.stringify(plants)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value );
         }
         else { alert("No leaf nodes selected for download."); }
-});
+    });
 
 });
 

@@ -2,7 +2,6 @@
 package CXGN::Trial::Download::Plugin::TrialPhenotypeCSV;
 
 use Moose::Role;
-use CXGN::BreederSearch;
 use CXGN::Trial;
 use CXGN::Phenotypes::Search;
 

@@ -4,7 +4,6 @@ package CXGN::Trial::Download::Plugin::TrialPhenotypeExcel;
 use Moose::Role;
 
 use Spreadsheet::WriteExcel;
-use CXGN::BreederSearch;
 use CXGN::Trial;
 use CXGN::Phenotypes::Search;
 use Data::Dumper;
