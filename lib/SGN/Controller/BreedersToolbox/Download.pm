@@ -25,6 +25,10 @@ use CXGN::Trial::Download;
 use POSIX qw(strftime);
 use Sort::Maker;
 use DateTime;
+use SGN::Model::Cvterm;
+use CXGN::Trial::TrialLookup;
+use CXGN::Location::LocationLookup;
+use CXGN::Stock::StockLookup;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -240,6 +244,56 @@ sub download_multiple_trials_action : Path('/breeders/trials/phenotype/download'
             push @trait_list_int, $cvterm_id;
         }
     }
+    my @plot_list_int;
+    foreach (@plot_list) {
+        if ($_ =~ m/^\d+$/) {
+            push @plot_list_int, $_;
+        } else {
+            my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema, stock_name=>$_ });
+            my $stock_id = $stock_lookup->get_stock_exact()->stock_id();
+            push @plot_list_int, $stock_id;
+        }
+    }
+    my @accession_list_int;
+    foreach (@accession_list) {
+        if ($_ =~ m/^\d+$/) {
+            push @accession_list_int, $_;
+        } else {
+            my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema, stock_name=>$_ });
+            my $stock_id = $stock_lookup->get_stock_exact()->stock_id();
+            push @accession_list_int, $stock_id;
+        }
+    }
+    my @plant_list_int;
+    foreach (@plant_list) {
+        if ($_ =~ m/^\d+$/) {
+            push @plant_list_int, $_;
+        } else {
+            my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema, stock_name=>$_ });
+            my $stock_id = $stock_lookup->get_stock_exact()->stock_id();
+            push @plant_list_int, $stock_id;
+        }
+    }
+    my @trial_list_int;
+    foreach (@trial_list) {
+        if ($_ =~ m/^\d+$/) {
+            push @trial_list_int, $_;
+        } else {
+            my $trial_lookup = CXGN::Trial::TrialLookup->new({ schema => $schema, trial_name=>$_ });
+            my $trial_id = $trial_lookup->get_trial()->project_id();
+            push @trial_list_int, $trial_id;
+        }
+    }
+    my @location_list_int;
+    foreach (@location_list) {
+        if ($_ =~ m/^\d+$/) {
+            push @location_list_int, $_;
+        } else {
+            my $location_lookup = CXGN::Location::LocationLookup->new({ schema => $schema, location_name=>$_ });
+            my $location_id = $location_lookup->get_geolocation()->nd_geolocation_id();
+            push @location_list_int, $location_id;
+        }
+    }
 
     my $plugin = "";
     if ($format eq "xls") {
@@ -262,11 +316,11 @@ sub download_multiple_trials_action : Path('/breeders/trials/phenotype/download'
         bcs_schema => $schema,
         trait_list => \@trait_list_int,
         year_list => \@year_list,
-        location_list => \@location_list,
-        trial_list => \@trial_list,
-        accession_list => \@accession_list,
-        plot_list => \@plot_list,
-        plant_list => \@plant_list,
+        location_list => \@location_list_int,
+        trial_list => \@trial_list_int,
+        accession_list => \@accession_list_int,
+        plot_list => \@plot_list_int,
+        plant_list => \@plant_list_int,
         filename => $tempfile,
         format => $plugin,
         data_level => $data_level,

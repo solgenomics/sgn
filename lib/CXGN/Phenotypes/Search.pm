@@ -152,7 +152,7 @@ sub search {
         my $year_sql = _sql_from_arrayref($self->year_list);
         push @where_clause, "year.value in ($year_sql)";
     }
-    if ($self->trait_contains  && scalar(@{$self->trait_contains})>0) {
+    if ($self->trait_contains && scalar(@{$self->trait_contains})>0) {
         foreach (@{$self->trait_contains}) {
             push @where_clause, "cvterm.name like '%".lc($_)."%'";
         }
