@@ -112,9 +112,9 @@ jQuery(document).ready(function ($) {
         //alert(block_number);
 
         var row_number= $('#row_number').val();
-	var row_number_per_block=$('#row_number_per_block').val();
-	var col_number_per_block=$('#col_number_per_block').val();
-	var col_number=$('#col_number').val();
+        var row_number_per_block=$('#row_number_per_block').val();
+        var col_number_per_block=$('#col_number_per_block').val();
+        var col_number=$('#col_number').val();
 
 
        // alert(row_number);
@@ -123,19 +123,19 @@ jQuery(document).ready(function ($) {
         var control_list_id = $('#list_of_checks_section_list_select').val();
         var control_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
 
-  var control_list_crbd;
-  if (control_list_id_crbd != ""){
+        var control_list_crbd;
+        if (control_list_id_crbd != ""){
             control_list_crbd = JSON.stringify(list.getList(control_list_id_crbd));
-  }
-	var stock_list;
-	if (stock_list_id != "") {
-            stock_list = JSON.stringify(list.getList(stock_list_id));
+        }
+        var stock_list;
+        if (stock_list_id != "") {
             stock_list_array = list.getList(stock_list_id);
+            stock_list = JSON.stringify(list.getList(stock_list_id));
 	}
 	var control_list;
 	if (control_list_id != "") {
             control_list = JSON.stringify(list.getList(control_list_id));
-	}
+        }
 
   var design_type = $('#select_design_method').val();
   if (design_type == "") {
@@ -176,40 +176,40 @@ jQuery(document).ready(function ($) {
 
         $.ajax({
             type: 'POST',
-	    timeout: 3000000,
+            timeout: 3000000,
             url: '/ajax/trial/generate_experimental_design',
-	    dataType: "json",
-      beforeSend: function () {
-        $('#working_modal').modal("show");
-      },
+            dataType: "json",
+            beforeSend: function() {
+                $('#working_modal').modal("show");
+            },
             data: {
                 'project_name': name,
                 'project_description': desc,
                 'year': year,
                 'trial_location': trial_location,
                 'stock_list': stock_list,
-		'control_list': control_list,
-    'control_list_crbd': control_list_crbd,
-		'design_type': design_type,
-		'rep_count': rep_count,
-		'block_number': block_number,
+                'control_list': control_list,
+                'control_list_crbd': control_list_crbd,
+                'design_type': design_type,
+                'rep_count': rep_count,
+                'block_number': block_number,
                 'row_number': row_number,
-		'row_number_per_block': row_number_per_block,
-		'col_number_per_block': col_number_per_block,
-		'col_number': col_number,
-		'block_size': block_size,
-		'max_block_size': max_block_size,
-		'plot_prefix': plot_prefix,
-		'start_number': start_number,
-		'increment': increment,
-        'greenhouse_num_plants': JSON.stringify(greenhouse_num_plants),
+                'row_number_per_block': row_number_per_block,
+                'col_number_per_block': col_number_per_block,
+                'col_number': col_number,
+                'block_size': block_size,
+                'max_block_size': max_block_size,
+                'plot_prefix': plot_prefix,
+                'start_number': start_number,
+                'increment': increment,
+                'greenhouse_num_plants': JSON.stringify(greenhouse_num_plants),
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
                 if (response.error) {
                     alert(response.error);
-		    $('#working_modal').modal("hide");
                 } else {
+
 		    $('#trial_design_information').html(response.design_info_view_html);
         var layout_view = JSON.parse(response.design_layout_view_html);
         //console.log(layout_view);
@@ -223,46 +223,46 @@ jQuery(document).ready(function ($) {
 
 		    $('#working_modal').modal("hide");
                     $('#trial_design_confirm').modal("show");
-		    design_json = response.design_json;
+                    design_json = response.design_json;
                 }
             },
             error: function () {
-		$('#working_modal').modal("hide");
+                $('#working_modal').modal("hide");
                 alert('An error occurred. sorry. test');
             }
        });
     }
 
     $('#new_trial_submit').click(function () {
-          var name = $('#new_trial_name').val();
-          var year = $('#add_project_year').val();
-          var desc = $('textarea#add_project_description').val();
-          var method_to_use = $('.format_type:checked').val();
-	  if (name == '') {
-	    alert('Trial name required');
-	    return;
-	  }
-          if (year === '' || desc === '') {
-	    alert('Year and description are required.');
-	    return;
-          }
-          if (method_to_use == "empty") {
-	    alert('adding a project');
-	    save_project_info(name, year, desc);
-          }
-          if (method_to_use == "create_with_upload") {
-	    var uploadFile = $("#trial_upload_file").val();
-	    $('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
-	    if (uploadFile === '') {
-              alert("Please select a file");
-              return;
-	    }
-	    $("#create_new_trial_form").submit();
-          }
-          if (method_to_use == "create_with_design_tool") {
-	    //generate_experimental_design(name,year,desc);
-	    generate_experimental_design();
-	  }
+        var name = $('#new_trial_name').val();
+        var year = $('#add_project_year').val();
+        var desc = $('textarea#add_project_description').val();
+        var method_to_use = $('.format_type:checked').val();
+        if (name == '') {
+            alert('Trial name required');
+            return;
+        }
+        if (year === '' || desc === '') {
+            alert('Year and description are required.');
+            return;
+        }
+        if (method_to_use == "empty") {
+            alert('adding a project');
+            save_project_info(name, year, desc);
+        }
+        if (method_to_use == "create_with_upload") {
+            var uploadFile = $("#trial_upload_file").val();
+            $('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
+            if (uploadFile === '') {
+                alert("Please select a file");
+                return;
+            }
+            $("#create_new_trial_form").submit();
+        }
+        if (method_to_use == "create_with_design_tool") {
+            //generate_experimental_design(name,year,desc);
+            generate_experimental_design();
+        }
           //$( this).dialog("close");
           //location.reload();
     });
@@ -292,6 +292,7 @@ jQuery(document).ready(function ($) {
             $("#other_parameter_section").hide();
             $("#design_info").show();
             $("#greenhouse_num_plants_per_accession_section").hide();
+            $('#greenhouse_default_num_plants_per_accession').hide();
         } else if (design_method == "RCBD") {
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
@@ -310,6 +311,7 @@ jQuery(document).ready(function ($) {
             $("#other_parameter_section").hide();
             $("#design_info").show();
             $("#greenhouse_num_plants_per_accession_section").hide();
+            $('#greenhouse_default_num_plants_per_accession').hide();
         } else if (design_method == "Alpha") {
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
@@ -328,6 +330,7 @@ jQuery(document).ready(function ($) {
             $("#other_parameter_section").hide();
             $("#design_info").show();
             $("#greenhouse_num_plants_per_accession_section").hide();
+            $('#greenhouse_default_num_plants_per_accession').hide();
         } else if (design_method == "Augmented") {
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
@@ -346,6 +349,7 @@ jQuery(document).ready(function ($) {
             $("#other_parameter_section").hide();
             $("#design_info").show();
             $("#greenhouse_num_plants_per_accession_section").hide();
+            $('#greenhouse_default_num_plants_per_accession').hide();
         } else if (design_method == "") {
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").hide();
@@ -365,6 +369,7 @@ jQuery(document).ready(function ($) {
             $("#other_parameter_section2").hide();
             $("#design_info").show();
             $("#greenhouse_num_plants_per_accession_section").hide();
+            $('#greenhouse_default_num_plants_per_accession').hide();
         }
 
         else if (design_method == "MAD") {
@@ -396,6 +401,7 @@ jQuery(document).ready(function ($) {
                 }
             });
             $("#greenhouse_num_plants_per_accession_section").hide();
+            $('#greenhouse_default_num_plants_per_accession').hide();
         }
 
         else if (design_method == 'greenhouse') {
@@ -415,6 +421,7 @@ jQuery(document).ready(function ($) {
             $("#design_info").hide();
             $('#greenhouse_default_num_plants_per_accession').show();
             $("#greenhouse_num_plants_per_accession_section").show();
+            $('#greenhouse_default_num_plants_per_accession').show();
             greenhouse_show_num_plants_section();
         }
 
@@ -424,6 +431,11 @@ jQuery(document).ready(function ($) {
     });
 
     jQuery(document).on('change', '#select_list_list_select', function() {
+        if (jQuery("#select_design_method").val() == 'greenhouse') {
+            greenhouse_show_num_plants_section();
+        }
+    });
+    jQuery(document).on('keyup', '#greenhouse_default_num_plants_per_accession_val', function() {
         if (jQuery("#select_design_method").val() == 'greenhouse') {
             greenhouse_show_num_plants_section();
         }
@@ -458,7 +470,7 @@ jQuery(document).ready(function ($) {
         var stock_list;
         if (stock_list_id != "") {
             stock_list_array = list.getList(stock_list_id);
-           stock_list = JSON.stringify(list.getList(stock_list_id));
+            stock_list = JSON.stringify(list.getList(stock_list_id));
         }
         var control_list;
         if (control_list_id != "") {

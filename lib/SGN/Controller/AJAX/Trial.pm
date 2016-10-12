@@ -212,15 +212,16 @@ my $location_number = scalar(@locations);
 
   $trial_design->set_trial_name($trial_name);
 
-   my $design_created = 0;
-    if ($use_same_layout) {
-      $design_created = 1;
+  my $design_created = 0;
+      if ($use_same_layout) {
+        $design_created = 1;
+      }
+
+    if ($design_created) {
+      $trial_design->set_randomization_seed($design_created);
+
     }
-
-  if ($design_created) {
-    $trial_design->set_randomization_seed($design_created);
-
-  }
+    
   if (@stock_names) {
     $trial_design->set_stock_list(\@stock_names);
     $design_info{'number_of_stocks'} = scalar(@stock_names);
@@ -306,6 +307,7 @@ my $location_number = scalar(@locations);
   if ($error) {return;}
   if ($trial_design->get_design()) {
     %design = %{$trial_design->get_design()};
+    print STDERR "DESIGN: ". Dumper(%design);
   } else {
     $c->stash->{rest} = {error => "Could not generate design" };
     return;
@@ -359,7 +361,7 @@ sub save_experimental_design_POST : Args(0) {
   my $error;
 
   my $design = _parse_design_from_json($c->req->param('design_json'));
-  print STDERR Dumper $design;
+  print STDERR "\nDesign: " . Dumper $design;
 
   my @locations;
   my $trial_location;
@@ -645,7 +647,7 @@ sub upload_trial_file_POST : Args(0) {
   $parser->load_plugin('TrialExcelFormat');
   $parsed_data = $parser->parse();
 
-  
+
 
   if (!$parsed_data) {
     my $return_error = '';
