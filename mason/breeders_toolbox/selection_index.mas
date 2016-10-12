@@ -18,7 +18,7 @@ $trial_name => undef
           <select class="form-control" autofocus="autofocus" id="select_trial_for_selection_index"></select>
         </div>
         <div class="col-sm-6 col-md-6 col-lg-6">
-          <label for="trait_list">Trait select: </label>
+          <label id="trait_list_label" for="trait_list">Trait select: </label>
           <select class="form-control" id="trait_list"></select>
         </div><br><br><br><br><br>
         <div class="col-sm-12 col-md-12 col-lg-12 table-responsive">
@@ -33,19 +33,21 @@ $trial_name => undef
             </thead>
             <tbody id ="trait_table"></tbody>
           </table>
-        </div><br><br><br><br><br>
-        <div class="col-sm-6 col-md-6 col-lg-6">
-        <label>Additional options: </label>
-          <label><input type="checkbox" id="allow_missing" value="">Include accessions with phenotypes missing for one or more trait</label>
-          <div class="col-sm-6 col-md-6 col-lg-6">
-            <label for="reference_accession_list"><input type="checkbox" id="use_reference_accession" value="">Scale values to a reference accession: </label>
-            <select class="form-control" id="reference_accession_list"></select>
-          </div>
+        <div id="additional_traits">
+        </div><br><br>
         </div>
         <div class="col-sm-6 col-md-6 col-lg-6">
-        <label>Calculate rankings: </label>
+        <label>Additional options: </label>
+          <label><input type="checkbox" id="allow_missing" value="">Include accessions with phenotypes missing for one or more trait</label><br><br>
+            <label for="reference_accession_list"><input type="checkbox" id="use_reference_accession" value="">Scale values to a reference accession: </label><br>
+            <select class="form-control" id="reference_accession_list"></select>
+        </div><br><br><br><br><br>
+        <div class="col-sm-6 col-md-6 col-lg-6">
+        <label>SIN formula: </label><br>
           <p id="ranking_formula"></p>
-          <center><button type="button" class="btn btn-primary disabled" id="calculate_rankings">Submit</button></center>
+        </div>
+        <div class="col-sm-12 col-md-12 col-lg-12 text-right">
+        <button type="button" class="btn btn-primary disabled" id="calculate_rankings">Calculate Rankings</button>
         </div>
       </div>
     </div>
@@ -54,7 +56,7 @@ $trial_name => undef
 
 <div class="panel panel-default">
   <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse2">
-    <div class="panel-title"><a href="#table_panel" class="accordion-toggle">Results</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
+    <div class="panel-title"><a href="#table_panel" class="accordion-toggle">Rankings</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
   </div>
   <div id="collapse2" class="panel-collapse collapse in">
     <div class="panel-body" id="table_panel" style="overflow:hidden">
