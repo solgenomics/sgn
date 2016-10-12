@@ -185,7 +185,7 @@ sub _parse_list_from_json {
     }
 }
 
-#used from wizard page, trial detail page, and manage trials page for downloading trial layouts and phenotypes
+#used from wizard page, trial detail page, and manage trials page for downloading phenotypes
 sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -612,6 +612,9 @@ print $TEMP "No pedigrees found in the Database for the accessions searched. \n"
 # pedigree download -- end
 
 #=pod
+
+
+#Used from manage download page for downloading gbs from accessions
 sub download_gbs_action : Path('/breeders/download_gbs_action') {
   my ($self, $c) = @_;
 

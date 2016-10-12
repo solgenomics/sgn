@@ -50,7 +50,7 @@ has 'trial_list' => (
 );
 
 has 'protocol_id' => (
-    isa => 'Int|Undef',
+    isa => 'Int',
     is => 'rw',
 );
 
