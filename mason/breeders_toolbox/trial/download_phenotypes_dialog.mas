@@ -20,8 +20,8 @@ $trial_name => undef
                 <label class="col-sm-3 control-label">Format: </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_trial_phenotypes_format">
-                        <option value="csv">CSV</option>
                         <option value="xls">Excel (xls)</option>
+                        <option value="csv">CSV</option>
                     </select>
                 </div>
 	        </div>
@@ -33,9 +33,52 @@ $trial_name => undef
                         <option value="1">Yes</option>
                     </select>
                 </div>
-	        </div>
-	       </form><br/>
-         
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Data Level: </label>
+                <div class="col-sm-9" >
+                    <select class="form-control" id="download_trial_phenotypes_level_option">
+                        <option value="plot">Plots</option>
+                        <option value="plant">Plants</option>
+                        <option value="">All</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Traits:<br/><small>(Select none for all traits)</small></label>
+                <div class="col-sm-9" >
+                    <div id="download_trial_phenotypes_traits">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Trait Name Contains: </label>
+                <div class="col-sm-9" >
+                    <input id="download_trial_phenotype_trait_contains" name="download_trial_phenotype_trait_contains" type="text" class="form-control" placeholder="Example: storage root,oxoglutarate"/>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-8 control-label">Minimum Phenotype Value: </label>
+                        <div class="col-sm-4" >
+                            <input id="download_trial_phenotype_phenotype_min" name="download_trial_phenotype_phenotype_min" type="number" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-8 control-label">Maximum Phenotype Value: </label>
+                        <div class="col-sm-4" >
+                            <input id="download_trial_phenotype_phenotype_max" name="download_trial_phenotype_phenotype_max" type="number" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </form><br/>
+
         </div>
       </div>
       <div class="modal-footer">
@@ -52,15 +95,31 @@ jQuery(document).ready(function() {
 
   jQuery('#trial_download_phenotypes_button').click( function () {
     jQuery('#download_trial_phenotypes_dialog').modal("show");
+    data_level_change_traits();
   });
-  
+
+  jQuery(document).on('change', "#download_trial_phenotypes_level_option", function() {
+    data_level_change_traits();
+  });
+
   jQuery('#download_trial_phenotypes_submit_button').click( function () {
+    var trial_id = "<% $trial_id %>";
+    var trial_id_array = trial_id.split(",");
     var format = jQuery("#download_trial_phenotypes_format").val();
     var timestamp = jQuery("#download_trial_phenotypes_timestamp_option").val();
-    window.open("/breeders/trial/<% $trial_id %>/download/phenotype?format="+format+"&timestamp="+timestamp);
+    var trait_contains = jQuery("#download_trial_phenotype_trait_contains").val();
+    var trait_contains_array = trait_contains.split(",");
+    var traits = jQuery("#download_trial_phenotypes_traits_select").val();
+    var data_level = jQuery("#download_trial_phenotypes_level_option").val();
+    var phenotype_min_value = jQuery("#download_trial_phenotype_phenotype_min").val();
+    var phenotype_max_value = jQuery("#download_trial_phenotype_phenotype_max").val();
+    window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&format="+format+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_list="+JSON.stringify(traits)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value );
 
   });
 
 });
 
+function data_level_change_traits() {
+    get_select_box('traits', 'download_trial_phenotypes_traits', { 'name' : 'download_trial_phenotypes_traits_select', 'id' : 'download_trial_phenotypes_traits_select', 'trial_id':<% $trial_id %>, 'data_level':jQuery('#download_trial_phenotypes_level_option').val() });
+}
 </script>

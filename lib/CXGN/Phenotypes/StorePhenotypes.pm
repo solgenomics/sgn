@@ -112,7 +112,7 @@ has 'unique_trait_stock' => (isa => "HashRef",
     is => 'rw',
 );
 
-
+#build is used for creating hash lookups in this case
 sub BUILD {
     my $self = shift;
 

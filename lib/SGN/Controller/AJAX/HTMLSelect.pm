@@ -195,6 +195,33 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->req->param('trial_id');
+    my $data_level = $c->req->param('data_level') || 'plot';
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$trial_id});
+    my $traits_assayed = $trial->get_traits_assayed($data_level);
+    my @traits;
+    foreach (@$traits_assayed) {
+        my @val = ($_->[0], $_->[1]);
+        push @traits, \@val;
+    }
+
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+
+    my $html = simple_selectbox_html(
+      multiple => 1,
+      name => $name,
+      id => $id,
+      choices => \@traits,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
     my $self = shift;
     my $c = shift;
