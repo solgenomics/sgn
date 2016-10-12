@@ -495,8 +495,12 @@ sub simple_selectbox_html {
     }
     $params{params} ||= '';
     $params{name}   ||= '';
-    $retstring =
-      qq!<select class="form-control" $id $params{multiple} $params{params} name="$params{name}" >!;
+    my $size = $params{size};
+    $retstring = qq!<select class="form-control" $id $params{multiple} $params{params} name="$params{name}"!;
+    if ($size) {
+        $retstring .= qq!size="$params{size}"!;
+    }
+    $retstring .= qq!>!;
     $retstring =~ s/ +/ /;    #collapse spaces
     my $in_group = 0;
     foreach ( @{ $params{choices} } ) {
