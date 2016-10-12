@@ -121,8 +121,8 @@ sub _validate_with_plugin {
         if ( ($info_type =~ m/^days/  || $info_type =~ m/^number/) && !($info_value =~ /^\d+?$/) ) {
           push @errors, "Cell $info_type:$row_name: is not a positive integer: $info_value";
         }
-        elsif ( $info_type =~ m/^date/ && !($info_value =~ m/(\d{4})-(\d{2})-(\d{2})/) ) {
-          push @errors, "Cell $info_type:$row_name: is not a valid date: $info_value. Dates need to be of form YYYY-MM-DD";
+        elsif ( $info_type =~ m/^date/ && !($info_value =~ m/(\d{4})\/(\d{2})\/(\d{2})/) ) {
+          push @errors, "Cell $info_type:$row_name: is not a valid date: $info_value. Dates need to be of form YYYY/MM/DD";
         }
       }
     }
@@ -217,7 +217,6 @@ sub _parse_with_plugin {
     }
   }
 
-  print STDERR "Dumper of additional properties hash:\t" . Dumper(\%additional_properties) ."\n";
   for my $row ( 1 .. $row_max ) {
     my $cross_name;
     my $cross_type;

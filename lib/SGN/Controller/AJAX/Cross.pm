@@ -125,7 +125,7 @@ sub upload_cross_file_POST : Args(0) {
   $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
   $parser->load_plugin('CrossesExcelFormat');
   $parsed_data = $parser->parse();
-  print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
+  #print STDERR "Dumper of parsed data:\t" . Dumper($parsed_data) . "\n";
 
   if (!$parsed_data) {
     my $return_error = '';
@@ -400,22 +400,20 @@ sub save_property_check :Path('/cross/property/check') Args(1) {
 
     my $type_id = $type_row->cvterm_id();
 
+    if ($type =~ m/^number/ || $type =~ m/^days/) { $type = 'number';}
+    if ($type =~ m/^date/) { $type = 'date';}
+
     my %suggested_values = (
-	cross_type =>  { 'biparental'=>1, 'self'=>1, 'open pollinated'=>1, 'bulk'=>1, 'bulk selfed'=>1, 'bulk and open pollinated'=>1, 'doubled haplotype'=>1 },
-	number_of_flowers => '\d+',
-	number_of_seeds => '\d+',
+  cross_name => '.*',
+	cross_type =>  { 'biparental'=>1, 'self'=>1, 'open'=>1, 'bulk'=>1, 'bulk_self'=>1, 'bulk_open'=>1, 'doubled_haploid'=>1 },
+	number => '\d+',
 	date => '\d{4}\\/\d{2}\\/\d{2}',
-	time => '\d+\:\d+',
-	operator => '.*',
-	cross_name => '.*',
 	);
 
     my %example_values = (
 	date => '2014/03/29',
-	time => '10:00',
-	number_of_flowers => 23,
-	number_of_seeds => 42,
-	operator => 'Alfonso',
+  number => 20,
+  cross_type => 'biparental',
 	cross_name => 'nextgen_cross',
 	);
 
@@ -427,7 +425,7 @@ sub save_property_check :Path('/cross/property/check') Args(1) {
     }
     else {
 	if ($value !~ m/^$suggested_values{$type}$/) {
-	    $c->stash->{rest} = { error => 'The provided value is not of the correct type. Format example: "'.$example_values{$type}.'"' };
+	    $c->stash->{rest} = { error => 'The provided value is not in a valid format. Format example: "'.$example_values{$type}.'"' };
 	    return;
 	}
     }
@@ -439,7 +437,7 @@ sub cross_property_save :Path('/cross/property/save') Args(1) {
     my $c = shift;
 
     if (!$c->user()) {
-	$c->stash->{rest} = { error => "You must be logged in add properties." };
+	$c->stash->{rest} = { error => "You must be logged in to add properties." };
 	return;
     }
     if (!($c->user()->has_role('submitter') or $c->user()->has_role('curator'))) {
