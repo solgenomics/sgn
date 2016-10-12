@@ -150,7 +150,7 @@ sub search {
     }
     if ($self->year_list && scalar(@{$self->year_list})>0) {
         my $year_sql = _sql_from_arrayref($self->year_list);
-        push @where_clause, "year.value in ($year_sql)";
+        push @where_clause, "year.value::int in ($year_sql)";
     }
     if ($self->trait_contains && scalar(@{$self->trait_contains})>0) {
         foreach (@{$self->trait_contains}) {
