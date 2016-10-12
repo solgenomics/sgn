@@ -41,7 +41,7 @@ jQuery(document).ready(function() {
           	  data: {'trait_ids': trait_ids },
               success: function(response) {
                 synonyms = response.synonyms;
-                var trait_html;
+                var trait_html = '<option id="select_message" value="" title="Select a trait">Select a trait</a>\n';
                 for (i = 0; i < list.length; i++) {
                   var trait_id = list[i][0];
                   var trait_name = list[i][1];
@@ -87,10 +87,10 @@ jQuery(document).ready(function() {
         var trait_name = jQuery('option:selected', this).text();
         var trait_synonym = jQuery('option:selected', this).data("synonym");
         var trait_CO_id = jQuery('option:selected', this).data("co_id");
-        var trait_html = "<tr><td><a href='/cvterm/"+trait_id+"/view' data-value='"+trait_id+"'>"+trait_name+"</a></td><td><p id='"+trait_id+"_CO_id'>"+trait_CO_id+"<p></td><td><p id='"+trait_id+"_synonym'>"+trait_synonym+"<p></td><td><input type='text' id='"+weight_id+"' class='form-control weight' placeholder='Must be a number (+ or -), default = 1'></input></td></tr>";
+        var trait_html = "<tr id='"+trait_id+"_row'><td><a href='/cvterm/"+trait_id+"/view' data-value='"+trait_id+"'>"+trait_name+"</a></td><td><p id='"+trait_id+"_CO_id'>"+trait_CO_id+"<p></td><td><p id='"+trait_id+"_synonym'>"+trait_synonym+"<p></td><td><input type='text' id='"+weight_id+"' class='form-control weight' placeholder='Must be a number (+ or -), default = 1'></input></td><td align='center'><a title='Remove' id='"+trait_id+"_remove' href='javascript:remove_trait("+trait_id+")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
         jQuery('#trait_table').append(trait_html);
-        jQuery('option:selected', this).val('');
-        jQuery('option:selected', this).text('Select another trait');
+        jQuery('#select_message').text('Select another trait');
+        jQuery('#select_message').attr('selected',true);
         update_formula();
         jQuery('#'+weight_id).focus();
         jQuery('#'+weight_id).change( //
@@ -170,6 +170,12 @@ function build_table(data, column_names, trial_name, target_div) {
     columns: column_names,
     order: [[ penultimate_column, "desc" ]],
   });
+}
+
+function remove_trait(trait_id) {
+  //console.log("remove with id "+trait_id+" has been clicked!");
+  jQuery('#'+trait_id+'_row').remove();
+  update_formula();
 }
 
 function update_formula() {
