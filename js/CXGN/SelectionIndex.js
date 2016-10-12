@@ -80,6 +80,32 @@ jQuery(document).ready(function() {
 
  });
 
+
+jQuery('input[id^="top_"]').change( // save top # or % of accession to add to lists
+  function() {
+  var type = this.id.split("_").pop();
+  var number = jQuery('#top_'+type).val();
+  var table = $('#weighted_values_table').DataTable();
+  var name_links = table.column(0).data();
+  var names = [];
+
+  if (type == 'number') {
+    for (var i = 0; i < number; i++) { //extract names from anchor tags
+      names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+    }
+    //console.log("retrieved top "+number+" names: "+names);
+  }
+  else if (type == 'percent') {
+    var adjusted_number = Math.round((number / 100 ) * name_links.length);
+    for (var i = 0; i < adjusted_number; i++) { //extract names from anchor tags
+      names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+    }
+    //console.log("retrieved top "+number+" percent of names: "+names);
+  }
+  jQuery('#top_ranked_names').html(names);
+  addToListMenu('ranking_to_list_menu', 'top_ranked_names', { listType: 'accessions', });
+});
+
     jQuery('#trait_list').change( // add selected trait to trait table
       function() {
         var trait_id = jQuery('option:selected', this).val();

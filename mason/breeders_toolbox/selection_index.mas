@@ -65,10 +65,25 @@ $trial_name => undef
         <div id="weighted_values_div" class="tab-pane fade in active"></div>
         <div id="raw_avgs_div" class="tab-pane fade"></div>
       </div>
+      <div class="col-sm-12 col-md-12 col-lg-12"><br><br>
+      <label>Copy top # or % of ranked accessions to a new or exisiting list: </label><br>
+
+        <label class="col-sm-3 control-label">Use #: </label>
+        <div class="col-sm-9" >
+          <input type="text" class="form-control" id="top_number">
+        </div>
+        <label class="col-sm-3 control-label">Use %: </label>
+        <div class="col-sm-9" >
+          <input type="text" class="form-control" id="top_percent">
+        </div>
+
+      <div style="text-align:right" id="ranking_to_list_menu"></div>
+      <div id="top_ranked_names" style="display: none;"></div>
+      </div>
+      </div>
     </div>
   </div>
 </div>
-
 
 <script>
     jQuery(document).ready(function() {
