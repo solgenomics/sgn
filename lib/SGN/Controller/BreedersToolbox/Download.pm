@@ -197,9 +197,9 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         return;
     }
 
-    my $format = $c->req->param("format") || "xls";
-    my $data_level = $c->req->param("dataLevel") || "plot";
-    my $timestamp_option = $c->req->param("timestamp") || 0;
+    my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xls";
+    my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
+    my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
     my $trait_list = $c->req->param("trait_list");
     my $year_list = $c->req->param("year_list");
     my $location_list = $c->req->param("location_list");
@@ -208,17 +208,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $plot_list = $c->req->param("plot_list");
     my $plant_list = $c->req->param("plant_list");
     my $trait_contains = $c->req->param("trait_contains");
-    my $phenotype_min_value = $c->req->param("phenotype_min_value") || "";
-    my $phenotype_max_value = $c->req->param("phenotype_max_value") || "";
-
-    if ($data_level eq 'plants') {
-        my $trial = $c->stash->{trial};
-        if (!$trial->has_plant_entries()) {
-            $c->stash->{template} = 'generic_message.mas';
-            $c->stash->{message} = "The requested trial (".$trial->get_name().") does not have plant entries. Please create the plant entries first.";
-            return;
-        }
-    }
+    my $phenotype_min_value = $c->req->param("phenotype_min_value") && $c->req->param("phenotype_min_value") ne 'null' ? $c->req->param("phenotype_min_value") : "";
+    my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
 
     my @trait_list;
     if ($trait_list && $trait_list ne 'null') { @trait_list = @{_parse_list_from_json($trait_list)}; }
@@ -402,6 +393,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $trial_list_id     = $c->req->param("trial_list_list_select");
     my $trait_list_id     = $c->req->param("trait_list_list_select");
     my $format            = $c->req->param("format");
+    my $datalevel         = $c->req->param("phenotype_datalevel");
     my $timestamp_included = $c->req->param("timestamp") || 0;
     my $cookie_value      = $c->req->param("download_token_value");
 
@@ -455,6 +447,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         trial_list=>$trial_id_data->{transform},
         accession_list=>$accession_id_data->{transform},
         include_timestamp=>$timestamp_included,
+        data_level=>$datalevel
     });
     my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 

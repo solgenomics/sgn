@@ -45,7 +45,7 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     required => 1,
 );
 
-#Not specifying data_level will give phenotypes for all data levels (plots, plants, etc)
+#(plot, plant, or all)
 has 'data_level' => (
     isa => 'Str|Undef',
     is => 'ro',
@@ -127,7 +127,7 @@ sub search {
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     if ($self->accession_list && scalar(@{$self->accession_list})>0) {
         my $accession_sql = _sql_from_arrayref($self->accession_list);
-        push @where_clause, "stock.stock_id in ($accession_sql)";
+        push @where_clause, "accession.stock_id in ($accession_sql)";
     }
     if ($self->plot_list && scalar(@{$self->plot_list})>0) {
         my $plot_sql = _sql_from_arrayref($self->plot_list);
@@ -171,7 +171,7 @@ sub search {
         push @where_clause, "phenotype.value::real BETWEEN ".$self->phenotype_min_value." AND ".$self->phenotype_max_value;
         push @where_clause, "phenotype.value~\'$numeric_regex\'";
     }
-    if ($self->data_level) {
+    if ($self->data_level ne 'all') {
         my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $self->data_level, 'stock_type')->cvterm_id();
         push @where_clause, "plot.type_id = $stock_type_id";
     } else {

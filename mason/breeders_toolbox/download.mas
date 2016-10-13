@@ -32,6 +32,9 @@ Choose a list for each parameter and click "Download".
       Timestamps
     </th>
     <th>
+      Data Level
+    </th>
+    <th>
       Action
     </th>
   </tr>
@@ -65,6 +68,13 @@ Choose a list for each parameter and click "Download".
     <select class="form-control" id="timestamp" name="timestamp">
         <option value="0">No</option>
         <option value="1">Yes</option>
+    </select>
+    </td>
+    <td>
+    <select class="form-control" id="phenotype_datalevel" name="phenotype_datalevel">
+        <option value="all">All</option>
+        <option value="plot">Plot</option>
+        <option value="plant">Plant</option>
     </select>
     </td>
     <td>
