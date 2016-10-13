@@ -124,6 +124,7 @@ sub search {
     my %synonym_hash_lookup = %{$self->get_synonym_hash_lookup()};
 
     my @where_clause;
+    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     if ($self->accession_list && scalar(@{$self->accession_list})>0) {
         my $accession_sql = _sql_from_arrayref($self->accession_list);
         push @where_clause, "stock.stock_id in ($accession_sql)";
@@ -151,6 +152,7 @@ sub search {
     if ($self->year_list && scalar(@{$self->year_list})>0) {
         my $year_sql = _sql_from_arrayref($self->year_list);
         push @where_clause, "year.value::int in ($year_sql)";
+        push @where_clause, "year.value~\'$numeric_regex\'";
     }
     if ($self->trait_contains && scalar(@{$self->trait_contains})>0) {
         foreach (@{$self->trait_contains}) {
@@ -158,17 +160,14 @@ sub search {
         }
     }
     if ($self->phenotype_min_value && !$self->phenotype_max_value) {
-        my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
         push @where_clause, "phenotype.value::real >= ".$self->phenotype_min_value;
         push @where_clause, "phenotype.value~\'$numeric_regex\'";
     }
     if ($self->phenotype_max_value && !$self->phenotype_min_value) {
-        my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
         push @where_clause, "phenotype.value::real <= ".$self->phenotype_max_value;
         push @where_clause, "phenotype.value~\'$numeric_regex\'";
     }
     if ($self->phenotype_max_value && $self->phenotype_min_value) {
-        my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
         push @where_clause, "phenotype.value::real BETWEEN ".$self->phenotype_min_value." AND ".$self->phenotype_max_value;
         push @where_clause, "phenotype.value~\'$numeric_regex\'";
     }
@@ -179,7 +178,8 @@ sub search {
         push @where_clause, "(plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id)";
     }
 
-    my $where_clause = "WHERE rep.type_id = $rep_type_id AND stock.type_id = $accession_type_id";
+    my $where_clause = "WHERE accession.type_id = $accession_type_id";
+    $where_clause .= " AND rep.type_id = $rep_type_id";
     $where_clause .= " AND block_number.type_id = $block_number_type_id";
     $where_clause .= " AND plot_number.type_id = $plot_number_type_id";
     $where_clause .= " AND year.type_id = $year_type_id";
@@ -191,18 +191,18 @@ sub search {
     #print STDERR $where_clause."\n";
 
     my $order_clause = " ORDER BY project.name, plot.uniquename";
-    my $q = "SELECT year.value, project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name ||  ':' || dbxref.accession AS accession, rep.value, block_number.value, cvterm.cvterm_id, project.project_id, nd_geolocation.nd_geolocation_id, stock.stock_id, plot.stock_id, phenotype.uniquename, design.value
+    my $q = "SELECT year.value, project.name, accession.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name ||  ':' || dbxref.accession, rep.value, block_number.value, cvterm.cvterm_id, project.project_id, nd_geolocation.nd_geolocation_id, accession.stock_id, plot.stock_id, phenotype.uniquename, design.value
              FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)
-             JOIN stock ON (object_id=stock.stock_id)
-             LEFT JOIN stockprop AS rep ON (plot.stock_id=rep.stock_id)
-             LEFT JOIN stockprop AS block_number ON (plot.stock_id=block_number.stock_id)
-             LEFT JOIN stockprop AS plot_number ON (plot.stock_id=plot_number.stock_id)
+             JOIN stock as accession ON (object_id=accession.stock_id)
+             JOIN stockprop AS rep ON (plot.stock_id=rep.stock_id)
+             JOIN stockprop AS block_number ON (plot.stock_id=block_number.stock_id)
+             JOIN stockprop AS plot_number ON (plot.stock_id=plot_number.stock_id)
              JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id)
              JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
              JOIN nd_geolocation USING(nd_geolocation_id)
              JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)
-             JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
-             JOIN cv USING(cv_id)
+             JOIN phenotype USING(phenotype_id)
+             JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
              JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
              JOIN db USING(db_id)
              JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)
@@ -229,6 +229,7 @@ sub search {
         my $synonyms = $synonym_hash_lookup{$stock_name};
         push @$result, [ $year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design ];
     }
+    #print STDERR Dumper $result;
     print STDERR "Search End:".localtime."\n";
     return $result;
 }
@@ -249,18 +250,25 @@ sub get_extended_phenotype_info_matrix {
 
     print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
     print STDERR "Construct Pheno Matrix Start:".localtime."\n";
+    my @unique_plot_list = ();
+    my %seen_plots;
     foreach my $d (@$data) {
 
         my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design) = @$d;
 
+        if (!exists($seen_plots{$plot_id})) {
+            push @unique_plot_list, $plot_id;
+            $seen_plots{$plot_id} = 1;
+        }
+
         my $cvterm = $trait."|".$cvterm_accession;
         if ($include_timestamp && $timestamp_value) {
-            $plot_data{$plot_name}->{$cvterm} = "$value,$timestamp_value";
+            $plot_data{$plot_id}->{$cvterm} = "$value,$timestamp_value";
         } else {
-            $plot_data{$plot_name}->{$cvterm} = $value;
+            $plot_data{$plot_id}->{$cvterm} = $value;
         }
         my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
-        $plot_data{$plot_name}->{metadata} = {
+        $plot_data{$plot_id}->{metadata} = {
             rep => $rep,
             studyName => $project_name,
             germplasmName => $stock_name,
@@ -290,10 +298,6 @@ sub get_extended_phenotype_info_matrix {
     }
     push @info, $line;
 
-    my @unique_plot_list = ();
-    foreach my $d (keys %plot_data) {
-        push @unique_plot_list, $d;
-    }
     #print STDERR Dumper \@unique_plot_list;
 
     foreach my $p (@unique_plot_list) {
