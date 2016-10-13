@@ -103,12 +103,6 @@ $(document).ready(function() {
       var trait_validation = 1;
       if (trait_list_id) { trait_validation = lo.validate(trait_list_id, 'traits', true); }
 
-      if (!accession_list_id || !trial_list_id || !trait_list_id) {
-      	 enable_ui();
-      	 alert("You need to select an accession, a trial, and a trait list!");
-	 return;
-      }
-
       var problem_lists = new Array();
 
       if (accession_validation != 1) {
@@ -175,7 +169,7 @@ $(document).ready(function() {
   <tr>
     <td>
       <div id="accession_list4">
-      </div>      
+      </div>
     </td>
     <td>
       <input class="btn btn-primary" type="button" id="pedigree" value="Download" />
@@ -188,7 +182,7 @@ $(document).ready(function() {
 
 
 <script>
-  $(document).ready(function() { 
+  $(document).ready(function() {
 
       var lo = new CXGN.List();
 
@@ -203,29 +197,29 @@ $(document).ready(function() {
 
 
       var accession_validation = 1;
-      if (accession_list_id) { 
-        accession_validation = lo.validate(accession_list_id, 'accessions', true); 
+      if (accession_list_id) {
+        accession_validation = lo.validate(accession_list_id, 'accessions', true);
 
       }
 
-   if (! accession_list_id) { 
+   if (! accession_list_id) {
         alert("You need to select an accession!");
-        return; 
+        return;
       }
 
       var problem_lists = new Array();
 
-      if (accession_validation != 1) { 
+      if (accession_validation != 1) {
         problem_lists.push('accessions');
       }
 
    console.log(problem_lists);
 
-      if (problem_lists.length > 0) { 
+      if (problem_lists.length > 0) {
         alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
         return;
       }
-    
+
      jQuery('#download_pedigree').submit();
 
       enable_ui()
@@ -241,7 +235,7 @@ function disable_ui() {
 	}
 
   });
-    
+
 </script>
 
 <!-- end of code for pedigree download -->
@@ -368,6 +362,10 @@ function disable_ui() {
       </div>
     </td>
     <td>
+      <div id="protocol_list2">
+      </div>
+    </td>
+    <td>
       <input class="btn btn-primary" type="button" id="genotype_qc" value="Quality Control" />
     </td>
   </tr>
@@ -385,6 +383,7 @@ function disable_ui() {
 
       $('#accession_list3').html(lo.listSelect('genotype_qc_accession_list', [ 'accessions' ], 'select'));
       $('#trial_list3').html(lo.listSelect('genotype_trial_list', [ 'trials' ], 'select' ));
+      get_select_box("genotyping_protocols", "protocol_list2", {'id':'protocol_list2_select', 'name':'protocol_list2_select'});
 
       $('#genotype_qc').click(function() {
 
@@ -402,7 +401,7 @@ function disable_ui() {
 
       disable_ui()
 
-      var accession_list_id = $('#genotype_accession_list_list_select').val();
+      var accession_list_id = $('#genotype_qc_accession_list_list_select').val();
       var trial_list_id = $('#genotype_trial_list_list_select').val();
 
       var accession_validation = lo.validate(accession_list_id, 'accessions', true);
