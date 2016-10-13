@@ -39,7 +39,7 @@
                     <select class="form-control" id="download_wizard_phenotypes_level_option">
                         <option value="plot">Plots</option>
                         <option value="plant">Plants</option>
-                        <option value="">All</option>
+                        <option value="all">All</option>
                     </select>
                 </div>
             </div>
