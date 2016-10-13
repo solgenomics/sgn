@@ -127,7 +127,7 @@ sub search {
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     if ($self->accession_list && scalar(@{$self->accession_list})>0) {
         my $accession_sql = _sql_from_arrayref($self->accession_list);
-        push @where_clause, "stock.stock_id in ($accession_sql)";
+        push @where_clause, "accession.stock_id in ($accession_sql)";
     }
     if ($self->plot_list && scalar(@{$self->plot_list})>0) {
         my $plot_sql = _sql_from_arrayref($self->plot_list);

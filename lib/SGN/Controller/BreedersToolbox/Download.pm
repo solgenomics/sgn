@@ -393,6 +393,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $trial_list_id     = $c->req->param("trial_list_list_select");
     my $trait_list_id     = $c->req->param("trait_list_list_select");
     my $format            = $c->req->param("format");
+    my $datalevel         = $c->req->param("phenotype_datalevel");
     my $timestamp_included = $c->req->param("timestamp") || 0;
     my $cookie_value      = $c->req->param("download_token_value");
 
@@ -446,6 +447,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         trial_list=>$trial_id_data->{transform},
         accession_list=>$accession_id_data->{transform},
         include_timestamp=>$timestamp_included,
+        data_level=>$datalevel
     });
     my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 
