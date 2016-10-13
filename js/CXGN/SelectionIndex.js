@@ -10,10 +10,15 @@ jQuery(document).ready(function() {
       $span.find('i').removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
   })
 
-    jQuery('#select_trial_for_selection_index').change( // update wizard panels and categories when data selections change
+    jQuery('#select_trial_for_selection_index').change( // update selection index options when trial selection changes
     	function() {
 
       jQuery('#selection_index').html("");
+      jQuery('#trait_table').html("");
+      jQuery('#weighted_values_div').html("");
+      jQuery('#raw_avgs_div').html("");
+      update_formula();
+
 	    var data = [ [ jQuery(this).val() ] ];
 
       jQuery.ajax({   // get traits phenotyped in trial
@@ -53,6 +58,12 @@ jQuery(document).ready(function() {
                   synonym_fixed = syn_parts[0];
                   trait_html += '<option value="'+trait_id+'" data-synonym="'+synonym_fixed+'" data-CO_id="'+CO_id+'" title="'+parts[0]+'">'+parts[0]+'</a>\n';
                 }
+                if (jQuery('#trait_list_label').length==0) {
+                  jQuery('#trait_list_div').html('<label id="trait_list_label" for="trait_list">Trait select: </label>');
+                  var trait_select = jQuery('#trait_list').detach();
+                  trait_select.appendTo('#trait_list_div');
+                  jQuery('#additional_traits').html("");
+                }
                 jQuery('#trait_list').html(trait_html);
                 jQuery('#trait_list').focus();
               },
@@ -79,32 +90,6 @@ jQuery(document).ready(function() {
      });
 
  });
-
-
-jQuery('input[id^="top_"]').change( // save top # or % of accession to add to lists
-  function() {
-  var type = this.id.split("_").pop();
-  var number = jQuery('#top_'+type).val();
-  var table = $('#weighted_values_table').DataTable();
-  var name_links = table.column(0).data();
-  var names = [];
-
-  if (type == 'number') {
-    for (var i = 0; i < number; i++) { //extract names from anchor tags
-      names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
-    }
-    //console.log("retrieved top "+number+" names: "+names);
-  }
-  else if (type == 'percent') {
-    var adjusted_number = Math.round((number / 100 ) * name_links.length);
-    for (var i = 0; i < adjusted_number; i++) { //extract names from anchor tags
-      names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
-    }
-    //console.log("retrieved top "+number+" percent of names: "+names);
-  }
-  jQuery('#top_ranked_names').html(names);
-  addToListMenu('ranking_to_list_menu', 'top_ranked_names', { listType: 'accessions', });
-});
 
     jQuery('#trait_list').change( // add selected trait to trait table
       function() {
@@ -184,7 +169,10 @@ function build_table(data, column_names, trial_name, target_div) {
 
   var table_id = target_div.replace("div", "table");
   var table_type = target_div.replace("_div", "");
-  var table_html = '<div class="table-responsive" style="margin-top: 10px;"><table id="'+table_id+'" class="table table-hover table-striped table-bordered" width="100%"><caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Table description: <i>'+table_type+' for trial '+trial_name+'.</i></center></caption></table></div>'
+  var table_html = '<br><br><div class="table-responsive" style="margin-top: 10px;"><table id="'+table_id+'" class="table table-hover table-striped table-bordered" width="100%"><caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Table description: <i>'+table_type+' for trial '+trial_name+'.</i></center></caption></table></div>'
+  if (table_type == 'weighted_values') { table_html += '<div class="col-sm-12 col-md-12 col-lg-12"><hr><label>Save top ranked accessions to a list: </label><br><br><div class="col-sm-3 col-md-3 col-lg-3" style="display: inline-block"><label>By number:</label>&nbsp;<select class="form-control" id="top_number"></select></div><div class="col-sm-3 col-md-3 col-lg-3" style="display: inline-block"><label>Or percent:</label>&nbsp;<select class="form-control" id="top_percent"></select></div><div class="col-sm-6 col-md-6 col-lg-6"><div style="text-align:right" id="ranking_to_list_menu"></div><div id="top_ranked_names" style="display: none;"></div></div><br><br><br><br><br></div>'; }
+
+  // <input type="text" class="col-sm-6 form-control" id="top_number">  <label class="col-sm-3 control-label">Use #: </label><div class="col-sm-9" ><input type="text" class="form-control" id="top_number"></div><br><label class="col-sm-3 control-label">Use %: </label><div class="col-sm-9" ><input type="text" class="form-control" id="top_percent"></div>
   jQuery('#'+target_div).html(table_html);
 
   var penultimate_column = column_names.length - 2;
@@ -199,6 +187,47 @@ function build_table(data, column_names, trial_name, target_div) {
     columns: column_names,
     order: [[ penultimate_column, "desc" ]],
   });
+
+  if (table_type == 'weighted_values') {
+
+    var table = $('#weighted_values_table').DataTable();
+    var name_links = table.column(0).data();
+    jQuery("#top_number").append('<option value="">Select a number</option>');
+    jQuery("#top_percent").append('<option value="">Select a percent</option>');
+
+    for (i=1;i<=name_links.length;i++){
+      jQuery("#top_number").append('<option value='+i+'>'+i+'</option>');
+    }
+    for (i=1;i<=100;i++){
+      jQuery("#top_percent").append('<option value='+i+'>'+i+'%</option>');
+    }
+
+    jQuery('select[id^="top_"]').change( // save top # or % of accession to add to lists
+      function() {
+      var type = this.id.split("_").pop();
+      var number = jQuery('#top_'+type).val();
+      var names = [];
+
+      if (type == 'number') {
+        jQuery("#top_percent").val(''); // reset other select
+        for (var i = 0; i < number; i++) { //extract names from anchor tags
+          names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+        }
+        //console.log("retrieved top "+number+" names: "+names);
+      }
+      else if (type == 'percent') {
+        jQuery("#top_number").val(''); // reset other select
+        var adjusted_number = Math.round((number / 100 ) * name_links.length);
+        for (var i = 0; i < adjusted_number; i++) { //extract names from anchor tags
+          names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+        }
+        //console.log("retrieved top "+number+" percent of names: "+names);
+      }
+      jQuery('#top_ranked_names').html(names);
+      addToListMenu('ranking_to_list_menu', 'top_ranked_names', { listType: 'accessions', });
+    });
+
+  }
 }
 
 function remove_trait(trait_id) {
