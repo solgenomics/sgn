@@ -91,6 +91,10 @@ jQuery(document).ready(function() {
 
  });
 
+ jQuery("#use_reference_accession").change(function() {
+     jQuery("#reference_accession_list").toggle(this.checked); // show if it is checked, otherwise hide
+ });
+
     jQuery('#trait_list').change( // add selected trait to trait table
       function() {
         var trait_id = jQuery('option:selected', this).val();
@@ -151,6 +155,7 @@ jQuery(document).ready(function() {
         method: 'POST',
       	data: {'trial_id': trial_id, 'trait_ids': trait_ids, 'weights': weights, 'allow_missing': allow_missing, 'reference_accession' : reference_accession_id },
       	  success: function(response) {
+            if (response.error) { alert(response.error); }
             var raw_avgs = response.raw_avg_values || [];
             var weighted_values = response.weighted_values || [];
             var trial_name = jQuery('#select_trial_for_selection_index option:selected').text();

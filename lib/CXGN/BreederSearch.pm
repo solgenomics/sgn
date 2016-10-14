@@ -191,7 +191,20 @@ sub avg_phenotypes_query {
       if ($id == $reference_accession) { @reference_values = @avg_values; }
     }
 
+    my $trait_num = 0;
     print STDERR "reference accession id = $reference_accession and reference values = @reference_values\n";
+    if (!defined(@reference_values)) {
+      return { error => "Can't scale values with a zero or undefined reference value. Please select a different trait or reference accession." };
+    }
+    foreach (@reference_values) {
+      $trait_num++;
+      print STDERR "trait $trait_num reference value = $_\n";
+      if (!defined($_)) {
+        return { error => "Can't scale values with a zero or undefined reference value. Please remove trait number $trait_num or select a different reference accession." };
+      }
+    }
+
+    #return { error => "Can't scale to a zero or undefined reference value. Please select a different trait or reference accession." } if grep {!defined($_)} @reference_values;
 
     $h->execute(@$trait_ids);
     while (my ($id, $name, @avg_values) = $h->fetchrow_array()) {

@@ -108,6 +108,7 @@ sub get_avg_phenotypes : Path('/ajax/breeder/search/avg_phenotypes') Args(0) {
   my $results_ref = $bs->avg_phenotypes_query($trial_id, \@trait_ids, \@weights, $allow_missing, $reference_accession);
 
   $c->stash->{rest} = {
+    error => $results_ref->{'error'},
     raw_avg_values => $results_ref->{'raw_avg_values'},
     weighted_values => $results_ref->{'weighted_values'}
   };
