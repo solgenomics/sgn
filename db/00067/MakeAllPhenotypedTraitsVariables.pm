@@ -70,13 +70,13 @@ sub patch {
         my $q = "SELECT cvterm.cvterm_id FROM phenotype JOIN cvterm on (phenotype.cvalue_id=cvterm.cvterm_id);";
         my $h = $chado_schema->storage->dbh()->prepare($q);
         $h->execute();
-        my @cvterm_ids;
+        my %cvterm_ids;
         while (my ($cvterm) = $h->fetchrow_array()) {
-            push @cvterm_ids, $cvterm;
+            $cvterm_ids{$cvterm} = 1;
         }
         my $update_q = "UPDATE cvterm_relationship SET type_id=$variable_term_id WHERE subject_id=? and type_id=$is_a_term_id;";
         my $update_h = $chado_schema->storage->dbh()->prepare($update_q);
-        foreach (@cvterm_ids) {
+        foreach (keys %cvterm_ids) {
             $update_h->execute($_);
         }
     };
