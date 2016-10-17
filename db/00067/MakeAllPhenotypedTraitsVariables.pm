@@ -74,10 +74,26 @@ sub patch {
         while (my ($cvterm) = $h->fetchrow_array()) {
             $cvterm_ids{$cvterm} = 1;
         }
-        my $update_q = "UPDATE cvterm_relationship SET type_id=$variable_term_id WHERE subject_id=? and type_id=$is_a_term_id;";
-        my $update_h = $chado_schema->storage->dbh()->prepare($update_q);
+
+
+        my $count_q = "SELECT count(*) FROM cvterm_relationship WHERE subject_id=? and type_id=$is_a_term_id;";
+        my $count_h = $chado_schema->storage->dbh()->prepare($count_q);
+
         foreach (keys %cvterm_ids) {
-            $update_h->execute($_);
+
+            my $count = $count_h->execute($_);
+            if ($count == 0){
+                my $create_q = "INSERT INTO cvterm_relationship (type_id, subject_id, object_id) VALUES ($variable_term_id, ?, ?);";
+                my $create_h = $chado_schema->storage->dbh()->prepare($create_q);
+                $create_h->execute($_, $_);
+            } elsif ($count == 1) {
+                my $update_q = "UPDATE cvterm_relationship SET type_id=$variable_term_id WHERE subject_id=? and type_id=$is_a_term_id;";
+                my $update_h = $chado_schema->storage->dbh()->prepare($update_q);
+                $update_h->execute($_);
+            } else {
+                die "More than one is_a relationship already saved...\n";
+            }
+
         }
     };
 
