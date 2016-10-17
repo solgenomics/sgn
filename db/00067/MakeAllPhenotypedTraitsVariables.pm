@@ -81,8 +81,10 @@ sub patch {
 
         foreach (keys %cvterm_ids) {
 
-            my $count = $count_h->execute($_);
-            if ($count == 0){
+            my $count_stmt = $count_h->execute($_);
+	    my $count = $count_h->fetchrow;
+	    print STDERR "$_ ::: $count\n";
+            if (!$count || $count == 0){
                 my $create_q = "INSERT INTO cvterm_relationship (type_id, subject_id, object_id) VALUES ($variable_term_id, ?, ?);";
                 my $create_h = $chado_schema->storage->dbh()->prepare($create_q);
                 $create_h->execute($_, $_);
