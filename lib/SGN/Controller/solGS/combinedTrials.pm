@@ -161,8 +161,9 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
     $c->stash->{model_id} = $combo_pops_id;
     $c->stash->{pop_id} = $combo_pops_id;
     $c->stash->{data_set_type} = 'combined populations';
-    
-    my @traits_ids = $c->req->param('trait_id');
+   
+    my @traits_ids = $c->req->param('trait_id[]');
+    my $req = $c->req->param('source');
     my @traits_pages;
   
     my $solgs_controller = $c->controller('solGS::solGS');
@@ -212,14 +213,14 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
     elsif (scalar(@traits_ids) > 1) 
     {
         foreach my $trait_id (@traits_ids) 
-        {
+        { 
             $c->stash->{trait_id} = $trait_id;
             $solgs_controller->get_trait_details($c, $trait_id);
             my $tr_abbr = $c->stash->{trait_abbr};
 	    
 	    $self->combine_trait_data($c);  
             $self->build_model_combined_trials_trait($c);
-          
+         
             $solgs_controller->get_model_accuracy_value($c, $combo_pops_id, $tr_abbr);
             my $accuracy_value = $c->stash->{accuracy_value};
      
@@ -232,22 +233,32 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
         }
     }  
   
-    $solgs_controller->analyzed_traits($c);
-    my $analyzed_traits = $c->stash->{analyzed_traits};
-   
-    $c->stash->{trait_pages} = \@traits_pages;
-    $c->stash->{template}    = $solgs_controller->template('/population/combined/multiple_traits_output.mas');
-       
-    $self->combined_trials_desc($c);
+    if ($req =~ /AJAX/) 
+    {
+	my $ret->{status} = 'success';
+        $ret = to_json($ret);
         
-    my $project_name = $c->stash->{project_name};
-    my $project_desc = $c->stash->{project_desc};
+        $c->res->content_type('application/json');
+        $c->res->body($ret);       	
+    } 
+    else 
+    {
+	$solgs_controller->analyzed_traits($c);
+	my $analyzed_traits = $c->stash->{analyzed_traits};
+	
+	$c->stash->{trait_pages} = \@traits_pages;
+	$c->stash->{template}    = $solgs_controller->template('/population/combined/multiple_traits_output.mas');
+	
+	$self->combined_trials_desc($c);
         
-    my @model_desc = ([qq | <a href="/solgs/populations/combined/$combo_pops_id">$project_name</a> |, $project_desc, \@traits_pages]);
-    $c->stash->{model_data} = \@model_desc;
-    $c->stash->{pop_id} = $combo_pops_id;
-    $solgs_controller->get_acronym_pairs($c);  
-
+	my $project_name = $c->stash->{project_name};
+	my $project_desc = $c->stash->{project_desc};
+        
+	my @model_desc = ([qq | <a href="/solgs/populations/combined/$combo_pops_id">$project_name</a> |, $project_desc, \@traits_pages]);
+	$c->stash->{model_data} = \@model_desc;
+	$c->stash->{pop_id} = $combo_pops_id;
+	$solgs_controller->get_acronym_pairs($c);  
+    }
 }
 
 
@@ -442,8 +453,7 @@ sub combined_trials_desc {
         my $pr_rs = $c->model('solGS::solGS')->project_details($pop_id);
 
         while (my $row = $pr_rs->next)
-        {
-         
+        {         
             my $pr_id   = $row->id;
             my $pr_name = $row->name;
             $desc .= qq | <a href="/solgs/population/$pr_id">$pr_name</a>|; 
