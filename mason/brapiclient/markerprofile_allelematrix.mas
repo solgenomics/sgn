@@ -1,0 +1,48 @@
+<%args>
+</%args>
+
+<div id="brapi_home_markerprofile_allelematrix_div">
+
+    <h4>MarkerProfile Details</h4>
+    <input name="brapi_home_markerprofiledbid1" id="brapi_home_markerprofiledbid1" class="form-control" type="text" placeholder="MarkerProfileDbId e.g. 1622" value="1622"/>
+    <input name="brapi_home_markerprofiledbid2" id="brapi_home_markerprofiledbid2" class="form-control" type="text" placeholder="MarkerProfileDbId e.g. 1623" value="1623"/>
+    <input name="brapi_home_markerprofiledbid3" id="brapi_home_markerprofiledbid3" class="form-control" type="text" placeholder="MarkerProfileDbId e.g. 1624" value="1624"/>
+    <input name="brapi_home_markerprofiledbid4" id="brapi_home_markerprofiledbid4" class="form-control" type="text" placeholder="MarkerProfileDbId e.g. 1625" value="1625"/>
+    <select name="brapi_home_allelematrix_format" id="brapi_home_allelematrix_format" class="form-control" />
+        <option value="json">JSON (transformed to HTML table)</option>
+        <option value="tsv">TSV</option>
+        <option value="csv">CSV</option>
+    </select>
+    <button class="btn btn-primary" name="brapi_home_allelematrix_submit" id="brapi_home_allelematrix_submit">Get AlleleMatrix</button>
+    <br/><br/>
+    <div id="brapi_markerprofile_allelematrix_div">
+    </div>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery("#brapi_home_allelematrix_submit").click(function() {
+
+        jQuery.ajax( {
+          'url': '/brapi/v1/allelematrix-search?markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid1').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid2').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid3').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid4').val()+'&format='+jQuery('#brapi_home_allelematrix_format').val(),
+          'method': 'GET',
+          'success': function(response) {
+            console.log(response);
+
+            var data = [];
+            for (var i=0; i<response.result.data.length; i++) {
+                data.push({'markerDbId':response.result.data[i][0], 'markerprofileDbId':response.result.data[i][1], 'alleleCall':response.result.data[i][2]});
+            }
+            brapi_create_paginated_table(data, response.metadata.pagination, 'brapi_markerprofile_allelematrix_div', '/brapi/v1/allelematrix-search?markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid1').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid2').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid3').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid4').val()+'&format='+jQuery('#brapi_home_allelematrix_format').val(), undefined);
+
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+    });
+});
+
+</script>

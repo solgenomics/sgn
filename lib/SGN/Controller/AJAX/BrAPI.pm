@@ -16,6 +16,7 @@ use JSON qw( decode_json );
 use Data::Dumper;
 use Try::Tiny;
 use CXGN::Phenotypes::Search;
+use File::Slurp qw | read_file |;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -254,6 +255,7 @@ sub calls_GET {
         ['germplasm/id/markerprofiles', ['json'], ['GET'] ],
         ['markerprofiles', ['json'], ['GET'] ],
         ['markerprofiles/id', ['json'], ['GET'] ],
+        ['allelematrix-search', ['json','tsv','csv'], ['GET','POST'] ],
     );
 
     my @data;
@@ -396,12 +398,18 @@ sub germplasm_search_process {
     my $germplasm_id = $params->{germplasmDbId};
     my $permplasm_pui = $params->{germplasmPUI};
     my $match_method = $params->{matchMethod};
-    if ($match_method && ($match_method ne 'exact' || $match_method ne 'wildcard')) {
-        $message .= "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters.";
-    }
-
-    my $total_count = 0;
     my %result;
+
+    if ($match_method && ($match_method ne 'exact' && $match_method ne 'wildcard')) {
+        $message .= "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters.";
+        $status->{'message'} = $message;
+        $c->stash->{rest} = {
+            metadata => { pagination=>{}, status => $status, datafiles=>[] },
+            result => \%result,
+        };
+        $c->detach;
+    }
+    my $total_count = 0;
 
     my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
     my %search_params;
@@ -1449,128 +1457,121 @@ sub convert_dosage_to_genotype {
 
 =cut
 
-sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
-  my $self = shift;
-  my $c = shift;
-  #my $auth = _authenticate_user($c);
-  my $status = $c->stash->{status};
-  my @status = @$status;
+sub allelematrix : Chained('brapi') PathPart('allelematrix-search') Args(0) : ActionClass('REST') { }
 
-  my @profile_ids = $c->req->param('markerprofileDbId');
-  my $data_format = $c->req->param('format');
-  #print STDERR Dumper \@profile_ids;
-  #my @profile_ids = split ",", $markerprofile_ids;
+sub allelematrix_POST {
+    my $self = shift;
+    my $c = shift;
+    allelematrix_search_process($self, $c);
+}
 
-  my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
+sub allelematrix_GET {
+    my $self = shift;
+    my $c = shift;
+    allelematrix_search_process($self, $c);
+}
 
-  my %scores;
-  my $total_pages;
-  my $total_count;
-  my @marker_score_lines;
-  my @ordered_refmarkers;
-  my $markers;
-  if ($rs->count() > 0) {
-    while (my $profile = $rs->next()) {
-      my $profile_json = $profile->value();
-      my $refmarkers = JSON::Any->decode($profile_json);
-      #print STDERR Dumper($refmarkers);
-      push @ordered_refmarkers, sort genosort keys(%$refmarkers);
+sub allelematrix_search_process {
+    my $self = shift;
+    my $c = shift;
+    #my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my $message = '';
+    my @profile_ids = $c->req->param('markerprofileDbId');
+    my @marker_ids = $c->req->param('markerDbId');
+    my $unknown_string = $c->req->param('unknownString') || '';
+    my $sep_phased = $c->req->param('sepPhased') || '|';
+    my $sep_unphased = $c->req->param('sepUnphased') || '/';
+    my $data_format = $c->req->param('format') || 'json';
+    my %metadata;
+    my $data_file_path;
+    my %result;
+    #print STDERR Dumper \@profile_ids;
+    #my @profile_ids = split ",", $markerprofile_ids;
 
+    if ($data_format ne 'json' && $data_format ne 'tsv' && $data_format ne 'csv') {
+        $message .= 'Unsupported Format Given. Supported values are: json, tsv, csv';
+        $status->{'message'} = $message;
+        $c->stash->{rest} = {
+            metadata => { pagination=>{}, status => $status, datafiles=>[$data_file_path] },
+            result => \%result,
+        };
+        $c->detach;
     }
-    #print Dumper(\@ordered_refmarkers);
 
-    my $json = JSON->new();
-    $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
-    while (my $profile = $rs->next()) {
-      foreach my $m (@ordered_refmarkers) {
-        my $markers_json = $profile->value();
-        $markers = $json->decode($markers_json);
+    my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
 
-        $scores{$profile->genotypeprop_id()}->{$m} = $self->convert_dosage_to_genotype($markers->{$m});
-      }
-    }
-  }
-
-  #print STDERR Dumper \%scores;
-
-  my @lines;
-  foreach my $line (keys %scores) {
-    push @lines, $line;
-  }
-
-  my @json_lines;
-  my $fh;
-  my $file_path;
-  my %markers_seen;
-  my $data_file_path;
-  my @marker_score_json_lines;
-  if (!$data_format || $data_format eq 'json' ){
-      @json_lines = @lines;
-      print STDERR scalar(@ordered_refmarkers)."\n";
-
-      for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
-
-        my %markers_by_line;
-        my $m = $ordered_refmarkers[$n];
-        #print STDERR Dumper $m;
-          foreach my $line (keys %scores) {
-            push @{$markers_by_line{$m}}, $scores{$line}->{$m};
-            if (!exists $markers_seen{$m} ) {
-                #print STDERR Dumper \@{$markers_by_line{$m}};
-              $markers_seen{$m} = \@{$markers_by_line{$m}};
-              #push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
-            }
-          }
-
-      }
-      foreach my $marker_name (sort keys %markers_seen) {
-          my $marker_scores = $markers_seen{$marker_name};
-          #print STDERR Dumper $marker_scores;
-          push @marker_score_json_lines, { $marker_name => $marker_scores };
-      }
-
-
-  } elsif ($data_format eq 'tsv') {
-      my $dir = $c->tempfiles_subdir('download');
-      my ($fh, $tempfile) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$data_format.'_'.'XXXXX');
-      $file_path = $c->config->{basepath}."/".$tempfile.".tsv";
-      open(my $fh, ">", $file_path);
-      print STDERR $file_path."\n";
-      print $fh "markerprofileDbIds\t", join("\t", @lines), "\n";
-
-      my %markers_by_line;
-      print STDERR scalar(@ordered_refmarkers)."\n";
-      foreach my $m (@ordered_refmarkers) {
-          #print STDERR Dumper $m;
-        foreach my $line (keys %scores) {
-          push @{$markers_by_line{$m}}, $scores{$line}->{$m};
-          if (!exists $markers_seen{$m} ) {
-              #print STDERR Dumper \@{$markers_by_line{$m}};
-            $markers_seen{$m} = \@{$markers_by_line{$m}};
-            #push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
-          }
+    my @scores;
+    my $total_pages;
+    my $total_count;
+    my @ordered_refmarkers;
+    my $markers;
+    if ($rs->count() > 0) {
+        while (my $profile = $rs->next()) {
+            my $profile_json = $profile->value();
+            my $refmarkers = JSON::Any->decode($profile_json);
+            #print STDERR Dumper($refmarkers);
+            push @ordered_refmarkers, sort genosort keys(%$refmarkers);
         }
-      }
+        #print Dumper(\@ordered_refmarkers);
+        my %unique_markers;
+        foreach (@ordered_refmarkers) {
+            $unique_markers{$_} = 1;
+        }
 
-      foreach my $marker_name (sort keys %markers_seen) {
-          my $marker_scores = $markers_seen{$marker_name};
-          #print STDERR Dumper $marker_scores;
-          print $fh "$marker_name\t", join("\t", @{$marker_scores}),"\n";
-      }
+        my $json = JSON->new();
+        $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
+        while (my $profile = $rs->next()) {
+            my $markers_json = $profile->value();
+            $markers = $json->decode($markers_json);
+            my $genotypeprop_id = $profile->genotypeprop_id();
+            foreach my $m (sort keys %unique_markers) {
+                push @scores, [$m, $genotypeprop_id, $self->convert_dosage_to_genotype($markers->{$m})];
+            }
+        }
+    }
 
+    #print STDERR Dumper \@scores;
 
-      close $fh;
-      $data_file_path = $file_path;
-  }
+    my $file_path;
+    my @scores_seen;
+    if (!$data_format || $data_format eq 'json' ){
 
+        for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
+            push @scores_seen, $scores[$n];
+        }
 
+    } elsif ($data_format eq 'tsv' || $data_format eq 'csv') {
+        my $delim;
+        if ($data_format eq 'tsv') {
+            $delim = "\t";
+        } elsif ($data_format eq 'csv') {
+            $delim = ",";
+        }
+        my $dir = $c->tempfiles_subdir('download');
+        my ($fh, $tempfile) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$data_format.'_'.'XXXXX');
+        $file_path = $c->config->{basepath}."/".$tempfile.".$data_format";
+        open($fh, ">", $file_path);
+            print STDERR $file_path."\n";
+            #print $fh "markerprofileDbIds\t", join($delim, @lines), "\n";
+            foreach (@scores) {
+                print $fh join("$delim", @{$_}),"\n";
+            }
 
-  $total_count = scalar(keys %$markers);
+        close $fh;
+        $data_file_path = $file_path;
+        $c->res->content_type('Application/'.$data_format);
+        $c->res->header('Content-Disposition', qq[attachment; filename="$data_file_path"]);
+        my $output = read_file($data_file_path);
+        $c->res->body($output);
+    }
 
-  $c->stash->{rest} = {
-    metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => \@status, datafiles=>$data_file_path },
-    result => {markerprofileDbIds => \@json_lines, data => \@marker_score_json_lines},
-  };
+    $total_count = scalar(@scores);
+
+    $c->stash->{rest} = {
+        metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => $status, datafiles=>[$data_file_path] },
+        result => {data => \@scores_seen},
+    };
 
 }
 

@@ -26,3 +26,7 @@
 <hr>
 <& /brapiclient/markerprofile_detail.mas &>
 <br/>
+
+<hr>
+<& /brapiclient/markerprofile_allelematrix.mas &>
+<br/>
