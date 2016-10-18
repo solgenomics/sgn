@@ -256,6 +256,8 @@ sub calls_GET {
         ['markerprofiles', ['json'], ['GET'] ],
         ['markerprofiles/id', ['json'], ['GET'] ],
         ['allelematrix-search', ['json','tsv','csv'], ['GET','POST'] ],
+        ['programs', ['json'], ['GET'] ],
+        ['crops', ['json'], ['GET'] ],
     );
 
     my @data;
@@ -277,6 +279,24 @@ sub calls_GET {
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
+
+sub crops : Chained('brapi') PathPart('crops') Args(0) : ActionClass('REST') { }
+
+sub crops_GET {
+    my $self = shift;
+    my $c = shift;
+    my $status = $c->stash->{status};
+
+    my %pagination = ();
+    my %result = (data=>
+        [$c->config->{'supportedCrop'}]
+    );
+    my @data_files;
+    my %metadata = (pagination=>\%pagination, status=>$status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
 
 
 
@@ -1630,7 +1650,8 @@ sub programs_list_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
+    my $program_name = $c->req->param('programName');
+    my $abbreviation = $c->req->param('abbreviation');
     my %result;
     my @data;
 
@@ -1643,12 +1664,31 @@ sub programs_list_GET {
     my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
     for( my $i = $start; $i <= $end; $i++ ) {
         if (@$programs[$i]) {
-            push @data, {programDbId=>@$programs[$i]->[0], name=>@$programs[$i]->[1], objective=>@$programs[$i]->[2], leadPerson=>''};
+            if ($program_name) {
+                if ($program_name eq @$programs[$i]->[1]) {
+                    push @data, {
+                        programDbId=>@$programs[$i]->[0],
+                        name=>@$programs[$i]->[1],
+                        abbreviation=>@$programs[$i]->[1],
+                        objective=>@$programs[$i]->[2],
+                        leadPerson=>''
+                    };
+                }
+            } else {
+                push @data, {
+                    programDbId=>@$programs[$i]->[0],
+                    name=>@$programs[$i]->[1],
+                    abbreviation=>@$programs[$i]->[1],
+                    objective=>@$programs[$i]->[2],
+                    leadPerson=>''
+                };
+            }
         }
     }
 
     %result = (data=>\@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my @datafiles;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }

@@ -12,6 +12,10 @@
 <br/>
 
 <hr>
+<& /brapiclient/crops.mas &>
+<br/>
+
+<hr>
 <& /brapiclient/germplasm_search.mas &>
 <br/>
 
@@ -29,4 +33,8 @@
 
 <hr>
 <& /brapiclient/markerprofile_allelematrix.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/programs.mas &>
 <br/>
