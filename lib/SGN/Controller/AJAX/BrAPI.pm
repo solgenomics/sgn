@@ -249,10 +249,11 @@ sub calls_GET {
         ['token', ['json'], ['POST','DELETE'] ],
         ['calls', ['json'], ['GET'] ],
         ['germplasm-search', ['json'], ['GET','POST'] ],
-        ['germplasm', ['json'], ['GET'] ],
+        ['germplasm/id', ['json'], ['GET'] ],
         ['germplasm/id/pedigree', ['json'], ['GET'] ],
         ['germplasm/id/markerprofiles', ['json'], ['GET'] ],
-        ['markerprofiles', ['json'], ['GET','POST'] ],
+        ['markerprofiles', ['json'], ['GET'] ],
+        ['markerprofiles/id', ['json'], ['GET'] ],
     );
 
     my @data;
@@ -1310,36 +1311,48 @@ sub genotype_fetch_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
+    my $unknown_string = $c->req->param('unknownString') || '';
+    my $expand_homozygotes = $c->req->param('expandHomozygotes') || '';
+    my $sep_phased = $c->req->param('sepPhased') || '|';
+    my $sep_unphased = $c->req->param('sepUnphased') || '/';
     my @data;
     my %result;
 
     my $total_count = 0;
     my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->find(
-	{'genotypeprops.genotypeprop_id' => $c->stash->{markerprofile_id} },
-	{join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-	 select=> ['genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
-	 as=> ['value', 'protocol_name', 'stock_id'],
-	}
+        {'genotypeprops.genotypeprop_id' => $c->stash->{markerprofile_id} },
+        {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
+         select=> ['genotypeprops.value', 'nd_protocol.name', 'stock.stock_id', 'stock.uniquename'],
+         as=> ['value', 'protocol_name', 'stock_id', 'uniquename'],
+        }
     );
 
     if ($rs) {
-    	    my $genotype_json = $rs->get_column('value');
-    	    my $genotype = JSON::Any->decode($genotype_json);
-            $total_count = scalar keys %$genotype;
+        my $genotype_json = $rs->get_column('value');
+        my $genotype = JSON::Any->decode($genotype_json);
+        $total_count = scalar keys %$genotype;
 
-    	    foreach my $m (sort genosort keys %$genotype) {
-                push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}) };
-    	    }
+        foreach my $m (sort genosort keys %$genotype) {
+            push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}) };
+        }
 
-            my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-            my $end = $c->stash->{page_size}*$c->stash->{current_page};
-            my @data_window = splice @data, $start, $end;
+        my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+        my $end = $c->stash->{page_size}*$c->stash->{current_page};
+        my @data_window = splice @data, $start, $end;
 
-    	    %result = (germplasmDbId=>$rs->get_column('stock_id'), extractDbId=>'', markerprofileDbId=>$c->stash->{markerprofile_id}, analysisMethod=>$rs->get_column('protocol_name'), encoding=>"AA,BB,AB", data => \@data_window);
+        %result = (
+            germplasmDbId=>$rs->get_column('stock_id'),
+            uniqueDisplayName=>$rs->get_column('uniquename'),
+            extractDbId=>'',
+            markerprofileDbId=>$c->stash->{markerprofile_id},
+            analysisMethod=>$rs->get_column('protocol_name'),
+            #encoding=>"AA,BB,AB",
+            data => \@data_window
+        );
     }
 
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my @datafiles;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }

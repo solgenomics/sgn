@@ -22,3 +22,7 @@
 <hr>
 <& /brapiclient/markerprofile_search.mas &>
 <br/>
+
+<hr>
+<& /brapiclient/markerprofile_detail.mas &>
+<br/>
