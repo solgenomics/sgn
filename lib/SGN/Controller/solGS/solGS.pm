@@ -2755,7 +2755,7 @@ sub prediction_population_file {
   
     $self->genotype_file($c, $pred_pop_id);
     $geno_files .= "\t" . $c->stash->{pred_genotype_file};   
-  
+   
     $fh->print($geno_files);
     $fh->close; 
 
@@ -4799,7 +4799,11 @@ sub genotype_file  {
     my $pop_id  = $c->stash->{pop_id};
   
     my $geno_file;
+    print STDERR "\n from argument pred_pop_id: $pred_pop_id\n";
 
+    my $test_id = $c->stash->{prediction_pop_id};
+   # if (!$pred_pop_id) {$pred_pop_id = $c->stash->{prediction_pop_id}; }
+    print STDERR "\n from from stash pred_pop_id: $pred_pop_id -- test_id: $test_id\n";
     if ($pred_pop_id) 
     {      
         $pop_id = $c->stash->{prediction_pop_id};      
