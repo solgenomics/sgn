@@ -4799,15 +4799,11 @@ sub genotype_file  {
     my $pop_id  = $c->stash->{pop_id};
   
     my $geno_file;
-    print STDERR "\n from argument pred_pop_id: $pred_pop_id\n";
-
-    my $test_id = $c->stash->{prediction_pop_id};
-   # if (!$pred_pop_id) {$pred_pop_id = $c->stash->{prediction_pop_id}; }
-    print STDERR "\n from from stash pred_pop_id: $pred_pop_id -- test_id: $test_id\n";
+   
     if ($pred_pop_id) 
     {      
         $pop_id = $c->stash->{prediction_pop_id};      
-        $geno_file = $c->stash->{user_selection_list_genotype_data_file};      
+        $geno_file = $c->stash->{user_selection_list_genotype_data_file}; 
     } 
     
     die "Population id must be provided to get the genotype data set." if !$pop_id;
