@@ -39,4 +39,9 @@
 <& /brapiclient/trials.mas &>
 <br/>
 
+<hr>
+<& /brapiclient/trials_detail.mas &>
+<br/>
+
+
 
