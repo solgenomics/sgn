@@ -28,7 +28,7 @@ $trial_name => undef
               <th>Trait name</th>
               <th>Trait synonym</th>
               <th>Weight</th>
-              <th>Scale to Check?</th>
+              <th>Scale to % of a control?</th>
               <th>Remove?</th>
             </thead>
             <tbody id ="trait_table"></tbody>

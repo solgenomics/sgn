@@ -1670,10 +1670,10 @@ sub get_controls {
 	return \@controls;
 }
 
-=head2 get_controls
+=head2 get_controls_by_plot
 
- Usage:        my $controls = $t->get_controls();
- Desc:         Returns the accessions that were used as controls in the design
+ Usage:        my $controls = $t->get_controls_by_plot(\@plot_ids);
+ Desc:         Returns the accessions that were used as controls in a trial from a list of trial plot ids. Improves on speed of get_controls by avoiding a join through nd_experiment_stock
  Ret:          an arrayref containing
                { accession_name => control_name, stock_id => control_stock_id }
  Args:         none
@@ -1686,18 +1686,7 @@ sub get_controls_by_plot {
 	my $self = shift;
 	my $plot_ids = shift;
 	my @ids = @$plot_ids;
-	my $ids = join (',', @ids);
-	print STDERR "IDS = ".$ids;
 	my @controls;
-
-# equivalent of:
-
-#	SELECT accession.stock_id, accession.uniquename FROM stock accession
-#	JOIN stock_relationship ON(accession.stock_id = stock_relationship.object_id)
-#	JOIN stock plot ON(stock_relationship.subject_id = plot.stock_id)
-#	JOIN stockprop ON(plot.stock_id = stockprop.stock_id)
-#	JOIN cvterm ON(stockprop.type_id = cvterm.cvterm_id)
-#	where plot.stock_id IN (@ids) AND cvterm.name = 'is a control' GROUP BY 1;
 
 	my $accession_rs = $self->bcs_schema->resultset('Stock::Stock')->search(
 		{ 'subject.stock_id' => { 'in' => \@ids} , 'type.name' => 'is a control' },
@@ -1705,7 +1694,6 @@ sub get_controls_by_plot {
   );
 
 	while(my $accession = $accession_rs->next()) {
-		print STDERR "processing accession $accession\n";
 		push @controls, { accession_name => $accession->uniquename, stock_id => $accession->stock_id };
 	}
 
