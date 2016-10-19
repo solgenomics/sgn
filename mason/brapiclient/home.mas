@@ -45,6 +45,10 @@
 <br/>
 
 <hr>
+<& /brapiclient/programs.mas &>
+<br/>
+
+<hr>
 <& /brapiclient/trials.mas &>
 <br/>
 
