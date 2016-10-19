@@ -258,6 +258,7 @@ sub calls_GET {
         ['allelematrix-search', ['json','tsv','csv'], ['GET','POST'] ],
         ['programs', ['json'], ['GET'] ],
         ['crops', ['json'], ['GET'] ],
+        ['seasons', ['json'], ['GET','POST'] ],
         ['trials', ['json'], ['GET','POST'] ],
         ['trials/id', ['json'], ['GET'] ],
     );
@@ -299,7 +300,43 @@ sub crops_GET {
     $c->stash->{rest} = \%response;
 }
 
+sub seasons : Chained('brapi') PathPart('seasons') Args(0) : ActionClass('REST') { }
 
+sub seasons_POST {
+    my $self = shift;
+    my $c = shift;
+    seasons_process($self, $c);
+}
+
+sub seasons_GET {
+    my $self = shift;
+    my $c = shift;
+    seasons_process($self, $c);
+}
+
+sub seasons_process {
+    my $self = shift;
+    my $c = shift;
+    my $status = $c->stash->{status};
+    my @data;
+    my $total_count = 0;
+    my $year_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'project year', 'project_property')->cvterm_id();
+    my $project_years_rs = $self->bcs_schema()->resultset("Project::Project")->search_related('projectprops', {'projectprops.type_id'=>$year_cvterm_id}, {order_by=>'projectprops.projectprop_id'});
+    my $rs_slice = $project_years_rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+    while (my $p_year = $rs_slice->next()) {
+        push @data, {
+            seasonsDbId=>$p_year->projectprop_id(),
+            season=>'',
+            year=>$p_year->value()
+        }
+    }
+    my %result = (data=>\@data);
+    $total_count = $project_years_rs->count();
+    my @data_files;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
 
 
 sub pagination_response {

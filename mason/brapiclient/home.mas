@@ -16,6 +16,10 @@
 <br/>
 
 <hr>
+<& /brapiclient/seasons.mas &>
+<br/>
+
+<hr>
 <& /brapiclient/germplasm_search.mas &>
 <br/>
 
