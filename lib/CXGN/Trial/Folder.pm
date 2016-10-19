@@ -38,6 +38,10 @@ has 'name' => (isa => 'Str',
 	default => 'Untitled',
 );
 
+has 'location_id' => (isa => 'Int',
+	is => 'rw',
+);
+
 has 'breeding_program_trial_relationship_id' =>  (isa => 'Int',
 	is => 'rw',
 );
@@ -94,6 +98,7 @@ sub BUILD {
 
 	if (!$self->folder_type) {
 		my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross',  'stock_type')->cvterm_id;
+		my $location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project location',  'project_property')->cvterm_id;
 
 		my $trial_type_rs = $self->bcs_schema->resultset("Project::Project")->search({ 'me.project_id' => $self->folder_id })->search_related('projectprops');
 		while (my $tt = $trial_type_rs->next()) {
@@ -101,6 +106,8 @@ sub BUILD {
 				$self->folder_type("cross");
 			} elsif ($tt->value eq 'genotyping_plate') {
 				$self->folder_type("genotyping_trial");
+			} elsif ($tt->type_id == $location_cvterm_id) {
+				$self->location_id($tt->value + 0);
 			}
 		}
 
