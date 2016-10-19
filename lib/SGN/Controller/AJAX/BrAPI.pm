@@ -32,6 +32,15 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 
 my $DEFAULT_PAGE_SIZE=20;
 
+sub pagination_response {
+    my $data_count = shift;
+    my $page_size = shift;
+    my $page = shift;
+    my $total_pages_decimal = $data_count/$page_size;
+    my $total_pages = ($total_pages_decimal == int $total_pages_decimal) ? $total_pages_decimal : int($total_pages_decimal + 1);
+    my %pagination = (pageSize=>$page_size, currentPage=>$page, totalCount=>$data_count, totalPages=>$total_pages);
+    return \%pagination;
+}
 
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     my $self = shift;
@@ -339,15 +348,78 @@ sub seasons_process {
 }
 
 
-sub pagination_response {
-    my $data_count = shift;
-    my $page_size = shift;
-    my $page = shift;
-    my $total_pages_decimal = $data_count/$page_size;
-    my $total_pages = ($total_pages_decimal == int $total_pages_decimal) ? $total_pages_decimal : int($total_pages_decimal + 1);
-    my %pagination = (pageSize=>$page_size, currentPage=>$page, totalCount=>$data_count, totalPages=>$total_pages);
-    return \%pagination;
+=head2 brapi/v1/studyTypes
+
+ Usage: To retrieve a list of programs being worked onthe various study types
+ Desc:
+ Return JSON example:
+        {
+             "metadata" : {
+                "pagination": {
+                    "pageSize": 10,
+                    "currentPage": 1,
+                    "totalCount": 10,
+                    "totalPages": 1
+                },
+                "status": []
+            },
+            "result" : {
+                "data" : [
+                    {
+                        "name": "Nursery",
+                        "description": "Description for Nursery study type"
+                    },
+                    {
+                        "name": "Trial",
+                        "description": "Description for Nursery study type"
+                    }
+                ]
+            }
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+sub study_types : Chained('brapi') PathPart('studyTypes') Args(0) : ActionClass('REST') { }
+
+sub study_types_POST {
+    my $self = shift;
+    my $c = shift;
+    study_types_process($self, $c);
 }
+
+sub study_types_GET {
+    my $self = shift;
+    my $c = shift;
+    study_types_process($self, $c);
+}
+
+sub study_types_process {
+    my $self = shift;
+    my $c = shift;
+    my $status = $c->stash->{status};
+    my @data;
+    my $total_count = 0;
+    my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'design', 'project_property')->cvterm_id();
+    my $project_rs = $self->bcs_schema()->resultset("Project::Project")->search_related('projectprops', {'projectprops.type_id'=>$design_cvterm_id}, {order_by=>'projectprops.projectprop_id'});
+    my $rs_slice = $project_rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+    while (my $pp = $rs_slice->next()) {
+        push @data, {
+            studyTypeDbId=>$pp->projectprop_id(),
+            name=>$pp->value(),
+            description=>'',
+        }
+    }
+    my %result = (data=>\@data);
+    $total_count = $project_rs->count();
+    my @data_files;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+
 
 
 =head2 /brapi/v1/germplasm-search?germplasmName=&germplasmGenus=&germplasmSubTaxa=&germplasmDbId&germplasmPUI=http://data.inra.fr/accession/234Col342&germplasmSpecies=Triticum&panel=diversitypanel1&collection=none&pageSize=pageSize&page=page
@@ -1902,74 +1974,6 @@ sub programs_list_GET {
     $c->stash->{rest} = \%response;
 }
 
-
-=head2 brapi/v1/studyTypes
-
- Usage: To retrieve a list of programs being worked onthe various study types
- Desc:
- Return JSON example:
-        {
-             "metadata" : {
-                "pagination": {
-                    "pageSize": 10,
-                    "currentPage": 1,
-                    "totalCount": 10,
-                    "totalPages": 1
-                },
-                "status": []
-            },
-            "result" : {
-                "data" : [
-                    {
-                        "name": "Nursery",
-                        "description": "Description for Nursery study type"
-                    },
-                    {
-                        "name": "Trial",
-                        "description": "Description for Nursery study type"
-                    }
-                ]
-            }
-        }
- Args:
- Side Effects:
-
-=cut
-
-sub studies_types_list  : Chained('brapi') PathPart('studyTypes') Args(0) : ActionClass('REST') { }
-
-sub studies_types_list_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my @status = @$status;
-
-    $c->stash->{rest} = {status=>\@status};
-}
-
-sub studies_types_list_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my %result;
-    my @data;
-    my $status = $c->stash->{status};
-    my @status = @$status;
-
-    my @cvterm_ids = CXGN::Trial::get_all_project_types($self->bcs_schema);
-    my $cvterm;
-    foreach (@cvterm_ids) {
-	$cvterm = CXGN::Chado::Cvterm->new($c->dbc->dbh, $_->[0]);
-	push @data, {name=>$_->[1], description=>$cvterm->get_definition },
-    }
-
-    my $total_count = scalar(@cvterm_ids);
-    %result = (data => \@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
-}
 
 
 sub studies_instances  : Chained('studies_single') PathPart('instances') Args(0) : ActionClass('REST') { }

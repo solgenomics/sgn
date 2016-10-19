@@ -20,6 +20,11 @@
 <br/>
 
 <hr>
+<& /brapiclient/studytypes.mas &>
+<br/>
+
+
+<hr>
 <& /brapiclient/germplasm_search.mas &>
 <br/>
 
