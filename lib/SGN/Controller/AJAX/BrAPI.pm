@@ -268,6 +268,7 @@ sub calls_GET {
         ['programs', ['json'], ['GET'] ],
         ['crops', ['json'], ['GET'] ],
         ['seasons', ['json'], ['GET','POST'] ],
+        ['studyTypes', ['json'], ['GET','POST'] ],
         ['trials', ['json'], ['GET','POST'] ],
         ['trials/id', ['json'], ['GET'] ],
     );
@@ -854,157 +855,205 @@ MCPD CALL NO LONGER IN BRAPI SPEC
 
 =cut
 
-sub studies_list  : Chained('brapi') PathPart('studies') Args(0) : ActionClass('REST') { }
+sub studies_search  : Chained('brapi') PathPart('studies-search') Args(0) : ActionClass('REST') { }
 
-sub studies_list_POST {
+#sub studies_list_POST {
+#    my $self = shift;
+#    my $c = shift;
+#    my $auth = _authenticate_user($c);
+#    my $status = $c->stash->{status};
+#    my $message = '';
+
+#    my $study_name = $c->req->param('studyName');
+#    my $location_id = $c->req->param('locationDbId');
+#    my $years = $c->req->param('studyYears');
+#    my $program_id = $c->req->param('programDbId');
+#    my $optional_info = $c->req->param('optionalInfo');
+#
+#    my $description;
+#    my $study_type;
+#    if ($optional_info) {
+#        my $opt_info_hash = decode_json($optional_info);
+#        $description = $opt_info_hash->{"studyObjective"};
+#        $study_type = $opt_info_hash->{"studyType"};
+#    }
+
+#    my $program_obj = CXGN::BreedersToolbox::Projects->new({schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') });
+#    my $programs = $program_obj->get_breeding_programs();
+#    my $program_check;
+#    my $program_name;
+#    foreach (@$programs) {
+#        if ($_->[0] == $program_id) {
+#            $program_check = 1;
+#            $program_name = $_->[1];
+#        }
+#    }
+#    if (!$program_check) {
+#        $message .= "Program not found with programDbId = ".$program_id;
+#        $status->{'message'} = $message;
+#        $c->stash->{rest} = {status => $status };
+#        $c->detach();
+#    }
+
+#    my $locations = $program_obj->get_all_locations();
+#    my $location_check;
+#    my $location_name;
+#    foreach (@$locations) {
+#        if ($_->[0] == $location_id) {
+#            $location_check = 1;
+#            $location_name = $_->[1];
+#        }
+#    }
+#    if (!$location_check) {
+#        $message .= "Location not found with locationDbId = ".$location_id;
+#        $status->{'message'} = $message;
+#        $c->stash->{rest} = {status => $status };
+#        $c->detach();
+#    }
+
+#    my $trial_design;
+#    my $trial_create = CXGN::Trial::TrialCreate->new({
+#        dbh => $c->dbc->dbh,
+#        chado_schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'),
+#        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+#        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
+#        user_name => $c->user()->get_object()->get_username(),
+#        program => $program_name,
+#        trial_year => $years,
+#        trial_description => $description,
+#        design_type => $study_type,
+#        trial_location => $location_name,
+#        trial_name => $study_name,
+#        design => $trial_design,
+#    });
+
+#    if ($trial_create->trial_name_already_exists()) {
+#        $message .= "Trial name \"".$trial_create->get_trial_name()."\" already exists.";
+#        $status->{'message'} = $message;
+#        $c->stash->{rest} = {status => $status };
+#        $c->detach();
+#    }
+
+#    try {
+#        $trial_create->save_trial();
+#    } catch {
+#        $message .= "Error saving trial in the database $_";
+#        $status->{'message'} = $message;
+#        $c->stash->{rest} = {status => $status };
+#        $c->detach();
+#    };
+
+#    $message .= "Study saved successfully.";
+#    $status->{'message'} = $message;
+#    $c->stash->{rest} = {status => $status };
+#}
+
+sub studies_search_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my @status = @$status;
-
-    my $study_name = $c->req->param('studyName');
-    my $location_id = $c->req->param('locationDbId');
-    my $years = $c->req->param('studyYears');
-    my $program_id = $c->req->param('programDbId');
-    my $optional_info = $c->req->param('optionalInfo');
-
-    my $description;
-    my $study_type;
-    if ($optional_info) {
-        my $opt_info_hash = decode_json($optional_info);
-        $description = $opt_info_hash->{"studyObjective"};
-        $study_type = $opt_info_hash->{"studyType"};
-    }
-
-    my $program_obj = CXGN::BreedersToolbox::Projects->new({schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') });
-    my $programs = $program_obj->get_breeding_programs();
-    my $program_check;
-    my $program_name;
-    foreach (@$programs) {
-        if ($_->[0] == $program_id) {
-            $program_check = 1;
-            $program_name = $_->[1];
-        }
-    }
-    if (!$program_check) {
-        push @status, "Program not found with programDbId = ".$program_id;
-        $c->stash->{rest} = {status => \@status };
-        return;
-    }
-
-    my $locations = $program_obj->get_all_locations();
-    my $location_check;
-    my $location_name;
-    foreach (@$locations) {
-        if ($_->[0] == $location_id) {
-            $location_check = 1;
-            $location_name = $_->[1];
-        }
-    }
-    if (!$location_check) {
-        push @status, "Location not found with locationDbId = ".$location_id;
-        $c->stash->{rest} = {status => \@status };
-        return;
-    }
-
-    my $trial_design;
-    my $trial_create = CXGN::Trial::TrialCreate->new({
-        dbh => $c->dbc->dbh,
-        chado_schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'),
-        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
-        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
-        user_name => $c->user()->get_object()->get_username(),
-        program => $program_name,
-        trial_year => $years,
-        trial_description => $description,
-        design_type => $study_type,
-        trial_location => $location_name,
-        trial_name => $study_name,
-        design => $trial_design,
-    });
-
-    if ($trial_create->trial_name_already_exists()) {
-        push @status, "Trial name \"".$trial_create->get_trial_name()."\" already exists.";
-        $c->stash->{rest} = {status => \@status };
-        return;
-    }
-
-    my $error;
-
-    try {
-        $trial_create->save_trial();
-    } catch {
-        push @status, "Error saving trial in the database $_";
-        $c->stash->{rest} = {status => \@status};
-        $error = 1;
-    };
-    if ($error) {
-        return;
-    }
-
-    push @status, "Study saved successfully.";
-    $c->stash->{rest} = {status => \@status};
+    studies_search_process($self, $c);
 }
 
-sub studies_list_GET {
+sub studies_search_GET {
+    my $self = shift;
+    my $c = shift;
+    studies_search_process($self, $c);
+}
+
+sub studies_search_process {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $program_id = $c->req->param("programId");
+    my @program_ids = $c->req->param("programDbId");
+    my @location_ids = $c->req->param("locationDbId");
+    my @season_ids = $c->req->param("seasonDbId");
+    my @studytype_ids = $c->req->param("studyTypeDbId");
+    my @study_ids = $c->req->param("studyDbId");
+    my @germplasm_ids = $c->req->param("germplasmDbId");
+    my @variable_ids = $c->req->param("observationVariableDbId");
     my $status = $c->stash->{status};
-    my @status = @$status;
 
     my @data;
     my %result;
-    my $rs;
-    if (!$program_id) {
-	$rs = $self->bcs_schema->resultset('Project::Project')->search(
-	    {'type.name' => 'breeding_program_trial_relationship' },
-	    {join=> {'project_relationship_subject_projects' => 'type'},
-	     '+select'=> ['me.project_id'],
-	     '+as'=> ['study_id' ],
-	     order_by=>{ -asc=>'me.project_id' }
-	    }
-	);
-    }elsif ($program_id) {
-	$rs = $self->bcs_schema->resultset('Project::Project')->search(
-	    {'type.name' => 'breeding_program_trial_relationship', 'project_relationship_subject_projects.object_project_id' => $program_id },
-	    {join=> {'project_relationship_subject_projects' => 'type'},
-	     '+select'=> ['me.project_id'],
-	     '+as'=> ['study_id' ],
-	     order_by=>{ -asc=>'me.project_id' }
-	    }
-	);
+    my %search_params;
+    my $bp_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
+    $search_params{'project_relationship_subject_projects.type_id'} = $bp_trial_relationship_id;
+    if (@study_ids) {
+        $search_params{'me.project_id'} = {'in' => \@study_ids};
     }
+    if (@program_ids) {
+        $search_params{'project_relationship_subject_projects.object_project_id'} = {'in' => \@program_ids};
+    }
+    if (@season_ids) {
+        my $year_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project year', 'project_property')->cvterm_id();
+        $search_params{'projectprops.type_id'} = $year_type_id;
+        $search_params{'projectprops.projectprop_id'} = {'in' => \@season_ids};
+    }
+    if (@studytype_ids) {
+        my $studytype_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'design', 'project_property')->cvterm_id();
+        $search_params{'projectprops.type_id'} = $studytype_type_id;
+        $search_params{'projectprops.projectprop_id'} = {'in' => \@studytype_ids};
+    }
+    if (@location_ids) {
+        my $location_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project location', 'project_property')->cvterm_id();
+        $search_params{'projectprops.type_id'} = $location_type_id;
+        $search_params{'projectprops.value::int'} = {'in' => \@location_ids};
+    }
+    my $rs = $self->bcs_schema->resultset('Project::Project')->search(
+        \%search_params,
+        {join=> [ {'project_relationship_subject_projects'}, {'projectprops'} ],
+        '+select'=> ['me.project_id'],
+        '+as'=> ['study_id' ],
+        order_by=>{ -asc=>'me.project_id' }
+        }
+    );
 
     my $total_count = 0;
     if ($rs) {
-	$total_count = $rs->count();
-	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
-	while (my $s = $rs_slice->next()) {
-	   my $t = CXGN::Trial->new( { trial_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
+        $total_count = $rs->count();
+        my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+        while (my $s = $rs_slice->next()) {
+            my $t = CXGN::Trial->new( { trial_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
+            my $folder = CXGN::Trial::folder->new( { folder_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
 
-	   my @years = ($t->get_year());
-	   my %optional_info = (studyPUI=>'', startDate => $t->get_planting_date(), endDate => $t->get_harvest_date());
-	   my $project_type = '';
-	   if ($t->get_project_type()) {
-	       $project_type = $t->get_project_type()->[1];
-	   }
-	   my $location = '';
-	   if ($t->get_location()) {
-	       $location = $t->get_location()->[0];
-	   }
-	   push @data, {studyDbId=>$t->get_trial_id(), name=>$t->get_name(), studyType=>$project_type, years=>\@years, locationDbId=>$location, optionalInfo=>\%optional_info};
-	}
+            my @years = ($t->get_year());
+            my %additional_info = (
+                studyPUI=>'',
+            );
+            my $project_type = '';
+            if ($t->get_project_type()) {
+               $project_type = $t->get_project_type()->[1];
+            }
+            my $location_id = '';
+            my $location_name = '';
+            if ($t->get_location()) {
+               $location_id = $t->get_location()->[0];
+               $location_name = $t->get_location()->[1];
+            }
+            push @data, {
+                studyDbId=>$t->get_trial_id(),
+                name=>$t->get_name(),
+                trialDbId=>$folder->project_parent->project_id(),
+                trialName=>$folder->project_parent->name(),
+                studyType=>$project_type,
+                seasons=>\@years,
+                locationDbId=>$location_id,
+                locationName=>$location_name,
+                programDbId=>$folder->breeding_program->project_id(),
+                programName=>$folder->breeding_program->name(),
+                startDate => $t->get_planting_date(),
+                endDate => $t->get_harvest_date(),
+                additionalInfo=>\%additional_info
+            };
+        }
     }
 
     %result = (data=>\@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my @datafiles;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
-
 
 #BrAPI Trials are modeled as Folders
 sub trials_list  : Chained('brapi') PathPart('trials') Args(0) : ActionClass('REST') { }
