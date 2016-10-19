@@ -77,17 +77,29 @@ jQuery(document).ready(function() {
      jQuery.ajax({   // get accessions phenotyped in trial
        url: '/ajax/breeder/search',
        method: 'POST',
-       data: {'categories': [ 'trials', 'accessions' ], 'data': data, 'querytypes': 0 },
+       data: {'categories': [ 'trials', 'plots' ], 'data': data, 'querytypes': 0 },
        success: function(response) {
-         var accessions = response.list || [];
+         var plots = response.list || [];
+         console.log("plots: "+JSON.stringify(plots));
+         var plot_ids = plots.map( function(val){ return val[0] });
+         console.log("plot ids: "+JSON.stringify(plot_ids));
+         jQuery.ajax({
+           url : '/ajax/breeders/trial/'+data+'/controls_by_plot',
+           data: { 'plot_ids': plot_ids },
+       	    success: function(response){
+       	        console.log('controls:'+JSON.stringify(response));
+                var accessions = response.accessions;
          var accession_html = '<option value="" title="Select a reference accession">Select a reference accession</a>\n';
-         for (i = 0; i < accessions.length; i++) {
-           accession_html += '<option value="'+accessions[i][0]+'" title="'+accessions[i][1]+'">'+accessions[i][1]+'</a>\n';
+         for (i = 0; i < response.accessions[0].length; i++) {
+           accession_html += '<option value="'+accessions[0][i].stock_id+'" title="'+response.accessions[0][i].stock_id+'">'+response.accessions[0][i].accession_name+'</a>\n';
          }
          jQuery('#reference_accession_list').html(accession_html);
        },
        error: function(response) { jQuery('#reference_accession_list').html('<option>No accessions retrieved from this trial</a>'); }
      });
+   },
+   error: function(response) { jQuery('#reference_accession_list').html('<option>No accessions retrieved from this trial</a>'); }
+ });
 
  });
 
@@ -102,7 +114,8 @@ jQuery(document).ready(function() {
         var trait_name = jQuery('option:selected', this).text();
         var trait_synonym = jQuery('option:selected', this).data("synonym");
         var trait_CO_id = jQuery('option:selected', this).data("co_id");
-        var trait_html = "<tr id='"+trait_id+"_row'><td><a href='/cvterm/"+trait_id+"/view' data-value='"+trait_id+"'>"+trait_name+"</a></td><td><p id='"+trait_id+"_CO_id'>"+trait_CO_id+"<p></td><td><p id='"+trait_id+"_synonym'>"+trait_synonym+"<p></td><td><input type='text' id='"+weight_id+"' class='form-control weight' placeholder='Must be a number (+ or -), default = 1'></input></td><td align='center'><a title='Remove' id='"+trait_id+"_remove' href='javascript:remove_trait("+trait_id+")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
+        var reference_accession_html =  jQuery('#reference_accession_list').html();
+        var trait_html = "<tr id='"+trait_id+"_row'><td><a href='/cvterm/"+trait_id+"/view' data-value='"+trait_id+"'>"+trait_name+"</a></td><td><p id='"+trait_id+"_synonym'>"+trait_synonym+"<p></td><td><input type='text' id='"+weight_id+"' class='form-control weight' placeholder='Must be a number (+ or -), default = 1'></input></td><td><select class='form-control' id='"+trait_id+"_reference_accession'>"+reference_accession_html+"</select></td><td align='center'><a title='Remove' id='"+trait_id+"_remove' href='javascript:remove_trait("+trait_id+")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
         jQuery('#trait_table').append(trait_html);
         jQuery('#select_message').text('Add another trait');
         jQuery('#select_message').attr('selected',true);

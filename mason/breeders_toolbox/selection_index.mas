@@ -26,9 +26,9 @@ $trial_name => undef
           <table class="table table-bordered table-striped table-highlight">
             <thead>
               <th>Trait name</th>
-              <th>Trait CO id</th>
               <th>Trait synonym</th>
               <th>Weight</th>
+              <th>Scale to Check?</th>
               <th>Remove?</th>
             </thead>
             <tbody id ="trait_table"></tbody>
