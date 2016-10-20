@@ -162,13 +162,15 @@ sub avg_phenotypes_query {
   my $trial_id = shift;
   my $trait_ids = shift;
   my $weights = shift;
+  my $controls = shift;
+  my @trait_ids = @$trait_ids;
+  my @weights = @$weights;
+  my @controls = @$controls;
   my $allow_missing = shift;
-  my $reference_accession = shift;
-
 
   my $select = "SELECT table0.accession_id, table0.accession_name";
   my $from = " FROM (SELECT accession_id, accession_name FROM materialized_phenoview WHERE trial_id = $trial_id GROUP BY 1,2) AS table0";
-  for (my $i = 1; $i <= scalar @$trait_ids; $i++) {
+  for (my $i = 1; $i <= scalar @trait_ids; $i++) {
     $select .= ",  ROUND( CAST(table$i.trait$i AS NUMERIC), 2)";
     $from .= " JOIN (SELECT accession_id, accession_name, AVG(phenotype_value::REAL) AS trait$i FROM materialized_phenoview WHERE trial_id = $trial_id AND trait_id = ? GROUP BY 1,2) AS table$i USING (accession_id)";
   }
@@ -180,46 +182,41 @@ sub avg_phenotypes_query {
   my $h = $self->dbh->prepare($query);
   $h->execute(@$trait_ids);
 
-  my @weights = @$weights;
   my (@raw_avg_values, @reference_values, @rows_to_scale, @weighted_values);
 
-  if ($reference_accession) {
-
-    while (my @row = $h->fetchrow_array()) {
-      push @rows_to_scale, @row;
-      my ($id, $name, @avg_values) = @row;
-      if ($id == $reference_accession) { @reference_values = @avg_values; }
-    }
-
-    my $trait_num = 0;
-    print STDERR "reference accession id = $reference_accession and reference values = @reference_values\n";
-    if (!defined(@reference_values)) {
-      return { error => "Can't scale values with a zero or undefined reference value. Please select a different trait or reference accession." };
-    }
-    foreach (@reference_values) {
-      $trait_num++;
-      print STDERR "trait $trait_num reference value = $_\n";
-      if (!defined($_)) {
-        return { error => "Can't scale values with a zero or undefined reference value. Please remove trait number $trait_num or select a different reference accession." };
+  if (grep { defined($_) } @controls) {
+  while (my @row = $h->fetchrow_array()) {
+    push @rows_to_scale, @row;
+    my ($id, $name, @avg_values) = @row;
+    for my $i (0..$#controls) {
+      my $control = $controls[$i] || 0;
+      if ($id == $control) {
+        #print STDERR "Matched control accession $name with values @avg_values\n";
+        if (!defined(@avg_values[$i])) {
+          return { error => "Can't scale values using control $name, it has a zero or undefined value for trait with id @$trait_ids[$i] in this trial. Please select a different control for this trait." };
+        }
+        $reference_values[$i] = $avg_values[$i];
       }
     }
+  }
+    for my $i (0..$#trait_ids) {
+        $reference_values[$i] = 1 unless defined $reference_values[$i];
+    }
 
-    #return { error => "Can't scale to a zero or undefined reference value. Please select a different trait or reference accession." } if grep {!defined($_)} @reference_values;
-
+    #print STDERR "reference values = @reference_values\n";
     $h->execute(@$trait_ids);
     while (my ($id, $name, @avg_values) = $h->fetchrow_array()) {
 
       my @scaled_values = map {sprintf("%.2f", $avg_values[$_] / $reference_values[$_])} 0..$#avg_values;
       my @scaled_and_weighted = map {sprintf("%.2f", $scaled_values[$_] * $weights[$_])} 0..$#scaled_values;
       unshift @scaled_values, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
-      unshift @scaled_and_weighted, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
-
       push @raw_avg_values, [@scaled_values];
 
       my $sum;
       map { $sum += $_ } @scaled_and_weighted;
       my $rounded_sum = sprintf("%.2f", $sum);
       push @scaled_and_weighted, $rounded_sum;
+      unshift @scaled_and_weighted, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
       push @weighted_values, [@scaled_and_weighted];
     }
 
@@ -251,8 +248,8 @@ sub avg_phenotypes_query {
     push @weighted_values3, [@temp_array];
   }
 
-  print STDERR "avg_phenotypes: ".Dumper(@raw_avg_values);
-  print STDERR "avg_phenotypes: ".Dumper(@weighted_values3);
+  #print STDERR "avg_phenotypes: ".Dumper(@raw_avg_values);
+  #print STDERR "avg_phenotypes: ".Dumper(@weighted_values3);
 
   return {
     raw_avg_values => \@raw_avg_values,

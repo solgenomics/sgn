@@ -167,6 +167,7 @@ jQuery(document).ready(function() {
             column_names = [],
             weighted_column_names = [],
             weights = [];
+            controls = [];
         column_names.push({
             title: "Accession"
         });
@@ -179,6 +180,8 @@ jQuery(document).ready(function() {
             var trait_name = jQuery('a', this).text();
             var weight = jQuery('#' + trait_id + '_weight').val() || 1; // default = 1
             weights.push(weight);
+            var control = jQuery('#' + trait_id + '_control option:selected').val() || '';
+            controls.push(control);
             var parts = trait_name.split("|");
             column_names.push({
                 title: parts[0]
@@ -202,8 +205,8 @@ jQuery(document).ready(function() {
                 'trial_id': trial_id,
                 'trait_ids': trait_ids,
                 'weights': weights,
-                'allow_missing': allow_missing,
-              //  'reference_accession': reference_accession_id
+                'controls': controls,
+                'allow_missing': allow_missing
             },
             success: function(response) {
                 if (response.error) {
@@ -320,7 +323,7 @@ function update_formula() {
         }
         term_number++;
     });
-    console.log("formula=" + formula);
+    //console.log("formula=" + formula);
     jQuery('#ranking_formula').text(formula);
     return;
 }
