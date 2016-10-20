@@ -690,9 +690,8 @@ sub germplasm_detail_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status=>\@status};
+    $c->stash->{rest} = {status=>$status};
 }
 
 sub germplasm_detail_GET {
@@ -795,9 +794,8 @@ MCPD CALL NO LONGER IN BRAPI SPEC
 #    my $c = shift;
 #    my $auth = _authenticate_user($c);
 #    my $status = $c->stash->{status};
-#    my @status = @$status;
 
-#    $c->stash->{rest} = {status=>\@status};
+#    $c->stash->{rest} = {status=>$status};
 #}
 
 #sub germplasm_mcpd_GET {
@@ -807,7 +805,6 @@ MCPD CALL NO LONGER IN BRAPI SPEC
 #    my $schema = $self->bcs_schema();
 #    my %result;
 #    my $status = $c->stash->{status};
-#    my @status = @$status;
 
 #    my $synonym_id = $schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
 #    my $organism = CXGN::Chado::Organism->new( $schema, $c->stash->{stock}->get_organism_id() );
@@ -815,7 +812,7 @@ MCPD CALL NO LONGER IN BRAPI SPEC
 #    %result = (germplasmDbId=>$c->stash->{stock_id}, defaultDisplayName=>$c->stash->{stock}->get_uniquename(), accessionNumber=>$c->stash->{stock}->get_uniquename(), germplasmName=>$c->stash->{stock}->get_name(), germplasmPUI=>$c->stash->{stock}->get_uniquename(), pedigree=>germplasm_pedigree_string($schema, $c->stash->{stock_id}), germplasmSeedSource=>'', synonyms=>germplasm_synonyms($schema, $c->stash->{stock_id}, $synonym_id), commonCropName=>$organism->get_common_name(), instituteCode=>'', instituteName=>'', biologicalStatusOfAccessionCode=>'', countryOfOriginCode=>'', typeOfGermplasmStorageCode=>'', genus=>$organism->get_genus(), species=>$organism->get_species(), speciesAuthority=>'', subtaxa=>$organism->get_taxon(), subtaxaAuthority=>'', donors=>'', acquisitionDate=>'');
 
 #    my %pagination;
-#    my %metadata = (pagination=>\%pagination, status=>\@status);
+#    my %metadata = (pagination=>\%pagination, status=>$status);
 #    my %response = (metadata=>\%metadata, result=>\%result);
 #    $c->stash->{rest} = \%response;
 #}
@@ -1397,9 +1394,8 @@ sub germplasm_pedigree_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status=>\@status};
+    $c->stash->{rest} = {status=>$status};
 }
 
 sub germplasm_pedigree_GET {
@@ -1471,9 +1467,8 @@ sub germplasm_markerprofile_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status=>\@status};
+    $c->stash->{rest} = {status=>$status};
 }
 
 sub germplasm_markerprofile_GET {
@@ -1686,9 +1681,8 @@ sub genotype_fetch_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status=>\@status};
+    $c->stash->{rest} = {status=>$status};
 }
 
 sub genotype_fetch_GET {
@@ -1748,7 +1742,6 @@ sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods')
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
     my @response;
@@ -1997,9 +1990,8 @@ sub programs_list_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status=>\@status};
+    $c->stash->{rest} = {status=>$status};
 }
 
 sub programs_list_GET {
@@ -2059,9 +2051,8 @@ sub studies_instances_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status=>\@status};
+    $c->stash->{rest} = {status=>$status};
 }
 
 sub studies_instances_GET {
@@ -2070,10 +2061,9 @@ sub studies_instances_GET {
     #my $auth = _authenticate_user($c);
     my %result;
     my $status = $c->stash->{status};
-    my @status = @$status;
     my $total_count = 0;
 
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2086,9 +2076,8 @@ sub studies_info_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub studies_info_GET {
@@ -2168,9 +2157,8 @@ sub studies_details_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub studies_details_GET {
@@ -2178,7 +2166,6 @@ sub studies_details_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
     my %result;
     my $total_count = 0;
 
@@ -2229,7 +2216,7 @@ sub studies_details_GET {
 	);
     }
 
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2272,9 +2259,8 @@ sub studies_layout_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub studies_layout_GET {
@@ -2282,7 +2268,6 @@ sub studies_layout_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
     my %result;
     my $total_count = 0;
 
@@ -2315,7 +2300,7 @@ sub studies_layout_GET {
 	$total_count += 1;
     }
     %result = (data=>$plot_data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2364,9 +2349,8 @@ sub studies_plot_phenotypes_POST {
     my $trait_id = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub studies_plot_phenotypes_GET {
@@ -2375,7 +2359,6 @@ sub studies_plot_phenotypes_GET {
     my $trait_id = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
     my %result;
 
     my $t = $c->stash->{study};
@@ -2405,7 +2388,7 @@ sub studies_plot_phenotypes_GET {
     }
 
     %result = (data=>\@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2451,9 +2434,8 @@ sub studies_table_POST {
     my $trait_id = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub studies_table_GET {
@@ -2461,7 +2443,6 @@ sub studies_table_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
     my %result;
 
     my $include_timestamp = $c->req->param("timestamp") || 0;
@@ -2500,7 +2481,7 @@ sub studies_table_GET {
     #print STDERR Dumper \@data_window;
 
     %result = (studyDbId => $c->stash->{study_id}, observationVariableDbId => \@header_ids, observationVariableName => \@header_names, data=>\@data_window);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2592,9 +2573,8 @@ sub phenotypes_dataset_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub phenotypes_dataset_GET {
@@ -2603,7 +2583,6 @@ sub phenotypes_dataset_GET {
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my $params = $c->req->params();
-    my @status = @$status;
 
     my $study_id = $params->{studyDbId};
     my $t = CXGN::Trial->new( { trial_id => $study_id, bcs_schema => $self->bcs_schema } );
@@ -2626,7 +2605,7 @@ sub phenotypes_dataset_GET {
     my %result = (
       observationUnitDbId =>
       data => \@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 
@@ -2640,9 +2619,8 @@ sub traits_list_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub traits_list_GET {
@@ -2650,7 +2628,6 @@ sub traits_list_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
     #my $db_rs = $self->bcs_schema()->resultset("General::Db")->search( { name => $c->config->{trait_ontology_db_name} } );
     #if ($db_rs->count ==0) { return undef; }
@@ -2679,7 +2656,7 @@ sub traits_list_GET {
 
     my $total_count = $p->rows;
     my %result = (data => \@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 
@@ -2691,7 +2668,6 @@ sub traits_single  : Chained('brapi') PathPart('traits') CaptureArgs(1) {
     #my $auth = _authenticate_user($c);
     my $cvterm_id = shift;
     my $status = $c->stash->{status};
-    my @status = @$status;
     my %result;
 
     my $q = "SELECT cvterm_id, name FROM materialized_traits where cvterm_id=?;";
@@ -2711,7 +2687,7 @@ sub traits_single  : Chained('brapi') PathPart('traits') CaptureArgs(1) {
     }
 
     my $total_count = $p->rows;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2771,9 +2747,8 @@ sub maps_list_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub maps_list_GET {
@@ -2781,7 +2756,6 @@ sub maps_list_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
     my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
@@ -2832,7 +2806,7 @@ sub maps_list_GET {
     my @data_window = splice @data, $start, $end;
 
     my %result = (data => \@data_window);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2894,9 +2868,8 @@ sub maps_details_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub maps_details_GET {
@@ -2904,7 +2877,6 @@ sub maps_details_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
     my $params = $c->req->params();
     my $total_count = 0;
 
@@ -2971,7 +2943,7 @@ sub maps_details_GET {
       linkageGroups => \@data_window,
     );
 
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%map_info);
     $c->stash->{rest} = \%response;
 }
@@ -3015,9 +2987,8 @@ sub maps_marker_detail_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub maps_marker_detail_GET {
@@ -3025,7 +2996,6 @@ sub maps_marker_detail_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
     my $params = $c->req->params();
 
     my %linkage_groups;
@@ -3096,7 +3066,7 @@ sub maps_marker_detail_GET {
     my @data_window = splice @markers, $start, $end;
 
     my %result = (data => \@data_window);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -3109,9 +3079,8 @@ sub locations_list_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub locations_list_GET {
@@ -3119,7 +3088,6 @@ sub locations_list_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
     my @data;
     my @attributes;
 
@@ -3135,7 +3103,7 @@ sub locations_list_GET {
     }
 
     my %result = (data=>\@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
