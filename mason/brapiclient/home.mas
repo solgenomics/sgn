@@ -56,5 +56,7 @@
 <& /brapiclient/trials_detail.mas &>
 <br/>
 
-
+<hr>
+<& /brapiclient/studies_search.mas &>
+<br/>
 

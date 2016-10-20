@@ -271,6 +271,7 @@ sub calls_GET {
         ['studyTypes', ['json'], ['GET','POST'] ],
         ['trials', ['json'], ['GET','POST'] ],
         ['trials/id', ['json'], ['GET'] ],
+        ['studies-search', ['json'], ['GET','POST'] ],
     );
 
     my @data;
@@ -402,14 +403,13 @@ sub study_types_process {
     my $status = $c->stash->{status};
     my @data;
     my $total_count = 0;
-    my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'design', 'project_property')->cvterm_id();
-    my $project_rs = $self->bcs_schema()->resultset("Project::Project")->search_related('projectprops', {'projectprops.type_id'=>$design_cvterm_id}, {order_by=>'projectprops.projectprop_id'});
+    my $project_rs = $self->bcs_schema()->resultset("Cv::Cv")->search_related('cvterms', {'me.name'=>'project_type'}, {order_by=>'cvterms.cvterm_id'});
     my $rs_slice = $project_rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
     while (my $pp = $rs_slice->next()) {
         push @data, {
-            studyTypeDbId=>$pp->projectprop_id(),
-            name=>$pp->value(),
-            description=>'',
+            studyTypeDbId=>$pp->cvterm_id(),
+            name=>$pp->name(),
+            description=>$pp->definition(),
         }
     }
     my %result = (data=>\@data);
@@ -964,46 +964,47 @@ sub studies_search_process {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my @program_ids = $c->req->param("programDbId");
-    my @location_ids = $c->req->param("locationDbId");
-    my @season_ids = $c->req->param("seasonDbId");
-    my @studytype_ids = $c->req->param("studyTypeDbId");
-    my @study_ids = $c->req->param("studyDbId");
-    my @germplasm_ids = $c->req->param("germplasmDbId");
-    my @variable_ids = $c->req->param("observationVariableDbId");
+    my $program_ids = $c->req->param("programDbId");
+    my $location_ids = $c->req->param("locationDbId");
+    my $season_ids = $c->req->param("seasonDbId");
+    my $studytype_ids = $c->req->param("studyTypeDbId");
+    my $study_ids = $c->req->param("studyDbId");
+    my $germplasm_ids = $c->req->param("germplasmDbId");
+    my $variable_ids = $c->req->param("observationVariableDbId");
     my $status = $c->stash->{status};
+    #$self->bcs_schema->storage->debug(1);
 
     my @data;
     my %result;
     my %search_params;
     my $bp_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
     $search_params{'project_relationship_subject_projects.type_id'} = $bp_trial_relationship_id;
-    if (@study_ids) {
-        $search_params{'me.project_id'} = {'in' => \@study_ids};
+    if ($study_ids) {
+        $search_params{'me.project_id'} = {-in => $study_ids};
     }
-    if (@program_ids) {
-        $search_params{'project_relationship_subject_projects.object_project_id'} = {'in' => \@program_ids};
+    if ($program_ids) {
+        $search_params{'project_relationship_subject_projects.object_project_id'} = {-in => $program_ids};
     }
-    if (@season_ids) {
+    if ($season_ids) {
         my $year_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project year', 'project_property')->cvterm_id();
         $search_params{'projectprops.type_id'} = $year_type_id;
-        $search_params{'projectprops.projectprop_id'} = {'in' => \@season_ids};
+        $search_params{'projectprops.projectprop_id'} = {-in => $season_ids};
     }
-    if (@studytype_ids) {
-        my $studytype_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'design', 'project_property')->cvterm_id();
-        $search_params{'projectprops.type_id'} = $studytype_type_id;
-        $search_params{'projectprops.projectprop_id'} = {'in' => \@studytype_ids};
+    if ($studytype_ids) {
+        $search_params{'cv.name'} = 'project_type';
+        $search_params{'type.cvterm_id'} = {-in => $studytype_ids};
     }
-    if (@location_ids) {
+    if ($location_ids) {
         my $location_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project location', 'project_property')->cvterm_id();
         $search_params{'projectprops.type_id'} = $location_type_id;
-        $search_params{'projectprops.value::int'} = {'in' => \@location_ids};
+        $search_params{'projectprops.value::int'} = {-in => $location_ids};
     }
     my $rs = $self->bcs_schema->resultset('Project::Project')->search(
         \%search_params,
-        {join=> [ {'project_relationship_subject_projects'}, {'projectprops'} ],
+        {join=> [{'project_relationship_subject_projects'}, {'projectprops' => {'type' => 'cv'}}],
         '+select'=> ['me.project_id'],
         '+as'=> ['study_id' ],
+        distinct => 1,
         order_by=>{ -asc=>'me.project_id' }
         }
     );
@@ -1014,37 +1015,47 @@ sub studies_search_process {
         my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
         while (my $s = $rs_slice->next()) {
             my $t = CXGN::Trial->new( { trial_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
-            my $folder = CXGN::Trial::folder->new( { folder_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
+            my $folder = CXGN::Trial::Folder->new( { folder_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
+            if ($folder->folder_type eq 'trial') {
 
-            my @years = ($t->get_year());
-            my %additional_info = (
-                studyPUI=>'',
-            );
-            my $project_type = '';
-            if ($t->get_project_type()) {
-               $project_type = $t->get_project_type()->[1];
+                my @years = ($t->get_year());
+                my %additional_info = (
+                    studyPUI=>'',
+                );
+                my $project_type = '';
+                if ($t->get_project_type()) {
+                   $project_type = $t->get_project_type()->[1];
+                }
+                my $location_id = '';
+                my $location_name = '';
+                if ($t->get_location()) {
+                   $location_id = $t->get_location()->[0];
+                   $location_name = $t->get_location()->[1];
+                }
+                my $planting_date = '';
+                if ($t->get_planting_date()) {
+                    $planting_date = $t->get_planting_date();
+                }
+                my $harvest_date = '';
+                if ($t->get_harvest_date()) {
+                    $harvest_date = $t->get_harvest_date();
+                }
+                push @data, {
+                    studyDbId=>$t->get_trial_id(),
+                    name=>$t->get_name(),
+                    trialDbId=>$folder->project_parent->project_id(),
+                    trialName=>$folder->project_parent->name(),
+                    studyType=>$project_type,
+                    seasons=>\@years,
+                    locationDbId=>$location_id,
+                    locationName=>$location_name,
+                    programDbId=>$folder->breeding_program->project_id(),
+                    programName=>$folder->breeding_program->name(),
+                    startDate => $planting_date,
+                    endDate => $harvest_date,
+                    additionalInfo=>\%additional_info
+                };
             }
-            my $location_id = '';
-            my $location_name = '';
-            if ($t->get_location()) {
-               $location_id = $t->get_location()->[0];
-               $location_name = $t->get_location()->[1];
-            }
-            push @data, {
-                studyDbId=>$t->get_trial_id(),
-                name=>$t->get_name(),
-                trialDbId=>$folder->project_parent->project_id(),
-                trialName=>$folder->project_parent->name(),
-                studyType=>$project_type,
-                seasons=>\@years,
-                locationDbId=>$location_id,
-                locationName=>$location_name,
-                programDbId=>$folder->breeding_program->project_id(),
-                programName=>$folder->breeding_program->name(),
-                startDate => $t->get_planting_date(),
-                endDate => $t->get_harvest_date(),
-                additionalInfo=>\%additional_info
-            };
         }
     }
 
