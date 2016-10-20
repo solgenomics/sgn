@@ -12,6 +12,10 @@
 <br/>
 
 <hr>
+<& /brapiclient/observation_levels.mas &>
+<br/>
+
+<hr>
 <& /brapiclient/crops.mas &>
 <br/>
 
@@ -60,3 +64,6 @@
 <& /brapiclient/studies_search.mas &>
 <br/>
 
+<hr>
+<& /brapiclient/studies_detail.mas &>
+<br/>

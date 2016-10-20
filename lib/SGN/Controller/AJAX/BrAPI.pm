@@ -258,6 +258,7 @@ sub calls_GET {
     my @available = (
         ['token', ['json'], ['POST','DELETE'] ],
         ['calls', ['json'], ['GET'] ],
+        ['observationLevels', ['json'], ['GET'] ],
         ['germplasm-search', ['json'], ['GET','POST'] ],
         ['germplasm/id', ['json'], ['GET'] ],
         ['germplasm/id/pedigree', ['json'], ['GET'] ],
@@ -272,6 +273,7 @@ sub calls_GET {
         ['trials', ['json'], ['GET','POST'] ],
         ['trials/id', ['json'], ['GET'] ],
         ['studies-search', ['json'], ['GET','POST'] ],
+        ['studies/id', ['json'], ['GET'] ],
     );
 
     my @data;
@@ -304,6 +306,23 @@ sub crops_GET {
     my %pagination = ();
     my %result = (data=>
         [$c->config->{'supportedCrop'}]
+    );
+    my @data_files;
+    my %metadata = (pagination=>\%pagination, status=>$status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+sub observation_levels : Chained('brapi') PathPart('observationLevels') Args(0) : ActionClass('REST') { }
+
+sub observation_levels_GET {
+    my $self = shift;
+    my $c = shift;
+    my $status = $c->stash->{status};
+
+    my %pagination = ();
+    my %result = (data=>
+        ['plant','plot']
     );
     my @data_files;
     my %metadata = (pagination=>\%pagination, status=>$status, datafiles=>\@data_files);
@@ -1302,7 +1321,6 @@ sub studies_germplasm_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
     my $metadata = $c->req->params("metadata");
     my $result = $c->req->params("result");
@@ -1313,9 +1331,8 @@ sub studies_germplasm_POST {
     print STDERR Dumper($result);
 
     my $pagintation = $metadata_hash{"pagination"};
-    push(@status, $metadata_hash{"status"});
 
-    $c->stash->{rest} = {status=>\@status};
+    $c->stash->{rest} = {status=>$status};
 }
 
 sub studies_germplasm_GET {
@@ -1324,10 +1341,9 @@ sub studies_germplasm_GET {
     #my $auth = _authenticate_user($c);
     my %result;
     my $status = $c->stash->{status};
-    my @status = @$status;
     my $total_count = 0;
 
-    my $synonym_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
+    my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'stock_synonym', 'stock_property')->cvterm_id();
     my $tl = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $c->stash->{study_id} });
     my ($accessions, $controls) = $tl->_get_trial_accession_names_and_control_names();
     my @germplasm_data;
@@ -1346,7 +1362,7 @@ sub studies_germplasm_GET {
 
 	%result = (studyDbId=>$c->stash->{study_id}, studyName=>$c->stash->{studyName}, data =>\@germplasm_data);
 
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2081,31 +2097,65 @@ sub studies_info_GET {
     #my $auth = _authenticate_user($c);
     my %result;
     my $status = $c->stash->{status};
-    my @status = @$status;
+    my $message = '';
     my $total_count = 0;
-
+    my $study_id = $c->stash->{study_id};
     my $t = $c->stash->{study};
     if ($t) {
-    	$total_count = 1;
-    	my @years = ($t->get_year());
-    	my %optional_info = (studyPUI=>'', startDate=>'', endDate=>'');
-    	my $project_type = '';
-    	if ($t->get_project_type()) {
-    	    $project_type = $t->get_project_type()->[1];
-    	}
-    	my $location = '';
-    	if ($t->get_location()) {
-    	    $location = $t->get_location()->[0];
-    	}
-    	my $ps = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
-    	my $programs = $ps->get_breeding_program_with_trial($c->stash->{study_id});
+        $total_count = 1;
+        my $folder = CXGN::Trial::Folder->new( { folder_id => $study_id, bcs_schema => $self->bcs_schema } );
+        if ($folder->folder_type eq 'trial') {
 
-    	%result = (studyDbId=>$t->get_trial_id(), studyName=>$t->get_name(), studyType=>$project_type, years=>\@years, locationDbId=>$location, programDbId=>@$programs[0]->[0], programName=>@$programs[0]->[1], optionalInfo=>\%optional_info);
+            my @years = ($t->get_year());
+            my %additional_info = (
+                studyPUI=>'',
+            );
+            my $project_type = '';
+            if ($t->get_project_type()) {
+               $project_type = $t->get_project_type()->[1];
+            }
+            my $location_id = '';
+            my $location_name = '';
+            if ($t->get_location()) {
+               $location_id = $t->get_location()->[0];
+               $location_name = $t->get_location()->[1];
+            }
+            my $planting_date = '';
+            if ($t->get_planting_date()) {
+                $planting_date = $t->get_planting_date();
+            }
+            my $harvest_date = '';
+            if ($t->get_harvest_date()) {
+                $harvest_date = $t->get_harvest_date();
+            }
+            %result = (
+                studyDbId=>$t->get_trial_id(),
+                name=>$t->get_name(),
+                trialDbId=>$folder->project_parent->project_id(),
+                trialName=>$folder->project_parent->name(),
+                studyType=>$project_type,
+                seasons=>\@years,
+                locationDbId=>$location_id,
+                locationName=>$location_name,
+                programDbId=>$folder->breeding_program->project_id(),
+                programName=>$folder->breeding_program->name(),
+                startDate => $planting_date,
+                endDate => $harvest_date,
+                additionalInfo=>\%additional_info,
+                active=>'',
+                observationVariables=>"/brapi/v1/studies/$study_id/observationVariables",
+                germplasm=>"/brapi/v1/studies/$study_id/germplasm",
+                observationUnits=>"/brapi/v1/studies/$study_id/observationUnits",
+                layout=>"/brapi/v1/studies/$study_id/layout",
+                location=>"/brapi/v1/locations/$location_id",
+            );
+        }
     } else {
-	   push @status, "Study ID not found.";
+        $message .= "StudyDbId not found.";
     }
-
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    $status->{'message'} = $message;
+    my @datafiles;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2183,6 +2233,36 @@ sub studies_details_GET {
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
+
+sub studies_observation_variables : Chained('studies_single') PathPart('observationVariables') Args(0) : ActionClass('REST') { }
+
+sub studies_observation_variables_POST {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+
+    $c->stash->{rest} = {status => $status};
+}
+
+sub studies_observation_variables_GET {
+    my $self = shift;
+    my $c = shift;
+    #my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my %result;
+    my $total_count = 0;
+
+    my $t = CXGN::Trial->new( { schema => $self->bcs_schema, trial_id => $c->stash->{study_id} });
+    my @data;
+
+    %result = (data=>\@data);
+    my @datafiles;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
 
 
 sub studies_layout : Chained('studies_single') PathPart('layout') Args(0) : ActionClass('REST') { }

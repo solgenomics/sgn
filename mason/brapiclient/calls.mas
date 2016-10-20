@@ -36,6 +36,7 @@ jQuery("#brapi_home_show_calls").click(function() {
                 html = html+'</ul>';
             html = html+'</ul>';
         }
+        html = html+'</ul>';
         jQuery("#brapi_calls_home_div").empty().html(html);
       },
       error: function(response) {
