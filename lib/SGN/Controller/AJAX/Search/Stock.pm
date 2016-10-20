@@ -98,6 +98,12 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     if (exists($params->{trait} ) && $params->{trait} ) {
 	$and_conditions->{ 'observable.name' }  = $params->{trait} ;
     }
+    if (exists($params->{minimum_trait_value} ) && $params->{minimum_trait_value} ) {
+        $and_conditions->{ 'phenotype.value' }  = { '>' => $params->{minimum_trait_value} };
+    }
+    if (exists($params->{maximum_trait_value} ) && $params->{maximum_trait_value} ) {
+        $and_conditions->{ 'phenotype.value' }  = { '<' => $params->{maximum_trait_value} };
+    }
 
     if (exists($params->{project} ) && $params->{project} ) {
 	$and_conditions->{ 'lower(project.name)' } = { -like  => lc($params->{project} ) } ;

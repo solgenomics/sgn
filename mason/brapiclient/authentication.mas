@@ -31,9 +31,10 @@ jQuery(document).ready(function() {
             'password' : jQuery("#brapi_auth_login_password").val()
           },
           'success': function(response) {
+            console.log(response);
             //jQuery("#brapi_auth_home_div").empty().html("Successfully logged in!"+response);
             alert('Successfully logged in!'+response.userDisplayName + response.expires_in);
-            location.reload();
+            //location.reload();
           },
           error: function(response) {
             alert('An error occurred');
@@ -46,8 +47,9 @@ jQuery(document).ready(function() {
           'url': '/brapi/v1/token',
           'method': 'DELETE',
           'success': function(response) {
+            console.log(response);
             alert('Successfully logged out!');
-            location.reload();
+            //location.reload();
           },
           error: function(response) {
             alert('An error occurred');

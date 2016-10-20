@@ -12,6 +12,58 @@
 <br/>
 
 <hr>
+<& /brapiclient/observation_levels.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/crops.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/seasons.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/studytypes.mas &>
+<br/>
+
+
+<hr>
 <& /brapiclient/germplasm_search.mas &>
 <br/>
 
+<hr>
+<& /brapiclient/germplasm_detail.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/markerprofile_search.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/markerprofile_detail.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/markerprofile_allelematrix.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/programs.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/trials.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/trials_detail.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/studies_search.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/studies_detail.mas &>
+<br/>
