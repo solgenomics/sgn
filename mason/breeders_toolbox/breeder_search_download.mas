@@ -3,12 +3,90 @@
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect', 'spin_min', 'ladda_min' ] &>
+
+<div class="modal fade" id="download_wizard_phenotypes_dialog" name="download_wizard_phenotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="downloadWizardPhenotypesDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="downloadWizardPhenotypesDialog">Download Phenotypes</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+	       <form class="form-horizontal" role="form" method="post" >
+	        <div class="form-group">
+                <label class="col-sm-3 control-label">Format: </label>
+                <div class="col-sm-9" >
+                    <select class="form-control" id="download_wizard_phenotypes_format">
+                        <option value="xls">Excel (xls)</option>
+                        <option value="csv">CSV</option>
+                    </select>
+                </div>
+	        </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Include Timestamps: </label>
+                <div class="col-sm-9" >
+                    <select class="form-control" id="download_wizard_phenotypes_timestamp_option">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Data Level: </label>
+                <div class="col-sm-9" >
+                    <select class="form-control" id="download_wizard_phenotypes_level_option">
+                        <option value="plot">Plots</option>
+                        <option value="plant">Plants</option>
+                        <option value="all">All</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Trait Name Contains: </label>
+                <div class="col-sm-9" >
+                    <input id="download_wizard_phenotype_trait_contains" name="download_wizard_phenotype_trait_contains" type="text" class="form-control" placeholder="Example: storage root,oxoglutarate"/>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-8 control-label">Minimum Phenotype Value: </label>
+                        <div class="col-sm-4" >
+                            <input id="download_wizard_phenotype_phenotype_min" name="download_wizard_phenotype_phenotype_min" type="number" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-8 control-label">Maximum Phenotype Value: </label>
+                        <div class="col-sm-4" >
+                            <input id="download_wizard_phenotype_phenotype_max" name="download_wizard_phenotype_phenotype_max" type="number" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </form><br/>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="download_wizard_phenotypes_cancel_button" id="download_wizard_phenotypes_cancel_button" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="download_wizard_phenotypes_submit_button" id="download_wizard_phenotypes_submit_button" title="Submit">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <table class="table borderless" alt="breeder search" border="0" ><tr>
 	<td>
     <div>
 	<p>Phenotypes:
-		<button class="btn btn-primary ladda-button" id="download_button_excel" disabled="disabled" data-style="expand-right" title="To download, you must be logged in with a trial selected"><span class="ladda-label">Download Excel</span><span class="ladda-spinner"></span></button>
-    <button class="btn btn-primary ladda-button" id="download_button_csv" disabled="disabled" data-style="expand-right" title="To download, you must be logged in with a trial selected"><span class="ladda-label">Download CSV</span><span class="ladda-spinner"></span></button>
+		<button class="btn btn-primary" id="wizard_download_phenotypes_button" disabled="disabled" data-style="expand-right" title="To download, you must be logged in with a filter selected">Download Phenotypes</button>
 	</div>
 	</td>
 	<td>
