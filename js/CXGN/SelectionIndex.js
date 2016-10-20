@@ -151,6 +151,10 @@ jQuery(document).ready(function() {
                     update_formula();
                     jQuery('#trait_list').focus();
                 });
+            jQuery('#'+trait_id +'_control').change( 
+                function() {
+                    update_formula();
+            });
             jQuery('#calculate_rankings').removeClass('disabled');
             jQuery('#trait_list_label').remove();
             var trait_select = jQuery('#trait_list').detach();
@@ -182,12 +186,12 @@ jQuery(document).ready(function() {
             weights.push(weight);
             var control = jQuery('#' + trait_id + '_control option:selected').val() || '';
             controls.push(control);
-            var parts = trait_name.split("|");
+            if (control) { trait_name += " as % of " + jQuery('#' + trait_id + '_control option:selected').text(); }
             column_names.push({
-                title: parts[0]
+                title: trait_name
             });
             weighted_column_names.push({
-                title: weight + " * (" + parts[0] + ")"
+                title: weight + " * (" + trait_name + ")"
             });
         });
         weighted_column_names.push({
@@ -313,9 +317,10 @@ function update_formula() {
         var trait_id = jQuery('a', this).data("value");
         var trait_name = jQuery('a', this).text();
         var weight = jQuery('#' + trait_id + '_weight').val() || 1; // default = 1
-        var control = jQuery('#' + trait_id + '_control option:selected').text();
+        var control_id = jQuery('#' + trait_id + '_control option:selected').val();
+        if (control_id) { trait_name += " as % of " + jQuery('#' + trait_id + '_control option:selected').text(); }
         //var parts = trait_name.split("|");
-        var score = weight + " * (" + trait_name + " as % of " + control + ") ";
+        var score = weight + " * (" + trait_name + ") ";
         if (weight >= 0 && term_number > 0) {
             formula += " + " + score;
         } else {
