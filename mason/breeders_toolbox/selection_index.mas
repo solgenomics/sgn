@@ -39,8 +39,7 @@ $trial_name => undef
         <div class="col-sm-6 col-md-6 col-lg-6">
         <label>Additional options: </label>
           <label><input type="checkbox" id="allow_missing" value="">Include accessions with missing phenotypes</label><br>
-            <label for="reference_accession_list"><input type="checkbox" id="use_reference_accession" value="">Scale values to a reference accession: </label><br>
-            <select class="form-control" id="reference_accession_list" style="display: none"></select>
+          <select class="form-control" id="control_list" style="display: none"></select>
         </div><br><br><br><br><br>
         <div class="col-sm-6 col-md-6 col-lg-6">
         <label>SIN formula: </label><br>

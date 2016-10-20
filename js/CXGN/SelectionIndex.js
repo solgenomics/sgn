@@ -85,7 +85,6 @@ jQuery(document).ready(function() {
                 }
             });
 
-
             jQuery.ajax({ // get accessions phenotyped in trial
                 url: '/ajax/breeder/search',
                 method: 'POST',
@@ -109,27 +108,28 @@ jQuery(document).ready(function() {
                         success: function(response) {
                             console.log('controls:' + JSON.stringify(response));
                             var accessions = response.accessions;
-                            var accession_html = '<option value="" title="Select a reference accession">Select a control accession</a>\n';
-                            for (i = 0; i < response.accessions[0].length; i++) {
-                                accession_html += '<option value="' + accessions[0][i].stock_id + '" title="' + response.accessions[0][i].stock_id + '">' + response.accessions[0][i].accession_name + '</a>\n';
+                            var accession_html;
+                            if (response.accessions[0].length == 0) {
+                              accession_html = '<option value="" title="Select a control">No controls found</a>\n';
                             }
-                            jQuery('#reference_accession_list').html(accession_html);
+                            else {
+                              accession_html = '<option value="" title="Select a control">Select a control</a>\n';
+                              for (i = 0; i < response.accessions[0].length; i++) {
+                                accession_html += '<option value="' + accessions[0][i].stock_id + '" title="' + response.accessions[0][i].stock_id + '">' + response.accessions[0][i].accession_name + '</a>\n';
+                              }
+                            }
+                            jQuery('#control_list').html(accession_html);
                         },
                         error: function(response) {
-                            jQuery('#reference_accession_list').html('<option>No accessions retrieved from this trial</a>');
+                            jQuery('#control_list').html('<option value="" title="Select a control">Error retrieving trial controls</a>');
                         }
                     });
                 },
                 error: function(response) {
-                    jQuery('#reference_accession_list').html('<option>No accessions retrieved from this trial</a>');
+                    jQuery('#control_list').html('<option value="" title="Select a control">Error retrieving trial design</a>');
                 }
             });
-
         });
-
-    jQuery("#use_reference_accession").change(function() {
-        jQuery("#reference_accession_list").toggle(this.checked); // show if it is checked, otherwise hide
-    });
 
     jQuery('#trait_list').change( // add selected trait to trait table
         function() {
@@ -138,8 +138,9 @@ jQuery(document).ready(function() {
             var trait_name = jQuery('option:selected', this).text();
             var trait_synonym = jQuery('option:selected', this).data("synonym");
             var trait_CO_id = jQuery('option:selected', this).data("co_id");
-            var reference_accession_html = jQuery('#reference_accession_list').html();
-            var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + weight_id + "' class='form-control weight' placeholder='Must be a number (+ or -), default = 1'></input></td><td><select class='form-control' id='" + trait_id + "_reference_accession'>" + reference_accession_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
+            var control_html = jQuery('#control_list').html();
+            console.log("control html"+control_html);
+            var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + weight_id + "' class='form-control weight' placeholder='Must be a number (+ or -), default = 1'></input></td><td><select class='form-control' id='" + trait_id + "_control'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
             jQuery('#trait_table').append(trait_html);
             jQuery('#select_message').text('Add another trait');
             jQuery('#select_message').attr('selected', true);
@@ -160,11 +161,6 @@ jQuery(document).ready(function() {
         jQuery('#raw_avgs_div').html("");
         jQuery('#weighted_values_div').html("");
         var trial_id = jQuery("#select_trial_for_selection_index option:selected").val();
-
-        var reference_accession_id;
-        if (jQuery("#use_reference_accession").is(':checked')) {
-            reference_accession_id = jQuery("#reference_accession_list option:selected").val();
-        }
 
         var selected_trait_rows = jQuery('#trait_table').children();
         var trait_ids = [],
@@ -207,7 +203,7 @@ jQuery(document).ready(function() {
                 'trait_ids': trait_ids,
                 'weights': weights,
                 'allow_missing': allow_missing,
-                'reference_accession': reference_accession_id
+              //  'reference_accession': reference_accession_id
             },
             success: function(response) {
                 if (response.error) {
@@ -314,14 +310,15 @@ function update_formula() {
         var trait_id = jQuery('a', this).data("value");
         var trait_name = jQuery('a', this).text();
         var weight = jQuery('#' + trait_id + '_weight').val() || 1; // default = 1
-        var parts = trait_name.split("|");
+        var control = jQuery('#' + trait_id + '_control option:selected').text();
+        //var parts = trait_name.split("|");
+        var score = weight + " * (" + trait_name + " as % of " + control + ") ";
         if (weight >= 0 && term_number > 0) {
-            formula += " + " + weight + " * (" + parts[0] + ") ";
+            formula += " + " + score;
         } else {
-            formula += weight + " * (" + parts[0] + ") ";
+            formula += score;
         }
         term_number++;
-        console.log("termnumber=" + term_number);
     });
     console.log("formula=" + formula);
     jQuery('#ranking_formula').text(formula);
