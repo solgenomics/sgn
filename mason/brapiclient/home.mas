@@ -75,3 +75,7 @@
 <hr>
 <& /brapiclient/studies_table.mas &>
 <br/>
+
+<hr>
+<& /brapiclient/studies_layout.mas &>
+<br/>

@@ -277,6 +277,7 @@ sub calls_GET {
         ['studies/id', ['json'], ['GET'] ],
         ['studies/id/germplasm', ['json'], ['GET'] ],
         ['studies/id/table', ['json','csv','xls'], ['GET'] ],
+        ['studies/id/layout', ['json'], ['GET'] ],
     );
 
     my @data;
@@ -2297,12 +2298,18 @@ sub studies_layout_GET {
 	} else {
 	    $type = 'Test';
 	}
-	%optional_info = (germplasmName => $design->{$plot_number}->{accession_name}, blockNumber => $design->{$plot_number}->{block_number} ? $design->{$plot_number}->{block_number} : undef, rowNumber => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} : undef, columnNumber => $design->{$plot_number}->{col_number} ? $design->{$plot_number}->{col_number} : undef, type => $type);
+	%optional_info;
 	$formatted_plot = {
 	    studyDbId => $c->stash->{study_id},
-	    plotDbId => $design->{$plot_number}->{plot_id},
-	    plotName => $design->{$plot_number}->{plot_name},
-	    replicate => $design->{$plot_number}->{replicate} ? 1 : 0,
+	    observationUnitDbId => $design->{$plot_number}->{plot_id},
+	    observationUnitName => $design->{$plot_number}->{plot_name},
+        observationLevel => 'plot',
+	    replicate => $design->{$plot_number}->{replicate} ? $design->{$plot_number}->{replicate} : '',
+        blockNumber => $design->{$plot_number}->{block_number} ? $design->{$plot_number}->{block_number} : '',
+        X => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} : '',
+        Y => $design->{$plot_number}->{col_number} ? $design->{$plot_number}->{col_number} : '',
+        entryType => $type,
+        germplasmName => $design->{$plot_number}->{accession_name},
 	    germplasmDbId => $design->{$plot_number}->{accession_id},
 	    optionalInfo => \%optional_info
 	};
