@@ -4656,7 +4656,9 @@ sub first_stock_genotype_data {
 sub prep_genotype_file {
     my ($self, $args) = @_;
     
-    my $geno_file  = $args->{genotype_file};  
+    my $geno_file  = $args->{genotype_file};
+    my $cache_dir  = $args->{cache_dir};
+
     my $pop_id     = ($args->{prediction_id} ? $args->{prediction_id} : $args->{population_id});
  
     my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context', 
@@ -4669,7 +4671,7 @@ sub prep_genotype_file {
 	write_file($geno_file, ${$geno_data});
     }
 
-    my $file_cache  = Cache::File->new(cache_root => $c->stash->{solgs_cache_dir});
+    my $file_cache  = Cache::File->new(cache_root => $cache_dir);
     $file_cache->set('genotype_data_' . $pop_id, $geno_file, '30 days');
     
 }
@@ -4896,6 +4898,7 @@ sub genotype_file  {
 		'model_id'      => $model_id,
 		'tr_geno_file'  => $tr_geno_file,
 		'genotype_file' => $geno_file,
+		'cache_dir'     => $c->stash->{solgs_cache_dir},
 	    };
 
 	    $self->submit_cluster_genotype_query($c, $args);
