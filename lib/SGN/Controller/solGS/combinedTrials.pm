@@ -471,34 +471,35 @@ sub combined_trials_desc {
 	$s_pop_id = $pop_id;
 	$s_pop_id =~ s/\s+//;
     }
-       
+    
+    $c->stash->{pop_id} = $s_pop_id;
     $solgs_controller->filtered_training_genotype_file($c);
     my $filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
 
-    $solgs_controller->cache_combined_pops_data($c);
-    my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
-    my @unfiltered_geno_rows = read_file($combined_pops_geno_file);
-   
     my $markers_no;
     my @geno_lines;
-
-    if (-s $filtered_geno_file) {
-	my @rows = read_file($filtered_geno_file);
-	$markers_no = scalar(split('\t', $rows[0])) - 1;
+    my $dir = $c->{stash}->{solgs_cache_dir};
+    
+    if (-s $filtered_geno_file) 
+    {
+	@geno_lines = read_file($filtered_geno_file);
+	$markers_no = scalar(split('\t', $geno_lines[0])) - 1;
     } 
     else 
     {
-	$markers_no = scalar(split ('\t', $unfiltered_geno_rows[0])) - 1;	
+	my $geno_exp  = "genotype_data_${s_pop_id}.txt";
+        my $geno_file = $solgs_controller->grep_file($dir, $geno_exp);
+        @geno_lines   = read_file($geno_file);
+        $markers_no   = scalar(split ('\t', $geno_lines[0])) - 1;
     }
   
-    my $dir = $c->{stash}->{solgs_cache_dir};
     my $trait_exp        = "traits_acronym_pop_${combo_pops_id}";
     my $traits_list_file = $solgs_controller->grep_file($dir, $trait_exp);  
 
     my @traits_list = read_file($traits_list_file);
     my $traits_no   = scalar(@traits_list) - 1;
 
-    my $stock_no  = scalar(@unfiltered_geno_rows) - 1;
+    my $stock_no  = scalar(@geno_lines) - 1;
 
     my $training_pop = "Training population $combo_pops_id";
     

@@ -690,10 +690,10 @@ sub genotype_data {
 
     my $project_id    = $args->{population_id};
     my $prediction_id = $args->{prediction_id};
-    my $data_set_type = $args->{data_set_type};
-    my $cache_dir     = $args->{cache_dir};
-    my $geno_file     = $args->{genotype_file};
-    my $trait_abbr    = $args->{trait_abbr};
+    #my $data_set_type = $args->{data_set_type};
+    #my $cache_dir     = $args->{cache_dir};
+    my $tr_geno_file  = $args->{tr_geno_file};
+    #my $trait_abbr    = $args->{trait_abbr};
     my $model_id      = ($args->{model_id} ? $args->{model_id} : $project_id);
 
     my $stock_genotype_rs;
@@ -707,21 +707,15 @@ sub genotype_data {
     if ($project_id) 
     {    
         if ($prediction_id && $project_id == $prediction_id) 
-        {      
+        {   
             $stock_genotype_rs = $self->prediction_genotypes_rs($project_id);
             my $stock_count = $stock_genotype_rs->count;
   
             unless ($header_markers) 
             {
                 if ($stock_count)
-                {
-                    my $file = $data_set_type =~ /combined/ 
-                        ? "genotype_data_${model_id}_${trait_abbr}" 
-                        : "genotype_data_${model_id}.txt";
-                 
-                    my $training_geno_file = SGN::Controller::solGS::solGS->grep_file($cache_dir, $file);
-
-                    open my $fh, $training_geno_file or die "couldnot open $training_geno_file: $!";    
+                {                
+                    open my $fh, $tr_geno_file or die "couldnot open $tr_geno_file: $!";    
                     my $header_markers = <$fh>;
                     $header_markers =~ s/^\s+|\s+$//g;
                                 
@@ -1267,7 +1261,9 @@ sub stock_genotype_values {
     my $geno_values = $geno_row->get_column('stock_name') . "\t";
    
     foreach my $marker (@markers) 
-    {        
+    {   
+	no warnings 'uninitialized';
+
         my $genotype =  $values->{$marker};
         $geno_values .= $genotype =~ /\d+/g ? $round->round($genotype) : $genotype;       
         $geno_values .= "\t" unless $marker eq $markers[-1];
@@ -1307,12 +1303,12 @@ sub prediction_pops {
   }
   elsif( $training_pop_id =~ /uploaded/) 
   {
-      my $user_id = $self->context->user->id;
+     # my $user_id = $self->context->user->id;
       
       my $dir = $self->context->stash->{solgs_prediction_upload_dir};      
       opendir my $dh, $dir or die "can't open $dir: $!\n";
     
-      my ($geno_file) = grep { /genotype_data_${user_id}_${training_pop_id}/ && -f "$dir/$_" }  readdir($dh); 
+      my ($geno_file) = grep { /genotype_data_${training_pop_id}/ && -f "$dir/$_" }  readdir($dh); 
       closedir $dh;
 
       $geno_file = catfile($dir, $geno_file);
