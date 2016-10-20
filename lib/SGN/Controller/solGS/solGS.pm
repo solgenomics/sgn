@@ -298,8 +298,7 @@ sub projects_links {
 	if ($has_phenotype) 
 	{	
 	    my $trial_compatibility_file = $self->trial_compatibility_file($c);
-	    my $size = -s $trial_compatibility_file;
-	   
+  
 	    if (-s $trial_compatibility_file && !$update_marker_count) 
 	    {
 		my $genotype_prop = $c->model("solGS::solGS")->get_project_genotypeprop($pr_id);
@@ -1441,7 +1440,7 @@ sub download_urls {
     my ($self, $c) = @_;
     my $data_set_type = $c->stash->{data_set_type};
     my $pop_id;
-    
+
     no warnings 'uninitialized';
 
     if ($data_set_type =~ /combined populations/)
@@ -1450,7 +1449,7 @@ sub download_urls {
     }
     else 
     {
-        $pop_id         = $c->stash->{pop_id};  
+        $pop_id         = $c->stash->{pop_id}; 
     }
     
     my $trait_id          = $c->stash->{trait_id};
@@ -1575,7 +1574,7 @@ sub predict_selection_pop_single_trait {
 	$self->predict_selection_pop_single_pop_model($c)
     }
     else
-    {    
+    {  
 	$self->predict_selection_pop_combined_pops_model($c);
     }
 
@@ -1618,7 +1617,7 @@ sub predict_selection_pop_single_pop_model {
     $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
     
     my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
- 
+    
     if (!-s $prediction_pop_gebvs_file)
     {
 	my $dir = $c->stash->{solgs_cache_dir};
@@ -1711,6 +1710,7 @@ sub prediction_population :Path('/solgs/model') Args(3) {
         $c->stash->{trait_id}          = $trait_id;
 
 	$self->predict_selection_pop_single_pop_model($c);
+
 	$self->trait_phenotype_stat($c);
         $self->gs_files($c);
 
@@ -1852,7 +1852,7 @@ sub prediction_pop_analyzed_traits {
            
     my $dir = $c->stash->{solgs_cache_dir};
     my @pred_files;
- 
+   
     opendir my $dh, $dir or die "can't open $dir: $!\n";
    
     no warnings 'uninitialized';
@@ -1861,7 +1861,7 @@ sub prediction_pop_analyzed_traits {
   
     $prediction_pop_id = "uploaded_${prediction_pop_id}" if $prediction_is_uploaded;
  
-    if ($training_pop_id =~ /$prediction_pop_id/) 
+    if ($training_pop_id != /$prediction_pop_id/) 
     {
 	my  @files  =  grep { /prediction_pop_gebvs_${training_pop_id}_${prediction_pop_id}/ && -s "$dir/$_" > 0 } 
                  readdir($dh); 
@@ -1887,8 +1887,8 @@ sub prediction_pop_analyzed_traits {
 		}
 	    }
    
-	    $c->stash->{prediction_pop_analyzed_traits} = \@traits;
-	    $c->stash->{prediction_pop_analyzed_traits_ids} = \@trait_ids;
+	    $c->stash->{prediction_pop_analyzed_traits}       = \@traits;
+	    $c->stash->{prediction_pop_analyzed_traits_ids}   = \@trait_ids;
 	    $c->stash->{prediction_pop_analyzed_traits_files} = \@files;
 	} 
     }
@@ -1904,7 +1904,6 @@ sub download_prediction_urls {
     my $download_url;# = $c->stash->{download_prediction};
     my $model_tr_id = $c->stash->{trait_id};
    
-
     my $page = $c->req->referer;
     my $base = $c->req->base;
    
@@ -1923,11 +1922,9 @@ sub download_prediction_urls {
     if ($prediction_pop_id)
     {
         $self->prediction_pop_analyzed_traits($c, $training_pop_id, $prediction_pop_id);
-
         $selection_traits_ids = $c->stash->{prediction_pop_analyzed_traits_ids};
 	$selection_traits_files = $c->stash->{prediction_pop_analyzed_traits_files};
     } 
-
 
     if ($page =~ /solgs\/model\/combined\/populations\// )
     { 
@@ -2719,6 +2716,7 @@ sub format_selection_pops {
 		 
                   $self->download_prediction_urls($c, $training_pop_id, $prediction_pop_id);
                   my $download_prediction = $c->stash->{download_prediction};
+
                   push @data,  [$pred_pop_link, $desc, $project_yr, $download_prediction];
               }
           }
