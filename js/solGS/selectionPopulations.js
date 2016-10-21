@@ -63,6 +63,8 @@ function checkSelectionPopulationRelevance (popName) {
   
     var combinedPopsId = jQuery("#combo_pops_id").val();
     var dataSetType;
+
+    var traitId = jQuery('#trait_id').val();
    
     if (combinedPopsId) {
 	dataSetType = 'combined populations';
@@ -75,6 +77,7 @@ function checkSelectionPopulationRelevance (popName) {
     var popData = {
 	'selection_pop_name' : popName, 
 	'training_pop_id'    : trainingPopId,
+	'trait_id'           : traitId,
 	'data_set_type'      : dataSetType,
     };
 
