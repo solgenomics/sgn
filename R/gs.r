@@ -329,7 +329,7 @@ if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size !=
   predictionData[, 1]      <- NULL
     
   message('read in filtered prediction genotype data')
-} else {
+} else if (length(predictionFile) != 0) {
     
   predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
   message('selection population: no of markers before filtering out: ', ncol(predictionData))
