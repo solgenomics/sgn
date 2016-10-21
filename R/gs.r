@@ -245,7 +245,7 @@ if (datasetInfo == 'combined populations') {
   }
 }
 
- ### MAF calculation ###
+### MAF calculation ###
 calculateMAF <- function(x) {
   a0 <-  length(x[x==0])
   a1 <-  length(x[x==1])
@@ -260,7 +260,6 @@ calculateMAF <- function(x) {
   return (maf)
 
 }
-
 
 
 if (is.null(filteredGenoData)) {
@@ -317,39 +316,45 @@ predictionPopGEBVsFile <- grep("prediction_pop_gebvs", outputFiles, ignore.case 
 message("filtered pred geno file: ", filteredPredGenoFile)
 message("prediction gebv file: ",  predictionPopGEBVsFile)
 
-predictionData <- c()
+predictionData           <- c()
 readFilteredPredGenoData <- c()
+filteredPredGenoData     <- c()
 
-if (length(predictionFile) != 0 || length(filteredPredGenoFile) != 0 ) {
-  
-  if (file.info(filteredPredGenoFile)$size != 0) {
-    predictionData <- fread(filteredPredGenoFile, na.strings = c("NA", " ", "--", "-"),)
-    readFilteredPredGenoData <- 1
-    message('read in filtered prediction genotype data')
-  } else {
+if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size != 0) {
+  predictionData <- fread(filteredPredGenoFile, na.strings = c("NA", " ", "--", "-"),)
+  readFilteredPredGenoData <- 1
 
-    predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
-    message('selection population: no of markers before filtering out: ', ncol(predictionData))
-
-   #remove monomorphic markers
-    message('marker no before monomorphic markers cleaning ', ncol(predictionData))
-    predictionData[, which(apply(predictionData, 2,  function(x) length(unique(x))) < 2) := NULL ]
-    message('marker no after monomorphic markers cleaning ', ncol(predictionData))
-    
-    predictionData[, which(colSums(is.na(predictionData)) >= nrow(predictionData) * 0.6) := NULL]
-
-    #remove indls with > 80% missing marker data
-    predictionData[, noMissing := apply(.SD, 1, function(x) sum(is.na(x)))]
-    predictionData <- predictionData[noMissing <= ncol(predictionData) * 0.8]
-    predictionData[, noMissing := NULL]
- 
-    predictionData[, which(apply(predictionData, 2,  calculateMAF) < 0.05) := NULL ]
-    message('selection pop marker no after MAF cleaning ', ncol(predictionData))
-}
   predictionData           <- as.data.frame(predictionData)
   rownames(predictionData) <- predictionData[, 1]
-  predictionData[, 1]      <- NULL  
+  predictionData[, 1]      <- NULL
+    
+  message('read in filtered prediction genotype data')
+} else {
+    
+  predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
+  message('selection population: no of markers before filtering out: ', ncol(predictionData))
+    
+  predictionData[, which(colSums(is.na(predictionData)) >= nrow(predictionData) * 0.6) := NULL]
+
+  #remove indls with > 80% missing marker data
+  predictionData[, noMissing := apply(.SD, 1, function(x) sum(is.na(x)))]
+  predictionData <- predictionData[noMissing <= ncol(predictionData) * 0.8]
+  predictionData[, noMissing := NULL]
+
+  #remove monomorphic markers
+  message('marker no before monomorphic markers cleaning ', ncol(predictionData))
+  predictionData[, which(apply(predictionData, 2,  function(x) length(unique(x))) < 2) := NULL ]
+  message('marker no after monomorphic markers cleaning ', ncol(predictionData))
+
+  predictionData[, which(apply(predictionData, 2,  calculateMAF) < 0.05) := NULL ]
+  message('selection pop marker no after MAF cleaning ', ncol(predictionData))
+
+  predictionData           <- as.data.frame(predictionData)
+  rownames(predictionData) <- predictionData[, 1]
+  predictionData[, 1]      <- NULL
+  filteredPredGenoData     <- predictionData
 }
+
 
 #impute genotype values for obs with missing values,
 #based on mean of neighbouring 10 (arbitrary) obs
@@ -714,13 +719,13 @@ if (!is.null(filteredGenoData) && is.null(readFilteredGenoData)) {
 
 }
 
-if (!is.null(filteredPredGenoFile) && is.null(readFilteredPredGenoData)) {
-  write.table(predictionData,
+if (length(filteredPredGenoFile) != 0 && is.null(readFilteredPredGenoData)) {
+  write.table(filteredPredGenoData,
               file = filteredPredGenoFile,
               sep = "\t",
               col.names = NA,
               quote = FALSE,
-            )
+              )
 }
 
 
