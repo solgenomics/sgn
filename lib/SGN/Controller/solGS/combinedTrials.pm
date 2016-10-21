@@ -321,13 +321,21 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
        
     $self->combined_trials_desc($c);      
   
-    my $pop_rs = $c->model("solGS::solGS")->project_details($selection_pop_id);    
-    
-    while (my $pop_row = $pop_rs->next) 
-    {      
-	$c->stash->{prediction_pop_name} = $pop_row->name;    
+    if ($selection_pop_id =~ /uploaded/) 
+    {
+        $c->stash->{prediction_pop_id} = $selection_pop_id;
+        $c->controller('solGS::solGS')->uploaded_population_summary($c);
     }
-   
+    else 
+    {
+	my $pop_rs = $c->model("solGS::solGS")->project_details($selection_pop_id);    
+    
+	while (my $pop_row = $pop_rs->next) 
+	{      
+	    $c->stash->{prediction_pop_name} = $pop_row->name;    
+	}
+    }  
+
     my $identifier    = $model_id . '_' . $selection_pop_id;
     $c->controller('solGS::solGS')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
     my $gebvs_file = $c->stash->{prediction_pop_gebvs_file};
