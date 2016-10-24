@@ -206,7 +206,6 @@ me.stock_id LEFT JOIN stock object ON object.stock_id =
 stock_relationship_subjects.object_id WHERE ( ( observable.cvterm_id =? AND
 project.project_id=? ) );");
 
-		my @array;
 		my %cvterm_hash;
 		my %plot_hash;
 		my %valid_plots;
@@ -216,7 +215,6 @@ project.project_id=? ) );");
 				$cvterm_hash{$_}->{$plot_name} = $value;
 				$plot_hash{$plot_name}->{$_} = $value;
 
-				@array, $cvterm_hash{$_}->{$plot_name};
 			}
 		}
 		
