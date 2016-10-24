@@ -66,12 +66,7 @@ jQuery(document).ready(function() {
                                 synonym_fixed = syn_parts[0];
                                 trait_html += '<option value="' + trait_id + '" data-synonym="' + synonym_fixed + '" data-CO_id="' + CO_id + '" title="' + parts[0] + '">' + parts[0] + '</a>\n';
                             }
-                            if (jQuery('#trait_list_label').length == 0) {
-                                jQuery('#trait_list_div').html('<label id="trait_list_label" for="trait_list">Trait select: </label>');
-                                var trait_select = jQuery('#trait_list').detach();
-                                trait_select.appendTo('#trait_list_div');
-                                jQuery('#additional_traits').html("");
-                            }
+
                             jQuery('#trait_list').html(trait_html);
                             jQuery('#trait_list').focus();
                         },
@@ -95,18 +90,18 @@ jQuery(document).ready(function() {
                 },
                 success: function(response) {
                     var plots = response.list || [];
-                    console.log("plots: " + JSON.stringify(plots));
+                    //console.log("plots: " + JSON.stringify(plots));
                     var plot_ids = plots.map(function(val) {
                         return val[0]
                     });
-                    console.log("plot ids: " + JSON.stringify(plot_ids));
+                    //console.log("plot ids: " + JSON.stringify(plot_ids));
                     jQuery.ajax({
                         url: '/ajax/breeders/trial/' + data + '/controls_by_plot',
                         data: {
                             'plot_ids': plot_ids
                         },
                         success: function(response) {
-                            console.log('controls:' + JSON.stringify(response));
+                            //console.log('controls:' + JSON.stringify(response));
                             var accessions = response.accessions;
                             var accession_html;
                             if (response.accessions[0].length == 0) {
@@ -139,7 +134,7 @@ jQuery(document).ready(function() {
             var trait_synonym = jQuery('option:selected', this).data("synonym");
             var trait_CO_id = jQuery('option:selected', this).data("co_id");
             var control_html = jQuery('#control_list').html();
-            console.log("control html"+control_html);
+            //console.log("control html"+control_html);
             var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + weight_id + "' class='form-control weight' placeholder='Must be a number (+ or -), default = 1'></input></td><td><select class='form-control' id='" + trait_id + "_control'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
             jQuery('#trait_table').append(trait_html);
             jQuery('#select_message').text('Add another trait');
@@ -151,14 +146,13 @@ jQuery(document).ready(function() {
                     update_formula();
                     jQuery('#trait_list').focus();
                 });
-            jQuery('#'+trait_id +'_control').change( 
+            jQuery('#'+trait_id +'_control').change(
                 function() {
                     update_formula();
             });
             jQuery('#calculate_rankings').removeClass('disabled');
-            jQuery('#trait_list_label').remove();
-            var trait_select = jQuery('#trait_list').detach();
-            trait_select.appendTo('#additional_traits');
+            jQuery('#sin_options').show();
+            jQuery('#sin_formula').show();
         });
 
     jQuery('#calculate_rankings').click(function() {
@@ -319,7 +313,6 @@ function update_formula() {
         var weight = jQuery('#' + trait_id + '_weight').val() || 1; // default = 1
         var control_id = jQuery('#' + trait_id + '_control option:selected').val();
         if (control_id) { trait_name += " as % of " + jQuery('#' + trait_id + '_control option:selected').text(); }
-        //var parts = trait_name.split("|");
         var score = weight + " * (" + trait_name + ") ";
         if (weight >= 0 && term_number > 0) {
             formula += " + " + score;

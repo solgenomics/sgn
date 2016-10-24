@@ -13,15 +13,11 @@ $trial_name => undef
   </div>
   <div id="collapse1" class="panel-collapse collapse in">
     <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
-        <div class="col-sm-6 col-md-6 col-lg-6">
+      <div class="col-sm-12 col-md-12 col-lg-12">
           <label for="select_trial_for_selection_index">Trial select: </label>
           <select class="form-control" autofocus="autofocus" id="select_trial_for_selection_index"></select>
-        </div>
-        <div id="trait_list_div" class="col-sm-6 col-md-6 col-lg-6">
-          <label id="trait_list_label" for="trait_list">Trait select: </label>
-          <select class="form-control" id="trait_list"></select>
-        </div><br><br><br><br><br>
-        <div class="col-sm-12 col-md-12 col-lg-12 table-responsive">
+      </div><br><br><br><br><br>
+      <div class="col-sm-12 col-md-12 col-lg-12 table-responsive" id="trait_table_div">
         <label>Traits and weights: </label>
           <table class="table table-bordered table-striped table-highlight">
             <thead>
@@ -32,20 +28,21 @@ $trial_name => undef
               <th>Remove?</th>
             </thead>
             <tbody id ="trait_table"></tbody>
+            <tfoot><td colspan="5">
+            <select class="form-control" id="trait_list"></select>
+            </td></tfoot>
           </table>
-        <div id="additional_traits">
-        </div><br><br>
         </div>
-        <div class="col-sm-6 col-md-6 col-lg-6">
+        <div class="col-sm-6 col-md-6 col-lg-6" id="sin_options" style="display: none"><br>
         <label>Additional options: </label>
           <label><input type="checkbox" id="allow_missing" value="">Include accessions with missing phenotypes</label><br>
           <select class="form-control" id="control_list" style="display: none"></select>
         </div><br><br><br><br><br>
-        <div class="col-sm-6 col-md-6 col-lg-6">
-        <label>SIN formula: </label><br>
+        <div class="col-sm-6 col-md-6 col-lg-6" id="sin_formula" style="display: none"><br>
+        <label>Selection Index (SIN) formula: </label><br>
           <p id="ranking_formula"></p>
         </div>
-        <div class="col-sm-12 col-md-12 col-lg-12 text-right">
+        <div class="col-sm-12 col-md-12 col-lg-12 text-right"><br>
         <button type="button" class="btn btn-primary disabled" id="calculate_rankings">Calculate Rankings</button>
         </div>
       </div>
