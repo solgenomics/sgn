@@ -262,6 +262,42 @@ sub models_combined_trials :Path('/solgs/models/combined/trials') Args(1) {
 }
 
 
+sub display_combined_pops_result :Path('/solgs/model/combined/populations/') Args(3){
+    my ($self, $c,  $combo_pops_id, $trait_key,  $trait_id,) = @_;
+
+    $c->stash->{data_set_type} = 'combined populations';
+    $c->stash->{combo_pops_id} = $combo_pops_id;
+    
+    my $pops_cvs = $c->req->param('combined_populations');
+    my $solgs_controller = $c->controller('solGS::solGS');
+
+    if ($pops_cvs)
+    {
+	my @pops = split(',', $pops_cvs);
+        $c->stash->{trait_combo_pops} = \@pops;
+    }
+    else
+    {
+        $solgs_controller->get_combined_pops_list($c, $combo_pops_id);
+        $c->stash->{trait_combo_pops} = $c->stash->{combined_pops_list}; 
+    }
+   
+    $solgs_controller->get_trait_details($c, $trait_id);
+    $solgs_controller->trait_phenotype_stat($c);    
+    $solgs_controller->validation_file($c);
+    $solgs_controller->model_accuracy($c);
+    $solgs_controller->gebv_kinship_file($c);
+    $solgs_controller->blups_file($c);
+    $solgs_controller->download_urls($c);
+    $solgs_controller->gebv_marker_file($c);
+    $solgs_controller->top_markers($c);
+    $solgs_controller->combined_pops_summary($c);
+    $solgs_controller->model_parameters($c);
+    
+    $c->stash->{template} = $solgs_controller->template('/model/combined/populations/trait.mas');
+}
+
+
 sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
     my ($self, $c, $selection_pop_id, 
         $model_key, $combined_key, $model_id, 
@@ -285,13 +321,21 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
        
     $self->combined_trials_desc($c);      
   
-    my $pop_rs = $c->model("solGS::solGS")->project_details($selection_pop_id);    
-    
-    while (my $pop_row = $pop_rs->next) 
-    {      
-	$c->stash->{prediction_pop_name} = $pop_row->name;    
+    if ($selection_pop_id =~ /uploaded/) 
+    {
+        $c->stash->{prediction_pop_id} = $selection_pop_id;
+        $c->controller('solGS::solGS')->uploaded_population_summary($c);
     }
-   
+    else 
+    {
+	my $pop_rs = $c->model("solGS::solGS")->project_details($selection_pop_id);    
+    
+	while (my $pop_row = $pop_rs->next) 
+	{      
+	    $c->stash->{prediction_pop_name} = $pop_row->name;    
+	}
+    }  
+
     my $identifier    = $model_id . '_' . $selection_pop_id;
     $c->controller('solGS::solGS')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
     my $gebvs_file = $c->stash->{prediction_pop_gebvs_file};
@@ -435,27 +479,42 @@ sub combined_trials_desc {
 	$s_pop_id = $pop_id;
 	$s_pop_id =~ s/\s+//;
     }
-   
+    
+    $c->stash->{pop_id} = $s_pop_id;
+    $solgs_controller->filtered_training_genotype_file($c);
+    my $filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
+
+    my $markers_no;
+    my @geno_lines;
     my $dir = $c->{stash}->{solgs_cache_dir};
-
-    my $geno_exp  = "genotype_data_${s_pop_id}.txt"; 
-    my $geno_file = $solgs_controller->grep_file($dir, $geno_exp);  
-   
-    my @geno_lines = read_file($geno_file);
-    my $markers_no = scalar(split ('\t', $geno_lines[0])) - 1;
-
+    
+    if (-s $filtered_geno_file) 
+    {
+	@geno_lines = read_file($filtered_geno_file);
+	$markers_no = scalar(split('\t', $geno_lines[0])) - 1;
+    } 
+    else 
+    {
+	my $geno_exp  = "genotype_data_${s_pop_id}.txt";
+        my $geno_file = $solgs_controller->grep_file($dir, $geno_exp);
+        @geno_lines   = read_file($geno_file);
+        $markers_no   = scalar(split ('\t', $geno_lines[0])) - 1;
+    }
+  
     my $trait_exp        = "traits_acronym_pop_${combo_pops_id}";
     my $traits_list_file = $solgs_controller->grep_file($dir, $trait_exp);  
 
     my @traits_list = read_file($traits_list_file);
     my $traits_no   = scalar(@traits_list) - 1;
 
+    my $stock_no  = scalar(@geno_lines) - 1;
+
     my $training_pop = "Training population $combo_pops_id";
     
     my $protocol = $c->config->{default_genotyping_protocol};
     $protocol = 'N/A' if !$protocol;
 
-    $c->stash(stocks_no    => scalar(@geno_lines) - 1,
+    $c->stash(stocks_no    => $stock_no,
 	      markers_no   => $markers_no,
               traits_no    => $traits_no,
               project_desc => $desc,
@@ -463,7 +522,6 @@ sub combined_trials_desc {
               owner        => $projects_owners,
 	      protocol     => $protocol,
         );
-
 }
 
 
