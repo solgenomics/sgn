@@ -11,11 +11,13 @@ use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use CXGN::Chado::Stock;
 use CXGN::Login;
-use CXGN::BreederSearch;
 use CXGN::Trial::TrialCreate;
 use JSON qw( decode_json );
 use Data::Dumper;
 use Try::Tiny;
+use CXGN::Phenotypes::Search;
+use File::Slurp qw | read_file |;
+use Spreadsheet::WriteExcel;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -31,17 +33,26 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 
 my $DEFAULT_PAGE_SIZE=20;
 
+sub pagination_response {
+    my $data_count = shift;
+    my $page_size = shift;
+    my $page = shift;
+    my $total_pages_decimal = $data_count/$page_size;
+    my $total_pages = ($total_pages_decimal == int $total_pages_decimal) ? $total_pages_decimal : int($total_pages_decimal + 1);
+    my %pagination = (pageSize=>$page_size, currentPage=>$page, totalCount=>$data_count, totalPages=>$total_pages);
+    return \%pagination;
+}
 
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     my $self = shift;
     my $c = shift;
     my $version = shift;
-    my @status;
+    my %status;
 
-    $self->bcs_schema( $c->dbic_schema("Bio::Chado::Schema") );
+    $self->bcs_schema( $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') );
     $c->stash->{api_version} = $version;
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
-    $c->stash->{status} = \@status;
+    $c->stash->{status} = \%status;
     $c->stash->{session_token} = $c->req->param("session_token");
     $c->stash->{current_page} = $c->req->param("currentPage") || 1;
     $c->stash->{page_size} = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
@@ -51,14 +62,13 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 sub _authenticate_user {
     my $c = shift;
     my $status = $c->stash->{status};
-    my @status = @$status;
 
     my ($person_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
     #print STDERR $person_id." : ".$user_type." : ".$expired;
 
     if (!$person_id || $expired || $user_type ne 'curator') {
-        push(@status, 'You must login and have permission to access BrAPI calls.');
-        my %metadata = (status=>\@status);
+        $status->{'message'} = 'You must login and have permission to access this BrAPI call.';
+        my %metadata = (status=>$status);
         $c->stash->{rest} = \%metadata;
         $c->detach;
     }
@@ -71,15 +81,15 @@ sub _authenticate_user {
  Usage: For logging a user in and loggin a user out through the API
  Desc:
 
-For Logging In 
-POST Request: 
+For Logging In
+POST Request:
 {
  "grant_type" : "password", //(optional, text, `password`) ... The grant type, only allowed value is password, but can be ignored
  "username" : "user38", // (required, text, `thepoweruser`) ... The username
  "password" : "secretpw", // (optional, text, `mylittlesecret`) ... The password
  "client_id" : "blabla" // (optional, text, `blabla`) ... The client id, currently ignored.
 }
- 
+
 POST Response:
  {
    "metadata": {
@@ -91,11 +101,11 @@ POST Response:
    "access_token": "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4",
    "expires_in": "The lifetime in seconds of the access token"
  }
- 
+
 For Logging out
 DELETE Request:
- 
-{ 
+
+{
     "access_token" : "R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4" // (optional, text, `R6gKDBRxM4HLj6eGi4u5HkQjYoIBTPfvtZzUD8TUzg4`) ... The user access token. Default: current user token.
 }
 
@@ -120,14 +130,14 @@ sub authenticate_token_DELETE {
     my $login_controller = CXGN::Login->new($c->dbc->dbh);
 
     my $status = $c->stash->{status};
-    my @status = @$status;
-    
+
     $login_controller->logout_user();
 
     my %pagination = ();
     my %result;
     my @data_files;
-    my %metadata = (pagination=>\%pagination, status=>\@status, datafiles=>\@data_files);
+    $status->{'message'} = 'Successfully logged out.';
+    my %metadata = (pagination=>\%pagination, status=>$status, datafiles=>\@data_files);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -140,7 +150,7 @@ sub authenticate_token_POST {
     my $params = $c->req->params();
 
     my $status = $c->stash->{status};
-    my @status = @$status;
+    my $message = '';
     my $cookie = '';
     my $first_name = '';
     my $last_name = '';
@@ -149,32 +159,33 @@ sub authenticate_token_POST {
         if ($params->{grant_type} eq 'password' || !$params->{grant_type}) {
             my $login_info = $login_controller->login_user( $params->{username}, $params->{password} );
             if ($login_info->{account_disabled}) {
-                push(@status, 'Account Disabled');
+                $message .= 'Account Disabled';
             }
             if ($login_info->{incorrect_password}) {
-                push(@status, 'Incorrect Password');
+                $message .= 'Incorrect Password';
             }
             if ($login_info->{duplicate_cookie_string}) {
-                push(@status, 'Duplicate Cookie String');
+                $message .= 'Duplicate Cookie String';
             }
             if ($login_info->{logins_disabled}) {
-                push(@status, 'Logins Disabled');
+                $message .= 'Logins Disabled';
             }
             if ($login_info->{person_id}) {
-                push(@status, 'Login Successfull');
+                $message .= 'Login Successfull';
                 $cookie = $login_info->{cookie_string};
                 $first_name = $login_info->{first_name};
                 $last_name = $login_info->{last_name};
             }
         } else {
-            push(@status, 'Grant Type Not Supported. Valid grant type: password');
+            $message .= 'Grant Type Not Supported. Valid grant type: password';
         }
     } else {
-        push(@status, 'Login Not Allowed');
+        $message .= 'Login Not Allowed At This Time.';
     }
     my %pagination = ();
     my @data_files;
-    my %metadata = (pagination=>\%pagination, status=>\@status, datafiles=>\@data_files);
+    $status->{'message'} = $message;
+    my %metadata = (pagination=>\%pagination, status=>$status, datafiles=>\@data_files);
     my %response = (metadata=>\%metadata, access_token=>$cookie, userDisplayName=>"$first_name $last_name", expires_in=>$CXGN::Login::LOGIN_TIMEOUT);
     $c->stash->{rest} = \%response;
 }
@@ -184,9 +195,9 @@ sub authenticate_token_POST {
 
  Usage: For determining which calls have been implemented and with which datafile types and methods
  Desc:
- 
+
  GET Request:
- 
+
  GET Response:
 {
   "metadata": {
@@ -242,41 +253,206 @@ sub calls : Chained('brapi') PathPart('calls') Args(0) : ActionClass('REST') { }
 sub calls_GET {
     my $self = shift;
     my $c = shift;
+    my $datatype_param = $c->req->param('datatype');
 
     my $status = $c->stash->{status};
-    my @status = @$status;
+    my @available = (
+        ['token', ['json'], ['POST','DELETE'] ],
+        ['calls', ['json'], ['GET'] ],
+        ['observationLevels', ['json'], ['GET'] ],
+        ['germplasm-search', ['json'], ['GET','POST'] ],
+        ['germplasm/id', ['json'], ['GET'] ],
+        ['germplasm/id/pedigree', ['json'], ['GET'] ],
+        ['germplasm/id/markerprofiles', ['json'], ['GET'] ],
+        ['markerprofiles', ['json'], ['GET'] ],
+        ['markerprofiles/id', ['json'], ['GET'] ],
+        ['allelematrix-search', ['json','tsv','csv'], ['GET','POST'] ],
+        ['programs', ['json'], ['GET'] ],
+        ['crops', ['json'], ['GET'] ],
+        ['seasons', ['json'], ['GET','POST'] ],
+        ['studyTypes', ['json'], ['GET','POST'] ],
+        ['trials', ['json'], ['GET','POST'] ],
+        ['trials/id', ['json'], ['GET'] ],
+        ['studies-search', ['json'], ['GET','POST'] ],
+        ['studies/id', ['json'], ['GET'] ],
+        ['studies/id/germplasm', ['json'], ['GET'] ],
+        ['studies/id/table', ['json','csv','xls'], ['GET'] ],
+        ['studies/id/layout', ['json'], ['GET'] ],
+    );
+
     my @data;
-    push @data, {call=>'token', datatypes=>['json'], methods=>['POST','DELETE']};
-    push @data, {call=>'calls', datatypes=>['json'], methods=>['GET']};
+    foreach (@available) {
+        if ($datatype_param) {
+            if( $datatype_param ~~ @{$_->[1]} ){
+                push @data, {call=>$_->[0], datatypes=>$_->[1], methods=>$_->[2]};
+            }
+        }
+        else {
+            push @data, {call=>$_->[0], datatypes=>$_->[1], methods=>$_->[2]};
+        }
+    }
 
     my %pagination = ();
     my %result = (data=>\@data);
     my @data_files;
-    my %metadata = (pagination=>\%pagination, status=>\@status, datafiles=>\@data_files);
+    my %metadata = (pagination=>\%pagination, status=>$status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+sub crops : Chained('brapi') PathPart('crops') Args(0) : ActionClass('REST') { }
+
+sub crops_GET {
+    my $self = shift;
+    my $c = shift;
+    my $status = $c->stash->{status};
+
+    my %pagination = ();
+    my %result = (data=>
+        [$c->config->{'supportedCrop'}]
+    );
+    my @data_files;
+    my %metadata = (pagination=>\%pagination, status=>$status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+sub observation_levels : Chained('brapi') PathPart('observationLevels') Args(0) : ActionClass('REST') { }
+
+sub observation_levels_GET {
+    my $self = shift;
+    my $c = shift;
+    my $status = $c->stash->{status};
+
+    my %pagination = ();
+    my %result = (data=>
+        ['plant','plot']
+    );
+    my @data_files;
+    my %metadata = (pagination=>\%pagination, status=>$status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+sub seasons : Chained('brapi') PathPart('seasons') Args(0) : ActionClass('REST') { }
+
+sub seasons_POST {
+    my $self = shift;
+    my $c = shift;
+    seasons_process($self, $c);
+}
+
+sub seasons_GET {
+    my $self = shift;
+    my $c = shift;
+    seasons_process($self, $c);
+}
+
+sub seasons_process {
+    my $self = shift;
+    my $c = shift;
+    my $status = $c->stash->{status};
+    my @data;
+    my $total_count = 0;
+    my $year_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'project year', 'project_property')->cvterm_id();
+    my $project_years_rs = $self->bcs_schema()->resultset("Project::Project")->search_related('projectprops', {'projectprops.type_id'=>$year_cvterm_id}, {order_by=>'projectprops.projectprop_id'});
+    my $rs_slice = $project_years_rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+    while (my $p_year = $rs_slice->next()) {
+        push @data, {
+            seasonsDbId=>$p_year->projectprop_id(),
+            season=>'',
+            year=>$p_year->value()
+        }
+    }
+    my %result = (data=>\@data);
+    $total_count = $project_years_rs->count();
+    my @data_files;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+
+=head2 brapi/v1/studyTypes
+
+ Usage: To retrieve a list of programs being worked onthe various study types
+ Desc:
+ Return JSON example:
+        {
+             "metadata" : {
+                "pagination": {
+                    "pageSize": 10,
+                    "currentPage": 1,
+                    "totalCount": 10,
+                    "totalPages": 1
+                },
+                "status": []
+            },
+            "result" : {
+                "data" : [
+                    {
+                        "name": "Nursery",
+                        "description": "Description for Nursery study type"
+                    },
+                    {
+                        "name": "Trial",
+                        "description": "Description for Nursery study type"
+                    }
+                ]
+            }
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+sub study_types : Chained('brapi') PathPart('studyTypes') Args(0) : ActionClass('REST') { }
+
+sub study_types_POST {
+    my $self = shift;
+    my $c = shift;
+    study_types_process($self, $c);
+}
+
+sub study_types_GET {
+    my $self = shift;
+    my $c = shift;
+    study_types_process($self, $c);
+}
+
+sub study_types_process {
+    my $self = shift;
+    my $c = shift;
+    my $status = $c->stash->{status};
+    my @data;
+    my $total_count = 0;
+    my $project_rs = $self->bcs_schema()->resultset("Cv::Cv")->search_related('cvterms', {'me.name'=>'project_type'}, {order_by=>'cvterms.cvterm_id'});
+    my $rs_slice = $project_rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+    while (my $pp = $rs_slice->next()) {
+        push @data, {
+            studyTypeDbId=>$pp->cvterm_id(),
+            name=>$pp->name(),
+            description=>$pp->definition(),
+        }
+    }
+    my %result = (data=>\@data);
+    $total_count = $project_rs->count();
+    my @data_files;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@data_files);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
 
 
 
-sub pagination_response {
-    my $data_count = shift;
-    my $page_size = shift;
-    my $page = shift;
-    my $total_pages_decimal = $data_count/$page_size;
-    my $total_pages = ($total_pages_decimal == int $total_pages_decimal) ? $total_pages_decimal : int($total_pages_decimal + 1);
-    my %pagination = (pageSize=>$page_size, currentPage=>$page, totalCount=>$data_count, totalPages=>$total_pages);
-    return \%pagination;
-}
-
 
 =head2 /brapi/v1/germplasm-search?germplasmName=&germplasmGenus=&germplasmSubTaxa=&germplasmDbId&germplasmPUI=http://data.inra.fr/accession/234Col342&germplasmSpecies=Triticum&panel=diversitypanel1&collection=none&pageSize=pageSize&page=page
 
  Usage: For searching a germplasm by name. Allows for exact and wildcard match methods. http://docs.brapi.apiary.io/#germplasm
  Desc:
- 
+
  POST Request:
- 
+
 {
     "germplasmPUI" : "http://...", // (optional, text, `http://data.inra.fr/accession/234Col342`) ... The name or synonym of external genebank accession identifier
     "germplasmDbId" : 986, // (optional, text, `986`) ... The name or synonym of external genebank accession identifier
@@ -323,7 +499,7 @@ POST Response:
                 "speciesAuthority": "",
                 "subtaxa": "sp malaccensis var pahang",
                 "subtaxaAuthority": "",
-                "donors": 
+                "donors":
                 [
                     {
                         "donorAccessionNumber": "",
@@ -346,7 +522,7 @@ sub germplasm_synonyms {
     my @synonyms;
     my $rsp = $schema->resultset("Stock::Stockprop")->search({type_id => $synonym_id, stock_id=>$stock_id });
     while (my $stockprop = $rsp->next()) {
-	push( @synonyms, $stockprop->value() );
+        push( @synonyms, $stockprop->value() );
     }
     return \@synonyms;
 }
@@ -365,104 +541,23 @@ sub germplasm_list  : Chained('brapi') PathPart('germplasm-search') Args(0) : Ac
 sub germplasm_list_GET {
     my $self = shift;
     my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $params = $c->req->params();
-
-    my $status = $c->stash->{status};
-    my @status = @$status;
-
-    my $germplasm_name = $params->{germplasmName};
-    my $accession_number = $params->{accessionNumber};
-    my $genus = $params->{germplasmGenus};
-    my $subtaxa = $params->{germplasmSubTaxa};
-    my $species = $params->{germplasmSpecies};
-    my $germplasm_id = $params->{germplasmDbId};
-    my $permplasm_pui = $params->{germplasmPUI};
-    my $match_method = $params->{matchMethod};
-    if ($match_method && ($match_method ne 'exact' || $match_method ne 'wildcard')) {
-        push(@status, "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters.");
-    }
-
-    my $total_count = 0;
-    my %result;
-
-    my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
-    my %search_params;
-    my %order_params;
-    my @select_list = ['me.stock_id', 'me.name', 'me.uniquename'];
-    my @sselect_as_list = ['stock_id', 'name', 'uniquename'];
-
-    $search_params{'me.type_id'} = $accession_type_cvterm_id;
-    $order_params{'-asc'} = 'me.stock_id';
-    
-    if ($germplasm_name && (!$match_method || $match_method eq 'exact')) {
-        $search_params{'me.uniquename'} = $germplasm_name;
-    }
-    if ($germplasm_name && $match_method eq 'wildcard') {
-        $germplasm_name =~ tr/*?/%_/;
-        $search_params{'me.uniquename'} = { 'ilike' => $germplasm_name };
-    }
-    if ($germplasm_id && (!$match_method || $match_method eq 'exact')) {
-        $search_params{'me.stock_id'} = $germplasm_id;
-    }
-    if ($germplasm_id && $match_method eq 'wildcard') {
-        $germplasm_id =~ tr/*?/%_/;
-        $search_params{'me.stock_id'} = { 'ilike' => $germplasm_id };
-    }
-    #print STDERR Dumper \%search_params;
-    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, { '+select'=> \@select_list, '+as'=> \@sselect_as_list, order_by=> \%order_params } );
-    my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'stock_synonym', 'stock_property')->cvterm_id();
-    if ($accession_number) {
-        $search_params{'stockprops.type_id'} = $synonym_id;
-        $search_params{'stockprops.value'} = $accession_number;
-        $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, { join=>{'stockprops'}, '+select'=> \@select_list, '+as'=> \@sselect_as_list, order_by=> \%order_params } );
-    }
-
-    my @data;
-    if ($rs) {
-    	$total_count = $rs->count();
-    	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
-    	while (my $stock = $rs_slice->next()) {
-    	    push @data, { 
-                germplasmDbId=>$stock->get_column('stock_id'),
-                defaultDisplayName=>$stock->get_column('name'),
-                germplasmName=>$stock->get_column('uniquename'),
-                accessionNumber=>$accession_number,
-                germplasmPUI=>$stock->get_column('uniquename'),
-                pedigree=>germplasm_pedigree_string($self->bcs_schema(), $stock->get_column('stock_id')),
-                germplasmSeedSource=>'',
-                synonyms=>germplasm_synonyms($self->bcs_schema(), $stock->get_column('stock_id'), $synonym_id),
-                commonCropName=>'',
-                instituteCode=>'',
-                instituteName=>'',
-                biologicalStatusOfAccessionCode=>'',
-                countryOfOriginCode=>'',
-                typeOfGermplasmStorageCode=>'',
-                genus=>'',
-                species=>'',
-                speciesAuthority=>'',
-                subtaxa=>'',
-                subtaxaAuthority=>'',
-                donors=>'',
-                acquisitionDate=>'',
-            };
-        }
-    }
-
-    %result = (data => \@data);
-    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+    germplasm_search_process($self, $c);
 }
 
 sub germplasm_list_POST {
+    my $self = shift;
+    my $c = shift;
+    germplasm_search_process($self, $c);
+}
+
+sub germplasm_search_process {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $params = $c->req->params();
 
     my $status = $c->stash->{status};
-    my @status = @$status;
+    my $message = '';
 
     my $germplasm_name = $params->{germplasmName};
     my $accession_number = $params->{accessionNumber};
@@ -472,22 +567,26 @@ sub germplasm_list_POST {
     my $germplasm_id = $params->{germplasmDbId};
     my $permplasm_pui = $params->{germplasmPUI};
     my $match_method = $params->{matchMethod};
-    if ($match_method && ($match_method ne 'exact' || $match_method ne 'wildcard')) {
-        push(@status, "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters.");
-    }
-
-    my $total_count = 0;
     my %result;
+
+    if ($match_method && ($match_method ne 'exact' && $match_method ne 'wildcard')) {
+        $message .= "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters.";
+        $status->{'message'} = $message;
+        $c->stash->{rest} = {
+            metadata => { pagination=>{}, status => $status, datafiles=>[] },
+            result => \%result,
+        };
+        $c->detach;
+    }
+    my $total_count = 0;
 
     my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
     my %search_params;
     my %order_params;
-    my @select_list = ['me.stock_id', 'me.name', 'me.uniquename'];
-    my @sselect_as_list = ['stock_id', 'name', 'uniquename'];
 
     $search_params{'me.type_id'} = $accession_type_cvterm_id;
     $order_params{'-asc'} = 'me.stock_id';
-    
+
     if ($germplasm_name && (!$match_method || $match_method eq 'exact')) {
         $search_params{'me.uniquename'} = $germplasm_name;
     }
@@ -500,53 +599,57 @@ sub germplasm_list_POST {
     }
     if ($germplasm_id && $match_method eq 'wildcard') {
         $germplasm_id =~ tr/*?/%_/;
-        $search_params{'me.stock_id'} = { 'ilike' => $germplasm_id };
+        $search_params{'me.stock_id::varchar(255)'} = { 'ilike' => $germplasm_id };
     }
     #print STDERR Dumper \%search_params;
-    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, { '+select'=> \@select_list, '+as'=> \@sselect_as_list, order_by=> \%order_params } );
+    #$self->bcs_schema->storage->debug(1);
+    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, { 'order_by'=> \%order_params } );
     my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'stock_synonym', 'stock_property')->cvterm_id();
     if ($accession_number) {
         $search_params{'stockprops.type_id'} = $synonym_id;
         $search_params{'stockprops.value'} = $accession_number;
-        $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, { join=>{'stockprops'}, '+select'=> \@select_list, '+as'=> \@sselect_as_list, order_by=> \%order_params } );
+        $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, { 'join'=>{'stockprops'}, 'order_by'=> \%order_params } );
     }
 
     my @data;
     if ($rs) {
-    	$total_count = $rs->count();
-    	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
-    	while (my $stock = $rs_slice->next()) {
-    	    push @data, { 
-                germplasmDbId=>$stock->get_column('stock_id'),
-                defaultDisplayName=>$stock->get_column('name'),
-                germplasmName=>$stock->get_column('uniquename'),
+        $total_count = $rs->count();
+        my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+        while (my $stock = $rs_slice->next()) {
+            push @data, {
+                germplasmDbId=>$stock->stock_id,
+                defaultDisplayName=>$stock->uniquename,
+                germplasmName=>$stock->uniquename,
                 accessionNumber=>$accession_number,
-                germplasmPUI=>$stock->get_column('uniquename'),
-                pedigree=>germplasm_pedigree_string($self->bcs_schema(), $stock->get_column('stock_id')),
+                germplasmPUI=>$stock->uniquename,
+                pedigree=>germplasm_pedigree_string($self->bcs_schema(), $stock->stock_id),
                 germplasmSeedSource=>'',
-                synonyms=>germplasm_synonyms($self->bcs_schema(), $stock->get_column('stock_id'), $synonym_id),
-                commonCropName=>'',
+                synonyms=>germplasm_synonyms($self->bcs_schema(), $stock->stock_id, $synonym_id),
+                commonCropName=>$stock->search_related('organism')->first()->common_name(),
                 instituteCode=>'',
                 instituteName=>'',
                 biologicalStatusOfAccessionCode=>'',
                 countryOfOriginCode=>'',
-                typeOfGermplasmStorageCode=>'',
-                genus=>'',
-                species=>'',
+                typeOfGermplasmStorageCode=>'Not Stored',
+                genus=>$stock->search_related('organism')->first()->genus(),
+                species=>$stock->search_related('organism')->first()->species(),
                 speciesAuthority=>'',
                 subtaxa=>'',
                 subtaxaAuthority=>'',
-                donors=>'',
+                donors=>[],
                 acquisitionDate=>'',
             };
         }
     }
 
     %result = (data => \@data);
-    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    $status->{'message'} = $message;
+    my @data_files;
+    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@data_files);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
+
 
 =head2 brapi/v1/germplasm/{id}
 
@@ -591,9 +694,8 @@ sub germplasm_detail_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status=>\@status};
+    $c->stash->{rest} = {status=>$status};
 }
 
 sub germplasm_detail_GET {
@@ -603,24 +705,48 @@ sub germplasm_detail_GET {
     my $rs = $c->stash->{stock};
     my $schema = $self->bcs_schema();
     my $status = $c->stash->{status};
-    my @status = @$status;
 
     my $total_count = 0;
     if ($c->stash->{stock}) {
-	$total_count = 1;
+        $total_count = 1;
     }
 
     my %result;
-    my $synonym_id = $schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
+    my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'stock_synonym', 'stock_property')->cvterm_id();
 
-    %result = (germplasmDbId=>$c->stash->{stock_id}, defaultDisplayName=>$c->stash->{stock}->get_name(), germplasmName=>$c->stash->{stock}->get_uniquename(), accessionNumber=>$c->stash->{stock}->get_uniquename(), germplasmPUI=>$c->stash->{stock}->get_uniquename(), pedigree=>germplasm_pedigree_string($self->bcs_schema(), $c->stash->{stock_id}), seedSource=>'', synonyms=>germplasm_synonyms($schema, $c->stash->{stock_id}, $synonym_id));
+    %result = (
+        germplasmDbId=>$c->stash->{stock_id},
+        defaultDisplayName=>$c->stash->{stock}->get_name(),
+        germplasmName=>$c->stash->{stock}->get_uniquename(),
+        accessionNumber=>$c->stash->{stock}->get_uniquename(),
+        germplasmPUI=>$c->stash->{stock}->get_uniquename(),
+        pedigree=>germplasm_pedigree_string($self->bcs_schema(), $c->stash->{stock_id}),
+        germplasmSeedSource=>'',
+        synonyms=>germplasm_synonyms($schema, $c->stash->{stock_id}, $synonym_id),
+        commonCropName=>$c->stash->{stock}->get_organism->common_name(),
+        instituteCode=>'',
+        instituteName=>'',
+        biologicalStatusOfAccessionCode=>'',
+        countryOfOriginCode=>'',
+        typeOfGermplasmStorageCode=>'Not Stored',
+        genus=>$c->stash->{stock}->get_organism->genus(),
+        species=>$c->stash->{stock}->get_organism->species(),
+        speciesAuthority=>'',
+        subtaxa=>'',
+        subtaxaAuthority=>'',
+        donors=>[],
+        acquisitionDate=>'',
+    );
 
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my @datafiles;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
 
 =head2 brapi/v1/germplasm/{id}/MCPD
+
+MCPD CALL NO LONGER IN BRAPI SPEC
 
  Usage: To retrieve multi crop passport descriptor for a single germplasm
  Desc:
@@ -665,37 +791,35 @@ sub germplasm_detail_GET {
 
 =cut
 
-sub germplasm_mcpd  : Chained('germplasm_single') PathPart('MCPD') Args(0) : ActionClass('REST') { }
+#sub germplasm_mcpd  : Chained('germplasm_single') PathPart('MCPD') Args(0) : ActionClass('REST') { }
 
-sub germplasm_mcpd_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my @status = @$status;
+#sub germplasm_mcpd_POST {
+#    my $self = shift;
+#    my $c = shift;
+#    my $auth = _authenticate_user($c);
+#    my $status = $c->stash->{status};
 
-    $c->stash->{rest} = {status=>\@status};
-}
+#    $c->stash->{rest} = {status=>$status};
+#}
 
-sub germplasm_mcpd_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $schema = $self->bcs_schema();
-    my %result;
-    my $status = $c->stash->{status};
-    my @status = @$status;
+#sub germplasm_mcpd_GET {
+#    my $self = shift;
+#    my $c = shift;
+#    #my $auth = _authenticate_user($c);
+#    my $schema = $self->bcs_schema();
+#    my %result;
+#    my $status = $c->stash->{status};
 
-    my $synonym_id = $schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
-    my $organism = CXGN::Chado::Organism->new( $schema, $c->stash->{stock}->get_organism_id() );
+#    my $synonym_id = $schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
+#    my $organism = CXGN::Chado::Organism->new( $schema, $c->stash->{stock}->get_organism_id() );
 
-    %result = (germplasmDbId=>$c->stash->{stock_id}, defaultDisplayName=>$c->stash->{stock}->get_uniquename(), accessionNumber=>$c->stash->{stock}->get_uniquename(), germplasmName=>$c->stash->{stock}->get_name(), germplasmPUI=>$c->stash->{stock}->get_uniquename(), pedigree=>germplasm_pedigree_string($schema, $c->stash->{stock_id}), germplasmSeedSource=>'', synonyms=>germplasm_synonyms($schema, $c->stash->{stock_id}, $synonym_id), commonCropName=>$organism->get_common_name(), instituteCode=>'', instituteName=>'', biologicalStatusOfAccessionCode=>'', countryOfOriginCode=>'', typeOfGermplasmStorageCode=>'', genus=>$organism->get_genus(), species=>$organism->get_species(), speciesAuthority=>'', subtaxa=>$organism->get_taxon(), subtaxaAuthority=>'', donors=>'', acquisitionDate=>'');
+#    %result = (germplasmDbId=>$c->stash->{stock_id}, defaultDisplayName=>$c->stash->{stock}->get_uniquename(), accessionNumber=>$c->stash->{stock}->get_uniquename(), germplasmName=>$c->stash->{stock}->get_name(), germplasmPUI=>$c->stash->{stock}->get_uniquename(), pedigree=>germplasm_pedigree_string($schema, $c->stash->{stock_id}), germplasmSeedSource=>'', synonyms=>germplasm_synonyms($schema, $c->stash->{stock_id}, $synonym_id), commonCropName=>$organism->get_common_name(), instituteCode=>'', instituteName=>'', biologicalStatusOfAccessionCode=>'', countryOfOriginCode=>'', typeOfGermplasmStorageCode=>'', genus=>$organism->get_genus(), species=>$organism->get_species(), speciesAuthority=>'', subtaxa=>$organism->get_taxon(), subtaxaAuthority=>'', donors=>'', acquisitionDate=>'');
 
-    my %pagination;
-    my %metadata = (pagination=>\%pagination, status=>\@status);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
-}
+#    my %pagination;
+#    my %metadata = (pagination=>\%pagination, status=>$status);
+#    my %response = (metadata=>\%metadata, result=>\%result);
+#    $c->stash->{rest} = \%response;
+#}
 
 
 =head2 brapi/v1/studies?programId=programId
@@ -751,153 +875,381 @@ sub germplasm_mcpd_GET {
 
 =cut
 
-sub studies_list  : Chained('brapi') PathPart('studies') Args(0) : ActionClass('REST') { }
+sub studies_search  : Chained('brapi') PathPart('studies-search') Args(0) : ActionClass('REST') { }
 
-sub studies_list_POST {
+#sub studies_list_POST {
+#    my $self = shift;
+#    my $c = shift;
+#    my $auth = _authenticate_user($c);
+#    my $status = $c->stash->{status};
+#    my $message = '';
+
+#    my $study_name = $c->req->param('studyName');
+#    my $location_id = $c->req->param('locationDbId');
+#    my $years = $c->req->param('studyYears');
+#    my $program_id = $c->req->param('programDbId');
+#    my $optional_info = $c->req->param('optionalInfo');
+#
+#    my $description;
+#    my $study_type;
+#    if ($optional_info) {
+#        my $opt_info_hash = decode_json($optional_info);
+#        $description = $opt_info_hash->{"studyObjective"};
+#        $study_type = $opt_info_hash->{"studyType"};
+#    }
+
+#    my $program_obj = CXGN::BreedersToolbox::Projects->new({schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') });
+#    my $programs = $program_obj->get_breeding_programs();
+#    my $program_check;
+#    my $program_name;
+#    foreach (@$programs) {
+#        if ($_->[0] == $program_id) {
+#            $program_check = 1;
+#            $program_name = $_->[1];
+#        }
+#    }
+#    if (!$program_check) {
+#        $message .= "Program not found with programDbId = ".$program_id;
+#        $status->{'message'} = $message;
+#        $c->stash->{rest} = {status => $status };
+#        $c->detach();
+#    }
+
+#    my $locations = $program_obj->get_all_locations();
+#    my $location_check;
+#    my $location_name;
+#    foreach (@$locations) {
+#        if ($_->[0] == $location_id) {
+#            $location_check = 1;
+#            $location_name = $_->[1];
+#        }
+#    }
+#    if (!$location_check) {
+#        $message .= "Location not found with locationDbId = ".$location_id;
+#        $status->{'message'} = $message;
+#        $c->stash->{rest} = {status => $status };
+#        $c->detach();
+#    }
+
+#    my $trial_design;
+#    my $trial_create = CXGN::Trial::TrialCreate->new({
+#        dbh => $c->dbc->dbh,
+#        chado_schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'),
+#        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+#        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
+#        user_name => $c->user()->get_object()->get_username(),
+#        program => $program_name,
+#        trial_year => $years,
+#        trial_description => $description,
+#        design_type => $study_type,
+#        trial_location => $location_name,
+#        trial_name => $study_name,
+#        design => $trial_design,
+#    });
+
+#    if ($trial_create->trial_name_already_exists()) {
+#        $message .= "Trial name \"".$trial_create->get_trial_name()."\" already exists.";
+#        $status->{'message'} = $message;
+#        $c->stash->{rest} = {status => $status };
+#        $c->detach();
+#    }
+
+#    try {
+#        $trial_create->save_trial();
+#    } catch {
+#        $message .= "Error saving trial in the database $_";
+#        $status->{'message'} = $message;
+#        $c->stash->{rest} = {status => $status };
+#        $c->detach();
+#    };
+
+#    $message .= "Study saved successfully.";
+#    $status->{'message'} = $message;
+#    $c->stash->{rest} = {status => $status };
+#}
+
+sub studies_search_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my @status = @$status;
-
-    my $study_name = $c->req->param('studyName');
-    my $location_id = $c->req->param('locationDbId');
-    my $years = $c->req->param('studyYears');
-    my $program_id = $c->req->param('programDbId');
-    my $optional_info = $c->req->param('optionalInfo');
-
-    my $description;
-    my $study_type;
-    if ($optional_info) {
-        my $opt_info_hash = decode_json($optional_info);
-        $description = $opt_info_hash->{"studyObjective"};
-        $study_type = $opt_info_hash->{"studyType"};
-    }
-
-    my $program_obj = CXGN::BreedersToolbox::Projects->new({schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') });
-    my $programs = $program_obj->get_breeding_programs();
-    my $program_check;
-    my $program_name;
-    foreach (@$programs) {
-        if ($_->[0] == $program_id) {
-            $program_check = 1;
-            $program_name = $_->[1];
-        }
-    }
-    if (!$program_check) {
-        push @status, "Program not found with programDbId = ".$program_id;
-        $c->stash->{rest} = {status => \@status };
-        return;
-    }
-
-    my $locations = $program_obj->get_all_locations();
-    my $location_check;
-    my $location_name;
-    foreach (@$locations) {
-        if ($_->[0] == $location_id) {
-            $location_check = 1;
-            $location_name = $_->[1];
-        }
-    }
-    if (!$location_check) {
-        push @status, "Location not found with locationDbId = ".$location_id;
-        $c->stash->{rest} = {status => \@status };
-        return;
-    }
-
-    my $trial_design;
-    my $trial_create = CXGN::Trial::TrialCreate->new({ 
-        dbh => $c->dbc->dbh,
-        chado_schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'),
-        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
-        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
-        user_name => $c->user()->get_object()->get_username(),
-        program => $program_name,
-        trial_year => $years,
-        trial_description => $description,
-        design_type => $study_type,
-        trial_location => $location_name,
-        trial_name => $study_name,
-        design => $trial_design,
-    });
-
-    if ($trial_create->trial_name_already_exists()) {
-        push @status, "Trial name \"".$trial_create->get_trial_name()."\" already exists.";
-        $c->stash->{rest} = {status => \@status };
-        return;
-    }
-
-    my $error;
-
-    try {
-        $trial_create->save_trial();
-    } catch {
-        push @status, "Error saving trial in the database $_";
-        $c->stash->{rest} = {status => \@status};
-        $error = 1;
-    };
-    if ($error) {
-        return;
-    }
-
-    push @status, "Study saved successfully.";
-    $c->stash->{rest} = {status => \@status};
+    studies_search_process($self, $c);
 }
 
-sub studies_list_GET {
+sub studies_search_GET {
+    my $self = shift;
+    my $c = shift;
+    studies_search_process($self, $c);
+}
+
+sub studies_search_process {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $program_id = $c->req->param("programId");
+    my $program_ids = $c->req->param("programDbId");
+    my $location_ids = $c->req->param("locationDbId");
+    my $season_ids = $c->req->param("seasonDbId");
+    my $studytype_ids = $c->req->param("studyTypeDbId");
+    my $study_ids = $c->req->param("studyDbId");
+    my $germplasm_ids = $c->req->param("germplasmDbId");
+    my $variable_ids = $c->req->param("observationVariableDbId");
     my $status = $c->stash->{status};
-    my @status = @$status;
+    #$self->bcs_schema->storage->debug(1);
 
     my @data;
     my %result;
-    my $rs;
-    if (!$program_id) {
-	$rs = $self->bcs_schema->resultset('Project::Project')->search(
-	    {'type.name' => 'breeding_program_trial_relationship' },
-	    {join=> {'project_relationship_subject_projects' => 'type'},
-	     '+select'=> ['me.project_id'],
-	     '+as'=> ['study_id' ],
-	     order_by=>{ -asc=>'me.project_id' }
-	    }
-	);
-    }elsif ($program_id) {
-	$rs = $self->bcs_schema->resultset('Project::Project')->search(
-	    {'type.name' => 'breeding_program_trial_relationship', 'project_relationship_subject_projects.object_project_id' => $program_id },
-	    {join=> {'project_relationship_subject_projects' => 'type'},
-	     '+select'=> ['me.project_id'],
-	     '+as'=> ['study_id' ],
-	     order_by=>{ -asc=>'me.project_id' }
-	    }
-	);
+    my %search_params;
+    my $bp_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
+    $search_params{'project_relationship_subject_projects.type_id'} = $bp_trial_relationship_id;
+    if ($study_ids) {
+        $search_params{'me.project_id'} = {-in => $study_ids};
     }
+    if ($program_ids) {
+        $search_params{'project_relationship_subject_projects.object_project_id'} = {-in => $program_ids};
+    }
+    if ($season_ids) {
+        my $year_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project year', 'project_property')->cvterm_id();
+        $search_params{'projectprops.type_id'} = $year_type_id;
+        $search_params{'projectprops.projectprop_id'} = {-in => $season_ids};
+    }
+    if ($studytype_ids) {
+        $search_params{'cv.name'} = 'project_type';
+        $search_params{'type.cvterm_id'} = {-in => $studytype_ids};
+    }
+    if ($location_ids) {
+        my $location_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project location', 'project_property')->cvterm_id();
+        $search_params{'projectprops.type_id'} = $location_type_id;
+        $search_params{'projectprops.value::int'} = {-in => $location_ids};
+    }
+    my $rs = $self->bcs_schema->resultset('Project::Project')->search(
+        \%search_params,
+        {join=> [{'project_relationship_subject_projects'}, {'projectprops' => {'type' => 'cv'}}],
+        '+select'=> ['me.project_id'],
+        '+as'=> ['study_id' ],
+        distinct => 1,
+        order_by=>{ -asc=>'me.project_id' }
+        }
+    );
 
     my $total_count = 0;
     if ($rs) {
-	$total_count = $rs->count();
-	my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
-	while (my $s = $rs_slice->next()) {
-	   my $t = CXGN::Trial->new( { trial_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
+        $total_count = $rs->count();
+        my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+        while (my $s = $rs_slice->next()) {
+            my $t = CXGN::Trial->new( { trial_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
+            my $folder = CXGN::Trial::Folder->new( { folder_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
+            if ($folder->folder_type eq 'trial') {
 
-	   my @years = ($t->get_year());
-	   my %optional_info = (studyPUI=>'', startDate => $t->get_planting_date(), endDate => $t->get_harvest_date());
-	   my $project_type = '';
-	   if ($t->get_project_type()) {
-	       $project_type = $t->get_project_type()->[1];
-	   }
-	   my $location = '';
-	   if ($t->get_location()) {
-	       $location = $t->get_location()->[0];
-	   }
-	   push @data, {studyDbId=>$t->get_trial_id(), name=>$t->get_name(), studyType=>$project_type, years=>\@years, locationDbId=>$location, optionalInfo=>\%optional_info};
-	}
+                my @years = ($t->get_year());
+                my %additional_info = (
+                    studyPUI=>'',
+                );
+                my $project_type = '';
+                if ($t->get_project_type()) {
+                   $project_type = $t->get_project_type()->[1];
+                }
+                my $location_id = '';
+                my $location_name = '';
+                if ($t->get_location()) {
+                   $location_id = $t->get_location()->[0];
+                   $location_name = $t->get_location()->[1];
+                }
+                my $planting_date = '';
+                if ($t->get_planting_date()) {
+                    $planting_date = $t->get_planting_date();
+                }
+                my $harvest_date = '';
+                if ($t->get_harvest_date()) {
+                    $harvest_date = $t->get_harvest_date();
+                }
+                push @data, {
+                    studyDbId=>$t->get_trial_id(),
+                    name=>$t->get_name(),
+                    trialDbId=>$folder->project_parent->project_id(),
+                    trialName=>$folder->project_parent->name(),
+                    studyType=>$project_type,
+                    seasons=>\@years,
+                    locationDbId=>$location_id,
+                    locationName=>$location_name,
+                    programDbId=>$folder->breeding_program->project_id(),
+                    programName=>$folder->breeding_program->name(),
+                    startDate => $planting_date,
+                    endDate => $harvest_date,
+                    additionalInfo=>\%additional_info
+                };
+            }
+        }
     }
 
     %result = (data=>\@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my @datafiles;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+#BrAPI Trials are modeled as Folders
+sub trials_list  : Chained('brapi') PathPart('trials') Args(0) : ActionClass('REST') { }
+
+sub trials_list_GET {
+    my $self = shift;
+    my $c = shift;
+    trials_search_process($self, $c);
+}
+
+sub trials_list_POST {
+    my $self = shift;
+    my $c = shift;
+    trials_search_process($self, $c);
+}
+
+sub trials_search_process {
+    my $self = shift;
+    my $c = shift;
+    #my $auth = _authenticate_user($c);
+    my $params = $c->req->params();
+
+    my $status = $c->stash->{status};
+    my $message = '';
+
+    my $location_id = $params->{locationDbId};
+    my $program_id = $params->{programDbId};
+    my $active = $params->{active};
+    my %result;
+    my $total_count = 0;
+
+    my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
+    my $folder_rs = $self->bcs_schema()->resultset("Project::Project")->search_related('projectprops', {'projectprops.type_id'=>$folder_cvterm_id});
+
+    my @folder_studies;
+    my %additional_info;
+    my @data;
+    if ($folder_rs) {
+        $total_count = $folder_rs->count();
+        my $rs_slice = $folder_rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+        while (my $p = $rs_slice->next()) {
+            my $folder = CXGN::Trial::Folder->new({bcs_schema=>$self->bcs_schema, folder_id=>$p->project_id});
+            if ($folder->is_folder) {
+                my $children = $folder->children();
+                foreach (@$children) {
+                    if ($location_id) {
+                        if ($location_id == $_->location_id) {
+                            push @folder_studies, {
+                                studyDbId=>$_->folder_id,
+                                studyName=>$_->name,
+                                locationDbId=>$_->location_id
+                            };
+                        }
+                    } else {
+                        push @folder_studies, {
+                            studyDbId=>$_->folder_id,
+                            studyName=>$_->name,
+                            locationDbId=>$_->location_id
+                        };
+                    }
+                }
+
+                if ($program_id) {
+                    if ($program_id == $folder->breeding_program->project_id) {
+                        push @data, {
+                            trialDbId=>$folder->folder_id,
+                            trialName=>$folder->name,
+                            programDbId=>$folder->breeding_program->project_id(),
+                            programName=>$folder->breeding_program->name(),
+                            startDate=>'',
+                            endDate=>'',
+                            active=>'',
+                            studies=>\@folder_studies,
+                            additionalInfo=>\%additional_info
+                        };
+                    }
+                } else {
+                    push @data, {
+                        trialDbId=>$folder->folder_id,
+                        trialName=>$folder->name,
+                        programDbId=>$folder->breeding_program->project_id(),
+                        programName=>$folder->breeding_program->name(),
+                        startDate=>'',
+                        endDate=>'',
+                        active=>'',
+                        studies=>\@folder_studies,
+                        additionalInfo=>\%additional_info
+                    };
+                }
+            }
+        }
+    }
+
+    %result = (data => \@data);
+    $status->{'message'} = $message;
+    my @data_files;
+    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+
+sub trials_single  : Chained('brapi') PathPart('trials') CaptureArgs(1) {
+    my $self = shift;
+    my $c = shift;
+    my $folder_id = shift;
+
+    $c->stash->{trial_id} = $folder_id;
+    $c->stash->{trial} = CXGN::Trial::Folder->new(bcs_schema=>$self->bcs_schema(), folder_id=>$folder_id);
+}
+
+
+sub trials_detail  : Chained('trials_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub trials_detail_POST {
+    my $self = shift;
+    my $c = shift;
+    #my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+
+    $c->stash->{rest} = {status=>$status};
+}
+
+sub trials_detail_GET {
+    my $self = shift;
+    my $c = shift;
+    #my $auth = _authenticate_user($c);
+    my $folder = $c->stash->{trial};
+    my $schema = $self->bcs_schema();
+    my $status = $c->stash->{status};
+    my $message = '';
+
+    my $total_count = 0;
+
+    my %result;
+    if ($folder->is_folder) {
+        $total_count = 1;
+        my @folder_studies;
+        my %additional_info;
+        my $children = $folder->children();
+        foreach (@$children) {
+            push @folder_studies, {
+                studyDbId=>$_->folder_id,
+                studyName=>$_->name,
+                locationDbId=>$_->location_id
+            };
+        }
+        %result = (
+            trialDbId=>$folder->folder_id,
+            trialName=>$folder->name,
+            programDbId=>$folder->breeding_program->project_id(),
+            programName=>$folder->breeding_program->name(),
+            startDate=>'',
+            endDate=>'',
+            active=>'',
+            studies=>\@folder_studies,
+            additionalInfo=>\%additional_info
+        );
+    } else {
+        $message .= 'The given trialDbId does not match an actual trial.';
+    }
+
+    my @datafiles;
+    $status->{'message'} = $message;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -970,7 +1322,6 @@ sub studies_germplasm_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
     my $metadata = $c->req->params("metadata");
     my $result = $c->req->params("result");
@@ -981,9 +1332,8 @@ sub studies_germplasm_POST {
     print STDERR Dumper($result);
 
     my $pagintation = $metadata_hash{"pagination"};
-    push(@status, $metadata_hash{"status"});
 
-    $c->stash->{rest} = {status=>\@status};
+    $c->stash->{rest} = {status=>$status};
 }
 
 sub studies_germplasm_GET {
@@ -992,29 +1342,40 @@ sub studies_germplasm_GET {
     #my $auth = _authenticate_user($c);
     my %result;
     my $status = $c->stash->{status};
-    my @status = @$status;
     my $total_count = 0;
 
-    my $synonym_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => "synonym" })->cvterm_id();
-    my $tl = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $c->stash->{study_id} });
-    my ($accessions, $controls) = $tl->_get_trial_accession_names_and_control_names();
+    my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'stock_synonym', 'stock_property')->cvterm_id();
+    my $tl = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $c->stash->{study_id} });
+    my $accessions = $tl->get_accessions();
     my @germplasm_data;
 
     if ($accessions) {
-        push (@$accessions, @$controls);
         $total_count = scalar(@$accessions);
         my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
         my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
         for( my $i = $start; $i <= $end; $i++ ) {
             if (@$accessions[$i]) {
-                push @germplasm_data, { germplasmDbId=>@$accessions[$i]->{stock_id}, germplasmName=>@$accessions[$i]->{accession_name}, studyEntryNumberId=>'', defaultDisplayName=>@$accessions[$i]->{accession_name}, accessionNumber=>@$accessions[$i]->{accession_name}, germplasmPUI=>@$accessions[$i]->{accession_name}, pedigree=>germplasm_pedigree_string($self->bcs_schema, @$accessions[$i]->{stock_id}), seedSource=>'', synonyms=>germplasm_synonyms($self->bcs_schema, @$accessions[$i]->{stock_id}, $synonym_id)};
+                push @germplasm_data, {
+                    germplasmDbId=>@$accessions[$i]->{stock_id},
+                    germplasmName=>@$accessions[$i]->{accession_name},
+                    entryNumber=>'',
+                    accessionNumber=>@$accessions[$i]->{accession_name},
+                    germplasmPUI=>@$accessions[$i]->{accession_name},
+                    pedigree=>germplasm_pedigree_string($self->bcs_schema, @$accessions[$i]->{stock_id}),
+                    seedSource=>'',
+                    synonyms=>germplasm_synonyms($self->bcs_schema, @$accessions[$i]->{stock_id}, $synonym_id)
+                };
             }
         }
     }
 
-	%result = (studyDbId=>$c->stash->{study_id}, studyName=>$c->stash->{studyName}, data =>\@germplasm_data);
-
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    %result = (
+        studyDbId=>$c->stash->{study_id},
+        studyName=>$c->stash->{studyName},
+        data =>\@germplasm_data
+    );
+    my @datafiles;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -1049,9 +1410,8 @@ sub germplasm_pedigree_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status=>\@status};
+    $c->stash->{rest} = {status=>$status};
 }
 
 sub germplasm_pedigree_GET {
@@ -1061,27 +1421,34 @@ sub germplasm_pedigree_GET {
     my $schema = $self->bcs_schema();
     my %result;
     my $status = $c->stash->{status};
-    my @status = @$status;
+    my $message = '';
     my $total_count = 0;
 
     if ($c->req->param('notation')) {
-	push @status, 'notation not implemented';
-	if ($c->req->param('notation') ne 'purdy') {
-	    push @status, {code=>'ERR-1', message=>'Unsupported notation code.'};
-	}
+        $message .= 'Notation not yet implemented. Returns a simple parent1/parent2 string.';
+        if ($c->req->param('notation') ne 'purdy') {
+            $message .= 'Unsupported notation code. Allowed notation: purdy';
+        }
     }
 
     my $s = $c->stash->{stock};
     if ($s) {
-	$total_count = 1;
+        $total_count = 1;
     }
 
     my @direct_parents = $s->get_direct_parents();
 
-    %result = (germplasmDbId=>$c->stash->{stock_id}, pedigree=>germplasm_pedigree_string($schema, $c->stash->{stock_id}), parent1Id=>$direct_parents[0][0], parent2Id=>$direct_parents[1][0]);
+    %result = (
+        germplasmDbId=>$c->stash->{stock_id},
+        pedigree=>germplasm_pedigree_string($schema, $c->stash->{stock_id}),
+        parent1Id=>$direct_parents[0][0],
+        parent2Id=>$direct_parents[1][0]
+    );
 
     my %pagination;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my @datafiles;
+    $status->{'message'} = $message;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -1116,9 +1483,8 @@ sub germplasm_markerprofile_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status=>\@status};
+    $c->stash->{rest} = {status=>$status};
 }
 
 sub germplasm_markerprofile_GET {
@@ -1128,7 +1494,6 @@ sub germplasm_markerprofile_GET {
     my $schema = $self->bcs_schema();
     my %result;
     my $status = $c->stash->{status};
-    my @status = @$status;
     my @marker_profiles;
 
     my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
@@ -1148,7 +1513,8 @@ sub germplasm_markerprofile_GET {
     }
     %result = (germplasmDbId=>$c->stash->{stock_id}, markerProfiles=>\@marker_profiles);
     my $total_count = scalar(@marker_profiles);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my @datafiles;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -1198,94 +1564,87 @@ sub germplasm_markerprofile_GET {
 
 =cut
 
-sub markerprofiles_list : Chained('brapi') PathPart('markerprofiles') Args(0) : ActionClass('REST') { }
-
-sub markerprofiles_list_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my @status = @$status;
-
-    $c->stash->{rest} = {status=>\@status};
-}
-
-sub markerprofiles_list_GET {
+sub markerprofile_search_process {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $germplasm = $c->req->param("germplasm");
+    my $germplasm = $c->req->param("germplasmDbId");
+    my $study = $c->req->param("studyDbId");
     my $extract = $c->req->param("extract");
-    my $method = $c->req->param("method");
+    my $method = $c->req->param("methodDbId");
     my $status = $c->stash->{status};
-    my @status = @$status;
+    my $message = '';
     my @data;
     my %result;
 
     my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
 
-    my $rs;
-    if ($germplasm && $method) {
-	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-	    {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'stock.stock_id'=>$germplasm, 'nd_protocol.nd_protocol_id'=>$method},
-	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-	     select=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
-	     as=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
-	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
-	    }
-	);
+    my %search_params;
+    $search_params{'genotypeprops.type_id'} = $snp_genotyping_cvterm_id;
+    if ($germplasm) {
+        $search_params{'stock.stock_id'} = $germplasm;
     }
-    if ($germplasm && !$method) {
-	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-	    {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'stock.stock_id'=>$germplasm},
-	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-	     select=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
-	     as=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
-	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
-	    }
-	);
+    if ($method) {
+        $search_params{'nd_protocol.nd_protocol_id'} = $method;
     }
-    if (!$germplasm && $method) {
-	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-	    {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'nd_protocol.nd_protocol_id'=>$method},
-	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-	     select=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
-	     as=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
-	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
-	    }
-	);
+    if ($study) {
+        $search_params{'nd_experiment_projects.project_id'} = $study;
     }
-    if (!$germplasm && !$method) {
-	$rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-	    { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id },
-	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-	     select=> ['genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
-	     as=> ['genotypeprop_id', 'value', 'protocol_name', 'stock_id'],
-	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
-	    }
-	);
-    }
+    my @select_list = ('genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id', 'stock.uniquename');
+    my @select_as_list = ('genotypeprop_id', 'value', 'protocol_name', 'stock_id', 'uniquename');
+    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
+        \%search_params,
+        {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_projects'}, {'nd_experiment_stocks' => 'stock'} ],
+        select=> \@select_list,
+        as=> \@select_as_list,
+        order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
+        }
+    );
 
     if ($extract) {
-	push @status, 'Extract not supported';
+        $message .= 'Extract not supported';
     }
 
     if ($rs) {
       my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
-	while (my $row = $rs_slice->next()) {
-	    my $genotype_json = $row->get_column('value');
-	    my $genotype = JSON::Any->decode($genotype_json);
+      while (my $row = $rs_slice->next()) {
+          my $genotype_json = $row->get_column('value');
+          my $genotype = JSON::Any->decode($genotype_json);
 
-	    push @data, {markerProfileDbId => $row->get_column('genotypeprop_id'), germplasmDbId => $row->get_column('stock_id'), extractDbId => "", analysisMethod => $row->get_column('protocol_name'), resultCount => scalar(keys(%$genotype)) };
-	}
+          push @data, {
+              markerProfileDbId => $row->get_column('genotypeprop_id'),
+              germplasmDbId => $row->get_column('stock_id'),
+              uniqueDisplayName => $row->get_column('uniquename'),
+              extractDbId => "",
+              sampleDbId => "",
+              analysisMethod => $row->get_column('protocol_name'),
+              resultCount => scalar(keys(%$genotype)) 
+          };
+      }
     }
 
     my $total_count = $rs->count();
 
     %result = (data => \@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    $status->{'message'} = $message;
+    my @datafiles;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
+}
+
+sub markerprofiles_list : Chained('brapi') PathPart('markerprofiles') Args(0) : ActionClass('REST') { }
+
+sub markerprofiles_list_POST {
+    my $self = shift;
+    my $c = shift;
+    markerprofile_search_process($self, $c);
+}
+
+sub markerprofiles_list_GET {
+    my $self = shift;
+    my $c = shift;
+    markerprofile_search_process($self, $c);
 }
 
 
@@ -1333,9 +1692,8 @@ sub genotype_fetch_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status=>\@status};
+    $c->stash->{rest} = {status=>$status};
 }
 
 sub genotype_fetch_GET {
@@ -1343,36 +1701,48 @@ sub genotype_fetch_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
+    my $unknown_string = $c->req->param('unknownString') || '';
+    my $expand_homozygotes = $c->req->param('expandHomozygotes') || '';
+    my $sep_phased = $c->req->param('sepPhased') || '|';
+    my $sep_unphased = $c->req->param('sepUnphased') || '/';
     my @data;
     my %result;
 
     my $total_count = 0;
     my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->find(
-	{'genotypeprops.genotypeprop_id' => $c->stash->{markerprofile_id} },
-	{join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-	 select=> ['genotypeprops.value', 'nd_protocol.name', 'stock.stock_id'],
-	 as=> ['value', 'protocol_name', 'stock_id'],
-	}
+        {'genotypeprops.genotypeprop_id' => $c->stash->{markerprofile_id} },
+        {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
+         select=> ['genotypeprops.value', 'nd_protocol.name', 'stock.stock_id', 'stock.uniquename'],
+         as=> ['value', 'protocol_name', 'stock_id', 'uniquename'],
+        }
     );
 
     if ($rs) {
-    	    my $genotype_json = $rs->get_column('value');
-    	    my $genotype = JSON::Any->decode($genotype_json);
-            $total_count = scalar keys %$genotype;
+        my $genotype_json = $rs->get_column('value');
+        my $genotype = JSON::Any->decode($genotype_json);
+        $total_count = scalar keys %$genotype;
 
-    	    foreach my $m (sort genosort keys %$genotype) {
-                push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}) };
-    	    }
+        foreach my $m (sort genosort keys %$genotype) {
+            push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}) };
+        }
 
-            my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-            my $end = $c->stash->{page_size}*$c->stash->{current_page};
-            my @data_window = splice @data, $start, $end;
+        my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+        my $end = $c->stash->{page_size}*$c->stash->{current_page};
+        my @data_window = splice @data, $start, $end;
 
-    	    %result = (germplasmDbId=>$rs->get_column('stock_id'), extractDbId=>'', markerprofileDbId=>$c->stash->{markerprofile_id}, analysisMethod=>$rs->get_column('protocol_name'), encoding=>"AA,BB,AB", data => \@data_window);
+        %result = (
+            germplasmDbId=>$rs->get_column('stock_id'),
+            uniqueDisplayName=>$rs->get_column('uniquename'),
+            extractDbId=>'',
+            markerprofileDbId=>$c->stash->{markerprofile_id},
+            analysisMethod=>$rs->get_column('protocol_name'),
+            #encoding=>"AA,BB,AB",
+            data => \@data_window
+        );
     }
 
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my @datafiles;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -1383,7 +1753,6 @@ sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods')
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
     my @response;
@@ -1469,128 +1838,121 @@ sub convert_dosage_to_genotype {
 
 =cut
 
-sub allelematrix : Chained('brapi') PathPart('allelematrix') Args(0) {
-  my $self = shift;
-  my $c = shift;
-  #my $auth = _authenticate_user($c);
-  my $status = $c->stash->{status};
-  my @status = @$status;
+sub allelematrix : Chained('brapi') PathPart('allelematrix-search') Args(0) : ActionClass('REST') { }
 
-  my @profile_ids = $c->req->param('markerprofileDbId');
-  my $data_format = $c->req->param('format');
-  #print STDERR Dumper \@profile_ids;
-  #my @profile_ids = split ",", $markerprofile_ids;
+sub allelematrix_POST {
+    my $self = shift;
+    my $c = shift;
+    allelematrix_search_process($self, $c);
+}
 
-  my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
+sub allelematrix_GET {
+    my $self = shift;
+    my $c = shift;
+    allelematrix_search_process($self, $c);
+}
 
-  my %scores;
-  my $total_pages;
-  my $total_count;
-  my @marker_score_lines;
-  my @ordered_refmarkers;
-  my $markers;
-  if ($rs->count() > 0) {
-    while (my $profile = $rs->next()) {
-      my $profile_json = $profile->value();
-      my $refmarkers = JSON::Any->decode($profile_json);
-      #print STDERR Dumper($refmarkers);
-      push @ordered_refmarkers, sort genosort keys(%$refmarkers);
+sub allelematrix_search_process {
+    my $self = shift;
+    my $c = shift;
+    #my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my $message = '';
+    my @profile_ids = $c->req->param('markerprofileDbId');
+    my @marker_ids = $c->req->param('markerDbId');
+    my $unknown_string = $c->req->param('unknownString') || '';
+    my $sep_phased = $c->req->param('sepPhased') || '|';
+    my $sep_unphased = $c->req->param('sepUnphased') || '/';
+    my $data_format = $c->req->param('format') || 'json';
+    my %metadata;
+    my $data_file_path;
+    my %result;
+    #print STDERR Dumper \@profile_ids;
+    #my @profile_ids = split ",", $markerprofile_ids;
 
+    if ($data_format ne 'json' && $data_format ne 'tsv' && $data_format ne 'csv') {
+        $message .= 'Unsupported Format Given. Supported values are: json, tsv, csv';
+        $status->{'message'} = $message;
+        $c->stash->{rest} = {
+            metadata => { pagination=>{}, status => $status, datafiles=>[$data_file_path] },
+            result => \%result,
+        };
+        $c->detach;
     }
-    #print Dumper(\@ordered_refmarkers);
 
-    my $json = JSON->new();
-    $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
-    while (my $profile = $rs->next()) {
-      foreach my $m (@ordered_refmarkers) {
-        my $markers_json = $profile->value();
-        $markers = $json->decode($markers_json);
+    my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
 
-        $scores{$profile->genotypeprop_id()}->{$m} = $self->convert_dosage_to_genotype($markers->{$m});
-      }
-    }
-  }
-
-  #print STDERR Dumper \%scores;
-
-  my @lines;
-  foreach my $line (keys %scores) {
-    push @lines, $line;
-  }
-  
-  my @json_lines;
-  my $fh;
-  my $file_path;
-  my %markers_seen;
-  my $data_file_path;
-  my @marker_score_json_lines;
-  if (!$data_format || $data_format eq 'json' ){
-      @json_lines = @lines;
-      print STDERR scalar(@ordered_refmarkers)."\n";
-
-      for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
-
-        my %markers_by_line;
-        my $m = $ordered_refmarkers[$n];
-        #print STDERR Dumper $m;
-          foreach my $line (keys %scores) {
-            push @{$markers_by_line{$m}}, $scores{$line}->{$m};
-            if (!exists $markers_seen{$m} ) {
-                #print STDERR Dumper \@{$markers_by_line{$m}};
-              $markers_seen{$m} = \@{$markers_by_line{$m}};
-              #push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
-            }
-          }
-
-      }
-      foreach my $marker_name (sort keys %markers_seen) {
-          my $marker_scores = $markers_seen{$marker_name};
-          #print STDERR Dumper $marker_scores;
-          push @marker_score_json_lines, { $marker_name => $marker_scores };
-      }
-      
-      
-  } elsif ($data_format eq 'tsv') {
-      my $dir = $c->tempfiles_subdir('download');
-      my ($fh, $tempfile) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$data_format.'_'.'XXXXX');
-      $file_path = $c->config->{basepath}."/".$tempfile.".tsv";
-      open(my $fh, ">", $file_path);
-      print STDERR $file_path."\n";
-      print $fh "markerprofileDbIds\t", join("\t", @lines), "\n";
-      
-      my %markers_by_line;
-      print STDERR scalar(@ordered_refmarkers)."\n";
-      foreach my $m (@ordered_refmarkers) {
-          #print STDERR Dumper $m;
-        foreach my $line (keys %scores) {
-          push @{$markers_by_line{$m}}, $scores{$line}->{$m};
-          if (!exists $markers_seen{$m} ) {
-              #print STDERR Dumper \@{$markers_by_line{$m}};
-            $markers_seen{$m} = \@{$markers_by_line{$m}};
-            #push @marker_score_lines, { $m => \@{$markers_by_line{$m}} };
-          }
+    my @scores;
+    my $total_pages;
+    my $total_count;
+    my @ordered_refmarkers;
+    my $markers;
+    if ($rs->count() > 0) {
+        while (my $profile = $rs->next()) {
+            my $profile_json = $profile->value();
+            my $refmarkers = JSON::Any->decode($profile_json);
+            #print STDERR Dumper($refmarkers);
+            push @ordered_refmarkers, sort genosort keys(%$refmarkers);
         }
-      }
+        #print Dumper(\@ordered_refmarkers);
+        my %unique_markers;
+        foreach (@ordered_refmarkers) {
+            $unique_markers{$_} = 1;
+        }
 
-      foreach my $marker_name (sort keys %markers_seen) {
-          my $marker_scores = $markers_seen{$marker_name};
-          #print STDERR Dumper $marker_scores;
-          print $fh "$marker_name\t", join("\t", @{$marker_scores}),"\n";
-      }
-      
-      
-      close $fh;
-      $data_file_path = $file_path;
-  }
-  
-  
+        my $json = JSON->new();
+        $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
+        while (my $profile = $rs->next()) {
+            my $markers_json = $profile->value();
+            $markers = $json->decode($markers_json);
+            my $genotypeprop_id = $profile->genotypeprop_id();
+            foreach my $m (sort keys %unique_markers) {
+                push @scores, [$m, $genotypeprop_id, $self->convert_dosage_to_genotype($markers->{$m})];
+            }
+        }
+    }
 
-  $total_count = scalar(keys %$markers);
+    #print STDERR Dumper \@scores;
 
-  $c->stash->{rest} = {
-    metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => \@status, datafiles=>$data_file_path },
-    result => {markerprofileDbIds => \@json_lines, data => \@marker_score_json_lines},
-  };
+    my $file_path;
+    my @scores_seen;
+    if (!$data_format || $data_format eq 'json' ){
+
+        for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
+            push @scores_seen, $scores[$n];
+        }
+
+    } elsif ($data_format eq 'tsv' || $data_format eq 'csv') {
+        my $delim;
+        if ($data_format eq 'tsv') {
+            $delim = "\t";
+        } elsif ($data_format eq 'csv') {
+            $delim = ",";
+        }
+        my $dir = $c->tempfiles_subdir('download');
+        my ($fh, $tempfile) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$data_format.'_'.'XXXXX');
+        $file_path = $c->config->{basepath}."/".$tempfile.".$data_format";
+        open($fh, ">", $file_path);
+            print STDERR $file_path."\n";
+            #print $fh "markerprofileDbIds\t", join($delim, @lines), "\n";
+            foreach (@scores) {
+                print $fh join("$delim", @{$_}),"\n";
+            }
+
+        close $fh;
+        $data_file_path = $file_path;
+        $c->res->content_type('Application/'.$data_format);
+        $c->res->header('Content-Disposition', qq[attachment; filename="$data_file_path"]);
+        my $output = read_file($data_file_path);
+        $c->res->body($output);
+    }
+
+    $total_count = scalar(@scores);
+
+    $c->stash->{rest} = {
+        metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => $status, datafiles=>[$data_file_path] },
+        result => {data => \@scores_seen},
+    };
 
 }
 
@@ -1639,9 +2001,8 @@ sub programs_list_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status=>\@status};
+    $c->stash->{rest} = {status=>$status};
 }
 
 sub programs_list_GET {
@@ -1649,7 +2010,8 @@ sub programs_list_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
+    my $program_name = $c->req->param('programName');
+    my $abbreviation = $c->req->param('abbreviation');
     my %result;
     my @data;
 
@@ -1662,84 +2024,35 @@ sub programs_list_GET {
     my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
     for( my $i = $start; $i <= $end; $i++ ) {
         if (@$programs[$i]) {
-            push @data, {programDbId=>@$programs[$i]->[0], name=>@$programs[$i]->[1], objective=>@$programs[$i]->[2], leadPerson=>''};
+            if ($program_name) {
+                if ($program_name eq @$programs[$i]->[1]) {
+                    push @data, {
+                        programDbId=>@$programs[$i]->[0],
+                        name=>@$programs[$i]->[1],
+                        abbreviation=>@$programs[$i]->[1],
+                        objective=>@$programs[$i]->[2],
+                        leadPerson=>''
+                    };
+                }
+            } else {
+                push @data, {
+                    programDbId=>@$programs[$i]->[0],
+                    name=>@$programs[$i]->[1],
+                    abbreviation=>@$programs[$i]->[1],
+                    objective=>@$programs[$i]->[2],
+                    leadPerson=>''
+                };
+            }
         }
     }
 
     %result = (data=>\@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my @datafiles;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
 
-
-=head2 brapi/v1/studyTypes
-
- Usage: To retrieve a list of programs being worked onthe various study types
- Desc:
- Return JSON example:
-        {
-             "metadata" : {
-                "pagination": {
-                    "pageSize": 10,
-                    "currentPage": 1,
-                    "totalCount": 10,
-                    "totalPages": 1
-                },
-                "status": []
-            },
-            "result" : {
-                "data" : [
-                    {
-                        "name": "Nursery",
-                        "description": "Description for Nursery study type"
-                    },
-                    {
-                        "name": "Trial",
-                        "description": "Description for Nursery study type"
-                    }
-                ]
-            }
-        }
- Args:
- Side Effects:
-
-=cut
-
-sub studies_types_list  : Chained('brapi') PathPart('studyTypes') Args(0) : ActionClass('REST') { }
-
-sub studies_types_list_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my @status = @$status;
-
-    $c->stash->{rest} = {status=>\@status};
-}
-
-sub studies_types_list_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my %result;
-    my @data;
-    my $status = $c->stash->{status};
-    my @status = @$status;
-
-    my @cvterm_ids = CXGN::Trial::get_all_project_types($self->bcs_schema);
-    my $cvterm;
-    foreach (@cvterm_ids) {
-	$cvterm = CXGN::Chado::Cvterm->new($c->dbc->dbh, $_->[0]);
-	push @data, {name=>$_->[1], description=>$cvterm->get_definition },
-    }
-
-    my $total_count = scalar(@cvterm_ids);
-    %result = (data => \@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
-}
 
 
 sub studies_instances  : Chained('studies_single') PathPart('instances') Args(0) : ActionClass('REST') { }
@@ -1749,9 +2062,8 @@ sub studies_instances_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status=>\@status};
+    $c->stash->{rest} = {status=>$status};
 }
 
 sub studies_instances_GET {
@@ -1760,10 +2072,9 @@ sub studies_instances_GET {
     #my $auth = _authenticate_user($c);
     my %result;
     my $status = $c->stash->{status};
-    my @status = @$status;
     my $total_count = 0;
 
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -1776,9 +2087,8 @@ sub studies_info_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub studies_info_GET {
@@ -1787,31 +2097,65 @@ sub studies_info_GET {
     #my $auth = _authenticate_user($c);
     my %result;
     my $status = $c->stash->{status};
-    my @status = @$status;
+    my $message = '';
     my $total_count = 0;
-
+    my $study_id = $c->stash->{study_id};
     my $t = $c->stash->{study};
     if ($t) {
-    	$total_count = 1;
-    	my @years = ($t->get_year());
-    	my %optional_info = (studyPUI=>'', startDate=>'', endDate=>'');
-    	my $project_type = '';
-    	if ($t->get_project_type()) {
-    	    $project_type = $t->get_project_type()->[1];
-    	}
-    	my $location = '';
-    	if ($t->get_location()) {
-    	    $location = $t->get_location()->[0];
-    	}
-    	my $ps = CXGN::BreedersToolbox::Projects->new( { schema => $self->bcs_schema });
-    	my $programs = $ps->get_breeding_program_with_trial($c->stash->{study_id});
+        $total_count = 1;
+        my $folder = CXGN::Trial::Folder->new( { folder_id => $study_id, bcs_schema => $self->bcs_schema } );
+        if ($folder->folder_type eq 'trial') {
 
-    	%result = (studyDbId=>$t->get_trial_id(), studyName=>$t->get_name(), studyType=>$project_type, years=>\@years, locationDbId=>$location, programDbId=>@$programs[0]->[0], programName=>@$programs[0]->[1], optionalInfo=>\%optional_info);
+            my @years = ($t->get_year());
+            my %additional_info = (
+                studyPUI=>'',
+            );
+            my $project_type = '';
+            if ($t->get_project_type()) {
+               $project_type = $t->get_project_type()->[1];
+            }
+            my $location_id = '';
+            my $location_name = '';
+            if ($t->get_location()) {
+               $location_id = $t->get_location()->[0];
+               $location_name = $t->get_location()->[1];
+            }
+            my $planting_date = '';
+            if ($t->get_planting_date()) {
+                $planting_date = $t->get_planting_date();
+            }
+            my $harvest_date = '';
+            if ($t->get_harvest_date()) {
+                $harvest_date = $t->get_harvest_date();
+            }
+            %result = (
+                studyDbId=>$t->get_trial_id(),
+                name=>$t->get_name(),
+                trialDbId=>$folder->project_parent->project_id(),
+                trialName=>$folder->project_parent->name(),
+                studyType=>$project_type,
+                seasons=>\@years,
+                locationDbId=>$location_id,
+                locationName=>$location_name,
+                programDbId=>$folder->breeding_program->project_id(),
+                programName=>$folder->breeding_program->name(),
+                startDate => $planting_date,
+                endDate => $harvest_date,
+                additionalInfo=>\%additional_info,
+                active=>'',
+                observationVariables=>"/brapi/v1/studies/$study_id/observationVariables",
+                germplasm=>"/brapi/v1/studies/$study_id/germplasm",
+                observationUnits=>"/brapi/v1/studies/$study_id/observationUnits",
+                layout=>"/brapi/v1/studies/$study_id/layout",
+                location=>"/brapi/v1/locations/$location_id",
+            );
+        }
     } else {
-	   push @status, "Study ID not found.";
+        $message .= "StudyDbId not found.";
     }
-
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    $status->{'message'} = $message;
+    my @datafiles;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -1824,9 +2168,8 @@ sub studies_details_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub studies_details_GET {
@@ -1834,7 +2177,6 @@ sub studies_details_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
     my %result;
     my $total_count = 0;
 
@@ -1885,10 +2227,40 @@ sub studies_details_GET {
 	);
     }
 
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
+
+sub studies_observation_variables : Chained('studies_single') PathPart('observationVariables') Args(0) : ActionClass('REST') { }
+
+sub studies_observation_variables_POST {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+
+    $c->stash->{rest} = {status => $status};
+}
+
+sub studies_observation_variables_GET {
+    my $self = shift;
+    my $c = shift;
+    #my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+    my %result;
+    my $total_count = 0;
+
+    my $t = CXGN::Trial->new( { schema => $self->bcs_schema, trial_id => $c->stash->{study_id} });
+    my @data;
+
+    %result = (data=>\@data);
+    my @datafiles;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
 
 
 sub studies_layout : Chained('studies_single') PathPart('layout') Args(0) : ActionClass('REST') { }
@@ -1898,9 +2270,8 @@ sub studies_layout_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub studies_layout_GET {
@@ -1908,7 +2279,6 @@ sub studies_layout_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
     my %result;
     my $total_count = 0;
 
@@ -1928,12 +2298,18 @@ sub studies_layout_GET {
 	} else {
 	    $type = 'Test';
 	}
-	%optional_info = (germplasmName => $design->{$plot_number}->{accession_name}, blockNumber => $design->{$plot_number}->{block_number} ? $design->{$plot_number}->{block_number} : undef, rowNumber => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} : undef, columnNumber => $design->{$plot_number}->{col_number} ? $design->{$plot_number}->{col_number} : undef, type => $type);
+	%optional_info;
 	$formatted_plot = {
 	    studyDbId => $c->stash->{study_id},
-	    plotDbId => $design->{$plot_number}->{plot_id},
-	    plotName => $design->{$plot_number}->{plot_name},
-	    replicate => $design->{$plot_number}->{replicate} ? 1 : 0,
+	    observationUnitDbId => $design->{$plot_number}->{plot_id},
+	    observationUnitName => $design->{$plot_number}->{plot_name},
+        observationLevel => 'plot',
+	    replicate => $design->{$plot_number}->{replicate} ? $design->{$plot_number}->{replicate} : '',
+        blockNumber => $design->{$plot_number}->{block_number} ? $design->{$plot_number}->{block_number} : '',
+        X => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} : '',
+        Y => $design->{$plot_number}->{col_number} ? $design->{$plot_number}->{col_number} : '',
+        entryType => $type,
+        germplasmName => $design->{$plot_number}->{accession_name},
 	    germplasmDbId => $design->{$plot_number}->{accession_id},
 	    optionalInfo => \%optional_info
 	};
@@ -1941,13 +2317,13 @@ sub studies_layout_GET {
 	$total_count += 1;
     }
     %result = (data=>$plot_data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
 
 
-=head2 brapi/v1/studies/<studyDbId>/observationVariable/<observationVariableDbId>
+=head2 brapi/v1/studies/<studyDbId>/observations?observationVariableDbId=2
 
  Usage: To retrieve phenotypic values on a the plot level for an entire trial
  Desc:
@@ -1982,30 +2358,28 @@ sub studies_layout_GET {
 
 =cut
 
-sub studies_plot_phenotypes : Chained('studies_single') PathPart('observationVariable') Args(1) : ActionClass('REST') { }
+sub studies_stock_phenotypes : Chained('studies_single') PathPart('observations') Args(0) : ActionClass('REST') { }
 
-sub studies_plot_phenotypes_POST {
+sub studies_stock_phenotypes_POST {
     my $self = shift;
     my $c = shift;
-    my $trait_id = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
-sub studies_plot_phenotypes_GET {
+sub studies_stock_phenotypes_GET {
     my $self = shift;
     my $c = shift;
-    my $trait_id = shift;
+    my $trait_id = $c->req->param('observationVariableDbId');
+    my $data_level = $c->req->param('observationLevel') || 'plot';
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
     my %result;
 
     my $t = $c->stash->{study};
-    my $phenotype_data = $t->get_stock_phenotypes_for_trait($trait_id, 'plot');
+    my $phenotype_data = $t->get_stock_phenotypes_for_trait($trait_id, $data_level);
 
     my $trait =$self->bcs_schema->resultset('Cv::Cvterm')->find({ cvterm_id => $trait_id });
 
@@ -2025,13 +2399,27 @@ sub studies_plot_phenotypes_GET {
             my $stock_plot_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'plot_of', 'stock_relationship')->cvterm_id();
             my $germplasm =$self->bcs_schema->resultset('Stock::StockRelationship')->find({ 'me.subject_id' => $plot_id, 'me.type_id' =>$stock_plot_relationship_type_id }, {join => 'object', '+select'=> ['object.stock_id', 'object.uniquename'], '+as'=> ['germplasm_id', 'germplasm_name'] } );
 
-            my %data_hash = (studyDbId => $c->stash->{study_id}, plotDbId => $plot_id, observationVariableDbId => $trait_id, observationVariableName => $trait->name(), plotName => @$phenotype_data[$i]->[1], timestamp => $timestamp, uploadedBy => @$phenotype_data[$i]->[3], operator => $operator, germplasmDbId => $germplasm->get_column('germplasm_id'), germplasmName => $germplasm->get_column('germplasm_name'), value => @$phenotype_data[$i]->[4] );
+            my %data_hash = (
+                studyDbId => $c->stash->{study_id},
+                observationDbId=>'',
+                observationVariableDbId => $trait_id,
+                observationVariableName => $trait->name(),
+                observationUnitDbId => @$phenotype_data[$i]->[0],
+                observationUnitName => @$phenotype_data[$i]->[1],
+                observationLevel => 'plot',
+                observationTimestamp => $timestamp,
+                uploadedBy => @$phenotype_data[$i]->[3],
+                operator => $operator,
+                germplasmDbId => $germplasm->get_column('germplasm_id'),
+                germplasmName => $germplasm->get_column('germplasm_name'),
+                value => @$phenotype_data[$i]->[4]
+            );
             push @data, \%data_hash;
         }
     }
 
     %result = (data=>\@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2077,9 +2465,8 @@ sub studies_table_POST {
     my $trait_id = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub studies_table_GET {
@@ -2087,44 +2474,111 @@ sub studies_table_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
+    my $data_level = $c->req->param('observationLevel') || 'plot';
+    my $format = $c->req->param('format') || 'json';
     my %result;
 
-    my $timestamp = $c->req->param("timestamp") || 0;
-    my $bs = CXGN::BreederSearch->new( { dbh => $self->bcs_schema->storage->dbh() });
+    my $include_timestamp = $c->req->param("timestamp") || 0;
     my $trial_id = $c->stash->{study_id};
-    my $trial_sql = "\'$trial_id\'";
-    my @data = $bs->get_extended_phenotype_info_matrix(undef,$trial_sql, undef, $timestamp);
+    my $phenotypes_search = CXGN::Phenotypes::Search->new({
+        bcs_schema=>$self->bcs_schema,
+        data_level=>$data_level,
+        trial_list=>[$trial_id],
+        include_timestamp=>$include_timestamp,
+    });
+    my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 
     #print STDERR Dumper \@data;
 
-    my $total_count = scalar(@data)-1;
-    my @header_names = split /\t/, $data[0];
-    #print STDERR Dumper \@header_names;
-    my @trait_names = @header_names[11 .. $#header_names];
-    #print STDERR Dumper \@trait_names;
-    my @header_ids;
-    foreach my $t (@trait_names) {
-        push @header_ids, SGN::Model::Cvterm->get_cvterm_row_from_trait_name($self->bcs_schema, $t)->cvterm_id();
-    }
-
-    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1)+1;
-    my $end = $c->stash->{page_size}*$c->stash->{current_page}+1;
-    my @data_window;
-    for (my $line = $start; $line < $end; $line++) {
-        if ($data[$line]) {
-            my @columns = split /\t/, $data[$line], -1;
-
-            push @data_window, \@columns;
+    if ($format eq 'json') {
+        my $total_count = scalar(@data)-1;
+        my @header_names = split /\t/, $data[0];
+        #print STDERR Dumper \@header_names;
+        my @trait_names = @header_names[13 .. $#header_names];
+        #print STDERR Dumper \@trait_names;
+        my @header_ids;
+        foreach my $t (@trait_names) {
+            push @header_ids, SGN::Model::Cvterm->get_cvterm_row_from_trait_name($self->bcs_schema, $t)->cvterm_id();
         }
+
+        my $start = $c->stash->{page_size}*($c->stash->{current_page}-1)+1;
+        my $end = $c->stash->{page_size}*$c->stash->{current_page}+1;
+        my @data_window;
+        for (my $line = $start; $line < $end; $line++) {
+            if ($data[$line]) {
+                my @columns = split /\t/, $data[$line], -1;
+
+                push @data_window, \@columns;
+            }
+        }
+
+        #print STDERR Dumper \@data_window;
+
+        %result = (
+            studyDbId => $c->stash->{study_id},
+            headerRow => ['studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'plotDbId', 'plotName', 'rep', 'blockNumber'],
+            observationVariableDbIds => \@header_ids,
+            observationVariableNames => \@header_names,
+            data=>\@data_window
+        );
+        my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>[]);
+        my %response = (metadata=>\%metadata, result=>\%result);
+        $c->stash->{rest} = \%response;
+
+    } else {
+        # if xls or csv, create tempfile name and place to save it
+        my $what = "phenotype_download";
+        my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
+        my $dir = $c->tempfiles_subdir('download');
+        my $temp_file_name = $time_stamp . "$what" . "XXXX";
+        my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+        my $tempfile = $c->config->{basepath}."/".$rel_file;
+
+        if ($format eq "csv") {
+
+            #build csv with column names
+            open(CSV, ">", $tempfile) || die "Can't open file $tempfile\n";
+                my @header = split /\t/, $data[0];
+                my $num_col = scalar(@header);
+                for (my $line =0; $line< @data; $line++) {
+                    my @columns = split /\t/, $data[$line];
+                    my $step = 1;
+                    for(my $i=0; $i<$num_col; $i++) {
+                        if ($columns[$i]) {
+                            print CSV "\"$columns[$i]\"";
+                        } else {
+                            print CSV "\"\"";
+                        }
+                        if ($step < $num_col) {
+                            print CSV ",";
+                        }
+                        $step++;
+                    }
+                    print CSV "\n";
+                }
+            close CSV;
+
+        } elsif ($format = 'xls') {
+            my $ss = Spreadsheet::WriteExcel->new($tempfile);
+            my $ws = $ss->add_worksheet();
+
+            for (my $line =0; $line< @data; $line++) {
+                my @columns = split /\t/, $data[$line];
+                for(my $col = 0; $col<@columns; $col++) {
+                    $ws->write($line, $col, $columns[$col]);
+                }
+            }
+            #$ws->write(0, 0, "$program_name, $location ($year)");
+            $ss ->close();
+        }
+
+        #Using tempfile and new filename,send file to client
+        my $file_name = $time_stamp . "$what" . ".$format";
+        $c->res->content_type('Application/'.$format);
+        $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+        my $output = read_file($tempfile);
+        $c->res->body($output);
     }
-
-    #print STDERR Dumper \@data_window;
-
-    %result = (studyDbId => $c->stash->{study_id}, observationVariableDbId => \@header_ids, observationVariableName => \@header_names, data=>\@data_window);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
 }
 
 
@@ -2214,9 +2668,8 @@ sub phenotypes_dataset_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub phenotypes_dataset_GET {
@@ -2225,7 +2678,6 @@ sub phenotypes_dataset_GET {
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my $params = $c->req->params();
-    my @status = @$status;
 
     my $study_id = $params->{studyDbId};
     my $t = CXGN::Trial->new( { trial_id => $study_id, bcs_schema => $self->bcs_schema } );
@@ -2248,7 +2700,7 @@ sub phenotypes_dataset_GET {
     my %result = (
       observationUnitDbId =>
       data => \@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 
@@ -2262,9 +2714,8 @@ sub traits_list_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub traits_list_GET {
@@ -2272,7 +2723,6 @@ sub traits_list_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
     #my $db_rs = $self->bcs_schema()->resultset("General::Db")->search( { name => $c->config->{trait_ontology_db_name} } );
     #if ($db_rs->count ==0) { return undef; }
@@ -2288,20 +2738,29 @@ sub traits_list_GET {
 
     my @data;
     while (my ($cvterm_id, $name) = $p->fetchrow_array()) {
-        my $q2 = "SELECT cvterm.definition, cvtermprop.value, dbxref.accession FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) WHERE cvterm.cvterm_id=?";
+        my $q2 = "SELECT cvterm.definition, cvtermprop.value, dbxref.accession, db.name FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) JOIN db using(db_id) WHERE cvterm.cvterm_id=?";
         my $h = $self->bcs_schema()->storage->dbh()->prepare($q2);
         $h->execute($cvterm_id);
 
-        while (my ($description, $scale, $accession) = $h->fetchrow_array()) {
+        while (my ($description, $scale, $accession, $db) = $h->fetchrow_array()) {
             my @observation_vars = ();
-            push (@observation_vars, ($name, $accession));
-            push @data, { traitDbId => $cvterm_id, traitId => $name, name => $name, description => $description, observationVariables => \@observation_vars, defaultValue => '', scale =>$scale };
+            push @observation_vars, $name.'|'.$db.":".$accession;
+            push @data, {
+                traitDbId => $cvterm_id,
+                traitId => $db.':'.$accession,
+                name => $name,
+                description => $description,
+                observationVariables => \@observation_vars,
+                defaultValue => '',
+                scale =>$scale
+            };
         }
     }
 
     my $total_count = $p->rows;
     my %result = (data => \@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my @datafiles;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 
@@ -2313,7 +2772,6 @@ sub traits_single  : Chained('brapi') PathPart('traits') CaptureArgs(1) {
     #my $auth = _authenticate_user($c);
     my $cvterm_id = shift;
     my $status = $c->stash->{status};
-    my @status = @$status;
     my %result;
 
     my $q = "SELECT cvterm_id, name FROM materialized_traits where cvterm_id=?;";
@@ -2321,19 +2779,27 @@ sub traits_single  : Chained('brapi') PathPart('traits') CaptureArgs(1) {
     $p->execute($cvterm_id);
 
     while (my ($cvterm_id, $name) = $p->fetchrow_array()) {
-	my $q2 = "SELECT cvterm.definition, cvtermprop.value, dbxref.accession FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) WHERE cvterm.cvterm_id=?";
+	my $q2 = "SELECT cvterm.definition, cvtermprop.value, dbxref.accession, db.name FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) WHERE cvterm.cvterm_id=?";
 	my $h = $self->bcs_schema()->storage->dbh()->prepare($q2);
 	$h->execute($cvterm_id);
 
-	while (my ($description, $scale, $accession) = $h->fetchrow_array()) {
+	while (my ($description, $scale, $accession, $db) = $h->fetchrow_array()) {
 	    my @observation_vars = ();
-	    push (@observation_vars, ($name, $accession));
-	    %result = ( traitDbId => $cvterm_id, traitId => $name, name => $name, description => $description, observationVariables => \@observation_vars, defaultValue => '', scale =>$scale );
+	    push @observation_vars, $name.'|'.$db.':'.$accession;
+	    %result = (
+            traitDbId => $cvterm_id,
+            traitId => $db.':'.$accession,
+            name => $name,
+            description => $description,
+            observationVariables => \@observation_vars,
+            defaultValue => '',
+            scale =>$scale
+        );
 	}
     }
 
     my $total_count = $p->rows;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2393,9 +2859,8 @@ sub maps_list_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub maps_list_GET {
@@ -2403,7 +2868,6 @@ sub maps_list_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
     my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
@@ -2454,7 +2918,7 @@ sub maps_list_GET {
     my @data_window = splice @data, $start, $end;
 
     my %result = (data => \@data_window);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2516,9 +2980,8 @@ sub maps_details_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub maps_details_GET {
@@ -2526,7 +2989,6 @@ sub maps_details_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
     my $params = $c->req->params();
     my $total_count = 0;
 
@@ -2593,7 +3055,7 @@ sub maps_details_GET {
       linkageGroups => \@data_window,
     );
 
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%map_info);
     $c->stash->{rest} = \%response;
 }
@@ -2637,9 +3099,8 @@ sub maps_marker_detail_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub maps_marker_detail_GET {
@@ -2647,7 +3108,6 @@ sub maps_marker_detail_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
     my $params = $c->req->params();
 
     my %linkage_groups;
@@ -2718,7 +3178,7 @@ sub maps_marker_detail_GET {
     my @data_window = splice @markers, $start, $end;
 
     my %result = (data => \@data_window);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2731,9 +3191,8 @@ sub locations_list_POST {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
 
-    $c->stash->{rest} = {status => \@status};
+    $c->stash->{rest} = {status => $status};
 }
 
 sub locations_list_GET {
@@ -2741,7 +3200,6 @@ sub locations_list_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my @status = @$status;
     my @data;
     my @attributes;
 
@@ -2757,7 +3215,7 @@ sub locations_list_GET {
     }
 
     my %result = (data=>\@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>\@status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }

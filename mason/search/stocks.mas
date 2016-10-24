@@ -138,6 +138,24 @@ my $breeding_programs_select = simple_selectbox_html(
         </div>
       </div>
     </div>
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Minimum Trait Value: </label>
+          <div class="col-sm-9" >
+            <input type="text" class="form-control" id="minimum_trait_value" />
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Maximum Trait Value: </label>
+          <div class="col-sm-9" >
+            <input type="text" class="form-control" id="maximum_trait_value" />
+          </div>
+        </div>
+      </div>
+    </div>
     <button style="float:right" class="btn btn-primary" id="submit_stock_search" />Search</button>
     <br/><br/>
   </div>
@@ -237,6 +255,8 @@ jQuery(document).ready(function () {
                   d.organism     = jQuery('#organism_select').val();
                   d.person       = jQuery('#person').val();
                   d.trait        = jQuery('#trait').val();
+                  d.minimum_trait_value        = jQuery('#minimum_trait_value').val();
+                  d.maximum_trait_value        = jQuery('#maximum_trait_value').val();
                   d.project      = jQuery('#project').val();
                   d.location     = jQuery('#location').val();
                   d.year         = jQuery('#year').val();

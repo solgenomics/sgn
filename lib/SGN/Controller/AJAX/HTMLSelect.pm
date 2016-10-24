@@ -163,6 +163,70 @@ sub get_trial_type_select : Path('/ajax/html/select/trial_types') Args(0) {
 sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
+    my $breeding_program_id = $c->req->param("breeding_program_id");
+
+    my $projects;
+    if (!$breeding_program_id) {
+      $projects = $p->get_breeding_programs();
+    } else {
+      push @$projects, [$breeding_program_id];
+    }
+
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+    my $size = $c->req->param("size");
+    my $empty = $c->req->param("empty") || "";
+    my @trials;
+    foreach my $project (@$projects) {
+      my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
+      foreach (@$field_trials) {
+          push @trials, $_;
+      }
+    }
+
+    if ($empty) { unshift @trials, [ "", "Please select a trial" ]; }
+
+    my $html = simple_selectbox_html(
+      multiple => 1,
+      name => $name,
+      id => $id,
+      size => $size,
+      choices => \@trials,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->req->param('trial_id');
+    my $data_level = $c->req->param('data_level') || 'plot';
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$trial_id});
+    my $traits_assayed = $trial->get_traits_assayed($data_level);
+    my @traits;
+    foreach (@$traits_assayed) {
+        my @val = ($_->[0], $_->[1]);
+        push @traits, \@val;
+    }
+
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+
+    my $html = simple_selectbox_html(
+      multiple => 1,
+      name => $name,
+      id => $id,
+      choices => \@traits,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
+    my $self = shift;
+    my $c = shift;
 
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } );
 
@@ -176,11 +240,12 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
 
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
-    my @trials;
+    my $size = $c->req->param("size");
+    my @crosses;
     foreach my $project (@$projects) {
       my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($project->[0]);
-      foreach (@$field_trials) {
-          push @trials, $_;
+      foreach (@$cross_trials) {
+          push @crosses, $_;
       }
     }
 
@@ -188,7 +253,8 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
       multiple => 1,
       name => $name,
       id => $id,
-      choices => \@trials,
+      size => $size,
+      choices => \@crosses,
     );
     $c->stash->{rest} = { select => $html };
 }

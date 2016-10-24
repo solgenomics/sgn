@@ -572,6 +572,28 @@ CXGN.List.prototype = {
 	return info;
 
     },
+    
+    addCrossProgenyToList: function(list_id, text) {
+        if (! text) {
+            return;
+        }
+        var list = text.split("\n");
+        list = list.filter(function(n){ return n != '' }); 
+        console.log(list);
+        var addeditems;
+        jQuery.ajax( {
+            url: '/list/add_cross_progeny',
+            async: false,
+            data: { 'list_id':list_id, 'cross_id_list' : JSON.stringify(list) },
+            success: function(response) {
+                console.log(response);
+                addeditems = response.success.count;
+            }
+        });
+        //var info = this.addBulk(list_id, list);
+
+        return addeditems;
+    },
 
     /* listSelect: Creates an html select with lists of requested types.
 
@@ -805,23 +827,28 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
     var listType;
     var typeSourceDiv;
     var type;
+    var addition_type;
 
     if (options) {
-	if (options.selectText) {
-	    selectText = options.selectText;
-	}
-	if (options.typeSourceDiv) {
-	    var sourcetype = getData(options.typeSourceDiv, selectText);
-	    if (sourcetype) {
-		type = sourcetype.replace(/(\n|\r)+$/, '');
-	    }
-	}
-	if (options.listType) {
-	    type = options.listType;
-	}
+        if (options.selectText) {
+            selectText = options.selectText;
+        }
+        if (options.typeSourceDiv) {
+            var sourcetype = getData(options.typeSourceDiv, selectText);
+            if (sourcetype) {
+                type = sourcetype.replace(/(\n|\r)+$/, '');
+            }
+        }
+        if (options.listType) {
+            type = options.listType;
+        }
+        if (options.additionType) {
+            addition_type = options.additionType;
+        }
     }
+
     html = '<div class="row"><div class="col-sm-6" style="margin-right:0px; padding-right:0px;"><input class="form-control input-sm" type="text" id="'+dataDiv+'_new_list_name" placeholder="New list..." />';
-    html += '</div><div class="col-sm-6" style="margin-left:0px; padding-left:0px; margin-right:0px; padding-right:0px;"><input type="hidden" id="'+dataDiv+'_list_type" value="'+type+'" />';
+    html += '</div><div class="col-sm-6" style="margin-left:0px; padding-left:0px; margin-right:0px; padding-right:0px;"><input type="hidden" id="'+dataDiv+'_addition_type" value="'+addition_type+'" /><input type="hidden" id="'+dataDiv+'_list_type" value="'+type+'" />';
     html += '<input class="btn btn-primary btn-sm" id="'+dataDiv+'_add_to_new_list" type="button" value="add to new list" /></div></div><br />';
 
     html += '<div class="row"><div class="col-sm-6" style="margin-right:0px; padding-right:0px;">'+lo.listSelect(dataDiv, [ type ]);
@@ -832,22 +859,27 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
 
     var list_id = 0;
 
-    jQuery('#'+dataDiv+'_add_to_new_list').click(
-	function() {
-	    var lo = new CXGN.List();
-	    var new_name = jQuery('#'+dataDiv+'_new_list_name').val();
-	    var type = jQuery('#'+dataDiv+'_list_type').val();
+    jQuery('#'+dataDiv+'_add_to_new_list').click( function() {
+        var lo = new CXGN.List();
+        var new_name = jQuery('#'+dataDiv+'_new_list_name').val();
+        var type = jQuery('#'+dataDiv+'_list_type').val();
+        var addition_type = jQuery('#'+dataDiv+'_addition_type').val();
 
-	    var data = getData(dataDiv, selectText);
-
-	    list_id = lo.newList(new_name);
-	    if (list_id > 0) {
-		var elementsAdded = lo.addToList(list_id, data);
-		if (type) { lo.setListType(list_id, type); }
-		alert("Added "+elementsAdded+" list elements to list "+new_name+" and set type to "+type);
-	    }
-	}
-    );
+        var data = getData(dataDiv, selectText);
+        list_id = lo.newList(new_name);
+        if (list_id > 0) {
+            var elementsAdded;
+            if (addition_type == 'cross_progeny') {
+                elementsAdded = lo.addCrossProgenyToList(list_id, data);
+            } else {
+                elementsAdded = lo.addToList(list_id, data);
+            }
+            if (type) { 
+                lo.setListType(list_id, type); 
+            }
+            alert("Added "+elementsAdded+" list elements to list "+new_name+" and set type to "+type);
+        }
+    });
 
     jQuery('#'+dataDiv+'_button').click(
 	function() {
