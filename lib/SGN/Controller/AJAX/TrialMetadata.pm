@@ -555,30 +555,10 @@ sub update_field_coord : Chained('trial') PathPart('update_field_coords') Args(0
    my $schema = $c->dbic_schema('Bio::Chado::Schema');
    my $dbh = $c->dbc->dbh();
 
-   my $trial_id = $c->stash->{trial_id};
-   print "TRIALID: $trial_id\n";
-
-    if (!$c->user()) {
-	  	print STDERR "User not logged in... not updating field map.\n";
-	  	$c->stash->{rest} = {error => "You need to be logged in to update field map." };
-	  	return;
-    }
-
-    my $user_id = $c->user->get_object->get_sp_person_id();
-
-    if ($c->user->check_roles('curator')) {
-  	   return 0;
-    }
-
-    my $breeding_programs = $c->stash->{trial}->get_breeding_programs();
-    print STDERR Dumper($breeding_programs);
-
-    if ( ($c->user->check_roles('submitter')) && ( $c->user->check_roles($breeding_programs->[0]->[1]))) {
-	     return 0;
-    } else {
-      $c->stash->{rest} = {error => "You have insufficient privileges to modify or update this map." };
-	  	return;
-    }
+   if ($self->update_map_privileges_denied($c)) {
+ $c->stash->{rest} = { error => "You have insufficient access privileges to update this map." };
+ return;
+   }
 
    my @plot_1_objectIDs;
    my @plot_2_objectIDs;
@@ -594,16 +574,12 @@ sub update_field_coord : Chained('trial') PathPart('update_field_coords') Args(0
      push @plot_2_objectIDs, $plot_2_objectID;
    }
 
-   print STDERR Dumper(@plot_1_objectIDs);
-   print STDERR Dumper(@plot_2_objectIDs);
-
      for (my $n=0; $n<scalar(@plot_2_objectIDs); $n++) {
         my $h2 = $dbh->prepare("update stock_relationship set object_id =? where object_id=? and subject_id=?;");
          $h2->execute($plot_1_objectIDs[$n],$plot_2_objectIDs[$n],$plot_2_id);
      }
 
      for (my $n=0; $n<scalar(@plot_2_objectIDs); $n++) {
-       #foreach my $plot1 (@plot_1_objectIDs) {
         my $h2 = $dbh->prepare("update stock_relationship set object_id =? where object_id=? and subject_id=?;");
          $h2->execute($plot_2_objectIDs[$n],$plot_1_objectIDs[$n],$plot_1_id);
     }
@@ -651,7 +627,7 @@ sub delete_privileges_denied {
     my $user_id = $c->user->get_object->get_sp_person_id();
 
     if ($c->user->check_roles('curator')) {
-	return 0;
+	     return 0;
     }
 
     my $breeding_programs = $c->stash->{trial}->get_breeding_programs();
@@ -660,6 +636,27 @@ sub delete_privileges_denied {
 	return 0;
     }
     return "You have insufficient privileges to modify or delete this trial.";
+}
+
+sub update_map_privileges_denied {
+    my $self = shift;
+    my $c = shift;
+
+    my $trial_id = $c->stash->{trial_id};
+
+    if (! $c->user) { return "Login required for map update functions."; }
+    my $user_id = $c->user->get_object->get_sp_person_id();
+
+    if ($c->user->check_roles('curator')) {
+	     return 0;
+    }
+
+    my $breeding_programs = $c->stash->{trial}->get_breeding_programs();
+
+    if ( ($c->user->check_roles('submitter')) && ( $c->user->check_roles($breeding_programs->[0]->[1]))) {
+	return 0;
+    }
+    return "You have insufficient privileges to modify or update this map.";
 }
 
 # loading field coordinates
