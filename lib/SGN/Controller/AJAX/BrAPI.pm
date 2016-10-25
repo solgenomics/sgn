@@ -2298,7 +2298,6 @@ sub studies_layout_GET {
 	} else {
 	    $type = 'Test';
 	}
-	%optional_info;
 	$formatted_plot = {
 	    studyDbId => $c->stash->{study_id},
 	    observationUnitDbId => $design->{$plot_number}->{plot_id},
@@ -2372,16 +2371,26 @@ sub studies_stock_phenotypes_POST {
 sub studies_stock_phenotypes_GET {
     my $self = shift;
     my $c = shift;
-    my $trait_id = $c->req->param('observationVariableDbId');
+    my $trait_ids = $c->req->param('observationVariableDbId');
     my $data_level = $c->req->param('observationLevel') || 'plot';
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my %result;
-
+    my @trait_ids_array;
+    if(ref($trait_ids) eq 'ARRAY') {
+        @trait_ids_array = @{$trait_ids};
+    } elsif(ref($trait_ids) eq 'SCALAR') {
+        @trait_ids_array = ($trait_ids);
+    }
     my $t = $c->stash->{study};
-    my $phenotype_data = $t->get_stock_phenotypes_for_trait($trait_id, $data_level);
-
-    my $trait =$self->bcs_schema->resultset('Cv::Cvterm')->find({ cvterm_id => $trait_id });
+    my $phenotype_data;
+    if ($data_level eq 'all') {
+        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'all');
+    } elsif ($data_level eq 'plot') {
+        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plot', 'plot_of', 'accession', 'subject');
+    } elsif ($data_level eq 'plant') {
+        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plant', 'plant_of', 'plot', 'object');
+    }
 
     #print STDERR Dumper $phenotype_data;
 
@@ -2391,35 +2400,31 @@ sub studies_stock_phenotypes_GET {
     my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
     for( my $i = $start; $i <= $end; $i++ ) {
         if (@$phenotype_data[$i]) {
-            my $pheno_uniquename = @$phenotype_data[$i]->[2];
+            my $pheno_uniquename = @$phenotype_data[$i]->[5];
             my ($part1 , $part2) = split( /date: /, $pheno_uniquename);
             my ($timestamp , $operator) = split( /\ \ operator = /, $part2);
 
-            my $plot_id = @$phenotype_data[$i]->[0];
-            my $stock_plot_relationship_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'plot_of', 'stock_relationship')->cvterm_id();
-            my $germplasm =$self->bcs_schema->resultset('Stock::StockRelationship')->find({ 'me.subject_id' => $plot_id, 'me.type_id' =>$stock_plot_relationship_type_id }, {join => 'object', '+select'=> ['object.stock_id', 'object.uniquename'], '+as'=> ['germplasm_id', 'germplasm_name'] } );
-
             my %data_hash = (
                 studyDbId => $c->stash->{study_id},
-                observationDbId=>'',
-                observationVariableDbId => $trait_id,
-                observationVariableName => $trait->name(),
+                observationDbId=>@$phenotype_data[$i]->[4],
+                observationVariableDbId => @$phenotype_data[$i]->[2],
+                observationVariableName => @$phenotype_data[$i]->[3],
                 observationUnitDbId => @$phenotype_data[$i]->[0],
                 observationUnitName => @$phenotype_data[$i]->[1],
-                observationLevel => 'plot',
+                observationLevel => $data_level,
                 observationTimestamp => $timestamp,
-                uploadedBy => @$phenotype_data[$i]->[3],
+                uploadedBy => @$phenotype_data[$i]->[6],
                 operator => $operator,
-                germplasmDbId => $germplasm->get_column('germplasm_id'),
-                germplasmName => $germplasm->get_column('germplasm_name'),
-                value => @$phenotype_data[$i]->[4]
+                germplasmDbId => @$phenotype_data[$i]->[8],
+                germplasmName => @$phenotype_data[$i]->[9],
+                value => @$phenotype_data[$i]->[7]
             );
             push @data, \%data_hash;
         }
     }
 
     %result = (data=>\@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>[]);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }

@@ -1137,10 +1137,10 @@ sub get_phenotypes_for_trait {
     return @data;
 }
 
-=head2 function get_stock_phenotypes_for_trait($trait_id)
+=head2 function get_stock_phenotypes_for_traits(\@trait_id)
 
  Usage:
- Desc:         returns all plot_id, plot_name, pheno_uniquename, uploader_id, value for the given trait in this trial
+ Desc:         returns all plot_id, plot_name, pheno_uniquename, uploader_id, value for the given traits in this trial
  Ret:
  Args:
  Side Effects:
@@ -1148,40 +1148,72 @@ sub get_phenotypes_for_trait {
 
 =cut
 
-sub get_stock_phenotypes_for_trait {
+sub get_stock_phenotypes_for_traits {
     my $self = shift;
-    my $trait_id = shift;
-    my $stock_type = shift;
+    my $trait_ids = shift;
+    my $stock_type = shift || 'all';
     my $stock_relationship = shift;
     my $relationship_stock_type = shift;
+	my $subject_or_object = shift || 'subject';
     my @data;
     my $dbh = $self->bcs_schema->storage()->dbh();
-
-    my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+	my $sql_trait_ids = join ("," , @$trait_ids);
+	my $where_clause = 'WHERE project_id=? and a.cvterm_id IN (?) and b.cvterm_id = ? and phenotype.value~? ';
+	my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 	my $q;
-	if ($stock_type) {
-		my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
-		if ($stock_relationship) {
-			my $stock_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_relationship, 'stock_relationship')->cvterm_id();
-			my $rel_stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $relationship_stock_type, 'stock_type')->cvterm_id();
-			if ($relationship_stock_type) {
-				
-				$q = "SELECT stock.stock_id, stock.uniquename, phenotype.uniquename, phenotype.sp_person_id, phenotype.value::real, rel_stock.stock_id, rel_stock.uniquename FROM cvterm as a JOIN phenotype ON (a.cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN cvterm as b ON (b.cvterm_id=nd_experiment_stock.type_id) JOIN stock USING(stock_id) JOIN stock_relationship on (stock.stock_id=stock_relationship.object_id) JOIN stock as rel_stock on (stock_relationship.subject_id=rel_stock.stock_id) WHERE rel_stock.type_id=$rel_stock_type_cvterm_id and stock.type_id=$stock_type_cvterm_id and stock_relationship.type_id=$stock_relationship_cvterm_id and project_id=? and a.cvterm_id = ? and b.cvterm_id = ? and phenotype.value~? ORDER BY stock.stock_id;";
-			} else {
-				$q = "SELECT stock.stock_id, stock.uniquename, phenotype.uniquename, phenotype.sp_person_id, phenotype.value::real, rel_stock.stock_id, rel_stock.uniquename FROM cvterm as a JOIN phenotype ON (a.cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN cvterm as b ON (b.cvterm_id=nd_experiment_stock.type_id) JOIN stock USING(stock_id) JOIN stock_relationship on (stock.stock_id=stock_relationship.object_id) JOIN stock as rel_stock on (stock_relationship.subject_id=rel_stock.stock_id) WHERE stock.type_id=$stock_type_cvterm_id and stock_relationship.type_id=$stock_relationship_cvterm_id and project_id=? and a.cvterm_id = ? and b.cvterm_id = ? and phenotype.value~? ORDER BY stock.stock_id;";
-			}
-		} else {
-			$q = "SELECT stock.stock_id, stock.uniquename, phenotype.uniquename, phenotype.sp_person_id, phenotype.value::real FROM cvterm as a JOIN phenotype ON (a.cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN cvterm as b ON (b.cvterm_id=nd_experiment_stock.type_id) JOIN stock USING(stock_id) WHERE stock.type_id=$stock_type_cvterm_id and project_id=? and a.cvterm_id = ? and b.cvterm_id = ? and phenotype.value~? ORDER BY stock.stock_id;";
-		}
+
+	if ($stock_type eq 'all') {
+		$q = "SELECT stock.stock_id, stock.uniquename, a.cvterm_id, a.name || '|' || db.name ||  ':' || dbxref.accession, phenotype.phenotype_id, phenotype.uniquename, phenotype.sp_person_id, phenotype.value::real
+			FROM cvterm as a
+			JOIN dbxref ON (a.dbxref_id = dbxref.dbxref_id)
+			JOIN db USING(db_id)
+			JOIN phenotype ON (a.cvterm_id=cvalue_id)
+			JOIN nd_experiment_phenotype USING(phenotype_id)
+			JOIN nd_experiment_project USING(nd_experiment_id)
+			JOIN nd_experiment_stock USING(nd_experiment_id)
+			JOIN cvterm as b ON (b.cvterm_id=nd_experiment_stock.type_id)
+			JOIN stock USING(stock_id)
+			$where_clause
+			ORDER BY stock.stock_id;";
 	} else {
-		$q = "SELECT stock.stock_id, stock.uniquename, phenotype.uniquename, phenotype.sp_person_id, phenotype.value::real FROM cvterm as a JOIN phenotype ON (a.cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN cvterm as b ON (b.cvterm_id=nd_experiment_stock.type_id) JOIN stock USING(stock_id) WHERE project_id=? and a.cvterm_id = ? and b.cvterm_id = ? and phenotype.value~? ORDER BY stock.stock_id;";
+		my $relationship_join = '';
+		if ($subject_or_object eq 'object') {
+			$relationship_join = 'JOIN stock_relationship on (stock.stock_id=stock_relationship.object_id) JOIN stock as rel_stock on (stock_relationship.subject_id=rel_stock.stock_id) ';
+		} elsif ($subject_or_object eq 'subject') {
+			$relationship_join = 'JOIN stock_relationship on (stock.stock_id=stock_relationship.subject_id) JOIN stock as rel_stock on (stock_relationship.object_id=rel_stock.stock_id) ';
+		}
+		if ($stock_type) {
+			my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
+			$where_clause .= "and stock.type_id=$stock_type_cvterm_id ";
+			if ($stock_relationship) {
+				my $stock_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_relationship, 'stock_relationship')->cvterm_id();
+				my $rel_stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $relationship_stock_type, 'stock_type')->cvterm_id();
+				$where_clause .= "and stock_relationship.type_id=$stock_relationship_cvterm_id";
+				if ($relationship_stock_type) {
+					$where_clause .= "and rel_stock.type_id=$rel_stock_type_cvterm_id and stock_relationship.type_id=$stock_relationship_cvterm_id";
+				}
+			}
+		}
+		$q = "SELECT stock.stock_id, stock.uniquename, a.cvterm_id, a.name || '|' || db.name ||  ':' || dbxref.accession, phenotype.phenotype_id, phenotype.uniquename, phenotype.sp_person_id, phenotype.value::real, rel_stock.stock_id, rel_stock.uniquename
+			FROM cvterm as a
+			JOIN dbxref ON (a.dbxref_id = dbxref.dbxref_id)
+			JOIN db USING(db_id)
+			JOIN phenotype ON (a.cvterm_id=cvalue_id)
+			JOIN nd_experiment_phenotype USING(phenotype_id)
+			JOIN nd_experiment_project USING(nd_experiment_id)
+			JOIN nd_experiment_stock USING(nd_experiment_id)
+			JOIN cvterm as b ON (b.cvterm_id=nd_experiment_stock.type_id)
+			JOIN stock USING(stock_id)
+			$relationship_join
+			$where_clause
+			ORDER BY stock.stock_id;";
 	}
     my $h = $dbh->prepare($q);
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    $h->execute($self->get_trial_id(), $trait_id, $phenotyping_experiment_cvterm, $numeric_regex );
-    while (my ($stock_id, $stock_name, $pheno_uniquename, $uploader_id, $value, $rel_stock_id, $rel_stock_name) = $h->fetchrow_array()) {
-        push @data, [$stock_id, $stock_name, $pheno_uniquename, $uploader_id, $value + 0, $rel_stock_id, $rel_stock_name];
+    $h->execute($self->get_trial_id(), $sql_trait_ids, $phenotyping_experiment_cvterm, $numeric_regex );
+    while (my ($stock_id, $stock_name, $trait_id, $trait_name, $phenotype_id, $pheno_uniquename, $uploader_id, $value, $rel_stock_id, $rel_stock_name) = $h->fetchrow_array()) {
+        push @data, [$stock_id, $stock_name, $trait_id, $trait_name, $phenotype_id, $pheno_uniquename, $uploader_id, $value + 0, $rel_stock_id, $rel_stock_name];
     }
     return \@data;
 }

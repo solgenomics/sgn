@@ -190,13 +190,13 @@ my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
 #print STDERR Dumper \@pheno_for_trait_sorted;
 is_deeply(\@pheno_for_trait_sorted, ['30','40','50'], 'check traits assayed' );
 
-my $plot_pheno_for_trait = $tn->get_stock_phenotypes_for_trait(70727);
+my $plot_pheno_for_trait = $tn->get_stock_phenotypes_for_traits([70727]);
 #print STDERR Dumper $plot_pheno_for_trait;
 my @phenotyped_stocks;
 my @phenotyped_stocks_values;
 foreach (@$plot_pheno_for_trait) {
     push @phenotyped_stocks, $_->[1];
-    push @phenotyped_stocks_values, $_->[4];
+    push @phenotyped_stocks_values, $_->[7];
 }
 @phenotyped_stocks = sort @phenotyped_stocks;
 @phenotyped_stocks_values = sort @phenotyped_stocks_values;
