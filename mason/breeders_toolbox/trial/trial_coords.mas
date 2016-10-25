@@ -4,7 +4,7 @@ $trial_id
 </%args>
 
 
-<& /util/import_javascript.mas, classes => [ 'kinetics.kinetic.js' ] &>
+<& /util/import_javascript.mas, classes => [ 'kinetics.kinetic.js', 'jqueryui.js', 'jquery.js' ] &>
 
 
 
@@ -60,7 +60,7 @@ $trial_id
     <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
     <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
   </ul> </br> -->
-   <a id="download" class="btn btn-primary">Download as Image</a> &nbsp; <a id="delete_field_map_link"><button class="btn btn-danger"  type="button" id="delete_map_button" value="delete_cords" >Delete Map</button></a>
+   <a id="download" class="btn btn-primary">Download as Image</a> &nbsp; <a id="delete_field_map_link"><button class="btn btn-danger"  type="button" id="delete_map_button" value="delete_cords" >Delete Map</button></a> &nbsp; <a id="update_field_map_link"><button class="btn btn-success"  type="button" id="update_map_button" value="update_cords" style="display:none;">Update Map</button></a>
  </div>
 
 
@@ -69,20 +69,36 @@ var trial_id = <% $trial_id %>;
 //alert("trial_id: "+trial_id)
    jQuery(document).ready( function() {
 
+   var container_new = new Container();
+   var result;
+   //var container_string = container_new;
+   function Container(){
+          this.variables = [];
+       }
+       Container.prototype.addVar = function(info_acc){
+          this.variables.push(info_acc);
+       }
+       Container.prototype.toString = function(){
+          var result = '';
+          for(var i in this.variables)
+              result += this.variables[i];
+          return result;
+   }
+
      jQuery('#physical_layout_onswitch').click( function() {
 
 //   jQuery(function() {
-  //  jQuery("#downloadImgLink").click(function() {
-    //    html2canvas(jQuery("#container"), {
-      //      onrendered: function(canvas) {
-        //        theCanvas = canvas;
+//    jQuery("#downloadImgLink").click(function() {
+//        html2canvas(jQuery("#container"), {
+//            onrendered: function(canvas) {
+//                theCanvas = canvas;
 //
 //                canvas.toBlob(function(blob) {
-  //                  saveAs(blob, "Dashboard.png");
-    //            });
-      //      }
-      //  });
-  //  });
+//                  saveAs(blob, "Dashboard.png");
+//            });
+//        }
+//      });
+//    });
 //  });
 
 	jQuery.ajax( {
@@ -145,7 +161,7 @@ var trial_id = <% $trial_id %>;
 					response.plot_number[y][x] = '';
 					}
 
-				draw_rect(stage, plot_layer, popup_layer, response.plot_msg[y][x], x, y, max_col, response.coord_col[x], response.coord_row[y], plot_counter, response.plot_id[y][x], response.plot_number[y][x], max_rep, max_block, response.controls, response.acc[y][x], response.blk[y][x], response.rep_no[y][x]);
+				draw_rect(stage, plot_layer, popup_layer, response.plot_msg[y][x], x, y, max_col, response.coord_col[x], response.coord_row[y], plot_counter, response.plot_id[y][x], response.plot_number[y][x], max_rep, max_block, response.controls, response.acc[y][x], response.blk[y][x], response.rep_no[y][x], response.plot_name[y][x]);
 
 			}
 		}
@@ -161,8 +177,8 @@ var trial_id = <% $trial_id %>;
         });
      });
 
-    function draw_rect(stage, plot_layer, popup_layer, plot_msg, x, y, max_col, col_number, row_number, plot_counter, plot_id, plot_number, max_rep, max_block, controls, accessions, blk, rep_no){
-
+    function draw_rect(stage, plot_layer, popup_layer, plot_msg, x, y, max_col, col_number, row_number, plot_counter, plot_id, plot_number, max_rep, max_block, controls, accessions, blk, rep_no, plot_name){
+//alert("plot id: "+plot_id+ ", accession: "+accessions );
   var width = 65;
 	var popup_x = width;
   var popup_width = 200;
@@ -219,15 +235,16 @@ var trial_id = <% $trial_id %>;
   }
 
 	var myRectangle = new Kinetic.Rect({
-	x:x,
-	y:y,
-	width:width,
-	height:width,
-	//fill:'#C0C0C0',
-  fill: color,
-	stroke: stroke_col,
-	strokeWidth:3,
-      });
+  	x:x,
+  	y:y,
+  	width:width,
+  	height:width,
+  	//fill:'#C0C0C0',
+    fill: color,
+  	stroke: stroke_col,
+  	strokeWidth:3,
+    draggable: true
+  });
 
 	var plot_txt_info = new Kinetic.Text({
         x:x +10,
@@ -277,16 +294,49 @@ var trial_id = <% $trial_id %>;
 	//plot_layer.draw();
 
        	popup_layer.removeChildren();
-	popup_layer.draw();
+	       popup_layer.draw();
 
       });
 
-       myRectangle.on('mousedown', function() {
+      myRectangle.addEventListener("dblclick", myFunction);
 
-	window.location.href = '/stock/'+plot_id+'/view';
-	//window.location.href = 'http://cassavabase.org/stock/'+plot_id+'/view';
+      function myFunction() {
+        window.location.href = '/stock/'+plot_id+'/view';
+      }
 
-      });
+      //myRectangle.on('mousedown', function() {
+
+	    //  window.location.href = '/stock/'+plot_id+'/view';
+	   //   window.location.href = 'http://cassavabase.org/stock/'+plot_id+'/view';
+    // });
+
+    myRectangle.on('dragstart', function(){
+      myRectangle.moveToTop();
+      plot_layer.add(plot_txt_info);
+    });
+    myRectangle.on('dragend',function(){
+      var a = accessions+","+plot_id+",";
+      //alert("1: "+a);
+      alert(accessions+" in plot "+plot_number+ " was moved to a different plot.");
+      if (!container_new.variables[2]) {
+        container_new.addVar(a);
+      }
+      if (container_new.variables[1] == container_new.variables[0]){
+        if (container_new.variables[2]){
+          container_new.variables[1] = container_new.variables[2];
+          container_new.variables[2] = '';
+          //alert(container_new.toString());
+          result = container_new.toString();
+          jQuery('#update_field_map_link').find('button').trigger('click');
+        }
+      } else if ((container_new.variables[1]) && (container_new.variables[1] != container_new.variables[0])){
+          //alert(container_new.toString());
+          result = container_new.toString();
+          jQuery('#update_field_map_link').find('button').trigger('click');
+
+      }
+
+    });
 
       plot_layer.add(myRectangle);
       plot_layer.add(plot_txt_info);
@@ -306,7 +356,60 @@ var trial_id = <% $trial_id %>;
  }, false);
 
 
+ jQuery("#update_field_map_dialog").dialog({
+ autoOpen: false,
+ modal: true,
+ autoResize:true,
+     width: 500,
+     position: ['top', 75],
+ buttons: {
+         "Cancel": function () {
+             jQuery('#update_field_map_dialog').dialog("close");
+             location.reload();
+         },
+   "Ok": {text: "Ok", id:"update_field_coords_ok_button", click:function () {
+ update_field_map(result);
+             jQuery('#update_field_map_dialog').dialog("close");
+     }
+   }
+ }
+ });
+
 });
+
+
+/////////UPDATE//////////////
+
+function update_field_map(result) {
+    jQuery('#update_field_map_dialog').dialog("close");
+    jQuery('#working_modal').modal("show");
+
+  var plotID_accessions = result;
+  //var container_string = JSON.stringify(plotID_accessions);
+  new jQuery.ajax({
+   type: 'POST',
+   url: '/ajax/breeders/trial/<% $trial_id %>/update_field_coords',
+   dataType: "json",
+   data: {
+             'plot_infor': plotID_accessions,
+   },
+
+   success: function (response) {
+       jQuery('#working_modal').modal("hide");
+
+      if (response.error) {
+          alert("Error Updating Field Map: "+response.error);
+      } else {
+          //alert("Field map deletion Successful...");
+          jQuery('#update_field_map_dialog_message').dialog("open");
+          }
+   },
+   error: function () {
+       jQuery('#working_modal').modal("hide");
+             alert('An error occurred updating field map.');
+   }
+  });
+ }
 
 </script>
 
@@ -324,6 +427,22 @@ var trial_id = <% $trial_id %>;
        </label>
 
    </div>
+</div>
+
+<div id="update_field_map_dialog" title="Update Physical Field Map" style="display:none;">
+   <div id="trait_list_dc" name="trait_list">
+       <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;">Please, confirm change of accessions between plots in the map... <br />
+
+       </label>
+
+   </div>
+</div>
+
+<div id="update_field_map_dialog_message" title="Update Physical Field Map" style="display:none;">
+   <p>
+       <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+       The field coordinates were updated successfully...
+   </p>
 </div>
 
 <style>

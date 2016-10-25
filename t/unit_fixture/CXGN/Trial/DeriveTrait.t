@@ -216,11 +216,14 @@ my $store_error = $store_phenotypes->store();
 ok(!$store_error, "check that store pheno spreadsheet works");
 
 my $trait_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($fix->bcs_schema, 'dry matter content|CO:0000092')->cvterm_id();
-my $all_stock_phenotypes_for_dry_matter_content = $tn->get_stock_phenotypes_for_trait($trait_id);
+my $all_stock_phenotypes_for_dry_matter_content = $tn->get_stock_phenotypes_for_traits([$trait_id], 'all');
+#print STDERR Dumper $all_stock_phenotypes_for_dry_matter_content;
 ok(scalar(@$all_stock_phenotypes_for_dry_matter_content) == 6, "check if num phenotype saved is correct");
-my $plant_phenotypes_for_dry_matter_content = $tn->get_stock_phenotypes_for_trait($trait_id, 'plant');
+my $plant_phenotypes_for_dry_matter_content = $tn->get_stock_phenotypes_for_traits([$trait_id], 'plant', 'plant_of', 'plot', 'object');
+#print STDERR Dumper $plant_phenotypes_for_dry_matter_content;
 ok(scalar(@$plant_phenotypes_for_dry_matter_content) == 4, "check num phenotype for plant is correct");
-my $plot_phenotypes_for_dry_matter_content = $tn->get_stock_phenotypes_for_trait($trait_id, 'plot');
-ok(scalar(@$plot_phenotypes_for_dry_matter_content) == 2, "check num phenotype for plant is correct");
+my $plot_phenotypes_for_dry_matter_content = $tn->get_stock_phenotypes_for_traits([$trait_id], 'plot', 'plot_of', 'accession', 'subject');
+#print STDERR Dumper $plot_phenotypes_for_dry_matter_content;
+ok(scalar(@$plot_phenotypes_for_dry_matter_content) == 2, "check num phenotype for plot is correct");
 
 done_testing();

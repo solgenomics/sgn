@@ -425,7 +425,7 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
   $acc_name[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'accession_name'};
   $blk_no[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'block_number'};
   $rep_no[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'rep_number'};
-
+  $plot_name[$my_hash->{'row_number'}-1][$my_hash->{'col_number'}-1] = $my_hash->{'plot_name'};
 		}
 		else {
 		}
@@ -442,7 +442,7 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 	push @rep_numbers, $my_hash->{'rep_number'};
 	push @block_numbers, $my_hash->{'block_number'};
 	push @accession_name, $my_hash->{'accession_name'};
-	push @plot_name, $my_hash->{'plot_name'};
+	#push @plot_name, $my_hash->{'plot_name'};
 
     }
 
@@ -508,7 +508,8 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 
 }
 
-sub compute_derive_traits : Path('/ajax/phenotype/delete_field_coords') Args(0) {
+#sub compute_derive_traits : Path('/ajax/phenotype/delete_field_coords') Args(0) {
+sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
 
   my $self = shift;
 	my $c = shift;
@@ -532,6 +533,84 @@ sub compute_derive_traits : Path('/ajax/phenotype/delete_field_coords') Args(0) 
   my $h = $dbh->prepare("delete from stockprop where stockprop.stockprop_id IN (select stockprop.stockprop_id from project join nd_experiment_project using(project_id) join nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) join stockprop on(stock.stock_id=stockprop.stock_id) where (stockprop.type_id IN (select cvterm_id from cvterm where name='col_number') or stockprop.type_id IN (select cvterm_id from cvterm where name='row_number')) and project.project_id=? and stock.type_id IN (select cvterm_id from cvterm join cv using(cv_id) where cv.name = 'stock_type' and cvterm.name ='plot'));");
   my ($row_number, $col_number, $cvterm_id, @cvterm );
   $h->execute($trial_id);
+
+  $c->stash->{rest} = {success => 1};
+
+}
+
+
+sub update_field_coord : Chained('trial') PathPart('update_field_coords') Args(0) {
+
+  my $self = shift;
+	my $c = shift;
+	my $plotIDs_accessions = $c->req->param('plot_infor');
+  print "MY PLOTID AND ACCESSIONS: $plotIDs_accessions\n";
+
+  my ($accession_1, $plot_1_id, $accession_2, $plot_2_id) = split /,/, $plotIDs_accessions;
+  print "hello1: $accession_1\n";
+  print "hello2: $plot_1_id\n";
+  print "hello3: $accession_2\n";
+  print "hello4: $plot_2_id\n";
+
+  if (!$accession_1 || !$accession_2){
+    $c->stash->{rest} = {error => "Dragged plot has no accession." };
+	 	return;
+  }
+  if (!$plot_1_id || !$plot_2_id ){
+    $c->stash->{rest} = {error => "Dragged plot is empty." };
+	 	return;
+  }
+  if ($plot_1_id == $plot_2_id){
+    $c->stash->{rest} = {error => "You have dragged a plot twice." };
+	 	return;
+  }
+
+   my $schema = $c->dbic_schema('Bio::Chado::Schema');
+   my $dbh = $c->dbc->dbh();
+
+   if ($self->update_map_privileges_denied($c)) {
+ $c->stash->{rest} = { error => "You have insufficient access privileges to update this map." };
+ return;
+   }
+
+   my $trial_id = $c->stash->{trial_id};
+   my $trial = CXGN::Trial->new({ bcs_schema => $schema,
+     trial_id => $trial_id
+   });
+
+   my $triat_name = $trial->get_traits_assayed();
+
+   print STDERR Dumper($triat_name);
+
+
+  if (scalar(@{$triat_name}) != 0)  {
+    $c->stash->{rest} = {error => "One or more traits have been assayed for this trial; Map/Layout can not be modified." };
+    return;
+  }
+
+   my @plot_1_objectIDs;
+   my @plot_2_objectIDs;
+   my $h = $dbh->prepare("select object_id from stock_relationship where subject_id=?;");
+   $h->execute($plot_1_id);
+   while (my $plot_1_objectID = $h->fetchrow_array()) {
+     push @plot_1_objectIDs, $plot_1_objectID;
+   }
+
+   my $h1 = $dbh->prepare("select object_id from stock_relationship where subject_id=?;");
+   $h1->execute($plot_2_id);
+   while (my $plot_2_objectID = $h1->fetchrow_array()) {
+     push @plot_2_objectIDs, $plot_2_objectID;
+   }
+
+     for (my $n=0; $n<scalar(@plot_2_objectIDs); $n++) {
+        my $h2 = $dbh->prepare("update stock_relationship set object_id =? where object_id=? and subject_id=?;");
+         $h2->execute($plot_1_objectIDs[$n],$plot_2_objectIDs[$n],$plot_2_id);
+     }
+
+     for (my $n=0; $n<scalar(@plot_2_objectIDs); $n++) {
+        my $h2 = $dbh->prepare("update stock_relationship set object_id =? where object_id=? and subject_id=?;");
+         $h2->execute($plot_2_objectIDs[$n],$plot_1_objectIDs[$n],$plot_1_id);
+    }
 
   $c->stash->{rest} = {success => 1};
 
@@ -576,7 +655,7 @@ sub delete_privileges_denied {
     my $user_id = $c->user->get_object->get_sp_person_id();
 
     if ($c->user->check_roles('curator')) {
-	return 0;
+	     return 0;
     }
 
     my $breeding_programs = $c->stash->{trial}->get_breeding_programs();
@@ -585,6 +664,27 @@ sub delete_privileges_denied {
 	return 0;
     }
     return "You have insufficient privileges to modify or delete this trial.";
+}
+
+sub update_map_privileges_denied {
+    my $self = shift;
+    my $c = shift;
+
+    my $trial_id = $c->stash->{trial_id};
+
+    if (! $c->user) { return "Login required for map update functions."; }
+    my $user_id = $c->user->get_object->get_sp_person_id();
+
+    if ($c->user->check_roles('curator')) {
+	     return 0;
+    }
+
+    my $breeding_programs = $c->stash->{trial}->get_breeding_programs();
+
+    if ( ($c->user->check_roles('submitter')) && ( $c->user->check_roles($breeding_programs->[0]->[1]))) {
+	return 0;
+    }
+    return "You have insufficient privileges to modify or update this map.";
 }
 
 # loading field coordinates
