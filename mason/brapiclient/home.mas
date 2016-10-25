@@ -91,3 +91,7 @@
 <hr>
 <& /brapiclient/traits.mas &>
 <br/>
+
+<hr>
+<& /brapiclient/traits_detail.mas &>
+<br/>

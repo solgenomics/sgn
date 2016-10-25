@@ -281,6 +281,7 @@ sub calls_GET {
         ['studies/id/observations', ['json'], ['GET'] ],
         ['phenotypes-search', ['json'], ['GET','POST'] ],
         ['traits', ['json'], ['GET'] ],
+        ['traits/id', ['json'], ['GET'] ],
     );
 
     my @data;
@@ -2813,27 +2814,35 @@ sub traits_list_GET {
 
 }
 
+
 sub traits_single  : Chained('brapi') PathPart('traits') CaptureArgs(1) {
     my $self = shift;
     my $c = shift;
+    my $trait_id = shift;
+
+    $c->stash->{trait_id} = $trait_id;
+}
+
+
+sub trait_detail  : Chained('traits_single') PathPart('') Args(0) : ActionClass('REST') { }
+
+sub trait_detail_GET {
+    my $self = shift;
+    my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $cvterm_id = shift;
+    my $cvterm_id = $c->stash->{trait_id};
     my $status = $c->stash->{status};
     my %result;
 
-    my $q = "SELECT cvterm_id, name FROM materialized_traits where cvterm_id=?;";
-    my $p = $self->bcs_schema()->storage->dbh()->prepare($q);
-    $p->execute($cvterm_id);
-
-    while (my ($cvterm_id, $name) = $p->fetchrow_array()) {
-	my $q2 = "SELECT cvterm.definition, cvtermprop.value, dbxref.accession, db.name FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) WHERE cvterm.cvterm_id=?";
-	my $h = $self->bcs_schema()->storage->dbh()->prepare($q2);
-	$h->execute($cvterm_id);
-
-	while (my ($description, $scale, $accession, $db) = $h->fetchrow_array()) {
-	    my @observation_vars = ();
-	    push @observation_vars, $name.'|'.$db.':'.$accession;
-	    %result = (
+    my $q = "SELECT cvterm.definition, cvtermprop.value, dbxref.accession, db.name, cvterm.name FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) WHERE cvterm.cvterm_id=?";
+    my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+    $h->execute($cvterm_id);
+    my $total_count = 0;
+    while (my ($description, $scale, $accession, $db, $name) = $h->fetchrow_array()) {
+        $total_count++;
+        my @observation_vars = ();
+        push @observation_vars, $name.'|'.$db.':'.$accession;
+        %result = (
             traitDbId => $cvterm_id,
             traitId => $db.':'.$accession,
             name => $name,
@@ -2842,11 +2851,9 @@ sub traits_single  : Chained('brapi') PathPart('traits') CaptureArgs(1) {
             defaultValue => '',
             scale =>$scale
         );
-	}
     }
 
-    my $total_count = $p->rows;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>[]);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
