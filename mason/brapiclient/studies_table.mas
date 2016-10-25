@@ -5,6 +5,11 @@
 
     <h4>Study Observation Units Table</h4>
     <input name="brapi_home_studytabledbid" id="brapi_home_studytabledbid" class="form-control" type="text" placeholder="StudyDbId e.g. 139" value="139"/>
+    <select name="brapi_home_studytable_datalevel" id="brapi_home_studytable_datalevel" class="form-control" />
+        <option value="plot">Plot</option>
+        <option value="plant">Plant</option>
+        <option value="all">All</option>
+    </select>
     <select name="brapi_home_studytable_format" id="brapi_home_studytable_format" class="form-control" />
         <option value="json">JSON (transformed to HTML table)</option>
         <option value="csv">CSV</option>
@@ -26,7 +31,7 @@ jQuery(document).ready(function() {
     
         if (jQuery('#brapi_home_studytable_format').val() == 'json') {
             jQuery.ajax( {
-              'url': '/brapi/v1/studies/'+jQuery('#brapi_home_studytabledbid').val()+'/table?format='+jQuery('#brapi_home_studytable_format').val(),
+              'url': '/brapi/v1/studies/'+jQuery('#brapi_home_studytabledbid').val()+'/table?format='+jQuery('#brapi_home_studytable_format').val()+'&observationLevel='+jQuery("#brapi_home_studytable_datalevel").val(),
               'method': 'GET',
               'success': function(response) {
                 console.log(response);

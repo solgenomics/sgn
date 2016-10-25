@@ -24,7 +24,7 @@
 jQuery(document).ready(function() {
     jQuery("#brapi_home_studyobservations_submit").click(function() {
         jQuery.ajax( {
-          'url': '/brapi/v1/studies/'+jQuery('#brapi_home_studyobservationsdbid').val()+'/observations?observationVariableDbId='+jQuery('#brapi_home_studyobservationdbid1').val()+'observationVariableDbId='+jQuery('#brapi_home_studyobservationdbid2').val()+'observationLevel='+jQuery('#brapi_home_studyobservations_level').val(),
+          'url': '/brapi/v1/studies/'+jQuery('#brapi_home_studyobservationsdbid').val()+'/observations?observationVariableDbId='+jQuery('#brapi_home_studyobservationdbid1').val()+'&observationVariableDbId='+jQuery('#brapi_home_studyobservationdbid2').val()+'&observationLevel='+jQuery('#brapi_home_studyobservations_level').val(),
           'method': 'GET',
           'beforeSend': function() {
             jQuery('#working_modal').modal('show');

@@ -40,7 +40,7 @@ sub generate_plot_phenotypes {
 
     my $trait_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
-    my $plant_phenotypes_for_trait = $trial->get_stock_phenotypes_for_traits([$trait_id], 'plant', 'plant_of', 'plot', 'object');
+    my $plant_phenotypes_for_trait = $trial->get_stock_phenotypes_for_traits([$trait_id], 'plant', ['plant_of'], 'plot', 'object');
 
     my %plot_plant_values;
     foreach (@$plant_phenotypes_for_trait) {

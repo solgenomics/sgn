@@ -278,6 +278,7 @@ sub calls_GET {
         ['studies/id/germplasm', ['json'], ['GET'] ],
         ['studies/id/table', ['json','csv','xls'], ['GET'] ],
         ['studies/id/layout', ['json'], ['GET'] ],
+        ['studies/id/observations', ['json'], ['GET'] ],
     );
 
     my @data;
@@ -326,7 +327,7 @@ sub observation_levels_GET {
 
     my %pagination = ();
     my %result = (data=>
-        ['plant','plot']
+        ['plant','plot','all']
     );
     my @data_files;
     my %metadata = (pagination=>\%pagination, status=>$status, datafiles=>\@data_files);
@@ -2357,9 +2358,9 @@ sub studies_layout_GET {
 
 =cut
 
-sub studies_stock_phenotypes : Chained('studies_single') PathPart('observations') Args(0) : ActionClass('REST') { }
+sub studies_observations : Chained('studies_single') PathPart('observations') Args(0) : ActionClass('REST') { }
 
-sub studies_stock_phenotypes_POST {
+sub studies_observations_POST {
     my $self = shift;
     my $c = shift;
     my $auth = _authenticate_user($c);
@@ -2368,28 +2369,30 @@ sub studies_stock_phenotypes_POST {
     $c->stash->{rest} = {status => $status};
 }
 
-sub studies_stock_phenotypes_GET {
+sub studies_observations_GET {
     my $self = shift;
     my $c = shift;
-    my $trait_ids = $c->req->param('observationVariableDbId');
+    my @trait_ids_array = $c->req->param('observationVariableDbId');
     my $data_level = $c->req->param('observationLevel') || 'plot';
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
     my %result;
-    my @trait_ids_array;
-    if(ref($trait_ids) eq 'ARRAY') {
-        @trait_ids_array = @{$trait_ids};
-    } elsif(ref($trait_ids) eq 'SCALAR') {
-        @trait_ids_array = ($trait_ids);
-    }
+    #my @trait_ids_array;
+    #if(ref($trait_ids) eq 'ARRAY') {
+    #    @trait_ids_array = @{$trait_ids};
+    #} elsif(ref($trait_ids) eq 'SCALAR') {
+    #    @trait_ids_array = ($trait_ids);
+    #}
+    #print STDERR Dumper $trait_ids;
+    #print STDERR Dumper \@trait_ids_array;
     my $t = $c->stash->{study};
     my $phenotype_data;
     if ($data_level eq 'all') {
-        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'all');
+        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'all', ['plot_of','plant_of'], 'accession', 'subject');
     } elsif ($data_level eq 'plot') {
-        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plot', 'plot_of', 'accession', 'subject');
+        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plot', ['plot_of'], 'accession', 'subject');
     } elsif ($data_level eq 'plant') {
-        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plant', 'plant_of', 'plot', 'object');
+        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plant', ['plant_of'], 'accession', 'subject');
     }
 
     #print STDERR Dumper $phenotype_data;
