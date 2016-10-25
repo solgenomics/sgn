@@ -560,6 +560,21 @@ sub update_field_coord : Chained('trial') PathPart('update_field_coords') Args(0
  return;
    }
 
+   my $trial_id = $c->stash->{trial_id};
+   my $trial = CXGN::Trial->new({ bcs_schema => $schema,
+     trial_id => $trial_id
+   });
+
+   my $triat_name = $trial->get_traits_assayed();
+
+   print STDERR Dumper($triat_name);
+
+
+  if (scalar(@{$triat_name}) != 0)  {
+    $c->stash->{rest} = {error => "One or more traits have been assayed for this trial; Map/Layout can not be modified." };
+    return;
+  }
+
    my @plot_1_objectIDs;
    my @plot_2_objectIDs;
    my $h = $dbh->prepare("select object_id from stock_relationship where subject_id=?;");
