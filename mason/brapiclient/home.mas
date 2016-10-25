@@ -83,3 +83,7 @@
 <hr>
 <& /brapiclient/studies_observations.mas &>
 <br/>
+
+<hr>
+<& /brapiclient/phenotypes_search.mas &>
+<br/>

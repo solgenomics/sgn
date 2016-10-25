@@ -191,7 +191,7 @@ sub search {
     #print STDERR $where_clause."\n";
 
     my $order_clause = " ORDER BY project.name, plot.uniquename";
-    my $q = "SELECT year.value, project.name, accession.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name ||  ':' || dbxref.accession, rep.value, block_number.value, cvterm.cvterm_id, project.project_id, nd_geolocation.nd_geolocation_id, accession.stock_id, plot.stock_id, phenotype.uniquename, design.value, plot_type.name
+    my $q = "SELECT year.value, project.name, accession.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name ||  ':' || dbxref.accession, rep.value, block_number.value, cvterm.cvterm_id, project.project_id, nd_geolocation.nd_geolocation_id, accession.stock_id, plot.stock_id, phenotype.uniquename, design.value, plot_type.name, phenotype.phenotype_id
              FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)
              JOIN cvterm as plot_type ON (plot_type.cvterm_id = plot.type_id)
              JOIN stock as accession ON (object_id=accession.stock_id)
@@ -217,7 +217,7 @@ sub search {
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my $result = [];
-    while (my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename, $design, $stock_type_name) = $h->fetchrow_array()) {
+    while (my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename, $design, $stock_type_name, $phenotype_id) = $h->fetchrow_array()) {
 
         my $timestamp_value;
         if ($include_timestamp) {
@@ -228,7 +228,7 @@ sub search {
             }
         }
         my $synonyms = $synonym_hash_lookup{$stock_name};
-        push @$result, [ $year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name ];
+        push @$result, [ $year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id ];
     }
     #print STDERR Dumper $result;
     print STDERR "Search End:".localtime."\n";
@@ -255,7 +255,7 @@ sub get_extended_phenotype_info_matrix {
     my %seen_plots;
     foreach my $d (@$data) {
 
-        my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name) = @$d;
+        my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id) = @$d;
 
         if (!exists($seen_plots{$plot_id})) {
             push @unique_plot_list, $plot_id;

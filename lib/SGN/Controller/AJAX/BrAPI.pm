@@ -279,6 +279,7 @@ sub calls_GET {
         ['studies/id/table', ['json','csv','xls'], ['GET'] ],
         ['studies/id/layout', ['json'], ['GET'] ],
         ['studies/id/observations', ['json'], ['GET'] ],
+        ['phenotypes-search', ['json'], ['GET','POST'] ],
     );
 
     my @data;
@@ -2502,7 +2503,7 @@ sub studies_table_GET {
         my $total_count = scalar(@data)-1;
         my @header_names = split /\t/, $data[0];
         #print STDERR Dumper \@header_names;
-        my @trait_names = @header_names[14 .. $#header_names];
+        my @trait_names = @header_names[15 .. $#header_names];
         #print STDERR Dumper \@trait_names;
         my @header_ids;
         foreach my $t (@trait_names) {
@@ -2669,51 +2670,88 @@ sub studies_table_GET {
 
 =cut
 
-sub phenotypes_dataset : Chained('brapi') PathPart('phenotypes') Args(0) : ActionClass('REST') { }
+sub phenotypes_search : Chained('brapi') PathPart('phenotypes-search') Args(0) : ActionClass('REST') { }
 
-sub phenotypes_dataset_POST {
+sub phenotypes_search_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
+    process_phenotypes_search($self, $c);
 }
 
-sub phenotypes_dataset_GET {
+sub phenotypes_search_GET {
+    my $self = shift;
+    my $c = shift;
+    process_phenotypes_search($self, $c);
+}
+
+sub process_phenotypes_search {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
-    my $params = $c->req->params();
-
-    my $study_id = $params->{studyDbId};
-    my $t = CXGN::Trial->new( { trial_id => $study_id, bcs_schema => $self->bcs_schema } );
-    my $traits_assayed = $t->get_traits_assayed();
-    print STDERR Dumper $traits_assayed;
-
-    my $count_limit = $c->stash->{page_size};
-    foreach (@$traits_assayed) {
-      if ($_->[2] < $count_limit) {
-
-
-      }
-      $count_limit = $count_limit - $_->[2];
+    my @data;
+    my $stock_ids = $c->req->param('germplasmDbIds');
+    my $trait_ids = $c->req->param('observationVariableDbIds');
+    my $trial_ids = $c->req->param('studyDbIds');
+    my $location_ids = $c->req->param('locationDbIds');
+    my $year_ids = $c->req->param('seasonDbIds');
+    my $data_level = $c->req->param('observationLevel');
+    my @stocks_array = split /,/, $stock_ids;
+    my @traits_array = split /,/, $trait_ids;
+    my @trials_array = split /,/, $trial_ids;
+    my @locations_array = split /,/, $location_ids;
+    my @years_array = split /,/, $year_ids;
+    my $phenotypes_search = CXGN::Phenotypes::Search->new({
+        bcs_schema=>$self->bcs_schema,
+        data_level=>$data_level,
+        stock_list=>\@stocks_array,
+        trial_list=>\@trials_array,
+        location_list=>\@locations_array,
+        trait_list=>\@traits_array,
+        year_list=>\@years_array,
+        include_timestamp=>1,
+    });
+    my $search_result = $phenotypes_search->search();
+    my $total_count = scalar(@$search_result);
+    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+    my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
+    for( my $i = $start; $i <= $end; $i++ ) {
+        if (@$search_result[$i]) {
+            my %data_entry = (
+                observationDbId=>@$search_result[$i]->[19],
+                observationUnitDbId=>@$search_result[$i]->[14],
+                observationUnitName=>@$search_result[$i]->[6],
+                studyDbId=>@$search_result[$i]->[11],
+                studyName=>@$search_result[$i]->[1],
+                studyLocationDbId=>@$search_result[$i]->[12],
+                studyLocation=>@$search_result[$i]->[3],
+                programName=>'',
+                observationLevel=>@$search_result[$i]->[18],
+                germplasmDbId=>@$search_result[$i]->[13],
+                germplasmName=>@$search_result[$i]->[2],
+                observationVariableId=>@$search_result[$i]->[4]."|".@$search_result[$i]->[7],
+                observationVariableDbId=>@$search_result[$i]->[10],
+                season=>@$search_result[$i]->[0],
+                value=>@$search_result[$i]->[5],
+                observationTimeStamp=>@$search_result[$i]->[15],
+                collector=>'',
+                uploadedBy=>'',
+                additionalInfo=>{
+                    'block'=>@$search_result[$i]->[9],
+                    'replicate'=>@$search_result[$i]->[8],
+                    'germplasmSynonyms'=>@$search_result[$i]->[16],
+                    'design'=>@$search_result[$i]->[17],
+                }
+            );
+            push @data, \%data_entry;
+        }
     }
 
-
-    my @data;
-
-    my $total_count = '0';
-    my %result = (
-      observationUnitDbId =>
-      data => \@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
+    my %result = (data => \@data);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>[]);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
-
 }
-
 
 sub traits_list : Chained('brapi') PathPart('traits') Args(0) : ActionClass('REST') { }
 
