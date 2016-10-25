@@ -19,6 +19,10 @@ jQuery(document).ready(function() {
             jQuery('#raw_avgs_div').html("");
             update_formula();
 
+            if (jQuery(this).val() == '') {
+                return;
+            };
+
             var data = [
                 [jQuery(this).val()]
             ];
@@ -130,12 +134,13 @@ jQuery(document).ready(function() {
         function() {
             var trait_id = jQuery('option:selected', this).val();
             var weight_id = trait_id + '_weight';
+            var control_id = trait_id + '_control';
             var trait_name = jQuery('option:selected', this).text();
             var trait_synonym = jQuery('option:selected', this).data("synonym");
             var trait_CO_id = jQuery('option:selected', this).data("co_id");
             var control_html = jQuery('#control_list').html();
             //console.log("control html"+control_html);
-            var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + weight_id + "' class='form-control weight' placeholder='Must be a number (+ or -), default = 1'></input></td><td><select class='form-control' id='" + trait_id + "_control'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
+            var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + weight_id + "' class='form-control weight' placeholder='Must be a number (+ or -), default = 1'></input></td><td><select class='form-control' id='" + control_id + "'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
             jQuery('#trait_table').append(trait_html);
             jQuery('#select_message').text('Add another trait');
             jQuery('#select_message').attr('selected', true);
@@ -146,7 +151,7 @@ jQuery(document).ready(function() {
                     update_formula();
                     jQuery('#trait_list').focus();
                 });
-            jQuery('#'+trait_id +'_control').change(
+            jQuery('#'+control_id).change(
                 function() {
                     update_formula();
             });
@@ -195,6 +200,8 @@ jQuery(document).ready(function() {
         });
         //weighted_column_names.push( { title: "SIN Rank" } );
         var allow_missing = jQuery("#allow_missing").is(':checked');
+
+        console.log("trait_ids:"+trait_ids+"\nweights:"+weights+"\ncontrols:"+controls);
 
         jQuery.ajax({ // get raw averaged and weighted phenotypes from trial
             url: '/ajax/breeder/search/avg_phenotypes',
@@ -296,6 +303,64 @@ function build_table(data, column_names, trial_name, target_div) {
             });
 
     }
+}
+
+function load_sin() { // update traits and selection index when a saved sin formula is picked
+
+  //retrieve contents of list:
+  var sin_list_id = jQuery('#sin_formula_list_select').val();
+  var lo = new CXGN.List();
+
+  var list_data = lo.getListData(sin_list_id);
+  var sin_data = list_data.elements;
+  var trait_ids = [];
+  var weights = [];
+  var controls = [];
+
+  for (i = 0; i < sin_data.length; i++) {
+    var array = sin_data[i];
+    console.log("sin array item="+array);
+    array.shift();
+    var string = array.shift();
+    var parts = string.split(":");
+    console.log("values type="+parts[0]);
+    var values = parts[1];
+    switch (parts[0]) {
+        case 'trait_ids':
+            trait_ids = values.split(",");
+            break;
+        case 'weights':
+            weights = values.split(",");
+            break;
+        case 'controls':
+            controls = values.split(",");
+            break;
+    }
+  }
+  jQuery('#selection_index').html("");
+  jQuery('#trait_table').html("");
+
+  //add traits, weights, and controls to table
+  for (i = 0; i < trait_ids.length; i++) {
+    //console.log("building trait table with trait_id:"+trait_ids[i]+" and weight:"+weights[i]+" and control:"+controls[i]);
+    var trait_id = trait_ids[i];
+    var weight_id = trait_id + '_weight';
+    var control_id = trait_id + '_control';
+    var trait_name = jQuery('#trait_list option[value=' + trait_id + ']').text();
+    var trait_synonym = jQuery('#trait_list option[value=' + trait_id + ']').data("synonym");
+    var trait_CO_id = jQuery('#trait_list option[value=' + trait_id + ']').data("co_id");
+    var control_html = jQuery('#control_list').html();
+    //console.log("control html"+control_html);
+    var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + weight_id + "' class='form-control' placeholder='Must be a number (+ or -), default = 1'></input></td><td><select class='form-control' id='" + control_id + "'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
+
+    jQuery('#trait_table').append(trait_html);
+    jQuery('#'+weight_id).val(weights[i]);
+    jQuery('#'+control_id).val(controls[i]);
+  }
+  jQuery('#select_message').text('Add another trait');
+  jQuery('#select_message').attr('selected', true);
+  update_formula();
+
 }
 
 function remove_trait(trait_id) {
