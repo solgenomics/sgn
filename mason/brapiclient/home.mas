@@ -87,3 +87,7 @@
 <hr>
 <& /brapiclient/phenotypes_search.mas &>
 <br/>
+
+<hr>
+<& /brapiclient/traits.mas &>
+<br/>

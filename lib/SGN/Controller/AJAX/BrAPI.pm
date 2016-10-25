@@ -280,6 +280,7 @@ sub calls_GET {
         ['studies/id/layout', ['json'], ['GET'] ],
         ['studies/id/observations', ['json'], ['GET'] ],
         ['phenotypes-search', ['json'], ['GET','POST'] ],
+        ['traits', ['json'], ['GET'] ],
     );
 
     my @data;
@@ -2778,17 +2779,17 @@ sub traits_list_GET {
     #my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
     #$h->execute($db_id);
 
-    my $q = "SELECT cvterm_id, name FROM materialized_traits;";
+    my $q = "SELECT trait_id FROM traitsxtrials;";
     my $p = $self->bcs_schema()->storage->dbh()->prepare($q);
     $p->execute();
 
     my @data;
-    while (my ($cvterm_id, $name) = $p->fetchrow_array()) {
-        my $q2 = "SELECT cvterm.definition, cvtermprop.value, dbxref.accession, db.name FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) JOIN db using(db_id) WHERE cvterm.cvterm_id=?";
+    while (my ($cvterm_id) = $p->fetchrow_array()) {
+        my $q2 = "SELECT cvterm.definition, cvtermprop.value, dbxref.accession, db.name, cvterm.name FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) JOIN db using(db_id) WHERE cvterm.cvterm_id=?";
         my $h = $self->bcs_schema()->storage->dbh()->prepare($q2);
         $h->execute($cvterm_id);
 
-        while (my ($description, $scale, $accession, $db) = $h->fetchrow_array()) {
+        while (my ($description, $scale, $accession, $db, $name) = $h->fetchrow_array()) {
             my @observation_vars = ();
             push @observation_vars, $name.'|'.$db.":".$accession;
             push @data, {
@@ -2798,7 +2799,7 @@ sub traits_list_GET {
                 description => $description,
                 observationVariables => \@observation_vars,
                 defaultValue => '',
-                scale =>$scale
+                #scale =>$scale
             };
         }
     }
