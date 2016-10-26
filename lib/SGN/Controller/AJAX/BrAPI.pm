@@ -282,10 +282,10 @@ sub calls_GET {
         ['phenotypes-search', ['json'], ['GET','POST'] ],
         ['traits', ['json'], ['GET'] ],
         ['traits/id', ['json'], ['GET'] ],
-        ['locations', ['json'], ['GET'] ],
         ['maps', ['json'], ['GET'] ],
         ['maps/id', ['json'], ['GET'] ],
         ['maps/id/positions', ['json'], ['GET'] ],
+        ['locations', ['json'], ['GET'] ],
     );
 
     my @data;
