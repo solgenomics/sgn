@@ -24,7 +24,7 @@ $trial_name => undef
               <th>Trait name</th>
               <th>Trait synonym</th>
               <th>Weight</th>
-              <th>Scale to % of a control?</th>
+              <th>Scale relative to a control?</th>
               <th>Remove?</th>
             </thead>
             <tbody id ="trait_table"></tbody>
@@ -33,22 +33,27 @@ $trial_name => undef
             </td></tfoot>
           </table>
         </div>
-        <div class="col-sm-6 col-md-6 col-lg-6" id="sin_options" style="display: none"><br>
-        <label>Additional options: </label>
-          <label><input type="checkbox" id="allow_missing" value="">Include accessions with missing phenotypes</label><br>
-          <label><input type="checkbox" id="load_sin" value="">Load a saved Selection Index (SIN) formula</label><br>
-          <label for="sin_list">SIN formula select: </label>
-          <div id="sin_list"></div>
+
+        <div class="col-sm-6 col-md-6 col-lg-6" id="sin_formula">
+        <center><label>Selection Index (SIN) formula:</label></center><br>
+          <p id="ranking_formula"></p><br><br>
+          <center><button type="button" class="btn btn-primary disabled" id="calculate_rankings">Calculate Rankings</button></center>
+        </div><br><br><br><br><br>
+
+        <div class="col-sm-6 col-md-6 col-lg-6">
+        <label>Options:</label><br>
+        <label>Load a saved formula:</label>
+        <div id="sin_list"></div><br>
+        <label>Save the current formula:</label>
+          <div class="input-group">
+            <input type='text' id='save_sin_name' class='form-control' placeholder='Enter a name'></input>
+            <span class="input-group-btn">
+              <button class="btn btn-default" id="save_sin" type="button">Save</button>
+            </span>
+          </div><br>
+            <label><input type="checkbox" id="allow_missing" value="">Include accessions with missing values in calculations</label>
           <select class="form-control" id="control_list" style="display: none"></select>
         </div><br><br><br><br><br>
-        <div class="col-sm-6 col-md-6 col-lg-6" id="sin_formula" style="display: none"><br>
-        <label>Selection Index (SIN) formula: </label><br>
-          <p id="ranking_formula"></p>
-          <input type='text' id='sin_list_name' class='form-control' placeholder='Enter SIN formula name'></input>
-        </div>
-        <div class="col-sm-12 col-md-12 col-lg-12 text-right"><br>
-        <button type="button" class="btn btn-primary disabled" id="calculate_rankings">Calculate Rankings</button>
-        </div>
       </div>
     </div>
   </div>
@@ -60,7 +65,7 @@ $trial_name => undef
   </div>
   <div id="collapse2" class="panel-collapse collapse in">
     <div class="panel-body" id="table_panel" style="overflow:hidden">
-      <ul class="nav nav-tabs"><li class="active"><a data-toggle="tab" href="#weighted_values_div">Selection Index</a></li><li><a data-toggle="tab" href="#raw_avgs_div">Raw Averages</a></li></ul>
+      <ul class="nav nav-tabs"><li class="active"><a data-toggle="tab" href="#weighted_values_div">Selection Index</a></li><li><a data-toggle="tab" href="#raw_avgs_div">Raw Values</a></li></ul>
       <div class="tab-content">
         <div id="weighted_values_div" class="tab-pane fade in active"></div>
         <div id="raw_avgs_div" class="tab-pane fade"></div>
@@ -71,6 +76,7 @@ $trial_name => undef
 
 <script>
     jQuery(document).ready(function() {
+        jQuery('#ranking_formula').html("<center><i>Select a trial, then pick traits and weights (or load a saved formula).</i></center>");
         get_select_box('trials', 'select_trial_for_selection_index', { 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' , 'empty' : 1 });
         var lo = new CXGN.List();
         jQuery('#sin_list').html(lo.listSelect('sin_formula', [''], 'select'));

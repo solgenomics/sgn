@@ -58,6 +58,7 @@ jQuery(document).ready(function() {
                         },
                         success: function(response) {
                             synonyms = response.synonyms;
+                            console.log("synonyms = "+JSON.stringify(synonyms));
                             var trait_html = '<option id="select_message" value="" title="Select a trait">Select a trait</a>\n';
                             for (i = 0; i < list.length; i++) {
                                 var trait_id = list[i][0];
@@ -72,7 +73,7 @@ jQuery(document).ready(function() {
                             }
 
                             jQuery('#trait_list').html(trait_html);
-                            jQuery('#trait_list').focus();
+
                         },
                         error: function(response) {
                             alert("An error occurred while retrieving synonyms for traits with ids " + trait_ids);
@@ -84,7 +85,7 @@ jQuery(document).ready(function() {
                 }
             });
 
-            jQuery.ajax({ // get accessions phenotyped in trial
+            jQuery.ajax({ // get plots phenotyped in trial
                 url: '/ajax/breeder/search',
                 method: 'POST',
                 data: {
@@ -118,6 +119,9 @@ jQuery(document).ready(function() {
                               }
                             }
                             jQuery('#control_list').html(accession_html);
+                            //jQuery('#sin_options').show();
+                            //jQuery('#sin_formula').show();
+                            jQuery('#trait_list').focus();
                         },
                         error: function(response) {
                             jQuery('#control_list').html('<option value="" title="Select a control">Error retrieving trial controls</a>');
@@ -156,8 +160,6 @@ jQuery(document).ready(function() {
                     update_formula();
             });
             jQuery('#calculate_rankings').removeClass('disabled');
-            jQuery('#sin_options').show();
-            jQuery('#sin_formula').show();
         });
 
     jQuery('#calculate_rankings').click(function() {
@@ -180,17 +182,18 @@ jQuery(document).ready(function() {
         jQuery(selected_trait_rows).each(function(index, selected_trait_rows) {
             var trait_id = jQuery('a', this).data("value");
             trait_ids.push(trait_id);
-            var trait_name = jQuery('a', this).text();
+            var trait_synonym = "mean ";
+            trait_synonym += jQuery('#' + trait_id + '_synonym').text();
             var weight = jQuery('#' + trait_id + '_weight').val() || 1; // default = 1
             weights.push(weight);
             var control = jQuery('#' + trait_id + '_control option:selected').val() || '';
             controls.push(control);
-            if (control) { trait_name += " as % of " + jQuery('#' + trait_id + '_control option:selected').text(); }
+            if (control) { trait_synonym += " relative to " + jQuery('#' + trait_id + '_control option:selected').text(); }
             column_names.push({
-                title: trait_name
+                title: trait_synonym
             });
             weighted_column_names.push({
-                title: weight + " * (" + trait_name + ")"
+                title: weight + " * (" + trait_synonym + ")"
             });
         });
         weighted_column_names.push({
@@ -369,24 +372,31 @@ function remove_trait(trait_id) {
 }
 
 function update_formula() {
+    console.log("updating formula....");
     var selected_trait_rows = jQuery('#trait_table').children();
-    var formula = "SIN = ";
+    if (selected_trait_rows.length <1) {
+      jQuery('#ranking_formula').html("<center><i>Select a trial, then pick traits and weights (or load a saved formula).</i></center>");
+      return;
+    }
+    var formula = "<center><b>SIN = </b></center>";
     var term_number = 0;
     jQuery(selected_trait_rows).each(function(index, selected_trait_rows) {
         var trait_id = jQuery('a', this).data("value");
-        var trait_name = jQuery('a', this).text();
+        var trait_synonym = "mean ";
+        trait_synonym += jQuery('#' + trait_id + '_synonym').text();
         var weight = jQuery('#' + trait_id + '_weight').val() || 1; // default = 1
-        var control_id = jQuery('#' + trait_id + '_control option:selected').val();
-        if (control_id) { trait_name += " as % of " + jQuery('#' + trait_id + '_control option:selected').text(); }
-        var score = weight + " * (" + trait_name + ") ";
-        if (weight >= 0 && term_number > 0) {
-            formula += " + " + score;
+      //  var control_id = jQuery('#' + trait_id + '_control option:selected').val();
+        if (jQuery('#' + trait_id + '_control option:selected').val()) { // if control selected for scaling
+          trait_synonym += " relative to " + jQuery('#' + trait_id + '_control option:selected').text();
+        }
+
+        if (term_number == 0 || weight <= 0) {
+          formula += "<center>" + weight + " * ( " + trait_synonym + ")</center>";
         } else {
-            formula += score;
+          formula += "<center>+ " + weight + " * ( " + trait_synonym + ")</center>";
         }
         term_number++;
     });
-    //console.log("formula=" + formula);
-    jQuery('#ranking_formula').text(formula);
+    jQuery('#ranking_formula').html(formula);
     return;
 }
