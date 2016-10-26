@@ -184,6 +184,27 @@ sub refresh_materialized_view_all_gs_traits {
 }
 
 
+sub search_trait_trials {
+ my ($self, $trait_id) = @_;
+
+ my $q = "SELECT distinct(trial_id) FROM traitsXtrials ORDER BY trial_id";
+
+ my $sth = $self->context->dbc->dbh->prepare($q);
+
+ $sth->execute();
+
+ my @trials;
+
+ while ( my $trial_id = $sth->fetchrow_array()) 
+ {
+     push @trials, $trial_id;
+ }
+    
+ return \@trials;
+
+}
+
+
 sub search_populations {
     my ($self, $trait_id, $page) = @_;
   
@@ -332,7 +353,7 @@ sub project_details {
     my ($self, $pr_id) = @_;
     
     my $pr_rs = $self->schema->resultset("Project::Project")
-        ->search( {'me.project_id' => $pr_id});
+        ->search( {'me.project_id' => {-in => $pr_id} });
 
     return $pr_rs;
 
