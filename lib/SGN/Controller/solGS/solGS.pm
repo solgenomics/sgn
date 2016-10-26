@@ -396,8 +396,9 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
     my $combine = $c->req->param('combine');
     my $page = $c->req->param('page') || 1;
 
-    my $projects_rs = $c->model('solGS::solGS')->search_populations($trait_id, $page);
-    my $trait       = $c->model('solGS::solGS')->trait_name($trait_id);
+    my $projects_ids = $c->model('solGS::solGS')->search_trait_trials($trait_id);
+    my $projects_rs  = $c->model('solGS::solGS')->project_details($projects_ids);
+    my $trait        = $c->model('solGS::solGS')->trait_name($trait_id);
    
     $self->get_projects_details($c, $projects_rs);
     my $projects = $c->stash->{projects_details};
@@ -447,64 +448,15 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
                 ];
 	}
    }     
-    
-    my $page_links =  sub {uri ( query => {  page => shift } ) };
-    my $pager = $projects_rs->pager; 
-    $pager->change_entries_per_page(15);
- 
-     my $pagination;
-   
-    my $url = "/solgs/search/result/populations/$trait_id";
-   
-    if ( $pager->previous_page || $pager->next_page )
-    {
-    	$pagination =   '<div  style="width:690px; overflow: auto;" class = "paginate_nav">';
-        
-    	if( $pager->previous_page ) 
-    	{
-    	    $pagination .=  '<a class="paginate_nav" href="' . $url .  $page_links->($pager->previous_page) . '">&lt;</a>';
-    	}
-        
-    	for my $c_page ( $pager->first_page .. $pager->last_page ) 
-    	{
-    	    if( $pager->current_page == $c_page ) 
-    	    {
-    		$pagination .=  '<span class="paginate_nav_currpage paginate_nav">' .  $c_page . '</span>';
-    	    }
-    	    else 
-    		{
-    		    $pagination .=  '<a class="paginate_nav" href="' . $url.   $page_links->($c_page) . '">' . $c_page . '</a>';
-    		}
-    	}
-    	if( $pager->next_page ) 
-    	{
-    	    $pagination .= '<a class="paginate_nav" href="' . $url . $page_links->($pager->next_page). '">&gt;</a>';
-    	}
-        
-    	$pagination .= '</div>';
-    }
 
     my $ret->{status} = 'failed';
     
     if (@projects_list) 
     {            
 	$ret->{status} = 'success';
-	$ret->{pagination} = $pagination;
 	$ret->{trials}   = \@projects_list;
     } 
-    else 
-    { 
-    	if ($pager->current_page == $pager->last_page) 
-    	{
-    	    $c->res->redirect("/solgs/search/result/populations/$trait_id/?page=1&trait=$trait");  
-    	}
-    	else 
-    	{
-    	    my $go_next = $pager->current_page + 1;
-    	    $c->res->redirect("/solgs/search/result/populations/$trait_id/?page=$go_next&trait=$trait");
-    	}
-    } 
-        
+   
     $ret = to_json($ret);
         
     $c->res->content_type('application/json');
