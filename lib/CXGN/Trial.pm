@@ -1188,7 +1188,7 @@ sub get_stock_phenotypes_for_traits {
 	my $rel_stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $relationship_stock_type, 'stock_type')->cvterm_id();
 	$where_clause .= "and rel_stock.type_id=$rel_stock_type_cvterm_id ";
 
-	my $q = "SELECT stock.stock_id, stock.uniquename, a.cvterm_id, a.name || '|' || db.name ||  ':' || dbxref.accession, phenotype.phenotype_id, phenotype.uniquename, phenotype.sp_person_id, phenotype.value::real, rel_stock.stock_id, rel_stock.uniquename
+	my $q = "SELECT stock.stock_id, stock.uniquename, a.cvterm_id, a.name || '|' || db.name ||  ':' || dbxref.accession, phenotype.phenotype_id, phenotype.uniquename, phenotype.sp_person_id, phenotype.value::real, rel_stock.stock_id, rel_stock.uniquename, stock_type.name
 		FROM cvterm as a
 		JOIN dbxref ON (a.dbxref_id = dbxref.dbxref_id)
 		JOIN db USING(db_id)
@@ -1198,16 +1198,16 @@ sub get_stock_phenotypes_for_traits {
 		JOIN nd_experiment_stock USING(nd_experiment_id)
 		JOIN cvterm as b ON (b.cvterm_id=nd_experiment_stock.type_id)
 		JOIN stock USING(stock_id)
+		JOIN cvterm as stock_type ON (stock_type.cvterm_id=stock.type_id)
 		$relationship_join
 		$where_clause
-		GROUP BY (stock.stock_id, stock.uniquename, a.cvterm_id, a.name || '|' || db.name ||  ':' || dbxref.accession, phenotype.phenotype_id, phenotype.uniquename, phenotype.sp_person_id, phenotype.value::real, rel_stock.stock_id, rel_stock.uniquename)
 		ORDER BY stock.stock_id;";
     my $h = $dbh->prepare($q);
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     $h->execute($self->get_trial_id(), $phenotyping_experiment_cvterm, $numeric_regex );
-    while (my ($stock_id, $stock_name, $trait_id, $trait_name, $phenotype_id, $pheno_uniquename, $uploader_id, $value, $rel_stock_id, $rel_stock_name) = $h->fetchrow_array()) {
-        push @data, [$stock_id, $stock_name, $trait_id, $trait_name, $phenotype_id, $pheno_uniquename, $uploader_id, $value + 0, $rel_stock_id, $rel_stock_name];
+    while (my ($stock_id, $stock_name, $trait_id, $trait_name, $phenotype_id, $pheno_uniquename, $uploader_id, $value, $rel_stock_id, $rel_stock_name, $stock_type) = $h->fetchrow_array()) {
+        push @data, [$stock_id, $stock_name, $trait_id, $trait_name, $phenotype_id, $pheno_uniquename, $uploader_id, $value + 0, $rel_stock_id, $rel_stock_name, $stock_type];
     }
     return \@data;
 }

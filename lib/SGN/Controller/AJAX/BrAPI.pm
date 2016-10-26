@@ -2418,7 +2418,7 @@ sub studies_observations_GET {
                 observationVariableName => @$phenotype_data[$i]->[3],
                 observationUnitDbId => @$phenotype_data[$i]->[0],
                 observationUnitName => @$phenotype_data[$i]->[1],
-                observationLevel => $data_level,
+                observationLevel => @$phenotype_data[$i]->[10],
                 observationTimestamp => $timestamp,
                 uploadedBy => @$phenotype_data[$i]->[6],
                 operator => $operator,
