@@ -179,11 +179,11 @@ sub search {
     }
 
     my $where_clause = "WHERE accession.type_id = $accession_type_id";
-    $where_clause .= " AND rep.type_id = $rep_type_id";
-    $where_clause .= " AND block_number.type_id = $block_number_type_id";
-    $where_clause .= " AND plot_number.type_id = $plot_number_type_id";
-    $where_clause .= " AND year.type_id = $year_type_id";
-    $where_clause .= " AND design.type_id = $design_type_id";
+    $where_clause .= " AND (rep.type_id = $rep_type_id OR rep.type_id IS NULL)";
+    $where_clause .= " AND (block_number.type_id = $block_number_type_id OR block_number.type_id IS NULL)";
+    $where_clause .= " AND (plot_number.type_id = $plot_number_type_id OR plot_number.type_id IS NULL)";
+    $where_clause .= " AND (year.type_id = $year_type_id OR year.type_id IS NULL)";
+    $where_clause .= " AND (design.type_id = $design_type_id OR design.type_id IS NULL)";
 
     if (@where_clause>0) {
         $where_clause .= " AND " . (join (" AND " , @where_clause));
