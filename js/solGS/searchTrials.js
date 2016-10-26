@@ -251,10 +251,10 @@ function displayTrainingPopulations (tableDetails) {
 	    jQuery('#' + divId).html(table).show();
 	    
 	    jQuery('#' + tableId).dataTable({
-		'searching' : false,
-		'ordering'  : false,
+		'searching' : true,
+		'ordering'  : true,
 		'processing': true,
-		'paging': false,
+		'paging': true,
 		'info': false,
 		'data': data,
 	    });
