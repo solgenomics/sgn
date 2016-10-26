@@ -99,3 +99,11 @@
 <hr>
 <& /brapiclient/locations.mas &>
 <br/>
+
+<hr>
+<& /brapiclient/maps.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/maps_detail.mas &>
+<br/>

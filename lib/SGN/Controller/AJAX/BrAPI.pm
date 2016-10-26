@@ -283,6 +283,9 @@ sub calls_GET {
         ['traits', ['json'], ['GET'] ],
         ['traits/id', ['json'], ['GET'] ],
         ['locations', ['json'], ['GET'] ],
+        ['maps', ['json'], ['GET'] ],
+        ['maps/id', ['json'], ['GET'] ],
+        ['maps/id/positions', ['json'], ['GET'] ],
     );
 
     my @data;
@@ -2929,40 +2932,40 @@ sub maps_list_GET {
 
     my @data;
     while (my $row = $rs->next()) {
-      my %map_info;
-    	print STDERR "Retrieving map info for ".$row->name()." ID:".$row->nd_protocol_id()."\n";
+        my %map_info;
+        print STDERR "Retrieving map info for ".$row->name()." ID:".$row->nd_protocol_id()."\n";
         #$self->bcs_schema->storage->debug(1);
-    	my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'me.nd_protocol_id' => $row->nd_protocol_id() } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {select=>['genotype.description', 'genotypeprops.value'], as=>['description', 'value'], rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
+        my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'me.nd_protocol_id' => $row->nd_protocol_id() } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {select=>['genotype.description', 'genotypeprops.value'], as=>['description', 'value'], rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
 
-    	my $lg_row = $lg_rs->first();
+        my $lg_row = $lg_rs->first();
 
-    	if (!$lg_row) {
-    	    die "This was never supposed to happen :-(";
-    	}
+        if (!$lg_row) {
+            die "This was never supposed to happen :-(";
+        }
 
-    	my $scores = JSON::Any->decode($lg_row->get_column('value'));
-    	my %chrs;
+        my $scores = JSON::Any->decode($lg_row->get_column('value'));
+        my %chrs;
 
-    	my $marker_count =0;
-    	foreach my $m (sort genosort (keys %$scores)) {
-    	    my ($chr, $pos) = split "_", $m;
-    	    #print STDERR "CHR: $chr. POS: $pos\n";
-    	    $chrs{$chr} = $pos;
-    	    $marker_count++;
-    	}
-      my $lg_count = scalar(keys(%chrs));
+        my $marker_count =0;
+        foreach my $m (sort genosort (keys %$scores)) {
+            my ($chr, $pos) = split "_", $m;
+            #print STDERR "CHR: $chr. POS: $pos\n";
+            $chrs{$chr} = $pos;
+            $marker_count++;
+        }
+        my $lg_count = scalar(keys(%chrs));
 
-    	%map_info = (
-    	    mapId =>  $row->nd_protocol_id(),
-    	    name => $row->name(),
-          species => $lg_row->get_column('description'),
-    	    type => "physical",
-    	    unit => "bp",
-    	    markerCount => $marker_count,
-    	    publishedDate => undef,
-    	    comments => "",
-    	    linkageGroupCount => $lg_count,
-    	    );
+        %map_info = (
+            mapDbId =>  $row->nd_protocol_id(),
+            name => $row->name(),
+            species => $lg_row->get_column('description'),
+            type => "physical",
+            unit => "bp",
+            markerCount => $marker_count,
+            publishedDate => undef,
+            comments => "",
+            linkageGroupCount => $lg_count,
+        );
 
         push @data, \%map_info;
     }
@@ -2973,7 +2976,7 @@ sub maps_list_GET {
     my @data_window = splice @data, $start, $end;
 
     my %result = (data => \@data_window);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>[]);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -3066,10 +3069,10 @@ sub maps_details_GET {
     my %markers;
     my @ordered_refmarkers;
     while (my $profile = $lg_rs->next()) {
-      my $profile_json = $profile->value();
-      my $refmarkers = JSON::Any->decode($profile_json);
-      #print STDERR Dumper($refmarkers);
-      push @ordered_refmarkers, sort genosort keys(%$refmarkers);
+        my $profile_json = $profile->value();
+        my $refmarkers = JSON::Any->decode($profile_json);
+        #print STDERR Dumper($refmarkers);
+        push @ordered_refmarkers, sort genosort keys(%$refmarkers);
 
     }
 
@@ -3080,21 +3083,25 @@ sub maps_details_GET {
 
         $markers{$chr}->{$m} = 1;
         if ($pos) {
-          if ($chrs{$chr}) {
-            if ($pos > $chrs{$chr}) {
-              $chrs{$chr} = $pos;
+            if ($chrs{$chr}) {
+                if ($pos > $chrs{$chr}) {
+                    $chrs{$chr} = $pos;
+                }
+            } else {
+                $chrs{$chr} = $pos;
             }
-          } else {
-            $chrs{$chr} = $pos;
-          }
         }
 
-      }
+    }
 
     foreach my $ci (sort (keys %chrs)) {
-      my $num_markers = scalar keys %{ $markers{$ci} };
-      my %linkage_groups_data = (linkageGroupId => $ci, numberMarkers => $num_markers, maxPosition => $chrs{$ci} );
-      push @data, \%linkage_groups_data;
+        my $num_markers = scalar keys %{ $markers{$ci} };
+        my %linkage_groups_data = (
+            linkageGroupId => $ci,
+            numberMarkers => $num_markers,
+            maxPosition => $chrs{$ci}
+        );
+        push @data, \%linkage_groups_data;
     }
 
     $total_count = scalar(@data);
@@ -3103,14 +3110,14 @@ sub maps_details_GET {
     my @data_window = splice @data, $start, $end;
 
     %map_info = (
-      mapId =>  $rs->nd_protocol_id(),
-      name => $rs->name(),
-      type => "physical",
-      unit => "bp",
-      linkageGroups => \@data_window,
+        mapDbId =>  $rs->nd_protocol_id(),
+        name => $rs->name(),
+        type => "physical",
+        unit => "bp",
+        linkageGroups => \@data_window,
     );
 
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>[]);
     my %response = (metadata=>\%metadata, result=>\%map_info);
     $c->stash->{rest} = \%response;
 }
@@ -3233,7 +3240,7 @@ sub maps_marker_detail_GET {
     my @data_window = splice @markers, $start, $end;
 
     my %result = (data => \@data_window);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>[]);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
