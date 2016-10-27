@@ -6,6 +6,7 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use JSON;
 use POSIX;
+use List::Util qw(sum);
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 	is => 'rw',
