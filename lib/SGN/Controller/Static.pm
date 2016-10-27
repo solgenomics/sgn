@@ -24,11 +24,6 @@ use Moose;
 BEGIN { extends 'Catalyst::Controller'; }
 
 
-sub brapi_test :Path('/brapi_test/') :Args(0) { 
-    my $self = shift;
-    my $c = shift;
-    $c->stash->{template} = '/brapiclient/test.mas';
-}
 
 sub ethz_cass_sync :Path('/ethz_cass/sync/') :Args(0) { 
     my $self = shift;

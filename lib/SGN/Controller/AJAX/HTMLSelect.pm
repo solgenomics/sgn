@@ -201,9 +201,12 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $self = shift;
     my $c = shift;
     my $trial_id = $c->req->param('trial_id');
-    my $data_level = $c->req->param('data_level') || 'plot';
+    my $data_level = $c->req->param('data_level') || 'all';
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
+    if ($data_level eq 'all') {
+        $data_level = '';
+    }
     my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$trial_id});
     my $traits_assayed = $trial->get_traits_assayed($data_level);
     my @traits;

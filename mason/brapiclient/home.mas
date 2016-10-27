@@ -83,3 +83,27 @@
 <hr>
 <& /brapiclient/studies_observations.mas &>
 <br/>
+
+<hr>
+<& /brapiclient/phenotypes_search.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/traits.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/traits_detail.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/locations.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/maps.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/maps_detail.mas &>
+<br/>
