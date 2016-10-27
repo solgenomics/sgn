@@ -38,6 +38,10 @@ has 'name' => (isa => 'Str',
 	default => 'Untitled',
 );
 
+has 'location_id' => (isa => 'Int',
+	is => 'rw',
+);
+
 has 'breeding_program_trial_relationship_id' =>  (isa => 'Int',
 	is => 'rw',
 );
@@ -94,16 +98,19 @@ sub BUILD {
 
 	if (!$self->folder_type) {
 		my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'cross',  'stock_type')->cvterm_id;
-		
+		my $location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project location',  'project_property')->cvterm_id;
+
 		my $trial_type_rs = $self->bcs_schema->resultset("Project::Project")->search({ 'me.project_id' => $self->folder_id })->search_related('projectprops');
 		while (my $tt = $trial_type_rs->next()) {
 			if ($tt->type_id == $cross_cvterm_id) {
 				$self->folder_type("cross");
 			} elsif ($tt->value eq 'genotyping_plate') {
 				$self->folder_type("genotyping_trial");
+			} elsif ($tt->type_id == $location_cvterm_id) {
+				$self->location_id($tt->value + 0);
 			}
 		}
-		
+
 		if (!$self->folder_type) {
 			$self->folder_type("trial");
 		}
@@ -135,7 +142,7 @@ sub create {
     my $check_rs = $args->{bcs_schema}->resultset('Project::Project')->search( { name => $args->{name} } );
 
     if ($check_rs->count() > 0) {
-	die "The name ".$args->{name}." cannot be used for a folder because it already exists.";
+	die "The name ".$args->{name}." cannot be used for a new folder because it already exists.";
     }
 
      my $folder_cvterm = SGN::Model::Cvterm->get_cvterm_row($args->{bcs_schema},'trial_folder', 'project_property');
@@ -170,7 +177,7 @@ sub list {
 
     my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'trial_folder', 'project_property')->cvterm_id();
 		my $breeding_program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema,'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
-		
+
 		my $breeding_program_rel;
 		if ($args->{breeding_program_id}) {
 			$breeding_program_rel = $schema->resultset('Project::ProjectRelationship')->search({ 'me.object_project_id' => $args->{breeding_program_id}, 'me.type_id' => $breeding_program_trial_relationship_id })->search_related("subject_project")->search_related("projectprops", {'projectprops.type_id'=>$folder_cvterm_id}, {'+select'=>'subject_project.name', '+as'=>'name' } );
@@ -226,10 +233,10 @@ sub _get_children {
 sub associate_parent {
     my $self = shift;
 		my $parent_id = shift;
-		
+
 		my $folder_cvterm_id = $self->folder_cvterm_id();
 		my $breeding_program_trial_relationship_id = $self->breeding_program_trial_relationship_id();
-		
+
 		#If the user selects 'None' to remove the trial from the folder, then the parent_id will be passed as 0. No new parent will be created.
 		if ($parent_id == 0) {
 			$self->remove_parents;
@@ -249,7 +256,7 @@ sub associate_parent {
 			print STDERR "The specified parent folder is not of type folder or breeding program. Ignoring.";
 			return;
 		}
-		
+
 		$self->remove_parents;
 
 		my $project_rel_row = $self->bcs_schema()->resultset('Project::ProjectRelationship')->create({
@@ -260,7 +267,7 @@ sub associate_parent {
 		$project_rel_row->insert();
 
     $self->project_parent($parent_row);
-		
+
 		my $parent_is_child = check_if_folder_is_child_in_tree($self->bcs_schema, $parent_id, $self->children());
 		if ($parent_is_child) {
 			print STDERR 'Parent '.$parent_id.' is child in tree of folder '.$self->folder_id()."\n";
@@ -268,9 +275,9 @@ sub associate_parent {
 				bcs_schema => $self->bcs_schema,
 				folder_id => $parent_id
 			});
-			$parent_folder->remove_parents;			
+			$parent_folder->remove_parents;
 		}
-		
+
 }
 
 sub remove_parents {
@@ -307,7 +314,7 @@ sub check_if_folder_is_child_in_tree {
 			return check_if_folder_is_child_in_tree($schema, $folder_id, $child_folder->children() );
 		}
 	}
-	
+
 	return;
 }
 
@@ -348,7 +355,7 @@ sub associate_breeding_program {
 
 sub delete_folder {
 	my $self = shift;
-	
+
 	my $children = $self->children();
 	if (scalar(@$children) > 0) {
 		return;
@@ -371,6 +378,7 @@ sub remove_child {
 sub get_jstree_html {
 	my $self = shift;
 	my $parent_type = shift;
+	my $project_type_of_interest = shift // 'trial';
 
 	my $html = "";
 
@@ -381,11 +389,11 @@ sub get_jstree_html {
 	if (@$children > 0) {
 		foreach my $child (@$children) {
 			if ($child->is_folder()) {
-				$html .= $child->get_jstree_html('folder');
+				$html .= $child->get_jstree_html('folder', $project_type_of_interest);
 			}
 			else {
-				#Only display "trial" types.
-				if ($child->folder_type eq 'trial') {
+				#Only display $project of interest types.
+				if ($child->folder_type eq $project_type_of_interest) {
 					$html .= $self->_jstree_li_html($child->folder_type(), $child->folder_id(), $child->name())."</li>";
 				}
 			}
@@ -406,6 +414,17 @@ sub _jstree_li_html {
     	$url = "/breeders/trial/".$id;
     } elsif ($type eq 'folder') {
     	$url = "/folder/".$id;
+    } elsif ($type eq 'cross') {
+		print STDERR "$id : $name \n";
+		my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'cross', 'stock_type')->cvterm_id();
+		my $cross_stock = $self->bcs_schema->resultset("Project::Project")->search({ 'me.project_id' => $id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', {'stock.type_id'=>$cross_type_id})->first();
+		if ($cross_stock) {
+			$id = $cross_stock->stock_id();
+    		$url = "/cross/".$id;
+			return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\"><a href=\"$url\">".$name.'</a>';
+		} else {
+			return;
+		}
     }
 
     return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\"><a href=\"$url\">".$name.'</a>';

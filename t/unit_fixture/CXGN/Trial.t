@@ -136,13 +136,6 @@ my $phenotype_count_before_store = $trial->phenotype_count();
 
 ok($trial->phenotype_count() == 0, "trial has no phenotype data");
 
-my $c = SimulateC->new( { dbh => $f->dbh(),
-			  bcs_schema => $f->bcs_schema(),
-			  metadata_schema => $f->metadata_schema(),
-			  sp_person_id => 41 });
-
-my $lp = CXGN::Phenotypes::StorePhenotypes->new();
-
 my $plotlist_ref = [ 'anothertrial1', 'anothertrial2', 'anothertrial3', 'anothertrial4', 'anothertrial5' ];
 
 my $traitlist_ref = [ 'root number|CO:0000011', 'dry yield|CO:0000014' ];
@@ -155,9 +148,20 @@ my %plot_trait_value = ( 'anothertrial1' => { 'root number|CO:0000011'  => [0,''
 
 my %metadata = ( operator => 'johndoe', date => '20141223' );
 
-my $size = scalar(@$plotlist_ref) * scalar(@$traitlist_ref);
+my $lp = CXGN::Phenotypes::StorePhenotypes->new(
+    bcs_schema=>$f->bcs_schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>$plotlist_ref,
+    trait_list=>$traitlist_ref,
+    values_hash=>\%plot_trait_value,
+    has_timestamps=>0,
+    overwrite_values=>0,
+    metadata_hash=>\%metadata,
+);
 
-$lp->store($c, $size, $plotlist_ref, $traitlist_ref, \%plot_trait_value, \%metadata, 'plots');
+$lp->store();
 
 my $total_phenotypes = $trial->total_phenotypes();
 
@@ -179,20 +183,20 @@ foreach (@$traits_assayed) {
 }
 @traits_assayed_names = sort @traits_assayed_names;
 #print STDERR Dumper \@traits_assayed_names;
-is_deeply(\@traits_assayed_names, ['Dry yield', 'Root number counting'], 'check traits assayed' );
+is_deeply(\@traits_assayed_names, ['Dry yield|CO:0000014', 'Root number counting|CO:0000011'], 'check traits assayed' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70727);
 my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
 #print STDERR Dumper \@pheno_for_trait_sorted;
 is_deeply(\@pheno_for_trait_sorted, ['30','40','50'], 'check traits assayed' );
 
-my $plot_pheno_for_trait = $tn->get_plot_phenotypes_for_trait(70727);
+my $plot_pheno_for_trait = $tn->get_stock_phenotypes_for_traits([70727], 'all', ['plot_of','plant_of'], 'accession', 'subject');
 #print STDERR Dumper $plot_pheno_for_trait;
 my @phenotyped_stocks;
 my @phenotyped_stocks_values;
 foreach (@$plot_pheno_for_trait) {
     push @phenotyped_stocks, $_->[1];
-    push @phenotyped_stocks_values, $_->[4];
+    push @phenotyped_stocks_values, $_->[7];
 }
 @phenotyped_stocks = sort @phenotyped_stocks;
 @phenotyped_stocks_values = sort @phenotyped_stocks_values;
@@ -310,9 +314,19 @@ my %plant_trait_value = ( 'anothertrial9_plant_2' => { 'root number|CO:0000011' 
 
 my %metadata = ( operator => 'johndoe', date => '20141225' );
 
-my $size = scalar(@$plantlist_ref) * scalar(@$traitlist_ref);
-
-$lp->store($c, $size, $plantlist_ref, $traitlist_ref, \%plant_trait_value, \%metadata, 'plants');
+my $lp = CXGN::Phenotypes::StorePhenotypes->new(
+    bcs_schema=>$f->bcs_schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>$plantlist_ref,
+    trait_list=>$traitlist_ref,
+    values_hash=>\%plant_trait_value,
+    has_timestamps=>0,
+    overwrite_values=>0,
+    metadata_hash=>\%metadata,
+);
+$lp->store();
 
 my $total_phenotypes = $trial->total_phenotypes();
 

@@ -4,11 +4,15 @@ use Moose;
 use Data::Dumper;
 use List::Util 'max';
 use Bio::Chado::Schema;
-use List::Util qw | any |;
+use List::Util qw | any sum |;
 use DBI;
 use DBIx::Class;
 use SGN::Model::Cvterm;
-
+use JSON;
+use POSIX;
+use URI::Encode qw(uri_encode uri_decode);
+use CXGN::BreedersToolbox::DeriveTrait;
+use CXGN::Phenotypes::StorePhenotypes;
 
 BEGIN {extends 'Catalyst::Controller::REST'}
 
@@ -67,7 +71,9 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 	print "TRAIT NAME: $selected_trait\n";
 	print "TRIAl ID: $trial_id\n";
 
-	my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 	my $selected_trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $selected_trait);
 	if (!$selected_trait_cvterm) {
 		print STDERR "The trait $selected_trait is not in the database.\n";
@@ -200,7 +206,6 @@ me.stock_id LEFT JOIN stock object ON object.stock_id =
 stock_relationship_subjects.object_id WHERE ( ( observable.cvterm_id =? AND
 project.project_id=? ) );");
 
-		my @array;
 		my %cvterm_hash;
 		my %plot_hash;
 		my %valid_plots;
@@ -210,7 +215,6 @@ project.project_id=? ) );");
 				$cvterm_hash{$_}->{$plot_name} = $value;
 				$plot_hash{$plot_name}->{$_} = $value;
 
-				@array, $cvterm_hash{$_}->{$plot_name};
 			}
 		}
 		
@@ -256,22 +260,119 @@ project.project_id=? ) );");
 	print STDERR Dumper (\@plots);
 	print STDERR Dumper (\@traits);	
    
-	$parse_result{'data'} = \%data;
-    	$parse_result{'plots'} = \@plots;
-    	$parse_result{'traits'} = \@traits;
+    $parse_result{'data'} = \%data;
+    $parse_result{'plots'} = \@plots;
+    $parse_result{'traits'} = \@traits;
 
-	my $size = scalar(@plots) * scalar(@traits);
-	my %phenotype_metadata;
-	$phenotype_metadata{'archived_file'} = 'none';
-  	$phenotype_metadata{'archived_file_type'}="generated from derived traits";
-  	$phenotype_metadata{'operator'}=$c->user()->get_object()->get_sp_person_id();
-  	$phenotype_metadata{'date'}="$timestamp";
+    my %phenotype_metadata;
+    $phenotype_metadata{'archived_file'} = 'none';
+    $phenotype_metadata{'archived_file_type'}="generated from derived traits";
+    $phenotype_metadata{'operator'}=$c->user()->get_object()->get_sp_person_id();
+    $phenotype_metadata{'date'}="$timestamp";
+    my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
 
-	my $store = CXGN::Phenotypes::StorePhenotypes->store($c, $size, \@plots, \@traits, \%data, \%phenotype_metadata);
-       
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        user_id=>$user_id,
+        stock_list=>\@plots,
+        trait_list=>\@traits,
+        values_hash=>\%data,
+        has_timestamps=>1,
+        overwrite_values=>0,
+        metadata_hash=>\%phenotype_metadata,
+    );
+
+    my $store_error = $store_phenotypes->store();
+    if ($store_error) {
+        $c->stash->{rest} = {error => $store_error};
+    }
 
 	$c->stash->{rest} = {success => 1};
 }
+
+
+sub generate_plot_phenotypes : Path('/ajax/breeders/trial/generate_plot_phenotypes') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->req->param('trial_id');
+    my $trait_name = uri_decode($c->req->param('trait_name'));
+    my $method = $c->req->param('method');
+    my $rounding = $c->req->param('rounding');
+    #print STDERR "Trial: $trial_id\n";
+    #print STDERR "Trait: $trait_name\n";
+    #print STDERR "Method: $method\n";
+    #print STDERR "Round: $rounding\n";
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $derive_trait = CXGN::BreedersToolbox::DeriveTrait->new({bcs_schema=>$schema, trait_name=>$trait_name, trial_id=>$trial_id, method=>$method, rounding=>$rounding});
+    my ($info, $plots, $traits, $store_hash) = $derive_trait->generate_plot_phenotypes();
+    #print STDERR Dumper \%store_hash;
+    #print STDERR Dumper \@return;
+    $c->stash->{rest} = {success => 1, info=>$info, method=>$method, trait_name=>$trait_name, rounding=>$rounding, store_plots=>encode_json($plots), store_traits=>encode_json($traits), store_data=>encode_json($store_hash)};
+}
+
+
+
+sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated_plot_phenotypes') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my %parse_result;
+    my $data = decode_json($c->req->param('store_data'));
+    my $plots = decode_json($c->req->param('store_plots'));
+    my $traits = decode_json($c->req->param('store_traits'));
+    my $overwrite_values = $c->req->param('overwrite_values');
+    #print STDERR Dumper $data;
+    #print STDERR Dumper $plots;
+    #print STDERR Dumper $traits;
+    #print STDERR $overwrite_values;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+
+    my $overwrite = 0;
+    if ($overwrite_values) {
+        $overwrite = 1;
+        my $user_type = $c->user()->get_object->get_user_type();
+        #print STDERR $user_type."\n";
+        if ($user_type ne 'curator') {
+            $c->stash->{rest} = {error => 'Must be a curator to overwrite values! Please contact us!'};
+        }
+    }
+
+    $parse_result{'data'} = $data;
+    $parse_result{'plots'} = $plots;
+    $parse_result{'traits'} = $traits;
+
+    my %phenotype_metadata;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    $phenotype_metadata{'archived_file'} = 'none';
+    $phenotype_metadata{'archived_file_type'}="generated from plot from plant phenotypes";
+    $phenotype_metadata{'operator'}=$c->user()->get_object()->get_sp_person_id();
+    $phenotype_metadata{'date'}="$timestamp";
+    my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
+
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+        bcs_schema=>$schema,
+        metadata_schema=>$metadata_schema,
+        phenome_schema=>$phenome_schema,
+        user_id=>$user_id,
+        stock_list=>$plots,
+        trait_list=>$traits,
+        values_hash=>$data,
+        has_timestamps=>0,
+        overwrite_values=>$overwrite,
+        metadata_hash=>\%phenotype_metadata,
+    );
+    my $store_error = $store_phenotypes->store();
+    if ($store_error) {
+        $c->stash->{rest} = {error => $store_error};
+    }
+    $c->stash->{rest} = {success => 1};
+}
+
 
 
 1;

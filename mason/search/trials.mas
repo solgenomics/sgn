@@ -8,7 +8,7 @@ $nd_geolocation => 'not_provided'
 <& /page/page_title.mas, title => "Trial Search" &>
 
 
-<table id="search_results" class="display">
+<table id="trial_search_results" class="display">
 <thead>
   <tr>
     <th>Trial name</th>
@@ -23,6 +23,12 @@ $nd_geolocation => 'not_provided'
 </table>
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+<br><br>
+<&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the trial names currently showing in the search results table to a new or exisiting list</i>'&>
+<br>
+<div style="text-align:right" id="trials_to_list_menu"></div>
+<div id="trial_result_names" style="display: none;"></div>
+</&>
 
 
 
@@ -30,8 +36,23 @@ $nd_geolocation => 'not_provided'
 
 jQuery(document).ready(function () {
 
-   jQuery('#search_results').DataTable( {
+   var trial_table = jQuery('#trial_search_results').DataTable( {
        'ajax': '/ajax/search/trials?nd_geolocation=<% $nd_geolocation %>'
+   });
+
+   jQuery('#trial_search_results').on( 'draw.dt', function () {
+     var name_links = trial_table.column( 0, {page:'current'} ).data();
+     var names = [];
+
+     for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
+       names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+     }
+
+     jQuery('#trial_result_names').html(names);
+     addToListMenu('trials_to_list_menu', 'trial_result_names', {
+       listType: 'trials'
+     });
+
    });
 
 });

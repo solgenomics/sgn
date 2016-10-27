@@ -266,8 +266,11 @@ for (popGenoNum in 1:popsGenoSize)
     
     popMarkers <- colnames(genoData)
     message("No of markers from population ", popId, ": ", length(popMarkers))
-    #print(popMarkers)
-  
+    
+    message("sum of geno missing values: ", sum(is.na(genoData)))
+    genoData <- genoData[, colSums(is.na(genoData)) < nrow(genoData) * 0.5]
+    message("sum of geno missing values: ", sum(is.na(genoData)))
+
     if (sum(is.na(genoData)) > 0)
       {
         message("sum of geno missing values: ", sum(is.na(genoData)))

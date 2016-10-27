@@ -67,6 +67,19 @@ sub get_cvterm_row_from_trait_name {
     my $trait_name = shift;
 
     #print STDERR $trait_name;
+
+    #for mutiterm trait_name of form term1|CHEBI:0000001||term2|CASSTIME:0000002||term3|CASSTISS:0000001
+    if ($trait_name =~ /\|\|/ ) {
+        my @term_array = split(/\|\|/, $trait_name);
+        my $like_search = '%';
+        foreach (@term_array){
+            my ( $full_cvterm_name, $full_accession) = split (/\|/, $_);
+            $like_search .= "$full_accession%";
+        }
+        my $trait_cvterm = $schema->resultset("Cv::Cvterm")->search({ name => { like => $like_search } })->single();
+        return $trait_cvterm;
+    }
+
     #fieldbook trait string should be "$trait_name|$dbname:$trait_accession" e.g. plant height|CO:0000123
     my ( $full_cvterm_name, $full_accession) = split (/\|/, $trait_name);
     my ( $db_name , $accession ) = split (/:/ , $full_accession);

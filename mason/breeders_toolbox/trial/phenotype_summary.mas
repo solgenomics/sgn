@@ -26,15 +26,17 @@ $trial_id
 
 
 <div class="well well-sm table-responsive">
-     <center><h4>Raw Data Statistics</h4></center><hr>
+     <center><h4>Raw Data Statistics for Accession's Plot Measurements</h4></center><hr>
      <table id="phenotype_summary_data" class="display">
      <thead>
      <tr>
+     <th>Accession</th>
      <th>Trait</th>
-     <th>Average</th>
+     <th>Mean</th>
      <th>Min</th>
      <th>Max</th>
      <th>Std Dev</th>
+     <th>CV</th>
      <th>Count</th>
      <th>Histogram</th>
      </tr>
@@ -45,7 +47,7 @@ $trial_id
 </div>
 
 <div class="well well-sm" id="raw_data_histogram_well">
-  <center><h4>Raw Data Histogram</h4></center><hr>
+  <center><h4>Raw Data Histogram for Trial's Plot Measurements</h4></center><hr>
   <div id="trial_summary_hist_div">
   <div class="row">
     <div class="col-sm-8">

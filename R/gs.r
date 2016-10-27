@@ -13,7 +13,7 @@ library(stringr)
 library(lme4)
 library(randomForest)
 library(data.table)
-
+#library(genetics)
 
 allArgs <- commandArgs()
 
@@ -60,21 +60,54 @@ traitPhenoFile <- paste("phenotype_trait", trait, sep = "_")
 traitPhenoFile <- grep(traitPhenoFile, outputFiles,ignore.case = TRUE, value = TRUE)
 
 varianceComponentsFile <- grep("variance_components", outputFiles, ignore.case = TRUE, value = TRUE)
-
-formattedPhenoFile <- grep("formatted_phenotype_data", inputFiles, ignore.case = TRUE, value = TRUE)
+filteredGenoFile       <- grep("filtered_genotype_data", outputFiles, ignore.case = TRUE, value = TRUE)
+formattedPhenoFile     <- grep("formatted_phenotype_data", inputFiles, ignore.case = TRUE, value = TRUE)
 
 formattedPhenoData <- c()
 phenoData          <- c()
+genoFile <- grep("genotype_data_", inputFiles, ignore.case = TRUE, perl=TRUE, value = TRUE)
+
+message('geno file ', genoFile)
+if (is.null(genoFile)) {
+  stop("genotype data file is missing.")
+}
+
+if (file.info(genoFile)$size == 0) {
+  stop("genotype data file is empty.")
+}
+
+readFilteredGenoData <- c()
+filteredGenoData <- c()
+if (length(filteredGenoFile) != 0 && file.info(filteredGenoFile)$size != 0) {
+  filteredGenoData <- fread(filteredGenoFile, na.strings = c("NA", " ", "--", "-"),  header = TRUE)
+  readFilteredGenoData <- 1
+  message('read in filtered geno data')
+}
+
+genoData <- c()
+if (is.null(filteredGenoData)) {
+  genoData <- fread(genoFile, na.strings = c("NA", " ", "--", "-"),  header = TRUE)
+  message('read in unfiltered geno data')
+}
 
 if (length(formattedPhenoFile) != 0 && file.info(formattedPhenoFile)$size != 0) {
-    formattedPhenoData <- as.data.frame(fread(formattedPhenoFile,
-                                              na.strings = c("NA", " ", "--", "-", ".")
-                                              ))
+  formattedPhenoData <- as.data.frame(fread(formattedPhenoFile,
+                                            na.strings = c("NA", " ", "--", "-", ".")
+                                            ))
       
-    row.names(formattedPhenoData) <- formattedPhenoData[, 1]
-    formattedPhenoData[, 1]       <- NULL    
+  row.names(formattedPhenoData) <- formattedPhenoData[, 1]
+  formattedPhenoData[, 1]       <- NULL    
 } else {
   phenoFile <- grep("\\/phenotype_data", inputFiles, ignore.case = TRUE, value = TRUE, perl = TRUE)
+
+  if (is.null(phenoFile)) {
+    stop("phenotype data file is missing.")
+  }
+
+  if (file.info(phenoFile)$size == 0) {
+    stop("phenotype data file is empty.")
+  }
+  
   phenoData <- fread(phenoFile, na.strings = c("NA", " ", "--", "-", "."), header = TRUE) 
 }
 
@@ -212,38 +245,116 @@ if (datasetInfo == 'combined populations') {
   }
 }
 
-genoFile <- grep("genotype_data", inputFiles, ignore.case = TRUE, value = TRUE)
-genoData <- fread(genoFile, na.strings = c("NA", " ", "--", "-"),  header = TRUE)
+### MAF calculation ###
+calculateMAF <- function(x) {
+  a0 <-  length(x[x==0])
+  a1 <-  length(x[x==1])
+  a2 <-  length(x[x==2])
+  aT <- a0 + a1 + a2
 
-genoData           <- as.data.frame(genoData)
-rownames(genoData) <- genoData[, 1]
-genoData[, 1]      <- NULL
-genoData           <- genoData[, colSums(is.na(genoData)) < nrow(genoData) * 0.5]
+  p <- ((2*a0)+a1)/(2*aT)
+  q <- 1- p
+
+  maf <- min(p, q)
+  
+  return (maf)
+
+}
+
+
+if (is.null(filteredGenoData)) {
+
+  #remove markers with > 60% missing marker data
+  message('no of markers before filtering out: ', ncol(genoData))
+  genoData[, which(colSums(is.na(genoData)) >= nrow(genoData) * 0.6) := NULL]
+  message('no of markers after filtering out 60% missing: ', ncol(genoData))
+
+  #remove indls with > 80% missing marker data
+  genoData[, noMissing := apply(.SD, 1, function(x) sum(is.na(x)))]
+  genoData <- genoData[noMissing <= ncol(genoData) * 0.8]
+  genoData[, noMissing := NULL]
+  message('no of indls after filtering out ones with 80% missing: ', nrow(genoData))
+
+  #remove monomorphic markers
+  message('marker no before monomorphic markers cleaning ', ncol(genoData))
+  genoData[, which(apply(genoData, 2,  function(x) length(unique(x))) < 2) := NULL ]
+  message('marker no after monomorphic markers cleaning ', ncol(genoData))
+
+  #remove markers with MAF < 5%
+  genoData[, which(apply(genoData, 2,  calculateMAF) < 0.05) := NULL ]
+  message('marker no after MAF cleaning ', ncol(genoData))
+
+  genoData           <- as.data.frame(genoData)
+  rownames(genoData) <- genoData[, 1]
+  genoData[, 1]      <- NULL
+  filteredGenoData   <- genoData 
+} else {
+  genoData           <- as.data.frame(filteredGenoData)
+  rownames(genoData) <- genoData[, 1]
+  genoData[, 1]      <- NULL
+}
 
 predictionTempFile <- grep("prediction_population", inputFiles, ignore.case = TRUE, value = TRUE)
-predictionFile     <- c()
+predictionFile       <- c()
+filteredPredGenoFile <- c()
+predictionAllFiles   <- c()
 
 message('prediction temp genotype file: ', predictionTempFile)
 
 if (length(predictionTempFile) !=0 ) {
-  predictionFile <- scan(predictionTempFile, what = "character")
-}
+  predictionAllFiles <- scan(predictionTempFile, what = "character")
 
-message('prediction genotype file: ', predictionFile)
+  predictionFile <- grep("\\/genotype_data", predictionAllFiles, ignore.case = TRUE, perl=TRUE, value = TRUE)
+  message('prediction unfiltered genotype file: ', predictionFile)
+
+  filteredPredGenoFile   <- grep("filtered_genotype_data_",  predictionAllFiles, ignore.case = TRUE, perl=TRUE, value = TRUE)
+  message('prediction filtered genotype file: ', predictionFile)
+}
 
 predictionPopGEBVsFile <- grep("prediction_pop_gebvs", outputFiles, ignore.case = TRUE, value = TRUE)
+
+message("filtered pred geno file: ", filteredPredGenoFile)
 message("prediction gebv file: ",  predictionPopGEBVsFile)
 
-predictionData <- c()
+predictionData           <- c()
+readFilteredPredGenoData <- c()
+filteredPredGenoData     <- c()
 
-if (length(predictionFile) !=0 ) {
+if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size != 0) {
+  predictionData <- fread(filteredPredGenoFile, na.strings = c("NA", " ", "--", "-"),)
+  readFilteredPredGenoData <- 1
 
-  predictionData <- as.data.frame(fread(predictionFile, na.strings = c("NA", " ", "--", "-"),))
- 
+  predictionData           <- as.data.frame(predictionData)
   rownames(predictionData) <- predictionData[, 1]
   predictionData[, 1]      <- NULL
-  predictionData           <- predictionData[, colSums(is.na(predictionData)) < nrow(predictionData) * 0.5]
+    
+  message('read in filtered prediction genotype data')
+} else if (length(predictionFile) != 0) {
+    
+  predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
+  message('selection population: no of markers before filtering out: ', ncol(predictionData))
+    
+  predictionData[, which(colSums(is.na(predictionData)) >= nrow(predictionData) * 0.6) := NULL]
+
+  #remove indls with > 80% missing marker data
+  predictionData[, noMissing := apply(.SD, 1, function(x) sum(is.na(x)))]
+  predictionData <- predictionData[noMissing <= ncol(predictionData) * 0.8]
+  predictionData[, noMissing := NULL]
+
+  #remove monomorphic markers
+  message('marker no before monomorphic markers cleaning ', ncol(predictionData))
+  predictionData[, which(apply(predictionData, 2,  function(x) length(unique(x))) < 2) := NULL ]
+  message('marker no after monomorphic markers cleaning ', ncol(predictionData))
+
+  predictionData[, which(apply(predictionData, 2,  calculateMAF) < 0.05) := NULL ]
+  message('selection pop marker no after MAF cleaning ', ncol(predictionData))
+
+  predictionData           <- as.data.frame(predictionData)
+  rownames(predictionData) <- predictionData[, 1]
+  predictionData[, 1]      <- NULL
+  filteredPredGenoData     <- predictionData
 }
+
 
 #impute genotype values for obs with missing values,
 #based on mean of neighbouring 10 (arbitrary) obs
@@ -271,15 +382,17 @@ commonObs <- data.frame(commonObs)
 rownames(commonObs)<-commonObs[, 1]
 
 message('lines with both genotype and phenotype data: ', length(row.names(commonObs)))
+
 #include in the genotype dataset only observation lines
 #with phenotype data
 message("genotype lines before filtering for phenotyped only: ", length(row.names(genoData)))        
-genoDataFiltered <- genoData[(rownames(genoData) %in% rownames(commonObs)), ]
-message("genotype lines after filtering for phenotyped only: ", length(row.names(genoDataFiltered)))
+genoDataFilteredObs <- genoData[(rownames(genoData) %in% rownames(commonObs)), ]
+message("genotype lines after filtering for phenotyped only: ", length(row.names(genoDataFilteredObs)))
+
 #drop observation lines without genotype data
 message("phenotype lines before filtering for genotyped only: ", length(row.names(phenoTrait)))        
 phenoTrait <- merge(data.frame(phenoTrait), commonObs, by=0, all=FALSE)
-rownames(phenoTrait) <-phenoTrait[, 1]
+rownames(phenoTrait) <- phenoTrait[, 1]
 phenoTrait <- subset(phenoTrait, select=trait)
 
 message("phenotype lines after filtering for genotyped only: ", length(row.names(phenoTrait)))
@@ -287,18 +400,16 @@ message("phenotype lines after filtering for genotyped only: ", length(row.names
 
 traitPhenoData   <- data.frame(round(phenoTrait, digits = 2))           
 phenoTrait       <- data.matrix(phenoTrait)
-genoDataFiltered <- data.matrix(genoDataFiltered)
+genoDataFilteredObs <- data.matrix(genoDataFilteredObs)
 
 #impute missing data in prediction data
 predictionDataMissing <- c()
 if (length(predictionData) != 0) {
   #purge markers unique to both populations
-  commonMarkers    <- intersect(names(data.frame(genoDataFiltered)), names(predictionData))
-  predictionData   <- subset(predictionData, select = commonMarkers)
-  genoDataFiltered <- subset(genoDataFiltered, select= commonMarkers)
+  commonMarkers       <- intersect(names(data.frame(genoDataFilteredObs)), names(predictionData))
+  predictionData      <- subset(predictionData, select = commonMarkers)
+  genoDataFilteredObs <- subset(genoDataFilteredObs, select= commonMarkers)
   
- # predictionData <- data.matrix(predictionData)
- 
   if (sum(is.na(predictionData)) > 0) {
     predictionDataMissing <- c('yes')
     message("sum of geno missing values, ", sum(is.na(predictionData)) )  
@@ -323,9 +434,9 @@ if (length(relationshipMatrixFile) != 0) {
 }
 
 #change genotype coding to [-1, 0, 1], to use the A.mat ) if  [0, 1, 2]
-genoTrCode <- grep("2", genoDataFiltered[1, ], value = TRUE)
+genoTrCode <- grep("2", genoDataFilteredObs[1, ], value = TRUE)
 if(length(genoTrCode) != 0) {
-  genoDataFiltered <- genoDataFiltered - 1
+  genoDataFilteredObs <- genoDataFilteredObs - 1
 }
 
 if (length(predictionData) != 0 ) {
@@ -338,7 +449,7 @@ if (length(predictionData) != 0 ) {
 ordered.markerEffects <- c()
 if ( length(predictionData) == 0 ) {
   markerEffects <- mixed.solve(y = phenoTrait,
-                               Z = genoDataFiltered
+                               Z = genoDataFilteredObs
                                )
 
   ordered.markerEffects <- data.matrix(markerEffects$u)
@@ -464,8 +575,8 @@ for (i in 1:10) {
   kblup <- paste("rKblup", i, sep = ".")
   
   result <- kinship.BLUP(y = phenoTrait[trG, ],
-                         G.train = genoDataFiltered[trG, ],
-                         G.pred = genoDataFiltered[slG, ],                      
+                         G.train = genoDataFilteredObs[trG, ],
+                         G.pred = genoDataFilteredObs[slG, ],                      
                          mixed.method = "REML",
                          K.method = "RR",
                          )
@@ -514,10 +625,10 @@ predictionPopResult <- c()
 predictionPopGEBVs  <- c()
 
 if (length(predictionData) != 0) {
-    message("running prediction for selection candidates...marker data", ncol(predictionData), " vs. ", ncol(genoDataFiltered))
+    message("running prediction for selection candidates...marker data", ncol(predictionData), " vs. ", ncol(genoDataFilteredObs))
 
     predictionPopResult <- kinship.BLUP(y = phenoTrait,
-                                        G.train = genoDataFiltered,
+                                        G.train = genoDataFilteredObs,
                                         G.pred = predictionData,
                                         mixed.method = "REML",
                                         K.method = "RR"
@@ -596,6 +707,25 @@ if (!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
                 col.names = NA,
                 quote = FALSE,
                 )
+}
+
+if (!is.null(filteredGenoData) && is.null(readFilteredGenoData)) {
+  write.table(filteredGenoData,
+              file = filteredGenoFile,
+              sep = "\t",
+              col.names = NA,
+              quote = FALSE,
+            )
+
+}
+
+if (length(filteredPredGenoFile) != 0 && is.null(readFilteredPredGenoData)) {
+  write.table(filteredPredGenoData,
+              file = filteredPredGenoFile,
+              sep = "\t",
+              col.names = NA,
+              quote = FALSE,
+              )
 }
 
 
