@@ -162,16 +162,45 @@ jQuery(document).ready(function() {
             jQuery('#calculate_rankings').removeClass('disabled');
         });
 
+    jQuery('#save_sin').click(function() {
+      var lo = new CXGN.List();
+      var new_name = jQuery('#save_sin_name').val();
+      console.log("Saving SIN formula to list named "+new_name);
+      var selected_trait_rows = jQuery('#trait_table').children();
+      var trait_ids = [],
+          weights = [],
+          controls = [];
+      jQuery(selected_trait_rows).each(function(index, selected_trait_rows) {
+          var trait_id = jQuery('a', this).data("value");
+          trait_ids.push(trait_id);
+          var weight = jQuery('#' + trait_id + '_weight').val() || 1; // default = 1
+          weights.push(weight);
+          var control = jQuery('#' + trait_id + '_control option:selected').val() || '';
+          controls.push(control);
+      });
+
+      var data = "trait_ids:" + trait_ids.join();
+      data += "\nweights:" + weights.join();
+      data += "\ncontrols:" + controls.join();
+      console.log("data to save is "+JSON.stringify(data));
+      list_id = lo.newList(new_name);
+      if (list_id > 0) {
+        var elementsAdded = lo.addToList(list_id, data);
+      }
+      alert("Saved SIN formula to list "+new_name);
+
+    });
+
+
     jQuery('#calculate_rankings').click(function() {
         jQuery('#raw_avgs_div').html("");
         jQuery('#weighted_values_div').html("");
         var trial_id = jQuery("#select_trial_for_selection_index option:selected").val();
-
         var selected_trait_rows = jQuery('#trait_table').children();
         var trait_ids = [],
             column_names = [],
             weighted_column_names = [],
-            weights = [];
+            weights = [],
             controls = [];
         column_names.push({
             title: "Accession"
