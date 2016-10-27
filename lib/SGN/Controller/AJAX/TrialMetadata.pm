@@ -121,19 +121,24 @@ sub trial_details_POST  {
     print STDERR "Here are the deets: " . Dumper($details) . "\n";
     }
 
-    if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-	    $c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial details of this trial.' };
-	    return;
-    }
+    # if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
+	  #   $c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial details of this trial.' };
+	  #   return;
+    # }
+    #
+     my $trial_id = $c->stash->{trial_id};
+     my $trial = $c->stash->{trial};
+    # my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $c->stash->{schema} });
+    # my $breeding_program = $program_object->get_breeding_programs_by_trial($trial_id);
+    #
+    # if (! ($c->user() &&  ($c->user->check_roles("curator") || $c->user->check_roles($breeding_program)))) {
+	  #   $c->stash->{rest} = { error => "You need to be logged in with sufficient privileges to change the details of this trial." };
+	  #   return;
+    # }
 
-    my $trial_id = $c->stash->{trial_id};
-    my $trial = $c->stash->{trial};
-    my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $c->stash->{schema} });
-    my $breeding_program = $program_object->get_breeding_programs_by_trial($trial_id);
-
-    if (! ($c->user() &&  ($c->user->check_roles("curator") || $c->user->check_roles($breeding_program)))) {
-	    $c->stash->{rest} = { error => "You need to be logged in with sufficient privileges to change the details of this trial." };
-	    return;
+    if ($self->trial_details_privileges_denied($c)) {
+      $c->stash->{rest} = { error => "You need to be logged in with sufficient privileges to change the details of this trial." };
+      return;
     }
 
     # set each new detail that is defined
@@ -160,6 +165,27 @@ sub trial_details_POST  {
     else {
 	    $c->stash->{rest} = { success => 1 };
     }
+}
+
+sub trial_details_privileges_denied {
+    my $self = shift;
+    my $c = shift;
+
+    my $trial_id = $c->stash->{trial_id};
+
+    if (! $c->user) { return "Login required for trial details functions."; }
+    my $user_id = $c->user->get_object->get_sp_person_id();
+
+    if ($c->user->check_roles('curator')) {
+	     return 0;
+    }
+
+    my $breeding_programs = $c->stash->{trial}->get_breeding_programs();
+
+    if ( ($c->user->check_roles('submitter')) && ( $c->user->check_roles($breeding_programs->[0]->[1]))) {
+	return 0;
+    }
+    return "You have insufficient privileges to modify or change the details of this trial.";
 }
 
 sub traits_assayed : Chained('trial') PathPart('traits_assayed') Args(0) {
