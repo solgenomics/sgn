@@ -1,3 +1,65 @@
+
+//  This is for displaying brapi non-paginated responses in a table format.
+//
+//  Pass a js object with the headers and data as key:values, such as: 
+//    {
+//        "col1":"col1row1value",
+//        "height":"12",
+//        "age":"900"
+//    }
+//
+//  as well as the id for the div that you want the table to appear on the web page, e.g. "brapi_map_list_table"
+//  as well as optionally, a link js object, which will be used to construct links in the table. e.g. { "name": ["mapId", "/maps/protocols/"] }
+
+function brapi_create_table(data, div_id, link) {
+    console.log(data);
+    console.log(div_id);
+    console.log(link);
+    var html = "<table class='table table-hover table-bordered'><thead><tr>";
+    var header = [];
+    for(var h in data) {
+        if (data.hasOwnProperty(h)) {
+            if (checkDefined(link) == 0) {
+                header.push(h);
+            } else {
+                for(var link_header in link) {
+                    if(h != link[link_header][0]) {
+                        header.push(h);
+                    }
+                }
+            }
+        }
+    }
+    //console.log(header);
+    header.sort();
+    for(var col=0; col<header.length; col++){
+        html = html+"<th>"+capitalizeEachWord(header[col])+"</th>";
+    }
+    html = html+"</tr></thead><tbody>";
+    html = html+"<tr>";
+    for(var col=0; col<header.length; col++){
+        if (checkDefined(link) == 0) {
+            html = html+"<td>"+data[header[col]]+"</td>";
+        } else {
+            for(var link_header in link) {
+                if (header[col] == link_header) {
+                    if (link[link_header][1] == 'stock') {
+                        html = html+"<td><a href='/"+link[link_header][1]+"/"+data[link[link_header][0]]+"/view'>"+data[link_header]+"</a></td>";
+                    } else {
+                        html = html+"<td><a href='/"+link[link_header][1]+"/"+data[link[link_header][0]]+"'>"+data[link_header]+"</a></td>";
+                    }
+                } else {
+                    html = html+"<td>"+data[header[col]]+"</td>";
+                }
+            }
+        }
+    }
+    html = html+"</tr>";
+    html = html+"</tbody></table>";
+    jQuery("#"+div_id).html(html);
+}
+
+
 //  This is for displaying brapi paginated responses in a table format. The brapi response should be paginated over response.result.data and pagination info should be in response.metadata.pagination
 //
 //  Pass a js object with the headers and data as key:values, such as: 
@@ -15,13 +77,12 @@
 //  as well as optionally, a link js object, which will be used to construct links in the table. e.g. { "name": ["mapId", "/maps/protocols/"] }
 
 
-function brapi_create_table(data, pagination, div_id, return_url, link, params) {
+function brapi_create_paginated_table(data, pagination, div_id, return_url, link) {
     console.log(data);
     console.log(pagination);
     console.log(div_id);
     console.log(return_url);
     console.log(link);
-    console.log(params);
     var current_page = pagination.currentPage;
     var next_page = current_page + 1;
     var previous_page = current_page - 1;
@@ -70,11 +131,13 @@ function brapi_create_table(data, pagination, div_id, return_url, link, params) 
                 } else {
                     for(var link_header in link) {
                         if (header[col] == link_header) {
-                            html = html+"<td><a href='"+link[link_header][1]+data[row][link[link_header][0]]+"'>"+data[row][link_header]+"</a></td>";
-                        } else {
-                            if (data[row][header[col]].length == 0) {
-                                html = html+"<td>"+data[row][header[col]]+"</td>";
+                            if (link[link_header][1] == 'stock') {
+                                html = html+"<td><a href='/"+link[link_header][1]+"/"+data[row][link[link_header][0]]+"/view'>"+data[row][link_header]+"</a></td>";
+                            } else {
+                                html = html+"<td><a href='/"+link[link_header][1]+"/"+data[row][link[link_header][0]]+"'>"+data[row][link_header]+"</a></td>";
                             }
+                        } else {
+                            html = html+"<td>"+data[row][header[col]]+"</td>";
                         }
                     }
                 }
@@ -130,7 +193,7 @@ jQuery(document).ready(function () {
             },
             success: function(response) {
                 jQuery("#working_modal").modal("hide");
-                //console.log(response);
+                console.log(response);
                 var div_id = jQuery("#table_div_id_input").val();
                 var return_url = jQuery("#table_return_url_input").val();
                 if (checkDefined(jQuery("#table_links_input").val()) == 1) {
@@ -139,7 +202,7 @@ jQuery(document).ready(function () {
                     var links = jQuery("#table_links_input").val();
                 }
                 jQuery("#"+jQuery("#table_div_id_input").val()).empty();
-                brapi_create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
+                brapi_create_paginated_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
@@ -171,7 +234,7 @@ jQuery(document).ready(function () {
                     var links = jQuery("#table_links_input").val();
                 }
                 jQuery("#"+jQuery("#table_div_id_input").val()).empty();
-                brapi_create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
+                brapi_create_paginated_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
@@ -199,7 +262,7 @@ jQuery(document).ready(function () {
                         var links = jQuery("#table_links_input").val();
                     }
                     jQuery("#"+jQuery("#table_div_id_input").val()).empty();
-                    brapi_create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
+                    brapi_create_paginated_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
                 },
                 error: function(response) {
                     jQuery("#working_modal").modal("hide");
@@ -228,7 +291,7 @@ jQuery(document).ready(function () {
                         var links = jQuery("#table_links_input").val();
                     }
                     jQuery("#"+jQuery("#table_div_id_input").val()).empty();
-                    brapi_create_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
+                    brapi_create_paginated_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
                 },
                 error: function(response) {
                     jQuery("#working_modal").modal("hide");

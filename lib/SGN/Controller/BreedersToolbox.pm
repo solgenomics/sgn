@@ -158,7 +158,7 @@ sub manage_nurseries : Path("/breeders/nurseries") Args(0) {
 
 }
 
-sub manage_crosses : Path("/breeders/nurseries_and_crosses") Args(0) {
+sub manage_crosses : Path("/breeders/crosses") Args(0) {
     my $self = shift;
     my $c = shift;
 
