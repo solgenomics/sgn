@@ -572,13 +572,13 @@ CXGN.List.prototype = {
 	return info;
 
     },
-    
+
     addCrossProgenyToList: function(list_id, text) {
         if (! text) {
             return;
         }
         var list = text.split("\n");
-        list = list.filter(function(n){ return n != '' }); 
+        list = list.filter(function(n){ return n != '' });
         console.log(list);
         var addeditems;
         jQuery.ajax( {
@@ -604,7 +604,7 @@ CXGN.List.prototype = {
            provided text as description
     */
 
-    listSelect: function(div_name, types, empty_element) {
+    listSelect: function(div_name, types, empty_element, refresh) {
 	var lists = new Array();
 
 	if (types) {
@@ -628,9 +628,16 @@ CXGN.List.prototype = {
 	for (var n=0; n<lists.length; n++) {
 	    html += '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
 	}
-	html = html + '</select>';
-	return html;
-    },
+  if (refresh) {
+    var arguments = "'"+div_name+"_list_select','"+types+"','"+empty_element+"'";
+	  html = '<div class="input-group">'+html+'</select><span class="input-group-btn"><button class="btn btn-default" id="'+div_name+'_list_refresh" title="Refresh lists" onclick="refreshListSelect('+arguments+')"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></span></div>';
+    return html;
+  }
+  else {
+    html = html + '</select>';
+  	return html;
+  }
+},
 
     updateName: function(list_id, new_name) {
 	jQuery.ajax( {
@@ -677,9 +684,9 @@ CXGN.List.prototype = {
 	else {
 
 	    jQuery("#validate_accession_error_display tbody").html('');
-	    
+
             var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing accessions to a list</h3><div id='validate_stock_missing_accessions' style='display:none'></div><div id='validate_stock_add_missing_accessions'></div><hr><h4>Go to <a href='/breeders/accessions'>Manage Accessions</a> to add these new accessions.</h4></div><br/>";
-	    
+
 
 	    jQuery("#validate_stock_add_missing_accessions_html").html(missing_accessions_html);
 
@@ -694,12 +701,12 @@ CXGN.List.prototype = {
           selectText: true,
           listType: 'accessions'
         });
-            
+
 
             jQuery("#validate_accession_error_display tbody").append(missing.join(","));
             jQuery('#validate_accession_error_display').modal("show");
 	    return;
-	
+
 	    //alert("List validation failed. Elements not found: "+ missing.join(","));
 	    //return 0;
 	}
@@ -805,6 +812,44 @@ function pasteList(div_name) {
     jQuery('#'+div_name).val(list_text);
   }
 
+  /* refreshListSelect: refreshes an html select with lists of requested types.
+
+     Parameters:
+       div_name: The div_name where the select should appear
+       types: a list of list types that should be listed in the menu
+       add_empty_element: text. if present, add an empty element with the
+         provided text as description
+  */
+
+  function refreshListSelect(div_name, types, empty_element) {
+    var lo = new CXGN.List();
+    var lists = new Array();
+
+    if (types) {
+        for (var n=0; n<types.length; n++) {
+      var more = lo.availableLists(types[n]);
+      if (more) {
+          for (var i=0; i<more.length; i++) {
+        lists.push(more[i]);
+          }
+      }
+        }
+    }
+    else {
+        lists = lo.availableLists();
+    }
+
+    var html;
+    if (empty_element) {
+        html += '<option value="">'+empty_element+'</option>\n';
+          }
+    for (var n=0; n<lists.length; n++) {
+        html += '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
+    }
+    jQuery('#'+div_name).html(html);
+
+  }
+
 /*
   addToListMenu
 
@@ -874,8 +919,8 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
             } else {
                 elementsAdded = lo.addToList(list_id, data);
             }
-            if (type) { 
-                lo.setListType(list_id, type); 
+            if (type) {
+                lo.setListType(list_id, type);
             }
             alert("Added "+elementsAdded+" list elements to list "+new_name+" and set type to "+type);
         }
