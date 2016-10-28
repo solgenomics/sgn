@@ -260,8 +260,9 @@ sub trait_histogram : Chained('trial') PathPart('trait_histogram') Args(1) {
     my $self = shift;
     my $c = shift;
     my $trait_id = shift;
+    my $stock_type = $c->req->param('stock_type') || 'plot';
 
-    my @data = $c->stash->{trial}->get_phenotypes_for_trait($trait_id, 'plot');
+    my @data = $c->stash->{trial}->get_phenotypes_for_trait($trait_id, $stock_type);
 
     $c->stash->{rest} = { data => \@data };
 }
