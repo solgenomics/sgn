@@ -43,7 +43,12 @@ jQuery(document).ready(function() {
                     enable_ui();
                 },
                 success: function(response) {
-                    var list = response.list || [];
+                    var list = response.list || 0;
+                    if (!list) {
+                      trait_html = '<option id="select_message" value="" title="No trait measurements found for the selected trial.">No trait measurements found for the selected trial.</a>\n';
+                      jQuery('#trait_list').html(trait_html);
+                      return;
+                    }
                     var trait_ids = [];
                     for (i = 0; i < list.length; i++) {
                         trait_ids.push(list[i][0]);
@@ -156,7 +161,7 @@ jQuery(document).ready(function() {
                 function() {
                     update_formula();
                 });
-            jQuery('#calculate_rankings').removeClass('disabled');
+            //jQuery('#calculate_rankings').removeClass('disabled');
         });
 
     jQuery('#save_sin').click(function() {
@@ -441,6 +446,10 @@ function update_formula() {
     var selected_trait_rows = jQuery('#trait_table').children();
     if (selected_trait_rows.length < 1) {
         jQuery('#ranking_formula').html("<center><i>Select a trial, then pick traits and weights (or load a saved formula).</i></center>");
+        jQuery('#calculate_rankings').addClass('disabled');
+        jQuery('#save_sin').addClass('disabled');
+        jQuery('#save_sin_name').addClass('disabled');
+        jQuery('#sin_list').addClass('disabled');
         return;
     }
     var formula = "<center><b>SIN = </b></center>";
@@ -462,5 +471,9 @@ function update_formula() {
         term_number++;
     });
     jQuery('#ranking_formula').html(formula);
+    jQuery('#calculate_rankings').removeClass('disabled');
+    jQuery('#save_sin').removeClass('disabled');
+    jQuery('#save_sin_name').removeClass('disabled');
+    jQuery('#sin_list').removeClass('disabled');
     return;
 }

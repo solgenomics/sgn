@@ -175,8 +175,13 @@ sub get_synonyms : Path('/ajax/cvterm/get_synonyms') Args(0) {
     print STDERR "found cvterm_id = $found_cvterm_id";
 
     my $synonym = $cvterm->get_uppercase_synonym();
-    print STDERR " has synonym: ".$synonym."\n";
-    $synonyms->{$trait_id} = $synonym;
+    if ($synonym) {
+      print STDERR " has synonym: ".$synonym."\n";
+      $synonyms->{$trait_id} = $synonym;
+    }
+    else {
+      $synonyms->{$trait_id} = 'None';
+    }
   }
 
   $c->stash->{rest} = { synonyms => $synonyms };
