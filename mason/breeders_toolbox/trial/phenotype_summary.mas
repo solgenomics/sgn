@@ -44,23 +44,24 @@ $trial_id
     </form>
     <hr>
 
-    <table id="phenotype_summary_data" class="display">
-    <thead>
-    <tr>
-    <th>Accession</th>
-    <th>Trait</th>
-    <th>Mean</th>
-    <th>Min</th>
-    <th>Max</th>
-    <th>Std Dev</th>
-    <th>CV</th>
-    <th>Count</th>
-    <th>Histogram</th>
-    </tr>
-    </thead>
-    <tbody>
-    </tbody>
-    </table>
+    <div id="pheno_summary_table_div">
+        <table id="phenotype_summary_data" class="display">
+        <thead>
+        <tr>
+        <th>Trait</th>
+        <th>Mean</th>
+        <th>Min</th>
+        <th>Max</th>
+        <th>Std Dev</th>
+        <th>CV</th>
+        <th>Count</th>
+        <th>Histogram</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        </table>
+    </div>
 </div>
 
 <div class="well well-sm" id="raw_data_histogram_well">
@@ -98,6 +99,19 @@ jQuery(document).ready(function () {
     jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
 
         datatables_display_phenosummary();
+
+        jQuery(document).on('change', '#display_trial_phenosummary', function() {
+            var html = '';
+            var display = jQuery('#display_trial_phenosummary').val();
+            if (display == 'plots' || display == 'plants') {
+                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+            }
+            if (display == 'plots_accession' || display == 'plants_accession') {
+                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Accession</th><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+            }
+            jQuery('#pheno_summary_table_div').empty().html(html);
+            datatables_display_phenosummary();
+        });
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed',
@@ -166,9 +180,6 @@ function datatables_display_phenosummary() {
     jQuery('#phenotype_summary_data').DataTable( {
         "retrieve": true,
         "ajax": '/ajax/breeders/trial/'+ <% $trial_id %> + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val(),
-        "columnDefs": [
-          { className: "text-center", "targets": [ 6 ] }
-        ],
     });
 }
 
