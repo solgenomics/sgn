@@ -24,6 +24,11 @@ jQuery(document).ready(function() {
                 return;
             };
 
+            jQuery('#trait_table_label').html('<a href="/breeders_toolbox/trial/'+jQuery(this).val()+'">'+jQuery('option:selected', this).text()+'</a> Traits and Weights:')
+
+            var trial_id = jQuery(this).val();
+            var trial_name = jQuery("option:selected", this).text();
+
             var data = [
                 [jQuery(this).val()]
             ];
@@ -45,7 +50,7 @@ jQuery(document).ready(function() {
                 success: function(response) {
                     var list = response.list || 0;
                     if (!list) {
-                      trait_html = '<option id="select_message" value="" title="No trait measurements found for the selected trial.">No trait measurements found for the selected trial.</a>\n';
+                      trait_html = '<option id="select_message" value="" title="No trait measurements found.">No trait measurements found for '+trial_name+'.</option>\n';
                       jQuery('#trait_list').html(trait_html);
                       return;
                     }
@@ -65,7 +70,7 @@ jQuery(document).ready(function() {
                         success: function(response) {
                             synonyms = response.synonyms;
                             //console.log("synonyms = " + JSON.stringify(synonyms));
-                            var trait_html = '<option id="select_message" value="" title="Select a trait">Select a trait</a>\n';
+                            trait_html = '<option id="select_message" value="" title="Select a trait">Select a trait</option>\n';
                             for (i = 0; i < list.length; i++) {
                                 var trait_id = list[i][0];
                                 var trait_name = list[i][1];
@@ -165,6 +170,11 @@ jQuery(document).ready(function() {
         });
 
     jQuery('#save_sin').click(function() {
+      if (jQuery('#trait_table').children().length < 1) {
+        document.getElementById('selection_index_error_message').innerHTML = "<center><li class='list-group-item list-group-item-danger'> Formula not saved.<br> At least one trait must be selected before saving a SIN formula.</li></center>";
+        jQuery('#selection_index_error_dialog').modal("show");
+        return;
+      }
         var lo = new CXGN.List();
         var new_name = jQuery('#save_sin_name').val();
         console.log("Saving SIN formula to list named " + new_name);
@@ -207,6 +217,12 @@ jQuery(document).ready(function() {
 
 
     jQuery('#calculate_rankings').click(function() {
+
+      if (jQuery('#trait_table').children().length < 1) {
+        document.getElementById('selection_index_error_message').innerHTML = "<center><li class='list-group-item list-group-item-danger'> Error.<br> A trial and at least one trait must be selected before calculating rankings.</li></center>";
+        jQuery('#selection_index_error_dialog').modal("show");
+        return;
+      }
         jQuery('#raw_avgs_div').html("");
         jQuery('#weighted_values_div').html("");
         var trial_id = jQuery("#select_trial_for_selection_index option:selected").val();
@@ -216,29 +232,34 @@ jQuery(document).ready(function() {
             weighted_column_names = [],
             weights = [],
             controls = [];
+
+        var trial_name = jQuery('#select_trial_for_selection_index option:selected').text();
         column_names.push({
-            title: "Accession"
+            title: trial_name + " Accession"
         });
         weighted_column_names.push({
-            title: "Accession"
+            title: trial_name + " Accession"
         });
         jQuery(selected_trait_rows).each(function(index, selected_trait_rows) {
             var trait_id = jQuery('a', this).data("value");
             trait_ids.push(trait_id);
-            var trait_synonym = "mean ";
-            trait_synonym += jQuery('#' + trait_id + '_synonym').text();
+            var trait = jQuery('#' + trait_id + '_synonym').text()
+            if (trait == 'None') {
+              trait = jQuery('a', this).text();
+            }
+            var trait_term = "mean "+trait;
             var weight = jQuery('#' + trait_id + '_weight').val() || 1; // default = 1
             weights.push(weight);
             var control = jQuery('#' + trait_id + '_control option:selected').val() || '';
             controls.push(control);
             if (control) {
-                trait_synonym += " relative to " + jQuery('#' + trait_id + '_control option:selected').text();
+                trait_term += " relative to " + jQuery('#' + trait_id + '_control option:selected').text();
             }
             column_names.push({
-                title: trait_synonym
+                title: trait_term
             });
             weighted_column_names.push({
-                title: weight + " * (" + trait_synonym + ")"
+                title: weight + " * (" + trait_term + ")"
             });
         });
         weighted_column_names.push({
@@ -354,6 +375,12 @@ function build_table(data, column_names, trial_name, target_div) {
 
 function load_sin() { // update traits and selection index when a saved sin formula is picked
 
+    if (!jQuery("#select_trial_for_selection_index option:selected").val()) {
+      document.getElementById('selection_index_error_message').innerHTML = "<center><li class='list-group-item list-group-item-danger'> Error.<br> A trial must be selected before loading a SIN formula.</li></center>";
+      jQuery('#selection_index_error_dialog').modal("show");
+      return;
+    }
+
     //retrieve contents of list:
     var sin_list_id = jQuery('#sin_formula_list_select').val();
     if (!sin_list_id) {
@@ -448,32 +475,31 @@ function update_formula() {
         jQuery('#ranking_formula').html("<center><i>Select a trial, then pick traits and weights (or load a saved formula).</i></center>");
         jQuery('#calculate_rankings').addClass('disabled');
         jQuery('#save_sin').addClass('disabled');
-        jQuery('#save_sin_name').addClass('disabled');
-        jQuery('#sin_list').addClass('disabled');
         return;
     }
     var formula = "<center><b>SIN = </b></center>";
     var term_number = 0;
     jQuery(selected_trait_rows).each(function(index, selected_trait_rows) {
         var trait_id = jQuery('a', this).data("value");
-        var trait_synonym = "mean ";
-        trait_synonym += jQuery('#' + trait_id + '_synonym').text();
+        var trait = jQuery('#' + trait_id + '_synonym').text()
+        if (trait == 'None') {
+          trait = jQuery('a', this).text();
+        }
+        var trait_term = "mean "+trait;
         var weight = jQuery('#' + trait_id + '_weight').val() || 1; // default = 1
         if (jQuery('#' + trait_id + '_control option:selected').val()) { // if control selected for scaling
-            trait_synonym += " relative to " + jQuery('#' + trait_id + '_control option:selected').text();
+            trait_term += " relative to " + jQuery('#' + trait_id + '_control option:selected').text();
         }
 
         if (term_number == 0 || weight <= 0) {
-            formula += "<center>" + weight + " * ( " + trait_synonym + ")</center>";
+            formula += "<center>" + weight + " * ( " + trait_term + ")</center>";
         } else {
-            formula += "<center>+ " + weight + " * ( " + trait_synonym + ")</center>";
+            formula += "<center>+ " + weight + " * ( " + trait_term + ")</center>";
         }
         term_number++;
     });
     jQuery('#ranking_formula').html(formula);
     jQuery('#calculate_rankings').removeClass('disabled');
     jQuery('#save_sin').removeClass('disabled');
-    jQuery('#save_sin_name').removeClass('disabled');
-    jQuery('#sin_list').removeClass('disabled');
     return;
 }

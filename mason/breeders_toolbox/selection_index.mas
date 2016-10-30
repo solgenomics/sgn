@@ -18,7 +18,7 @@ $trial_name => undef
           <select class="form-control" autofocus="autofocus" id="select_trial_for_selection_index"></select>
       </div><br><br><br><br><br>
       <div class="col-sm-12 col-md-12 col-lg-12 table-responsive" id="trait_table_div">
-        <label>Traits and weights: </label>
+        <label id="trait_table_label">Traits and weights: </label>
           <table class="table table-bordered table-striped table-highlight">
             <thead>
               <th>Trait name</th>
@@ -46,9 +46,9 @@ $trial_name => undef
         <div id="sin_list"></div><br>
         <label>Save the current formula:</label>
           <div class="input-group">
-            <input type='text' id='save_sin_name' class='form-control' placeholder='Enter a name'></input>
+            <input type='text' id='save_sin_name' class='form-control disabled' placeholder='Enter a name'></input>
             <span class="input-group-btn">
-              <button class="btn btn-default" id="save_sin" type="button">Save</button>
+              <button class="btn btn-default disabled" id="save_sin" type="button">Save</button>
             </span>
           </div><br>
             <label><input type="checkbox" id="allow_missing" value="">Include accessions with missing values in calculations</label>
