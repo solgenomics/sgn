@@ -143,10 +143,21 @@ sub authenticate_token_DELETE {
     $c->stash->{rest} = \%response;
 }
 
+sub authenticate_token_GET {
+    my $self = shift;
+    my $c = shift;
+    process_authenticate_token($self,$c);
+}
+
 sub authenticate_token_POST {
     my $self = shift;
     my $c = shift;
+    process_authenticate_token($self,$c);
+}
 
+sub process_authenticate_token {
+    my $self = shift;
+    my $c = shift;
     my $login_controller = CXGN::Login->new($c->dbc->dbh);
     my $params = $c->req->params();
 
@@ -190,7 +201,6 @@ sub authenticate_token_POST {
     my %response = (metadata=>\%metadata, access_token=>$cookie, userDisplayName=>"$first_name $last_name", expires_in=>$CXGN::Login::LOGIN_TIMEOUT);
     $c->stash->{rest} = \%response;
 }
-
 
 =head2 /brapi/v1/calls
 
