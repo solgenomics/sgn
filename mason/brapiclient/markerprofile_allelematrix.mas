@@ -28,7 +28,7 @@ jQuery(document).ready(function() {
         if (jQuery('#brapi_home_allelematrix_format').val() == 'json') {
 
             jQuery.ajax( {
-              'url': '/brapi/v1/allelematrix-search?markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid1').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid2').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid3').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid4').val()+'&format='+jQuery('#brapi_home_allelematrix_format').val(),
+              'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/allelematrix-search?markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid1').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid2').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid3').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid4').val()+'&format='+jQuery('#brapi_home_allelematrix_format').val(),
               'method': 'GET',
               'success': function(response) {
                 console.log(response);
@@ -37,7 +37,7 @@ jQuery(document).ready(function() {
                 for (var i=0; i<response.result.data.length; i++) {
                     data.push({'markerDbId':response.result.data[i][0], 'markerprofileDbId':response.result.data[i][1], 'alleleCall':response.result.data[i][2]});
                 }
-                brapi_create_paginated_table(data, response.metadata.pagination, 'brapi_markerprofile_allelematrix_div', '/brapi/v1/allelematrix-search?markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid1').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid2').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid3').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid4').val()+'&format='+jQuery('#brapi_home_allelematrix_format').val(), undefined);
+                brapi_create_paginated_table(data, response.metadata.pagination, 'brapi_markerprofile_allelematrix_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/allelematrix-search?markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid1').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid2').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid3').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid4').val()+'&format='+jQuery('#brapi_home_allelematrix_format').val(), undefined);
 
               },
               error: function(response) {
@@ -46,7 +46,7 @@ jQuery(document).ready(function() {
             });
 
         } else {
-            window.open('/brapi/v1/allelematrix-search?markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid1').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid2').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid3').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid4').val()+'&format='+jQuery('#brapi_home_allelematrix_format').val());
+            window.open(jQuery('#brapi_home_url_select').val()+'/brapi/v1/allelematrix-search?markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid1').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid2').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid3').val()+'&markerprofileDbId='+jQuery('#brapi_home_markerprofiledbid4').val()+'&format='+jQuery('#brapi_home_allelematrix_format').val());
         }
     });
 });

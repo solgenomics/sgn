@@ -19,13 +19,13 @@
 jQuery(document).ready(function() {
     jQuery("#brapi_home_studygermplasmdbid_submit").click(function() {
         jQuery.ajax( {
-          'url': '/brapi/v1/studies/'+jQuery('#brapi_home_studygermplasmdbid').val()+'/germplasm',
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies/'+jQuery('#brapi_home_studygermplasmdbid').val()+'/germplasm',
           'method': 'GET',
           'success': function(response) {
             console.log(response);
             var html = '<table class="table table-bordered"><thead><tr><th>StudyDbId</th><th>TrialName</th></tr></thead><tbody><tr><td>'+response.result.studyDbId+'</td><td>'+response.result.studyName+'</td></tr></tbody></table>';
             jQuery('#brapi_studygermplasm_detail_result_div').empty().html(html);
-            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_studygermplasm_data_result_div', undefined);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_studygermplasm_data_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies/'+jQuery('#brapi_home_studygermplasmdbid').val()+'/germplasm', undefined);
 
           },
           error: function(response) {

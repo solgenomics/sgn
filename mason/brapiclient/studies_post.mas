@@ -8,7 +8,7 @@ jQuery.ajax({
 	url: 'http://127.0.0.1:3000/brapi/v1/token?username=janedoe&password=secretpw&grant_type=password',
 	success: function(response) {
 		console.log(response);
-		var url = 'http://127.0.0.1:3000/brapi/v1/studies?session_token='+response.session_token;
+		var url = jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies?session_token='+response.session_token;
 
 		jQuery.ajax({
 			type: 'POST',

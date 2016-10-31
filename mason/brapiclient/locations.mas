@@ -16,7 +16,7 @@
 jQuery(document).ready(function() {
     jQuery("#brapi_home_locations_submit").click(function() {
         jQuery.ajax( {
-          'url': '/brapi/v1/locations',
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/locations',
           'method': 'GET',
           'beforeSend': function() {
             jQuery('#working_modal').modal('show');
@@ -24,7 +24,7 @@ jQuery(document).ready(function() {
           'success': function(response) {
             jQuery('#working_modal').modal('hide');
             console.log(response);
-            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_locations_data_result_div', undefined);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_locations_data_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/locations', undefined);
 
           },
           error: function(response) {

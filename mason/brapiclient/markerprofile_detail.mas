@@ -20,7 +20,7 @@ jQuery(document).ready(function() {
     jQuery("#brapi_home_markerprofiledbid_submit").click(function() {
 
         jQuery.ajax( {
-          'url': '/brapi/v1/markerprofiles/'+jQuery('#brapi_home_markerprofiledbid').val(),
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/markerprofiles/'+jQuery('#brapi_home_markerprofiledbid').val(),
           'method': 'GET',
           'success': function(response) {
             console.log(response);
@@ -33,7 +33,7 @@ jQuery(document).ready(function() {
                     data.push({'marker':j, 'allele':response.result.data[i][j]});
                 }
             }
-            brapi_create_paginated_table(data, response.metadata.pagination, 'brapi_markerprofile_detail_result_div', '/brapi/v1/markerprofiles/'+jQuery('#brapi_home_markerprofiledbid').val(), undefined);
+            brapi_create_paginated_table(data, response.metadata.pagination, 'brapi_markerprofile_detail_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/markerprofiles/'+jQuery('#brapi_home_markerprofiledbid').val(), undefined);
 
           },
           error: function(response) {

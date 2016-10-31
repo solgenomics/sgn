@@ -21,7 +21,7 @@
 jQuery(document).ready(function() {
     jQuery("#brapi_home_germplasmdbid_submit").click(function() {
         jQuery.ajax( {
-          'url': '/brapi/v1/germplasm/'+jQuery('#brapi_home_germplasmdbid').val(),
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm/'+jQuery('#brapi_home_germplasmdbid').val(),
           'method': 'GET',
           'success': function(response) {
             console.log(response);
@@ -34,7 +34,7 @@ jQuery(document).ready(function() {
         });
 
         jQuery.ajax( {
-          'url': '/brapi/v1/germplasm/'+jQuery('#brapi_home_germplasmdbid').val()+'/pedigree',
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm/'+jQuery('#brapi_home_germplasmdbid').val()+'/pedigree',
           'method': 'GET',
           'success': function(response) {
             console.log(response);
@@ -47,7 +47,7 @@ jQuery(document).ready(function() {
         });
         
         jQuery.ajax( {
-          'url': '/brapi/v1/germplasm/'+jQuery('#brapi_home_germplasmdbid').val()+'/markerprofiles',
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm/'+jQuery('#brapi_home_germplasmdbid').val()+'/markerprofiles',
           'method': 'GET',
           'success': function(response) {
             console.log(response);
@@ -55,7 +55,7 @@ jQuery(document).ready(function() {
             for (var i=0; i<response.result.markerProfiles.length; i++) {
                 data.push({'markerProfileDbId':response.result.markerProfiles[i]});
             }
-            brapi_create_paginated_table(data, response.metadata.pagination, 'brapi_germplasm_detail_markerprofiles_result_div', '/brapi/v1/germplasm/'+jQuery('#brapi_home_germplasmdbid').val()+'/markerprofiles', undefined);
+            brapi_create_paginated_table(data, response.metadata.pagination, 'brapi_germplasm_detail_markerprofiles_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm/'+jQuery('#brapi_home_germplasmdbid').val()+'/markerprofiles', undefined);
 
           },
           error: function(response) {

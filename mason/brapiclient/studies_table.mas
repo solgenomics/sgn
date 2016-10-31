@@ -31,13 +31,13 @@ jQuery(document).ready(function() {
     
         if (jQuery('#brapi_home_studytable_format').val() == 'json') {
             jQuery.ajax( {
-              'url': '/brapi/v1/studies/'+jQuery('#brapi_home_studytabledbid').val()+'/table?format='+jQuery('#brapi_home_studytable_format').val()+'&observationLevel='+jQuery("#brapi_home_studytable_datalevel").val(),
+              'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies/'+jQuery('#brapi_home_studytabledbid').val()+'/table?format='+jQuery('#brapi_home_studytable_format').val()+'&observationLevel='+jQuery("#brapi_home_studytable_datalevel").val(),
               'method': 'GET',
               'success': function(response) {
                 console.log(response);
                 var html = '<table class="table table-bordered"><thead><tr><th>StudyDbId</th><th>HeaderRow</th><th>ObservationVariableDbIds</th><th>ObservationVariableNames</th></tr></thead><tbody><tr><td>'+response.result.studyDbId+'</td><td>'+response.result.headerRow+'</td><td>'+response.result.observationVariableDbIds+'</td><td>'+response.result.observationVariableNames+'</td></tr></tbody></table>';
                 jQuery('#brapi_studytable_detail_result_div').empty().html(html);
-                brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_studytable_data_result_div', undefined);
+                brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_studytable_data_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies/'+jQuery('#brapi_home_studytabledbid').val()+'/table?format='+jQuery('#brapi_home_studytable_format').val()+'&observationLevel='+jQuery("#brapi_home_studytable_datalevel").val(),  undefined);
 
               },
               error: function(response) {
@@ -45,7 +45,7 @@ jQuery(document).ready(function() {
               }
             });
         } else {
-            window.open('/brapi/v1/studies/'+jQuery('#brapi_home_studytabledbid').val()+'/table?format='+jQuery('#brapi_home_studytable_format').val());
+            window.open(jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies/'+jQuery('#brapi_home_studytabledbid').val()+'/table?format='+jQuery('#brapi_home_studytable_format').val());
         }
     });
 });
