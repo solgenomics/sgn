@@ -7,6 +7,7 @@
 
     <h4>URL Select</h4>
     <select name="brapi_home_url_select" id="brapi_home_url_select" class="form-control" />
+        <option value="">local</option>
         <option value="https://cassbase.org">cassbase.org</option>
         <option value="https://cassavabase.org">cassavabase.org</option>
         <option value="https://musabase.org">musabase.org</option>
