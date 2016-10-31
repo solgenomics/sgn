@@ -200,6 +200,7 @@ my $breeding_programs_select = simple_selectbox_html(
     <th>Stock Name</th>
     <th>Stock Type</th>
     <th>Organism</th>
+    <th>Synonyms</th>
 </tr>
 </thead>
 
