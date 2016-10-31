@@ -266,19 +266,17 @@ sub experimental_design {
 sub project_location {
     my ($self, $pr_id) = @_;
   
-    my $location_id = $self->schema->resultset('Cv::Cvterm')
-	->search( { 'me.name' => 'project location' })
-	->first
-	->id;
-
-    my $q = "SELECT location_name from locations WHERE location_id = ?";
+    my $q = "SELECT location_name 
+                    FROM locationsXtrials 
+                    JOIN locations USING (location_id)  
+                    WHERE trial_id = ?";
 
     my $sth = $self->context->dbc->dbh()->prepare($q);
 
-    $sth->execute($location_id);
+    $sth->execute($pr_id);
     
     my $loc = $sth->fetchrow_array;
-
+ 
     return $loc; 
 }    
 
