@@ -425,8 +425,9 @@ sub combined_trials_desc {
 	$s_pop_id = $pop_id;
 	$s_pop_id =~ s/\s+//;
     }
-   
-    my $dir = $c->{stash}->{solgs_cache_dir};
+       
+    $solgs_controller->filtered_training_genotype_file($c);
+    my $filtered_geno_file  = $c->stash->{filtered_training_genotype_file};
 
     my $geno_exp  = "genotype_data_${s_pop_id}.txt"; 
     my $geno_file = $solgs_controller->grep_file($dir, $geno_exp);  
