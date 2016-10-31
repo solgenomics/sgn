@@ -3,6 +3,21 @@
 
 <h3>BrAPI</h3>
 
+<div id="brapi_home_url_select_div">
+
+    <h4>URL Select</h4>
+    <select name="brapi_home_url_select" id="brapi_home_url_select" class="form-control" />
+        <option value="https://cassbase.org">cassbase.org</option>
+        <option value="https://cassavabase.org">cassavabase.org</option>
+        <option value="https://musabase.org">musabase.org</option>
+        <option value="https://sweetpotatobase.org">sweetpotatobase.org</option>
+        <option value="https://yambase.org">yambase.org</option>
+        <option value="https://fernbase.org">fernbase.org</option>
+        <option value="https://solgenomics.net">solgenomics.net</option>
+    </select>
+
+</div>
+
 <hr>
 <& /brapiclient/authentication.mas &>
 <br/>

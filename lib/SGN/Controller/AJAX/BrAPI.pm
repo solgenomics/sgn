@@ -52,6 +52,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     $self->bcs_schema( $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') );
     $c->stash->{api_version} = $version;
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+    $c->response->headers->header( "Access-Control-Allow-Methods" => '*' );
     $c->stash->{status} = \%status;
     $c->stash->{session_token} = $c->req->param("session_token");
     $c->stash->{current_page} = $c->req->param("currentPage") || 1;

@@ -78,7 +78,7 @@ $trial_id
                             <label class="col-sm-3 control-label">Method: </label>
                             <div class="col-sm-9" >
                                 <select id="generate_plot_pheno_method_select" class="form-control">
-                                    <option value="arithmetic_mean">Arithmetic Mean (Average)</option>
+                                    <option value="arithmetic_mean">Arithmetic Mean</option>
                                     <option value="mode">Mode</option>
                                     <option value="maximum">Maximum</option>
                                     <option value="minimum">Minimum</option>
