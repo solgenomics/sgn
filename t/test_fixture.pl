@@ -101,6 +101,13 @@ open(my $NEWCONF, ">", "sgn_fixture.conf") || die "Can't open sgn_fixture.conf f
 print $NEWCONF $new_conf;
 close($NEWCONF);
 
+# run the materialized views creation script
+#
+my $dbhost = $config->{db_host} || 'localhost';
+print STDERR "Running matview refresh with -H $dbhost -D $dbname -U postgres -P $db_postgres_password\n"; 
+system("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U postgres -P $db_postgres_password");
+
+
 print STDERR "Done.\n";
 
 # start the test web server
