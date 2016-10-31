@@ -184,7 +184,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         my $stock_id    = $a->stock_id;
         my $synonym_string = '';
         if (exists($synonym_hash->{$uniquename})) {
-            $synonym_string = join /,/, @{$synonym_hash->{$uniquename}};
+            $synonym_string = join ', ', @{$synonym_hash->{$uniquename}};
         }
         push @result, [  "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string ];
 
