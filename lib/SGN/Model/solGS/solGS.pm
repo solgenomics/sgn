@@ -330,7 +330,7 @@ sub has_phenotype {
 sub has_genotype {
     my ($self, $pr_id) = @_;
 
-    my $protocol = $self->context->config->{default_genotyping_protocol};
+    my $protocol = $self->genotyping_protocol();
    
     my $q = "SELECT genotyping_protocol_name, genotyping_protocol_id 
                  FROM genotyping_protocolsXtrials 
@@ -951,7 +951,7 @@ sub project_genotypes_rs {
 sub genotypes_nd_experiment_ids_rs {
     my ($self, $genotypes_ids) = @_;
     
-    my $protocol = $self->context->config->{default_genotyping_protocol};
+    my $protocol = $self->genotyping_protocol();
 
     my $nd_experiment_rs = $self->schema->resultset("NaturalDiversity::NdExperimentStock")
 	->search({'me.stock_id' => { -in => $genotypes_ids},
@@ -2070,6 +2070,22 @@ sub get_project_genotyping_markers {
     return $markers;
 
 }
+
+
+
+sub genotyping_protocol {
+    my ($self, $protocol) = @_;
+
+    unless ($protocol) 
+    {
+	$protocol = $self->context->config->{default_genotyping_protocol};
+    }
+
+    return $protocol;
+
+}
+
+
 
 
 __PACKAGE__->meta->make_immutable;
