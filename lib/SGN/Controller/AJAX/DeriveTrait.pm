@@ -305,11 +305,48 @@ sub generate_plot_phenotypes : Path('/ajax/breeders/trial/generate_plot_phenotyp
     #print STDERR "Method: $method\n";
     #print STDERR "Round: $rounding\n";
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    my $derive_trait = CXGN::BreedersToolbox::DeriveTrait->new({bcs_schema=>$schema, trait_name=>$trait_name, trial_id=>$trial_id, method=>$method, rounding=>$rounding});
-    my ($info, $plots, $traits, $store_hash) = $derive_trait->generate_plot_phenotypes();
+
+    my @traits;
+    if ($trait_name eq 'all') {
+        my $trial = CXGN::Trial->new({trial_id=>$trial_id, bcs_schema=>$schema});
+        my $traits_assayed = $trial->get_traits_assayed('plant');
+        foreach (@$traits_assayed) {
+            push @traits, $_->[1];
+        }
+    } else {
+        @traits = ($trait_name);
+    }
+
+    my @return_info;
+    my @return_plots;
+    my @return_traits;
+    my @return_store_hash;
+    foreach (@traits) {
+        my $derive_trait = CXGN::BreedersToolbox::DeriveTrait->new({
+            bcs_schema=>$schema,
+            trait_name=>$_,
+            trial_id=>$trial_id,
+            method=>$method,
+            rounding=>$rounding
+        });
+        my ($info, $plots, $traits, $store_hash) = $derive_trait->generate_plot_phenotypes();
+        push @return_info, $info;
+        push @return_plots, $plots;
+        push @return_traits, $traits;
+        push @return_store_hash, $store_hash;
+    }
     #print STDERR Dumper \%store_hash;
     #print STDERR Dumper \@return;
-    $c->stash->{rest} = {success => 1, info=>$info, method=>$method, trait_name=>$trait_name, rounding=>$rounding, store_plots=>encode_json($plots), store_traits=>encode_json($traits), store_data=>encode_json($store_hash)};
+    $c->stash->{rest} = {
+        success => 1,
+        info=>\@return_info,
+        method=>$method,
+        trait_name=>$trait_name,
+        rounding=>$rounding,
+        store_plots=>encode_json(\@return_plots),
+        store_traits=>encode_json(\@return_traits),
+        store_data=>encode_json(\@return_store_hash)
+    };
 }
 
 
@@ -341,10 +378,6 @@ sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated
         }
     }
 
-    $parse_result{'data'} = $data;
-    $parse_result{'plots'} = $plots;
-    $parse_result{'traits'} = $traits;
-
     my %phenotype_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
@@ -354,21 +387,23 @@ sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated
     $phenotype_metadata{'date'}="$timestamp";
     my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
 
-    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
-        bcs_schema=>$schema,
-        metadata_schema=>$metadata_schema,
-        phenome_schema=>$phenome_schema,
-        user_id=>$user_id,
-        stock_list=>$plots,
-        trait_list=>$traits,
-        values_hash=>$data,
-        has_timestamps=>0,
-        overwrite_values=>$overwrite,
-        metadata_hash=>\%phenotype_metadata,
-    );
-    my $store_error = $store_phenotypes->store();
-    if ($store_error) {
-        $c->stash->{rest} = {error => $store_error};
+    for (my $i=0; $i<scalar(@$data); $i++) {
+        my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+            bcs_schema=>$schema,
+            metadata_schema=>$metadata_schema,
+            phenome_schema=>$phenome_schema,
+            user_id=>$user_id,
+            stock_list=>$plots->[$i],
+            trait_list=>$traits->[$i],
+            values_hash=>$data->[$i],
+            has_timestamps=>0,
+            overwrite_values=>$overwrite,
+            metadata_hash=>\%phenotype_metadata,
+        );
+        my $store_error = $store_phenotypes->store();
+        if ($store_error) {
+            $c->stash->{rest} = {error => $store_error};
+        }
     }
     $c->stash->{rest} = {success => 1};
 }
