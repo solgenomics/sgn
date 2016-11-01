@@ -37,7 +37,7 @@
 jQuery(document).ready(function() {
     jQuery("#brapi_germplasm_search_submit").click(function() {
         jQuery.ajax( {
-          'url': '/brapi/v1/germplasm-search',
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm-search',
           'method': 'POST',
           'data': { 
             'germplasmName' :  jQuery("#brapi_germplasm_search_germplasmname").val(),
@@ -50,8 +50,8 @@ jQuery(document).ready(function() {
             'matchMethod' : jQuery("#brapi_germplasm_search_matchMethod").val(),
           },
           'success': function(response) {
-            console.log(response);
-            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_germplasm_search_result_div', '/brapi/v1/germplasm-search', { "germplasmName": ["germplasmDbId", "stock"] });
+            //console.log(response);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_germplasm_search_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm-search', { "germplasmName": ["germplasmDbId", "stock"] });
 
           },
           error: function(response) {

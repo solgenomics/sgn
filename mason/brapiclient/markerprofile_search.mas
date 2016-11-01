@@ -25,11 +25,11 @@
 jQuery(document).ready(function() {
     jQuery("#brapi_markerprofile_search_submit").click(function() {
         jQuery.ajax( {
-          'url': '/brapi/v1/markerprofiles?germplasmDbId='+jQuery("#brapi_markerprofile_search_germplasmDbId").val()+'&studyDbId='+jQuery("#brapi_markerprofile_search_studyDbId").val()+'&methodDbId='+jQuery("#brapi_markerprofile_search_methodDbId").val(),
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/markerprofiles?germplasmDbId='+jQuery("#brapi_markerprofile_search_germplasmDbId").val()+'&studyDbId='+jQuery("#brapi_markerprofile_search_studyDbId").val()+'&methodDbId='+jQuery("#brapi_markerprofile_search_methodDbId").val(),
           'method': 'GET',
           'success': function(response) {
             console.log(response);
-            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_markerprofile_search_result_div', '/brapi/v1/markerprofiles', undefined);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_markerprofile_search_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/markerprofiles', undefined);
 
           },
           error: function(response) {

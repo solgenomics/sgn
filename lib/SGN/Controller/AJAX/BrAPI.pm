@@ -56,6 +56,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     $self->bcs_schema( $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') );
     $c->stash->{api_version} = $version;
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+    $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
     $c->stash->{status} = \%status;
     $c->stash->{session_token} = $c->req->param("session_token");
     $c->stash->{current_page} = $c->req->param("currentPage") || 1;
@@ -146,10 +147,21 @@ sub authenticate_token_DELETE {
     $c->stash->{rest} = \%response;
 }
 
+sub authenticate_token_GET {
+    my $self = shift;
+    my $c = shift;
+    process_authenticate_token($self,$c);
+}
+
 sub authenticate_token_POST {
     my $self = shift;
     my $c = shift;
+    process_authenticate_token($self,$c);
+}
 
+sub process_authenticate_token {
+    my $self = shift;
+    my $c = shift;
     my $login_controller = CXGN::Login->new($c->dbc->dbh);
     my $params = $c->req->params();
 
@@ -193,7 +205,6 @@ sub authenticate_token_POST {
     my %response = (metadata=>\%metadata, access_token=>$cookie, userDisplayName=>"$first_name $last_name", expires_in=>$CXGN::Login::LOGIN_TIMEOUT);
     $c->stash->{rest} = \%response;
 }
-
 
 =head2 /brapi/v1/calls
 

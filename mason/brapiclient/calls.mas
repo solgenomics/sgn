@@ -14,7 +14,7 @@ jQuery(document).ready(function() {
 
 jQuery("#brapi_home_show_calls").click(function() {
     jQuery.ajax( {
-      'url': '/brapi/v1/calls?datatype=json',
+      'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/calls?datatype=json',
       'method': 'GET',
       'success': function(response) {
         console.log(response);
