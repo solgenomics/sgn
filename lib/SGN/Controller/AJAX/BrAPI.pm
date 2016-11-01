@@ -275,6 +275,7 @@ sub calls_GET {
         ['germplasm/id', ['json'], ['GET'] ],
         ['germplasm/id/pedigree', ['json'], ['GET'] ],
         ['germplasm/id/markerprofiles', ['json'], ['GET'] ],
+        ['germplasm/id/attributes', ['json'], ['GET'] ],
         ['attributes', ['json'], ['GET'] ],
         ['attributes/categories', ['json'], ['GET'] ],
         ['markerprofiles', ['json'], ['GET'] ],
@@ -1469,6 +1470,54 @@ sub germplasm_pedigree_GET {
     my %pagination;
     my @datafiles;
     $status->{'message'} = $message;
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+
+
+
+sub germplasm_attributes_detail  : Chained('germplasm_single') PathPart('attributes') Args(0) : ActionClass('REST') { }
+
+sub germplasm_attributes_detail_GET {
+    my $self = shift;
+    my $c = shift;
+    #my $auth = _authenticate_user($c);
+    my $stock_id = $c->stash->{stock_id};
+    my $status = $c->stash->{status};
+
+    my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+    my $q = "SELECT cv.cv_id, cv.name, cv.definition, b.cvterm_id, b.name, b.definition, stockprop.value, stockprop.stockprop_id
+        FROM stockprop
+        JOIN stock using(stock_id)
+        JOIN cvterm as b on (stockprop.type_id=b.cvterm_id)
+        JOIN cv on (b.cv_id=cv.cv_id)
+        WHERE stock.type_id=? and stock.stock_id=?
+        ORDER BY cv.cv_id;";
+
+    my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+    $h->execute($accession_type_cvterm_id, $stock_id);
+    my @data;
+    while (my ($attributeCategoryDbId, $attributeCategoryName, $attributeCategoryDesc, $attributeDbId, $name, $description, $value, $stockprop_id) = $h->fetchrow_array()) {
+        push @data, {
+            attributeDbId => $stockprop_id,
+            attributeName => $name,
+            attributeCode => $name,
+            value => $value,
+            dateDetermined => ''
+        };
+    }
+    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+    my $end = $c->stash->{page_size}*$c->stash->{current_page};
+    my @data_window = splice @data, $start, $end;
+    my $total_count = scalar(@data);
+    my %result = (
+        germplasmDbId=>$stock_id,
+        data => \@data_window
+    );
+
+    my @datafiles;
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
