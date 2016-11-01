@@ -53,6 +53,10 @@
 <br/>
 
 <hr>
+<& /brapiclient/germplasm_attributes.mas &>
+<br/>
+
+<hr>
 <& /brapiclient/markerprofile_search.mas &>
 <br/>
 

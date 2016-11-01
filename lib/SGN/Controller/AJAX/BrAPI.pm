@@ -143,11 +143,11 @@ sub authenticate_token_DELETE {
     $c->stash->{rest} = \%response;
 }
 
-sub authenticate_token_GET {
-    my $self = shift;
-    my $c = shift;
-    process_authenticate_token($self,$c);
-}
+#sub authenticate_token_GET {
+#    my $self = shift;
+#    my $c = shift;
+#    process_authenticate_token($self,$c);
+#}
 
 sub authenticate_token_POST {
     my $self = shift;
@@ -275,6 +275,8 @@ sub calls_GET {
         ['germplasm/id', ['json'], ['GET'] ],
         ['germplasm/id/pedigree', ['json'], ['GET'] ],
         ['germplasm/id/markerprofiles', ['json'], ['GET'] ],
+        ['attributes', ['json'], ['GET'] ],
+        ['attributes/categories', ['json'], ['GET'] ],
         ['markerprofiles', ['json'], ['GET'] ],
         ['markerprofiles/id', ['json'], ['GET'] ],
         ['allelematrix-search', ['json','tsv','csv'], ['GET','POST'] ],
@@ -1542,6 +1544,124 @@ sub germplasm_markerprofile_GET {
 #
 # Need to implement Germplasm Attributes
 #
+
+sub germplasm_attributes_list  : Chained('brapi') PathPart('attributes') Args(0) : ActionClass('REST') { }
+
+sub germplasm_attributes_list_GET {
+    my $self = shift;
+    my $c = shift;
+    germplasm_attributes_process($self, $c);
+}
+
+sub germplasm_attributes_process {
+    my $self = shift;
+    my $c = shift;
+    #my $auth = _authenticate_user($c);
+
+    my $status = $c->stash->{status};
+    my $message = '';
+
+    my $attribute_category_id = $c->req->param('attributeCategoryDbId');
+    my @data;
+    my $where_clause = '';
+    if ($attribute_category_id) {
+        $where_clause .= "AND cv.cv_id = $attribute_category_id ";
+    }
+    my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+    my $q = "SELECT cv.cv_id, cv.name, cv.definition, b.cvterm_id, b.name, b.definition, stockprop.value
+        FROM stockprop
+        JOIN stock using(stock_id)
+        JOIN cvterm as b on (stockprop.type_id=b.cvterm_id)
+        JOIN cv on (b.cv_id=cv.cv_id)
+        WHERE stock.type_id=?
+        $where_clause
+        ORDER BY cv.cv_id;";
+
+    my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+    $h->execute($accession_type_cvterm_id);
+    my %attribute_hash;
+    while (my ($attributeCategoryDbId, $attributeCategoryName, $attributeCategoryDesc, $attributeDbId, $name, $description, $value) = $h->fetchrow_array()) {
+        if (exists($attribute_hash{$attributeDbId})) {
+            my $values = $attribute_hash{$attributeDbId}->[5];
+            push @$values, $value;
+            $attribute_hash{$attributeDbId}->[5] = $values;
+        } else {
+            $attribute_hash{$attributeDbId} = [$attributeCategoryDbId, $attributeCategoryName, $attributeCategoryDesc, $name, $description, [$value]];
+        }
+    }
+    foreach (keys %attribute_hash) {
+        push @data, {
+            attributeDbId => $_,
+            code => $attribute_hash{$_}->[3],
+            uri => '',
+            name => $attribute_hash{$_}->[3],
+            description => $attribute_hash{$_}->[4],
+            attributeCategoryDbId => $attribute_hash{$_}->[0],
+            attributeCategoryName => $attribute_hash{$_}->[1],
+            datatype => '',
+            values => $attribute_hash{$_}->[5]
+        };
+    }
+    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+    my $end = $c->stash->{page_size}*$c->stash->{current_page};
+    my @data_window = splice @data, $start, $end;
+    my $total_count = scalar(@data);
+    my %result = (data => \@data_window);
+    $status->{'message'} = $message;
+    my @data_files;
+    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
+
+sub germplasm_attribute_categories_list  : Chained('brapi') PathPart('attributes/categories') Args(0) : ActionClass('REST') { }
+
+sub germplasm_attribute_categories_list_GET {
+    my $self = shift;
+    my $c = shift;
+    germplasm_attributes_categories_process($self, $c);
+}
+
+sub germplasm_attributes_categories_process {
+    my $self = shift;
+    my $c = shift;
+    #my $auth = _authenticate_user($c);
+
+    my $status = $c->stash->{status};
+    my $message = '';
+
+    my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
+    my $q = "SELECT distinct(cv.cv_id), cv.name, cv.definition
+        FROM stockprop
+        JOIN stock using(stock_id)
+        JOIN cvterm as b on (stockprop.type_id=b.cvterm_id)
+        JOIN cv on (b.cv_id=cv.cv_id)
+        WHERE stock.type_id=?
+        GROUP BY (cv.cv_id)
+        ORDER BY cv.cv_id;";
+
+    my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+    $h->execute($accession_type_cvterm_id);
+    my @data;
+    while (my ($attributeCategoryDbId, $attributeCategoryName, $attributeCategoryDesc) = $h->fetchrow_array()) {
+        push @data, {
+            attributeCategoryDbId => $attributeCategoryDbId,
+            attributeCategoryName => $attributeCategoryName,
+        };
+    }
+    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+    my $end = $c->stash->{page_size}*$c->stash->{current_page};
+    my @data_window = splice @data, $start, $end;
+    my $total_count = scalar(@data);
+    my %result = (data => \@data_window);
+    $status->{'message'} = $message;
+    my @data_files;
+    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@data_files);
+    my %response = (metadata=>\%metadata, result=>\%result);
+    $c->stash->{rest} = \%response;
+}
+
 
 
 =head2 brapi/v1/markerprofiles?germplasm=germplasmDbId&extract=extractDbId&method=methodDbId
