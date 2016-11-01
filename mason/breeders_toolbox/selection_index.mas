@@ -23,8 +23,8 @@ $trial_name => undef
             <thead>
               <th>Trait name</th>
               <th>Trait synonym</th>
-              <th>Weight</th>
-              <th>Scale relative to a control?</th>
+              <th data-toggle="tooltip" title="Must be a positive or negative number, reflecting the importance of the trait. This weight is multiplied by the mean of observed values for the trait to produce a score. Scores are calculated this way for all of the different traits, and then summed to produce the overall SIN value that is used in the ranking.">Weight</th>
+              <th data-toggle="tooltip" title="May be left blank. If a control is selected, the mean of observed values for each accession will be divided by the mean of observed values for the control accession. The resulting fraction will then be multiplied by the weight and summed in the calculation of the SIN value. ">Normalize with a control?</th>
               <th>Remove?</th>
             </thead>
             <tbody id ="trait_table"></tbody>
@@ -96,7 +96,7 @@ $trial_name => undef
         jQuery('#ranking_formula').html("<center><i>Select a trial, then pick traits and weights (or load a saved formula).</i></center>");
         get_select_box('trials', 'select_trial_for_selection_index', { 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' , 'empty' : 1 });
         var lo = new CXGN.List();
-        jQuery('#sin_list').html(lo.listSelect('sin_formula', [''], 'Select a formula', 'refresh'));
+        jQuery('#sin_list').html(lo.listSelect('sin_formula', ['dataset'], 'Select a formula', 'refresh'));
         jQuery('#sin_formula_list_select').change(
           function() {
             load_sin();

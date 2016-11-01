@@ -75,12 +75,11 @@ jQuery(document).ready(function() {
                                 var trait_id = list[i][0];
                                 var trait_name = list[i][1];
                                 var parts = trait_name.split("|");
-                                var CO_id = parts[1];
                                 var synonym = synonyms[trait_id];
                                 synonym_fixed = synonym.replace(/"/g, "");
                                 var syn_parts = synonym_fixed.split(" ");
                                 synonym_fixed = syn_parts[0];
-                                trait_html += '<option value="' + trait_id + '" data-synonym="' + synonym_fixed + '" data-CO_id="' + CO_id + '" title="' + parts[0] + '">' + parts[0] + '</a>\n';
+                                trait_html += '<option value="' + trait_id + '" data-synonym="' + synonym_fixed + '" data-list_name="' + trait_name + '" title="' + parts[0] + '">' + parts[0] + '</a>\n';
                             }
 
                             jQuery('#trait_list').html(trait_html);
@@ -149,9 +148,9 @@ jQuery(document).ready(function() {
             var control_id = trait_id + '_control';
             var trait_name = jQuery('option:selected', this).text();
             var trait_synonym = jQuery('option:selected', this).data("synonym");
-            var trait_CO_id = jQuery('option:selected', this).data("co_id");
+            var list_name = jQuery('option:selected', this).data("list_name");
             var control_html = jQuery('#control_list').html();
-            var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + weight_id + "' class='form-control weight' placeholder='Must be a number (+ or -), default = 1'></input></td><td><select class='form-control' id='" + control_id + "'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
+            var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-list_name='" + list_name + "' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + weight_id + "' class='form-control weight' placeholder='Must be a number (+ or -), default = 1'></input></td><td><select class='form-control' id='" + control_id + "'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
             jQuery('#trait_table').append(trait_html);
             jQuery('#select_message').text('Add another trait');
             jQuery('#select_message').attr('selected', true);
@@ -187,26 +186,34 @@ jQuery(document).ready(function() {
         jQuery(selected_trait_rows).each(function(index, selected_trait_rows) {
             var trait_id = jQuery('a', this).data("value");
             trait_ids.push(trait_id);
-            var trait_name = jQuery('a', this).text();
-            trait_names.push(trait_name.trim());
+            trait_names.push(jQuery('a', this).data("list_name"));
             weights.push(jQuery('#' + trait_id + '_weight').val() || 1); // default = 1
             control_ids.push(jQuery('#' + trait_id + '_control option:selected').val() || '');
-            var control_name = jQuery('#' + trait_id + '_control option:selected').text() || '';
+            var control_name;
+            if (jQuery('#' + trait_id + '_control option:selected').val()) {
+              control_name = jQuery('#' + trait_id + '_control option:selected').text();
+            }
+            else {
+              control_name = '';
+            }
             control_names.push(control_name.trim());
         });
 
-        var data = "trait_ids:" + trait_ids.join();
-        data += "\ntrait_names:" + trait_names.join();
-        data += "\nweights:" + weights.join();
-        data += "\ncontrol_ids:" + control_ids.join();
-        data += "\ncontrol_names:" + control_names.join();
+  //      var data = "trait_ids:" + trait_ids.join();
+  //      var data = "traits:" + trait_ids.join();
+        var data = "traits:" + trait_names.join();
+  //      data += "\nweights:" + weights.join();
+  //      data += "\ncontrol_ids:" + control_ids.join();
+  //      data += "\naccessions:" + control_ids.join();
+        data += "\naccessions:" + control_names.join();
         console.log("data to save is " + JSON.stringify(data));
         list_id = lo.newList(new_name);
         if (list_id > 0) {
             var elementsAdded = lo.addToList(list_id, data);
+            lo.setListType(list_id, 'dataset');
         }
         if (elementsAdded) {
-            alert("Saved SIN formula to list " + new_name);
+            alert("Saved SIN formula with name " + new_name);
         }
 
     });
@@ -439,7 +446,6 @@ function load_sin() { // update traits and selection index when a saved sin form
             continue;
         }
         var trait_synonym = jQuery('#trait_list option[value=' + trait_id + ']').data("synonym");
-        var trait_CO_id = jQuery('#trait_list option[value=' + trait_id + ']').data("co_id");
         var control_html = jQuery('#control_list').html();
         //console.log("control html"+control_html);
         var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + weight_input_id + "' class='form-control' placeholder='Must be a number (+ or -), default = 1'></input></td><td><select class='form-control' id='" + control_select_id + "'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";

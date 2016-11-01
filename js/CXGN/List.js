@@ -629,8 +629,8 @@ CXGN.List.prototype = {
 	    html += '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
 	}
   if (refresh) {
-    var arguments = "'"+div_name+"_list_select','"+types+"','"+empty_element+"'";
-	  html = '<div class="input-group">'+html+'</select><span class="input-group-btn"><button class="btn btn-default" id="'+div_name+'_list_refresh" title="Refresh lists" onclick="refreshListSelect('+arguments+')"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></span></div>';
+    types = types.map(type => `'${type}'`).join(',');
+	  html = '<div class="input-group">'+html+'</select><span class="input-group-btn"><button class="btn btn-default" id="'+div_name+'_list_refresh" title="Refresh lists" onclick="refreshListSelect(\''+div_name+'_list_select\',['+types+'],\'Options refreshed.\')"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></span></div>';
     return html;
   }
   else {
@@ -703,7 +703,7 @@ CXGN.List.prototype = {
         });
 
 
-            jQuery("#validate_accession_error_display tbody").append(missing.join(","));
+            jQuery("#validate_accession_error_display tbody").append(missing.join("<br>"));
             jQuery('#validate_accession_error_display').modal("show");
 	    return;
 
@@ -827,6 +827,7 @@ function pasteList(div_name) {
 
     if (types) {
         for (var n=0; n<types.length; n++) {
+          console.log("retrieving lists of type: "+types[n]+"\n");
       var more = lo.availableLists(types[n]);
       if (more) {
           for (var i=0; i<more.length; i++) {
