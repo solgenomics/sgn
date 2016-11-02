@@ -162,51 +162,55 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
 	}
 	elsif($cross_type eq "open") { 
 	     $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-	     my $population_name = "";
-	     my @male_parents = split /\s*\,\s*/, $male;
+	#      my $population_name = "";
+	#      my @male_parents = split /\s*\,\s*/, $male;
 
-	     if ($male) {
-		 $population_name = join "_", @male_parents;
-	     }
-	     else { 
-		 $population_name = $female."_open";
-	     }
-	     $male_parent = Bio::GeneticRelationships::Population->new( { name => $population_name});
-	     $male_parent->set_members(\@male_parents);
+	#      if ($male) {
+	# 	 $population_name = join "_", @male_parents;
+	#      }
+	#      else { 
+	# 	 $population_name = $female."_open";
+	#      }
+	#      $male_parent = Bio::GeneticRelationships::Population->new( { name => $population_name});
+	#      $male_parent->set_members(\@male_parents);
 	     
 
-	     my $population_cvterm_id = $c->model("Cvterm")->get_cvterm_row($schema, "population", "stock_type");
-	     my $male_parent_cvterm_id = $c->model("Cvterm")->get_cvterm_row($schema, "male_parent", "stock_relationship");
+	#      my $population_cvterm_id = $c->model("Cvterm")->get_cvterm_row($schema, "population", "stock_type");
+	#      my $male_parent_cvterm_id = $c->model("Cvterm")->get_cvterm_row($schema, "male_parent", "stock_relationship");
 
-	     # create population stock entry
-	     # 
-	     my $pop_rs = $schema->resultset("Stock::Stock")->create( 
-		 { 
-		     name => $population_name,
-		     uniquename => $population_name,
-		     type_id => $population_cvterm_id->cvterm_id(),
-		 });
+	#      # create population stock entry
+	#      # 
+	#      my $pop_rs = $schema->resultset("Stock::Stock")->create( 
+	# 	 { 
+	# 	     name => $population_name,
+	# 	     uniquename => $population_name,
+	# 	     type_id => $population_cvterm_id->cvterm_id(),
+	# 	 });
 
-	      # generate population connections to the male parents
-	     foreach my $p (@male_parents) { 
-		 my $p_row = $schema->resultset("Stock::Stock")->find({ uniquename => $p });
-		 my $connection = $schema->resultset("Stock::StockRelationship")->create( 
-		     {
-			 subject_id => $pop_rs->stock_id,
-			 object_id => $p_row->stock_id,
-			 type_id => $male_parent_cvterm_id->cvterm_id(),
-		     });
-	     }
-	     $male = $population_name;
+	#       # generate population connections to the male parents
+	#      foreach my $p (@male_parents) { 
+	# 	 my $p_row = $schema->resultset("Stock::Stock")->find({ uniquename => $p });
+	# 	 my $connection = $schema->resultset("Stock::StockRelationship")->create( 
+	# 	     {
+	# 		 subject_id => $pop_rs->stock_id,
+	# 		 object_id => $p_row->stock_id,
+	# 		 type_id => $male_parent_cvterm_id->cvterm_id(),
+	# 	     });
+	#      }
+	#      $male = $population_name;
 	}
 	
-	my $p = Bio::GeneticRelationships::Pedigree->new( 
-	    { 
-		cross_type => $cross_type,
-		female_parent => $female_parent,
-		male_parent => $male_parent,
-		name => $progeny,
-	    });
+	my $opts = { 
+	    cross_type => $cross_type,
+	    female_parent => $female_parent,
+	    name => $progeny
+	};
+
+	if ($male_parent) { 
+	    $opts->{male_parent} = $male_parent;
+	}
+
+	my $p = Bio::GeneticRelationships::Pedigree->new($opts);
 	push @pedigrees, $p;
     }
     
