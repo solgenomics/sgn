@@ -1553,17 +1553,25 @@ sub get_accessions {
 	my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
 	my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
 
-	my $trial_accession_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock")->search_related("stock_relationship_subjects", { 'stock_relationship_subjects.type_id' => [$plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id] } );
+	my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename
+		FROM stock as accession
+		JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id)
+		JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id)
+		JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id)
+		JOIN nd_experiment using(nd_experiment_id)
+		JOIN nd_experiment_project using(nd_experiment_id)
+		JOIN project using(project_id)
+		WHERE nd_experiment.type_id IN ($field_trial_cvterm_id, $genotyping_trial_cvterm_id)
+		AND accession.type_id = $accession_cvterm_id
+		AND stock_relationship.type_id IN ($plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id)
+		AND project.project_id = ?
+		GROUP BY accession.stock_id
+		ORDER BY accession.stock_id;";
 
-	my %unique_accessions;
-	while(my $rs = $trial_accession_rs->next()) {
-		my $r = $rs->object;
-		if ($r->type_id == $accession_cvterm_id) {
-			$unique_accessions{$r->uniquename} = $r->stock_id;
-		}
-	}
-	foreach (keys %unique_accessions) {
-		push @accessions, {accession_name=>$_, stock_id=>$unique_accessions{$_} };
+	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+	$h->execute($self->get_trial_id());
+	while (my ($stock_id, $uniquename) = $h->fetchrow_array()) {
+		push @accessions, {accession_name=>$uniquename, stock_id=>$stock_id };
 	}
 
 	return \@accessions;

@@ -31,6 +31,7 @@ function searchAllTrials(url) {
         type: 'POST',
         dataType: "json",
         url: url,
+        cache: true,
         success: function(res) { 
 
             jQuery("#all_trials_search_message").hide();
@@ -247,17 +248,31 @@ function displayTrainingPopulations (tableDetails) {
 	} else {
 	    
 	    var table = createTrialsTable(tableId);
-
+	   
+	   
 	    jQuery('#' + divId).html(table).show();
-	    
-	    jQuery('#' + tableId).dataTable({
+	    var page = window.location.href;
+
+	    if (page.match(/solgs\/search\/trials\/trait\//)) {
+		jQuery('#' + tableId).dataTable({
+		'searching' : true,
+		'ordering'  : true,
+		'processing': true,
+		'paging': true,
+		'info': false,
+		'data': data,
+		});
+	    } else {
+		jQuery('#' + tableId).dataTable({
 		'searching' : false,
 		'ordering'  : false,
-		'processing': true,
+		'processing': false,
 		'paging': false,
 		'info': false,
 		'data': data,
-	    });
+		});	
+
+	    }
 	}
     }
    
