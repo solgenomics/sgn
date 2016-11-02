@@ -21,7 +21,11 @@ jQuery(document).ready(function() {
         jQuery.ajax( {
           'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies/'+jQuery('#brapi_home_studygermplasmdbid').val()+'/germplasm',
           'method': 'GET',
+          'beforeSend': function(){
+            jQuery('#working_modal').modal('show');
+          },
           'success': function(response) {
+            jQuery('#working_modal').modal('hide');
             console.log(response);
             var html = '<table class="table table-bordered"><thead><tr><th>StudyDbId</th><th>TrialName</th></tr></thead><tbody><tr><td>'+response.result.studyDbId+'</td><td>'+response.result.studyName+'</td></tr></tbody></table>';
             jQuery('#brapi_studygermplasm_detail_result_div').empty().html(html);
@@ -29,6 +33,7 @@ jQuery(document).ready(function() {
 
           },
           error: function(response) {
+            jQuery('#working_modal').modal('hide');
             alert('An error occurred');
           }
         });
