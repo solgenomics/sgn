@@ -42,31 +42,21 @@ sub transform {
       $type_singular =~ s/s$//;
       my $transform_name = $type . "_2_" . $type_singular . "_ids";
       my @elements = split(",", $elements);
-      print STDERR "$type data: ".Dumper($elements)."\n";
-      print STDERR "Transform name = $transform_name \n";
 
       foreach my $p ($object->plugins()) {
-        print STDERR "Looking at plugin named ".$p->name()."\n";
         if ($transform_name eq $p->name()) {
-          print STDERR "Transform name $transform_name matched plugin ".$p->name()."\n";
           my $data = $p->transform($schema, \@elements);
-          print STDERR "Transform results = ".Dumper($data)."\n";
           my $transform = %$data{'transform'};
           if (scalar @$transform > 0) {
-            print STDERR "Pushing transformed data ".Dumper(@$transform)." to array\n";
-            push @transform, $type . ": " . join(", ", @$transform);
+            push @transform, $type_singular . "_ids:" . join(",", @$transform);
           }
           my $missing = %$data{'missing'};
           if (scalar @$missing > 0) {
-            print STDERR "Pushing missing data ".Dumper(@$missing)." to array\n";
-            push @missing, $type . ": " . join(", ", @$missing);
+            push @missing, $type_singular . "_ids:" . join(",", @$missing);
           }
         }
       }
     }
-
-    print STDERR "Transformed data: ".Dumper(@transform)."\n";
-    print STDERR "Missing data: ".Dumper(@missing)."\n";
 
     return {
       transform => \@transform,

@@ -199,14 +199,11 @@ jQuery(document).ready(function() {
             control_names.push(control_name.trim());
         });
 
-  //      var data = "trait_ids:" + trait_ids.join();
-  //      var data = "traits:" + trait_ids.join();
         var data = "traits:" + trait_names.join();
-  //      data += "\nweights:" + weights.join();
-  //      data += "\ncontrol_ids:" + control_ids.join();
-  //      data += "\naccessions:" + control_ids.join();
+        data += "\nweights:" + weights.join();
         data += "\naccessions:" + control_names.join();
-        console.log("data to save is " + JSON.stringify(data));
+        //console.log("Saving SIN formula to dataset: " + JSON.stringify(data));
+
         list_id = lo.newList(new_name);
         if (list_id > 0) {
             var elementsAdded = lo.addToList(list_id, data);
@@ -395,18 +392,12 @@ function load_sin() { // update traits and selection index when a saved sin form
         return;
     }
     var lo = new CXGN.List();
-
     var list_data = lo.getListData(sin_list_id);
     var sin_data = list_data.elements;
 
-    var ids = lo.transform(sin_list_id, 'dataset_2_dataset_ids');
-    console.log("ids="+JSON.stringify(ids));
-
-    var trait_ids = [];
-    var trait_names = [];
+    var traits = [];
     var weights = [];
-    var control_ids = [];
-    var control_names = [];
+    var accessions = [];
 
     for (i = 0; i < sin_data.length; i++) {
         var array = sin_data[i];
@@ -415,23 +406,36 @@ function load_sin() { // update traits and selection index when a saved sin form
         var parts = string.split(":");
         var values = parts[1];
         switch (parts[0]) {
-            case 'trait_ids':
-                trait_ids = values.split(",");
-                break;
-            case 'trait_names':
-                trait_names = values.split(",");
+            case 'traits':
+                traits = values.split(",");
                 break;
             case 'weights':
                 weights = values.split(",");
                 break;
-            case 'control_ids':
-                control_ids = values.split(",");
-                break;
-            case 'control_names':
-                control_names = values.split(",");
+            case 'accessions':
+                accessions = values.split(",");
                 break;
         }
     }
+
+    var ids = lo.transform(sin_list_id, 'dataset_2_dataset_ids');
+    var trait_ids = [];
+    var accession_ids = [];
+
+    for (i = 0; i < ids.length; i++) {
+        var data = ids[i];
+        var parts = data.split(":");
+        var values = parts[1];
+        switch (parts[0]) {
+            case 'trait_ids':
+                trait_ids = values.split(",");
+                break;
+            case 'accession_ids':
+                accession_ids = values.split(",");
+                break;
+        }
+    }
+
     jQuery('#selection_index').html("");
     jQuery('#trait_table').html("");
     var omitted_traits = [];
@@ -440,13 +444,14 @@ function load_sin() { // update traits and selection index when a saved sin form
     //add traits, weights, and controls to table
     for (i = 0; i < trait_ids.length; i++) {
         var trait_id = trait_ids[i];
-        var control_id = control_ids[i];
+        var control_id = accession_ids[i];
         //console.log("building trait table with trait:" + trait_id + trait_names[i] + " and weight:" + weights[i] + " and control:" + control_id + control_names[i]);
         var weight_input_id = trait_id + '_weight';
         var control_select_id = trait_id + '_control';
         var trait_name = jQuery('#trait_list option[value=' + trait_id + ']').text();
         if (!trait_name) {
-            omitted_traits.push("<a href='/cvterm/" + trait_id + "/view' data-value='" + trait_id + "'>" + trait_names[i] + "</a>");
+            console.log("Adding trait with id "+trait_id+" to omitted traits list\n");
+            omitted_traits.push("<a href='/cvterm/" + trait_id + "/view' data-value='" + trait_id + "'>" + traits[i] + "</a>");
             continue;
         }
         var trait_synonym = jQuery('#trait_list option[value=' + trait_id + ']').data("synonym");
@@ -459,7 +464,8 @@ function load_sin() { // update traits and selection index when a saved sin form
         if (jQuery('#' + control_select_id).find('option[value="' + control_id + '"]').length) {
             jQuery('#' + control_select_id).val(control_id);
         } else {
-            omitted_controls.push("<a href='/stock/" + control_id + "/view' data-value='" + control_id + "'>" + control_names[i] + "</a>");
+            console.log("Adding control with id "+control_id+" to omitted controls list\n");
+            omitted_controls.push("<a href='/stock/" + control_id + "/view' data-value='" + control_id + "'>" + accessions[i] + "</a>");
         }
     }
     jQuery('#select_message').text('Add another trait');
