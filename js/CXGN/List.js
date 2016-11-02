@@ -658,7 +658,7 @@ CXGN.List.prototype = {
             url: '/list/validate/'+list_id+'/'+type,
             async: false,
             success: function(response) {
-                console.log(response);
+                //console.log(response);
                 if (response.error) {
                     alert(response.error);
                 } else {
