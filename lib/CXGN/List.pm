@@ -276,7 +276,7 @@ after 'description' => sub {
     my $description = shift;
     
     if (!$description) { 
-	print STDERR "NO desc provided... skipping!\n";
+	#print STDERR "NO desc provided... skipping!\n";
 	return; 
     }
 

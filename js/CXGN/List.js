@@ -652,57 +652,60 @@ CXGN.List.prototype = {
     },
 
     validate: function(list_id, type, non_interactive) {
-	var missing = new Array();
-	var error = 0;
-	jQuery.ajax( {
-	    url: '/list/validate/'+list_id+'/'+type,
-	    async: false,
-	    success: function(response) {
-		if (response.error) {
-		    alert(response.error);
-		}
-		else {
-		    missing = response.missing;
-		}
-	    },
-	    error: function(response) { alert("An error occurred while validating the list "+list_id); error=1; }
-	});
+        var missing = new Array();
+        var error = 0;
+        jQuery.ajax( {
+            url: '/list/validate/'+list_id+'/'+type,
+            async: false,
+            success: function(response) {
+                console.log(response);
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    missing = response.missing;
+                }
+            },
+            error: function(response) {
+                alert("An error occurred while validating the list "+list_id);
+                error=1;
+            }
+        });
 
-	if (error === 1 ) { return; }
+        if (error === 1 ) { return; }
 
-	if (missing.length==0) {
-	    if (!non_interactive) { alert("This list passed validation."); }
-	    return 1;
-	}
-	else {
+        if (missing.length==0) {
+            if (!non_interactive) { alert("This list passed validation."); }
+            return 1;
+        } else {
 
-	    jQuery("#validate_accession_error_display tbody").html('');
-	    
-            var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing accessions to a list</h3><div id='validate_stock_missing_accessions' style='display:none'></div><div id='validate_stock_add_missing_accessions'></div><hr><h4>Go to <a href='/breeders/accessions'>Manage Accessions</a> to add these new accessions.</h4></div><br/>";
-	    
+            if (type == 'accessions') {
+                jQuery("#validate_accession_error_display tbody").html('');
 
-	    jQuery("#validate_stock_add_missing_accessions_html").html(missing_accessions_html);
+                var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing accessions to a list</h3><div id='validate_stock_missing_accessions' style='display:none'></div><div id='validate_stock_add_missing_accessions'></div><hr><h4>Go to <a href='/breeders/accessions'>Manage Accessions</a> to add these new accessions.</h4></div><br/>";
+
+                jQuery("#validate_stock_add_missing_accessions_html").html(missing_accessions_html);
 
                 var missing_accessions_vals = '';
-		if (missing){
                 for(var i=0; i<missing.length; i++) {
                     missing_accessions_vals = missing_accessions_vals + missing[i] + '\n';
                 }
-		}
+
                 jQuery("#validate_stock_missing_accessions").html(missing_accessions_vals);
                 addToListMenu('validate_stock_add_missing_accessions', 'validate_stock_missing_accessions', {
-          selectText: true,
-          listType: 'accessions'
-        });
-            
+                    selectText: true,
+                    listType: 'accessions'
+                });
 
-            jQuery("#validate_accession_error_display tbody").append(missing.join(","));
-            jQuery('#validate_accession_error_display').modal("show");
-	    return;
-	
-	    //alert("List validation failed. Elements not found: "+ missing.join(","));
-	    //return 0;
-	}
+                jQuery("#validate_accession_error_display tbody").append(missing.join(","));
+                jQuery('#validate_accession_error_display').modal("show");
+
+                //alert("List validation failed. Elements not found: "+ missing.join(","));
+                //return 0;
+            } else {
+                alert('List did not pass validation because of these items: '+missing.join(", "));
+            }
+            return;
+        }
     },
 
     transform: function(list_id, transform_name) {

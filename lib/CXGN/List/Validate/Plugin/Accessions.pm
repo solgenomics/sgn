@@ -53,10 +53,10 @@ sub validate {
 
     my @missing;
 
-    foreach my $item (@$list) { 
-	if ($items{$item} == 0) { 
-	    push @missing, $item;
-	}
+    foreach my $item (@$list) {
+        if (!exists($items{$item})) {
+            push @missing, $item;
+        }
     }
 
     return { missing => \@missing };
