@@ -1565,7 +1565,8 @@ sub get_accessions {
 		AND accession.type_id = $accession_cvterm_id
 		AND stock_relationship.type_id IN ($plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id)
 		AND project.project_id = ?
-		GROUP BY accession.stock_id;";
+		GROUP BY accession.stock_id
+		ORDER BY accession.stock_id;";
 
 	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
 	$h->execute($self->get_trial_id());
