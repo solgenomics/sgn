@@ -398,6 +398,10 @@ function load_sin() { // update traits and selection index when a saved sin form
 
     var list_data = lo.getListData(sin_list_id);
     var sin_data = list_data.elements;
+
+    var ids = lo.transform(sin_list_id, 'dataset_2_dataset_ids');
+    console.log("ids="+JSON.stringify(ids));
+
     var trait_ids = [];
     var trait_names = [];
     var weights = [];
