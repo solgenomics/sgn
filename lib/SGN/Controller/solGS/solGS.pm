@@ -1155,20 +1155,6 @@ sub trait_phenodata_file {
 }
 
 
-sub filtered_selection_genotype_file {
-    my ($self, $c) = @_;
-   
-    my $pop_id = $c->stash->{prediction_pop_id} || $c->stash->{selection_pop_id};
-    
-    my $cache_data = { key       => 'filtered_genotype_data_' . $pop_id, 
-                       file      => 'filtered_genotype_data_' . $pop_id . '.txt',
-                       stash_key => 'filtered_selection_genotype_file'
-    };
-    
-    $self->cache_file($c, $cache_data);
-}
-
-
 sub filtered_training_genotype_file {
     my ($self, $c) = @_;
    
@@ -1197,7 +1183,7 @@ sub filtered_selection_genotype_file {
     $self->cache_file($c, $cache_data);
 }
 
-r
+
 sub formatted_phenotype_file {
     my ($self, $c) = @_;
    
