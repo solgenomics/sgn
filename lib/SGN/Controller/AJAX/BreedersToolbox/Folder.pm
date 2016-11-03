@@ -48,10 +48,13 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
 	    breeding_program_id => $breeding_program_id,
 	});
 
-    $c->stash->{rest} = { success => 1 };
+    $c->stash->{rest} = {
+      success => 1,
+      folder_id => $folder->folder_id()
+    };
 }
 
-sub delete_folder : Chained('get_folder') PathPart('delete') Args(0) { 
+sub delete_folder : Chained('get_folder') PathPart('delete') Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -73,7 +76,7 @@ sub delete_folder : Chained('get_folder') PathPart('delete') Args(0) {
 
 }
 
-sub associate_parent_folder : Chained('get_folder') PathPart('associate/parent') Args(1) { 
+sub associate_parent_folder : Chained('get_folder') PathPart('associate/parent') Args(1) {
     my $self = shift;
     my $c = shift;
     my $parent_id = shift;

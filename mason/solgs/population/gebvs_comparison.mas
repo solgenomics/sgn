@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/solgs/population/compare_gebvs.mas  -- a template for graphic viz of gebvs of training and selection populations.
+/solgs/population/gebvs_comparison.mas  -- a template for graphic viz of gebvs of training and selection populations.
 
 =AUTHOR
 

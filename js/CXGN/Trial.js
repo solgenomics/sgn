@@ -249,6 +249,7 @@ function delete_field_map() {
   });
 }
 
+
 function trial_detail_page_setup_dialogs() {
 
      jQuery('#compute_derived_trait_dialog').dialog({
@@ -455,6 +456,8 @@ delete_field_map();
 }
 });
 
+
+
 jQuery('#delete_field_map_link').click(function () {
     jQuery('#delete_field_map_dialog').dialog("open");
 });
@@ -471,6 +474,24 @@ buttons: {
             }
     }
 
+});
+
+jQuery("#update_field_map_dialog_message").dialog({
+autoOpen: false,
+modal: true,
+buttons: {
+        Ok: { id: "dismiss_update_field_map_dialog",
+              click: function() {
+                location.reload();
+              },
+              text: "OK"
+            }
+    }
+
+});
+
+jQuery('#update_field_map_link').click(function () {
+    jQuery('#update_field_map_dialog').dialog("open");
 });
 
 }

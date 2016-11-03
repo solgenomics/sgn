@@ -32,7 +32,6 @@ BEGIN { extends 'Catalyst::Controller' }
 
 
 
-
 sub generate_check_value :Path('/solgs/generate/checkvalue') Args(0) {
     my ($self, $c) = @_;
     
@@ -70,7 +69,6 @@ sub upload_prediction_genotypes_list :Path('/solgs/upload/prediction/genotypes/l
     foreach my $stock (@$list)
     {
         push @stocks_names, $stock->[1];
-	print STDERR "\n uploaded stock: $stock->[1]\n";
     }
     
 
@@ -156,7 +154,7 @@ sub create_user_list_genotype_data_file {
         $geno_data = $c->stash->{user_selection_list_genotype_data};    
     }
 
-    my $file = catfile ($tmp_dir, "genotype_data_${user_id}_${list_id}");
+    my $file = catfile ($tmp_dir, "genotype_data_${list_id}.txt");
 
     write_file($file, $geno_data);
 
@@ -187,7 +185,7 @@ sub create_user_reference_list_phenotype_data_file {
   
     $pheno_data = $c->controller("solGS::solGS")->format_phenotype_dataset($pheno_data, $traits_file);
     
-    my $file = catfile ($tmp_dir, "phenotype_data_${user_id}_${model_id}");
+    my $file = catfile ($tmp_dir, "phenotype_data_${model_id}.txt");
     write_file($file, $pheno_data);
     
     $c->stash->{user_reference_list_phenotype_data_file} = $file;
@@ -263,7 +261,7 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
         $c->stash->{uploaded_prediction} = $uploaded_prediction;
         $c->stash->{list_source}         = $list_source;
 
-        $c->controller("solGS::solGS")->get_trait_name($c, $trait_id);
+        $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
         my $trait_abbr = $c->stash->{trait_abbr};
 
         my $identifier = $combo_pops_id. '_uploaded_' . $prediction_pop_id;
@@ -359,7 +357,7 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
              }
 
              $trait_id =  $c->model("solGS::solGS")->get_trait_id($trait_name);
-             $c->controller("solGS::solGS")->get_trait_name($c, $trait_id);
+             $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
              my $trait_abbr = $c->stash->{trait_abbr};
 
              my $identifier = $model_id . '_uploaded_' . $prediction_pop_id;
@@ -377,10 +375,10 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
                      my $dir     = $c->stash->{solgs_prediction_upload_dir};
                      my $user_id = $c->user->id;
                      
-		     my $exp     = "phenotype_data_${user_id}_${model_id}"; 
+		     my $exp     = "phenotype_data_${model_id}"; 
                      $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
                 
-                     $exp       = "genotype_data_${user_id}_${model_id}"; 
+                     $exp       = "genotype_data_${model_id}"; 
                      $geno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);    
 
                  }
@@ -446,7 +444,7 @@ sub user_prediction_population_file {
                                    DIR => $upload_dir
         );
 
-    my $exp = "genotype_data_${user_id}_uploaded_${pred_pop_id}"; 
+    my $exp = "genotype_data_uploaded_${pred_pop_id}"; 
     my  $pred_pop_file = $c->controller("solGS::solGS")->grep_file($upload_dir, $exp);
  
     $c->stash->{user_selection_list_genotype_data_file} = $pred_pop_file;

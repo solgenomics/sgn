@@ -1,6 +1,7 @@
 
 <%args>
-$breeding_program
+$breeding_program_name
+$breeding_program_id
 $trial_name
 $trial_id
 </%args>
@@ -8,7 +9,7 @@ $trial_id
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
 
 <h1>CASSAVABASE GENOTYPING TRIAL</h1>
-<h1>Breeding program: <% $breeding_program->[0]->[1] %></h1>
+<h1>Breeding program: <% $breeding_program_name %></h1>
 <h2>Trial name: <a href='/breeders/trial/<% $trial_id %>'><% $trial_name %></a></h2>
 <br/>
 

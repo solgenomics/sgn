@@ -30,6 +30,7 @@ use CXGN::Stock::StockLookup;
 use CXGN::Location::LocationLookup;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial;
+use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
 
 class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
@@ -56,6 +57,7 @@ has 'crosses' => (isa =>'ArrayRef[Pedigree]', is => 'rw', predicate => 'has_cros
 has 'location' => (isa =>'Str', is => 'rw', predicate => 'has_location', required => 1,);
 has 'program' => (isa =>'Str', is => 'rw', predicate => 'has_program', required => 1,);
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
+has 'parent_folder_id' => (isa => 'Str', is => 'rw', predicate => 'has_parent_folder_id', required => 0,);
 
 sub add_crosses {
   my $self = shift;
@@ -68,9 +70,11 @@ sub add_crosses {
   my $program_lookup;
   my $transaction_error;
   my @added_stock_ids;
+	my $parent_folder_id;
 
   #lookup user by name
-  my $owner_name = $self->get_owner_name();;
+  my $owner_name = $self->get_owner_name();
+  $parent_folder_id = $self->get_parent_folder_id() || 0;
   my $dbh = $self->get_dbh();
   my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name); #add person id as an option.
 
@@ -162,6 +166,17 @@ sub add_crosses {
 		       });
 
 	  #add error if cross name exists
+
+		#add cross to folder if one was specified
+		if ($parent_folder_id) {
+			my $folder = CXGN::Trial::Folder->new(
+			{
+				bcs_schema => $chado_schema,
+				folder_id => $project->project_id(),
+			});
+
+			$folder->associate_parent($parent_folder_id);
+		}
 
 	  #set projectprop so that projects corresponding to crosses can be identified
 	  my $prop_row = $chado_schema->resultset("Project::Projectprop")
@@ -390,9 +405,9 @@ sub _validate_cross {
   }
   #add support for other cross types here
 
-  else {
-    return;
-  }
+  #else {
+  #  return;
+  #}
 
   return 1;
 }
@@ -404,6 +419,8 @@ sub _get_accession {
   my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
   my $stock;
   my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
+  my $vector_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'vector_construct', 'stock_type');
+	my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'population', 'stock_type');
 
   $stock_lookup->set_stock_name($accession_name);
   $stock = $stock_lookup->get_stock_exact();
@@ -413,8 +430,8 @@ sub _get_accession {
     return;
   }
 
-  if ($stock->type_id() != $accession_cvterm->cvterm_id()) {
-    print STDERR "Name in pedigree is not a stock of type accession\n";
+  if (($stock->type_id() != $accession_cvterm->cvterm_id()) && ($stock->type_id() != $population_cvterm->cvterm_id())  && ($stock->type_id() != $vector_cvterm->cvterm_id()) ) {
+    print STDERR "Name in pedigree is not a stock of type accession or population or vector_construct\n";
     return;
   }
 

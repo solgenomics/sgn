@@ -1,0 +1,79 @@
+
+<%args>
+$trial_id => undef
+$trial_name => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.dataTables-min', 'jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min', 'CXGN.BreederSearch', 'CXGN.SelectionIndex' ] &>
+<& /page/page_title.mas, title=>"Build a Selection Index" &>
+
+<div class="panel panel-default">
+  <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse1">
+    <div class="panel-title"><a href="#form" class="accordion-toggle">Parameters</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
+  </div>
+  <div id="collapse1" class="panel-collapse collapse in">
+    <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
+        <div class="col-sm-6 col-md-6 col-lg-6">
+          <label for="select_trial_for_selection_index">Trial select: </label>
+          <select class="form-control" autofocus="autofocus" id="select_trial_for_selection_index"></select>
+        </div>
+        <div id="trait_list_div" class="col-sm-6 col-md-6 col-lg-6">
+          <label id="trait_list_label" for="trait_list">Trait select: </label>
+          <select class="form-control" id="trait_list"></select>
+        </div><br><br><br><br><br>
+        <div class="col-sm-12 col-md-12 col-lg-12 table-responsive">
+        <label>Traits and weights: </label>
+          <table class="table table-bordered table-striped table-highlight">
+            <thead>
+              <th>Trait name</th>
+              <th>Trait CO id</th>
+              <th>Trait synonym</th>
+              <th>Weight</th>
+              <th>Remove?</th>
+            </thead>
+            <tbody id ="trait_table"></tbody>
+          </table>
+        <div id="additional_traits">
+        </div><br><br>
+        </div>
+        <div class="col-sm-6 col-md-6 col-lg-6">
+        <label>Additional options: </label>
+          <label><input type="checkbox" id="allow_missing" value="">Include accessions with missing phenotypes</label><br>
+            <label for="reference_accession_list"><input type="checkbox" id="use_reference_accession" value="">Scale values to a reference accession: </label><br>
+            <select class="form-control" id="reference_accession_list"></select>
+        </div><br><br><br><br><br>
+        <div class="col-sm-6 col-md-6 col-lg-6">
+        <label>SIN formula: </label><br>
+          <p id="ranking_formula"></p>
+        </div>
+        <div class="col-sm-12 col-md-12 col-lg-12 text-right">
+        <button type="button" class="btn btn-primary disabled" id="calculate_rankings">Calculate Rankings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<div class="panel panel-default">
+  <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse2">
+    <div class="panel-title"><a href="#table_panel" class="accordion-toggle">Rankings</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
+  </div>
+  <div id="collapse2" class="panel-collapse collapse in">
+    <div class="panel-body" id="table_panel" style="overflow:hidden">
+      <ul class="nav nav-tabs"><li class="active"><a data-toggle="tab" href="#weighted_values_div">Selection Index</a></li><li><a data-toggle="tab" href="#raw_avgs_div">Raw Averages</a></li></ul>
+      <div class="tab-content">
+        <div id="weighted_values_div" class="tab-pane fade in active"></div>
+        <div id="raw_avgs_div" class="tab-pane fade"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    jQuery(document).ready(function() {
+        get_select_box('trials', 'select_trial_for_selection_index', { 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' , 'empty' : 1 });
+    });
+
+
+
+</script>

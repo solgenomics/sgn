@@ -1,0 +1,56 @@
+<%args>
+</%args>
+
+<div id="brapi_home_phenotype_search_div">
+
+    <h4>Phenotype Search</h4>
+    <input name="brapi_home_phenosearch_germplasmDbIds" id="brapi_home_phenosearch_germplasmDbIds" class="form-control" type="text" placeholder="GermplasmDbIds e.g. 139" value="139"/>
+    <input name="brapi_home_phenosearch_studyDbIds" id="brapi_home_phenosearch_studyDbIds" class="form-control" type="text" placeholder="StudyDbIds e.g. 139,137" value="139,137"/>
+    <input name="brapi_home_phenosearch_observationVariableDbIds" id="brapi_home_phenoseach_observationVariableDbIds" class="form-control" type="text" placeholder="ObservationDbIds e.g. 70741,70666,70773" value="70741,70666,70773"/>
+    <input name="brapi_home_phenosearch_locationDbIds" id="brapi_home_phenosearch_locationDbIds" class="form-control" type="text" placeholder="LocationDbIds e.g. 23" value="23"/>
+    <input name="brapi_home_phenosearch_years" id="brapi_home_phenosearch_years" class="form-control" type="text" placeholder="Years e.g. 2014,2015" value="2014,2015"/>
+    <select name="brapi_home_phenosearch_observations_level" id="brapi_home_phenosearch_observations_level" class="form-control" />
+        <option value="all">All</option>
+        <option value="plot">Plot</option>
+        <option value="plant">Plant</option>
+    </select>
+    <button class="btn btn-primary" name="brapi_home_phenosearch_submit" id="brapi_home_phenosearch_submit">Search Phenotypes</button>
+    <br/><br/>
+    <div id="brapi_phenosearch_data_result_div">
+    </div>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery("#brapi_home_phenosearch_submit").click(function() {
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/phenotypes-search',
+          'data' : {
+            'observationVariableDbIds':jQuery('#brapi_home_phenosearch_observationVariableDbIds').val(),
+            'germplasmDbIds':jQuery('#brapi_home_phenosearch_germplasmDbIds').val(),
+            'observationLevel':jQuery('#brapi_home_phenosearch_observations_level').val(),
+            'studyDbIds':jQuery('#brapi_home_phenosearch_studyDbIds').val(),
+            'locationDbIds':jQuery('#brapi_home_phenosearch_locationDbIds').val(),
+            'seasonDbIds':jQuery('#brapi_home_phenosearch_years').val()
+          },
+          'method': 'POST',
+          'beforeSend': function() {
+            jQuery('#working_modal').modal('show');
+          },
+          'success': function(response) {
+            jQuery('#working_modal').modal('hide');
+            console.log(response);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_phenosearch_data_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/phenotypes-search', undefined);
+
+          },
+          error: function(response) {
+            jQuery('#working_modal').modal('hide');
+            alert('An error occurred');
+          }
+        });
+    });
+});
+
+</script>

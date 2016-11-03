@@ -263,9 +263,6 @@ function gebvsComparison () {
                 d3.selectAll("text#tr_mean").remove();
             });
 
-	console.log('std tr ' + xMT[0] + '  ' + xMT[1])
-	console.log('std sl ' + xMS[0] + '  ' + xMS[1])
-
 	linePlot.graph.append("path")
 	    .attr("d", midLine(selectionMidlineData))
 	    .attr("stroke", slColor)

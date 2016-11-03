@@ -1,0 +1,39 @@
+<%args>
+</%args>
+
+<div id="brapi_home_study_layout_detail_div">
+
+    <h4>Study Layout</h4>
+    <input name="brapi_home_studylayoutdbid" id="brapi_home_studylayoutdbid" class="form-control" type="text" placeholder="StudyDbId e.g. 139" value="139"/>
+    <button class="btn btn-primary" name="brapi_home_studylayoutdbid_submit" id="brapi_home_studylayoutdbid_submit">Get Layout</button>
+    <br/><br/>
+    <div id="brapi_studylayout_data_result_div">
+    </div>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery("#brapi_home_studylayoutdbid_submit").click(function() {
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies/'+jQuery('#brapi_home_studylayoutdbid').val()+'/layout',
+          'method': 'GET',
+          'beforeSend': function() {
+            jQuery('#working_modal').modal('show');
+          },
+          'success': function(response) {
+            jQuery('#working_modal').modal('hide');
+            console.log(response);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_studylayout_data_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies/'+jQuery('#brapi_home_studylayoutdbid').val()+'/layout', undefined);
+
+          },
+          error: function(response) {
+            jQuery('#working_modal').modal('hide');
+            alert('An error occurred');
+          }
+        });
+    });
+});
+
+</script>

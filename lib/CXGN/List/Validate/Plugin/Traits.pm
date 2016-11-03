@@ -16,33 +16,39 @@ sub validate {
 #    print STDERR "LIST: ".Data::Dumper::Dumper($list);
 
     my @missing = ();
-    my $rs;
     foreach my $term (@$list) {
-        my @components = split /\|\|/, $term;
-        foreach (@components) {
+        my $delim = q{|};
+        my $full_accession = substr $term, rindex( $term, $delim ) + length $delim;
 
-            my ($trait_name, $full_accession) = split (/\|/, $_);
-            my ($db_name, $accession) = split ":", $full_accession;
+        my ($db_name, $accession) = split ":", $full_accession;
+        if ($accession) {
             $accession =~ s/\s+$//;
             $accession =~ s/^\s+//;
+        }
+        if ($db_name) {
             $db_name  =~ s/\s+$//;
             $db_name  =~ s/^\s+//;
+        }
 
-            my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
-            if ($db_rs->count() == 0) {
+        my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
+        if ($db_rs->count() == 0) {
+            push @missing, $term;
+        }
+        else {
+            my $rs = $schema->resultset("Cv::Cvterm")->search( {
+            'dbxref.db_id' => $db_rs->first()->db_id(),
+            'dbxref.accession'=>$accession }, {
+                'join' => 'dbxref' }
+            );
+
+            #print STDERR "COUNT: ".$rs->count."\n";
+
+            if ($rs->count == 0) {
                 push @missing, $_;
-            }
-            else {
-                $rs = $schema->resultset("Cv::Cvterm")->search( {
-                'dbxref.db_id' => $db_rs->first()->db_id(),
-                'dbxref.accession'=>$accession }, {
-                    'join' => 'dbxref' }
-                );
-
-                #print STDERR "COUNT: ".$rs->count."\n";
-
-                if ($rs->count == 0) {
-                    push @missing, $_;
+            } else {
+                my $rs_var = $rs->search_related('cvterm_relationship_subjects', {'type.name' => 'VARIABLE_OF'}, { 'join' => 'type'});
+                if ($rs_var->count == 0) {
+                    push @missing, $term;
                 }
             }
         }

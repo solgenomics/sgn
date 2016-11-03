@@ -339,9 +339,8 @@ sub site_cluster_shared_dir {
     my $self = shift;
 
     my $host = $self->req->base; 
-    $host    =~ s/(http[s])|[:\/\d+]//g;
+    $host    =~ s/(https?)|[:\/\d+]//g;
     $host    =~ s/(www\.)//;
-
     $host    = File::Spec->catdir($self->config->{cluster_shared_tempdir}, $host);
 
     return $host;

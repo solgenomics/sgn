@@ -18,6 +18,7 @@ $folder_id
 $folder_name
 $folder_description
 $children
+$crosses
 $project_parent => undef
 $breeding_program => undef
 </%args>
@@ -45,6 +46,7 @@ foreach (@$children) {
 
   <ul class="nav nav-tabs" role="tablist">
     <li role="presentation" class="active"><a href="#trials" aria-controls="trials" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-leaf text-success"></span>&nbsp;&nbsp;&nbsp;Trials</a></li>
+    <li role="presentation"><a href="#crosses" aria-controls="crosses" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-grain text-success"></span>&nbsp;&nbsp;&nbsp;Crosses</a></li>
     <li role="presentation"><a href="#folders" aria-controls="folders" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;&nbsp;&nbsp;Folders</a></li>
     <li role="presentation"><a href="#breeding_program" aria-controls="breeding_program" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;&nbsp;&nbsp;Breeding Program</a></li>
   </ul>
@@ -64,6 +66,29 @@ foreach (@$children) {
         </table>
 
         <button class="btn btn-primary" id="open_folder_dialog_link">Add trial to folder</button>
+
+      </div>
+    </div>
+
+    <div role="tabpanel" class="tab-pane fade" id="crosses">
+      <div class="well">
+        <h3>Crosses in Folder</h3>
+        <table class="table table-hover table-bordered">
+        <tbody>
+% foreach (@$crosses) {
+            <tr><td><a href="/cross/<% $_->[0] %>"><% $_->[1] %></a></td></tr>
+% }
+        </tbody>
+        </table>
+
+        <hr>
+        <h4>Add All Cross Progeny to a List</h4>
+        <div id="add_all_cross_progeny_in_folder_to_list"></div>
+        <div id="add_all_cross_progeny_in_folder_to_list_data" style="display:none">
+% foreach (@$crosses) {
+<% $_->[0] %>
+% }
+</div>
 
       </div>
     </div>
@@ -94,11 +119,11 @@ foreach (@$children) {
       No Child Folders
 % }
       </div>
-      
+
       <div class="well">
         <button class="btn btn-primary" id="move_folder_dialog_link">Move folder</button>
       </div>
-      
+
     </div>
 
     <div role="tabpanel" class="tab-pane fade" id="breeding_program">
@@ -118,9 +143,9 @@ foreach (@$children) {
 </div>
 
 <script>
-    
+
 jQuery(document).ready(function() {
-    
+
     jQuery('#delete_folder_button').click( function() {
         if (confirm("Are you sure you want to delete this folder?")) {
             jQuery.ajax( {
@@ -140,7 +165,8 @@ jQuery(document).ready(function() {
         }
     });
     
-});
-    
-</script>
+    addToListMenu('add_all_cross_progeny_in_folder_to_list', 'add_all_cross_progeny_in_folder_to_list_data', { listType: 'accessions', additionType: 'cross_progeny' } );
 
+});
+
+</script>

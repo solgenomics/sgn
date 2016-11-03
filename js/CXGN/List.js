@@ -493,7 +493,7 @@ CXGN.List.prototype = {
             var list_item_id = jQuery(this).data('listitemid');
             var list_item_name = jQuery(this).data('listitemname');
             var list_item_div = jQuery(this).data('listitemdiv');
-            var list_item_edit_html = '<div class="input-group"><input type="text" class="form-control" placeholder="'+list_item_name+'" id="list_item_edit_input_'+list_item_id+'" data-listitemid="'+list_item_id+'" /><span class="input-group-btn"><button class="btn btn-default" type="button" name="list_item_edit_submit" data-inputid="list_item_edit_input_'+list_item_id+'">Ok</button></span></div>';
+            var list_item_edit_html = '<div class="input-group"><input type="text" class="form-control" value="'+list_item_name+'" placeholder="'+list_item_name+'" id="list_item_edit_input_'+list_item_id+'" data-listitemid="'+list_item_id+'" /><span class="input-group-btn"><button class="btn btn-default" type="button" name="list_item_edit_submit" data-inputid="list_item_edit_input_'+list_item_id+'">Ok</button></span></div>';
             jQuery("#"+list_item_div).empty().html(list_item_edit_html);
         });
 
@@ -572,6 +572,28 @@ CXGN.List.prototype = {
 	return info;
 
     },
+    
+    addCrossProgenyToList: function(list_id, text) {
+        if (! text) {
+            return;
+        }
+        var list = text.split("\n");
+        list = list.filter(function(n){ return n != '' }); 
+        console.log(list);
+        var addeditems;
+        jQuery.ajax( {
+            url: '/list/add_cross_progeny',
+            async: false,
+            data: { 'list_id':list_id, 'cross_id_list' : JSON.stringify(list) },
+            success: function(response) {
+                console.log(response);
+                addeditems = response.success.count;
+            }
+        });
+        //var info = this.addBulk(list_id, list);
+
+        return addeditems;
+    },
 
     /* listSelect: Creates an html select with lists of requested types.
 
@@ -630,57 +652,60 @@ CXGN.List.prototype = {
     },
 
     validate: function(list_id, type, non_interactive) {
-	var missing = new Array();
-	var error = 0;
-	jQuery.ajax( {
-	    url: '/list/validate/'+list_id+'/'+type,
-	    async: false,
-	    success: function(response) {
-		if (response.error) {
-		    alert(response.error);
-		}
-		else {
-		    missing = response.missing;
-		}
-	    },
-	    error: function(response) { alert("An error occurred while validating the list "+list_id); error=1; }
-	});
+        var missing = new Array();
+        var error = 0;
+        jQuery.ajax( {
+            url: '/list/validate/'+list_id+'/'+type,
+            async: false,
+            success: function(response) {
+                //console.log(response);
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    missing = response.missing;
+                }
+            },
+            error: function(response) {
+                alert("An error occurred while validating the list "+list_id);
+                error=1;
+            }
+        });
 
-	if (error === 1 ) { return; }
+        if (error === 1 ) { return; }
 
-	if (missing.length==0) {
-	    if (!non_interactive) { alert("This list passed validation."); }
-	    return 1;
-	}
-	else {
+        if (missing.length==0) {
+            if (!non_interactive) { alert("This list passed validation."); }
+            return 1;
+        } else {
 
-	    jQuery("#validate_accession_error_display tbody").html('');
-	    
-            var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing accessions to a list</h3><div id='validate_stock_missing_accessions' style='display:none'></div><div id='validate_stock_add_missing_accessions'></div><hr><h4>Go to <a href='/breeders/accessions'>Manage Accessions</a> to add these new accessions.</h4></div><br/>";
-	    
+            if (type == 'accessions') {
+                jQuery("#validate_accession_error_display tbody").html('');
 
-	    jQuery("#validate_stock_add_missing_accessions_html").html(missing_accessions_html);
+                var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing accessions to a list</h3><div id='validate_stock_missing_accessions' style='display:none'></div><div id='validate_stock_add_missing_accessions'></div><hr><h4>Go to <a href='/breeders/accessions'>Manage Accessions</a> to add these new accessions.</h4></div><br/>";
+
+                jQuery("#validate_stock_add_missing_accessions_html").html(missing_accessions_html);
 
                 var missing_accessions_vals = '';
-		if (missing){
                 for(var i=0; i<missing.length; i++) {
                     missing_accessions_vals = missing_accessions_vals + missing[i] + '\n';
                 }
-		}
+
                 jQuery("#validate_stock_missing_accessions").html(missing_accessions_vals);
                 addToListMenu('validate_stock_add_missing_accessions', 'validate_stock_missing_accessions', {
-          selectText: true,
-          listType: 'accessions'
-        });
-            
+                    selectText: true,
+                    listType: 'accessions'
+                });
 
-            jQuery("#validate_accession_error_display tbody").append(missing.join(","));
-            jQuery('#validate_accession_error_display').modal("show");
-	    return;
-	
-	    //alert("List validation failed. Elements not found: "+ missing.join(","));
-	    //return 0;
-	}
+                jQuery("#validate_accession_error_display tbody").append(missing.join(","));
+                jQuery('#validate_accession_error_display').modal("show");
+
+                //alert("List validation failed. Elements not found: "+ missing.join(","));
+                //return 0;
+            } else {
+                alert('List did not pass validation because of these items: '+missing.join(", "));
+            }
+            return;
+        }
     },
 
     transform: function(list_id, transform_name) {
@@ -805,23 +830,28 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
     var listType;
     var typeSourceDiv;
     var type;
+    var addition_type;
 
     if (options) {
-	if (options.selectText) {
-	    selectText = options.selectText;
-	}
-	if (options.typeSourceDiv) {
-	    var sourcetype = getData(options.typeSourceDiv, selectText);
-	    if (sourcetype) {
-		type = sourcetype.replace(/(\n|\r)+$/, '');
-	    }
-	}
-	if (options.listType) {
-	    type = options.listType;
-	}
+        if (options.selectText) {
+            selectText = options.selectText;
+        }
+        if (options.typeSourceDiv) {
+            var sourcetype = getData(options.typeSourceDiv, selectText);
+            if (sourcetype) {
+                type = sourcetype.replace(/(\n|\r)+$/, '');
+            }
+        }
+        if (options.listType) {
+            type = options.listType;
+        }
+        if (options.additionType) {
+            addition_type = options.additionType;
+        }
     }
+
     html = '<div class="row"><div class="col-sm-6" style="margin-right:0px; padding-right:0px;"><input class="form-control input-sm" type="text" id="'+dataDiv+'_new_list_name" placeholder="New list..." />';
-    html += '</div><div class="col-sm-6" style="margin-left:0px; padding-left:0px; margin-right:0px; padding-right:0px;"><input type="hidden" id="'+dataDiv+'_list_type" value="'+type+'" />';
+    html += '</div><div class="col-sm-6" style="margin-left:0px; padding-left:0px; margin-right:0px; padding-right:0px;"><input type="hidden" id="'+dataDiv+'_addition_type" value="'+addition_type+'" /><input type="hidden" id="'+dataDiv+'_list_type" value="'+type+'" />';
     html += '<input class="btn btn-primary btn-sm" id="'+dataDiv+'_add_to_new_list" type="button" value="add to new list" /></div></div><br />';
 
     html += '<div class="row"><div class="col-sm-6" style="margin-right:0px; padding-right:0px;">'+lo.listSelect(dataDiv, [ type ]);
@@ -832,22 +862,27 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
 
     var list_id = 0;
 
-    jQuery('#'+dataDiv+'_add_to_new_list').click(
-	function() {
-	    var lo = new CXGN.List();
-	    var new_name = jQuery('#'+dataDiv+'_new_list_name').val();
-	    var type = jQuery('#'+dataDiv+'_list_type').val();
+    jQuery('#'+dataDiv+'_add_to_new_list').click( function() {
+        var lo = new CXGN.List();
+        var new_name = jQuery('#'+dataDiv+'_new_list_name').val();
+        var type = jQuery('#'+dataDiv+'_list_type').val();
+        var addition_type = jQuery('#'+dataDiv+'_addition_type').val();
 
-	    var data = getData(dataDiv, selectText);
-
-	    list_id = lo.newList(new_name);
-	    if (list_id > 0) {
-		var elementsAdded = lo.addToList(list_id, data);
-		if (type) { lo.setListType(list_id, type); }
-		alert("Added "+elementsAdded+" list elements to list "+new_name+" and set type to "+type);
-	    }
-	}
-    );
+        var data = getData(dataDiv, selectText);
+        list_id = lo.newList(new_name);
+        if (list_id > 0) {
+            var elementsAdded;
+            if (addition_type == 'cross_progeny') {
+                elementsAdded = lo.addCrossProgenyToList(list_id, data);
+            } else {
+                elementsAdded = lo.addToList(list_id, data);
+            }
+            if (type) { 
+                lo.setListType(list_id, type); 
+            }
+            alert("Added "+elementsAdded+" list elements to list "+new_name+" and set type to "+type);
+        }
+    });
 
     jQuery('#'+dataDiv+'_button').click(
 	function() {

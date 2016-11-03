@@ -1,0 +1,58 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'brapi.Table' ] &>
+
+<h4>Studies Search</h4>
+
+<div id="brapi_studies_search_home_div">
+
+<input name="brapi_studies_programDbId" id="brapi_studies_programDbId" class="form-control" type="text" placeholder="ProgramDbId" />
+<input name="brapi_studies_locationDbId" id="brapi_studies_locationDbId" class="form-control" type="text" placeholder="LocationDbId" />
+<input name="brapi_studies_seasonDbId" id="brapi_studies_seasonDbId" class="form-control" type="text" placeholder="SeasonDbId" />
+<input name="brapi_studies_studyTypeDbId" id="brapi_studies_studyTypeDbId" class="form-control" type="text" placeholder="StudyTypeDbId" />
+<input name="brapi_studies_studyDbId" id="brapi_studies_studyDbId" class="form-control" type="text" placeholder="StudyDbId" />
+<!--
+<input name="brapi_studies_germplasmDbId" id="brapi_studies_germplasmDbId" class="form-control" type="text" placeholder="GermplasmDbId" />
+<input name="brapi_studies_variableDbId" id="brapi_studies_variableDbId" class="form-control" type="text" placeholder="ObservationVariableDbId" />
+-->
+<button class="btn btn-primary" name="brapi_studies_search_submit" id="brapi_studies_search_submit">Search</button>
+
+<br/><br/>
+
+<div id="brapi_studies_search_result_div">
+
+</div>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery("#brapi_studies_search_submit").click(function() {
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies-search',
+          'method': 'POST',
+          'data': { 
+            'programDbId' :  jQuery("#brapi_studies_programDbId").val(),
+            'locationDbId' : jQuery("#brapi_studies_locationDbId").val(),
+            'seasonDbId' : jQuery("#brapi_studies_seasonDbId").val(),
+            'studyTypeDbId' : jQuery("#brapi_studies_studyTypeDbId").val(),
+            'studyDbId' : jQuery("#brapi_studies_studyDbId").val(),
+            'germplasmDbId' : jQuery("#brapi_studies_germplasmDbId").val(),
+            'observationVariableDbId' : jQuery("#brapi_studies_variableDbId").val(),
+          },
+          'success': function(response) {
+            console.log(response);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_studies_search_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies-search', undefined);
+
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+    });
+});
+
+
+</script>
