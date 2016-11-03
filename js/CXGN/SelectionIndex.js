@@ -10,6 +10,8 @@ jQuery(document).ready(function() {
             $span.find('i').removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
         })
 
+    jQuery('#pagetitle_h3').append('&nbsp;<a id="selection_index_more_info" href="#"><span class="glyphicon glyphicon-info-sign"></span></a>');
+
     jQuery('#select_trial_for_selection_index').change( // update selection index options when trial selection changes
         function() {
 
@@ -24,7 +26,7 @@ jQuery(document).ready(function() {
                 return;
             };
 
-            jQuery('#trait_table_label').html('<a href="/breeders_toolbox/trial/'+jQuery(this).val()+'">'+jQuery('option:selected', this).text()+'</a> Traits and Weights:')
+            jQuery('#trait_table_label').html('Traits and coefficients for <a href="/breeders_toolbox/trial/'+jQuery(this).val()+'">'+jQuery('option:selected', this).text()+'</a>:')
 
             var trial_id = jQuery(this).val();
             var trial_name = jQuery("option:selected", this).text();
@@ -150,7 +152,7 @@ jQuery(document).ready(function() {
             var trait_synonym = jQuery('option:selected', this).data("synonym");
             var list_name = jQuery('option:selected', this).data("list_name");
             var control_html = jQuery('#control_list').html();
-            var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-list_name='" + list_name + "' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + weight_id + "' class='form-control weight' placeholder='Must be a number (+ or -), default = 1'></input></td><td><select class='form-control' id='" + control_id + "'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
+            var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-list_name='" + list_name + "' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + weight_id + "' class='form-control weight' placeholder='Default is 1'></input></td><td><select class='form-control' id='" + control_id + "'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
             jQuery('#trait_table').append(trait_html);
             jQuery('#select_message').text('Add another trait');
             jQuery('#select_message').attr('selected', true);
@@ -158,8 +160,15 @@ jQuery(document).ready(function() {
             jQuery('#' + weight_id).focus();
             jQuery('#' + weight_id).change( //
                 function() {
+                  if (isNaN(jQuery(this).val())) {
+                    jQuery(this).val('');
+                    document.getElementById('selection_index_error_message').innerHTML = "<center><li class='list-group-item list-group-item-danger'> Error.<br> Index weights must be a positive or negative number.</li></center>";
+                    jQuery('#selection_index_error_dialog').modal("show");
+                  }
+                  else {
                     update_formula();
                     jQuery('#trait_list').focus();
+                  }
                 });
             jQuery('#' + control_id).change(
                 function() {
@@ -215,6 +224,10 @@ jQuery(document).ready(function() {
 
     });
 
+    jQuery('#selection_index_more_info').click(function() {
+      jQuery('#selection_index_info_dialog').modal("show");
+    });
+
     jQuery('#selection_index_error_close_button').click(function() {
         document.getElementById('selection_index_error_message').innerHTML = "";
     });
@@ -239,10 +252,10 @@ jQuery(document).ready(function() {
 
         var trial_name = jQuery('#select_trial_for_selection_index option:selected').text();
         column_names.push({
-            title: trial_name + " Accession"
+            title: "Accession"
         });
         weighted_column_names.push({
-            title: trial_name + " Accession"
+            title: "Accession"
         });
         jQuery(selected_trait_rows).each(function(index, selected_trait_rows) {
             var trait_id = jQuery('a', this).data("value");
@@ -251,13 +264,15 @@ jQuery(document).ready(function() {
             if (trait == 'None') {
               trait = jQuery('a', this).text();
             }
-            var trait_term = "mean "+trait;
+            var trait_term = trait; //= "mean "+trait;
             var weight = jQuery('#' + trait_id + '_weight').val() || 1; // default = 1
+
+
             weights.push(weight);
             var control = jQuery('#' + trait_id + '_control option:selected').val() || '';
             controls.push(control);
             if (control) {
-                trait_term += " relative to " + jQuery('#' + trait_id + '_control option:selected').text();
+                trait_term += " as a fraction of " + jQuery('#' + trait_id + '_control option:selected').text();
             }
             column_names.push({
                 title: trait_term
@@ -314,10 +329,30 @@ function build_table(data, column_names, trial_name, target_div) {
 
     jQuery('#' + target_div).html(table_html);
 
+    var export_message = 'Accession rankings calculated using a selection index at ' + window.location.href;
     var penultimate_column = column_names.length - 2;
+
     jQuery('#' + table_id).DataTable({
         dom: 'Bfrtip',
-        buttons: ['copy', 'excel', 'csv', 'print'],
+        buttons: [ 'copy',
+            {
+                extend: 'excelHtml5',
+                title: trial_name +'_rankings'
+            },
+            {
+                extend: 'csvHtml5',
+                title: trial_name +'_rankings'
+            },
+            {
+                extend: 'pdfHtml5',
+                title: trial_name +'_rankings',
+                message: export_message
+            },
+            {
+                extend: 'print',
+                message: export_message
+            }
+        ],
         data: data,
         destroy: true,
         paging: true,
@@ -501,10 +536,10 @@ function update_formula() {
         if (trait == 'None') {
           trait = jQuery('a', this).text();
         }
-        var trait_term = "mean "+trait;
+        var trait_term = trait; //= "mean "+trait;
         var weight = jQuery('#' + trait_id + '_weight').val() || 1; // default = 1
         if (jQuery('#' + trait_id + '_control option:selected').val()) { // if control selected for scaling
-            trait_term += " relative to " + jQuery('#' + trait_id + '_control option:selected').text();
+            trait_term += " as a fraction of " + jQuery('#' + trait_id + '_control option:selected').text();
         }
 
         if (term_number == 0 || weight <= 0) {

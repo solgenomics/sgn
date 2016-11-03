@@ -3,11 +3,11 @@
 
 =head1 NAME
 
- AddDatasetListType.pm
+ AddListTypes.pm
 
 =head1 SYNOPSIS
 
-mx-run AddDatasetListType [options] -H hostname -D dbname -u username [-F]
+mx-run AddListTypes [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
@@ -31,7 +31,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddDatasetListType;
+package AddListTypes;
 
 use Moose;
 use Bio::Chado::Schema;
@@ -40,7 +40,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch will create a new cvterm 'dataset' in the 'list_type' cv, which will be used for the creation of lists of lists.
+This patch will create new cvterms 'dataset', 'crosses', 'populations', and 'numeric' in the 'list_type' cv.
 
 
 sub patch {
@@ -56,10 +56,29 @@ sub patch {
 
     my $coderef = sub {
 
-	my $vector_list_type_cvterm = $schema->resultset("Cv::Cvterm")->create_with({
+	my $dataset_list_type_cvterm = $schema->resultset("Cv::Cvterm")->create_with({
 	    name => 'dataset',
+      definition => 'dataset',
 	    cv   => 'list_types',
 	});
+
+  my $crosses_list_type_cvterm = $schema->resultset("Cv::Cvterm")->create_with({
+      name => 'crosses',
+      definition => 'crosses',
+      cv   => 'list_types',
+  });
+
+  my $populations_list_type_cvterm = $schema->resultset("Cv::Cvterm")->create_with({
+      name => 'populations',
+      definition => 'populations',
+      cv   => 'list_types',
+  });
+
+  my $numbers_list_type_cvterm = $schema->resultset("Cv::Cvterm")->create_with({
+      name => 'numbers',
+      definition => 'numbers',
+      cv   => 'list_types',
+  });
 
     };
 

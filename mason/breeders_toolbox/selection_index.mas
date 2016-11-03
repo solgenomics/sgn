@@ -4,6 +4,7 @@ $trial_id => undef
 $trial_name => undef
 </%args>
 
+<script type="text/javascript" src="http://latex.codecogs.com/latexit.js"></script>
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.dataTables-min', 'jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min', 'CXGN.BreederSearch', 'CXGN.SelectionIndex' ] &>
 <& /page/page_title.mas, title=>"Build a Selection Index" &>
 
@@ -14,17 +15,17 @@ $trial_name => undef
   <div id="collapse1" class="panel-collapse collapse in">
     <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
       <div class="col-sm-12 col-md-12 col-lg-12">
-          <label for="select_trial_for_selection_index">Trial select: </label>
+          <label for="select_trial_for_selection_index">Trial: </label>
           <select class="form-control" autofocus="autofocus" id="select_trial_for_selection_index"></select>
       </div><br><br><br><br><br>
       <div class="col-sm-12 col-md-12 col-lg-12 table-responsive" id="trait_table_div">
-        <label id="trait_table_label">Traits and weights: </label>
+        <label id="trait_table_label">Traits and coefficients: </label>
           <table class="table table-bordered table-striped table-highlight">
             <thead>
               <th>Trait name</th>
               <th>Trait synonym</th>
-              <th data-toggle="tooltip" title="Must be a positive or negative number, reflecting the importance of the trait. This weight is multiplied by the mean of observed values for the trait to produce a score. Scores are calculated this way for all of the different traits, and then summed to produce the overall SIN value that is used in the ranking.">Weight</th>
-              <th data-toggle="tooltip" title="May be left blank. If a control is selected, the mean of observed values for each accession will be divided by the mean of observed values for the control accession. The resulting fraction will then be multiplied by the weight and summed in the calculation of the SIN value. ">Normalize with a control?</th>
+              <th data-toggle="tooltip" title="Must be a positive or negative number.">Index coefficient</th>
+              <th data-toggle="tooltip" title="Select the trial name, or a control, to normalize means for this trait to the trial or control mean">Normalize with a control?</th>
               <th>Remove?</th>
             </thead>
             <tbody id ="trait_table"></tbody>
@@ -61,14 +62,68 @@ $trial_name => undef
 
 <div class="panel panel-default">
   <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse2">
-    <div class="panel-title"><a href="#table_panel" class="accordion-toggle">Rankings</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
+    <div class="panel-title"><a href="#table_panel" class="accordion-toggle">Results</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
   </div>
   <div id="collapse2" class="panel-collapse collapse in">
     <div class="panel-body" id="table_panel" style="overflow:hidden">
-      <ul class="nav nav-tabs"><li class="active"><a data-toggle="tab" href="#weighted_values_div">Selection Index</a></li><li><a data-toggle="tab" href="#raw_avgs_div">Raw Values</a></li></ul>
+      <ul class="nav nav-tabs"><li class="active"><a data-toggle="tab" href="#weighted_values_div">Rankings</a></li><li><a data-toggle="tab" href="#raw_avgs_div">Unweighted Means</a></li></ul>
       <div class="tab-content">
         <div id="weighted_values_div" class="tab-pane fade in active"></div>
         <div id="raw_avgs_div" class="tab-pane fade"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="selection_index_info_dialog" name="selection_index_info_dialog" tabindex="-1" role="dialog" aria-labelledby="selectionIndexInfoDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <center><h3 class="modal-title" id="selectionIndexInfoDialog">How the Selection Index tool works</h3></center>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+        <h4>
+          Background:
+        </h4>
+          <center><p>A selection index is a method of optimizing selection by simultaneously acting on multiple traits. While gain is ultimately made by improving genetic value, in practice true genetic values are not known. Instead, a selection index takes into account multiple sources of information that are available about an individual and combines them into a best linear prediction of breeding value. This tool combines phenotypic observations with index coefficients into a selection index, SIN, of the form:<p></center>
+          <center><div lang="latex">SIN = b_1x_1 + b_2x_2\hspace{2mm}...\hspace{2mm}b_ix_i</div></center><br>
+          <center><p>where <span lang="latex">x_i</span> is the mean of observations on the <span lang="latex">_i</span>th trait and <span lang="latex">b_i</span> is the selection index coefficient (or weight) for that trait.</p></center>
+
+        <h4>
+          Parameters:
+        </h4>
+        <dl>
+          <dt>Trial</dt>
+          <dd>One trial. Must be selected first. Support for using data from multiple trials may be added later.</dd>
+          <dt>Traits</dt>
+          <dd>One or more traits. Must be traits that were measured in the trial. At maximum, all of the traits from the trial can be used.</dd>
+          <dt>Selection coefficients</dt>
+          <dd>One for each trait. Must be a positive or negative number, and should reflect the importance of the trait in the index. If left blank it defaults to 1.</dd>
+          <dt>Normalization</dt>
+          <dd>By default the unadjusted mean of phenotypic observations is used. For each trait, users have the option to normalize these means using to a control mean or the overall trial mean.</dd>
+        </dl>
+
+        <h4>
+          Options:
+        </h4>
+        <dt>Save</dt>
+        <dd>The save option allows a user to enter a formula name, and save the current index formula as a dataset. It is then available for later use, and visible in their list manager to edit or share with others.</dd>
+        <dt>Select</dt>
+        <dd>The select option allows a user to load a saved formula, which will include the saved combination of traits, coefficients, and normalization options.</dd>
+        <dt>Include checkbox</dt>
+        <dd>Accessions with missing phenotypes are excluded by default. Checking the allow missing phenotypes option will expand the rankings to include any accessions that were planted in the trial but are missing observations for one or more of the traits in the index. A missing phenotype will not contribute to the final SIN score, so the final SIN interpretation should change accordingly.</dd>
+
+        <h4>
+          Results:
+        </h4>
+          <p>The <b>Calculate Rankings</b> button will produce a SIN score and ranking for each accession, based on the selected parameters and phenotype means. The rankings and phenotype means are displayed in the <b>Rankings</b> and <b>Unweighted Means</b> tabs of the results section, where they can be manipulated, copied and downloaded. Below the results table, users have the option to <b>save top ranked accessions to a list</b>.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
