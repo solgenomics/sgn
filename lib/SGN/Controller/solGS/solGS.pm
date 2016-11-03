@@ -360,47 +360,49 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
     my $page = $c->req->param('page') || 1;
 
     my $projects_ids = $c->model('solGS::solGS')->search_trait_trials($trait_id);
-    my $projects_rs  = $c->model('solGS::solGS')->project_details($projects_ids);
-    my $trait        = $c->model('solGS::solGS')->trait_name($trait_id);
-   
-    $self->get_projects_details($c, $projects_rs);
-    my $projects = $c->stash->{projects_details};
-      
     my @projects_list;
     
-    foreach my $pr_id (keys %$projects) 
-    { 
-	my $pr_name     = $projects->{$pr_id}{project_name};
-	my $pr_desc     = $projects->{$pr_id}{project_desc};
-	my $pr_year     = $projects->{$pr_id}{project_year};
-	my $pr_location = $projects->{$pr_id}{project_location};
-
-	$c->stash->{pop_id} = $pr_id;
-	$self->check_population_has_genotype($c);
-	my $has_genotype = $c->stash->{population_has_genotype};
-
-	if ($has_genotype) 
-	{
-	    my $trial_compatibility_file = $self->trial_compatibility_file($c);
-   
-	    $self->trial_compatibility_table($c, $has_genotype);
-	    my $match_code = $c->stash->{trial_compatibility_code};
-
-	    my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
-	$match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
-
-	    push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
-	}
-    }     
-
     my $ret->{status} = 'failed';
-    
-    if (@projects_list) 
-    {            
+ 
+    if (@$projects_ids) 
+    {
 	$ret->{status} = 'success';
-	$ret->{trials}   = \@projects_list;
-    } 
+
+	my $projects_rs  = $c->model('solGS::solGS')->project_details($projects_ids);
+	my $trait        = $c->model('solGS::solGS')->trait_name($trait_id);
    
+	$self->get_projects_details($c, $projects_rs);
+	my $projects = $c->stash->{projects_details};
+         
+	foreach my $pr_id (keys %$projects) 
+	{ 
+	    my $pr_name     = $projects->{$pr_id}{project_name};
+	    my $pr_desc     = $projects->{$pr_id}{project_desc};
+	    my $pr_year     = $projects->{$pr_id}{project_year};
+	    my $pr_location = $projects->{$pr_id}{project_location};
+
+	    $c->stash->{pop_id} = $pr_id;
+	    $self->check_population_has_genotype($c);
+	    my $has_genotype = $c->stash->{population_has_genotype};
+
+	    if ($has_genotype) 
+	    {
+		my $trial_compatibility_file = $self->trial_compatibility_file($c);
+		
+		$self->trial_compatibility_table($c, $has_genotype);
+		my $match_code = $c->stash->{trial_compatibility_code};
+
+		my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+		$match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+
+		push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
+	    }
+	}     
+    }
+
+      
+    $ret->{trials}   = \@projects_list;
+  
     $ret = to_json($ret);
         
     $c->res->content_type('application/json');

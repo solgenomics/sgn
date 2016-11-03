@@ -80,7 +80,7 @@ function searchAllTrials(url) {
 
 
 function listAllTrials (trials)  {
- 
+   
     if (trials) {
 	var tableId = 'all_trials_table';
 	var divId   = 'all_trials_div';
@@ -90,10 +90,10 @@ function listAllTrials (trials)  {
 	    'tableId': tableId, 
 	    'data'   : trials
 	};
-	
+
 	jQuery('#searched_trials_div').empty();
 	jQuery('#all_trials_div').empty();
-	
+
 	displayTrainingPopulations(tableDetails);
 
     } else {
@@ -255,21 +255,21 @@ function displayTrainingPopulations (tableDetails) {
 
 	    if (page.match(/solgs\/search\/trials\/trait\//)) {
 		jQuery('#' + tableId).dataTable({
-		'searching' : true,
-		'ordering'  : true,
-		'processing': true,
-		'paging': true,
-		'info': false,
-		'data': data,
+		    'searching' : true,
+		    'ordering'  : true,
+		    'processing': true,
+		    'paging': true,
+		    'info': false,
+		    'data': data,
 		});
 	    } else {
 		jQuery('#' + tableId).dataTable({
-		'searching' : false,
-		'ordering'  : false,
-		'processing': false,
-		'paging': false,
-		'info': false,
-		'data': data,
+		    'searching' : false,
+		    'ordering'  : false,
+		    'processing': false,
+		    'paging': false,
+		    'info': false,
+		    'data': data,
 		});	
 
 	    }
