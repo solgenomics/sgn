@@ -50,6 +50,7 @@ solGS.waitPage = function (page, args) {
 		    Yes: {
 			text: 'Yes',
 			class: 'btn btn-success',
+                        id   : 'queue_job',
 			click: function() {
 			    jQuery(this).dialog("close");			  
 			    
@@ -60,6 +61,7 @@ solGS.waitPage = function (page, args) {
 		    No: { 
 			text: 'No, I will wait...',
 			class: 'btn btn-primary',
+                        id   : 'no_queue',
 			click: function() { 
 			    jQuery(this).dialog("close");
 			    
@@ -70,6 +72,7 @@ solGS.waitPage = function (page, args) {
 		    Cancel: { 
 			text: 'Cancel',
 			class: 'btn btn-info',
+                        id   : 'cancel_queue_info',
 			click: function() { 
 			    jQuery(this).dialog("close");
 			},
