@@ -146,23 +146,23 @@ jQuery(document).ready(function() {
     jQuery('#trait_list').change( // add selected trait to trait table
         function() {
             var trait_id = jQuery('option:selected', this).val();
-            var weight_id = trait_id + '_weight';
+            var coefficient_id = trait_id + '_coefficient';
             var control_id = trait_id + '_control';
             var trait_name = jQuery('option:selected', this).text();
             var trait_synonym = jQuery('option:selected', this).data("synonym");
             var list_name = jQuery('option:selected', this).data("list_name");
             var control_html = jQuery('#control_list').html();
-            var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-list_name='" + list_name + "' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + weight_id + "' class='form-control weight' placeholder='Default is 1'></input></td><td><select class='form-control' id='" + control_id + "'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
+            var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-list_name='" + list_name + "' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + coefficient_id + "' class='form-control' placeholder='Default is 1'></input></td><td><select class='form-control' id='" + control_id + "'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
             jQuery('#trait_table').append(trait_html);
             jQuery('#select_message').text('Add another trait');
             jQuery('#select_message').attr('selected', true);
             update_formula();
-            jQuery('#' + weight_id).focus();
-            jQuery('#' + weight_id).change( //
+            jQuery('#' + coefficient_id).focus();
+            jQuery('#' + coefficient_id).change( //
                 function() {
                   if (isNaN(jQuery(this).val())) {
                     jQuery(this).val('');
-                    document.getElementById('selection_index_error_message').innerHTML = "<center><li class='list-group-item list-group-item-danger'> Error.<br> Index weights must be a positive or negative number.</li></center>";
+                    document.getElementById('selection_index_error_message').innerHTML = "<center><li class='list-group-item list-group-item-danger'> Error.<br> Index coefficients must be a positive or negative number.</li></center>";
                     jQuery('#selection_index_error_dialog').modal("show");
                   }
                   else {
@@ -188,16 +188,13 @@ jQuery(document).ready(function() {
         console.log("Saving SIN formula to list named " + new_name);
         var selected_trait_rows = jQuery('#trait_table').children();
         var trait_ids = [],
-            trait_names = [],
-            weights = [],
-            control_ids = [];
-        control_names = [];
+            traits = [],
+            coefficients = [],
+            controls = [];
         jQuery(selected_trait_rows).each(function(index, selected_trait_rows) {
             var trait_id = jQuery('a', this).data("value");
-            trait_ids.push(trait_id);
-            trait_names.push(jQuery('a', this).data("list_name"));
-            weights.push(jQuery('#' + trait_id + '_weight').val() || 1); // default = 1
-            control_ids.push(jQuery('#' + trait_id + '_control option:selected').val() || '');
+            traits.push(jQuery('a', this).data("list_name"));
+            coefficients.push(jQuery('#' + trait_id + '_coefficient').val() || 1); // default = 1
             var control_name;
             if (jQuery('#' + trait_id + '_control option:selected').val()) {
               control_name = jQuery('#' + trait_id + '_control option:selected').text();
@@ -205,13 +202,13 @@ jQuery(document).ready(function() {
             else {
               control_name = '';
             }
-            control_names.push(control_name.trim());
+            controls.push(control_name.trim());
         });
 
-        var data = "traits:" + trait_names.join();
-        data += "\nweights:" + weights.join();
-        data += "\naccessions:" + control_names.join();
-        //console.log("Saving SIN formula to dataset: " + JSON.stringify(data));
+        var data = "traits:" + traits.join();
+        data += "\nnumbers:" + coefficients.join();
+        data += "\naccessions:" + controls.join();
+        console.log("Saving SIN formula to dataset: " + JSON.stringify(data));
 
         list_id = lo.newList(new_name);
         if (list_id > 0) {
@@ -247,7 +244,7 @@ jQuery(document).ready(function() {
         var trait_ids = [],
             column_names = [],
             weighted_column_names = [],
-            weights = [],
+            coefficients = [],
             controls = [];
 
         var trial_name = jQuery('#select_trial_for_selection_index option:selected').text();
@@ -265,10 +262,10 @@ jQuery(document).ready(function() {
               trait = jQuery('a', this).text();
             }
             var trait_term = trait; //= "mean "+trait;
-            var weight = jQuery('#' + trait_id + '_weight').val() || 1; // default = 1
+            var coefficient = jQuery('#' + trait_id + '_coefficient').val() || 1; // default = 1
 
 
-            weights.push(weight);
+            coefficients.push(coefficient);
             var control = jQuery('#' + trait_id + '_control option:selected').val() || '';
             controls.push(control);
             if (control) {
@@ -278,7 +275,7 @@ jQuery(document).ready(function() {
                 title: trait_term
             });
             weighted_column_names.push({
-                title: weight + " * (" + trait_term + ")"
+                title: coefficient + " * (" + trait_term + ")"
             });
         });
         weighted_column_names.push({
@@ -288,7 +285,7 @@ jQuery(document).ready(function() {
         });
         var allow_missing = jQuery("#allow_missing").is(':checked');
 
-        console.log("trait_ids:" + trait_ids + "\nweights:" + weights + "\ncontrols:" + controls);
+        console.log("trait_ids:" + trait_ids + "\ncoefficients:" + coefficients + "\ncontrols:" + controls);
 
         jQuery.ajax({ // get raw averaged and weighted phenotypes from trial
             url: '/ajax/breeder/search/avg_phenotypes',
@@ -296,7 +293,7 @@ jQuery(document).ready(function() {
             data: {
                 'trial_id': trial_id,
                 'trait_ids': trait_ids,
-                'weights': weights,
+                'coefficients': coefficients,
                 'controls': controls,
                 'allow_missing': allow_missing
             },
@@ -431,8 +428,8 @@ function load_sin() { // update traits and selection index when a saved sin form
     var sin_data = list_data.elements;
 
     var traits = [];
-    var weights = [];
-    var accessions = [];
+    var coefficients = [];
+    var controls = [];
 
     for (i = 0; i < sin_data.length; i++) {
         var array = sin_data[i];
@@ -444,18 +441,18 @@ function load_sin() { // update traits and selection index when a saved sin form
             case 'traits':
                 traits = values.split(",");
                 break;
-            case 'weights':
-                weights = values.split(",");
+            case 'numbers':
+                coefficients = values.split(",");
                 break;
             case 'accessions':
-                accessions = values.split(",");
+                controls = values.split(",");
                 break;
         }
     }
 
     var ids = lo.transform(sin_list_id, 'dataset_2_dataset_ids');
     var trait_ids = [];
-    var accession_ids = [];
+    var control_ids = [];
 
     for (i = 0; i < ids.length; i++) {
         var data = ids[i];
@@ -466,7 +463,7 @@ function load_sin() { // update traits and selection index when a saved sin form
                 trait_ids = values.split(",");
                 break;
             case 'accession_ids':
-                accession_ids = values.split(",");
+                control_ids = values.split(",");
                 break;
         }
     }
@@ -476,12 +473,12 @@ function load_sin() { // update traits and selection index when a saved sin form
     var omitted_traits = [];
     var omitted_controls = [];
 
-    //add traits, weights, and controls to table
+    //add traits, coefficients, and controls to table
     for (i = 0; i < trait_ids.length; i++) {
         var trait_id = trait_ids[i];
-        var control_id = accession_ids[i];
-        //console.log("building trait table with trait:" + trait_id + trait_names[i] + " and weight:" + weights[i] + " and control:" + control_id + control_names[i]);
-        var weight_input_id = trait_id + '_weight';
+        var control_id = control_ids[i];
+        //console.log("building trait table with trait:" + trait_id + trait_names[i] + " and coefficient:" + coefficients[i] + " and control:" + control_id + control_names[i]);
+        var coefficient_input_id = trait_id + '_coefficient';
         var control_select_id = trait_id + '_control';
         var trait_name = jQuery('#trait_list option[value=' + trait_id + ']').text();
         if (!trait_name) {
@@ -492,10 +489,10 @@ function load_sin() { // update traits and selection index when a saved sin form
         var trait_synonym = jQuery('#trait_list option[value=' + trait_id + ']').data("synonym");
         var control_html = jQuery('#control_list').html();
         //console.log("control html"+control_html);
-        var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + weight_input_id + "' class='form-control' placeholder='Must be a number (+ or -), default = 1'></input></td><td><select class='form-control' id='" + control_select_id + "'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
+        var trait_html = "<tr id='" + trait_id + "_row'><td><a href='/cvterm/" + trait_id + "/view' data-value='" + trait_id + "'>" + trait_name + "</a></td><td><p id='" + trait_id + "_synonym'>" + trait_synonym + "<p></td><td><input type='text' id='" + coefficient_input_id + "' class='form-control' placeholder='Default is 1'></input></td><td><select class='form-control' id='" + control_select_id + "'>" + control_html + "</select></td><td align='center'><a title='Remove' id='" + trait_id + "_remove' href='javascript:remove_trait(" + trait_id + ")'><span class='glyphicon glyphicon-remove'></span></a></td></tr>";
 
         jQuery('#trait_table').append(trait_html);
-        jQuery('#' + weight_input_id).val(weights[i]);
+        jQuery('#' + coefficient_input_id).val(coefficients[i]);
         if (jQuery('#' + control_select_id).find('option[value="' + control_id + '"]').length) {
             jQuery('#' + control_select_id).val(control_id);
         } else {
@@ -523,7 +520,7 @@ function update_formula() {
     //console.log("updating formula....");
     var selected_trait_rows = jQuery('#trait_table').children();
     if (selected_trait_rows.length < 1) {
-        jQuery('#ranking_formula').html("<center><i>Select a trial, then pick traits and weights (or load a saved formula).</i></center>");
+        jQuery('#ranking_formula').html("<center><i>Select a trial, then pick traits and coefficients (or load a saved formula).</i></center>");
         jQuery('#calculate_rankings').addClass('disabled');
         jQuery('#save_sin').addClass('disabled');
         return;
@@ -537,15 +534,15 @@ function update_formula() {
           trait = jQuery('a', this).text();
         }
         var trait_term = trait; //= "mean "+trait;
-        var weight = jQuery('#' + trait_id + '_weight').val() || 1; // default = 1
+        var coefficient = jQuery('#' + trait_id + '_coefficient').val() || 1; // default = 1
         if (jQuery('#' + trait_id + '_control option:selected').val()) { // if control selected for scaling
             trait_term += " as a fraction of " + jQuery('#' + trait_id + '_control option:selected').text();
         }
 
-        if (term_number == 0 || weight <= 0) {
-            formula += "<center>" + weight + " * ( " + trait_term + ")</center>";
+        if (term_number == 0 || coefficient <= 0) {
+            formula += "<center>" + coefficient + " * ( " + trait_term + ")</center>";
         } else {
-            formula += "<center>+ " + weight + " * ( " + trait_term + ")</center>";
+            formula += "<center>+ " + coefficient + " * ( " + trait_term + ")</center>";
         }
         term_number++;
     });

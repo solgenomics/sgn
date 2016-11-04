@@ -4,7 +4,12 @@ $trial_id => undef
 $trial_name => undef
 </%args>
 
-<script type="text/javascript" src="http://latex.codecogs.com/latexit.js"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+</script>
+<script type="text/javascript" async
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
+</script>
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.dataTables-min', 'jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min', 'CXGN.BreederSearch', 'CXGN.SelectionIndex' ] &>
 <& /page/page_title.mas, title=>"Build a Selection Index" &>
 
@@ -88,33 +93,33 @@ $trial_name => undef
         <h4>
           Background:
         </h4>
-          <center><p>A selection index is a method of optimizing selection by simultaneously acting on multiple traits. While gain is ultimately made by improving genetic value, in practice true genetic values are not known. Instead, a selection index takes into account multiple sources of information that are available about an individual and combines them into a best linear prediction of breeding value. This tool combines phenotypic observations with index coefficients into a selection index, SIN, of the form:<p></center>
-          <center><div lang="latex">SIN = b_1x_1 + b_2x_2\hspace{2mm}...\hspace{2mm}b_ix_i</div></center><br>
-          <center><p>where <span lang="latex">x_i</span> is the mean of observations on the <span lang="latex">_i</span>th trait and <span lang="latex">b_i</span> is the selection index coefficient (or weight) for that trait.</p></center>
+          <center><p>A selection index is a method of optimizing selection by acting on multiple traits simultaneously. An index can accomplish this because it incorporates multiple sources of information about an individual into a single best linear prediction of breeding value. This implementation combines phenotypic observations with index coefficients into a selection index, SIN, of the form:</p></center>
+          <center>\(SIN = b_1x_1 + b_2x_2\hspace{2mm}...\hspace{2mm}b_ix_i\)</center><br>
+          <center><p>where $x_i$ is the mean of observations on the $_i$th trait and $b_i$ is the selection index coefficient (or weight) for that trait.</p></center>
 
         <h4>
           Parameters:
         </h4>
         <dl>
           <dt>Trial</dt>
-          <dd>One trial. Must be selected first. Support for using data from multiple trials may be added later.</dd>
+          <dd>One trial. Must be selected first. Multiple trial selection indices are not yet supported.</dd>
           <dt>Traits</dt>
           <dd>One or more traits. Must be traits that were measured in the trial. At maximum, all of the traits from the trial can be used.</dd>
           <dt>Selection coefficients</dt>
           <dd>One for each trait. Must be a positive or negative number, and should reflect the importance of the trait in the index. If left blank it defaults to 1.</dd>
           <dt>Normalization</dt>
-          <dd>By default the unadjusted mean of phenotypic observations is used. For each trait, users have the option to normalize these means using to a control mean or the overall trial mean.</dd>
+          <dd>By default the unadjusted mean of phenotypic observations is used. For each trait, users have the option to normalize these means using a control mean or the overall trial mean.</dd>
         </dl>
 
         <h4>
           Options:
         </h4>
         <dt>Save</dt>
-        <dd>The save option allows a user to enter a formula name, and save the current index formula as a dataset. It is then available for later use, and visible in their list manager to edit or share with others.</dd>
+        <dd>The save option allows a user to enter a name, and save the current index formula as a dataset. It is then available for later use, and visible in their list manager where it can be edited or shared with others.</dd>
         <dt>Select</dt>
-        <dd>The select option allows a user to load a saved formula, which will include the saved combination of traits, coefficients, and normalization options.</dd>
+        <dd>The select option allows a user to load a saved formula, which will consist of a saved combination of traits, coefficients, and normalization options.</dd>
         <dt>Include checkbox</dt>
-        <dd>Accessions with missing phenotypes are excluded by default. Checking the allow missing phenotypes option will expand the rankings to include any accessions that were planted in the trial but are missing observations for one or more of the traits in the index. A missing phenotype will not contribute to the final SIN score, so the final SIN interpretation should change accordingly.</dd>
+        <dd>Accessions with missing phenotypes are excluded by default. If the allow missing phenotypes option is enabled, the rankings will expand to include any accessions which were planted in the trial but which are missing observations for one or more of the traits in the index. Missing phenotypes will not contribute to the SIN score, so the final SIN interpretation should change accordingly.</dd>
 
         <h4>
           Results:
