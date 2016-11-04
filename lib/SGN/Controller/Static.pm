@@ -32,12 +32,6 @@ sub ethz_cass_sync :Path('/ethz_cass/sync/') :Args(0) {
     $c->stash->{template} = '/stock/ethz_cass_sync.mas';
 }
 
-sub personal_calendar :Path('/calendar/personal/') :Args(0) { 
-    my $self = shift;
-    my $c = shift;
-    $c->stash->{template} = '/calendar/personal.mas';
-}
-
 sub test_authentication :Path('/test_authentication/') :Args(0) { 
     my $self = shift;
     my $c = shift;
