@@ -190,7 +190,6 @@ sub _get_crd_design {
     my @rep_numbers;
     my @converted_plot_numbers;
     my $number_of_stocks;
-    my @control_names_crbd;
     my @control_list_crbd;
     my %control_names_lookup;
     my $stock_name_iter;
