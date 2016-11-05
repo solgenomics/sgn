@@ -374,6 +374,7 @@ jQuery(document).ready(function ($) {
     $("#list_of_checks_section_multi_list_select").remove();
     $("#select_list_multi_list_select").remove();
     $("#crbd_list_of_checks_section_multi_list_select").remove();
+    $("#select_list_locations_multi").append(list.listSelect("select_list_locations_multi", [ 'locations' ], "select location list" ));
     $("#select_list_multi").append(list.listSelect("select_list_multi", [ 'accessions' ] ));
     $("#list_of_checks_section_multi").append(list.listSelect("list_of_checks_section_multi", [ 'accessions' ]));
     $("#crbd_select_list").append(list.listSelect("crbd_select_list", [ 'accessions' ] ));
