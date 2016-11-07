@@ -49,6 +49,8 @@ $d->find_element_ok('dry matter content percentage', 'link_text', 'build model')
 sleep(3);
 $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
 sleep(30);
+$d->find_element_ok('run_pca', 'id', 'run pca')->click();
+sleep(20);
 
 $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/solgs', 'solgs home page');
