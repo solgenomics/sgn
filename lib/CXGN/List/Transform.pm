@@ -15,7 +15,7 @@ CXGN::List::Transform - transform lists from one type to another
 package CXGN::List::Transform;
 
 use Moose;
-
+use Data::Dumper;
 use Module::Pluggable require => 1;
 
 =head2 can_transform

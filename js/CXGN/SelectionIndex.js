@@ -435,7 +435,7 @@ function load_sin() { // update traits and selection index when a saved sin form
         var array = sin_data[i];
         array.shift();
         var string = array.shift();
-        var parts = string.split(":");
+        var parts = string.split(/:(.+)/);
         var values = parts[1];
         switch (parts[0]) {
             case 'traits':
@@ -456,7 +456,7 @@ function load_sin() { // update traits and selection index when a saved sin form
 
     for (i = 0; i < ids.length; i++) {
         var data = ids[i];
-        var parts = data.split(":");
+        var parts = data.split(/:(.+)/);
         var values = parts[1];
         switch (parts[0]) {
             case 'trait_ids':
@@ -477,12 +477,11 @@ function load_sin() { // update traits and selection index when a saved sin form
     for (i = 0; i < trait_ids.length; i++) {
         var trait_id = trait_ids[i];
         var control_id = control_ids[i];
-        //console.log("building trait table with trait:" + trait_id + trait_names[i] + " and coefficient:" + coefficients[i] + " and control:" + control_id + control_names[i]);
+        //console.log("building trait table with trait:" + trait_id + traits[i] + " and coefficient:" + coefficients[i] + " and control:" + control_id + controls[i]);
         var coefficient_input_id = trait_id + '_coefficient';
         var control_select_id = trait_id + '_control';
         var trait_name = jQuery('#trait_list option[value=' + trait_id + ']').text();
         if (!trait_name) {
-            console.log("Adding trait with id "+trait_id+" to omitted traits list\n");
             omitted_traits.push("<a href='/cvterm/" + trait_id + "/view' data-value='" + trait_id + "'>" + traits[i] + "</a>");
             continue;
         }
@@ -496,17 +495,24 @@ function load_sin() { // update traits and selection index when a saved sin form
         if (jQuery('#' + control_select_id).find('option[value="' + control_id + '"]').length) {
             jQuery('#' + control_select_id).val(control_id);
         } else if (control_id) {
-            console.log("Adding control with id "+control_id+" to omitted controls list\n");
-            omitted_controls.push("<a href='/stock/" + control_id + "/view' data-value='" + control_id + "'>" + accessions[i] + "</a>");
+            omitted_controls.push("<a href='/stock/" + control_id + "/view' data-value='" + control_id + "'>" + controls[i] + "</a>");
         }
     }
     jQuery('#select_message').text('Add another trait');
     jQuery('#select_message').attr('selected', true);
     update_formula();
 
-    if (omitted_traits.length > 0 || omitted_controls.length > 0) {
-        document.getElementById('selection_index_error_message').innerHTML = "<center><li class='list-group-item list-group-item-danger'> The following parts of the saved SIN formula have been omitted because they were not found in this trial:</li></center><br><center><p>Traits: " + omitted_traits.join(", ") + "</p></center><br><center><p>Controls: " + omitted_controls.join(", ") + "</p></center>";
-        jQuery('#selection_index_error_dialog').modal("show");
+    if (omitted_traits.length > 0 && omitted_controls.length > 0) {
+      document.getElementById('selection_index_error_message').innerHTML = "<center><li class='list-group-item list-group-item-danger'> The following parts of the saved SIN formula have been omitted because they were not found in this trial:</li></center><br><center><p>Traits: " + omitted_traits.join(", ") + "</p></center><br><center><p>Controls: " + omitted_controls.join(", ") + "</p></center>";
+      jQuery('#selection_index_error_dialog').modal("show");
+    }
+    else if (omitted_traits.length > 0) {
+      document.getElementById('selection_index_error_message').innerHTML = "<center><li class='list-group-item list-group-item-danger'> The following parts of the saved SIN formula have been omitted because they were not found in this trial:</li></center><br><center><p>Traits: " + omitted_traits.join(", ") + "</p></center>";
+      jQuery('#selection_index_error_dialog').modal("show");
+    }
+    else if (omitted_controls.length > 0) {
+      document.getElementById('selection_index_error_message').innerHTML = "<center><li class='list-group-item list-group-item-danger'> The following parts of the saved SIN formula have been omitted because they were not found in this trial:</li></center><br><center><p>Controls: " + omitted_controls.join(", ") + "</p></center>";
+      jQuery('#selection_index_error_dialog').modal("show");
     }
 
 }

@@ -39,7 +39,7 @@ sub transform {
 
       my ($type, $elements) = split(":(.+)", $l);
       my $type_singular = $type;
-      $type_singular =~ s/s$//;
+      $type_singular =~ s/e?s$//;
       my $transform_name = $type . "_2_" . $type_singular . "_ids";
       my @elements = split(",", $elements);
 
