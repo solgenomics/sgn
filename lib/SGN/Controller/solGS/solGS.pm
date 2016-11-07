@@ -1947,7 +1947,7 @@ sub get_trait_details {
 
     if ($trait =~ /^\d+$/) 
     {
-	$trait = $c->model('solGS::solGS')->trait_name($trait_id);	
+	$trait = $c->model('solGS::solGS')->trait_name($trait);	
     }
     
     if ($trait) 
