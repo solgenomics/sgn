@@ -173,10 +173,15 @@ sub get_synonyms : Path('/ajax/cvterm/get_synonyms') Args(0) {
     my $cvterm = CXGN::Chado::Cvterm->new( $dbh, $trait_id );
     my $found_cvterm_id = $cvterm->get_cvterm_id;
     print STDERR "found cvterm_id = $found_cvterm_id";
-    my @synonyms = $cvterm->get_synonyms();
-    my $synonym = pop @synonyms;
-    print STDERR " has synonym: ".$synonym."\n";
-    $synonyms->{$trait_id} = $synonym;
+
+    my $synonym = $cvterm->get_uppercase_synonym();
+    if ($synonym) {
+      print STDERR " has synonym: ".$synonym."\n";
+      $synonyms->{$trait_id} = $synonym;
+    }
+    else {
+      $synonyms->{$trait_id} = 'None';
+    }
   }
 
   $c->stash->{rest} = { synonyms => $synonyms };
