@@ -3,11 +3,11 @@
 
 =head1 NAME
 
- AddListTypes.pm
+ AddNewListTypes.pm
 
 =head1 SYNOPSIS
 
-mx-run AddListTypes [options] -H hostname -D dbname -u username [-F]
+mx-run AddNewListTypes [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
@@ -31,7 +31,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddListTypes;
+package AddNewListTypes;
 
 use Moose;
 use Bio::Chado::Schema;

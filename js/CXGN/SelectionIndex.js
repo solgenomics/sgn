@@ -495,7 +495,7 @@ function load_sin() { // update traits and selection index when a saved sin form
         jQuery('#' + coefficient_input_id).val(coefficients[i]);
         if (jQuery('#' + control_select_id).find('option[value="' + control_id + '"]').length) {
             jQuery('#' + control_select_id).val(control_id);
-        } else {
+        } else if (control_id) {
             console.log("Adding control with id "+control_id+" to omitted controls list\n");
             omitted_controls.push("<a href='/stock/" + control_id + "/view' data-value='" + control_id + "'>" + accessions[i] + "</a>");
         }
