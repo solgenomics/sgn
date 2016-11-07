@@ -93,7 +93,7 @@ $trial_name => undef
         <h4>
           Background:
         </h4>
-          <center><p>A selection index is a method of optimizing selection by acting on multiple traits simultaneously. An index can accomplish this because it incorporates multiple sources of information about an individual into a single best linear prediction of breeding value. This implementation combines phenotypic observations with index coefficients into a selection index, SIN, of the form:</p></center>
+          <center><p>A selection index is a method of optimizing selection by acting on multiple traits simultaneously. An index can accomplish this because it incorporates multiple sources of information about an individual into a single best linear prediction of breeding value. This selection index tool combines phenotypic observations with index coefficients into a selection index, SIN, of the form:</p></center>
           <center>\(SIN = b_1x_1 + b_2x_2\hspace{2mm}...\hspace{2mm}b_ix_i\)</center><br>
           <center><p>where $x_i$ is the mean of observations on the $_i$th trait and $b_i$ is the selection index coefficient (or weight) for that trait.</p></center>
 
