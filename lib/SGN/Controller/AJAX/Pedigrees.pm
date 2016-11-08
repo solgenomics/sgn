@@ -162,6 +162,8 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
 	}
 	elsif($cross_type eq "open") { 
 	     $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+
+	     $male_parent = undef;
 	#      my $population_name = "";
 	#      my @male_parents = split /\s*\,\s*/, $male;
 
