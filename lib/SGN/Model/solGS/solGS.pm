@@ -352,16 +352,15 @@ sub has_phenotype {
     my $has_phenotype;
     if ($pr_id) 
     {
-	my $pr_stocks  = $self->project_subject_stocks_rs($pr_id);
+	my $q = "SELECT distinct(trial_id)
+                 FROM traitsXtrials 
+                 WHERE trial_id = ?";
 
-	if ($pr_stocks->first)
-	{
-	    my $phenotypes = $self->stock_phenotype_data_rs($pr_stocks);
-	    my $data       = $self->structure_phenotype_data($phenotypes);
-	    
-	    $has_phenotype = 1 if $data;
-	}
-	
+	my $sth = $self->context->dbc->dbh->prepare($q);
+
+	$sth->execute($pr_id);
+
+	$has_phenotype  = $sth->fetchrow_array();	
     }
 
     return $has_phenotype;
