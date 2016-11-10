@@ -219,7 +219,7 @@ sub search {
     my @dbs = ();
     
     while (my $db = $rs->next()) { 
-	my $bdbo = CXGN::BlastDB->new( sgn_schema => $sgn_schema, dbpath => $dbpath, blast_db_id => $db->blast_db_id() ); 
+	my $bdbo = CXGN::Blast->new( sgn_schema => $sgn_schema, dbpath => $dbpath, blast_db_id => $db->blast_db_id() ); 
 	push @dbs, $bdbo;
     }
     return @dbs;
