@@ -46,7 +46,8 @@ sub transform {
       foreach my $p ($object->plugins()) {
         if ($transform_name eq $p->name()) {
           my $data = $p->transform($schema, \@elements);
-          my $transformed = %$data{'transform'};
+          my %data_hash = %$data;
+          my $transformed = $data_hash{'transform'};
           my @transformed_array = @$transformed;
           if (scalar @transformed_array > 0) {
             push @ids, $type_singular . "_ids:" . join(",", @transformed_array);
