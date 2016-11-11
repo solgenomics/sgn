@@ -184,6 +184,27 @@ sub refresh_materialized_view_all_gs_traits {
 }
 
 
+sub search_trait_trials {
+    my ($self, $trait_id) = @_;
+
+    my $q = "SELECT distinct(trial_id) FROM traitsXtrials ORDER BY trial_id";
+
+    my $sth = $self->context->dbc->dbh->prepare($q);
+
+    $sth->execute();
+
+    my @trials;
+
+    while ( my $trial_id = $sth->fetchrow_array()) 
+    {
+	push @trials, $trial_id;
+    }
+    
+    return \@trials;
+
+}
+
+
 sub search_populations {
     my ($self, $trait_id, $page) = @_;
   
@@ -219,7 +240,12 @@ sub project_year {
     
     return $self->schema->resultset("Cv::Cvterm")
         ->search({'project_id' => $pr_id, 'me.name' => 'project year' })
-        ->search_related('projectprops');
+        ->search_related('projectprops', 
+			 {}, 
+			 {	    
+			     select => [qw /projectprops.value/]
+			 }
+	);
 }
 
 
@@ -228,30 +254,29 @@ sub experimental_design {
     
     return $self->schema->resultset("Cv::Cvterm")
         ->search({'project_id' => $pr_id, 'me.name' => 'design' })
-        ->search_related('projectprops');
+        ->search_related('projectprops', 
+			 {}, 
+			 {	    
+			     select => [qw /projectprops.value/]
+			 });
+   
 }
 
 
 sub project_location {
     my ($self, $pr_id) = @_;
   
-    my $location_id = $self->schema->resultset('Cv::Cvterm')
-	->search( { 'name' => 'project location' })
-	->first
-	->id;
-
-    my $q = "SELECT description FROM projectprop 
-                LEFT JOIN cvterm ON (type_id = cvterm_id) 
-                LEFT JOIN  nd_geolocation ON (CAST(projectprop.value AS INT) = nd_geolocation.nd_geolocation_id) 
-                WHERE project_id = ?
-                      AND cvterm.cvterm_id = ?";
+    my $q = "SELECT location_name 
+                    FROM locationsXtrials 
+                    JOIN locations USING (location_id)  
+                    WHERE trial_id = ?";
 
     my $sth = $self->context->dbc->dbh()->prepare($q);
 
-    $sth->execute($pr_id, $location_id);
+    $sth->execute($pr_id);
     
     my $loc = $sth->fetchrow_array;
-
+ 
     return $loc; 
 }    
 
@@ -305,26 +330,21 @@ sub has_phenotype {
 sub has_genotype {
     my ($self, $pr_id) = @_;
 
-    my $has_genotype;
-    my $stock_subj_rs = $self->project_subject_stocks_rs($pr_id);    
-    my $stock_obj_rs  = $self->stocks_object_rs($stock_subj_rs);
-    my $stock_genotype_rs = $self->stock_genotypes_rs($stock_obj_rs)->search(undef, {page => 1, rows=> 10});
+    my $protocol = $self->genotyping_protocol();
    
-    while (my $stock = $stock_genotype_rs->next) 
-    {
-        if($stock) 
-        {
-            my $genotype_name = $stock->get_column('stock_name'); 
-            if ($stock->get_column('value')) 
-            { 
-                $has_genotype = 'has_genotype';
-                last;
-            }
-        }      
-    }
+    my $q = "SELECT genotyping_protocol_name, genotyping_protocol_id 
+                 FROM genotyping_protocolsXtrials 
+                 JOIN genotyping_protocols USING (genotyping_protocol_id)
+                 WHERE trial_id = ? 
+                 AND genotyping_protocols.genotyping_protocol_name ILIKE ?";
 
-    return $has_genotype;
+    my $sth = $self->context->dbc->dbh->prepare($q);
 
+    $sth->execute($pr_id, $protocol);
+
+    my ($protocol_name, $protocol_id)  = $sth->fetchrow_array();
+  
+    return $protocol_id;
 }
 
 
@@ -332,7 +352,7 @@ sub project_details {
     my ($self, $pr_id) = @_;
     
     my $pr_rs = $self->schema->resultset("Project::Project")
-        ->search( {'me.project_id' => $pr_id});
+        ->search( {'me.project_id' => {-in => $pr_id} });
 
     return $pr_rs;
 
@@ -520,14 +540,17 @@ sub get_project_type {
    
     my $pr_rs = $self->schema->resultset("Cv::Cvterm")
         ->search({'project_id' => $pr_id, 'me.name' => 'genomic selection' })
-        ->search_related('projectprops');
+        ->search_related('projectprops',{}, 
+			 {	    
+			     select => [qw /projectprops.value/]
+			 });
 
     my $pr_type;
     if($pr_rs->next) 
     {
 	$pr_type = $pr_rs->first()->value;
     }
-    
+
     return $pr_type;
 }
 
@@ -690,10 +713,7 @@ sub genotype_data {
 
     my $project_id    = $args->{population_id};
     my $prediction_id = $args->{prediction_id};
-    #my $data_set_type = $args->{data_set_type};
-    #my $cache_dir     = $args->{cache_dir};
     my $tr_geno_file  = $args->{tr_geno_file};
-    #my $trait_abbr    = $args->{trait_abbr};
     my $model_id      = ($args->{model_id} ? $args->{model_id} : $project_id);
 
     my $stock_genotype_rs;
@@ -927,10 +947,11 @@ sub project_genotypes_rs {
 
 }
 
+
 sub genotypes_nd_experiment_ids_rs {
     my ($self, $genotypes_ids) = @_;
     
-    my $protocol = $self->context->config->{default_genotyping_protocol};
+    my $protocol = $self->genotyping_protocol();
 
     my $nd_experiment_rs = $self->schema->resultset("NaturalDiversity::NdExperimentStock")
 	->search({'me.stock_id' => { -in => $genotypes_ids},
@@ -2049,6 +2070,22 @@ sub get_project_genotyping_markers {
     return $markers;
 
 }
+
+
+
+sub genotyping_protocol {
+    my ($self, $protocol) = @_;
+
+    unless ($protocol) 
+    {
+	$protocol = $self->context->config->{default_genotyping_protocol};
+    }
+
+    return $protocol;
+
+}
+
+
 
 
 __PACKAGE__->meta->make_immutable;

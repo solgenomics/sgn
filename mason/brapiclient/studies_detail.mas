@@ -17,7 +17,7 @@
 jQuery(document).ready(function() {
     jQuery("#brapi_home_studydbid_submit").click(function() {
         jQuery.ajax( {
-          'url': '/brapi/v1/studies/'+jQuery('#brapi_home_studydbid').val(),
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies/'+jQuery('#brapi_home_studydbid').val(),
           'method': 'GET',
           'success': function(response) {
             console.log(response);

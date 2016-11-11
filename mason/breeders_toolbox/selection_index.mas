@@ -4,6 +4,12 @@ $trial_id => undef
 $trial_name => undef
 </%args>
 
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});
+</script>
+<script type="text/javascript" async
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
+</script>
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.dataTables-min', 'jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min', 'CXGN.BreederSearch', 'CXGN.SelectionIndex' ] &>
 <& /page/page_title.mas, title=>"Build a Selection Index" &>
 
@@ -13,42 +19,47 @@ $trial_name => undef
   </div>
   <div id="collapse1" class="panel-collapse collapse in">
     <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
-        <div class="col-sm-6 col-md-6 col-lg-6">
-          <label for="select_trial_for_selection_index">Trial select: </label>
+      <div class="col-sm-12 col-md-12 col-lg-12">
+          <label for="select_trial_for_selection_index">Trial: </label>
           <select class="form-control" autofocus="autofocus" id="select_trial_for_selection_index"></select>
-        </div>
-        <div id="trait_list_div" class="col-sm-6 col-md-6 col-lg-6">
-          <label id="trait_list_label" for="trait_list">Trait select: </label>
-          <select class="form-control" id="trait_list"></select>
-        </div><br><br><br><br><br>
-        <div class="col-sm-12 col-md-12 col-lg-12 table-responsive">
-        <label>Traits and weights: </label>
+      </div><br><br><br><br><br>
+      <div class="col-sm-12 col-md-12 col-lg-12 table-responsive" id="trait_table_div">
+        <label id="trait_table_label">Traits and coefficients: </label>
           <table class="table table-bordered table-striped table-highlight">
             <thead>
               <th>Trait name</th>
-              <th>Trait CO id</th>
               <th>Trait synonym</th>
-              <th>Weight</th>
+              <th data-toggle="tooltip" title="Must be a positive or negative number.">Index coefficient</th>
+              <th data-toggle="tooltip" title="Select the trial name, or a control, to normalize means for this trait to the trial or control mean">Normalize with a control?</th>
               <th>Remove?</th>
             </thead>
             <tbody id ="trait_table"></tbody>
+            <tfoot><td colspan="5">
+            <select class="form-control" id="trait_list"></select>
+            </td></tfoot>
           </table>
-        <div id="additional_traits">
-        </div><br><br>
         </div>
-        <div class="col-sm-6 col-md-6 col-lg-6">
-        <label>Additional options: </label>
-          <label><input type="checkbox" id="allow_missing" value="">Include accessions with missing phenotypes</label><br>
-            <label for="reference_accession_list"><input type="checkbox" id="use_reference_accession" value="">Scale values to a reference accession: </label><br>
-            <select class="form-control" id="reference_accession_list"></select>
+
+        <div class="col-sm-6 col-md-6 col-lg-6" id="sin_formula"><br>
+        <center><label>Selection Index (SIN) formula:</label></center><br>
+          <p id="ranking_formula"></p><br><br>
+          <center><button type="button" class="btn btn-primary disabled" id="calculate_rankings">Calculate Rankings</button></center>
         </div><br><br><br><br><br>
-        <div class="col-sm-6 col-md-6 col-lg-6">
-        <label>SIN formula: </label><br>
-          <p id="ranking_formula"></p>
-        </div>
-        <div class="col-sm-12 col-md-12 col-lg-12 text-right">
-        <button type="button" class="btn btn-primary disabled" id="calculate_rankings">Calculate Rankings</button>
-        </div>
+
+        <div class="col-sm-6 col-md-6 col-lg-6"><br>
+        <label>Options:</label><br>
+        <label>Load a saved formula:</label>
+        <div id="sin_list"></div><br>
+        <label>Save the current formula:</label>
+          <div class="input-group">
+            <input type='text' id='save_sin_name' class='form-control disabled' placeholder='Enter a name'></input>
+            <span class="input-group-btn">
+              <button class="btn btn-default disabled" id="save_sin" type="button">Save</button>
+            </span>
+          </div><br>
+            <label><input type="checkbox" id="allow_missing" value="">Include accessions with missing values in calculations</label>
+          <select class="form-control" id="control_list" style="display: none"></select>
+        </div><br><br><br><br><br>
       </div>
     </div>
   </div>
@@ -56,11 +67,11 @@ $trial_name => undef
 
 <div class="panel panel-default">
   <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse2">
-    <div class="panel-title"><a href="#table_panel" class="accordion-toggle">Rankings</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
+    <div class="panel-title"><a href="#table_panel" class="accordion-toggle">Results</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
   </div>
   <div id="collapse2" class="panel-collapse collapse in">
     <div class="panel-body" id="table_panel" style="overflow:hidden">
-      <ul class="nav nav-tabs"><li class="active"><a data-toggle="tab" href="#weighted_values_div">Selection Index</a></li><li><a data-toggle="tab" href="#raw_avgs_div">Raw Averages</a></li></ul>
+      <ul class="nav nav-tabs"><li class="active"><a data-toggle="tab" href="#weighted_values_div">Rankings</a></li><li><a data-toggle="tab" href="#raw_avgs_div">Unweighted Means</a></li></ul>
       <div class="tab-content">
         <div id="weighted_values_div" class="tab-pane fade in active"></div>
         <div id="raw_avgs_div" class="tab-pane fade"></div>
@@ -69,11 +80,86 @@ $trial_name => undef
   </div>
 </div>
 
+<div class="modal fade" id="selection_index_info_dialog" name="selection_index_info_dialog" tabindex="-1" role="dialog" aria-labelledby="selectionIndexInfoDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <center><h3 class="modal-title" id="selectionIndexInfoDialog">How the Selection Index tool works</h3></center>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+        <h4>
+          Background:
+        </h4>
+          <center><p>A selection index is a method of optimizing selection by acting on multiple traits simultaneously. An index can accomplish this because it incorporates multiple sources of information about an individual into a single best linear prediction of breeding value. This selection index tool combines phenotypic observations with index coefficients into a selection index, SIN, of the form:</p></center>
+          <center>\(SIN = b_1x_1 + b_2x_2\hspace{2mm}...\hspace{2mm}b_ix_i\)</center><br>
+          <center><p>where $x_i$ is the mean of observations on the $_i$th trait and $b_i$ is the selection index coefficient (or weight) for that trait.</p></center>
+
+        <h4>
+          Parameters:
+        </h4>
+        <dl>
+          <dt>Trial</dt>
+          <dd>One trial. Must be selected first. Multiple trial selection indices are not yet supported.</dd>
+          <dt>Traits</dt>
+          <dd>One or more traits. Must be traits that were measured in the trial. At maximum, all of the traits from the trial can be used.</dd>
+          <dt>Selection coefficients</dt>
+          <dd>One for each trait. Must be a positive or negative number, and should reflect the importance of the trait in the index. If left blank it defaults to 1.</dd>
+          <dt>Normalization</dt>
+          <dd>By default the unadjusted mean of phenotypic observations is used. For each trait, users have the option to normalize these means using a control mean or the overall trial mean.</dd>
+        </dl>
+
+        <h4>
+          Options:
+        </h4>
+        <dt>Save</dt>
+        <dd>The save option allows a user to enter a name, and save the current index formula as a dataset. It is then available for later use, and visible in their list manager where it can be edited or shared with others.</dd>
+        <dt>Select</dt>
+        <dd>The select option allows a user to load a saved formula, which will consist of a saved combination of traits, coefficients, and normalization options.</dd>
+        <dt>Include checkbox</dt>
+        <dd>Accessions with missing phenotypes are excluded by default. If the allow missing phenotypes option is enabled, the rankings will expand to include any accessions which were planted in the trial but which are missing observations for one or more of the traits in the index. Missing phenotypes will not contribute to the SIN score, so the final SIN interpretation should change accordingly.</dd>
+
+        <h4>
+          Results:
+        </h4>
+          <p>The <b>Calculate Rankings</b> button will produce a SIN score and ranking for each accession, based on the selected parameters and phenotype means. The rankings and phenotype means are displayed in the <b>Rankings</b> and <b>Unweighted Means</b> tabs of the results section, where they can be manipulated, copied and downloaded. Below the results table, users have the option to <b>save top ranked accessions to a list</b>.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="selection_index_error_dialog" tabindex="-1" role="dialog" aria-labelledby="selectionIndexErrorDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="selectionIndexErrorDialog"></h4>
+            </div>
+            <div class="modal-body" id="selection_index_error_body">
+              <ul class="list-group" id="selection_index_error_message"></ul>
+            </div>
+            <div class="modal-footer">
+                <button id="selection_index_error_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     jQuery(document).ready(function() {
+        jQuery('#ranking_formula').html("<center><i>Select a trial, then pick traits and weights (or load a saved formula).</i></center>");
         get_select_box('trials', 'select_trial_for_selection_index', { 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' , 'empty' : 1 });
+        var lo = new CXGN.List();
+        jQuery('#sin_list').html(lo.listSelect('sin_formula', ['dataset'], 'Select a formula', 'refresh'));
+        jQuery('#sin_formula_list_select').change(
+          function() {
+            load_sin();
+        });
     });
-
-
-
 </script>

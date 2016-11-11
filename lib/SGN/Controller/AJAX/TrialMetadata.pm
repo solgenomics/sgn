@@ -1,4 +1,3 @@
-
 package SGN::Controller::AJAX::TrialMetadata;
 
 use Moose;
@@ -43,14 +42,12 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
 }
 
 =head2 delete_trial_by_file
-
  Usage:
  Desc:
  Ret:
  Args:
  Side Effects:
  Example:
-
 =cut
 
 sub delete_trial_data : Local() ActionClass('REST');
@@ -180,39 +177,59 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $round = Math::Round::Var->new(0.01);
     my $dbh = $c->dbc->dbh();
     my $trial_id = $c->stash->{trial_id};
-    my $plot_of = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $display = $c->req->param('display');
+    my $select_clause_additional = '';
+    my $group_by_additional = '';
+    my $stock_type_id;
+    my $rel_type_id;
+    if ($display eq 'plots') {
+        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    }
+    if ($display eq 'plants') {
+        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+    }
+    if ($display eq 'plots_accession') {
+        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+        $select_clause_additional = ', accession.uniquename, accession.stock_id';
+        $group_by_additional = ', accession.stock_id, accession.uniquename';
+    }
+    if ($display eq 'plants_accession') {
+        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+        $select_clause_additional = ', accession.uniquename, accession.stock_id';
+        $group_by_additional = ', accession.stock_id, accession.uniquename';
+    }
     my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
-    my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text)
-                                      || dbxref.accession::text AS trait,
-                                     cvterm.cvterm_id,
-                                     count(phenotype.value),
-                                     to_char(avg(phenotype.value::real), 'FM999990.990'),
-                                     to_char(max(phenotype.value::real), 'FM999990.990'),
-                                     to_char(min(phenotype.value::real), 'FM999990.990'),
-                                     to_char(stddev(phenotype.value::real), 'FM999990.990'),
-                                     accession.uniquename,
-                                     accession.stock_id
-                                    FROM cvterm
-                                    JOIN phenotype ON (cvterm_id=cvalue_id)
-                                    JOIN nd_experiment_phenotype USING(phenotype_id)
-                                    JOIN nd_experiment_project USING(nd_experiment_id)
-                                    JOIN nd_experiment_stock USING(nd_experiment_id)
-                                    JOIN stock as plot USING(stock_id)
-                                    JOIN stock_relationship on (plot.stock_id = stock_relationship.subject_id)
-                                    JOIN stock as accession on (accession.stock_id = stock_relationship.object_id)
-                                    JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id
-                                    WHERE project_id=?
-                                          AND phenotype.value~?
-                                          AND stock_relationship.type_id=?
-                                          AND plot.type_id=?
-                                          AND accession.type_id=?
-                                    GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text)
-                                                || dbxref.accession::text, cvterm.cvterm_id, accession.stock_id, accession.uniquename;");
+    my $h = $dbh->prepare("SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
+        cvterm.cvterm_id,
+        count(phenotype.value),
+        to_char(avg(phenotype.value::real), 'FM999990.990'),
+        to_char(max(phenotype.value::real), 'FM999990.990'),
+        to_char(min(phenotype.value::real), 'FM999990.990'),
+        to_char(stddev(phenotype.value::real), 'FM999990.990')
+        $select_clause_additional
+        FROM cvterm
+            JOIN phenotype ON (cvterm_id=cvalue_id)
+            JOIN nd_experiment_phenotype USING(phenotype_id)
+            JOIN nd_experiment_project USING(nd_experiment_id)
+            JOIN nd_experiment_stock USING(nd_experiment_id)
+            JOIN stock as plot USING(stock_id)
+            JOIN stock_relationship on (plot.stock_id = stock_relationship.subject_id)
+            JOIN stock as accession on (accession.stock_id = stock_relationship.object_id)
+            JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id
+        WHERE project_id=?
+            AND phenotype.value~?
+            AND stock_relationship.type_id=?
+            AND plot.type_id=?
+            AND accession.type_id=?
+        GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    $h->execute($c->stash->{trial_id}, $numeric_regex, $plot_of, $plot_type_id, $accesion_type_id);
+    $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $accesion_type_id);
 
     my @phenotype_data;
 
@@ -228,7 +245,12 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         if ($max) { $max = $round->round($max); }
         if ($stddev) { $stddev = $round->round($stddev); }
 
-	push @phenotype_data, [ qq{<a href="/stock/$stock_id/view">$stock_name</a>}, qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} ];
+        my @return_array;
+        if ($stock_name && $stock_id) {
+            push @return_array, qq{<a href="/stock/$stock_id/view">$stock_name</a>};
+        }
+        push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
+        push @phenotype_data, \@return_array;
     }
 
     $c->stash->{rest} = { data => \@phenotype_data };
@@ -238,8 +260,9 @@ sub trait_histogram : Chained('trial') PathPart('trait_histogram') Args(1) {
     my $self = shift;
     my $c = shift;
     my $trait_id = shift;
+    my $stock_type = $c->req->param('stock_type') || 'plot';
 
-    my @data = $c->stash->{trial}->get_phenotypes_for_trait($trait_id, 'plot');
+    my @data = $c->stash->{trial}->get_phenotypes_for_trait($trait_id, $stock_type);
 
     $c->stash->{rest} = { data => \@data };
 }
@@ -279,6 +302,19 @@ sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
 
     my @data = $trial->get_controls();
+
+    $c->stash->{rest} = { accessions => \@data };
+}
+
+sub controls_by_plot : Chained('trial') PathPart('controls_by_plot') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my @plot_ids = $c->req->param('plot_ids[]');
+
+    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_controls_by_plot(\@plot_ids);
 
     $c->stash->{rest} = { accessions => \@data };
 }

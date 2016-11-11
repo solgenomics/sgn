@@ -695,17 +695,19 @@ sub update_element_action :Path('/list/item/update') Args(0) {
     my $list_id = $c->req->param("list_id");
     my $item_id = $c->req->param("item_id");
     my $content = $c->req->param("content");
-    print STDERR "update ".$list_id." ".$item_id." ".$content."\n";
-
     my $error = $self->check_user($c, $list_id);
 
-    if ($error) {
-        $c->stash->{rest} = { error => $error };
-        return;
-    }
+    if ($content) {
+        print STDERR "update ".$list_id." ".$item_id." ".$content."\n";
 
-    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-    $error = $list->update_element_by_id($item_id, $content);
+        if ($error) {
+            $c->stash->{rest} = { error => $error };
+            return;
+        }
+
+        my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+        $error = $list->update_element_by_id($item_id, $content);
+    }
 
     if ($error) {
         $c->stash->{rest} = { error => "An error occurred while attempting to update item $item_id" };

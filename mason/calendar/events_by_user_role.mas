@@ -232,19 +232,26 @@ $(document).ready(function() {
     });
 
     var fcSources = {
-        month_view: {
-            url: '/ajax/calendar/populate/personal/month',
+        //month_view: {
+        //    url: '/ajax/calendar/populate/personal/month',
+        //    error: function() {window.location.replace('/solpeople/login.pl');},
+        //    className: 'bg-info',
+        //    textColor: '#000',
+        //    borderColor: '#FFF',
+        //},
+        agendaWeek_view: {
+            url: '/ajax/calendar/populate/personal/agendaWeek',
             error: function() {window.location.replace('/solpeople/login.pl');},
             className: 'bg-info',
             textColor: '#000',
             borderColor: '#FFF',
         },
-        gcal_cassbase: {
-            googleCalendarId: 'mtm2tg9p10nvqttdjas4v0n0sg@group.calendar.google.com',
-            className: 'bg-success',
-            textColor: '#000',
-            borderColor: '#FFF',
-        },
+        //gcal_cassbase: {
+        //    googleCalendarId: 'mtm2tg9p10nvqttdjas4v0n0sg@group.calendar.google.com',
+        //    className: 'bg-success',
+        //    textColor: '#000',
+        //    borderColor: '#FFF',
+        //},
         //gcal_holidays: {
         //    googleCalendarId: 'en.usa#holiday@group.v.calendar.google.com',
         //    className: 'bg-danger',
@@ -260,10 +267,20 @@ $(document).ready(function() {
         lazyFetching: true,
         header: {
             left:   'title',
+            center: 'month,agendaWeek',
             right:  'prevYear,prev,today,next,nextYear'
         },
+        views: {
+            month: {
+                titleFormat: 'MMM YYYY'
+            },
+            agendaWeek: {
+                titleFormat: 'MMM D YYYY'
+            }
+        },
+        eventSources: [fcSources.month_view, fcSources.agendaWeek_view, fcSources.gcal_cassbase, fcSources.gcal_holidays],
+        defaultView: 'month',
         googleCalendarApiKey: 'AIzaSyDHH6NGHEYJcYRcxr5mHBWKcqNlKyu-L-Q',
-        eventSources: [fcSources.month_view, fcSources.gcal_cassbase, fcSources.gcal_holidays],
         eventRender: function(event, element, view) {
             if (!event.url) {
                 element.find('.fc-title').html(event.title + ": " + event.property ); 

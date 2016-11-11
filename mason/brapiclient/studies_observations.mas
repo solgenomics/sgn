@@ -24,7 +24,7 @@
 jQuery(document).ready(function() {
     jQuery("#brapi_home_studyobservations_submit").click(function() {
         jQuery.ajax( {
-          'url': '/brapi/v1/studies/'+jQuery('#brapi_home_studyobservationsdbid').val()+'/observations?observationVariableDbId='+jQuery('#brapi_home_studyobservationdbid1').val()+'&observationVariableDbId='+jQuery('#brapi_home_studyobservationdbid2').val()+'&observationLevel='+jQuery('#brapi_home_studyobservations_level').val(),
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies/'+jQuery('#brapi_home_studyobservationsdbid').val()+'/observations?observationVariableDbId='+jQuery('#brapi_home_studyobservationdbid1').val()+'&observationVariableDbId='+jQuery('#brapi_home_studyobservationdbid2').val()+'&observationLevel='+jQuery('#brapi_home_studyobservations_level').val(),
           'method': 'GET',
           'beforeSend': function() {
             jQuery('#working_modal').modal('show');
@@ -32,7 +32,7 @@ jQuery(document).ready(function() {
           'success': function(response) {
             jQuery('#working_modal').modal('hide');
             console.log(response);
-            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_studyobservations_data_result_div', undefined);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_studyobservations_data_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies/'+jQuery('#brapi_home_studyobservationsdbid').val()+'/observations?observationVariableDbId='+jQuery('#brapi_home_studyobservationdbid1').val()+'&observationVariableDbId='+jQuery('#brapi_home_studyobservationdbid2').val()+'&observationLevel='+jQuery('#brapi_home_studyobservations_level').val(), undefined);
 
           },
           error: function(response) {

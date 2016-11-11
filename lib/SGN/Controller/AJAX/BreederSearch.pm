@@ -79,7 +79,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 
   my $results_ref = $bs->metadata_query($c, \@criteria_list, $dataref, $queryref);
 
-  print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
+  #print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
 
   if ($results_ref->{error}) {
     print STDERR "Returning with error . . .\n";
@@ -98,16 +98,17 @@ sub get_avg_phenotypes : Path('/ajax/breeder/search/avg_phenotypes') Args(0) {
 
   my $trial_id = $c->req->param('trial_id');
   my @trait_ids = $c->req->param('trait_ids[]');
-  my @weights = $c->req->param('weights[]');
+  my @weights = $c->req->param('coefficients[]');
+  my @controls = $c->req->param('controls[]');
   my $allow_missing = $c->req->param('allow_missing');
-  my $reference_accession = $c->req->param('reference_accession');
 
   my $dbh = $c->dbc->dbh();
   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
 
-  my $results_ref = $bs->avg_phenotypes_query($trial_id, \@trait_ids, \@weights, $allow_missing, $reference_accession);
+  my $results_ref = $bs->avg_phenotypes_query($trial_id, \@trait_ids, \@weights, \@controls, $allow_missing);
 
   $c->stash->{rest} = {
+    error => $results_ref->{'error'},
     raw_avg_values => $results_ref->{'raw_avg_values'},
     weighted_values => $results_ref->{'weighted_values'}
   };

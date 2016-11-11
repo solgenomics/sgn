@@ -16,7 +16,6 @@ use Tie::UrlEncoder; our %urlencode;
 use File::Spec qw | catfile |;
 use File::Slurp qw | read_file write_file |;
 use CXGN::Tools::Run;
-use CXGN::BlastDB;
 use Bio::Seq;
 use CXGN::Page::FormattingHelpers qw/ html_break_string/;
 

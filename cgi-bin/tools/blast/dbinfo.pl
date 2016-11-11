@@ -1,3 +1,7 @@
+
+#### Note: This script is deprecated. The functionality was moved to
+####       SGN::Controller::Blast
+
 use strict;
 use warnings;
 

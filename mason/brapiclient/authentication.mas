@@ -23,7 +23,7 @@
 jQuery(document).ready(function() {
     jQuery("#brapi_auth_login_submit").click(function() {
         jQuery.ajax( {
-          'url': '/brapi/v1/token',
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/token',
           'method': 'POST',
           'data': { 
             'grant_type' : 'password',
@@ -44,7 +44,7 @@ jQuery(document).ready(function() {
     
     jQuery("#brapi_auth_logout_submit").click(function() {
         jQuery.ajax( {
-          'url': '/brapi/v1/token',
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/token',
           'method': 'DELETE',
           'success': function(response) {
             console.log(response);
