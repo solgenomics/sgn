@@ -30,7 +30,7 @@ sub transform {
     my $list = shift;
     my $object = shift;
 
-    my @transform = ();
+    my @ids= ();
     my @missing = ();
 
     print STDERR "Untransformed list data: ".Dumper($list)."\n";
@@ -46,9 +46,9 @@ sub transform {
       foreach my $p ($object->plugins()) {
         if ($transform_name eq $p->name()) {
           my $data = $p->transform($schema, \@elements);
-          my $transform = %$data{'transform'};
-          if (scalar @$transform > 0) {
-            push @transform, $type_singular . "_ids:" . join(",", @$transform);
+          my $transformed = %$data{'transform'};
+          if (scalar @$transformed > 0) {
+            push @ids, $type_singular . "_ids:" . join(",", @$transformed);
           }
           my $missing = %$data{'missing'};
           if (scalar @$missing > 0) {
@@ -59,7 +59,7 @@ sub transform {
     }
 
     return {
-      transform => \@transform,
+      transform => \@ids,
 	    missing => \@missing,
     };
 }
