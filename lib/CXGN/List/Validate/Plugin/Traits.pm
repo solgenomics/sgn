@@ -47,12 +47,12 @@ sub validate {
                     push @missing, $_;
                 } else {
 
-                    if (!$trait_has_components) {
-                        my $rs_var = $rs->search_related('cvterm_relationship_subjects', {'type.name' => 'VARIABLE_OF'}, { 'join' => 'type'});
-                        if ($rs_var->count == 0) {
-                            push @missing, $_;
-                        }
-                    }
+                    #if (!$trait_has_components) {
+                    #    my $rs_var = $rs->search_related('cvterm_relationship_subjects', {'type.name' => 'VARIABLE_OF'}, { 'join' => 'type'});
+                    #    if ($rs_var->count == 0) {
+                    #        push @missing, $_;
+                    #    }
+                    #}
                 }
             }
         }
