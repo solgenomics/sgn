@@ -2689,7 +2689,7 @@ sub studies_table_GET {
         my $total_count = scalar(@data)-1;
         my @header_names = split /\t/, $data[0];
         #print STDERR Dumper \@header_names;
-        my @trait_names = @header_names[15 .. $#header_names];
+        my @trait_names = @header_names[14 .. $#header_names];
         #print STDERR Dumper \@trait_names;
         my @header_ids;
         foreach my $t (@trait_names) {
