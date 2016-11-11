@@ -47,8 +47,9 @@ sub transform {
         if ($transform_name eq $p->name()) {
           my $data = $p->transform($schema, \@elements);
           my $transformed = %$data{'transform'};
-          if (scalar @$transformed > 0) {
-            push @ids, $type_singular . "_ids:" . join(",", @$transformed);
+          my @transformed_array = @$transformed;
+          if (scalar @transformed_array > 0) {
+            push @ids, $type_singular . "_ids:" . join(",", @transformed_array);
           }
           my $missing = %$data{'missing'};
           if (scalar @$missing > 0) {
@@ -56,6 +57,7 @@ sub transform {
           }
         }
       }
+
     }
 
     return {
