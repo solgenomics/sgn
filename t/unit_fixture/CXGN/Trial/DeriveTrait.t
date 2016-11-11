@@ -144,7 +144,7 @@ my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
 is_deeply(\@traits_assayed_sorted, [
           [
             70741,
-            'Dry matter content percentage|CO:0000092'
+            'dry matter content percentage|CO:0000092'
           ]
         ], "check upload worked");
 

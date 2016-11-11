@@ -66,13 +66,13 @@ ok(%design = %{$trial_design->get_design()}, "Get RCBD trial design");
 is(scalar(keys %design), scalar(@stock_names) * $number_of_blocks,"Result of RCBD design has a number of plots equal to the number of stocks times the number of blocks");
 
 print STDERR $stock_names[4] ."($plot_start_number) vs. ".$design{$plot_start_number}->{stock_name}."\n";
-
-ok($design{$plot_start_number}->{stock_name} eq $stock_names[0],"First plot has correct stock name");
+print STDERR Dumper \%design;
+ok($design{$plot_start_number}->{stock_name} eq $stock_names[4],"First plot has correct stock name");
 print "stock_number $design{$plot_start_number}->{stock_name}\n";
 ok($design{$plot_start_number}->{block_number} == 1, "First plot is in block 1");
 ok($design{$plot_start_number+((scalar(@stock_names)-1)*$plot_number_increment)}->{block_number} == 1, "Block 1 is the right length");
 ok($design{$plot_start_number+(scalar(@stock_names)*$plot_number_increment)}->{block_number} == 2, "Block 2 starts after block 1");
-is($design{$plot_start_number+$plot_number_increment}->{stock_name}, $stock_names[1], "Second plot has correct stock name");
+is($design{$plot_start_number+$plot_number_increment}->{stock_name}, $stock_names[5], "Second plot has correct stock name");
 
 #tests for constructing plot names from plot start number, increment, prefix and suffix
 ok($design{$plot_start_number}->{plot_name} eq $plot_name_prefix.$plot_start_number.$plot_name_suffix,"Plot names contain prefix and suffix");

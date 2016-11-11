@@ -18,6 +18,7 @@ use CXGN::Trial::TrialLayout;
 use Try::Tiny;
 use File::Basename qw | basename dirname|;
 use File::Spec::Functions;
+use CXGN::People::Roles;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -94,6 +95,25 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{template} = '/breeders_toolbox/manage_accessions.mas';
 
+}
+
+sub manage_roles : Path("/breeders/manage_roles") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    $c->stash->{user_can_add_roles} = $c->user->check_roles("curator");
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $person_roles = CXGN::People::Roles->new({ bcs_schema=>$schema });
+    my $breeding_programs = $person_roles->get_breeding_program_roles();
+
+    $c->stash->{roles} = $breeding_programs;
+    $c->stash->{template} = '/breeders_toolbox/manage_roles.mas';
 }
 
 
