@@ -78,10 +78,10 @@ jQuery(document).ready(function() {
                                 var trait_name = list[i][1];
                                 var parts = trait_name.split("|");
                                 var synonym = synonyms[trait_id];
-                                synonym_fixed = synonym.replace(/"/g, "");
-                                var syn_parts = synonym_fixed.split(" ");
-                                synonym_fixed = syn_parts[0];
-                                trait_html += '<option value="' + trait_id + '" data-synonym="' + synonym_fixed + '" data-list_name="' + trait_name + '" title="' + parts[0] + '">' + parts[0] + '</a>\n';
+                            //    synonym_fixed = synonym.replace(/"/g, "");
+                            //    var syn_parts = synonym_fixed.split(" ");
+                              //  synonym_fixed = syn_parts[0];
+                                trait_html += '<option value="' + trait_id + '" data-synonym="' + synonym + '" data-list_name="' + trait_name + '" title="' + parts[0] + '">' + parts[0] + '</a>\n';
                             }
 
                             jQuery('#trait_list').html(trait_html);

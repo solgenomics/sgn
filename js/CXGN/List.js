@@ -629,7 +629,7 @@ CXGN.List.prototype = {
 	    html += '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
 	}
   if (refresh) {
-    types = types.map(type => `'${type}'`).join(',');
+    if (types.length > 1) { types = types.map(type => `'${type}'`).join(',') };
 	  html = '<div class="input-group">'+html+'</select><span class="input-group-btn"><button class="btn btn-default" id="'+div_name+'_list_refresh" title="Refresh lists" onclick="refreshListSelect(\''+div_name+'_list_select\',['+types+'],\'Options refreshed.\')"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></span></div>';
     return html;
   }
