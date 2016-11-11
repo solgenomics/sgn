@@ -1,0 +1,86 @@
+
+=head1 NAME
+
+CXGN::People::Roles - helper class for people's roles
+
+=head1 SYNOPSYS
+
+ my $person_roles = CXGN::Person::Roles->new( { bcs_schema => $schema } );
+
+ etc.
+
+=head1 AUTHOR
+
+Nicolas Morales <nm529@cornell.edu>
+
+=head1 METHODS
+
+=cut
+
+package CXGN::People::Roles;
+
+use Moose;
+use Try::Tiny;
+use SGN::Model::Cvterm;
+use Data::Dumper;
+
+
+has 'bcs_schema' => (
+	isa => 'Bio::Chado::Schema',
+	is => 'rw',
+);
+
+
+sub get_breeding_program_roles {
+	my $self = shift;
+	my $dbh = $self->bcs_schema->storage->dbh;
+	my @breeding_program_roles;
+	my $q="SELECT username, sp_person_id, name FROM sgn_people.sp_person_roles JOIN sgn_people.sp_person using(sp_person_id) JOIN sgn_people.sp_roles using(sp_role_id)";
+	my $sth = $dbh->prepare($q);
+	$sth->execute();
+	while (my ($username, $sp_person_id, $sp_role) = $sth->fetchrow_array ) {
+		push(@breeding_program_roles, [$username, $sp_person_id, $sp_role] );
+	}
+
+	#print STDERR Dumper \@breeding_program_roles;
+	return \@breeding_program_roles;
+}
+
+sub add_sp_person_role {
+	my $self = shift;
+	my $sp_person_id = shift;
+	my $sp_role_id = shift;
+	my $dbh = $self->bcs_schema->storage->dbh;
+	my $q = "INSERT INTO sgn_people.sp_person_roles (sp_person_id, sp_role_id) VALUES (?,?);";
+	my $sth = $dbh->prepare($q);
+	$sth->execute($sp_person_id, $sp_role_id);
+	return;
+}
+
+sub get_sp_persons {
+	my $self = shift;
+	my $dbh = $self->bcs_schema->storage->dbh;
+	my @sp_persons;
+	my $q="SELECT username, sp_person_id FROM sgn_people.sp_person;";
+	my $sth = $dbh->prepare($q);
+	$sth->execute();
+	while (my ($username, $sp_person_id) = $sth->fetchrow_array ) {
+		push(@sp_persons, [$username, $sp_person_id] );
+	}
+	return \@sp_persons;
+}
+
+sub get_sp_roles {
+	my $self = shift;
+	my $dbh = $self->bcs_schema->storage->dbh;
+	my @sp_roles;
+	my $q="SELECT name, sp_role_id FROM sgn_people.sp_roles;";
+	my $sth = $dbh->prepare($q);
+	$sth->execute();
+	while (my ($name, $sp_role_id) = $sth->fetchrow_array ) {
+		push(@sp_roles, [$name, $sp_role_id] );
+	}
+	return \@sp_roles;
+}
+
+1;

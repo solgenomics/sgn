@@ -64,6 +64,9 @@ ok($trial_design->set_design_type("RCBD"), "Set design type to RCBD");
 ok($trial_design->calculate_design(), "Calculate RCBD trial design");
 ok(%design = %{$trial_design->get_design()}, "Get RCBD trial design");
 is(scalar(keys %design), scalar(@stock_names) * $number_of_blocks,"Result of RCBD design has a number of plots equal to the number of stocks times the number of blocks");
+
+print STDERR $stock_names[4] ."($plot_start_number) vs. ".$design{$plot_start_number}->{stock_name}."\n";
+print STDERR Dumper \%design;
 ok($design{$plot_start_number}->{stock_name} eq $stock_names[4],"First plot has correct stock name");
 print "stock_number $design{$plot_start_number}->{stock_name}\n";
 ok($design{$plot_start_number}->{block_number} == 1, "First plot is in block 1");

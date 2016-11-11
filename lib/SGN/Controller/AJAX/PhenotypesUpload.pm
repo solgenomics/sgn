@@ -194,6 +194,7 @@ sub _prep_upload {
     my $user_type = $c->user()->get_object->get_user_type();
     if ($user_type ne 'submitter' && $user_type ne 'curator') {
         push @error_status, 'Must have submitter privileges to upload phenotypes! Please contact us!';
+        return (\@success_status, \@error_status);
     }
 
     my $overwrite_values = $c->req->param('phenotype_upload_overwrite_values');
@@ -201,6 +202,7 @@ sub _prep_upload {
         #print STDERR $user_type."\n";
         if ($user_type ne 'curator') {
             push @error_status, 'Must be a curator to overwrite values! Please contact us!';
+            return (\@success_status, \@error_status);
         }
     }
 
@@ -214,6 +216,7 @@ sub _prep_upload {
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         push @error_status, "Could not save file $upload_original_name in archive.";
+        return (\@success_status, \@error_status);
     } else {
         push @success_status, "File $upload_original_name saved in archive.";
     }
@@ -231,6 +234,7 @@ sub _prep_upload {
         my $md5 = $uploader->get_md5($archived_image_zipfile_with_path);
         if (!$archived_image_zipfile_with_path) {
             push @error_status, "Could not save images zipfile $upload_original_name in archive.";
+            return (\@success_status, \@error_status);
         } else {
             push @success_status, "Images Zip File $upload_original_name saved in archive.";
         }
@@ -242,6 +246,7 @@ sub _prep_upload {
     my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
+        return (\@success_status, \@error_status);
     }
     if ($validate_file == 1){
         push @success_status, "File valid: $upload_original_name.";
@@ -249,6 +254,7 @@ sub _prep_upload {
         if ($validate_file->{'error'}) {
             push @error_status, $validate_file->{'error'};
         }
+        return (\@success_status, \@error_status);
     }
 
     ## Set metadata
@@ -261,6 +267,7 @@ sub _prep_upload {
     my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
+        return (\@success_status, \@error_status);
     }
     if ($parsed_file->{'error'}) {
         push @error_status, $parsed_file->{'error'};

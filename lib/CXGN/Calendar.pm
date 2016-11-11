@@ -5,7 +5,7 @@ CXGN::Calendar - helper class for calendar
 
 =head1 SYNOPSYS
 
- my $calendar_funcs = CXGN::Calendar->new( { bcs_schema => $schema } );
+ my $calendar_funcs = CXGN::Calendar->new( {  } );
  $calendar_funcs->check_value_format("2012/01/01 00:00:00");
 
  etc.
@@ -26,6 +26,22 @@ use SGN::Model::Cvterm;
 use Time::Piece;
 use Time::Seconds;
 use Data::Dumper;
+
+
+has 'bcs_schema' => (
+	isa => 'Bio::Chado::Schema',
+	is => 'rw',
+);
+
+has 'sp_person_id' => (
+	isa => "Int",
+	is => 'rw',
+);
+
+has 'roles' => (
+	isa => "ArrayRef",
+	is => 'rw',
+);
 
 
 sub check_value_format {
@@ -157,40 +173,40 @@ sub format_time {
 
 sub get_calendar_events_personal {
 	my $self = shift;
-    my $c = shift;
-    my $person_id = $c->user->get_object->get_sp_person_id;
-    my @roles = $c->user->get_roles();
-    #print STDERR Dumper \@roles;
+	my $schema = $self->bcs_schema;
+	my $dbh = $schema->storage->dbh;
+	my $person_id = $self->sp_person_id;
+	my @roles = @{$self->roles};
+	#print STDERR Dumper \@roles;
 
-    my @search_project_ids = '-1';
-    foreach (@roles) {
-    	my $q="SELECT project_id FROM project WHERE name=?";
-    	my $sth = $c->dbc->dbh->prepare($q);
-    	$sth->execute($_);
-        while (my ($project_id) = $sth->fetchrow_array ) {
-    	    push(@search_project_ids, $project_id);
+	my @search_project_ids = '-1';
+	foreach (@roles) {
+		my $q="SELECT project_id FROM project WHERE name=?";
+		my $sth = $dbh->prepare($q);
+		$sth->execute($_);
+		while (my ($project_id) = $sth->fetchrow_array ) {
+			push(@search_project_ids, $project_id);
 
-    	    my $q="SELECT subject_project_id FROM project_relationship JOIN cvterm ON (type_id=cvterm_id) WHERE object_project_id=? and cvterm.name='breeding_program_trial_relationship'";
-    	    my $sth = $c->dbc->dbh->prepare($q);
-    	    $sth->execute($project_id);
-    	    while (my ($trial) = $sth->fetchrow_array ) {
-                push(@search_project_ids, $trial);
-    	    }
-    	}
-    }
-
-    @search_project_ids = map{$_='me.project_id='.$_; $_} @search_project_ids;
-    my $search_projects = join(" OR ", @search_project_ids);
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    my $search_rs = $schema->resultset('Project::Project')->search(
-	undef,
-	{join=>{'projectprops'=>{'type'=>'cv'}},
-	'+select'=> ['projectprops.projectprop_id', 'type.name', 'projectprops.value', 'type.cvterm_id'],
-	'+as'=> ['pp_id', 'cv_name', 'pp_value', 'cvterm_id'],
+			my $q="SELECT subject_project_id FROM project_relationship JOIN cvterm ON (type_id=cvterm_id) WHERE object_project_id=? and cvterm.name='breeding_program_trial_relationship'";
+			my $sth = $dbh->prepare($q);
+			$sth->execute($project_id);
+			while (my ($trial) = $sth->fetchrow_array ) {
+				push(@search_project_ids, $trial);
+			}
+		}
 	}
-    );
-    $search_rs = $search_rs->search([$search_projects]);
-    return $search_rs;
+
+	@search_project_ids = map{$_='me.project_id='.$_; $_} @search_project_ids;
+	my $search_projects = join(" OR ", @search_project_ids);
+	my $search_rs = $schema->resultset('Project::Project')->search(
+		undef,
+		{join=>{'projectprops'=>{'type'=>'cv'}},
+		'+select'=> ['projectprops.projectprop_id', 'type.name', 'projectprops.value', 'type.cvterm_id'],
+		'+as'=> ['pp_id', 'cv_name', 'pp_value', 'cvterm_id'],
+		}
+	);
+	$search_rs = $search_rs->search([$search_projects]);
+	return $search_rs;
 }
 
 sub populate_calendar_events {
@@ -335,21 +351,5 @@ sub display_url {
     }
 }
 
-#For displaying the breeding program role permissions for the calendar.
-sub get_breeding_program_roles {
-    my $self = shift;
-    my $c = shift;
-
-    my @breeding_program_roles;
-    my $q="SELECT username, sp_person_id, name FROM sgn_people.sp_person_roles JOIN sgn_people.sp_person using(sp_person_id) JOIN sgn_people.sp_roles using(sp_role_id)";
-    my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute();
-    while (my ($username, $sp_person_id, $sp_role) = $sth->fetchrow_array ) {
-        push(@breeding_program_roles, [$username, $sp_person_id, $sp_role] );
-    }
-
-    #print STDERR Dumper \@breeding_program_roles;
-    return \@breeding_program_roles;
-}
 
 1;

@@ -1,0 +1,67 @@
+<%args>
+</%args>
+
+<div id="brapi_home_germplasm_attributes_div">
+
+    <h4>Germplasm Attributes List</h4>
+    <button class="btn btn-primary" name="brapi_home_germplasm_attributes_submit" id="brapi_home_germplasm_attributes_submit">Get Attributes</button>
+    <br/><br/>
+    <div id="brapi_germplasm_attributes_result_div">
+    </div>
+    <div id="brapi_germplasm_attributes_categories_result_div">
+    </div>
+
+    <h4>Germplasm Attributes Detail</h4>
+    <input name="brapi_home_germplasm_attribute_dbid" id="brapi_home_germplasm_attribute_dbid" class="form-control" type="text" placeholder="GermplasmDbId e.g. 38841" value="38841"/>
+    <button class="btn btn-primary" name="brapi_home_germplasmdbid_attributes_submit" id="brapi_home_germplasmdbid_attributes_submit">Get Attributes for Germplasm</button>
+    <br/><br/>
+    <div id="brapi_germplasm_dbid_attributes_result_div">
+    </div>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery("#brapi_home_germplasm_attributes_submit").click(function() {
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/attributes',
+          'method': 'GET',
+          'success': function(response) {
+            console.log(response);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_germplasm_attributes_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/attributes', undefined);
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/attributes/categories',
+          'method': 'GET',
+          'success': function(response) {
+            console.log(response);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_germplasm_attributes_categories_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/attributes/categories', undefined);
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+    });
+
+    jQuery('#brapi_home_germplasmdbid_attributes_submit').click(function() {
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm/'+jQuery('#brapi_home_germplasm_attribute_dbid').val()+'/attributes',
+          'method': 'GET',
+          'success': function(response) {
+            console.log(response);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_germplasm_dbid_attributes_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm'+jQuery('#brapi_home_germplasm_attribute_dbid').val()+'/attributes', undefined);
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+    });
+});
+
+</script>

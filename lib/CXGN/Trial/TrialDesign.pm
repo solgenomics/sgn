@@ -190,11 +190,23 @@ sub _get_crd_design {
     my @rep_numbers;
     my @converted_plot_numbers;
     my $number_of_stocks;
+    my @control_list_crbd;
+    my %control_names_lookup;
+    my $stock_name_iter;
     if ($self->has_stock_list()) {
         @stock_list = @{$self->get_stock_list()};
         $number_of_stocks = scalar(@stock_list);
     } else {
         die "No stock list specified\n";
+    }
+    if ($self->has_control_list_crbd()) {
+      @control_list_crbd = @{$self->get_control_list_crbd()};
+      %control_names_lookup = map { $_ => 1 } @control_list_crbd;
+      foreach $stock_name_iter (@stock_names) {
+        if (exists($control_names_lookup{$stock_name_iter})) {
+  	die "Names in stock list cannot be used also as controls\n";
+        }
+      }
     }
     if ($self->has_number_of_reps()) {
         $number_of_reps = $self->get_number_of_reps();
@@ -253,6 +265,7 @@ sub _get_crd_design {
         $plot_info{'block_number'} = 1;
         $plot_info{'rep_number'} = $rep_numbers[$i];
         $plot_info{'plot_name'} = $converted_plot_numbers[$i];
+        $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
         $crd_design{$converted_plot_numbers[$i]} = \%plot_info;
     }
 
