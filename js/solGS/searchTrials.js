@@ -23,7 +23,7 @@ jQuery(document).ready(function(){
 });
 
 
-function searchAllTrials(url) {
+function searchAllTrials(url, result) {
     
     jQuery("#all_trials_search_message").html('Searching for GS trials..').show();
     
@@ -31,6 +31,7 @@ function searchAllTrials(url) {
         type: 'POST',
         dataType: "json",
         url: url,
+        data: {'show_result': result},
         cache: true,
         success: function(res) { 
 
@@ -171,7 +172,8 @@ jQuery(document).ready( function () {
 	jQuery("#searched_trials_div").empty();
 	jQuery("#all_trials_div").empty();
 	var url = '/solgs/search/trials';
-	searchAllTrials(url);
+        var result = 'all';
+	searchAllTrials(url, result);
     });
           
 });
@@ -242,37 +244,25 @@ function displayTrainingPopulations (tableDetails) {
     if (data) {
 
 	var tableRows = jQuery('#' + tableId + ' tr').length;
-	
-	if (tableRows > 1) {
-	    jQuery('#' + tableId).dataTable().fnAddData(data);
-	} else {
+		if (tableRows > 1) {
+	    jQuery('#' + tableId).dataTable().fnAddData(data);	} else {
 	    
 	    var table = createTrialsTable(tableId);
 	   
-	   
 	    jQuery('#' + divId).html(table).show();
-	    var page = window.location.href;
-
-	    if (page.match(/solgs\/search\/trials\/trait\//)) {
-		jQuery('#' + tableId).dataTable({
+	   
+	    jQuery('#' + tableId).dataTable({
+                    'order'     : [[1, "desc"], [4, "desc"]],
 		    'searching' : true,
 		    'ordering'  : true,
 		    'processing': true,
 		    'paging': true,
-		    'info': false,
+		    'lengthChange': false,
+                    'oLanguage': {
+			"sSearch": "Filter result by: "
+		    },
 		    'data': data,
-		});
-	    } else {
-		jQuery('#' + tableId).dataTable({
-		    'searching' : false,
-		    'ordering'  : false,
-		    'processing': false,
-		    'paging': false,
-		    'info': false,
-		    'data': data,
-		});	
-
-	    }
+	    }).draw();
 	}
     }
    
