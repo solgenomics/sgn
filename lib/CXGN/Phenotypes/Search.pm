@@ -179,11 +179,11 @@ sub search {
     }
 
     my $where_clause = "WHERE accession.type_id = $accession_type_id";
-    #$where_clause .= " AND (rep.type_id = $rep_type_id OR rep.type_id IS NULL)";
-    #$where_clause .= " AND (block_number.type_id = $block_number_type_id OR block_number.type_id IS NULL)";
-    #$where_clause .= " AND (plot_number.type_id = $plot_number_type_id OR plot_number.type_id IS NULL)";
-    #$where_clause .= " AND (year.type_id = $year_type_id OR year.type_id IS NULL)";
-    #$where_clause .= " AND (design.type_id = $design_type_id OR design.type_id IS NULL)";
+    $where_clause .= " AND (rep.type_id = $rep_type_id OR rep.type_id IS NULL)";
+    $where_clause .= " AND (block_number.type_id = $block_number_type_id OR block_number.type_id IS NULL)";
+    $where_clause .= " AND (plot_number.type_id = $plot_number_type_id OR plot_number.type_id IS NULL)";
+    $where_clause .= " AND (year.type_id = $year_type_id OR year.type_id IS NULL)";
+    $where_clause .= " AND (design.type_id = $design_type_id OR design.type_id IS NULL)";
 
     if (@where_clause>0) {
         $where_clause .= " AND " . (join (" AND " , @where_clause));
@@ -195,9 +195,9 @@ sub search {
              FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)
              JOIN cvterm as plot_type ON (plot_type.cvterm_id = plot.type_id)
              JOIN stock as accession ON (object_id=accession.stock_id)
-             LEFT JOIN stockprop AS rep ON (plot.stock_id=rep.stock_id)
-             LEFT JOIN stockprop AS block_number ON (plot.stock_id=block_number.stock_id)
-             LEFT JOIN stockprop AS plot_number ON (plot.stock_id=plot_number.stock_id)
+             JOIN stockprop AS rep ON (plot.stock_id=rep.stock_id)
+             JOIN stockprop AS block_number ON (plot.stock_id=block_number.stock_id)
+             JOIN stockprop AS plot_number ON (plot.stock_id=plot_number.stock_id)
              JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id)
              JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
              JOIN nd_geolocation USING(nd_geolocation_id)
@@ -208,8 +208,8 @@ sub search {
              JOIN db USING(db_id)
              JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)
              JOIN project USING(project_id)
-             LEFT JOIN projectprop as year USING(project_id)
-             LEFT JOIN projectprop as design USING(project_id)
+             JOIN projectprop as year USING(project_id)
+             JOIN projectprop as design USING(project_id)
              $where_clause
              $order_clause;";
 
