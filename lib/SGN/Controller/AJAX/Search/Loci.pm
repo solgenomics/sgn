@@ -33,7 +33,7 @@ sub locus_search :Path('/ajax/search/loci') Args(0) {
     my $any_name  = $params->{any_name};
     
     my ($or_conditions, $and_conditions);
-    $and_conditions->{ 'me.obsolete' } => 'f'  ;
+    $and_conditions->{ 'me.obsolete' } = 'f'  ;
     
     if (exists($params->{any_name} ) && $params->{any_name} ) {
 	my $start = '%';
