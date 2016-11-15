@@ -601,6 +601,7 @@ sub add_individual_cross {
   my $suffix = $c->req->param('suffix');
   my $progeny_number = $c->req->param('progeny_number');
   my $number_of_flowers = $c->req->param('number_of_flowers');
+  my $number_of_fruits = $c->req->param('number_of_fruits');
   my $number_of_seeds = $c->req->param('number_of_seeds');
   my $visible_to_role = $c->req->param('visible_to_role');
 
@@ -722,6 +723,13 @@ if ($number_of_flowers) {
     $cross_add_info->set_number_of_flowers($number_of_flowers);
     $cross_add_info->add_info();
 }
+
+if ($number_of_fruits) {
+    my $cross_add_info = CXGN::Pedigree::AddCrossInfo->new({ chado_schema => $chado_schema, cross_name => $cross_name} );
+    $cross_add_info->set_number_of_fruits($number_of_fruits);
+    $cross_add_info->add_info();
+}
+
 
 #add number of seeds as an experimentprop if specified
 if ($number_of_seeds) {
