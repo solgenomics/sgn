@@ -44,12 +44,6 @@ has '+description' => ( default => <<'' );
 patch for adding descriotion column to chado table nd_protocol. This change will go into Chado version 1.4. DO NOT ALTER CHADO TABLES WITHOUT COORDINATING FIRST WITH GMOD!
 
 
-has '+prereq' => (
-    default => sub {
-        ['MyPrevPatch'],
-    },
-  );
-
 sub patch {
     my $self=shift;
 

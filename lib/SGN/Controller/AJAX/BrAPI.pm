@@ -2711,7 +2711,7 @@ sub studies_table_GET {
 
         %result = (
             studyDbId => $c->stash->{study_id},
-            headerRow => ['studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'rep', 'blockNumber'],
+            headerRow => ['studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber'],
             observationVariableDbIds => \@header_ids,
             observationVariableNames => \@trait_names,
             data=>\@data_window

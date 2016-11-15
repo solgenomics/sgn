@@ -76,7 +76,7 @@ $gs_traits_index
   </div>
 
   <div id="searched_trials_message"  style="padding:20px 0px 10px 0px;font-weight:bold;text-align:center;color:#A7C942"></div>
-  <div id="searched_trials_div" style="display:none;"> 
+  <div id="searched_trials_div" style="padding-top: 20px; display:none;"> 
 </div>
   <br />
 
