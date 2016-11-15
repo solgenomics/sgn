@@ -93,13 +93,6 @@ window.onload = function initialize() {
 	matviews_update_options();
     });
 
-    jQuery('#refresh_lists').on('click', function () {
-	     create_list_start('Start from a list');
-       var message_html = '<div class="well well-sm"><font color="green">Lists refreshed.</font></div>';
-       jQuery('#list_message').html(message_html);
-    });
-
-
     jQuery('#update_wizard_dialog, #upload_datacollector_phenotypes_dialog, #upload_phenotype_spreadsheet_dialog, #upload_fieldbook_phenotypes_dialog').on("click", '.wiz-update', function () {
 	//if (window.console) console.log("refreshing materialized views . . .");
 	refresh_matviews();
@@ -367,7 +360,7 @@ function reset_downstream_sections(this_section) {  // clear downstream selects,
 
 function create_list_start(message) {
     var lo = new CXGN.List();
-    var listhtml = lo.listSelect('paste', '', message);
+    var listhtml = lo.listSelect('paste', '', message, 'refresh');
     jQuery('#paste_list').html(listhtml);
     jQuery('#paste_list_select').change(
       function() {

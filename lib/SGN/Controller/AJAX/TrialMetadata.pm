@@ -306,6 +306,19 @@ sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     $c->stash->{rest} = { accessions => \@data };
 }
 
+sub controls_by_plot : Chained('trial') PathPart('controls_by_plot') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my @plot_ids = $c->req->param('plot_ids[]');
+
+    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_controls_by_plot(\@plot_ids);
+
+    $c->stash->{rest} = { accessions => \@data };
+}
+
 sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     my $self = shift;
     my $c = shift;
