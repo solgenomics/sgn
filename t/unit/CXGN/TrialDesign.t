@@ -30,6 +30,7 @@ my $design_type = "CRD";
 my %design;
 
 ok(my $trial_design = CXGN::Trial::TrialDesign->new(), "Create TrialDesign object");
+$trial_design->set_trial_name("TESTTRIAL");
 ok($trial_design->set_stock_list(\@stock_names), "Set stock names for trial design");
 is_deeply($trial_design->get_stock_list(),\@stock_names, "Get stock names for trial design");
 ok($trial_design->set_plot_name_prefix($plot_name_prefix), "Set plot name prefix for trial design");
@@ -65,17 +66,18 @@ ok($trial_design->calculate_design(), "Calculate RCBD trial design");
 ok(%design = %{$trial_design->get_design()}, "Get RCBD trial design");
 is(scalar(keys %design), scalar(@stock_names) * $number_of_blocks,"Result of RCBD design has a number of plots equal to the number of stocks times the number of blocks");
 
-print STDERR $stock_names[4] ."($plot_start_number) vs. ".$design{$plot_start_number}->{stock_name}."\n";
+print STDERR $stock_names[0] ."($plot_start_number) vs. ".$design{$plot_start_number}->{stock_name}."\n";
 print STDERR Dumper \%design;
-ok($design{$plot_start_number}->{stock_name} eq $stock_names[4],"First plot has correct stock name");
+ok($design{$plot_start_number}->{stock_name} eq $stock_names[0],"First plot has correct stock name");
 print "stock_number $design{$plot_start_number}->{stock_name}\n";
 ok($design{$plot_start_number}->{block_number} == 1, "First plot is in block 1");
 ok($design{$plot_start_number+((scalar(@stock_names)-1)*$plot_number_increment)}->{block_number} == 1, "Block 1 is the right length");
 ok($design{$plot_start_number+(scalar(@stock_names)*$plot_number_increment)}->{block_number} == 2, "Block 2 starts after block 1");
-is($design{$plot_start_number+$plot_number_increment}->{stock_name}, $stock_names[5], "Second plot has correct stock name");
+is($design{$plot_start_number+$plot_number_increment}->{stock_name}, $stock_names[1], "Second plot has correct stock name");
 
 #tests for constructing plot names from plot start number, increment, prefix and suffix
-ok($design{$plot_start_number}->{plot_name} eq $plot_name_prefix.$plot_start_number.$plot_name_suffix,"Plot names contain prefix and suffix");
+ok($design{$plot_start_number}->{plot_name} =~ /$plot_name_prefix/, "Plot names contain prefix");
+ok($design{$plot_start_number}->{plot_name} =~ /$plot_name_suffix/, "Plot names contain suffix");
 ok($trial_design->set_plot_start_number(1), "Change plot start number for trial design to 1");
 ok($trial_design->set_plot_number_increment(1), "Change plot number increment for trial design to 1");
 ok($trial_design->calculate_design(), "Calculate design with plot start number and increment set to 1");
