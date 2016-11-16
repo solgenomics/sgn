@@ -37,13 +37,10 @@ $gs_traits_index
 
 <& /solgs/search/trait_search_form.mas,
    gs_traits_index => $gs_traits_index
-  &>
+ &>
 
 <& /solgs/search/trial_search_form.mas &>
 
-<& /solgs/population/project_details_form.mas &>
-
-<& /solgs/search/combine_trials_table.mas &>
 
 <& /solgs/search/list_type_training_population.mas &>
    
