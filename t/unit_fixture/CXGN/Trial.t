@@ -183,7 +183,7 @@ foreach (@$traits_assayed) {
 }
 @traits_assayed_names = sort @traits_assayed_names;
 #print STDERR Dumper \@traits_assayed_names;
-is_deeply(\@traits_assayed_names, ['Dry yield|CO:0000014', 'Root number counting|CO:0000011'], 'check traits assayed' );
+is_deeply(\@traits_assayed_names, ['dry yield|CO:0000014', 'root number counting|CO:0000011'], 'check traits assayed' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70727);
 my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;

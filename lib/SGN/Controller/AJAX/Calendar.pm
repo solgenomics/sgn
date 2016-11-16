@@ -40,7 +40,6 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-my $calendar_funcs = CXGN::Calendar->new({});
 
 =head2 /ajax/calendar/populate/personal/{view}
 
@@ -61,6 +60,14 @@ sub calendar_events_personal_GET : Args(1) {
     my $c = shift;
     my $view = shift;
     if (!$c->user()) {$c->detach();}
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my @roles = $c->user->get_roles();
+
+    my $calendar_funcs = CXGN::Calendar->new({
+        bcs_schema => $schema,
+        sp_person_id => $c->user->get_object->get_sp_person_id,
+        roles => \@roles
+    });
     my $search_rs = $calendar_funcs->get_calendar_events_personal($c);
     $c->stash->{rest} = $calendar_funcs->populate_calendar_events($search_rs, $view);
 }
@@ -86,6 +93,8 @@ sub add_event_POST {
         $c->stash->{rest} = {status => 3};
         return;
     }
+
+    my $calendar_funcs = CXGN::Calendar->new({});
 
     #A time::piece object is returned from format_time(). Calling ->datetime on this object return an ISO8601 datetime string. This is what is saved in the db.
     my $format_start = $calendar_funcs->format_time($params->{event_start})->datetime;
@@ -161,6 +170,8 @@ sub drag_or_resize_event_POST {
         return;
     }
 
+    my $calendar_funcs = CXGN::Calendar->new({});
+
     #First we process the start datetime.
     #A time::piece object is returned from format_time(). Delta is the number of seconds that the date was changed. Calling ->epoch on the time::piece object returns a string representing number of sec since epoch.
     my $formatted_start = $calendar_funcs->format_time($params->{start_drag} )->epoch;
@@ -218,6 +229,7 @@ sub edit_event_POST {
     }
 
     my $params = $c->req->params();
+    my $calendar_funcs = CXGN::Calendar->new({});
 
     #A time::piece object is returned from format_time(). Calling ->datetime on this object return an ISO8601 datetime string. This is what is saved in the db.
     my $format_start = $calendar_funcs->format_time($params->{edit_event_start})->datetime;

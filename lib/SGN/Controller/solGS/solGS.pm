@@ -150,70 +150,29 @@ sub search : Path('/solgs/search') Args() {
 sub search_trials : Path('/solgs/search/trials') Args() {
     my ($self, $c) = @_;
 
-    my $page = $c->req->param('page') || 1;
-
-    my $project_rs = $c->model('solGS::solGS')->all_projects($page, 15);
-   
-    $self->projects_links($c, $project_rs);
-    my $projects = $c->stash->{projects_pages};
+    my $show_result = $c->req->param('show_result');
+    my $limit = $show_result =~ /all/ ? undef : 10;
     
-    my $page_links =  sub {uri ( query => {  page => shift } ) };
-    
-    my $pager = $project_rs->pager; 
-    $pager->change_entries_per_page(15);
-
-    my $pagination;
-    my $url = '/solgs/search/trials/';
+    my $projects_ids = $c->model('solGS::solGS')->all_gs_projects($limit);
    
-    if ( $pager->previous_page || $pager->next_page )
-    {
-        $pagination =   '<div style="width:690px; overflow: auto;" class = "paginate_nav">';
-        
-        if( $pager->previous_page ) 
-        {
-            $pagination .=  '<a class="paginate_nav" href="' . $url .  $page_links->($pager->previous_page) . '">&lt;</a>';
-        }
-        
-        for my $c_page ( $pager->first_page .. $pager->last_page ) 
-        {
-            if( $pager->current_page == $c_page ) 
-            {
-                $pagination .=  '<span class="paginate_nav_currpage paginate_nav">' .  $c_page . '</span>';
-            }
-            else 
-            {
-                $pagination .=  '<a class="paginate_nav" href="' . $url.   $page_links->($c_page) . '">' . $c_page . '</a>';
-            }
-        }
-        if( $pager->next_page ) 
-        {
-            $pagination .= '<a class="paginate_nav" href="' . $url . $page_links->($pager->next_page). '">&gt;</a>';
-        }
-        
-        $pagination .= '</div>';
-    }
-
     my $ret->{status} = 'failed';
+
+    my $formatted_trials = [];
     
-    if (@$projects) 
-    {            
-        $ret->{status} = 'success';
-        $ret->{pagination} = $pagination;
-        $ret->{trials}   = $projects;
-    } 
-    else 
-    { 
-        if ($pager->current_page == $pager->last_page) 
-        {
-          $c->res->redirect("/solgs/search/trials/?page=1");  
-        }
-        else 
-        {
-            my $go_next = $pager->current_page + 1;
-            $c->res->redirect("/solgs/search/trials/?page=$go_next");
-        }
-    } 
-    
+    if (@$projects_ids) 
+    {
+	my $projects_rs = $c->model('solGS::solGS')->project_details($projects_ids);
+
+	$self->get_projects_details($c, $projects_rs);
+	my $projects = $c->stash->{projects_details};
+
+	$self->format_gs_projects($c, $projects);
+	$formatted_trials = $c->stash->{formatted_gs_projects}; 
+
+	$ret->{status} = 'success';
+    }
+ 
+    $ret->{trials}   = $formatted_trials;
     $ret = to_json($ret);
         
     $c->res->content_type('application/json');
@@ -346,54 +305,102 @@ sub show_search_result_pops : Path('/solgs/search/result/populations') Args(1) {
     my $page = $c->req->param('page') || 1;
 
     my $projects_ids = $c->model('solGS::solGS')->search_trait_trials($trait_id);
-    my @projects_list;
-    
+        
     my $ret->{status} = 'failed';
- 
+    my $formatted_projects = [];
+
     if (@$projects_ids) 
     {
-	$ret->{status} = 'success';
-
 	my $projects_rs  = $c->model('solGS::solGS')->project_details($projects_ids);
 	my $trait        = $c->model('solGS::solGS')->trait_name($trait_id);
    
 	$self->get_projects_details($c, $projects_rs);
 	my $projects = $c->stash->{projects_details};
-         
-	foreach my $pr_id (keys %$projects) 
-	{ 
-	    my $pr_name     = $projects->{$pr_id}{project_name};
-	    my $pr_desc     = $projects->{$pr_id}{project_desc};
-	    my $pr_year     = $projects->{$pr_id}{project_year};
-	    my $pr_location = $projects->{$pr_id}{project_location};
 
-	    $c->stash->{pop_id} = $pr_id;
-	    $self->check_population_has_genotype($c);
-	    my $has_genotype = $c->stash->{population_has_genotype};
-
-	    if ($has_genotype) 
-	    {
-		my $trial_compatibility_file = $self->trial_compatibility_file($c);
-		
-		$self->trial_compatibility_table($c, $has_genotype);
-		my $match_code = $c->stash->{trial_compatibility_code};
-
-		my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
-		$match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
-
-		push @projects_list, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
-	    }
-	}     
+	$self->format_trait_gs_projects($c, $trait_id, $projects);
+	$formatted_projects = $c->stash->{formatted_gs_projects}; 
+	
+	$ret->{status} = 'success';        
     }
-
       
-    $ret->{trials}   = \@projects_list;
+    $ret->{trials}   = $formatted_projects;
   
     $ret = to_json($ret);
         
     $c->res->content_type('application/json');
     $c->res->body($ret);
    
+}
+
+
+sub format_trait_gs_projects {
+   my ($self, $c, $trait_id, $projects) = @_; 
+
+   my @formatted_projects;
+
+   foreach my $pr_id (keys %$projects) 
+   { 
+       my $pr_name     = $projects->{$pr_id}{project_name};
+       my $pr_desc     = $projects->{$pr_id}{project_desc};
+       my $pr_year     = $projects->{$pr_id}{project_year};
+       my $pr_location = $projects->{$pr_id}{project_location};
+
+       $c->stash->{pop_id} = $pr_id;
+       $self->check_population_has_genotype($c);
+       my $has_genotype = $c->stash->{population_has_genotype};
+
+       if ($has_genotype) 
+       {
+	   my $trial_compatibility_file = $self->trial_compatibility_file($c);
+	   
+	   $self->trial_compatibility_table($c, $has_genotype);
+	   my $match_code = $c->stash->{trial_compatibility_code};
+
+	   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+	   $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+
+	   push @formatted_projects, [ $checkbox, qq|<a href="/solgs/trait/$trait_id/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
+       }
+   }     
+
+   $c->stash->{formatted_gs_projects} = \@formatted_projects;
+
+}
+
+
+sub format_gs_projects {
+   my ($self, $c, $projects) = @_; 
+
+   my @formatted_projects;
+
+   foreach my $pr_id (keys %$projects) 
+   { 
+       my $pr_name     = $projects->{$pr_id}{project_name};
+       my $pr_desc     = $projects->{$pr_id}{project_desc};
+       my $pr_year     = $projects->{$pr_id}{project_year};
+       my $pr_location = $projects->{$pr_id}{project_location};
+
+      # $c->stash->{pop_id} = $pr_id;
+      # $self->check_population_has_genotype($c);
+      # my $has_genotype = $c->stash->{population_has_genotype};
+       my $has_genotype = $c->config->{default_genotyping_protocol};
+
+       if ($has_genotype) 
+       {
+	   my $trial_compatibility_file = $self->trial_compatibility_file($c);
+	   
+	   $self->trial_compatibility_table($c, $has_genotype);
+	   my $match_code = $c->stash->{trial_compatibility_code};
+
+	   my $checkbox = qq |<form> <input  type="checkbox" name="project" value="$pr_id" onclick="getPopIds()"/> </form> |;
+	   $match_code = qq | <div class=trial_code style="color: $match_code; background-color: $match_code; height: 100%; width:100%">code</div> |;
+
+	   push @formatted_projects, [ $checkbox, qq|<a href="/solgs/population/$pr_id" onclick="solGS.waitPage(this.href); return false;">$pr_name</a>|, $pr_desc, $pr_location, $pr_year, $match_code];
+       }
+   }     
+
+   $c->stash->{formatted_gs_projects} = \@formatted_projects;
+
 }
 
 

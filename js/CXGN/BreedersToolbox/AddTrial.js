@@ -279,7 +279,7 @@ jQuery(document).ready(function ($) {
             $("#trial_multi-design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").hide();
-            $("#crbd_show_list_of_checks_section").hide();
+            $("#crbd_show_list_of_checks_section").show();
             $("#rep_count_section").show();
             $("#block_number_section").hide();
             $("#block_size_section").hide();
@@ -316,7 +316,7 @@ jQuery(document).ready(function ($) {
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
-            $("#crbd_show_list_of_checks_section").hide();
+            $("#crbd_show_list_of_checks_section").show();
             $("#show_list_of_checks_section").hide();
             $("#rep_count_section").show();
             $("#block_number_section").hide();

@@ -90,6 +90,7 @@ jQuery(document).ready(function ($) {
       var row_number_per_block=$('#row_number_per_block_multi').val();
       var col_number_per_block=$('#col_number_per_block_multi').val();
       var col_number=$('#col_number_multi').val();
+      var location_list_id = $('#select_list_locations_multi_list_select').val();
       var stock_list_id = $('#select_list_multi_list_select').val();
       var control_list_id = $('#list_of_checks_section_multi_list_select').val();
       var control_list_id_crbd = $('#crbd_list_of_checks_section_multi_list_select').val();
@@ -97,6 +98,13 @@ jQuery(document).ready(function ($) {
       if (control_list_id_crbd != ""){
           control_list_crbd = JSON.stringify(list.getList(control_list_id_crbd));
       }
+      var location_list;
+      if (location_list_id != "") {
+          location_list = JSON.stringify(list.getList(location_list_id));
+      } else {
+        location_list = JSON.stringify(trial_location);
+      }
+
       var stock_list;
       if (stock_list_id != "") {
           stock_list = JSON.stringify(list.getList(stock_list_id));
@@ -145,7 +153,7 @@ jQuery(document).ready(function ($) {
               'project_name': name,
               'project_description': desc,
               'year': year,
-              'trial_location': JSON.stringify(trial_location),
+              'trial_location': location_list,
               'stock_list': stock_list,
               'control_list': control_list,
               'control_list_crbd': control_list_crbd,
@@ -220,7 +228,7 @@ jQuery(document).ready(function ($) {
       if (design_method == "CRD") {
           $("#trial_multi-design_more_info").show();
           $("#show_list_of_checks_section_multi").hide();
-          $("#crbd_show_list_of_checks_section_multi").hide();
+          $("#crbd_show_list_of_checks_section_multi").show();
           $("#rep_count_section_multi").show();
           $("#block_number_section_multi").hide();
           $("#block_size_section_multi").hide();
@@ -374,6 +382,7 @@ jQuery(document).ready(function ($) {
     $("#list_of_checks_section_multi_list_select").remove();
     $("#select_list_multi_list_select").remove();
     $("#crbd_list_of_checks_section_multi_list_select").remove();
+    $("#select_list_locations_multi").append(list.listSelect("select_list_locations_multi", [ 'locations' ], "select location list" ));
     $("#select_list_multi").append(list.listSelect("select_list_multi", [ 'accessions' ] ));
     $("#list_of_checks_section_multi").append(list.listSelect("list_of_checks_section_multi", [ 'accessions' ]));
     $("#crbd_select_list").append(list.listSelect("crbd_select_list", [ 'accessions' ] ));
@@ -479,6 +488,14 @@ jQuery(document).ready(function ($) {
       //var block_number = jQuery('#block_number_multi').val();
       var stock_list_id = jQuery('#select_list_multi_list_select').val();
       var control_list_id = jQuery('#list_of_checks_section_multi_list_select').val();
+      var location_list_id = jQuery('#select_list_locations_multi_list_select').val();
+
+      var location_list;
+      if (location_list_id != "") {
+          location_list = JSON.stringify(list.getList(location_list_id));
+      } else {
+          location_list = JSON.stringify(trial_location);
+      }
   //    var stock_list;
   //    if (stock_list_id != "") {
   //       stock_list = JSON.stringify(list.getList(stock_list_id));
@@ -534,7 +551,7 @@ jQuery(document).ready(function ($) {
               'project_description': desc,
               'use_same_layout': use_same_layout,
               'year': year,
-              'trial_location': JSON.stringify(trial_location),
+              'trial_location': location_list,
             //  'stock_list': stock_list,
             //  'control_list': control_list,
               'design_type': design_type,

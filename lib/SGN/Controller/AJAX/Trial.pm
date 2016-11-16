@@ -132,7 +132,7 @@ sub generate_experimental_design_POST : Args(0) {
   my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
   my $use_same_layout = $c->req->param('use_same_layout');
   #my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
-  if ($design_type eq "RCBD" || $design_type eq "Alpha") {
+  if ($design_type eq "RCBD" || $design_type eq "Alpha" || $design_type eq "CRD") {
     if (@control_names_crbd) {
         @stock_names = (@stock_names, @control_names_crbd);
     }
@@ -221,7 +221,7 @@ my $location_number = scalar(@locations);
       $trial_design->set_randomization_seed($design_created);
 
     }
-    
+
   if (@stock_names) {
     $trial_design->set_stock_list(\@stock_names);
     $design_info{'number_of_stocks'} = scalar(@stock_names);

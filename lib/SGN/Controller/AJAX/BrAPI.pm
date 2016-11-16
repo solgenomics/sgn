@@ -2689,7 +2689,7 @@ sub studies_table_GET {
         my $total_count = scalar(@data)-1;
         my @header_names = split /\t/, $data[0];
         #print STDERR Dumper \@header_names;
-        my @trait_names = @header_names[15 .. $#header_names];
+        my @trait_names = @header_names[14 .. $#header_names];
         #print STDERR Dumper \@trait_names;
         my @header_ids;
         foreach my $t (@trait_names) {
@@ -2713,7 +2713,7 @@ sub studies_table_GET {
             studyDbId => $c->stash->{study_id},
             headerRow => ['studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'rep', 'blockNumber'],
             observationVariableDbIds => \@header_ids,
-            observationVariableNames => \@header_names,
+            observationVariableNames => \@trait_names,
             data=>\@data_window
         );
         my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>[]);

@@ -25,10 +25,12 @@ jQuery(document).ready(function ($) {
     function generate_trait_file() {
 	var trait_list_id = $('#select_list_list_select').val();
 	var trait_list = JSON.stringify(list.getList(trait_list_id));
+  var trait_ids = JSON.stringify(list.transform(trait_list_id, 'traits_2_trait_ids'));
+  console.log("trait_ids ="+JSON.stringify(trait_ids));
 
 	var trait_file_name = $('#trait_file_name').val();
 
-	if (trait_file_name == '')  { 
+	if (trait_file_name == '')  {
 	    alert("A trait file name is required.");
 	    return;
 	}
@@ -39,6 +41,7 @@ jQuery(document).ready(function ($) {
 	    dataType: "json",
 	    data: {
                 'trait_list': trait_list,
+                'trait_ids': trait_ids,
                 'trait_file_name': trait_file_name,
 	    },
 	    success: function (response) {
@@ -71,7 +74,7 @@ jQuery(document).ready(function ($) {
 	    Ok: function() {
                 generate_trait_file();
 	    },
-	    Cancel: function() { 
+	    Cancel: function() {
 		$("#create_trait_file_dialog").dialog("close");
 	    }
 	}
@@ -81,8 +84,8 @@ jQuery(document).ready(function ($) {
         $('#create_trait_file_dialog').dialog("open");
     });
 
-    jQuery('#delete_fieldbook_layout_link').click( function() { 
+    jQuery('#delete_fieldbook_layout_link').click( function() {
 	alert('Layout deleted successfully.');
-    });  
+    });
 
 });

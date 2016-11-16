@@ -14,6 +14,7 @@ Nicolas Morales <nm529@cornell.edu>
 
 <%args>
 $roles => undef
+$user_can_add_roles => undef
 </%args>
 
 
@@ -47,6 +48,9 @@ $roles => undef
       <div class="modal-body">
         <div class="container-fluid">
         	<h3>Permissions <small>: Events for breeding programs and their trials are accessible through the calendar to users who have a role in that breeding program. <br/><br/>Please <a href='/contact/form'>contact us</a> if you do not see your name in this table.</small></h3>
+% if ($user_can_add_roles) {
+	<h3>Curators can <button class="btn btn-default" id="add_person_role_button">Give User a Role</button> </h3>
+% }
 			<br/>
 
 			<table id="calendar_bp_user_roles" class="table table-bordered">
@@ -74,6 +78,7 @@ $roles => undef
   </div>
 </div>
 
+ <& /people/add_person_role.mas &>
 
 <script>
 
