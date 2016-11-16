@@ -14,7 +14,7 @@ see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This patch will retrieve plot names, trial name, and trial description from trials where props are missing. If it finds missing props in the names or description it will add them to the db.
+For now, this patch is only designed for Sweetpotatobase. Use with caution on other databases. It will retrieve plot plot names, trial name, and trial description from trials where props are missing. If it finds missing props in the names or description it will add them to the db.
 
 =head1 AUTHOR
 
@@ -39,7 +39,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch will retrieve plot names, trial name, and trial description from trials where props are missing. If it finds missing props in the names or description it will add them to the db.
+ For now, this patch is only designed for Sweetpotatobase. Use with caution on other databases. It will retrieve plot names, trial name, and trial description from trials where props are missing. If it finds missing props in the names or description it will add them to the db.
 
 
 sub patch {
