@@ -1,0 +1,61 @@
+
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<& /page/page_title.mas, title => 'Cross Search' &>
+
+  <table>
+  <tr><td>
+      Female parent
+    </td>
+    <td width="20">
+      &nbsp;
+    </td>
+    <td>
+      <input id="female_parent_name" />
+    </td>
+    <td width="40">
+      &nbsp;
+    </td>
+    <td>
+      Male parent
+    </td>
+    <td width="20">
+      &nbsp;
+    </td>
+    <td>
+      <select id="male_parent_name" />
+      <option>Choose female parent first</option>
+</select>
+</td>
+</tr>
+</table>
+
+<!-- Data table -->
+
+<table id="cross_data_table" class="display" >
+  <thead>
+    <tr>
+      <th>Female Parent</th><th>Male Parent</th><th>Cross name</th>
+    </tr>
+  </thead>
+</table>
+
+<!-- Javascript -->
+
+
+<script>
+
+jQuery(document).ready(function () {
+
+   jQuery('#cross_data_table').DataTable( {
+     'ajax':'/ajax/search/crosses',
+
+     });
+
+});
+
+</script>
