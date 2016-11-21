@@ -252,6 +252,7 @@ sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
           push @crosses, $_;
       }
     }
+    @crosses = sort @crosses;
 
     my $html = simple_selectbox_html(
       multiple => 1,
