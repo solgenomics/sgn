@@ -184,6 +184,7 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
           push @trials, $_;
       }
     }
+    @trials = sort @trials;
 
     if ($empty) { unshift @trials, [ "", "Please select a trial" ]; }
 
