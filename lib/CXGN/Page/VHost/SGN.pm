@@ -81,7 +81,7 @@ sub bar_top {
                 $login_logout = <<HTML
 
 (<a class="toplink" style="text-decoration: underline" href="/solpeople/login.pl?logout=yes">log out</a>)
-<a class="mytools" href="/solpeople/top-level.pl">My SGN</a>
+<a class="mytools" href="/solpeople/profile/$person_id">My SGN</a>
 HTML
             }
         }
