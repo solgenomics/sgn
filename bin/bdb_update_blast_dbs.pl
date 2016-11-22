@@ -40,6 +40,10 @@ sub usage {
 
   -D <dbname>
 
+  -p <password> (if not supplied, will prompt)
+
+  -U <dbuser>   (if -p option is supplied)
+
   -d <path>     required.  path where all blast DB files are expected to go.
 
   -t <path>     path to put tempfiles.  must be writable.  Defaults to /tmp.
@@ -55,12 +59,20 @@ EOU
 
 
 our %opt;
-getopts('xt:d:f:H:D:h',\%opt) or die "Invalid arguments";
+getopts('xt:d:f:H:D:p:U:h',\%opt) or die "Invalid arguments";
 
 $opt{t} ||= File::Spec->tmpdir;
 
 print STDERR "Connecting to database... $opt{H} $opt{D}\n";
-my $dbh = CXGN::DB::InsertDBH->new( { dbhost => $opt{H}, dbname => $opt{D} });
+
+my $dbh;
+
+if (!$opt{p}) { 
+    $dbh = CXGN::DB::InsertDBH->new( { dbhost => $opt{H}, dbname => $opt{D} });
+}
+else { 
+    $dbh = CXGN::DB::Connection->new( { dbhost => $opt{H}, dbname => $opt{D}, dbpass => $opt{p}, dbuser => $opt{U} });
+}
 
 print STDERR "Creating schema object...\n";
 my $sgn_schema = SGN::Schema->connect( sub{ $dbh->get_actual_dbh() });
