@@ -5,7 +5,7 @@
 #(if no login and no 'id=', no good)
 
 #(we don't want to encourage users to go directly to this page to edit their own info;
-# they should go through top-level.pl, so they'll already be logged in when they get here)
+# they should go through /solpeople/profile/<sp_person_id>, so they'll already be logged in when they get here)
 
 use strict;
 use CXGN::Login;
@@ -408,7 +408,7 @@ sub get_actions_toolbar
 	my $home;
 	if($user_is_owner || $user_type eq 'curator')
 	{
-		$home = qq(<a href="top-level.pl?sp_person_id=$sp_person_id">[Directory Update Home]</a>&nbsp;&nbsp;);
+		$home = qq(<a href="/solpeople/profile/$sp_person_id">[Profile Home]</a>&nbsp;&nbsp;);
 	}
 	else
 	{

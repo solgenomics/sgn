@@ -68,6 +68,8 @@ ok($trial_design->set_design_type("RCBD"), "set design type");
 ok($trial_design->calculate_design(), "calculate design");
 ok(my $design = $trial_design->get_design(), "retrieve design");
 
+print STDERR Dumper $design;
+
 ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     phenome_schema => $phenome_schema,
@@ -85,31 +87,45 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
 ok(my $trial_id = $trial_create->save_trial(), "save trial");
 
 my $trial = CXGN::Trial->new({ bcs_schema => $fix->bcs_schema(), trial_id => $trial_id });
-$trial->create_plant_entities('2');
+
+my $trial_plots = $trial->get_plots();
+my @trial_plot_names;
+foreach (@$trial_plots){
+    push @trial_plot_names, $_->[1];
+}
+@trial_plot_names = sort @trial_plot_names;
+is(scalar(@trial_plot_names), 20, "check num plots saved");
+
+my $num_plants_add = 2;
+$trial->create_plant_entities($num_plants_add);
 
 my %phenotype_metadata;
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2017-02-16_01:10:56";
+my @plots = sort ( $trial_plot_names[0], $trial_plot_names[1], $trial_plot_names[2] );
+my @plants = sort ( $trial_plot_names[0]."_plant_1", $trial_plot_names[0]."_plant_2", $trial_plot_names[1]."_plant_2", $trial_plot_names[2]."_plant_1" );
+print STDERR Dumper \@plots;
+
 my $parsed_data = {
-            'test_trial_derive_trait1_plant_1' => {
+            $plants[0] => {
                                 'dry matter content|CO:0000092' => [
                                                                      '23',
                                                                      '2017-02-11 11:12:20-0500'
                                                                    ]
                                                    },
-           'test_trial_derive_trait1_plant_2' => {
+            $plants[1] => {
                                'dry matter content|CO:0000092' => [
                                                                     '28',
                                                                     '2017-02-11 11:13:20-0500'
                                                                   ]
                                                   },
-          'test_trial_derive_trait2_plant_1' => {
+            $plants[2] => {
                               'dry matter content|CO:0000092' => [
                                                                    '30',
                                                                    '2017-02-11 11:15:20-0500'
                                                                  ]
                                                  },
-             'test_trial_derive_trait2_plant_2' => {
+            $plants[3] => {
                                  'dry matter content|CO:0000092' => [
                                                                       '33',
                                                                       '2017-02-11 11:16:20-0500'
@@ -117,7 +133,6 @@ my $parsed_data = {
                                                     },
             };
 
-my @plots = ( 'test_trial_derive_trait1_plant_1', 'test_trial_derive_trait1_plant_2', 'test_trial_derive_trait2_plant_1', 'test_trial_derive_trait2_plant_2' );
 my @traits = ( 'dry matter content|CO:0000092' );
 
 my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
@@ -125,7 +140,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     metadata_schema=>$fix->metadata_schema,
     phenome_schema=>$fix->phenome_schema,
     user_id=>41,
-    stock_list=>\@plots,
+    stock_list=>\@plants,
     trait_list=>\@traits,
     values_hash=>$parsed_data,
     has_timestamps=>1,
@@ -153,47 +168,65 @@ my $method = 'arithmetic_mean';
 my $rounding = 'round';
 my $trait_name = 'dry matter content|CO:0000092';
 my $derive_trait = CXGN::BreedersToolbox::DeriveTrait->new({bcs_schema=>$fix->bcs_schema, trait_name=>$trait_name, trial_id=>$trial_id, method=>$method, rounding=>$rounding});
-my ($info, $plots, $traits, $store_hash) = $derive_trait->generate_plot_phenotypes();
+my ($info, $plots_ret, $traits, $store_hash) = $derive_trait->generate_plot_phenotypes();
 #print STDERR Dumper $info;
+
+my @sorted_plots_ret = sort @$plots_ret;
 my @ordered_info;
-foreach (sort @$plots) {
+is_deeply(\@plots, \@sorted_plots_ret, 'check generated plots');
+
+foreach (@sorted_plots_ret) {
     foreach my $info_n (@$info) {
         if ($_ eq $info_n->{'plot_name'}) {
             push @ordered_info, { 'plot_name'=>$info_n->{'plot_name'}, 'value_to_store'=>$info_n->{'value_to_store'}, 'notes'=>$info_n->{'notes'}, 'output'=>$info_n->{'output'}, 'plant_values'=>$info_n->{'plant_values'} };
         }
     }
 }
-#print STDERR Dumper \@ordered_info;
+print STDERR Dumper \@ordered_info;
 is_deeply(\@ordered_info, [
           {
-            'plot_name' => 'test_trial_derive_trait1',
-            'value_to_store' => '26',
+            'plot_name' => $plots[0],
             'notes' => '',
-            'output' => '25.5',
-            'plant_values' => '[23,28]'
+            'value_to_store' => '26',
+            'plant_values' => '[23,28]',
+            'output' => '25.5'
           },
           {
-            'plot_name' => 'test_trial_derive_trait2',
+            'value_to_store' => '30',
+            'plant_values' => '[30]',
+            'output' => '30',
+            'plot_name' => $plots[1],
+            'notes' => ''
+          },
+          {
             'notes' => '',
-            'output' => '31.5',
-            'plant_values' => '[30,33]',
-            'value_to_store' => '32'
+            'plot_name' => $plots[2],
+            'output' => '33',
+            'plant_values' => '[33]',
+            'value_to_store' => '33'
           }
         ], "check returned info array");
-#print STDERR Dumper $store_hash;
+
+print STDERR Dumper $store_hash;
 is_deeply($store_hash, {
-          'test_trial_derive_trait1' => {
-                                          'dry matter content|CO:0000092' => [
-                                                                               '26',
-                                                                               ''
-                                                                             ]
-                                        },
-          'test_trial_derive_trait2' => {
-                                          'dry matter content|CO:0000092' => [
-                                                                               '32',
-                                                                               ''
-                                                                             ]
-                                        }
+          $plots[0] => {
+                                                                                  'dry matter content|CO:0000092' => [
+                                                                                                                       '26',
+                                                                                                                       ''
+                                                                                                                     ]
+                                                                                },
+          $plots[1] => {
+                                                                                  'dry matter content|CO:0000092' => [
+                                                                                                                       '30',
+                                                                                                                       ''
+                                                                                                                     ]
+                                                                                },
+          $plots[2] => {
+                                                                                  'dry matter content|CO:0000092' => [
+                                                                                                                       '33',
+                                                                                                                       ''
+                                                                                                                     ]
+                                                                                }
         }, "check returned values to store");
 
 my %phenotype_metadata;
@@ -204,7 +237,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     metadata_schema=>$fix->metadata_schema,
     phenome_schema=>$fix->phenome_schema,
     user_id=>41,
-    stock_list=>$plots,
+    stock_list=>$plots_ret,
     trait_list=>$traits,
     values_hash=>$store_hash,
     has_timestamps=>0,
@@ -218,12 +251,12 @@ ok(!$store_error, "check that store pheno spreadsheet works");
 my $trait_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($fix->bcs_schema, 'dry matter content|CO:0000092')->cvterm_id();
 my $all_stock_phenotypes_for_dry_matter_content = $tn->get_stock_phenotypes_for_traits([$trait_id], 'all', ['plot_of','plant_of'], 'accession', 'subject');
 #print STDERR Dumper $all_stock_phenotypes_for_dry_matter_content;
-ok(scalar(@$all_stock_phenotypes_for_dry_matter_content) == 6, "check if num phenotype saved is correct");
+ok(scalar(@$all_stock_phenotypes_for_dry_matter_content) == 7, "check if num phenotype saved is correct");
 my $plant_phenotypes_for_dry_matter_content = $tn->get_stock_phenotypes_for_traits([$trait_id], 'plant', ['plant_of'], 'accession', 'subject');
 #print STDERR Dumper $plant_phenotypes_for_dry_matter_content;
 ok(scalar(@$plant_phenotypes_for_dry_matter_content) == 4, "check num phenotype for plant is correct");
 my $plot_phenotypes_for_dry_matter_content = $tn->get_stock_phenotypes_for_traits([$trait_id], 'plot', ['plot_of'], 'accession', 'subject');
 #print STDERR Dumper $plot_phenotypes_for_dry_matter_content;
-ok(scalar(@$plot_phenotypes_for_dry_matter_content) == 2, "check num phenotype for plot is correct");
+ok(scalar(@$plot_phenotypes_for_dry_matter_content) == 3, "check num phenotype for plot is correct");
 
 done_testing();
