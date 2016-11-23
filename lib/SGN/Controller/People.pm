@@ -108,8 +108,8 @@ sub people_top_level : Path('/solpeople/profile') Args(1) {
         my ( $locus_annotations, $more_annotations );
         for ( my $i = 0 ; $i < $top ; $i++ ) {
             my $locus    = CXGN::Phenome::Locus->new( $dbh, $annotated_loci[$i] );
-            my $symbol   = $locus->get_locus_symbol();
-            my $locus_id = $locus->get_locus_id();
+            my $symbol   = $locus->get_locus_symbol() ? $locus->get_locus_symbol() : '';
+            my $locus_id = $locus->get_locus_id() ? $locus->get_locus_id() : '';
 
             if ( $i < $max ) {
                 $locus_annotations .= qq | <a href="/locus/$locus_id/view">$symbol</a> |;
@@ -139,7 +139,7 @@ sub people_top_level : Path('/solpeople/profile') Args(1) {
     $c->stash->{site_name} = $c->config->{project_name};
     $c->stash->{user_roles} = \%roles_hash;
     $c->stash->{sp_person_id} = $p->get_sp_person_id;
-    $c->stash->{username} = $p->get_username;
+    $c->stash->{username} = $c->user->get_object->get_username;
     $c->stash->{first_name} = $p->get_first_name;
     $c->stash->{last_name} = $p->get_last_name;
     $c->stash->{is_users_profile} = $users_profile;
