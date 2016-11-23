@@ -20,6 +20,7 @@ sub people_search : Path('/search/people') Args(0) {
 
 }
 
+#Code migrated from /cgi-bin/solpeople/top-level.pl
 sub people_top_level : Path('/solpeople/profile') Args(1) {
     my $self = shift;
     my $c = shift;
