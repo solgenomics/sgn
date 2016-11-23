@@ -28,6 +28,10 @@ sub people_top_level : Path('/solpeople/profile') Args(1) {
 
     #will redirect user to login page if they are not logged in.
     my $user_id=CXGN::Login->new($dbh)->verify_session();
+    if (!$user_id) {
+        $c->res->redirect('/solpeople/login.pl');
+        $c->detach();
+    }
     my $users_profile;
     if ($person_id == $user_id) {
         $users_profile = 1;
