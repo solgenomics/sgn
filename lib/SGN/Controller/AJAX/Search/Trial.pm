@@ -73,7 +73,7 @@ sub search : Path('/ajax/search/trials') Args(0) {
             join =>
               { 'project_relationship_object_projects' => 'subject_project' },
             where => { type_id => $breeding_program_trial_relationship_id },
-            select => [ 'me.name',          'subject_project.project_id' ],
+            select => [ 'me.name', 'subject_project.project_id' ],
             as     => [ 'breeding_program', 'trial_id' ]
         }
     );
@@ -90,13 +90,15 @@ sub search : Path('/ajax/search/trials') Args(0) {
             join =>
               { 'project_relationship_object_projects' => 'subject_project' },
             where => { type_id => $trial_folder_cvterm_id },
-            select => [ 'me.name', 'subject_project.project_id' ],
-            as     => [ 'folder',  'trial_id' ]
+            select => [ 'me.name', 'me.project_id', 'subject_project.project_id' ],
+            as     => [ 'folder', 'folder_id','trial_id' ]
         }
     );
 
     while ( my $row = $folder_rs->next() ) {
-        $folders{ $row->get_column('trial_id') } = $row->get_column('folder');
+        my $folder = $row->get_column('folder');
+        my $folder_id = $row->get_column('folder_id');
+        $folders{ $row->get_column('trial_id') } ="<a href=\"/folder/$folder_id\">$folder</a>";
     }
 
     my %locations;

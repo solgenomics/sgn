@@ -8,7 +8,7 @@ $nd_geolocation => 'not_provided'
 <& /page/page_title.mas, title => "Trial Search" &>
 
 
-<table id="trial_search_results" class="table table-striped">
+<table id="trial_search_results" width="100%" class="table table-hover table-striped">
 <thead>
   <tr>
     <th>Trial name</th>
@@ -21,8 +21,8 @@ $nd_geolocation => 'not_provided'
     <th>Design</th>
 </tr>
 </thead>
-
 </table>
+
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 <br><br>
@@ -41,7 +41,6 @@ jQuery(document).ready(function () {
    var trial_table = jQuery('#trial_search_results').DataTable( {
        'ajax': '/ajax/search/trials?nd_geolocation=<% $nd_geolocation %>'
    });
-   trial_table.columns.adjust().draw();
 
    jQuery('#trial_search_results').on( 'draw.dt', function () {
      var name_links = trial_table.column( 0, {page:'current'} ).data();
