@@ -19,6 +19,8 @@ $ds->years(['2012', '2013']);
 $ds->traits([ 70666, 70741 ]);
 $ds->trials([ 139, 144 ]);
 $ds->plots( [ 40034, 40035 ]);
+$ds->name("test");
+$ds->description("test description");
 
 my $sp_dataset_id = $ds->store();
 
@@ -28,7 +30,8 @@ is_deeply($new_ds->accessions(), $ds->accessions(), "accession store");
 is_deeply($new_ds->years(), $ds->years(), "years store");
 is_deeply($new_ds->traits(), $ds->traits(), "traits store");
 is_deeply($new_ds->plots(), $ds->plots(), "plots store");
-
+is($new_ds->name(), $ds->name(), "name store");
+is($new_ds->description(), $ds->description(), "desc store");
 
 my @datasets = ( 
     CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema()), 
@@ -46,16 +49,8 @@ foreach my $ds (@datasets) {
     my $sp_dataset_id = $ds->store();
 
     print STDERR "Save dataset with id $sp_dataset_id\n";
-
-    my $ds_copy = CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema(), sp_dataset_id => $sp_dataset_id);
-    
-    is_deeply($ds_copy->accessions(), $ds->accessions(), "accession store test");
-    is($ds_copy->name(), $ds->name(), "name store test");
-    is($ds_copy->description, $ds->description(), "description store test");
-
+   
     my $trials = $ds->retrieve_trials();
-
-    
 
     is_deeply($trials, [
                          [
