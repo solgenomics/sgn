@@ -8,6 +8,7 @@ use SGN::Test::WWW::WebDriver;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 
+
 $d->get_ok('/solgs', 'solgs home page');
 
 sleep(2);
@@ -52,11 +53,7 @@ sleep(30);
 $d->find_element_ok('run_pca', 'id', 'run pca')->click();
 sleep(20);
 
-$d->while_logged_in_as("submitter", sub {
-    $d->get_ok('/solgs', 'solgs home page');
-    $d->find_element_ok('Select a list-based', 'partial_link_text', 'toogle list training pops')->click();
-    sleep(5);		      
-});
+
 
 
 done_testing();
