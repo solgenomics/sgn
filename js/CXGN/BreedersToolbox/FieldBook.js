@@ -20,7 +20,7 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function ($) {
 
-    var list = new CXGN.List();
+/*    var list = new CXGN.List();
 
     function generate_trait_file() {
 	var trait_list_id = $('#select_list_list_select').val();
@@ -82,7 +82,7 @@ jQuery(document).ready(function ($) {
 
     $('#create_new_trait_file_link').click(function () {
         $('#create_trait_file_dialog').dialog("open");
-    });
+    }); */
 
     jQuery('#delete_fieldbook_layout_link').click( function() {
 	alert('Layout deleted successfully.');
