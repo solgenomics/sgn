@@ -33,13 +33,13 @@ my $message = "Already have an account? Please log in using the form below.";
 my $referer = $ENV{HTTP_REFERER} || '';
 if ( $referer =~ m|http://[^/]+/index.pl| ) {
 
-    # if they were on the front page, send them to "My SGN"
-    $goto_url ||= "/solpeople/top-level.pl";
+    # if they were on the front page, send them to homepage
+    $goto_url ||= "/";
 }
 elsif ( $referer =~ m|account-confirm.pl| ) {
 
-    # if they just confirmed their account, send them to "My SGN"
-    $goto_url = "/solpeople/top-level.pl";
+    # if they just confirmed their account, send them to homepage
+    $goto_url = "/";
 }
 else {
 
@@ -101,23 +101,23 @@ if ( $username && $password )    #else if we are in the process of logging in
             #if we logged in from having just logged out,
             #make sure we don't get sent back to the logout page:
             if ( $goto_url =~ /login\.pl/ ) {
-                $goto_url = "/solpeople/top-level.pl";
+                $goto_url = "/solpeople/profile/$person_id";
             }
 
             $page->client_redirect($goto_url);
         }
         else  #else they are just getting started, so send them to the menu page
         {
-            $page->client_redirect("top-level.pl");
+            $page->client_redirect("/solpeople/profile/$person_id");
         }
     }
 }
 else          #else we not trying to log in yet
 {
     if ( $login_controller->has_session()
-      ) #if there's no good reason for them to be here, send them to the menu page
+      ) #if there's no good reason for them to be here, send them to the homepage
     {
-        $page->client_redirect("top-level.pl");
+        $page->client_redirect("/");
     }
 }
 

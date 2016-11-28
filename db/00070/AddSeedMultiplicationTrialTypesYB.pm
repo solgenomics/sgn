@@ -3,7 +3,7 @@
 
 =head1 NAME
 
- AddNdprotocolDescriptionChado
+ AddSeedMultiplicationTrialTypesYB.pm
 
 =head1 SYNOPSIS
 
@@ -13,16 +13,12 @@ this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-
-Add a description column to the Chado table nd_protocol
-This change will go into Chado version 1.4. See GMOD git repo for details.
-DO NOT ALTER CHADO TABLES WITHOUT COORDINATING WITH GMOD FIRST!
-
+This patch adds seed multiplication as a trial type on Yambase database.
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
- Naama Menda<nm249@cornell.edu>
+ Alex Ogbonna<aco46@cornell.edu>
 
 =head1 COPYRIGHT & LICENSE
 
@@ -34,15 +30,23 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddNdprotocolDescriptionChado;
+package AddSeedMultiplicationTrialTypesYB;
 
 use Moose;
+use Bio::Chado::Schema;
+use Try::Tiny;
 extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-patch for adding descriotion column to chado table nd_protocol. This change will go into Chado version 1.4. DO NOT ALTER CHADO TABLES WITHOUT COORDINATING FIRST WITH GMOD!
+Description of this patch goes here
 
+has '+prereq' => (
+	default => sub {
+        [],
+    },
+
+  );
 
 sub patch {
     my $self=shift;
@@ -52,15 +56,19 @@ sub patch {
     print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
 
     print STDOUT "\nExecuting the SQL commands.\n";
-
-    $self->dbh->do(<<EOSQL);
---do your SQL here
---
-
-ALTER TABLE nd_protocol ADD COLUMN description varchar(255) DEFAULT null;
+    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
 
-EOSQL
+    print STDERR "INSERTING CV TERMS...\n";
+
+    my $term = 'Seed Multiplication';
+
+
+	 $schema->resultset("Cv::Cvterm")->create_with( {
+		name => $term,
+		cv => 'project_type', }
+		);
+
 
 print "You're done!\n";
 }

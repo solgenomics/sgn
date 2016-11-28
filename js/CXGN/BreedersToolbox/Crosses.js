@@ -68,6 +68,10 @@ jQuery(document).ready(function($) {
             $("#get_flower_number").toggle(this.checked); // show if it is checked, otherwise hide
         });
 
+        $("#fruit_number_checkbox").change(function() {
+            $("#get_fruit_number").toggle(this.checked); // show if it is checked, otherwise hide
+        });
+
         $("#use_folders_checkbox").change(function() {
             $("#folder_section").toggle(this.checked); // show if it is checked, otherwise hide
         });
@@ -188,6 +192,7 @@ jQuery(document).ready(function($) {
 
         var progenyNumber = $("#progeny_number").val();
         var flowerNumber = $("#flower_number").val();
+        var fruitNumber = $("#fruit_number").val();
         var seedNumber = $("#seed_number").val();
         var prefix = $("#prefix").val();
         var suffix = $("#suffix").val();
@@ -249,7 +254,7 @@ jQuery(document).ready(function($) {
             timeout: 3000000,
             dataType: "json",
             type: 'POST',
-            data: 'cross_name=' + crossName + '&cross_type=' + crossType + '&maternal=' + maternal + '&paternal=' + paternal + '&maternal_parents=' + maternal_parents + '&paternal_parents=' + paternal_parents + '&progeny_number=' + progenyNumber + '&flower_number=' + flowerNumber + '&seed_number=' + seedNumber + '&prefix=' + prefix + '&suffix=' + suffix + '&visible_to_role' + visibleToRole + '&breeding_program_id=' + breeding_program_id + '&location=' + location + '&folder_name=' + folder_name + '&folder_id=' + folder_id,
+            data: 'cross_name=' + crossName + '&cross_type=' + crossType + '&maternal=' + maternal + '&paternal=' + paternal + '&maternal_parents=' + maternal_parents + '&paternal_parents=' + paternal_parents + '&progeny_number=' + progenyNumber + '&flower_number=' + flowerNumber + '&fruit_number=' + fruitNumber + '&seed_number=' + seedNumber + '&prefix=' + prefix + '&suffix=' + suffix + '&visible_to_role' + visibleToRole + '&breeding_program_id=' + breeding_program_id + '&location=' + location + '&folder_name=' + folder_name + '&folder_id=' + folder_id,
             beforeSend: function() {
                 jQuery("#create_cross").modal("hide");
                 jQuery("#working_modal").modal("show");

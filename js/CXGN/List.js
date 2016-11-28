@@ -1286,19 +1286,33 @@ function makePrivateSelectedListGroup(list_ids) {
 
 function combineSelectedListGroup(list_ids) {
     var arrayLength = list_ids.length;
-	var list_name = jQuery('#new_combined_list_name').val();
+    var list_name = jQuery('#new_combined_list_name').val();
     if (confirm('Combine selected lists into a new list called '+list_name+'?')) {
-		var lo = new CXGN.List();
-		var new_list_id = lo.newList(list_name);
-		for (var i=0; i<arrayLength; i++) {
-			list = lo.getListData(list_ids[i]);
-			var numElements = list.elements.length;
-			var arrayItems = [];
-			for (var j=0; j<numElements; j++) {
-				arrayItems.push(list.elements[j][1]);
-			}
-			lo.addBulk(new_list_id, arrayItems);
-		}
-	lo.renderLists('list_dialog');
+        var arrayItems = [];
+        var lo = new CXGN.List();
+        var first_list_type = lo.getListType(list_ids[0]);
+        var same_list_types = true;
+        for (var i=0; i<arrayLength; i++) {
+            var list_type = lo.getListType(list_ids[i]);
+            if (list_type != first_list_type) {
+                same_list_types = false;
+                if (!confirm('Are you sure you want to combine these list types: '+first_list_type+' and '+list_type)) {
+                    return;
+                }
+            }
+        }
+        var new_list_id = lo.newList(list_name);
+        if (same_list_types == true) {
+            lo.setListType(new_list_id, first_list_type);
+        }
+        for (var i=0; i<arrayLength; i++) {
+            list = lo.getListData(list_ids[i]);
+            var numElements = list.elements.length;
+            for (var j=0; j<numElements; j++) {
+                arrayItems.push(list.elements[j][1]);
+            }
+        }
+        lo.addBulk(new_list_id, arrayItems);
+        lo.renderLists('list_dialog');
     }
 }

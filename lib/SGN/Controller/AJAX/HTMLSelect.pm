@@ -101,7 +101,7 @@ sub get_year_select : Path('/ajax/html/select/years') Args(0) {
       @years = sort { $b <=> $a } CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_all_years();
     }
 
-    my $default = $c->req->param("default") || @years[1];
+    my $default = $c->req->param("default") || $years[1];
 
     my $html = simple_selectbox_html(
       name => $name,
@@ -149,7 +149,7 @@ sub get_trial_type_select : Path('/ajax/html/select/trial_types') Args(0) {
 
     my @types = CXGN::Trial::get_all_project_types($c->dbic_schema("Bio::Chado::Schema"));
 
-    my $default = $c->req->param("default") || @types[0]->[0];
+    my $default = $c->req->param("default") || $types[0]->[0];
 
     my $html = simple_selectbox_html(
       name => $name,
@@ -184,6 +184,7 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
           push @trials, $_;
       }
     }
+    @trials = sort @trials;
 
     if ($empty) { unshift @trials, [ "", "Please select a trial" ]; }
 
@@ -251,6 +252,7 @@ sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
           push @crosses, $_;
       }
     }
+    @crosses = sort @crosses;
 
     my $html = simple_selectbox_html(
       multiple => 1,
