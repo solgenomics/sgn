@@ -6,28 +6,34 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="createTraitFileDialog">Create a Trait File for the Android Fieldbook App</h4>
+        <center><h4 class="modal-title" id="createTraitFileDialog">Create a Trait File for the Android Fieldbook App</h4></center>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
             <form class="form-horizontal" role="form" method="post" >
             <div class="form-group">
-            <div id="select_list_container" name="select_list">
-              <label id="select_list_label" for="select_list_list_select" style="display: inline-block; width: 200px;">List of traits to include:
-              </label>
-              <span id="select_list_div"></span>
+              <label class="col-sm-3 control-label" for="select_list_list_select">Select a list of traits: </label>
+              <div class="col-sm-9">
+                <span id="select_list_div"></span>
+              </div>
             </div>
-            </div>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label" for="select_traits_for_trait_file">Or Select Traits: </label>
-                    <div class="col-sm-9" >
-                        <div id="select_traits_for_trait_file">
-                          [Loading...]
-                        </div>
-                    </div>
+            <div class="form-group">
+              <label class="col-sm-3 control-label" for="select_traits_for_trait_file">Or select traits directly: </label>
+              <div class="col-sm-9">
+                <div id="select_traits_for_trait_file">
+                  [Loading...]
                 </div>
-                <input id="trait_file_name" name="trait_file_name" />
-            </form><br/>
+                <hr style="margin-top:4px;margin-bottom:4px" />
+                <div class="well well-sm"><div id="trait_select_count">No Selection</div></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="col-sm-3 control-label" for="trait_file_name">File name:</label>
+              <div class="col-sm-9">
+                <input id="trait_file_name" type="text" class="form-control" placeholder="Type name here">
+              </div>
+            </div>
+          </form><br/>
         </div>
       </div>
       <div class="modal-footer">
@@ -67,12 +73,23 @@
 <script>
 
 jQuery(document).ready(function() {
+  var list = new CXGN.List();
+  var trait_lists = list.listSelect('select_list', [ 'traits' ], 'Select a list');
+  jQuery('#select_list_div').html(trait_lists);
 
-    get_select_box('traits', 'select_traits_for_trait_file', { 'name' : 'html_select_traits_for_trait_file', 'id' : 'html_select_traits_for_trait_file' , 'empty' : 1 });
+  get_select_box('traits', 'select_traits_for_trait_file', { 'name' : 'html_select_traits_for_trait_file', 'id' : 'html_select_traits_for_trait_file' , 'empty' : 1 });
 
     jQuery('#create_new_trait_file_link').click( function () {
         console.log("create trait file link was clicked!");
-        jQuery('#html_select_traits_for_trait_file').attr('size', 10)
+        jQuery('#html_select_traits_for_trait_file').attr('size', 10);
+        show_list_counts('trait_select_count', document.getElementById("html_select_traits_for_trait_file").length );
+        jQuery('#html_select_traits_for_trait_file').change(
+        function() {
+          jQuery('#select_list_list_select').val('');
+          var traits = document.getElementById("html_select_traits_for_trait_file").length; //jQuery('#html_select_traits_for_trait_file').text().split("\n").length-1;
+          var selected = jQuery('#html_select_traits_for_trait_file').val();
+    	    show_list_counts('trait_select_count', traits, selected.length );
+    	  });
         jQuery('#create_trait_file_dialog').modal('show');
     });
 
@@ -82,18 +99,47 @@ jQuery(document).ready(function() {
 
 });
 
-function generate_trait_file() {
-var trait_list_id = jQuery('#select_list_list_select').val();
-var trait_list = JSON.stringify(list.getList(trait_list_id));
-var trait_ids = JSON.stringify(list.transform(trait_list_id, 'traits_2_trait_ids'));
-console.log("trait_ids ="+JSON.stringify(trait_ids));
-
-var trait_file_name = jQuery('#trait_file_name').val();
-
-if (trait_file_name == '')  {
-  alert("A trait file name is required.");
-  return;
+function show_list_counts(count_div, total_count, selected) {
+    var html = 'Traits: '+total_count+'<br />';
+    if (selected) {
+	html += 'Selected: '+selected;
+    }
+    jQuery('#'+count_div).html(html);
 }
+
+function generate_trait_file() {
+  var trait_list_id = jQuery('#select_list_list_select').val();
+  var trait_ids = [];
+  var trait_list = [];
+
+  if (trait_list_id) {
+    trait_list = JSON.stringify(list.getList(trait_list_id));
+    trait_ids = JSON.stringify(list.transform(trait_list_id, 'traits_2_trait_ids'));
+  }
+  else {
+    trait_ids = JSON.stringify(jQuery('#html_select_traits_for_trait_file').val());
+    var trait_names = [];
+    jQuery("#html_select_traits_for_trait_file option:selected").each(
+     function() {
+      trait_names.push(jQuery(this).text());
+     });
+     trait_list = JSON.stringify(trait_names);
+  }
+
+  console.log("trait_ids ="+JSON.stringify(trait_ids));
+  console.log("trait_list ="+JSON.stringify(trait_list));
+
+  if (trait_ids == '')  {
+    alert("Traits, from a list or selected individually, are required.");
+    return;
+  }
+
+  var trait_file_name = jQuery('#trait_file_name').val();
+
+  if (trait_file_name == '')  {
+    alert("A trait file name is required.");
+    return;
+  }
 
 jQuery.ajax({
   type: 'POST',
@@ -104,16 +150,23 @@ jQuery.ajax({
             'trait_ids': trait_ids,
             'trait_file_name': trait_file_name,
   },
-  success: function (response) {
-            if (response.error) {
-    alert(response.error);
-            } else {
-    alert('The trait file was saved.');
-    location.reload();
-            }
+  beforeSend: function() {
+      jQuery("#working_modal").modal("show");
   },
-  error: function (response) {
-            alert('An error occurred generating the trait file.'+response.error);
+  success: function (response) {
+      jQuery("#working_modal").modal("hide");
+      if (response.error) {
+          alert(response.error);
+      } else {
+          jQuery('#trait_file_download_link').attr('href',"/fieldbook/trait_file_download/"+response.file_id);
+          jQuery("#trait_file_saved_dialog_message").modal("show");
+          jQuery('#create_trait_file_dialog').modal("hide");
+      }
+  },
+  error: function () {
+      jQuery("#working_modal").modal("hide");
+      alert('An error occurred creating the trait file.');
+      jQuery('#create_trait_file_dialog').modal("hide");
   },
     });
 }

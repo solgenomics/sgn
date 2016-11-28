@@ -215,7 +215,9 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 								    });
   $file_row->insert();
 
-  $c->stash->{rest} = {success => "1",};
+  my $id = $file_row->file_id();
+
+  $c->stash->{rest} = {success => "1", file_id => $id, };
 
 }
 
