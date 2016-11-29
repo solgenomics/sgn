@@ -35,7 +35,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="create_trait_file_cancel_button" id="create_trait_file_cancel_button" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" name="create_trait_file_cancel_button" id="create_trait_file_cancel_button" data-dismiss="modal">Create File</button>
         <button type="button" class="btn btn-primary" name="create_trait_file_ok_button" id="create_trait_file_ok_button" title="Submit">Submit</button>
       </div>
     </div>
