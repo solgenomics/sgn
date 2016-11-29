@@ -213,8 +213,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     if ($trial_id eq 'all') {
       my $bs = CXGN::BreederSearch->new( { dbh=> $c->dbc->dbh() } );
       my $query = $bs->metadata_query($c, [ 'traits' ], {}, {});
-      my $trait_list = %$query{results};
-      @traits = @$trait_list;
+      @traits = @{$query->{results}};
       #print STDERR "Traits: ".Dumper(@traits)."\n";
     } else {
       my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$trial_id});
