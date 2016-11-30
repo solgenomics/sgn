@@ -7,7 +7,48 @@ CXGN::Trial::TrialCreate - Module to create a trial based on a specified design.
 
 =head1 USAGE
 
- my $trial_create = CXGN::Trial::TrialCreate->new({schema => $schema} );
+ FOR FIELD PHENOTYPING TRIALS:
+ my $trial_create = CXGN::Trial::TrialCreate->new({
+	chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
+	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+	dbh => $c->dbc->dbh(),
+	user_name => $user_name, #not implemented,
+	design_type => 'CRD',
+	design => $design_hash,
+	program => $breeding_program->name(),
+	trial_year => $year,
+	trial_description => $project_description,
+	trial_location => $location->name(),
+	trial_name => $trial_name,
+ });
+ try {
+   $trial_create->save_trial();
+ } catch {
+   print STDERR "ERROR SAVING TRIAL!\n";
+ };
+
+ FOR GENOTYPING TRIALS:
+ my $ct = CXGN::Trial::TrialCreate->new( {
+	chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
+	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+	dbh => $c->dbc->dbh(),
+	user_name => $c->user()->get_object()->get_username(), #not implemented
+	trial_year => $year,
+	trial_location => $location->name(),
+	program => $breeding_program->name(),
+	trial_description => $description,
+	design_type => 'genotyping_plate',
+	design => $design_hash,
+	trial_name => $trial_name,
+	is_genotyping => 1,
+	genotyping_user_id => $user_id,
+	genotyping_project_name => $project_name
+ });
+ try {
+   $ct->save_trial();
+ } catch {
+   print STDERR "ERROR SAVING TRIAL!\n";
+ };
 
 
 =head1 DESCRIPTION
@@ -38,12 +79,7 @@ has 'chado_schema' => (
 		 predicate => 'has_chado_schema',
 		 required => 1,
 		);
-has 'phenome_schema' => (
-		 is       => 'rw',
-		 isa      => 'DBIx::Class::Schema',
-		 predicate => 'has_phenome_schema',
-		 required => 1,
-		);
+
 has 'metadata_schema' => (
 		 is       => 'rw',
 		 isa      => 'DBIx::Class::Schema',
@@ -53,29 +89,18 @@ has 'metadata_schema' => (
 
 has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 #has 'user_name' => (isa => 'Str', is => 'rw', predicate => 'has_user_name', required => 1,);
-#has 'location' => (isa =>'Str', is => 'rw', predicate => 'has_location', required => 1,);
 has 'program' => (isa =>'Str', is => 'rw', predicate => 'has_program', required => 1,);
 has 'trial_year' => (isa => 'Str', is => 'rw', predicate => 'has_trial_year', required => 1,);
 has 'trial_description' => (isa => 'Str', is => 'rw', predicate => 'has_trial_description', required => 1,);
 has 'trial_location' => (isa => 'Str', is => 'rw', predicate => 'has_trial_location', required => 1,);
 has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', required => 1);
 has 'design' => (isa => 'HashRef[HashRef[Str|ArrayRef]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
-#has 'breeding_program_id' => (isa => 'Int', is => 'rw', predicate => 'has_breeding_program_id', required => 1);
-has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 0,);
-has 'greenhouse_num_plants' => (isa => 'ArrayRef[Int]|Undef', is => 'rw', predicate => 'has_greenhouse_num_plants', required => 0,);
+has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 1);
+
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
 has 'genotyping_user_id' => (isa => 'Str', is => 'rw');
-
 has 'genotyping_project_name' => (isa => 'Str', is => 'rw');
 
-# sub get_trial_name {
-#   my $self = shift;
-#   my $trial_name;
-#   if ($self->has_trial_year() && $self->has_trial_location()) {
-#     $trial_name = "Trial ".$self->get_trial_location()." ".$self->get_trial_year();
-#   }
-#   return $trial_name;
-# }
 
 sub trial_name_already_exists {
   my $self = shift;
