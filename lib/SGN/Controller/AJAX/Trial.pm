@@ -308,7 +308,7 @@ my $location_number = scalar(@locations);
   if ($error) {return;}
   if ($trial_design->get_design()) {
     %design = %{$trial_design->get_design()};
-    print STDERR "DESIGN: ". Dumper(%design);
+    #print STDERR "DESIGN: ". Dumper(%design);
   } else {
     $c->stash->{rest} = {error => "Could not generate design" };
     return;

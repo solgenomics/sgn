@@ -175,7 +175,14 @@ sub save_trial {
 	my $sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type');
 	my $sample_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship');
 	my $genotyping_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_layout', 'experiment_type');
-	my $plant_index_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_index_number', 'stock_property')->cvterm_id();
+	my $plant_index_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_index_number', 'stock_property');
+	my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property');
+	my $block_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property');
+	my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property');
+	my $is_control_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'is a control', 'stock_property');
+	my $range_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'range', 'stock_property');
+	my $row_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property');
+	my $col_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property');
 
 	my $project = $chado_schema->resultset('Project::Project')
 	->create({
@@ -272,6 +279,8 @@ sub save_trial {
 		my $plot_number;
 		if ($design{$key}->{plot_number}) {
 			$plot_number = $design{$key}->{plot_number};
+		} else {
+			$plot_number = $key;
 		}
 		my $plant_names;
 		if ($design{$key}->{plant_names}) {
@@ -293,14 +302,6 @@ sub save_trial {
 		} else {
 			$rep_number = 1;
 		}
-		my $well;
-		if ($design{$key}->{well}) {
-			$well = $design{$key}->{well};
-		}
-		my $plate;
-		if ($design{$key}->{plate}) {
-			$plate = $design{$key}->{plate};
-		}
 		my $is_a_control;
 		if ($design{$key}->{is_a_control}) {
 			$is_a_control = $design{$key}->{is_a_control};
@@ -313,7 +314,10 @@ sub save_trial {
 		if ($design{$key}->{col_number}) {
 			$col_number = $design{$key}->{col_number};
 		}
-
+		my $range_number;
+		if ($design{$key}->{range_number}) {
+			$range_number = $design{$key}->{range_number};
+		}
 
 
 		#check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database.
@@ -346,36 +350,20 @@ sub save_trial {
 				uniquename => $plot_name,
 				type_id => $plot_cvterm->cvterm_id,
 			});
-			if ($rep_number) {
-				$plot->create_stockprops({'replicate' => $rep_number}, {autocreate => 1} );
-			}
-			if ($block_number) {
-				$plot->create_stockprops({'block' => $block_number}, {autocreate => 1} );
-			}
-			if ($plot_number) {
-				$plot->create_stockprops({'plot number' => $plot_number}, {autocreate => 1});
-			}
-			else {
-				$plot->create_stockprops({'plot number' => $key}, {autocreate => 1});
-			}
-
+			$plot->create_stockprops({$replicate_cvterm->name() => $rep_number});
+			$plot->create_stockprops({$block_cvterm->name() => $block_number});
+			$plot->create_stockprops({$plot_number_cvterm->name() => $plot_number});
 			if ($is_a_control) {
-				$plot->create_stockprops({'is a control' => $is_a_control}, {autocreate => 1} );
+				$plot->create_stockprops({$is_control_cvterm->name() => $is_a_control});
 			}
-			if ($design{$key}->{'range_number'}) {
-				$plot->create_stockprops({'range' => $key}, {autocreate => 1});
-			}
-			if ($well) {
-				$plot->create_stockprops({'well' => $well}, {autocreate => 1});
-			}
-			if ($plate) {
-				$plot->create_stockprops({'plate' => $plate}, {autocreate => 1});
+			if ($range_number) {
+				$plot->create_stockprops({$range_cvterm->name() => $range_number});
 			}
 			if ($row_number) {
-				$plot->create_stockprops({'row_number' => $row_number}, {autocreate => 1} );
+				$plot->create_stockprops({$row_number_cvterm->name() => $row_number});
 			}
 			if ($col_number) {
-				$plot->create_stockprops({'col_number' => $col_number}, {autocreate => 1} );
+				$plot->create_stockprops({$col_number_cvterm->name() => $col_number});
 			}
 
 			# print STDERR "Check 03: ".localtime();
@@ -402,6 +390,7 @@ sub save_trial {
 		#Create plant entry if given. Currently this is for the greenhouse trial creation.
 		#print STDERR "Check 04: ".localtime();
 		if ($plant_names) {
+			my $plant_index_number = 1;
 			foreach my $plant_name (@$plant_names) {
 				my $plant = $chado_schema->resultset("Stock::Stock")
 				->find_or_create({
@@ -411,15 +400,23 @@ sub save_trial {
 					type_id => $plant_cvterm->cvterm_id,
 				});
 
-				my $plantprop = $chado_schema->resultset("Stock::Stockprop")->find_or_create( {
-					stock_id => $plant->stock_id(),
-					type_id => $plant_index_number_cvterm,
-					value => 1,
-				});
-
-				$plant->create_stockprops({'plot number' => $plot_number}, {autocreate => 1});
-				$plant->create_stockprops({'replicate' => $rep_number}, {autocreate => 1} );
-				$plant->create_stockprops({'block' => $block_number}, {autocreate => 1} );
+				$plant->create_stockprops({$plant_index_number_cvterm->name() => $plant_index_number});
+				$plant_index_number++;
+				$plant->create_stockprops({$replicate_cvterm->name() => $rep_number});
+				$plant->create_stockprops({$block_cvterm->name() => $block_number});
+				$plant->create_stockprops({$plot_number_cvterm->name() => $plot_number});
+				if ($is_a_control) {
+					$plant->create_stockprops({$is_control_cvterm->name() => $is_a_control});
+				}
+				if ($range_number) {
+					$plant->create_stockprops({$range_cvterm->name() => $range_number});
+				}
+				if ($row_number) {
+					$plant->create_stockprops({$row_number_cvterm->name() => $row_number});
+				}
+				if ($col_number) {
+					$plant->create_stockprops({$col_number_cvterm->name() => $col_number});
+				}
 
 				#the plant has a relationship to the plot
 				if (!$stock_relationship_data{$plant->stock_id(), $plant_of->cvterm_id(), $plot->stock_id()} ) {
