@@ -52,7 +52,7 @@ has 'metadata_schema' => (
 			 );
 
 has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
-has 'user_name' => (isa => 'Str', is => 'rw', predicate => 'has_user_name', required => 1,);
+#has 'user_name' => (isa => 'Str', is => 'rw', predicate => 'has_user_name', required => 1,);
 #has 'location' => (isa =>'Str', is => 'rw', predicate => 'has_location', required => 1,);
 has 'program' => (isa =>'Str', is => 'rw', predicate => 'has_program', required => 1,);
 has 'trial_year' => (isa => 'Str', is => 'rw', predicate => 'has_trial_year', required => 1,);
@@ -128,14 +128,14 @@ sub save_trial {
 	#print STDERR "Check 4.2: ".localtime();
 
 	#lookup user by name
-	my $user_name = $self->get_user_name();
-	my $dbh = $self->get_dbh();
-	my $owner_sp_person_id;
-	$owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $user_name); #add person id as an option.
-	if (!$owner_sp_person_id) {
-		print STDERR "Can't create trial: User/owner not found\n";
-		die "no owner $user_name" ;
-	}
+	#my $user_name = $self->get_user_name();
+	#my $dbh = $self->get_dbh();
+	#my $owner_sp_person_id;
+	#$owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $user_name); #add person id as an option.
+	#if (!$owner_sp_person_id) {
+	#	print STDERR "Can't create trial: User/owner not found\n";
+	#	die "no owner $user_name" ;
+	#}
 
 	#print STDERR "Check 4.3: ".localtime();
 

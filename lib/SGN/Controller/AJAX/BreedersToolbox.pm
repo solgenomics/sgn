@@ -434,7 +434,7 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
      	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
      	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
      	dbh => $c->dbc->dbh(),
-     	user_name => $c->user()->get_object()->get_username(),
+     	user_name => $c->user()->get_object()->get_username(), #not implemented
      	trial_year => $year,
 	trial_location => $location->description(),
 	program => $breeding_program->name(),
@@ -588,7 +588,7 @@ sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') Args(0) {
      	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
      	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
      	dbh => $c->dbc->dbh(),
-     	user_name => $c->user()->get_object()->get_username(),
+     	user_name => $c->user()->get_object()->get_username(), #not implemented
      	trial_year => $year,
 	trial_location => $location->description(),
 	program => $breeding_program->name(),

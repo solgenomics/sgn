@@ -426,7 +426,7 @@ sub save_experimental_design_POST : Args(0) {
 	       chado_schema => $chado_schema,
     	   phenome_schema => $phenome_schema,
     	   dbh => $dbh,
-    	   user_name => $user_name,
+    	   user_name => $user_name, #not implemented
     	   design => $trial_location_design,
     	   program => $breeding_program,
     	   trial_year => $c->req->param('year'),
