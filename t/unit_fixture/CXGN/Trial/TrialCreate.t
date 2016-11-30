@@ -86,7 +86,6 @@ ok(my $design = $trial_design->get_design(), "retrieve design");
 
 ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
-    phenome_schema => $phenome_schema,
     dbh => $dbh,
     user_name => "johndoe", #not implemented
     design => $design,	
@@ -138,7 +137,6 @@ ok(my $design = $trial_design->get_design(), "retrieve design");
 
 ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
-    phenome_schema => $phenome_schema,
     dbh => $dbh,
     user_name => "johndoe", #not implemented
     design => $design,	
@@ -189,7 +187,6 @@ my %geno_design;
 
 ok(my $genotyping_trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
-    phenome_schema => $phenome_schema,
     dbh => $dbh,
     is_genotyping => 1,
     user_name => "johndoe", #not implemented
@@ -199,7 +196,7 @@ ok(my $genotyping_trial_create = CXGN::Trial::TrialCreate->new({
     trial_description => "test description",
     trial_location => "test_location_for_trial",
     trial_name => "test_genotyping_trial_name",
-    design_type => "Genotyping",
+    design_type => "genotyping_plate",
 							       }), "create genotyping trial");
 
 ok($genotyping_trial_create->save_trial(), "save genotyping trial");

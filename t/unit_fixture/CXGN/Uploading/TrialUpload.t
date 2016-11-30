@@ -154,7 +154,6 @@ is_deeply($parsed_data, $parsed_data_check, 'check trial excel parse data' );
 my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	   chado_schema => $c->bcs_schema(),
-	   phenome_schema => $c->phenome_schema(),
 	   dbh => $c->dbh(),
 	   trial_year => "2016",
 	   trial_description => "Trial Upload Test",
@@ -336,8 +335,6 @@ is_deeply($design, $igd_design_check, "check igd design");
 my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	chado_schema => $c->bcs_schema,
-     	phenome_schema => $c->phenome_schema,
-     	metadata_schema => $c->metadata_schema,
      	dbh => $c->dbh(),
      	user_name => 'janedoe', #not implemented
      	trial_year => '2016',

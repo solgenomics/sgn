@@ -419,7 +419,6 @@ sub save_experimental_design_POST : Args(0) {
 
       my $trial_create = CXGN::Trial::TrialCreate->new({
 	       chado_schema => $chado_schema,
-    	   phenome_schema => $phenome_schema,
     	   dbh => $dbh,
     	   user_name => $user_name, #not implemented
     	   design => $trial_location_design,
@@ -669,7 +668,6 @@ sub upload_trial_file_POST : Args(0) {
   my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	   chado_schema => $chado_schema,
-	   phenome_schema => $phenome_schema,
 	   dbh => $dbh,
 	   trial_year => $trial_year,
 	   trial_description => $trial_description,

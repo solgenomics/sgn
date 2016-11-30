@@ -431,8 +431,6 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
 
     my $ct = CXGN::Trial::TrialCreate->new( {
      	chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
-     	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
-     	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
      	dbh => $c->dbc->dbh(),
      	user_name => $c->user()->get_object()->get_username(), #not implemented
      	trial_year => $year,
@@ -585,8 +583,6 @@ sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') Args(0) {
 
     my $ct = CXGN::Trial::TrialCreate->new( {
      	chado_schema => $schema,
-     	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
-     	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
      	dbh => $c->dbc->dbh(),
      	user_name => $c->user()->get_object()->get_username(), #not implemented
      	trial_year => $year,

@@ -10,7 +10,6 @@ CXGN::Trial::TrialCreate - Module to create a trial based on a specified design.
  FOR FIELD PHENOTYPING TRIALS:
  my $trial_create = CXGN::Trial::TrialCreate->new({
 	chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
-	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
 	dbh => $c->dbc->dbh(),
 	user_name => $user_name, #not implemented,
 	design_type => 'CRD',
@@ -30,7 +29,6 @@ CXGN::Trial::TrialCreate - Module to create a trial based on a specified design.
  FOR GENOTYPING TRIALS:
  my $ct = CXGN::Trial::TrialCreate->new( {
 	chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
-	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
 	dbh => $c->dbc->dbh(),
 	user_name => $c->user()->get_object()->get_username(), #not implemented
 	trial_year => $year,
@@ -79,13 +77,6 @@ has 'chado_schema' => (
 		 predicate => 'has_chado_schema',
 		 required => 1,
 		);
-
-has 'metadata_schema' => (
-		 is       => 'rw',
-		 isa      => 'DBIx::Class::Schema',
-		 predicate => 'has_metadata_schema',
-		 required => 0,
-			 );
 
 has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 #has 'user_name' => (isa => 'Str', is => 'rw', predicate => 'has_user_name', required => 1,);

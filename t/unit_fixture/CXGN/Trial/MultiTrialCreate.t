@@ -79,7 +79,6 @@ foreach my $trial_location (@multi_location) {
 
     ok(my $trial_create = CXGN::Trial::TrialCreate->new({
         chado_schema => $chado_schema,
-        phenome_schema => $phenome_schema,
         dbh => $dbh,
         user_name => "johndoe", #not implemented
         design => $multi_design[$design_index],
