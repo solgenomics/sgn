@@ -15,7 +15,7 @@ jQuery(document).ready( function() {
        
         var list = new CXGN.List();
         
-        var listMenu = list.listSelect("reference_genotypes", ['plots']);
+    var listMenu = list.listSelect("reference_genotypes", ['plots', 'trials']);
        
 	if(listMenu.match(/option/) != null) {
             
