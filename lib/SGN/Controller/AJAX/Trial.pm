@@ -157,22 +157,6 @@ catch {
 my $location_number = scalar(@locations);
 
 #print STDERR Dumper(@locations);
-   print STDERR join "\n",$design_type;
-   print STDERR "\n";
-
-   print STDERR join "\n",$block_number;
-   print STDERR "\n";
-
-   print STDERR join "\n",$row_number;
-   print STDERR "\n";
-
-   print STDERR join "\n",$use_same_layout;
-   print STDERR "\n";
-
-   print STDERR join "\n",$trial_location;
-   print STDERR "\n";
-
-
 
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
@@ -308,7 +292,7 @@ my $location_number = scalar(@locations);
   if ($error) {return;}
   if ($trial_design->get_design()) {
     %design = %{$trial_design->get_design()};
-    print STDERR "DESIGN: ". Dumper(%design);
+    #print STDERR "DESIGN: ". Dumper(%design);
   } else {
     $c->stash->{rest} = {error => "Could not generate design" };
     return;
@@ -357,8 +341,6 @@ sub save_experimental_design_POST : Args(0) {
   my $user_id = $c->user()->get_object()->get_sp_person_id();
 
   my $user_name = $c->user()->get_object()->get_username();
-
-  print STDERR "\nUserName: $user_name\n\n";
   my $error;
 
   my $design = _parse_design_from_json($c->req->param('design_json'));
@@ -418,16 +400,16 @@ sub save_experimental_design_POST : Args(0) {
     #print STDERR Dumper $trial_location_design;
 
       my $trial_create = CXGN::Trial::TrialCreate->new({
-	       chado_schema => $chado_schema,
-    	   dbh => $dbh,
-    	   user_name => $user_name, #not implemented
-    	   design => $trial_location_design,
-    	   program => $breeding_program,
-    	   trial_year => $c->req->param('year'),
-    	   trial_description => $c->req->param('project_description'),
-         trial_location => $trial_location,
-         trial_name => $trial_name,
-    	   design_type => $c->req->param('design_type'),
+        chado_schema => $chado_schema,
+        dbh => $dbh,
+        user_name => $user_name, #not implemented
+        design => $trial_location_design,
+        program => $breeding_program,
+        trial_year => $c->req->param('year'),
+        trial_description => $c->req->param('project_description'),
+        trial_location => $trial_location,
+        trial_name => $trial_name,
+        design_type => $c->req->param('design_type'),
 	  });
 
   #$trial_create->set_user($c->user()->id());
@@ -446,13 +428,20 @@ sub save_experimental_design_POST : Args(0) {
       return;
     }
 
+    my %message;
     try {
-      $trial_create->save_trial();
+        %message = $trial_create->save_trial();
     } catch {
-      $c->stash->{rest} = {error => "Error saving trial in the database $_"};
-      print STDERR "ERROR SAVING TRIAL!\n";
-      $error = 1;
+        $error = $_;
     };
+    if ($message{'error'}){
+        $error = $message{'error'};
+    }
+    if ($error) {
+        print STDERR "Error trialcreate save: $error\n";
+        $c->stash->{rest} = {error => "Error saving trial in the database: $error"};
+        $c->detach;
+    }
 
     $design_index++;
 
