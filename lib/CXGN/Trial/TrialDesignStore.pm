@@ -9,8 +9,10 @@ CXGN::Trial::TrialDesignStore - Module to validate and store a trial's design (b
 
  my $design_store = CXGN::Trial::TrialDesignStore->new({
 	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+	trial_id => $trial_id,
 	design_type => 'CRD',
 	design => $design_hash,
+	is_genotyping => 0
  });
  my $validate_error = $design_store->validate_design();
  my $store_error;
