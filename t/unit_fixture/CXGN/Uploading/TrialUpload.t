@@ -184,7 +184,7 @@ ok($post1_project_diff == 1, "check project table after upload excel trial");
 my $post_nd_experiment_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({})->count();
 my $post1_nd_experiment_diff = $post_nd_experiment_count - $pre_nd_experiment_count;
 print STDERR "NdExperiment: ".$post1_nd_experiment_diff."\n";
-ok($post1_nd_experiment_diff == 2, "check ndexperiment table after upload excel trial");
+ok($post1_nd_experiment_diff == 1, "check ndexperiment table after upload excel trial");
 
 my $post_nd_experiment_proj_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({})->count();
 my $post1_nd_experiment_proj_diff = $post_nd_experiment_proj_count - $pre_nd_experiment_proj_count;
@@ -367,7 +367,7 @@ ok($post2_project_diff == 2, "check project table after upload igd trial");
 $post_nd_experiment_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({})->count();
 my $post2_nd_experiment_diff = $post_nd_experiment_count - $pre_nd_experiment_count;
 print STDERR "NdExperiment: ".$post2_nd_experiment_diff."\n";
-ok($post2_nd_experiment_diff == 4, "check ndexperiment table after upload igd trial");
+ok($post2_nd_experiment_diff == 2, "check ndexperiment table after upload igd trial");
 
 $post_nd_experiment_proj_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({})->count();
 my $post2_nd_experiment_proj_diff = $post_nd_experiment_proj_count - $pre_nd_experiment_proj_count;
