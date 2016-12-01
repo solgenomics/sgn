@@ -221,7 +221,7 @@ sub save_trial {
 		return ( error => "Error validating trial design: $validate_design_error." );
 	} else {
 		try {
-			$trial_design_store->store();
+			$error = $trial_design_store->store();
 		} catch {
 			print STDERR "ERROR store: $_\n";
 			$error = $_;

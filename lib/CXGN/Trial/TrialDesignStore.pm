@@ -13,14 +13,18 @@ CXGN::Trial::TrialDesignStore - Module to validate and store a trial's design (b
 	design => $design_hash,
  });
  my $validate_error = $design_store->validate_design();
+ my $store_error;
  if ($validate_error) {
  	print STDERR "VALIDATE ERROR: $validate_error\n";
  } else {
  	try {
-		$design_store->store();
+		$store error = $design_store->store();
 	} catch {
-		print STDERR "ERROR SAVING TRIAL!: $_\n";
+		$store_error = $_;
  	};
+}
+if ($store_error) {
+	print STDERR "ERROR SAVING TRIAL!: $store_error\n";
 }
 
 
@@ -171,179 +175,191 @@ sub store {
 	my $stock_id_checked;
 	my $organism_id_checked;
 
-	#print STDERR Dumper \%design;
-	foreach my $key (sort { $a cmp $b} keys %design) {
+	my $coderef = sub {
 
-		my $plot_name;
-		if ($design{$key}->{plot_name}) {
-			$plot_name = $design{$key}->{plot_name};
-		}
-		my $plot_number;
-		if ($design{$key}->{plot_number}) {
-			$plot_number = $design{$key}->{plot_number};
-		} else {
-			$plot_number = $key;
-		}
-		my $plant_names;
-		if ($design{$key}->{plant_names}) {
-			$plant_names = $design{$key}->{plant_names};
-		}
-		my $stock_name;
-		if ($design{$key}->{stock_name}) {
-			$stock_name = $design{$key}->{stock_name};
-		}
-		my $block_number;
-		if ($design{$key}->{block_number}) { #set block number to 1 if no blocks are specified
-			$block_number = $design{$key}->{block_number};
-		} else {
-			$block_number = 1;
-		}
-		my $rep_number;
-		if ($design{$key}->{rep_number}) { #set rep number to 1 if no reps are specified
-			$rep_number = $design{$key}->{rep_number};
-		} else {
-			$rep_number = 1;
-		}
-		my $is_a_control;
-		if ($design{$key}->{is_a_control}) {
-			$is_a_control = $design{$key}->{is_a_control};
-		}
-		my $row_number;
-		if ($design{$key}->{row_number}) {
-			$row_number = $design{$key}->{row_number};
-		}
-		my $col_number;
-		if ($design{$key}->{col_number}) {
-			$col_number = $design{$key}->{col_number};
-		}
-		my $range_number;
-		if ($design{$key}->{range_number}) {
-			$range_number = $design{$key}->{range_number};
-		}
+		#print STDERR Dumper \%design;
+		foreach my $key (sort { $a cmp $b} keys %design) {
 
-		#check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database.
-		if ($stock_data{$stock_name}) {
-			$stock_id_checked = $stock_data{$stock_name}[0];
-			$organism_id_checked = $stock_data{$stock_name}[1];
-		} else {
-			my $parent_stock;
-			my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-			$stock_lookup->set_stock_name($stock_name);
-			$parent_stock = $stock_lookup->get_stock();
-
-			if (!$parent_stock) {
-				die ("Error while saving trial layout: no stocks found matching $stock_name");
+			my $plot_name;
+			if ($design{$key}->{plot_name}) {
+				$plot_name = $design{$key}->{plot_name};
+			}
+			my $plot_number;
+			if ($design{$key}->{plot_number}) {
+				$plot_number = $design{$key}->{plot_number};
+			} else {
+				$plot_number = $key;
+			}
+			my $plant_names;
+			if ($design{$key}->{plant_names}) {
+				$plant_names = $design{$key}->{plant_names};
+			}
+			my $stock_name;
+			if ($design{$key}->{stock_name}) {
+				$stock_name = $design{$key}->{stock_name};
+			}
+			my $block_number;
+			if ($design{$key}->{block_number}) { #set block number to 1 if no blocks are specified
+				$block_number = $design{$key}->{block_number};
+			} else {
+				$block_number = 1;
+			}
+			my $rep_number;
+			if ($design{$key}->{rep_number}) { #set rep number to 1 if no reps are specified
+				$rep_number = $design{$key}->{rep_number};
+			} else {
+				$rep_number = 1;
+			}
+			my $is_a_control;
+			if ($design{$key}->{is_a_control}) {
+				$is_a_control = $design{$key}->{is_a_control};
+			}
+			my $row_number;
+			if ($design{$key}->{row_number}) {
+				$row_number = $design{$key}->{row_number};
+			}
+			my $col_number;
+			if ($design{$key}->{col_number}) {
+				$col_number = $design{$key}->{col_number};
+			}
+			my $range_number;
+			if ($design{$key}->{range_number}) {
+				$range_number = $design{$key}->{range_number};
 			}
 
-			$stock_id_checked = $parent_stock->stock_id();
-			$organism_id_checked = $parent_stock->organism_id();
-		}
+			#check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database.
+			if ($stock_data{$stock_name}) {
+				$stock_id_checked = $stock_data{$stock_name}[0];
+				$organism_id_checked = $stock_data{$stock_name}[1];
+			} else {
+				my $parent_stock;
+				my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
+				$stock_lookup->set_stock_name($stock_name);
+				$parent_stock = $stock_lookup->get_stock();
 
-		#create the plot, if plot given
-		my $plot;
-		if ($plot_name) {
-			$plot = $chado_schema->resultset("Stock::Stock")
-			->find_or_create({
-				organism_id => $organism_id_checked,
-				name       => $plot_name,
-				uniquename => $plot_name,
-				type_id => $stock_type_id,
-			});
-			$plot->create_stockprops({$replicate_cvterm->name() => $rep_number});
-			$plot->create_stockprops({$block_cvterm->name() => $block_number});
-			$plot->create_stockprops({$plot_number_cvterm->name() => $plot_number});
-			if ($is_a_control) {
-				$plot->create_stockprops({$is_control_cvterm->name() => $is_a_control});
-			}
-			if ($range_number) {
-				$plot->create_stockprops({$range_cvterm->name() => $range_number});
-			}
-			if ($row_number) {
-				$plot->create_stockprops({$row_number_cvterm->name() => $row_number});
-			}
-			if ($col_number) {
-				$plot->create_stockprops({$col_number_cvterm->name() => $col_number});
+				if (!$parent_stock) {
+					die ("Error while saving trial layout: no stocks found matching $stock_name");
+				}
+
+				$stock_id_checked = $parent_stock->stock_id();
+				$organism_id_checked = $parent_stock->organism_id();
 			}
 
-			#create the stock_relationship of the accession with the plot, if it does not exist already
-			if (!$stock_relationship_data{$stock_id_checked, $stock_rel_type_id, $plot->stock_id()} ) {
-				my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
-					object_id => $stock_id_checked,
-					type_id => $stock_rel_type_id,
-					subject_id => $plot->stock_id()
-				});
-			}
-
-			#link the experiment to the plot, if it is not already
-			if (!$stock_experiment_data{$plot->stock_id(), $nd_experiment_project->nd_experiment_id(), $nd_experiment_type_id} ) {
-				my $stock_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
-					nd_experiment_id => $nd_experiment_project->nd_experiment_id(),
-					type_id => $nd_experiment_type_id,
-					stock_id => $plot->stock_id(),
-				});
-			}
-		}
-
-		#Create plant entry if given. Currently this is for the greenhouse trial creation.
-		if ($plant_names) {
-			my $plant_index_number = 1;
-			foreach my $plant_name (@$plant_names) {
-				my $plant = $chado_schema->resultset("Stock::Stock")
+			#create the plot, if plot given
+			my $plot;
+			if ($plot_name) {
+				$plot = $chado_schema->resultset("Stock::Stock")
 				->find_or_create({
 					organism_id => $organism_id_checked,
-					name       => $plant_name,
-					uniquename => $plant_name,
-					type_id => $plant_cvterm->cvterm_id,
+					name       => $plot_name,
+					uniquename => $plot_name,
+					type_id => $stock_type_id,
 				});
-
-				$plant->create_stockprops({$plant_index_number_cvterm->name() => $plant_index_number});
-				$plant_index_number++;
-				$plant->create_stockprops({$replicate_cvterm->name() => $rep_number});
-				$plant->create_stockprops({$block_cvterm->name() => $block_number});
-				$plant->create_stockprops({$plot_number_cvterm->name() => $plot_number});
+				$plot->create_stockprops({$replicate_cvterm->name() => $rep_number});
+				$plot->create_stockprops({$block_cvterm->name() => $block_number});
+				$plot->create_stockprops({$plot_number_cvterm->name() => $plot_number});
 				if ($is_a_control) {
-					$plant->create_stockprops({$is_control_cvterm->name() => $is_a_control});
+					$plot->create_stockprops({$is_control_cvterm->name() => $is_a_control});
 				}
 				if ($range_number) {
-					$plant->create_stockprops({$range_cvterm->name() => $range_number});
+					$plot->create_stockprops({$range_cvterm->name() => $range_number});
 				}
 				if ($row_number) {
-					$plant->create_stockprops({$row_number_cvterm->name() => $row_number});
+					$plot->create_stockprops({$row_number_cvterm->name() => $row_number});
 				}
 				if ($col_number) {
-					$plant->create_stockprops({$col_number_cvterm->name() => $col_number});
+					$plot->create_stockprops({$col_number_cvterm->name() => $col_number});
 				}
 
-				#the plant has a relationship to the plot
-				if (!$stock_relationship_data{$plant->stock_id(), $plant_of->cvterm_id(), $plot->stock_id()} ) {
-					my $stock_relationship = $chado_schema->resultset("Stock::StockRelationship")->create({
-						subject_id => $plot->stock_id,
-						object_id => $plant->stock_id(),
-						type_id => $plant_of->cvterm_id(),
-					});
-				}
-
-				#create the stock_relationship of the accession with the plant, if it does not exist already
-				if (!$stock_relationship_data{$stock_id_checked, $plant_of->cvterm_id(), $plant->stock_id()} ) {
+				#create the stock_relationship of the accession with the plot, if it does not exist already
+				if (!$stock_relationship_data{$stock_id_checked, $stock_rel_type_id, $plot->stock_id()} ) {
 					my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
 						object_id => $stock_id_checked,
-						type_id => $plant_of->cvterm_id(),
-						subject_id => $plant->stock_id()
+						type_id => $stock_rel_type_id,
+						subject_id => $plot->stock_id()
 					});
 				}
 
-				#link the experiment to the plant, if it is not already
-				if (!$stock_experiment_data{$plant->stock_id(), $nd_experiment_project->nd_experiment_id(), $nd_experiment_type_id} ) {
+				#link the experiment to the plot, if it is not already
+				if (!$stock_experiment_data{$plot->stock_id(), $nd_experiment_project->nd_experiment_id(), $nd_experiment_type_id} ) {
 					my $stock_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
 						nd_experiment_id => $nd_experiment_project->nd_experiment_id(),
 						type_id => $nd_experiment_type_id,
-						stock_id => $plant->stock_id(),
+						stock_id => $plot->stock_id(),
 					});
 				}
 			}
-		}
-	}
 
+			#Create plant entry if given. Currently this is for the greenhouse trial creation.
+			if ($plant_names) {
+				my $plant_index_number = 1;
+				foreach my $plant_name (@$plant_names) {
+					my $plant = $chado_schema->resultset("Stock::Stock")
+					->find_or_create({
+						organism_id => $organism_id_checked,
+						name       => $plant_name,
+						uniquename => $plant_name,
+						type_id => $plant_cvterm->cvterm_id,
+					});
+
+					$plant->create_stockprops({$plant_index_number_cvterm->name() => $plant_index_number});
+					$plant_index_number++;
+					$plant->create_stockprops({$replicate_cvterm->name() => $rep_number});
+					$plant->create_stockprops({$block_cvterm->name() => $block_number});
+					$plant->create_stockprops({$plot_number_cvterm->name() => $plot_number});
+					if ($is_a_control) {
+						$plant->create_stockprops({$is_control_cvterm->name() => $is_a_control});
+					}
+					if ($range_number) {
+						$plant->create_stockprops({$range_cvterm->name() => $range_number});
+					}
+					if ($row_number) {
+						$plant->create_stockprops({$row_number_cvterm->name() => $row_number});
+					}
+					if ($col_number) {
+						$plant->create_stockprops({$col_number_cvterm->name() => $col_number});
+					}
+
+					#the plant has a relationship to the plot
+					if (!$stock_relationship_data{$plant->stock_id(), $plant_of->cvterm_id(), $plot->stock_id()} ) {
+						my $stock_relationship = $chado_schema->resultset("Stock::StockRelationship")->create({
+							subject_id => $plot->stock_id,
+							object_id => $plant->stock_id(),
+							type_id => $plant_of->cvterm_id(),
+						});
+					}
+
+					#create the stock_relationship of the accession with the plant, if it does not exist already
+					if (!$stock_relationship_data{$stock_id_checked, $plant_of->cvterm_id(), $plant->stock_id()} ) {
+						my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
+							object_id => $stock_id_checked,
+							type_id => $plant_of->cvterm_id(),
+							subject_id => $plant->stock_id()
+						});
+					}
+
+					#link the experiment to the plant, if it is not already
+					if (!$stock_experiment_data{$plant->stock_id(), $nd_experiment_project->nd_experiment_id(), $nd_experiment_type_id} ) {
+						my $stock_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
+							nd_experiment_id => $nd_experiment_project->nd_experiment_id(),
+							type_id => $nd_experiment_type_id,
+							stock_id => $plant->stock_id(),
+						});
+					}
+				}
+			}
+		}
+
+	};
+	
+	my $transaction_error;
+	try {
+		$chado_schema->txn_do($coderef);
+	} catch {
+		print STDERR "Transaction Error: $_\n";
+		$transaction_error =  $_;
+	};
+	return $transaction_error;
 }
 
 1;
