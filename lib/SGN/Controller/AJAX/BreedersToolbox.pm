@@ -370,7 +370,7 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
 
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
         $c->stash->{rest} = { error => 'You do not have the required privileges to create a genotyping trial.' };
-        return;
+        $c->detach();
     }
 
     my $list_id = $c->req->param("list_id");
@@ -385,7 +385,7 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
 
     if (!$name || !$list_id || !$breeding_program_id || !$location_id || !$year) {
         $c->stash->{rest} = { error => "Please provide all parameters." };
-        return;
+        $c->detach();
     }
 
     my $td = CXGN::Trial::TrialDesign->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
@@ -404,14 +404,14 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
 
     if ($@) {
         $c->stash->{rest} = { error => "Design failed. Error: $@" };
-        return;
+        $c->detach();
     }
 
     $design = $td->get_design();
 
     if (exists($design->{error})) {
         $c->stash->{rest} = $design;
-        return;
+        $c->detach();
     }
     #print STDERR Dumper($design);
 
@@ -419,13 +419,13 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
     my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $location_id } );
     if (!$location) {
         $c->stash->{rest} = { error => "Unknown location" };
-        return;
+        $c->detach();
     }
 
     my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
     if (!$breeding_program) {
         $c->stash->{rest} = { error => "Unknown breeding program" };
-        return;
+        $c->detach();
     }
 
 
@@ -444,17 +444,19 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
     });
 
     my %message;
+    my $error;
     try {
         %message = $ct->save_trial();
     } catch {
-        $c->stash->{rest} = {error => "Error saving trial in the database $_"};
-        return;
+        $error = $_;
     };
 
     if ($message{'error'}) {
-        my $error = $message{'error'};
+        $error = $message{'error'};
+    }
+    if ($error){
         $c->stash->{rest} = {error => "Error saving trial in the database: $error"};
-        return;
+        $c->detach();
     }
 
     $c->stash->{rest} = {
@@ -473,7 +475,7 @@ sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') Args(0) {
 
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
         $c->stash->{rest} = { error => 'You do not have the required privileges to create a genotyping trial.' };
-        return;
+        $c->detach();
     }
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $list_id = $c->req->param("list_id");
@@ -498,7 +500,7 @@ sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') Args(0) {
     if (@{$errors->{'error_messages'}}) {
         $c->stash->{rest} = { error => "The file has the following problems: ".join ", ", @{$errors->{'error_messages'}}.". Please fix these problems and try again." };
         print STDERR "Parsing errors in uploaded file. Aborting. (".join ",", @{$errors->{'error_messages'}}.")\n";
-        return;
+        $c->detach();
     }
     print STDERR "Meta information from genotyping trial file: ".Dumper($meta);
 
@@ -508,7 +510,7 @@ sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') Args(0) {
     print STDERR "PARAMS: $upload_original_name, $list_id, $breeding_program_id, $location_id, $year\n";
     if (!$upload_original_name || !$list_id || !$breeding_program_id || !$location_id || !$year) {
         $c->stash->{rest} = { error => "Please provide all parameters, including a file." };
-        return;
+        $c->detach();
     }
 
     print STDERR "Looking up stock names and converting to IGD accepted names...\n";
@@ -561,27 +563,27 @@ sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') Args(0) {
     if ($@) {
         $c->stash->{rest} = { error => "Design failed. Error: $@" };
         print STDERR "Design failed because of $@\n";
-        return;
+        $c->detach();
     }
 
     $design = $td->get_design();
 
     if (exists($design->{error})) {
         $c->stash->{rest} = $design;
-        return;
+        $c->detach();
     }
     #print STDERR Dumper($design);
 
     my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $location_id } );
     if (!$location) {
         $c->stash->{rest} = { error => "Unknown location" };
-        return;
+        $c->detach();
     }
 
     my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
     if (!$breeding_program) {
         $c->stash->{rest} = { error => "Unknown breeding program" };
-        return;
+        $c->detach();
     }
 
     print STDERR "Creating the trial...\n";
@@ -603,19 +605,21 @@ sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') Args(0) {
     });
 
     my %message;
+    my $error;
     try {
         %message = $ct->save_trial();
     } catch {
-        $c->stash->{rest} = {error => "Error saving trial in the database $_"};
-        return;
+        $error = $_;
     };
 
     if ($message{'error'}) {
-        my $error = $message{'error'};
-        $c->stash->{rest} = {error => "Error saving trial in the database: $error"};
-        return;
+        $error = $message{'error'};
     }
-    
+    if ($error){
+        $c->stash->{rest} = {error => "Error saving trial in the database: $error"};
+        $c->detach;
+    }
+
     $c->stash->{rest} = {
         message => "Successfully stored the trial.",
         trial_id => $message{trial_id},
