@@ -79,9 +79,7 @@ my $new_trial = CXGN::Trial::TrialCreate->new(
     {
 	dbh => $f->dbh(),
 	chado_schema => $f->bcs_schema(),
-	metadata_schema => $f->metadata_schema(),
-	phenome_schema => $f->phenome_schema(),
-	user_name => 'janedoe',
+	user_name => 'janedoe', #not implemented
 	program => 'test',
 	trial_year => 2014,
 	trial_description => 'another test trial...',

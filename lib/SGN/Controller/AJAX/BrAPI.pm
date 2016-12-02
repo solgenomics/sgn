@@ -959,7 +959,7 @@ sub studies_search  : Chained('brapi') PathPart('studies-search') Args(0) : Acti
 #        chado_schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado'),
 #        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
 #        phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
-#        user_name => $c->user()->get_object()->get_username(),
+#        user_name => $c->user()->get_object()->get_username(), #not implemented
 #        program => $program_name,
 #        trial_year => $years,
 #        trial_description => $description,

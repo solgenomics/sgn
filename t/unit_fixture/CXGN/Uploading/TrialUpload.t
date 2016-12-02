@@ -154,13 +154,12 @@ is_deeply($parsed_data, $parsed_data_check, 'check trial excel parse data' );
 my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	   chado_schema => $c->bcs_schema(),
-	   phenome_schema => $c->phenome_schema(),
 	   dbh => $c->dbh(),
 	   trial_year => "2016",
 	   trial_description => "Trial Upload Test",
 	   trial_location => "test_location",
 	   trial_name => "Trial_upload_test",
-	   user_name => "janedoe",
+	   user_name => "janedoe", #not implemented
 	   design_type => "RCBD",
 	   design => $parsed_data,
 	   program => "test",
@@ -185,7 +184,7 @@ ok($post1_project_diff == 1, "check project table after upload excel trial");
 my $post_nd_experiment_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({})->count();
 my $post1_nd_experiment_diff = $post_nd_experiment_count - $pre_nd_experiment_count;
 print STDERR "NdExperiment: ".$post1_nd_experiment_diff."\n";
-ok($post1_nd_experiment_diff == 2, "check ndexperiment table after upload excel trial");
+ok($post1_nd_experiment_diff == 1, "check ndexperiment table after upload excel trial");
 
 my $post_nd_experiment_proj_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({})->count();
 my $post1_nd_experiment_proj_diff = $post_nd_experiment_proj_count - $pre_nd_experiment_proj_count;
@@ -336,10 +335,8 @@ is_deeply($design, $igd_design_check, "check igd design");
 my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	chado_schema => $c->bcs_schema,
-     	phenome_schema => $c->phenome_schema,
-     	metadata_schema => $c->metadata_schema,
      	dbh => $c->dbh(),
-     	user_name => 'janedoe',
+     	user_name => 'janedoe', #not implemented
      	trial_year => '2016',
 	trial_location => 'test_location',
 	program => 'test',
@@ -370,7 +367,7 @@ ok($post2_project_diff == 2, "check project table after upload igd trial");
 $post_nd_experiment_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({})->count();
 my $post2_nd_experiment_diff = $post_nd_experiment_count - $pre_nd_experiment_count;
 print STDERR "NdExperiment: ".$post2_nd_experiment_diff."\n";
-ok($post2_nd_experiment_diff == 4, "check ndexperiment table after upload igd trial");
+ok($post2_nd_experiment_diff == 2, "check ndexperiment table after upload igd trial");
 
 $post_nd_experiment_proj_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({})->count();
 my $post2_nd_experiment_proj_diff = $post_nd_experiment_proj_count - $pre_nd_experiment_proj_count;

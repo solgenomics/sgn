@@ -170,7 +170,7 @@ function getUserUploadedRefPop (listId) {
 
     var uploadedSelPop ='<table id="uploaded_reference_pops_table" style="width:100%; text-align:left"><tr>'
                                 + '<th>List-based training population</th>'
-                                + '<th>Build model</th>'
+                                + '<th>Models</th>'
                                 +'</tr>'
                                 + '<tr>'
                                 + '<td>'
