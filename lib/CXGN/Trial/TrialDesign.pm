@@ -47,6 +47,9 @@ has 'plot_start_number' => (isa => 'Int', is => 'rw', predicate => 'has_plot_sta
 has 'plot_number_increment' => (isa => 'Int', is => 'rw', predicate => 'has_plot_number_increment', clearer => 'clear_plot_number_increment', default => 1);
 has 'randomization_seed' => (isa => 'Int', is => 'rw', predicate => 'has_randomization_seed', clearer => 'clear_randomization_seed');
 has 'blank' => ( isa => 'Str', is => 'rw', predicate=> 'has_blank' );
+has 'fieldmap_col_number' => (isa => 'Int',is => 'rw',predicate => 'has_fieldmap_col_number',clearer => 'clear_fieldmap_col_number');
+has 'fieldmap_row_number' => (isa => 'Int',is => 'rw',predicate => 'has_fieldmap_row_number',clearer => 'clear_fieldmap_row_number');
+has 'plot_layout_format' => (isa => 'Str', is => 'rw', predicate => 'has_plot_layout_format', clearer => 'clear_plot_layout_format');
 
 subtype 'RandomizationMethodType',
   as 'Str',
@@ -193,6 +196,11 @@ sub _get_crd_design {
     my @control_list_crbd;
     my %control_names_lookup;
     my $stock_name_iter;
+    my $fieldmap_row_number;
+    my @fieldmap_row_numbers;
+    my $fieldmap_col_number;
+    my $plot_layout_format;
+    my @col_number_fieldmaps;
     if ($self->has_stock_list()) {
         @stock_list = @{$self->get_stock_list()};
         $number_of_stocks = scalar(@stock_list);
@@ -212,6 +220,17 @@ sub _get_crd_design {
         $number_of_reps = $self->get_number_of_reps();
     } else {
         die "Number of reps not specified\n";
+    }
+
+    if ($self->has_fieldmap_col_number()) {
+      $fieldmap_col_number = $self->get_fieldmap_col_number();
+
+    }
+    if ($self->has_fieldmap_row_number()) {
+      $fieldmap_row_number = $self->get_fieldmap_row_number();
+    }
+    if ($self->has_plot_layout_format()) {
+      $plot_layout_format = $self->get_plot_layout_format();
     }
 
     if (scalar(@stock_list)>1) {
@@ -253,19 +272,44 @@ sub _get_crd_design {
         @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
         #print STDERR Dumper \@converted_plot_numbers;
 
+        #generate col_number
+        #if ($fieldmap_col_number) {
+        if ($plot_layout_format eq "zigzag") {
+          #my @col_number_fieldmaps = (my @column, (1..$fieldmap_col_number) x $number_of_reps);
+          #my @col_number_fieldmaps = ((1..$fieldmap_col_number) x $number_of_reps);
+          @col_number_fieldmaps = ((1..(scalar(@stock_list))) x $number_of_reps);
+          print STDERR Dumper(\@col_number_fieldmaps);
+        } elsif ($plot_layout_format eq "serpentine") {
+          @col_number_fieldmaps = (my @serpentine, (1..(scalar(@stock_list))) x $number_of_reps);
+          print STDERR Dumper(@col_number_fieldmaps);
+        }
+
     } else { #only a single stock was given, so no randomization can occur.
         @converted_plot_numbers = (1...$number_of_reps);
         @rep_numbers = (1...$number_of_reps);
         @stock_names = ($stock_list[0]) x $number_of_reps;
     }
 
+    if ($fieldmap_row_number) {
+      #do some stuff
+      @fieldmap_row_numbers;
+    }
+    elsif ($plot_layout_format && !$fieldmap_col_number && !$fieldmap_row_number){
+      @fieldmap_row_numbers = sort(@rep_numbers);
+    }
+
     for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
         my %plot_info;
+
         $plot_info{'stock_name'} = $stock_names[$i];
         $plot_info{'block_number'} = 1;
         $plot_info{'rep_number'} = $rep_numbers[$i];
         $plot_info{'plot_name'} = $converted_plot_numbers[$i];
         $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
+        if ($fieldmap_row_numbers[$i]){
+          $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
+          $plot_info{'col_number'} = $col_number_fieldmaps[$i]
+        }
         $crd_design{$converted_plot_numbers[$i]} = \%plot_info;
     }
 
@@ -1316,14 +1360,14 @@ sub _build_plot_names {
     my $prefix = '';
     my $suffix = '';
     my $trial_name = $self->get_trial_name;
-    
+
     if ($self->has_plot_name_prefix()) {
         $prefix = $self->get_plot_name_prefix()."_";
     }
     if ($self->has_plot_name_suffix()) {
         $suffix = $self->get_plot_name_suffix();
     }
-    
+
     foreach my $key (keys %design) {
 	$trial_name ||="";
 	my $stock_name = $design{$key}->{stock_name};
@@ -1331,10 +1375,10 @@ sub _build_plot_names {
 	if ($self->get_design_type() eq "RCBD") { # as requested by IITA (Prasad)
 	    $design{$key}->{plot_name} = $prefix.$trial_name."_rep".$rep_number."_".$stock_name.$suffix.$key;
 	}
-	elsif ($self->get_design_type() eq "Augmented") { 
+	elsif ($self->get_design_type() eq "Augmented") {
 	    $design{$key}->{plot_name} = $prefix.$trial_name."_plotno".$key."_".$stock_name.$suffix;
 	}
-	else { 
+	else {
 	    $design{$key}->{plot_name} = $prefix.$trial_name."_".$key.$suffix;
 	}
 
