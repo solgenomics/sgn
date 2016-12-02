@@ -78,7 +78,6 @@ function loadReferenceGenotypesList(listId) {
         alert('The list is empty. Please select a list with content.' );
     }
     else {  
-
         jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
         jQuery.blockUI({message: 'Please wait..'});
        
@@ -175,7 +174,7 @@ function getUserUploadedRefPop (listId) {
                                 +'</tr>'
                                 + '<tr>'
                                 + '<td>'
-                                + '<a href="/solgs/population/' + modelId + '\"  onclick="javascript:loadPopulationPage(' + url + ',' 
+                                + '<a href="/solgs/population/' + modelId + '\" onclick="javascript:loadPopulationPage(' + url + ',' 
                                 + listIdArg + ',' + listSource + ')">' + '<data>'+ hiddenInput + '</data>'
                                 + listName + '</a>'
                                 + '</td>'
