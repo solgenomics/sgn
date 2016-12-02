@@ -15,31 +15,29 @@ jQuery(document).ready( function() {
        
         var list = new CXGN.List();
         
-    var listMenu = list.listSelect("reference_genotypes", ['plots', 'trials']);
+    var listMenu = list.listSelect("list_type_training_pops", ['plots', 'trials']);
        
-	if(listMenu.match(/option/) != null) {
-            
-            jQuery("#reference_genotypes_list").append(listMenu);
-
+	if (listMenu.match(/option/) != null) {
+           
+            jQuery("#list_type_training_pops_list").append(listMenu);
         } else {
             
-            jQuery("#reference_genotypes_list").append("<select><option>no lists found</option></select>");
+            jQuery("#list_type_training_pops_list").append("<select><option>no lists found</option></select>");
         }
                
     });
 
 
 jQuery(document).ready( function() { 
-       
-        var listId;
+               
+        jQuery("<option>", {value: '', selected: true}).prependTo("#list_type_training_pops_list_select");
         
-        jQuery("<option>", {value: '', selected: true}).prependTo("#reference_genotypes_list_select");
-        
-        jQuery("#reference_genotypes_list_select").change(function() {        
-                listId = jQuery(this).find("option:selected").val();              
-                                
-                if(listId) {                
-                    jQuery("#reference_genotypes_list_upload").click(function() {
+        jQuery("#list_type_training_pops_list_select").change(function() { 
+	    alert('select')
+                var listId = jQuery(this).find("option:selected").val();              
+            alert(listId);                
+                if (listId) {                
+                    jQuery("#list_type_training_pop_load").click(function() {
                             //alert('get list: ' + listId);
                             loadReferenceGenotypesList(listId);
                         });

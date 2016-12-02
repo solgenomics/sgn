@@ -18,7 +18,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('a list-based', 'partial_link_text', 'toogle list training pops')->click();
     sleep(2);
-    $d->find_element_ok('//select[@id="reference_genotypes_list_select"]/option[@value=8]', 'xpath', 'select list tr pop')->click();
+    $d->find_element_ok('//select[@id="list_type_training_pops_list_select"]/option[@value=8]', 'xpath', 'select list tr pop')->click();
     sleep(10);
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list tr pop')->click();
     sleep(10);
