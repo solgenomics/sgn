@@ -18,29 +18,31 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <& /util/import_javascript.mas, classes => ["solGS.listTypeTrainingPopulation"] &>
 
- <div class="fileupload-buttonbar">
+<&| /page/info_section.mas, 
+    collapsible => 1, 
+  collapsed   => 1,
+  title       => "Select a list-based training population or create a new one",
+&>
+
+  <div class="fileupload-buttonbar">
    
     <div class="list_upload" id="list_label">
       <label for="reference_genotypes_list">Select a training population </label>
     </div> 
-    <div class="list_upload" id="reference_genotypes_list">      
-    </div>
+    <div class="list_upload" id="reference_genotypes_list"></div>
     <div class="list_upload" id="reference_genotypes_list_upload">
       <input type="button" value="Go" />
-    </div>
-    
+    </div>  
     <div class="list_upload" style="margin-left:5px">     
       <i class="glyphicon-plus"></i>
       <a href="/solgs/breeder_search" style="color:#ffffff">Make a new list of plots</a>  
     </div>
-
     <br>
-    <br>
-   
+    <br>  
     <div class="sub_infosectioncontent" id="uploaded_reference_populations" style="display:none"></div>
     <br>
 
-</div>
+  </div>
 
-
+</&>
 
