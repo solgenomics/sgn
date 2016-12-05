@@ -72,6 +72,7 @@ has 'bcs_schema' => (
 	required => 1,
 );
 has 'trial_id' => (isa => 'Int', is => 'rw', predicate => 'has_trial_id', required => 1);
+has 'nd_geolocation_id' => (isa => 'Int', is => 'rw', predicate => 'has_nd_geolocation_id', required => 1);
 has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', required => 1);
 has 'design' => (isa => 'HashRef[HashRef[Str|ArrayRef]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
@@ -121,8 +122,9 @@ sub validate_design {
 
 	my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
 	my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
+	my $tissue_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
 	my %saved_stocks;
-	my $stocks = $chado_schema->resultset('Stock::Stock')->search({type_id=>[$plot_type_id, $plant_type_id]});
+	my $stocks = $chado_schema->resultset('Stock::Stock')->search({type_id=>[$plot_type_id, $plant_type_id, $tissue_type_id]});
 	while (my $s = $stocks->next()) {
 		$saved_stocks{$s->uniquename} = 1;
 	}
@@ -135,7 +137,7 @@ sub validate_design {
 			if ($property eq 'plot_name') {
 				my $plot_name = $design{$stock}->{$property};
 				if (exists($saved_stocks{$plot_name})) {
-					$error .= "Plot $plot_name already exists in the database.";
+					$error .= "Plot or tissue $plot_name already exists in the database.";
 				}
 			}
 			if ($property eq 'plant_names') {
@@ -157,6 +159,8 @@ sub store {
 	my $chado_schema = $self->get_bcs_schema;
 	my $design_type = $self->get_design_type;
 	my %design = %{$self->get_design};
+	my $trial_id = $self->get_trial_id;
+	my $nd_geolocation_id = $self->get_nd_geolocation_id;
 
 	my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
 	my $plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type');
@@ -183,13 +187,30 @@ sub store {
 		$stock_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
 	}
 
-	my $nd_experiment_project = $chado_schema->resultset('NaturalDiversity::NdExperimentProject')->find(
+	my $nd_experiment_project;
+	my $nd_experiment_project_rs = $chado_schema->resultset('NaturalDiversity::NdExperimentProject')->search(
 		{
-			'me.project_id'=>$self->get_trial_id(),
-			'nd_experiment.type_id'=>$nd_experiment_type_id
+			'me.project_id'=>$trial_id,
+			'nd_experiment.type_id'=>$nd_experiment_type_id,
+			'nd_experiment.nd_geolocation_id'=>$nd_geolocation_id
 		},
 		{ join => 'nd_experiment'}
 	);
+
+	if ($nd_experiment_project_rs->count < 1) {
+		my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
+		->create({
+			nd_geolocation_id => $self->get_nd_geolocation_id,
+			type_id => $nd_experiment_type_id,
+		});
+		$nd_experiment_project = $nd_experiment->find_or_create_related('nd_experiment_projects', {project_id => $trial_id} );
+	} elsif ($nd_experiment_project_rs->count > 1) {
+		print STDERR "ERROR: More than one nd_experiment of type=$nd_experiment_type_id for project=$trial_id\n";
+		$nd_experiment_project = $nd_experiment_project_rs->first;
+	} elsif ($nd_experiment_project_rs->count == 1) {
+		print STDERR "OKAY: NdExperimentProject type=$nd_experiment_type_id for project$trial_id\n";
+		$nd_experiment_project = $nd_experiment_project_rs->first;
+	}
 
 	my $rs = $chado_schema->resultset('Stock::Stock')->search(
 		{ 'me.is_obsolete' => { '!=' => 't' }, 'me.type_id' => $accession_cvterm->cvterm_id },

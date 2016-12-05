@@ -219,6 +219,7 @@ sub save_trial {
 	my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
 		bcs_schema => $chado_schema,
 		trial_id => $project->project_id(),
+		nd_geolocation_id => $geolocation->nd_geolocation_id(),
 		design_type => $design_type,
 		design => \%design,
 		is_genotyping => $self->get_is_genotyping
