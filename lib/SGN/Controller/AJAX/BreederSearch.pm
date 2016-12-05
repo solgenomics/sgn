@@ -87,7 +87,7 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
     return;
   }
   elsif (@$results < 1) {
-    $c->stash->{rest} = { error => scalar(@$results).' matches. No results to display' };
+    $c->stash->{rest} = { list => $results, message => scalar(@$results).' matches. No results to display' };
     return;
   }
   else {
