@@ -279,9 +279,13 @@ sub _get_crd_design {
           #my @col_number_fieldmaps = ((1..$fieldmap_col_number) x $number_of_reps);
           @col_number_fieldmaps = ((1..(scalar(@stock_list))) x $number_of_reps);
           print STDERR Dumper(\@col_number_fieldmaps);
-        } elsif ($plot_layout_format eq "serpentine") {
-          @col_number_fieldmaps = (my @serpentine, (1..(scalar(@stock_list))) x $number_of_reps);
-          print STDERR Dumper(@col_number_fieldmaps);
+        }
+        elsif ($plot_layout_format eq "serpentine") {
+          #@col_number_fieldmaps = (1..(scalar(@stock_list))) x $number_of_reps);
+
+          #my $count = scalar(@col_number_fieldmaps);
+          #print "I have $count arrays\n";
+          #print STDERR Dumper(@col_number_fieldmaps);
         }
 
     } else { #only a single stock was given, so no randomization can occur.

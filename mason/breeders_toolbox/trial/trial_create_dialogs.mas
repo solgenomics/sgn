@@ -224,9 +224,10 @@ $breeding_programs
                                         <label class="col-sm-7 control-label">Plot layout format: </label>
                                         <div class="col-sm-5" >
                                           <select class="form-control" id="plot_layout_format" name="plot_layout_format">
+                                            <option value="">select plot layout format</option>
                                             <option value=zigzag>Zigzag</option>
                                             <option value=serpentine>Serpentine</option>
-                                          </select
+                                          </select>
                                         </div>
                                     </div>
                                 </div>
