@@ -1,4 +1,52 @@
 
+=head1 NAME
+
+CXGN::Dataset - a class to easily query the database for breeding data
+
+=head1 DESCRIPTION
+
+CXGN::Dataset can be used to flexibly define datasets for breeding applications. For example, a dataset can be defined using a list of germplasm, a list of trials, a list of years, etc, or a combination of the above. Once defined, it allows to easily obtain related phenotypes and genotypes and other data.
+
+Datasets can be stored in the database and retrieved for later use.
+
+Currently, there are three incarnations of CXGN::Dataset:
+
+=over 5
+
+=item CXGN::Dataset
+
+Unbuffered output of the queries
+
+=item CXGN::Dataset::File
+
+Writes results to files
+
+=item CXGN::Dataset::Cache
+
+Returns output like CXGN::Dataset, but uses a disk-cache for the response data
+
+=back
+
+=head1 SYNOPSYS
+
+ my $ds = CXGN::Dataset->new( people_schema => $p, schema => $s);
+ $ds->accessions([ 'a', 'b', 'c' ]);
+ my $trials = $ds->retrieve_trials();
+ my $sp_dataset_id = $ds->store();
+ #...
+ my $restored_ds = CXGN::Dataset( people_schema => $p, schema => $s, sp_dataset_id => $sp_dataset_id );
+ my $years = $restored_ds->retrieve_years();
+ #...
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+
+=head1 ACCESSORS
+
+=cut
+
 package CXGN::Dataset;
 
 use Moose;
@@ -10,51 +58,117 @@ use CXGN::People::Schema;
 use CXGN::Phenotypes::Search;
 use CXGN::Genotype::Search;
 
+=head2 people_schema()
+
+accessor for CXGN::People::Schema database object
+
+=cut
+
 has 'people_schema' => (isa => 'CXGN::People::Schema',  is => 'rw', required => 1 );
 
+=head2 schema()
+
+accessor for Bio::Chado::Schema database object
+
+=cut
+
 has 'schema' =>       ( isa => "Bio::Chado::Schema", is => 'rw', required => 1 );
+
+=head2 sp_dataset_id()
+
+accessor for sp_dataset primary key
+
+=cut
 
 has 'sp_dataset_id' => ( isa => 'Int', 
 			 is => 'rw',
 			 predicate => 'has_sp_dataset_id',
     );
 
+=head2 data()
+
+accessor for the json-formatted data structure (as used for the backend storage)
+
+=cut 
+
 has 'data' =>        ( isa => 'HashRef', 
 		       is => 'rw'
     );
+
+=head2 name()
+
+accessor for the name of this dataset
+
+=cut
 
 has 'name' =>        ( isa => 'Maybe[Str]',
 		       is => 'rw',
     );
 
+=head2 description()
+
+accessor for the descrition of this dataset
+
+=cut
+
 has 'description' => ( isa => 'Maybe[Str]', 
 		       is => 'rw'
     );
+
+=head2 accessions()
+
+accessor for defining the accessions that are part of this dataset (ArrayRef).
+
+=cut
 
 has 'accessions' =>  ( isa => 'Maybe[ArrayRef]', 
 		       is => 'rw',
 		       predicate => 'has_accessions',
     );
 
+=head2 plots()
+
+accessor for defining the plots that are part of this dataset (ArrayRef).
+
+=cut
+
 has 'plots' =>       ( isa => 'Maybe[ArrayRef]', 
 		       is => 'rw',
 		       predicate => 'has_plots',
     );
+
+=head2 trials()
+
+accessor for defining the trials that are part of this dataset (ArrayRef).
+
+=cut
 
 has 'trials' =>      ( isa => 'Maybe[ArrayRef]', 
 		       is => 'rw',
 		       predicate => 'has_trials',
     );
 
+=head2 traits()
+
+=cut
+
 has 'traits' =>      ( isa => 'Maybe[ArrayRef]', 
 		       is => 'rw',
 		       predicate => 'has_traits',
     );
 
+=head2 years()
+
+=cut
+
 has 'years' =>       ( isa => 'Maybe[ArrayRef]', 
 		       is => 'rw',
 		       predicate => 'has_years',
     );
+
+=head2 breeding_programs()
+
+=cut
 
 has 'breeding_programs' => ( isa => 'Maybe[ArrayRef]', 
 			     is => 'rw',
@@ -65,6 +179,10 @@ has 'is_live' =>     ( isa => 'Bool',
 		       is => 'rw',
 		       default => 0,
     );
+
+=head2 data_level()
+
+=cut
 
 has 'data_level' =>  ( isa => 'String',
 		       is => 'rw',
@@ -100,6 +218,13 @@ sub BUILD {
 
 }
 
+=head1 CLASS METHODS
+
+=head2 datasets_by_person()
+
+
+=cut
+
 sub datasets_by_person { 
     my $class = shift;
     my $people_schema = shift;
@@ -114,6 +239,12 @@ sub datasets_by_person {
 
     return \@datasets;
 }    
+
+=head1 METHODS
+
+=head2 store()
+
+=cut
 
 sub store { 
     my $self = shift;
@@ -180,6 +311,10 @@ sub _get_source_dataref {
     return $dataref;
 }
 
+=head2 retrieve_genotypes()
+
+=cut
+
 sub retrieve_genotypes { 
     my $self = shift;
     my $protocol_id = shift;
@@ -193,6 +328,10 @@ sub retrieve_genotypes {
     my $resultset = $genotypes_search->get_genotype_info(); 
     my $genotypes = $resultset->{genotypes};	
 }
+
+=head2 retrieve_genotypes()
+
+=cut
 
 sub retrieve_phenotypes { 
     my $self = shift;
@@ -211,6 +350,10 @@ sub retrieve_phenotypes {
 
 }
 
+=head2 retrieve_accessions()
+
+=cut
+
 sub retrieve_accessions { 
     my $self = shift;
     my $accessions;
@@ -225,6 +368,10 @@ sub retrieve_accessions {
     return $accessions->{results};
 }
 
+=head2 retrieve_plots()
+
+=cut
+
 sub retrieve_plots { 
     my $self = shift;
     my $plots;
@@ -238,6 +385,10 @@ sub retrieve_plots {
     }
     return $plots->{results};
 }
+
+=head2 retrieve_trials()
+
+=cut
 
 sub retrieve_trials { 
     my $self = shift;
@@ -254,6 +405,9 @@ sub retrieve_trials {
     return $trials->{results};
 }
 
+=head2 retrieve_traits()
+
+=cut
 
 sub retrieve_traits { 
     my $self = shift;
@@ -269,6 +423,10 @@ sub retrieve_traits {
     return $traits->{results};
 
 }
+
+=head2 retrieve_years()
+
+=cut
 
 sub retrieve_years { 
     my $self = shift;
