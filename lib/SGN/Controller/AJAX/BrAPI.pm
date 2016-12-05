@@ -303,21 +303,25 @@ sub calls_GET {
     );
 
     my @data;
-    foreach (@available) {
-        if ($datatype_param) {
-            if( $datatype_param ~~ @{$_->[1]} ){
-                push @data, {call=>$_->[0], datatypes=>$_->[1], methods=>$_->[2]};
+    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
+    my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
+    for( my $i = $start; $i <= $end; $i++ ) {
+        if ($available[$i]) {
+            if ($datatype_param) {
+                if( $datatype_param ~~ @{$available[$i]->[1]} ){
+                    push @data, {call=>$available[$i]->[0], datatypes=>$available[$i]->[1], methods=>$available[$i]->[2]};
+                }
             }
-        }
-        else {
-            push @data, {call=>$_->[0], datatypes=>$_->[1], methods=>$_->[2]};
+            else {
+                push @data, {call=>$available[$i]->[0], datatypes=>$available[$i]->[1], methods=>$available[$i]->[2]};
+            }
         }
     }
 
-    my %pagination = ();
+    my $total_count = scalar(@available);
     my %result = (data=>\@data);
     my @data_files;
-    my %metadata = (pagination=>\%pagination, status=>$status, datafiles=>\@data_files);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@data_files);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
