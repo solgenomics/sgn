@@ -136,15 +136,8 @@ sub metadata_query {
     push @results, [ $id, $name ];
   }
 
-  if (@results >= 10_000) {
-    return { error => scalar(@results).' matches. Too many results to display' };
-  }
-  elsif (@results < 1) {
-    return { error => scalar(@results).' matches. No results to display' };
-  }
-  else {
-    return { results => \@results };
-  }
+  return { results => \@results };
+
 }
 
 =head2 avg_phenotypes_query

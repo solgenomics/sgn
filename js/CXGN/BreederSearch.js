@@ -170,7 +170,12 @@ function retrieve_and_display_set(categories, data, this_section) {
 		    jQuery('#'+selectall_id).before(error_html);
 		}
 		else {
-                    var list = response.list || [];
+        if (response.message) {
+          var message_html = '<div class="well well-sm" id="response_error"><center><font color="orange">'+response.message+'</font></center></div>';
+  		    var selectall_id = "c"+this_section+"_select_all";
+  		    jQuery('#'+selectall_id).before(message_html);
+        }
+        var list = response.list || [];
 		    data_html = format_options_list(list);
 		    var data_id = "c"+this_section+"_data";
 		    var count_id = "c"+this_section+"_data_count";

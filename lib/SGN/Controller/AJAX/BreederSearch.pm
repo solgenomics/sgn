@@ -80,16 +80,21 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   my $results_ref = $bs->metadata_query($c, \@criteria_list, $dataref, $queryref);
 
   #print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
+  my $results = $results_ref->{'results'};
 
-  if ($results_ref->{error}) {
-    print STDERR "Returning with error . . .\n";
-    $c->stash->{rest} = { error => $results_ref->{'error'} };
+  if (@$results >= 10_000) {
+    $c->stash->{rest} = { list => $results, message => scalar(@$results).' matches. Please use bulk tools (lists, downloads, etc.) with caution' };
+    return;
+  }
+  elsif (@$results < 1) {
+    $c->stash->{rest} = { error => scalar(@$results).' matches. No results to display' };
     return;
   }
   else {
-    $c->stash->{rest} = { list => $results_ref->{'results'} };
+    $c->stash->{rest} = { list => $results };
     return;
   }
+
 }
 
 sub get_avg_phenotypes : Path('/ajax/breeder/search/avg_phenotypes') Args(0) {
