@@ -6,6 +6,7 @@ use Moose;
 use List::MoreUtils qw | any all |;
 use JSON::Any;
 use Data::Dumper;
+use Try::Tiny;
 use CXGN::BreederSearch;
 
 BEGIN { extends 'Catalyst::Controller::REST'; };
@@ -77,7 +78,30 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   my $dbh = $c->dbc->dbh();
   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
 
-  my $results_ref = $bs->metadata_query($c, \@criteria_list, $dataref, $queryref);
+  # Check if matviews are populated, and run refresh if they aren't. Which, as of postgres 9.5, will be the case when our databases are loaded from a dump. This should no longer be necessary once this bug is fixed in newer postgres versions
+   my ($status, %response_hash);
+   try {
+     my $populated_query = "select * from materialized_phenoview limit 1";
+     my $sth = $c->dbc->dbh->prepare($populated_query);
+     $sth->execute();
+   } catch { #if test query fails because views aren't populated
+     print STDERR "Using basic refresh to populate views . . .\n";
+     $status = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'basic');
+     %response_hash = %$status;
+   };
+
+   if (%response_hash && $response_hash{'message'} eq 'Wizard update completed!') {
+     print STDERR "Populated views, now proceeding with query . . . .\n";
+   } elsif (%response_hash && $response_hash{'message'} eq 'Wizard update initiated.') {
+     $c->stash->{rest} = { error => "The search wizard is temporarily unavailable while database indexes are being repopulated. Please try again later." };
+     return;
+   } elsif (%response_hash && $response_hash{'error'}) {
+     $c->stash->{rest} = { error => $response_hash{'error'} };
+     return;
+   }
+
+
+  my $results_ref = $bs->metadata_query(\@criteria_list, $dataref, $queryref);
 
   #print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
   my $results = $results_ref->{'results'};
