@@ -70,7 +70,7 @@ __PACKAGE__->config(
     default_view => 'Mason',
 
     # Static::Simple configuration
-    static => {
+    'Plugin::Static::Simple' => {
         dirs => [qw[ css s static img documents static_content data ]],
     },
 

@@ -1,3 +1,8 @@
+#DEPRECATED
+#####################
+#This page now points to the url /solpeople/profile/<sp_person_id> in the controller SGN::Controller::People
+#####################
+
 use strict;
 
 use CXGN::DB::Connection;

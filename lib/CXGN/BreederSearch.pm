@@ -136,15 +136,8 @@ sub metadata_query {
     push @results, [ $id, $name ];
   }
 
-  if (@results >= 10_000) {
-    return { error => scalar(@results).' matches. Too many results to display' };
-  }
-  elsif (@results < 1) {
-    return { error => scalar(@results).' matches. No results to display' };
-  }
-  else {
-    return { results => \@results };
-  }
+  return { results => \@results };
+
 }
 
 =head2 avg_phenotypes_query
@@ -192,7 +185,7 @@ sub avg_phenotypes_query {
       my $control = $controls[$i] || 0;
       if ($id == $control) {
         #print STDERR "Matched control accession $name with values @avg_values\n";
-        if (!defined(@avg_values[$i])) {
+        if (!defined($avg_values[$i])) {
           return { error => "Can't scale values using control $name, it has a zero or undefined value for trait with id @$trait_ids[$i] in this trial. Please select a different control for this trait." };
         }
         $reference_values[$i] = $avg_values[$i];

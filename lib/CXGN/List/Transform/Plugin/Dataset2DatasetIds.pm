@@ -31,7 +31,7 @@ sub transform {
     my $object = shift;
 
     my @ids= ();
-    my @missing = ();
+    my @missing_ids = ();
 
     print STDERR "Untransformed list data: ".Dumper($list)."\n";
 
@@ -52,9 +52,10 @@ sub transform {
           if (scalar @transformed_array > 0) {
             push @ids, $type_singular . "_ids:" . join(",", @transformed_array);
           }
-          my $missing = %$data{'missing'};
-          if (scalar @$missing > 0) {
-            push @missing, $type_singular . "_ids:" . join(",", @$missing);
+          my $missing = $data_hash{'missing'};
+          my @missing_array = @$missing;
+          if (scalar @missing_array > 0) {
+            push @missing_ids, $type_singular . "_ids:" . join(",", @missing_array);
           }
         }
       }
@@ -63,7 +64,7 @@ sub transform {
 
     return {
       transform => \@ids,
-	    missing => \@missing,
+	    missing => \@missing_ids,
     };
 }
 

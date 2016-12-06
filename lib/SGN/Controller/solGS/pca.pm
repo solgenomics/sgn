@@ -253,7 +253,8 @@ sub create_pca_genotype_data {
 
 		$c->stash->{pop_id} = $trial_id; 
 	  
-		$c->controller("solGS::solGS")->genotype_file($c);
+		#$c->controller("solGS::solGS")->genotype_file($c);
+		$self->_pca_genotype_data($c);
 		push @genotype_files, $c->stash->{genotype_file};
 	    }
 	    $c->stash->{genotype_files_list} = \@genotype_files;
@@ -261,11 +262,28 @@ sub create_pca_genotype_data {
     }
     else 
     {
-	$c->controller("solGS::solGS")->genotype_file($c);
+	$self->_pca_genotype_data($c);
+	#$c->controller("solGS::solGS")->genotype_file($c);
     }
 
 }
 
+sub _pca_genotype_data {
+    my ($self, $c) = @_;
+  	
+    $c->controller("solGS::solGS")->filtered_training_genotype_file($c);
+    my $filtered_geno_file = $c->stash->{filtered_training_genotype_file};
+
+    if (!-s $filtered_geno_file) 
+    {	
+	$c->controller("solGS::solGS")->genotype_file($c);
+    }
+    else 
+    {
+	$c->stash->{genotype_file} = $filtered_geno_file;
+    }
+    
+}
 
 sub create_pca_dir {
     my ($self, $c) = @_;

@@ -1,0 +1,49 @@
+<%doc>
+
+=head1 NAME 
+
+/solgs/search/trait_search_form.mas - trait search form
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+$gs_traits_index
+
+</%args>
+
+
+<&| /page/info_section.mas,
+  collapsible => 1, 
+  collapsed   => 0,
+  title => "Search for a trait ",
+&>
+
+<div id="gs_traits_index" class="row" style="margin: 20px 2px 60px;">
+  <p style="text-align:center">Traits index: <% $gs_traits_index %></p>
+</div>
+
+<div id="search_trait_form" class="row">
+  <div class="col-md-5 col-md-offset-3">
+    <input type="text" id="search_trait_entry" class="form-control" size="35px" placeholder="enter trait name"/>
+  </div>
+  <div class="col-md-4">
+    <button id="search_trait" type="submit" class="btn btn-success"> 
+      <span class="glyphicon glyphicon-search"></span>
+    </button>
+  </div>
+ 
+  <p id="search_trait_message" style="text-align: center;margin-top: 40px;font-weight:bold;color:red"></p>
+
+</div>
+
+
+
+
+</&>
