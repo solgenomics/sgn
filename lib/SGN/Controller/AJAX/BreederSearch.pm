@@ -82,12 +82,16 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
   #print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
   my $results = $results_ref->{'results'};
 
-  if (@$results >= 10_000) {
-    $c->stash->{rest} = { list => $results, message => scalar(@$results).' matches. Please use bulk tools (lists, downloads, etc.) with caution' };
+  if (@$results >= 100_000) {
+    $c->stash->{rest} = { list => [], message => scalar(@$results).' matches. This is too many to display, please narrow your search' };
+    return;
+  }
+  elsif (@$results >= 10_000) {
+    $c->stash->{rest} = { list => $results, message => 'Over 10,000 matches. Speeds may be affected, consider narrowing your search' };
     return;
   }
   elsif (@$results < 1) {
-    $c->stash->{rest} = { list => $results, message => scalar(@$results).' matches. No results to display' };
+    $c->stash->{rest} = { list => $results, message => scalar(@$results).' matches. Nothing to display' };
     return;
   }
   else {
