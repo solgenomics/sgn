@@ -187,11 +187,19 @@ sub refresh_materialized_view_all_gs_traits {
 sub search_trait_trials {
     my ($self, $trait_id) = @_;
 
-    my $q = "SELECT distinct(trial_id) FROM traitsXtrials ORDER BY trial_id";
+    #my $q = "SELECT distinct(trial_id) FROM traitsXtrials ORDER BY trial_id";
+    my $protocol = $self->genotyping_protocol();
+
+    my $q = "SELECT distinct(trial_id) 
+                 FROM traitsXtrials 
+                 JOIN genotyping_protocolsXtrials USING (trial_id)
+                 JOIN genotyping_protocols USING (genotyping_protocol_id)
+		 WHERE genotyping_protocols.genotyping_protocol_name ILIKE ?
+                 AND trait_id = ?";
 
     my $sth = $self->context->dbc->dbh->prepare($q);
 
-    $sth->execute();
+    $sth->execute($protocol, $trait_id);
 
     my @trials;
 
@@ -281,6 +289,40 @@ sub project_location {
 }    
 
 
+sub all_gs_projects {
+    my ($self, $limit) = @_;
+
+    my $protocol = $self->genotyping_protocol();
+    $limit = 'LIMIT ' . $limit if $limit;
+
+    my $order_by = 'CASE WHEN trials.trial_name ~ \'\\m[0-9]+\' THEN 1 ELSE 0 END, trials.trial_name DESC';
+
+    my $q = "SELECT trials.trial_name, trials.trial_id                
+                 FROM trials 
+                 JOIN traitsXtrials USING (trial_id)
+                 JOIN genotyping_protocolsXtrials USING (trial_id)
+                 JOIN genotyping_protocols USING (genotyping_protocol_id)
+		 WHERE genotyping_protocols.genotyping_protocol_name ILIKE ? 
+                       GROUP BY trials.trial_id, trials.trial_name
+                       ORDER BY $order_by  
+                       $limit";
+
+    my $sth = $self->context->dbc->dbh()->prepare($q);
+
+    $sth->execute($protocol);
+
+    my @gs_trials;
+
+    while (my ($trial_name, $trial_id) = $sth->fetchrow_array()) 
+    {
+	push @gs_trials, $trial_id;
+    }
+
+    return \@gs_trials;
+
+}
+
+
 sub all_projects {
     my ($self, $page, $rows) = @_;
 
@@ -310,16 +352,15 @@ sub has_phenotype {
     my $has_phenotype;
     if ($pr_id) 
     {
-	my $pr_stocks  = $self->project_subject_stocks_rs($pr_id);
+	my $q = "SELECT distinct(trial_id)
+                 FROM traitsXtrials 
+                 WHERE trial_id = ?";
 
-	if ($pr_stocks->first)
-	{
-	    my $phenotypes = $self->stock_phenotype_data_rs($pr_stocks);
-	    my $data       = $self->structure_phenotype_data($phenotypes);
-	    
-	    $has_phenotype = 1 if $data;
-	}
-	
+	my $sth = $self->context->dbc->dbh->prepare($q);
+
+	$sth->execute($pr_id);
+
+	$has_phenotype  = $sth->fetchrow_array();	
     }
 
     return $has_phenotype;
@@ -2070,7 +2111,6 @@ sub get_project_genotyping_markers {
     return $markers;
 
 }
-
 
 
 sub genotyping_protocol {

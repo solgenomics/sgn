@@ -869,19 +869,19 @@ sub store_lg {
     print STDERR "\n all chr num: $num\n";
 
     @all_chrs = uniq @all_chrs;
-    my $num = scalar(@all_chrs);
+    $num = scalar(@all_chrs);
     print STDERR "\n unique chr numbers: $num\n";
     foreach my $ch (@all_chrs) { print STDERR "\n chr -- $ch \n ";}
    my @chrs = grep {$_ =~ /\d+/} @all_chrs;
     @chrs = uniq(@chrs);
-    my $num = scalar(@chrs);
+    $num = scalar(@chrs);
     print STDERR "\n clean chr numbers: $num\n";     
 my @cleaned_chrs; 
 
     foreach my $ch (@chrs) { print STDERR "\n cleaned chr -- $ch \n "; $ch =~ s/\s+//g; push @cleaned_chrs, $ch;}
     @chrs = @cleaned_chrs;
     @chrs = uniq(@chrs);
-    my $num = scalar(@chrs);
+    $num = scalar(@chrs);
     print STDERR "\n clean chr numbers: $num\n";
     foreach my $ch (@chrs) { print STDERR "\n final cleaned chr -- $ch \n ";}
 
