@@ -329,6 +329,7 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         push @ontology_children, [$child->name."|".$db_name.":".$accession, $child->name."|".$db_name.":".$accession];
     }
 
+    @ontology_children = sort { $a->[1] cmp $b->[1] } @ontology_children;
     if ($empty) {
         unshift @ontology_children, [ 0, "None" ];
     }
