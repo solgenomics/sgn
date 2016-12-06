@@ -184,6 +184,7 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
           push @trials, $_;
       }
     }
+    @trials = sort @trials;
 
     if ($empty) { unshift @trials, [ "", "Please select a trial" ]; }
 
@@ -200,19 +201,27 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
 sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $trial_id = $c->req->param('trial_id');
+    my $trial_id = $c->req->param('trial_id') || 'all';
     my $data_level = $c->req->param('data_level') || 'all';
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     if ($data_level eq 'all') {
         $data_level = '';
     }
-    my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$trial_id});
-    my $traits_assayed = $trial->get_traits_assayed($data_level);
+
     my @traits;
-    foreach (@$traits_assayed) {
-        my @val = ($_->[0], $_->[1]);
-        push @traits, \@val;
+    if ($trial_id eq 'all') {
+      my $bs = CXGN::BreederSearch->new( { dbh=> $c->dbc->dbh() } );
+      my $query = $bs->metadata_query($c, [ 'traits' ], {}, {});
+      @traits = @{$query->{results}};
+      #print STDERR "Traits: ".Dumper(@traits)."\n";
+    } else {
+      my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$trial_id});
+      my $traits_assayed = $trial->get_traits_assayed($data_level);
+      foreach (@$traits_assayed) {
+          my @val = ($_->[0], $_->[1]);
+          push @traits, \@val;
+      }
     }
 
     my $id = $c->req->param("id") || "html_trial_select";
@@ -251,6 +260,7 @@ sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
           push @crosses, $_;
       }
     }
+    @crosses = sort @crosses;
 
     my $html = simple_selectbox_html(
       multiple => 1,
@@ -319,6 +329,7 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         push @ontology_children, [$child->name."|".$db_name.":".$accession, $child->name."|".$db_name.":".$accession];
     }
 
+    @ontology_children = sort { $a->[1] cmp $b->[1] } @ontology_children;
     if ($empty) {
         unshift @ontology_children, [ 0, "None" ];
     }

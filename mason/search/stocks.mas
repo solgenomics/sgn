@@ -194,7 +194,7 @@ my $breeding_programs_select = simple_selectbox_html(
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
-<table id="stock_search_results" class="display">
+<table id="stock_search_results" width="100%" class="table table-hover table-striped">
 <thead>
   <tr>
     <th>Stock Name</th>

@@ -9,19 +9,19 @@ CXGN::Blast - a BLAST database that we keep in stock and updated.
 
   ### SIMPLE MECHANICS
 
-  This object has been refactored to work with DBIx::Class (instead 
-  of Class::DBI) and Moose.
+  This object has been derived from CXGN::BlastDB (in cxgn-corelibs) and
+  refactored to work with DBIx::Class (instead of Class::DBI) and Moose.
 
   The constructor now requires some additional arguments:
 
-  my $db = CXGN::BlastDB->new( { blast_db_id => $x, 
+  my $db = CXGN::Blast->new( { blast_db_id => $x, 
                                  sgn_schema => $s,
                                  dbpath => $p,
                                });
 
   (this standard constructor now replaces the previous from_id() constructor).
  
-  my @dbs = CXGN::BlastDB->retrieve_all(); #get all blastDB objects
+  my @dbs = CXGN::Blast->retrieve_all(); #get all blastDB objects
 
   #change the title of a blast db in memory
   $dbs[0]->title( 'Sequences from Tomatoes' );
@@ -58,7 +58,7 @@ CXGN::Blast - a BLAST database that we keep in stock and updated.
   $uv->format_from_file('new_univec.seq');
 
   #i'll plop another formatted copy of univec in my home dir too
-  CXGN::BlastDB->dbpath('/home/rob/blast');
+  $bdb->dbpath('/home/rob/blast');
   $uv->format_from_file('new_univec.seq');
   #that will have done a mkpath -p /home/rob/blast/screening/vector,
   #then it will have put the Univec.nin, nhr, and nsq files there.
@@ -67,8 +67,8 @@ CXGN::Blast - a BLAST database that we keep in stock and updated.
 
 This is a handle on a BLAST database we manage.  Each of
 these objects corresponds to a row in the sgn.blast_db table and
-a set of files in the filesystem. at a place specified by this class's
-dbpath() data member (see dbpath docs below).  This path defaults to
+a set of files in the filesystem. at a place specified by the
+dbpath() accessor (see dbpath docs below).  This path defaults to
 the value of the 'blast_db_path' configuration variable (see L<CXGN::Config>).
 
 =head1 METHODS
@@ -581,8 +581,8 @@ sub get_sequence {
 
 =head2 dbpath
 
-  Usage: CXGN::BlastDB->dbpath('/data/cluster/blast/databases');
-  Desc : class method to get/set the location where all blast database
+  Usage: $bdb->dbpath('/data/cluster/blast/databases');
+  Desc : object method to get/set the location where all blast database
          files are expected to be found.  Defaults to the value of the
          CXGN configuration variable 'blast_db_path'.
   Ret  : the current base path
