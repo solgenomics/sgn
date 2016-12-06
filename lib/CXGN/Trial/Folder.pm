@@ -38,6 +38,16 @@ has 'name' => (isa => 'Str',
 	default => 'Untitled',
 );
 
+has 'folder_for_trials' => (isa => 'Bool',
+	is => 'rw',
+	default => 0,
+);
+
+has 'folder_for_crosses' => (isa => 'Bool',
+	is => 'rw',
+	default => 0,
+);
+
 has 'location_id' => (isa => 'Int',
 	is => 'rw',
 );
@@ -75,24 +85,28 @@ sub BUILD {
 	$self->name($row->name());
 
 	my $breeding_program_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program', 'project_property')->cvterm_id();
-	$self->breeding_program_cvterm_id($breeding_program_type_id);
-
+	my $folder_for_trials_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_trials', 'project_property')->cvterm_id();
+	my $folder_for_crosses_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_crosses', 'project_property')->cvterm_id();
 	my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
-	$self->folder_cvterm_id($folder_cvterm_id);
-
 	my $breeding_program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
+
+	$self->breeding_program_cvterm_id($breeding_program_type_id);
+	$self->folder_cvterm_id($folder_cvterm_id);
 	$self->breeding_program_trial_relationship_id($breeding_program_trial_relationship_id);
 
 	my $folder_type = $self->bcs_schema()->resultset('Project::Projectprop')-> search( { project_id => $self->folder_id() });
-
 	while (my $folder_type_row = $folder_type->next) {
 		if ($folder_type_row->type_id() == $self->folder_cvterm_id() ) {
 			$self->folder_type("folder");
 			$self->is_folder(1);
-		}
-		elsif ($folder_type_row->type_id() == $self->breeding_program_cvterm_id()) {
-			#print STDERR "Setting folder type to breeding_program.\n";
+		} elsif ($folder_type_row->type_id() == $self->breeding_program_cvterm_id()) {
 			$self->folder_type("breeding_program");
+		}
+		if ($folder_type_row->type_id() == $folder_for_trials_cvterm_id) {
+			$self->folder_for_trials(1);
+		}
+		if ($folder_type_row->type_id() == $folder_for_crosses_cvterm_id) {
+			$self->folder_for_trials(1);
 		}
 	}
 
@@ -134,39 +148,47 @@ sub BUILD {
 # class methods
 
 sub create {
-    my $class = shift;
-    my $args = shift;
+	my $class = shift;
+	my $args = shift;
+	my $schema = $args->{bcs_schema};
+	my $folder_name = $args->{name};
+	my $description = $args->{description} || "";
+	my $breeding_program_id = $args->{breeding_program_id};
+	my $parent_folder_id = $args->{parent_folder_id};
+	my $folder_for_trials = $args->{folder_for_trials};
+	my $folder_for_crosses = $args->{folder_for_crosses};
 
-    # check if name is already taken
-    #
-    my $check_rs = $args->{bcs_schema}->resultset('Project::Project')->search( { name => $args->{name} } );
+	# check if name is already taken
+	my $check_rs = $schema->resultset('Project::Project')->search( { name => $folder_name } );
+	if ($check_rs->count() > 0) {
+		die "The name $folder_name cannot be used for a new folder because it already exists.";
+	}
 
-    if ($check_rs->count() > 0) {
-	die "The name ".$args->{name}." cannot be used for a new folder because it already exists.";
-    }
+	my $folder_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_folder', 'project_property');
 
-     my $folder_cvterm = SGN::Model::Cvterm->get_cvterm_row($args->{bcs_schema},'trial_folder', 'project_property');
-
-    my $project_row = $args->{bcs_schema}->resultset('Project::Project')->create(
-	{
-	    name =>  $args->{name},
-	    description => $args->{description} || "",
+	my $project = $schema->resultset('Project::Project')->create({
+		name => $folder_name,
+		description => $description,
 	});
+	$project->create_projectprops({ $folder_cvterm->name() => '1' });
 
-    my $project_id = $project_row->project_id();
+	if ($folder_for_trials) {
+		my $folder_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_trials', 'project_property');
+		$project->create_projectprops({ $folder_type_cvterm->name() => '1' });
+	}
+	if ($folder_for_crosses) {
+		my $folder_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_crosses', 'project_property');
+		$project->create_projectprops({ $folder_type_cvterm->name() => '1' });
+	}
 
-    my $folder_projectprop_row = $args->{bcs_schema}->resultset('Project::Projectprop')->create(
-	{
-	    project_id => $project_id,
-	    type_id => $folder_cvterm->cvterm_id() }
-	);
+	my $folder = CXGN::Trial::Folder->new({
+		bcs_schema => $schema,
+		folder_id => $project->project_id()
+	});
+	$folder->associate_parent($parent_folder_id);
+	$folder->associate_breeding_program($breeding_program_id);
 
-    my $folder = CXGN::Trial::Folder->new( { bcs_schema => $args->{bcs_schema}, folder_id => $project_id });
-
-    $folder->associate_parent($args->{parent_folder_id});
-    $folder->associate_breeding_program($args->{breeding_program_id});
-
-    return $folder;
+	return $folder;
 }
 
 
@@ -228,6 +250,31 @@ sub _get_children {
 	}
 
 	return \@child_folders;
+}
+
+sub set_folder_content_type {
+	my $self = shift;
+	my $type = shift; #folder_for_trials or folder_for_crosses
+	my $boolean_value = shift; #0 or 1
+
+	my $folder_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, 'project_property')->cvterm_id();
+	my $prop = $self->bcs_schema->resultset('Project::Projectprop')->find({
+		project_id => $self->folder_id,
+		type_id => $folder_type_cvterm_id
+	});
+	if ($boolean_value){
+		if (!$prop){
+			my $new_prop = $self->bcs_schema->resultset('Project::Projectprop')->create({
+				project_id => $self->folder_id,
+				type_id => $folder_type_cvterm_id,
+				value => '1'
+			});
+		}
+	} else {
+		if ($prop){
+			$prop->delete();
+		}
+	}
 }
 
 sub associate_parent {
@@ -380,6 +427,14 @@ sub get_jstree_html {
 	my $parent_type = shift;
 	my $project_type_of_interest = shift // 'trial';
 
+	my $folder_content_check;
+	if ($project_type_of_interest eq 'trial'){
+		$folder_content_check = $self->folder_for_trials;
+	}
+	if ($project_type_of_interest eq 'cross'){
+		$folder_content_check = $self->folder_for_crosses;
+	}
+
 	my $html = "";
 
 	$html .= $self->_jstree_li_html($parent_type, $self->folder_id(), $self->name());
@@ -388,7 +443,7 @@ sub get_jstree_html {
 
 	if (@$children > 0) {
 		foreach my $child (@$children) {
-			if ($child->is_folder()) {
+			if ($child->is_folder() && $folder_content_check) {
 				$html .= $child->get_jstree_html('folder', $project_type_of_interest);
 			}
 			else {
