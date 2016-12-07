@@ -176,10 +176,12 @@ jQuery(document).ready(function() {
 });
 
 
-function getCombinedPopsId() {
+function getCombinedPopsId(trialsIds) {
 
-    var comboPopsList = getSelectedTrials();
-    var trialsIds     = comboPopsList.join(","); 
+    if (!trialsIds) {
+	trialsIds = getSelectedTrials();
+    }
+
     var traitId       = getTraitId();
     var action        = "/solgs/get/combined/populations/id";
   
@@ -198,7 +200,7 @@ function getCombinedPopsId() {
 
 		 var args = {
 		     'combo_pops_id'   : [ comboPopsId ],
-		     'combo_pops_list' : comboPopsList,
+		     'combo_pops_list' : trialsIds,
 		     'analysis_type'   : 'combine populations',
 		     'data_set_type'   : 'multiple populations',
 		     'trait_id'        : traitId,
@@ -218,20 +220,20 @@ function getCombinedPopsId() {
             } 
         },
         error: function(res) {
-    	    //combinedPopsId = 0;   
+    	    alert('Error occured getting combined trials unique id'); 
         }       
     }); 
 
-   // return combinedPopsId;
-    
 }
 
 
-function retrievePopsData() {
+function retrievePopsData(trialsIds) {
 
-    var trialsIds = getSelectedTrials();
-    trialsIds = trialsIds.join(",");
-    
+    alert('ids ' + trialsIds)
+    if (!trialsIds) {
+	trialsIds = getSelectedTrials();
+    }
+    	
     var action = "/solgs/retrieve/populations/data";
    
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
@@ -247,10 +249,10 @@ function retrievePopsData() {
                
                 var combinedPopsId = res.combined_pops_id;
                
-                if(combinedPopsId) {
+                if (combinedPopsId) {
                     goToCombinedTrialsPage(combinedPopsId);
                     jQuery.unblockUI();
-                }else if (res.redirect_url) {
+                } else if (res.redirect_url) {
                     goToSingleTrialPage(res.redirect_url);
                     jQuery.unblockUI();
                 } 
