@@ -51,7 +51,6 @@ sub generate_check_value :Path('/solgs/generate/checkvalue') Args(0) {
     $c->res->content_type('application/json');
     $c->res->body($ret);
 
-
 }
 
 
@@ -71,7 +70,6 @@ sub upload_prediction_genotypes_list :Path('/solgs/upload/prediction/genotypes/l
         push @stocks_names, $stock->[1];
     }
     
-
     @stocks_names = uniq(@stocks_names);
     $c->stash->{genotypes_list} = \@stocks_names;
     
@@ -113,6 +111,30 @@ sub solgs_list_login_message :Path('/solgs/list/login/message') Args(0) {
 
     $c->stash->{template} = "/generic_message.mas"; 
    
+}
+
+
+sub get_trial_id :Path('/solgs/get/trial/id') Args(0) {
+    my ($self, $c) = @_;
+    
+    my @trials_names = $c->req->param('trials_names[]');
+
+    my $tr_rs = $c->model('solGS::solGS')->project_details_by_exact_name(\@trials_names);
+
+    my @trials_ids;
+    
+    while (my $rw = $tr_rs->next) 
+    {
+	push @trials_ids, $rw->project_id;
+    }
+ 
+    my  $ret->{trials_ids} = \@trials_ids;
+           
+    $ret = to_json($ret);
+        
+    $c->res->content_type('application/json');
+    $c->res->body($ret);
+
 }
 
 
@@ -457,7 +479,28 @@ sub user_prediction_population_file {
 }
 
 
-sub upload_reference_genotypes_list :Path('/solgs/upload/reference/genotypes/list') Args(0) {
+sub get_list_elements_names {
+    my ($self, $c, $list) = @_;
+
+    $list =~ s/\\//g; 
+    my $garbage = substr $list, 0, 1, ''; 
+    $garbage    = substr $list, -1, 1, '';
+
+    $list = from_json($list);
+
+    my @names = ();  
+   
+    foreach my $id_names (@$list)
+    {
+        push @names, $id_names->[1];
+    }
+
+    $c->stash->{list_elements_names} = \@names;
+
+}
+
+
+sub load_plots_list_training :Path('/solgs/load/plots/list/training') Args(0) {
     my ($self, $c) = @_;
  
     my $model_id   = $c->req->param('model_id');
@@ -465,22 +508,12 @@ sub upload_reference_genotypes_list :Path('/solgs/upload/reference/genotypes/lis
     my $list       = $c->req->param('list');
 
     my $population_type          = $c->req->param('population_type');
-    $c->stash->{population_type} = $population_type;
- 
-    $list =~ s/\\//g; 
-    my $garbage = substr $list, 0, 1, ''; 
-    $garbage    = substr $list, -1, 1, '';
+    $c->stash->{population_type} = $population_type; 
+  
+    $self->get_list_elements_names($c, $list);
+    my $plots_names = $c->stash->{list_elements_names};
 
-    $list = from_json($list);
-
-    my @plots_names = ();  
-   
-    foreach my $plot (@$list)
-    {
-        push @plots_names, $plot->[1];
-    }
-    
-    $c->stash->{reference_population_plot_names} = \@plots_names;
+    $c->stash->{reference_population_plot_names} = $plots_names;
      
     $c->stash->{list_name} = $list_name;
     $c->stash->{model_id}  = $model_id;
