@@ -218,7 +218,7 @@ sub list {
 		$projectprop_params{'projectprops.type_id'} = $folder_type_cvterm_id;
 	}
 
-	my $breeding_program_rel = $schema->resultset('Project::ProjectRelationship')->search(\%object_project_params)->search_related("subject_project")->search_related("projectprops", \%projectprop_params, {'select'=>'subject_project.name', 'as'=>'name' } );
+	my $breeding_program_rel = $schema->resultset('Project::ProjectRelationship')->search(\%object_project_params)->search_related("subject_project")->search_related("projectprops", \%projectprop_params, {'+select'=>'subject_project.name', '+as'=>'name' } );
 
 	my @folders;
 	while (my $row = $breeding_program_rel->next()) {
