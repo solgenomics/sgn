@@ -378,14 +378,14 @@ sub save_experimental_design_POST : Args(0) {
   	      return;
       }
 
-      $folder = CXGN::Trial::Folder->create(
-  	{
-  	    bcs_schema => $schema,
-  	    parent_folder_id => $parent_folder_id,
-  	    name => $trial_name,
-  	    breeding_program_id => $breeding_program_id,
-  	});
-    $folder_id = $folder->folder_id();
+        $folder = CXGN::Trial::Folder->create({
+            bcs_schema => $schema,
+            parent_folder_id => $parent_folder_id,
+            name => $trial_name,
+            breeding_program_id => $breeding_program_id,
+            folder_for_trials => 1
+        });
+        $folder_id = $folder->folder_id();
   }
 
   my $design_index = 0;

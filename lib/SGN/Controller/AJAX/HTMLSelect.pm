@@ -117,6 +117,8 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
     my $c = shift;
 
     my $breeding_program_id = $c->req->param("breeding_program_id");
+    my $folder_for_trials = 1 ? $c->req->param("folder_for_trials") eq 'true' : 0;
+    my $folder_for_crosses = 1 ? $c->req->param("folder_for_crosses") eq 'true' : 0;
 
     my $id = $c->req->param("id") || "folder_select";
     my $name = $c->req->param("name") || "folder_select";
@@ -125,7 +127,9 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
 
     my @folders = CXGN::Trial::Folder->list({
 	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-	    breeding_program_id => $breeding_program_id
+	    breeding_program_id => $breeding_program_id,
+        folder_for_trials => $folder_for_trials,
+        folder_for_crosses => $folder_for_crosses
     });
 
     if ($empty) {
