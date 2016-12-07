@@ -21,6 +21,8 @@ $children
 $crosses
 $project_parent => undef
 $breeding_program => undef
+$folder_for_trials
+$folder_for_crosses
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.Trial', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
@@ -41,6 +43,7 @@ foreach (@$children) {
 <& /breeders_toolbox/folder/folder_set.mas, folder_id=>$folder_id, folder_name=>$folder_name, breeding_program_id=>$breeding_program->project_id(), breeding_program_name=>$breeding_program->name() &>
 <& /breeders_toolbox/folder/folder_move.mas, breeding_program_id=>$breeding_program->project_id(), breeding_program_name=>$breeding_program->name() &>
 <& /breeders_toolbox/folder/edit_folder_name.mas, trial_id=>$folder_id, trial_name=>$folder_name, trial_type=>"Folder" &>
+<& /breeders_toolbox/folder/folder_category_set.mas, folder_id=>$folder_id, folder_name=>$folder_name &>
 
 <div>
 
@@ -55,7 +58,8 @@ foreach (@$children) {
     <div role="tabpanel" class="tab-pane fade in active" id="trials">
       <div class="well">
         <h3>Trials in Folder</h3>
-        <table class="table table-hover table-bordered">
+        <table name="folder_datatables_table" class="table table-hover table-bordered">
+        <thead><tr><th>Trial Name</th></tr></thead>
         <tbody>
 % foreach (@$children) {
 %   if ($_->folder_type eq 'trial') {
@@ -65,15 +69,14 @@ foreach (@$children) {
         </tbody>
         </table>
 
-        <button class="btn btn-primary" id="open_folder_dialog_link">Add trial to folder</button>
-
       </div>
     </div>
 
     <div role="tabpanel" class="tab-pane fade" id="crosses">
       <div class="well">
         <h3>Crosses in Folder</h3>
-        <table class="table table-hover table-bordered">
+        <table name="folder_datatables_table" class="table table-hover table-bordered">
+        <thead><tr><th>Cross Name</th></tr></thead>
         <tbody>
 % foreach (@$crosses) {
             <tr><td><a href="/cross/<% $_->[0] %>"><% $_->[1] %></a></td></tr>
@@ -137,14 +140,53 @@ foreach (@$children) {
 
 </div>
 
-<div class="well">
-  <button class="btn btn-sm btn-default" id="edit_trial_name">Rename Folder</button>&nbsp;&nbsp;&nbsp;&nbsp;
-  <button class="btn btn-sm btn-default" id="delete_folder_button">Delete Folder</button>
+<hr>
+
+<div class="row">
+    <div class="col-sm-6">
+        <div class="well well-sm">
+            <table class="table table-bordered">
+                <thead></thead>
+                <tbody>
+                    <tr>
+                        <td><h5>Folder For Trials</h5></td>
+% if($folder_for_trials){
+                        <td><h4><span class="glyphicon glyphicon-ok"></span></h4></td>
+% } else {
+                        <td><h4><span class="glyphicon glyphicon-remove"></span></h4></td>
+% }
+
+                    </tr>
+                    <tr>
+                        <td><h5>Folder For Crosses</h5></td>
+% if($folder_for_crosses){
+                        <td><h4><span class="glyphicon glyphicon-ok"></span></h4></td>
+% } else {
+                        <td><h4><span class="glyphicon glyphicon-remove"></span></h4></td>
+% }
+                    </tr>
+                </tbody>
+            </table>
+            <button class="btn btn-sm btn-default" id="change_folder_categories_button">Change</button>
+        </div>
+    </div>
+    <div class="col-sm-6">
+        <div class="well">
+            <center>
+            <button class="btn btn-sm btn-primary" id="open_folder_dialog_link">Add Trial to Folder</button>
+            <br/><br/>
+            <button class="btn btn-sm btn-default" id="edit_trial_name">Rename Folder</button>&nbsp;&nbsp;&nbsp;&nbsp;
+            <button class="btn btn-sm btn-default" id="delete_folder_button">Delete Folder</button>
+            </center>
+        </div>
+    </div>
 </div>
 
 <script>
 
 jQuery(document).ready(function() {
+
+    jQuery("[name=folder_datatables_table]").DataTable();
 
     jQuery('#delete_folder_button').click( function() {
         if (confirm("Are you sure you want to delete this folder?")) {

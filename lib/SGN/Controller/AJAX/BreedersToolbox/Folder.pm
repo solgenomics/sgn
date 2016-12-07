@@ -100,19 +100,40 @@ sub associate_parent_folder : Chained('get_folder') PathPart('associate/parent')
 
 }
 
+sub set_folder_categories : Chained('get_folder') PathPart('categories') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $folder_for_trials = 1 ? $c->req->param("folder_for_trials") eq 'true' : 0;
+    my $folder_for_crosses = 1 ? $c->req->param("folder_for_crosses") eq 'true' : 0;
+
+    if (! $self->check_privileges($c)) {
+        return;
+    }
+
+    my $folder = CXGN::Trial::Folder->new({
+        bcs_schema => $c->stash->{schema},
+        folder_id => $c->stash->{folder_id}
+    });
+
+    $folder->set_folder_content_type('folder_for_trials', $folder_for_trials);
+    $folder->set_folder_content_type('folder_for_crosses', $folder_for_crosses);
+
+    $c->stash->{rest} = { success => 1 };
+}
+
 sub check_privileges {
     my $self = shift;
     my $c = shift;
 
     if (!$c->user()) {
-	print STDERR "User not logged in... not uploading coordinates.\n";
-	$c->stash->{rest} = {error => "You need to be logged in to upload coordinates." };
-	return 0;
+        print STDERR "User not logged in... not uploading coordinates.\n";
+        $c->stash->{rest} = {error => "You need to be logged in to upload coordinates." };
+        $c->detach;
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-	$c->stash->{rest} = {error =>  "You have insufficient privileges to add coordinates." };
-	return 0;
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to add coordinates." };
+        $c->detach;
     }
     return 1;
 }

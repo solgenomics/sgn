@@ -134,9 +134,7 @@ function new_trial_folder() {
   var folder_name = jQuery('#new_folder_name').val();
   var breeding_program_id = jQuery('#new_folder_breeding_program_id').val();
   var folder_for_trials = jQuery('#new_folder_for_trials').is(":checked");
-  console.log(folder_for_trials);
   var folder_for_crosses = jQuery('#new_folder_for_crosses').is(":checked");
-  console.log(folder_for_crosses);
 
   jQuery.ajax( {
     'url': '/ajax/folder/new',

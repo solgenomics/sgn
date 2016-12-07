@@ -189,29 +189,43 @@ sub create {
 	return $folder;
 }
 
-
+#CLASS function
 sub list {
-    my $class = shift;
-    my $args = shift;
-		my $schema = $args->{bcs_schema};
+	my $class = shift;
+	my $args = shift;
+	my $schema = $args->{bcs_schema};
+	my $breeding_program_id = $args->{breeding_program_id};
+	my $folder_for_trials = $args->{folder_for_trials};
+	my $folder_for_crosses = $args->{folder_for_crosses};
 
-    my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'trial_folder', 'project_property')->cvterm_id();
-		my $breeding_program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema,'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
+	my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,'trial_folder', 'project_property')->cvterm_id();
+	my $breeding_program_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($schema,'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
 
-		my $breeding_program_rel;
-		if ($args->{breeding_program_id}) {
-			$breeding_program_rel = $schema->resultset('Project::ProjectRelationship')->search({ 'me.object_project_id' => $args->{breeding_program_id}, 'me.type_id' => $breeding_program_trial_relationship_id })->search_related("subject_project")->search_related("projectprops", {'projectprops.type_id'=>$folder_cvterm_id}, {'+select'=>'subject_project.name', '+as'=>'name' } );
-		} else {
-			$breeding_program_rel = $schema->resultset('Project::ProjectRelationship')->search({ 'me.type_id' => $breeding_program_trial_relationship_id })->search_related("subject_project")->search_related("projectprops", {'projectprops.type_id'=>$folder_cvterm_id}, {'+select'=>'subject_project.name', '+as'=>'name' } );
-		}
+	my %object_project_params;
+	$object_project_params{'me.type_id'} = $breeding_program_trial_relationship_id;
+	if ($breeding_program_id){
+		$object_project_params{'me.object_project_id'} = $breeding_program_id;
+	}
 
+	my %projectprop_params;
+	if (!$folder_for_trials && !$folder_for_crosses){
+		$projectprop_params{'projectprops.type_id'} = $folder_cvterm_id;
+	} elsif ($folder_for_trials){
+		my $folder_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_trials', 'project_property')->cvterm_id();
+		$projectprop_params{'projectprops.type_id'} = $folder_type_cvterm_id;
+	} elsif ($folder_for_crosses){
+		my $folder_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_crosses', 'project_property')->cvterm_id();
+		$projectprop_params{'projectprops.type_id'} = $folder_type_cvterm_id;
+	}
 
-    my @folders;
-    while (my $row = $breeding_program_rel->next()) {
-			push @folders, [ $row->project_id(), $row->get_column('name') ];
-    }
+	my $breeding_program_rel = $schema->resultset('Project::ProjectRelationship')->search(\%object_project_params)->search_related("subject_project")->search_related("projectprops", \%projectprop_params, {'select'=>'subject_project.name', 'as'=>'name' } );
 
-    return @folders;
+	my @folders;
+	while (my $row = $breeding_program_rel->next()) {
+		push @folders, [ $row->project_id(), $row->get_column('name') ];
+	}
+
+	return @folders;
 }
 
 
@@ -235,8 +249,6 @@ sub _get_children {
 		my $folder = CXGN::Trial::Folder->new({
 			bcs_schema=> $self->bcs_schema(),
 			folder_id=>$id,
-			folder_for_trials=>$self->folder_for_trials,
-			folder_for_crosses=>$self->folder_for_crosses
 		});
 
 		if ($self->folder_type() eq "breeding_program") {

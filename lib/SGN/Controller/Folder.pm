@@ -47,6 +47,8 @@ sub folder_page :Path("/folder") Args(1) {
     $c->stash->{breeding_program} = $folder->breeding_program();
     $c->stash->{folder_id} = $folder_id;
     $c->stash->{folder_name} = $folder_project->name();
+    $c->stash->{folder_for_trials} = $folder->folder_for_trials();
+    $c->stash->{folder_for_crosses} = $folder->folder_for_crosses();
     $c->stash->{folder_description} = $folder_project->description();
     if (!$folder->breeding_program) {
         $c->stash->{message} = "The requested folder does not exist or has been deleted.";
