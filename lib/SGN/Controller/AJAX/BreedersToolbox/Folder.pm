@@ -127,12 +127,12 @@ sub check_privileges {
 
     if (!$c->user()) {
         print STDERR "User not logged in... not uploading coordinates.\n";
-        $c->stash->{rest} = {error => "You need to be logged in to upload coordinates." };
+        $c->stash->{rest} = {error => "You need to be logged in." };
         $c->detach;
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-        $c->stash->{rest} = {error =>  "You have insufficient privileges to add coordinates." };
+        $c->stash->{rest} = {error =>  "You have insufficient privileges." };
         $c->detach;
     }
     return 1;
