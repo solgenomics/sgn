@@ -51,6 +51,19 @@ $breeding_program_name => undef
                 </div>
               </div>
 	        </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Folder For Trials: </label>
+                <div class="col-sm-9" >
+                    <input name="new_folder_for_trials" id="new_folder_for_trials" type="checkbox"/>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Folder For Crosses: </label>
+                <div class="col-sm-9" >
+                    <input name="new_folder_for_crosses" id="new_folder_for_crosses" type="checkbox"/>
+                </div>
+            </div>
+
 	       </form><br/>
         </div>
       </div>
@@ -79,7 +92,7 @@ $breeding_program_name => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_new_folder_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_new_folder_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close and Refresh Page</button>
             </div>
         </div>
     </div>
@@ -110,31 +123,44 @@ jQuery(document).ready(function() {
     new_trial_folder();
   });
 
+  jQuery('#new_folder_success_dialog_message').on('hidden.bs.modal', function () {
+    location.reload();
+  });
+
 });
 
 function new_trial_folder() {
   var parent_id = jQuery('#new_folder_parent_folder_id').val();
   var folder_name = jQuery('#new_folder_name').val();
   var breeding_program_id = jQuery('#new_folder_breeding_program_id').val();
+  var folder_for_trials = jQuery('#new_folder_for_trials').is(":checked");
+  console.log(folder_for_trials);
+  var folder_for_crosses = jQuery('#new_folder_for_crosses').is(":checked");
+  console.log(folder_for_crosses);
 
   jQuery.ajax( {
     'url': '/ajax/folder/new',
+    'beforeSend' : function(){
+        jQuery('#working_modal').modal('show');
+    },
     'data': { 
       'parent_folder_id' : parent_id,
       'folder_name' :  folder_name,
-      'breeding_program_id' : breeding_program_id
+      'breeding_program_id' : breeding_program_id,
+      'folder_for_trials' : folder_for_trials,
+      'folder_for_crosses' : folder_for_crosses
     },
     'success': function(response) {
+      jQuery('#working_modal').modal('hide');
+      jQuery('#new_folder_dialog').modal("hide");
       if (response.error){
         alert(response.error);
-        jQuery('#new_folder_dialog').modal("hide");
       } else {
-        jQuery('#new_folder_dialog').modal("hide");
         jQuery('#new_folder_success_dialog_message').modal("show");
-        //location.reload();
       }
     },
     error: function(response) {
+      jQuery('#working_modal').modal('hide');
       alert('An error occurred');
       jQuery('#new_folder_dialog').modal("hide");
     }

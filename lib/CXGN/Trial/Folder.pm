@@ -101,12 +101,10 @@ sub BUILD {
 			$self->is_folder(1);
 		} elsif ($folder_type_row->type_id() == $self->breeding_program_cvterm_id()) {
 			$self->folder_type("breeding_program");
-		}
-		if ($folder_type_row->type_id() == $folder_for_trials_cvterm_id) {
+		} elsif ($folder_type_row->type_id() == $folder_for_trials_cvterm_id) {
 			$self->folder_for_trials(1);
-		}
-		if ($folder_type_row->type_id() == $folder_for_crosses_cvterm_id) {
-			$self->folder_for_trials(1);
+		} elsif ($folder_type_row->type_id() == $folder_for_crosses_cvterm_id) {
+			$self->folder_for_crosses(1);
 		}
 	}
 
@@ -234,7 +232,12 @@ sub _get_children {
 
 	my @child_folders;
 	foreach my $id (@children) {
-		my $folder = CXGN::Trial::Folder->new( { bcs_schema=> $self->bcs_schema(), folder_id=>$id });
+		my $folder = CXGN::Trial::Folder->new({
+			bcs_schema=> $self->bcs_schema(),
+			folder_id=>$id,
+			folder_for_trials=>$self->folder_for_trials,
+			folder_for_crosses=>$self->folder_for_crosses
+		});
 
 		if ($self->folder_type() eq "breeding_program") {
 			if ($folder->project_parent()) {
@@ -427,14 +430,6 @@ sub get_jstree_html {
 	my $parent_type = shift;
 	my $project_type_of_interest = shift // 'trial';
 
-	my $folder_content_check;
-	if ($project_type_of_interest eq 'trial'){
-		$folder_content_check = $self->folder_for_trials;
-	}
-	if ($project_type_of_interest eq 'cross'){
-		$folder_content_check = $self->folder_for_crosses;
-	}
-
 	my $html = "";
 
 	$html .= $self->_jstree_li_html($parent_type, $self->folder_id(), $self->name());
@@ -443,6 +438,18 @@ sub get_jstree_html {
 
 	if (@$children > 0) {
 		foreach my $child (@$children) {
+
+			my $folder_content_check;
+			if ($project_type_of_interest eq 'trial'){
+				$folder_content_check = $child->folder_for_trials;
+			}
+			if ($project_type_of_interest eq 'cross'){
+				$folder_content_check = $child->folder_for_crosses;
+			}
+			if (!$child->folder_for_trials && !$child->folder_for_crosses){
+				$folder_content_check = 1;
+			}
+
 			if ($child->is_folder() && $folder_content_check) {
 				$html .= $child->get_jstree_html('folder', $project_type_of_interest);
 			}

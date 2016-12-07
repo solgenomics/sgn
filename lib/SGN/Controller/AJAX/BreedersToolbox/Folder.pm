@@ -29,6 +29,8 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
     my $parent_folder_id = $c->req->param("parent_folder_id");
     my $folder_name = $c->req->param("folder_name");
     my $breeding_program_id = $c->req->param("breeding_program_id");
+    my $folder_for_trials = 1 ? $c->req->param("folder_for_trials") eq 'true' : 0;
+    my $folder_for_crosses = 1 ? $c->req->param("folder_for_crosses") eq 'true' : 0;
 
     if (! $self->check_privileges($c)) {
 	return;
@@ -40,12 +42,13 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
 	$c->stash->{rest} = { error => "An folder or trial with that name already exists in the database. Please select another name." };
 	return;
     }
-    my $folder = CXGN::Trial::Folder->create(
-	{
+    my $folder = CXGN::Trial::Folder->create({
 	    bcs_schema => $schema,
 	    parent_folder_id => $parent_folder_id,
 	    name => $folder_name,
 	    breeding_program_id => $breeding_program_id,
+        folder_for_trials => $folder_for_trials,
+        folder_for_crosses => $folder_for_crosses
 	});
 
     $c->stash->{rest} = {

@@ -17,7 +17,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package AddNewCrossCvterms;
+package AddNewFolderCvterms;
 
 use Moose;
 use Bio::Chado::Schema;
