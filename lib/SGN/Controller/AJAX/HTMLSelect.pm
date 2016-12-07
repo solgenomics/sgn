@@ -216,7 +216,12 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my @traits;
     if ($trial_id eq 'all') {
       my $bs = CXGN::BreederSearch->new( { dbh=> $c->dbc->dbh() } );
-      my $query = $bs->metadata_query($c, [ 'traits' ], {}, {});
+      my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
+      if ($status->{'error'}) {
+        $c->stash->{rest} = { error => $status->{'error'}};
+        return;
+      }
+      my $query = $bs->metadata_query([ 'traits' ], {}, {});
       @traits = @{$query->{results}};
       #print STDERR "Traits: ".Dumper(@traits)."\n";
     } else {
