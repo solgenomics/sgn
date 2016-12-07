@@ -49,25 +49,25 @@ has 'dbname' => (
  Example:   retrieving all the trials from location 'test_location' (location_id = 23) and year '2014' in the fixture db:
 
  my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
- $criteria_list = [
+ my $criteria_list = [
                 'years',
                 'locations',
                 'trials'
               ];
- $dataref = {
+ my $dataref = {
                 'trials' => {
                             'locations' => '\'23\'',
                             'years' => '\'2014\''
                           }
               };
- $queryref = {
+ my $queryref = {
                 'trials' => {
                             'locations' => 0,
                             'years' => 0
                           }
               };
 
- $results = $bs ->metadata_query($criteria_list, $dataref, $queryref);
+ my $results_ref = $bs ->metadata_query($criteria_list, $dataref, $queryref);
 
  print Dumper($results);
  will give you:
@@ -272,9 +272,51 @@ sub avg_phenotypes_query {
 
 }
 
+=head2 test_matviews
+
+parameters: db parameters
+
+returns: message detailing matview status
+
+Side Effects: If they are unavailable, it will use the refresh_matviews method to populate the materialized views
+
+=cut
+
+
+sub test_matviews {
+
+  my $self = shift;
+  my $dbhost = shift;
+  my $dbname = shift;
+  my $dbuser = shift;
+  my $dbpass = shift;
+  my ($status, %response_hash);
+
+  try {
+    my $populated_query = "select * from materialized_phenoview limit 1";
+    my $sth = $self->dbh->prepare($populated_query);
+    $sth->execute();
+  } catch { #if test query fails because views aren't populated
+    print STDERR "Using basic refresh to populate views . . .\n";
+    $status = $self->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'basic');
+    %response_hash = %$status;
+  };
+
+  if (%response_hash && $response_hash{'message'} eq 'Wizard update completed!') {
+    print STDERR "Populated views, now proceeding with query . . . .\n";
+    return { success => "Populated views, query can proceed." };
+  } elsif (%response_hash && $response_hash{'message'} eq 'Wizard update initiated.') {
+    return { error => "The search wizard is temporarily unavailable while database indexes are being repopulated. Please try again later." };
+  } elsif (%response_hash && $response_hash{'error'}) {
+    return { error => $response_hash{'error'} };
+  } else {
+    return { success => "Test successful, query can proceed." };
+  }
+}
+
 =head2 refresh_matviews
 
-parameters: string to specify desired refresh type, basic or concurrent. defaults to concurrent
+parameters: db parameters, and a string to specify desired refresh type, basic or concurrent. defaults to concurrent
 
 returns: message detailing success or error
 
