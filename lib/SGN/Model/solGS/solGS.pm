@@ -412,7 +412,7 @@ sub project_details_by_exact_name {
     my ($self, $pr_name) = @_;
     
     return $self->schema->resultset("Project::Project")
-        ->search( {'me.name' => {'iLIKE' => $pr_name }});
+        ->search( {'me.name' => {-in => $pr_name }});
 }
 
 
