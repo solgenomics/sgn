@@ -26,8 +26,8 @@ BEGIN { extends 'Catalyst::Controller' }
 sub get_combined_pops_id :Path('/solgs/get/combined/populations/id') Args() {
     my ($self, $c) = @_;
 
-    my $ids = $c->req->param('trials');
-    my @pops_ids = split(/,/, $ids);
+    my @pops_ids = $c->req->param('trials[]');
+   # my @pops_ids = split(/,/, $ids);
    
     my $combo_pops_id;
     my $ret->{status} = 0;
@@ -40,6 +40,7 @@ sub get_combined_pops_id :Path('/solgs/get/combined/populations/id') Args() {
 	$ret->{combo_pops_id} = $combo_pops_id;
 	$ret->{status} = 1;
 	
+	my $ids = join(',', @pops_ids);
 	my $entry = "\n" . $combo_pops_id . "\t" . $ids;
         $c->controller("solGS::solGS")->catalogue_combined_pops($c, $entry);
     }
@@ -55,9 +56,8 @@ sub get_combined_pops_id :Path('/solgs/get/combined/populations/id') Args() {
 sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
     my ($self, $c) = @_;
    
-    my $ids     = $c->req->param('trials');
-    my @pops_ids = split(/,/, $ids);
- 
+    my @pops_ids = $c->req->param('trials[]');
+   
     my $combo_pops_id;
     my $ret->{status} = 0;
 
@@ -71,6 +71,7 @@ sub prepare_data_for_trials :Path('/solgs/retrieve/populations/data') Args() {
 	$self->create_combined_pops_id($c);
 	my $combo_pops_id = $c->stash->{combo_pops_id};
 	
+	my $ids = join(',', @pops_ids);
         my $entry = "\n" . $combo_pops_id . "\t" . $ids;
         $solgs_controller->catalogue_combined_pops($c, $entry);
 	
