@@ -6,6 +6,7 @@ use Moose;
 use List::MoreUtils qw | any all |;
 use JSON::Any;
 use Data::Dumper;
+use Try::Tiny;
 use CXGN::BreederSearch;
 
 BEGIN { extends 'Catalyst::Controller::REST'; };
@@ -76,26 +77,31 @@ sub get_data : Path('/ajax/breeder/search') Args(0) {
 
   my $dbh = $c->dbc->dbh();
   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
+  my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
+  if ($status->{'error'}) {
+      $c->stash->{rest} = { error => $status->{'error'}};
+      return;
+  }
+  my $results_ref = $bs->metadata_query(\@criteria_list, $dataref, $queryref);
 
-  my $results_ref = $bs->metadata_query($c, \@criteria_list, $dataref, $queryref);
+  print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
+  my @results =@{$results_ref->{results}};
 
-  #print STDERR "RESULTS: ".Data::Dumper::Dumper($results_ref);
-  my $results = $results_ref->{'results'};
 
-  if (@$results >= 100_000) {
-    $c->stash->{rest} = { list => [], message => scalar(@$results).' matches. This is too many to display, please narrow your search' };
+  if (@results >= 100_000) {
+    $c->stash->{rest} = { list => [], message => scalar(@results).' matches. This is too many to display, please narrow your search' };
     return;
   }
-  elsif (@$results >= 10_000) {
-    $c->stash->{rest} = { list => $results, message => 'Over 10,000 matches. Speeds may be affected, consider narrowing your search' };
+  elsif (@results >= 10_000) {
+    $c->stash->{rest} = { list => \@results, message => 'Over 10,000 matches. Speeds may be affected, consider narrowing your search' };
     return;
   }
-  elsif (@$results < 1) {
-    $c->stash->{rest} = { list => $results, message => scalar(@$results).' matches. Nothing to display' };
+  elsif (@results < 1) {
+    $c->stash->{rest} = { list => \@results, message => scalar(@results).' matches. Nothing to display' };
     return;
   }
   else {
-    $c->stash->{rest} = { list => $results };
+    $c->stash->{rest} = { list => \@results };
     return;
   }
 
