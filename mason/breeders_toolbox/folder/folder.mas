@@ -84,14 +84,16 @@ foreach (@$children) {
         </tbody>
         </table>
 
-        <hr>
-        <h4>Add All Cross Progeny to a List</h4>
+<br/>
+<&| /page/info_section.mas, title=>"Add All Cross Progeny to a List", collapsible=>1, collapsed=>1 &>
         <div id="add_all_cross_progeny_in_folder_to_list"></div>
         <div id="add_all_cross_progeny_in_folder_to_list_data" style="display:none">
 % foreach (@$crosses) {
 <% $_->[0] %>
 % }
-</div>
+        </div>
+</&>
+
 
       </div>
     </div>
@@ -207,7 +209,11 @@ jQuery(document).ready(function() {
         }
     });
     
-    addToListMenu('add_all_cross_progeny_in_folder_to_list', 'add_all_cross_progeny_in_folder_to_list_data', { listType: 'accessions', additionType: 'cross_progeny' } );
+    if (isLoggedIn()) {
+        addToListMenu('add_all_cross_progeny_in_folder_to_list', 'add_all_cross_progeny_in_folder_to_list_data', { listType: 'accessions', additionType: 'cross_progeny' } );
+    } else {
+        jQuery('#add_all_cross_progeny_in_folder_to_list').html("&nbsp;Please log in to use lists.");
+    }
 
 });
 
