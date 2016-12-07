@@ -165,40 +165,15 @@ my ($info, $plots_ret, $traits, $store_hash) = $derive_trait->generate_plot_phen
 #print STDERR Dumper $info;
 
 my @sorted_plots_ret = sort @$plots_ret;
-my @ordered_info;
 is_deeply(\@plots, \@sorted_plots_ret, 'check generated plots');
 
-foreach (@sorted_plots_ret) {
-    foreach my $info_n (@$info) {
-        if ($_ eq $info_n->{'plot_name'}) {
-            push @ordered_info, { 'plot_name'=>$info_n->{'plot_name'}, 'value_to_store'=>$info_n->{'value_to_store'}, 'notes'=>$info_n->{'notes'}, 'output'=>$info_n->{'output'}, 'plant_values'=>$info_n->{'plant_values'} };
-        }
-    }
+my @values_to_store;
+foreach my $info_n (@$info) {
+    push @values_to_store, $info_n->{'value_to_store'};
 }
-print STDERR Dumper \@ordered_info;
-is_deeply(\@ordered_info, [
-          {
-            'output' => '23',
-            'plant_values' => '[23]',
-            'plot_name' => $plots[0],
-            'notes' => '',
-            'value_to_store' => '23'
-          },
-          {
-            'output' => '28',
-            'plant_values' => '[28]',
-            'value_to_store' => '28',
-            'notes' => '',
-            'plot_name' => $plots[1]
-          },
-          {
-            'value_to_store' => '30',
-            'notes' => '',
-            'plot_name' => $plots[2],
-            'plant_values' => '[30]',
-            'output' => '30'
-          }
-        ], "check returned info array");
+@values_to_store = sort @values_to_store;
+print STDERR Dumper \@values_to_store;
+is_deeply(\@values_to_store, [23,28,30], "check returned values");
 
 print STDERR Dumper $store_hash;
 
