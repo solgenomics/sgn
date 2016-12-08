@@ -1810,7 +1810,7 @@ sub markerprofile_search_process {
               extractDbId => "",
               sampleDbId => "",
               analysisMethod => $row->get_column('protocol_name'),
-              resultCount => scalar(keys(%$genotype)) 
+              resultCount => scalar(keys(%$genotype))
           };
       }
     }
@@ -2676,13 +2676,14 @@ sub studies_table_GET {
     my $data_level = $c->req->param('observationLevel') || 'plot';
     my $format = $c->req->param('format') || 'json';
     my %result;
-
+    my $search_type = $c->req->param("search_type") || 'quick';
     my $include_timestamp = $c->req->param("timestamp") || 0;
     my $trial_id = $c->stash->{study_id};
     my $phenotypes_search = CXGN::Phenotypes::Search->new({
         bcs_schema=>$self->bcs_schema,
         data_level=>$data_level,
         trial_list=>[$trial_id],
+        search_type=>$search_type,
         include_timestamp=>$include_timestamp,
     });
     my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
@@ -2886,6 +2887,7 @@ sub process_phenotypes_search {
     my $location_ids = $c->req->param('locationDbIds');
     my $year_ids = $c->req->param('seasonDbIds');
     my $data_level = $c->req->param('observationLevel');
+    my $search_type = $c->req->param("search_type") || 'quick';
     my @stocks_array = split /,/, $stock_ids;
     my @traits_array = split /,/, $trait_ids;
     my @trials_array = split /,/, $trial_ids;
@@ -2899,6 +2901,7 @@ sub process_phenotypes_search {
         location_list=>\@locations_array,
         trait_list=>\@traits_array,
         year_list=>\@years_array,
+        search_type=>$search_type,
         include_timestamp=>1,
     });
     my $search_result = $phenotypes_search->search();

@@ -176,6 +176,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $data_level = $c->req->param("dataLevel") || "plot";
     my $timestamp_option = $c->req->param("timestamp") || 0;
     my $trait_list = $c->req->param("trait_list");
+    my $search_type = $c->req->param("search_type") || 'quick';
 
     if ($data_level eq 'plants') {
         my $trial = $c->stash->{trial};
@@ -227,6 +228,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         filename => $tempfile,
         format => $plugin,
         data_level => $data_level,
+        search_type => $search_type,
         include_timestamp => $timestamp_option,
     });
 
