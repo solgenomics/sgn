@@ -222,13 +222,24 @@ sub _get_crd_design {
         die "Number of reps not specified\n";
     }
 
+    sub isint{
+      my $val = shift;
+      return ($val =~ m/^\d+$/);
+    }
+
     if ($self->has_fieldmap_col_number()) {
       $fieldmap_col_number = $self->get_fieldmap_col_number();
-
     }
     if ($self->has_fieldmap_row_number()) {
       $fieldmap_row_number = $self->get_fieldmap_row_number();
+      my $colNumber = ((scalar(@stock_list) * $number_of_reps)/$fieldmap_row_number);
+      if (isint($colNumber)){
+        $fieldmap_col_number = $colNumber;
+      } else {
+          die "Choose a different row number for field map generation. The product of number of accessions and rep when divided by row number should give an integer\n";
+      }
     }
+
     if ($self->has_plot_layout_format()) {
       $plot_layout_format = $self->get_plot_layout_format();
     }
@@ -274,17 +285,29 @@ sub _get_crd_design {
 
         #generate col_number
         if ($plot_layout_format eq "zigzag") {
-          #my @col_number_fieldmaps = (my @column, (1..$fieldmap_col_number) x $number_of_reps);
-          #my @col_number_fieldmaps = ((1..$fieldmap_col_number) x $number_of_reps);
-          @col_number_fieldmaps = ((1..(scalar(@stock_list))) x $number_of_reps);
+          if (!$fieldmap_col_number){
+            @col_number_fieldmaps = ((1..(scalar(@stock_list))) x $number_of_reps);
+          } else {
+            @col_number_fieldmaps = ((1..$fieldmap_col_number) x $fieldmap_row_number);
+          }
           print STDERR Dumper(\@col_number_fieldmaps);
         }
         elsif ($plot_layout_format eq "serpentine") {
-          for my $rep (1 .. $number_of_reps){
-            if ($rep % 2){
-              push @col_number_fieldmaps, (1..(scalar(@stock_list)));
-            } else {
-              push @col_number_fieldmaps, (reverse 1..(scalar(@stock_list)));
+          if (!$fieldmap_row_number)  {
+            for my $rep (1 .. $number_of_reps){
+              if ($rep % 2){
+                push @col_number_fieldmaps, (1..(scalar(@stock_list)));
+              } else {
+                push @col_number_fieldmaps, (reverse 1..(scalar(@stock_list)));
+              }
+            }
+          } else {
+            for my $rep (1 .. $fieldmap_row_number){
+              if ($rep % 2){
+                push @col_number_fieldmaps, (1..$fieldmap_col_number);
+              } else {
+                push @col_number_fieldmaps, (reverse 1..$fieldmap_col_number);
+              }
             }
           }
           #@col_number_fieldmaps = (my @cols, (1..(scalar(@stock_list))) x $number_of_reps);
@@ -296,12 +319,12 @@ sub _get_crd_design {
         @stock_names = ($stock_list[0]) x $number_of_reps;
     }
 
-    if ($fieldmap_row_number) {
-      #do some stuff
-      @fieldmap_row_numbers;
-    }
-    elsif ($plot_layout_format && !$fieldmap_col_number && !$fieldmap_row_number){
+    if ($plot_layout_format && !$fieldmap_col_number && !$fieldmap_row_number){
       @fieldmap_row_numbers = sort(@rep_numbers);
+    }
+    elsif ($plot_layout_format && $fieldmap_row_number){
+      @fieldmap_row_numbers = ((1..$fieldmap_row_number) x $fieldmap_col_number);
+      @fieldmap_row_numbers = sort(@fieldmap_row_numbers);
     }
 
     for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
