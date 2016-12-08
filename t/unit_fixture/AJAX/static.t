@@ -171,9 +171,6 @@ $mech->get_ok($_) for
     qw(
         /js/CXGN/AJAX/Ontology.js
         /js/CXGN/Phenome/Qtl.js
-        /js/calendar/fullcalendar_gcal_min.js
-        /js/calendar/bootstrap_datepicker_min.js
-        /css/datepicker.css
     );
 
 #Called by application from sgn/mason/chado/publication.mas
@@ -294,11 +291,73 @@ $mech->get_ok($_) for
         /js/tools/vigs.js
     );
 
+    
+#SITE SPECIFICS
+
+
+
+$mech->get_ok($_) for
+    qw(
+        /img/sgn_logo_icon.png
+    );
+
+#Called from cassava/mason/*
 $mech->get_ok($_) for
     qw(
         /css/nextgen-cassava-base-new.css
-        /css/datatables/jquery.dataTables.css
-        /img/sgn_logo_icon.png
+        /documents/inc/jquery-cassava-theme/jquery-ui-1.10.3.custom.css
+        /documents/img/cassava/nextgen_cassava_icon.png
+        /static/documents/img/cassava/cassavabase.gif
     );
+
+#Called from cassbase/mason/*
+$mech->get_ok($_) for
+    qw(
+        /css/nextgen-cassava-base-new.css
+        /documents/inc/jquery-cassava-theme/jquery-ui-1.10.3.custom.css
+        /documents/img/CASSbase/cass_logo_4c.gif
+    );
+
+#Called from citrusgreening/mason/*
+$mech->get_ok($_) for
+    qw(
+        /css/citrusgreening.css
+        /img/citrusgreening/cg_logo_icon.png
+        /documents/img/citrusgreening/cg_logo.png
+        /documents/img/citrusgreening/cg_name.png
+    );
+
+#Called from fernbase/mason/*
+$mech->get_ok($_) for
+    qw(
+        /css/nextgen-cassava-base-new.css
+        /documents/inc/jquery-cassava-theme/jquery-ui-1.10.3.custom.css
+        /documents/img/fernbase/fern.png
+    );
+
+#Called from musabase/mason/*,
+$mech->get_ok($_) for
+    qw(
+        /css/nextgen-cassava-base-new.css
+        /documents/inc/jquery-cassava-theme/jquery-ui-1.10.3.custom.css
+        /documents/img/sgn_transparent_logo.png
+    );
+
+#Called from sweetpotatobase/mason/*,
+$mech->get_ok($_) for
+    qw(
+        /css/nextgen-cassava-base-new.css
+        /documents/inc/jquery-cassava-theme/jquery-ui-1.10.3.custom.css
+        /documents/img/sweetpotatobase/sweetpotatobase_logo.png
+    );
+
+#Called from yambase/mason/*,
+$mech->get_ok($_) for
+    qw(
+        /css/nextgen-cassava-base-new.css
+        /documents/inc/jquery-cassava-theme/jquery-ui-1.10.3.custom.css
+        /documents/img/AfricaYamLogo.jpg
+    );
+
 
 done_testing;
