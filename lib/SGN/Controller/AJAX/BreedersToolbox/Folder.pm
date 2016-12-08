@@ -39,8 +39,8 @@ sub create_folder :Path('/ajax/folder/new') Args(0) {
     my $existing = $schema->resultset("Project::Project")->find( { name => $folder_name });
 
     if ($existing) {
-	$c->stash->{rest} = { error => "An folder or trial with that name already exists in the database. Please select another name." };
-	return;
+        $c->stash->{rest} = { error => "A folder or trial with that name already exists in the database. Please select another name." };
+        $c->detach;
     }
     my $folder = CXGN::Trial::Folder->create({
 	    bcs_schema => $schema,
