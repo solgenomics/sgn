@@ -324,7 +324,7 @@ sub _get_crd_design {
     }
     elsif ($plot_layout_format && $fieldmap_row_number){
       @fieldmap_row_numbers = ((1..$fieldmap_row_number) x $fieldmap_col_number);
-      @fieldmap_row_numbers = sort(@fieldmap_row_numbers);
+      @fieldmap_row_numbers = sort {$a <=> $b} @fieldmap_row_numbers;
     }
 
     for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
@@ -370,7 +370,7 @@ sub _get_rcbd_design {
   my $fieldmap_col_number;
   my $plot_layout_format;
   my @col_number_fieldmaps;
-print "LAYOUT FORMAT SELECTED: $plot_layout_format\n";
+
   if ($self->has_stock_list()) {
     @stock_list = @{$self->get_stock_list()};
   } else {
@@ -390,12 +390,22 @@ print "LAYOUT FORMAT SELECTED: $plot_layout_format\n";
   } else {
     die "Number of blocks not specified\n";
   }
+  sub isint{
+    my $val = shift;
+    return ($val =~ m/^\d+$/);
+  }
 
   if ($self->has_fieldmap_col_number()) {
     $fieldmap_col_number = $self->get_fieldmap_col_number();
   }
   if ($self->has_fieldmap_row_number()) {
     $fieldmap_row_number = $self->get_fieldmap_row_number();
+    my $colNumber = ((scalar(@stock_list) * $number_of_blocks)/$fieldmap_row_number);
+      if (isint($colNumber)){
+        $fieldmap_col_number = $colNumber;
+      } else {
+          die "Choose a different row number for field map generation. The product of number of accessions and block when divided by row number should give an integer\n";
+      }
   }
   if ($self->has_plot_layout_format()) {
     $plot_layout_format = $self->get_plot_layout_format();
@@ -435,26 +445,39 @@ print "LAYOUT FORMAT SELECTED: $plot_layout_format\n";
   #generate col_number
 
   if ($plot_layout_format eq "zigzag") {
-    @col_number_fieldmaps = ((1..(scalar(@stock_list))) x $number_of_blocks);
-    print STDERR Dumper(\@col_number_fieldmaps);
+    if (!$fieldmap_col_number){
+      @col_number_fieldmaps = ((1..(scalar(@stock_list))) x $number_of_blocks);
+    } else {
+      @col_number_fieldmaps = ((1..$fieldmap_col_number) x $fieldmap_row_number);
+    }
   }
   elsif ($plot_layout_format eq "serpentine") {
-    for my $rep (1 .. $number_of_blocks){
-      if ($rep % 2){
-        push @col_number_fieldmaps, (1..(scalar(@stock_list)));
-      } else {
-        push @col_number_fieldmaps, (reverse 1..(scalar(@stock_list)));
+    if (!$fieldmap_row_number)  {
+      for my $rep (1 .. $number_of_blocks){
+        if ($rep % 2){
+          push @col_number_fieldmaps, (1..(scalar(@stock_list)));
+        } else {
+          push @col_number_fieldmaps, (reverse 1..(scalar(@stock_list)));
+        }
+      }
+    } else {
+      for my $rep (1 .. $fieldmap_row_number){
+        if ($rep % 2){
+          push @col_number_fieldmaps, (1..$fieldmap_col_number);
+        } else {
+          push @col_number_fieldmaps, (reverse 1..$fieldmap_col_number);
+        }
       }
     }
   }
 
-  if ($fieldmap_row_number) {
-    #do some stuff
-    @fieldmap_row_numbers;
-  }
-  elsif ($plot_layout_format && !$fieldmap_col_number && !$fieldmap_row_number){
+  if ($plot_layout_format && !$fieldmap_col_number && !$fieldmap_row_number){
     @fieldmap_row_numbers = (@block_numbers);
   }
+  elsif ($plot_layout_format && $fieldmap_row_number){
+      @fieldmap_row_numbers = ((1..$fieldmap_row_number) x $fieldmap_col_number);
+      @fieldmap_row_numbers = sort {$a <=> $b} @fieldmap_row_numbers;
+    }
 
   for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
     my %plot_info;
@@ -511,15 +534,25 @@ sub _get_alpha_lattice_design {
       }
     }
   }
+
+  if ($self->has_number_of_reps()) {
+    $number_of_reps = $self->get_number_of_reps();
+    if ($number_of_reps < 2) {
+      die "Number of reps for alpha lattice design must be 2 or greater\n";
+    }
+  } else {
+    die "Number of reps not specified\n";
+  }
+
+  sub isint{
+      my $val = shift;
+      return ($val =~ m/^\d+$/);
+  }
+
   if ($self->has_fieldmap_col_number()) {
     $fieldmap_col_number = $self->get_fieldmap_col_number();
   }
-  if ($self->has_fieldmap_row_number()) {
-    $fieldmap_row_number = $self->get_fieldmap_row_number();
-  }
-  if ($self->has_plot_layout_format()) {
-    $plot_layout_format = $self->get_plot_layout_format();
-  }
+
   if ($self->has_block_size()) {
     $block_size = $self->get_block_size();
     print STDERR "block size = $block_size\n";
@@ -547,14 +580,20 @@ sub _get_alpha_lattice_design {
   } else {
     die "No block size specified\n";
   }
-  if ($self->has_number_of_reps()) {
-    $number_of_reps = $self->get_number_of_reps();
-    if ($number_of_reps < 2) {
-      die "Number of reps for alpha lattice design must be 2 or greater\n";
-    }
-  } else {
-    die "Number of reps not specified\n";
+
+  if ($self->has_fieldmap_row_number()) {
+    $fieldmap_row_number = $self->get_fieldmap_row_number();
+      my $colNumber = ((scalar(@stock_list) * $number_of_reps)/$fieldmap_row_number);
+      if (isint($colNumber)){
+        $fieldmap_col_number = $colNumber;
+      } else {
+          die "Choose a different row number for field map generation. The product of number of accessions and rep when divided by row number should give an integer\n";
+      }
   }
+  if ($self->has_plot_layout_format()) {
+    $plot_layout_format = $self->get_plot_layout_format();
+  }
+
   $stock_data_matrix =  R::YapRI::Data::Matrix->new(
 						       {
 							name => 'stock_data_matrix',
@@ -596,26 +635,40 @@ sub _get_alpha_lattice_design {
   @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
 
   if ($plot_layout_format eq "zigzag") {
-    @col_number_fieldmaps = ((1..$number_of_blocks) x ($number_of_blocks * $number_of_reps));
-    print STDERR Dumper(\@col_number_fieldmaps);
+    if (!$fieldmap_col_number){
+      @col_number_fieldmaps = ((1..$number_of_blocks) x ($number_of_blocks * $number_of_reps));
+      print STDERR Dumper(\@col_number_fieldmaps);
+    } else {
+        @col_number_fieldmaps = ((1..$fieldmap_col_number) x $fieldmap_row_number);
+      }
   }
   elsif ($plot_layout_format eq "serpentine") {
-    for my $rep (1 .. ($number_of_blocks * $number_of_reps)){
-      if ($rep % 2){
-        push @col_number_fieldmaps, (1..$number_of_blocks);
-      } else {
-        push @col_number_fieldmaps, (reverse 1..$number_of_blocks);
+    if (!$fieldmap_row_number)  {
+      for my $rep (1 .. ($number_of_blocks * $number_of_reps)){
+        if ($rep % 2){
+          push @col_number_fieldmaps, (1..$number_of_blocks);
+        } else {
+          push @col_number_fieldmaps, (reverse 1..$number_of_blocks);
+        }
       }
-    }
+    } else {
+        for my $rep (1 .. $fieldmap_row_number){
+          if ($rep % 2){
+            push @col_number_fieldmaps, (1..$fieldmap_col_number);
+          } else {
+              push @col_number_fieldmaps, (reverse 1..$fieldmap_col_number);
+          }
+        }
+      }
   }
 
-  if ($fieldmap_row_number) {
-    #do some stuff
-    @fieldmap_row_numbers;
-  }
-  elsif ($plot_layout_format && !$fieldmap_col_number && !$fieldmap_row_number){
+  if ($plot_layout_format && !$fieldmap_col_number && !$fieldmap_row_number){
     @fieldmap_row_numbers = (@block_numbers);
   }
+  elsif ($plot_layout_format && $fieldmap_row_number){
+      @fieldmap_row_numbers = ((1..$fieldmap_row_number) x $fieldmap_col_number);
+      @fieldmap_row_numbers = sort {$a <=> $b} @fieldmap_row_numbers;
+    }
 
   for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
     my %plot_info;
