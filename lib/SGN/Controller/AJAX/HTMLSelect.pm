@@ -117,6 +117,8 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
     my $c = shift;
 
     my $breeding_program_id = $c->req->param("breeding_program_id");
+    my $folder_for_trials = 1 ? $c->req->param("folder_for_trials") eq 'true' : 0;
+    my $folder_for_crosses = 1 ? $c->req->param("folder_for_crosses") eq 'true' : 0;
 
     my $id = $c->req->param("id") || "folder_select";
     my $name = $c->req->param("name") || "folder_select";
@@ -125,7 +127,9 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
 
     my @folders = CXGN::Trial::Folder->list({
 	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-	    breeding_program_id => $breeding_program_id
+	    breeding_program_id => $breeding_program_id,
+        folder_for_trials => $folder_for_trials,
+        folder_for_crosses => $folder_for_crosses
     });
 
     if ($empty) {
@@ -201,19 +205,32 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
 sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $trial_id = $c->req->param('trial_id');
+    my $trial_id = $c->req->param('trial_id') || 'all';
     my $data_level = $c->req->param('data_level') || 'all';
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     if ($data_level eq 'all') {
         $data_level = '';
     }
-    my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$trial_id});
-    my $traits_assayed = $trial->get_traits_assayed($data_level);
+
     my @traits;
-    foreach (@$traits_assayed) {
-        my @val = ($_->[0], $_->[1]);
-        push @traits, \@val;
+    if ($trial_id eq 'all') {
+      my $bs = CXGN::BreederSearch->new( { dbh=> $c->dbc->dbh() } );
+      my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
+      if ($status->{'error'}) {
+        $c->stash->{rest} = { error => $status->{'error'}};
+        return;
+      }
+      my $query = $bs->metadata_query([ 'traits' ], {}, {});
+      @traits = @{$query->{results}};
+      #print STDERR "Traits: ".Dumper(@traits)."\n";
+    } else {
+      my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$trial_id});
+      my $traits_assayed = $trial->get_traits_assayed($data_level);
+      foreach (@$traits_assayed) {
+          my @val = ($_->[0], $_->[1]);
+          push @traits, \@val;
+      }
     }
 
     my $id = $c->req->param("id") || "html_trial_select";
@@ -321,6 +338,7 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         push @ontology_children, [$child->name."|".$db_name.":".$accession, $child->name."|".$db_name.":".$accession];
     }
 
+    @ontology_children = sort { $a->[1] cmp $b->[1] } @ontology_children;
     if ($empty) {
         unshift @ontology_children, [ 0, "None" ];
     }

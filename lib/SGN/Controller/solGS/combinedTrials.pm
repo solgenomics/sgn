@@ -479,7 +479,7 @@ sub combined_trials_desc {
 	$s_pop_id = $pop_id;
 	$s_pop_id =~ s/\s+//;
     }
-    
+   
     $c->stash->{pop_id} = $s_pop_id;
     $solgs_controller->filtered_training_genotype_file($c);
     my $filtered_geno_file  = $c->stash->{filtered_training_genotype_file};

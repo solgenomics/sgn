@@ -12,11 +12,6 @@ my $f = SGN::Test::Fixture->new();
 
 my $bs = CXGN::BreederSearch->new( { dbh=> $f->dbh() });
 
-my $refresh = 'SELECT refresh_materialized_views()';
-my $h = $f->dbh->prepare($refresh);
-$h->execute();
-
-
 my $criteria_list = [
                'accessions',
                'trials'
@@ -32,7 +27,7 @@ my $queryref = {
                            }
              };
 
-my $results = $bs->metadata_query($f, $criteria_list, $dataref, $queryref);
+my $results = $bs->metadata_query($criteria_list, $dataref, $queryref);
 #print STDERR Dumper $results;
 is_deeply($results, {
                'results' => [

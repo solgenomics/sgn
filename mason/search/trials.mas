@@ -8,19 +8,21 @@ $nd_geolocation => 'not_provided'
 <& /page/page_title.mas, title => "Trial Search" &>
 
 
-<table id="trial_search_results" class="display">
+<table id="trial_search_results" width="100%" class="table table-hover table-striped">
 <thead>
   <tr>
     <th>Trial name</th>
     <th>Description</th>
     <th>Breeding program</th>
+    <th>Folder</th>
     <th>Year</th>
     <th>Location</th>
     <th>Trial type</th>
+    <th>Design</th>
 </tr>
 </thead>
-
 </table>
+
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 <br><br>

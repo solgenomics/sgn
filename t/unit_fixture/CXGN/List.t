@@ -126,72 +126,71 @@ my $lists = CXGN::List::available_lists($t->dbh(), 41);
 
 #print STDERR Dumper($lists);
 @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
-
+#print STDERR Dumper \@lists_sorted;
 is_deeply(\@lists_sorted, [
           [
-            '3',
+            3,
             'test_stocks',
             undef,
-            '5',
-            '76451',
+            5,
+            76451,
             'accessions',
-	    '0'
+            0
           ],
           [
-            '5',
+            5,
             'accessions_for_solgs_tests',
             undef,
-            '374',
-            '76451',
+            374,
+            76451,
             'accessions',
-	    '0'
+            0
           ],
           [
-            '6',
+            6,
             'accessions_for_trial2',
             undef,
-            '307',
-            '76451',
+            307,
+            76451,
             'accessions',
-	    '0'
+            0
           ],
           [
-            '7',
+            7,
             'selection_acc',
             undef,
-            '20',
+            20,
             undef,
             undef,
-	    '0'
+            0
           ],
           [
-            '8',
+            10,
             'new_test_name',
             'new description',
-            '1',
-            '76451',
+            1,
+            76451,
             'accessions',
-	    '0'
+            0
           ],
-	  [
-            '809',
+          [
+            809,
             'janedoe_1_public',
             undef,
-            '2',
+            2,
             undef,
             undef,
-	    '1'
+            1
           ],
-	  [
-            '811',
+          [
+            811,
             'janedoe_1_private',
             undef,
-            '2',
+            2,
             undef,
             undef,
-	    '0'
-          ],
-
+            0
+          ]
         ],
         "check available lists after additions");
 
@@ -204,64 +203,64 @@ my $lists = CXGN::List::available_lists($t->dbh(), 41);
 #print STDERR Dumper($lists);
 
 @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
+#print STDERR Dumper \@lists_sorted;
 
 is_deeply(\@lists_sorted, [
-	      [
-	       '3',
-	       'test_stocks',
-	       undef,
-	       '5',
-	       '76451',
-	       'accessions',
-	       '0'
-	      ],
-	      [
-	       '6',
-	       'accessions_for_trial2',
-	       undef,
-	       '307',
-	       '76451',
-	       'accessions',
-	       '0'
-	      ],
-	      [
-	       '7',
-	       'selection_acc',
-	       undef,
-	       '20',
-	       undef,
-	       undef,
-	       '0'
-	      ],
-	      [
-	       '8',
-	       'new_test_name',
-	       'new description',
-	       '1',
-	       '76451',
-	       'accessions',
-	       '0'
-	      ],
-	      [
-            '809',
+          [
+            3,
+            'test_stocks',
+            undef,
+            5,
+            76451,
+            'accessions',
+            0
+          ],
+          [
+            6,
+            'accessions_for_trial2',
+            undef,
+            307,
+            76451,
+            'accessions',
+            0
+          ],
+          [
+            7,
+            'selection_acc',
+            undef,
+            20,
+            undef,
+            undef,
+            0
+          ],
+          [
+            10,
+            'new_test_name',
+            'new description',
+            1,
+            76451,
+            'accessions',
+            0
+          ],
+          [
+            809,
             'janedoe_1_public',
             undef,
-            '2',
+            2,
             undef,
             undef,
-	    '1'
+            1
           ],
-	  [
-            '811',
+          [
+            811,
             'janedoe_1_private',
             undef,
-            '2',
+            2,
             undef,
             undef,
-	    '0'
-          ],
-
-	  ]
+            0
+          ]
+        ]
 	  , "check available lists after deletion");
 
 
