@@ -135,14 +135,18 @@ sub search {
         my $accession_sql = _sql_from_arrayref($self->accession_list);
         push @where_clause, "accession_id in ($accession_sql)";
     }
+  #  if (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->plant_list && scalar(@{$self->plant_list})>0)) {
+  #      my $plot_sql = _sql_from_arrayref($self->plot_list);
+  #      my $plant_sql = _sql_from_arrayref($self->plant_list);
+#        push @where_clause, "(plot.stock_id in ($plot_sql) OR plot.stock_id in ($plant_sql))";
     if ($self->plot_list && scalar(@{$self->plot_list})>0) {
         my $plot_sql = _sql_from_arrayref($self->plot_list);
         push @where_clause, "plot_id in ($plot_sql)";
-    }
-    if ($self->plant_list && scalar(@{$self->plant_list})>0) {
+    } elsif ($self->plant_list && scalar(@{$self->plant_list})>0) {
         my $plant_sql = _sql_from_arrayref($self->plant_list);
         push @where_clause, "plant_id in ($plant_sql)";
     }
+
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
         my $trial_sql = _sql_from_arrayref($self->trial_list);
         push @where_clause, "trial_id in ($trial_sql)";
@@ -358,13 +362,7 @@ sub get_synonym_hash_lookup {
     $h->execute();
     my %result;
     while (my ($uniquename, $synonym) = $h->fetchrow_array()) {
-        if(exists($result{$uniquename})) {
-            my $synonyms = $result{$uniquename};
-            push @$synonyms, $synonym;
-            $result{$uniquename} = $synonyms;
-        } else {
-            $result{$uniquename} = [$synonym];
-        }
+        push @{$result{$uniquename}}, $synonym;
     }
     print STDERR "Synonym End:".localtime."\n";
     return \%result;
