@@ -2126,9 +2126,13 @@ while (my $rs = $exp_md_files_table_tail->next() ) {
 }
 #print STDERR Dumper \@exp_md_files_table;
 
-
+#For running this test in series with all other tests or alone.. AddPlants.t does this step earlier if tests done in series...
+my $nd_experiment_stock_number;
 if (!$tn->has_plant_entries) {
 	$tn->create_plant_entities(2);
+	$nd_experiment_stock_number = 413;
+} else {
+	$nd_experiment_stock_number = 383;
 }
 
 #check that parse fails for plant spreadsheet file when using plot parser
@@ -2690,7 +2694,7 @@ $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 383, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_stock_diff == $nd_experiment_stock_number, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
 
 my @exp_stock_table;
 my $exp_stock_table_tail = $exp_stock_rs->slice($post1_exp_stock_count-323, $post1_exp_stock_count);
@@ -2921,7 +2925,7 @@ $exp_stock_rs = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')
 $post1_exp_stock_count = $exp_stock_rs->count();
 $post1_exp_stock_diff = $post1_exp_stock_count - $pre_exp_stock_count;
 print STDERR "Experimentstock count: ".$post1_exp_stock_diff."\n";
-ok($post1_exp_stock_diff == 393, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
+ok($post1_exp_stock_diff == $nd_experiment_stock_number+10, "Check num rows in NdExperimentstock table after addition of large phenotyping spreadsheet upload");
 
 my @exp_stock_table;
 my $exp_stock_table_tail = $exp_stock_rs->slice($post1_exp_stock_count-323, $post1_exp_stock_count);
