@@ -313,6 +313,8 @@ sub _get_source_dataref {
 
 =head2 retrieve_genotypes()
 
+Retrieves genotypes as a listref of hashrefs.
+
 =cut
 
 sub retrieve_genotypes { 
@@ -329,7 +331,9 @@ sub retrieve_genotypes {
     my $genotypes = $resultset->{genotypes};	
 }
 
-=head2 retrieve_genotypes()
+=head2 retrieve_phenotypes()
+
+retrieves phenotypes as a listref of listrefs
 
 =cut
 
@@ -352,6 +356,8 @@ sub retrieve_phenotypes {
 
 =head2 retrieve_accessions()
 
+retrieves accessions as a listref of listref [stock_id, uniquname]
+
 =cut
 
 sub retrieve_accessions { 
@@ -370,6 +376,8 @@ sub retrieve_accessions {
 
 =head2 retrieve_plots()
 
+Retrieves plots as a listref of listrefs.
+
 =cut
 
 sub retrieve_plots { 
@@ -387,6 +395,8 @@ sub retrieve_plots {
 }
 
 =head2 retrieve_trials()
+
+retrieves trials as a listref of listrefs.
 
 =cut
 
@@ -407,6 +417,8 @@ sub retrieve_trials {
 
 =head2 retrieve_traits()
 
+retrieves traits as a listref of listrefs.
+
 =cut
 
 sub retrieve_traits { 
@@ -425,6 +437,8 @@ sub retrieve_traits {
 }
 
 =head2 retrieve_years()
+
+retrieves years as a listref of listrefs
 
 =cut
 
