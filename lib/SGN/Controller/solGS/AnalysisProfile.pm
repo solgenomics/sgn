@@ -191,7 +191,8 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     }
     else  
     { 
-	my $output_details_file = $c->controller('solGS::solGS')->create_tempfile($c, 'analysis_report_args');
+	my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
+	my $output_details_file = $c->controller('solGS::solGS')->create_tempfile($tmp_dir, 'analysis_report_args');
 	nstore $output_details, $output_details_file 
 	    or croak "check_analysis_status: $! serializing output_details to $output_details_file";
 	
