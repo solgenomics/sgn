@@ -2024,9 +2024,9 @@ sub convert_dosage_to_genotype {
             "result" : {
                 "makerprofileDbIds": ["markerprofileId1","markerprofileId2","markerprofileId3"],
                 "data" : [
-                    { "markerId1":["AB","AA","AA"] },
-                    { "markerId2":["AA","AB","AA"] },
-                    { "markerId3":["AB","AB","BB"] }
+                    { "markerDbId1":["AB","AA","AA"] },
+                    { "markerDbId2":["AA","AB","AA"] },
+                    { "markerDbId3":["AB","AB","BB"] }
                 ]
             }
         }
@@ -3329,12 +3329,12 @@ sub maps_details_GET {
             "result": {
                 "data" : [
                     {
-                        "markerId": 1,
+                        "markerDbId": 1,
                         "markerName": "marker1",
                         "location": "1000",
                         "linkageGroup": "1A"
                     }, {
-                        "markerId": 2,
+                        "markerDbId": 2,
                         "markerName": "marker2",
                         "location": "1001",
                         "linkageGroup": "1A"
@@ -3398,7 +3398,7 @@ sub maps_marker_detail_GET {
     	    my ($chr, $pos) = split "_", $m;
     	    #print STDERR "CHR: $chr. POS: $pos\n";
            $chrs{$chr} = $pos;
-            #   "markerId": 1,
+            #   "markerDbId": 1,
             #   "markerName": "marker1",
             #   "location": "1000",
             #   "linkageGroup": "1A"
@@ -3407,22 +3407,22 @@ sub maps_marker_detail_GET {
                 if (exists $linkage_groups{$chr} ) {
                     if ($params->{min} && $params->{max}) {
                         if ($pos >= $params->{min} && $pos <= $params->{max}) {
-                            push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
+                            push @markers, { markerDbId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
                         }
                     } elsif ($params->{min}) {
                         if ($pos >= $params->{min}) {
-                            push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
+                            push @markers, { markerDbId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
                         }
                     } elsif ($params->{max}) {
                         if ($pos <= $params->{max}) {
-                            push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
+                            push @markers, { markerDbId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
                         }
                     } else {
-                        push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
+                        push @markers, { markerDbId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
                     }
                 }
             } else {
-                push @markers, { markerId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
+                push @markers, { markerDbId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
             }
 
         }
