@@ -2127,9 +2127,10 @@ sub allelematrix_search_process {
             $delim = ",";
         }
         my $dir = $c->tempfiles_subdir('download');
-        my ($fh, $tempfile) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$data_format.'_'.'XXXXX');
-        $file_path = $c->config->{main_production_site_url}.":".$c->config->{basepath}."/".$tempfile.".$data_format";
-        open($fh, ">", $file_path);
+        my ($file_path, $uri) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$data_format.'_'.'XXXXX');
+        #$file_path = $c->config->{main_production_sitae_url}.":".$c->config->{basepath}."/".$tempfile.".$data_format";
+        my $hostname = $c->req->hostname;
+        open(my $fh, ">", $file_path);
             print STDERR $file_path."\n";
             #print $fh "markerprofileDbIds\t", join($delim, @lines), "\n";
             foreach (@scores) {
@@ -2137,7 +2138,7 @@ sub allelematrix_search_process {
             }
 
         close $fh;
-        $data_file_path = $file_path;
+        $data_file_path = $hostname.$uri;
         #$c->res->content_type('Application/'.$data_format);
         #$c->res->header('Content-Disposition', qq[attachment; filename="$data_file_path"]);
         #my $output = read_file($data_file_path);
