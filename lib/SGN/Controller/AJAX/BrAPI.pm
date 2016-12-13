@@ -55,7 +55,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
     $c->stash->{status} = \%status;
     $c->stash->{session_token} = $c->req->param("session_token");
-    $c->stash->{current_page} = $c->req->param("currentPage") || 1;
+    $c->stash->{current_page} = $c->req->param("currentPage") || 0;
     $c->stash->{page_size} = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
 
 }
@@ -303,8 +303,8 @@ sub calls_GET {
     );
 
     my @data;
-    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-    my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
+    my $start = $c->stash->{page_size}*$c->stash->{current_page};
+    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
     for( my $i = $start; $i <= $end; $i++ ) {
         if ($available[$i]) {
             if ($datatype_param) {
@@ -382,7 +382,7 @@ sub seasons_process {
     my $total_count = 0;
     my $year_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'project year', 'project_property')->cvterm_id();
     my $project_years_rs = $self->bcs_schema()->resultset("Project::Project")->search_related('projectprops', {'projectprops.type_id'=>$year_cvterm_id}, {order_by=>'projectprops.projectprop_id'});
-    my $rs_slice = $project_years_rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+    my $rs_slice = $project_years_rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
     while (my $p_year = $rs_slice->next()) {
         push @data, {
             seasonsDbId=>$p_year->projectprop_id(),
@@ -640,7 +640,7 @@ sub germplasm_search_process {
     my @data;
     if ($rs) {
         $total_count = $rs->count();
-        my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+        my $rs_slice = $rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
         while (my $stock = $rs_slice->next()) {
             push @data, {
                 germplasmDbId=>$stock->stock_id,
@@ -1058,7 +1058,7 @@ sub studies_search_process {
     my $total_count = 0;
     if ($rs) {
         $total_count = $rs->count();
-        my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+        my $rs_slice = $rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
         while (my $s = $rs_slice->next()) {
             my $t = CXGN::Trial->new( { trial_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
             my $folder = CXGN::Trial::Folder->new( { folder_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
@@ -1150,7 +1150,7 @@ sub trials_search_process {
     my @data;
     if ($folder_rs) {
         $total_count = $folder_rs->count();
-        my $rs_slice = $folder_rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+        my $rs_slice = $folder_rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
         while (my $p = $rs_slice->next()) {
             my $folder = CXGN::Trial::Folder->new({bcs_schema=>$self->bcs_schema, folder_id=>$p->project_id});
             if ($folder->is_folder) {
@@ -1377,8 +1377,8 @@ sub studies_germplasm_GET {
 
     if ($accessions) {
         $total_count = scalar(@$accessions);
-        my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-        my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
+        my $start = $c->stash->{page_size}*$c->stash->{current_page};
+        my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
         for( my $i = $start; $i <= $end; $i++ ) {
             if (@$accessions[$i]) {
                 push @germplasm_data, {
@@ -1512,8 +1512,8 @@ sub germplasm_attributes_detail_GET {
             dateDetermined => ''
         };
     }
-    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-    my $end = $c->stash->{page_size}*$c->stash->{current_page};
+    my $start = $c->stash->{page_size}*$c->stash->{current_page};
+    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
     my @data_window = splice @data, $start, $end;
     my $total_count = scalar(@data);
     my %result = (
@@ -1581,7 +1581,7 @@ sub germplasm_markerprofile_GET {
   	    }
   	);
 
-    my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+    my $rs_slice = $rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
     while (my $gt = $rs_slice->next()) {
       push @marker_profiles, $gt->get_column('genotypeprop_id');
     }
@@ -1655,8 +1655,8 @@ sub germplasm_attributes_process {
             values => $attribute_hash{$_}->[5]
         };
     }
-    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-    my $end = $c->stash->{page_size}*$c->stash->{current_page};
+    my $start = $c->stash->{page_size}*$c->stash->{current_page};
+    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
     my @data_window = splice @data, $start, $end;
     my $total_count = scalar(@data);
     my %result = (data => \@data_window);
@@ -1703,8 +1703,8 @@ sub germplasm_attributes_categories_process {
             attributeCategoryName => $attributeCategoryName,
         };
     }
-    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-    my $end = $c->stash->{page_size}*$c->stash->{current_page};
+    my $start = $c->stash->{page_size}*$c->stash->{current_page};
+    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
     my @data_window = splice @data, $start, $end;
     my $total_count = scalar(@data);
     my %result = (data => \@data_window);
@@ -1798,7 +1798,7 @@ sub markerprofile_search_process {
     }
 
     if ($rs) {
-      my $rs_slice = $rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+      my $rs_slice = $rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
       while (my $row = $rs_slice->next()) {
           my $genotype_json = $row->get_column('value');
           my $genotype = JSON::Any->decode($genotype_json);
@@ -1918,8 +1918,8 @@ sub genotype_fetch_GET {
             push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}) };
         }
 
-        my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-        my $end = $c->stash->{page_size}*$c->stash->{current_page};
+        my $start = $c->stash->{page_size}*$c->stash->{current_page};
+        my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
         my @data_window = splice @data, $start, $end;
 
         %result = (
@@ -2110,7 +2110,7 @@ sub allelematrix_search_process {
     my @scores_seen;
     if (!$data_format || $data_format eq 'json' ){
 
-        for (my $n = $c->stash->{page_size} * ($c->stash->{current_page}-1); $n< ($c->stash->{page_size} * ($c->stash->{current_page})); $n++) {
+        for (my $n = $c->stash->{page_size}*$c->stash->{current_page}; $n< ($c->stash->{page_size}*($c->stash->{current_page}+1)-1); $n++) {
             push @scores_seen, $scores[$n];
         }
 
@@ -2212,8 +2212,8 @@ sub programs_list_GET {
     my $programs = $ps -> get_breeding_programs();
     my $total_count = scalar(@$programs);
 
-    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-    my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
+    my $start = $c->stash->{page_size}*$c->stash->{current_page};
+    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
     for( my $i = $start; $i <= $end; $i++ ) {
         if (@$programs[$i]) {
             if ($program_name) {
@@ -2590,8 +2590,8 @@ sub studies_observations_GET {
 
     my @data;
     my $total_count = scalar(@$phenotype_data);
-    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-    my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
+    my $start = $c->stash->{page_size}*$c->stash->{current_page};
+    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
     for( my $i = $start; $i <= $end; $i++ ) {
         if (@$phenotype_data[$i]) {
             my $pheno_uniquename = @$phenotype_data[$i]->[5];
@@ -2700,8 +2700,8 @@ sub studies_table_GET {
             push @header_ids, SGN::Model::Cvterm->get_cvterm_row_from_trait_name($self->bcs_schema, $t)->cvterm_id();
         }
 
-        my $start = $c->stash->{page_size}*($c->stash->{current_page}-1)+1;
-        my $end = $c->stash->{page_size}*$c->stash->{current_page}+1;
+        my $start = $c->stash->{page_size}*$c->stash->{current_page};
+        my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
         my @data_window;
         for (my $line = $start; $line < $end; $line++) {
             if ($data[$line]) {
@@ -2903,8 +2903,8 @@ sub process_phenotypes_search {
     });
     my $search_result = $phenotypes_search->search();
     my $total_count = scalar(@$search_result);
-    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-    my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
+    my $start = $c->stash->{page_size}*$c->stash->{current_page};
+    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
     for( my $i = $start; $i <= $end; $i++ ) {
         if (@$search_result[$i]) {
             my %data_entry = (
@@ -3155,8 +3155,8 @@ sub maps_list_GET {
     }
 
     my $total_count = scalar(@data);
-    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-    my $end = $c->stash->{page_size}*$c->stash->{current_page};
+    my $start = $c->stash->{page_size}*$c->stash->{current_page};
+    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
     my @data_window = splice @data, $start, $end;
 
     my %result = (data => \@data_window);
@@ -3289,8 +3289,8 @@ sub maps_details_GET {
     }
 
     $total_count = scalar(@data);
-    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-    my $end = $c->stash->{page_size}*$c->stash->{current_page};
+    my $start = $c->stash->{page_size}*$c->stash->{current_page};
+    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
     my @data_window = splice @data, $start, $end;
 
     %map_info = (
@@ -3419,8 +3419,8 @@ sub maps_marker_detail_GET {
         }
 
     my $total_count = scalar(@markers);
-    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-    my $end = $c->stash->{page_size}*$c->stash->{current_page};
+    my $start = $c->stash->{page_size}*$c->stash->{current_page};
+    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
     my @data_window = splice @markers, $start, $end;
 
     my %result = (data => \@data_window);
@@ -3452,8 +3452,8 @@ sub locations_list_GET {
     my $locations = CXGN::Trial::get_all_locations($self->bcs_schema);
 
     my $total_count = scalar(@$locations);
-    my $start = $c->stash->{page_size}*($c->stash->{current_page}-1);
-    my $end = $c->stash->{page_size}*$c->stash->{current_page}-1;
+    my $start = $c->stash->{page_size}*$c->stash->{current_page};
+    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
     for( my $i = $start; $i <= $end; $i++ ) {
         if (@$locations[$i]) {
             push @data, {
