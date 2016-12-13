@@ -18,6 +18,7 @@ use Try::Tiny;
 use CXGN::Phenotypes::Search;
 use File::Slurp qw | read_file |;
 use Spreadsheet::WriteExcel;
+use Time::Piece;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -1081,10 +1082,14 @@ sub studies_search_process {
                 my $planting_date = '';
                 if ($t->get_planting_date()) {
                     $planting_date = $t->get_planting_date();
+                    my $t = Time::Piece->strptime($planting_date, "%Y-%B-%d");
+                    $planting_date = $t->strftime("%Y-%m-%d");
                 }
                 my $harvest_date = '';
                 if ($t->get_harvest_date()) {
                     $harvest_date = $t->get_harvest_date();
+                    my $t = Time::Piece->strptime($harvest_date, "%Y-%B-%d");
+                    $harvest_date = $t->strftime("%Y-%m-%d");
                 }
                 push @data, {
                     studyDbId=>$t->get_trial_id(),
@@ -2315,10 +2320,14 @@ sub studies_info_GET {
             my $planting_date = '';
             if ($t->get_planting_date()) {
                 $planting_date = $t->get_planting_date();
+                my $t = Time::Piece->strptime($planting_date, "%Y-%B-%d");
+                $planting_date = $t->strftime("%Y-%m-%d");
             }
             my $harvest_date = '';
             if ($t->get_harvest_date()) {
                 $harvest_date = $t->get_harvest_date();
+                my $t = Time::Piece->strptime($harvest_date, "%Y-%B-%d");
+                $harvest_date = $t->strftime("%Y-%m-%d");
             }
             %result = (
                 studyDbId=>$t->get_trial_id(),
