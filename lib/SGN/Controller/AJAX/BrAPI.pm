@@ -2138,10 +2138,10 @@ sub allelematrix_search_process {
 
         close $fh;
         $data_file_path = $file_path;
-        $c->res->content_type('Application/'.$data_format);
-        $c->res->header('Content-Disposition', qq[attachment; filename="$data_file_path"]);
-        my $output = read_file($data_file_path);
-        $c->res->body($output);
+        #$c->res->content_type('Application/'.$data_format);
+        #$c->res->header('Content-Disposition', qq[attachment; filename="$data_file_path"]);
+        #my $output = read_file($data_file_path);
+        #$c->res->body($output);
     }
 
     $total_count = scalar(@scores);
