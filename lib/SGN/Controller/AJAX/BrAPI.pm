@@ -2128,7 +2128,7 @@ sub allelematrix_search_process {
         }
         my $dir = $c->tempfiles_subdir('download');
         my ($fh, $tempfile) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$data_format.'_'.'XXXXX');
-        $file_path = $c->config->{basepath}."/".$tempfile.".$data_format";
+        $file_path = $c->config->{main_production_site_url}.":".$c->config->{basepath}."/".$tempfile.".$data_format";
         open($fh, ">", $file_path);
             print STDERR $file_path."\n";
             #print $fh "markerprofileDbIds\t", join($delim, @lines), "\n";
@@ -2977,12 +2977,16 @@ sub traits_list_GET {
     #my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
     #$h->execute($db_id);
 
-    my $q = "SELECT trait_id FROM traitsxtrials;";
+    my @trait_ids;
+    my $q = "SELECT trait_id FROM traitsxtrials ORDER BY trait_id;";
     my $p = $self->bcs_schema()->storage->dbh()->prepare($q);
     $p->execute();
+    while (my ($cvterm_id) = $p->fetchrow_array()) {
+        push @trait_ids, $cvterm_id;
+    }
 
     my @data;
-    while (my ($cvterm_id) = $p->fetchrow_array()) {
+    foreach my $cvterm_id (@trait_ids){
         my $q2 = "SELECT cvterm.definition, cvtermprop.value, dbxref.accession, db.name, cvterm.name FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) JOIN db using(db_id) WHERE cvterm.cvterm_id=?";
         my $h = $self->bcs_schema()->storage->dbh()->prepare($q2);
         $h->execute($cvterm_id);
