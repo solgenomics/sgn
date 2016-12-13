@@ -172,8 +172,7 @@ solGS.waitPage = function (page, args) {
 
     function goToPage (page, args) { 
 
-	var matchItems = 'solgs/population/'
-	    + '|solgs/confirm/request'
+	var matchItems = 'solgs/confirm/request'
 	    + '|solgs/trait/'
 	    + '|solgs/model/combined/trials/'
 	    + '|solgs/model/\\w+_\\d+/prediction/'
@@ -231,12 +230,17 @@ solGS.waitPage = function (page, args) {
 	   
 	}  else if (page.match(/solgs\/populations\/combined\//)) {
 	    retrievePopsData();  
-	    //window.location = page;
-	}  else {
-
-	    window.location = window.location.href;
+	} else if (page.match(/solgs\/population\//)) {
+	    if (page.match(/solgs\/population\/uploaded_/)) {
+		var listId = args.list_id;
+		loadPlotListTypeTrainingPop(listId);  
+	    } else {
+		window.location = page;
+	    }	   
 	}
-	
+	else {
+	    window.location = window.location.href;
+	}	
     }
 
 
