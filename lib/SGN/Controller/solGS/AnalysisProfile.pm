@@ -337,6 +337,11 @@ sub parse_arguments {
 	  {
 	      $c->stash->{data_set_type} =  $arguments->{$k};
 	  }	 
+	  
+	  if ($k eq 'list') 
+	  {
+	      $c->stash->{list} =  $arguments->{$k};
+	  }	 
       }
   }
 	    
@@ -435,20 +440,40 @@ sub structure_output_details {
     elsif ( $analysis_page =~ m/solgs\/population\// ) 
     {
 	my $population_page = $base . "solgs/population/$pop_id";
-	$c->stash->{pop_id} = $pop_id;
+	my $pheno_file;
+	my $geno_file;
+	my $pop_name;
 
-	$solgs_controller->phenotype_file($c);	
-	$solgs_controller->genotype_file($c);
-	$solgs_controller->get_project_details($c, $pop_id);
+	if ($pop_id =~ /uploaded/) {
+       
+	    $c->controller('solGS::List')->create_list_pop_tempfiles($c);
+	    $pheno_file  = $c->stash->{pheno_data_temp_file};
+	    $geno_file  = $c->stash->{geno_data_temp_file};
+
+	    $solgs_controller->uploaded_population_summary($c);
+	    $pop_name = $c->stash->{project_name};	    
+	} 
+	else 
+	{	    
+	    $solgs_controller->phenotype_file($c);
+	    $pheno_file = $c->stash->{phenotype_file};
+
+	    $solgs_controller->genotype_file($c);
+	    $geno_file = $c->stash->{genotype_file};
+	    
+	    $solgs_controller->get_project_details($c, $pop_id);
+	    $pop_name = $c->stash->{project_name};
+	  
+	}
 
 	$output_details{'population_id_' . $pop_id} = {
 		'population_page' => $population_page,
 		'population_id'   => $pop_id,
-		'population_name' => $c->stash->{project_name},
-		'phenotype_file'  => $c->stash->{phenotype_file},
-		'genotype_file'   => $c->stash->{genotype_file},  
+		'population_name' => $pop_name,
+		'phenotype_file'  => $pheno_file,
+		'genotype_file'   => $geno_file,  
 		'data_set_type'   => $c->stash->{data_set_type},
-	};		
+	};
     }
     elsif ( $analysis_page =~ m/solgs\/model\/\d+\/prediction\// ) 
     {	
@@ -616,8 +641,17 @@ sub run_analysis {
     }
     elsif ($analysis_page =~ /solgs\/population\//)
     {
-	$c->controller('solGS::solGS')->phenotype_file($c);	
-	$c->controller('solGS::solGS')->genotype_file($c);
+	my $pop_id = $c->stash->{model_id};
+
+	if ($pop_id =~ /uploaded/) 
+	{
+	    $c->controller('solGS::solGS')->prepare_plots_type_training_data($c);
+	}
+	else
+	{
+	    $c->controller('solGS::solGS')->phenotype_file($c);	
+	    $c->controller('solGS::solGS')->genotype_file($c);
+	}
     }
     elsif ($analysis_page =~ /solgs\/populations\/combined\//)
     {
