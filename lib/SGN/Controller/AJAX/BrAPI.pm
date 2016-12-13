@@ -138,7 +138,7 @@ sub authenticate_token_DELETE {
     my %result;
     my @data_files;
     $status->{'message'} = 'Successfully logged out.';
-    my %metadata = (pagination=>\%pagination, status=>$status, datafiles=>\@data_files);
+    my %metadata = (pagination=>\%pagination, status=>[$status], datafiles=>\@data_files);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -197,7 +197,7 @@ sub process_authenticate_token {
     my %pagination = ();
     my @data_files;
     $status->{'message'} = $message;
-    my %metadata = (pagination=>\%pagination, status=>$status, datafiles=>\@data_files);
+    my %metadata = (pagination=>\%pagination, status=>[$status], datafiles=>\@data_files);
     my %response = (metadata=>\%metadata, access_token=>$cookie, userDisplayName=>"$first_name $last_name", expires_in=>$CXGN::Login::LOGIN_TIMEOUT);
     $c->stash->{rest} = \%response;
 }
@@ -321,7 +321,7 @@ sub calls_GET {
     my $total_count = scalar(@available);
     my %result = (data=>\@data);
     my @data_files;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@data_files);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -338,7 +338,7 @@ sub crops_GET {
         [$c->config->{'supportedCrop'}]
     );
     my @data_files;
-    my %metadata = (pagination=>\%pagination, status=>$status, datafiles=>\@data_files);
+    my %metadata = (pagination=>\%pagination, status=>[$status], datafiles=>\@data_files);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -355,7 +355,7 @@ sub observation_levels_GET {
         ['plant','plot','all']
     );
     my @data_files;
-    my %metadata = (pagination=>\%pagination, status=>$status, datafiles=>\@data_files);
+    my %metadata = (pagination=>\%pagination, status=>[$status], datafiles=>\@data_files);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -393,7 +393,7 @@ sub seasons_process {
     my %result = (data=>\@data);
     $total_count = $project_years_rs->count();
     my @data_files;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@data_files);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -464,7 +464,7 @@ sub study_types_process {
     my %result = (data=>\@data);
     $total_count = $project_rs->count();
     my @data_files;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@data_files);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -671,7 +671,7 @@ sub germplasm_search_process {
     %result = (data => \@data);
     $status->{'message'} = $message;
     my @data_files;
-    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@data_files);
+    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -765,7 +765,7 @@ sub germplasm_detail_GET {
     );
 
     my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -1107,7 +1107,7 @@ sub studies_search_process {
 
     %result = (data=>\@data);
     my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -1207,7 +1207,7 @@ sub trials_search_process {
     %result = (data => \@data);
     $status->{'message'} = $message;
     my @data_files;
-    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@data_files);
+    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -1275,7 +1275,7 @@ sub trials_detail_GET {
 
     my @datafiles;
     $status->{'message'} = $message;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -1401,7 +1401,7 @@ sub studies_germplasm_GET {
         data =>\@germplasm_data
     );
     my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -1474,7 +1474,7 @@ sub germplasm_pedigree_GET {
     my %pagination;
     my @datafiles;
     $status->{'message'} = $message;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -1522,7 +1522,7 @@ sub germplasm_attributes_detail_GET {
     );
 
     my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -1588,7 +1588,7 @@ sub germplasm_markerprofile_GET {
     %result = (germplasmDbId=>$c->stash->{stock_id}, markerProfiles=>\@marker_profiles);
     my $total_count = scalar(@marker_profiles);
     my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -1662,7 +1662,7 @@ sub germplasm_attributes_process {
     my %result = (data => \@data_window);
     $status->{'message'} = $message;
     my @data_files;
-    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@data_files);
+    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -1710,7 +1710,7 @@ sub germplasm_attributes_categories_process {
     my %result = (data => \@data_window);
     $status->{'message'} = $message;
     my @data_files;
-    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@data_files);
+    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -1820,7 +1820,7 @@ sub markerprofile_search_process {
     %result = (data => \@data);
     $status->{'message'} = $message;
     my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -1934,7 +1934,7 @@ sub genotype_fetch_GET {
     }
 
     my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2066,7 +2066,7 @@ sub allelematrix_search_process {
         $message .= 'Unsupported Format Given. Supported values are: json, tsv, csv';
         $status->{'message'} = $message;
         $c->stash->{rest} = {
-            metadata => { pagination=>{}, status => $status, datafiles=>[$data_file_path] },
+            metadata => { pagination=>{}, status => [$status], datafiles=>[$data_file_path] },
             result => \%result,
         };
         $c->detach;
@@ -2142,7 +2142,7 @@ sub allelematrix_search_process {
     $total_count = scalar(@scores);
 
     $c->stash->{rest} = {
-        metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => $status, datafiles=>[$data_file_path] },
+        metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => [$status], datafiles=>[$data_file_path] },
         result => {data => \@scores_seen},
     };
 
@@ -2240,7 +2240,7 @@ sub programs_list_GET {
 
     %result = (data=>\@data);
     my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2266,7 +2266,7 @@ sub studies_instances_GET {
     my $status = $c->stash->{status};
     my $total_count = 0;
 
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status]);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2347,7 +2347,7 @@ sub studies_info_GET {
     }
     $status->{'message'} = $message;
     my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2448,7 +2448,7 @@ sub studies_observation_variables_GET {
 
     %result = (data=>\@data);
     my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2508,7 +2508,7 @@ sub studies_layout_GET {
 	$total_count += 1;
     }
     %result = (data=>$plot_data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status]);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2618,7 +2618,7 @@ sub studies_observations_GET {
     }
 
     %result = (data=>\@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>[]);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2720,7 +2720,7 @@ sub studies_table_GET {
             observationVariableNames => \@trait_names,
             data=>\@data_window
         );
-        my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>[]);
+        my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
         my %response = (metadata=>\%metadata, result=>\%result);
         $c->stash->{rest} = \%response;
 
@@ -2938,7 +2938,7 @@ sub process_phenotypes_search {
     }
 
     my %result = (data => \@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>[]);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -2996,7 +2996,7 @@ sub traits_list_GET {
     my $total_count = $p->rows;
     my %result = (data => \@data);
     my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>\@datafiles);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 
@@ -3041,7 +3041,7 @@ sub trait_detail_GET {
         );
     }
 
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>[]);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -3160,7 +3160,7 @@ sub maps_list_GET {
     my @data_window = splice @data, $start, $end;
 
     my %result = (data => \@data_window);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>[]);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -3301,7 +3301,7 @@ sub maps_details_GET {
         linkageGroups => \@data_window,
     );
 
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>[]);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
     my %response = (metadata=>\%metadata, result=>\%map_info);
     $c->stash->{rest} = \%response;
 }
@@ -3424,7 +3424,7 @@ sub maps_marker_detail_GET {
     my @data_window = splice @markers, $start, $end;
 
     my %result = (data => \@data_window);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>[]);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
@@ -3472,7 +3472,7 @@ sub locations_list_GET {
     }
 
     my %result = (data=>\@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>$status, datafiles=>[]);
+    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
