@@ -13,17 +13,17 @@ JSAN.use("jquery.blockUI");
 
 jQuery(document).ready( function() {
        
-        var list = new CXGN.List();
+    var list = new CXGN.List();
         
     var listMenu = list.listSelect("list_type_training_pops", ['plots', 'trials']);
        
-	if (listMenu.match(/option/) != null) {           
-            jQuery("#list_type_training_pops_list").append(listMenu);
-        } else {
-            jQuery("#list_type_training_pops_list").append("<select><option>no lists found</option></select>");
-        }
+    if (listMenu.match(/option/) != null) {           
+        jQuery("#list_type_training_pops_list").append(listMenu);
+    } else {
+        jQuery("#list_type_training_pops_list").append("<select><option>no lists found</option></select>");
+    }
                
-    });
+});
 
 
 jQuery(document).ready( function() { 
@@ -40,17 +40,16 @@ jQuery(document).ready( function() {
 		jQuery("#list_type_training_pop_load").click(function() {
 		    
 		    if (listDetail.type.match(/plots/)) {
-			loadPlotListTypeTrainingPop(listId);
+			askJobQueueing(listId);
 		    } else {
-			alert('this is trials type');
 			var trialsList = listDetail.list;
 			var trialsNames = listDetail.elementsNames;
 			
 			loadTrialListTypeTrainingPop(trialsNames);		    
 		    }
-            });
-        }
-    });       
+		});
+            }
+	});       
 });
 
 
@@ -94,7 +93,7 @@ function getListTypeTrainingPopDetail(listId) {
 
 
 function loadTrialListTypeTrainingPop (trialsNames) {
-    alert('laod trials ' + trialsNames)
+   
     jQuery.ajax({
         type: 'POST',
         url: '/solgs/get/trial/id/',
@@ -110,15 +109,35 @@ function loadTrialListTypeTrainingPop (trialsNames) {
 
 }
 
-function loadPlotListTypeTrainingPop(listId) {     
-    
+function askJobQueueing (listId) {
     var genoList       = getListTypeTrainingPopDetail(listId);
     var listName       = genoList.name;
     var list           = genoList.list;
-    var modelId        = getModelId(listId);
+    var modelId        = getModelId(listId);  
+
+    var args = {
+	'list'           : list,
+	'list_id'        : listId,
+	'analysis_type'  : 'population download',
+	'data_set_type'  : 'single population',
+    };  
+
+    var page = '/solgs/population/' + modelId;
+
+    solGS.waitPage(page, args);
+
+}
+
+
+function loadPlotListTypeTrainingPop(listId) {     
+    
+    var genoList  = getListTypeTrainingPopDetail(listId);
+    var listName  = genoList.name;
+    var list      = genoList.list;
+    var modelId   = getModelId(listId);
 
     var populationType = 'uploaded_reference';
-
+    
     if ( list.length === 0) {       
         alert('The list is empty. Please select a list with content.' );
     }
@@ -137,47 +156,13 @@ function loadPlotListTypeTrainingPop(listId) {
                    
                 if (response.status == 'success') {
     
-                    var uploadedRefPops = jQuery("#uploaded_reference_pops_table").doesExist();
-                       
-                    if (uploadedRefPops == false) {  
-                            
-                        uploadedRefPops = getUserUploadedRefPop(listId);                    
-                        jQuery("#uploaded_reference_populations").append(uploadedRefPops).show();                           
-                    }
-                    else {
-                        var url =   '\'/solgs/population/'+ modelId + '\'';
-                        var listIdArg = '\'' + listId +'\'';
-                        var listSource = '\'from_db\'';
-			
-                        var popIdName   = {model_id : modelId, name: listName,};
-                        popIdName       = JSON.stringify(popIdName);
-                        var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
-                        
-                        var addRow = '<tr><td>'
-                            + '<a href="/solgs/population/' + modelId + '\"  onclick="javascript:loadPopulationPage(' + url + ',' 
-                            + listIdArg + ',' + listSource + ')">' + '<data>'+ hiddenInput + '</data>'
-                            + listName + '</a>'
-                            + '</td>'
-                            + '<td id="list_reference_page_' + modelId +  '">'
-                            + '<a href="/solgs/population/' + modelId + '\" onclick="javascript:loadPopulationPage(' + url + ',' 
-                            + listIdArg + ',' + listSource + ')">' 
-                            + '[ Build Model ]'+ '</a>'          
-                            + '</td><tr>';
-                            // alert(addRow);
-                        var tdId = '#list_reference_page_' + modelId;
-                        var addedRow = jQuery(tdId).doesExist();
-                            // alert(addedRow);
-                        if (addedRow == false) {
-                            jQuery("#uploaded_reference_pops_table tr:last").after(addRow);
-                        }                          
-                    }
-                    
+                    window.location = '/solgs/population/' + modelId;                       
 		    jQuery.unblockUI();                        
                       
-                    } else {                                    
-                        alert("fail: Error occured while uploading the list of reference genotypes.");
-                        jQuery.unblockUI();   
-                    }                     
+                } else {                                    
+                    alert("fail: Error occured while querying for the training data.");
+                    jQuery.unblockUI();   
+                }                     
             },
             error: function(res) {
                 alert("Error occured while uploading the list of reference genotypes.");
@@ -249,7 +234,6 @@ function loadPopulationPage (url, listId, listSource) {
                        'list_source': listSource,
                        'list_name'  : listName,
                       },
-
                 success: function (response) {
                
                 if (response.status == 'success') {                                 
