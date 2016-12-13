@@ -885,37 +885,15 @@ sub genotype_data {
 }
 
 
-sub format_user_list_genotype_data {
-    my $self = shift;
-
-    my $population_type = $self->context->stash->{population_type};
-   
-    my @genotypes;
-    my @filtered_genotypes;
-
-    if ($population_type =~ /reference/)         
-    {
-	my  @plots = @{ $self->context->stash->{reference_population_plot_names} };
-	my $genotypes_rs = $self->get_genotypes_from_plots(\@plots);
-	
-	while (my $genotype = $genotypes_rs->next) 
-	{
-	    my $name = $genotype->uniquename;
-	    push @genotypes, $name;
-	}
-    }
-    else
-    {
-	@genotypes = @{$self->context->stash->{genotypes_list}};	    
-    }    
- 
-    @genotypes = uniq(@genotypes);
+sub genotypes_list_genotype_data {
+    my ($self, $genotypes) = @_;
    
     my $geno_data;
     my $header_markers;
     my @header_markers;
+    my @filtered_genotypes;
 
-    my $list_genotypes_rs = $self->accessions_list_genotypes_rs(\@genotypes);
+    my $list_genotypes_rs = $self->accessions_list_genotypes_rs($genotypes);
     my $cnt = 0;
     
     while (my $stock_genotype = $list_genotypes_rs->next) 
@@ -954,14 +932,7 @@ sub format_user_list_genotype_data {
 	}    
     }
 
-    if ($population_type =~ /reference/) 
-    {
-        $self->context->stash->{user_reference_list_genotype_data} = $geno_data;
-    }
-    else
-    {
-        $self->context->stash->{user_selection_list_genotype_data} = $geno_data;   
-    }
+    return \$geno_data;
 
 }
 
@@ -1469,21 +1440,28 @@ sub prediction_pops {
 }
 
 
-sub format_user_reference_list_phenotype_data {
-    my $self = shift;
-
-    my @plots_names;
-    my $population_type = $self->context->stash->{population_type};
+sub plots_list_phenotype_data {
+    my ($self, $plots_names) = @_;
+   
+#my @plots_names;
+    #my $population_type = $self->context->stash->{population_type};
     
-    if ($population_type =~ /reference/)         
+    #if ($population_type =~ /reference/)         
+    #{
+    #    @plots_names = @{ $self->context->stash->{reference_population_plot_names} };
+    #}
+    if (@$plots_names) 
     {
-        @plots_names = @{ $self->context->stash->{reference_population_plot_names} };
-    }
-
-    my $stock_pheno_data_rs = $self->plots_list_phenotype_data_rs(\@plots_names);
+	my $stock_pheno_data_rs = $self->plots_list_phenotype_data_rs($plots_names);
   
-    my $data = $self->structure_phenotype_data($stock_pheno_data_rs);
-    $self->context->stash->{user_reference_list_phenotype_data} = $data;     
+	my $data = $self->structure_phenotype_data($stock_pheno_data_rs);
+	return \$data;
+    }
+    else
+    {
+	return;
+    }
+    #$self->context->stash->{user_reference_list_phenotype_data} = $data;     
 }
 
 
@@ -1568,7 +1546,6 @@ sub project_trait_phenotype_data_rs {
     return $rs;
 
 }
-
 
 
 sub get_plot_phenotype_rs {
@@ -1756,7 +1733,7 @@ sub phenotype_data {
 	 $data           = $self->structure_phenotype_data($phenotypes);                   
      }
     
-     return  $data; 
+     return  \$data; 
 }
 
 
