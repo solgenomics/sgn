@@ -648,14 +648,14 @@ sub germplasm_search_process {
                 defaultDisplayName=>$stock->uniquename,
                 germplasmName=>$stock->uniquename,
                 accessionNumber=>$accession_number,
-                germplasmPUI=>$stock->uniquename,
+                germplasmPUI=>$c->config->{main_production_site_url}."/stock/".$stock->stock_id."/view",
                 pedigree=>germplasm_pedigree_string($self->bcs_schema(), $stock->stock_id),
                 germplasmSeedSource=>'',
                 synonyms=>germplasm_synonyms($self->bcs_schema(), $stock->stock_id, $synonym_id),
                 commonCropName=>$stock->search_related('organism')->first()->common_name(),
                 instituteCode=>'',
                 instituteName=>'',
-                biologicalStatusOfAccessionCode=>'',
+                biologicalStatusOfAccessionCode=>'400',
                 countryOfOriginCode=>'',
                 typeOfGermplasmStorageCode=>'Not Stored',
                 genus=>$stock->search_related('organism')->first()->genus(),
@@ -664,7 +664,7 @@ sub germplasm_search_process {
                 subtaxa=>'',
                 subtaxaAuthority=>'',
                 donors=>[],
-                acquisitionDate=>'',
+                acquisitionDate=>$stock->create_date,
             };
         }
     }
@@ -1016,6 +1016,7 @@ sub studies_search_process {
     my $season_ids = $c->req->param("seasonDbId");
     my $studytype_ids = $c->req->param("studyTypeDbId");
     my $study_ids = $c->req->param("studyDbId");
+    my $study_names = $c->req->param("studyName");
     my $germplasm_ids = $c->req->param("germplasmDbId");
     my $variable_ids = $c->req->param("observationVariableDbId");
     my $status = $c->stash->{status};
@@ -1028,6 +1029,9 @@ sub studies_search_process {
     $search_params{'project_relationship_subject_projects.type_id'} = $bp_trial_relationship_id;
     if ($study_ids) {
         $search_params{'me.project_id'} = {-in => $study_ids};
+    }
+    if ($study_names) {
+        $search_params{'me.name'} = {-in => $study_names};
     }
     if ($program_ids) {
         $search_params{'project_relationship_subject_projects.object_project_id'} = {-in => $program_ids};
@@ -2894,7 +2898,7 @@ sub process_phenotypes_search {
     my $trial_ids = $c->req->param('studyDbIds');
     my $location_ids = $c->req->param('locationDbIds');
     my $year_ids = $c->req->param('seasonDbIds');
-    my $data_level = $c->req->param('observationLevel');
+    my $data_level = $c->req->param('observationLevel') || 'plot';
     my @stocks_array = split /,/, $stock_ids;
     my @traits_array = split /,/, $trait_ids;
     my @trials_array = split /,/, $trial_ids;
@@ -2917,29 +2921,30 @@ sub process_phenotypes_search {
     for( my $i = $start; $i <= $end; $i++ ) {
         if (@$search_result[$i]) {
             my %data_entry = (
-                observationDbId=>@$search_result[$i]->[19],
-                observationUnitDbId=>@$search_result[$i]->[14],
+                observationDbId=>@$search_result[$i]->[20],
+                observationUnitDbId=>@$search_result[$i]->[15],
                 observationUnitName=>@$search_result[$i]->[6],
-                studyDbId=>@$search_result[$i]->[11],
+                studyDbId=>@$search_result[$i]->[12],
                 studyName=>@$search_result[$i]->[1],
-                studyLocationDbId=>@$search_result[$i]->[12],
+                studyLocationDbId=>@$search_result[$i]->[13],
                 studyLocation=>@$search_result[$i]->[3],
                 programName=>'',
-                observationLevel=>@$search_result[$i]->[18],
-                germplasmDbId=>@$search_result[$i]->[13],
+                observationLevel=>@$search_result[$i]->[19],
+                germplasmDbId=>@$search_result[$i]->[14],
                 germplasmName=>@$search_result[$i]->[2],
-                observationVariableId=>@$search_result[$i]->[4]."|".@$search_result[$i]->[7],
-                observationVariableDbId=>@$search_result[$i]->[10],
+                observationVariableName=>@$search_result[$i]->[4]."|".@$search_result[$i]->[7],
+                observationVariableDbId=>@$search_result[$i]->[11],
                 season=>@$search_result[$i]->[0],
                 value=>@$search_result[$i]->[5],
-                observationTimeStamp=>@$search_result[$i]->[15],
+                observationTimeStamp=>@$search_result[$i]->[16],
                 collector=>'',
                 uploadedBy=>'',
                 additionalInfo=>{
                     'block'=>@$search_result[$i]->[9],
                     'replicate'=>@$search_result[$i]->[8],
-                    'germplasmSynonyms'=>@$search_result[$i]->[16],
-                    'design'=>@$search_result[$i]->[17],
+                    'plotNumber'=>@$search_result[$i]->[10],
+                    'germplasmSynonyms'=>@$search_result[$i]->[17],
+                    'design'=>@$search_result[$i]->[18],
                 }
             );
             push @data, \%data_entry;
