@@ -1050,6 +1050,10 @@ sub studies_search_process {
         $search_params{'projectprops.type_id'} = $location_type_id;
         $search_params{'projectprops.value::int'} = {-in => $location_ids};
     }
+
+    my $breeding_program_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program', 'project_property')->cvterm_id();
+    my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
+
     my $rs = $self->bcs_schema->resultset('Project::Project')->search(
         \%search_params,
         {join=> [{'project_relationship_subject_projects'}, {'projectprops' => {'type' => 'cv'}}],
@@ -1067,11 +1071,10 @@ sub studies_search_process {
         while (my $s = $rs_slice->next()) {
             my $t = CXGN::Trial->new( { trial_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
             my $folder = CXGN::Trial::Folder->new( { folder_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
-            if ($folder->folder_type eq 'trial') {
 
                 my @years = ($t->get_year());
                 my %additional_info = (
-                    studyPUI=>'',
+                    studyPUI => $c->config->{main_production_site_url}."/breeders_toolbox/trial/".$t->get_trial_id(),
                 );
                 my $project_type = '';
                 if ($t->get_project_type()) {
@@ -1095,17 +1098,21 @@ sub studies_search_process {
                     my $t = Time::Piece->strptime($harvest_date, "%Y-%B-%d");
                     $harvest_date = $t->strftime("%Y-%m-%d");
                 }
+                my $trial_id = $folder->project_parent->project_id();
+                my $trial_name = $folder->project_parent->name();
+                my $program_id = $folder->breeding_program->project_id();
+                my $program_name = $folder->breeding_program->name();
                 push @data, {
                     studyDbId=>$t->get_trial_id(),
                     name=>$t->get_name(),
-                    trialDbId=>$folder->project_parent->project_id(),
-                    trialName=>$folder->project_parent->name(),
+                    trialDbId=>$trial_id,
+                    trialName=>$trial_name,
                     studyType=>$project_type,
                     seasons=>\@years,
                     locationDbId=>$location_id,
                     locationName=>$location_name,
-                    programDbId=>$folder->breeding_program->project_id(),
-                    programName=>$folder->breeding_program->name(),
+                    programDbId=>$program_id,
+                    programName=>$program_name,
                     startDate => $planting_date,
                     endDate => $harvest_date,
                     additionalInfo=>\%additional_info
