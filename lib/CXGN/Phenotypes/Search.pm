@@ -126,131 +126,154 @@ sub search {
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $include_timestamp = $self->include_timestamp;
-
+    my $search_type = $self->search_type;
+    print STDERR "Search type in pheno search = $search_type\n";
+    if ($search_type ne 'fast' && $search_type ne 'complete') {
+      return "Search type must be set, valid options are 'fast' and 'complete'\n";
+    }
+    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     my %synonym_hash_lookup = %{$self->get_synonym_hash_lookup()};
 
+    my %matview_columns = (
+      accession_id=> 'accession_id',
+      plot_id=> $self->data_level eq 'plot' ? 'plot_id' : 'plant_id',
+      trial_id=> 'trial_id',
+      trait_id=> 'trait_id',
+      location_id=> 'location_id',
+      year_id=> 'year_id',
+      trait_name=> 'trait_name',
+      phenotype_value=> 'phenotype_value',
+      trial_name=> 'trial_name',
+      plot_name=> $self->data_level eq 'plot' ? 'plot_name' : 'plant_name',
+      accession_name=> 'accession_name',
+      location_name=> 'location_name',
+      trial_design=> 'trial_design_value',
+      phenotype_id=> 'materialized_phenoview.phenotype_id',
+      plot_type=> $self->data_level eq 'plot' ? "'plot' AS plot_type" : "'plant' AS plot_type",
+      from_clause=> " FROM materialized_phenoview
+             LEFT JOIN stockprop AS rep ON (plot_id=rep.stock_id AND rep.type_id = $rep_type_id)
+             LEFT JOIN stockprop AS block_number ON (plot_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
+             LEFT JOIN stockprop AS plot_number ON (plot_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
+             JOIN phenotype USING(phenotype_id)",
+    );
+
+    my %db_columns = (
+      accession_id=> 'accession.stock_id',
+      plot_id=> 'plot.stock_id',
+      trial_id=> 'project.project_id',
+      trait_id=> 'cvterm.cvterm_id',
+      location_id=> 'nd_geolocation.nd_geolocation_id',
+      year_id=> 'year.value',
+      trait_name=> "(((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text",
+      phenotype_value=> 'phenotype.value',
+      trial_name=> 'project.name',
+      plot_name=> 'plot.uniquename',
+      accession_name=> 'accession.uniquename',
+      location_name=> 'nd_geolocation.description',
+      trial_design=> 'design.value',
+      phenotype_id=> 'phenotype.phenotype_id',
+      plot_type=> 'plot_type.name',
+      from_clause=> " FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)
+      JOIN cvterm as plot_type ON (plot_type.cvterm_id = plot.type_id)
+      JOIN stock as accession ON (object_id=accession.stock_id AND accession.type_id = $accession_type_id)
+      LEFT JOIN stockprop AS rep ON (plot.stock_id=rep.stock_id AND rep.type_id = $rep_type_id)
+      LEFT JOIN stockprop AS block_number ON (plot.stock_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
+      LEFT JOIN stockprop AS plot_number ON (plot.stock_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
+      JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id)
+      JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
+      JOIN nd_geolocation USING(nd_geolocation_id)
+      JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)
+      JOIN phenotype USING(phenotype_id)
+      JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
+      JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
+      JOIN db USING(db_id)
+      JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)
+      JOIN project USING(project_id)
+      LEFT JOIN projectprop as year ON (project.project_id=year.project_id AND year.type_id = $year_type_id)
+      LEFT JOIN projectprop as design ON (project.project_id=design.project_id AND design.type_id = $design_type_id)",
+    );
+
+    my %column_lookup = (
+      fast=>\%matview_columns,
+      complete=>\%db_columns
+    );
+
+    my %columns = %{$column_lookup{$search_type}};
+
+    my $select_clause = "SELECT ".$columns{'year_id'}.", ".$columns{'trial_name'}.", ".$columns{'accession_name'}.", ".$columns{'location_name'}.", ".$columns{'trait_name'}.", ".$columns{'phenotype_value'}.", ".$columns{'plot_name'}.",
+          rep.value, block_number.value, plot_number.value, ".$columns{'trait_id'}.", ".$columns{'trial_id'}.", ".$columns{'location_id'}.", ".$columns{'accession_id'}.", ".$columns{'plot_id'}.", phenotype.uniquename, ".$columns{'trial_design'}.", ".$columns{'plot_type'}.", ".$columns{'phenotype_id'};
+
+    my $from_clause = $columns{'from_clause'};
+
+    my $order_clause = " ORDER BY ".$columns{'trial_name'}.", ".$columns{'plot_name'};
+
     my @where_clause;
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+
     if ($self->accession_list && scalar(@{$self->accession_list})>0) {
         my $accession_sql = _sql_from_arrayref($self->accession_list);
-        push @where_clause, "accession_id in ($accession_sql)";
+        push @where_clause, $columns{'accession_id'}." in ($accession_sql)";
     }
-  #  if (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->plant_list && scalar(@{$self->plant_list})>0)) {
-  #      my $plot_sql = _sql_from_arrayref($self->plot_list);
-  #      my $plant_sql = _sql_from_arrayref($self->plant_list);
-#        push @where_clause, "(plot.stock_id in ($plot_sql) OR plot.stock_id in ($plant_sql))";
+
     if ($self->plot_list && scalar(@{$self->plot_list})>0) {
         my $plot_sql = _sql_from_arrayref($self->plot_list);
-        push @where_clause, "plot_id in ($plot_sql)";
+        push @where_clause, $columns{'plot_id'}." in ($plot_sql)";
     } elsif ($self->plant_list && scalar(@{$self->plant_list})>0) {
         my $plant_sql = _sql_from_arrayref($self->plant_list);
-        push @where_clause, "plant_id in ($plant_sql)";
+        push @where_clause, $columns{'plant_id'}." in ($plant_sql)";
     }
 
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
         my $trial_sql = _sql_from_arrayref($self->trial_list);
-        push @where_clause, "trial_id in ($trial_sql)";
+        push @where_clause, $columns{'trial_id'}." in ($trial_sql)";
     }
     if ($self->trait_list && scalar(@{$self->trait_list})>0) {
         my $trait_sql = _sql_from_arrayref($self->trait_list);
-        push @where_clause, "trait_id in ($trait_sql)";
+        push @where_clause, $columns{'trait_id'}." in ($trait_sql)";
     }
     if ($self->location_list && scalar(@{$self->location_list})>0) {
         my $location_sql = _sql_from_arrayref($self->location_list);
-        push @where_clause, "location_id in ($location_sql)";
+        push @where_clause, $columns{'location_id'}." in ($location_sql)";
     }
     if ($self->year_list && scalar(@{$self->year_list})>0) {
         my $arrayref = $self->year_list;
         my $sql = join ("','" , @$arrayref);
         my $year_sql = "'" . $sql . "'";
-        push @where_clause, "year_id in ($year_sql)";
+        push @where_clause, $columns{'year_id'}." in ($year_sql)";
     }
     if ($self->trait_contains && scalar(@{$self->trait_contains})>0) {
         foreach (@{$self->trait_contains}) {
-            push @where_clause, "trait_name like '%".lc($_)."%'";
+            push @where_clause, $columns{'trait_name'}." like '%".lc($_)."%'";
         }
     }
     if ($self->phenotype_min_value && !$self->phenotype_max_value) {
         push @where_clause, "phenotype_value::real >= ".$self->phenotype_min_value;
-        push @where_clause, "phenotype_value~\'$numeric_regex\'";
+        push @where_clause, $columns{'phenotype_value'}."~\'$numeric_regex\'";
     }
     if ($self->phenotype_max_value && !$self->phenotype_min_value) {
         push @where_clause, "phenotype_value::real <= ".$self->phenotype_max_value;
-        push @where_clause, "phenotype_value~\'$numeric_regex\'";
+        push @where_clause, $columns{'phenotype_value'}."~\'$numeric_regex\'";
     }
     if ($self->phenotype_max_value && $self->phenotype_min_value) {
         push @where_clause, "phenotype_value::real BETWEEN ".$self->phenotype_min_value." AND ".$self->phenotype_max_value;
-        push @where_clause, "phenotype_value~\'$numeric_regex\'";
+        push @where_clause, $columns{'phenotype_value'}."~\'$numeric_regex\'";
     }
 
-    my $order_clause = " ORDER BY trial_name, plot_name";
-
- my ($where_clause, $q);
-
- if ($self->search_type eq 'direct') {
-
-
-       if ($self->data_level ne 'all') {
-         my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $self->data_level, 'stock_type')->cvterm_id();
-         push @where_clause, "plot.type_id = $stock_type_id";
-       } else {
-         push @where_clause, "(plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id)";
-       }
-       $where_clause .= "WHERE " . (join (" AND " , @where_clause));
-
-    $q = "SELECT year.value as year_id, project.name as trial_name, accession.uniquename as accession_name, nd_geolocation.description as location_name,
-          (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name, phenotype.value AS phenotype_value, plot.uniquename AS plot_name,
-          rep.value, block_number.value, plot_number.value, cvterm.cvterm_id AS trait_id, project.project_id AS trial_id, nd_geolocation.nd_geolocation_id AS location_id,
-          accession.stock_id AS accession_id, plot.stock_id AS plot_id, phenotype.uniquename, design.value AS trial_design_value, plot_type.name, phenotype.phenotype_id
-            FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)
-            JOIN cvterm as plot_type ON (plot_type.cvterm_id = plot.type_id)
-            JOIN stock as accession ON (object_id=accession.stock_id AND accession.type_id = $accession_type_id)
-            LEFT JOIN stockprop AS rep ON (plot.stock_id=rep.stock_id AND rep.type_id = $rep_type_id)
-            LEFT JOIN stockprop AS block_number ON (plot.stock_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
-            LEFT JOIN stockprop AS plot_number ON (plot.stock_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
-            JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id)
-            JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
-            JOIN nd_geolocation USING(nd_geolocation_id)
-            JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)
-            JOIN phenotype USING(phenotype_id)
-            JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
-            JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
-            JOIN db USING(db_id)
-            JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)
-            JOIN project USING(project_id)
-            LEFT JOIN projectprop as year ON (project.project_id=year.project_id AND year.type_id = $year_type_id)
-            LEFT JOIN projectprop as design ON (project.project_id=design.project_id AND design.type_id = $design_type_id)
-            $where_clause
-            $order_clause";
-
-  } elsif ($self->search_type eq 'quick') {
-    my $where_clause .= "WHERE " . (join (" AND " , @where_clause));
-    my $select;
-    if ($self->data_level eq 'plant') {
-        $select = "SELECT year_name, trial_name, accession_name, location_name, trait_name, phenotype_value,
-                          plant_name, rep.value, block_number.value, plot_number.value, trait_id, trial_id,
-                          location_id, accession_id, plant_id, phenotype.uniquename, trial_design_value, 'plot' AS plot_type, materialized_phenoview.phenotype_id";
-    } else {
-      $select = "SELECT year_name, trial_name, accession_name, location_name, trait_name, phenotype_value,
-                        plot_name, rep.value, block_number.value, plot_number.value, trait_id, trial_id,
-                        location_id, accession_id, plot_id, phenotype.uniquename, trial_design_value, 'plant' AS plot_type, materialized_phenoview.phenotype_id";
+    if ($self->data_level ne 'all' && $search_type eq 'complete') {
+      my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $self->data_level, 'stock_type')->cvterm_id();
+      push @where_clause, "plot.type_id = $stock_type_id";
+    } elsif ($search_type eq 'complete') {
+      push @where_clause, "(plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id)";
     }
 
-    $q =  "$select FROM materialized_phenoview
-           LEFT JOIN stockprop AS rep ON (plot_id=rep.stock_id AND rep.type_id = $rep_type_id)
-           LEFT JOIN stockprop AS block_number ON (plot_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
-           LEFT JOIN stockprop AS plot_number ON (plot_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
-           JOIN phenotype USING(phenotype_id)
-           $where_clause
-           $order_clause";
-  } else {
-    return "Search type must be set, valid options are 'direct' and 'quick'\n";
-  }
+    my $where_clause = "WHERE " . (join (" AND " , @where_clause));
 
+    my  $q = $select_clause . $from_clause . $where_clause . $order_clause;
     print STDERR "QUERY: $q\n\n";
+
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my $result = [];
+
     while (my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename, $design, $stock_type_name, $phenotype_id) = $h->fetchrow_array()) {
 
         my $timestamp_value;

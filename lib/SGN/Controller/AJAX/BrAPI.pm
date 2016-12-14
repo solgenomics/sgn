@@ -2676,7 +2676,8 @@ sub studies_table_GET {
     my $data_level = $c->req->param('observationLevel') || 'plot';
     my $format = $c->req->param('format') || 'json';
     my %result;
-    my $search_type = $c->req->param("search_type") || 'quick';
+    my $search_type = $c->req->param("search_type") || 'fast';
+    print STDERR "Search Type =". $search_type . "\n";
     my $include_timestamp = $c->req->param("timestamp") || 0;
     my $trial_id = $c->stash->{study_id};
     my $phenotypes_search = CXGN::Phenotypes::Search->new({
@@ -2887,7 +2888,8 @@ sub process_phenotypes_search {
     my $location_ids = $c->req->param('locationDbIds');
     my $year_ids = $c->req->param('seasonDbIds');
     my $data_level = $c->req->param('observationLevel');
-    my $search_type = $c->req->param("search_type") || 'quick';
+    my $search_type = $c->req->param("search_type") || 'fast';
+    print STDERR "Search Type in Brapi =". $search_type . "\n";
     my @stocks_array = split /,/, $stock_ids;
     my @traits_array = split /,/, $trait_ids;
     my @trials_array = split /,/, $trial_ids;
