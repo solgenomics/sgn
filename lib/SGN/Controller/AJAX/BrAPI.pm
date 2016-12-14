@@ -56,7 +56,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
     $c->stash->{status} = \%status;
     $c->stash->{session_token} = $c->req->param("session_token");
-    $c->stash->{current_page} = $c->req->param("currentPage") || 0;
+    $c->stash->{current_page} = $c->req->param("page") || 0;
     $c->stash->{page_size} = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
 
 }
@@ -2904,6 +2904,7 @@ sub process_phenotypes_search {
     my @trials_array = split /,/, $trial_ids;
     my @locations_array = split /,/, $location_ids;
     my @years_array = split /,/, $year_ids;
+    my $offset = $c->stash->{current_page}*$c->stash->{page_size};
     my $phenotypes_search = CXGN::Phenotypes::Search->new({
         bcs_schema=>$self->bcs_schema,
         data_level=>$data_level,
@@ -2913,42 +2914,45 @@ sub process_phenotypes_search {
         trait_list=>\@traits_array,
         year_list=>\@years_array,
         include_timestamp=>1,
+        limit=>$c->stash->{page_size},
+        offset=>$offset
     });
     my $search_result = $phenotypes_search->search();
-    my $total_count = scalar(@$search_result);
-    my $start = $c->stash->{page_size}*$c->stash->{current_page};
-    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-    for( my $i = $start; $i <= $end; $i++ ) {
-        if (@$search_result[$i]) {
+    #print STDERR Dumper $search_result;
+    my $total_count = 0;
+    if (scalar(@$search_result)>0){
+        $total_count = $search_result->[0]->[21];
+    }
+    foreach my $result (@$search_result){
             my %data_entry = (
-                observationDbId=>@$search_result[$i]->[20],
-                observationUnitDbId=>@$search_result[$i]->[15],
-                observationUnitName=>@$search_result[$i]->[6],
-                studyDbId=>@$search_result[$i]->[12],
-                studyName=>@$search_result[$i]->[1],
-                studyLocationDbId=>@$search_result[$i]->[13],
-                studyLocation=>@$search_result[$i]->[3],
+                observationDbId=>$result->[20],
+                observationUnitDbId=>$result->[15],
+                observationUnitName=>$result->[6],
+                studyDbId=>$result->[12],
+                studyName=>$result->[1],
+                studyLocationDbId=>$result->[13],
+                studyLocation=>$result->[3],
                 programName=>'',
-                observationLevel=>@$search_result[$i]->[19],
-                germplasmDbId=>@$search_result[$i]->[14],
-                germplasmName=>@$search_result[$i]->[2],
-                observationVariableName=>@$search_result[$i]->[4]."|".@$search_result[$i]->[7],
-                observationVariableDbId=>@$search_result[$i]->[11],
-                season=>@$search_result[$i]->[0],
-                value=>@$search_result[$i]->[5],
-                observationTimeStamp=>@$search_result[$i]->[16],
+                observationLevel=>$result->[19],
+                germplasmDbId=>$result->[14],
+                germplasmName=>$result->[2],
+                observationVariableName=>$result->[4]."|".$result->[7],
+                observationVariableDbId=>$result->[11],
+                season=>$result->[0],
+                value=>$result->[5],
+                observationTimeStamp=>$result->[16],
                 collector=>'',
                 uploadedBy=>'',
                 additionalInfo=>{
-                    'block'=>@$search_result[$i]->[9],
-                    'replicate'=>@$search_result[$i]->[8],
-                    'plotNumber'=>@$search_result[$i]->[10],
-                    'germplasmSynonyms'=>@$search_result[$i]->[17],
-                    'design'=>@$search_result[$i]->[18],
+                    'block'=>$result->[9],
+                    'replicate'=>$result->[8],
+                    'plotNumber'=>$result->[10],
+                    'germplasmSynonyms'=>$result->[17],
+                    'design'=>$result->[18],
                 }
             );
             push @data, \%data_entry;
-        }
+        #}
     }
 
     my %result = (data => \@data);
