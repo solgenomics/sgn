@@ -454,7 +454,7 @@ sub study_types_process {
     my @data;
     my $total_count = 0;
     my $project_rs = $self->bcs_schema()->resultset("Cv::Cv")->search_related('cvterms', {'me.name'=>'project_type'}, {order_by=>'cvterms.cvterm_id'});
-    my $rs_slice = $project_rs->slice($c->stash->{page_size}*($c->stash->{current_page}-1), $c->stash->{page_size}*$c->stash->{current_page}-1);
+    my $rs_slice = $project_rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
     while (my $pp = $rs_slice->next()) {
         push @data, {
             studyTypeDbId=>$pp->cvterm_id(),
