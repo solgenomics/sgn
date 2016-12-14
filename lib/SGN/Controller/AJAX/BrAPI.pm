@@ -1057,8 +1057,8 @@ sub studies_search_process {
     my $rs = $self->bcs_schema->resultset('Project::Project')->search(
         \%search_params,
         {join=> [{'project_relationship_subject_projects'}, {'projectprops' => {'type' => 'cv'}}],
-        '+select'=> ['me.project_id'],
-        '+as'=> ['study_id' ],
+        '+select'=> ['me.project_id', 'me.name'],
+        '+as'=> ['study_id','name' ],
         distinct => 1,
         order_by=>{ -asc=>'me.project_id' }
         }
@@ -1069,55 +1069,70 @@ sub studies_search_process {
         $total_count = $rs->count();
         my $rs_slice = $rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
         while (my $s = $rs_slice->next()) {
-            my $t = CXGN::Trial->new( { trial_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
-            my $folder = CXGN::Trial::Folder->new( { folder_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
+            #my $t = CXGN::Trial->new( { trial_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
+            #my $folder = CXGN::Trial::Folder->new( { folder_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
 
-                my @years = ($t->get_year());
+                #my @years = ($t->get_year());
                 my %additional_info = (
-                    studyPUI => $c->config->{main_production_site_url}."/breeders_toolbox/trial/".$t->get_trial_id(),
+                    studyPUI => $c->config->{main_production_site_url}."/breeders_toolbox/trial/".$s->get_column('study_id'),
                 );
                 my $project_type = '';
-                if ($t->get_project_type()) {
-                   $project_type = $t->get_project_type()->[1];
-                }
+                #if ($t->get_project_type()) {
+                #   $project_type = $t->get_project_type()->[1];
+                #}
                 my $location_id = '';
                 my $location_name = '';
-                if ($t->get_location()) {
-                   $location_id = $t->get_location()->[0];
-                   $location_name = $t->get_location()->[1];
-                }
+                #if ($t->get_location()) {
+                #   $location_id = $t->get_location()->[0];
+                #   $location_name = $t->get_location()->[1];
+                #}
                 my $planting_date = '';
-                if ($t->get_planting_date()) {
-                    $planting_date = $t->get_planting_date();
-                    my $t = Time::Piece->strptime($planting_date, "%Y-%B-%d");
-                    $planting_date = $t->strftime("%Y-%m-%d");
-                }
+                #if ($t->get_planting_date()) {
+                 #   $planting_date = $t->get_planting_date();
+                #    my $t = Time::Piece->strptime($planting_date, "%Y-%B-%d");
+                #    $planting_date = $t->strftime("%Y-%m-%d");
+                #}
                 my $harvest_date = '';
-                if ($t->get_harvest_date()) {
-                    $harvest_date = $t->get_harvest_date();
-                    my $t = Time::Piece->strptime($harvest_date, "%Y-%B-%d");
-                    $harvest_date = $t->strftime("%Y-%m-%d");
-                }
-                my $trial_id = $folder->project_parent->project_id();
-                my $trial_name = $folder->project_parent->name();
-                my $program_id = $folder->breeding_program->project_id();
-                my $program_name = $folder->breeding_program->name();
+                #if ($t->get_harvest_date()) {
+                #    $harvest_date = $t->get_harvest_date();
+                #    my $t = Time::Piece->strptime($harvest_date, "%Y-%B-%d");
+                #    $harvest_date = $t->strftime("%Y-%m-%d");
+                #}
+                #my $trial_id = $folder->project_parent->project_id();
+                #my $trial_name = $folder->project_parent->name();
+                #my $program_id = $folder->breeding_program->project_id();
+                #my $program_name = $folder->breeding_program->name();
+                #push @data, {
+                #    studyDbId=>$t->get_trial_id(),
+                #    name=>$t->get_name(),
+                #    trialDbId=>$trial_id,
+                #    trialName=>$trial_name,
+                #    studyType=>$project_type,
+                #    seasons=>\@years,
+                #    locationDbId=>$location_id,
+                #    locationName=>$location_name,
+                #    programDbId=>$program_id,
+                #    programName=>$program_name,
+                #    startDate => $planting_date,
+                #    endDate => $harvest_date,
+                #    additionalInfo=>\%additional_info
+                #};
                 push @data, {
-                    studyDbId=>$t->get_trial_id(),
-                    name=>$t->get_name(),
-                    trialDbId=>$trial_id,
-                    trialName=>$trial_name,
-                    studyType=>$project_type,
-                    seasons=>\@years,
-                    locationDbId=>$location_id,
-                    locationName=>$location_name,
-                    programDbId=>$program_id,
-                    programName=>$program_name,
-                    startDate => $planting_date,
-                    endDate => $harvest_date,
+                    studyDbId=>$s->get_column('study_id'),
+                    name=>$s->get_column('name'),
+                    trialDbId=>'',
+                    trialName=>'',
+                    studyType=>'',
+                    seasons=>[],
+                    locationDbId=>'',
+                    locationName=>'',
+                    programDbId=>'',
+                    programName=>'',
+                    startDate => '',
+                    endDate => '',
                     additionalInfo=>\%additional_info
                 };
-            }
+            #}
         }
     }
 
