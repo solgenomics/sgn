@@ -79,4 +79,60 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'metadata' => {'status' => {},'pagination' => {'pageSize' => 20,'totalPages' => 1,'totalCount' => 2,'currentPage' => 1},'datafiles' => []},'result' => {'markerProfiles' => [1622,1934],'germplasmDbId' => '38937'}}, 'germplasm markerprofile');
 
+$mech->get_ok('http://localhost:3010/brapi/v1/markerprofiles?pageSize=2&currentPage=3');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'datafiles' => [],'status' => {'message' => ''},'pagination' => {'totalCount' => 535,'pageSize' => 2,'totalPages' => 268,'currentPage' => 3}},'result' => {'data' => [{'resultCount' => 500,'uniqueDisplayName' => 'UG120004','markerProfileDbId' => 1626,'analysisMethod' => 'GBS ApeKI genotyping v4','sampleDbId' => '','extractDbId' => '','germplasmDbId' => 38881},{'markerProfileDbId' => 1627,'analysisMethod' => 'GBS ApeKI genotyping v4','sampleDbId' => '','extractDbId' => '','germplasmDbId' => 39007,'uniqueDisplayName' => 'UG120156','resultCount' => 500}]}}, 'markerprofile');
+
+$mech->get_ok('http://localhost:3010/brapi/v1/markerprofiles?pageSize=1&currentPage=1&germplasmDbId=38937');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'result' => {'data' => [{'markerProfileDbId' => 1622,'resultCount' => 500,'analysisMethod' => 'GBS ApeKI genotyping v4','uniqueDisplayName' => 'UG120066','sampleDbId' => '','germplasmDbId' => 38937,'extractDbId' => ''}]},'metadata' => {'datafiles' => [],'status' => {'message' => ''},'pagination' => {'currentPage' => 1,'totalCount' => 2,'totalPages' => 2,'pageSize' => 1}}}, 'markerprofile');
+
+$mech->get_ok('http://localhost:3010/brapi/v1/markerprofiles?pageSize=2&currentPage=3&methodDbId=1');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'result' => {'data' => [{'resultCount' => 500,'uniqueDisplayName' => 'UG120004','germplasmDbId' => 38881,'extractDbId' => '','analysisMethod' => 'GBS ApeKI genotyping v4','sampleDbId' => '','markerProfileDbId' => 1626},{'markerProfileDbId' => 1627,'analysisMethod' => 'GBS ApeKI genotyping v4','sampleDbId' => '','extractDbId' => '','germplasmDbId' => 39007,'resultCount' => 500,'uniqueDisplayName' => 'UG120156'}]},'metadata' => {'datafiles' => [],'status' => {'message' => ''},'pagination' => {'totalPages' => 268,'currentPage' => 3,'totalCount' => 535,'pageSize' => 2}}}, 'markerprofile');
+
+$mech->get_ok('http://localhost:3010/brapi/v1/markerprofiles/1627');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'result' => {'uniqueDisplayName' => 'UG120156','data' => [{'S5_36739' => 'BB'},{'S13_92567' => 'BB'},{'S69_57277' => 'BB'},{'S80_224901' => 'AA'},{'S80_232173' => 'BB'},{'S80_265728' => 'AA'},{'S97_219243' => 'AB'},{'S224_309814' => 'BB'},{'S248_174244' => 'BB'},{'S318_245078' => 'AA'},{'S325_476494' => 'AA'},{'S341_311907' => 'BB'},{'S341_745165' => 'BB'},{'S341_927602' => 'BB'},{'S435_153155' => 'AA'},{'S620_130205' => 'BB'},{'S784_76866' => 'BB'},{'S821_289681' => 'AB'},{'S823_109683' => 'AA'},{'S823_119622' => 'BB'}],'analysisMethod' => 'GBS ApeKI genotyping v4','markerprofileDbId' => '1627','extractDbId' => '','germplasmDbId' => 39007},'metadata' => {'datafiles' => [],'status' => {},'pagination' => {'totalCount' => 500,'currentPage' => 1,'pageSize' => 20,'totalPages' => 25}}}, 'markerprofile');
+
+$mech->post_ok('http://localhost:3010/brapi/v1/allelematrix-search', ['markerprofileDbId'=>[1626,1627], 'format'=>'json'] );
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'status' => {},'datafiles' => [undef],'pagination' => {'pageSize' => 20,'totalCount' => 1000,'totalPages' => 50,'currentPage' => 1}},'result' => {'data' => [['S10114_185859',1626,'BB'],['S10173_777651',1626,'BB'],['S10173_899514',1626,'BB'],['S10241_146006',1626,'AA'],['S1027_465354',1626,'AA'],['S10367_21679',1626,'AA'],['S1046_216535',1626,'AB'],['S10493_191533',1626,'BB'],['S10493_282956',1626,'AB'],['S10493_529025',1626,'BB'],['S10551_41284',1626,'BB'],['S10551_44996',1626,'AA'],['S10551_96591',1626,'BB'],['S10563_110710',1626,'AA'],['S10563_458792',1626,'BB'],['S10563_535346',1626,'AA'],['S10563_6640',1626,'BB'],['S10563_996687',1626,'AA'],['S10689_537521',1626,'BB'],['S10689_585587',1626,'BB']]}}, 'allelematrix-search');
+
+$mech->get_ok('http://localhost:3010/brapi/v1/programs' );
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'pagination' => {'totalCount' => 1,'pageSize' => 20,'currentPage' => 1,'totalPages' => 1},'datafiles' => [],'status' => {}},'result' => {'data' => [{'programDbId' => 134,'name' => 'test','abbreviation' => 'test','objective' => 'test','leadPerson' => ''}]}}, 'programs');
+
+$mech->get_ok('http://localhost:3010/brapi/v1/crops' );
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'pagination' => {},'status' => {},'datafiles' => []},'result' => {'data' => ['Cassava']}}, 'crops');
+
+$mech->get_ok('http://localhost:3010/brapi/v1/studyTypes' );
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'result' => {'data' => [{'description' => 'seedling','studyTypeDbId' => 76464,'name' => 'Seedling Nursery'},{'description' => undef,'studyTypeDbId' => 76514,'name' => 'Advanced Yield Trial'},{'name' => 'Preliminary Yield Trial','description' => undef,'studyTypeDbId' => 76515},{'description' => undef,'studyTypeDbId' => 76516,'name' => 'Uniform Yield Trial'},{'name' => 'Variety Release Trial','description' => undef,'studyTypeDbId' => 77105},{'name' => 'Clonal Evaluation','studyTypeDbId' => 77106,'description' => undef}]},'metadata' => {'status' => {},'pagination' => {'totalPages' => 1,'totalCount' => 6,'pageSize' => 20,'currentPage' => 1},'datafiles' => []}}, 'studyTypes');
+
+$mech->get_ok('http://localhost:3010/brapi/v1/studyTypes?pageSize=2&currentPage=2' );
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'pagination' => {'totalPages' => 3,'pageSize' => 2,'totalCount' => 6,'currentPage' => 2},'status' => {},'datafiles' => []},'result' => {'data' => [{'name' => 'Preliminary Yield Trial','description' => undef,'studyTypeDbId' => 76515},{'description' => undef,'studyTypeDbId' => 76516,'name' => 'Uniform Yield Trial'}]}}, 'studyTypes');
+
+$mech->post_ok('http://localhost:3010/brapi/v1/studies-search?pageSize=2&currentPage=2' );
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'status' => {},'datafiles' => [],'pagination' => {'totalCount' => 6,'totalPages' => 3,'pageSize' => 2,'currentPage' => 2}},'result' => {'data' => [{'startDate' => '','seasons' => ['2014'],'studyType' => 'Clonal Evaluation','locationDbId' => '23','programName' => 'test','locationName' => 'test_location','trialDbId' => 134,'programDbId' => 134,'endDate' => '','additionalInfo' => {'studyPUI' => ''},'trialName' => 'test','studyDbId' => 139,'name' => 'Kasese solgs trial'}]}}, 'studies-search');
+
+$mech->get_ok('http://localhost:3010/brapi/v1/locations?pageSize=1&currentPage=1' );
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'result' => {'data' => [{'altitude' => undef,'countryCode' => '','abbreviation' => '','latitude' => undef,'locationType' => '','longitude' => undef,'locationDbId' => 23,'additionalInfo' => [{'geodetic datum' => undef}],'countryName' => '','name' => 'test_location'}]},'metadata' => {'status' => {},'datafiles' => [],'pagination' => {'pageSize' => 1,'totalPages' => 2,'currentPage' => 1,'totalCount' => 2}}}, 'location');
+
+
 done_testing();

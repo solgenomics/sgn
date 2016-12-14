@@ -113,6 +113,16 @@ has 'search_type' => (
     is => 'rw'
 );
 
+has 'limit' => (
+    isa => 'Int|Undef',
+    is => 'rw'
+);
+
+has 'offset' => (
+    isa => 'Int|Undef',
+    is => 'rw'
+);
+
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema();
@@ -148,7 +158,6 @@ sub search {
       accession_name=> 'accession_name',
       location_name=> 'location_name',
       trial_design=> 'trial_design_value',
-      phenotype_id=> 'materialized_phenoview.phenotype_id',
       plot_type=> $self->data_level eq 'plot' ? "'plot' AS plot_type" : "'plant' AS plot_type",
       from_clause=> " FROM materialized_phenoview
              LEFT JOIN stockprop AS rep ON (plot_id=rep.stock_id AND rep.type_id = $rep_type_id)
@@ -171,7 +180,6 @@ sub search {
       accession_name=> 'accession.uniquename',
       location_name=> 'nd_geolocation.description',
       trial_design=> 'design.value',
-      phenotype_id=> 'phenotype.phenotype_id',
       plot_type=> 'plot_type.name',
       from_clause=> " FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)
       JOIN cvterm as plot_type ON (plot_type.cvterm_id = plot.type_id)
@@ -201,7 +209,7 @@ sub search {
     my %columns = %{$column_lookup{$search_type}};
 
     my $select_clause = "SELECT ".$columns{'year_id'}.", ".$columns{'trial_name'}.", ".$columns{'accession_name'}.", ".$columns{'location_name'}.", ".$columns{'trait_name'}.", ".$columns{'phenotype_value'}.", ".$columns{'plot_name'}.",
-          rep.value, block_number.value, plot_number.value, ".$columns{'trait_id'}.", ".$columns{'trial_id'}.", ".$columns{'location_id'}.", ".$columns{'accession_id'}.", ".$columns{'plot_id'}.", phenotype.uniquename, ".$columns{'trial_design'}.", ".$columns{'plot_type'}.", ".$columns{'phenotype_id'};
+          rep.value, block_number.value, plot_number.value, ".$columns{'trait_id'}.", ".$columns{'trial_id'}.", ".$columns{'location_id'}.", ".$columns{'accession_id'}.", ".$columns{'plot_id'}.", phenotype.uniquename, ".$columns{'trial_design'}.", ".$columns{'plot_type'}.", phenotype.phenotype_id, count(phenotype.phenotype_id) OVER() AS full_count";
 
     my $from_clause = $columns{'from_clause'};
 
@@ -267,15 +275,23 @@ sub search {
 
     my $where_clause = "WHERE " . (join (" AND " , @where_clause));
 
-    my  $q = $select_clause . $from_clause . $where_clause . $order_clause;
+    my $offset_clause = '';
+    my $limit_clause = '';
+    if ($self->limit){
+        $limit_clause = " LIMIT ".$self->limit;
+    }
+    if ($self->offset){
+        $offset_clause = " OFFSET ".$self->offset;
+    }
+
+    my  $q = $select_clause . $from_clause . $where_clause . $order_clause . $limit_clause . $offset_clause;
     print STDERR "QUERY: $q\n\n";
 
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my $result = [];
 
-    while (my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename, $design, $stock_type_name, $phenotype_id) = $h->fetchrow_array()) {
-
+    while (my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename, $design, $stock_type_name, $phenotype_id, $full_count) = $h->fetchrow_array()) {
         my $timestamp_value;
         if ($include_timestamp) {
             my ($p1, $p2) = split /date: /, $phenotype_uniquename;
@@ -285,9 +301,9 @@ sub search {
             }
         }
         my $synonyms = $synonym_hash_lookup{$stock_name};
-        push @$result, [ $year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id ];
+        push @$result, [ $year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id, $full_count ];
     }
-    #print STDERR Dumper $result;
+
     print STDERR "Search End:".localtime."\n";
     return $result;
 }
