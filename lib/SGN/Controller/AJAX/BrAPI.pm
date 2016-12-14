@@ -2923,7 +2923,7 @@ sub process_phenotypes_search {
     my $location_ids = $c->req->param('locationDbIds');
     my $year_ids = $c->req->param('seasonDbIds');
     my $data_level = $c->req->param('observationLevel') || 'plot';
-    my $search_type = $c->req->param("search_type") || 'fast';
+    my $search_type = $c->req->param("search_type") || 'complete';
     my @stocks_array = split /,/, $stock_ids;
     my @traits_array = split /,/, $trait_ids;
     my @trials_array = split /,/, $trial_ids;

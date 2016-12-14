@@ -76,6 +76,13 @@ $trial_name => undef
                     </div>
                 </div>
             </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Download Type: </label>
+                <div class="col-sm-9" >
+                    <label class="radio-inline" title="Optimizes speed using the database cache. May exclude most recently uploaded data."><input type="radio" name="trial_search_type" id="trial_search_type" value="fast" checked>Fast</label>
+                    <label class="radio-inline" title="Optimizes completeness using an exhaustive search. May result in longer download times."><input type="radio" name="trial_search_type" id="trial_search_type" value="complete">Complete</label>
+                </div>
+            </div>
 
         </form><br/>
 
@@ -113,7 +120,9 @@ jQuery(document).ready(function() {
     var data_level = jQuery("#download_trial_phenotypes_level_option").val();
     var phenotype_min_value = jQuery("#download_trial_phenotype_phenotype_min").val();
     var phenotype_max_value = jQuery("#download_trial_phenotype_phenotype_max").val();
-    window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&format="+format+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_list="+JSON.stringify(traits)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value );
+    var search_type = jQuery('input[name=trial_search_type]:checked').val()
+    console.log("Search Type in trial js="+search_type);
+    window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&format="+format+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_list="+JSON.stringify(traits)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&search_type="+search_type);
 
   });
 

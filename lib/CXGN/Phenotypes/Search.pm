@@ -146,7 +146,7 @@ sub search {
 
     my %matview_columns = (
       accession_id=> 'accession_id',
-      plot_id=> $self->data_level eq 'plot' ? 'plot_id' : 'plant_id',
+      plot_id=> $self->data_level eq 'plot' ? 'plot_id' : 'plant_id As plot_id',
       trial_id=> 'trial_id',
       trait_id=> 'trait_id',
       location_id=> 'location_id',
@@ -154,7 +154,7 @@ sub search {
       trait_name=> 'trait_name',
       phenotype_value=> 'phenotype_value',
       trial_name=> 'trial_name',
-      plot_name=> $self->data_level eq 'plot' ? 'plot_name' : 'plant_name',
+      plot_name=> $self->data_level eq 'plot' ? 'plot_name' : 'plant_name AS plot_name',
       accession_name=> 'accession_name',
       location_name=> 'location_name',
       trial_design=> 'trial_design_value',
@@ -176,7 +176,7 @@ sub search {
       trait_name=> "(((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text",
       phenotype_value=> 'phenotype.value',
       trial_name=> 'project.name',
-      plot_name=> 'plot.uniquename',
+      plot_name=> 'plot.uniquename AS plot_name',
       accession_name=> 'accession.uniquename',
       location_name=> 'nd_geolocation.description',
       trial_design=> 'design.value',
@@ -213,7 +213,7 @@ sub search {
 
     my $from_clause = $columns{'from_clause'};
 
-    my $order_clause = " ORDER BY ".$columns{'trial_name'}.", ".$columns{'plot_name'};
+    my $order_clause = " ORDER BY ".$columns{'trial_name'}.", plot_name";
 
     my @where_clause;
 
