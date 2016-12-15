@@ -211,7 +211,6 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $phenotype_min_value = $c->req->param("phenotype_min_value") && $c->req->param("phenotype_min_value") ne 'null' ? $c->req->param("phenotype_min_value") : "";
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
     my $search_type = $c->req->param("search_type") || 'fast';
-    print STDERR "Search Type in download phenotypes action=". $search_type . "\n";
 
     my @trait_list;
     if ($trait_list && $trait_list ne 'null') { @trait_list = @{_parse_list_from_json($trait_list)}; }
@@ -400,7 +399,6 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $timestamp_included = $c->req->param("timestamp") || 0;
     my $cookie_value      = $c->req->param("download_token_value");
     my $search_type        = $c->req->param("search_type") || 'fast';
-    print STDERR "Search Type =". $search_type . "\n";
 
     my $accession_data;
     if ($accession_list_id) {

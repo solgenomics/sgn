@@ -2712,7 +2712,6 @@ sub studies_table_GET {
     my $format = $c->req->param('format') || 'json';
     my %result;
     my $search_type = $c->req->param("search_type") || 'fast';
-    print STDERR "Search Type =". $search_type . "\n";
     my $include_timestamp = $c->req->param("timestamp") || 0;
     my $trial_id = $c->stash->{study_id};
     my $phenotypes_search = CXGN::Phenotypes::Search->new({

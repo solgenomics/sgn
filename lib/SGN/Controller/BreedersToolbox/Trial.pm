@@ -177,7 +177,6 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $timestamp_option = $c->req->param("timestamp") || 0;
     my $trait_list = $c->req->param("trait_list");
     my $search_type = $c->req->param("search_type") || 'fast';
-    print STDERR "Search Type in Trial download method=". $search_type . "\n";
 
     if ($data_level eq 'plants') {
         my $trial = $c->stash->{trial};

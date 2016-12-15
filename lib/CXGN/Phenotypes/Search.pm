@@ -136,17 +136,17 @@ sub search {
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $include_timestamp = $self->include_timestamp;
-    my $search_type = $self->search_type;
-    print STDERR "Search type in pheno search = $search_type\n";
-    if ($search_type ne 'fast' && $search_type ne 'complete') {
-      return "Search type must be set, valid options are 'fast' and 'complete'\n";
-    }
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     my %synonym_hash_lookup = %{$self->get_synonym_hash_lookup()};
 
+    my $search_type = $self->search_type;
+    if ($search_type ne 'fast' && $search_type ne 'complete') {
+      return "Search type must be set, valid options are 'fast' and 'complete'\n";
+    }
+
     my %matview_columns = (
       accession_id=> 'accession_id',
-      plot_id=> $self->data_level eq 'plot' ? 'plot_id' : 'plant_id As plot_id',
+      plot_id=> 'plot_id',
       trial_id=> 'trial_id',
       trait_id=> 'trait_id',
       location_id=> 'location_id',
@@ -154,11 +154,11 @@ sub search {
       trait_name=> 'trait_name',
       phenotype_value=> 'phenotype_value',
       trial_name=> 'trial_name',
-      plot_name=> $self->data_level eq 'plot' ? 'plot_name' : 'plant_name AS plot_name',
+      plot_name=> 'plot_name',
       accession_name=> 'accession_name',
       location_name=> 'location_name',
       trial_design=> 'trial_design_value',
-      plot_type=> $self->data_level eq 'plot' ? "'plot' AS plot_type" : "'plant' AS plot_type",
+      plot_type=> "'plot' AS plot_type",
       from_clause=> " FROM materialized_phenoview
              LEFT JOIN stockprop AS rep ON (plot_id=rep.stock_id AND rep.type_id = $rep_type_id)
              LEFT JOIN stockprop AS block_number ON (plot_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
@@ -213,7 +213,7 @@ sub search {
 
     my $from_clause = $columns{'from_clause'};
 
-    my $order_clause = " ORDER BY ".$columns{'trial_name'}.", plot_name";
+    my $order_clause = " ORDER BY 2,7";
 
     my @where_clause;
 
@@ -227,7 +227,7 @@ sub search {
         push @where_clause, $columns{'plot_id'}." in ($plot_sql)";
     } elsif ($self->plant_list && scalar(@{$self->plant_list})>0) {
         my $plant_sql = _sql_from_arrayref($self->plant_list);
-        push @where_clause, $columns{'plant_id'}." in ($plant_sql)";
+        push @where_clause, $columns{'plot_id'}." in ($plant_sql)";
     }
 
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
@@ -268,9 +268,9 @@ sub search {
 
     if ($self->data_level ne 'all' && $search_type eq 'complete') {
       my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $self->data_level, 'stock_type')->cvterm_id();
-      push @where_clause, "plot.type_id = $stock_type_id";
+      push @where_clause, "plot.type_id = $stock_type_id"; #ONLY plots or plants
     } elsif ($search_type eq 'complete') {
-      push @where_clause, "(plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id)";
+      push @where_clause, "(plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id)"; #plots AND plants
     }
 
     my $where_clause = "WHERE " . (join (" AND " , @where_clause));
@@ -285,6 +285,7 @@ sub search {
     }
 
     my  $q = $select_clause . $from_clause . $where_clause . $order_clause . $limit_clause . $offset_clause;
+
     print STDERR "QUERY: $q\n\n";
 
     my $h = $schema->storage->dbh()->prepare($q);
