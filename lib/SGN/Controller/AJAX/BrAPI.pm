@@ -1054,9 +1054,19 @@ sub studies_search_process {
     my $breeding_program_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program', 'project_property')->cvterm_id();
     my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
 
+    #my $rs = $self->bcs_schema->resultset('Project::Project')->search(
+    #    \%search_params,
+    #    {join=> [{'project_relationship_subject_projects'}, {'projectprops' => {'type' => 'cv'}}],
+    #    '+select'=> ['me.project_id', 'me.name'],
+    #    '+as'=> ['study_id','name' ],
+    #    distinct => 1,
+    #    order_by=>{ -asc=>'me.project_id' }
+    #    }
+    #);
+    
     my $rs = $self->bcs_schema->resultset('Project::Project')->search(
-        \%search_params,
-        {join=> [{'project_relationship_subject_projects'}, {'projectprops' => {'type' => 'cv'}}],
+        {},
+        {
         '+select'=> ['me.project_id', 'me.name'],
         '+as'=> ['study_id','name' ],
         distinct => 1,
@@ -2146,6 +2156,19 @@ sub allelematrix_search_process {
         }
 
     } elsif ($data_format eq 'tsv' || $data_format eq 'csv') {
+
+        my @header_row;
+        push @header_row, 'markerprofileDbIds';
+        foreach (@profile_ids){
+            push @header_row, $_;
+        }
+
+        my %markers;
+        foreach (@scores){
+            $markers{$_->[0]}->{$_->[1]} = $_->[2];
+        }
+        #print STDERR Dumper \%markers;
+
         my $delim;
         if ($data_format eq 'tsv') {
             $delim = "\t";
@@ -2157,9 +2180,20 @@ sub allelematrix_search_process {
         #$file_path = $c->config->{main_production_sitae_url}.":".$c->config->{basepath}."/".$tempfile.".$data_format";
         open(my $fh, ">", $file_path);
             print STDERR $file_path."\n";
+            print $fh join("$delim", @header_row),"\n";
             #print $fh "markerprofileDbIds\t", join($delim, @lines), "\n";
-            foreach (@scores) {
-                print $fh join("$delim", @{$_}),"\n";
+            foreach (keys %markers) {
+                print $fh $_.$delim;
+                my $count = 1;
+                foreach my $profile_id (@profile_ids) {
+                    print $fh $markers{$_}->{$profile_id};
+                    if ($count < scalar(@profile_ids)){
+                        print $fh $delim;
+                    }
+                    #print $fh .join("$delim", @{$_}),"\n";
+                    $count++;
+                }
+                print $fh "\n";
             }
 
         close $fh;
@@ -3466,8 +3500,12 @@ sub maps_marker_detail_GET {
         }
 
     my $total_count = scalar(@markers);
-    my $start = $c->stash->{page_size}*$c->stash->{current_page};
-    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
+    my $page_size = $c->stash->{page_size};
+    if ($page_size == 20) {
+        $page_size = 100000
+    }
+    my $start = $page_size*$c->stash->{current_page};
+    my $end = $page_size*($c->stash->{current_page}+1)-1;
     my @data_window = splice @markers, $start, $end;
 
     my %result = (data => \@data_window);
