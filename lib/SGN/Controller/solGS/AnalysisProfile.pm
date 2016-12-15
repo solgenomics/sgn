@@ -164,13 +164,13 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
    
     my $analysis_profile = $c->req->params;
     $c->stash->{analysis_profile} = $analysis_profile;
-
+    print STDERR "\ncall parse_arguments\n";
     $self->parse_arguments($c);
-    
+     print STDERR "\ncall run analysis\n";
     $self->run_analysis($c);  
-     
+      print STDERR "\ncall structure output details\n";
     $self->structure_output_details($c); 
-    
+      print STDERR "\nCALLED structure output details\n";
     my $output_details = $c->stash->{bg_job_output_details};
       
     $c->stash->{r_temp_file} = 'analysis-status';
@@ -283,16 +283,34 @@ sub parse_arguments {
 		  $c->stash->{combo_pops_id} = @{ $arguments->{$k} }[0];
 	      }
 	      else 
-	      {
-		  $c->stash->{pop_id}          = @{ $arguments->{$k} }[0];
-		  $c->stash->{training_pop_id} = @{ $arguments->{$k} }[0];
+	      {   
+		  if (ref($arguments->{k}) eq 'ARRAY')
+		  {
+		      $c->stash->{pop_id}          = @{ $arguments->{$k} }[0];
+		      $c->stash->{training_pop_id} = @{ $arguments->{$k} }[0];
+		      $c->stash->{model_id}        = @{ $arguments->{$k} }[0];
+		  }
+		  else 
+		  {
+		     $c->stash->{pop_id}          = $arguments->{$k};
+		     $c->stash->{training_pop_id} = $arguments->{$k};
+		     $c->stash->{model_id}        = $arguments->{$k};  
+		  }
 	      }
 	     
 	  }
+	  
 	  if ($k eq 'selection_pop_id') 
 	  {
 	      $c->stash->{selection_pop_id}  = @{ $arguments->{$k} }[0];
 	      $c->stash->{prediction_pop_id} = @{ $arguments->{$k} }[0];
+	  }
+
+	  if ($k eq 'model_id') 
+	  {
+	      $c->stash->{model_id}        = $arguments->{$k};
+	      $c->stash->{training_pop_id} = $arguments->{$k};;
+	      $c->stash->{pop_id}          = $arguments->{$k};;
 	  }
 
 	  if ($k eq 'training_pop_id') 
@@ -329,6 +347,16 @@ sub parse_arguments {
 	      }
 	  } 
 	  
+	  if ($k eq 'list') 
+	  {
+	      $c->stash->{list} = $arguments->{$k}; 
+	  }	
+
+	  if ($k eq 'list_name') 
+	  {
+	      $c->stash->{list_name} = $arguments->{$k}; 
+	  }
+	
 	  if ($k eq 'analysis_type') 
 	  {
 	      $c->stash->{analysis_type} = $arguments->{$k};
@@ -337,12 +365,7 @@ sub parse_arguments {
 	  if ($k eq 'data_set_type') 
 	  {
 	      $c->stash->{data_set_type} =  $arguments->{$k};
-	  }	 
-	  
-	  if ($k eq 'list') 
-	  {
-	      $c->stash->{list} =  $arguments->{$k};
-	  }	 
+	  }	 	  	 
       }
   }
 	    
@@ -446,10 +469,10 @@ sub structure_output_details {
 	my $pop_name;
 
 	if ($pop_id =~ /uploaded/) {
-       
-	    $c->controller('solGS::List')->create_list_pop_tempfiles($c);
-	    $pheno_file  = $c->stash->{pheno_data_temp_file};
-	    $geno_file  = $c->stash->{geno_data_temp_file};
+	    my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};;	   
+	    my $files   = $c->controller('solGS::List')->create_list_pop_tempfiles($tmp_dir, $pop_id);
+	    $pheno_file = $files->{pheno_file};
+	    $geno_file  = $files->{geno_file};
 
 	    $solgs_controller->uploaded_population_summary($c);
 	    $pop_name = $c->stash->{project_name};	    
@@ -646,7 +669,11 @@ sub run_analysis {
 
 	if ($pop_id =~ /uploaded/) 
 	{
-	    $c->controller('solGS::solGS')->prepare_plots_type_training_data($c);
+	    print STDERR "\n pop id: $pop_id -- calling plots pheno data\n";
+
+	    $c->controller('solGS::List')->plots_list_phenotype_file($c);
+	    $c->controller('solGS::List')->genotypes_list_genotype_file($c);
+	    $c->controller('solGS::List')->create_list_population_metadata_file($c);
 	}
 	else
 	{
@@ -776,7 +803,7 @@ sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
     my ($self, $c) = @_;
     
     my $referer = $c->req->referer;
-    my $user_id = $c->user->get_object->get_sp_person_id;
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
 
     $c->stash->{message} = "<p>Your analysis is running.<br />
                             You will receive an email when it is completed.<br /></p>
