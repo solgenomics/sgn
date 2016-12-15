@@ -24,7 +24,7 @@ use JSON;
 use Storable qw/ nstore retrieve /;
 use Carp qw/ carp confess croak /;
 
-BEGIN { extends 'Catalyst::Controller::HTML::FormFu' }
+BEGIN { extends 'Catalyst::Controller' }
 
 #
 # Sets the actions in this controller to be registered with no prefix
@@ -75,63 +75,63 @@ sub submit :Path('/solgs/submit/intro')  Args(0) {
 }
 
 
-sub details_form : Path('/solgs/form/population/details') Args(0) {
-    my ($self, $c) = @_;
+# sub details_form : Path('/solgs/form/population/details') Args(0) {
+#     my ($self, $c) = @_;
 
-    $self->load_yaml_file($c, 'population/details.yml');
-    my $form = $c->stash->{form}; 
+#     $self->load_yaml_file($c, 'population/details.yml');
+#     my $form = $c->stash->{form}; 
    
-    if ($form->submitted_and_valid ) 
-    {
-        $c->res->redirect('/solgs/form/population/phenotype');
-    }
-    else 
-    {
-        $c->stash(template => $self->template('/form/population/details.mas'),
-                  form     => $form
-            );
-    }
-}
+#     if ($form->submitted_and_valid ) 
+#     {
+#         $c->res->redirect('/solgs/form/population/phenotype');
+#     }
+#     else 
+#     {
+#         $c->stash(template => $self->template('/form/population/details.mas'),
+#                   form     => $form
+#             );
+#     }
+# }
 
 
-sub phenotype_form : Path('/solgs/form/population/phenotype') Args(0) {
-    my ($self, $c) = @_;
+# sub phenotype_form : Path('/solgs/form/population/phenotype') Args(0) {
+#     my ($self, $c) = @_;
     
-    $self->load_yaml_file($c, 'population/phenotype.yml');
-    my $form = $c->stash->{form};
+#     $self->load_yaml_file($c, 'population/phenotype.yml');
+#     my $form = $c->stash->{form};
 
-    if ($form->submitted_and_valid) 
-    {
-      $c->res->redirect('/solgs/form/population/genotype');
-    }        
-    else
-    {
-        $c->stash(template => $self->template('/form/population/phenotype.mas'),
-                  form     => $form
-            );
-    }
+#     if ($form->submitted_and_valid) 
+#     {
+#       $c->res->redirect('/solgs/form/population/genotype');
+#     }        
+#     else
+#     {
+#         $c->stash(template => $self->template('/form/population/phenotype.mas'),
+#                   form     => $form
+#             );
+#     }
 
-}
+# }
 
 
-sub genotype_form : Path('/solgs/form/population/genotype') Args(0) {
-    my ($self, $c) = @_;
+# sub genotype_form : Path('/solgs/form/population/genotype') Args(0) {
+#     my ($self, $c) = @_;
 
-    $self->load_yaml_file($c, 'population/genotype.yml');
-    my $form = $c->stash->{form};
+#     $self->load_yaml_file($c, 'population/genotype.yml');
+#     my $form = $c->stash->{form};
 
-    if ($form->submitted_and_valid) 
-    {
-      $c->res->redirect('/solgs/population/12');
-    }        
-    else
-    {
-        $c->stash(template => $self->template('/form/population/genotype.mas'),
-                  form     => $form
-            );
-    }
+#     if ($form->submitted_and_valid) 
+#     {
+#       $c->res->redirect('/solgs/population/12');
+#     }        
+#     else
+#     {
+#         $c->stash(template => $self->template('/form/population/genotype.mas'),
+#                   form     => $form
+#             );
+#     }
 
-}
+# }
 
 
 sub search : Path('/solgs/search') Args() {
@@ -592,8 +592,6 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
             $c->stash->{no_traits_selected} = 'some';
         }
 
-        $self->select_traits($c);
-
         my $acronym = $self->get_acronym_pairs($c);
         $c->stash->{acronym} = $acronym;
     }
@@ -650,7 +648,7 @@ sub uploaded_population_summary {
       
 	    ($list_name)       = grep {/list_name/} @metadata_tr;      
 	    ($key, $list_name) = split(/\t/, $list_name); 
-   
+	  
 	    $c->stash(project_id          => $model_id,
 		      project_name        => $list_name,
 		      project_desc        => $desc,
@@ -763,12 +761,12 @@ sub project_description {
 }
 
 
-sub select_traits   {
-    my ($self, $c) = @_;
+# sub select_traits   {
+#     my ($self, $c) = @_;
 
-    $self->load_yaml_file($c, 'population/traits.yml');
-    $c->stash->{traits_form} = $c->stash->{form};
-}
+#     #$self->load_yaml_file($c, 'population/traits.yml');
+#    # $c->stash->{traits_form} = $c->stash->{form};
+# }
 
 
 sub selection_trait :Path('/solgs/selection/') Args(5) {
@@ -4651,10 +4649,10 @@ sub phenotype_file {
 
 sub format_phenotype_dataset {
     my ($self, $data_ref, $traits_file) = @_;
-    
-    my $data = ${$data_ref};
+   
+    my $data = $$data_ref;
     my @rows = split (/\n/, $data);
-        
+   
     my $formatted_headers = $self->format_phenotype_dataset_headers($rows[0], $traits_file);   
     $rows[0] = $formatted_headers;
 
