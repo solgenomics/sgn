@@ -956,7 +956,6 @@ sub project_genotypes_rs {
 
     return $pr_genotypes_rs;
 
-
 }
 
 
@@ -1443,25 +1442,18 @@ sub prediction_pops {
 sub plots_list_phenotype_data {
     my ($self, $plots_names) = @_;
    
-#my @plots_names;
-    #my $population_type = $self->context->stash->{population_type};
-    
-    #if ($population_type =~ /reference/)         
-    #{
-    #    @plots_names = @{ $self->context->stash->{reference_population_plot_names} };
-    #}
     if (@$plots_names) 
     {
-	my $stock_pheno_data_rs = $self->plots_list_phenotype_data_rs($plots_names);
-  
-	my $data = $self->structure_phenotype_data($stock_pheno_data_rs);
+	my $stock_pheno_data_rs = $self->plots_list_phenotype_data_rs($plots_names);  
+	my $data                = $self->structure_phenotype_data($stock_pheno_data_rs);
+
 	return \$data;
     }
     else
     {
 	return;
     }
-    #$self->context->stash->{user_reference_list_phenotype_data} = $data;     
+   
 }
 
 
