@@ -1054,9 +1054,19 @@ sub studies_search_process {
     my $breeding_program_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program', 'project_property')->cvterm_id();
     my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
 
+    #my $rs = $self->bcs_schema->resultset('Project::Project')->search(
+    #    \%search_params,
+    #    {join=> [{'project_relationship_subject_projects'}, {'projectprops' => {'type' => 'cv'}}],
+    #    '+select'=> ['me.project_id', 'me.name'],
+    #    '+as'=> ['study_id','name' ],
+    #    distinct => 1,
+    #    order_by=>{ -asc=>'me.project_id' }
+    #    }
+    #);
+    
     my $rs = $self->bcs_schema->resultset('Project::Project')->search(
-        \%search_params,
-        {join=> [{'project_relationship_subject_projects'}, {'projectprops' => {'type' => 'cv'}}],
+        {},
+        {
         '+select'=> ['me.project_id', 'me.name'],
         '+as'=> ['study_id','name' ],
         distinct => 1,
