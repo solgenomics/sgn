@@ -110,18 +110,10 @@ function loadTrialListTypeTrainingPop (trialsNames) {
 }
 
 function askJobQueueing (listId) {
-    var genoList       = getListTypeTrainingPopDetail(listId);
-    var listName       = genoList.name;
-    var list           = genoList.list;
-    var modelId        = getModelId(listId);  
-
-    var args = {
-	'list'           : list,
-	'list_id'        : listId,
-	'analysis_type'  : 'population download',
-	'data_set_type'  : 'single population',
-    };  
-
+ 
+    var args = createReqArgs(listId);
+    var modelId = args.population_id;
+    alert(modelId)
     var page = '/solgs/population/' + modelId;
 
     solGS.waitPage(page, args);
@@ -129,34 +121,59 @@ function askJobQueueing (listId) {
 }
 
 
-function loadPlotListTypeTrainingPop(listId) {     
+function createReqArgs (listId) {
     
     var genoList  = getListTypeTrainingPopDetail(listId);
     var listName  = genoList.name;
     var list      = genoList.list;
-    var modelId   = getModelId(listId);
+    var popId     = getModelId(listId);
 
-    var populationType = 'uploaded_reference';
+    var popType = 'uploaded_reference';
+
+    var args = {
+	'list_name'      : listName,
+	'list'           : list,
+	'list_id'        : listId,
+	'analysis_type'  : 'population download',
+	'data_set_type'  : 'single population',
+        'population_id'  : popId,
+	'population_type': popType,
+    };  
+
+    return args;
+
+}
+
+
+function loadPlotListTypeTrainingPop(listId) {     
+  
+    var args  = createReqArgs(listId);
+    var len   = args.list.length;
+    var popId = args.population_id;
+
+    if (window.Prototype) {
+	delete Array.prototype.toJSON;
+    }
     
-    if ( list.length === 0) {       
+    args = JSON.stringify(args);
+
+    if (len === 0) {       
         alert('The list is empty. Please select a list with content.' );
     }
     else {  
         jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
         jQuery.blockUI({message: 'Please wait..'});
        
-        list = JSON.stringify(list);
-     
         jQuery.ajax({
             type: 'POST',
             dataType: 'json',
-            data: {'model_id': modelId, 'list_name': listName, 'list': list, 'population_type': populationType},
+            data: {'arguments': args},
             url: '/solgs/load/plots/list/training',                   
             success: function(response) {
                    
                 if (response.status == 'success') {
     
-                    window.location = '/solgs/population/' + modelId;                       
+                    window.location = '/solgs/population/' + popId;                       
 		    jQuery.unblockUI();                        
                       
                 } else {                                    
@@ -165,7 +182,7 @@ function loadPlotListTypeTrainingPop(listId) {
                 }                     
             },
             error: function(res) {
-                alert("Error occured while uploading the list of reference genotypes.");
+                alert("Error occured while querying for the training data.");
                 jQuery.unblockUI();   
             }            
         });        
