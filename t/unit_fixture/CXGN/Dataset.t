@@ -48,8 +48,6 @@ foreach my $ds (@datasets) {
     
     my $sp_dataset_id = $ds->store();
 
-    print STDERR "Save dataset with id $sp_dataset_id\n";
-   
     my $trials = $ds->retrieve_trials();
 
     is_deeply($trials, [
@@ -68,11 +66,11 @@ foreach my $ds (@datasets) {
                        ]
 	      , "trial retrieve test");
     
-
-    print STDERR Dumper($trials);
-    
+    if ($ds->isa("CXGN::Dataset::File")) { 
+	ok(-e $ds->file_name()."_trials.txt", "trial file exists");
+    }
+	
     my $traits = $ds ->retrieve_traits();
-    print STDERR Dumper($traits);
 
     is_deeply($traits, [
 		  [
@@ -96,15 +94,9 @@ foreach my $ds (@datasets) {
     
     my $phenotypes = $ds->retrieve_phenotypes();
     
-   # print STDERR Dumper($phenotypes);
-    
     my $genotypes = $ds->retrieve_genotypes(1);
     
-    #print STDERR Dumper($genotypes);
-    
     my $years = $ds->retrieve_years();
-
-    print STDERR Dumper($years);
 
     is_deeply($years, [], "Year retrieve test");
 
@@ -180,8 +172,6 @@ foreach my $ds (@datasets) {
 		   'UG120038_block:2_plot:TP38_2012_NaCRRI'
 		  ]
 	      ], "plot retrieve test");
-    
-    print STDERR Dumper($plots);
 }
 
 done_testing();
