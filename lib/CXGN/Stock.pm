@@ -1,0 +1,904 @@
+=head1 NAME
+
+CXGN::Chado::Stock - a second-level DBIC Bio::Chado::Schema::Stock::Stock object
+
+Version: 2.0
+
+=head1 DESCRIPTION
+
+Functions such as 'get_obsolete' , 'store' , and 'exists_in_database' are required , and do not use standard DBIC syntax.
+
+=head1 AUTHOR
+
+Naama Menda <nm249@cornell.edu>
+
+=cut
+
+package CXGN::Chado::Stock ;
+
+use Moose;
+
+use Carp;
+use Data::Dumper;
+use Bio::Chado::Schema;
+use CXGN::Metadata::Schema;
+use Bio::GeneticRelationships::Pedigree;
+use Bio::GeneticRelationships::Individual;
+use base qw / CXGN::DB::Object / ;
+
+=head2 new
+
+  Usage: my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+  Desc:
+  Ret: a CXGN::Chado::Stock object
+  Args: a $schema a schema object,
+        $stock_id, if omitted, an empty stock object is created.
+  Side_Effects: accesses the database, check if exists the database columns that this object use. die if the id is not an integer.
+
+=cut
+
+has 'schema' => ( isa => 'Bio::Chado::Schema',
+                  is => 'rw',
+);
+
+has 'stock_id' => ( isa => 'Int',
+                    is => 'rw',
+);
+
+has 'organism_id' => ( isa => 'Int',
+                       is => 'rw',
+                       builder => '_get_organism_id',
+);
+
+has 'species' => ( isa => 'Str',
+                   is => 'rw',
+                   builder => '_get_species',
+);
+
+has 'type' => ( isa => 'Str',
+                is => 'rw',
+                builder => '_get_type',
+);
+
+has 'name' => ( isa => 'Str',
+                is => 'rw',
+                builder => '_get_name',
+);
+
+has 'uniquename' => ( isa => 'Str',
+                      is => 'rw',
+                      builder => '_get_uniquename',
+);
+
+has 'description' => ( isa => 'Str',
+                        is => 'rw',
+                       builder => '_get_description',
+);
+
+has 'is_obsolete' => ( isa => 'Str',
+                        is => 'rw',
+                       builder => '_get_is_obsolete',
+);
+
+
+
+sub BUILD {
+    my $self = shift;
+    ### First, bless the class to create the object and set the schema into the object.
+    #my $self = $class->SUPER::new($schema);
+    my $stock;
+    if (defined $self->stock_id()) {
+	$stock = $self->get_resultset('Stock::Stock')->find({ stock_id => $self->stock_id() });
+    } else {
+	### Create an empty resultset object;
+	$stock = $self->get_resultset('Stock::Stock')->new( {} );
+    }
+    ###It's important to set the object row for using the accesor in other class functions
+    $self->set_object_row($stock);
+    return $self;
+}
+
+
+
+=head2 store
+
+ Usage: $self->store
+ Desc:  store a new stock
+ Ret:   a database id
+ Args:  none
+ Side Effects: checks if the stock exists in the database, and if does, will attempt to update
+ Example:
+
+=cut
+
+sub store {
+    my $self = shift;
+    my $id = $self->stock_id();
+    my $schema = $self->get_schema();
+    #no stock id . Check first if the name  exists in te database
+    if (!$id) {
+	my $exists= $self->exists_in_database();
+	if (!$exists) {
+	    my $new_row = $self->get_object_row();
+	    $new_row->insert();
+	    
+	    $id = $new_row->stock_id();
+	}
+	else {
+	    my $existing_stock=$self->get_resultset('Stock::Stock')->find($exists);
+	    # don't update here if stock already exist. User should call 
+	    # from the code exist_in_database and instantiate a new stock 
+	    # object with the database id updating here is not a good idea, 
+	    # since it might not be what the user intended to do
+            # and it can mess up the database.
+	}
+    }
+    else {  # id exists
+	$self->get_object_row()->update();
+    }
+    return $id
+}
+
+########################
+
+
+=head2 exists_in_database
+
+ Usage: $self->exists_in_database()
+ Desc:  check if the uniquename exists in the stock table
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub exists_in_database {
+    my $self = shift;
+    my $stock_id = $self->stock_id();
+    my $uniquename = $self->get_uniquename || '' ;
+    my ($s) = $self->get_resultset('Stock::Stock')->search(
+	{
+	    uniquename => { 'ilike' => $uniquename },
+	});
+
+    # loading new stock - $stock_id is undef
+    #
+    if (defined($s) && !$stock_id ) {  return $s->stock_id ; }
+
+    # updating an existing stock
+    #
+    elsif ($stock_id && defined($s) ) {
+	if ( ($s->stock_id == $stock_id) ) {
+	    return 0;
+	    #trying to update the uniquename
+	} 
+	elsif ( $s->stock_id != $stock_id ) {
+	    return " Can't update an existing stock $stock_id uniquename:$uniquename.";
+	    # if the new name we're trying to update/insert does not exist 
+	    # in the stock table..
+	    #
+	} 
+	elsif ($stock_id && !$s->stock_id) {
+	    return 0;
+	}
+    }
+    return undef;
+}
+
+=head2 get_organism
+
+ Usage: $self->get_organism
+ Desc:  find the organism object of this stock
+ Ret:   L<Bio::Chado::Schema::Organism::Organism> object
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_organism {
+    my $self = shift;
+    if (my $bcs_stock = $self->get_object_row) {
+        return $bcs_stock->organism;
+    }
+    return undef;
+}
+
+
+=head2 get_species
+
+ Usage: $self->get_species
+ Desc:  find the species name of this stock , if one exists
+ Ret:   string
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_species {
+    my $self = shift;
+    my $organism = $self->get_organism;
+    if ($organism) {
+        return $organism->species;
+    }else { return undef; }
+}
+
+=head2 set_species
+
+Usage: $self->set_species
+ Desc:  set organism_id for the stock using organism.species name
+ Ret:   nothing
+ Args:  species name (case insensitive)
+ Side Effects: sets the organism_id for the stock
+ Example:
+
+=cut
+
+sub set_species {
+    my $self = shift;
+    my $species_name = shift; # this has to be EXACTLY as stored in the organism table
+    my $organism = $self->get_schema->resultset('Organism::Organism')->search(
+        { 'lower(species)' => { like =>  lc($species_name) } } )->single ; #should be 1 result
+    if ($organism) {
+        $self->get_object_row->set_column(organism_id => $organism->organism_id );
+    }
+    else {
+        warn "NO organism found for species name $species_name!!\n";
+    }
+}
+
+sub _get_type {
+    my $self = shift;
+
+    if (my $bcs_stock = $self->get_object_row ) {
+	return  $bcs_stock->type;
+    }
+    return undef;
+}
+
+sub get_object_row {
+    my $self = shift;
+    return $self->{object_row};
+}
+
+sub set_object_row {
+  my $self = shift;
+  $self->{object_row} = shift;
+}
+
+=head2 get_resultset
+
+ Usage: $self->get_resultset(ModuleName::TableName)
+ Desc:  Get a ResultSet object for source_name
+ Ret:   a ResultSet object
+ Args:  a source name
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_resultset {
+    my $self=shift;
+    my $source = shift;
+    return $self->get_schema()->resultset("$source");
+}
+
+###mapping accessors to DBIC
+
+sub _get_name {
+    my $self = shift;
+    return $self->get_object_row()->get_column("name");
+}
+
+sub _set_name {
+    my $self = shift;
+    $self->get_object_row()->set_column(name => shift);
+}
+
+sub _get_uniquename {
+    my $self = shift;
+    return $self->get_object_row()->get_column("uniquename");
+}
+
+sub _set_uniquename {
+    my $self = shift;
+    $self->get_object_row()->set_column(uniquename => shift);
+}
+
+sub _get_organism_id {
+    my $self = shift;
+    if (my $bcs_stock =  $self->get_object_row ) {
+        return $bcs_stock->get_column("organism_id");
+    }
+    return undef;
+}
+
+sub _set_organism_id {
+    my $self = shift;
+    $self->get_object_row()->set_column(organism_id => shift);
+}
+
+sub _get_type_id {
+    my $self = shift;
+    if (my $bcs_stock = $self->get_object_row ) {
+        return $bcs_stock->get_column("type_id");
+    }
+}
+
+sub _set_type_id {
+    my $self = shift;
+    $self->get_object_row()->set_column(type_id => shift);
+}
+
+sub _get_description {
+    my $self = shift;
+    return $self->get_object_row()->get_column("description");
+}
+
+sub _set_description {
+    my $self = shift;
+    $self->get_object_row()->set_column(description => shift);
+}
+
+sub _get_stock_id {
+    my $self = shift;
+    if ( my $bcs_stock = $self->get_object_row ) {
+        return $bcs_stock->get_column("stock_id");
+    }
+    return undef;
+}
+
+sub _set_stock_id {
+    my $self = shift;
+    $self->get_object_row()->set_column(stock_id => shift);
+}
+
+sub _get_is_obsolete {
+    my $self = shift;
+    my $stock = $self->get_object_row();
+    return $stock->get_column("is_obsolete") if $stock;
+}
+
+sub _set_is_obsolete {
+    my $self = shift;
+    #my $stock = $self->get_object_row();
+    my $obsolete_string = '_OBSOLETED_' . localtime();
+    my $name = $self->get_name() . $obsolete_string;
+    $self->set_name($name);
+    my $uniquename = $self->get_uniquename() . $obsolete_string;
+    $self->set_uniquename($uniquename);
+    $self->get_object_row()->set_column(is_obsolete => shift);
+}
+
+=head2 function get_image_ids
+
+  Synopsis:     my @images = $self->get_image_ids()
+  Arguments:    none
+  Returns:      a list of image ids
+  Side effects:	none
+  Description:	a method for fetching all images associated with a stock
+
+=cut
+
+sub get_image_ids {
+    my $self = shift;
+    my $ids = $self->get_schema->storage->dbh->selectcol_arrayref
+	( "SELECT image_id FROM phenome.stock_image WHERE stock_id=? ",
+	  undef,
+	  $self->stock_id
+        );
+    return @$ids;
+}
+
+=head2 associate_allele
+
+ Usage: $self->associate_allele($allele_id, $sp_person_id)
+ Desc:  store a stock-allele link in phenome.stock_allele
+ Ret:   a database id
+ Args:  allele_id, sp_person_id
+ Side Effects:  store a metadata row
+ Example:
+
+=cut
+
+sub associate_allele {
+    my $self = shift;
+    my $allele_id = shift;
+    my $sp_person_id = shift;
+    if (!$allele_id || !$sp_person_id) {
+        warn "Need both allele_id and person_id for linking the stock with an allele!";
+        return
+    }
+    my $metadata_id = $self->_new_metadata_id($sp_person_id);
+    #check if the allele is already linked
+    my $ids =  $self->get_schema->storage->dbh->selectcol_arrayref
+        ( "SELECT stock_allele_id FROM phenome.stock_allele WHERE stock_id = ? AND allele_id = ?",
+          undef,
+          $self->stock_id,
+          $allele_id
+        );
+    if ($ids) { warn "Allele $allele_id is already linked with stock " . $self->stock_id ; }
+#store the allele_id - stock_id link
+    my $q = "INSERT INTO phenome.stock_allele (stock_id, allele_id, metadata_id) VALUES (?,?,?) RETURNING stock_allele_id";
+    my $sth  = $self->get_schema->storage->dbh->prepare($q);
+    $sth->execute($self->stock_id, $allele_id, $metadata_id);
+    my ($id) =  $sth->fetchrow_array;
+    return $id;
+}
+
+=head2 associate_owner
+
+ Usage: $self->associate_owner($owner_sp_person_id, $sp_person_id)
+ Desc:  store a stock-owner link in phenome.stock_owner
+ Ret:   a database id
+ Args:  owner_id, sp_person_id
+ Side Effects:  store a metadata row
+ Example:
+
+=cut
+
+sub associate_owner {
+    my $self = shift;
+    my $owner_id = shift;
+    my $sp_person_id = shift;
+    if (!$owner_id || !$sp_person_id) {
+        warn "Need both owner_id and person_id for linking the stock with an owner!";
+        return;
+    }
+    my $metadata_id = $self->_new_metadata_id($sp_person_id);
+    #check if the owner is already linked
+    my $ids =  $self->get_schema->storage->dbh->selectcol_arrayref
+        ( "SELECT stock_owner_id FROM phenome.stock_owner WHERE stock_id = ? AND owner_id = ?",
+          undef,
+          $self->stock_id,
+          $owner_id
+        );
+    if ($ids) { warn "Owner $owner_id is already linked with stock " . $self->stock_id ; }
+#store the owner_id - stock_id link
+    my $q = "INSERT INTO phenome.stock_owner (stock_id, owner_id, metadata_id) VALUES (?,?,?) RETURNING stock_owner_id";
+    my $sth  = $self->get_schema->storage->dbh->prepare($q);
+    $sth->execute($self->stock_id, $owner_id, $metadata_id);
+    my ($id) =  $sth->fetchrow_array;
+    return $id;
+}
+
+=head2 get_trait_list
+
+ Usage:
+ Desc:         gets the list of traits that have been measured
+               on this stock
+ Ret:          a list of lists  ( [ cvterm_id, cvterm_name] , ...)
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_trait_list {
+    my $self = shift;
+
+    my $q = "select distinct(cvterm.cvterm_id), db.name || ':' || dbxref.accession, cvterm.name, avg(phenotype.value::Real), stddev(phenotype.value::Real) from stock as accession join stock_relationship on (accession.stock_id=stock_relationship.object_id) JOIN stock as plot on (plot.stock_id=stock_relationship.subject_id) JOIN nd_experiment_stock ON (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm ON (phenotype.cvalue_id = cvterm.cvterm_id) JOIN dbxref ON(cvterm.dbxref_id = dbxref.dbxref_id) JOIN db USING(db_id) where accession.stock_id=? and phenotype.value~? group by cvterm.cvterm_id, db.name || ':' || dbxref.accession, cvterm.name";
+    my $h = $self->get_schema()->storage->dbh()->prepare($q);
+    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+    $h->execute($self->stock_id(), $numeric_regex);
+    my @traits;
+    while (my ($cvterm_id, $cvterm_accession, $cvterm_name, $avg, $stddev) = $h->fetchrow_array()) {
+	push @traits, [ $cvterm_id, $cvterm_accession, $cvterm_name, $avg, $stddev ];
+    }
+
+    # get directly associated traits
+    #
+    $q = "select distinct(cvterm.cvterm_id), db.name || ':' || dbxref.accession, cvterm.name, avg(phenotype.value::Real), stddev(phenotype.value::Real) from stock JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm ON (phenotype.cvalue_id = cvterm.cvterm_id) JOIN dbxref ON(cvterm.dbxref_id = dbxref.dbxref_id) JOIN db USING(db_id) where stock.stock_id=? and phenotype.value~? group by cvterm.cvterm_id, db.name || ':' || dbxref.accession, cvterm.name";
+
+    $h = $self->get_schema()->storage()->dbh()->prepare($q);
+    $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+    $h->execute($self->stock_id(), $numeric_regex);
+
+    while (my ($cvterm_id, $cvterm_accession, $cvterm_name, $avg, $stddev) = $h->fetchrow_array()) {
+	push @traits, [ $cvterm_id, $cvterm_accession, $cvterm_name, $avg, $stddev ];
+    }
+
+    return @traits;
+}
+
+=head2 get_trials
+
+ Usage:
+ Desc:          gets the list of trails this stock was used in
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_trials {
+    my $self = shift;
+    my $dbh = $self->get_schema()->storage()->dbh();
+
+    my $geolocation_q = "SELECT nd_geolocation_id, description FROM nd_geolocation;";
+    my $geolocation_h = $dbh->prepare($geolocation_q);
+    $geolocation_h->execute();
+    my %geolocations;
+
+    while (my ($nd_geolocation_id, $description) = $geolocation_h->fetchrow_array()) {
+        $geolocations{$nd_geolocation_id} = $description;
+    }
+
+    my $geolocation_type_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'project location', 'project_property')->cvterm_id();
+    my $q = "select distinct(project.project_id), project.name, projectprop.value from stock as accession join stock_relationship on (accession.stock_id=stock_relationship.object_id) JOIN stock as plot on (plot.stock_id=stock_relationship.subject_id) JOIN nd_experiment_stock ON (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN project USING (project_id) LEFT JOIN projectprop ON (project.project_id=projectprop.project_id) where projectprop.type_id=$geolocation_type_id AND accession.stock_id=?;";
+
+    my $h = $dbh->prepare($q);
+    $h->execute($self->stock_id());
+
+    my @trials;
+    while (my ($project_id, $project_name, $nd_geolocation_id) = $h->fetchrow_array()) {
+        push @trials, [ $project_id, $project_name, $nd_geolocation_id, $geolocations{$nd_geolocation_id} ];
+    }
+    return @trials;
+}
+
+sub get_direct_parents {
+    my $self = shift;
+    my $stock_id = shift || $self->stock_id();
+
+    print STDERR "get_direct_parents with $stock_id...\n";
+
+    my $female_parent_id;
+    my $male_parent_id;
+    eval {
+	$female_parent_id = $self->get_schema()->resultset("Cv::Cvterm")->find( { name => 'female_parent' })->cvterm_id();
+	$male_parent_id = $self->get_schema()->resultset("Cv::Cvterm")->find( { name => 'male_parent' }) ->cvterm_id();
+    };
+    if ($@) {
+	die "Cvterm for female_parent and/or male_parent seem to be missing in the database\n";
+    }
+
+    my $rs = $self->get_schema()->resultset("Stock::StockRelationship")->search( { object_id => $stock_id, type_id => { -in => [ $female_parent_id, $male_parent_id ] } });
+    my @parents;
+    while (my $row = $rs->next()) {
+	print STDERR "Found parent...\n";
+	my $prs = $self->get_schema()->resultset("Stock::Stock")->find( { stock_id => $row->subject_id() });
+	my $parent_type = "";
+	if ($row->type_id() == $female_parent_id) {
+	    $parent_type = "female";
+	}
+	if ($row->type_id() == $male_parent_id) {
+	    $parent_type = "male";
+	}
+	push @parents, [ $prs->stock_id(), $prs->uniquename(), $parent_type ];
+    }
+
+    return @parents;
+}
+
+sub get_recursive_parents {
+    my $self = shift;
+    my $individual = shift;
+    my $max_level = shift || 1;
+    my $current_level = shift;
+
+    if (!defined($individual)) { return; }
+
+    if ($current_level > $max_level) {
+	print STDERR "Reached level $current_level of $max_level... we are done!\n";
+	return;
+    }
+
+    $current_level++;
+    my @parents = $self->get_direct_parents($individual->get_id());
+
+    my $pedigree = Bio::GeneticRelationships::Pedigree->new( { name => $individual->get_name()."_pedigree", cross_type=>"unknown"} );
+
+    foreach my $p (@parents) {
+	my ($parent_id, $parent_name, $relationship) = @$p;
+
+	my ($female_parent, $male_parent, $attributes);
+	my $parent = Bio::GeneticRelationships::Individual->new( { name => $parent_name, id=> $parent_id });
+	if ($relationship eq "female") {
+	    $pedigree->set_female_parent($parent);
+	}
+
+	if ($relationship eq "male") {
+	    print STDERR "Adding male parent...\n";
+	    $pedigree->set_male_parent($parent);
+	}
+	$self->get_recursive_parents($parent, $max_level, $current_level);
+    }
+    $individual->set_pedigree($pedigree);
+}
+
+sub get_parents {
+    my $self = shift;
+    my $max_level = shift || 1;
+
+    my $root = Bio::GeneticRelationships::Individual->new(
+	{
+	    name => $self->get_uniquename(),
+	    id => $self->stock_id(),
+	});
+
+    $self->get_recursive_parents($root, $max_level, 0);
+
+    return $root;
+}
+
+=head2 _new_metadata_id
+
+Usage: my $md_id = $self->_new_metatada_id($sp_person_id)
+Desc:  Store a new md_metadata row with a $sp_person_id
+Ret:   a database id
+Args:  sp_person_id
+
+=cut
+
+sub _new_metadata_id {
+    my $self = shift;
+    my $sp_person_id = shift;
+    my $metadata_schema = CXGN::Metadata::Schema->connect(
+        sub { $self->get_schema->storage->dbh },
+        );
+    my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema);
+    $metadata->set_create_person_id($sp_person_id);
+    my $metadata_id = $metadata->store()->get_metadata_id();
+    return $metadata_id;
+}
+
+=head2 merge
+
+ Usage:         $s->merge(221, 1);
+ Desc:          merges stock $s with stock_id 221. Optional delete boolean
+                parameter indicates whether other stock should be deleted.
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub merge {
+    my $self = shift;
+    my $other_stock_id = shift;
+    my $delete_other_stock = shift;
+
+    if ($other_stock_id == $self->stock_id()) {
+	print STDERR "Trying to merge stock into itself ($other_stock_id) Skipping...\n";
+	return;
+    }
+
+
+
+    my $stockprop_count=0;
+    my $subject_rel_count=0;
+    my $object_rel_count=0;
+    my $stock_allele_count=0;
+    my $image_count=0;
+    my $experiment_stock_count=0;
+    my $stock_dbxref_count=0;
+    my $stock_owner_count=0;
+    my $parent_1_count=0;
+    my $parent_2_count=0;
+    my $other_stock_deleted = 'NO';
+
+
+    my $schema = $self->get_schema();
+
+    # move stockprops
+    #
+    my $sprs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $other_stock_id });
+    while (my $row = $sprs->next()) {
+
+	# check if this stockprop already exists for this stock; save only if not
+	#
+	my $thissprs = $schema->resultset("Stock::Stockprop")->search(
+	    {
+		stock_id => $self->stock_id(),
+		type_id => $row->type_id(),
+		value => $row->value()
+	    });
+
+	if ($thissprs->count() == 0) {
+	    my $value = $row->value();
+	    my $type_id = $row->type_id();
+
+	    my $rank_rs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $self->stock_id(), type_id => $type_id });
+
+	    my $rank;
+	    if ($rank_rs->count() > 0) {
+		$rank = $rank_rs->get_column("rank")->max();
+	    }
+
+	    $rank++;
+	    $row->rank($rank);
+	    $row->stock_id($self->stock_id());
+
+	    $row->update();
+
+	    print STDERR "MERGED stockprop_id ".$row->stockprop_id." for stock $other_stock_id type_id $type_id value $value into stock ".$self->stock_id()."\n";
+	    $stockprop_count++;
+	}
+    }
+
+    # move subject relationships
+    #
+    my $ssrs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $other_stock_id });
+
+    while (my $row = $ssrs->next()) {
+
+	my $this_subject_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $self->stock_id(), object_id => $row->object_id, type_id => $row->type_id() });
+
+	if ($this_subject_rel_rs->count() == 0) { # this stock does not have the relationship
+	    # get the max rank
+	    my $rank_rs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $self->stock_id(), type_id => $row->type_id() });
+	    my $rank = 0;
+	    if ($rank_rs->count() > 0) {
+		$rank = $rank_rs->get_column("rank")->max();
+	    }
+	    $rank++;
+	    $row->rank($rank);
+	    $row->subject_id($self->stock_id());
+	    $row->update();
+	    print STDERR "Moving subject relationships from stock $other_stock_id to stock ".$self->stock_id()."\n";
+	    $subject_rel_count++;
+	}
+    }
+
+    # move object relationships
+    #
+    my $osrs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id });
+    while (my $row = $osrs->next()) {
+	my $this_object_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id, subject_id => $row->subject_id(), type_id => $row->type_id() });
+
+	if ($this_object_rel_rs->count() == 0) {
+	    my $rank_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id(), type_id => $row->type_id() });
+	    my $rank = 0;
+	    if ($rank_rs->count() > 0) {
+		$rank = $rank_rs->get_column("rank")->max();
+	    }
+	    $rank++;
+	    $row->rank($rank);
+	    $row->object_id($self->stock_id());
+	    $row->update();
+	    print STDERR "Moving object relationships from stock $other_stock_id to stock ".$self->stock_id()."\n";
+	    $object_rel_count++;
+	}
+    }
+
+    # move experiment_stock
+    #
+    my $esrs = $schema->resultset("NaturalDiversity::NdExperimentStock")->search( { stock_id => $other_stock_id });
+    while (my $row = $esrs->next()) {
+	$row->stock_id($self->stock_id());
+	$row->update();
+	print STDERR "Moving experiments for stock $other_stock_id to stock ".$self->stock_id()."\n";
+	$experiment_stock_count++;
+    }
+
+    # move stock_cvterm relationships
+    #
+
+
+    # move stock_dbxref
+    #
+    my $sdrs = $schema->resultset("Stock::StockDbxref")->search( { stock_id => $other_stock_id });
+    while (my $row = $sdrs->next()) {
+	$row->stock_id($self->stock_id());
+	$row->update();
+	$stock_dbxref_count++;
+    }
+
+    # move sgn.pcr_exp_accession relationships
+    #
+
+
+    # move sgn.pcr_experiment relationships
+    #
+
+
+
+    # move stock_genotype relationships
+    #
+
+
+    my $phenome_schema = CXGN::Phenome::Schema->connect(
+	sub { $self->get_schema->storage->dbh() }, { on_connect_do => [ 'SET search_path TO phenome, public, sgn'], limit_dialect => 'LimitOffset' }
+	);
+
+    # move phenome.stock_allele relationships
+    #
+    my $sars = $phenome_schema->resultset("StockAllele")->search( { stock_id => $other_stock_id });
+    while (my $row = $sars->next()) {
+	$row->stock_id($self->stock_id());
+	$row->udate();
+	print STDERR "Moving stock alleles from stock $other_stock_id to stock ".$self->stock_id()."\n";
+	$stock_allele_count++;
+    }
+
+    # move image relationships
+    #
+    my $irs = $phenome_schema->resultset("StockImage")->search( { stock_id => $other_stock_id });
+    while (my $row = $irs->next()) {
+
+	my $this_rs = $phenome_schema->resultset("StockImage")->search( { stock_id => $self->stock_id(), image_id => $row->image_id() } );
+	if ($this_rs->count() == 0) {
+	    $row->stock_id($self->stock_id());
+	    $row->update();
+	    print STDERR "Moving image ".$row->image_id()." from stock $other_stock_id to stock ".$self->stock_id()."\n";
+	    $image_count++;
+	}
+	else {
+	    print STDERR "Removing stock_image entry...\n";
+	    $row->delete(); # there is no cascade delete on image relationships, so we need to remove dangling relationships.
+	}
+    }
+
+    # move stock owners
+    #
+    my $sors = $phenome_schema->resultset("StockOwner")->search( { stock_id => $other_stock_id });
+    while (my $row = $sors->next()) {
+
+	my $this_rs = $phenome_schema->resultset("StockOwner")->search( { stock_id => $self->stock_id(), sp_person_id => $row->sp_person_id() });
+	if ($this_rs->count() == 0) {
+	    $row->stock_id($self->stock_id());
+	    $row->update();
+	    print STDERR "Moved stock_owner ".$row->sp_person_id()." of stock $other_stock_id to stock ".$self->stock_id()."\n";
+	    $stock_owner_count++;
+	}
+	else {
+	    print STDERR "(Deleting stock owner entry for stock $other_stock_id, owner ".$row->sp_person_id()."\n";
+	    $row->delete(); # see comment for move image relationships
+	}
+    }
+
+    # move map parents
+    #
+    my $sgn_schema = SGN::Schema->connect(
+	sub { $self->get_schema->storage->dbh() }, { limit_dialect => 'LimitOffset' }
+	);
+
+    my $mrs1 = $sgn_schema->resultset("Map")->search( { parent_1 => $other_stock_id });
+    while (my $row = $mrs1->next()) {
+	$row->parent_1($self->stock_id());
+	$row->update();
+	print STDERR "Move map parent_1 $other_stock_id to ".$self->stock_id()."\n";
+	$parent_1_count++;
+    }
+
+    my $mrs2 = $sgn_schema->resultset("Map")->search( { parent_2 => $other_stock_id });
+    while (my $row = $mrs2->next()) {
+	$row->parent_2($self->stock_id());
+	$row->update();
+	print STDERR "Move map parent_2 $other_stock_id to ".$self->stock_id()."\n";
+	$parent_2_count++;
+    }
+
+    if ($delete_other_stock) {
+	my $row = $self->get_schema->resultset("Stock::Stock")->find( { stock_id => $other_stock_id });
+	$row->delete();
+	$other_stock_deleted = 'YES';
+    }
+
+
+    print STDERR "Done with merge of stock_id $other_stock_id into ".$self->stock_id()."\n";
+    print STDERR "Relationships moved: \n";
+    print STDERR <<COUNTS;
+    Stock props: $stockprop_count
+    Subject rels: $subject_rel_count
+    Object rels: $object_rel_count
+    Alleles: $stock_allele_count
+    Images: $image_count
+    Experiments: $experiment_stock_count
+    Dbxrefs: $stock_dbxref_count
+    Stock owners: $stock_owner_count
+    Map parents: $parent_1_count
+    Map parents: $parent_2_count
+    Other stock deleted: $other_stock_deleted.
+COUNTS
+
+}
+
+##########
+1;########
+##########
