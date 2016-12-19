@@ -464,6 +464,7 @@ sub structure_output_details {
     elsif ( $analysis_page =~ m/solgs\/population\// ) 
     {
 	my $population_page = $base . "solgs/population/$pop_id";
+	my $data_set_type   = $c->stash->{data_set_type};
 	my $pheno_file;
 	my $geno_file;
 	my $pop_name;
@@ -479,25 +480,20 @@ sub structure_output_details {
 	} 
 	else 
 	{	    
-	    $solgs_controller->phenotype_file($c);
-	    $pheno_file = $c->stash->{phenotype_file};
-
-	    $solgs_controller->genotype_file($c);
-	    $geno_file = $c->stash->{genotype_file};
-	    
+	    $solgs_controller->phenotype_file_name($c);	
+	    $solgs_controller->genotype_file_name($c);
+	
 	    $solgs_controller->get_project_details($c, $pop_id);
 	    $pop_name = $c->stash->{project_name};
-	  
 	}
-
-	$output_details{'population_id_' . $pop_id} = {
+	    $output_details{'population_id_' . $pop_id} = {
 		'population_page' => $population_page,
 		'population_id'   => $pop_id,
 		'population_name' => $pop_name,
 		'phenotype_file'  => $pheno_file,
 		'genotype_file'   => $geno_file,  
-		'data_set_type'   => $c->stash->{data_set_type},
-	};
+		'data_set_type'   => $data_set_type,
+	    };
     }
     elsif ( $analysis_page =~ m/solgs\/model\/\d+\/prediction\// ) 
     {	

@@ -157,10 +157,9 @@ sub search : Path('/ajax/search/trials') Args(0) {
           unless ( $nd_geolocation eq 'not_provided'
             || $trials{$t}->{location} eq $nd_geolocation );
         print STDERR "matched trial location = $trials{$t}->{location} \n";
-
         push @result,
           [
-"<a href=\"/breeders_toolbox/trial/$trials{$t}->{project_id}\">$t</a>",
+"<a href=\"/breeders_toolbox/trial/$trials{$t}->{trial_id}\">$t</a>",
             $trials{$t}->{trial_description}, $trials{$t}->{breeding_program},
             $trials{$t}->{folder},            $trials{$t}->{year},
             $trials{$t}->{location},          $trials{$t}->{trial_type},

@@ -1208,6 +1208,55 @@ sub formatted_phenotype_file {
 }
 
 
+sub phenotype_file_name {
+    my ($self, $c) = @_;
+   
+    my $pop_id = $c->stash->{pop_id};
+    $pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
+
+    if ($pop_id =~ /uploaded/) 
+    {
+	my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
+	my $file = catfile($tmp_dir, 'phenotype_data_' . $pop_id . '.txt');
+	$c->stash->{phenotype_file_name} = $file;
+    }
+    else
+    {
+
+	my $cache_data = { key       => 'phenotype_data_' . $pop_id, 
+			   file      => 'phenotype_data_' . $pop_id . '.txt',
+			   stash_key => 'phenotype_file_name'
+	};
+    
+	$self->cache_file($c, $cache_data);
+    }
+}
+
+
+sub genotype_file_name {
+    my ($self, $c) = @_;
+   
+    my $pop_id = $c->stash->{pop_id};
+    $pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
+ 
+    if ($pop_id =~ /uploaded/) 
+    {
+	my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
+	my $file = catfile($tmp_dir, 'genotype_data_' . $pop_id . '.txt');
+	$c->stash->{genotype_file_name} = $file;
+    }
+    else
+    {
+	my $cache_data = { key   => 'genotype_data_' . $pop_id, 
+                       file      => 'genotype_data_' . $pop_id . '.txt',
+                       stash_key => 'genotype_file_name'
+	};
+    
+	$self->cache_file($c, $cache_data);
+    }
+}
+
+
 sub gebv_kinship_file {
     my ($self, $c) = @_;
 
@@ -4524,8 +4573,7 @@ sub prep_phenotype_file {
     my $pheno_file  = $args->{phenotype_file};
     my $pop_id      = $args->{population_id};
     my $traits_file = $args->{traits_list_file};
-    my $cache_dir   = $args->{cache_dir};
-  
+ 
     my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context', 
 					       schema => SGN::Context->dbic_schema("Bio::Chado::Schema")});
    
@@ -4536,10 +4584,6 @@ sub prep_phenotype_file {
 	my $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $traits_file);
 	write_file($pheno_file, $pheno_data);
     }
-
-    my $file_cache  = Cache::File->new(cache_root => $cache_dir);
-
-    $file_cache->set('phenotype_data_' . $pop_id, $pheno_file, '30 days');
     
 }
 
@@ -4562,9 +4606,7 @@ sub first_stock_genotype_data {
 sub prep_genotype_file {
     my ($self, $args) = @_;
     
-    my $geno_file  = $args->{genotype_file};
-    my $cache_dir  = $args->{cache_dir};
-
+    my $geno_file  = $args->{genotype_file}; 
     my $pop_id     = ($args->{prediction_id} ? $args->{prediction_id} : $args->{population_id});
  
     my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context', 
@@ -4576,9 +4618,6 @@ sub prep_genotype_file {
     {
 	write_file($geno_file, $geno_data);
     }
-
-    my $file_cache  = Cache::File->new(cache_root => $cache_dir);
-    $file_cache->set('genotype_data_' . $pop_id, $geno_file, '30 days');
     
 }
 
@@ -4590,11 +4629,7 @@ sub phenotype_file {
     die "Population id must be provided to get the phenotype data set." if !$pop_id;
     $pop_id =~ s/combined_//;
     
-    my $pheno_file;
- 
-    if ($c->stash->{uploaded_reference} || $pop_id =~ /uploaded/) {
-        my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};     
-	
+    if ($c->stash->{uploaded_reference} || $pop_id =~ /uploaded/) {	
 	if (!$c->user) {
 	    
 	    my $page = "/" . $c->req->path;
@@ -4603,44 +4638,30 @@ sub phenotype_file {
 	    $c->detach;   
 
 	}	
-	else 
-	{
-	  #  my $user_id = $c->user->id;
-	    $pheno_file = catfile ($tmp_dir, "phenotype_data_${pop_id}.txt");
-	}
     }
  
-    unless ($pheno_file) 
-    {
-	my $dir = $c->stash->{solgs_cache_dir};
-        my $file_cache  = Cache::File->new(cache_root => $dir);
-        $file_cache->purge();
-   
-        my $key        = "phenotype_data_" . $pop_id;
-        $pheno_file = $file_cache->get($key);
+    $self->phenotype_file_name($c);
+    my $pheno_file = $c->stash->{phenotype_file_name};
 
-	no warnings 'uninitialized';
-      
-	unless ( -s $pheno_file)
-        {  	   
-            $pheno_file = catfile($dir, 'phenotype_data_' . $pop_id . '.txt');
-	    
-	    $self->traits_list_file($c);
-	    my $traits_file =  $c->stash->{traits_list_file};
-	     
-	    my $args = {
-		'population_id'    => $pop_id,
-		'phenotype_file'   => $pheno_file,
-		'traits_list_file' => $traits_file,
-		'cache_dir'        => $dir,
-	    };
+    no warnings 'uninitialized';
+    
+    unless ( -s $pheno_file)
+    {  	   	    
+	$self->traits_list_file($c);
+	my $traits_file =  $c->stash->{traits_list_file};
+	
+	my $args = {
+	    'population_id'    => $pop_id,
+	    'phenotype_file'   => $pheno_file,
+	    'traits_list_file' => $traits_file,
+	};
 	   
-	    if (!$c->stash->{uploaded_reference}) 
-	    {
-		$self->submit_cluster_phenotype_query($c, $args);
-	    }	    
-        }
+	if (!$c->stash->{uploaded_reference}) 
+	{
+	    $self->submit_cluster_phenotype_query($c, $args);
+	}	    
     }
+
    
     $c->stash->{phenotype_file} = $pheno_file;   
 
@@ -4734,8 +4755,7 @@ sub genotype_file  {
     my ($self, $c, $pred_pop_id) = @_;
    
     my $pop_id  = $c->stash->{pop_id};
-    my $geno_file;
-
+   
     if ($pred_pop_id) 
     {      
         $pop_id = $c->stash->{prediction_pop_id};      
@@ -4744,73 +4764,49 @@ sub genotype_file  {
     
     die "Population id must be provided to get the genotype data set." if !$pop_id;
   
-    if ($c->stash->{uploaded_reference}) 
+    if ($c->stash->{uploaded_reference} || $pop_id =~ /uploaded/) 
     {
-        my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};     
-       
-	if (!$c->user)
+  	if (!$c->user)
 	{
 	    my $path = "/" . $c->req->path;
 	    $c->res->redirect("/solgs/list/login/message?page=$path");
 	    $c->detach;
 	}
-	else	    
-	{
-	   # my $user_id = $c->user->id;
-	    $geno_file = catfile ($tmp_dir, "genotype_data_${pop_id}.txt"); 
-	}
     }
 
-    if ($pop_id =~ /uploaded/) 
-    {
-        my $dir = $c->stash->{solgs_prediction_upload_dir};
-        my $user_id = $c->user->id;
-      
-        my $exp = "genotype_data_${pop_id}"; 
-        $geno_file = $self->grep_file($dir, $exp);    
-      
+    $self->genotype_file_name($c);
+    my $geno_file = $c->stash->{genotype_file_name};
+
+    no warnings 'uninitialized';
+
+    unless (-s $geno_file)
+    {  
+	my $model_id = $c->stash->{model_id};
+	
+	my $dir = ($model_id =~ /uploaded/) 
+	    ? $c->stash->{solgs_prediction_upload_dir} 
+	    : $c->stash->{solgs_cache_dir};
+
+	my $trait_abbr = $c->stash->{trait_abbr};
+
+	my $tr_file = ($c->stash->{data_set_type} =~ /combined/) 
+	    ? "genotype_data_${model_id}_${trait_abbr}_combined" 
+	    : "genotype_data_${model_id}.txt";
+	
+	my $tr_geno_file = catfile($dir, $tr_file);
+
+	my $args = {
+	    'population_id' => $pop_id,
+	    'prediction_id' => $pred_pop_id,
+	    'model_id'      => $model_id,
+	    'tr_geno_file'  => $tr_geno_file,
+	    'genotype_file' => $geno_file,
+	    'cache_dir'     => $c->stash->{solgs_cache_dir},
+	};
+
+	$self->submit_cluster_genotype_query($c, $args);
     }
-
-    unless($geno_file) 
-    {
-	my $cache_dir = $c->stash->{solgs_cache_dir};
-        my $file_cache  = Cache::File->new(cache_root => $cache_dir);
-        $file_cache->purge();
-   
-        my $key        = "genotype_data_" . $pop_id;
-        $geno_file = $file_cache->get($key);
-
-	no warnings 'uninitialized';
-
-        unless (-s $geno_file)
-        {  
-	    my $model_id = $c->stash->{model_id};
-	    
-	    my $dir = ($model_id =~ /uploaded/) 
-		? $c->stash->{solgs_prediction_upload_dir} 
-	        : $c->stash->{solgs_cache_dir};
-
-	    my $trait_abbr = $c->stash->{trait_abbr};
-
-	    my $tr_file = ($c->stash->{data_set_type} =~ /combined/) 
-		? "genotype_data_${model_id}_${trait_abbr}_combined" 
-		: "genotype_data_${model_id}.txt";
-           
-	    my $tr_geno_file = catfile($dir, $tr_file);
-	    $geno_file       = catfile($c->stash->{solgs_cache_dir}, "genotype_data_${pop_id}.txt");
-
-	    my $args = {
-		'population_id' => $pop_id,
-		'prediction_id' => $pred_pop_id,
-		'model_id'      => $model_id,
-		'tr_geno_file'  => $tr_geno_file,
-		'genotype_file' => $geno_file,
-		'cache_dir'     => $c->stash->{solgs_cache_dir},
-	    };
-
-	    $self->submit_cluster_genotype_query($c, $args);
-        }
-    }
+    
    
     if ($pred_pop_id) 
     {
@@ -5084,7 +5080,6 @@ sub r_combine_populations  {
                              $combined_pops_geno_file,
         );
                              
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $tempfile_input = $self->create_tempfile($temp_dir, "input_files_${trait_id}_combine"); 
     write_file($tempfile_input, $input_files);
 

@@ -540,4 +540,34 @@ my $delete_folder = $folder->delete_folder();
 ok($delete_folder == 1, "folder deleted.");
 
 
+
+my $folder4 = CXGN::Trial::Folder->create({
+  bcs_schema => $schema,
+  name => 'F4',
+  breeding_program_id => $test_breeding_program->project_id(),
+  folder_for_trials => 1,
+  folder_for_crosses => 1
+});
+my $F4_id = $folder4->folder_id;
+
+$folder = CXGN::Trial::Folder->new({
+  bcs_schema => $schema,
+  folder_id => $F4_id
+});
+ok($folder->folder_for_trials == 1, "check create folder with folder_for_trials");
+ok($folder->folder_for_crosses == 1, "check create folder with folder_for_crosses");
+
+$folder->set_folder_content_type('folder_for_trials', 0);
+$folder->set_folder_content_type('folder_for_crosses', 0);
+
+$folder = CXGN::Trial::Folder->new({
+  bcs_schema => $schema,
+  folder_id => $F4_id
+});
+ok(!$folder->folder_for_trials, "check unset folder_for_trials");
+ok(!$folder->folder_for_crosses, "check unset folder_for_crosses");
+
+my $delete_folder = $folder->delete_folder();
+ok($delete_folder == 1, "folder deleted.");
+
 done_testing();

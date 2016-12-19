@@ -2,8 +2,16 @@ package CXGN::Trial::TrialCreate;
 
 =head1 NAME
 
-CXGN::Trial::TrialCreate - Module to create a trial based on a specified design.
+CXGN::Trial::TrialCreate - Module to create an entirely new trial based on a specified design. For field_layout experiments and genotyping_layout experiments. 
 
+Will do the following:
+1) Create a new project entry in Project table based on trial and description supplied to object. If there is a project with the name already saved, it will return an error and do nothing.
+2) Create a single new experiment entry in nd_experiment. If is_genotyping is supplied, this will be type = genotyping_layout. Otherwise, this will be type = field_layout.
+3) Will associate the location to the project through the nd_experiment as well as through a projectprop. Location lookup happens based on location name that is provided. Assumes locations already stored in database.
+4) Will associate the trial to its breeding program. Lookup is by breeding program name that is provided and assumes bp already exists in database. Will return an error if breeding program name not found.
+5) Creates a single nd_experiment_project entry, linking project to nd_experiment.
+6) Creates a year and design projectprop.
+7) Calls the CXGN::Trial::TrialDesignStore object to handle storing stocks (plots and plants) and stockprops (rep, block, etc)
 
 =head1 USAGE
 
@@ -207,9 +215,11 @@ sub save_trial {
 		my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
 		$project->create_projectprops({ $has_plants_cvterm->name() => 'varies' });
 	}
+
 	my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
 		bcs_schema => $chado_schema,
 		trial_id => $project->project_id(),
+		nd_geolocation_id => $geolocation->nd_geolocation_id(),
 		design_type => $design_type,
 		design => \%design,
 		is_genotyping => $self->get_is_genotyping
