@@ -4755,7 +4755,8 @@ sub genotype_file  {
     my ($self, $c, $pred_pop_id) = @_;
    
     my $pop_id  = $c->stash->{pop_id};
-   
+    my $geno_file;
+
     if ($pred_pop_id) 
     {      
         $pop_id = $c->stash->{prediction_pop_id};      
@@ -4774,8 +4775,11 @@ sub genotype_file  {
 	}
     }
 
-    $self->genotype_file_name($c);
-    my $geno_file = $c->stash->{genotype_file_name};
+    unless ($geno_file)
+    {
+	$self->genotype_file_name($c);
+	$geno_file = $c->stash->{genotype_file_name};
+    }
 
     no warnings 'uninitialized';
 
