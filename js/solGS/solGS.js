@@ -229,7 +229,7 @@ solGS.waitPage = function (page, args) {
 	    }
 	   
 	}  else if (page.match(/solgs\/populations\/combined\//)) {
-	    retrievePopsData();  
+	    retrievePopsData(args.combo_pops_list);  
 	} else if (page.match(/solgs\/population\//)) {
 	    if (page.match(/solgs\/population\/uploaded_/)) {
 		var listId = args.list_id;
