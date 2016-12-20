@@ -75,65 +75,6 @@ sub submit :Path('/solgs/submit/intro')  Args(0) {
 }
 
 
-# sub details_form : Path('/solgs/form/population/details') Args(0) {
-#     my ($self, $c) = @_;
-
-#     $self->load_yaml_file($c, 'population/details.yml');
-#     my $form = $c->stash->{form}; 
-   
-#     if ($form->submitted_and_valid ) 
-#     {
-#         $c->res->redirect('/solgs/form/population/phenotype');
-#     }
-#     else 
-#     {
-#         $c->stash(template => $self->template('/form/population/details.mas'),
-#                   form     => $form
-#             );
-#     }
-# }
-
-
-# sub phenotype_form : Path('/solgs/form/population/phenotype') Args(0) {
-#     my ($self, $c) = @_;
-    
-#     $self->load_yaml_file($c, 'population/phenotype.yml');
-#     my $form = $c->stash->{form};
-
-#     if ($form->submitted_and_valid) 
-#     {
-#       $c->res->redirect('/solgs/form/population/genotype');
-#     }        
-#     else
-#     {
-#         $c->stash(template => $self->template('/form/population/phenotype.mas'),
-#                   form     => $form
-#             );
-#     }
-
-# }
-
-
-# sub genotype_form : Path('/solgs/form/population/genotype') Args(0) {
-#     my ($self, $c) = @_;
-
-#     $self->load_yaml_file($c, 'population/genotype.yml');
-#     my $form = $c->stash->{form};
-
-#     if ($form->submitted_and_valid) 
-#     {
-#       $c->res->redirect('/solgs/population/12');
-#     }        
-#     else
-#     {
-#         $c->stash(template => $self->template('/form/population/genotype.mas'),
-#                   form     => $form
-#             );
-#     }
-
-# }
-
-
 sub search : Path('/solgs/search') Args() {
     my ($self, $c) = @_;
 
