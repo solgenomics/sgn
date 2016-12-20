@@ -34,7 +34,7 @@ $gs_traits_index
     <input type="text" id="search_trait_entry" class="form-control" size="35px" placeholder="enter trait name"/>
   </div>
   <div>
-    <button" id="search_trait" type="submit" class="btn btn-success"> 
+    <button id="search_trait" type="submit" class="btn btn-success"> 
       <span class="glyphicon glyphicon-search"></span>
     </button>
   </div>
