@@ -99,7 +99,7 @@ function loadTrialListTypeTrainingPop (trialsNames) {
         url: '/solgs/get/trial/id/',
         dataType: 'json',
         data: { 'trials_names': trialsNames},
-        success: function (res) {            
+        success: function (res) { 
             getCombinedPopsId(res.trials_ids);
         },
         error: function(response) {
@@ -113,7 +113,7 @@ function askJobQueueing (listId) {
  
     var args = createReqArgs(listId);
     var modelId = args.population_id;
-    alert(modelId)
+    
     var page = '/solgs/population/' + modelId;
 
     solGS.waitPage(page, args);
@@ -232,12 +232,10 @@ function getUserUploadedRefPop (listId) {
 
 function loadPopulationPage (url, listId, listSource) {   
     
-    // var traitId        = getTraitId();
     var genoList       = getListTypeTrainingPopDetail(listId);
     var listName       = genoList.name;
     var modelId        = getModelId(listId);
      
-    //alert('loadPopulationPage: url ' + url);
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
     jQuery.blockUI({message: 'Please wait..'});
    
