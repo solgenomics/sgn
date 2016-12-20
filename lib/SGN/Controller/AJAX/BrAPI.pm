@@ -586,12 +586,15 @@ sub germplasm_search_process {
     my $status = $c->stash->{status};
     my $message = '';
 
-    my $germplasm_name = $params->{germplasmName};
-    my $accession_number = $params->{accessionNumber};
+    my @germplasm_names = $params->{germplasmName};
+    @germplasm_names = grep {$_ ne undef} @germplasm_names;
+    my @accession_numbers = $params->{accessionNumber};
+    @accession_numbers = grep {$_ ne undef} @accession_numbers;
     my $genus = $params->{germplasmGenus};
     my $subtaxa = $params->{germplasmSubTaxa};
     my $species = $params->{germplasmSpecies};
-    my $germplasm_id = $params->{germplasmDbId};
+    my @germplasm_ids = $params->{germplasmDbId};
+    @germplasm_ids = grep {$_ ne undef} @germplasm_ids;
     my $permplasm_pui = $params->{germplasmPUI};
     my $match_method = $params->{matchMethod};
     my %result;
@@ -614,29 +617,42 @@ sub germplasm_search_process {
     $search_params{'me.type_id'} = $accession_type_cvterm_id;
     $order_params{'-asc'} = 'me.stock_id';
 
-    if ($germplasm_name && (!$match_method || $match_method eq 'exact')) {
-        $search_params{'me.uniquename'} = $germplasm_name;
+    if (@germplasm_names && scalar(@germplasm_names)>0){
+        if (!$match_method || $match_method eq 'exact') {
+            $search_params{'me.uniquename'} = \@germplasm_names;
+        } elsif ($match_method eq 'wildcard') {
+            my @wildcard_names;
+            foreach (@germplasm_names) {
+                $_ =~ tr/*?/%_/;
+                push @wildcard_names, $_;
+            }
+            $search_params{'me.uniquename'} = { 'ilike' => \@wildcard_names };
+        }
     }
-    if ($germplasm_name && $match_method eq 'wildcard') {
-        $germplasm_name =~ tr/*?/%_/;
-        $search_params{'me.uniquename'} = { 'ilike' => $germplasm_name };
+
+    if (@germplasm_ids && scalar(@germplasm_ids)>0){
+        if (!$match_method || $match_method eq 'exact') {
+            $search_params{'me.stock_id'} = \@germplasm_ids;
+        } elsif ($match_method eq 'wildcard') {
+            my @wildcard_ids;
+            foreach (@germplasm_ids) {
+                $_ =~ tr/*?/%_/;
+                push @wildcard_ids, $_;
+            }
+            $search_params{'me.stock_id::varchar(255)'} = { 'ilike' => \@wildcard_ids };
+        }
     }
-    if ($germplasm_id && (!$match_method || $match_method eq 'exact')) {
-        $search_params{'me.stock_id'} = $germplasm_id;
-    }
-    if ($germplasm_id && $match_method eq 'wildcard') {
-        $germplasm_id =~ tr/*?/%_/;
-        $search_params{'me.stock_id::varchar(255)'} = { 'ilike' => $germplasm_id };
-    }
+
     #print STDERR Dumper \%search_params;
     #$self->bcs_schema->storage->debug(1);
-    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, { 'order_by'=> \%order_params } );
     my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'stock_synonym', 'stock_property')->cvterm_id();
-    if ($accession_number) {
+    my %extra_params = ('+select'=>['me.uniquename'], '+as'=>['accession_number'], 'order_by'=> \%order_params);
+    if (@accession_numbers && scalar(@accession_numbers)>0) {
         $search_params{'stockprops.type_id'} = $synonym_id;
-        $search_params{'stockprops.value'} = $accession_number;
-        $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, { 'join'=>{'stockprops'}, 'order_by'=> \%order_params } );
+        $search_params{'stockprops.value'} = \@accession_numbers;
+        %extra_params = ('join'=>{'stockprops'}, '+select'=>['stockprops.value'], '+as'=>['accession_number'], 'order_by'=> \%order_params);
     }
+    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, \%extra_params );
 
     my @data;
     if ($rs) {
@@ -647,7 +663,7 @@ sub germplasm_search_process {
                 germplasmDbId=>$stock->stock_id,
                 defaultDisplayName=>$stock->uniquename,
                 germplasmName=>$stock->uniquename,
-                accessionNumber=>$accession_number,
+                accessionNumber=>$stock->get_column('accession_number'),
                 germplasmPUI=>$c->config->{main_production_site_url}."/stock/".$stock->stock_id."/view",
                 pedigree=>germplasm_pedigree_string($self->bcs_schema(), $stock->stock_id),
                 germplasmSeedSource=>'',
@@ -655,7 +671,7 @@ sub germplasm_search_process {
                 commonCropName=>$stock->search_related('organism')->first()->common_name(),
                 instituteCode=>'',
                 instituteName=>'',
-                biologicalStatusOfAccessionCode=>'400',
+                biologicalStatusOfAccessionCode=>'',
                 countryOfOriginCode=>'',
                 typeOfGermplasmStorageCode=>'Not Stored',
                 genus=>$stock->search_related('organism')->first()->genus(),
@@ -664,7 +680,7 @@ sub germplasm_search_process {
                 subtaxa=>'',
                 subtaxaAuthority=>'',
                 donors=>[],
-                acquisitionDate=>$stock->create_date,
+                acquisitionDate=>'',
             };
         }
     }
@@ -3498,15 +3514,15 @@ sub maps_marker_detail_GET {
 
     my $total_count = scalar(@markers);
     my $page_size = $c->stash->{page_size};
-    if ($page_size == 20) {
-        $page_size = 100000
+    if ($page_size == $DEFAULT_PAGE_SIZE) {
+        $page_size = 100000;
     }
     my $start = $page_size*$c->stash->{current_page};
     my $end = $page_size*($c->stash->{current_page}+1)-1;
     my @data_window = splice @markers, $start, $end;
 
     my %result = (data => \@data_window);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
+    my %metadata = (pagination=>pagination_response($total_count, $page_size, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }
