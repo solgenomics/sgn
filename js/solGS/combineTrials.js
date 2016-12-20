@@ -176,23 +176,26 @@ jQuery(document).ready(function() {
 });
 
 
-function getCombinedPopsId() {
-  
-    var comboPopsList = getSelectedTrials();
+function getCombinedPopsId(comboPopsList) {
+    
+    if (!comboPopsList) {
+	comboPopsList = getSelectedTrials();
+    }
+    
     var traitId       = getTraitId();
     var referer       = window.location.href;
     var page;
 	 
     if (comboPopsList.length > 1)
     {
-	var trialsIds  = comboPopsList.join(","); 
+	//var trialsIds  = comboPopsList.join(","); 
 	var action     = "/solgs/get/combined/populations/id";
 
 	jQuery.ajax({  
             type: 'POST',
             dataType: "json",
             url: action,
-            data: {'trials': trialsIds},
+            data: {'trials': comboPopsList},
             success: function(res) {                         
 		if (res.status) {               
     		    var comboPopsId = res.combo_pops_id;
@@ -249,11 +252,10 @@ function getCombinedPopsId() {
 
 function retrievePopsData(trialsIds) {
 
-    alert('ids ' + trialsIds)
     if (!trialsIds) {
 	trialsIds = getSelectedTrials();
     }
-    	
+ 
     var action = "/solgs/retrieve/populations/data";
    
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
