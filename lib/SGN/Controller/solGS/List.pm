@@ -128,7 +128,7 @@ sub get_trial_id :Path('/solgs/get/trial/id') Args(0) {
 	push @trials_ids, $rw->project_id;
     }
  
-    my  $ret->{trials_ids} = \@trials_ids;
+    my $ret->{trials_ids} = \@trials_ids;
            
     $ret = to_json($ret);
         
@@ -453,11 +453,7 @@ sub get_list_elements_names {
     my ($self, $c) = @_;
 
     my $list = $c->stash->{list};
- print STDERR "\n pop id:getting list_list elements_names\n";
-  
-
-   # $list = from_json($list);
-
+ 
     my @names = ();  
    
     foreach my $id_names (@$list)
@@ -513,7 +509,6 @@ sub map_genotypes_plots {
 	{
 	    my $name = $genotype->uniquename;
 	    push @genotypes, $name;
-	    print STDERR "\n ma-genotypes: $name\n";
 	}
 
 	@genotypes = uniq(@genotypes); 
@@ -542,7 +537,7 @@ sub load_plots_list_training :Path('/solgs/load/plots/list/training') Args(0) {
     
     my $tmp_dir  = $c->stash->{solgs_prediction_upload_dir};
     my $model_id = $c->stash->{model_id};
-      print STDERR "\n model id: $model_id\n";
+   
     my $files = $self->create_list_pop_tempfiles($tmp_dir, $model_id);
     my $pheno_file = $files->{pheno_file};
     my $geno_file  =  $files->{geno_file};
@@ -570,7 +565,7 @@ sub genotypes_list_genotype_data {
     my $model_id  = $args->{model_id};
     my $genotypes = $args->{genotypes_list};
     my $tmp_dir   = $args->{list_data_dir};
-    print STDERR "\n genotypes list geno data --model id: $model_id -- $genotypes->[0]\n";
+    
     my $model = SGN::Model::solGS::solGS->new({context => 'SGN::Context', schema => SGN::Context->dbic_schema("Bio::Chado::Schema")});
 
     my $geno_data = $model->genotypes_list_genotype_data($genotypes);
