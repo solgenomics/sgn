@@ -34,12 +34,12 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 );
 
 has 'program_list' => (
-    isa => 'ArrayRef[Int]|Undef',
+    isa => 'ArrayRef[Str]|Undef',
     is => 'rw',
 );
 
 has 'location_list' => (
-    isa => 'ArrayRef[Int]|Undef',
+    isa => 'ArrayRef[Str]|Undef',
     is => 'rw',
 );
 
@@ -89,15 +89,6 @@ has 'order_by' => (
     is => 'rw'
 );
 
-has 'limit' => (
-    isa => 'Int|Undef',
-    is => 'rw'
-);
-
-has 'offset' => (
-    isa => 'Int|Undef',
-    is => 'rw'
-);
 
 sub search {
     my $self = shift;
@@ -217,7 +208,9 @@ sub search {
 
     while ( my $t = $trial_rs->next() ) {
         my $trial_id = $t->project_id();
-        if ( $not_trials{$trial_id} ) { next; }
+        if ( $not_trials{$trial_id} ) {
+            next;
+        }
         my $trial_name = $t->name();
 
         $trials{$trial_name}->{trial_id} = $t->project_id();
@@ -228,25 +221,27 @@ sub search {
 
         #print STDERR "READ: $trial_name, $type_id, $value\n";
 
-        if ( $type_id == $location_cvterm_id ) {
-            $trials{$trial_name}->{location} = [$value, $locations{$value}];
-        }
-        if ( $type_id == $year_cvterm_id ) {
-            $trials{$trial_name}->{year} = $value;
-        }
-        if ( $type_id == $design_cvterm_id ) {
-            $trials{$trial_name}->{design} = $value;
-        }
-        if ( $type_id == $planting_cvterm_id ) {
-            $trials{$trial_name}->{planting_date} = $calendar_funcs->display_start_date($value);
-        }
-        if ( $type_id == $harvest_cvterm_id ) {
-            $trials{$trial_name}->{harvest_date} = $calendar_funcs->display_start_date($value);
+        if ($type_id){
+            if ( $type_id == $location_cvterm_id ) {
+                $trials{$trial_name}->{location} = [$value, $locations{$value}];
+            }
+            if ( $type_id == $year_cvterm_id ) {
+                $trials{$trial_name}->{year} = $value;
+            }
+            if ( $type_id == $design_cvterm_id ) {
+                $trials{$trial_name}->{design} = $value;
+            }
+            if ( $type_id == $planting_cvterm_id ) {
+                $trials{$trial_name}->{planting_date} = $calendar_funcs->display_start_date($value);
+            }
+            if ( $type_id == $harvest_cvterm_id ) {
+                $trials{$trial_name}->{harvest_date} = $calendar_funcs->display_start_date($value);
+            }
+
+            #print "$type_id corresponds to project type $trial_types{$type_id}\n";
+            $trials{$trial_name}->{trial_type} = $trial_types{$type_id};
         }
 
-        #print "$type_id corresponds to project type $trial_types{$type_id}\n";
-
-        $trials{$trial_name}->{trial_type} = $trial_types{$type_id};
         $trials{$trial_name}->{breeding_program} = $breeding_programs{$trial_id};
         $trials{$trial_name}->{folder} = $folders{$trial_id};
     }
@@ -255,11 +250,11 @@ sub search {
 
         if (scalar(keys %location_list)>0){
             next
-                unless ( exists( $location_list{$trials{$t}->{location}->[0]} ) );
+                unless ( exists( $location_list{$trials{$t}->{location}->[1]} ) );
         }
         if (scalar(keys %program_list)>0){
             next
-                unless ( exists( $program_list{$trials{$t}->{breeding_program}->[0]} ) );
+                unless ( exists( $program_list{$trials{$t}->{breeding_program}->[1]} ) );
         }
         if (scalar(keys %year_list)>0){
             next

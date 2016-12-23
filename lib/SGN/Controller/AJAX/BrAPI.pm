@@ -1030,35 +1030,64 @@ sub studies_search_process {
     my $c = shift;
     my $schema = $self->bcs_schema;
     #my $auth = _authenticate_user($c);
-    my $program_ids = $c->req->param("programDbId");
+    my @program_names = $c->req->param("programNames");
+    @program_names = grep {$_ ne undef} @program_names;
+    my @study_names = $c->req->param("studyNames");
+    @study_names = grep {$_ ne undef} @study_names;
     my @location_names = $c->req->param("studyLocations");
-    #my $location_ids = $c->req->param("locationDbId");
-    my @season_ids = $c->req->param("seasonDbId");
-    my @studytype_ids = $c->req->param("studyTypeDbId");
-    my @study_ids = $c->req->param("studyDbId");
-    my @germplasm_ids = $c->req->param("germplasmDbId");
-    my @variable_ids = $c->req->param("observationVariableDbId");
-    my $sort_by = $c->req->param("sortBy");
-    my $sort_order = $c->req->param("sortOrder");
+    @location_names = grep {$_ ne undef} @location_names;
+    my $study_type = $c->req->param("studyType");
+    my @study_type_list;
+    if ($study_type && $study_type ne 'undef'){
+        push @study_type_list, $study_type;
+    }
+    #my @germplasm_ids = $c->req->param("germplasmDbIds");
+    #my @variable_ids = $c->req->param("observationVariableDbIds");
+    #my $sort_by = $c->req->param("sortBy");
+    #my $sort_order = $c->req->param("sortOrder");
     my $status = $c->stash->{status};
     #$self->bcs_schema->storage->debug(1);
 
-    my @location_names_to_ids;
-    foreach (@location_names){
-        my $location_lookup = CXGN::Location::LocationLookup->new({
-            schema => $schema,
-            location_name => $_
-        });
-        push @location_names_to_ids, $location_lookup->get_geolocation->nd_geolocation_id;
-    }
-
     my $trial_search = CXGN::Trial::Search->new({
         bcs_schema=>$schema,
-        location_list=>\@location_names_to_ids,
+        location_list=>\@location_names,
+        trial_type_list=>\@study_type_list,
+        trial_name_list=>\@study_names,
+        trial_name_is_exact=>1,
+        program_list=>\@program_names
     });
     my $data = $trial_search->search();
+    my @data_window;
+    my $start = $c->stash->{page_size}*$c->stash->{current_page};
+    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
+    for( my $i = $start; $i <= $end; $i++ ) {
+        if (@$data[$i]) {
+            my %additional_info = (
+                design => @$data[$i]->{design},
+                description => @$data[$i]->{description},
+            );
+            my %data_obj = (
+                studyDbId => @$data[$i]->{trial_id},
+                studyName => @$data[$i]->{trial_name},
+                trialDbId => @$data[$i]->{folder_id},
+                trialName => @$data[$i]->{folder_name},
+                studyType => @$data[$i]->{trial_type},
+                seasons => [@$data[$i]->{year}],
+                locationDbId => @$data[$i]->{location_id},
+                locationName => @$data[$i]->{location_name},
+                programDbId => @$data[$i]->{breeding_program_id},
+                programName => @$data[$i]->{breeding_program_name},
+                startDate => @$data[$i]->{harvest_date},
+                endDate => @$data[$i]->{planting_date},
+                active=>'',
+                additionalInfo=>\%additional_info
+            );
+            push @data_window, \%data_obj;
+        }
+    }
+    #print STDERR Dumper \@data_window;
 
-    my %result = (data=>$data);
+    my %result = (data=>\@data_window);
     my $total_count = scalar(@$data);
     my @datafiles;
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
