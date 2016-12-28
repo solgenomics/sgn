@@ -155,47 +155,47 @@ variances <- unlist(
 
 variances <- data.frame(variances)
 scores    <- data.frame(scores)
+loadings  <- data.frame(loadings)
+
 rownames(scores) <- genotypes
 
 headers <- c()
+
 for (i in 1:10) {
   headers[i] <- paste("PC", i, sep='')
 }
 
 colnames(scores) <- c(headers)
 
-write.table(scores,
-            file = scoresFile,
-            sep = "\t",
-            col.names = NA,
-            quote = FALSE,
-            append = FALSE
-            )
+fwrite(scores,
+       file      = scoresFile,
+       sep       = "\t",
+       row.names = TRUE,
+       quote     = FALSE,
+       )
 
-write.table(loadings,
-            file = loadingsFile,
-            sep = "\t",
-            col.names = NA,
-            quote = FALSE,
-            append = FALSE
-            )
+fwrite(loadings,
+       file      = loadingsFile,
+       sep       = "\t",
+       row.names = TRUE,
+       quote     = FALSE,
+       )
 
-write.table(variances,
-            file = varianceFile,
-            sep = "\t",
-            col.names = NA,
-            quote = FALSE,
-            append = FALSE
-            )
+fwrite(variances,
+       file      = varianceFile,
+       sep       = "\t",
+       row.names = TRUE,
+       quote     = FALSE,
+       )
 
 
 if (!is.null(genoDataMissing)) {
-write.table(genoData,
-            file = genoDataFile,
-            sep = "\t",
-            col.names = NA,
-            quote = FALSE,
-            )
+fwrite(genoData,
+       file      = genoDataFile,
+       sep       = "\t",
+       row.names = TRUE,
+       quote     = FALSE,
+       )
 
 }
 

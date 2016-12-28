@@ -362,14 +362,12 @@ if (sum(is.na(genoData)) > 0) {
 #common stocks only
 message('phenotyped lines: ', length(row.names(phenoTrait)))
 message('genotyped lines: ', length(row.names(genoData)))
-print(phenoTrait)
+
 #extract observation lines with both
 #phenotype and genotype data only.
-commonObs <- intersect(phenoTrait$genotypes, row.names(genoData))
-#print(commonObs)
-commonObs <- data.frame(commonObs)
-
-rownames(commonObs)<-commonObs[, 1]
+commonObs           <- intersect(phenoTrait$genotypes, row.names(genoData))
+commonObs           <- data.frame(commonObs)
+rownames(commonObs) <- commonObs[, 1]
 
 message('lines with both genotype and phenotype data: ', length(row.names(commonObs)))
 
@@ -439,12 +437,15 @@ if (length(relationshipMatrixFile) != 0) {
 
 if (length(relationshipMatrixFile) != 0) {
   if (file.info(relationshipMatrixFile)$size == 0) {
-    relationshipMatrix <- A.mat(genoData)
+    relationshipMatrix <- A.mat(genoData)  
   }
+ 
 }
 
+relationshipMatrix         <- round(relationshipMatrix, 2)
 relationshipMatrixFiltered <- relationshipMatrix[(rownames(relationshipMatrix) %in% rownames(commonObs)), ]
 relationshipMatrixFiltered <- relationshipMatrixFiltered[, (colnames(relationshipMatrixFiltered) %in% rownames(commonObs))]
+relationshipMatrix         <- data.frame(relationshipMatrix)
 
 iGEBV  <-kin.blup(data=phenoTrait, geno='genotypes', pheno=trait, K=relationshipMatrixFiltered)
 iGEBVu <- iGEBV$g
@@ -465,6 +466,7 @@ if ( length(predictionData) == 0 ) {
   ordered.markerEffects <- round(ordered.markerEffects, digits=5)
 
   colnames(ordered.markerEffects) <- c("Marker Effects")
+  ordered.markerEffects <- data.frame(ordered.markerEffects) 
 
 }
 
@@ -595,6 +597,8 @@ if (!is.null(validationAll)) {
     validationAll <- rbind(validationAll, validationMean)
     colnames(validationAll) <- c("Correlation")
   }
+  
+  validationAll <- data.frame(validationAll)
 }
 
 predictionPopResult <- c()
@@ -622,92 +626,86 @@ if (length(predictionData) != 0) {
 }
 
 if (!is.null(predictionPopGEBVs) & length(predictionPopGEBVsFile) != 0)  {
-    write.table(predictionPopGEBVs,
-                file = predictionPopGEBVsFile,
-                sep = "\t",
-                col.names = NA,
-                quote = FALSE,
-                append = FALSE
-                )
+    fwrite(predictionPopGEBVs,
+           file  = predictionPopGEBVsFile,
+           row.names = TRUE,
+           sep   = "\t",
+           quote = FALSE,
+           )
 }
 
 if(!is.null(validationAll)) {
-    write.table(validationAll,
-                file = validationFile,
-                sep = "\t",
-                col.names = NA,
-                quote = FALSE,
-                append = FALSE
-                )
+    fwrite(validationAll,
+           file  = validationFile,
+           row.names = TRUE,
+           sep   = "\t",
+           quote = FALSE,
+           )
 }
 
 if (!is.null(ordered.markerEffects)) {
-    write.table(ordered.markerEffects,
-                file = markerFile,
-                sep = "\t",
-                col.names = NA,
-                quote = FALSE,
-                append = FALSE
-                )
-}
+    fwrite(ordered.markerEffects,
+           file  = markerFile,
+           row.names = TRUE,
+           sep   = "\t",
+           quote = FALSE,
+           )
+  }
 
 if (!is.null(ordered.iGEBV)) {
-    write.table(ordered.iGEBV,
-                file = blupFile,
-                sep = "\t",
-                col.names = NA,
-                quote = FALSE,
-                append = FALSE
-                )
+    fwrite(ordered.iGEBV,
+           file  = blupFile,
+           row.names = TRUE,
+           sep   = "\t",
+           quote = FALSE,
+           )
 }
 
 if (length(combinedGebvsFile) != 0 ) {
     if(file.info(combinedGebvsFile)$size == 0) {
-        write.table(ordered.iGEBV,
-                    file = combinedGebvsFile,
-                    sep = "\t",
-                    col.names = NA,
-                    quote = FALSE,
-                    )
+        fwrite(ordered.iGEBV,
+               file  = combinedGebvsFile,
+               row.names = TRUE,
+               sep   = "\t",
+               quote = FALSE,
+               )
       } else {
-      write.table(allGebvs,
-                  file = combinedGebvsFile,
-                  sep = "\t",
-                  quote = FALSE,
-                  col.names = NA,
-                  )
+      fwrite(allGebvs,
+             file  = combinedGebvsFile,
+             row.names = TRUE,
+             sep   = "\t",
+             quote = FALSE,
+             )
     }
 }
 
 if (!is.null(traitPhenoData) & length(traitPhenoFile) != 0) {
-    write.table(traitPhenoData,
-                file = traitPhenoFile,
-                sep = "\t",
-                col.names = NA,
-                quote = FALSE,
-                )
+    fwrite(traitPhenoData,
+           file  = traitPhenoFile,
+           row.names = TRUE,
+           sep   = "\t",
+           quote = FALSE,
+           )
 }
 
 if (!is.null(filteredGenoData) && is.null(readFilteredGenoData)) {
-  write.table(filteredGenoData,
-              file = filteredGenoFile,
-              sep = "\t",
-              col.names = NA,
-              quote = FALSE,
-            )
+  fwrite(filteredGenoData,
+         file  = filteredGenoFile,
+         row.names = TRUE,
+         sep   = "\t",
+         quote = FALSE,
+         )
 
 }
 
 if (length(filteredPredGenoFile) != 0 && is.null(readFilteredPredGenoData)) {
-  write.table(filteredPredGenoData,
-              file = filteredPredGenoFile,
-              sep = "\t",
-              col.names = NA,
-              quote = FALSE,
-              )
+  fwrite(filteredPredGenoData,
+         file  = filteredPredGenoFile,
+         row.names = TRUE,
+         sep   = "\t",
+         quote = FALSE,
+         )
 }
-
-
 
 ## if (!is.null(genoDataMissing)) {
 ##   write.table(genoData,
@@ -728,24 +726,23 @@ if (length(filteredPredGenoFile) != 0 && is.null(readFilteredPredGenoData)) {
 ##               )
 ## }
 
-
+message('rmatrix..fwrite')
 if (file.info(relationshipMatrixFile)$size == 0) {
-  write.table(relationshipMatrix,
-              file = relationshipMatrixFile,
-              sep = "\t",
-              col.names = NA,
-              quote = FALSE,
-              )
+  fwrite(relationshipMatrix,
+         file  = relationshipMatrixFile,
+         row.names = TRUE,
+         sep   = "\t",
+         quote = FALSE,
+         )
 }
 
-
 if (file.info(formattedPhenoFile)$size == 0 && !is.null(formattedPhenoData) ) {
-  write.table(formattedPhenoData,
-              file = formattedPhenoFile,
-              sep = "\t",
-              col.names = NA,
-              quote = FALSE,
-              )
+  fwrite(formattedPhenoData,
+         file = formattedPhenoFile,
+         row.names = TRUE,
+         sep = "\t",
+         quote = FALSE,
+         )
 }
 
 message("Done.")
