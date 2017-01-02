@@ -416,11 +416,22 @@ if (length(predictionData) != 0 ) {
   }
 }
 
+# phenoTrait <- phenoTraitMarker
+ordered.markerEffects <- c()
+ordered.trGEBV        <- c()
+validationAll         <- c()
+combinedGebvsFile     <- c()
+allGebvs              <- c()
+traitPhenoData        <- c()
+relationshipMatrix    <- c()
+
+#additive relationship model
+#calculate the inner products for
+#genotypes (realized relationship matrix)
 relationshipMatrixFile <- grep("relationship_matrix", outputFiles, ignore.case = TRUE, value = TRUE)
 
 message("relationship matrix file: ", relationshipMatrixFile)
 
-relationshipMatrix <- c()
 if (length(relationshipMatrixFile) != 0) {
   if (file.info(relationshipMatrixFile)$size > 0 ) {
     relationshipMatrix <- as.data.frame(fread(relationshipMatrixFile))
@@ -430,10 +441,6 @@ if (length(relationshipMatrixFile) != 0) {
     relationshipMatrix           <- data.matrix(relationshipMatrix)
   }
 }
-
-#additive relationship model
-#calculate the inner products for
-#genotypes (realized relationship matrix)
 
 if (length(relationshipMatrixFile) != 0) {
   if (file.info(relationshipMatrixFile)$size == 0) {
@@ -447,12 +454,16 @@ relationshipMatrixFiltered <- relationshipMatrix[(rownames(relationshipMatrix) %
 relationshipMatrixFiltered <- relationshipMatrixFiltered[, (colnames(relationshipMatrixFiltered) %in% rownames(commonObs))]
 relationshipMatrix         <- data.frame(relationshipMatrix)
 
-iGEBV  <-kin.blup(data=phenoTrait, geno='genotypes', pheno=trait, K=relationshipMatrixFiltered)
-iGEBVu <- iGEBV$g
 
-# phenoTrait <- phenoTraitMarker
-ordered.markerEffects <- c()
-if ( length(predictionData) == 0 ) {
+if (length(predictionData) == 0) {
+
+  trGEBV  <- kin.blup(data  = phenoTrait,
+                     geno  = 'genotypes',
+                     pheno = trait,
+                     K     = relationshipMatrixFiltered
+                     )
+
+  trGEBVu <- trGEBV$g
 
   phenoTraitMarker    <- data.matrix(phenoTraitMarker)
   genoDataFilteredObs <- data.matrix(genoDataFilteredObs)
@@ -463,35 +474,33 @@ if ( length(predictionData) == 0 ) {
 
   ordered.markerEffects <- data.matrix(markerEffects$u)
   ordered.markerEffects <- data.matrix(ordered.markerEffects [order (-ordered.markerEffects[, 1]), ])
-  ordered.markerEffects <- round(ordered.markerEffects, digits=5)
+  ordered.markerEffects <- round(ordered.markerEffects, 5)
 
   colnames(ordered.markerEffects) <- c("Marker Effects")
   ordered.markerEffects <- data.frame(ordered.markerEffects) 
 
-}
 
-traitPhenoData   <- data.frame(round(phenoTraitMarker, 2))   
+  traitPhenoData   <- data.frame(round(phenoTraitMarker, 2))   
 
-heritability  <- round((iGEBV$Vg/iGEBV$Ve), 2)
+  heritability  <- round((trGEBV$Vg/trGEBV$Ve), 2)
 
-cat("\n", file = varianceComponentsFile,  append = FALSE)
-cat('Error variance', iGEBV$Ve, file = varianceComponentsFile, sep = "\t", append = TRUE)
-cat("\n", file = varianceComponentsFile,  append = TRUE)
-cat('Additive genetic variance',  iGEBV$Vg, file = varianceComponentsFile, sep = '\t', append = TRUE)
-cat("\n", file = varianceComponentsFile,  append = TRUE)
-cat('Phenotype mean', 'NA',file = varianceComponentsFile, sep = '\t', append = TRUE)
-cat("\n", file = varianceComponentsFile,  append = TRUE)
-cat('Heritability (h)', heritability, file = varianceComponentsFile, sep = '\t', append = TRUE)
+  cat("\n", file = varianceComponentsFile,  append = FALSE)
+  cat('Error variance', trGEBV$Ve, file = varianceComponentsFile, sep = "\t", append = TRUE)
+  cat("\n", file = varianceComponentsFile,  append = TRUE)
+  cat('Additive genetic variance',  trGEBV$Vg, file = varianceComponentsFile, sep = '\t', append = TRUE)
+  cat("\n", file = varianceComponentsFile,  append = TRUE)
+  cat('Phenotype mean', 'NA',file = varianceComponentsFile, sep = '\t', append = TRUE)
+  cat("\n", file = varianceComponentsFile,  append = TRUE)
+  cat('Heritability (h)', heritability, file = varianceComponentsFile, sep = '\t', append = TRUE)
 
 
-iGEBV         <- data.matrix(iGEBVu)
-ordered.iGEBV <- as.data.frame(iGEBV[order(-iGEBV[, 1]), ])
-ordered.iGEBV <- round(ordered.iGEBV, digits = 3)
+  trGEBV         <- data.matrix(trGEBVu)
+  ordered.trGEBV <- as.data.frame(trGEBV[order(-trGEBV[, 1]), ])
+  ordered.trGEBV <- round(ordered.trGEBV, 3)
 
-combinedGebvsFile <- grep('selected_traits_gebv', outputFiles, ignore.case = TRUE,value = TRUE)
+  combinedGebvsFile <- grep('selected_traits_gebv', outputFiles, ignore.case = TRUE,value = TRUE)
 
-allGebvs<-c()
-if (length(combinedGebvsFile) != 0) {
+  if (length(combinedGebvsFile) != 0) {
     fileSize <- file.info(combinedGebvsFile)$size
     if (fileSize != 0 ) {
         combinedGebvs <- as.data.frame(fread(combinedGebvsFile))
@@ -512,93 +521,93 @@ if (length(combinedGebvsFile) != 0) {
      }
   }
 
-colnames(ordered.iGEBV) <- c(trait)
+  colnames(ordered.trGEBV) <- c(trait)
                   
 #cross-validation
-validationAll <- c()
 
-if (is.null(predictionFile)) {
-  genoNum <- nrow(phenoTraitMarker)
-if (genoNum < 20 ) {
-  warning(genoNum, " is too small number of genotypes.")
-}
-  
-reps <- round_any(genoNum, 10, f = ceiling) %/% 10
-
-genotypeGroups <-c()
-
-if (genoNum %% 10 == 0) {
-    genotypeGroups <- rep(1:10, reps)
-  } else {
-    genotypeGroups <- rep(1:10, reps) [- (genoNum %% 10) ]
-  }
-
-set.seed(4567)                                   
-genotypeGroups <- genotypeGroups[ order (runif(genoNum)) ]
-
-for (i in 1:10) {
-  tr <- paste("trPop", i, sep = ".")
-  sl <- paste("slPop", i, sep = ".")
- 
-  trG <- which(genotypeGroups != i)
-  slG <- which(genotypeGroups == i)
-  
-  assign(tr, trG)
-  assign(sl, slG)
-
-  kblup <- paste("rKblup", i, sep = ".")
-
-  result <- kin.blup(data  = phenoTrait[trG,],
-                     geno  = 'genotypes',
-                     pheno = trait,
-                     K     = relationshipMatrixFiltered
-                     )
-  
-  assign(kblup, result)
-  #calculate cross-validation accuracy
-  valBlups   <- result$g
-  valBlups   <- data.frame(valBlups) 
-  slGDf      <- data.frame(phenoTraitMarker[slG, ])  
-  valBlups   <- valBlups[(rownames(valBlups) %in% rownames(data.frame(phenoTraitMarker[slG, ]))), ]
-  valBlups   <- data.frame(valBlups) 
-  valCorData <- merge(slGDf, valBlups, by=0, all=FALSE)
-
-  rownames(valCorData) <- valCorData[, 1]
-  valCorData[, 1]      <- NULL
-
-  accuracy   <- try(cor(valCorData))
-  validation <- paste("validation", i, sep = ".")
-
-  cvTest <- paste("Validation test", i, sep = " ")
-
-  if ( class(accuracy) != "try-error")
-    {
-      accuracy <- round(accuracy[1,2], digits = 3)
-      accuracy <- data.matrix(accuracy)
-    
-      colnames(accuracy) <- c("correlation")
-      rownames(accuracy) <- cvTest
-
-      assign(validation, accuracy)
-      
-      if (!is.na(accuracy[1,1])) {
-        validationAll <- rbind(validationAll, accuracy)
-      }    
+  if (is.null(predictionFile)) {
+    genoNum <- nrow(phenoTraitMarker)
+    if (genoNum < 20 ) {
+      warning(genoNum, " is too small number of genotypes.")
     }
-}
-
-validationAll <- data.matrix(validationAll[order(-validationAll[, 1]), ])
-     
-if (!is.null(validationAll)) {
-    validationMean <- data.matrix(round(colMeans(validationAll), digits = 2))
-   
-    rownames(validationMean) <- c("Average")
-     
-    validationAll <- rbind(validationAll, validationMean)
-    colnames(validationAll) <- c("Correlation")
-  }
   
-  validationAll <- data.frame(validationAll)
+    reps <- round_any(genoNum, 10, f = ceiling) %/% 10
+
+    genotypeGroups <-c()
+
+    if (genoNum %% 10 == 0) {
+      genotypeGroups <- rep(1:10, reps)
+    } else {
+      genotypeGroups <- rep(1:10, reps) [- (genoNum %% 10) ]
+    }
+
+    set.seed(4567)                                   
+    genotypeGroups <- genotypeGroups[ order (runif(genoNum)) ]
+
+    for (i in 1:10) {
+      tr <- paste("trPop", i, sep = ".")
+      sl <- paste("slPop", i, sep = ".")
+ 
+      trG <- which(genotypeGroups != i)
+      slG <- which(genotypeGroups == i)
+  
+      assign(tr, trG)
+      assign(sl, slG)
+
+      kblup <- paste("rKblup", i, sep = ".")
+
+      result <- kin.blup(data  = phenoTrait[trG,],
+                         geno  = 'genotypes',
+                         pheno = trait,
+                         K     = relationshipMatrixFiltered
+                         )
+  
+      assign(kblup, result)
+      #calculate cross-validation accuracy
+      valBlups   <- result$g
+      valBlups   <- data.frame(valBlups) 
+      slGDf      <- data.frame(phenoTraitMarker[slG, ])  
+      valBlups   <- valBlups[(rownames(valBlups) %in% rownames(data.frame(phenoTraitMarker[slG, ]))), ]
+      valBlups   <- data.frame(valBlups) 
+      valCorData <- merge(slGDf, valBlups, by=0, all=FALSE)
+
+      rownames(valCorData) <- valCorData[, 1]
+      valCorData[, 1]      <- NULL
+
+      accuracy   <- try(cor(valCorData))
+      validation <- paste("validation", i, sep = ".")
+
+      cvTest <- paste("Validation test", i, sep = " ")
+
+      if ( class(accuracy) != "try-error")
+        {
+          accuracy <- round(accuracy[1,2], digits = 3)
+          accuracy <- data.matrix(accuracy)
+    
+          colnames(accuracy) <- c("correlation")
+          rownames(accuracy) <- cvTest
+
+          assign(validation, accuracy)
+      
+          if (!is.na(accuracy[1,1])) {
+            validationAll <- rbind(validationAll, accuracy)
+          }    
+        }
+    }
+
+    validationAll <- data.matrix(validationAll[order(-validationAll[, 1]), ])
+     
+    if (!is.null(validationAll)) {
+      validationMean <- data.matrix(round(colMeans(validationAll), digits = 2))
+   
+      rownames(validationMean) <- c("Average")
+     
+      validationAll <- rbind(validationAll, validationMean)
+      colnames(validationAll) <- c("Correlation")
+    }
+  
+    validationAll <- data.frame(validationAll)
+  }
 }
 
 predictionPopResult <- c()
@@ -615,7 +624,7 @@ if (length(predictionData) != 0) {
                                     pheno = trait,
                                     K     = rTrSl)
     
- message("running prediction for selection candidates...DONE!!")
+     message("running prediction for selection candidates...DONE!!")
     predictionPopGEBVs <- round(data.frame(predictionPopResult$g), 3)
     genotypesSl        <- rownames(predictionData)
     predictionPopGEBVs <- predictionPopGEBVs[(rownames(predictionPopGEBVs) %in% genotypesSl), ]
@@ -652,8 +661,8 @@ if (!is.null(ordered.markerEffects)) {
            )
   }
 
-if (!is.null(ordered.iGEBV)) {
-    fwrite(ordered.iGEBV,
+if (!is.null(ordered.trGEBV)) {
+    fwrite(ordered.trGEBV,
            file  = blupFile,
            row.names = TRUE,
            sep   = "\t",
@@ -663,7 +672,7 @@ if (!is.null(ordered.iGEBV)) {
 
 if (length(combinedGebvsFile) != 0 ) {
     if(file.info(combinedGebvsFile)$size == 0) {
-        fwrite(ordered.iGEBV,
+        fwrite(ordered.trGEBV,
                file  = combinedGebvsFile,
                row.names = TRUE,
                sep   = "\t",
@@ -726,7 +735,6 @@ if (length(filteredPredGenoFile) != 0 && is.null(readFilteredPredGenoData)) {
 ##               )
 ## }
 
-message('rmatrix..fwrite')
 if (file.info(relationshipMatrixFile)$size == 0) {
   fwrite(relationshipMatrix,
          file  = relationshipMatrixFile,
