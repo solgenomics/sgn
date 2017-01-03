@@ -11,12 +11,15 @@ jQuery(document).ready(function () {
     console.log("got data back, here it is: "+data);
     var trial_location = "<% $location %>";
     var locations = data;
-    var num_locations = data.length;
-    for (var i=0; i < num_locations; i++) {
+    var location_status;
+    for (var i=0; i < locations.length; i++) {
       if (locations[i] == trial_location) {
-        console.log("found location "+trial_location+" !\n");
+        location_status = 'found';
         jQuery('#trial_weather_check').html('<a href="http://weather.rtbbase.org?location='+trial_location+'">Weather for '+trial_location+'</a>')
       }
+    }
+    if (location_status != 'found') {
+      jQuery('#trial_weather_check').html('<p><i> No weather data available for location '+trial_location+'</i></p>')
     }
   });
 

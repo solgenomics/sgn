@@ -301,7 +301,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 <& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 
 <&| /page/info_section.mas,
-   title       => 'Trial Weather',
+   title       => 'Weather at Trial Location',
    collapsible => 1,
 &>
 
