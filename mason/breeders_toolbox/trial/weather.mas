@@ -1,0 +1,15 @@
+<%args>
+$location
+</%args>
+
+<p id="trial_weather_check">[loading...]</p>
+
+<script type="text/javascript" defer="defer">
+jQuery(document).ready(function () {
+
+  jQuery.getJSON("http://weather.rtbbase.org/rest/locations",function(data){
+    console.log("got data back, here it is: "+data);
+  });
+
+});
+</script>
