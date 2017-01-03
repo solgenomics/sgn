@@ -284,7 +284,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 % if (!$has_plant_entries) {
    <button class="btn btn-default" id="create_plant_entries_button">Add plant entries</button>
    <& /breeders_toolbox/trial/add_plants_per_plot.mas, trial_id => $trial_id, trial_name => $trial_name &>
-   
+
 % } else {
 
 <& /breeders_toolbox/trial/trial_plants.mas, trial_id => $trial_id &>
@@ -299,6 +299,15 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 
 <& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+
+<&| /page/info_section.mas,
+   title       => 'Trial Weather',
+   collapsible => 1,
+&>
+
+	<& /breeders_toolbox/trial/weather.mas, location => $location_name &>
+
+</&>
 
 <&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='trial_download_phenotypes_button'>Download Trial Data</a>]" &>
 
@@ -323,7 +332,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
    collapsible => 1,
 &>
 
-	<& /breeders_toolbox/trial_jbrowse_instance.mas, trial_id => $trial_id &>
+	<& /breeders_toolbox/trial/jbrowse_instance.mas, trial_id => $trial_id &>
 
 </&>
 
