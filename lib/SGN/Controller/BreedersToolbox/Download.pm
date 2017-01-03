@@ -173,7 +173,7 @@ sub breeder_download : Path('/breeders/download/') Args(0) {
 
 sub _parse_list_from_json {
     my $list_json = shift;
-    print STDERR Dumper $list_json;
+    #print STDERR Dumper $list_json;
     my $json = new JSON;
     if ($list_json) {
         my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
@@ -210,23 +210,24 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $trait_contains = $c->req->param("trait_contains");
     my $phenotype_min_value = $c->req->param("phenotype_min_value") && $c->req->param("phenotype_min_value") ne 'null' ? $c->req->param("phenotype_min_value") : "";
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
+    my $search_type = $c->req->param("search_type") || 'fast';
 
     my @trait_list;
-    if ($trait_list && $trait_list ne 'null') { @trait_list = @{_parse_list_from_json($trait_list)}; }
+    if ($trait_list && $trait_list ne 'null') { print STDERR "trait_list: ".Dumper $trait_list."\n"; @trait_list = @{_parse_list_from_json($trait_list)}; }
     my @trait_contains_list;
-    if ($trait_contains && $trait_contains ne 'null') { @trait_contains_list = @{_parse_list_from_json($trait_contains)}; }
+    if ($trait_contains && $trait_contains ne 'null') { print STDERR "trait_contains: ".Dumper $trait_contains."\n"; @trait_contains_list = @{_parse_list_from_json($trait_contains)}; }
     my @year_list;
-    if ($year_list && $year_list ne 'null') { @year_list = @{_parse_list_from_json($year_list)}; }
+    if ($year_list && $year_list ne 'null') { print STDERR "year list: ".Dumper $year_list."\n"; @year_list = @{_parse_list_from_json($year_list)}; }
     my @location_list;
-    if ($location_list && $location_list ne 'null') { @location_list = @{_parse_list_from_json($location_list)}; }
+    if ($location_list && $location_list ne 'null') { print STDERR "location list: ".Dumper $location_list."\n"; @location_list = @{_parse_list_from_json($location_list)}; }
     my @trial_list;
-    if ($trial_list && $trial_list ne 'null') { @trial_list = @{_parse_list_from_json($trial_list)}; }
+    if ($trial_list && $trial_list ne 'null') { print STDERR "trial list: ".Dumper $trial_list."\n"; @trial_list = @{_parse_list_from_json($trial_list)}; }
     my @accession_list;
-    if ($accession_list && $accession_list ne 'null') { @accession_list = @{_parse_list_from_json($accession_list)}; }
+    if ($accession_list && $accession_list ne 'null') { print STDERR "accession list: ".Dumper $accession_list."\n";@accession_list = @{_parse_list_from_json($accession_list)}; }
     my @plot_list;
-    if ($plot_list && $plot_list ne 'null') { @plot_list = @{_parse_list_from_json($plot_list)}; }
+    if ($plot_list && $plot_list ne 'null') { print STDERR "plot list: ".Dumper $plot_list."\n"; @plot_list = @{_parse_list_from_json($plot_list)}; }
     my @plant_list;
-    if ($plant_list && $plant_list ne 'null') { @plant_list = @{_parse_list_from_json($plant_list)}; }
+    if ($plant_list && $plant_list ne 'null') { print STDERR "plant list: ".Dumper $plant_list."\n"; @plant_list = @{_parse_list_from_json($plant_list)}; }
 
     #Input list arguments can be arrays of integer ids or strings; however, when fed to CXGN::Trial::Download, they must be arrayrefs of integer ids
     my @trait_list_int;
@@ -322,6 +323,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         trait_contains => \@trait_contains_list,
         phenotype_min_value => $phenotype_min_value,
         phenotype_max_value => $phenotype_max_value,
+        search_type=>$search_type
     });
 
     my $error = $download->download();
@@ -396,6 +398,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $datalevel         = $c->req->param("phenotype_datalevel");
     my $timestamp_included = $c->req->param("timestamp") || 0;
     my $cookie_value      = $c->req->param("download_token_value");
+    my $search_type        = $c->req->param("search_type") || 'fast';
 
     my $accession_data;
     if ($accession_list_id) {
@@ -447,7 +450,8 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         trial_list=>$trial_id_data->{transform},
         accession_list=>$accession_id_data->{transform},
         include_timestamp=>$timestamp_included,
-        data_level=>$datalevel
+        data_level=>$datalevel,
+        search_type=>$search_type
     });
     my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 
