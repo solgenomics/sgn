@@ -15,7 +15,7 @@ jQuery(document).ready(function () {
     for (var i=0; i < num_locations; i++) {
       if (locations[i] == trial_location) {
         console.log("found location "+trial_location+" !\n");
-        jQuery('#trial_weather_check').html('<a href="http://weather.rtbbase.org&location='+trial_location+'">Weather for '+trial_location+'</a>')
+        jQuery('#trial_weather_check').html('<a href="http://weather.rtbbase.org?location='+trial_location+'">Weather for '+trial_location+'</a>')
       }
     }
   });
