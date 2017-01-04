@@ -129,6 +129,21 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is_deeply($response, {'result' => {'data' => [{'active' => '','studyDbId' => 142,'seasons' => ['2015'],'trialName' => undef,'startDate' => undef,'additionalInfo' => {'design' => undef,'description' => 'test_population2'},'programDbId' => undef,'studyType' => undef,'endDate' => undef,'locationDbId' => undef,'studyName' => 'test_population2','trialDbId' => undef,'programName' => undef,'locationName' => undef},{'trialName' => undef,'studyDbId' => 144,'seasons' => ['2016'],'active' => '','locationDbId' => '23','endDate' => undef,'studyType' => undef,'programDbId' => 134,'startDate' => undef,'additionalInfo' => {'design' => 'CRD','description' => 'test tets'},'programName' => 'test','trialDbId' => undef,'studyName' => 'test_t','locationName' => 'test_location'}]},'metadata' => {'pagination' => {'currentPage' => 2,'totalCount' => 8,'pageSize' => 2,'totalPages' => 4},'datafiles' => [],'status' => [{}]}}, 'studies-search');
 
+$mech->post_ok('http://localhost:3010/brapi/v1/studies-search?pageSize=2&page=0&studyLocations=test_location' );
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'result' => {'data' => [{'programDbId' => 134,'studyDbId' => 139,'seasons' => ['2014'],'locationDbId' => '23','studyType' => 'Clonal Evaluation','startDate' => undef,'trialDbId' => undef,'studyName' => 'Kasese solgs trial','locationName' => 'test_location','programName' => 'test','endDate' => undef,'trialName' => undef,'additionalInfo' => {'design' => 'Alpha','description' => 'This trial was loaded into the fixture to test solgs.'},'active' => ''},{'trialDbId' => undef,'programName' => 'test','studyName' => 'test_t','locationName' => 'test_location','endDate' => undef,'active' => '','trialName' => undef,'additionalInfo' => {'description' => 'test tets','design' => 'CRD'},'studyDbId' => 144,'programDbId' => 134,'seasons' => ['2016'],'locationDbId' => '23','startDate' => undef,'studyType' => undef}]},'metadata' => {'datafiles' => [],'pagination' => {'totalCount' => 4,'currentPage' => 0,'pageSize' => 2,'totalPages' => 2},'status' => [{}]}}, 'studies-search');
+
+$mech->post_ok('http://localhost:3010/brapi/v1/studies-search?pageSize=2&page=0&studyLocations=test_location&studyType=Clonal%20Evaluation' );
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'result' => {'data' => [{'trialDbId' => undef,'studyName' => 'Kasese solgs trial','programName' => 'test','endDate' => undef,'locationName' => 'test_location','trialName' => undef,'additionalInfo' => {'design' => 'Alpha','description' => 'This trial was loaded into the fixture to test solgs.'},'active' => '','programDbId' => 134,'studyDbId' => 139,'seasons' => ['2014'],'locationDbId' => '23','studyType' => 'Clonal Evaluation','startDate' => undef}]},'metadata' => {'datafiles' => [],'pagination' => {'totalCount' => 1,'pageSize' => 2,'totalPages' => 1,'currentPage' => 0},'status' => [{}]}}, 'studies-search');
+
+$mech->post_ok('http://localhost:3010/brapi/v1/studies-search?pageSize=2&page=0&programNames=test' );
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'metadata' => {'datafiles' => [],'pagination' => {'totalCount' => 5,'pageSize' => 2,'totalPages' => 3,'currentPage' => 0},'status' => [{}]},'result' => {'data' => [{'studyType' => 'Clonal Evaluation','startDate' => undef,'locationDbId' => '23','seasons' => ['2014'],'programDbId' => 134,'studyDbId' => 139,'trialName' => undef,'additionalInfo' => {'design' => 'Alpha','description' => 'This trial was loaded into the fixture to test solgs.'},'active' => '','studyName' => 'Kasese solgs trial','locationName' => 'test_location','programName' => 'test','endDate' => undef,'trialDbId' => undef},{'active' => '','trialName' => undef,'additionalInfo' => {'design' => undef,'description' => 'new_test_cross'},'endDate' => undef,'programName' => 'test','studyName' => 'new_test_cross','locationName' => undef,'trialDbId' => undef,'startDate' => undef,'studyType' => undef,'locationDbId' => undef,'seasons' => [undef],'studyDbId' => 135,'programDbId' => 134}]}}, 'studies-search');
+
 $mech->get_ok('http://localhost:3010/brapi/v1/locations?pageSize=1&page=1' );
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
