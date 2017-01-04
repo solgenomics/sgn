@@ -1561,12 +1561,13 @@ sub get_accessions {
 		JOIN nd_experiment using(nd_experiment_id)
 		JOIN nd_experiment_project using(nd_experiment_id)
 		JOIN project using(project_id)
-		WHERE nd_experiment.type_id IN ($field_trial_cvterm_id, $genotyping_trial_cvterm_id)
-		AND accession.type_id = $accession_cvterm_id
+		WHERE accession.type_id = $accession_cvterm_id
 		AND stock_relationship.type_id IN ($plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id)
 		AND project.project_id = ?
 		GROUP BY accession.stock_id
 		ORDER BY accession.stock_id;";
+
+#Removed nd_experiment.type_id IN ($field_trial_cvterm_id, $genotyping_trial_cvterm_id) AND
 
 	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
 	$h->execute($self->get_trial_id());
@@ -1596,7 +1597,9 @@ sub get_plants {
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 
-	my $trial_plant_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$plant_cvterm_id});
+	my $trial_plant_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$plant_cvterm_id});
+
+	# removed "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id]
 
 	my %unique_plants;
 	while(my $rs = $trial_plant_rs->next()) {
@@ -1642,7 +1645,9 @@ sub get_plots {
 	push @type_ids, $tissue_sample_cvterm_id if $tissue_sample_cvterm_id;
 
 	print STDERR "TYPE IDS: ".join(", ", @type_ids);
-	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=> { in => [@type_ids] }});
+	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=> { in => [@type_ids] }});
+
+	# removed "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id]
 
 	my %unique_plots;
 	while(my $rs = $trial_plot_rs->next()) {
@@ -1691,13 +1696,14 @@ sub get_controls {
 		JOIN nd_experiment using(nd_experiment_id)
 		JOIN nd_experiment_project using(nd_experiment_id)
 		JOIN project using(project_id)
-		WHERE nd_experiment.type_id IN ($field_trial_cvterm_id, $genotyping_trial_cvterm_id)
-		AND accession.type_id = $accession_cvterm_id
+		WHERE accession.type_id = $accession_cvterm_id
 		AND stock_relationship.type_id IN ($plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id)
 		AND project.project_id = ?
 		AND control.type_id = $control_type_id
 		GROUP BY accession.stock_id
 		ORDER BY accession.stock_id;";
+
+	#removed nd_experiment.type_id IN ($field_trial_cvterm_id, $genotyping_trial_cvterm_id) AND
 
 	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
 	$h->execute($self->get_trial_id());

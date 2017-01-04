@@ -1210,9 +1210,13 @@ sub get_shared_trials_GET :Args(1) {
                          }
                   };
 
-    my $trial_query = $bs->metadata_query($c, $criteria_list, $dataref, $queryref);
-    my %query_response = %$trial_query;
-    my $shared_trials = $query_response{'results'};
+    my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
+    if ($status->{'error'}) {
+      $c->stash->{rest} = { error => $status->{'error'}};
+      return;
+    }
+    my $trial_query = $bs->metadata_query($criteria_list, $dataref, $queryref);
+    my @shared_trials = @{$trial_query->{results}};
 
     my @formatted_rows = ();
 
@@ -1225,12 +1229,11 @@ sub get_shared_trials_GET :Args(1) {
                          'accessions' => $stock_id
                        }
                 };
-        $trial_query = $bs->metadata_query($c, $criteria_list, $dataref, $queryref);
-        %query_response = %$trial_query;
-        my $current_trials = $query_response{'results'};
-	      my $num_trials = scalar @$current_trials;
+        $trial_query = $bs->metadata_query($criteria_list, $dataref, $queryref);
+        my @current_trials = @{$trial_query->{results}};
+	      my $num_trials = scalar @current_trials;
 
-	      foreach my $t (@$current_trials) {
+	      foreach my $t (@current_trials) {
           print STDERR "t = " . Dumper($t);
           $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
 	      }
@@ -1238,10 +1241,10 @@ sub get_shared_trials_GET :Args(1) {
 	      push @formatted_rows, ['<a href="/stock/'.$stock_id.'/view">'.$uniquename.'</a>', $num_trials, $trials_string ];
     }
 
-    my $num_trials = scalar @$shared_trials;
+    my $num_trials = scalar @shared_trials;
     if ($num_trials > 0) {
 	    my $trials_string = '';
-	    foreach my $t (@$shared_trials) {
+	    foreach my $t (@shared_trials) {
 	       $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
       }
 	    $trials_string  =~ s/,\s+$//;
@@ -1250,7 +1253,7 @@ sub get_shared_trials_GET :Args(1) {
       push @formatted_rows, [ "Trials in Common", $num_trials, "No shared trials found."];
     }
 
-    $c->stash->{rest} = { data => \@formatted_rows, shared_trials => $shared_trials };
+    $c->stash->{rest} = { data => \@formatted_rows, shared_trials => \@shared_trials };
   }
 }
 

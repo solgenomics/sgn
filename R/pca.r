@@ -78,41 +78,46 @@ if (is.null(loadingsFile))
 }
 
 genoData <- fread(genoDataFile, na.strings = c("NA", " ", "--", "-", "."))
+filteredGenoFile <- grep("filtered_genotype_data_",  genoDataFile, ignore.case = TRUE, perl=TRUE, value = TRUE)
 
-#remove markers with > 60% missing marker data
-message('no of markers before filtering out: ', ncol(genoData))
-genoData[, which(colSums(is.na(genoData)) >= nrow(genoData) * 0.6) := NULL]
-message('no of markers after filtering out 60% missing: ', ncol(genoData))
+message("filtered genotype file: ", filteredGenoFile)
 
-#remove indls with > 80% missing marker data
-genoData[, noMissing := apply(.SD, 1, function(x) sum(is.na(x)))]
-genoData <- genoData[noMissing <= ncol(genoData) * 0.8]
-genoData[, noMissing := NULL]
+if (is.null(filteredGenoFile) == TRUE) {
+  #remove markers with > 60% missing marker data
+  message('no of markers before filtering out: ', ncol(genoData))
+  genoData[, which(colSums(is.na(genoData)) >= nrow(genoData) * 0.6) := NULL]
+  message('no of markers after filtering out 60% missing: ', ncol(genoData))
 
-message('no of indls after filtering out ones with 80% missing: ', nrow(genoData))
-#remove monomorphic markers
-message('marker no before monomorphic markers cleaning ', ncol(genoData))
-genoData[, which(apply(genoData, 2,  function(x) length(unique(x))) < 2) := NULL ]
-message('marker no after monomorphic markers cleaning ', ncol(genoData))
+  #remove indls with > 80% missing marker data
+  genoData[, noMissing := apply(.SD, 1, function(x) sum(is.na(x)))]
+  genoData <- genoData[noMissing <= ncol(genoData) * 0.8]
+  genoData[, noMissing := NULL]
 
-### MAF calculation ###
-calculateMAF <- function(x) {
-  a0 <-  length(x[x==0])
-  a1 <-  length(x[x==1])
-  a2 <-  length(x[x==2])
-  aT <- a0 + a1 + a2
+  message('no of indls after filtering out ones with 80% missing: ', nrow(genoData))
+  #remove monomorphic markers
+  message('marker no before monomorphic markers cleaning ', ncol(genoData))
+  genoData[, which(apply(genoData, 2,  function(x) length(unique(x))) < 2) := NULL ]
+  message('marker no after monomorphic markers cleaning ', ncol(genoData))
 
-  p   <- ((2*a0)+a1)/(2*aT)
-  q   <- 1- p
-  maf <- min(p, q)
+  ### MAF calculation ###
+  calculateMAF <- function(x) {
+    a0 <-  length(x[x==0])
+    a1 <-  length(x[x==1])
+    a2 <-  length(x[x==2])
+    aT <- a0 + a1 + a2
+
+    p   <- ((2*a0)+a1)/(2*aT)
+    q   <- 1- p
+    maf <- min(p, q)
   
-  return (maf)
+    return (maf)
 
+  }
+
+  #remove markers with MAF < 5%
+  genoData[, which(apply(genoData, 2,  calculateMAF) < 0.05) := NULL ]
+  message('marker no after MAF cleaning ', ncol(genoData))
 }
-
-#remove markers with MAF < 5%
-genoData[, which(apply(genoData, 2,  calculateMAF) < 0.05) := NULL ]
-message('marker no after MAF cleaning ', ncol(genoData))
 
 genoData           <- as.data.frame(genoData)
 rownames(genoData) <- genoData[, 1]

@@ -256,15 +256,16 @@ jQuery(document).ready(function ($) {
             alert('adding a project');
             save_project_info(name, year, desc);
         }
-        if (method_to_use == "create_with_upload") {
-            var uploadFile = $("#trial_upload_file").val();
-            $('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
-            if (uploadFile === '') {
-                alert("Please select a file");
-                return;
-            }
-            $("#create_new_trial_form").submit();
-        }
+        //DEPRECATED: use js/CXGN/BreedersToolbox/UploadTrial.js
+        //if (method_to_use == "create_with_upload") {
+        //    var uploadFile = $("#trial_upload_file").val();
+        //    $('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
+        //    if (uploadFile === '') {
+        //        alert("Please select a file");
+        //        return;
+        //    }
+        //    $("#create_new_trial_form").submit();
+        //}
         if (method_to_use == "create_with_design_tool") {
             //generate_experimental_design(name,year,desc);
             generate_experimental_design();
