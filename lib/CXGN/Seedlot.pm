@@ -1,26 +1,63 @@
 
+=head1 NAME
+
+CXGN::Seedlot - a class to represent seedlots in the database
+
+=head1 DESCRIPTION
+
+CXGN::Seedlot inherits from CXGN::Stock. The required fields are:
+
+uniquename
+
+location_code
+
+Seed transactions can be added using CXGN::Seedlot::Transaction.
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=head1 ACCESSORS & METHODS 
+
+=cut
+
 package CXGN::Seedlot;
 
 use Moose;
+
+extends 'CXGN::Stock';
+
 use Data::Dumper;
+use CXGN::Seedlot::Transaction;
+use CXGN::BreedersToolbox::Projects;
+use SGN::Model::Cvterm;
 
-has 'schema' => ( isa => 'Bio::Chado::Schema',
-		  is => 'rw',
-		  required => 1,
-    );
+=head2 Accessor seedlot_id()
 
-has 'seedlot_id' => ( isa => 'Int',
+the database id of the seedlot. Is equivalent to stock_id.
+
+=cut
+
+has 'seedlot_id' => ( isa => 'Maybe[Int]',
 		      is => 'rw',
-		      predicate => 'has_seedlot_id',
     );
 
-has 'name' => ( isa => 'Str',
-		is  => 'rw',
-    );
+=head2 Accessor location_code()
+
+A string specifiying where the seedlot is stored. On the backend,
+this is stored int he description field.
+
+=cut
 
 has 'location_code' => ( isa => 'Str',
 		    is => 'rw',
     );
+
+=head2 Accessor cross()
+
+The cross this seedlot is associated with. Not yet implemented.
+
+=cut
 
 has 'cross' => ( isa => 'CXGN::Cross',
 		 is => 'rw',
@@ -30,49 +67,177 @@ has 'cross_stock_id' =>   ( isa => 'Int',
 			    is => 'rw',
     );
 
-has 'accession' =>        ( isa => 'CXGN::Chado::Stock',
-			    is => 'rw',
+=head2 Accessor accessions()
+
+The accessions this seedlot is associated with.
+
+=cut
+
+has 'accessions' =>        ( isa => 'ArrayRef',
+			    is => 'rw',  # for setter, use accession_stock_id
     );
 
-has 'accession_stock_id' => (isa => 'Int',
+has 'accession_stock_ids' => (isa => 'ArrayRef',
 			     is => 'rw',
     );
 
-has 'organism_id' =>      ( isa => 'Int',
-			    is => 'rw',
-			    default => 1,
-    );
+=head2 Accessor transactions()
+
+a ArrayRef of CXGN::Seedlot::Transaction objects
+
+=cut
 
 has 'transactions' =>     ( isa => 'ArrayRef',
 			    is => 'rw',
 			    default => sub { [] },
     );
 
-has 'breeding_program' => ( isa => 'Str',
-			    is => 'rw',
-			    
-    );
 
+after 'stock_id' => sub { 
+    my $self = shift;
+    my $id = shift;
+    return $self->seedlot_id($id);
+};
+
+# class method
+=head2 Class method: list_seedlots()
+
+ Usage:        my $seedlots = CXGN::Seedlot->list_seedlots($schema);
+ Desc:         Class method that returns information on all seedlots 
+               available in the system
+ Ret:          ArrayRef of [ seedlot_id, seedlot name, location_code] 
+ Args:         $schema - Bio::Chado::Schema object
+ Side Effects: accesses the database
+
+=cut
+
+sub list_seedlots { 
+    my $class = shift;
+    my $schema = shift;
+    
+    my $seedlots;
+    
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+    print STDERR "TYPE_ID = $type_id\n";
+    my $rs = $schema->resultset("Stock::Stock")->search( { type_id => $type_id });
+    while (my $row = $rs->next()) { 
+	push @$seedlots, [ $row->stock_id, $row->uniquename, $row->description];
+    }
+    return $seedlots;
+}
+
+sub BUILDARGS { 
+    my $orig = shift;
+    my %args = @_;
+    $args{stock_id} = $args{seedlot_id};
+    return \%args;
+}
 
 sub BUILD {
     my $self = shift;
-    
-    if ($self->has_seedlot_id()) { 
-	my $row = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->seedlot_id() });
-	$self->name($row->uniquename());
-	$self->location_code($row->description());
-	
-	$self->transactions( 
-	    CXGN::Seedlot::Transaction->get_transactions_by_seedlot_id(
-		$self->schema(), $self->seedlot_id()
-	    ));
+
+    if ($self->seedlot_id()) { 
+	$self->name($self->uniquename());
+	$self->location_code($self->description());
+	$self->seedlot_id($self->stock_id());
+	$self->accession_stock_ids($self->_retrieve_accession());
+	$self->breeding_program($self->_retrieve_breeding_program());
+	#$self->cross($self->_retrieve_cross());
+
+	my $transactions = CXGN::Seedlot::Transaction->get_transactions_by_seedlot_id(
+	    $self->schema(), $self->seedlot_id());
+	print STDERR Dumper($transactions);
+	$self->transactions($transactions);
     }
 }
 
-sub associate_breeding_program { 
+
+sub _store_cross { 
+    my $self = shift;
+    
+    
+
+
+}
+
+sub _retrieve_cross {
     my $self = shift;
 
 }
+
+sub _remove_cross {
+    my $self = shift;
+    
+    
+    
+}
+
+sub _store_accession { 
+    my $self = shift;
+
+    eval { 
+	my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
+	
+	if ($self->accession_stock_ids()) { 
+	    foreach my $a (@{$self->accession_stock_ids()}) { 
+		my $already_exists = $self->schema()->resultset("Stock::StockRelationship")
+		    ->find( { object_id => $self->seedlot_id(), type_id => $type_id });
+		
+		if ($already_exists) { 
+		    print STDERR "Accession with id $a is already associated with seedlot id ".$self->seedlot_id()."\n";
+		    next; 
+		}
+		my $row = $self->schema()->resultset("Stock::StockRelationship")->create( 
+		    { 
+			object_id => $self->seedlot_id(),
+			subject_id => $a,
+			type_id => $type_id,
+		    });
+	    }
+	}
+    };
+    
+    if ($@) { 
+	die $@;
+    }    
+}
+
+sub _retrieve_accession { 
+    my $self = shift;
+    
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
+
+    my $rs = $self->schema()->resultset("Stock::StockRelationship")->search( { type_id => $type_id, object_id => $self->seedlot_id() } );
+
+    my @accession_ids;
+    while (my $row = $rs->next()) { 
+	push @accession_ids, $row->subject_id();
+    }
+
+    $self->accession_stock_ids(\@accession_ids);
+
+    $rs = $self->schema()->resultset("Stock::Stock")->search( { stock_id => { in => \@accession_ids }});
+    my @names;
+    while (my $s = $rs->next()) { 
+	push @names, $s->uniquename();
+    }
+    $self->accessions(\@names);
+}
+
+sub _remove_accession {
+    my $self = shift;
+}
+
+=head2 Method current_count()
+
+ Usage:        my $current_count = $sl->current_count();
+ Desc:         returns the current balance of seeds in the seedlot
+ Ret:          a number
+ Args:         none
+ Side Effects: retrieves transactions from db and calculates count
+ Example:
+
+=cut
 
 sub current_count { 
     my $self = shift;
@@ -84,8 +249,8 @@ sub current_count {
     }
     return $count;
 }
- 
-sub add_transaction { 
+
+sub _add_transaction { 
     my $self = shift;
     my $transaction = shift;
 
@@ -95,44 +260,47 @@ sub add_transaction {
     $self->transactions($transactions);
 }
 
+=head2 store()
+
+ Usage:        my $seedlot_id = $sl->store();
+ Desc:         stores the current state of the object to the db
+ Ret:          the seedlot id.
+ Args:         none
+ Side Effects: accesses the db. Creates a new seedlot ID if not
+               already existing.
+ Example:
+
+=cut
+
 sub store { 
     my $self = shift;
 
+    print STDERR "storing: UNIQUENAME=".$self->uniquename()."\n";
+    $self->description($self->location_code());
+    $self->name($self->uniquename());
+
     my $type_id = $self->schema()->resultset("Cv::Cvterm")->
 	find( { name => "seedlot" })->cvterm_id();
-
+    $self->type_id($type_id);
     
-    
-    if (! $self->has_seedlot_id()) { 
-	my $row = $self->schema()->resultset("Stock::Stock")->create( 
-	    { 
-		description => $self->location_code(),
-		uniquename => $self->name(),
-		name => $self->name(),
-		type_id => $type_id,	
-	    });
-	
-	$row->update();
-	
-	my $stock_id = $row->stock_id();
-	$self->seedlot_id($stock_id);
+    my $id = $self->SUPER::store();
 
-	foreach my $t (@{$self->transactions()}) { 
+    print STDERR "Saving seedlot returned ID $id.\n";
+    $self->seedlot_id($id);
 
-	    print STDERR Dumper($self->transactions());
-	    $t->store();
-	}
+    $self->_store_breeding_program();
+    $self->_store_accession();
+    $self->_store_cross();
+
+    foreach my $t (@{$self->transactions()}) { 
 	
-	return $stock_id;
-    }
-    
-    else { 
-    
-	die "Update not implemented yet.";
-
-    }
-	
-
+	print STDERR Dumper($self->transactions());
+	$t->store();
+    }    
+    return $self->seedlot_id();
 }
 
 1;
+
+no Moose;
+__PACKAGE__->meta->make_immutable;
