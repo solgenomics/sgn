@@ -283,7 +283,7 @@ jQuery(document).ready(function ($) {
         if (design_method == "CRD") {
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
-            //$("#plotNaming_options").show();
+            $("#FieldMap").show();
             //$("#fieldmap_options").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").hide();
@@ -304,6 +304,7 @@ jQuery(document).ready(function ($) {
         } else if (design_method == "RCBD") {
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
+            $("#FieldMap").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#crbd_show_list_of_checks_section").show();
             $("#show_list_of_checks_section").hide();
@@ -321,6 +322,7 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").hide();
             $('#greenhouse_default_num_plants_per_accession').hide();
         } else if (design_method == "Alpha") {
+            $("#FieldMap").show();
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
@@ -340,6 +342,7 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").hide();
             $('#greenhouse_default_num_plants_per_accession').hide();
         } else if (design_method == "Augmented") {
+            $("#FieldMap").hide();
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
@@ -359,6 +362,7 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").hide();
             $('#greenhouse_default_num_plants_per_accession').hide();
         } else if (design_method == "") {
+            $("#FieldMap").hide();
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").hide();
             $("#crbd_show_list_of_checks_section").hide();
@@ -381,6 +385,7 @@ jQuery(document).ready(function ($) {
         }
 
         else if (design_method == "MAD") {
+            $("#FieldMap").hide();
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
@@ -413,6 +418,7 @@ jQuery(document).ready(function ($) {
         }
 
         else if (design_method == 'greenhouse') {
+            $("#FieldMap").hide();
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
             $("#show_list_of_checks_section").hide();
