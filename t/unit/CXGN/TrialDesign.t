@@ -108,13 +108,14 @@ ok(%design = %{$trial_design->get_design()}, "Get trial design with a negative p
 
 
 
-#tests for Alpha Lattice design
+#tests for Alpha Lattice design (fail)
 ok($trial_design->set_design_type("Alpha"), "Set design type to Alpha Lattice");
 ok($trial_design->set_block_size($block_size), "Set block size for trial design");
 is_deeply($trial_design->get_block_size(),$block_size, "Get block size for trial design");
 ok($trial_design->set_number_of_reps($number_of_reps), "Set number of reps for trial design");
 is_deeply($trial_design->get_number_of_reps(),$number_of_reps, "Get number of reps for trial design");
 ok($trial_design->calculate_design(), "Calculate Alpha Lattice trial design");
+ok(%design = %{$trial_design->get_design()}, "Get Alpha trial design");
 $trial_design->set_block_size(2);
 throws_ok { $trial_design->calculate_design() } '/Block size must be greater than 2/', 'Block size is larger than 2 test for alpha lattice design';
 #throws_ok { $trial_design->calculate_design() } '/is not divisible by the block size/', 'Does not allow number of stocks that is not divisible by block size';
@@ -124,6 +125,25 @@ $trial_design->set_block_size($block_size);
 $trial_design->set_number_of_reps(1);
 throws_ok { $trial_design->calculate_design() } '/Number of reps for alpha lattice design must be 2 or greater/', 'Does not allow less than 2 reps for alpha lattice design';
 $trial_design->set_number_of_reps($number_of_reps);
+
+#tests for Alpha Lattice design (pass)
+@stock_names = ("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T");
+ok($trial_design->set_stock_list(\@stock_names), "Set stock names for trial design");
+is_deeply($trial_design->get_stock_list(),\@stock_names, "Get stock names for trial design");
+ok($trial_design->set_design_type("Alpha"), "Set design type to Alpha Lattice");
+ok($trial_design->set_block_size(5), "Set block size for trial design");
+#is_deeply($trial_design->get_block_size(),$block_size, "Get block size for trial design");
+ok($trial_design->set_number_of_reps(4), "Set number of reps for trial design");
+#is_deeply($trial_design->get_number_of_reps(),$number_of_reps, "Get number of reps for trial design");
+ok($trial_design->set_plot_start_number($plot_start_number), "Set plot start number for trial design");
+is_deeply($trial_design->get_plot_start_number(),$plot_start_number, "Get plot start number for trial design");
+ok($trial_design->set_plot_number_increment($plot_number_increment), "Set plot number increment for trial design");
+is_deeply($trial_design->get_plot_number_increment(),$plot_number_increment, "Get plot number increment for trial design");
+ok($trial_design->calculate_design(), "Calculate Alpha Lattice trial design");
+ok(%design = %{$trial_design->get_design()}, "Get Alpha trial design");
+ok($design{'101'}->{row_number} == 1, "First plot row_number is 1");
+ok($design{'101'}->{col_number} == 1, "First plot col_number is 1");
+print STDERR Dumper \%design;
 
 
 #tests for Augmented design
