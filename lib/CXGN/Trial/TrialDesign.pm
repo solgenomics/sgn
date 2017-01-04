@@ -175,6 +175,11 @@ sub _get_genotyping_plate {
 
 }
 
+sub isint{
+  my $val = shift;
+  return ($val =~ m/^\d+$/);
+}
+
 sub _get_crd_design {
     my $self = shift;
     my %crd_design;
@@ -220,11 +225,6 @@ sub _get_crd_design {
         $number_of_reps = $self->get_number_of_reps();
     } else {
         die "Number of reps not specified\n";
-    }
-
-    sub isint{
-      my $val = shift;
-      return ($val =~ m/^\d+$/);
     }
 
     if ($self->has_fieldmap_col_number()) {
@@ -390,10 +390,6 @@ sub _get_rcbd_design {
   } else {
     die "Number of blocks not specified\n";
   }
-  sub isint{
-    my $val = shift;
-    return ($val =~ m/^\d+$/);
-  }
 
   if ($self->has_fieldmap_col_number()) {
     $fieldmap_col_number = $self->get_fieldmap_col_number();
@@ -542,11 +538,6 @@ sub _get_alpha_lattice_design {
     }
   } else {
     die "Number of reps not specified\n";
-  }
-
-  sub isint{
-      my $val = shift;
-      return ($val =~ m/^\d+$/);
   }
 
   if ($self->has_fieldmap_col_number()) {
