@@ -437,16 +437,17 @@ sub structure_output_details {
 	my $population_page = $base . "solgs/population/$pop_id";
 	$c->stash->{pop_id} = $pop_id;
 
-	$solgs_controller->phenotype_file($c);	
-	$solgs_controller->genotype_file($c);
+	$solgs_controller->phenotype_file_name($c);	
+	$solgs_controller->genotype_file_name($c);
+	
 	$solgs_controller->get_project_details($c, $pop_id);
 
 	$output_details{'population_id_' . $pop_id} = {
 		'population_page' => $population_page,
 		'population_id'   => $pop_id,
 		'population_name' => $c->stash->{project_name},
-		'phenotype_file'  => $c->stash->{phenotype_file},
-		'genotype_file'   => $c->stash->{genotype_file},  
+		'phenotype_file'  => $c->stash->{phenotype_file_name},
+		'genotype_file'   => $c->stash->{genotype_file_name},  
 		'data_set_type'   => $c->stash->{data_set_type},
 	};		
     }

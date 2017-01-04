@@ -423,6 +423,7 @@ jQuery(document).ready(function ($) {
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
             $("#show_list_of_checks_section").hide();
+            $("#crbd_show_list_of_checks_section").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").hide();
             $("#block_size_section").hide();
