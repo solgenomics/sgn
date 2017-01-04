@@ -8,7 +8,13 @@ CXGN::Trial::Search - an object to handle searching for trials given criteria
 
 my $trial_search = CXGN::Trial::Search->new({
     bcs_schema=>$schema,
-    location_list=>$location_list,
+    location_list=>\@locations,
+    program_list=>\@breeding_programs,
+    year_list=>\@years,
+    trial_type_list=>\@trial_types,
+    trial_id_list=>\@trial_ids,
+    trial_name_list=>\@trial_names,
+    trial_name_is_exact=>1
 });
 my $result = $trial_search->search();
 
