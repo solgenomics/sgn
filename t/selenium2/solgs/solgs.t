@@ -8,6 +8,7 @@ use SGN::Test::WWW::WebDriver;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 
+`rm -r /tmp/localhost/`;
 
 $d->get_ok('/solgs', 'solgs home page');
 
@@ -45,13 +46,13 @@ sleep(5);
 $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
 sleep(5);
 $d->find_element_ok('run_pheno_correlation', 'id', 'run pheno correlation')->click();
-sleep(10);
+sleep(30);
 $d->find_element_ok('dry matter content percentage', 'link_text', 'build model')->click();
 sleep(3);
 $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
 sleep(30);
 $d->find_element_ok('run_pca', 'id', 'run pca')->click();
-sleep(20);
+sleep(40);
 
 
 
