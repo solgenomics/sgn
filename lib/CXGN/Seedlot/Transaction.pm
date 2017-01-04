@@ -3,6 +3,7 @@ package CXGN::Seedlot::Transaction;
 
 use Moose;
 use JSON::Any;
+use SGN::Model::Cvterm;
 
 has 'schema' => ( isa => 'Bio::Chado::Schema',
 		  is => 'rw',
@@ -63,19 +64,23 @@ sub get_transactions_by_seedlot_id {
     my $schema = shift;
     my $seedlot_id = shift;
 
-    my $rs = $schema->resultset("Stock::StockRelationship")->search({ subject_id => $seedlot_id });
-
+    print STDERR "Get transactions by seedlot...\n";
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seed transaction", "stock_relationship")->cvterm_id();
+    my $rs = $schema->resultset("Stock::StockRelationship")->search({ subject_id => $seedlot_id , type_id => $type_id });
+    print STDERR "Found ".$rs->count()." transactions...\n";    
     my @transactions;
     while (my $row = $rs->next()) { 
+
 	my $t_obj = CXGN::Seedlot::Transaction->new( schema => $schema, transaction_id => $row->stock_relationship_id() );
-	
+
 	push @transactions, $t_obj;
     }
 
-    $rs = $schema->resultset("Stock::StockRelationship")->search({ object_id => $seedlot_id });
+    $rs = $schema->resultset("Stock::StockRelationship")->search({ object_id => $seedlot_id, type_id => $type_id });
 
     while (my $row = $rs->next()) { 
 	my $t_obj = CXGN::Seedlot::Transaction->new( schema => $schema, transaction_id => $row->stock_relationship_id() );
+	print STDERR "Found negative transaction...\n";
 	$t_obj->factor(-1);
 	push @transactions, $t_obj;
     }
@@ -124,10 +129,12 @@ sub store {
 			date => $self->date(),
 			operator => $self->operator(),
 		    }),
-		      }) 
+	    });
+	return $row->stock_relationship_id();
     }
     
     else { 
+        # update not implemented yet.
     }	
 }
 
