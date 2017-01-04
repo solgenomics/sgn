@@ -16,9 +16,10 @@ my $schema = $f->bcs_schema;
 my $mech = Test::WWW::Mechanize->new;
 my $response;
 
-$mech->post_ok('http://localhost:3010/ajax/search/trials' );
+$mech->post_ok('http://localhost:3010/ajax/search/trials?nd_geolocation=not_provided' );
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
+
 is_deeply($response, {'data' => [
 ['<a href="/breeders_toolbox/trial/139">Kasese solgs trial</a>','This trial was loaded into the fixture to test solgs.','test',undef,'2014','test_location','Clonal Evaluation','Alpha'],
 ['<a href="/breeders_toolbox/trial/135">new_test_cross</a>','new_test_cross','test',undef,undef,undef,undef,undef],

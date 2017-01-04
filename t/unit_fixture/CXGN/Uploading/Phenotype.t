@@ -3026,7 +3026,8 @@ my $phenotypes_search = CXGN::Phenotypes::Search->new({
     plot_list=>\@plot_ids,
     include_timestamp=>0,
     phenotype_min_value=>1,
-    phenotype_max_value=>100
+    phenotype_max_value=>100,
+		search_type=>'complete'
 });
 my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 #print STDERR Dumper \@data;
@@ -3058,7 +3059,8 @@ my $phenotypes_search = CXGN::Phenotypes::Search->new({
     include_timestamp=>1,
     trait_contains=>['r'],
     phenotype_min_value=>20,
-    phenotype_max_value=>100
+    phenotype_max_value=>100,
+		search_type=>'complete'
 });
 my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 #print STDERR Dumper \@data;
@@ -3109,7 +3111,8 @@ my $phenotypes_search = CXGN::Phenotypes::Search->new({
     include_timestamp=>1,
     trait_contains=>['r','t'],
     phenotype_min_value=>20,
-    phenotype_max_value=>80
+    phenotype_max_value=>80,
+		search_type=>'complete'
 });
 my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 #print STDERR Dumper \@data;
@@ -3122,7 +3125,7 @@ foreach my $line (@data){
 	$line = join "\t", @line_array;
 	push @test_result, $line;
 }
-#print STDERR Dumper \@test_result;
+print STDERR Dumper \@test_result;
 
 is_deeply(\@test_result, [
           'studyYear	studyDbId	studyName	studyDesign	locationDbId	locationName	germplasmDbId	germplasmName	germplasmSynonyms	observationLevel	variable	observationUnitName	replicate	blockNumber	plotNumber	dry matter content percentage|CO:0000092	fresh root weight|CO:0000012	fresh shoot weight measurement in kg|CO:0000016	sprouting proportion|CO:0000008',
@@ -3156,4 +3159,3 @@ is_deeply(\@test_result, [
         ], 'pheno search test3');
 
 done_testing();
-

@@ -222,7 +222,10 @@ sub search {
         push @where_clause, $columns{'accession_id'}." in ($accession_sql)";
     }
 
-    if ($self->plot_list && scalar(@{$self->plot_list})>0) {
+    if (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->plant_list && scalar(@{$self->plant_list})>0)) {
+        my $plot_and_plant_sql = _sql_from_arrayref($self->plot_list) .",". _sql_from_arrayref($self->plant_list);
+        push @where_clause, $columns{'plot_id'}." in ($plot_and_plant_sql)";
+    } elsif ($self->plot_list && scalar(@{$self->plot_list})>0) {
         my $plot_sql = _sql_from_arrayref($self->plot_list);
         push @where_clause, $columns{'plot_id'}." in ($plot_sql)";
     } elsif ($self->plant_list && scalar(@{$self->plant_list})>0) {
@@ -254,15 +257,15 @@ sub search {
         }
     }
     if ($self->phenotype_min_value && !$self->phenotype_max_value) {
-        push @where_clause, "phenotype_value::real >= ".$self->phenotype_min_value;
+        push @where_clause, $columns{'phenotype_value'}."::real >= ".$self->phenotype_min_value;
         push @where_clause, $columns{'phenotype_value'}."~\'$numeric_regex\'";
     }
     if ($self->phenotype_max_value && !$self->phenotype_min_value) {
-        push @where_clause, "phenotype_value::real <= ".$self->phenotype_max_value;
+        push @where_clause, $columns{'phenotype_value'}."::real <= ".$self->phenotype_max_value;
         push @where_clause, $columns{'phenotype_value'}."~\'$numeric_regex\'";
     }
     if ($self->phenotype_max_value && $self->phenotype_min_value) {
-        push @where_clause, "phenotype_value::real BETWEEN ".$self->phenotype_min_value." AND ".$self->phenotype_max_value;
+        push @where_clause, $columns{'phenotype_value'}."::real BETWEEN ".$self->phenotype_min_value." AND ".$self->phenotype_max_value;
         push @where_clause, $columns{'phenotype_value'}."~\'$numeric_regex\'";
     }
 
