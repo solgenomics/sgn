@@ -36,12 +36,19 @@ sub search : Path('/ajax/search/trials') Args(0) {
     my $data = $trial_search->search();
     my @result;
     foreach (@$data){
+        my $folder_string = '';
+        if ($_->{folder_name}){
+            $folder_string = "<a href=\"/folder/$_->{folder_id}\">$_->{folder_name}</a>";
+        }
         push @result,
           [
-"<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
-            $_->{description}, $_->{breeding_program_name},
-            $_->{folder_name},            $_->{year},
-            $_->{location_name},          $_->{trial_type},
+            "<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
+            $_->{description},
+            $_->{breeding_program_name},
+            $folder_string,
+            $_->{year},
+            $_->{location_name},
+            $_->{trial_type},
             $_->{design}
           ];
     }
