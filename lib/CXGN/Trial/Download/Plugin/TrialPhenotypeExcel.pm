@@ -32,6 +32,7 @@ sub download {
     my $year_list = $self->year_list;
     my $phenotype_min_value = $self->phenotype_min_value();
     my $phenotype_max_value = $self->phenotype_max_value();
+    my $search_type = $self->search_type();
 
     $self->trial_download_log($trial_id, "trial phenotypes");
 
@@ -48,7 +49,8 @@ sub download {
         phenotype_min_value=>$phenotype_min_value,
         phenotype_max_value=>$phenotype_max_value,
         location_list=>$location_list,
-        year_list=>$year_list
+        year_list=>$year_list,
+        search_type=>$search_type
     });
     my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
     #print STDERR Dumper \@data;
