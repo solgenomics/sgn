@@ -123,10 +123,8 @@ if (datasetInfo == 'combined populations') {
       dropColumns <- grep(trait, names(phenoData), ignore.case = TRUE, value = TRUE)
       phenoTrait  <- phenoData[, !(names(phenoData) %in% dropColumns)]
    
-      phenoTrait            <- as.data.frame(phenoTrait)
-      row.names(phenoTrait) <- phenoTrait[, 1]
-      phenoTrait[, 1]       <- NULL     
-      colnames(phenoTrait)  <- trait
+      phenoTrait            <- as.data.frame(phenoTrait)   
+      colnames(phenoTrait)  <- c('genotypes', trait)
     }
    
 } else {
@@ -347,7 +345,6 @@ if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size !=
 
 
 #impute genotype values for obs with missing values,
-#based on mean of neighbouring 10 (arbitrary) obs
 genoDataMissing <- c()
 
 if (sum(is.na(genoData)) > 0) {
@@ -406,6 +403,7 @@ if (length(predictionData) != 0) {
 #change genotype coding to [-1, 0, 1], to use the A.mat ) if  [0, 1, 2]
 genoTrCode <- grep("2", genoDataFilteredObs[1, ], value = TRUE)
 if(length(genoTrCode) != 0) {
+  genoData            <- genoData - 1
   genoDataFilteredObs <- genoDataFilteredObs - 1
 }
 
@@ -438,15 +436,13 @@ if (length(relationshipMatrixFile) != 0) {
 
     rownames(relationshipMatrix) <- relationshipMatrix[, 1]
     relationshipMatrix[, 1]      <- NULL
+    colnames(relationshipMatrix) <- rownames(relationshipMatrix)
     relationshipMatrix           <- data.matrix(relationshipMatrix)
+  } else {
+    relationshipMatrix           <- A.mat(genoData)
+    diag(relationshipMatrix)     <- diag(relationshipMatrix) + 1e-6
+    colnames(relationshipMatrix) <- rownames(relationshipMatrix)
   }
-}
-
-if (length(relationshipMatrixFile) != 0) {
-  if (file.info(relationshipMatrixFile)$size == 0) {
-    relationshipMatrix <- A.mat(genoData)  
-  }
- 
 }
 
 relationshipMatrix         <- round(relationshipMatrix, 2)
@@ -454,13 +450,12 @@ relationshipMatrixFiltered <- relationshipMatrix[(rownames(relationshipMatrix) %
 relationshipMatrixFiltered <- relationshipMatrixFiltered[, (colnames(relationshipMatrixFiltered) %in% rownames(commonObs))]
 relationshipMatrix         <- data.frame(relationshipMatrix)
 
-
 if (length(predictionData) == 0) {
 
   trGEBV  <- kin.blup(data  = phenoTrait,
-                     geno  = 'genotypes',
-                     pheno = trait,
-                     K     = relationshipMatrixFiltered
+                      geno  = 'genotypes',
+                      pheno = trait,
+                      K     = relationshipMatrixFiltered
                      )
 
   trGEBVu <- trGEBV$g
@@ -508,9 +503,9 @@ if (length(predictionData) == 0) {
         rownames(combinedGebvs) <- combinedGebvs[,1]
         combinedGebvs[,1]       <- NULL
 
-        colnames(ordered.iGEBV) <- c(trait)
+        colnames(ordered.trGEBV) <- c(trait)
       
-        traitGEBV <- as.data.frame(ordered.iGEBV)
+        traitGEBV <- as.data.frame(ordered.trGEBV)
         allGebvs <- merge(combinedGebvs, traitGEBV,
                           by = 0,
                           all = TRUE                     
