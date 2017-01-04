@@ -200,7 +200,7 @@ $breeding_programs
                                 </div>
 
                                 <hr>
-                                <div class="form-group"  >
+                                <div class="form-group"  id="FieldMap">
                                     <label class="col-sm-4 control-label">Field map display: </label>
                                     <div class="col-sm-8" >
                                         <input type="checkbox" id="show_field_map_options" />
@@ -215,7 +215,7 @@ $breeding_programs
                                         </div>
                                     </div> -->
                                     <div class="form-group form-group-sm" >
-                                        <label class="col-sm-7 control-label">Number of rows (uses rep/block number by default): </label>
+                                        <label class="col-sm-7 control-label">Number of rows (optional): </label>
                                         <div class="col-sm-5" >
                                           <input type="text" class="form-control" id="fieldMap_row_number" name="fieldMap_row_number" />
                                         </div>
@@ -225,7 +225,7 @@ $breeding_programs
                                         <div class="col-sm-5" >
                                           <select class="form-control" id="plot_layout_format" name="plot_layout_format">
                                             <option value="">select plot layout format</option>
-                                            <option value=zigzag>Zigzag</option>
+                                            <option value=zigzag>Zigzag(unserpentine)</option>
                                             <option value=serpentine>Serpentine</option>
                                           </select>
                                         </div>
