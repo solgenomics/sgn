@@ -28,7 +28,7 @@ my $randomization_method = "Super-Duper";
 my $randomization_seed = 1;
 my $design_type = "CRD";
 my %design;
-my $fieldmap_row_number = "3";
+my $fieldmap_row_number = 2;
 my $plot_layout_format = "serpentine";
 
 ok(my $trial_design = CXGN::Trial::TrialDesign->new(), "Create TrialDesign object");
@@ -62,6 +62,8 @@ ok($trial_design->calculate_design(), "Calculate CRD trial design");
 ok(%design = %{$trial_design->get_design()}, "Get CRD trial design");
 ok($design{$plot_start_number}->{block_number} == 1, "Block number for first plot in CRD is 1");
 ok($design{$plot_start_number+((scalar(@stock_names)-1)*$plot_number_increment)}->{block_number} == 1, "Block number for last plot in CRD is 1");
+ok($design{'101'}->{row_number} == 1, "First plot row_number is 1");
+ok($design{'101'}->{col_number} == 1, "First plot col_number is 1");
 
 print Dumper(\%design);
 
@@ -71,6 +73,8 @@ is_deeply($trial_design->get_number_of_blocks(),$number_of_blocks, "Get number o
 ok($trial_design->set_design_type("RCBD"), "Set design type to RCBD");
 ok($trial_design->calculate_design(), "Calculate RCBD trial design");
 ok(%design = %{$trial_design->get_design()}, "Get RCBD trial design");
+ok($design{'101'}->{row_number} == 1, "First plot row_number is 1");
+ok($design{'101'}->{col_number} == 1, "First plot col_number is 1");
 is(scalar(keys %design), scalar(@stock_names) * $number_of_blocks,"Result of RCBD design has a number of plots equal to the number of stocks times the number of blocks");
 
 print STDERR $stock_names[0] ."($plot_start_number) vs. ".$design{$plot_start_number}->{stock_name}."\n";
@@ -130,6 +134,7 @@ is_deeply($trial_design->get_control_list(),\@control_names, "Get control names 
 ok($trial_design->set_maximum_block_size($maximum_block_size), "Set maximum block size for trial design");
 is_deeply($trial_design->get_maximum_block_size(),$maximum_block_size, "Get maximum block size for trial design");
 ok($trial_design->calculate_design(), "Calculate Augmented trial design");
+
 
 #tests for MAD design
 #$trial_design->set_number_of_rows(10);
