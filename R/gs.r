@@ -477,7 +477,7 @@ if (length(predictionData) == 0) {
 
   traitPhenoData   <- data.frame(round(phenoTraitMarker, 2))   
 
-  heritability  <- round((trGEBV$Vg/trGEBV$Ve), 2)
+  heritability  <- round((trGEBV$Vg/(trGEBV$Ve + trGEBV$Vg)), 2)
 
   cat("\n", file = varianceComponentsFile,  append = FALSE)
   cat('Error variance', trGEBV$Ve, file = varianceComponentsFile, sep = "\t", append = TRUE)
