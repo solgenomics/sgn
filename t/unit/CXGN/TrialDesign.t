@@ -28,6 +28,8 @@ my $randomization_method = "Super-Duper";
 my $randomization_seed = 1;
 my $design_type = "CRD";
 my %design;
+my $fieldmap_row_number = "3";
+my $plot_layout_format = "serpentine";
 
 ok(my $trial_design = CXGN::Trial::TrialDesign->new(), "Create TrialDesign object");
 $trial_design->set_trial_name("TESTTRIAL");
@@ -47,6 +49,11 @@ ok($trial_design->set_randomization_seed($randomization_seed), "Set randomizatio
 is_deeply($trial_design->get_randomization_seed(),$randomization_seed, "Get randomization seed for trial design");
 ok($trial_design->set_design_type($design_type), "Set design type for trial design");
 is_deeply($trial_design->get_design_type(),$design_type, "Get design type for trial design");
+ok($trial_design->set_plot_layout_format($plot_layout_format), "Set layout format for trial design");
+is_deeply($trial_design->get_plot_layout_format(),$plot_layout_format, "Get layout format for trial design");
+ok($trial_design->set_fieldmap_row_number($fieldmap_row_number), "Set row number for trial design");
+is_deeply($trial_design->get_fieldmap_row_number(),$fieldmap_row_number, "Get row number for trial design");
+
 
 #tests for CRD
 $trial_design->set_number_of_reps(1);
@@ -97,7 +104,7 @@ ok(%design = %{$trial_design->get_design()}, "Get trial design with a negative p
 
 
 
-#tests for Alpha Lattice design	
+#tests for Alpha Lattice design
 ok($trial_design->set_design_type("Alpha"), "Set design type to Alpha Lattice");
 ok($trial_design->set_block_size($block_size), "Set block size for trial design");
 is_deeply($trial_design->get_block_size(),$block_size, "Get block size for trial design");
@@ -127,7 +134,7 @@ ok($trial_design->calculate_design(), "Calculate Augmented trial design");
 #tests for MAD design
 #$trial_design->set_number_of_rows(10);
 #$trial_design->set_block_row_numbers(2);
-#$trial_design->set_block_col_numbers(2); 
+#$trial_design->set_block_col_numbers(2);
 #$trial_design->set_number_of_blocks(5);
 #ok($trial_design->set_design_type("MAD"), "Set design type to Augmented");
 #ok($trial_design->set_control_list(\@control_names), "Set control names for trial design");
