@@ -13,6 +13,7 @@ use SGN::Model::Cvterm;
 use DateTime;
 use Data::Dumper;
 use CXGN::Phenotypes::Search;
+use CXGN::BreederSearch;
 
 my $f = SGN::Test::Fixture->new();
 
@@ -3018,6 +3019,25 @@ foreach my $plot (@plots) {
 	push @plot_ids, $stock_id;
 }
 
+my @phenosearch_test1_data = [
+          'studyYear	studyDbId	studyName	studyDesign	locationDbId	locationName	germplasmDbId	germplasmName	germplasmSynonyms	observationLevel	observationUnitDbId	observationUnitName	replicate	blockNumber	plotNumber	dry matter content percentage|CO:0000092	dry yield|CO:0000014	flower|CO:0000111	fresh root weight|CO:0000012	fresh shoot weight measurement in kg|CO:0000016	harvest index variable|CO:0000015	root number counting|CO:0000011	sprouting proportion|CO:0000008	top yield|CO:0000017',
+          '2014	137	test_trial	CRD	23	test_location	38843	test_accession4		plot	38857	test_trial21	1	1	1	35	42		15	20		3	45	2',
+          '2014	137	test_trial	CRD	23	test_location	38842	test_accession3	test_accession3_synonym1	plot	38866	test_trial210	3	1	10	30	12		15	29	9.8		45	2',
+          '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plot	38867	test_trial211	3	1	11	38	13		15	30	10.8	4	2	4',
+          '2014	137	test_trial	CRD	23	test_location	38844	test_accession5		plot	38868	test_trial212	3	1	12	39	42		15	31	11.8	6	56	7',
+          '2014	137	test_trial	CRD	23	test_location	38841	test_accession2	test_accession2_synonym1,test_accession2_synonym2	plot	38869	test_trial213	2	1	13	35	35	1	15	32	12.8	8	8	4.4',
+          '2014	137	test_trial	CRD	23	test_location	38843	test_accession4		plot	38870	test_trial214	3	1	14	30	32	1	15	33	13.8	4	87	7.5',
+          '2014	137	test_trial	CRD	23	test_location	38841	test_accession2	test_accession2_synonym1,test_accession2_synonym2	plot	38871	test_trial215	3	1	15	38	31	1	15	34	14.8	5	25	7',
+          '2014	137	test_trial	CRD	23	test_location	38844	test_accession5		plot	38858	test_trial22	1	1	2	30	45	1	15	21	1.8	7	43	3',
+          '2014	137	test_trial	CRD	23	test_location	38842	test_accession3	test_accession3_synonym1	plot	38859	test_trial23	1	1	3	38	41	1	15	22	2.8	4	23	5',
+          '2014	137	test_trial	CRD	23	test_location	38842	test_accession3	test_accession3_synonym1	plot	38860	test_trial24	2	1	4	39	14	1	15	23	3.8	11	78	7',
+          '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plot	38861	test_trial25	1	1	5	35	25	1	15	24	4.8	6	56	2',
+          '2014	137	test_trial	CRD	23	test_location	38843	test_accession4		plot	38862	test_trial26	2	1	6	30		1	15	25	5.8	4	45	4',
+          '2014	137	test_trial	CRD	23	test_location	38844	test_accession5		plot	38863	test_trial27	2	1	7	38		1	15	26	6.8	8	34	9',
+          '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plot	38864	test_trial28	2	1	8	39	41		15	27	7.8	9	23	6',
+          '2014	137	test_trial	CRD	23	test_location	38841	test_accession2	test_accession2_synonym1,test_accession2_synonym2	plot	38865	test_trial29	1	1	9	35	24	1	15	28	8.8	6	76	3'
+        ];
+
 my $phenotypes_search = CXGN::Phenotypes::Search->new({
     bcs_schema=>$f->bcs_schema,
     data_level=>'plot',
@@ -3026,28 +3046,33 @@ my $phenotypes_search = CXGN::Phenotypes::Search->new({
     plot_list=>\@plot_ids,
     include_timestamp=>0,
     phenotype_min_value=>1,
-    phenotype_max_value=>100
+    phenotype_max_value=>100,
+		search_type=>'complete'
 });
 my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 #print STDERR Dumper \@data;
-is_deeply(\@data, [
-          'studyYear	studyDbId	studyName	studyDesign	locationDbId	locationName	germplasmDbId	germplasmName	germplasmSynonyms	observationLevel	observationUnitDbId	observationUnitName	replicate	blockNumber	plotNumber	dry matter content percentage|CO:0000092	dry yield|CO:0000014	flower|CO:0000111	fresh root weight|CO:0000012	fresh shoot weight measurement in kg|CO:0000016	harvest index variable|CO:0000015	root number counting|CO:0000011	sprouting proportion|CO:0000008	top yield|CO:0000017',
-          '2014	137	test_trial	CRD	23	test_location	38843	test_accession4		plot	38857	test_trial21	1	1	1	35	42		15	20		3	45	2',
-          '2014	137	test_trial	CRD	23	test_location	38842	test_accession3	test_accession3_synonym1	plot	38866	test_trial210	3	1	10	12	12		15	29	9.8		45	2',
-          '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plot	38867	test_trial211	3	1	11	45	13		15	30	10.8	4	2	4',
-          '2014	137	test_trial	CRD	23	test_location	38844	test_accession5		plot	38868	test_trial212	3	1	12	46	42		47	21	11.8	6	56	7',
-          '2014	137	test_trial	CRD	23	test_location	38841	test_accession2	test_accession2_synonym1,test_accession2_synonym2	plot	38869	test_trial213	2	1	13	35	35	1	15	32	12.8	8	8	4.4',
-          '2014	137	test_trial	CRD	23	test_location	38843	test_accession4		plot	38870	test_trial214	3	1	14	30	32	1	15	33	13.8	4	87	7.5',
-          '2014	137	test_trial	CRD	23	test_location	38841	test_accession2	test_accession2_synonym1,test_accession2_synonym2	plot	38871	test_trial215	3	1	15	49	31	1	15	24	14.8	5	25	7',
-          '2014	137	test_trial	CRD	23	test_location	38844	test_accession5		plot	38858	test_trial22	1	1	2	30	45	1	37	21	1.8	7	43	3',
-          '2014	137	test_trial	CRD	23	test_location	38842	test_accession3	test_accession3_synonym1	plot	38859	test_trial23	1	1	3	38	41	1	15	22	2.8	4	23	5',
-          '2014	137	test_trial	CRD	23	test_location	38842	test_accession3	test_accession3_synonym1	plot	38860	test_trial24	2	1	4	39	14	1	15	23	3.8	11	78	7',
-          '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plot	38861	test_trial25	1	1	5	35	25	1	15	24	4.8	6	56	2',
-          '2014	137	test_trial	CRD	23	test_location	38843	test_accession4		plot	38862	test_trial26	2	1	6	30		1	15	25	5.8	4	45	4',
-          '2014	137	test_trial	CRD	23	test_location	38844	test_accession5		plot	38863	test_trial27	2	1	7	38		1	15	26	6.8	8	34	9',
-          '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plot	38864	test_trial28	2	1	8	39	41		15	27	7.8	9	23	6',
-          '2014	137	test_trial	CRD	23	test_location	38841	test_accession2	test_accession2_synonym1,test_accession2_synonym2	plot	38865	test_trial29	1	1	9	35	24	1	15	28	8.8	6	76	3'
-        ], 'pheno search test1');
+is_deeply(\@data, @phenosearch_test1_data, 'pheno search test1 complete');
+
+my $bs = CXGN::BreederSearch->new( { dbh=> $f->dbh() });
+my $refresh = 'SELECT refresh_materialized_views()';
+my $h = $f->dbh->prepare($refresh);
+$h->execute();
+
+my $phenotypes_search = CXGN::Phenotypes::Search->new({
+    bcs_schema=>$f->bcs_schema,
+    data_level=>'plot',
+    trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
+    trial_list=>[137,900],
+    plot_list=>\@plot_ids,
+    include_timestamp=>0,
+    phenotype_min_value=>1,
+    phenotype_max_value=>100,
+		search_type=>'fast'
+});
+my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
+#print STDERR Dumper \@data;
+is_deeply(\@data, @phenosearch_test1_data, 'pheno search test1 fast');
+
 
 my $phenotypes_search = CXGN::Phenotypes::Search->new({
     bcs_schema=>$f->bcs_schema,
@@ -3058,7 +3083,8 @@ my $phenotypes_search = CXGN::Phenotypes::Search->new({
     include_timestamp=>1,
     trait_contains=>['r'],
     phenotype_min_value=>20,
-    phenotype_max_value=>100
+    phenotype_max_value=>100,
+		search_type=>'complete'
 });
 my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 #print STDERR Dumper \@data;
@@ -3109,7 +3135,8 @@ my $phenotypes_search = CXGN::Phenotypes::Search->new({
     include_timestamp=>1,
     trait_contains=>['r','t'],
     phenotype_min_value=>20,
-    phenotype_max_value=>80
+    phenotype_max_value=>80,
+		search_type=>'complete'
 });
 my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 #print STDERR Dumper \@data;
@@ -3130,15 +3157,15 @@ is_deeply(\@test_result, [
           '2014	137	test_trial	CRD	23	test_location	38842	test_accession3	test_accession3_synonym1	plot	variable	test_trial210	3	1	10	30	45	29	45',
           '2014	137	test_trial	CRD	23	test_location	38842	test_accession3	test_accession3_synonym1	plant	variable	test_trial210_plant_1	3	1	10	28	38',
           '2014	137	test_trial	CRD	23	test_location	38842	test_accession3	test_accession3_synonym1	plant	variable	test_trial210_plant_2	3	1	10	29',
-          '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plot	variable	test_trial211	3	1	11	45	46	30',
+          '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plot	variable	test_trial211	3	1	11	38	46	30',
           '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plant	variable	test_trial211_plant_1	3	1	11	30	40',
           '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plant	variable	test_trial211_plant_2	3	1	11	31	41',
-          '2014	137	test_trial	CRD	23	test_location	38843	test_accession4		plot	variable	test_trial214	3	1	14	30	49	23',
+          '2014	137	test_trial	CRD	23	test_location	38843	test_accession4		plot	variable	test_trial214	3	1	14	30	49	33',
           '2014	137	test_trial	CRD	23	test_location	38843	test_accession4		plant	variable	test_trial214_plant_1	3	1	14	36	46',
           '2014	137	test_trial	CRD	23	test_location	38843	test_accession4		plant	variable	test_trial214_plant_2	3	1	14	37	47',
           '2014	137	test_trial	CRD	23	test_location	38843	test_accession4		plant	variable	test_trial21_plant_1	1	1	1	42,2016-01-07 12:08:24-0500	20',
           '2014	137	test_trial	CRD	23	test_location	38843	test_accession4		plant	variable	test_trial21_plant_2	1	1	1	42,2016-01-07 12:08:24-0500	21',
-          '2014	137	test_trial	CRD	23	test_location	38842	test_accession3	test_accession3_synonym1	plot	variable	test_trial23	1	1	3	37	38	22	23',
+          '2014	137	test_trial	CRD	23	test_location	38842	test_accession3	test_accession3_synonym1	plot	variable	test_trial23	1	1	3	38	38	22	23',
           '2014	137	test_trial	CRD	23	test_location	38842	test_accession3	test_accession3_synonym1	plant	variable	test_trial23_plant_1	1	1	3	41,2016-01-07 12:08:27-0500	24',
           '2014	137	test_trial	CRD	23	test_location	38842	test_accession3	test_accession3_synonym1	plant	variable	test_trial23_plant_2	1	1	3	41,2016-01-07 12:08:27-0500	25',
           '2014	137	test_trial	CRD	23	test_location	38842	test_accession3	test_accession3_synonym1	plot	variable	test_trial24	2	1	4	39	39	23	78',
@@ -3147,13 +3174,12 @@ is_deeply(\@test_result, [
           '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plot	variable	test_trial25	1	1	5	35	40	24	56',
           '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plant	variable	test_trial25_plant_1	1	1	5		28',
           '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plant	variable	test_trial25_plant_2	1	1	5		29',
-          '2014	137	test_trial	CRD	23	test_location	38843	test_accession4		plot	variable	test_trial26	2	1	6	30	41	25,2016-02-11 16:12:20-0500	45',
+          '2014	137	test_trial	CRD	23	test_location	38843	test_accession4		plot	variable	test_trial26	2	1	6	30	41	25	45',
           '2014	137	test_trial	CRD	23	test_location	38843	test_accession4		plant	variable	test_trial26_plant_1	2	1	6	20	30',
           '2014	137	test_trial	CRD	23	test_location	38843	test_accession4		plant	variable	test_trial26_plant_2	2	1	6	21',
-          '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plot	variable	test_trial28	2	1	8	42	43	27,2016-02-11 13:12:20-0500	23',
+          '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plot	variable	test_trial28	2	1	8	39	43	27	23',
           '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plant	variable	test_trial28_plant_1	2	1	8		34',
           '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plant	variable	test_trial28_plant_2	2	1	8	25	35'
         ], 'pheno search test3');
 
 done_testing();
-
