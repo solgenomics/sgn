@@ -138,7 +138,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 <td>
 <div id="planting_date">
 % if ($planting_date) {
-  <a href="/calendar/personal?currentDate=<% $planting_date %>" target="_blank"><% $planting_date %></a>
+  <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $planting_date %>" ><% $planting_date %></a>
 % } else {
 %  print "[No Planting Date]";
 % }
@@ -151,7 +151,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 <td>
 <div id="harvest_date">
 % if ($harvest_date) {
-  <a href="/calendar/personal?currentDate=<% $harvest_date %>" target="_blank"><% $harvest_date %></a>
+  <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $harvest_date %>" ><% $harvest_date %></a>
 % } else {
 %  print "[No Harvest Date]";
 % }
