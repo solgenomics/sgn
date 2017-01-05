@@ -53,37 +53,37 @@ has 'data_level' => (
 );
 
 has 'trial_list' => (
-    isa => 'ArrayRef|Undef',
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
 
 has 'trait_list' => (
-    isa => 'ArrayRef|Undef',
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
 
 has 'accession_list' => (
-    isa => 'ArrayRef|Undef',
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
 
 has 'plot_list' => (
-    isa => 'ArrayRef|Undef',
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
 
 has 'plant_list' => (
-    isa => 'ArrayRef|Undef',
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
 
 has 'location_list' => (
-    isa => 'ArrayRef|Undef',
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
 
 has 'year_list' => (
-    isa => 'ArrayRef|Undef',
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
 
@@ -94,7 +94,7 @@ has 'include_timestamp' => (
 );
 
 has 'trait_contains' => (
-    isa => 'ArrayRef|Undef',
+    isa => 'ArrayRef[Str]|Undef',
     is => 'rw'
 );
 
