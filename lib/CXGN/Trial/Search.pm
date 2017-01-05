@@ -33,6 +33,7 @@ use Moose;
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
+use CXGN::Calendar;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
