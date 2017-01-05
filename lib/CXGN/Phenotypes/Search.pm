@@ -213,7 +213,7 @@ sub search {
 
     my $from_clause = $columns{'from_clause'};
 
-    my $order_clause = " ORDER BY 2,7";
+    my $order_clause = " ORDER BY 2,7,19 DESC";
 
     my @where_clause;
 
@@ -340,9 +340,9 @@ sub get_extended_phenotype_info_matrix {
         }
 
         #my $cvterm = $trait."|".$cvterm_accession;
-        if ($include_timestamp && $timestamp_value) {
+        if ((!exists($plot_data{$plot_id}->{$cvterm})) && $include_timestamp && $timestamp_value) {
             $plot_data{$plot_id}->{$cvterm} = "$value,$timestamp_value";
-        } else {
+        } elsif (!exists($plot_data{$plot_id}->{$cvterm})) {
             $plot_data{$plot_id}->{$cvterm} = $value;
         }
         my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
