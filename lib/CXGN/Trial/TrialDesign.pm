@@ -180,6 +180,17 @@ sub isint{
   return ($val =~ m/^\d+$/);
 }
 
+sub _validate_field_colNumber {
+  my $colNum = shift;
+  if (isint($colNum)){
+    return $colNum;
+  } else {
+      die "Choose a different row number for field map generation. The product of number of accessions and rep when divided by row number should give an integer\n";
+      return;
+  }
+
+}
+
 sub _get_crd_design {
     my $self = shift;
     my %crd_design;
@@ -233,11 +244,13 @@ sub _get_crd_design {
     if ($self->has_fieldmap_row_number()) {
       $fieldmap_row_number = $self->get_fieldmap_row_number();
       my $colNumber = ((scalar(@stock_list) * $number_of_reps)/$fieldmap_row_number);
-      if (isint($colNumber)){
-        $fieldmap_col_number = $colNumber;
-      } else {
-          die "Choose a different row number for field map generation. The product of number of accessions and rep when divided by row number should give an integer\n";
-      }
+      $fieldmap_col_number = _validate_field_colNumber($colNumber);
+
+      #if (isint($colNumber)){
+        #$fieldmap_col_number = $colNumber;
+      #} else {
+      #    die "Choose a different row number for field map generation. The product of number of accessions and rep when divided by row number should give an integer\n";
+      #}
     }
 
     if ($self->has_plot_layout_format()) {
@@ -397,11 +410,7 @@ sub _get_rcbd_design {
   if ($self->has_fieldmap_row_number()) {
     $fieldmap_row_number = $self->get_fieldmap_row_number();
     my $colNumber = ((scalar(@stock_list) * $number_of_blocks)/$fieldmap_row_number);
-      if (isint($colNumber)){
-        $fieldmap_col_number = $colNumber;
-      } else {
-          die "Choose a different row number for field map generation. The product of number of accessions and block when divided by row number should give an integer\n";
-      }
+    $fieldmap_col_number = _validate_field_colNumber($colNumber);
   }
   if ($self->has_plot_layout_format()) {
     $plot_layout_format = $self->get_plot_layout_format();
@@ -575,11 +584,7 @@ sub _get_alpha_lattice_design {
   if ($self->has_fieldmap_row_number()) {
     $fieldmap_row_number = $self->get_fieldmap_row_number();
       my $colNumber = ((scalar(@stock_list) * $number_of_reps)/$fieldmap_row_number);
-      if (isint($colNumber)){
-        $fieldmap_col_number = $colNumber;
-      } else {
-          die "Choose a different row number for field map generation. The product of number of accessions and rep when divided by row number should give an integer\n";
-      }
+      $fieldmap_col_number = _validate_field_colNumber($colNumber);
   }
   if ($self->has_plot_layout_format()) {
     $plot_layout_format = $self->get_plot_layout_format();
