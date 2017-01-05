@@ -13,7 +13,6 @@ library(stringr)
 library(lme4)
 library(randomForest)
 library(data.table)
-#library(genetics)
 
 allArgs <- commandArgs()
 
@@ -382,9 +381,6 @@ phenoTraitMarker           <- as.data.frame(phenoTrait)
 rownames(phenoTraitMarker) <- phenoTraitMarker[, 1]
 phenoTraitMarker[, 1]      <- NULL
 
-#traitPhenoData   <- data.frame(round(phenoTrait, 2))           
-#genoDataFilteredObs <- data.matrix(genoDataFilteredObs)
-
 #impute missing data in prediction data
 predictionDataMissing <- c()
 if (length(predictionData) != 0) {
@@ -414,7 +410,6 @@ if (length(predictionData) != 0 ) {
   }
 }
 
-# phenoTrait <- phenoTraitMarker
 ordered.markerEffects <- c()
 ordered.trGEBV        <- c()
 validationAll         <- c()
@@ -445,7 +440,6 @@ if (length(relationshipMatrixFile) != 0) {
   }
 }
 
-relationshipMatrix         <- round(relationshipMatrix, 2)
 relationshipMatrixFiltered <- relationshipMatrix[(rownames(relationshipMatrix) %in% rownames(commonObs)), ]
 relationshipMatrixFiltered <- relationshipMatrixFiltered[, (colnames(relationshipMatrixFiltered) %in% rownames(commonObs))]
 relationshipMatrix         <- data.frame(relationshipMatrix)
