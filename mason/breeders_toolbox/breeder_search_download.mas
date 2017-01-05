@@ -108,7 +108,7 @@
 	</div>
 	</td>
 	<td>
-	<div class="well well-sm pull-right" style="min-width: 200px;overflow:auto;"><div><p id="selected_accessions">No accessions selected</p><p id="selected_genotyping_protocols">No genotyping protocols selected</p></div>
+	<div class="well well-sm pull-right" style="min-width: 200px;overflow:auto;"><div><p id="selected_accessions">No accessions selected</p><p id="selected_genotyping_protocols">No genotyping protocols selected. Default wull be used.</p></div>
 	</td>
 	</tr>
 </table>

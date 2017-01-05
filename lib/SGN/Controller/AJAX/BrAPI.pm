@@ -1817,8 +1817,16 @@ sub markerprofile_search_process {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
+    my @germplasm_ids;
+    my @study_ids;
     my $germplasm = $c->req->param("germplasmDbId");
+    if ($germplasm){
+        push @germplasm_ids, $germplasm;
+    }
     my $study = $c->req->param("studyDbId");
+    if ($study){
+        push @study_ids, $study;
+    }
     my $extract = $c->req->param("extract");
     my $method = $c->req->param("methodDbId");
     my $status = $c->stash->{status};
@@ -1826,55 +1834,34 @@ sub markerprofile_search_process {
     my @data;
     my %result;
 
-    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
-
-    my %search_params;
-    $search_params{'genotypeprops.type_id'} = $snp_genotyping_cvterm_id;
-    if ($germplasm) {
-        $search_params{'stock.stock_id'} = $germplasm;
-    }
-    if ($method) {
-        $search_params{'nd_protocol.nd_protocol_id'} = $method;
-    }
-    if ($study) {
-        $search_params{'nd_experiment_projects.project_id'} = $study;
-    }
-    my @select_list = ('genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id', 'stock.uniquename');
-    my @select_as_list = ('genotypeprop_id', 'value', 'protocol_name', 'stock_id', 'uniquename');
-    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-        \%search_params,
-        {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_projects'}, {'nd_experiment_stocks' => 'stock'} ],
-        select=> \@select_list,
-        as=> \@select_as_list,
-        order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
-        }
-    );
-
     if ($extract) {
         $message .= 'Extract not supported';
     }
 
-    if ($rs) {
-      my $rs_slice = $rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
-      while (my $row = $rs_slice->next()) {
-          my $genotype_json = $row->get_column('value');
-          my $genotype = JSON::Any->decode($genotype_json);
+    my $genotypes_search = CXGN::Genotype::Search->new({
+        bcs_schema=>$self->bcs_schema,
+        accession_list=>\@germplasm_ids,
+        trial_list=>\@study_ids,
+        protocol_id=>$method,
+        offset=>$c->stash->{page_size}*$c->stash->{current_page},
+        limit=>$c->stash->{page_size}*($c->stash->{current_page}+1)-1
+    });
+    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
-          push @data, {
-              markerProfileDbId => $row->get_column('genotypeprop_id'),
-              germplasmDbId => $row->get_column('stock_id'),
-              uniqueDisplayName => $row->get_column('uniquename'),
-              extractDbId => "",
-              sampleDbId => "",
-              analysisMethod => $row->get_column('protocol_name'),
-              resultCount => scalar(keys(%$genotype))
-          };
-      }
+    foreach (@$genotypes){
+        push @data, {
+            markerProfileDbId => $_->{markerprofileDbId},
+            germplasmDbId => $_->{germplasmDbId},
+            uniqueDisplayName => $_->{germplasmName},
+            extractDbId => "",
+            sampleDbId => "",
+            analysisMethod => $_->{analysisMethod},
+            resultCount => $_->{resultCount}
+        };
     }
 
-    my $total_count = $rs->count();
-
     %result = (data => \@data);
+    $status->{'code'} = 'message';
     $status->{'message'} = $message;
     my @datafiles;
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);

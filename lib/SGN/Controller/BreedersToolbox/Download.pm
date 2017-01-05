@@ -621,12 +621,21 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   my $dl_token = $c->req->param("token") || "no_token";
   my $dl_cookie = "download".$dl_token;
 
-  my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id);
+  my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $trial_id_string, @trial_ids);
+
+  $trial_id_string = $c->req->param("trial_ids");
+  if ($trial_id_string){
+      @trial_ids = split(',', $trial_id_string);
+  }
 
   if ($format eq 'accession_ids') {       #use protocol id and accession ids supplied directly
     $id_string = $c->req->param("ids");
     @accession_ids = split(',',$id_string);
     $protocol_id = $c->req->param("protocol_id");
+    if (!$protocol_id){
+        my $default_genotyping_protocol = $c->config->{default_genotyping_protocol};
+        $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
+    }
   }
   elsif ($format eq 'list_id') {        #get accession names from list and tranform them to ids
 
@@ -659,10 +668,10 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   my $genotypes_search = CXGN::Genotype::Search->new({
       bcs_schema=>$schema,
       accession_list=>\@accession_ids,
+      trial_list=>\@trial_ids,
       protocol_id=>$protocol_id
   });
-  my $resultset = $genotypes_search->get_genotype_info();
-  my $genotypes = $resultset->{genotypes};
+  my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
   if (scalar(@$genotypes) == 0) {
     my $error = "No genotype data was found for @accession_list, and protocol with id $protocol_id. You can determine which accessions have been genotyped with a given protocol by using the search wizard.";
@@ -673,16 +682,14 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   }
 
   print $TEMP "# Downloaded from ".$c->config->{project_name}.": ".localtime()."\n"; # print header info
-  print $TEMP "# Protocol: id=$protocol_id, name=".$resultset->{protocol_name}."\n";
+  print $TEMP "# Protocol Id=$protocol_id, Accession List: ".join(',',@accession_list).", Accession Ids: $id_string, Trial Ids: $trial_id_string \n";
   print $TEMP "Marker\t";
 
   print STDERR "Decoding genotype data ...".localtime()."\n";
-  my $json = JSON::XS->new->allow_nonref;
 
   for (my $i=0; $i < scalar(@$genotypes) ; $i++) {       # loop through resultset, printing accession uniquenames as column headers and storing decoded gt strings in array of hashes
-    print $TEMP $genotypes->[$i][0] . "\t";
-    my $genotype_hash = $json->decode($genotypes->[$i][1]);
-    push(@accession_genotypes, $genotype_hash);
+    print $TEMP $genotypes->[$i]->{germplasmName} . "\t";
+    push(@accession_genotypes, $genotypes->[$i]->{genotype_hash});
   }
   @unsorted_markers = keys   %{ $accession_genotypes[0] };
   print $TEMP "\n";
@@ -800,8 +807,8 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
         trial_list=>$trial_id_data->{transform},
         protocol_id=>$protocol_id
     });
-    my $resultset = $genotypes_search->get_genotype_info();
-    my $data = $resultset->{genotypes};
+    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+    my $data = $genotypes;
 	$output = "";
 
 
@@ -810,7 +817,7 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
 
      for (my $i=0; $i < scalar(@$data) ; $i++)
      {
-      my $decoded = decode_json($data->[$i][1]);
+      my $decoded = $genotypes->[$i]->{genotype_hash};
       push(@AoH, $decoded);
      }
 
