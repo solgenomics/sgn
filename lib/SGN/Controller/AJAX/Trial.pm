@@ -129,6 +129,9 @@ sub generate_experimental_design_POST : Args(0) {
   my $start_number =  $c->req->param('start_number');
   my $increment =  $c->req->param('increment');
   my $trial_location = $c->req->param('trial_location');
+  my $fieldmap_col_number = $c->req->param('fieldmap_col_number');
+  my $fieldmap_row_number = $c->req->param('fieldmap_row_number');
+  my $plot_layout_format = $c->req->param('plot_layout_format');
   #my $trial_name = $c->req->param('project_name');
   my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
   my $use_same_layout = $c->req->param('use_same_layout');
@@ -281,6 +284,15 @@ my $location_number = scalar(@locations);
   if (!$trial_design->has_design_type()) {
     $c->stash->{rest} = {error => "Design type not supported." };
     return;
+  }
+  if ($fieldmap_col_number) {
+    $trial_design->set_fieldmap_col_number($fieldmap_col_number);
+  }
+  if ($fieldmap_row_number) {
+    $trial_design->set_fieldmap_row_number($fieldmap_row_number);
+  }
+  if ($plot_layout_format) {
+    $trial_design->set_plot_layout_format($plot_layout_format);
   }
 
   try {

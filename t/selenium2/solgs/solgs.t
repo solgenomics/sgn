@@ -10,8 +10,10 @@ my $d = SGN::Test::WWW::WebDriver->new();
 
 `rm -r /tmp/localhost/`;
 
-$d->get_ok('/solgs', 'solgs home page');
 
+$d->while_logged_in_as("submitter", sub {
+
+$d->get_ok('/solgs', 'solgs home page');
 sleep(2);
 
 $d->find_element_ok('D', 'link_text', 'index of solgs traits')->click();
@@ -53,8 +55,22 @@ $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
 sleep(30);
 $d->find_element_ok('run_pca', 'id', 'run pca')->click();
 sleep(40);
-
-
+  
+$d->find_element_ok('//select[@id="prediction_genotypes_list_select"]/option[text()="trial2 NaCRRI clones"]', 'xpath', 'select list tr pop')->click();
+sleep(10);
+$d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list tr pop')->click();
+sleep(30);
+$d->find_element_ok('//table[@id="uploaded_selection_pops_table"]/tbody/tr[2]/td[2]/a', 'xpath', 'select list tr pop')->click();  
+sleep(40);
+$d->find_element_ok('//table[@id="uploaded_selection_pops_table"]/tbody/tr[2]/td[2]/a', 'xpath', 'go sl pop page')->click();  
+sleep(40);
+$d->find_element_ok('run_pca', 'id', 'run pca')->click();
+sleep(40);
+$d->find_element_ok('compare_gebvs', 'id', 'compare gebvs')->click();
+sleep(20);
+$d->find_element_ok('normalLegend', 'id', 'gebvs plot gebvs legend');
+sleep(20);  
+});
 
 
 done_testing();
