@@ -118,8 +118,10 @@ window.onload = function initialize() {
         var data_level = jQuery("#download_wizard_phenotypes_level_option").val();
         var phenotype_min_value = jQuery("#download_wizard_phenotype_phenotype_min").val();
         var phenotype_max_value = jQuery("#download_wizard_phenotype_phenotype_max").val();
+        var search_type = jQuery('input[name=search_type]:checked').val();
+
         if (selected_trials.length !== 0 || selected_locations.length !== 0 || selected_accessions.length !== 0 || selected_traits.length !== 0 || selected_plots.length !== 0 || selected_plants.length !== 0 || selected_years.length !== 0) {
-            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(selected_trials)+"&format="+format+"&trait_list="+JSON.stringify(selected_traits)+"&accession_list="+JSON.stringify(selected_accessions)+"&plot_list="+JSON.stringify(selected_plots)+"&plant_list="+JSON.stringify(selected_plants)+"&location_list="+JSON.stringify(selected_locations)+"&year_list="+JSON.stringify(selected_years)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array) );
+            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(selected_trials)+"&format="+format+"&trait_list="+JSON.stringify(selected_traits)+"&accession_list="+JSON.stringify(selected_accessions)+"&plot_list="+JSON.stringify(selected_plots)+"&plant_list="+JSON.stringify(selected_plants)+"&location_list="+JSON.stringify(selected_locations)+"&year_list="+JSON.stringify(selected_years)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&search_type="+search_type);
         } else {
             alert("No filters selected for download.");
         }
@@ -411,7 +413,7 @@ function pasteList() {
       var ids = lo.transform2Ids(list_id, data);
       //if (window.console) console.log("list_ids="+JSON.stringify(ids));
       if (ids === undefined) {
-        report_list_start_error("Unable to retrieve ids from this list.");
+        report_list_start_error("Unable to retrieve ids from this list. Has this list been validated using the list manager?");
         return;
       }
       for (var n=0; n<elements.length; n++) { // format ids and names of list elements to display

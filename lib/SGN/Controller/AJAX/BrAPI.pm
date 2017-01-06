@@ -12,6 +12,8 @@ use CXGN::Trial::TrialLayout;
 use CXGN::Chado::Stock;
 use CXGN::Login;
 use CXGN::Trial::TrialCreate;
+use CXGN::Trial::Search;
+use CXGN::Location::LocationLookup;
 use JSON qw( decode_json );
 use Data::Dumper;
 use Try::Tiny;
@@ -586,12 +588,15 @@ sub germplasm_search_process {
     my $status = $c->stash->{status};
     my $message = '';
 
-    my $germplasm_name = $params->{germplasmName};
-    my $accession_number = $params->{accessionNumber};
+    my @germplasm_names = $params->{germplasmName};
+    @germplasm_names = grep {$_ ne undef} @germplasm_names;
+    my @accession_numbers = $params->{accessionNumber};
+    @accession_numbers = grep {$_ ne undef} @accession_numbers;
     my $genus = $params->{germplasmGenus};
     my $subtaxa = $params->{germplasmSubTaxa};
     my $species = $params->{germplasmSpecies};
-    my $germplasm_id = $params->{germplasmDbId};
+    my @germplasm_ids = $params->{germplasmDbId};
+    @germplasm_ids = grep {$_ ne undef} @germplasm_ids;
     my $permplasm_pui = $params->{germplasmPUI};
     my $match_method = $params->{matchMethod};
     my %result;
@@ -614,29 +619,42 @@ sub germplasm_search_process {
     $search_params{'me.type_id'} = $accession_type_cvterm_id;
     $order_params{'-asc'} = 'me.stock_id';
 
-    if ($germplasm_name && (!$match_method || $match_method eq 'exact')) {
-        $search_params{'me.uniquename'} = $germplasm_name;
+    if (@germplasm_names && scalar(@germplasm_names)>0){
+        if (!$match_method || $match_method eq 'exact') {
+            $search_params{'me.uniquename'} = \@germplasm_names;
+        } elsif ($match_method eq 'wildcard') {
+            my @wildcard_names;
+            foreach (@germplasm_names) {
+                $_ =~ tr/*?/%_/;
+                push @wildcard_names, $_;
+            }
+            $search_params{'me.uniquename'} = { 'ilike' => \@wildcard_names };
+        }
     }
-    if ($germplasm_name && $match_method eq 'wildcard') {
-        $germplasm_name =~ tr/*?/%_/;
-        $search_params{'me.uniquename'} = { 'ilike' => $germplasm_name };
+
+    if (@germplasm_ids && scalar(@germplasm_ids)>0){
+        if (!$match_method || $match_method eq 'exact') {
+            $search_params{'me.stock_id'} = \@germplasm_ids;
+        } elsif ($match_method eq 'wildcard') {
+            my @wildcard_ids;
+            foreach (@germplasm_ids) {
+                $_ =~ tr/*?/%_/;
+                push @wildcard_ids, $_;
+            }
+            $search_params{'me.stock_id::varchar(255)'} = { 'ilike' => \@wildcard_ids };
+        }
     }
-    if ($germplasm_id && (!$match_method || $match_method eq 'exact')) {
-        $search_params{'me.stock_id'} = $germplasm_id;
-    }
-    if ($germplasm_id && $match_method eq 'wildcard') {
-        $germplasm_id =~ tr/*?/%_/;
-        $search_params{'me.stock_id::varchar(255)'} = { 'ilike' => $germplasm_id };
-    }
+
     #print STDERR Dumper \%search_params;
     #$self->bcs_schema->storage->debug(1);
-    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, { 'order_by'=> \%order_params } );
     my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'stock_synonym', 'stock_property')->cvterm_id();
-    if ($accession_number) {
+    my %extra_params = ('+select'=>['me.uniquename'], '+as'=>['accession_number'], 'order_by'=> \%order_params);
+    if (@accession_numbers && scalar(@accession_numbers)>0) {
         $search_params{'stockprops.type_id'} = $synonym_id;
-        $search_params{'stockprops.value'} = $accession_number;
-        $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, { 'join'=>{'stockprops'}, 'order_by'=> \%order_params } );
+        $search_params{'stockprops.value'} = \@accession_numbers;
+        %extra_params = ('join'=>{'stockprops'}, '+select'=>['stockprops.value'], '+as'=>['accession_number'], 'order_by'=> \%order_params);
     }
+    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, \%extra_params );
 
     my @data;
     if ($rs) {
@@ -647,7 +665,7 @@ sub germplasm_search_process {
                 germplasmDbId=>$stock->stock_id,
                 defaultDisplayName=>$stock->uniquename,
                 germplasmName=>$stock->uniquename,
-                accessionNumber=>$accession_number,
+                accessionNumber=>$stock->get_column('accession_number'),
                 germplasmPUI=>$c->config->{main_production_site_url}."/stock/".$stock->stock_id."/view",
                 pedigree=>germplasm_pedigree_string($self->bcs_schema(), $stock->stock_id),
                 germplasmSeedSource=>'',
@@ -655,7 +673,7 @@ sub germplasm_search_process {
                 commonCropName=>$stock->search_related('organism')->first()->common_name(),
                 instituteCode=>'',
                 instituteName=>'',
-                biologicalStatusOfAccessionCode=>'400',
+                biologicalStatusOfAccessionCode=>'',
                 countryOfOriginCode=>'',
                 typeOfGermplasmStorageCode=>'Not Stored',
                 genus=>$stock->search_related('organism')->first()->genus(),
@@ -664,7 +682,7 @@ sub germplasm_search_process {
                 subtaxa=>'',
                 subtaxaAuthority=>'',
                 donors=>[],
-                acquisitionDate=>$stock->create_date,
+                acquisitionDate=>'',
             };
         }
     }
@@ -1010,143 +1028,67 @@ sub studies_search_GET {
 sub studies_search_process {
     my $self = shift;
     my $c = shift;
+    my $schema = $self->bcs_schema;
     #my $auth = _authenticate_user($c);
-    my $program_ids = $c->req->param("programDbId");
-    my $location_ids = $c->req->param("locationDbId");
-    my $season_ids = $c->req->param("seasonDbId");
-    my $studytype_ids = $c->req->param("studyTypeDbId");
-    my $study_ids = $c->req->param("studyDbId");
-    my $study_names = $c->req->param("studyName");
-    my $germplasm_ids = $c->req->param("germplasmDbId");
-    my $variable_ids = $c->req->param("observationVariableDbId");
+    my @program_names = $c->req->param("programNames");
+    @program_names = grep {$_ ne undef} @program_names;
+    my @study_names = $c->req->param("studyNames");
+    @study_names = grep {$_ ne undef} @study_names;
+    my @location_names = $c->req->param("studyLocations");
+    @location_names = grep {$_ ne undef} @location_names;
+    my $study_type = $c->req->param("studyType");
+    my @study_type_list;
+    if ($study_type && $study_type ne 'undef'){
+        push @study_type_list, $study_type;
+    }
+    #my @germplasm_ids = $c->req->param("germplasmDbIds");
+    #my @variable_ids = $c->req->param("observationVariableDbIds");
+    #my $sort_by = $c->req->param("sortBy");
+    #my $sort_order = $c->req->param("sortOrder");
     my $status = $c->stash->{status};
     #$self->bcs_schema->storage->debug(1);
 
-    my @data;
-    my %result;
-    my %search_params;
-    my $bp_trial_relationship_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
-    $search_params{'project_relationship_subject_projects.type_id'} = $bp_trial_relationship_id;
-    if ($study_ids) {
-        $search_params{'me.project_id'} = {-in => $study_ids};
-    }
-    if ($study_names) {
-        $search_params{'me.name'} = {-in => $study_names};
-    }
-    if ($program_ids) {
-        $search_params{'project_relationship_subject_projects.object_project_id'} = {-in => $program_ids};
-    }
-    if ($season_ids) {
-        my $year_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project year', 'project_property')->cvterm_id();
-        $search_params{'projectprops.type_id'} = $year_type_id;
-        $search_params{'projectprops.projectprop_id'} = {-in => $season_ids};
-    }
-    if ($studytype_ids) {
-        $search_params{'cv.name'} = 'project_type';
-        $search_params{'type.cvterm_id'} = {-in => $studytype_ids};
-    }
-    if ($location_ids) {
-        my $location_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project location', 'project_property')->cvterm_id();
-        $search_params{'projectprops.type_id'} = $location_type_id;
-        $search_params{'projectprops.value::int'} = {-in => $location_ids};
-    }
-
-    my $breeding_program_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program', 'project_property')->cvterm_id();
-    my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
-
-    #my $rs = $self->bcs_schema->resultset('Project::Project')->search(
-    #    \%search_params,
-    #    {join=> [{'project_relationship_subject_projects'}, {'projectprops' => {'type' => 'cv'}}],
-    #    '+select'=> ['me.project_id', 'me.name'],
-    #    '+as'=> ['study_id','name' ],
-    #    distinct => 1,
-    #    order_by=>{ -asc=>'me.project_id' }
-    #    }
-    #);
-    
-    my $rs = $self->bcs_schema->resultset('Project::Project')->search(
-        {},
-        {
-        '+select'=> ['me.project_id', 'me.name'],
-        '+as'=> ['study_id','name' ],
-        distinct => 1,
-        order_by=>{ -asc=>'me.project_id' }
-        }
-    );
-
-    my $total_count = 0;
-    if ($rs) {
-        $total_count = $rs->count();
-        my $rs_slice = $rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
-        while (my $s = $rs_slice->next()) {
-            #my $t = CXGN::Trial->new( { trial_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
-            #my $folder = CXGN::Trial::Folder->new( { folder_id => $s->get_column('study_id'), bcs_schema => $self->bcs_schema } );
-
-                #my @years = ($t->get_year());
-                my %additional_info = (
-                    studyPUI => $c->config->{main_production_site_url}."/breeders_toolbox/trial/".$s->get_column('study_id'),
-                );
-                my $project_type = '';
-                #if ($t->get_project_type()) {
-                #   $project_type = $t->get_project_type()->[1];
-                #}
-                my $location_id = '';
-                my $location_name = '';
-                #if ($t->get_location()) {
-                #   $location_id = $t->get_location()->[0];
-                #   $location_name = $t->get_location()->[1];
-                #}
-                my $planting_date = '';
-                #if ($t->get_planting_date()) {
-                 #   $planting_date = $t->get_planting_date();
-                #    my $t = Time::Piece->strptime($planting_date, "%Y-%B-%d");
-                #    $planting_date = $t->strftime("%Y-%m-%d");
-                #}
-                my $harvest_date = '';
-                #if ($t->get_harvest_date()) {
-                #    $harvest_date = $t->get_harvest_date();
-                #    my $t = Time::Piece->strptime($harvest_date, "%Y-%B-%d");
-                #    $harvest_date = $t->strftime("%Y-%m-%d");
-                #}
-                #my $trial_id = $folder->project_parent->project_id();
-                #my $trial_name = $folder->project_parent->name();
-                #my $program_id = $folder->breeding_program->project_id();
-                #my $program_name = $folder->breeding_program->name();
-                #push @data, {
-                #    studyDbId=>$t->get_trial_id(),
-                #    name=>$t->get_name(),
-                #    trialDbId=>$trial_id,
-                #    trialName=>$trial_name,
-                #    studyType=>$project_type,
-                #    seasons=>\@years,
-                #    locationDbId=>$location_id,
-                #    locationName=>$location_name,
-                #    programDbId=>$program_id,
-                #    programName=>$program_name,
-                #    startDate => $planting_date,
-                #    endDate => $harvest_date,
-                #    additionalInfo=>\%additional_info
-                #};
-                push @data, {
-                    studyDbId=>$s->get_column('study_id'),
-                    name=>$s->get_column('name'),
-                    trialDbId=>'',
-                    trialName=>'',
-                    studyType=>'',
-                    seasons=>[],
-                    locationDbId=>'',
-                    locationName=>'',
-                    programDbId=>'',
-                    programName=>'',
-                    startDate => '',
-                    endDate => '',
-                    additionalInfo=>\%additional_info
-                };
-            #}
+    my $trial_search = CXGN::Trial::Search->new({
+        bcs_schema=>$schema,
+        location_list=>\@location_names,
+        trial_type_list=>\@study_type_list,
+        trial_name_list=>\@study_names,
+        trial_name_is_exact=>1,
+        program_list=>\@program_names
+    });
+    my $data = $trial_search->search();
+    my @data_window;
+    my $start = $c->stash->{page_size}*$c->stash->{current_page};
+    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
+    for( my $i = $start; $i <= $end; $i++ ) {
+        if (@$data[$i]) {
+            my %additional_info = (
+                design => @$data[$i]->{design},
+                description => @$data[$i]->{description},
+            );
+            my %data_obj = (
+                studyDbId => @$data[$i]->{trial_id},
+                studyName => @$data[$i]->{trial_name},
+                trialDbId => @$data[$i]->{folder_id},
+                trialName => @$data[$i]->{folder_name},
+                studyType => @$data[$i]->{trial_type},
+                seasons => [@$data[$i]->{year}],
+                locationDbId => @$data[$i]->{location_id},
+                locationName => @$data[$i]->{location_name},
+                programDbId => @$data[$i]->{breeding_program_id},
+                programName => @$data[$i]->{breeding_program_name},
+                startDate => @$data[$i]->{harvest_date},
+                endDate => @$data[$i]->{planting_date},
+                active=>'',
+                additionalInfo=>\%additional_info
+            );
+            push @data_window, \%data_obj;
         }
     }
+    #print STDERR Dumper \@data_window;
 
-    %result = (data=>\@data);
+    my %result = (data=>\@data_window);
+    my $total_count = scalar(@$data);
     my @datafiles;
     my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
     my %response = (metadata=>\%metadata, result=>\%result);
@@ -1851,7 +1793,7 @@ sub markerprofile_search_process {
               extractDbId => "",
               sampleDbId => "",
               analysisMethod => $row->get_column('protocol_name'),
-              resultCount => scalar(keys(%$genotype)) 
+              resultCount => scalar(keys(%$genotype))
           };
       }
     }
@@ -2745,13 +2687,14 @@ sub studies_table_GET {
     my $data_level = $c->req->param('observationLevel') || 'plot';
     my $format = $c->req->param('format') || 'json';
     my %result;
-
+    my $search_type = $c->req->param("search_type") || 'fast';
     my $include_timestamp = $c->req->param("timestamp") || 0;
     my $trial_id = $c->stash->{study_id};
     my $phenotypes_search = CXGN::Phenotypes::Search->new({
         bcs_schema=>$self->bcs_schema,
         data_level=>$data_level,
         trial_list=>[$trial_id],
+        search_type=>$search_type,
         include_timestamp=>$include_timestamp,
     });
     my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
@@ -2955,6 +2898,7 @@ sub process_phenotypes_search {
     my $location_ids = $c->req->param('locationDbIds');
     my $year_ids = $c->req->param('seasonDbIds');
     my $data_level = $c->req->param('observationLevel') || 'plot';
+    my $search_type = $c->req->param("search_type") || 'complete';
     my @stocks_array = split /,/, $stock_ids;
     my @traits_array = split /,/, $trait_ids;
     my @trials_array = split /,/, $trial_ids;
@@ -2969,6 +2913,7 @@ sub process_phenotypes_search {
         location_list=>\@locations_array,
         trait_list=>\@traits_array,
         year_list=>\@years_array,
+        search_type=>$search_type,
         include_timestamp=>1,
         limit=>$c->stash->{page_size},
         offset=>$offset
@@ -3498,15 +3443,15 @@ sub maps_marker_detail_GET {
 
     my $total_count = scalar(@markers);
     my $page_size = $c->stash->{page_size};
-    if ($page_size == 20) {
-        $page_size = 100000
+    if ($page_size == $DEFAULT_PAGE_SIZE) {
+        $page_size = 100000;
     }
     my $start = $page_size*$c->stash->{current_page};
     my $end = $page_size*($c->stash->{current_page}+1)-1;
     my @data_window = splice @markers, $start, $end;
 
     my %result = (data => \@data_window);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
+    my %metadata = (pagination=>pagination_response($total_count, $page_size, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
     my %response = (metadata=>\%metadata, result=>\%result);
     $c->stash->{rest} = \%response;
 }

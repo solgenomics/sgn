@@ -212,7 +212,7 @@ sub save_trial {
 
 	my $design_type = $self->get_design_type();
 	if ($design_type eq 'greenhouse') {
-		my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
+		my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property');
 		$project->create_projectprops({ $has_plants_cvterm->name() => 'varies' });
 	}
 

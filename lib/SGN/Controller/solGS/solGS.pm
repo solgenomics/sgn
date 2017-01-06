@@ -1178,8 +1178,9 @@ sub genotype_file_name {
     my ($self, $c) = @_;
    
     my $pop_id = $c->stash->{pop_id};
-    $pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
- 
+    $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
+    $pop_id = $c->stash->{prediction_pop_id} if $c->stash->{prediction_pop_id}; 
+   
     if ($pop_id =~ /uploaded/) 
     {
 	my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
