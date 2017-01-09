@@ -395,7 +395,8 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     overwrite_values=>0,
     metadata_hash=>\%phenotype_metadata
 );
-
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+ok(!$verified_error);
 my $stored_phenotype_error_msg = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
@@ -517,11 +518,13 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     stock_list=>\@plots,
     trait_list=>\@traits,
     values_hash=>\%parsed_data,
-    has_timestamps=>1,
+    has_timestamps=>0,
     overwrite_values=>0,
     metadata_hash=>\%phenotype_metadata
 );
-
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+#print STDERR Dumper $verified_error;
+ok(!$verified_error);
 $stored_phenotype_error_msg = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
@@ -846,6 +849,8 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     metadata_hash=>\%phenotype_metadata,
 	image_zipfile_path=>'t/data/fieldbook/photos.zip',
 );
+my $validate_phenotype_error_msg = $store_phenotypes->verify();
+#print STDERR Dumper $validate_phenotype_error_msg;
 
 $stored_phenotype_error_msg = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store fieldbook works");
@@ -1278,7 +1283,9 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     overwrite_values=>0,
     metadata_hash=>\%phenotype_metadata,
 );
-
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+#print STDERR Dumper $verified_error;
+ok(!$verified_error);
 $stored_phenotype_error_msg = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store fieldbook works");
 
@@ -1948,7 +1955,8 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     overwrite_values=>0,
     metadata_hash=>\%phenotype_metadata,
 );
-
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+ok(!$verified_error);
 $stored_phenotype_error_msg = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store large pheno spreadsheet works");
 
@@ -2512,7 +2520,8 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     overwrite_values=>0,
     metadata_hash=>\%phenotype_metadata,
 );
-
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+ok(!$verified_error);
 $stored_phenotype_error_msg = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store large pheno spreadsheet works");
 
@@ -2859,7 +2868,8 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     overwrite_values=>0,
     metadata_hash=>\%phenotype_metadata,
 );
-
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+ok(!$verified_error);
 $stored_phenotype_error_msg = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store fieldbook plants works");
 

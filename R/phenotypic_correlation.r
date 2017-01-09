@@ -251,6 +251,8 @@ if (length(refererQtl) == 0  ) {
   formattedPhenoData <- round(formattedPhenoData, digits = 2)
 }
 
+formattedPhenoData <- data.frame(formattedPhenoData)
+
 coefpvalues <- rcor.test(formattedPhenoData,
                          method="pearson",
                          use="pairwise"
@@ -303,6 +305,7 @@ if ( apply(coefficients,
 
 pvalues[upper.tri(pvalues)]           <- NA
 coefficients[upper.tri(coefficients)] <- NA
+coefficients <- data.frame(coefficients)
 
 coefficients2json <- function(mat) {
   mat <- as.list(as.data.frame(t(mat)))
@@ -319,28 +322,29 @@ correlationList <- list(
 
 correlationJson <- paste("{",paste("\"", names(correlationList), "\":", correlationList, collapse=","), "}")
 
-write.table(coefficients,
-            file=correCoefficientsFile,
-            col.names=TRUE,
-            row.names=TRUE,
-            quote=FALSE,
-            dec="."
-            )
+correlationJson <- list(correlationJson)
 
-write.table(correlationJson,
-            file=correCoefficientsJsonFile,
-            col.names=FALSE,
-            row.names=FALSE,
-            )
+fwrite(coefficients,
+       file      = correCoefficientsFile,
+       row.names = TRUE,
+       sep       = "\t",
+       quote     = FALSE,
+       )
 
+fwrite(correlationJson,
+       file      = correCoefficientsJsonFile,
+       col.names = FALSE,
+       row.names = FALSE,
+       qmethod   = "escape"
+       )
 
 if (file.info(formattedPhenoFile)$size == 0 && !is.null(formattedPhenoData) ) {
-  write.table(formattedPhenoData,
-              file = formattedPhenoFile,
-              sep = "\t",
-              col.names = NA,
-              quote = FALSE,
-              )
+  fwrite(formattedPhenoData,
+         file      = formattedPhenoFile,
+         sep       = "\t",
+         row.names = TRUE,
+         quote     = FALSE,
+         )
 }
 
 
