@@ -1755,6 +1755,11 @@ sub markerprofile_search_process {
     }
     my $extract = $c->req->param("extract");
     my $method = $c->req->param("methodDbId");
+    if (!$method){
+        my $default_genotyping_protocol = $c->config->{default_genotyping_protocol};
+        $method = $self->bcs_schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
+    }
+
     my $status = $c->stash->{status};
     my $message = '';
     my @data;
