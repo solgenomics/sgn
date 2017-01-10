@@ -674,7 +674,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
   if (scalar(@$genotypes) == 0) {
-    my $error = "No genotype data was found for @accession_list, and protocol with id $protocol_id. You can determine which accessions have been genotyped with a given protocol by using the search wizard.";
+    my $error = "No genotype data was found for Accessions: @accession_list, Trials: $trial_id_string, and protocol with id $protocol_id. You can determine which accessions have been genotyped with a given protocol by using the search wizard.";
     $c->res->content_type("application/text");
     $c->res->header('Content-Disposition', qq[attachment; filename="Download error details"]);
     $c->res->body($error);

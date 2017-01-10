@@ -33,6 +33,7 @@ use Moose;
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
+use CXGN::Trial;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -80,17 +81,37 @@ sub get_genotype_info {
     my $limit = $self->limit;
     my $offset = $self->offset;
     my @data;
+    my %search_params;
+
     my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
 
-    my %search_params;
+    my @trials_accessions;
+    foreach (@$trial_list){
+        my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
+        my $accessions = $trial->get_accessions();
+        foreach (@$accessions){
+            push @trials_accessions, $_->{stock_id};
+        }
+    }
+
+    #If accessions are explicitly given, then accessions found from trials will not be added to the search.
+    if (!$accession_list || scalar(@$accession_list)==0) {
+        push @$accession_list, @trials_accessions;
+    }
+
+    #For projects inserted into database during the addition of genotypes and genotypeprops
+    if (scalar(@trials_accessions)==0){
+        if ($trial_list && scalar(@$trial_list)>0) {
+            $search_params{'nd_experiment_projects.project_id'} = { -in => $trial_list };
+        }
+    }
+
     $search_params{'genotypeprops.type_id'} = $snp_genotyping_cvterm_id;
     $search_params{'nd_protocol.nd_protocol_id'} = $protocol_id;
     if ($accession_list && scalar(@$accession_list)>0) {
         $search_params{'stock.stock_id'} = { -in => $accession_list };
     }
-    if ($trial_list && scalar(@$trial_list)>0) {
-        $search_params{'nd_experiment_projects.project_id'} = { -in => $trial_list };
-    }
+
     my @select_list = ('genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id', 'stock.uniquename');
     my @select_as_list = ('genotypeprop_id', 'value', 'protocol_name', 'stock_id', 'uniquename');
     #$self->bcs_schema->storage->debug(1);

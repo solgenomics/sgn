@@ -104,7 +104,7 @@
 	<td>
 	<div>
 	<p>Genotypes:
-		<button class="btn btn-primary ladda-button" id="download_button_genotypes" disabled="disabled" data-style="expand-right" title="To download, you must be logged in with a genotyping protocol and accessions selected"><span class="ladda-label">Download Genotypes</span><span class="ladda-spinner"></span></button>
+		<button class="btn btn-primary ladda-button" id="download_button_genotypes" disabled="disabled" data-style="expand-right" title="To download, you must be logged in with accessions or trials selected"><span class="ladda-label">Download Genotypes</span><span class="ladda-spinner"></span></button>
 	</div>
 	</td>
 	<td>
