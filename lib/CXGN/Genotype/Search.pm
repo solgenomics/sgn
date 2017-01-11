@@ -112,8 +112,8 @@ sub get_genotype_info {
         $search_params{'stock.stock_id'} = { -in => $accession_list };
     }
 
-    my @select_list = ('genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id', 'stock.uniquename');
-    my @select_as_list = ('genotypeprop_id', 'value', 'protocol_name', 'stock_id', 'uniquename');
+    my @select_list = ('genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id', 'stock.uniquename', 'genotype.uniquename');
+    my @select_as_list = ('genotypeprop_id', 'value', 'protocol_name', 'stock_id', 'uniquename', 'genotype_uniquename');
     #$self->bcs_schema->storage->debug(1);
     my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
         \%search_params,
@@ -137,6 +137,7 @@ sub get_genotype_info {
                 markerProfileDbId => $row->get_column('genotypeprop_id'),
                 germplasmDbId => $row->get_column('stock_id'),
                 germplasmName => $row->get_column('uniquename'),
+                genotypeUniquename => $row->get_column('genotype_uniquename'),
                 analysisMethod => $row->get_column('protocol_name'),
                 genotype_hash => $genotype,
                 resultCount => scalar(keys(%$genotype))

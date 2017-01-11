@@ -1783,7 +1783,7 @@ sub markerprofile_search_process {
         push @data, {
             markerProfileDbId => $_->{markerprofileDbId},
             germplasmDbId => $_->{germplasmDbId},
-            uniqueDisplayName => $_->{germplasmName},
+            uniqueDisplayName => $_->{genotypeUniquename},
             extractDbId => "",
             sampleDbId => "",
             analysisMethod => $_->{analysisMethod},

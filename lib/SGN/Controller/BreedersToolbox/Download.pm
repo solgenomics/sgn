@@ -688,7 +688,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   print STDERR "Decoding genotype data ...".localtime()."\n";
 
   for (my $i=0; $i < scalar(@$genotypes) ; $i++) {       # loop through resultset, printing accession uniquenames as column headers and storing decoded gt strings in array of hashes
-    print $TEMP $genotypes->[$i]->{germplasmName} . "\t";
+    print $TEMP $genotypes->[$i]->{genotypeUniquename} . "\t";
     push(@accession_genotypes, $genotypes->[$i]->{genotype_hash});
   }
   @unsorted_markers = keys   %{ $accession_genotypes[0] };
