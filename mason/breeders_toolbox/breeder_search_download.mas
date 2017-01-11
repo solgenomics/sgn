@@ -104,11 +104,11 @@
 	<td>
 	<div>
 	<p>Genotypes:
-		<button class="btn btn-primary ladda-button" id="download_button_genotypes" disabled="disabled" data-style="expand-right" title="To download, you must be logged in with a genotyping protocol and accessions selected"><span class="ladda-label">Download Genotypes</span><span class="ladda-spinner"></span></button>
+		<button class="btn btn-primary ladda-button" id="download_button_genotypes" disabled="disabled" data-style="expand-right" title="To download, you must be logged in with accessions or trials selected"><span class="ladda-label">Download Genotypes</span><span class="ladda-spinner"></span></button>
 	</div>
 	</td>
 	<td>
-	<div class="well well-sm pull-right" style="min-width: 200px;overflow:auto;"><div><p id="selected_accessions">No accessions selected</p><p id="selected_genotyping_protocols">No genotyping protocols selected</p></div>
+	<div class="well well-sm pull-right" style="min-width: 200px;overflow:auto;"><div><p id="selected_accessions">No accessions selected</p><p id="selected_genotyping_protocols">No genotyping protocols selected. Default wull be used.</p></div>
 	</td>
 	</tr>
 </table>
