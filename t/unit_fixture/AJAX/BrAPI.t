@@ -82,17 +82,17 @@ is_deeply($response, {'metadata' => {'status' => [{}],'datafiles' => [],'paginat
 $mech->get_ok('http://localhost:3010/brapi/v1/markerprofiles?pageSize=2&page=3');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'result' => {'data' => [{'markerProfileDbId' => 1628,'germplasmDbId' => 39027,'resultCount' => 500,'analysisMethod' => 'GBS ApeKI genotyping v4','sampleDbId' => '','uniqueDisplayName' => 'UG120178','extractDbId' => ''},{'uniqueDisplayName' => 'UG120179','extractDbId' => '','resultCount' => 500,'germplasmDbId' => 39028,'markerProfileDbId' => 1629,'analysisMethod' => 'GBS ApeKI genotyping v4','sampleDbId' => ''}]},'metadata' => {'status' => [{'message' => ''}],'datafiles' => [],'pagination' => {'totalCount' => 535,'pageSize' => 2,'currentPage' => 3,'totalPages' => 268}}}, 'markerprofile');
+is_deeply($response, {'metadata' => {'pagination' => {'totalPages' => 1,'pageSize' => 2,'totalCount' => 2,'currentPage' => 3},'datafiles' => [],'status' => [{'message' => '','code' => 'message'}]},'result' => {'data' => [{'uniqueDisplayName' => 'UG120178|78266','germplasmDbId' => 39027,'resultCount' => 500,'markerProfileDbId' => 1628,'extractDbId' => '','sampleDbId' => '','analysisMethod' => 'GBS ApeKI genotyping v4'},{'extractDbId' => '','analysisMethod' => 'GBS ApeKI genotyping v4','sampleDbId' => '','markerProfileDbId' => 1629,'uniqueDisplayName' => 'UG120179|78267','germplasmDbId' => 39028,'resultCount' => 500}]}}, 'markerprofile');
 
 $mech->get_ok('http://localhost:3010/brapi/v1/markerprofiles?pageSize=1&page=1&germplasmDbId=38937');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'metadata' => {'datafiles' => [],'pagination' => {'totalCount' => 2,'pageSize' => 1,'currentPage' => 1,'totalPages' => 2},'status' => [{'message' => ''}]},'result' => {'data' => [{'sampleDbId' => '','analysisMethod' => 'GBS ApeKI genotyping v4','markerProfileDbId' => 1934,'resultCount' => 500,'germplasmDbId' => 38937,'extractDbId' => '','uniqueDisplayName' => 'UG120066'}]}}, 'markerprofile');
+is_deeply($response, {'result' => {'data' => [{'analysisMethod' => 'GBS ApeKI genotyping v4','sampleDbId' => '','extractDbId' => '','markerProfileDbId' => 1934,'resultCount' => 500,'germplasmDbId' => 38937,'uniqueDisplayName' => 'UG120066|79802'}]},'metadata' => {'datafiles' => [],'pagination' => {'currentPage' => 1,'totalCount' => 1,'totalPages' => 1,'pageSize' => 1},'status' => [{'message' => '','code' => 'message'}]}}, 'markerprofile');
 
 $mech->get_ok('http://localhost:3010/brapi/v1/markerprofiles?pageSize=2&page=3&methodDbId=1');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'result' => {'data' => [{'germplasmDbId' => 39027,'markerProfileDbId' => 1628,'resultCount' => 500,'analysisMethod' => 'GBS ApeKI genotyping v4','sampleDbId' => '','uniqueDisplayName' => 'UG120178','extractDbId' => ''},{'sampleDbId' => '','resultCount' => 500,'markerProfileDbId' => 1629,'germplasmDbId' => 39028,'analysisMethod' => 'GBS ApeKI genotyping v4','extractDbId' => '','uniqueDisplayName' => 'UG120179'}]},'metadata' => {'status' => [{'message' => ''}],'datafiles' => [],'pagination' => {'totalPages' => 268,'currentPage' => 3,'totalCount' => 535,'pageSize' => 2}}}, 'markerprofile');
+is_deeply($response, {'metadata' => {'datafiles' => [],'pagination' => {'totalPages' => 1,'pageSize' => 2,'currentPage' => 3,'totalCount' => 2},'status' => [{'message' => '','code' => 'message'}]},'result' => {'data' => [{'analysisMethod' => 'GBS ApeKI genotyping v4','sampleDbId' => '','extractDbId' => '','uniqueDisplayName' => 'UG120178|78266','germplasmDbId' => 39027,'resultCount' => 500,'markerProfileDbId' => 1628},{'markerProfileDbId' => 1629,'uniqueDisplayName' => 'UG120179|78267','germplasmDbId' => 39028,'resultCount' => 500,'analysisMethod' => 'GBS ApeKI genotyping v4','extractDbId' => '','sampleDbId' => ''}]}}, 'markerprofile');
 
 $mech->get_ok('http://localhost:3010/brapi/v1/markerprofiles/1627');
 $response = decode_json $mech->content;

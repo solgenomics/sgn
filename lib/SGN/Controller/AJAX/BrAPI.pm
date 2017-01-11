@@ -1781,7 +1781,7 @@ sub markerprofile_search_process {
 
     foreach (@$genotypes){
         push @data, {
-            markerProfileDbId => $_->{markerprofileDbId},
+            markerProfileDbId => $_->{markerProfileDbId},
             germplasmDbId => $_->{germplasmDbId},
             uniqueDisplayName => $_->{genotypeUniquename},
             extractDbId => "",
