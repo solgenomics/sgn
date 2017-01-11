@@ -5,6 +5,7 @@
 
 options(echo = FALSE)
 
+library(data.table)
 library(stats)
 
 allArgs <- commandArgs()
@@ -16,9 +17,7 @@ inFile <- grep("input_rank_genotypes",
                value = TRUE
                )
 
-inputFiles <- scan(inFile,
-                   what = "character"
-                   )
+inputFiles <- scan(inFile, what = "character")
 
 relWeightsFile <- grep("rel_weights",
                        inputFiles,
@@ -34,9 +33,7 @@ outFile <- grep("output_rank_genotypes",
                 value = TRUE
                 )
 
-outputFiles <- scan(outFile,
-                    what = "character"
-                    )
+outputFiles <- scan(outFile, what = "character")
 
 traitsFiles <- grep("gebv_files_of_traits",
                     inputFiles,
@@ -59,10 +56,7 @@ selectionIndexFile <- grep("selection_index",
                               value = TRUE
                               )
 
-inTraitFiles <- scan(traitsFiles,
-                     what = "character"
-                     )
-
+inTraitFiles   <- scan(traitsFiles, what = "character")
 traitFilesList <- strsplit(inTraitFiles, "\t");
 traitsTotal    <- length(traitFilesList)
 
@@ -72,48 +66,36 @@ if (length(relWeightsFile) == 0)
   stop("There is no file with relative weights of traits.")
 
 
-relWeights <- read.table(relWeightsFile,
-                         header = TRUE,
-                         row.names = 1,
-                         sep = "\t",
-                         dec = "."
-                         )
+relWeights           <- data.frame(fread(relWeightsFile))
+rownames(relWeights) <- relWeights[, 1]
+relWeights[, 1]      <- NULL 
 
 combinedRelGebvs <- c()
 
-for (i in 1:traitsTotal)
-  {
-    traitFile <- traitFilesList[[i]]
-    traitGEBV <- read.table(traitFile,
-                            header = TRUE,
-                            row.names = 1,
-                            sep = "\t",
-                            dec = "."
-                            )
-
-  
-    traitGEBV <- traitGEBV[order(rownames(traitGEBV)),,drop=FALSE]
-
+for (i in 1:traitsTotal) {
+  traitFile           <- traitFilesList[[i]]
+  traitGEBV           <- data.frame(fread(traitFile))
+  rownames(traitGEBV) <- traitGEBV[, 1]
+  traitGEBV[, 1]      <- NULL
+  traitGEBV           <- traitGEBV[order(rownames(traitGEBV)),,drop=FALSE] 
+  trait               <- colnames(traitGEBV)
    
-    trait <- colnames(traitGEBV)
+  relWeight <- relWeights[trait, ]
    
-    relWeight <- relWeights[trait, ]
-   
-    if(is.na(relWeight) == FALSE && relWeight != 0 )
-      {
-        weightedTraitGEBV <- apply(traitGEBV, 1,
-                                   function(x) x*relWeight
-                                   )
+  if (is.na(relWeight) == FALSE && relWeight != 0 ) {
+      weightedTraitGEBV <- apply(traitGEBV, 1,
+                                 function(x) x*relWeight
+                                 )
         
-        combinedRelGebvs  <- merge(combinedRelGebvs, weightedTraitGEBV,
-                                   by = 0,
-                                   all = TRUE                     
-                                   )
+      combinedRelGebvs  <- merge(combinedRelGebvs, weightedTraitGEBV,
+                                 by = 0,
+                                 all = TRUE                     
+                                 )
 
-        rownames(combinedRelGebvs) <- combinedRelGebvs[, 1]
-        combinedRelGebvs[, 1] <- NULL
-      }
-  }
+      rownames(combinedRelGebvs) <- combinedRelGebvs[, 1]
+      combinedRelGebvs[, 1]      <- NULL
+    }
+}
 
 sumRelWeights <- apply(relWeights, 2, sum)
 sumRelWeights <- sumRelWeights[[1]]
@@ -131,39 +113,32 @@ combinedRelGebvs <- round(combinedRelGebvs,
 
 selectionIndex <-c()
 
-if (is.null(combinedRelGebvs) == FALSE)
-  {
-    selectionIndex <- subset(combinedRelGebvs,
-                             select = 'Index'
-                             )
-  }
+if (is.null(combinedRelGebvs) == FALSE) {
+  selectionIndex <- subset(combinedRelGebvs,
+                           select = 'Index'
+                           )
+}
 
-if (length(rankedGenotypesFile) != 0)
-  {
-    if(is.null(combinedRelGebvs) == FALSE)
-      {
-        write.table(combinedRelGebvs,
-                    file = rankedGenotypesFile,
-                    sep = "\t",
-                    col.names = NA,
-                    quote = FALSE,
-                    append = FALSE
-                    )
+if (length(rankedGenotypesFile) != 0) {
+  if (is.null(combinedRelGebvs) == FALSE) {
+    fwrite(combinedRelGebvs,
+           file      = rankedGenotypesFile,
+           sep       = "\t",
+           row.names = TRUE,
+           quote     = FALSE,
+           )
       }
-  }
+}
 
-if (length(selectionIndexFile) != 0)
-  {
-    if(is.null(selectionIndex) == FALSE)
-      {
-        write.table(selectionIndex,
-                    file = selectionIndexFile,
-                    sep = "\t",
-                    col.names = NA,
-                    quote = FALSE,
-                    append = FALSE
-                    )
-      }
+if (length(selectionIndexFile) != 0) {
+  if (is.null(selectionIndex) == FALSE) {
+    fwrite(selectionIndex,
+           file      = selectionIndexFile,
+           row.names = TRUE,
+           quote     = FALSE,
+           sep       = "\t",
+           )
   }
+}
 
 q(save = "no", runLast = FALSE)

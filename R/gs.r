@@ -13,6 +13,7 @@ library(stringr)
 library(lme4)
 library(randomForest)
 library(data.table)
+library(parallel)
 
 allArgs <- commandArgs()
 
@@ -444,12 +445,23 @@ relationshipMatrixFiltered <- relationshipMatrix[(rownames(relationshipMatrix) %
 relationshipMatrixFiltered <- relationshipMatrixFiltered[, (colnames(relationshipMatrixFiltered) %in% rownames(commonObs))]
 relationshipMatrix         <- data.frame(relationshipMatrix)
 
+nCores <- detectCores()
+message('no cores: ', nCores)
+if (nCores > 1) {
+  nCores <- (nCores %/% 2)
+} else {
+  nCores <- 1
+}
+
+message('assgined no cores: ', nCores)
+
 if (length(predictionData) == 0) {
 
-  trGEBV  <- kin.blup(data  = phenoTrait,
-                      geno  = 'genotypes',
-                      pheno = trait,
-                      K     = relationshipMatrixFiltered
+  trGEBV  <- kin.blup(data   = phenoTrait,
+                      geno   = 'genotypes',
+                      pheno  = trait,
+                      K      = relationshipMatrixFiltered,
+                      n.core = nCores,
                      )
 
   trGEBVu <- trGEBV$g
@@ -478,7 +490,6 @@ if (length(predictionData) == 0) {
   cat("\n", file = varianceComponentsFile,  append = TRUE)
   cat('Additive genetic variance',  trGEBV$Vg, file = varianceComponentsFile, sep = '\t', append = TRUE)
   cat("\n", file = varianceComponentsFile,  append = TRUE)
-  cat('Phenotype mean', 'NA',file = varianceComponentsFile, sep = '\t', append = TRUE)
   cat("\n", file = varianceComponentsFile,  append = TRUE)
   cat('Heritability (h)', heritability, file = varianceComponentsFile, sep = '\t', append = TRUE)
 
@@ -548,7 +559,8 @@ if (length(predictionData) == 0) {
       result <- kin.blup(data  = phenoTrait[trG,],
                          geno  = 'genotypes',
                          pheno = trait,
-                         K     = relationshipMatrixFiltered
+                         K     = relationshipMatrixFiltered,
+                         n.core = nCores,
                          )
   
       assign(kblup, result)
@@ -608,10 +620,12 @@ if (length(predictionData) != 0) {
     genoDataTrSl <- rbind(genoDataFilteredObs, predictionData)
     rTrSl <- A.mat(genoDataTrSl)
     
-    predictionPopResult <- kin.blup(data  = phenoTrait,
-                                    geno  = 'genotypes',
-                                    pheno = trait,
-                                    K     = rTrSl)
+    predictionPopResult <- kin.blup(data   = phenoTrait,
+                                    geno   = 'genotypes',
+                                    pheno  = trait,
+                                    K      = rTrSl,
+                                    n.core = nCores,
+                                    )
     
      message("running prediction for selection candidates...DONE!!")
     predictionPopGEBVs <- round(data.frame(predictionPopResult$g), 3)
