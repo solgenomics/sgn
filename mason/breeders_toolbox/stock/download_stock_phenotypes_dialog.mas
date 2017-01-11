@@ -1,0 +1,105 @@
+
+<%args>
+$stock_id
+$stock_type
+$stock_name => undef
+</%args>
+
+
+<div class="modal fade" id="download_stock_phenotypes_dialog" name="download_stock_phenotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="downloadStockPhenotypesDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="downloadStockPhenotypesDialog">Download Phenotypes for <% $stock_name %></h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+	       <form class="form-horizontal" role="form" method="post" >
+	        <div class="form-group">
+                <label class="col-sm-3 control-label">Format: </label>
+                <div class="col-sm-9" >
+                    <select class="form-control" id="download_stock_phenotypes_format">
+                        <option value="xls">Excel (xls)</option>
+                        <option value="csv">CSV</option>
+                    </select>
+                </div>
+	        </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Include Timestamps: </label>
+                <div class="col-sm-9" >
+                    <select class="form-control" id="download_stock_phenotypes_timestamp_option">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Traits:<br/><small>(Select none for all traits)</small></label>
+                <div class="col-sm-9" >
+                    <div id="download_stock_phenotypes_traits">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Download Type: </label>
+                <div class="col-sm-9" >
+                    <label class="radio-inline" title="Optimizes speed using the database cache. May exclude most recently uploaded data."><input type="radio" name="stock_search_type" id="stock_search_type" value="fast" checked>Fast (plots only)</label>
+                    <label class="radio-inline" title="Optimizes completeness using an exhaustive search. May result in longer download times."><input type="radio" name="stock_search_type" id="stock_search_type" value="complete">Complete</label>
+                </div>
+            </div>
+
+        </form><br/>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="download_stock_phenotypes_cancel_button" id="download_stock_phenotypes_cancel_button" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="download_stock_phenotypes_submit_button" id="download_stock_phenotypes_submit_button" title="Submit">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+
+  jQuery('#stock_download_phenotypes_button').click( function () {
+    var stock_type = "<% $stock_type %>";
+    console.log("stock_type ="+stock_type);
+    jQuery('#download_stock_phenotypes_dialog').modal("show");
+    data_level_change_traits();
+  });
+
+  jQuery(document).on('change', "#download_stock_phenotypes_level_option", function() {
+    data_level_change_traits();
+  });
+
+  jQuery('#download_stock_phenotypes_submit_button').click( function () {
+    var stock_type = "<% $stock_type %>";
+    var stock_id = <% $stock_id %>;
+
+    var stock_id_array = new Array();
+    stock_id_array.unshift(stock_id);
+    console.log("stock_id="+JSON.stringify(stock_id));
+    console.log("stock_id_array="+JSON.stringify(stock_id_array));
+
+    var format = jQuery("#download_stock_phenotypes_format").val();
+    var timestamp = jQuery("#download_stock_phenotypes_timestamp_option").val();
+    var traits = jQuery("#download_stock_phenotypes_traits_select").val();
+    //var trials = null;
+    var search_type = jQuery('input[name=stock_search_type]:checked').val()
+
+    window.open("/breeders/trials/phenotype/download?plot_list="+JSON.stringify(stock_id_array)+"&trial_list="+JSON.stringify(null)+"&format="+format+"&timestamp="+timestamp+"&trait_list="+JSON.stringify(traits)+"&search_type="+search_type);
+
+  });
+
+});
+
+function data_level_change_traits() {
+    var stock_type = "<% $stock_type %>";
+    get_select_box('traits', 'download_stock_phenotypes_traits', { 'name' : 'download_stock_phenotypes_traits_select', 'id' : 'download_stock_phenotypes_traits_select', 'stock_id':<% $stock_id %>, 'stock_type': stock_type });
+}
+</script>
