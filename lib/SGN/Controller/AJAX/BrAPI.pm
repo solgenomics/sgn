@@ -2687,7 +2687,7 @@ sub studies_table_GET {
     my $data_level = $c->req->param('observationLevel') || 'plot';
     my $format = $c->req->param('format') || 'json';
     my %result;
-    my $search_type = $c->req->param("search_type") || 'fast';
+    my $search_type = $c->req->param("search_type") || 'complete';
     my $include_timestamp = $c->req->param("timestamp") || 0;
     my $trial_id = $c->stash->{study_id};
     my $phenotypes_search = CXGN::Phenotypes::Search->new({
