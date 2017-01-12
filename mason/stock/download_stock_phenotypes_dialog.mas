@@ -67,8 +67,6 @@ $stock_name => undef
 jQuery(document).ready(function() {
 
   jQuery('#stock_download_phenotypes_button').click( function () {
-    var stock_type = "<% $stock_type %>";
-    console.log("stock_type ="+stock_type);
     jQuery('#download_stock_phenotypes_dialog').modal("show");
     data_level_change_traits();
   });
@@ -79,21 +77,12 @@ jQuery(document).ready(function() {
 
   jQuery('#download_stock_phenotypes_submit_button').click( function () {
     var stock_type = "<% $stock_type %>";
-    var stock_id = <% $stock_id %>;
-
-    var stock_id_array = new Array();
-    stock_id_array.unshift(stock_id);
-    console.log("stock_id="+JSON.stringify(stock_id));
-    console.log("stock_id_array="+JSON.stringify(stock_id_array));
-
+    var stock_id = ["<% $stock_id %>"];
     var format = jQuery("#download_stock_phenotypes_format").val();
     var timestamp = jQuery("#download_stock_phenotypes_timestamp_option").val();
     var traits = jQuery("#download_stock_phenotypes_traits_select").val();
-    //var trials = null;
     var search_type = jQuery('input[name=stock_search_type]:checked').val()
-
-    window.open("/breeders/trials/phenotype/download?plot_list="+JSON.stringify(stock_id_array)+"&trial_list="+JSON.stringify(null)+"&format="+format+"&timestamp="+timestamp+"&trait_list="+JSON.stringify(traits)+"&search_type="+search_type);
-
+    window.open("/breeders/trials/phenotype/download?"+stock_type+"_list="+JSON.stringify(stock_id)+"&format="+format+"&timestamp="+timestamp+"&trait_list="+JSON.stringify(traits)+"&search_type="+search_type);
   });
 
 });
