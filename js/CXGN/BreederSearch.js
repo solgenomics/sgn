@@ -131,15 +131,13 @@ window.onload = function initialize() {
     jQuery('#download_button_genotypes').on('click', function (event) {
       event.preventDefault();
       var accession_ids = get_selected_results('accessions');
-      var protocol_id = get_selected_genotyping_protocols();
-      if (accession_ids.length > 0 && protocol_id.length == 1) {
+      var trial_ids = get_selected_results('trials');
+      var protocol_id = get_selected_genotyping_protocols() ? get_selected_genotyping_protocols() : '';
         var ladda = Ladda.create(this);
         ladda.start();
         var token = new Date().getTime(); //use the current timestamp as the token name and value
         manage_dl_with_cookie(token, ladda);
-        window.location.href = '/breeders/download_gbs_action/?ids='+accession_ids.join(",")+'&protocol_id='+protocol_id+'&token='+token+'&format=accession_ids';
-      }
-      else { alert("Both accessions and protocols must be selected for download."); }
+        window.location.href = '/breeders/download_gbs_action/?ids='+accession_ids.join(",")+'&protocol_id='+protocol_id+'&token='+token+'&format=accession_ids&trial_ids='+trial_ids.join(",");
     });
 }
 
@@ -269,11 +267,10 @@ function get_selected_genotyping_protocols () {
         selected_genotyping_protocol = data[i];
       }
     }
-    if (selected_genotyping_protocol.length == 1) {
-      return selected_genotyping_protocol;
-    }
-    else {
-      alert("Please select a single genotyping protocol");
+    if (selected_genotyping_protocol){
+        if (selected_genotyping_protocol.length == 1) {
+            return selected_genotyping_protocol;
+        }
     }
 }
 
@@ -328,7 +325,7 @@ function update_download_options(this_section, categories) {
         jQuery('#selected_genotyping_protocols').html(genotyping_protocols_html);
       }
     }
-    if (selected_accessions == 1 && selected_genotyping_protocols == 1 && isLoggedIn()) {
+    if ( (selected_trials == 1 || selected_accessions == 1) && isLoggedIn()) {
       jQuery('#download_button_genotypes').prop( 'title', 'Click to Download Accession Genotypes');
 	    jQuery('#download_button_genotypes').removeAttr('disabled');
     }
@@ -338,14 +335,10 @@ function update_download_options(this_section, categories) {
       jQuery('#selected_trials').html('No trials selected');
     }
     if (selected_accessions !== 1) {
-      jQuery('#download_button_genotypes').prop('title','You must be logged in, with a genotyping protocol and accessions selected to download');
-      jQuery('#download_button_genotypes').attr('disabled', 'disabled');
       jQuery('#selected_accessions').html('No accessions selected');
     }
     if (selected_genotyping_protocols !== 1) {
-      jQuery('#download_button_genotypes').prop('title','You must be logged in, with a genotyping protocol and accessions selected to download');
-      jQuery('#download_button_genotypes').attr('disabled', 'disabled');
-      jQuery('#selected_genotyping_protocols').html('No genotyping protocols selected');
+      jQuery('#selected_genotyping_protocols').html('No genotyping protocols selected. Default will be used.');
     }
 }
 
