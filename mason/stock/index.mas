@@ -277,7 +277,8 @@ function jqueryStuff() {
 
 </&>
 
-<&| /page/info_section.mas, title => "Traits assayed" &>
+<& /stock/download_stock_phenotypes_dialog.mas, stock_id => $stock_id, stock_name => $uniquename, stock_type => $type_name &>
+<&| /page/info_section.mas, title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='stock_download_phenotypes_button'>Download Data</a>]" &>
 
   <& /stock/traits.mas, stock_id => $stock_id &>
 
@@ -309,7 +310,7 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 
 % my $maximum_descendants = 50;
 % if ($has_descendants > $maximum_descendants) {
-  
+
   <&| /page/info_section.mas, title=>"Descendants" , collapsible=>1, collapsed=>0 &>
     <& /generic_message.mas, message => "This accession has a total of $has_descendants direct descendants in the database. Descendants are shown only if there are fewer than $maximum_descendants direct descendants in the database. You can see all the direct descendants in the 'Related stocks' section below." &>
 </&>
