@@ -1318,10 +1318,10 @@ sub _build_plot_names {
     my $trial_name = $self->get_trial_name;
     
     if ($self->has_plot_name_prefix()) {
-	$prefix = $self->get_plot_name_prefix();
+        $prefix = $self->get_plot_name_prefix()."_";
     }
     if ($self->has_plot_name_suffix()) {
-	$suffix = $self->get_plot_name_suffix();
+        $suffix = $self->get_plot_name_suffix();
     }
     
     foreach my $key (keys %design) {
@@ -1329,19 +1329,19 @@ sub _build_plot_names {
 	my $stock_name = $design{$key}->{stock_name};
 	my $rep_number = $design{$key}->{rep_number};
 	if ($self->get_design_type() eq "RCBD") { # as requested by IITA (Prasad)
-	    $design{$key}->{plot_name} = $prefix."_".$trial_name."_rep".$rep_number."_".$stock_name.$suffix.$key;
+	    $design{$key}->{plot_name} = $prefix.$trial_name."_rep".$rep_number."_".$stock_name.$suffix.$key;
 	}
 	elsif ($self->get_design_type() eq "Augmented") { 
-	    $design{$key}->{plot_name} = $prefix."_".$trial_name."_plotno".$key."_".$stock_name.$suffix;
+	    $design{$key}->{plot_name} = $prefix.$trial_name."_plotno".$key."_".$stock_name.$suffix;
 	}
 	else { 
-	    $design{$key}->{plot_name} = $prefix."_".$trial_name."_".$key.$suffix;
+	    $design{$key}->{plot_name} = $prefix.$trial_name."_".$key.$suffix;
 	}
 
 	$design{$key}->{plot_number} = $key;
     }
 
-    print STDERR Dumper(\%design);
+    #print STDERR Dumper(\%design);
 
     return \%design;
 }
