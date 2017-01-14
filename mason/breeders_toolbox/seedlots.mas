@@ -1,0 +1,88 @@
+
+<%args>
+$seedlots => []
+</%args>
+
+<& /page/page_title.mas, title=>"Available Seedlots" &>
+
+  
+  <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery.dataTables-bootstrap-min', 'jquery', 'jquery.dataTables' ] &>
+
+<table id="trial_summary_data" class="display">
+<thead>
+  <tr>
+    <th>Seedlot</th>
+    <th>Seedlot Location</th>
+    <th>Content</th>
+  </tr>
+</thead>
+
+</table>
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<script>
+  jQuery(document).ready(function () {
+  
+    jQuery('#trial_summary_data').DataTable( { 
+      'ajax': '/ajax/breeders/seedlots',
+    });
+  });
+
+</script>
+
+<button class="btn btn-primary" id="add_seedlot_button">Add new seedlot</button>
+
+<div class="modal fade" id="add_seedlot_dialog" name="add_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="seedlot_dialog">Create New Seedlot</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <table cellspacing="10">
+	  <tr><td>Name</td><td> <input id="seedlot_name"></td></tr>
+	  <tr><td>Location</td><td><input id="seedlot_location"></td></tr>
+	  <tr><td>Accession</td><td><input id="seedlot_accession"></td></tr>
+	  <tr><td>Cross</td><td><input id="seedlot_cross"></td></tr>
+	  </table>
+	  
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="create_new_seedlot_button" type="button" class="btn btn-default" data-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  jQuery('#add_seedlot_button').click( function() { jQuery('#add_seedlot_dialog').modal('show') });
+
+  jQuery('#create_new_seedlot_button').click( function() { 
+    var name = jQuery('#seedlot_name').val();
+    var location = jQuery('#seedlot_location').val();
+    var accession = jQuery('#seedlot_accession').val();
+    var cross = jQuery('#seedlot_cross').val();
+    
+    if (name == '') { alert("Please provide a name"); }
+
+    jQuery.ajax( { 
+      url: '/ajax/breeders/seedlot-create',
+      data : { 'seedlot_name' : name, 'seedlot_location': location, 'seedlot_accession': accession, 'seedlot_cross': cross },
+      success: function(response) { 
+        if (response.success == 1) { 
+           alert("The seedlot has been created.");
+        }
+        if (response.success == 0) { 
+           alert(response.error);
+        }
+      }
+     });
+  });
+    
+  
+</script>

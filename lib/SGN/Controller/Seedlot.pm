@@ -1,0 +1,34 @@
+
+package SGN::Controller::Seedlot;
+
+use Moose;
+
+BEGIN { extends 'Catalyst::Controller'; }
+
+use CXGN::Seedlot;
+
+sub seedlots :Path('/breeders/seedlots') :Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $seedlots = CXGN::Seedlot->list_seedlots($c->dbic_schema("Bio::Chado::Schema"));
+    $c->stash->{template} = '/breeders_toolbox/seedlots.mas';
+
+}
+
+sub seedlot_detail :Path('/breeders/seedlot') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $seedlot_id = shift;
+
+    my $sl = CXGN::Seedlot->new(
+	schema => $c->dbic_schema("Bio::Chado::Schema"), 
+	seedlot_id => $seedlot_id);
+    $c->stash->{seedlot_id} = $sl->seedlot_id();
+    $c->stash->{uniquename} = $sl->uniquename();
+    $c->stash->{location_code} = $sl->location_code();
+    $c->stash->{current_count} = $sl->current_count();
+    $c->stash->{template} = '/breeders_toolbox/seedlot_details.mas';
+}
+
+1;

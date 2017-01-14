@@ -1,0 +1,49 @@
+
+<%args>
+$seedlot_id
+$uniquename
+$location_code => ''
+$current_count => 0
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery.dataTables-bootstrap-min', 'jquery', 'jquery.dataTables' ] &>
+
+<& /page/page_title.mas, title => 'Seedlot '.$uniquename &>
+
+<table>
+<tr><td><b>Name</b></td><td width="20">&nbsp;</td><td><% $uniquename %></td></tr>
+<tr><td><b>Location Code</b></td><td width="20">&nbsp;</td><td><% $location_code %></td></tr>
+<tr><td><b>Accession</b></td><td width="20">&nbsp;</td><td><% %></td></tr>
+<tr><td><b>Cross</b></td><td width="20">&nbsp;</td><td><% %></td></tr>
+<tr><td><b>Current count</b></td><td width="20">&nbsp;</td><td><% $current_count %></td></tr>
+</table>
+
+<center>
+<h3>Transactions</h3>
+</center>
+
+<table id="trial_summary_data" class="display">
+<thead>
+  <tr>
+    <th>Transaction Date</th>
+    <th>Source</th>
+    <th>Destination</th>
+    <th>Transaction Count</th>
+    <th>Operator</th>
+  </tr>
+</thead>
+
+</table>
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<script>
+  jQuery(document).ready(function () {
+  
+    jQuery('#trial_summary_data').DataTable( { 
+      'ajax': '/ajax/breeders/seedlot/'+<% $seedlot_id %>,
+    });
+  });
+</script>
+
+
