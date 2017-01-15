@@ -44,7 +44,7 @@ $breeding_program_name => undef
          </div>
          <hr>
          <div class="form-group">
-             <label class="col-sm-3 control-label">Folder: </label>
+             <label class="col-sm-3 control-label"><% $project_type %> Folders: </label>
              <div class="col-sm-9" >
                <div id="trial_folder_select_div">
 % if ($folder_id) {
