@@ -39,14 +39,8 @@ sub get_matches {
 	my $accession_list_ref = shift;
 	my $max_distance = shift;
 	my $schema = $self->get_schema();
-	#my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
-	#my $stock_rs = $schema->resultset("Stock::Stock")->search({type_id=>$type_id,});
 	my @accession_list = @{$accession_list_ref};
-	#my $stock;
-	#my $synonym_prop;
 	my %synonym_uniquename_lookup;
-	#my @stock_names;
-	#my @synonym_names;
 	my $fuzzy_string_search = CXGN::String::FuzzyMatch->new( { case_insensitive => 1} );
 	my @fuzzy_accessions;
 	my @absent_accessions;
