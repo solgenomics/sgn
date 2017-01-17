@@ -24,6 +24,7 @@ use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use CXGN::String::FuzzyMatch;
+use SGN::Model::Cvterm;
 #use Data::Dumper;
 
 has 'schema' => (
@@ -34,46 +35,41 @@ has 'schema' => (
 
 
 sub get_matches {
-  my $self = shift;
-  my $accession_list_ref = shift;
-  my $max_distance = shift;
-  my $schema = $self->get_schema();
-  my $type_id = $schema->resultset("Cv::Cvterm")->search({ name=>"accession" })->first->cvterm_id();
-  my $stock_rs = $schema->resultset("Stock::Stock")->search({type_id=>$type_id,});
-  my @accession_list = @{$accession_list_ref};
-  my $stock;
-  my $synonym_prop;
-  my %synonym_uniquename_lookup;
-  my @stock_names;
-  my @synonym_names;
-  my $fuzzy_string_search = CXGN::String::FuzzyMatch->new( { case_insensitive => 1} );
-  my @fuzzy_accessions;
-  my @absent_accessions;
-  my @found_accessions;
-  my %results;
+	my $self = shift;
+	my $accession_list_ref = shift;
+	my $max_distance = shift;
+	my $schema = $self->get_schema();
+	#my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+	#my $stock_rs = $schema->resultset("Stock::Stock")->search({type_id=>$type_id,});
+	my @accession_list = @{$accession_list_ref};
+	#my $stock;
+	#my $synonym_prop;
+	my %synonym_uniquename_lookup;
+	#my @stock_names;
+	#my @synonym_names;
+	my $fuzzy_string_search = CXGN::String::FuzzyMatch->new( { case_insensitive => 1} );
+	my @fuzzy_accessions;
+	my @absent_accessions;
+	my @found_accessions;
+	my %results;
 
+	my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+	my $q = "SELECT stock.uniquename, stockprop.value
+		FROM stock
+		LEFT JOIN stockprop USING(stock_id)
+		JOIN cvterm ON (stockprop.type_id = cvterm.cvterm_id)
+		WHERE stock.type_id=$accession_type_id AND lower(cvterm.name) like '%synonym%';";
+	my $h = $schema->storage->dbh()->prepare($q);
+	$h->execute();
+	my %uniquename_hash;
+	while (my ($uniquename, $synonym) = $h->fetchrow_array()) {
+		$uniquename_hash{$uniquename} = 1;
+		push @{$synonym_uniquename_lookup{$synonym}}, $uniquename;
+	}
 
-  while ($stock = $stock_rs->next()) {
-    my $unique_name = $stock->uniquename();
-    my $synonym_rs =$schema->resultset("Stock::Stockprop")
-      ->search({
-		stock_id => $stock->stock_id(),
-		'lower(type.name)'       => { like => '%synonym%' },
-	       },{join => 'type' });
-    push (@stock_names, $unique_name);
-    while ($synonym_prop = $synonym_rs->next()) {
-      my $synonym_name = $synonym_prop->value();
-      if ($synonym_uniquename_lookup{$synonym_name}) {
-	push (@{$synonym_uniquename_lookup{$synonym_name}},$unique_name);
-      } else {
-	my @unique_names = [$unique_name];
-	$synonym_uniquename_lookup{$synonym_name} = \@unique_names;
-      }
-    }
-  }
-
-  @synonym_names = keys %synonym_uniquename_lookup;
-  push (@stock_names, @synonym_names);
+	my @stock_names = keys %uniquename_hash;
+	my @synonym_names = keys %synonym_uniquename_lookup;
+	push (@stock_names, @synonym_names);
 
   foreach my $accession_name (@accession_list) {
     my @matches;

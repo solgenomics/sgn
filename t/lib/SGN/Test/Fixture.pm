@@ -41,6 +41,7 @@ use File::Slurp qw | read_file |;
 use Bio::Chado::Schema;
 use CXGN::Phenome::Schema;
 use CXGN::Metadata::Schema;
+use CXGN::People::Schema;
 use SGN::Schema;
 use Catalyst::Authentication::User;
 use CXGN::People::Person;
