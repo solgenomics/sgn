@@ -303,6 +303,7 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 </div>
 
 
+% if ($type_name eq 'accession'){
 
 <&| /page/info_section.mas, title=>"Pedigree" , collapsible=> $collapsible, collapsed=>0, subtitle=>"[$add_parent_link] [$remove_parent_link]" &>
   <& /pedigree/stock_pedigree.mas, stock_id => $stock_id, has_pedigree => $has_pedigree &>
@@ -331,6 +332,7 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 
 <& /pedigree/stock_pedigree_string.mas, stock_id => $stock_id &>
 
+% }
 
 % if ($type) {
 <&| /page/info_section.mas, title=>"Related stocks" , collapsible=>1, collapsed=>0 &>
