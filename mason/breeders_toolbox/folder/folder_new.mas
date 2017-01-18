@@ -88,11 +88,10 @@ $breeding_program_name => undef
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                         The folder was created successfully
                     </p>
-                    <button class="btn btn-primary" name="refresh_jstree_html">Refresh Trial Tree</button>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_new_folder_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close and Refresh Page</button>
+                <button id="close_new_folder_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

@@ -220,20 +220,15 @@ jQuery(document).ready(function ($) {
 
 	if (verifyResponse.found) {
 	    $('#count_of_found_accessions').html("Total number already in the database("+verifyResponse.found.length+")");
-	    var found_html = '<table class="table" id="found_accessions_table"><thead><tr><th>Search Name</th><th>Unique Name for Synonym</th></tr></thead><tbody>';
+	    var found_html = '<table class="table" id="found_accessions_table"><thead><tr><th>Search Name</th><th>Found in Database</th></tr></thead><tbody>';
 	    for( i=0; i < verifyResponse.found.length; i++){
 		found_html = found_html
 		    +'<tr><td>'+verifyResponse.found[i].matched_string
 		    +'</td>';
-		if (verifyResponse.found[i].matched_string != verifyResponse.found[i].unique_name){
 		    found_html = found_html
 			+'<td>'
 			+verifyResponse.found[i].unique_name
 			+'</td>';
-		} else {
-		    found_html = found_html
-			+'<td></td>';
-		}
 		found_html = found_html
 		    +'</tr>';
 	    }
@@ -244,11 +239,7 @@ jQuery(document).ready(function ($) {
 
 	    $('#review_found_matches_dialog').modal('show');
 
-	    $('#found_accessions_table').DataTable({
-		"scrollY":        "150px",
-		"scrollCollapse": true,
-		"paging":         false
-	    });
+	    $('#found_accessions_table').DataTable({});
 
 	    if (verifyResponse.fuzzy.length > 0 && doFuzzySearch) {
 		$('#review_found_matches_dialog').on('hidden.bs.modal', function () {

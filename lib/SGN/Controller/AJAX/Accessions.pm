@@ -105,32 +105,17 @@ sub do_exact_search {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my @found_accessions;
-    my @absent_accessions;
     my @fuzzy_accessions;
 
-    foreach my $a (@$accession_list) {
-	print STDERR "CHECKING $a...\n";
-	my $exact_search_rs = $schema->resultset("Stock::Stock")->search( { -or => { name => { -ilike => $a}, uniquename => { -ilike => $a }}});
-	if ($exact_search_rs->count() > 0) {
-	    push @found_accessions, { unique_name => $a, matched_string => $a };
-	}
-	else {
-	    my $exact_synonym_rs = $schema->resultset("Stock::Stockprop")->search(
-		{ value =>
-		  {
-		      -ilike => $a },
-		  'lower(type.name)' => { like => '%synonym%' },
-		},
-		{join => 'type' }
-		);
-	    if ($exact_synonym_rs ->count() > 0) {
-		push @found_accessions, { unique_name => $a,  matched_string => $a};
-		push @fuzzy_accessions, { unique_name => $a,  matched_string => $a};
-	    }
-	    else {
-		push @absent_accessions, $a;
-	    }
-	}
+    my $validator = CXGN::List::Validate->new();
+    my @absent_accessions = @{$validator->validate($schema, 'accessions', $accession_list)->{'missing'}};
+    my %accessions_missing_hash = map { $_ => 1 } @absent_accessions;
+
+    foreach (@$accession_list){
+        if (!exists($accessions_missing_hash{$_})){
+            push @found_accessions, { unique_name => $_,  matched_string => $_};
+            push @fuzzy_accessions, { unique_name => $_,  matched_string => $_};
+        }
     }
 
     my $rest = {
