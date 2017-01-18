@@ -418,7 +418,7 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 <div id="stock_trials_info_popup">
   <table id="stock_trials_info_table" >
     <thead>
-    <tr><th>Trait</th><th>Average</th><th>Std dev</th></tr>
+    <tr><th>Trait</th><th>Average</th><th>Std dev</th><th>Count</th></tr>
     </thead>
   </table>
 </div>
