@@ -152,11 +152,19 @@ function <% $div_name %>_addProp() {
   jQuery.ajax( { 
     type: 'POST',
     url: '/stock/prop/add',
+    beforeSend: function(){
+        jQuery('#working_modal').modal('show');
+    },
     data: { 'stock_id' : <% $stock_id %>, 'prop' : prop, 'prop_type': prop_type },
-    success: function(response) { 
-      if ("error" in response) { alert ('ERROR '+response.error); }
-      if ("message" in response) { alert('added prop ' + prop + ' ('+response.message+')'); }},
-    error: function(response) {   alert('an error occurred while storing the prop ' + response.error) } 
+    success: function(response) {
+        jQuery('#working_modal').modal('hide');
+        if ("error" in response) { alert ('ERROR '+response.error); }
+        if ("message" in response) { alert('Successfully added synonym ' + prop + '. ('+response.message+')'); }
+    },
+    error: function(response) {
+        jQuery('#working_modal').modal('hide');
+        alert('an error occurred while storing the prop ' + response.error);
+    }
   });
 
   <% $div_name %>_getProps();

@@ -241,30 +241,12 @@ jQuery(document).ready(function ($) {
 
 	    $('#found_accessions_table').DataTable({});
 
-	    if (verifyResponse.fuzzy.length > 0 && doFuzzySearch) {
-		$('#review_found_matches_dialog').on('hidden.bs.modal', function () {
-		    $('#review_fuzzy_matches_dialog').modal('show');
-		});
-
-	    }else{
-
-		accessionList = verifyResponse.absent;
-
-		$('#review_found_matches_dialog').on('hidden.bs.modal', function() {
-		    if (!accessionList || accessionList.length == 0) {
-			alert("No accessions to add");
-			location.reload();
-		    } else {
-			alert("Warning: use caution adding accessions.  Slight differences in spelling can cause undesired duplication.  Please send your list of accessions to add to a curator if you are unsure.");
-			$('#review_absent_dialog').modal('show');
-		    }
-		});
-	    }
+        accessionList = verifyResponse.absent;
 
 	}
 
-	if (verifyResponse.fuzzy && doFuzzySearch) {
-	    var fuzzy_html = '<table class="table"><thead><tr><th>Search Name</th><th>Existing Name(s)</th></tr></thead><tbody>';
+	if (verifyResponse.fuzzy.length > 0 && doFuzzySearch) {
+	    var fuzzy_html = '<table class="table"><thead><tr><th>Name in Your List</th><th>Existing Name(s) in Database</th></tr></thead><tbody>';
 	    for( i=0; i < verifyResponse.fuzzy.length; i++) {
 		fuzzy_html = fuzzy_html + '<tr><td>'+ verifyResponse.fuzzy[i].name + '</td>';
 		fuzzy_html = fuzzy_html + '<td><select class="form-control" id ="fuzzyselect'+i+'">';
@@ -283,16 +265,6 @@ jQuery(document).ready(function ($) {
 	    }
 	    accessionList = verifyResponse.absent;
 
-	    $('#review_fuzzy_matches_dialog').on('hidden.bs.modal', function() {
-		if (!accessionList || accessionList.length == 0) {
-		    alert("No accessions to add");
-		    location.reload();
-		} else {
-		    alert("Warning: use caution adding accessions.  Slight differences in spelling can cause undesired duplication.  Please send your list of accessions to add to a curator if you are unsure.");
-		    $('#review_absent_dialog').modal('show');
-		}
-	    });
-
 	}
 
 	if (verifyResponse.absent) {
@@ -309,6 +281,25 @@ jQuery(document).ready(function ($) {
 	    $('#view_absent').html(absent_html);
 	    //$('#review_absent_dialog').dialog('open');
 	}
+
+    jQuery('#review_found_matches_hide').click(function(){
+        if (verifyResponse.fuzzy.length > 0 && doFuzzySearch){
+            jQuery('#review_fuzzy_matches_dialog').modal('show');
+        } else {
+            jQuery('#review_fuzzy_matches_dialog').modal('hide');
+            jQuery('#review_absent_dialog').modal('show');
+        }
+    });
+
+    jQuery('#review_fuzzy_matches_open_lists').click(function(){
+        jQuery('#review_absent_dialog').modal('hide');
+        jQuery("button[name = 'lists_link']").trigger("click");
+    });
+
+    jQuery('#review_fuzzy_matches_hide').click(function(){
+        jQuery('#review_absent_dialog').modal('show');
+    });
+
     }
 
     function verify_accession_list() {
