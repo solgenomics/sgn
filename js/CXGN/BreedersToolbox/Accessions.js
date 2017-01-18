@@ -217,6 +217,7 @@ jQuery(document).ready(function ($) {
     function review_verification_results(verifyResponse){
 	var i;
 	var j;
+    //console.log(verifyResponse);
 
 	if (verifyResponse.found) {
 	    $('#count_of_found_accessions').html("Total number already in the database("+verifyResponse.found.length+")");

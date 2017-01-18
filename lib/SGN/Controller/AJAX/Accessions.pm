@@ -82,7 +82,7 @@ sub do_fuzzy_search {
     }
 
     $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
-    print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
+    #print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
 
     @found_accessions = $fuzzy_search_result->{'found'};
     @fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
@@ -124,7 +124,7 @@ sub do_exact_search {
 	found => \@found_accessions,
 	fuzzy => \@fuzzy_accessions
     };
-    print STDERR Dumper($rest);
+    #print STDERR Dumper($rest);
     $c->stash->{rest} = $rest;
 }
 
