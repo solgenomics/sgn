@@ -449,11 +449,13 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 % }
 </&>
 
+% if ($type_name eq 'accession'){
 
 <&| /page/info_section.mas, title=>"Accession JBrowse", collapsible => 1 , collapsed => 0 &>
 <p id="jbrowse_check">[loading...]</p>
 </&>
 
+% }
 
 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$this_page &>
 
