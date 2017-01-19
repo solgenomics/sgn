@@ -22,6 +22,7 @@ use List::MoreUtils qw /any /;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::BreedersToolbox::AccessionsFuzzySearch;
 use CXGN::Stock::AddStocks;
+use CXGN::List;
 use Data::Dumper;
 #use JSON;
 
@@ -127,6 +128,38 @@ sub do_exact_search {
     #print STDERR Dumper($rest);
     $c->stash->{rest} = $rest;
 }
+
+sub verify_fuzzy_options : Path('/ajax/accession_list/fuzzy_options') : ActionClass('REST') { }
+
+sub verify_fuzzy_options_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $accession_list_id = $c->req->param('accession_list_id');
+    my $fuzzy_option_hash = decode_json($c->req->param('fuzzy_option_data'));
+    #print STDERR Dumper $fuzzy_option_hash;
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $accession_list_id } );
+
+    my @names_to_add;
+    foreach my $form_name (keys %$fuzzy_option_hash){
+        my $item_name = $fuzzy_option_hash->{$form_name}->{'fuzzy_name'};
+        my $select_name = $fuzzy_option_hash->{$form_name}->{'fuzzy_select'};
+        my $fuzzy_option = $fuzzy_option_hash->{$form_name}->{'fuzzy_option'};
+        if ($fuzzy_option eq 'replace'){
+            $list->replace_by_name($item_name, $select_name);
+        } elsif ($fuzzy_option eq 'keep'){
+            push @names_to_add, $item_name;
+        } elsif ($fuzzy_option eq 'remove'){
+            $list->remove_by_name($item_name);
+        }
+    }
+
+    my $rest = {
+        success => "1",
+        names_to_add => \@names_to_add
+    };
+    #print STDERR Dumper($rest);
+    $c->stash->{rest} = $rest;
+}
+
 
 sub add_accession_list : Path('/ajax/accession_list/add') : ActionClass('REST') { }
 

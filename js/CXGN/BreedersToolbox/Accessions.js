@@ -20,7 +20,6 @@ jQuery(document).ready(function ($) {
 
     var list = new CXGN.List();
     var accessionList;
-    var doFuzzySearch;
     var validSpecies;
 
     function disable_ui() {
@@ -96,7 +95,7 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    alert("There were "+accessionsToAdd.length+" accessions added");
+                    alert("All accessions in your list are in the database.");
                 }
             },
             error: function () {
@@ -134,6 +133,66 @@ jQuery(document).ready(function ($) {
         verify_species_name();
     });
 
+    function process_fuzzy_options(accession_list_id) {
+        var data={};
+        $('#add_accession_fuzzy_table').find('tr').each(function(){
+            var id=$(this).attr('id');
+            if (id !== undefined){
+                var row={};
+                $(this).find('input,select').each(function(){
+                    var type = $(this).attr('type');
+                    if (type == 'radio'){
+                        if ($(this).is(':checked')){
+                            row[$(this).attr('name')]=$(this).val();
+                        }
+                    } else {
+                        row[$(this).attr('name')]=$(this).val();
+                    }
+                });
+                data[id]=row;
+            }
+        });
+        console.log(data);
+
+        $.ajax({
+            type: 'POST',
+            url: '/ajax/accession_list/fuzzy_options',
+            dataType: "json",
+            data: {
+                'accession_list_id': accession_list_id,
+                'fuzzy_option_data': JSON.stringify(data),
+            },
+            success: function (response) {
+                console.log(response);
+                accessionList = response.names_to_add;
+                if (accessionList.length > 0){
+                    populate_review_absent_dialog(accessionList);
+                    jQuery('#review_absent_dialog').modal('show');
+                } else {
+                    alert('All accessions in your list are in the database.');
+                }
+            },
+            error: function () {
+                alert('An error occurred checking your fuzzy options!');
+            }
+        });
+    }
+
+    function populate_review_absent_dialog(absent){
+        $('#count_of_absent_accessions').html("Total number to be added("+absent.length+")");
+        var absent_html = '';
+        $("#species_name_input").autocomplete({
+            source: '/organism/autocomplete'
+        });
+
+        for( i=0; i < absent.length; i++){
+            absent_html = absent_html
+            +'<div class="left">'+absent[i]
+            +'</div>';
+        }
+        $('#view_absent').html(absent_html);
+    }
+
     $('#review_absent_accessions_submit').click(function () {
         var speciesName = $("#species_name_input").val();
         var populationName = $("#population_name_input").val();
@@ -155,10 +214,11 @@ jQuery(document).ready(function ($) {
     });
 
 
-    function review_verification_results(verifyResponse){
+    function review_verification_results(verifyResponse, accession_list_id){
         var i;
         var j;
-        //console.log(verifyResponse);
+        console.log(verifyResponse);
+        //console.log(accession_list_id);
 
         if (verifyResponse.found) {
             $('#count_of_found_accessions').html("Total number already in the database("+verifyResponse.found.length+")");
@@ -182,17 +242,15 @@ jQuery(document).ready(function ($) {
 
         }
 
-        if (verifyResponse.fuzzy.length > 0 && doFuzzySearch) {
-            //var fuzzy_html = '<table class="table"><thead><tr><th class="col-xs-4">Name in Your List</th><th class="col-xs-4">Existing Name(s) in Database</th><th class="col-xs-1">Replace name in your list with selected existing name</th><th class="col-xs-1">Continue saving name in your list</th><th class="col-xs-1">Add name in your list as a synonym to selected existing name</th><th class="col-xs-1">Remove name from your list and ignore</th></tr></thead><tbody>';
-            var fuzzy_html = '<table class="table"><thead><tr><th class="col-xs-3">Name in Your List</th><th class="col-xs-3">Existing Name(s) in Database</th><th class="col-xs-2">Replace name in your list with selected existing name</th><th class="col-xs-2">Continue saving name in your list</th><th class="col-xs-2">Remove name from your list and ignore</th></tr></thead><tbody>';
+        if (verifyResponse.fuzzy.length > 0) {
+            var fuzzy_html = '<table id="add_accession_fuzzy_table" class="table"><thead><tr><th class="col-xs-3">Name in Your List</th><th class="col-xs-3">Existing Name(s) in Database</th><th class="col-xs-2">Replace name in your list with selected existing name</th><th class="col-xs-2">Continue saving name in your list</th><th class="col-xs-2">Remove name from your list and ignore</th></tr></thead><tbody>';
             for( i=0; i < verifyResponse.fuzzy.length; i++) {
-                fuzzy_html = fuzzy_html + '<tr><td>'+ verifyResponse.fuzzy[i].name + '</td>';
-                fuzzy_html = fuzzy_html + '<td><select class="form-control" id ="fuzzyselect'+i+'">';
+                fuzzy_html = fuzzy_html + '<tr id="add_accession_fuzzy_option_form'+i+'"><td>'+ verifyResponse.fuzzy[i].name + '<input type="hidden" name="fuzzy_name" value="'+ verifyResponse.fuzzy[i].name + '" /></td>';
+                fuzzy_html = fuzzy_html + '<td><select class="form-control" name ="fuzzy_select">';
                 for(j=0; j < verifyResponse.fuzzy[i].matches.length; j++){
-                    fuzzy_html = fuzzy_html + '<option value="">' + verifyResponse.fuzzy[i].matches[j].name + '</option>';
+                    fuzzy_html = fuzzy_html + '<option value="' + verifyResponse.fuzzy[i].matches[j].name + '">' + verifyResponse.fuzzy[i].matches[j].name + '</option>';
                 }
-                //fuzzy_html = fuzzy_html + '</select></td><td><input type="radio" name="add_accession_fuzzy_option" value="replace">&nbsp;</td><td><input type="radio" name="add_accession_fuzzy_option" value="keep">&nbsp;</td><td><input type="radio" name="add_accession_fuzzy_option" value="synonymize">&nbsp;</td><td><input type="radio" name="add_accession_fuzzy_option" value="remove">&nbsp;</td></tr>';
-                fuzzy_html = fuzzy_html + '</select></td><td><input type="radio" name="add_accession_fuzzy_option" value="replace">&nbsp;</td><td><input type="radio" name="add_accession_fuzzy_option" value="keep">&nbsp;</td><td><input type="radio" name="add_accession_fuzzy_option" value="remove">&nbsp;</td></tr>';
+                fuzzy_html = fuzzy_html + '</select></td><td><input type="radio" name="fuzzy_option" value="replace" checked>&nbsp;</td><td><input type="radio" name="fuzzy_option" value="keep">&nbsp;</td><td><input type="radio" name="fuzzy_option" value="remove">&nbsp;</td></tr>';
             }
             fuzzy_html = fuzzy_html + '</tbody></table>';
             $('#view_fuzzy_matches').html(fuzzy_html);
@@ -204,42 +262,34 @@ jQuery(document).ready(function ($) {
             accessionList = verifyResponse.absent;
         }
 
-        if (verifyResponse.absent) {
-            $('#count_of_absent_accessions').html("Total number to be added("+verifyResponse.absent.length+")");
-            var absent_html = '';
-            $("#species_name_input").autocomplete({
-            source: '/organism/autocomplete'
-            });
-
-            for( i=0; i < verifyResponse.absent.length; i++){
-                absent_html = absent_html
-                +'<div class="left">'+verifyResponse.absent[i]
-                +'</div>';
-            }
-            $('#view_absent').html(absent_html);
+        if (verifyResponse.absent.length > 0 && verifyResponse.fuzzy.length == 0) {
+            populate_review_absent_dialog(verifyResponse.absent);
         }
 
         jQuery('#review_found_matches_hide').click(function(){
-            if (verifyResponse.fuzzy.length > 0 && doFuzzySearch){
+            if (verifyResponse.fuzzy.length > 0){
                 jQuery('#review_fuzzy_matches_dialog').modal('show');
             } else {
                 jQuery('#review_fuzzy_matches_dialog').modal('hide');
-                jQuery('#review_absent_dialog').modal('show');
+                if (verifyResponse.absent.length > 0){
+                    jQuery('#review_absent_dialog').modal('show');
+                } else {
+                    alert('All accessions in your list are in the database.');
+                }
             }
+        });
+
+        jQuery(document).on('click', '#review_fuzzy_matches_continue', function(){
+            process_fuzzy_options(accession_list_id);
         });
 
     }
 
-    jQuery('#review_fuzzy_matches_continue').click(function(){
-        jQuery('#review_absent_dialog').modal('show');
-    });
-
     function verify_accession_list() {
         var accession_list_id = $('#accessions_list_select').val();
         var accession_list = JSON.stringify(list.getList(accession_list_id));
-        doFuzzySearch = $('#fuzzy_check').attr('checked');
+        doFuzzySearch = $('#fuzzy_check').attr('checked'); //fuzzy search is always checked in a hidden input
         //alert("should be disabled");
-        //alert (doFuzzySearch);
         //alert(accession_list);
 
         $.ajax({
@@ -260,7 +310,7 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    review_verification_results(response);
+                    review_verification_results(response, accession_list_id);
                 }
             },
             error: function () {
