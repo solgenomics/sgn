@@ -489,7 +489,7 @@ sub _get_rcbd_design {
     $plot_info{'stock_name'} = $stock_names[$i];
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
-    $plot_info{'rep_number'} = 1;
+    $plot_info{'rep_number'} = $block_numbers[$i];
     $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
     if ($fieldmap_row_numbers[$i]){
       $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
