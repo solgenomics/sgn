@@ -95,6 +95,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{has_plant_entries} = $trial->has_plant_entries();
 
     $c->stash->{hidap_enabled} = $c->config->{hidap_enabled};
+    $c->stash->{cassbase_to_cea} = $c->config->{cassbase_to_cea};
 
     if ($trial->get_folder) {
       $c->stash->{folder_id} = $trial->get_folder()->project_id();
@@ -175,6 +176,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $data_level = $c->req->param("dataLevel") || "plot";
     my $timestamp_option = $c->req->param("timestamp") || 0;
     my $trait_list = $c->req->param("trait_list");
+    my $search_type = $c->req->param("search_type") || 'fast';
 
     if ($data_level eq 'plants') {
         my $trial = $c->stash->{trial};
@@ -226,6 +228,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         filename => $tempfile,
         format => $plugin,
         data_level => $data_level,
+        search_type => $search_type,
         include_timestamp => $timestamp_option,
     });
 

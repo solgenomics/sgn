@@ -89,7 +89,7 @@ use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/evens distinct/;
 use CatalystX::GlobalContext '$c';
 
-my $page  = CXGN::Page->new("BLAST Search Interface","Evan");
+$page  = CXGN::Page->new("BLAST Search Interface","Evan");
 my $dbh   = CXGN::DB::Connection->new;
 my $prefs = CXGN::Page::UserPrefs->new( $dbh );
 

@@ -28,29 +28,70 @@ has 'dbname' => (
 
 =head2 metadata_query
 
- Usage:        my %info = $bs->metadata_query($criteria_list, $dataref, $queryref);
- Desc:
- Ret:          returns a hash with a key called results that contains
-               a listref of listrefs specifying the matching list with ids
-               and names.
- Args:         criteria_list: a comma separated string called a criteria_list,
-               listing all the criteria that need to be applied. Possible
-               criteria are trials, years, traits, and locations. The last
+ Usage:        my $results_ref = $bs->metadata_query($criteria_list, $dataref, $queryref);
+
+ Ret:          returns a hash with a list of ids and names that were matched.
+
+ Args:         criteria_list: a comma separated string of criteria categories. Possible
+               criteria include accessions, breeding programs, genotyping protocols,
+               locations, plots, plants, trials, trial_designs, traits, and years. The last
                criteria in the list is the return type.
+
                dataref: The dataref is a hashref of hashrefs. The first key
                is the target of the transformation, and the second is the
                source type of the transformation, containing comma separated
                values of the source type.
-               queryref: same structure as dataref, but instead of storing ids it stores a
-               1 if user requested intersect, or 0 for default union
- Side Effects: will run refresh_matviews() if matviews aren't already populated
- Example:
 
+               queryref: same structure as dataref, but instead of storing ids it stores a
+               1 if user to retrieve an intersection of matches, or 0 for the default union
+
+ Side Effects: none
+ Example:   retrieving all the trials from location 'test_location' (location_id = 23) and year '2014' in the fixture db:
+
+ my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
+ my $criteria_list = [
+                'years',
+                'locations',
+                'trials'
+              ];
+ my $dataref = {
+                'trials' => {
+                            'locations' => '\'23\'',
+                            'years' => '\'2014\''
+                          }
+              };
+ my $queryref = {
+                'trials' => {
+                            'locations' => 0,
+                            'years' => 0
+                          }
+              };
+
+ my $results_ref = $bs ->metadata_query($criteria_list, $dataref, $queryref);
+
+ print Dumper($results);
+ will give you:
+
+            {
+                'results' => [
+                               [
+                                 139,
+                                 'Kasese solgs trial'
+                               ],
+                               [
+                                 137,
+                                 'test_trial'
+                               ],
+                               [
+                                 141,
+                                 'trial2 NaCRRI'
+                               ]
+                             ]
+              },
 =cut
 
 sub metadata_query {
   my $self = shift;
-  my $c = shift;
   my $criteria_list = shift;
   my $dataref = shift;
   my $queryref = shift;
@@ -58,26 +99,6 @@ sub metadata_query {
   print STDERR "criteria_list=" . Dumper($criteria_list);
   print STDERR "dataref=" . Dumper($dataref);
   print STDERR "queryref=" . Dumper($queryref);
-
-  # Check if matviews are populated, and run refresh if they aren't. Which, as of postgres 9.5, will be the case when our databases are loaded from a dump. This should no longer be necessary once this bug is fixed in newer postgres versions
-  my ($status, %response_hash);
-  try {
-    my $populated_query = "select * from materialized_phenoview limit 1";
-    my $sth = $self->dbh->prepare($populated_query);
-    $sth->execute();
-  } catch { #if test query fails because views aren't populated
-    print STDERR "Using basic refresh to populate views . . .\n";
-    $status = $self->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'basic');
-    %response_hash = %$status;
-  };
-
-  if (%response_hash && $response_hash{'message'} eq 'Wizard update completed!') {
-    print STDERR "Populated views, now proceeding with query . . . .\n";
-  } elsif (%response_hash && $response_hash{'message'} eq 'Wizard update initiated.') {
-    return { error => "The search wizard is temporarily unavailable while database indexes are being repopulated. Please try again later. Depending on the size of the database, it will be ready within a few seconds to an hour."};
-  } elsif (%response_hash && $response_hash{'error'}) {
-    return { error => $response_hash{'error'} };
-  }
 
   my $target_table = $criteria_list->[-1];
   print STDERR "target_table=". $target_table . "\n";
@@ -136,15 +157,8 @@ sub metadata_query {
     push @results, [ $id, $name ];
   }
 
-  if (@results >= 10_000) {
-    return { error => scalar(@results).' matches. Too many results to display' };
-  }
-  elsif (@results < 1) {
-    return { error => scalar(@results).' matches. No results to display' };
-  }
-  else {
-    return { results => \@results };
-  }
+  return { results => \@results };
+
 }
 
 =head2 avg_phenotypes_query
@@ -162,13 +176,15 @@ sub avg_phenotypes_query {
   my $trial_id = shift;
   my $trait_ids = shift;
   my $weights = shift;
+  my $controls = shift;
+  my @trait_ids = @$trait_ids;
+  my @weights = @$weights;
+  my @controls = @$controls;
   my $allow_missing = shift;
-  my $reference_accession = shift;
-
 
   my $select = "SELECT table0.accession_id, table0.accession_name";
   my $from = " FROM (SELECT accession_id, accession_name FROM materialized_phenoview WHERE trial_id = $trial_id GROUP BY 1,2) AS table0";
-  for (my $i = 1; $i <= scalar @$trait_ids; $i++) {
+  for (my $i = 1; $i <= scalar @trait_ids; $i++) {
     $select .= ",  ROUND( CAST(table$i.trait$i AS NUMERIC), 2)";
     $from .= " JOIN (SELECT accession_id, accession_name, AVG(phenotype_value::REAL) AS trait$i FROM materialized_phenoview WHERE trial_id = $trial_id AND trait_id = ? GROUP BY 1,2) AS table$i USING (accession_id)";
   }
@@ -180,33 +196,41 @@ sub avg_phenotypes_query {
   my $h = $self->dbh->prepare($query);
   $h->execute(@$trait_ids);
 
-  my @weights = @$weights;
   my (@raw_avg_values, @reference_values, @rows_to_scale, @weighted_values);
 
-  if ($reference_accession) {
-
-    while (my @row = $h->fetchrow_array()) {
-      push @rows_to_scale, @row;
-      my ($id, $name, @avg_values) = @row;
-      if ($id == $reference_accession) { @reference_values = @avg_values; }
+  if (grep { defined($_) } @controls) {
+  while (my @row = $h->fetchrow_array()) {
+    push @rows_to_scale, @row;
+    my ($id, $name, @avg_values) = @row;
+    for my $i (0..$#controls) {
+      my $control = $controls[$i] || 0;
+      if ($id == $control) {
+        #print STDERR "Matched control accession $name with values @avg_values\n";
+        if (!defined($avg_values[$i])) {
+          return { error => "Can't scale values using control $name, it has a zero or undefined value for trait with id @$trait_ids[$i] in this trial. Please select a different control for this trait." };
+        }
+        $reference_values[$i] = $avg_values[$i];
+      }
+    }
+  }
+    for my $i (0..$#trait_ids) {
+        $reference_values[$i] = 1 unless defined $reference_values[$i];
     }
 
-    print STDERR "reference accession id = $reference_accession and reference values = @reference_values\n";
-
+    #print STDERR "reference values = @reference_values\n";
     $h->execute(@$trait_ids);
     while (my ($id, $name, @avg_values) = $h->fetchrow_array()) {
 
       my @scaled_values = map {sprintf("%.2f", $avg_values[$_] / $reference_values[$_])} 0..$#avg_values;
       my @scaled_and_weighted = map {sprintf("%.2f", $scaled_values[$_] * $weights[$_])} 0..$#scaled_values;
       unshift @scaled_values, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
-      unshift @scaled_and_weighted, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
-
       push @raw_avg_values, [@scaled_values];
 
       my $sum;
       map { $sum += $_ } @scaled_and_weighted;
       my $rounded_sum = sprintf("%.2f", $sum);
       push @scaled_and_weighted, $rounded_sum;
+      unshift @scaled_and_weighted, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
       push @weighted_values, [@scaled_and_weighted];
     }
 
@@ -238,8 +262,8 @@ sub avg_phenotypes_query {
     push @weighted_values3, [@temp_array];
   }
 
-  print STDERR "avg_phenotypes: ".Dumper(@raw_avg_values);
-  print STDERR "avg_phenotypes: ".Dumper(@weighted_values3);
+  #print STDERR "avg_phenotypes: ".Dumper(@raw_avg_values);
+  #print STDERR "avg_phenotypes: ".Dumper(@weighted_values3);
 
   return {
     raw_avg_values => \@raw_avg_values,
@@ -248,9 +272,51 @@ sub avg_phenotypes_query {
 
 }
 
+=head2 test_matviews
+
+parameters: db parameters
+
+returns: message detailing matview status
+
+Side Effects: If they are unavailable, it will use the refresh_matviews method to populate the materialized views
+
+=cut
+
+
+sub test_matviews {
+
+  my $self = shift;
+  my $dbhost = shift;
+  my $dbname = shift;
+  my $dbuser = shift;
+  my $dbpass = shift;
+  my ($status, %response_hash);
+
+  try {
+    my $populated_query = "select * from materialized_phenoview limit 1";
+    my $sth = $self->dbh->prepare($populated_query);
+    $sth->execute();
+  } catch { #if test query fails because views aren't populated
+    print STDERR "Using basic refresh to populate views . . .\n";
+    $status = $self->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'basic');
+    %response_hash = %$status;
+  };
+
+  if (%response_hash && $response_hash{'message'} eq 'Wizard update completed!') {
+    print STDERR "Populated views, now proceeding with query . . . .\n";
+    return { success => "Populated views, query can proceed." };
+  } elsif (%response_hash && $response_hash{'message'} eq 'Wizard update initiated.') {
+    return { error => "The search wizard is temporarily unavailable while database indexes are being repopulated. Please try again later." };
+  } elsif (%response_hash && $response_hash{'error'}) {
+    return { error => $response_hash{'error'} };
+  } else {
+    return { success => "Test successful, query can proceed." };
+  }
+}
+
 =head2 refresh_matviews
 
-parameters: string to specify desired refresh type, basic or concurrent. defaults to concurrent
+parameters: db parameters, and a string to specify desired refresh type, basic or concurrent. defaults to concurrent
 
 returns: message detailing success or error
 

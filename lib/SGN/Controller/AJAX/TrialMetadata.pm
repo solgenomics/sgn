@@ -118,19 +118,29 @@ sub trial_details_POST  {
     print STDERR "Here are the deets: " . Dumper($details) . "\n";
     }
 
+    #check privileges
+    print STDERR " curator status = ".$c->user()->check_roles('curator')." and submitter status = ".$c->user()->check_roles('submitter')."\n";
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-	    $c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial details of this trial.' };
-	    return;
+      $c->stash->{rest} = { error => 'You do not have the required privileges to edit trial details, trial details can only be edited by accounts with submitter or curator privileges' };
+      return;
     }
 
     my $trial_id = $c->stash->{trial_id};
     my $trial = $c->stash->{trial};
     my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $c->stash->{schema} });
-    my $breeding_program = $program_object->get_breeding_programs_by_trial($trial_id);
+    my $program_ref = $program_object->get_breeding_programs_by_trial($trial_id);
 
-    if (! ($c->user() &&  ($c->user->check_roles("curator") || $c->user->check_roles($breeding_program)))) {
-	    $c->stash->{rest} = { error => "You need to be logged in with sufficient privileges to change the details of this trial." };
-	    return;
+    my $program_array = @$program_ref[0];
+    my $breeding_program_name = @$program_array[1];
+    my @user_roles = $c->user->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
+
+    print STDERR "my user roles = @user_roles and trial breeding program = $breeding_program_name \n";
+
+    if (!exists($has_roles{$breeding_program_name})) {
+      $c->stash->{rest} = { error => "You need to be associated with breeding program $breeding_program_name to change the details of this trial." };
+      return;
     }
 
     # set each new detail that is defined
@@ -302,6 +312,19 @@ sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
 
     my @data = $trial->get_controls();
+
+    $c->stash->{rest} = { accessions => \@data };
+}
+
+sub controls_by_plot : Chained('trial') PathPart('controls_by_plot') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my @plot_ids = $c->req->param('plot_ids[]');
+
+    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_controls_by_plot(\@plot_ids);
 
     $c->stash->{rest} = { accessions => \@data };
 }

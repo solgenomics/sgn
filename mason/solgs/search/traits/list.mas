@@ -8,21 +8,41 @@ $index
 $traits_list
 
 </%args>
+<%perl>
+my $table;	
 
-<& /page/page_title.mas, 
-   title=>'List of traits with GS data'
-&>
+if (@$traits_list) {
+  $table  = qq | <table id="traits_starting_with_index_table" class="table table-condensed table-striped"> |;
+  $table .= qq | <thead><tr><td>Trait</td><td>Definition</td></tr></thead><tbody> |;
+	
+  foreach my $trait (@$traits_list) {
+    $table .= qq | <tr> |;
+    $table .= qq | <td> $trait->[0] </td> |;
+    $table .= qq | <td> $trait->[1] </td> |;
+    $table .= qq | </tr> |;
+  }
+    
+  $table .= qq | </tbody> |;
+  $table .= qq | </table> |;
 
-<&| /page/info_section.mas, 
-   title    => qq |Traits beginning with "$index" |
-&>
+} else {
+  $table = qq | <p>There are no traits starting with $index </p> |; 
+}
 
-<&/page/columnar_table.mas,
-   data         => $traits_list,
-  __align       => 'l',
-  __alt_freq    => 2,
-  __alt_width   => 1,
-  __cellpadding => 20,
- &>
+</%perl>
 
-</&>
+<div class="container">
+  <& /page/page_title.mas, 
+     title=>'List of traits with GS data'
+    &>
+
+    <&| /page/info_section.mas, 
+	title => qq |Traits beginning with "$index" |
+      &>
+
+      <div id="traits_starting_with_index_div">
+	<% $table %>
+     </div>
+
+ </&>
+</div>

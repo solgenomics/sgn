@@ -25,7 +25,7 @@ use SGN::Test::WWW::Mechanize skip_cgi => 1;
 my $mech = SGN::Test::WWW::Mechanize->new;
 
 $mech->get_ok("/search/organisms");
-$mech->content_like(qr!Organism/Taxon search!);
+$mech->content_like(qr!Organism/Taxon Search!);
 
 $mech->get_ok("/search");
 $mech->content_like(qr/Search/);
@@ -34,24 +34,24 @@ $mech->get_ok("/search/index.pl");
 $mech->content_like(qr/A database of in-situ/);
 
 my $type_regex = {
-    bacs                         => qr/Genomic clone search/,
+    bacs                         => qr/Genomic Clone Search/,
     directory                    => qr/Directory search/,
-    est                          => qr/EST search/,
+    est                          => qr/EST Search/,
     est_library                  => qr/Library search/,
-    experiment                   => qr/Expression search/,
+    experiment                   => qr/Expression Search/,
     family                       => qr/Family search/,
-    images                       => qr/Image search/,
+    images                       => qr/Image Search/,
     library                      => qr/Library search/,
-    loci                         => qr/Gene search/,
-    marker                       => qr/Map locations/,
-    markers                      => qr/Marker options/,
-    phenotype                    => qr/Submit new stock/,
-    phenotype_qtl_trait          => qr/Submit new stock/,
-    platform                     => qr/Expression search/,
+    loci                         => qr/Search Genes and Loci/,
+    marker                       => qr/Map Locations/,
+    markers                      => qr/Marker Options/,
+    phenotype                    => qr/Submit New Stock/,
+    phenotype_qtl_trait          => qr/Submit New Stock/,
+    platform                     => qr/Expression Search/,
     qtl                          => qr/Search QTLs/,
-    template_experiment_platform => qr/Expression search/,
-    trait                        => qr/Browse trait terms/,
-    unigene                      => qr/Unigene search/,
+    template_experiment_platform => qr/Expression Search/,
+    trait                        => qr/Search and browse tree of traits/,
+    unigene                      => qr/Unigene Search/,
     glossary                     => qr/Glossary search/,
 };
 

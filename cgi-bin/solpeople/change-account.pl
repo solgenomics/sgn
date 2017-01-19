@@ -311,7 +311,7 @@ sub get_actions_toolbar {
 	my %args = $self->get_args();
 	my $sp_person_id = $args{sp_person_id};
 	
-	my $home = qq(<a href="top-level.pl?sp_person_id=$sp_person_id">[Directory Update Home]</a>&nbsp;&nbsp;);
+	my $home = qq(<a href="/solpeople/profile/$sp_person_id">[Profile Home]</a>&nbsp;&nbsp;);
 	
 	if($self->get_action() eq "edit") {
 		if($user_is_owner) {

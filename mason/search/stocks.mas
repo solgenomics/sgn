@@ -22,9 +22,6 @@
 
 use CXGN::Page::FormattingHelpers qw / conditional_like_input_html simple_selectbox_html/;
 
-
-my $any_name_select = conditional_like_input_html("any_name","contains", "", '30');
-
 my $accession_cvterm_id;
 
 for (my $i=0; $i<= scalar(@$stock_types); $i++) {
@@ -61,7 +58,21 @@ my $breeding_programs_select = simple_selectbox_html(
         <div class="form-group form-group-sm">
       	  <label class="col-sm-3 control-label">Stock Name or Description: </label>
           <div class="col-sm-9" >
-            <% $any_name_select %>
+            <div class="form-group">
+              <div class="input-group">
+                <span class="input-group-btn" width="20%">
+                  <select class="form-control" id="any_name_matchtype" name="any_name_matchtype">
+                    <option title="contains" value="contains" selected="selected">contains</option>
+                    <option title="starts with" value="starts_with">starts with</option>
+                    <option title="ends with" value="ends_with">ends with</option>
+                    <option title="exactly" value="exactly">exactly</option>
+                  </select>
+                </span>
+                  <span class="input-group-btn">
+                  <input class="form-control" name="any_name" id="any_name" value="" size="30" type="text" placeholder="Type search here..."/>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -161,40 +172,13 @@ my $breeding_programs_select = simple_selectbox_html(
   </div>
 </&>
 
-<!--
-<div id="stock_search_form">
-  <table>
-  <tr><td colspan="4" align="right"><a href="/stock/0/new/">[Submit new stock]</a></td>
-    </tr>
-  <tr><td><label for="any_name_matchtype">Stock name or description</label></td><td colspan="2"><% $any_name_select %></td>
-    </tr>
-  <tr><td><label for="stock_type_select">Stock type</label></td><td><% $stock_type_select %></td>
-    <td><label for="organism_select">Organism</label></td><td><% $organism_select %></td>
-    </tr>
-  <tr><td><label for="person">Stock owner</label></td><td><input id="person"></td>
-    <td><label for="trait">Trait</label></td><td><input id="trait"></td>
-  </tr>
-  <tr><td><label for="project">Project name</label></td><td><input id="project"></td>
-    <td><label for="location">Project location</label></td><td><input id="location"></td>
-  </tr>
-  <tr><td><label for="year">Project year</label></td><td><input id="year"></td>
-    <td><label for="organization">Organization</label></td><td><% $breeding_programs_select %></td>
-  </tr>
-
-  <tr><td colspan="4" align="right"><button id="submit_stock_search" />Search</button></td>
-</tr></table>
-<br />
-
-</div>
--->
-
 <br />
 
 <&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0 &>
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
-<table id="stock_search_results" class="display">
+<table id="stock_search_results" width="100%" class="table table-hover table-striped">
 <thead>
   <tr>
     <th>Stock Name</th>
@@ -229,11 +213,11 @@ jQuery(document).ready(function () {
      jQuery("#onto").autocomplete({
         source: '<% $onto_autocomplete_uri %>' + "?db_name=" + '<% $trait_db_name %>'
      });
-     jQuery("#stock_name").autocomplete({
-        source: '/ajax/stock/stock_autocomplete',
-     });
      jQuery("#project").autocomplete({
         source: '/ajax/stock/project_autocomplete',
+     });
+     jQuery("#any_name").autocomplete({
+        source: '/ajax/stock/stock_autocomplete',
      });
      jQuery("#location").autocomplete({
         source: '/ajax/stock/geolocation_autocomplete',
