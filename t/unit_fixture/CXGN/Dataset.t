@@ -12,6 +12,7 @@ use CXGN::Dataset::Cache;
 
 my $t = SGN::Test::Fixture->new();
 
+
 my $ds = CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema());
 
 $ds->accessions( [ 38913, 38914, 38915 ]);
@@ -48,6 +49,7 @@ foreach my $ds (@datasets) {
     
     my $sp_dataset_id = $ds->store();
 
+
     my $trials = $ds->retrieve_trials();
 
     is_deeply($trials, [
@@ -66,6 +68,7 @@ foreach my $ds (@datasets) {
                        ]
 	      , "trial retrieve test");
     
+
     if ($ds->isa("CXGN::Dataset::File")) { 
 	ok(-e $ds->file_name()."_trials.txt", "trial file exists");
     }
@@ -94,6 +97,7 @@ foreach my $ds (@datasets) {
     
     my $phenotypes = $ds->retrieve_phenotypes();
     
+
     my $genotypes = $ds->retrieve_genotypes(1);
     
     my $years = $ds->retrieve_years();

@@ -87,7 +87,6 @@ has 'sp_dataset_id' => ( isa => 'Int',
 			 predicate => 'has_sp_dataset_id',
     );
 
-
 =head2 data()
 
 accessor for the json-formatted data structure (as used for the backend storage)
@@ -125,11 +124,9 @@ accessor for defining the accessions that are part of this dataset (ArrayRef).
 =cut
 
 has 'accessions' =>  ( isa => 'Maybe[ArrayRef]', 
-
 		       is => 'rw',
 		       predicate => 'has_accessions',
     );
-
 
 =head2 plots()
 
@@ -149,6 +146,7 @@ accessor for defining the trials that are part of this dataset (ArrayRef).
 
 =cut
 
+
 has 'trials' =>      ( isa => 'Maybe[ArrayRef]', 
 		       is => 'rw',
 		       predicate => 'has_trials',
@@ -164,16 +162,15 @@ has 'traits' =>      ( isa => 'Maybe[ArrayRef]',
 		       predicate => 'has_traits',
     );
 
-
 =head2 years()
 
 =cut
+
 
 has 'years' =>       ( isa => 'Maybe[ArrayRef]', 
 		       is => 'rw',
 		       predicate => 'has_years',
     );
-
 
 =head2 breeding_programs()
 
@@ -202,6 +199,7 @@ has 'data_level' =>  ( isa => 'String',
 
 has 'breeder_search' => (isa => 'CXGN::BreederSearch', is => 'rw');
 
+
 sub BUILD { 
     my $self = shift;
     
@@ -221,6 +219,7 @@ sub BUILD {
 	$self->breeding_programs($dataset->{breeding_programs});
 	$self->is_live($dataset->{is_live});
     }
+
 
     else { print STDERR "Creating empty dataset object\n"; }
 
@@ -243,6 +242,7 @@ sub datasets_by_person {
     my $sp_person_id = shift;
 
     my $rs = $people_schema->resultset("SpDataset")->search( { sp_person_id => $sp_person_id });
+
     my @datasets;
     while (my $row = $rs->next()) { 
 	push @datasets, $row->sp_dataset_id(), $row->name();
@@ -275,6 +275,7 @@ sub store {
 		 description => $self->description(),
 		 dataset => $json,
 	};
+
 
 
     print STDERR "dataset_id = ".$self->sp_dataset_id()."\n";
@@ -357,7 +358,6 @@ sub retrieve_phenotypes {
         trait_list => $self->traits(),
         trial_list => $self->trials(),
         accession_list => $self->accessions(),
-
         data_level => $self->data_level(),
     });
 
@@ -388,6 +388,7 @@ sub retrieve_accessions {
     }
     return $accessions->{results};
 }
+
 
 =head2 retrieve_plots()
 
@@ -424,7 +425,6 @@ sub retrieve_trials {
     else {
 	my $criteria = $self->_get_criteria();
 	push @$criteria, "trials";
-
 	$trials = $self->breeder_search()->metadata_query(undef, $criteria, $self->_get_source_dataref("trials"));						
     }
     print STDERR "TRIALS: ".Dumper($trials);
@@ -451,6 +451,7 @@ sub retrieve_traits {
     return $traits->{results};
 
 }
+
 
 =head2 retrieve_years()
 
