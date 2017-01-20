@@ -135,6 +135,7 @@ sub generate_experimental_design_POST : Args(0) {
   #my $trial_name = $c->req->param('project_name');
   my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
   my $use_same_layout = $c->req->param('use_same_layout');
+  my $number_of_checks = scalar(@control_names_crbd);
   #my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
   if ($design_type eq "RCBD" || $design_type eq "Alpha" || $design_type eq "CRD") {
     if (@control_names_crbd) {
@@ -273,6 +274,9 @@ my $location_number = scalar(@locations);
   }
   if ($location_number) {
     $design_info{'number_of_locations'} = $location_number;
+  }
+  if($number_of_checks){
+    $design_info{'number_of_checks'} = $number_of_checks;
   }
   if ($design_type) {
     $trial_design->set_design_type($design_type);
