@@ -22,6 +22,7 @@ use List::MoreUtils qw /any /;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::BreedersToolbox::AccessionsFuzzySearch;
 use CXGN::Stock::AddStocks;
+use CXGN::Chado::Stock;
 use CXGN::List;
 use Data::Dumper;
 #use JSON;
@@ -133,6 +134,7 @@ sub verify_fuzzy_options : Path('/ajax/accession_list/fuzzy_options') : ActionCl
 
 sub verify_fuzzy_options_POST : Args(0) {
     my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $accession_list_id = $c->req->param('accession_list_id');
     my $fuzzy_option_hash = decode_json($c->req->param('fuzzy_option_data'));
     #print STDERR Dumper $fuzzy_option_hash;
@@ -149,6 +151,11 @@ sub verify_fuzzy_options_POST : Args(0) {
             push @names_to_add, $item_name;
         } elsif ($fuzzy_option eq 'remove'){
             $list->remove_by_name($item_name);
+        } elsif ($fuzzy_option eq 'synonymize'){
+            my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$select_name})->stock_id();
+            my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+            $stock->add_synonym($item_name);
+            $list->replace_by_name($item_name, $select_name);
         }
     }
 

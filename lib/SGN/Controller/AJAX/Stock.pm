@@ -818,7 +818,7 @@ sub stock_autocomplete_GET :Args(0) {
 	push @response_list, $stock_name;
     }
 
-    print STDERR "stock_autocomplete RESPONSELIST = ".join ", ", @response_list;
+    #print STDERR "stock_autocomplete RESPONSELIST = ".join ", ", @response_list;
 
     $c->stash->{rest} = \@response_list;
 }

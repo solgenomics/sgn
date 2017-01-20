@@ -173,7 +173,7 @@ jQuery(document).ready(function ($) {
                 }
             },
             error: function () {
-                alert('An error occurred checking your fuzzy options!');
+                alert('An error occurred checking your fuzzy options! Do not try to add a synonym to a synonym!');
             }
         });
     }
@@ -243,14 +243,14 @@ jQuery(document).ready(function ($) {
         }
 
         if (verifyResponse.fuzzy.length > 0) {
-            var fuzzy_html = '<table id="add_accession_fuzzy_table" class="table"><thead><tr><th class="col-xs-3">Name in Your List</th><th class="col-xs-3">Existing Name(s) in Database</th><th class="col-xs-2">Replace name in your list with selected existing name</th><th class="col-xs-2">Continue saving name in your list</th><th class="col-xs-2">Remove name from your list and ignore</th></tr></thead><tbody>';
+            var fuzzy_html = '<table id="add_accession_fuzzy_table" class="table"><thead><tr><th class="col-xs-4">Name in Your List</th><th class="col-xs-4">Existing Name(s) in Database</th><th class="col-xs-1">Replace name in your list with selected existing name</th><th class="col-xs-1">Continue saving name in your list</th><th class="col-xs-1">Remove name from your list and ignore</th><th class="col-xs-1">Add name in your list as a synonym to selected existing name and replace name in your list with selected existing name</th></tr></thead><tbody>';
             for( i=0; i < verifyResponse.fuzzy.length; i++) {
                 fuzzy_html = fuzzy_html + '<tr id="add_accession_fuzzy_option_form'+i+'"><td>'+ verifyResponse.fuzzy[i].name + '<input type="hidden" name="fuzzy_name" value="'+ verifyResponse.fuzzy[i].name + '" /></td>';
                 fuzzy_html = fuzzy_html + '<td><select class="form-control" name ="fuzzy_select">';
                 for(j=0; j < verifyResponse.fuzzy[i].matches.length; j++){
                     fuzzy_html = fuzzy_html + '<option value="' + verifyResponse.fuzzy[i].matches[j].name + '">' + verifyResponse.fuzzy[i].matches[j].name + '</option>';
                 }
-                fuzzy_html = fuzzy_html + '</select></td><td><input type="radio" name="fuzzy_option" value="replace" checked>&nbsp;</td><td><input type="radio" name="fuzzy_option" value="keep">&nbsp;</td><td><input type="radio" name="fuzzy_option" value="remove">&nbsp;</td></tr>';
+                fuzzy_html = fuzzy_html + '</select></td><td><input type="radio" name="fuzzy_option" value="replace" checked>&nbsp;</td><td><input type="radio" name="fuzzy_option" value="keep">&nbsp;</td><td><input type="radio" name="fuzzy_option" value="remove">&nbsp;</td><td><input type="radio" name="fuzzy_option" value="synonymize">&nbsp;</td></tr>';
             }
             fuzzy_html = fuzzy_html + '</tbody></table>';
             $('#view_fuzzy_matches').html(fuzzy_html);

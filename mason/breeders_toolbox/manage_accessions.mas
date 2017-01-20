@@ -122,7 +122,7 @@ $preferred_species => ""
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary" name="review_fuzzy_matches_continue" id="review_fuzzy_matches_continue" data-dismiss="modal">Continue Saving New Names in Your List</button>
+        <button type="button" class="btn btn-primary" name="review_fuzzy_matches_continue" id="review_fuzzy_matches_continue" data-dismiss="modal">Make Changes and Continue</button>
       </div>
     </div>
   </div>
