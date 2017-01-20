@@ -327,7 +327,9 @@ sub _get_source_dataref {
 
 =head2 retrieve_genotypes()
 
+
 Retrieves genotypes as a listref of hashrefs.
+
 
 =cut
 
@@ -344,6 +346,7 @@ sub retrieve_genotypes {
     my $resultset = $genotypes_search->get_genotype_info(); 
     my $genotypes = $resultset->{genotypes};	
 }
+
 
 =head2 retrieve_phenotypes()
 
@@ -389,10 +392,10 @@ sub retrieve_accessions {
     return $accessions->{results};
 }
 
-
 =head2 retrieve_plots()
 
 Retrieves plots as a listref of listrefs.
+
 
 =cut
 
@@ -451,7 +454,6 @@ sub retrieve_traits {
     return $traits->{results};
 
 }
-
 
 =head2 retrieve_years()
 
