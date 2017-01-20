@@ -19,6 +19,8 @@ $ds->years(['2012', '2013']);
 $ds->traits([ 70666, 70741 ]);
 $ds->trials([ 139, 144 ]);
 $ds->plots( [ 40034, 40035 ]);
+$ds->name("test");
+$ds->description("test description");
 
 $ds->name("test");
 $ds->description("test description");
@@ -49,7 +51,6 @@ foreach my $ds (@datasets) {
     $ds->accessions( [ 38913, 38914, 38915 ] );
     
     my $sp_dataset_id = $ds->store();
-
 
     my $trials = $ds->retrieve_trials();
 
