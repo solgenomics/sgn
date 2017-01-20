@@ -24,6 +24,7 @@ use Moose;
 use Data::Dumper;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
+use Scalar::Util qw | looks_like_number |;
 use CXGN::Trial;
 use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
@@ -117,6 +118,8 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
     my $c = shift;
 
     my $breeding_program_id = $c->req->param("breeding_program_id");
+    my $folder_for_trials = 1 ? $c->req->param("folder_for_trials") eq 'true' : 0;
+    my $folder_for_crosses = 1 ? $c->req->param("folder_for_crosses") eq 'true' : 0;
 
     my $id = $c->req->param("id") || "folder_select";
     my $name = $c->req->param("name") || "folder_select";
@@ -125,7 +128,9 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
 
     my @folders = CXGN::Trial::Folder->list({
 	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-	    breeding_program_id => $breeding_program_id
+	    breeding_program_id => $breeding_program_id,
+        folder_for_trials => $folder_for_trials,
+        folder_for_crosses => $folder_for_crosses
     });
 
     if ($empty) {
@@ -202,6 +207,8 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $self = shift;
     my $c = shift;
     my $trial_id = $c->req->param('trial_id') || 'all';
+    my $stock_id = $c->req->param('stock_id') || 'all';
+    my $stock_type = $c->req->param('stock_type') . 's' || 'none';
     my $data_level = $c->req->param('data_level') || 'all';
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
@@ -210,12 +217,26 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     }
 
     my @traits;
-    if ($trial_id eq 'all') {
+    if (($trial_id eq 'all') && ($stock_id eq 'all')) {
       my $bs = CXGN::BreederSearch->new( { dbh=> $c->dbc->dbh() } );
-      my $query = $bs->metadata_query($c, [ 'traits' ], {}, {});
+      my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
+      if ($status->{'error'}) {
+        $c->stash->{rest} = { error => $status->{'error'}};
+        return;
+      }
+      my $query = $bs->metadata_query([ 'traits' ], {}, {});
       @traits = @{$query->{results}};
       #print STDERR "Traits: ".Dumper(@traits)."\n";
-    } else {
+    } elsif (looks_like_number($stock_id)) {
+      my $bs = CXGN::BreederSearch->new( { dbh=> $c->dbc->dbh() } );
+      my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
+      if ($status->{'error'}) {
+        $c->stash->{rest} = { error => $status->{'error'}};
+        return;
+      }
+      my $query = $bs->metadata_query([$stock_type,'traits'],{'traits' => {$stock_type => $stock_id}},{'traits' => {$stock_type => 0}});
+      @traits = @{$query->{results}};
+    } elsif (looks_like_number($trial_id)) {
       my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$trial_id});
       my $traits_assayed = $trial->get_traits_assayed($data_level);
       foreach (@$traits_assayed) {

@@ -102,7 +102,7 @@ my %phenotype_metadata;
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2017-02-16_01:10:56";
 my @plots = sort ( $trial_plot_names[0], $trial_plot_names[1], $trial_plot_names[2] );
-my @plants = sort ( $trial_plot_names[0]."_plant_1", $trial_plot_names[0]."_plant_2", $trial_plot_names[1]."_plant_2", $trial_plot_names[2]."_plant_1" );
+my @plants = sort ( $trial_plot_names[0]."_plant_2", $trial_plot_names[1]."_plant_2", $trial_plot_names[2]."_plant_2" );
 print STDERR Dumper \@plots;
 
 my $parsed_data = {
@@ -124,12 +124,6 @@ my $parsed_data = {
                                                                    '2017-02-11 11:15:20-0500'
                                                                  ]
                                                  },
-            $plants[3] => {
-                                 'dry matter content|CO:0000092' => [
-                                                                      '33',
-                                                                      '2017-02-11 11:16:20-0500'
-                                                                    ]
-                                                    },
             };
 
 my @traits = ( 'dry matter content|CO:0000092' );
@@ -171,62 +165,17 @@ my ($info, $plots_ret, $traits, $store_hash) = $derive_trait->generate_plot_phen
 #print STDERR Dumper $info;
 
 my @sorted_plots_ret = sort @$plots_ret;
-my @ordered_info;
 is_deeply(\@plots, \@sorted_plots_ret, 'check generated plots');
 
-foreach (@sorted_plots_ret) {
-    foreach my $info_n (@$info) {
-        if ($_ eq $info_n->{'plot_name'}) {
-            push @ordered_info, { 'plot_name'=>$info_n->{'plot_name'}, 'value_to_store'=>$info_n->{'value_to_store'}, 'notes'=>$info_n->{'notes'}, 'output'=>$info_n->{'output'}, 'plant_values'=>$info_n->{'plant_values'} };
-        }
-    }
+my @values_to_store;
+foreach my $info_n (@$info) {
+    push @values_to_store, $info_n->{'value_to_store'};
 }
-print STDERR Dumper \@ordered_info;
-is_deeply(\@ordered_info, [
-          {
-            'plot_name' => $plots[0],
-            'notes' => '',
-            'value_to_store' => '26',
-            'plant_values' => '[23,28]',
-            'output' => '25.5'
-          },
-          {
-            'value_to_store' => '30',
-            'plant_values' => '[30]',
-            'output' => '30',
-            'plot_name' => $plots[1],
-            'notes' => ''
-          },
-          {
-            'notes' => '',
-            'plot_name' => $plots[2],
-            'output' => '33',
-            'plant_values' => '[33]',
-            'value_to_store' => '33'
-          }
-        ], "check returned info array");
+@values_to_store = sort @values_to_store;
+print STDERR Dumper \@values_to_store;
+is_deeply(\@values_to_store, [23,28,30], "check returned values");
 
 print STDERR Dumper $store_hash;
-is_deeply($store_hash, {
-          $plots[0] => {
-                                                                                  'dry matter content|CO:0000092' => [
-                                                                                                                       '26',
-                                                                                                                       ''
-                                                                                                                     ]
-                                                                                },
-          $plots[1] => {
-                                                                                  'dry matter content|CO:0000092' => [
-                                                                                                                       '30',
-                                                                                                                       ''
-                                                                                                                     ]
-                                                                                },
-          $plots[2] => {
-                                                                                  'dry matter content|CO:0000092' => [
-                                                                                                                       '33',
-                                                                                                                       ''
-                                                                                                                     ]
-                                                                                }
-        }, "check returned values to store");
 
 my %phenotype_metadata;
 $phenotype_metadata{'operator'}='janedoe';
@@ -250,10 +199,10 @@ ok(!$store_error, "check that store pheno spreadsheet works");
 my $trait_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($fix->bcs_schema, 'dry matter content|CO:0000092')->cvterm_id();
 my $all_stock_phenotypes_for_dry_matter_content = $tn->get_stock_phenotypes_for_traits([$trait_id], 'all', ['plot_of','plant_of'], 'accession', 'subject');
 #print STDERR Dumper $all_stock_phenotypes_for_dry_matter_content;
-ok(scalar(@$all_stock_phenotypes_for_dry_matter_content) == 7, "check if num phenotype saved is correct");
+ok(scalar(@$all_stock_phenotypes_for_dry_matter_content) == 6, "check if num phenotype saved is correct");
 my $plant_phenotypes_for_dry_matter_content = $tn->get_stock_phenotypes_for_traits([$trait_id], 'plant', ['plant_of'], 'accession', 'subject');
 #print STDERR Dumper $plant_phenotypes_for_dry_matter_content;
-ok(scalar(@$plant_phenotypes_for_dry_matter_content) == 4, "check num phenotype for plant is correct");
+ok(scalar(@$plant_phenotypes_for_dry_matter_content) == 3, "check num phenotype for plant is correct");
 my $plot_phenotypes_for_dry_matter_content = $tn->get_stock_phenotypes_for_traits([$trait_id], 'plot', ['plot_of'], 'accession', 'subject');
 #print STDERR Dumper $plot_phenotypes_for_dry_matter_content;
 ok(scalar(@$plot_phenotypes_for_dry_matter_content) == 3, "check num phenotype for plot is correct");

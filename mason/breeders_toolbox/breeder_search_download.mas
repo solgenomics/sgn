@@ -14,7 +14,7 @@
       <div class="modal-body">
         <div class="container-fluid">
 
-	       <form class="form-horizontal" role="form" method="post" >
+	       <form class="form-horizontal" id="wizard_download_phenotypes_form" role="form" method="post" >
 	        <div class="form-group">
                 <label class="col-sm-3 control-label">Format: </label>
                 <div class="col-sm-9" >
@@ -68,6 +68,13 @@
                     </div>
                 </div>
             </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Download Type: </label>
+                <div class="col-sm-9" >
+                    <label class="radio-inline" title="Optimizes speed using the database cache. May exclude most recently uploaded data."><input type="radio" name="search_type" id="search_type" value="fast" checked>Fast (plots only)</label>
+                    <label class="radio-inline" title="Optimizes completeness using an exhaustive search. May result in longer download times."><input type="radio" name="search_type" id="search_type" value="complete">Complete</label>
+                </div>
+            </div>
 
         </form><br/>
 
@@ -97,11 +104,11 @@
 	<td>
 	<div>
 	<p>Genotypes:
-		<button class="btn btn-primary ladda-button" id="download_button_genotypes" disabled="disabled" data-style="expand-right" title="To download, you must be logged in with a genotyping protocol and accessions selected"><span class="ladda-label">Download Genotypes</span><span class="ladda-spinner"></span></button>
+		<button class="btn btn-primary ladda-button" id="download_button_genotypes" disabled="disabled" data-style="expand-right" title="To download, you must be logged in with accessions or trials selected"><span class="ladda-label">Download Genotypes</span><span class="ladda-spinner"></span></button>
 	</div>
 	</td>
 	<td>
-	<div class="well well-sm pull-right" style="min-width: 200px;overflow:auto;"><div><p id="selected_accessions">No accessions selected</p><p id="selected_genotyping_protocols">No genotyping protocols selected</p></div>
+	<div class="well well-sm pull-right" style="min-width: 200px;overflow:auto;"><div><p id="selected_accessions">No accessions selected</p><p id="selected_genotyping_protocols">No genotyping protocols selected. Default wull be used.</p></div>
 	</td>
 	</tr>
 </table>
