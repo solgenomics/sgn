@@ -3,6 +3,7 @@ use Moose;
 use List::MoreUtils qw | any |;
 use YAML::Any;
 use JSON::Any;
+use URI::Encode;
 use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -313,7 +314,8 @@ sub verify_name :Path('/organism/verify_name') :ActionClass('REST') {}
 sub verify_name_GET :Args(0) {
   my ( $self, $c ) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  my $species_name = $c->req->param('species_name');
+  my $uri = URI::Encode->new();
+  my $species_name = $uri->decode($c->req->param('species_name'));
   my $organism;
   $organism = $schema->resultset("Organism::Organism")->find({species => $species_name});
   if (!$organism) {
