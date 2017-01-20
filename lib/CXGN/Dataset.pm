@@ -359,6 +359,7 @@ sub retrieve_phenotypes {
         trial_list => $self->trials(),
         accession_list => $self->accessions(),
         data_level => $self->data_level(),
+	search_type => 'fast',
     });
 
     my @data =
@@ -384,7 +385,7 @@ sub retrieve_accessions {
 	my $criteria = $self->_get_criteria();
 	push @$criteria, "accessions";
 
-	$accessions = $self->breeder_search()->metadata_query(undef, $criteria, $self->_get_source_dataref("accessions"));						
+	$accessions = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("accessions"));						
     }
     return $accessions->{results};
 }
@@ -404,7 +405,7 @@ sub retrieve_plots {
     else {
 	my $criteria = $self->_get_criteria();
 	push @$criteria, "plots";
-	$plots = $self->breeder_search()->metadata_query(undef, $criteria, $self->_get_source_dataref("plots"));						
+	$plots = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("plots"));						
     }
     return $plots->{results};
 }
@@ -424,7 +425,7 @@ sub retrieve_trials {
     else {
 	my $criteria = $self->_get_criteria();
 	push @$criteria, "trials";
-	$trials = $self->breeder_search()->metadata_query(undef, $criteria, $self->_get_source_dataref("trials"));						
+	$trials = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("trials"));						
     }
     print STDERR "TRIALS: ".Dumper($trials);
     return $trials->{results};
@@ -445,7 +446,7 @@ sub retrieve_traits {
     else {
 	my $criteria = $self->_get_criteria();
 	push @$criteria, "traits";
-	$traits = $self->breeder_search()->metadata_query(undef, $criteria, $self->_get_source_dataref("traits"));						
+	$traits = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("traits"));						
     }
     return $traits->{results};
 
@@ -466,7 +467,7 @@ sub retrieve_years {
     else {
 	my $criteria = $self->_get_criteria();
 	push @$criteria, "years";
-	my $year_data = $self->breeder_search()->metadata_query(undef, $criteria, $self->_get_source_dataref("years"));
+	my $year_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("years"));
 	my $year_list = $year_data->{result};
 
 	foreach my $y (@$year_list) { 
