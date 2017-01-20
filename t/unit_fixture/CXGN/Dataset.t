@@ -70,7 +70,6 @@ foreach my $ds (@datasets) {
                        ]
 	      , "trial retrieve test");
     
-
     if ($ds->isa("CXGN::Dataset::File")) { 
 	ok(-e $ds->file_name()."_trials.txt", "trial file exists");
     }
@@ -99,7 +98,6 @@ foreach my $ds (@datasets) {
     
     my $phenotypes = $ds->retrieve_phenotypes();
     
-
     my $genotypes = $ds->retrieve_genotypes(1);
     
     my $years = $ds->retrieve_years();
