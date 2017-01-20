@@ -152,7 +152,7 @@ jQuery(document).ready(function ($) {
                 data[id]=row;
             }
         });
-        console.log(data);
+        //console.log(data);
 
         $.ajax({
             type: 'POST',
@@ -163,7 +163,7 @@ jQuery(document).ready(function ($) {
                 'fuzzy_option_data': JSON.stringify(data),
             },
             success: function (response) {
-                console.log(response);
+                //console.log(response);
                 accessionList = response.names_to_add;
                 if (accessionList.length > 0){
                     populate_review_absent_dialog(accessionList);
@@ -217,7 +217,7 @@ jQuery(document).ready(function ($) {
     function review_verification_results(verifyResponse, accession_list_id){
         var i;
         var j;
-        console.log(verifyResponse);
+        //console.log(verifyResponse);
         //console.log(accession_list_id);
 
         if (verifyResponse.found) {
