@@ -119,26 +119,29 @@ sub BUILD {
     #Find trait cvterm objects and put them in a hash
     my %trait_objs;
     my @trait_list = @{$self->trait_list};
+    my @cvterm_ids;
     my $schema = $self->bcs_schema;
     foreach my $trait_name (@trait_list) {
         #print STDERR "trait: $trait_name\n";
-        my $trait_cvterm;
-        $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
+        my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
         $trait_objs{$trait_name} = $trait_cvterm;
+        push @cvterm_ids, $trait_cvterm->cvterm_id();
     }
     $self->trait_objs(\%trait_objs);
 
     #for checking if values in the file are already stored in the database or in the same file
-    my %check_unique_value_trait_stock;
     my %check_unique_trait_stock;
-    my $sql = "SELECT value, cvalue_id, uniquename FROM phenotype WHERE value is not NULL; ";
-    my $sth = $schema->storage->dbh->prepare($sql);
-    $sth->execute();
-    while (my ($db_value, $db_cvalue_id, $db_uniquename) = $sth->fetchrow_array) {
-        my ($stock_string, $rest_of_name) = split( /,/, $db_uniquename);
-        $check_unique_value_trait_stock{$db_value, $db_cvalue_id, $stock_string} = 1;
-        $check_unique_trait_stock{$db_cvalue_id, $stock_string} = $db_value;
+    my %check_unique_value_trait_stock;
+    my $previous_phenotype_rs = $schema->resultset('Phenotype::Phenotype')->search({'me.cvalue_id'=>{-in=>\@cvterm_ids}}, {'join'=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>{'nd_experiment_stocks'=>'stock'}}}, 'select' => ['me.value', 'me.cvalue_id', 'stock.stock_id'], 'as' => ['value', 'cvterm_id', 'stock_id']});
+    while (my $previous_phenotype_cvterm = $previous_phenotype_rs->next() ) {
+        my $cvterm_id = $previous_phenotype_cvterm->get_column('cvterm_id');
+        my $stock_id = $previous_phenotype_cvterm->get_column('stock_id');
+        my $previous_value = $previous_phenotype_cvterm->get_column('value') || ' ';
+
+        $check_unique_trait_stock{$cvterm_id, $stock_id} = $previous_value;
+        $check_unique_value_trait_stock{$previous_value, $cvterm_id, $stock_id} = 1;
     }
+
     $self->unique_value_trait_stock(\%check_unique_value_trait_stock);
     $self->unique_trait_stock(\%check_unique_trait_stock);
 
@@ -227,6 +230,10 @@ sub verify {
                 my $trait_cvterm_id = $trait_cvterm->cvterm_id();
                 my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
 
+                if ($trait_value eq '.' || ($trait_value =~ m/[^a-zA-Z0-9.]/ && $trait_value ne '.')){
+                    $error_message = $error_message."<small>Trait values must be alphanumeric with no spaces: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
+                }
+
                 #check that trait value is valid for trait name
                 if (exists($check_trait_format{$trait_cvterm_id})) {
                     if ($check_trait_format{$trait_cvterm_id} eq 'numeric') {
@@ -251,10 +258,10 @@ sub verify {
                 }
 
                 #check if the plot_name, trait_name combination already exists in database.
-                if (exists($check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, "Stock: ".$stock_id})) {
+                if (exists($check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, $stock_id})) {
                     $warning_message = $warning_message."<small>$plot_name already has the same value as in your file ($trait_value) stored for the trait $trait_name.</small><hr>";
-                } elsif (exists($check_unique_trait_stock{$trait_cvterm_id, "Stock: ".$stock_id})) {
-                    $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock{$trait_cvterm_id, 'Stock: '.$stock_id}) than in your file ($trait_value) stored in the database for the trait $trait_name.</small><hr>";
+                } elsif (exists($check_unique_trait_stock{$trait_cvterm_id, $stock_id})) {
+                    $warning_message = $warning_message."<small>$plot_name already has a different value ($check_unique_trait_stock{$trait_cvterm_id, $stock_id}) than in your file ($trait_value) stored in the database for the trait $trait_name.</small><hr>";
                 }
 
                 #check if the plot_name, trait_name combination already exists in same file.
@@ -372,10 +379,10 @@ sub store {
 
                     #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
                     if ($overwrite_values) {
-                        if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), "Stock: ".$stock_id})) {
+                        if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
                             $self->delete_previous_phenotypes($trait_cvterm->cvterm_id(), $stock_id);
                         }
-                        $check_unique_trait_stock{$trait_cvterm->cvterm_id(), "Stock: ".$stock_id} = 1;
+                        $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
                     }
 
                     my $plot_trait_uniquename = "Stock: " .
@@ -391,30 +398,12 @@ sub store {
                             uniquename => $plot_trait_uniquename,
                         });
 
-                    my $experiment;
-
-		## Find the experiment that matches the location, type, operator, and date/timestamp if it exists
-		# my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
-		#     ->find({
-		# 	    nd_geolocation_id => $location_id,
-		# 	    type_id => $phenotyping_experiment_cvterm->cvterm_id(),
-		# 	    'type.name' => 'operator',
-		# 	    'nd_experimentprops.value' => $operator,
-		# 	    'type_2.name' => 'date',
-		# 	    'nd_experimentprops_2.value' => $upload_date,
-		# 	   },
-		# 	   {
-		# 	    join => [{'nd_experimentprops' => 'type'},{'nd_experimentprops' => 'type'},{'nd_experiment_phenotypes' => 'type'}],
-		# 	   });
-
-
-                    # Create a new experiment, if one does not exist
-                    if (!$experiment) {
-                    $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
-                        ->create({nd_geolocation_id => $location_id, type_id => $phenotyping_experiment_cvterm_id});
+                    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
+                        nd_geolocation_id => $location_id,
+                        type_id => $phenotyping_experiment_cvterm_id
+                    });
                     $experiment->create_nd_experimentprops({date => $upload_date},{autocreate => 1, cv_name => 'local'});
                     $experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
-                    }
 
                     ## Link the experiment to the project
                     $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
@@ -457,11 +446,16 @@ sub delete_previous_phenotypes {
     my $trait_cvterm_id = shift;
     my $stock_id = shift;
 
-    my $overwrite_phenotypes_rs = $self->bcs_schema->resultset("Phenotype::Phenotype")->search({uniquename=>{'like' => 'Stock: '.$stock_id.'%'}, cvalue_id=>$trait_cvterm_id });
-    while (my $previous_phenotype = $overwrite_phenotypes_rs->next()) {
-        #print STDERR "removing phenotype: ".$previous_phenotype->uniquename()."\n";
-        $previous_phenotype->delete();
-    }
+    my $q = "DELETE FROM phenotype WHERE phenotype_id IN (
+         SELECT phenotype_id FROM phenotype
+         JOIN nd_experiment_phenotype using(phenotype_id)
+         JOIN nd_experiment_stock using(nd_experiment_id)
+         JOIN stock using(stock_id)
+         WHERE stock.stock_id=?
+         AND phenotype.cvalue_id=? );";
+
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    $h->execute($stock_id, $trait_cvterm_id);
 }
 
 sub save_archived_file_metadata {

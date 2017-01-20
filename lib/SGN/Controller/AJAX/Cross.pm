@@ -95,6 +95,7 @@ sub upload_cross_file_POST : Args(0) {
 	    parent_folder_id => '',
 	    name => $folder_name,
 	    breeding_program_id => $breeding_program_id,
+        folder_for_crosses => 1
     });
     $folder_id = $folder->folder_id();
   }
@@ -244,6 +245,7 @@ sub add_cross_POST :Args(0) {
           parent_folder_id => '',
           name => $folder_name,
           breeding_program_id => $breeding_program_id,
+          folder_for_crosses =>1
         });
       };
 

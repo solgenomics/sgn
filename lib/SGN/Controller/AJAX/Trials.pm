@@ -50,7 +50,7 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     my $html = "";
     foreach my $project (@$projects) { 
 	   my $folder = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => $project->[0] });
-	   $html .= $folder->get_jstree_html('breeding_program');
+	   $html .= $folder->get_jstree_html('breeding_program', 'trial');
     }
     
     my $dir = catdir($c->site_cluster_shared_dir, "folder");

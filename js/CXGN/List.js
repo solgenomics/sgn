@@ -629,8 +629,8 @@ CXGN.List.prototype = {
 	    html += '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
 	}
   if (refresh) {
-    if (types.length > 1) { types = types.map(type => `'${type}'`).join(',') };
-	  html = '<div class="input-group">'+html+'</select><span class="input-group-btn"><button class="btn btn-default" id="'+div_name+'_list_refresh" title="Refresh lists" onclick="refreshListSelect(\''+div_name+'_list_select\',['+types+'],\'Options refreshed.\')"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></span></div>';
+    if (types.length > 1) { types = types.join(',') };
+	  html = '<div class="input-group">'+html+'</select><span class="input-group-btn"><button class="btn btn-default" id="'+div_name+'_list_refresh" title="Refresh lists" onclick="refreshListSelect(\''+div_name+'_list_select\',\''+types+'\',\'Options refreshed.\')"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></span></div>';
     return html;
   }
   else {
@@ -828,16 +828,17 @@ function pasteList(div_name) {
   function refreshListSelect(div_name, types, empty_element) {
     var lo = new CXGN.List();
     var lists = new Array();
-
-    if (types) {
+    var types = types.split(",");
+    //console.log("types = "+types);
+    if (types.length > 0) {
         for (var n=0; n<types.length; n++) {
-          console.log("retrieving lists of type: "+types[n]+"\n");
-      var more = lo.availableLists(types[n]);
-      if (more) {
-          for (var i=0; i<more.length; i++) {
-        lists.push(more[i]);
+          //console.log("retrieving lists of type: "+types[n]+"\n");
+          var more = lo.availableLists(types[n]);
+          if (more) {
+            for (var i=0; i<more.length; i++) {
+              lists.push(more[i]);
+            }
           }
-      }
         }
     }
     else {

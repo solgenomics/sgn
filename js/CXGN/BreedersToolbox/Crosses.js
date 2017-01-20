@@ -27,6 +27,7 @@ jQuery(document).ready(function($) {
         get_select_box('folders', 'add_cross_folder_select_div', {
             'name': 'add_cross_folder_id',
             'id': 'add_cross_folder_id',
+            'folder_for_crosses' : 1,
             'empty': 1
         });
 
@@ -133,6 +134,7 @@ jQuery(document).ready(function($) {
         get_select_box('folders', 'cross_folder_select_div', {
             'name': 'upload_folder_id',
             'id': 'upload_folder_id',
+            'folder_for_crosses': 1,
             'empty': 1
         });
         $("#upload_crosses_dialog").modal("show");
