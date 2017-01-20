@@ -22,6 +22,9 @@ $ds->plots( [ 40034, 40035 ]);
 $ds->name("test");
 $ds->description("test description");
 
+$ds->name("test");
+$ds->description("test description");
+
 my $sp_dataset_id = $ds->store();
 
 my $new_ds = CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema(), sp_dataset_id => $sp_dataset_id);
@@ -30,6 +33,7 @@ is_deeply($new_ds->accessions(), $ds->accessions(), "accession store");
 is_deeply($new_ds->years(), $ds->years(), "years store");
 is_deeply($new_ds->traits(), $ds->traits(), "traits store");
 is_deeply($new_ds->plots(), $ds->plots(), "plots store");
+
 is($new_ds->name(), $ds->name(), "name store");
 is($new_ds->description(), $ds->description(), "desc store");
 
@@ -172,6 +176,7 @@ foreach my $ds (@datasets) {
 		   'UG120038_block:2_plot:TP38_2012_NaCRRI'
 		  ]
 	      ], "plot retrieve test");
+
 }
 
 done_testing();
