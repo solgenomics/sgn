@@ -290,6 +290,7 @@ for (popGenoNum in 1:popsGenoSize)
     
  
   }
+
 message("combined total number of stocks in genotype dataset: ", length(rownames(combinedGenoPops)))
 #discard duplicate clones
 combinedGenoPops <- unique(combinedGenoPops)
@@ -298,21 +299,21 @@ message("combined unique number of stocks in genotype dataset: ", length(rowname
 message("writing data into files...")
 #if(length(combinedPhenoFile) != 0 )
 #  {
-      write.table(combinedPhenoPops,
+      fwrite(combinedPhenoPops,
                   file = combinedPhenoFile,
                   sep = "\t",
                   quote = FALSE,
-                  col.names = NA,
+                  row.names = TRUE,
                   )
 #  }
 
 #if(length(combinedGenoFile) != 0 )
 #  {
-      write.table(combinedGenoPops,
+      fwrite(combinedGenoPops,
                   file = combinedGenoFile,
                   sep = "\t",
                   quote = FALSE,
-                  col.names = NA,
+                   row.names = TRUE,
                   )
 #  }
 

@@ -147,6 +147,9 @@ jQuery(document).ready(function ($) {
 	var plot_prefix = $('#plot_prefix').val();
 	var start_number = $('#start_number').val();
 	var increment = $('#increment').val();
+  var fieldmap_col_number = $('#fieldMap_col_number').val();
+  var fieldmap_row_number = $('#fieldMap_row_number').val();
+  var plot_layout_format = $('#plot_layout_format').val();
 
     var greenhouse_num_plants = [];
     if (stock_list_id != "" && design_type == 'greenhouse') {
@@ -203,6 +206,9 @@ jQuery(document).ready(function ($) {
                 'start_number': start_number,
                 'increment': increment,
                 'greenhouse_num_plants': JSON.stringify(greenhouse_num_plants),
+                'fieldmap_col_number': fieldmap_col_number,
+                'fieldmap_row_number': fieldmap_row_number,
+                'plot_layout_format': plot_layout_format,
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
@@ -250,15 +256,16 @@ jQuery(document).ready(function ($) {
             alert('adding a project');
             save_project_info(name, year, desc);
         }
-        if (method_to_use == "create_with_upload") {
-            var uploadFile = $("#trial_upload_file").val();
-            $('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
-            if (uploadFile === '') {
-                alert("Please select a file");
-                return;
-            }
-            $("#create_new_trial_form").submit();
-        }
+        //DEPRECATED: use js/CXGN/BreedersToolbox/UploadTrial.js
+        //if (method_to_use == "create_with_upload") {
+        //    var uploadFile = $("#trial_upload_file").val();
+        //    $('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
+        //    if (uploadFile === '') {
+        //        alert("Please select a file");
+        //        return;
+        //    }
+        //    $("#create_new_trial_form").submit();
+        //}
         if (method_to_use == "create_with_design_tool") {
             //generate_experimental_design(name,year,desc);
             generate_experimental_design();
@@ -277,6 +284,8 @@ jQuery(document).ready(function ($) {
         if (design_method == "CRD") {
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
+            $("#FieldMap").show();
+            //$("#fieldmap_options").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").hide();
             $("#crbd_show_list_of_checks_section").show();
@@ -296,6 +305,7 @@ jQuery(document).ready(function ($) {
         } else if (design_method == "RCBD") {
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
+            $("#FieldMap").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#crbd_show_list_of_checks_section").show();
             $("#show_list_of_checks_section").hide();
@@ -313,6 +323,7 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").hide();
             $('#greenhouse_default_num_plants_per_accession').hide();
         } else if (design_method == "Alpha") {
+            $("#FieldMap").show();
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
@@ -332,6 +343,7 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").hide();
             $('#greenhouse_default_num_plants_per_accession').hide();
         } else if (design_method == "Augmented") {
+            $("#FieldMap").hide();
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
@@ -351,6 +363,7 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").hide();
             $('#greenhouse_default_num_plants_per_accession').hide();
         } else if (design_method == "") {
+            $("#FieldMap").hide();
             //$("#add_project_dialog").dialog("option", "height","auto");
             $("#show_list_of_checks_section").hide();
             $("#crbd_show_list_of_checks_section").hide();
@@ -373,6 +386,7 @@ jQuery(document).ready(function ($) {
         }
 
         else if (design_method == "MAD") {
+            $("#FieldMap").hide();
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
             //$("#add_project_dialog").dialog("option", "height","auto");
@@ -405,9 +419,11 @@ jQuery(document).ready(function ($) {
         }
 
         else if (design_method == 'greenhouse') {
+            $("#FieldMap").hide();
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
             $("#show_list_of_checks_section").hide();
+            $("#crbd_show_list_of_checks_section").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").hide();
             $("#block_size_section").hide();
@@ -458,6 +474,15 @@ jQuery(document).ready(function ($) {
 	}
     });
 
+    $("#show_field_map_options").click(function () {
+      if ($('#show_field_map_options').is(':checked')) {
+        $("#field_map_options").show();
+      }
+      else {
+        $("#field_map_options").hide();
+      }
+    });
+
     function save_experimental_design(design_json) {
         var list = new CXGN.List();
         var name = jQuery('#new_trial_name').val();
@@ -501,6 +526,9 @@ jQuery(document).ready(function ($) {
         var start_number = jQuery('#start_number').val();
         var increment = jQuery('#increment').val();
         var breeding_program_name = jQuery('#select_breeding_program').val();
+        var fieldmap_col_number = jQuery('#fieldMap_col_number').val();
+        var fieldmap_row_number = jQuery('#fieldMap_row_number').val();
+        var plot_layout_format = jQuery('#plot_layout_format').val();
 
         //var stock_verified = verify_stock_list(stock_list);
         if (desc == '' || year == '') {
@@ -534,6 +562,9 @@ jQuery(document).ready(function ($) {
                 'design_json': design_json,
                 'breeding_program_name': breeding_program_name,
                 'greenhouse_num_plants': JSON.stringify(greenhouse_num_plants),
+                'fieldmap_col_number': fieldmap_col_number,
+                'fieldmap_row_number': fieldmap_row_number,
+                'plot_layout_format': plot_layout_format,
             },
             success: function (response) {
                 if (response.error) {

@@ -33,6 +33,7 @@ use Moose;
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
+use CXGN::Trial;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -40,16 +41,27 @@ has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 );
 
 has 'accession_list' => (
-    isa => 'ArrayRef|Undef',
+    isa => 'ArrayRef[Int]|Undef',
     is => 'ro',
 );
 
 has 'trial_list' => (
-    isa => 'ArrayRef|Undef',
+    isa => 'ArrayRef[Int]|Undef',
     is => 'ro',
 );
 
 has 'protocol_id' => (
+    isa => 'Int',
+    is => 'rw',
+    required => 1,
+);
+
+has 'limit' => (
+    isa => 'Int',
+    is => 'rw',
+);
+
+has 'offset' => (
     isa => 'Int',
     is => 'rw',
 );
@@ -63,44 +75,80 @@ returns: an array with genotype information
 sub get_genotype_info {
     my $self = shift;
     my $schema = $self->bcs_schema;
-    my $accession_idref = $self->accession_list;
-    my $trial_idref = $self->trial_list;
+    my $trial_list = $self->trial_list;
     my $protocol_id = $self->protocol_id;
-    my $snp_genotype_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'snp genotyping', 'genotype_property')->cvterm_id();
-    my @accession_ids = @$accession_idref;
-    my ($q, @result, $protocol_name);
+    my $accession_list = $self->accession_list;
+    my $limit = $self->limit;
+    my $offset = $self->offset;
+    my @data;
+    my %search_params;
 
-    my @where_clause;
-    if ($accession_idref && scalar(@$accession_idref)>0) {
-        my $accession_sql = _sql_from_arrayref($accession_idref);
-        push @where_clause, "stock.stock_id in ($accession_sql)";
-    }
-    if ($trial_idref && scalar(@$trial_idref)>0) {
-        my $trial_sql = _sql_from_arrayref($trial_idref);
-        push @where_clause, "project.project_id in ($trial_sql)";
-    }
+    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
 
-    my $where_clause = "WHERE genotypeprop.type_id = $snp_genotype_id AND nd_experiment_protocol.nd_protocol_id=$protocol_id";
-
-    if (@where_clause>0) {
-        $where_clause .= " AND " . (join (" AND " , @where_clause));
+    my @trials_accessions;
+    foreach (@$trial_list){
+        my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
+        my $accessions = $trial->get_accessions();
+        foreach (@$accessions){
+            push @trials_accessions, $_->{stock_id};
+        }
     }
 
-    $q = "SELECT name, uniquename, value FROM (SELECT nd_protocol.name, stock.uniquename, genotypeprop.value, row_number() over (partition by stock.uniquename order by genotypeprop.genotype_id) as rownum from genotypeprop join nd_experiment_genotype USING (genotype_id) JOIN nd_experiment_protocol USING(nd_experiment_id) JOIN nd_protocol USING(nd_protocol_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN project USING(project_id) $where_clause ) tmp WHERE rownum <2";
-    print STDERR "QUERY: $q\n\n";
-
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute();
-
-    while (my($name,$uniquename,$genotype_string) = $h->fetchrow_array()) {
-        push @result, [ $uniquename, $genotype_string ];
-        $protocol_name = $name;
+    #If accessions are explicitly given, then accessions found from trials will not be added to the search.
+    if (!$accession_list || scalar(@$accession_list)==0) {
+        push @$accession_list, @trials_accessions;
     }
 
-    return {
-        protocol_name => $protocol_name,
-        genotypes => \@result
-    };
+    #For projects inserted into database during the addition of genotypes and genotypeprops
+    if (scalar(@trials_accessions)==0){
+        if ($trial_list && scalar(@$trial_list)>0) {
+            $search_params{'nd_experiment_projects.project_id'} = { -in => $trial_list };
+        }
+    }
+
+    $search_params{'genotypeprops.type_id'} = $snp_genotyping_cvterm_id;
+    $search_params{'nd_protocol.nd_protocol_id'} = $protocol_id;
+    if ($accession_list && scalar(@$accession_list)>0) {
+        $search_params{'stock.stock_id'} = { -in => $accession_list };
+    }
+
+    my @select_list = ('genotypeprops.genotypeprop_id', 'genotypeprops.value', 'nd_protocol.name', 'stock.stock_id', 'stock.uniquename', 'genotype.uniquename');
+    my @select_as_list = ('genotypeprop_id', 'value', 'protocol_name', 'stock_id', 'uniquename', 'genotype_uniquename');
+    #$self->bcs_schema->storage->debug(1);
+    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
+        \%search_params,
+        {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_projects'}, {'nd_experiment_stocks' => 'stock'} ],
+        select=> \@select_list,
+        as=> \@select_as_list,
+        order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
+        }
+    );
+
+    if ($rs) {
+        if ($limit && $offset){
+            my $rs_slice = $rs->slice($offset, $limit);
+            $rs = $rs_slice;
+        }
+        while (my $row = $rs->next()) {
+            my $genotype_json = $row->get_column('value');
+            my $genotype = JSON::Any->decode($genotype_json);
+
+            push @data, {
+                markerProfileDbId => $row->get_column('genotypeprop_id'),
+                germplasmDbId => $row->get_column('stock_id'),
+                germplasmName => $row->get_column('uniquename'),
+                genotypeUniquename => $row->get_column('genotype_uniquename'),
+                analysisMethod => $row->get_column('protocol_name'),
+                genotype_hash => $genotype,
+                resultCount => scalar(keys(%$genotype))
+            };
+        }
+    }
+    #print STDERR Dumper \@data;
+
+    my $total_count = $rs->count();
+
+    return ($total_count, \@data);
 }
 
 sub _sql_from_arrayref {

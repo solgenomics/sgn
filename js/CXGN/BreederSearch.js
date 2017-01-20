@@ -118,8 +118,11 @@ window.onload = function initialize() {
         var data_level = jQuery("#download_wizard_phenotypes_level_option").val();
         var phenotype_min_value = jQuery("#download_wizard_phenotype_phenotype_min").val();
         var phenotype_max_value = jQuery("#download_wizard_phenotype_phenotype_max").val();
+        var search_type = jQuery('input[name=search_type]:checked').val();
+        console.log("plot list="+JSON.stringify(selected_plots));
+
         if (selected_trials.length !== 0 || selected_locations.length !== 0 || selected_accessions.length !== 0 || selected_traits.length !== 0 || selected_plots.length !== 0 || selected_plants.length !== 0 || selected_years.length !== 0) {
-            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(selected_trials)+"&format="+format+"&trait_list="+JSON.stringify(selected_traits)+"&accession_list="+JSON.stringify(selected_accessions)+"&plot_list="+JSON.stringify(selected_plots)+"&plant_list="+JSON.stringify(selected_plants)+"&location_list="+JSON.stringify(selected_locations)+"&year_list="+JSON.stringify(selected_years)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array) );
+            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(selected_trials)+"&format="+format+"&trait_list="+JSON.stringify(selected_traits)+"&accession_list="+JSON.stringify(selected_accessions)+"&plot_list="+JSON.stringify(selected_plots)+"&plant_list="+JSON.stringify(selected_plants)+"&location_list="+JSON.stringify(selected_locations)+"&year_list="+JSON.stringify(selected_years)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&search_type="+search_type);
         } else {
             alert("No filters selected for download.");
         }
@@ -128,15 +131,13 @@ window.onload = function initialize() {
     jQuery('#download_button_genotypes').on('click', function (event) {
       event.preventDefault();
       var accession_ids = get_selected_results('accessions');
-      var protocol_id = get_selected_genotyping_protocols();
-      if (accession_ids.length > 0 && protocol_id.length == 1) {
+      var trial_ids = get_selected_results('trials');
+      var protocol_id = get_selected_genotyping_protocols() ? get_selected_genotyping_protocols() : '';
         var ladda = Ladda.create(this);
         ladda.start();
         var token = new Date().getTime(); //use the current timestamp as the token name and value
         manage_dl_with_cookie(token, ladda);
-        window.location.href = '/breeders/download_gbs_action/?ids='+accession_ids.join(",")+'&protocol_id='+protocol_id+'&token='+token+'&format=accession_ids';
-      }
-      else { alert("Both accessions and protocols must be selected for download."); }
+        window.location.href = '/breeders/download_gbs_action/?ids='+accession_ids.join(",")+'&protocol_id='+protocol_id+'&token='+token+'&format=accession_ids&trial_ids='+trial_ids.join(",");
     });
 }
 
@@ -170,7 +171,12 @@ function retrieve_and_display_set(categories, data, this_section) {
 		    jQuery('#'+selectall_id).before(error_html);
 		}
 		else {
-                    var list = response.list || [];
+        if (response.message) {
+          var message_html = '<div class="well well-sm" id="response_error"><center><font color="orange">'+response.message+'</font></center></div>';
+  		    var selectall_id = "c"+this_section+"_select_all";
+  		    jQuery('#'+selectall_id).before(message_html);
+        }
+        var list = response.list || [];
 		    data_html = format_options_list(list);
 		    var data_id = "c"+this_section+"_data";
 		    var count_id = "c"+this_section+"_data_count";
@@ -261,11 +267,10 @@ function get_selected_genotyping_protocols () {
         selected_genotyping_protocol = data[i];
       }
     }
-    if (selected_genotyping_protocol.length == 1) {
-      return selected_genotyping_protocol;
-    }
-    else {
-      alert("Please select a single genotyping protocol");
+    if (selected_genotyping_protocol){
+        if (selected_genotyping_protocol.length == 1) {
+            return selected_genotyping_protocol;
+        }
     }
 }
 
@@ -320,7 +325,7 @@ function update_download_options(this_section, categories) {
         jQuery('#selected_genotyping_protocols').html(genotyping_protocols_html);
       }
     }
-    if (selected_accessions == 1 && selected_genotyping_protocols == 1 && isLoggedIn()) {
+    if ( (selected_trials == 1 || selected_accessions == 1) && isLoggedIn()) {
       jQuery('#download_button_genotypes').prop( 'title', 'Click to Download Accession Genotypes');
 	    jQuery('#download_button_genotypes').removeAttr('disabled');
     }
@@ -330,14 +335,10 @@ function update_download_options(this_section, categories) {
       jQuery('#selected_trials').html('No trials selected');
     }
     if (selected_accessions !== 1) {
-      jQuery('#download_button_genotypes').prop('title','You must be logged in, with a genotyping protocol and accessions selected to download');
-      jQuery('#download_button_genotypes').attr('disabled', 'disabled');
       jQuery('#selected_accessions').html('No accessions selected');
     }
     if (selected_genotyping_protocols !== 1) {
-      jQuery('#download_button_genotypes').prop('title','You must be logged in, with a genotyping protocol and accessions selected to download');
-      jQuery('#download_button_genotypes').attr('disabled', 'disabled');
-      jQuery('#selected_genotyping_protocols').html('No genotyping protocols selected');
+      jQuery('#selected_genotyping_protocols').html('No genotyping protocols selected. Default will be used.');
     }
 }
 
@@ -406,7 +407,7 @@ function pasteList() {
       var ids = lo.transform2Ids(list_id, data);
       //if (window.console) console.log("list_ids="+JSON.stringify(ids));
       if (ids === undefined) {
-        report_list_start_error("Unable to retrieve ids from this list.");
+        report_list_start_error("Unable to retrieve ids from this list. Has this list been validated using the list manager?");
         return;
       }
       for (var n=0; n<elements.length; n++) { // format ids and names of list elements to display

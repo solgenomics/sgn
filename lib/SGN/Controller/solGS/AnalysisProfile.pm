@@ -437,16 +437,17 @@ sub structure_output_details {
 	my $population_page = $base . "solgs/population/$pop_id";
 	$c->stash->{pop_id} = $pop_id;
 
-	$solgs_controller->phenotype_file($c);	
-	$solgs_controller->genotype_file($c);
+	$solgs_controller->phenotype_file_name($c);	
+	$solgs_controller->genotype_file_name($c);
+	
 	$solgs_controller->get_project_details($c, $pop_id);
 
 	$output_details{'population_id_' . $pop_id} = {
 		'population_page' => $population_page,
 		'population_id'   => $pop_id,
 		'population_name' => $c->stash->{project_name},
-		'phenotype_file'  => $c->stash->{phenotype_file},
-		'genotype_file'   => $c->stash->{genotype_file},  
+		'phenotype_file'  => $c->stash->{phenotype_file_name},
+		'genotype_file'   => $c->stash->{genotype_file_name},  
 		'data_set_type'   => $c->stash->{data_set_type},
 	};		
     }
@@ -741,12 +742,12 @@ sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
     my ($self, $c) = @_;
     
     my $referer = $c->req->referer;
-    my $sp_person_id => $c->user->get_object->get_sp_person_id;
+    my $user_id = $c->user->get_object->get_sp_person_id;
 
     $c->stash->{message} = "<p>Your analysis is running.<br />
                             You will receive an email when it is completed.<br /></p>
                             <p>You can also check the status of the analysis in 
-                            <a href=\"/solpeople/profile/$sp_person_id\">your profile page</a>.</p>
+                            <a href=\"/solpeople/profile/$user_id\">your profile page</a>.</p>
                             <p><a href=\"$referer\">[ Go back ]</a></p>";
 
     $c->stash->{template} = "/generic_message.mas"; 

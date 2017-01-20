@@ -344,6 +344,7 @@ sub site_cluster_shared_dir {
     $host    = File::Spec->catdir($self->config->{cluster_shared_tempdir}, $host);
 
     return $host;
+
 }
 
 1;
