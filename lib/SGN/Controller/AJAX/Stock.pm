@@ -82,7 +82,8 @@ sub add_stockprop_POST {
             my $found_accessions = $fuzzy_search_result->{'found'};
             my $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
             if (scalar(@$found_accessions) > 0){
-                $message .= 'The synonym you are adding is already stored as its own unique stock.';
+                $c->stash->{rest} = { error => "Synonym not added: The synonym you are adding is already stored as its own unique stock or as a synonym." };
+                $c->detach();
             }
             if (scalar(@$fuzzy_accessions) > 0){
                 my @fuzzy_match_names;
@@ -91,7 +92,7 @@ sub add_stockprop_POST {
                         push @fuzzy_match_names, $m->{'name'};
                     }
                 }
-                $message .= "The synonym you are adding is similar to these accessions and synonyms in the database: ".join(', ', @fuzzy_match_names).".";
+                $message = "CAUTION: The synonym you are adding is similar to these accessions and synonyms in the database: ".join(', ', @fuzzy_match_names).".";
             }
         }
 
