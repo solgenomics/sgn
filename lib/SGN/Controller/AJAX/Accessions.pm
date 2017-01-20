@@ -22,6 +22,8 @@ use List::MoreUtils qw /any /;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::BreedersToolbox::AccessionsFuzzySearch;
 use CXGN::Stock::AddStocks;
+use CXGN::Chado::Stock;
+use CXGN::List;
 use Data::Dumper;
 #use JSON;
 
@@ -82,7 +84,7 @@ sub do_fuzzy_search {
     }
 
     $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
-    print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
+    #print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
 
     @found_accessions = $fuzzy_search_result->{'found'};
     @fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
@@ -124,9 +126,47 @@ sub do_exact_search {
 	found => \@found_accessions,
 	fuzzy => \@fuzzy_accessions
     };
-    print STDERR Dumper($rest);
+    #print STDERR Dumper($rest);
     $c->stash->{rest} = $rest;
 }
+
+sub verify_fuzzy_options : Path('/ajax/accession_list/fuzzy_options') : ActionClass('REST') { }
+
+sub verify_fuzzy_options_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $accession_list_id = $c->req->param('accession_list_id');
+    my $fuzzy_option_hash = decode_json($c->req->param('fuzzy_option_data'));
+    #print STDERR Dumper $fuzzy_option_hash;
+    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $accession_list_id } );
+
+    my @names_to_add;
+    foreach my $form_name (keys %$fuzzy_option_hash){
+        my $item_name = $fuzzy_option_hash->{$form_name}->{'fuzzy_name'};
+        my $select_name = $fuzzy_option_hash->{$form_name}->{'fuzzy_select'};
+        my $fuzzy_option = $fuzzy_option_hash->{$form_name}->{'fuzzy_option'};
+        if ($fuzzy_option eq 'replace'){
+            $list->replace_by_name($item_name, $select_name);
+        } elsif ($fuzzy_option eq 'keep'){
+            push @names_to_add, $item_name;
+        } elsif ($fuzzy_option eq 'remove'){
+            $list->remove_by_name($item_name);
+        } elsif ($fuzzy_option eq 'synonymize'){
+            my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$select_name})->stock_id();
+            my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+            $stock->add_synonym($item_name);
+            $list->replace_by_name($item_name, $select_name);
+        }
+    }
+
+    my $rest = {
+        success => "1",
+        names_to_add => \@names_to_add
+    };
+    #print STDERR Dumper($rest);
+    $c->stash->{rest} = $rest;
+}
+
 
 sub add_accession_list : Path('/ajax/accession_list/add') : ActionClass('REST') { }
 
