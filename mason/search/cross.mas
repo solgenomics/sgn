@@ -47,12 +47,14 @@
     </div>
     <div class="col-sm-1">
     </div>
-  </div>
 
+<br />
 
-<br /><br />
+<&| /page/info_section.mas, title => 'Search Results' , collapsible=>1, collapsed=>0 &>
 
-<table id="cross_search_results" class="display" cellspacing="0" width="100%">
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<table id="cross_search_results" width="100%" class="table table-hover table-striped">
 <thead>
   <tr>
     <th>Female Parent</th>
@@ -62,8 +64,8 @@
 </thead>
 
 </table>
-
-<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+</&>
+</div>
 
 
 
