@@ -176,12 +176,6 @@ sub genotypes_list_genotype_data_file {
 sub create_list_pop_tempfiles {
     my ($self, $dir, $model_id) = @_;
 
-    if (!$dir || !$model_id)
-    {
-	$dir = $c->stash->{solgs_prediction_upload_dir};
-	$model_id = $c->stash->{model_id};
-    }
-
     my $pheno_name = "phenotype_data_${model_id}.txt";
     my $geno_name  = "genotype_data_${model_id}.txt";  
     my $pheno_file = catfile($dir, $pheno_name);
@@ -523,7 +517,7 @@ sub load_plots_list_training :Path('/solgs/load/plots/list/training') Args(0) {
    
     my $files = $self->create_list_pop_tempfiles($tmp_dir, $model_id);
     my $pheno_file = $files->{pheno_file};
-    my $geno_file  =  $files->{geno_file};
+    my $geno_file  = $files->{geno_file};
  
     $self->create_list_population_metadata_file($c);
  
