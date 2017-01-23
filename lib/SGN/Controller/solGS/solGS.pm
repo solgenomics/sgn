@@ -922,7 +922,7 @@ sub input_files {
     {
         $prediction_population_file = $c->stash->{prediction_population_file};
     }
-
+  
     my $formatted_phenotype_file  = $c->stash->{formatted_phenotype_file};
    
     my $pheno_file  = $c->stash->{phenotype_file};
@@ -1179,7 +1179,7 @@ sub genotype_file_name {
    
     my $pop_id = $c->stash->{pop_id};
     $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
-    $pop_id = $c->stash->{prediction_pop_id} if $c->stash->{prediction_pop_id}; 
+    my $pred_pop_id = $c->stash->{prediction_pop_id} if $c->stash->{prediction_pop_id}; 
    
     if ($pop_id =~ /uploaded/) 
     {
@@ -4701,7 +4701,7 @@ sub genotype_file  {
 
     if ($pred_pop_id) 
     {      
-        $pop_id = $c->stash->{prediction_pop_id};      
+        $pop_id = $c->stash->{prediction_pop_id}; 
         $geno_file = $c->stash->{user_selection_list_genotype_data_file}; 
     } 
     
