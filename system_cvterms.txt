@@ -7,7 +7,7 @@ calendar	Phenotyping Event				00052
 calendar	Planning Event				00052	
 calendar	Planting Event				00052	
 calendar	Presentation Event				00052	
-experiment_type	 pedigree experiment					
+experiment_type	pedigree experiment					
 experiment_type	cross_experiment				00052	
 experiment_type	field_layout				00052	
 experiment_type	genotyping_experiment				00052	
