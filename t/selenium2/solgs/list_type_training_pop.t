@@ -32,7 +32,24 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(60);
     $d->find_element_ok('run_pca', 'id', 'run pca')->click(); $d->find_element_ok('run_pca', 'id', 'run pca')->click();
-    sleep(40);
+    sleep(60);
+
+    $d->find_element_ok('//select[@id="prediction_genotypes_list_select"]/option[text()="trial2 NaCRRI clones"]', 'xpath', 'select list sl pop')->click();
+    sleep(10);
+    $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
+    sleep(20);
+    $d->find_element_ok('//table[@id="uploaded_selection_pops_table"]/tbody/tr[2]/td[2]/a', 'xpath', 'select list sel pop')->click();  
+    sleep(20);
+    $d->find_element_ok('//table[@id="uploaded_selection_pops_table"]/tbody/tr[2]/td[2]/a', 'xpath', 'go sl pop page')->click();  
+    sleep(60);
+    $d->find_element_ok('run_pca', 'id', 'run pca')->click();
+    sleep(60);
+    $d->find_element_ok('compare_gebvs', 'id', 'compare gebvs')->click();
+    sleep(20);
+    $d->find_element_ok('normalLegend', 'id', 'gebvs plot gebvs legend');
+    sleep(20);
+
+
 
     ###list of trials####
     $d->get_ok('/solgs', 'solgs home page');
@@ -47,7 +64,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('dry matter content percentage', 'link_text', 'build combined DM model')->click();
     sleep(30);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(60);
+    sleep(80);
     $d->find_element_ok('run_pca', 'id', 'run pca')->click();
     sleep(60);
 });
