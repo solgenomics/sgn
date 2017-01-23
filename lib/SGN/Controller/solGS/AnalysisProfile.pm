@@ -164,13 +164,10 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
    
     my $analysis_profile = $c->req->params;
     $c->stash->{analysis_profile} = $analysis_profile;
-    print STDERR "\ncall parse_arguments\n";
     $self->parse_arguments($c);
-     print STDERR "\ncall run analysis\n";
     $self->run_analysis($c);  
-      print STDERR "\ncall structure output details\n";
     $self->structure_output_details($c); 
-      print STDERR "\nCALLED structure output details\n";
+
     my $output_details = $c->stash->{bg_job_output_details};
       
     $c->stash->{r_temp_file} = 'analysis-status';
@@ -260,22 +257,12 @@ sub parse_arguments {
       
       foreach my $k ( keys %{$arguments} ) 
       {
-	  if ($k eq 'population_id') 
-	  {
-	      my @pop_ids = @{ $arguments->{$k} };
-	      $c->stash->{pop_ids} = \@pop_ids;
-	      
-	      if (scalar(@pop_ids) == 1) 
-	      {		  
-		  $c->stash->{pop_id}  = $pop_ids[0];
-	      }
-	  }
-
 	  if ($k eq 'combo_pops_id') 
 	  {
 	      $c->stash->{combo_pops_id}   = @{ $arguments->{$k} }[0];
 	      $c->stash->{training_pop_id} = @{ $arguments->{$k} }[0];	      
 	  }
+
 	  if ($k eq 'population_id') 
 	  {	       
 	      if ($data_set_type =~ /combined populations/)
@@ -292,9 +279,9 @@ sub parse_arguments {
 		  }
 		  else 
 		  {
-		     $c->stash->{pop_id}          = $arguments->{$k};
-		     $c->stash->{training_pop_id} = $arguments->{$k};
-		     $c->stash->{model_id}        = $arguments->{$k};  
+		     $c->stash->{pop_id}          = @{$arguments->{$k}}[0];
+		     $c->stash->{training_pop_id} = @{$arguments->{$k}}[0];
+		     $c->stash->{model_id}        = @{$arguments->{$k}}[0];
 		  }
 	      }
 	     
@@ -309,8 +296,8 @@ sub parse_arguments {
 	  if ($k eq 'model_id') 
 	  {
 	      $c->stash->{model_id}        = $arguments->{$k};
-	      $c->stash->{training_pop_id} = $arguments->{$k};;
-	      $c->stash->{pop_id}          = $arguments->{$k};;
+	      $c->stash->{training_pop_id} = $arguments->{$k};
+	      $c->stash->{pop_id}          = $arguments->{$k};
 	  }
 
 	  if ($k eq 'training_pop_id') 
@@ -665,8 +652,6 @@ sub run_analysis {
 
 	if ($pop_id =~ /uploaded/) 
 	{
-	    print STDERR "\n pop id: $pop_id -- calling plots pheno data\n";
-
 	    $c->controller('solGS::List')->plots_list_phenotype_file($c);
 	    $c->controller('solGS::List')->genotypes_list_genotype_file($c);
 	    $c->controller('solGS::List')->create_list_population_metadata_file($c);
