@@ -27,7 +27,7 @@ print STDERR Dumper $response;
 
 is_deeply($response, {'metadata' => {'status' => [{}],'pagination' => {'totalPages' => 1,'currentPage' => 0,'totalCount' => 32,'pageSize' => 50},'datafiles' => []},'result' => {'data' => [{'datatypes' => ['json','tsv','csv'],'methods' => ['GET','POST'],'call' => 'allelematrix-search'}]}}, 'check calls response content');
 
-$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw"=> "grant_type"=> "password" ]);
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{'metadata'}->{'status'}->[0]->{'message'}, 'Login Successfull');

@@ -41,24 +41,25 @@ sub get_matches {
 	my $schema = $self->get_schema();
 	my @accession_list = @{$accession_list_ref};
 	my %synonym_uniquename_lookup;
-	my $fuzzy_string_search = CXGN::String::FuzzyMatch->new( { case_insensitive => 1} );
+	my $fuzzy_string_search = CXGN::String::FuzzyMatch->new( { case_insensitive => 0} );
 	my @fuzzy_accessions;
 	my @absent_accessions;
 	my @found_accessions;
 	my %results;
 
+	my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
 	my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-	my $q = "SELECT stock.uniquename, stockprop.value
-		FROM stock
-		LEFT JOIN stockprop USING(stock_id)
-		JOIN cvterm ON (stockprop.type_id = cvterm.cvterm_id)
-		WHERE stock.type_id=$accession_type_id AND lower(cvterm.name) like '%synonym%';";
+	my $q = "SELECT stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE stock.type_id=$accession_type_id";
 	my $h = $schema->storage->dbh()->prepare($q);
 	$h->execute();
 	my %uniquename_hash;
-	while (my ($uniquename, $synonym) = $h->fetchrow_array()) {
+	while (my ($uniquename, $synonym, $type_id) = $h->fetchrow_array()) {
 		$uniquename_hash{$uniquename} = 1;
-		push @{$synonym_uniquename_lookup{$synonym}}, $uniquename;
+		if ($type_id){
+			if ($type_id == $synonym_type_id){
+				push @{$synonym_uniquename_lookup{$synonym}}, $uniquename;
+			}
+		}
 	}
 
 	my @stock_names = keys %uniquename_hash;
