@@ -27,11 +27,11 @@ Isaak Y Tecle (iyt2@cornell.edu)
   <div class="fileupload-buttonbar">
    
     <div class="list_upload" id="list_label">
-      <label for="reference_genotypes_list">Select a training population </label>
-    </div> 
-    <div class="list_upload" id="reference_genotypes_list"></div>
-    <div class="list_upload" id="reference_genotypes_list_upload">
-      <input type="button" value="Go" />
+       <label for="list_type_training_pops">Select a training population </label>
+    </div>   
+      <div class="list_upload" id="list_type_training_pops_list"></div>
+    <div  class="list_upload" id="list_type_training_pop_load">
+      <input type="button"  value="Go" />
     </div>  
     <div class="list_upload" style="margin-left:5px">     
       <i class="glyphicon-plus"></i>

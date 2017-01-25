@@ -490,7 +490,6 @@ if (length(predictionData) == 0) {
   cat("\n", file = varianceComponentsFile,  append = TRUE)
   cat('Additive genetic variance',  trGEBV$Vg, file = varianceComponentsFile, sep = '\t', append = TRUE)
   cat("\n", file = varianceComponentsFile,  append = TRUE)
-  cat("\n", file = varianceComponentsFile,  append = TRUE)
   cat('Heritability (h)', heritability, file = varianceComponentsFile, sep = '\t', append = TRUE)
 
 
