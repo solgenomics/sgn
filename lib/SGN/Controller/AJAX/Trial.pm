@@ -367,6 +367,7 @@ sub save_experimental_design_POST : Args(0) {
   my $multi_location;
   my $trial_locations = $c->req->param('trial_location');
   my $trial_name = $c->req->param('project_name');
+  my $trial_type = $c->req->param('trial_type');
   my $breeding_program = $c->req->param('breeding_program_name');
   my $schema = $c->dbic_schema("Bio::Chado::Schema");
   my $breeding_program_id = $schema->resultset("Project::Project")->find({name=>$breeding_program})->project_id();
@@ -426,6 +427,7 @@ sub save_experimental_design_POST : Args(0) {
         trial_location => $trial_location,
         trial_name => $trial_name,
         design_type => $c->req->param('design_type'),
+        trial_type => $trial_type
 	  });
 
   #$trial_create->set_user($c->user()->id());

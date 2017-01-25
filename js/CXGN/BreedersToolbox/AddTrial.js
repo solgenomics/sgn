@@ -529,6 +529,7 @@ jQuery(document).ready(function ($) {
         var fieldmap_col_number = jQuery('#fieldMap_col_number').val();
         var fieldmap_row_number = jQuery('#fieldMap_row_number').val();
         var plot_layout_format = jQuery('#plot_layout_format').val();
+        var trial_type = jQuery('#add_project_type').val();
 
         //var stock_verified = verify_stock_list(stock_list);
         if (desc == '' || year == '') {
@@ -548,6 +549,7 @@ jQuery(document).ready(function ($) {
                 'project_description': desc,
                 //'trial_name': trial_name,
                 'year': year,
+                'trial_type': trial_type,
                 'trial_location': trial_location,
                 'stock_list': stock_list,
                 'control_list': control_list,
@@ -724,6 +726,7 @@ jQuery(document).ready(function ($) {
 
      $('#add_project_link').click(function () {
          get_select_box('years', 'add_project_year', {'auto_generate': 1 });
+         get_select_box('trial_types', 'add_project_type', {'empty':1} );
          open_project_dialog();
      });
 
