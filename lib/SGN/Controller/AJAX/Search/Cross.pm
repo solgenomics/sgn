@@ -21,14 +21,16 @@ sub search_male_parents :Path('/ajax/search/male_parents') :Args(0){
 
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $male_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
+    my $female_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
 
     my $dbh = $schema->storage->dbh();
 
     my $q = "SELECT DISTINCT female_parent.stock_id, male_parent.stock_id, male_parent.uniquename FROM stock as female_parent
     INNER JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id=stock_relationship1.subject_id)
-    AND stock_relationship1.type_id=76437 INNER JOIN stock_relationship AS stock_relationship2
+    AND stock_relationship1.type_id= '$female_parent_typeid' INNER JOIN stock_relationship AS stock_relationship2
     ON (stock_relationship1.object_id=stock_relationship2.object_id) INNER JOIN stock AS male_parent
-    ON (male_parent.stock_id=stock_relationship2.subject_id) AND stock_relationship2.type_id=76438
+    ON (male_parent.stock_id=stock_relationship2.subject_id) AND stock_relationship2.type_id= '$male_parent_typeid'
     WHERE female_parent.uniquename= '$female_parent'";
 
 
@@ -59,16 +61,20 @@ sub search : Path('/ajax/search/cross') Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
+    my $male_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
+    my $female_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
+    my $cross_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+
     my $dbh = $schema->storage->dbh();
 
 
 
     my $q = "SELECT female_parent.stock_id, male_parent.stock_id, cross_entry.stock_id, female_parent.uniquename,male_parent.uniquename,cross_entry.uniquename FROM stock as female_parent
     INNER JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id=stock_relationship1.subject_id)
-    AND stock_relationship1.type_id=76437 INNER JOIN stock_relationship AS stock_relationship2
+    AND stock_relationship1.type_id='$female_parent_typeid' INNER JOIN stock_relationship AS stock_relationship2
     ON (stock_relationship1.object_id=stock_relationship2.object_id) INNER JOIN stock AS male_parent
-    ON (male_parent.stock_id=stock_relationship2.subject_id) AND stock_relationship2.type_id=76438
-    INNER JOIN stock AS cross_entry ON (cross_entry.stock_id=stock_relationship2.object_id) AND cross_entry.type_id=76446
+    ON (male_parent.stock_id=stock_relationship2.subject_id) AND stock_relationship2.type_id='$male_parent_typeid'
+    INNER JOIN stock AS cross_entry ON (cross_entry.stock_id=stock_relationship2.object_id) AND cross_entry.type_id='$cross_typeid'
     WHERE female_parent.uniquename = '$female_parent' AND male_parent.uniquename = '$male_parent'";
 
     my $h = $dbh->prepare($q);

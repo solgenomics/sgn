@@ -91,6 +91,11 @@ jQuery(document).ready(function () {
     html = html + "</select>";
     console.log(html);
 
+    if(i ==''){
+      alert("No male parent");
+      return;
+    }
+
     jQuery('#male_parent').html(html);
     },
     error:function(response){
