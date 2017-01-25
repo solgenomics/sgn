@@ -24,61 +24,64 @@ jQuery(document).ready(function ($) {
 
     var design_json;
 
-  function verify_stock_list(stock_list) {
-    alert("verifying stock");
-    console.log("verifying stock...");
-	var return_val = 0;
-	$.ajax({
+    $(document).on('focusout', '#select_list_multi_list_select', function() {
+        var stock_list_id = $('#select_list_multi_list_select').val();
+        var stock_list;
+        if (stock_list_id != "") {
+            stock_list = JSON.stringify(list.getList(stock_list_id));
+            verify_stock_list(stock_list);
+        }
+    });
+
+    $(document).on('focusout', '#list_of_checks_section_multi_list_select', function() {
+        var stock_list_id = $('#list_of_checks_section_multi_list_select').val();
+        var stock_list;
+        if (stock_list_id != "") {
+            stock_list = JSON.stringify(list.getList(stock_list_id));
+            verify_stock_list(stock_list);
+        }
+    });
+
+    $(document).on('focusout', '#crbd_list_of_checks_section_multi_list_select', function() {
+        var stock_list_id = $('#crbd_list_of_checks_section_multi_list_select').val();
+        var stock_list;
+        if (stock_list_id != "") {
+            stock_list = JSON.stringify(list.getList(stock_list_id));
+            verify_stock_list(stock_list);
+        }
+    });
+
+    var stock_list_verified = 0;
+    function verify_stock_list(stock_list) {
+        $.ajax({
             type: 'POST',
-	    timeout: 3000000,
+            timeout: 3000000,
             url: '/ajax/trial/verify_stock_list',
-	    dataType: "json",
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            dataType: "json",
             data: {
-                //'stock_list': stock_list.join(","),
                 'stock_list': stock_list,
             },
             success: function (response) {
+                //console.log(response);
+                jQuery('#working_modal').modal('hide');
                 if (response.error) {
                     alert(response.error);
-		    verify_stock_list.return_val = 0;
-                } else {
-		    verify_stock_list.return_val = 1;
+                    stock_list_verified = 0;
+                }
+                if (response.success){
+                    stock_list_verified = 1;
                 }
             },
             error: function () {
+                jQuery('#working_modal').modal('hide');
                 alert('An error occurred. sorry');
-	    verify_stock_list.return_val = 0;
+                stock_list_verified = 0;
             }
-	});
-	   return return_val;
-  }
-
-  function verify_stock_list(control_list_crbd) {
-	var return_val = 0;
-	$.ajax({
-            type: 'POST',
-	    timeout: 3000000,
-            url: '/ajax/trial/verify_stock_list',
-	    dataType: "json",
-            data: {
-                //'stock_list': stock_list.join(","),
-                'stock_list': control_list_crbd,
-            },
-            success: function (response) {
-                if (response.error) {
-                    alert(response.error);
-		    verify_stock_list.return_val = 0;
-                } else {
-		    verify_stock_list.return_val = 1;
-                }
-            },
-            error: function () {
-                alert('An error occurred. sorry');
-	    verify_stock_list.return_val = 0;
-            }
-	});
-	   return return_val;
-  }
+       });
+    }
 
   function generate_multi_experimental_design() {
       var name = $('#new_multi_trial_name').val();
@@ -132,22 +135,13 @@ jQuery(document).ready(function ($) {
       var start_number = $('#start_number_multi').val();
       var increment = $('#increment_multi').val();
 
-     if (name == '') {
-          alert('Trial name required');
-          return;
-      }
-
-      if (desc == '' || year == '') {
-          alert('Year and description are required.');
-          return;
-      }
-
-      $('#working_modal').modal("show");
-
       $.ajax({
           type: 'POST',
           timeout: 3000000,
           url: '/ajax/trial/generate_experimental_design',
+          beforeSend: function(){
+              $('#working_modal').modal("show");
+          },
           dataType: "json",
           data: {
               'project_name': name,
@@ -178,14 +172,15 @@ jQuery(document).ready(function ($) {
               } else {
                 $('#multi_trial_design_information').html(response.design_info_view_html);
                 var layout_view = JSON.parse(response.design_layout_view_html);
-                console.log(layout_view);
+                //console.log(layout_view);
                 var layout_html = '';
                 for (var i=0; i<layout_view.length; i++) {
-                  console.log(layout_view[i]);
+                  //console.log(layout_view[i]);
                   layout_html += layout_view[i] + '<br>';
                 }
                 $('#multi_trial_design_view_layout_return').html(layout_html);
                 //$('#multi_trial_design_view_layout_return').html(response.design_layout_view_html);
+
                 $('#working_modal').modal("hide");
                 $('#multi_trial_design_confirm').modal("show");
                 design_json = response.design_json;
@@ -193,12 +188,12 @@ jQuery(document).ready(function ($) {
           },
           error: function () {
             $('#working_modal').modal("hide");
-            alert('An error occurred. sorry. test');
+            alert('An error occurred. sorry.');
           }
      });
   }
 
-  $('#new_multi_trial_submit').click(function () {
+  $(document).on('click', '#new_multi_trial_submit', function () {
         var name = $('#new_multi_trial_name').val();
         var year = $('#add_multi-project_year').val();
         var desc = $('textarea#add_multi-project_description').val();
@@ -214,13 +209,16 @@ jQuery(document).ready(function ($) {
           return;
         }
 
-        if (method_to_use == "create_with_design_tool") {
-          generate_multi_experimental_design();
+        if (stock_list_verified == 1){
+            if (method_to_use == "create_with_design_tool") {
+              generate_multi_experimental_design();
+            }
+        } else {
+            alert('Accession list is not valid!');
+            return;
         }
 
   });
-
-  $("#format_type_radio").change();
 
   $(document).on('change', '#select_multi-design_method', function () {
 
@@ -399,14 +397,6 @@ jQuery(document).ready(function ($) {
     $("#select_list_multi_list_select").one('mousedown', function () {
               $("option:first", this).remove();
     });
-    $("#select_list_multi_list_select").focusout(function() {
-        var stock_list_id = $('#select_list_multi_list_select').val();
-        var stock_list;
-        if (stock_list_id != "") {
-      stock_list = JSON.stringify(list.getList(stock_list_id));
-        }
-        verify_stock_list(stock_list);
-    });
 
     //add a blank line to list of checks select dropdown that dissappears when dropdown is opened
     $("#list_of_checks_section_multi_list_select").prepend("<option value=''></option>").val('');
@@ -417,24 +407,6 @@ jQuery(document).ready(function ($) {
     $("#crbd_list_of_checks_section_multi_list_select").prepend("<option value=''></option>").val('');
     $("#crbd_list_of_checks_section_multi_list_select").one('mousedown', function () {
               $("option:first", this).remove();
-    });
-
-    $("#list_of_checks_section_multi_list_select").focusout(function() {
-        var stock_list_id = $('#list_of_checks_section_multi_list_select').val();
-        var stock_list;
-        if (stock_list_id != "") {
-      stock_list = JSON.stringify(list.getList(stock_list_id));
-        }
-        verify_stock_list(stock_list);
-    });
-
-    $("#crbd_list_of_checks_section_multi_list_select").focusout(function() {
-        var stock_list_id = $('#crbd_list_of_checks_section_multi_list_select').val();
-        var stock_list;
-        if (stock_list_id != "") {
-      stock_list = JSON.stringify(list.getList(stock_list_id));
-        }
-        verify_stock_list(stock_list);
     });
 
     //add a blank line to design method select dropdown that dissappears when dropdown is opened
