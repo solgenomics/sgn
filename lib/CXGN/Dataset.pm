@@ -341,8 +341,8 @@ sub retrieve_genotypes {
 	trial_list => $self->trials(),
 	protocol_id => $protocol_id
 	); 
-    my $resultset = $genotypes_search->get_genotype_info(); 
-    my $genotypes = $resultset->{genotypes};	
+    my ($total_count, $dataref) = $genotypes_search->get_genotype_info(); 
+    return $dataref;	
 }
 
 =head2 retrieve_phenotypes()
