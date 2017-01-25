@@ -24,7 +24,7 @@ use JSON;
 use Storable qw/ nstore retrieve /;
 use Carp qw/ carp confess croak /;
 
-BEGIN { extends 'Catalyst::Controller::HTML::FormFu' }
+BEGIN { extends 'Catalyst::Controller' }
 
 #
 # Sets the actions in this controller to be registered with no prefix
@@ -72,65 +72,6 @@ sub submit :Path('/solgs/submit/intro')  Args(0) {
     my ($self, $c) = @_;
 
     $c->stash->{template} =  $self->template('/submit/intro.mas');
-}
-
-
-sub details_form : Path('/solgs/form/population/details') Args(0) {
-    my ($self, $c) = @_;
-
-    $self->load_yaml_file($c, 'population/details.yml');
-    my $form = $c->stash->{form}; 
-   
-    if ($form->submitted_and_valid ) 
-    {
-        $c->res->redirect('/solgs/form/population/phenotype');
-    }
-    else 
-    {
-        $c->stash(template => $self->template('/form/population/details.mas'),
-                  form     => $form
-            );
-    }
-}
-
-
-sub phenotype_form : Path('/solgs/form/population/phenotype') Args(0) {
-    my ($self, $c) = @_;
-    
-    $self->load_yaml_file($c, 'population/phenotype.yml');
-    my $form = $c->stash->{form};
-
-    if ($form->submitted_and_valid) 
-    {
-      $c->res->redirect('/solgs/form/population/genotype');
-    }        
-    else
-    {
-        $c->stash(template => $self->template('/form/population/phenotype.mas'),
-                  form     => $form
-            );
-    }
-
-}
-
-
-sub genotype_form : Path('/solgs/form/population/genotype') Args(0) {
-    my ($self, $c) = @_;
-
-    $self->load_yaml_file($c, 'population/genotype.yml');
-    my $form = $c->stash->{form};
-
-    if ($form->submitted_and_valid) 
-    {
-      $c->res->redirect('/solgs/population/12');
-    }        
-    else
-    {
-        $c->stash(template => $self->template('/form/population/genotype.mas'),
-                  form     => $form
-            );
-    }
-
 }
 
 
@@ -592,8 +533,6 @@ sub population : Regex('^solgs/population/([\w|\d]+)(?:/([\w+]+))?') {
             $c->stash->{no_traits_selected} = 'some';
         }
 
-        $self->select_traits($c);
-
         my $acronym = $self->get_acronym_pairs($c);
         $c->stash->{acronym} = $acronym;
     }
@@ -650,7 +589,7 @@ sub uploaded_population_summary {
       
 	    ($list_name)       = grep {/list_name/} @metadata_tr;      
 	    ($key, $list_name) = split(/\t/, $list_name); 
-   
+	  
 	    $c->stash(project_id          => $model_id,
 		      project_name        => $list_name,
 		      project_desc        => $desc,
@@ -763,12 +702,12 @@ sub project_description {
 }
 
 
-sub select_traits   {
-    my ($self, $c) = @_;
+# sub select_traits   {
+#     my ($self, $c) = @_;
 
-    $self->load_yaml_file($c, 'population/traits.yml');
-    $c->stash->{traits_form} = $c->stash->{form};
-}
+#     #$self->load_yaml_file($c, 'population/traits.yml');
+#    # $c->stash->{traits_form} = $c->stash->{form};
+# }
 
 
 sub selection_trait :Path('/solgs/selection/') Args(5) {
@@ -983,7 +922,7 @@ sub input_files {
     {
         $prediction_population_file = $c->stash->{prediction_population_file};
     }
-
+  
     my $formatted_phenotype_file  = $c->stash->{formatted_phenotype_file};
    
     my $pheno_file  = $c->stash->{phenotype_file};
@@ -1004,7 +943,8 @@ sub input_files {
         );
 
     my $name = "input_files_${pop_id}"; 
-    my $tempfile = $self->create_tempfile($c, $name); 
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $tempfile = $self->create_tempfile($temp_dir, $name); 
     write_file($tempfile, $input_files);
     $c->stash->{input_files} = $tempfile;
   
@@ -1057,7 +997,8 @@ sub output_files {
         );
                           
     my $name = "output_files_${trait}_$pop_id"; 
-    my $tempfile = $self->create_tempfile($c, $name); 
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $tempfile = $self->create_tempfile($temp_dir, $name); 
     write_file($tempfile, $file_list);
     
     $c->stash->{output_files} = $tempfile;
@@ -1238,7 +1179,7 @@ sub genotype_file_name {
    
     my $pop_id = $c->stash->{pop_id};
     $pop_id = $c->stash->{combo_pops_id} if !$pop_id;
-    $pop_id = $c->stash->{prediction_pop_id} if $c->stash->{prediction_pop_id}; 
+    my $pred_pop_id = $c->stash->{prediction_pop_id} if $c->stash->{prediction_pop_id}; 
    
     if ($pop_id =~ /uploaded/) 
     {
@@ -2082,14 +2023,15 @@ sub get_gebv_files_of_traits {
     $pred_file_suffix = '_' . $pred_pop_id  if $pred_pop_id; 
     
     my $name = "gebv_files_of_traits_${pop_id}${pred_file_suffix}";
-    my $file = $self->create_tempfile($c, $name);
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $file = $self->create_tempfile($temp_dir, $name);
    
     write_file($file, $gebv_files);
    
     $c->stash->{gebv_files_of_traits} = $file;
 
     my $name2 = "gebv_files_of_valid_traits_${pop_id}${pred_file_suffix}";
-    my $file2 = $self->create_tempfile($c, $name2);
+    my $file2 = $self->create_tempfile($temp_dir, $name2);
    
     write_file($file2, $valid_gebv_files);
    
@@ -2118,7 +2060,8 @@ sub gebv_rel_weights {
     $pred_file_suffix = '_' . $pred_pop_id  if $pred_pop_id; 
     
     my $name = "rel_weights_${pop_id}${pred_file_suffix}";
-    my $file = $self->create_tempfile($c, $name);
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $file = $self->create_tempfile($temp_dir, $name);
     write_file($file, $rel_wts);
     
     $c->stash->{rel_weights_file} = $file;
@@ -2135,7 +2078,8 @@ sub ranked_genotypes_file {
     $pred_file_suffix = '_' . $pred_pop_id  if $pred_pop_id;
   
     my $name = "ranked_genotypes_${pop_id}${pred_file_suffix}";
-    my $file = $self->create_tempfile($c, $name);
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $file = $self->create_tempfile($temp_dir, $name);
     $c->stash->{ranked_genotypes_file} = $file;
    
 }
@@ -2150,7 +2094,8 @@ sub selection_index_file {
     $pred_file_suffix = '_' . $pred_pop_id  if $pred_pop_id;
 
     my $name = "selection_index_${pop_id}${pred_file_suffix}";
-    my $file = $self->create_tempfile($c, $name);
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $file = $self->create_tempfile($temp_dir, $name);
     $c->stash->{selection_index_file} = $file;
    
 }
@@ -2197,12 +2142,12 @@ sub rank_genotypes : Private {
     $pred_file_suffix = '_' . $pred_pop_id  if $pred_pop_id;
     
     my $name = "output_rank_genotypes_${pop_id}${pred_file_suffix}";
-    my $output_file = $self->create_tempfile($c, $name);
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $output_file = $self->create_tempfile($temp_dir, $name);
     write_file($output_file, $output_files);
-    
-    
+       
     $name = "input_rank_genotypes_${pop_id}${pred_file_suffix}";
-    my $input_file = $self->create_tempfile($c, $name);
+    my $input_file = $self->create_tempfile($temp_dir, $name);
     write_file($input_file, $input_files);
     
     $c->stash->{output_files} = $output_file;
@@ -2891,7 +2836,8 @@ sub build_multiple_traits_models {
 	    else
 	    {
 		my $name  = "trait_info_${single_trait_id}_pop_${pop_id}";
-		my $file2 = $self->create_tempfile($c, $name);
+		my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+		my $file2 = $self->create_tempfile($temp_dir, $name);
 		
 		$c->stash->{trait_file} = $file2;
 		$c->stash->{trait_abbr} = $selected_traits[0];
@@ -2935,13 +2881,14 @@ sub build_multiple_traits_models {
 	    }  
 	    
 	    my $name = "selected_traits_pop_${pop_id}";
-	    my $file = $self->create_tempfile($c, $name);
+	    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+	    my $file = $self->create_tempfile($temp_dir, $name);
 	    
 	    write_file($file, $traits);
 	    $c->stash->{selected_traits_file} = $file;
 
 	    $name     = "trait_info_${single_trait_id}_pop_${pop_id}";
-	    my $file2 = $self->create_tempfile($c, $name);
+	    my $file2 = $self->create_tempfile($temp_dir, $name);
 	    
 	    $c->stash->{trait_file} = $file2;
 	    $self->get_rrblup_output($c); 
@@ -3670,7 +3617,8 @@ sub multi_pops_pheno_files {
     if ($trait_id)
     {
         my $name = "trait_${trait_id}_multi_pheno_files";
-        my $tempfile = $self->create_tempfile($c, $name);
+	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+        my $tempfile = $self->create_tempfile($temp_dir, $name);
         write_file($tempfile, $files);
     }
  
@@ -3703,7 +3651,8 @@ sub multi_pops_geno_files {
     if ($trait_id)
     {
         my $name = "trait_${trait_id}_multi_geno_files";
-        my $tempfile = $self->create_tempfile($c, $name);
+	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+        my $tempfile = $self->create_tempfile($temp_dir, $name);
         write_file($tempfile, $files);
     }
     
@@ -3711,13 +3660,13 @@ sub multi_pops_geno_files {
 
 
 sub create_tempfile {
-    my ($self, $c, $name, $ext) = @_;
+    my ($self, $dir, $name, $ext) = @_;
     
     $ext = '.' . $ext if $ext;
     
     my ($fh, $file) = tempfile($name . "-XXXXX", 
 			       SUFFIX => $ext,
-                               DIR => $c->stash->{solgs_tempfiles_dir}
+                               DIR => $dir,
         );
     
     $fh->close; 
@@ -4574,7 +4523,7 @@ sub prep_phenotype_file {
 
     if ($pheno_data)
     {
-	$pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $traits_file);
+	my $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $traits_file);
 	write_file($pheno_file, $pheno_data);
     }
     
@@ -4609,7 +4558,7 @@ sub prep_genotype_file {
    
     if ($geno_data)
     {
-	write_file($geno_file, ${$geno_data});
+	write_file($geno_file, $geno_data);
     }
     
 }
@@ -4622,8 +4571,6 @@ sub phenotype_file {
     die "Population id must be provided to get the phenotype data set." if !$pop_id;
     $pop_id =~ s/combined_//;
     
-    my $pheno_file;
- 
     if ($c->stash->{uploaded_reference} || $pop_id =~ /uploaded/) {	
 	if (!$c->user) {
 	    
@@ -4664,10 +4611,11 @@ sub phenotype_file {
 
 
 sub format_phenotype_dataset {
-    my ($self, $data, $traits_file) = @_;
-    
+    my ($self, $data_ref, $traits_file) = @_;
+   
+    my $data = $$data_ref;
     my @rows = split (/\n/, $data);
-        
+   
     my $formatted_headers = $self->format_phenotype_dataset_headers($rows[0], $traits_file);   
     $rows[0] = $formatted_headers;
 
@@ -4753,7 +4701,7 @@ sub genotype_file  {
 
     if ($pred_pop_id) 
     {      
-        $pop_id = $c->stash->{prediction_pop_id};      
+        $pop_id = $c->stash->{prediction_pop_id}; 
         $geno_file = $c->stash->{user_selection_list_genotype_data_file}; 
     } 
     
@@ -4769,8 +4717,11 @@ sub genotype_file  {
 	}
     }
 
-    $self->genotype_file_name($c);
-    my $geno_file = $c->stash->{genotype_file_name};
+    unless ($geno_file)
+    {
+	$self->genotype_file_name($c);
+	$geno_file = $c->stash->{genotype_file_name};
+    }
 
     no warnings 'uninitialized';
 
@@ -4921,12 +4872,13 @@ sub run_rrblup_trait {
 
         my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
         my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
-       
+	
+	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
         my $trait_info   = $trait_id . "\t" . $trait_abbr;     
-        my $trait_file  = $self->create_tempfile($c, "trait_info_${trait_id}");
+        my $trait_file  = $self->create_tempfile($temp_dir, "trait_info_${trait_id}");
         write_file($trait_file, $trait_info);
 
-        my $dataset_file  = $self->create_tempfile($c, "dataset_info_${trait_id}");
+        my $dataset_file  = $self->create_tempfile($temp_dir, "dataset_info_${trait_id}");
         write_file($dataset_file, $data_set_type);
  
         my $prediction_population_file = $c->stash->{prediction_population_file};
@@ -4939,7 +4891,7 @@ sub run_rrblup_trait {
                                    $prediction_population_file,
             );
 
-        my $input_file = $self->create_tempfile($c, "input_files_combo_${trait_abbr}");
+        my $input_file = $self->create_tempfile($temp_dir, "input_files_combo_${trait_abbr}");
         write_file($input_file, $input_files);
 
         if ($c->stash->{prediction_pop_id})
@@ -4963,9 +4915,9 @@ sub run_rrblup_trait {
     else 
     {
         my $name  = "trait_info_${trait_id}_pop_${pop_id}"; 
-    
+    	my $temp_dir = $c->stash->{solgs_tempfiles_dir};
         my $trait_info = $trait_id . "\t" . $trait_abbr;
-        my $file = $self->create_tempfile($c, $name);    
+        my $file = $self->create_tempfile($temp_dir, $name);    
         $c->stash->{trait_file} = $file;       
         write_file($file, $trait_info);
 
@@ -5057,9 +5009,10 @@ sub r_combine_populations  {
     
     my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
     my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
-   
+    
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $trait_info  = $trait_id . "\t" . $trait_abbr;
-    my $trait_file  = $self->create_tempfile($c, "trait_info_${trait_id}");
+    my $trait_file  = $self->create_tempfile($temp_dir, "trait_info_${trait_id}");
     write_file($trait_file, $trait_info); 
   
     my $input_files = join ("\t",
@@ -5073,11 +5026,10 @@ sub r_combine_populations  {
                              $combined_pops_geno_file,
         );
                              
-     
-    my $tempfile_input = $self->create_tempfile($c, "input_files_${trait_id}_combine"); 
+    my $tempfile_input = $self->create_tempfile($temp_dir, "input_files_${trait_id}_combine"); 
     write_file($tempfile_input, $input_files);
 
-    my $tempfile_output = $self->create_tempfile($c, "output_files_${trait_id}_combine"); 
+    my $tempfile_output = $self->create_tempfile($temp_dir, "output_files_${trait_id}_combine"); 
     write_file($tempfile_output, $output_files);
         
     die "\nCan't call combine populations R script without a trait id." if !$trait_id;
@@ -5152,8 +5104,9 @@ sub run_async {
 	$script_args .= $arg;
 	$script_args .= ' --script_args ' unless ($r_script_args->[-1] eq $arg);
     }
-
-    my $report_file = $self->create_tempfile($c, 'analysis_report_args');
+    
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $report_file = $self->create_tempfile($temp_dir, 'analysis_report_args');
     $c->stash->{report_file} = $report_file;
 
     my $cmd = 'mx-run solGS::DependentJob'
@@ -5235,7 +5188,8 @@ sub run_r_script {
 	{	    
 	    $c->stash->{job_type} = 'combine_populations'; 	   
 	    #$c->stash->{combine_pops_job_id} = $dependency;
-	    $c->stash->{gs_model_args_file} = $self->create_tempfile($c, 'gs_model_args');
+	    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+	    $c->stash->{gs_model_args_file} = $self->create_tempfile($temp_dir, 'gs_model_args');
 	    $self->run_async($c);
 	}
 	elsif ($r_script =~ /gs/)
@@ -5282,7 +5236,9 @@ sub run_r_script {
 	    {	    
 		#$c->stash->{job_type} = 'combine_populations'; 	   
 		$c->stash->{combine_pops_job_id} = $r_job->job_id();
-		$c->stash->{gs_model_args_file} = $self->create_tempfile($c, 'gs_model_args');
+		
+		my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+		$c->stash->{gs_model_args_file} = $self->create_tempfile($temp_dir, 'gs_model_args');
 		#$self->run_async($c);
 	    }
 

@@ -231,8 +231,9 @@ sub create_pca_genotype_data {
 		$c->model("solGS::solGS")->format_user_list_genotype_data;
 		my $geno_data = $c->stash->{user_selection_list_genotype_data};
 
+		my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
 		my $file = "genotype_data_${list_id}";     
-		$file = $c->controller("solGS::solGS")->create_tempfile($c, $file);    
+		$file = $c->controller("solGS::solGS")->create_tempfile($tmp_dir, $file);    
             
 		write_file($file, $geno_data);
 		$c->stash->{genotype_file} = $file; 
@@ -367,8 +368,9 @@ sub pca_output_files {
 	);
      
     my $pop_id = $c->stash->{pop_id};
+    my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
     my $name = "pca_output_files_${pop_id}"; 
-    my $tempfile =  $c->controller("solGS::solGS")->create_tempfile($c, $name); 
+    my $tempfile =  $c->controller("solGS::solGS")->create_tempfile($tmp_dir, $name); 
     write_file($tempfile, $file_list);
     
     $c->stash->{output_files} = $tempfile;

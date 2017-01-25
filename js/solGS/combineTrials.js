@@ -176,23 +176,26 @@ jQuery(document).ready(function() {
 });
 
 
-function getCombinedPopsId() {
-
-    var comboPopsList = getSelectedTrials(); 
+function getCombinedPopsId(comboPopsList) {
+    
+    if (!comboPopsList) {
+	comboPopsList = getSelectedTrials();
+    }
+    
     var traitId       = getTraitId();
     var referer       = window.location.href;
     var page;
 	 
     if (comboPopsList.length > 1)
     {
-	var trialsIds  = comboPopsList.join(","); 
+	//var trialsIds  = comboPopsList.join(","); 
 	var action     = "/solgs/get/combined/populations/id";
 
 	jQuery.ajax({  
             type: 'POST',
             dataType: "json",
             url: action,
-            data: {'trials': trialsIds},
+            data: {'trials': comboPopsList},
             success: function(res) {                         
 		if (res.status) {               
     		    var comboPopsId = res.combo_pops_id;
@@ -215,15 +218,16 @@ function getCombinedPopsId() {
 		    } else {
 			page = '/solgs/populations/combined/' + comboPopsId;
 		    }
-		    
+	    
 		    solGS.waitPage(page, args);
-            } 
+		} 
+
             },
             error: function(res) {
-    		//combinedPopsId = 0;   
-            } 	    
-	});
- 
+    		alert('Error occured getting combined trials unique id'); 
+            }       
+	}); 
+   
     } else {
 	var popId = comboPopsList[0];
 
@@ -243,15 +247,15 @@ function getCombinedPopsId() {
 	solGS.waitPage(page, args);
 
     }
-    
 }
 
 
-function retrievePopsData() {
+function retrievePopsData(trialsIds) {
 
-    var trialsIds = getSelectedTrials();
-    trialsIds = trialsIds.join(",");
-    
+    if (!trialsIds) {
+	trialsIds = getSelectedTrials();
+    }
+ 
     var action = "/solgs/retrieve/populations/data";
    
     jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
@@ -267,10 +271,10 @@ function retrievePopsData() {
                
                 var combinedPopsId = res.combined_pops_id;
                
-                if(combinedPopsId) {
+                if (combinedPopsId) {
                     goToCombinedTrialsPage(combinedPopsId);
                     jQuery.unblockUI();
-                }else if (res.redirect_url) {
+                } else if (res.redirect_url) {
                     goToSingleTrialPage(res.redirect_url);
                     jQuery.unblockUI();
                 } 
