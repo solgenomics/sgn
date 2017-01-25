@@ -49,28 +49,25 @@ jQuery(document).ready(function ($) {
     }
 
     $(document).on('focusout', '#select_list_list_select', function() {
-        var stock_list_id = $('#select_list_list_select').val();
-        var stock_list;
-        if (stock_list_id != "") {
-            stock_list = JSON.stringify(list.getList(stock_list_id));
+        if ($('#select_list_list_select').val()) {
+            var stock_list_id = $('#select_list_list_select').val();
+            var stock_list = JSON.stringify(list.getList(stock_list_id));
             verify_stock_list(stock_list);
         }
     });
 
     $(document).on('focusout', '#list_of_checks_section_list_select', function() {
-        var stock_list_id = $('#list_of_checks_section_list_select').val();
-        var stock_list;
-        if (stock_list_id != "") {
-            stock_list = JSON.stringify(list.getList(stock_list_id));
+        if ($('#list_of_checks_section_list_select').val()) {
+            var stock_list_id = $('#list_of_checks_section_list_select').val();
+            var stock_list = JSON.stringify(list.getList(stock_list_id));
             verify_stock_list(stock_list);
         }
     });
 
     $(document).on('focusout', '#crbd_list_of_checks_section_list_select', function() {
-        var stock_list_id = $('#crbd_list_of_checks_section_list_select').val();
-        var stock_list;
-        if (stock_list_id != "") {
-            stock_list = JSON.stringify(list.getList(stock_list_id));
+        if ($('#crbd_list_of_checks_section_list_select').val()) {
+            var stock_list_id = $('#crbd_list_of_checks_section_list_select').val();
+            var stock_list = JSON.stringify(list.getList(stock_list_id));
             verify_stock_list(stock_list);
         }
     });
@@ -579,12 +576,11 @@ jQuery(document).ready(function ($) {
 	$("#crbd_list_of_checks_section_list_select").remove();
 
 	//add lists to the list select and list of checks select dropdowns.
-	$("#select_list").append(list.listSelect("select_list", [ 'accessions' ] ));
-	$("#list_of_checks_section").append(list.listSelect("list_of_checks_section", [ 'accessions' ]));
+	$("#select_list").append(list.listSelect("select_list", [ 'accessions' ], '', 'refresh'));
+	$("#list_of_checks_section").append(list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh'));
 
   //add lists to the list select and list of checks select dropdowns for CRBD.
-  $("#crbd_select_list").append(list.listSelect("crbd_select_list", [ 'accessions' ] ));
-	$("#crbd_list_of_checks_section").append(list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list"));
+	$("#crbd_list_of_checks_section").append(list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list", 'refresh'));
 
 	//add a blank line to location select dropdown that dissappears when dropdown is opened
 	$("#add_project_location").prepend("<option value=''></option>").val('');
