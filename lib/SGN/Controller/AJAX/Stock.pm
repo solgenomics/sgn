@@ -29,6 +29,7 @@ use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_a
 use CXGN::Phenome::DumpGenotypes;
 use CXGN::BreederSearch;
 use Scalar::Util 'reftype';
+use CXGN::BreedersToolbox::AccessionsFuzzySearch;
 
 use Scalar::Util qw(looks_like_number);
 use DateTime;
@@ -64,22 +65,44 @@ sub add_stockprop_POST {
 
     if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
         my $req = $c->req;
-	# refactor this code  using $stock->create_stockprop
         my $stock_id = $c->req->param('stock_id');
         my $prop  = $c->req->param('prop');
         my $prop_type = $c->req->param('prop_type');
-	if ($prop_type eq 'synonym') { $prop_type = 'stock_synonym' ; }
 
 	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
 
-	if ($stock && $prop && $prop_type) {
-	    try {
-		$stock->create_stockprops( { $prop_type => $prop }, { autocreate => 1 } );
-		$c->stash->{rest} = { message => "stock_id $stock_id and type_id $prop_type have been associated with value $prop", }
-	    } catch {
-		$c->stash->{rest} = { error => "Failed: $_" }
-            };
-	} else {
+    if ($stock && $prop && $prop_type) {
+
+        my $message = '';
+        if ($prop_type eq 'stock_synonym') {
+            my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
+            my $max_distance = 0.2;
+            my $fuzzy_search_result = $fuzzy_accession_search->get_matches([$prop], $max_distance);
+            #print STDERR Dumper $fuzzy_search_result;
+            my $found_accessions = $fuzzy_search_result->{'found'};
+            my $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
+            if (scalar(@$found_accessions) > 0){
+                $c->stash->{rest} = { error => "Synonym not added: The synonym you are adding is already stored as its own unique stock or as a synonym." };
+                $c->detach();
+            }
+            if (scalar(@$fuzzy_accessions) > 0){
+                my @fuzzy_match_names;
+                foreach my $a (@$fuzzy_accessions){
+                    foreach my $m (@{$a->{'matches'}}) {
+                        push @fuzzy_match_names, $m->{'name'};
+                    }
+                }
+                $message = "CAUTION: The synonym you are adding is similar to these accessions and synonyms in the database: ".join(', ', @fuzzy_match_names).".";
+            }
+        }
+
+        try {
+            $stock->create_stockprops( { $prop_type => $prop }, { autocreate => 1 } );
+            $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop", }
+        } catch {
+            $c->stash->{rest} = { error => "Failed: $_" }
+        };
+    } else {
 	    $c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with stock $stock_id " };
 	}
     } else {
@@ -796,7 +819,7 @@ sub stock_autocomplete_GET :Args(0) {
 	push @response_list, $stock_name;
     }
 
-    print STDERR "stock_autocomplete RESPONSELIST = ".join ", ", @response_list;
+    #print STDERR "stock_autocomplete RESPONSELIST = ".join ", ", @response_list;
 
     $c->stash->{rest} = \@response_list;
 }

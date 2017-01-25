@@ -15,7 +15,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 
-$traits_form
+$traits_form => ''
 $combo_pops_id
 $all_traits_file
 

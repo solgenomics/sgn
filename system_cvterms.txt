@@ -7,7 +7,7 @@ calendar	Phenotyping Event				00052
 calendar	Planning Event				00052	
 calendar	Planting Event				00052	
 calendar	Presentation Event				00052	
-experiment_type	 pedigree experiment					
+experiment_type	pedigree experiment					
 experiment_type	cross_experiment				00052	
 experiment_type	field_layout				00052	
 experiment_type	genotyping_experiment				00052	
@@ -84,8 +84,8 @@ project_property	project transplanting date					sgn database
 project_property	project year					
 project_property	project_has_plant_entries				00054	
 project_property	trial_folder					
-project_property    folder_for_trials   For determining if a folder appears on manage trials page   12/6/16 nm529   00071   
-project_property    folder_for_crosses   For determining if a folder appears on manage crosses page   12/6/16 nm529   00071   
+project_property	folder_for_trials	For determining if a folder appears on manage trials page	12/6/16	nm529	00071	
+project_property	folder_for_crosses	For determining if a folder appears on manage crosses page	12/6/16	nm529	00071	
 project_relationship	breeding_program_trial_relationship				00051	
 project_type	Advanced Yeld Trials				00052	
 project_type	Advanced Yield Trial					
