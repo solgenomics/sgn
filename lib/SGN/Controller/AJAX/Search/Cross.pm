@@ -31,7 +31,7 @@ sub search_male_parents :Path('/ajax/search/male_parents') :Args(0){
     AND stock_relationship1.type_id= '$female_parent_typeid' INNER JOIN stock_relationship AS stock_relationship2
     ON (stock_relationship1.object_id=stock_relationship2.object_id) INNER JOIN stock AS male_parent
     ON (male_parent.stock_id=stock_relationship2.subject_id) AND stock_relationship2.type_id= '$male_parent_typeid'
-    WHERE female_parent.uniquename= '$female_parent'";
+    WHERE female_parent.uniquename= '$female_parent' ORDER BY male_parent.uniquename ASC";
 
 
     my $h = $dbh->prepare($q);
