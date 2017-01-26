@@ -75,33 +75,6 @@ jQuery(document).ready(function ($) {
 	return return_val;
     }
 
-    function verify_stock_list(control_list_crbd) {
-	var return_val = 0;
-	$.ajax({
-            type: 'POST',
-	    timeout: 3000000,
-            url: '/ajax/trial/verify_stock_list',
-	    dataType: "json",
-            data: {
-                //'stock_list': stock_list.join(","),
-                'stock_list': control_list_crbd,
-            },
-            success: function (response) {
-                if (response.error) {
-                    alert(response.error);
-		    verify_stock_list.return_val = 0;
-                } else {
-		    verify_stock_list.return_val = 1;
-                }
-            },
-            error: function () {
-                alert('An error occurred. sorry');
-	    verify_stock_list.return_val = 0;
-            }
-	});
-	return return_val;
-    }
-
     function generate_experimental_design() {
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
@@ -598,6 +571,7 @@ jQuery(document).ready(function ($) {
 	post: function () {
             var uploadTrialLayoutFile = $("#trial_upload_file").val();
             if (uploadTrialLayoutFile === '') {
+              console.log("create_new_trial_form posted!\n");
 		alert("No file selected");
             }
 	},
@@ -631,12 +605,11 @@ jQuery(document).ready(function ($) {
 	$("#crbd_list_of_checks_section_list_select").remove();
 
 	//add lists to the list select and list of checks select dropdowns.
-	$("#select_list").append(list.listSelect("select_list", [ 'accessions' ] ));
-	$("#list_of_checks_section").append(list.listSelect("list_of_checks_section", [ 'accessions' ]));
+	$("#select_list").append(list.listSelect("select_list", [ 'accessions' ], '', 'refresh'));
+	$("#list_of_checks_section").append(list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh'));
 
   //add lists to the list select and list of checks select dropdowns for CRBD.
-  $("#crbd_select_list").append(list.listSelect("crbd_select_list", [ 'accessions' ] ));
-	$("#crbd_list_of_checks_section").append(list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list"));
+	$("#crbd_list_of_checks_section").append(list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list", 'refresh'));
 
 	//add a blank line to location select dropdown that dissappears when dropdown is opened
 	$("#add_project_location").prepend("<option value=''></option>").val('');
@@ -651,12 +624,11 @@ jQuery(document).ready(function ($) {
 	});
 
 	$("#select_list_list_select").focusout(function() {
-	    var stock_list_id = $('#select_list_list_select').val();
-	    var stock_list;
-	    if (stock_list_id != "") {
-		stock_list = JSON.stringify(list.getList(stock_list_id));
+	    if ($('#select_list_list_select').val()) {
+        var stock_list_id = $('#select_list_list_select').val();
+        var stock_list = JSON.stringify(list.getList(stock_list_id));
+        verify_stock_list(stock_list);
 	    }
-	    verify_stock_list(stock_list);
 	});
 
 	//add a blank line to list of checks select dropdown that dissappears when dropdown is opened
@@ -671,21 +643,19 @@ jQuery(document).ready(function ($) {
   });
 
 	$("#list_of_checks_section_list_select").focusout(function() {
-	    var stock_list_id = $('#list_of_checks_section_list_select').val();
-	    var stock_list;
-	    if (stock_list_id != "") {
-		stock_list = JSON.stringify(list.getList(stock_list_id));
+      if ($('#list_of_checks_section_list_select').val()) {
+        var stock_list_id = $('#list_of_checks_section_list_select').val();
+        var stock_list = JSON.stringify(list.getList(stock_list_id));
+        verify_stock_list(stock_list);
 	    }
-	    verify_stock_list(stock_list);
 	});
 
   $("#crbd_list_of_checks_section_list_select").focusout(function() {
-	    var stock_list_id = $('#crbd_list_of_checks_section_list_select').val();
-	    var stock_list;
-	    if (stock_list_id != "") {
-		stock_list = JSON.stringify(list.getList(stock_list_id));
-	    }
-	    verify_stock_list(stock_list);
+    if ($('#crbd_list_of_checks_section_list_select').val()) {
+      var stock_list_id = $('#crbd_list_of_checks_section_list_select').val();
+      var stock_list = JSON.stringify(list.getList(stock_list_id));
+      verify_stock_list(stock_list);
+    }
 	});
 
 	//add a blank line to design method select dropdown that dissappears when dropdown is opened
