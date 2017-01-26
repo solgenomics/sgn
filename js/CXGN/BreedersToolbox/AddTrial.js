@@ -48,31 +48,60 @@ jQuery(document).ready(function ($) {
         });
     }
 
+    $(document).on('focusout', '#select_list_list_select', function() {
+        if ($('#select_list_list_select').val()) {
+            var stock_list_id = $('#select_list_list_select').val();
+            var stock_list = JSON.stringify(list.getList(stock_list_id));
+            verify_stock_list(stock_list);
+        }
+    });
+
+    $(document).on('focusout', '#list_of_checks_section_list_select', function() {
+        if ($('#list_of_checks_section_list_select').val()) {
+            var stock_list_id = $('#list_of_checks_section_list_select').val();
+            var stock_list = JSON.stringify(list.getList(stock_list_id));
+            verify_stock_list(stock_list);
+        }
+    });
+
+    $(document).on('focusout', '#crbd_list_of_checks_section_list_select', function() {
+        if ($('#crbd_list_of_checks_section_list_select').val()) {
+            var stock_list_id = $('#crbd_list_of_checks_section_list_select').val();
+            var stock_list = JSON.stringify(list.getList(stock_list_id));
+            verify_stock_list(stock_list);
+        }
+    });
+
+    var stock_list_verified = 0;
     function verify_stock_list(stock_list) {
-	var return_val = 0;
-	$.ajax({
+        $.ajax({
             type: 'POST',
-	    timeout: 3000000,
+            timeout: 3000000,
             url: '/ajax/trial/verify_stock_list',
-	    dataType: "json",
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            dataType: "json",
             data: {
-                //'stock_list': stock_list.join(","),
                 'stock_list': stock_list,
             },
             success: function (response) {
+                //console.log(response);
+                jQuery('#working_modal').modal('hide');
                 if (response.error) {
                     alert(response.error);
-		    verify_stock_list.return_val = 0;
-                } else {
-		    verify_stock_list.return_val = 1;
+                    stock_list_verified = 0;
+                }
+                if (response.success){
+                    stock_list_verified = 1;
                 }
             },
             error: function () {
+                jQuery('#working_modal').modal('hide');
                 alert('An error occurred. sorry');
-	    verify_stock_list.return_val = 0;
+                stock_list_verified = 0;
             }
-	});
-	return return_val;
+       });
     }
 
     function generate_experimental_design() {
@@ -81,17 +110,12 @@ jQuery(document).ready(function ($) {
         var desc = $('#add_project_description').val();
         var trial_location = $('#add_project_location').val();
         var block_number = $('#block_number').val();
-
         //alert(block_number);
-
         var row_number= $('#row_number').val();
         var row_number_per_block=$('#row_number_per_block').val();
         var col_number_per_block=$('#col_number_per_block').val();
         var col_number=$('#col_number').val();
-
-
        // alert(row_number);
-
         var stock_list_id = $('#select_list_list_select').val();
         var control_list_id = $('#list_of_checks_section_list_select').val();
         var control_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
@@ -104,51 +128,40 @@ jQuery(document).ready(function ($) {
         if (stock_list_id != "") {
             stock_list_array = list.getList(stock_list_id);
             stock_list = JSON.stringify(list.getList(stock_list_id));
-	}
-	var control_list;
-	if (control_list_id != "") {
+        }
+        var control_list;
+        if (control_list_id != "") {
             control_list = JSON.stringify(list.getList(control_list_id));
         }
 
-  var design_type = $('#select_design_method').val();
-  if (design_type == "") {
-      var design_type = $('#select_multi-design_method').val();
-  }
-	var rep_count = $('#rep_count').val();
-	var block_size = $('#block_size').val();
-	var max_block_size = $('#max_block_size').val();
-	var plot_prefix = $('#plot_prefix').val();
-	var start_number = $('#start_number').val();
-	var increment = $('#increment').val();
-  var fieldmap_col_number = $('#fieldMap_col_number').val();
-  var fieldmap_row_number = $('#fieldMap_row_number').val();
-  var plot_layout_format = $('#plot_layout_format').val();
-
-    var greenhouse_num_plants = [];
-    if (stock_list_id != "" && design_type == 'greenhouse') {
-        for (var i=0; i<stock_list_array.length; i++) {
-            var value = jQuery("input#greenhouse_num_plants_input_" + i).val();
-            if (value == '') {
-                value = 1;
-            }
-            greenhouse_num_plants.push(value);
+        var design_type = $('#select_design_method').val();
+        if (design_type == "") {
+            var design_type = $('#select_multi-design_method').val();
         }
-        //console.log(greenhouse_num_plants);
-    }
 
-	//var stock_verified = verify_stock_list(stock_list);
+        var rep_count = $('#rep_count').val();
+        var block_size = $('#block_size').val();
+        var max_block_size = $('#max_block_size').val();
+        var plot_prefix = $('#plot_prefix').val();
+        var start_number = $('#start_number').val();
+        var increment = $('#increment').val();
+        var fieldmap_col_number = $('#fieldMap_col_number').val();
+        var fieldmap_row_number = $('#fieldMap_row_number').val();
+        var plot_layout_format = $('#plot_layout_format').val();
+
+        var greenhouse_num_plants = [];
+        if (stock_list_id != "" && design_type == 'greenhouse') {
+            for (var i=0; i<stock_list_array.length; i++) {
+                var value = jQuery("input#greenhouse_num_plants_input_" + i).val();
+                if (value == '') {
+                    value = 1;
+                }
+                greenhouse_num_plants.push(value);
+            }
+            //console.log(greenhouse_num_plants);
+        }
 
         //alert(design_type);
-
-       if (name == '') {
-            alert('Trial name required');
-            return;
-        }
-
-        if (desc == '' || year == '') {
-            alert('Year and description are required.');
-            return;
-        }
 
         $.ajax({
             type: 'POST',
@@ -189,30 +202,31 @@ jQuery(document).ready(function ($) {
                     alert(response.error);
                 } else {
 
-		    $('#trial_design_information').html(response.design_info_view_html);
-        var layout_view = JSON.parse(response.design_layout_view_html);
-        //console.log(layout_view);
-        var layout_html = '';
-        for (var i=0; i<layout_view.length; i++) {
-          //console.log(layout_view[i]);
-          layout_html += layout_view[i] + '<br>';
-        }
-        $('#trial_design_view_layout_return').html(layout_html);
-        //$('#trial_design_view_layout_return').html(response.design_layout_view_html);
+                    $('#trial_design_information').html(response.design_info_view_html);
+                    var layout_view = JSON.parse(response.design_layout_view_html);
+                    //console.log(layout_view);
+                    var layout_html = '';
+                    for (var i=0; i<layout_view.length; i++) {
+                        //console.log(layout_view[i]);
+                        layout_html += layout_view[i] + '<br>';
+                    }
+                    $('#trial_design_view_layout_return').html(layout_html);
+                    //$('#trial_design_view_layout_return').html(response.design_layout_view_html);
 
-		    $('#working_modal').modal("hide");
+                    $('#working_modal').modal("hide");
                     $('#trial_design_confirm').modal("show");
                     design_json = response.design_json;
                 }
             },
             error: function () {
                 $('#working_modal').modal("hide");
-                alert('An error occurred. sorry. test');
+                alert('An error occurred. sorry.');
             }
        });
     }
 
-    $('#new_trial_submit').click(function () {
+    //When the user submits the form, input validation happens here before proceeding to design generation
+    $(document).on('click', '#new_trial_submit', function () {
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
         var desc = $('textarea#add_project_description').val();
@@ -225,30 +239,19 @@ jQuery(document).ready(function ($) {
             alert('Year and description are required.');
             return;
         }
-        if (method_to_use == "empty") {
-            alert('adding a project');
-            save_project_info(name, year, desc);
+        if (stock_list_verified == 1){
+            if (method_to_use == "empty") {
+                alert('adding a project');
+                save_project_info(name, year, desc);
+            }
+            if (method_to_use == "create_with_design_tool") {
+                generate_experimental_design();
+            }
+        } else {
+            alert('Accession list is not valid!');
+            return;
         }
-        //DEPRECATED: use js/CXGN/BreedersToolbox/UploadTrial.js
-        //if (method_to_use == "create_with_upload") {
-        //    var uploadFile = $("#trial_upload_file").val();
-        //    $('#create_new_trial_form').attr("action", "/trial/upload_trial_layout");
-        //    if (uploadFile === '') {
-        //        alert("Please select a file");
-        //        return;
-        //    }
-        //    $("#create_new_trial_form").submit();
-        //}
-        if (method_to_use == "create_with_design_tool") {
-            //generate_experimental_design(name,year,desc);
-            generate_experimental_design();
-        }
-          //$( this).dialog("close");
-          //location.reload();
     });
-
-    $("#format_type_radio").change();
-
 
     $(document).on('change', '#select_design_method', function () {
         //$("#add_project_dialog").dialog("option", "height","auto");
@@ -503,11 +506,6 @@ jQuery(document).ready(function ($) {
         var fieldmap_row_number = jQuery('#fieldMap_row_number').val();
         var plot_layout_format = jQuery('#plot_layout_format').val();
 
-        //var stock_verified = verify_stock_list(stock_list);
-        if (desc == '' || year == '') {
-           alert('Year and description are required.');
-           return;
-        }
         jQuery.ajax({
            type: 'POST',
            timeout: 3000000,
@@ -563,34 +561,7 @@ jQuery(document).ready(function ($) {
     });
 
     $('#view_trial_layout_button').click(function () {
-	$('#trial_design_view_layout').modal("show");
-    });
-
-    $('#create_new_trial_form').iframePostForm({
-	json: true,
-	post: function () {
-            var uploadTrialLayoutFile = $("#trial_upload_file").val();
-            if (uploadTrialLayoutFile === '') {
-              console.log("create_new_trial_form posted!\n");
-		alert("No file selected");
-            }
-	},
-	complete: function (response) {
-            if (response.error_string) {
-		$("#add_trial_error_display tbody").html('');
-		$("#add_trial_error_display tbody").append(response.error_string);
-		$("#add_trial_error_display").modal("show");
-
-		return;
-            }
-            if (response.error) {
-		alert(response.error);
-		return;
-            }
-            if (response.success) {
-		alert("File uploaded successfully");
-            }
-	}
+        $('#trial_design_view_layout').modal("show");
     });
 
     function open_project_dialog() {
@@ -623,14 +594,6 @@ jQuery(document).ready(function ($) {
             $("option:first", this).remove();
 	});
 
-	$("#select_list_list_select").focusout(function() {
-	    if ($('#select_list_list_select').val()) {
-        var stock_list_id = $('#select_list_list_select').val();
-        var stock_list = JSON.stringify(list.getList(stock_list_id));
-        verify_stock_list(stock_list);
-	    }
-	});
-
 	//add a blank line to list of checks select dropdown that dissappears when dropdown is opened
 	$("#list_of_checks_section_list_select").prepend("<option value=''></option>").val('');
 	$("#list_of_checks_section_list_select").one('mousedown', function () {
@@ -641,22 +604,6 @@ jQuery(document).ready(function ($) {
   $("#crbd_list_of_checks_section_list_select").one('mousedown', function () {
             $("option:first", this).remove();
   });
-
-	$("#list_of_checks_section_list_select").focusout(function() {
-      if ($('#list_of_checks_section_list_select').val()) {
-        var stock_list_id = $('#list_of_checks_section_list_select').val();
-        var stock_list = JSON.stringify(list.getList(stock_list_id));
-        verify_stock_list(stock_list);
-	    }
-	});
-
-  $("#crbd_list_of_checks_section_list_select").focusout(function() {
-    if ($('#crbd_list_of_checks_section_list_select').val()) {
-      var stock_list_id = $('#crbd_list_of_checks_section_list_select').val();
-      var stock_list = JSON.stringify(list.getList(stock_list_id));
-      verify_stock_list(stock_list);
-    }
-	});
 
 	//add a blank line to design method select dropdown that dissappears when dropdown is opened
 	$("#select_design_method").prepend("<option value=''></option>").val('');
@@ -686,7 +633,6 @@ jQuery(document).ready(function ($) {
         }
         if (method_to_use == "create_with_design_tool") {
             $("#trial_design_info").show();
-	    $("#select_design_method").change();
         } else {
             $("trial_design_info").hide();
         }
