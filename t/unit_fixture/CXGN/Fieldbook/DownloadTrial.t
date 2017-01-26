@@ -40,16 +40,8 @@ ok($create_fieldbook_return, "check that download trial fieldbook returns someth
 my @contents = ReadData ($create_fieldbook_return->{'file'});
 
 #print STDERR Dumper @contents->[0]->[0];
-is_deeply(@contents->[0]->[0], {
-          'error' => undef,
-          'sheet' => {
-                       'Sheet1' => 1
-                     },
-          'sheets' => 1,
-          'version' => '0.65',
-          'type' => 'xls',
-          'parser' => 'Spreadsheet::ParseExcel'
-      }, 'check type of file that was created.');
+is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
+is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
 
 my $columns = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
