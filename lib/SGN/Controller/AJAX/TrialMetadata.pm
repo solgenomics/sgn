@@ -435,6 +435,40 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
   $c->stash->{rest} = {success => 1};
 }
 
+sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions') Args(0) {
+  my $self = shift;
+  my $c = shift;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema');
+  my $old_accession = $c->req->param('old_accession');
+  my $new_accession = $c->req->param('new_accession');
+  my $old_plot_id = $c->req->param('old_plot_id');
+  my $trial_id = $c->stash->{trial_id};
+
+  if ($self->privileges_denied($c)) {
+    $c->stash->{rest} = { error => "You have insufficient access privileges to update this map." };
+    return;
+  }
+
+  my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
+    bcs_schema => $schema,
+    trial_id => $trial_id,
+    new_accession => $new_accession,
+    old_accession => $old_accession,
+    old_plot_id => $old_plot_id,
+
+  });
+  print "Calling Replace Function...............\n";
+  my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap();
+  if ($replace_return_error) {
+    $c->stash->{rest} = { error => $replace_return_error };
+    return;
+  }
+
+
+
+  print "OldAccession: $old_accession, NewAcc: $new_accession, OldPlotId: $old_plot_id\n";
+  $c->stash->{rest} = { success => 1};
+}
 
 sub update_field_coord : Chained('trial') PathPart('update_field_coords') Args(0) {
   my $self = shift;

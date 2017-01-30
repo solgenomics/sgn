@@ -1,0 +1,181 @@
+<%args>
+$trial_id
+$trial_name
+</%args>
+
+
+<& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js' ] &>
+
+
+<div class="modal  fade" id="edit_field_map_dialog" name="edit_field_map_dialog" tabindex="-1" role="dialog" aria-labelledby="EditFieldMapDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="EditFieldMapDialog">Edit Field Map For <% $trial_name %></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="edit_field_map_form" name="edit_field_map_form">
+
+                    <p3> Replace Trial Accessions Or Substitute Accessions Within A Trial Plots</p3>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_edit_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="replace_trial_accession_submit" id="replace_trial_accession_submit">Replace Accession</button>
+                <button type="button" class="btn btn-primary" name="substitute_accession_submit" id="substitute_accession_submit">Substitute Accession</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="replace_trial_accessions_dialog" name="replace_trial_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="ReplaceTrialAccessionsDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="ReplaceTrialAccessionsDialog">Replace Trial Accession In <% $trial_name %></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="replace_trial_accession_form" name="replace_trial_accession_form">
+
+	                    <div class="form-group">
+	                      <label class="col-sm-3 control-label">Select Accession: </label>
+	                      <div class="col-sm-9" id="accessions_in_trial">
+	                        <!--<select class="form-control" id="accessions_in_trial" name="accessions_in_trial"></select>-->
+	                      </div>
+	                    </div>
+
+	                      <div class="form-group">
+	                        <label class="col-sm-3 control-label">Enter New Accession: </label>
+	                        <div class="col-sm-9" >
+	                          <input class="form-control" id="replace_database_accession" name="replace_database_accession"></input>
+	                        </div>
+	                      </div>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_replace_trial_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="replace_trial_accession_submit" id="replace_trial_accession_submit">Replace Trial Accession</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="subtitute_plot_accessions_dialog" name="subtitute_plot_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="SubstitutePlotAccessionsDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="SubstitutePlotAccessionsDialog">Substitute Plot Accession In <% $trial_name %></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="substitute_plot_accession_form" name="substitute_plot_accession_form">
+
+											<div class="form-group">
+												<label class="col-sm-3 control-label">Select Accession 1: </label>
+												<div class="col-sm-9" id="plot_name_in_trial">
+
+												</div>
+											</div>
+
+											<div class="form-group">
+												<label class="col-sm-3 control-label">Select Accession 2: </label>
+												<div class="col-sm-9" id="sub_plot_accession_in_trial">
+												</div>
+											</div>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_substitute_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="substitute_plot_accession_submit" id="substitute_plot_accession_submit">Substitute Plot Accession</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+jQuery(document).ready( function() {
+
+  jQuery('input[id*="replace_database_accession"]').autocomplete({
+      appendTo: "#replace_trial_accessions_dialog",
+      source: '/ajax/stock/accession_autocomplete'
+  });
+});
+
+
+jQuery(document).ready(function () {
+
+
+	jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
+
+	    success: function(response){
+	         //console.log(response);
+
+		var trial_accessions_html = "<select class='form-control' id='trial_accessions_table'>";
+		//trial_accessions_html = trial_accessions_html + '<option value="all">All</option>';
+		for (i=0; i<response.accessions[0].length; i++) {
+		    trial_accessions_html = trial_accessions_html + "<option value=" + response.accessions[0][i].stock_id + ">" + response.accessions[0][i].accession_name + "</option>";
+
+		}
+		trial_accessions_html = trial_accessions_html + "</select>";
+		jQuery('#accessions_in_trial').empty();
+		jQuery('#accessions_in_trial').html(trial_accessions_html);
+
+	    },
+	    error: function(response){
+		alert("Error retrieving accessions.");
+	    }
+	});
+
+	jQuery.ajax( {
+			 url: '/ajax/breeders/trial/'+trial_id+'/coords',
+
+				 success: function(response) {
+				 console.log(response.acc);
+				 console.log(response.plot_name);
+				 console.log(response.plot_id);
+
+				 var trial_plot_name_html = "<select class='form-control' id='trial_plot_name_table'>";
+				 var trial_plot_number_html = "<select class='form-control' id='sub_plot_accession_in_trial'>";
+				 //var trial_plot_accession_html = "<select class='form-control' id='trial_plot_accession_table'>";
+
+				  for (n=0; n<response.plot_name.length; n++){
+			 			for (i=0; i<response.plot_name[n].length; i++) {
+			 		    trial_plot_name_html = trial_plot_name_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + "Plot:" + response.plot_name[n][i] + "," + " Number:" + response.plot_number[n][i] + "," +" Accession:"+ response.acc[n][i] +"</option>";
+							trial_plot_number_html = trial_plot_number_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + "Plot:" + response.plot_name[n][i] + "," + " Number:" + response.plot_number[n][i] + "," +" Accession:"+ response.acc[n][i] + "</option>";
+						//	trial_plot_accession_html = trial_plot_accession_html + "<option value=" + response.acc[0][i] + ">" + response.acc[0][i] + "</option>";
+				 		}
+					}
+					trial_plot_name_html = trial_plot_name_html + "</select>";
+					jQuery('#plot_name_in_trial').empty();
+					jQuery('#plot_name_in_trial').html(trial_plot_name_html);
+
+					trial_plot_number_html = trial_plot_number_html + "</select>";
+					jQuery('#sub_plot_accession_in_trial').empty();
+					jQuery('#sub_plot_accession_in_trial').html(trial_plot_number_html);
+
+				//	trial_plot_accession_html = trial_plot_accession_html + "</select>";
+				//	jQuery('#plot_accession_in_trial').empty();
+				//	jQuery('#plot_accession_in_trial').html(trial_plot_accession_html);
+			 }
+	});
+
+
+});
+
+</script

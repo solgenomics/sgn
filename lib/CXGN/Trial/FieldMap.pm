@@ -34,6 +34,17 @@ has 'second_accession_selected' => (isa => "Str",
 	is => 'rw',
 );
 
+has 'new_accession' => (isa => "Str",
+	is => 'rw',
+	);
+
+has 'old_accession' => (isa => "Str",
+		is => 'rw',
+	);
+
+has 'old_plot_id' => (isa => "Int",
+			is => 'rw',
+	);
 
 sub display_fieldmap {
 	my $self = shift;
@@ -251,6 +262,45 @@ sub update_fieldmap {
 		$h2->execute($plot_2_objectIDs[$n],$plot_1_objectIDs[$n],$plot_1_id);
 	}
 	return $error;
+}
+
+sub replace_plot_accession_fieldMap {
+	my $self = shift;
+	my $error;
+	my $dbh = $self->bcs_schema->storage->dbh;
+	my $new_accession = $self->new_accession;
+	my $old_accession = $self->old_accession;
+	my $old_plot_id = $self->old_plot_id;
+
+	print "$new_accession, $old_accession, $old_plot_id\n";
+
+	my $new_accession_id;
+	my $h_new = $dbh->prepare("select stock_id from stock where uniquename=?;");
+	$h_new->execute($new_accession);
+	while ( my $new_accession_id_ = $h_new->fetchrow_array()) {
+			$new_accession_id = $new_accession_id_;
+	}
+
+	my $old_accession_id;
+	my $h_old = $dbh->prepare("select stock_id from stock where uniquename=?;");
+	$h_old->execute($old_accession);
+	while ( my $old_accession_id_ = $h_old->fetchrow_array()) {
+		$old_accession_id = $old_accession_id_;
+	}
+	print "NEW ACCESSION ID: $new_accession_id\n";
+	print "OLD ACCESSION ID: $old_accession_id\n";
+	
+	my $h_old_plot_id = $dbh->prepare("select object_id from stock_relationship where subject_id=?;");
+	$h_old_plot_id->execute($old_plot_id);
+	while (my $old_plot_objectID = $h_old_plot_id->fetchrow_array()) {
+		print "OLD PLOT OBJECT_ID: $old_plot_objectID\n";
+
+		my $h_replace = $dbh->prepare("update stock_relationship set object_id =? where object_id=? and subject_id=?;");
+		$h_replace->execute($new_accession_id,$old_plot_objectID,$old_plot_id);
+	}
+
+	return $error;
+
 }
 
 1;

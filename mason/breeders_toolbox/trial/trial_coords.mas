@@ -60,7 +60,7 @@ $trial_id
     <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
     <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
   </ul> </br> -->
-   <a id="download" class="btn btn-primary">Download as Image</a> &nbsp; <a id="delete_field_map_link"><button class="btn btn-danger"  type="button" id="delete_map_button" value="delete_cords" >Delete Map</button></a> &nbsp; <a id="update_field_map_link"><button class="btn btn-success"  type="button" id="update_map_button" value="update_cords" style="display:none;">Update Map</button></a>
+   <a id="download" class="btn btn-primary">Download as Image</a> &nbsp; <a id="delete_field_map_link"><button class="btn btn-danger"  type="button" id="delete_map_button" value="delete_cords" >Delete Map</button></a> &nbsp; <a id="update_field_map_link"><button class="btn btn-success"  type="button" id="update_map_button" value="update_cords" style="display:none;">Update Map</button></a> &nbsp; <a id="replace_accessions_link"><button class="btn btn-success"  type="button" id="replace_accession_button" value="replace_accession" style="display:none;">Replace Accession</button></a>
  </div>
 
 
@@ -71,6 +71,8 @@ var trial_id = <% $trial_id %>;
 
    var container_new = new Container();
    var result;
+   var old_plot_accession;
+   var old_plot_id;
    //var container_string = container_new;
    function Container(){
           this.variables = [];
@@ -298,6 +300,31 @@ var trial_id = <% $trial_id %>;
 
       });
 
+    //  myRectangle.addEventListener("click", myFunction);
+
+    //  function myFunction() {
+    //    jQuery('#replace_accessions_link').find('button').trigger('click');
+
+    //  }
+    myRectangle.on('click', function() {
+      var  replace_accession = accessions;
+      var  replace_plot_id = plot_id;
+      var  replace_plot_name = plot_name;
+      var replace_plot_number = plot_number;
+      //alert(replace_accession+","+replace_plot_id+ "and" +replace_plot_name );
+
+      jQuery('#replace_accessions_link').find('button').trigger('click');
+      jQuery('#edit_plot_information').html('<b>Selected Plot Information: </b>');
+      jQuery('#edit_plot_name').html(replace_plot_name);
+      jQuery('#edit_plot_number').html(replace_plot_number);
+      old_plot_id = jQuery('#edit_plot_id').html(replace_plot_id);
+      old_plot_accession = jQuery('#edit_plot_accession').html(replace_accession);
+
+
+      //jQuery('#edit_plot_accession').html('Accession: '+replace_accession+' Plot: '+replace_plot_name+' PlotNumber: '+plot_number );
+      jQuery('#replace_plot_accessions_dialog').modal('show');
+    });
+
       myRectangle.addEventListener("dblclick", myFunction);
 
       function myFunction() {
@@ -375,6 +402,7 @@ var trial_id = <% $trial_id %>;
  }
  });
 
+
 });
 
 
@@ -438,12 +466,134 @@ function update_field_map(result) {
    </div>
 </div>
 
+
+
+<div id="replace_accessions_dialog_message" title="Replace Plot Accessions" style="display:none;">
+   <p>
+       <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+       Plot accession was replaced successfully...
+   </p>
+</div>
+
 <div id="update_field_map_dialog_message" title="Update Physical Field Map" style="display:none;">
    <p>
        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
        The field coordinates were updated successfully...
    </p>
 </div>
+
+
+
+<div class="modal fade" id="replace_plot_accessions_dialog" name="replace_plot_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="ReplacePlotAccessionsDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="ReplacePlotAccessionsDialog">Replace Plot Accession</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="replace_plot_accession_form" name="replace_plot_accession_form">
+                      <div id="edit_plot_information">
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Name: </label>
+                        <div class="col-sm-9" id="edit_plot_name">
+
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Number: </label>
+                        <div class="col-sm-9" id="edit_plot_number">
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Database ID: </label>
+                        <div class="col-sm-9" id="edit_plot_id">
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Accession: </label>
+                        <div class="col-sm-9" id="edit_plot_accession">
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Enter New Accession: </label>
+                        <div class="col-sm-9" >
+                          <input class="form-control" id="enter_database_accession" name="enter_database_accession"></input>
+                        </div>
+                      </div>
+
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_replace_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="replace_plot_accession_submit" id="replace_plot_accession_submit">Replace Plot Accession</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+jQuery(document).ready( function() {
+
+  jQuery('input[id*="enter_database_accession"]').autocomplete({
+      appendTo: "#replace_plot_accessions_dialog",
+      source: '/ajax/stock/accession_autocomplete'
+  });
+
+  jQuery('#replace_plot_accession_submit').click( function() {
+    replace_plotAccession_fieldMap();
+  });
+
+  function replace_plotAccession_fieldMap() {
+    jQuery('#replace_plot_accessions_dialog').modal("hide");
+    jQuery('#working_modal').modal("show");
+
+    var new_accession = jQuery('#enter_database_accession').val();
+    var old_accession = jQuery('#edit_plot_accession').html();
+    var old_plot_id = jQuery('#edit_plot_id').html();
+    alert(new_accession +","+ old_accession +","+ old_plot_id);
+
+    new jQuery.ajax({
+      type: 'POST',
+      url: '/ajax/breeders/trial/<% $trial_id %>/replace_plot_accessions',
+      dataType: "json",
+      data: {
+              'new_accession': new_accession,
+              'old_accession': old_accession,
+              'old_plot_id': old_plot_id,
+      },
+
+      success: function (response) {
+        jQuery('#working_modal').modal("hide");
+
+        if (response.error) {
+          alert("Error Replacing Plot Accession: "+response.error);
+        }
+        else {
+          jQuery('#replace_accessions_dialog_message').dialog("open");
+        }
+      },
+      error: function () {
+        jQuery('#working_modal').modal("hide");
+        alert('An error occurred replacing plot accession');
+      }
+    });
+  }
+
+});
+</script>
+
+
 
 <style>
 #download {
