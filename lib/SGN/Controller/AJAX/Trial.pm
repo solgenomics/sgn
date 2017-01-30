@@ -368,6 +368,7 @@ sub save_experimental_design_POST : Args(0) {
   my $multi_location;
   my $trial_locations = $c->req->param('trial_location');
   my $trial_name = $c->req->param('project_name');
+  my $trial_type = $c->req->param('trial_type');
   my $breeding_program = $c->req->param('breeding_program_name');
   my $schema = $c->dbic_schema("Bio::Chado::Schema");
   my $breeding_program_id = $schema->resultset("Project::Project")->find({name=>$breeding_program})->project_id();
@@ -427,6 +428,7 @@ sub save_experimental_design_POST : Args(0) {
         trial_location => $trial_location,
         trial_name => $trial_name,
         design_type => $c->req->param('design_type'),
+        trial_type => $trial_type
 	  });
 
   #$trial_create->set_user($c->user()->id());
@@ -556,6 +558,7 @@ sub upload_trial_file_POST : Args(0) {
   my $trial_location = $c->req->param('trial_upload_location');
   my $trial_name = $c->req->param('trial_upload_name');
   my $trial_year = $c->req->param('trial_upload_year');
+  my $trial_type = $c->req->param('trial_upload_trial_type');
   my $trial_description = $c->req->param('trial_upload_description');
   my $trial_design_method = $c->req->param('trial_upload_design_method');
   my $upload = $c->req->upload('trial_uploaded_file');
@@ -655,6 +658,7 @@ sub upload_trial_file_POST : Args(0) {
 	   trial_year => $trial_year,
 	   trial_description => $trial_description,
 	   trial_location => $trial_location,
+	   trial_type => $trial_type,
 	   trial_name => $trial_name,
 	   user_name => $user_name, #not implemented
 	   design_type => $trial_design_method,

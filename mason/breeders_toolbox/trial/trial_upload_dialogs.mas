@@ -53,6 +53,13 @@ $locations
                             </div>
                         </div>
                         <div class="form-group">
+                            <label class="col-sm-3 control-label">Trial Type: </label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="trial_upload_trial_type" name="trial_upload_trial_type" type="text">
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="col-sm-3 control-label">Year: </label>
                             <div class="col-sm-9" >
                                 <select class="form-control" id="trial_upload_year" name="trial_upload_year"></select>

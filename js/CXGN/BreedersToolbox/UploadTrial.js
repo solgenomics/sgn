@@ -19,8 +19,6 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function ($) {
 
-    get_select_box('years', 'trial_upload_year', {'auto_generate': 1 });
-
     function upload_trial_file() {
         var uploadFile = $("#trial_uploaded_file").val();
         $('#upload_trial_form').attr("action", "/ajax/trial/upload_trial_file");
@@ -47,6 +45,8 @@ jQuery(document).ready(function ($) {
     }
 
     $('#upload_trial_link').click(function () {
+        get_select_box('years', 'trial_upload_year', {'auto_generate': 1 });
+        get_select_box('trial_types', 'trial_upload_trial_type', {'empty': 1 });
         open_upload_trial_dialog();
     });
 
