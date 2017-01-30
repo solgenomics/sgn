@@ -1,11 +1,11 @@
 
-=head NAME
+=head1 NAME
 
 CXGN::SNPsIO;
 
-=head DESCRIPTION
+=head1 DESCRIPTION
 
-=head AUTHOR
+=head1 AUTHOR
 
 =cut
 
