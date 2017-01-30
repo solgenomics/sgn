@@ -49,7 +49,6 @@ EOH
 
 All functions are EXPORT_OK.
 
-=over 4
 
 =cut
 
