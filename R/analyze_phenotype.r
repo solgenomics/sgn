@@ -23,28 +23,59 @@ phenodata = read.csv(phenotype_file, sep=",", header = T, stringsAsFactors = T, 
 
 blocks = unique(phenodata$blockNumber)
 studyNames = unique(phenodata$studyName)
-
+accessions = unique(phenodata$germplasmName)
 datamatrix <- c()
 datasetnames <- c()
+trial_accessions <- c()
+all_accessions = unique(phenodata$germplasmName)
+
+datamatrix = matrix(nrow = length(all_accessions), ncol=length(studyNames)* length(blocks))
 
 for (i in 1:(length(studyNames))) {
     for (n in 1:length(blocks)) { 
         print(paste("StudyName: ", studyNames[i], n))
         trialdata = phenodata[phenodata[,"studyName"]==studyNames[i] & phenodata[,"blockNumber"]==n, ]
-        measurements = trialdata[,16]
-	if (length(measurements)!=0) { 
-	    name = paste(studyNames[i],"_B",blocks[n], sep="")
-            print(paste("Name: ", name))
-            datasetnames = c(datasetnames, name)
-        }
-        datamatrix = cbind(datamatrix, measurements)
-        show(datamatrix)
-        show(measurements)
+	show(trialdata)
+       for (m in 1:length(all_accessions)) { 
+	
+	    acc_slice = trialdata[trialdata[,"germplasmName"] ==  as.character(all_accessions[m] ), 16 ]
+	    
+	    acc_avg  = mean(as.numeric(acc_slice))
+	    print(paste("Average for accession", all_accessions[m]))
+            show(acc_avg)
+	    col = (i-1) * length(blocks) + n;
+	    print(paste("row: ", m, "col", col, "avg", acc_avg))
+            datamatrix[m, col  ] = acc_avg
+	}
+
+	colname = paste(studyNames[i],"_B",blocks[n], sep="")
+        datasetnames = c(datasetnames, colname)
     }		
 }
 
-show(datasetnames)
-   colnames(datamatrix) <- datasetnames
+
+colnames(datamatrix) <- datasetnames
+rownames(datamatrix) <- all_accessions
+
+# remove columns containing only NULL values
+dims = dim(datamatrix)
+empty_cols <- c()
+for (i in 1:dims[2]) { 
+    legal_values = datamatrix[ is.finite(datamatrix[,i]), i ]
+    show(legal_values)
+    if (length(legal_values) == 0) { 
+       print(paste("empty values", length(legal_values), "dims", dims[1]))
+       print(paste("found empty col ", i))
+       empty_cols <- c(empty_cols, i)
+    }
+}
+
+print("empty cols")
+show(empty_cols)
+
+for (i in 1:length(empty_cols)) { 
+    datamatrix <- datamatrix[,-empty_cols[i]]
+}
 
 show(datamatrix)
 

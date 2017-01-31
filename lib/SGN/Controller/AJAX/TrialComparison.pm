@@ -53,11 +53,9 @@ sub compare_trials_GET : Args(0) {
 	print $fh $csv_line."\n";
     }
     
-    $c->stash->{rest} = { file => $tempfile };
+    system('R CMD BATCH', '--no-save', '--no-restore', "--args phenotype_file=\"$tempfile\" output_file=\"$tempfile.png\"", $c->config->{basepath}.'/R/'.'analyze_phenotype.r' );
     
-    
-
-
+    $c->stash->{rest} = { file => $tempfile, png => $tempfile.".png" };
 }
 
 
