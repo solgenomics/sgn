@@ -16,7 +16,7 @@ $mech->with_test_level( local => sub {
     my $tempdir = File::Temp->newdir;
     my $params = {};
     $params->{idType} = "unigene_convert";
-    $params->{ids_string} = "SGN-U243120 SGN-U243522";
+    $params->{ids} = "SGN-U243120 SGN-U243522";
     $params->{dbc} = $mech->context->dbc->dbh;
     $params->{tempdir} = "$tempdir";
 
@@ -24,7 +24,7 @@ $mech->with_test_level( local => sub {
     my $bulk = CXGN::Bulk::UnigeneConverter->new($params);
 
     is($bulk->{idType}, "unigene_convert", "idType ok");
-    is($bulk->{ids_string}, "SGN-U243120 SGN-U243522", "id input string ok");
+    is($bulk->{ids}, "SGN-U243120 SGN-U243522", "id input string ok");
 
     # Testing process_parameters method.
     my $pp = $bulk->process_parameters();
