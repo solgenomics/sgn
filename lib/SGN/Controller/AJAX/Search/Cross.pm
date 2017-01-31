@@ -47,7 +47,7 @@ sub search_male_parents :Path('/ajax/search/male_parents') :Args(0){
 
 }
 
-sub search : Path('/ajax/search/cross') Args(0) {
+sub search : Path('/ajax/search/cross_info') Args(0) {
     my $self = shift;
     my $c = shift;
 
