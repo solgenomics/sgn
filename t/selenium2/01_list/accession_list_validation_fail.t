@@ -29,11 +29,11 @@ $d->find_element_ok("add_list_input", "id", "find add list input");
 
 my $add_list_input = $d->find_element_ok("add_list_input", "id", "find add list input test");
    
-$add_list_input->send_keys("new_test_list");
+$add_list_input->send_keys("new_test_list_accession_validation_fail");
 
 $d->find_element_ok("add_list_button", "id", "find add list button test")->click();
 
-$d->find_element_ok("view_list_new_test_list", "id", "view list test")->click();
+$d->find_element_ok("view_list_new_test_list_accession_validation_fail", "id", "view list test")->click();
 
 sleep(1);
 
@@ -65,6 +65,8 @@ $d->find_element_ok("close_missing_accessions_dialog", "id", "find close dialog 
 sleep(1);
 
 $d->find_element_ok("close_list_item_dialog", "id", "find close dialog button")->click();
+
+sleep(1);
 
 $d->find_element_ok("close_list_dialog_button", "id", "find close dialog button")->click();
 

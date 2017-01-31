@@ -32,6 +32,9 @@ Choose a list for each parameter and click "Download".
       Timestamps
     </th>
     <th>
+      Data Level
+    </th>
+    <th>
       Action
     </th>
   </tr>
@@ -40,7 +43,7 @@ Choose a list for each parameter and click "Download".
   <tr>
     <td>
       <div id="accession_list">
-      </div>      
+      </div>
     </td>
     <td>
       <div id="trial_list">
@@ -68,6 +71,13 @@ Choose a list for each parameter and click "Download".
     </select>
     </td>
     <td>
+    <select class="form-control" id="phenotype_datalevel" name="phenotype_datalevel">
+        <option value="all">All</option>
+        <option value="plot">Plot</option>
+        <option value="plant">Plant</option>
+    </select>
+    </td>
+    <td>
       <input class="btn btn-primary" type="button" id="phenotype" value="Download" />
       <input type="hidden" id="download_token_value" name="download_token_value"/>
     </td>
@@ -77,47 +87,41 @@ Choose a list for each parameter and click "Download".
 </form>
 </div>
 
-<script>  
-$(document).ready(function() { 
+<script>
+$(document).ready(function() {
 
     var lo = new CXGN.List();
 
     $('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
     $('#trial_list').html(lo.listSelect('trial_list', [ 'trials' ], 'select' ));
     $('#trait_list').html(lo.listSelect('trait_list', [ 'traits' ], 'select'  ));
- 
+
     $('#phenotype').click(function() {
 
     disable_ui();
-   
+
       var accession_list_id = $('#accession_list_list_select').val();
       var trial_list_id = $('#trial_list_list_select').val();
       var trait_list_id = $('#trait_list_list_select').val();
 
       var accession_validation = 1;
       if (accession_list_id) { accession_validation = lo.validate(accession_list_id, 'accessions', true); }
-      
-      var trial_validation = 1; 
-      if (trial_list_id) { trial_validation = lo.validate(trial_list_id, 'trials', true); }
-  
-      var trait_validation = 1;
-      if (trait_list_id) { trait_validation = lo.validate(trait_list_id, 'traits', true); } 
 
-      if (!accession_list_id || !trial_list_id || !trait_list_id) {
-      	 enable_ui();
-      	 alert("You need to select an accession, a trial, and a trait list!");
-	 return; 
-      }
+      var trial_validation = 1;
+      if (trial_list_id) { trial_validation = lo.validate(trial_list_id, 'trials', true); }
+
+      var trait_validation = 1;
+      if (trait_list_id) { trait_validation = lo.validate(trait_list_id, 'traits', true); }
 
       var problem_lists = new Array();
 
-      if (accession_validation != 1) { 
+      if (accession_validation != 1) {
         problem_lists.push('accessions');
       }
-      if (trial_validation != 1) { 
+      if (trial_validation != 1) {
         problem_lists.push('trials');
       }
-      if (trait_validation != 1) { 
+      if (trait_validation != 1) {
         problem_lists.push('trials');
       }
 
@@ -129,9 +133,9 @@ $(document).ready(function() {
 
       var token = new Date().getTime(); //use the current timestamp as the token value
       $('#download_token_value').val(token);
-      
+
       $('#download_form').submit();
-      
+
       var fileDownloadCheckTimer;
       fileDownloadCheckTimer = window.setInterval(function () { //checks for response cookie to keep working modal enabled until file is ready for download
       			     var cookieValue = $.cookie('fileDownloadToken');
@@ -154,15 +158,15 @@ $(document).ready(function() {
 
 </script>
 
+
+<!-- start of code for pedigree download -->
+
 <div class="well well-sm">
-<form id="download_gbs" action="/breeders/download_gbs_action" method="POST">
+<form id="download_pedigree" action="/breeders/download_pedigree_action" method="POST">
 <table class="table"  cellpadding="10">
   <thead>
-  <tr><td colspan="2"><h4>Download GBS Genotype </h4><p>Select parameter:</p></tr>
+  <tr><td colspan="2"><h4>Download Pedigree </h4><p>Select parameter:</p></tr>
   <tr>
-    <!-- th>
-      Trials
-    </th -->
     <th>
       Accessions
     </th>
@@ -173,13 +177,106 @@ $(document).ready(function() {
   </thead>
   <tbody>
   <tr>
-    <!-- td>
-      <div id="trial_list2">
+    <td>
+      <div id="accession_list4">
       </div>
-    </td -->
+    </td>
+    <td>
+      <input class="btn btn-primary" type="button" id="pedigree" value="Download" />
+    </td>
+  </tr>
+  </tbody>
+  </table>
+</form>
+</div>
+
+
+<script>
+  $(document).ready(function() {
+
+      var lo = new CXGN.List();
+
+      $('#accession_list4').html(lo.listSelect('pedigree_accession_list', [ 'accessions' ], 'select'));
+
+      $('#pedigree').click(function() {
+
+      disable_ui();
+
+      var accession_list_id = $('#pedigree_accession_list_list_select').val();
+      var trial_list_id = $('#genotype_trial_list_list_select').val();
+
+
+      var accession_validation = 1;
+      if (accession_list_id) {
+        accession_validation = lo.validate(accession_list_id, 'accessions', true);
+
+      }
+
+   if (! accession_list_id) {
+        alert("You need to select an accession!");
+        return;
+      }
+
+      var problem_lists = new Array();
+
+      if (accession_validation != 1) {
+        problem_lists.push('accessions');
+      }
+
+   console.log(problem_lists);
+
+      if (problem_lists.length > 0) {
+        alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
+        return;
+      }
+
+     jQuery('#download_pedigree').submit();
+
+      enable_ui()
+
+    });
+
+function disable_ui() {
+	$('#working_modal').modal("show");
+	}
+
+	function enable_ui() {
+	$('#working_modal').modal("hide");
+	}
+
+  });
+
+</script>
+
+<!-- end of code for pedigree download -->
+
+
+<div class="well well-sm">
+<form id="download_gbs" action="/breeders/download_gbs_action" method="POST">
+<table class="table"  cellpadding="10">
+  <thead>
+  <tr><td colspan="2"><h4>Download GBS Genotype </h4><p>Select parameter:</p></tr>
+  <tr>
+    <th>
+      Accessions
+    </th>
+    <th>
+      Genotyping Protocol
+    </th>
+    <th>
+      Action
+    </th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
     <td>
       <div id="accession_list2">
-      </div>      
+      </div>
+    </td>
+    <td>
+      <div id="protocol_list">
+      </div>
     </td>
     <td>
       <input class="btn btn-primary" type="button" id="genotype" value="Download" />
@@ -191,62 +288,48 @@ $(document).ready(function() {
 </div>
 
 <script>
-  $(document).ready(function() { 
+  $(document).ready(function() {
 
       var lo = new CXGN.List();
 
       $('#accession_list2').html(lo.listSelect('genotype_accession_list', [ 'accessions' ], 'select'));
-      $('#trial_list2').html(lo.listSelect('genotype_trial_list', [ 'trials' ], 'select' ));
+      get_select_box("genotyping_protocols", "protocol_list");
 
       $('#genotype').click(function() {
 
       disable_ui()
 
       var accession_list_id = $('#genotype_accession_list_list_select').val();
-      var trial_list_id = $('#genotype_trial_list_list_select').val();
+      var protocol_list_id = $('#protocol_list').val();
 
-  
       var accession_validation = 1;
-      if (accession_list_id) { 
-        accession_validation = lo.validate(accession_list_id, 'accessions', true); 
+      if (accession_list_id) {
+        accession_validation = lo.validate(accession_list_id, 'accessions', true);
       }
 
-      //var trial_validation = 1;
-      //if (trial_list_id) { 
-      //  trial_validation = lo.validate(trial_list_id, 'trials', true);
-      //}
-
-      //alert('trial validation = '+trial_validation);
-
-      if (!( accession_list_id || trial_list_id) ) { 
-        alert("You need to select an accession or a trial !");
-        return; 
+      if (!( accession_list_id || protocol_list_id) ) {
+        alert("You need to select a list of accessions and a protocol !");
+        return;
       }
 
       var problem_lists = new Array();
 
-      if (accession_validation != 1) { 
+      if (accession_validation != 1) {
         problem_lists.push('accessions');
       }
 
-      //if (trial_validation != 1) { 
-      //  problem_lists.push('trials');
-      //}
-
-
-      //alert("problem_lists is " + problem_lists);
 
       console.log(problem_lists);
 
-      if (problem_lists.length > 0) { 
+      if (problem_lists.length > 0) {
         alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
         return;
       }
-    
+
       jQuery('#download_gbs').submit();
 
       enable_ui()
-    
+
 
     });
 
@@ -286,7 +369,11 @@ $(document).ready(function() {
     </td>
     <td>
       <div id="accession_list3">
-      </div>      
+      </div>
+    </td>
+    <td>
+      <div id="protocol_list2">
+      </div>
     </td>
     <td>
       <input class="btn btn-primary" type="button" id="genotype_qc" value="Quality Control" />
@@ -300,16 +387,17 @@ $(document).ready(function() {
 </div>
 
 <script>
-  $(document).ready(function() { 
+  $(document).ready(function() {
 
       var lo = new CXGN.List();
 
-      $('#accession_list3').html(lo.listSelect('genotype_accession_list', [ 'accessions' ], 'select'));
+      $('#accession_list3').html(lo.listSelect('genotype_qc_accession_list', [ 'accessions' ], 'select'));
       $('#trial_list3').html(lo.listSelect('genotype_trial_list', [ 'trials' ], 'select' ));
+      get_select_box("genotyping_protocols", "protocol_list2", {'id':'protocol_list2_select', 'name':'protocol_list2_select'});
 
       $('#genotype_qc').click(function() {
 
-	$('#working').dialog( { 
+	$('#working').dialog( {
 		height: 100,
 		width:  300,
 		modal: true,
@@ -323,24 +411,24 @@ $(document).ready(function() {
 
       disable_ui()
 
-      var accession_list_id = $('#genotype_accession_list_list_select').val();
+      var accession_list_id = $('#genotype_qc_accession_list_list_select').val();
       var trial_list_id = $('#genotype_trial_list_list_select').val();
 
       var accession_validation = lo.validate(accession_list_id, 'accessions', true);
       var trial_validation = lo.validate(trial_list_id, 'trials', true);
 
-      if (! (accession_list_id || trial_list_id) ) { 
+      if (! (accession_list_id || trial_list_id) ) {
         alert("You need to select an accession or a trail !");
-        return; 
+        return;
       }
 
       var problem_lists = new Array();
 
-      if (accession_validation != 1) { 
+      if (accession_validation != 1) {
         problem_lists.push('accessions');
       }
 
-      if (trial_validation != 1) { 
+      if (trial_validation != 1) {
         problem_lists.push('trials');
       }
 
@@ -349,17 +437,17 @@ $(document).ready(function() {
 
       console.log(problem_lists);
 
-      if (problem_lists.length > 0) { 
+      if (problem_lists.length > 0) {
         alert("The following lists did not pass validation: "+problem_lists.join(", ")+". Please correct the list(s) and try again");
         return;
       }
-    
+
       jQuery('#gbs_qc').submit();
 
       enable_ui()
 
 
-    
+
 
     });
 

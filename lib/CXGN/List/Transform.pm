@@ -6,7 +6,7 @@ CXGN::List::Transform - transform lists from one type to another
 =head1 SYNOPSYS
 
  my $tf = CXGN::List::Transform->new();
- if (my $transform_name = $tf->can_transform("accessions", "accession_ids")) { 
+ if (my $transform_name = $tf->can_transform("accessions", "accession_ids")) {
    my $tf_list = @$tf->tranform($schema, $transform_name, $list_ref);
  }
 
@@ -15,7 +15,7 @@ CXGN::List::Transform - transform lists from one type to another
 package CXGN::List::Transform;
 
 use Moose;
-
+use Data::Dumper;
 use Module::Pluggable require => 1;
 
 =head2 can_transform
@@ -30,13 +30,13 @@ use Module::Pluggable require => 1;
 
 =cut
 
-sub can_transform { 
+sub can_transform {
     my $self = shift;
     my $type1 = shift;
     my $type2 = shift;
 
-    foreach my $p ($self->plugins()) { 
-	if ($p->can_transform($type1, $type2)) { 
+    foreach my $p ($self->plugins()) {
+	if ($p->can_transform($type1, $type2)) {
 	    return $p->name();
 	}
     }
@@ -46,7 +46,7 @@ sub can_transform {
 =head2 transform
 
  Usage:        $tf->transform($schema, $transform_name, $list_ref);
- Desc:         
+ Desc:
  Args:         $schema (Bio::Chado::Schema)
                $transform_name (obtain from can_transform())
                $list_ref of elements to transform
@@ -57,7 +57,7 @@ sub can_transform {
 
 =cut
 
-sub transform { 
+sub transform {
     my $self = shift;
     my $schema = shift;
     my $transform_name = shift;
@@ -65,9 +65,9 @@ sub transform {
 
     my $data;
 
-    foreach my $p ($self->plugins()) { 
-        if ($transform_name eq $p->name()) { 
-             $data = $p->transform($schema, $list);
+    foreach my $p ($self->plugins()) {
+        if ($transform_name eq $p->name()) {
+             $data = $p->transform($schema, $list, $self);
         }
     }
     return $data;

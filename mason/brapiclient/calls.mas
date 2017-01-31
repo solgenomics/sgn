@@ -1,0 +1,50 @@
+<%args>
+</%args>
+
+<h4>Calls</h4>
+
+<div id="brapi_calls_home_div">
+<button class="btn btn-primary" id="brapi_home_show_calls">Show Calls</button>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+
+jQuery("#brapi_home_show_calls").click(function() {
+    jQuery.ajax( {
+      'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/calls?datatype=json&pageSize=100',
+      'method': 'GET',
+      'success': function(response) {
+        console.log(response);
+        var html = '<br/><ul>';
+        for(var i = 0; i < response.result.data.length; i++) {
+            html = html+'<li>'+response.result.data[i].call+'</li>';
+            html = html+'<ul>';
+                html = html+'<li>Datatypes:';
+                html = html+'<ul>';
+                for(var j = 0; j < response.result.data[i].datatypes.length; j++){
+                    html = html+'<li>'+response.result.data[i].datatypes[j]+'</li>';
+                }
+                html = html+'</ul>';
+                html = html+'<li>Methods:';
+                html = html+'<ul>';
+                for(var j = 0; j < response.result.data[i].methods.length; j++){
+                    html = html+'<li>'+response.result.data[i].methods[j]+'</li>';
+                }
+                html = html+'</ul>';
+            html = html+'</ul>';
+        }
+        html = html+'</ul>';
+        jQuery("#brapi_calls_home_div").empty().html(html);
+      },
+      error: function(response) {
+        alert('An error occurred getting calls');
+      }
+    });
+});
+
+});
+
+</script>

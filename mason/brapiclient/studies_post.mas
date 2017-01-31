@@ -1,0 +1,44 @@
+
+<h3>BrAPI Study POST</h3>
+
+<script>
+
+jQuery.ajax({
+	type: 'POST',
+	url: 'http://127.0.0.1:3000/brapi/v1/token?username=janedoe&password=secretpw&grant_type=password',
+	success: function(response) {
+		console.log(response);
+		var url = jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies?session_token='+response.session_token;
+
+		jQuery.ajax({
+			type: 'POST',
+			url: url,
+			beforeSend: function() {
+				jQuery('#working_modal').modal("show");
+			},
+			data: {
+				studyName: "Test_study_01",
+				locationDbId: "23",
+				studyYears: "2016",
+				programDbId: "134",
+				optionalInfo: JSON.stringify({
+					studyType: "Trial",
+					studyObjective: "Test POST Study",
+				}),
+			},
+			success: function(response) { 
+				console.log(response);
+				jQuery('#working_modal').modal("hide");
+
+			},
+			error: function(response) { 
+				jQuery('#working_modal').modal("hide");
+				alert("An error occurred.");
+			}
+    	});
+
+	}
+});
+
+
+</script>

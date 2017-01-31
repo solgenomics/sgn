@@ -27,9 +27,12 @@ $harvest_date => undef
 $trial_description => undef
 $design_layout_view => undef
 $user_can_modify => undef
+$has_plant_entries => undef
 $hidap_enabled => undef
 $folder_name => undef
 $folder_id => undef
+$plants_per_plot => undef
+$cassbase_to_cea => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
@@ -48,7 +51,7 @@ my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Dow
 
 my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link">change</a>] } if $user_can_modify;
 
-print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
+#print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 #print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
 
@@ -135,7 +138,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <td>
 <div id="planting_date">
 % if ($planting_date) {
-  <a href="/calendar/personal?currentDate=<% $planting_date %>" target="_blank"><% $planting_date %></a>
+  <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $planting_date %>" ><% $planting_date %></a>
 % } else {
 %  print "[No Planting Date]";
 % }
@@ -148,7 +151,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <td>
 <div id="harvest_date">
 % if ($harvest_date) {
-  <a href="/calendar/personal?currentDate=<% $harvest_date %>" target="_blank"><% $harvest_date %></a>
+  <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $harvest_date %>" ><% $harvest_date %></a>
 % } else {
 %  print "[No Harvest Date]";
 % }
@@ -250,7 +253,9 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 </style> -->
 
 
-<&| /page/info_section.mas, id => "trial_design_section", title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
+<& /breeders_toolbox/trial/download_layout_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+
+<&| /page/info_section.mas, id => "trial_design_section", title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"[<a id='trial_download_layout_button'>Download Layout</a>]"  &>
 
 <& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
 
@@ -272,19 +277,49 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </&>
 
+<&| /page/info_section.mas, id => "trial_plants", title=>"Plant Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
+
+<div id="plant_entries_section">
+
+% if (!$has_plant_entries) {
+   <button class="btn btn-default" id="create_plant_entries_button">Add plant entries</button>
+   <& /breeders_toolbox/trial/add_plants_per_plot.mas, trial_id => $trial_id, trial_name => $trial_name &>
+
+% } else {
+
+<& /breeders_toolbox/trial/trial_plants.mas, trial_id => $trial_id &>
+
+% }
+
+</div>
+
 </&>
 
-<br />
+</&>
+
 
 <& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 
+<&| /page/info_section.mas,
+   title       => 'Weather at Trial Location',
+   collapsible => 1,
+&>
+
+	<& /breeders_toolbox/trial/weather.mas, location => $location_name &>
+
+</&>
+
 <&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='trial_download_phenotypes_button'>Download Trial Data</a>]" &>
+
+% if ($cassbase_to_cea) {
+    <& /breeders_toolbox/trial/cassbase_export_trial_to_expression_atlas.mas, trial_id => $trial_id, trial_name=>$trial_name &>
+% }
 
 <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
 
 </&>
 
-<&| /page/info_section.mas, id=> "compute_derived_traits", title=>'Compute Derived Traits', collapsible=>1, collapsed=>1, &>
+<&| /page/info_section.mas, id=> "compute_derived_traits", title=>'Compute Trait Phenotypes', collapsible=>1, collapsed=>1, &>
 
 	<& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
 
@@ -297,25 +332,25 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
    collapsible => 1,
 &>
 
-	<& /breeders_toolbox/trial_jbrowse_instance.mas, trial_id => $trial_id &>
+	<& /breeders_toolbox/trial/jbrowse_instance.mas, trial_id => $trial_id &>
 
 </&>
 
 <&| /page/info_section.mas, title=>"Files", collapsible=>1, collapsed=>0 &>
   <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_spreadsheet_link">Create Spreadsheet</a>]' &>
+    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a name="create_spreadsheet_link">Create Spreadsheet</a>]' &>
     </&>
-    <&| /page/info_section.mas, title=>"Android Field Book Layout", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_fieldbook_link">Create Field Book</a>]' &>
+    <&| /page/info_section.mas, title=>"Android Field Book Layout", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a name="create_fieldbook_link">Create Field Book</a>]' &>
     </&>
-    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=> '[<a id="create_DataCollector_link">Create DataCollector Spreadsheet</a>]' &>
+    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=> '[<a id="create_DataCollector_link">Create DataCollector Spreadsheet</a>]' &>
     </&>
   </&>
   <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link">Upload</a>]'&>
+    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link">Upload</a>]'&>
     </&>
-    <&| /page/info_section.mas, title=>"Android Field Book Exported", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_fieldbook_phenotypes_link">Upload</a>]'&>
+    <&| /page/info_section.mas, title=>"Android Field Book Exported", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_fieldbook_phenotypes_link">Upload</a>]'&>
     </&>
-    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_datacollector_phenotypes_link">Upload</a>]'&>
+    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_datacollector_phenotypes_link">Upload</a>]'&>
     </&>
   </&>
 </&>
@@ -323,6 +358,10 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
 <& /fieldbook/upload_phenotype_fieldbook.mas &>
 <& /breeders_toolbox/upload_phenotype_datacollector.mas &>
+
+<& /breeders_toolbox/trial/create_datacollector_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /fieldbook/create_fieldbook_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /breeders_toolbox/trial/create_spreadsheet_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 
 % my $data_agreement_link = "Add/edit data agreement";
 % if ($user_can_modify) { $data_agreement_link = '[<a id="add_data_agreement">Add/edit data agreement</a>]'; }
@@ -337,7 +376,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </&>
 
-% print STDERR "Check 9 (mason) : ".(time() - $start_time)."\n";
+% #print STDERR "Check 9 (mason) : ".(time() - $start_time)."\n";
 
 <!-- Phenotypic correlation analysis -->
 <& /solgs/population/correlation.mas,
@@ -349,45 +388,12 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
    trial_id => $trial_id
  &>
 
-% print STDERR "Check 10 (mason) : ".(time() - $start_time)."\n";
+% #print STDERR "Check 10 (mason) : ".(time() - $start_time)."\n";
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 % print $trial_id;
 </div>
 
-<div id="tablet_field_layout_saved_dialog_message" title="Field book layout file" style="display:none;">
-  <p>
-    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    The field book layout file was saved successfully
-  </p>
-  <p>
-    <a id="tablet_layout_download_link">Go To Download File</a>
-  </p>
-</div>
-
-<div id="create_spreadsheet_dialog" title="Create Phenotyping Spreadsheet" style="display:none;">
-  <div id="trait_list" name="trait_list">
-    <label id="trait_list_label" for="trait_list_list_select" style="display: inline-block; width: 200px;">List of traits:
-    </label>
-  </div>
-</div>
-
-<div id="create_DataCollector_dialog" title="Create Data Collector Spreadsheet" style="display:none;">
-  <div id="trait_list_dc" name="trait_list">
-    <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 200px;">List of traits:
-    </label>
-  </div>
-</div>
-
-<div id="data_collector_saved_dialog_message" title="Data collector spreadsheet" style="display:none;">
-  <p>
-    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    The data collector spreadsheet file was saved successfully
-  </p>
-  <p>
-    <a id="data_collector_download_link">Download File</a>
-  </p>
-</div>
 
 <div id="trial_design_view_layout" title="Trial design layout">
 % print $design_layout_view;

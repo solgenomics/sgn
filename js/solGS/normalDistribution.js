@@ -27,12 +27,13 @@ solGS.normalDistribution.prototype.getNormalDistData = function (xy) {
 	
 	for (var i=0; i < xy.length; i++) {
 	    
-	    var x  = xy[i][0];
+	    var x = xy[i][0];	    
 	    var y = xy[i][1];
-
+	    y     = d3.format('.2f')(y);	    
 	    var z = ss.z_score(y, mean, std);
+	    z     = d3.format('.2f')(z);	  
 	    var p = ss.cumulative_std_normal_probability(z);
-	    
+
 	    if (y > mean) {
 		p = 1 - p;
 	    }
@@ -40,7 +41,6 @@ solGS.normalDistribution.prototype.getNormalDistData = function (xy) {
 	    normalDistData.push({'x': x, 'y': y, 'z': z, 'p': p});
 	}
 	
-
     return normalDistData;
 }
 
@@ -132,6 +132,22 @@ solGS.normalDistribution.prototype.getYValuesP = function (normalData) {
 	}
 	
 	return yp;
+}
+
+
+solGS.normalDistribution.prototype.getObsValueZScore = function (obsValuesZScores, zScore) {
+
+	var obsValue;
+	for (var i=0; i < obsValuesZScores.length; i++) {
+	 
+	    var j =  obsValuesZScores[i];
+
+	    if (obsValuesZScores[i][1] == zScore) {
+		obsValue = obsValuesZScores[i][0];
+	    }
+	}
+  
+    return [obsValue, zScore];
 }
 
 

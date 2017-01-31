@@ -7,7 +7,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 
 use Data::Dumper;
 use JSON::Any;
-
+use CXGN::Phenotypes::Search;
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -21,6 +21,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $c = shift;
 
     my $params = $c->req->params() || {};
+    #print STDERR Dumper $params;
 
     my %query;
 
@@ -33,40 +34,41 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     }
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
-
+    #$schema->storage->debug(1);
     my ($or_conditions, $and_conditions);
-    $or_conditions->{'me.stock_id'} =  { '>' => 0 };
     $and_conditions->{'me.stock_id'} = { '>' => 0 };
-    if (exists($params->{any_name} ) && $params->{any_name} ) {
-	my $start = '%';
-	my $end = '%';
-	if ( $matchtype eq 'exactly' ) {
-	    $start = '';
-	    $end = '';
-	} elsif ( $matchtype eq 'starts_with' ) {
-	    $start = '';
-	} elsif ( $matchtype eq 'ends_with' ) {
-	    $end = '';
-	}
 
-	$or_conditions = [
-	    { 'me.name'          => {'ilike', $start.$any_name.$end} },
-	    { 'me.uniquename'    => {'ilike', $start.$any_name.$end} },
-	    { 'me.description'   => {'ilike', $start.$any_name.$end} },
-	    { 'stockprops.value'   => {'ilike', $start.$any_name.$end} }
-	    ] ;
+    if (exists($params->{any_name} ) && $params->{any_name} ) {
+        my $start = '%';
+        my $end = '%';
+        if ( $matchtype eq 'exactly' ) {
+            $start = '';
+            $end = '';
+        } elsif ( $matchtype eq 'starts_with' ) {
+            $start = '';
+        } elsif ( $matchtype eq 'ends_with' ) {
+            $end = '';
+        }
+
+        $or_conditions = [
+            { 'me.name'          => {'ilike', $start.$any_name.$end} },
+            { 'me.uniquename'    => {'ilike', $start.$any_name.$end} },
+            { 'me.description'   => {'ilike', $start.$any_name.$end} },
+            { 'stockprops.value'   => {'ilike', $start.$any_name.$end} }
+        ];
+
     } else {
-	$or_conditions = [ { 'me.uniquename' => { '!=', undef } } ];
+        $or_conditions = [ { 'me.uniquename' => { '!=', undef } } ];
     }
 
 
     ###############
     if (exists($params->{organism} ) && $params->{organism} ) {
-	$and_conditions->{'me.organism_id'} = $params->{organism} ;
+        $and_conditions->{'me.organism_id'} = $params->{organism} ;
     }
 
     if (exists($params->{stock_type} ) && $params->{stock_type} ) {
-	$and_conditions->{'me.type_id'} = $params->{stock_type} ;
+        $and_conditions->{'me.type_id'} = $params->{stock_type} ;
     }
 
     if (exists($params->{person} ) && $params->{person} ) {
@@ -97,6 +99,12 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 ###############
     if (exists($params->{trait} ) && $params->{trait} ) {
 	$and_conditions->{ 'observable.name' }  = $params->{trait} ;
+    }
+    if (exists($params->{minimum_trait_value} ) && $params->{minimum_trait_value} ) {
+        $and_conditions->{ 'phenotype.value' }  = { '>' => $params->{minimum_trait_value} };
+    }
+    if (exists($params->{maximum_trait_value} ) && $params->{maximum_trait_value} ) {
+        $and_conditions->{ 'phenotype.value' }  = { '<' => $params->{maximum_trait_value} };
     }
 
     if (exists($params->{project} ) && $params->{project} ) {
@@ -163,21 +171,26 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 	}
 	);
 
+    my $phenotypes_search = CXGN::Phenotypes::Search->new({bcs_schema=>$schema});
+    my $synonym_hash = $phenotypes_search->get_synonym_hash_lookup();
 
     my @result;
-    while (my $a        = $rs2->next()) {
-	my $uniquename  = $a->uniquename;
-	my $type_id     = $a->type_id ;
-	my $type        = $a->get_column('cvterm_name');
-	my $organism_id = $a->organism_id;
-	my $organism    = $a->get_column('species');
-	my $stock_id    = $a->stock_id;
-	push @result, [  "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism ];
+    while (my $a = $rs2->next()) {
+        my $uniquename  = $a->uniquename;
+        my $type_id     = $a->type_id ;
+        my $type        = $a->get_column('cvterm_name');
+        my $organism_id = $a->organism_id;
+        my $organism    = $a->get_column('species');
+        my $stock_id    = $a->stock_id;
+        my $synonym_string = '';
+        if (exists($synonym_hash->{$uniquename})) {
+            $synonym_string = join ', ', @{$synonym_hash->{$uniquename}};
+        }
+        push @result, [  "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string ];
+
     }
 
     $c->stash->{rest} = { data => [ @result ], draw => $draw, recordsTotal => $records_total,  recordsFiltered => $records_total };
-
-
 }
 
 1;

@@ -9,6 +9,8 @@ use Data::Dumper;
 use CXGN::List;
 use CXGN::List::Validate;
 use CXGN::List::Transform;
+use CXGN::Cross;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -391,6 +393,41 @@ sub copy_public_list : Path('/list/public/copy') Args(0) {
     }
 }
 
+sub add_cross_progeny : Path('/list/add_cross_progeny') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $cross_id_list = decode_json($c->req->param("cross_id_list"));
+    print STDERR Dumper $cross_id_list;
+    my $list_id = $c->req->param("list_id");
+
+    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id => $list_id });
+
+    my %response;
+    $response{'count'} = 0;
+    foreach (@$cross_id_list) {
+        my $cross = CXGN::Cross->new({bcs_schema=>$c->dbic_schema("Bio::Chado::Schema"), cross_stock_id=>$_});
+        my ($maternal_parent, $paternal_parent, $progeny) = $cross->get_cross_relationships();
+
+        my @accession_names;
+        foreach (@$progeny) {
+            push @accession_names, $_->[0];
+        }
+
+        my $r = $list->add_bulk(\@accession_names);
+        if ($r->{error}) {
+            $c->stash->{rest} = { error => $r->{error}};
+            return;
+        }
+        if (scalar(@{$r->{duplicates}}) > 0){
+            push $response{'duplicates'}, $r->{duplicates};
+        }
+        $response{'count'} += $r->{count};
+    }
+    print STDERR Dumper \%response;
+    $c->stash->{rest} = { duplicates => $response{'duplicates'} };
+    $c->stash->{rest}->{success} = { count => $response{'count'} };
+}
+
 sub add_bulk : Path('/list/add/bulk') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -649,6 +686,35 @@ sub remove_element_action :Path('/list/item/remove') Args(0) {
     
     $c->stash->{rest} = $response;
     
+}
+
+sub update_element_action :Path('/list/item/update') Args(0) {
+    my $self = shift;
+    my $c = shift;
+ 
+    my $list_id = $c->req->param("list_id");
+    my $item_id = $c->req->param("item_id");
+    my $content = $c->req->param("content");
+    my $error = $self->check_user($c, $list_id);
+
+    if ($content) {
+        print STDERR "update ".$list_id." ".$item_id." ".$content."\n";
+
+        if ($error) {
+            $c->stash->{rest} = { error => $error };
+            return;
+        }
+
+        my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+        $error = $list->update_element_by_id($item_id, $content);
+    }
+
+    if ($error) {
+        $c->stash->{rest} = { error => "An error occurred while attempting to update item $item_id" };
+    }
+    else {
+        $c->stash->{rest} = { success => 1 };
+    }
 }
 
 sub new_list : Private { 

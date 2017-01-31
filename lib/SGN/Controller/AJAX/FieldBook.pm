@@ -30,7 +30,6 @@ use JSON -support_by_pp;
 use Spreadsheet::WriteExcel;
 use SGN::View::Trial qw/design_layout_view design_info_view/;
 use CXGN::Phenotypes::ParseUpload;
-use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Trial::TrialLayout;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
@@ -56,6 +55,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_id = $c->req->param('trial_id');
+  my $data_level = $c->req->param('data_level') || 'plots';
   my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
   my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
 
@@ -77,9 +77,17 @@ sub create_fieldbook_from_trial_POST : Args(0) {
     $c->stash->{rest} = {error =>  "Trial does not exist with id $trial_id." };
     return;
   }
+    if ($data_level eq 'plants') {
+        my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+        if (!$trial->has_plant_entries()){
+            $c->stash->{rest} = {error =>  "Trial does not have plant entries. You must first create plant entries." };
+            return;
+        }
+    }
+
   my $dir = $c->tempfiles_subdir('/other');
   my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'other/excelXXXX');
-  
+
     my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
         bcs_schema => $schema,
         metadata_schema => $metadata_schema,
@@ -89,6 +97,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         archive_path => $c->config->{archive_path},
         user_id => $c->user()->get_object()->get_sp_person_id(),
         user_name => $c->user()->get_object()->get_username(),
+        data_level => $data_level,
     });
 
     my $create_fieldbook_return = $create_fieldbook->download();
@@ -125,6 +134,8 @@ sub create_trait_file_for_field_book_POST : Args(0) {
   my $archived_file_name = catfile($user_id, $subdirectory_name,$timestamp."_".$trait_file_name.".trt");
   my $archive_path = $c->config->{archive_path};
   my $file_destination =  catfile($archive_path, $archived_file_name);
+  my $dbh = $c->dbc->dbh();
+  my @trait_ids = @{_parse_list_from_json($c->req->param('trait_ids'))};
 
   if ($c->req->param('trait_list')) {
     @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
@@ -145,7 +156,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
   open FILE, ">$file_destination" or die $!;
   my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   print FILE "trait,format,defaultValue,minimum,maximum,details,categories,isVisible,realPosition\n";
-  my $order = 1;
+  my $order = 0;
 
   foreach my $term (@trait_list) {
 
@@ -158,6 +169,11 @@ sub create_trait_file_for_field_book_POST : Args(0) {
       $db_name =~ s/^\s+//;
 
       print STDERR "traitname: $term | accession: $accession \n";
+
+      my $cvterm = CXGN::Chado::Cvterm->new( $dbh, $trait_ids[$order] );
+      my $synonym = $cvterm->get_uppercase_synonym();
+      my $name = $synonym || $trait_name;
+      $order++;
 
       #get trait info
 
@@ -172,8 +188,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
       #return error if not $trait_info_string;
       #print line with trait info
       #print FILE "$trait_name:$db_name:$accession,text,,,,,,TRUE,$order\n";
-      print FILE "\"$trait_name|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\"\n";
-      $order++;
+      print FILE "\"$name\t\t\t|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\"\n";
   }
 
   close FILE;
@@ -200,7 +215,9 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 								    });
   $file_row->insert();
 
-  $c->stash->{rest} = {success => "1",};
+  my $id = $file_row->file_id();
+
+  $c->stash->{rest} = {success => "1", file_id => $id, };
 
 }
 

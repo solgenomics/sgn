@@ -4,6 +4,7 @@ $breeding_programs
 $locations
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
 
 <div class="modal fade" id="upload_trial_dialog" name="upload_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialDialog">
     <div class="modal-dialog " role="document">
@@ -126,6 +127,7 @@ $locations
                                 <td>rep_number</td>
                                 <td>range_number</td>
                                 <td>row_number</td>
+                                <td>col_number</td>
                             </tr>
                         </tbody>
                     </table>
@@ -148,8 +150,9 @@ $locations
                     <br />
                     range_number (range number, numeric)
                     <br />
-                    row_number (row number, numeric)
+                    row_number (row number, numeric, required for field map generation)
                     <br />
+                    col_number (column number, numeric, required for field map generation)
                 </div>
             </div>
             <div class="modal-footer">
@@ -160,7 +163,7 @@ $locations
 </div>
 
 <div class="modal fade" id="trial_upload_success_dialog_message" name="trial_upload_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="uploadTrialSuccessDialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -172,6 +175,7 @@ $locations
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                         The trial file was uploaded successfully
                     </p>
+                    <button class="btn btn-primary" name="refresh_jstree_html">Refresh Trial Tree</button>
                 </div>
             </div>
             <div class="modal-footer">

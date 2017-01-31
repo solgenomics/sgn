@@ -81,7 +81,7 @@ sub children_GET {
         push @response_list, $responsehash;
     }
     @response_list = sort { lc $a->{cvterm_name} cmp lc $b->{cvterm_name} } @response_list;
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 
@@ -111,13 +111,13 @@ sub parents_GET  {
     if (!$db || !$accession) {
         #not sure we need here to send an error key, since cache is usually called after parents (? )
         $response{error} = "Did not pass a legal ontology term ID! ( $db_name : $accession)";
-        $c->{stash}->{rest} = \%response;
+        $c->stash->{rest} = \%response;
         return;
     }
     $dbxref = $db->find_related('dbxrefs', { accession => $accession }) if $db;
     if (!$dbxref) {
         $response{error} = "Could not find term $db_name : $accession in the database! Check your input and try again";
-        $c->{stash}->{rest} = \%response;
+        $c->stash->{rest} = \%response;
         return;
     }
     my $cvterm = $dbxref->cvterm;
@@ -135,10 +135,10 @@ sub parents_GET  {
         }
     } else {
         $response{error} = "Could not find term $db_name : $accession in the database! Check your input and try again. THIS MAY BE AN INTERNAL DATABASE PROBLEM! Please contact sgn-feedback\@sgn.cornell.edu for help.";
-        $c->{stash}->{rest} = \%response;
+        $c->stash->{rest} = \%response;
         return;
     }
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 =head2 menu
@@ -157,7 +157,7 @@ sub menu  : Local : ActionClass('REST') { }
 sub menu_GET  {
     my $self = shift;
     my $c = shift;
-    
+
     my $menudata = $c->config->{onto_root_namespaces};
 
     print STDERR "MENUDATA: $menudata\n";
@@ -165,19 +165,19 @@ sub menu_GET  {
 
     my $menu = '<select name="cv_select">';
 
-    foreach my $mi (@menuitems) { 
+    foreach my $mi (@menuitems) {
 	print STDERR "MENU ITEM: $mi\n";
-	if ($mi =~ /\s*(\w+)?\s*(.*)$/) { 
+	if ($mi =~ /\s*(\w+)?\s*(.*)$/) {
 	    my $value = $1;
 	    my $name = $2;
 
 	    $menu .= qq { <option value="$value">$value $name</option>\n };
 	}
     }
-    
+
     $menu .= "</select>\n";
     $c->stash->{rest} = [ $menu ];
-    
+
 }
 
 
@@ -244,7 +244,7 @@ sub roots_GET {
         my $hashref = $self->flatten_node($r, undef);
         push @response_list, $hashref;
     }
-    $c->{stash}->{rest}= \@response_list;
+    $c->stash->{rest}= \@response_list;
 }
 
 
@@ -283,7 +283,7 @@ GROUP BY cvterm.cvterm_id,cv.name, cvterm.name, dbxref.accession, db.name ";
     while  (my $hashref = $sth->fetchrow_hashref ) {
         push @response_list, $hashref;
     }
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 =head2 cache
@@ -313,7 +313,7 @@ sub cache_GET {
     my ($db_name, $accession) = split ":", $c->request->param('node');
     if (!$db_name || !$accession) {
         $response{error} = "Looks like you passed an illegal ontology term ID ! ($db_name : $accession) Please try again.";
-        $c->{stash}->{rest} = \%response;
+        $c->stash->{rest} = \%response;
         return;
     }
 
@@ -321,23 +321,23 @@ sub cache_GET {
     my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
     if (!$dbxref) {
         $response{error} = "Did not find ontology term $db_name : $accession in the database. Please try again. If you think this term should exist please contact sgn-feedback\@sgn.cornell.edu";
-        $c->{stash}->{rest} = \%response;
+        $c->stash->{rest} = \%response;
         return;
     }
 
     my $cvterm = $dbxref->cvterm;
     if (!$cvterm) {
         $response{error} = "Did not find ontology term $db_name : $accession in the database. This may be an internal database issue. Please contact sgn-feedback\@sgn.cornell.edu and we will fic this error ASAP";
-        $c->{stash}->{rest} = \%response;
+        $c->stash->{rest} = \%response;
         return;
     }
     my $parents_rs = $cvterm->recursive_parents(); # returns a result set
-    if (!$parents_rs->next) { 
+    if (!$parents_rs->next) {
         $response{error} = "did not find recursive parents for cvterm " . $cvterm->name;
-        $c->{stash}->{rest} = \%response;
+        $c->stash->{rest} = \%response;
         return;
     }
-    
+
 #    $self->add_cache_list(undef, $cvterm, $cvterm->type());
     while (my $p = $parents_rs->next()) {
         my $children_rs = $p->children();
@@ -346,7 +346,7 @@ sub cache_GET {
             $self->add_cache_list($p, $child, $rel_rs->type());
         }
     }
-    $c->{stash}->{rest} = $self->{cache_list};
+    $c->stash->{rest} = $self->{cache_list};
 }
 
 
@@ -372,7 +372,7 @@ sub add_cache_list :Private {
     if (exists($self->{duplicates}->{$unique_hashkey})) {
         return;
     }
-    
+
     $self->{duplicates}->{$unique_hashkey}++;
 
     my $hashref = $self->flatten_node($child, $relationship);

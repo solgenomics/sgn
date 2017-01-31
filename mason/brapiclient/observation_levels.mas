@@ -1,0 +1,36 @@
+<%args>
+</%args>
+
+<h4>Observation Levels</h4>
+
+<div id="brapi_obslevel_home_div">
+<button class="btn btn-primary" id="brapi_home_show_obslevels">Show ObservationLevels</button>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+
+jQuery("#brapi_home_show_obslevels").click(function() {
+    jQuery.ajax( {
+      'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/observationLevels',
+      'method': 'GET',
+      'success': function(response) {
+        console.log(response);
+        var html = '<br/><ul>';
+        for(var i = 0; i < response.result.data.length; i++) {
+            html = html+'<li>'+response.result.data[i]+'</li>';
+        }
+        html = html+'</ul>';
+        jQuery("#brapi_obslevel_home_div").empty().html(html);
+      },
+      error: function(response) {
+        alert('An error occurred');
+      }
+    });
+});
+
+});
+
+</script>

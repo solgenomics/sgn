@@ -46,11 +46,11 @@ sub old_trial_url : Path('/breeders_toolbox/trial') Args(1) {
 }
 
 sub trial_info : Chained('trial_init') PathPart('') Args(0) {
-    print STDERR "Check 1: ".localtime()."\n";
+    #print STDERR "Check 1: ".localtime()."\n";
     my $self = shift;
     my $c = shift;
     my $format = $c->req->param("format");
-    print STDERR $format;
+    #print STDERR $format;
     my $user = $c->user();
     if (!$user) {
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
@@ -92,7 +92,10 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     $c->stash->{trial_id} = $c->stash->{trial_id};
 
+    $c->stash->{has_plant_entries} = $trial->has_plant_entries();
+
     $c->stash->{hidap_enabled} = $c->config->{hidap_enabled};
+    $c->stash->{cassbase_to_cea} = $c->config->{cassbase_to_cea};
 
     if ($trial->get_folder) {
       $c->stash->{folder_id} = $trial->get_folder()->project_id();
@@ -155,6 +158,8 @@ sub trial_tree : Path('/breeders/trialtree') Args(0) {
 
 }
 
+#For downloading trial layout in CSV and Excel, for downloading trial phenotypes in CSV and Excel, and for downloading trial phenotyping spreadsheets in Excel.
+#For phenotype download, better to use SGN::Controller::BreedersToolbox::Download->download_phenotypes_action and provide a single trial_id in the trial_list argument. This is how the phenotype download works from the wizard page, the trial tree page, and the trial detail page for phenotype download.
 sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;
@@ -163,34 +168,45 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
     my $user = $c->user();
     if (!$user) {
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
-	return;
+        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
     }
 
     my $format = $c->req->param("format") || "xls";
+    my $data_level = $c->req->param("dataLevel") || "plot";
     my $timestamp_option = $c->req->param("timestamp") || 0;
-    my $trait_list = $c->req->param("trait_list") || "";
+    my $trait_list = $c->req->param("trait_list");
+    my $search_type = $c->req->param("search_type") || 'fast';
+
+    if ($data_level eq 'plants') {
+        my $trial = $c->stash->{trial};
+        if (!$trial->has_plant_entries()) {
+            $c->stash->{template} = 'generic_message.mas';
+            $c->stash->{message} = "The requested trial (".$trial->get_name().") does not have plant entries. Please create the plant entries first.";
+            return;
+        }
+    }
 
     my @trait_list;
-    if ($trait_list) {
-	@trait_list = @{_parse_list_from_json($trait_list)};
+    if ($trait_list && $trait_list ne 'null') {
+        @trait_list = @{_parse_list_from_json($trait_list)};
     }
 
     my $plugin = "";
     if ( ($format eq "xls") && ($what eq "layout")) {
-	$plugin = "TrialLayoutExcel";
+        $plugin = "TrialLayoutExcel";
     }
     if (($format eq "csv") && ($what eq "layout")) {
-	$plugin = "TrialLayoutCSV";
+        $plugin = "TrialLayoutCSV";
     }
     if (($format eq "xls") && ($what =~ /phenotype/)) {
-	$plugin = "TrialPhenotypeExcel";
+        $plugin = "TrialPhenotypeExcel";
     }
     if (($format eq "csv") && ($what =~ /phenotype/)) {
-	$plugin = "TrialPhenotypeCSV";
+        $plugin = "TrialPhenotypeCSV";
     }
     if (($format eq "xls") && ($what eq "basic_trial_excel")) {
-	$plugin = "BasicExcel";
+        $plugin = "BasicExcel";
     }
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -205,21 +221,22 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
     print STDERR "TEMPFILE : $tempfile\n";
 
-    my $download = CXGN::Trial::Download->new(
-	{
-	    bcs_schema => $c->stash->{schema},
-	    trial_id => $c->stash->{trial_id},
-	    trait_list => \@trait_list,
-	    filename => $tempfile,
-	    format => $plugin,
+    my $download = CXGN::Trial::Download->new({
+        bcs_schema => $c->stash->{schema},
+        trial_id => $c->stash->{trial_id},
+        trait_list => \@trait_list,
+        filename => $tempfile,
+        format => $plugin,
+        data_level => $data_level,
+        search_type => $search_type,
         include_timestamp => $timestamp_option,
-      });
+    });
 
-      my $error = $download->download();
+    my $error = $download->download();
 
-      my $file_name = $trial_id . "_" . "$what" . ".$format";
-     $c->res->content_type('Application/'.$format);
-     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+    my $file_name = $trial_id . "_" . "$what" . ".$format";
+    $c->res->content_type('Application/'.$format);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 
     my $output = read_file($tempfile);
 

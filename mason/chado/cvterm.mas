@@ -51,6 +51,7 @@ my $is_obsolete = $cvterm->get_obsolete();
 my @synonyms    = $cvterm->get_synonyms();
 my @def_dbxrefs = $cvterm->get_def_dbxref();
 my @secondary_dbxrefs = $cvterm->get_secondary_dbxrefs();
+my @image_ids = $cvterm->get_image_ids;
 
 my @def_accessions = map( $_->get_db_name . ":" . $_->get_accession , @def_dbxrefs);
 
@@ -70,11 +71,15 @@ if ( @qtl_pops )
     }
  }
 
+my $this_page = "/cvterm/$cvterm_id/view/";
+my $image_subtitle =
+   " <a href=\"/image/add?type_id=$cvterm_id&type=cvterm&refering_page=$this_page\">[Add image]</a>" ;
+
 
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => [qw [CXGN.AJAX.Ontology jquery CXGN.Phenome.Qtl jquery jquery.dataTables] ] &>
+<& /util/import_javascript.mas, classes => [qw [CXGN.AJAX.Ontology  CXGN.Phenome.Qtl thickbox jquery  jquery.dataTables] ] &>
 
 
 <script language="javascript">
@@ -128,7 +133,7 @@ if ( @qtl_pops )
 
 <h4>Add this term to a list</h4>
 
-<div id="cvterm_id" style="display:none" ><% $db_name %>:<% $accession %></div>
+<div id="cvterm_id" style="display:none" ><% $cvterm_name %>|<% $db_name %>:<% $accession %></div>
 
 <&| /page/info_section.mas, title=>"Add to list", collapsible=>1, collapsed=>1 &>
 <div id="paste_to_list">
@@ -309,12 +314,24 @@ LOAD...
   
     jQuery('#trial_data').DataTable( { 
       'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/direct_trials',
-     });
+       }
+     );
   });
 
 </script>
 
 </&>
 
+<&| /page/info_section.mas, 
+    title => "Images and figures",
+    subtitle      => $image_subtitle,
+    collapsible   => 1,
+    collapsed     => 0,
+    hide_if_empty => 1,
+&>
+
+<& /image/print_images.mas, images => \@image_ids &>
+
+</&>
 
 <& /qtl/waitmessage.mas &>

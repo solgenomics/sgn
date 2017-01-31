@@ -72,6 +72,13 @@ sub get_trait_info {
   #get cvtermprops
   my $cvtermprops = $trait_cvterm->search_related('cvtermprops');
 
+	# add full name in detail field, plus scale info if it's available
+	my $trait_details = $trait_name;
+	my $trait_def = $trait_cvterm->definition();
+	$trait_def =~ s/([^\.]*\.\s{1})//;
+	if ($trait_def =~ /=/) { $trait_details .= "\n" . $trait_def; }
+	#print STDERR "trait details = $trait_details\n";
+
   my $cvterms = $self->_get_cvterms();
 
   my %trait_props;
@@ -80,7 +87,7 @@ sub get_trait_info {
   $trait_props{'trait_default_value'}='';
   $trait_props{'trait_minimum'}='';
   $trait_props{'trait_maximum'}='';
-  $trait_props{'trait_details'}='';
+  $trait_props{'trait_details'}=$trait_details;
   $trait_props{'trait_categories'}='';
 
 
@@ -92,19 +99,28 @@ sub get_trait_info {
 		$trait_props{'trait_maximum'}='100';
 		$trait_props{'trait_default_value'}='50';
 	}
-	elsif ($trait_name =~ m/counting/) {
-		$trait_props{'trait_format'}='counter';
+#	elsif ($trait_name =~ m/counting/) {
+#		$trait_props{'trait_format'}='counter';
+#	}
+	elsif ($trait_name =~ m/image/) {
+		$trait_props{'trait_format'}='photo';
 	}
-	elsif ($trait_name =~ m/([0-9])-([0-9])/) {
-		print STDERR "matched categorical trait\n";
-		$trait_props{'trait_format'}='categorical';
-		my $categories;
-		foreach (my $i=$1; $i < $2; $i++ ) {
-			$categories .= $i . "/";
+	elsif ($trait_name =~ m/([0-9])-([0-9]+)/) {
+		print STDERR "matched categorical trait with scale $1 to $2\n";
+
+		if (($2-$1) >= 12) { #leave categorical traits as numeric if they exceed fieldbook's max of 12 categories
+			$trait_props{'trait_minimum'}=$1;
+			$trait_props{'trait_maximum'}=$2;
+		} else {
+			$trait_props{'trait_format'}='categorical';
+			my $categories;
+			foreach (my $i=$1; $i < $2; $i++ ) {
+				$categories .= $i . "/";
+			}
+			$categories .= $2;
+			print STDERR "categories = $categories\n";
+			$trait_props{'trait_categories'}= $categories;
 		}
-		$categories .= $2;
-		print STDERR "categories = $categories\n";
-		$trait_props{'trait_categories'}= $categories;
 	}
 
 	#change from default numeric based on properties stored in the database

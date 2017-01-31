@@ -1,0 +1,143 @@
+cv name	cvterm name	definition	date	person	dbpatch #	comment
+calendar	Fertilizer Event				00052	
+calendar	Genotyping Event				00052	
+calendar	Harvest Event				00052	
+calendar	Meeting Event				00052	
+calendar	Phenotyping Event				00052	
+calendar	Planning Event				00052	
+calendar	Planting Event				00052	
+calendar	Presentation Event				00052	
+experiment_type	 pedigree experiment					
+experiment_type	cross_experiment				00052	
+experiment_type	field_layout				00052	
+experiment_type	genotyping_experiment				00052	
+experiment_type	genotyping_layout				00052	
+experiment_type	phenotyping_experiment				00052	
+genotype_property	igd number					
+genotype_property	infinium array					sgn database
+genotype_property	snp genotyping					
+geolocations_property	geolocation address				00052	
+geolocations_property	geolocation year				00052	
+list_types	accessions					
+list_types	crosses				00067	
+list_types	dataset				00067	
+list_types	locations					
+list_types	locus_ids					
+list_types	numbers				00067	
+list_types	plots					
+list_types	populations				00067	
+list_types	traits					
+list_types	trials					
+list_types	unigene_ids					
+list_types	vector_constructs				00049	
+list_types	years					
+local	date					
+local	months after planting					
+local	operator					
+local	organism_sequencing_metadata					
+local	sp_person_id				00052	
+local	time					
+local	visible_to_role				00052	
+nd_experiment_property	cross_name				00052	
+nd_experiment_property	cross_type				00052	
+nd_experiment_property	date_of_embryo_rescue				00066	
+nd_experiment_property	date_of_harvest				00066	
+nd_experiment_property	date_of_pollination				00066	
+nd_experiment_property	date_of_seed_extraction				00066	
+nd_experiment_property	days_from_extraction_to_embryo_rescue				00066	
+nd_experiment_property	days_from_harvest_to_extraction				00066	
+nd_experiment_property	days_to_maturity				00066	
+nd_experiment_property	genotyping_project_name				00052	
+nd_experiment_property	genotyping_user_id				00052	
+nd_experiment_property	number_of_embryos_contaminated					
+nd_experiment_property	number_of_embryos_germinated				00066	
+nd_experiment_property	number_of_embryos_rescued				00066	
+nd_experiment_property	number_of_flowers				00052	
+nd_experiment_property	number_of_fruits					
+nd_experiment_property	number_of_nonviable_seeds				00066	
+nd_experiment_property	number_of_progeny				00066	
+nd_experiment_property	number_of_seedlings_transplanted					
+nd_experiment_property	number_of_seeds				00052	
+nd_experiment_property	number_of_seeds_extracted				00066	
+nd_experiment_property	number_of_seeds_germinated				00066	
+nd_experiment_property	number_of_seeds_planted				00066	
+nd_experiment_property	number_of_viable_seeds				00066	
+organism_property	organism_synonym				00052	
+project_property	breeding_program				00051	
+project_property	data_agreement					
+project_property	design					
+project_property	genomic selection					
+project_property	harvest_date				00051	
+project_property	marker_count					
+project_property	planting_date				00051	
+project_property	population type					
+project_property	project fertilizer date					
+project_property	project first harvest date					sgn database
+project_property	project harvest date					
+project_property	project harvested plants					
+project_property	project last harvest date					sgn database
+project_property	project location					
+project_property	project planting date					
+project_property	project sowing date					sgn database
+project_property	project sown plants					
+project_property	project transplanting date					sgn database
+project_property	project year					
+project_property	project_has_plant_entries				00054	
+project_property	trial_folder					
+project_property	folder_for_trials	For determining if a folder appears on manage trials page	12/6/16	nm529	00071	
+project_property	folder_for_crosses	For determining if a folder appears on manage crosses page	12/6/16	nm529	00071	
+project_relationship	breeding_program_trial_relationship				00051	
+project_type	Advanced Yeld Trials				00052	
+project_type	Advanced Yield Trial					
+project_type	Clonal Evaluation					
+project_type	Preliminary Yield Trial					
+project_type	Preliminary Yield Trials				00052	
+project_type	Regional Trials					
+project_type	Seed Multiplication					
+project_type	Seedling Nursery					
+project_type	Uniform Yield Trial				00052	
+project_type	Variety Release Trial					
+stock_property	block				00052	
+stock_property	col_number				00052	
+stock_property	igd_synonym				00052	
+stock_property	is a control				00052	
+stock_property	location_code				00052	
+stock_property	organization				00052	
+stock_property	plant_index_number				00054	
+stock_property	plot number				00052	
+stock_property	range				00052	
+stock_property	replicate				00052	
+stock_property	row_number				00052	
+stock_property	stock_synonym				00046	
+stock_property	T1				00052	
+stock_property	T2				00052	
+stock_property	transgenic				00052	
+stock_relationship	cross_relationship				00052	
+stock_relationship	female_parent				00052	
+stock_relationship	male_parent				00052	
+stock_relationship	member_of				00052	
+stock_relationship	offspring_of				00052	
+stock_relationship	plant_of				00052	
+stock_relationship	plot_of				00052	
+stock_relationship	tissue_sample_of				00052	
+stock_type	accession				00052	
+stock_type	backcross population				00052	
+stock_type	cross				00052	
+stock_type	f2 population				00052	
+stock_type	mutant population				00052	
+stock_type	plant				00052	
+stock_type	plot				00052	
+stock_type	population				00052	
+stock_type	tissue_sample				00052	
+stock_type	training population				00052	
+stock_type	vector_construct				00052	
+trait_property	trait_categories					
+trait_property	trait_default_value					
+trait_property	trait_details					
+trait_property	trait_format					
+trait_property	trait_maximum					
+trait_property	trait_minimum					
+trial_type	crossing_trial					
+trial_type	genotyping_trial					
+trial_type	phenotyping_trial					
+project_design? 						suggested to move the trial design names from projectprop.value to projectprop.type_id

@@ -4,6 +4,8 @@ $locations
 $breeding_programs
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
+
 <div class="modal fade" id="add_project_dialog" name="add_project_dialog" tabindex="-1" role="dialog" aria-labelledby="addProjectDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -94,7 +96,7 @@ $breeding_programs
                                         <option title="creates alpha designs starting from the alpha design fixing under the 4 series formulated by Patterson and Williams." value=Alpha>Alpha Lattice</option>
                                         <option title="some  treatments  (checks)  are  replicate  r  times  and  other  treatments  (new)  are replicated once." value=Augmented>Augmented</option>
                                         <option title="Adjustments are calculated using data from all checks" value=MAD>Modified Augmented Design </option>
-
+                                        <option title="A greenhouse/nursery houses plants in no particular layout design." value="greenhouse" >Nursery/Greenhouse </option>
                                         <!--<option value=MADIII>MADIII</option>-->
                                         <!--<option value=MADIV>MADIV</option>-->
                                         <!--<option value=MADV>MADV</option>-->
@@ -112,6 +114,24 @@ $breeding_programs
                             <div class="form-group form-group-sm" id="show_list_of_checks_section" style="display: none" >
                                 <label class="col-sm-7 control-label">List of checks to include (required): </label>
                                 <div class="col-sm-5" id="list_of_checks_section" >
+                                </div>
+                            </div>
+                            <div class="form-group form-group-sm" id="greenhouse_default_num_plants_per_accession" style="display: none">
+                                <label class="col-sm-7 control-label">Default Number of Plants: </label>
+                                <div class="col-sm-5" >
+                                    <input class="form-control" type="text" id="greenhouse_default_num_plants_per_accession_val" placeholder="1" value="1" />
+                                </div>
+                            </div>
+                            <div class="form-group form-group-sm" id="greenhouse_num_plants_per_accession_section" style="display: none" >
+                                <hr>
+                                <center><h4>Number of Plants:</h4></center>
+                                <div id="greenhouse_num_plants_per_accession" >
+                                </div>
+                            </div>
+
+                            <div class="form-group form-group-sm" id="crbd_show_list_of_checks_section" style="display: none" >
+                                <label class="col-sm-7 control-label">List of checks to include(optional): </label>
+                                <div class="col-sm-5" id="crbd_list_of_checks_section" >
                                 </div>
                             </div>
 
@@ -178,6 +198,40 @@ $breeding_programs
                                         <input type="text" class="form-control" id="max_block_size" name="block_size" />
                                     </div>
                                 </div>
+
+                                <hr>
+                                <div class="form-group"  id="FieldMap">
+                                    <label class="col-sm-4 control-label">Field map display: </label>
+                                    <div class="col-sm-8" >
+                                        <input type="checkbox" id="show_field_map_options" />
+                                    </div>
+                                </div>
+
+                                <div id="field_map_options" style="display: none">
+                                    <!--<div class="form-group form-group-sm" >
+                                        <label class="col-sm-7 control-label">Number of columns per row (uses accession number by default): </label>
+                                        <div class="col-sm-5" >
+                                            <input type="text" class="form-control" id="fieldMap_col_number" name="fieldMap_col_number" />
+                                        </div>
+                                    </div> -->
+                                    <div class="form-group form-group-sm" >
+                                        <label class="col-sm-7 control-label">Number of rows (optional): </label>
+                                        <div class="col-sm-5" >
+                                          <input type="text" class="form-control" id="fieldMap_row_number" name="fieldMap_row_number" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" >
+                                        <label class="col-sm-7 control-label">Plot layout format: </label>
+                                        <div class="col-sm-5" >
+                                          <select class="form-control" id="plot_layout_format" name="plot_layout_format">
+                                            <option value="">select plot layout format</option>
+                                            <option value=zigzag>Zigzag(unserpentine)</option>
+                                            <option value=serpentine>Serpentine</option>
+                                          </select>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <hr>
                                 <div class="form-group" >
                                     <label class="col-sm-4 control-label">Custom plot naming/numbering: </label>
@@ -298,6 +352,7 @@ $breeding_programs
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                         The trial was saved successfully
                     </p>
+                    <button class="btn btn-primary" name="refresh_jstree_html">Refresh Trial Tree</button>
                 </div>
             </div>
             <div class="modal-footer">

@@ -1,0 +1,49 @@
+
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [  ] &>
+
+
+<div id="trial_plants_html">
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#trial_plants_onswitch').one("click", function() {
+
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plants',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                //console.log(response);
+                jQuery("#working_modal").modal("hide");
+                var trial_plants_html = "<table class='table table-hover table-condensed table-bordered' id='trial_plants_table_html'><thead><tr><th>Name</th></tr></thead><tbody>";
+                for (i=0; i<response.plants[0].length; i++) {
+                    trial_plants_html = trial_plants_html + "<tr><td><a href='/stock/" + response.plants[0][i][0] +"/view'>"+ response.plants[0][i][1] + "</a></td></tr>";
+                }
+                trial_plants_html = trial_plants_html + "</tbody></table>";
+                jQuery('#trial_plants_html').empty();
+                jQuery('#trial_plants_html').html(trial_plants_html);
+                enable_plants_datatable();
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving plants.");
+            }
+        });
+        
+    });
+
+});
+
+function enable_plants_datatable() {
+    jQuery('#trial_plants_table_html').DataTable();
+}
+
+</script>

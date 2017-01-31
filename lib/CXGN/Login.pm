@@ -172,13 +172,13 @@ sub verify_session {
             if ( $user_must_be_type ne $user_type )
             {            #if they are not the required type, send them away
 
-                $self->login_page_and_exit();
+                return;;
             }
         }
     }
     else {               #else they do not have a session, so send them away
 
-        $self->login_page_and_exit();
+        return;
     }
     if (wantarray)
     { #if they are trying to get both pieces of info, give it to them, in array context
@@ -314,7 +314,7 @@ sub login_user {
         my $sth = $self->get_sql("user_from_uname_pass");
         my $num_rows = $sth->execute( $username, $password );
 
-        my ( $person_id, $disabled, $user_prefs ) = $sth->fetchrow_array();
+        my ( $person_id, $disabled, $user_prefs, $first_name, $last_name ) = $sth->fetchrow_array();
         if ( $num_rows > 1 ) {
             die "Duplicate entries found for username '$username'";
         }
@@ -343,6 +343,8 @@ sub login_user {
                         $new_cookie_string );
                     CXGN::Cookie::set_cookie( "user_prefs", $user_prefs );
                     $login_info->{person_id}     = $person_id;
+                    $login_info->{first_name}     = $first_name;
+                    $login_info->{last_name}     = $last_name;
                     $login_info->{cookie_string} = $new_cookie_string;
                 }
             }
@@ -416,6 +418,7 @@ sub get_login_cookie {
 }
 
 =head2 login_page_and_exit
+##DEPRECATED: redirect should happen in a catalyst controller, not in an object like CXGN::Login
 
  Usage:        $login->login_page_and_exit();
  Desc:         redirects to the login page.
@@ -426,11 +429,13 @@ sub get_login_cookie {
 
 =cut
 
-sub login_page_and_exit {
-    my $self = shift;
-    print CGI->new->redirect( -uri => $LOGIN_PAGE, -status => 302 );
-    exit;
-}
+#sub login_page_and_exit {
+#    my $self = shift;
+    #CGI redirect crashes server when used from a catalyst controller.
+    #Redirecting should happen in controller, not in an object like CXGN::Login
+    #print CGI->new->redirect( -uri => $LOGIN_PAGE, -status => 302 );
+    #exit;
+#}
 
 ###
 ### helper function. SQL should probably be moved to the CXGN::People::Login class
@@ -458,7 +463,7 @@ sub set_sql {
         user_from_uname_pass =>
 
           "	SELECT 
-				sp_person_id, disabled, user_prefs 
+				sp_person_id, disabled, user_prefs, first_name, last_name
 			FROM 
 				sgn_people.sp_person 
 			WHERE 

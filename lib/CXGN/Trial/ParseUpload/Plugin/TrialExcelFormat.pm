@@ -61,6 +61,7 @@ sub _validate_with_plugin {
   my $rep_number_head;
   my $range_number_head;
   my $row_number_head;
+  my $col_number_head;
 
   if ($worksheet->get_cell(0,0)) {
     $plot_name_head  = $worksheet->get_cell(0,0)->value();
@@ -85,6 +86,9 @@ sub _validate_with_plugin {
   }
   if ($worksheet->get_cell(0,7)) {
       $row_number_head  = $worksheet->get_cell(0,7)->value();
+  }
+  if ($worksheet->get_cell(0,8)) {
+      $col_number_head  = $worksheet->get_cell(0,8)->value();
   }
 
   if (!$plot_name_head || $plot_name_head ne 'plot_name' ) {
@@ -131,6 +135,7 @@ sub _validate_with_plugin {
     my $rep_number;
     my $range_number;
     my $row_number;
+    my $col_number;
 
     if ($worksheet->get_cell($row,0)) {
       $plot_name = $worksheet->get_cell($row,0)->value();
@@ -154,7 +159,10 @@ sub _validate_with_plugin {
       $range_number =  $worksheet->get_cell($row,6)->value();
     }
     if ($worksheet->get_cell($row, 7)) {
-	$row_number = $worksheet->get_cell($row, 7)->value();
+	     $row_number = $worksheet->get_cell($row, 7)->value();
+    }
+    if ($worksheet->get_cell($row, 8)) {
+	     $col_number = $worksheet->get_cell($row, 8)->value();
     }
 
     #skip blank lines
@@ -165,19 +173,23 @@ sub _validate_with_plugin {
       #print STDERR "Check 02 ".localtime();
 
     #plot_name must not be blank
-    if (!$plot_name || $plot_name eq '') {
-      push @error_messages, "Cell A$row_name: plot name missing";
-    } else {
-      #plot must not already exist in the database
-      if ($plot_check{$plot_name} ) {
-	push @error_messages, "Cell A$row_name: plot name already exists: $plot_name";
-      }
+    if (!$plot_name || $plot_name eq '' ) {
+        push @error_messages, "Cell A$row_name: plot name missing.";
+    }
+    elsif ($plot_name =~ /\s/ || $plot_name =~ /\// || $plot_name =~ /\\/ ) {
+        push @error_messages, "Cell A$row_name: plot name must not contain spaces or slashes.";
+    }
+    else {
+        #plot must not already exist in the database
+        if ($plot_check{$plot_name} ) {
+            push @error_messages, "Cell A$row_name: plot name already exists: $plot_name";
+        }
 
-      #file must not contain duplicate plot names
-      if ($seen_plot_names{$plot_name}) {
-	push @error_messages, "Cell A$row_name: duplicate plot name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
-      }
-      $seen_plot_names{$plot_name}=$row_name;
+        #file must not contain duplicate plot names
+        if ($seen_plot_names{$plot_name}) {
+            push @error_messages, "Cell A$row_name: duplicate plot name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
+        }
+        $seen_plot_names{$plot_name}=$row_name;
     }
 
       #print STDERR "Check 03 ".localtime();
@@ -270,6 +282,7 @@ sub _parse_with_plugin {
     my $rep_number;
     my $range_number;
     my $row_number;
+    my $col_number;
 
     if ($worksheet->get_cell($row,0)) {
       $plot_name = $worksheet->get_cell($row,0)->value();
@@ -293,8 +306,10 @@ sub _parse_with_plugin {
       $range_number =  $worksheet->get_cell($row,6)->value();
     }
     if ($worksheet->get_cell($row,7)) {
-	$row_number = $worksheet->get_cell($row, 7)->value();
-
+	     $row_number = $worksheet->get_cell($row, 7)->value();
+    }
+    if ($worksheet->get_cell($row,8)) {
+	     $col_number = $worksheet->get_cell($row, 8)->value();
     }
     #skip blank lines
     if (!$plot_name && !$accession_name && !$plot_number && !$block_number) {
@@ -318,8 +333,12 @@ sub _parse_with_plugin {
       $design{$key}->{range_number} = $range_number;
     }
     if ($row_number) {
-	$design{$key}->{row_number} = $row_number;
+	     $design{$key}->{row_number} = $row_number;
     }
+    if ($col_number) {
+	     $design{$key}->{col_number} = $col_number;
+    }
+  
   }
 
   $self->_set_parsed_data(\%design);

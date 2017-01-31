@@ -8,6 +8,8 @@ $breeding_program_id => undef
 $breeding_program_name => undef
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
+
 <div class="modal fade" id="move_folder_dialog" name="move_folder_dialog" tabindex="-1" role="dialog" aria-labelledby="moveFolderDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -69,6 +71,28 @@ $breeding_program_name => undef
   </div>
 </div>
 
+<div class="modal fade" id="folder_move_success_dialog_message" name="folder_move_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="moveFolderSuccessDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="moveFolderSuccessDialog">Folder Move Successful</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The folder was moved successfully
+                    </p>
+                    <button class="btn btn-primary" name="refresh_jstree_html">Refresh Trial Tree</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_move_folder_success_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script defer="defer">
 jQuery(document).ready(function() {
@@ -125,7 +149,7 @@ function move_folder() {
         jQuery('#move_folder_dialog').modal("hide");
       }
       else {
-        alert("Successfully associated folder");
+        jQuery('#folder_move_success_dialog_message').modal("show");
         jQuery('#move_folder_dialog').modal("hide");
         //location.reload();
       }

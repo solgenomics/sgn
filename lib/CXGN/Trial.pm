@@ -20,6 +20,7 @@ Lukas Mueller <lam87@cornell.edu>
 package CXGN::Trial;
 
 use Moose;
+use Data::Dumper;
 use Try::Tiny;
 use Data::Dumper;
 use CXGN::Trial::Folder;
@@ -55,7 +56,6 @@ sub BUILD {
     if (!$row) {
 	die "The trial ".$self->get_trial_id()." does not exist";
     }
-
 }
 
 =head2 accessors get_trial_id()
@@ -81,8 +81,17 @@ has 'layout' => (isa => 'CXGN::Trial::TrialLayout',
 		 is => 'rw',
 		 reader => 'get_layout',
 		 writer => 'set_layout',
-		 predicate => 'has_layout'
+		 predicate => 'has_layout',
+		 lazy => 1,
+		 default => sub { my $self = shift; $self->_get_layout(); }
     );
+
+sub _get_layout {
+    my $self = shift;
+    print STDERR "RETRIEVING LAYOUT...\n";
+    my $layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $self->get_trial_id() });
+    $self->set_layout($layout);
+}
 
 
 =head2 accessors get_year(), set_year()
@@ -120,9 +129,10 @@ sub set_year {
     }
     else {
 	$row = $self->bcs_schema->resultset('Project::Projectprop')->create(
-	    { type_id => $type_id,
-	    value => $year,
-	      project_id =>  $self->get_trial_id()
+	    {
+		type_id => $type_id,
+		value => $year,
+		project_id =>  $self->get_trial_id()
 	    } );
     }
 }
@@ -375,7 +385,38 @@ sub set_project_type {
 		});
 }
 
+
+sub set_design_type {
+    my $self = shift;
+    my $design_type = shift;
+
+    my $design_cv_type = $self->bcs_schema->resultset('Cv::Cvterm')->find( { name => 'design' });
+    if (!$design_cv_type) {
+	print STDERR "Design CV term not found. Cannot set design type.\n";
+	return;
+    }
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create(
+	{
+	    project_id => $self->get_trial_id(),
+	    type_id => $design_cv_type->cvterm_id(),
+	});
+    $row->value($design_type);
+    $row->update();
+}
+
+=head2 accessors get_breeding_program(), set_breeding_program()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub get_breeding_program {
+
     my $self = shift;
 
     my $rs = $self->bcs_schema()->resultset("Project::ProjectRelationship")->search({
@@ -484,6 +525,19 @@ sub set_name {
     }
 }
 
+=head2 accessors get_harvest_date(), set_harvest_date()
+
+ Usage:         $t->set_harvest_date("2016/09/17");
+ Desc:          sets the projects harvest_date property.
+                The date format in the setter has to be
+                YYYY/MM/DD
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
 sub get_harvest_date {
     my $self = shift;
 
@@ -551,6 +605,18 @@ sub remove_harvest_date {
 			print STDERR "date format did not pass check while preparing to delete harvest date: $harvest_date  \n";
 		}
 }
+
+
+=head2 accessors get_planting_date(), set_planting_date()
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 sub get_planting_date {
     my $self = shift;
@@ -896,7 +962,6 @@ sub _delete_field_layout_experiment {
 
     my $plot_type_id = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'plot' })->cvterm_id();
     #print STDERR "Plot type id = $plot_type_id\n";
-
     my $genotype_plot = $self->bcs_schema->resultset("Cv::Cvterm")->find( { name => 'tissue_sample' });
 
     my $genotype_plot_id;
@@ -910,13 +975,32 @@ sub _delete_field_layout_experiment {
     my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
     $h->execute($field_layout_type_id, $genotyping_layout_type_id, $trial_id, $plot_type_id, $genotype_plot_id);
 
-    my $plots_deleted = 0;
-    while (my ($plot_id) = $h->fetchrow_array()) {
-	my $plot = $self->bcs_schema()->resultset("Stock::Stock")->find( { stock_id => $plot_id });
-	print STDERR "Deleting associated plot ".$plot->name()." (".$plot->stock_id().") \n";
-	$plots_deleted++;
-	$plot->delete();
-    }
+	my $has_plants = $self->has_plant_entries();
+	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant_of', 'stock_relationship')->cvterm_id();
+	my $plots_deleted = 0;
+	while (my ($plot_id) = $h->fetchrow_array()) {
+		my $plot = $self->bcs_schema()->resultset("Stock::Stock")->find( { stock_id => $plot_id });
+
+		if ($has_plants) {
+			my $plant_rs = $plot->search_related('stock_relationship_subjects', {type_id=>$plot_of_cvterm_id});
+			while (my $plant_rel = $plant_rs->next()) {
+				my $plant = $plant_rel->object();
+				print STDERR "Deleting associated plant ".$plant->name(). " (".$plant->stock_id().") \n";
+				$plant->delete();
+				$plant_rel->delete();
+			}
+		}
+
+		print STDERR "Deleting associated plot ".$plot->name()." (".$plot->stock_id().") \n";
+
+		$plots_deleted++;
+		$plot->delete();
+	}
+	if ($has_plants) {
+		my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project_has_plant_entries', 'project_property' );
+		my $has_plants_prop = $self->bcs_schema->resultset("Project::Projectprop")->find({ type_id => $has_plants_cvterm->cvterm_id(), project_id => $trial_id });
+		$has_plants_prop->delete();
+	}
 
     $q = "SELECT nd_experiment_id FROM nd_experiment JOIN nd_experiment_project USING(nd_experiment_id) WHERE nd_experiment.type_id in (?,?) AND project_id=?";
     $h = $self->bcs_schema->storage()->dbh()->prepare($q);
@@ -1029,10 +1113,21 @@ sub total_phenotypes {
 sub get_phenotypes_for_trait {
     my $self = shift;
     my $trait_id = shift;
+    my $stock_type = shift;
     my @data;
     my $dbh = $self->bcs_schema->storage()->dbh();
+	#my $schema = $self->bcs_schema();
 
-    my $h = $dbh->prepare("SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and cvterm.cvterm_id = ? and phenotype.value~?;");
+	my $h;
+	my $join_string = '';
+	my $where_string = '';
+	if ($stock_type) {
+		my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $stock_type, 'stock_type')->cvterm_id();
+		$join_string = 'JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id)';
+		$where_string = "stock.type_id=$stock_type_id and";
+	}
+	my $q = "SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) $join_string WHERE $where_string project_id=? and cvterm.cvterm_id = ? and phenotype.value~?;";
+	$h = $dbh->prepare($q);
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     $h->execute($self->get_trial_id(), $trait_id, $numeric_regex );
@@ -1042,31 +1137,77 @@ sub get_phenotypes_for_trait {
     return @data;
 }
 
-=head2 function get_plot_phenotypes_for_trait($trait_id)
+=head2 function get_stock_phenotypes_for_traits(\@trait_id, 'all', ['plot_of','plant_of'], 'accession', 'subject')
 
  Usage:
- Desc:         returns all plot_id, plot_name, pheno_uniquename, uploader_id, value for the given trait in this trial
- Ret:
- Args:
+ Desc:         returns all observations for the given traits in this trial
+ Ret:			arrayref of [[ $stock_id, $stock_name, $trait_id, $trait_name, $phenotype_id, $pheno_uniquename, $uploader_id, $value, $rel_stock_id, $rel_stock_name ], [], ...]
+ Args:			trait_ids : arrayref of cvterm_ids
+ 				stock_type: the stock type that the phenotype is associated to. 'plot', or 'plant', or 'all'
+				stock_relationships: for fetching stock_relationships of the phenotyped stock. arrayref of relationships. e.g. ['plot_of', 'plant_of'].
+				relationship_stock_type: the associated stock_type from the stock_relationship. 'plot', or 'plant'
+				subject_or_object: whether the stock_relationship join should be done from the subject or object side. 'subject', or 'object'
  Side Effects:
  Example:
 
 =cut
 
-sub get_plot_phenotypes_for_trait {
+sub get_stock_phenotypes_for_traits {
     my $self = shift;
-    my $trait_id = shift;
+    my $trait_ids = shift;
+    my $stock_type = shift; #plot, plant, all
+    my $stock_relationships = shift; #arrayref. plot_of, plant_of
+    my $relationship_stock_type = shift; #plot, plant
+	my $subject_or_object = shift;
     my @data;
+	#$self->bcs_schema->storage->debug(1);
     my $dbh = $self->bcs_schema->storage()->dbh();
+	my $sql_trait_ids = join ("," , @$trait_ids);
+	my $where_clause = "WHERE project_id=? and a.cvterm_id IN ($sql_trait_ids) and b.cvterm_id = ? and phenotype.value~? ";
+	my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
-    my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+	my $relationship_join = '';
+	if ($subject_or_object eq 'object') {
+		$relationship_join = 'JOIN stock_relationship on (stock.stock_id=stock_relationship.object_id) JOIN stock as rel_stock on (stock_relationship.subject_id=rel_stock.stock_id) ';
+	} elsif ($subject_or_object eq 'subject') {
+		$relationship_join = 'JOIN stock_relationship on (stock.stock_id=stock_relationship.subject_id) JOIN stock as rel_stock on (stock_relationship.object_id=rel_stock.stock_id) ';
+	}
+	if ($stock_type ne 'all') {
+		my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
+		$where_clause .= "and stock.type_id=$stock_type_cvterm_id ";
+	}
+	my @stock_rel_or;
+	foreach (@$stock_relationships) {
+		my $stock_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $_, 'stock_relationship')->cvterm_id();
+		push @stock_rel_or, "stock_relationship.type_id=$stock_relationship_cvterm_id";
+	}
+	my $stock_rel_or_sql = join (" OR " , @stock_rel_or);
+	if ($stock_rel_or_sql) {
+		$where_clause .= "and ($stock_rel_or_sql) ";
+	}
+	my $rel_stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $relationship_stock_type, 'stock_type')->cvterm_id();
+	$where_clause .= "and rel_stock.type_id=$rel_stock_type_cvterm_id ";
 
-    my $h = $dbh->prepare("SELECT stock.stock_id, stock.uniquename, phenotype.uniquename, phenotype.sp_person_id, phenotype.value::real FROM cvterm as a JOIN phenotype ON (a.cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN cvterm as b ON (b.cvterm_id=nd_experiment_stock.type_id) JOIN stock USING(stock_id) WHERE project_id=? and a.cvterm_id = ? and b.cvterm_id = ? and phenotype.value~? ORDER BY stock.stock_id;");
+	my $q = "SELECT stock.stock_id, stock.uniquename, a.cvterm_id, a.name || '|' || db.name ||  ':' || dbxref.accession, phenotype.phenotype_id, phenotype.uniquename, phenotype.sp_person_id, phenotype.value::real, rel_stock.stock_id, rel_stock.uniquename, stock_type.name
+		FROM cvterm as a
+		JOIN dbxref ON (a.dbxref_id = dbxref.dbxref_id)
+		JOIN db USING(db_id)
+		JOIN phenotype ON (a.cvterm_id=cvalue_id)
+		JOIN nd_experiment_phenotype USING(phenotype_id)
+		JOIN nd_experiment_project USING(nd_experiment_id)
+		JOIN nd_experiment_stock USING(nd_experiment_id)
+		JOIN cvterm as b ON (b.cvterm_id=nd_experiment_stock.type_id)
+		JOIN stock USING(stock_id)
+		JOIN cvterm as stock_type ON (stock_type.cvterm_id=stock.type_id)
+		$relationship_join
+		$where_clause
+		ORDER BY stock.stock_id;";
+    my $h = $dbh->prepare($q);
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    $h->execute($self->get_trial_id(), $trait_id, $phenotyping_experiment_cvterm, $numeric_regex );
-    while (my ($plot_id, $plot_name, $pheno_uniquename, $uploader_id, $value) = $h->fetchrow_array()) {
-        push @data, [$plot_id, $plot_name, $pheno_uniquename, $uploader_id, $value + 0];
+    $h->execute($self->get_trial_id(), $phenotyping_experiment_cvterm, $numeric_regex );
+    while (my ($stock_id, $stock_name, $trait_id, $trait_name, $phenotype_id, $pheno_uniquename, $uploader_id, $value, $rel_stock_id, $rel_stock_name, $stock_type) = $h->fetchrow_array()) {
+        push @data, [$stock_id, $stock_name, $trait_id, $trait_name, $phenotype_id, $pheno_uniquename, $uploader_id, $value + 0, $rel_stock_id, $rel_stock_name, $stock_type];
     }
     return \@data;
 }
@@ -1084,15 +1225,25 @@ sub get_plot_phenotypes_for_trait {
 
 sub get_traits_assayed {
     my $self = shift;
+	my $stock_type = shift;
     my $dbh = $self->bcs_schema->storage()->dbh();
 
     my @traits_assayed;
-    my $traits_assayed_q = $dbh->prepare("SELECT cvterm.name, cvterm.cvterm_id, count(phenotype.value) FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and phenotype.value~? GROUP BY cvterm.name, cvterm.cvterm_id ORDER BY cvterm.name;");
+
+	my $q;
+	if ($stock_type) {
+		my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
+		$q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock on (stock.stock_id = nd_experiment_stock.stock_id) WHERE stock.type_id=$stock_type_cvterm_id and project_id=? and phenotype.value~? GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
+	} else {
+		$q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, count(phenotype.value) FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) WHERE project_id=? and phenotype.value~? GROUP BY trait, cvterm.cvterm_id ORDER BY trait;";
+	}
+
+    my $traits_assayed_q = $dbh->prepare($q);
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     $traits_assayed_q->execute($self->get_trial_id(), $numeric_regex );
     while (my ($trait_name, $trait_id, $count) = $traits_assayed_q->fetchrow_array()) {
-	push @traits_assayed, [$trait_id, ucfirst($trait_name)];
+	push @traits_assayed, [$trait_id, $trait_name];
     }
     return \@traits_assayed;
 }
@@ -1116,7 +1267,6 @@ sub get_experiment_count {
     return $rs->count();
 }
 
-
 sub get_location_type_id {
     my $self = shift;
     my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'project location' });
@@ -1134,7 +1284,6 @@ sub get_year_type_id {
 
     return $rs->first()->cvterm_id();
 }
-
 
 sub get_breeding_program_trial_relationship_cvterm_id {
     my $self = shift;
@@ -1187,38 +1336,211 @@ sub get_harvest_date_cvterm_id {
     return $harvest_date_cvterm_id;
 }
 
-sub get_planting_date_cvterm_id {
-    my $self = shift;
 
-    my $planting_date_cvterm_id;
-    my $planting_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'planting_date', 'project_property');
-    if ($planting_date_cvterm) {
-        $planting_date_cvterm_id = $planting_date_cvterm->cvterm_id();
-    }
+=head2 function create_plant_entries()
 
-    return $planting_date_cvterm_id;
+ Usage:        $trial->create_plant_entries($plants_per_plot);
+ Desc:         Some trials require plant-level data. This function will
+               add an additional layer of plant entries for each plot.
+ Ret:
+ Args:         the number of plants per plot to add.
+ Side Effects:
+ Example:
+
+=cut
+
+sub create_plant_entities {
+	my $self = shift;
+	my $plants_per_plot = shift || 30;
+
+	my $create_plant_entities_txn = sub {
+		my $chado_schema = $self->bcs_schema();
+		my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id() });
+		my $design = $layout->get_design();
+
+		my $plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
+		my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
+		my $plot_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id();
+		my $plant_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of', 'stock_relationship')->cvterm_id();
+		my $plant_index_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_index_number', 'stock_property')->cvterm_id();
+		my $block_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id();
+		my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id();
+		my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
+		my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
+		my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
+		#my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
+
+		my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+			type_id => $has_plants_cvterm,
+			value => $plants_per_plot,
+			project_id => $self->get_trial_id(),
+		});
+
+
+		foreach my $plot (keys %$design) {
+			print STDERR " ... creating plants for plot $plot...\n";
+			my $plot_row = $chado_schema->resultset("Stock::Stock")->find( { uniquename => $design->{$plot}->{plot_name}, type_id=>$plot_cvterm });
+
+			if (! $plot_row) {
+				print STDERR "The plot $plot is not found in the database\n";
+				return "The plot $plot is not yet in the database. Cannot create plant entries.";
+			}
+
+			my $parent_plot = $plot_row->stock_id();
+			my $parent_plot_name = $plot_row->uniquename();
+			my $parent_plot_organism = $plot_row->organism_id();
+
+			foreach my $number (1..$plants_per_plot) {
+				my $plant_name = $parent_plot_name."_plant_$number";
+				#print STDERR "... ... creating plant $plant_name...\n";
+
+				my $plant = $chado_schema->resultset("Stock::Stock")->find_or_create({
+					organism_id => $parent_plot_organism,
+					name       => $plant_name,
+					uniquename => $plant_name,
+					type_id => $plant_cvterm,
+				});
+
+				my $plantprop = $chado_schema->resultset("Stock::Stockprop")->find_or_create( {
+					stock_id => $plant->stock_id(),
+					type_id => $plant_index_number_cvterm,
+					value => $number,
+				});
+
+				#The plant inherits the properties of the plot.
+				my $plot_props = $chado_schema->resultset("Stock::Stockprop")->search({ stock_id => $parent_plot, type_id => [$block_cvterm, $plot_number_cvterm, $replicate_cvterm] });
+				while (my $prop = $plot_props->next() ) {
+					#print STDERR $plant->uniquename()." ".$prop->type_id()."\n";
+					$plantprop = $chado_schema->resultset("Stock::Stockprop")->find_or_create( {
+						stock_id => $plant->stock_id(),
+						type_id => $prop->type_id(),
+						value => $prop->value(),
+					});
+				}
+
+				#the plant has a relationship to the plot
+				my $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
+					subject_id => $parent_plot,
+					object_id => $plant->stock_id(),
+					type_id => $plant_relationship_cvterm,
+				});
+
+				#the plant has a relationship to the accession
+				my $plot_accession = $self->bcs_schema()->resultset("Stock::StockRelationship")->find({subject_id=>$parent_plot, type_id=>$plot_relationship_cvterm })->object();
+				$stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
+					subject_id => $plant->stock_id(),
+					object_id => $plot_accession->stock_id(),
+					type_id => $plant_relationship_cvterm,
+				});
+
+				#link plant to project through nd_experiment. also add nd_genolocation_id of plot to nd_experiment for the plant
+				my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $field_layout_cvterm })->single();
+				my $plant_nd_experiment_stock = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
+					nd_experiment_id => $field_layout_experiment->nd_experiment_id(),
+					type_id => $field_layout_cvterm,
+					stock_id => $plant->stock_id(),
+				});
+			}
+		}
+	};
+
+     eval {
+	 $self->bcs_schema()->txn_do($create_plant_entities_txn);
+     };
+     if ($@) {
+	 print STDERR "An error occurred creating the plant entities. $@\n";
+	 return 0;
+     }
+
+     print STDERR "Plant entities created.\n";
+     return 1;
+
+ }
+
+=head2 function has_plant_entries()
+
+	Usage:        $trial->has_plant_entries();
+	Desc:         Some trials require plant-level data. This function will determine if a trial has plants associated with it.
+	Ret:          Returns 1 if trial has plants, 0 if the trial does not.
+	Args:
+	Side Effects:
+	Example:
+
+=cut
+
+sub has_plant_entries {
+	my $self = shift;
+	my $chado_schema = $self->bcs_schema();
+	my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property' );
+
+	my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+		type_id => $has_plants_cvterm->cvterm_id(),
+		project_id => $self->get_trial_id(),
+	});
+
+	if ($rs) {
+		return 1;
+	} else {
+		return 0;
+	}
+
 }
+
+ sub get_planting_date_cvterm_id {
+     my $self = shift;
+     my $planting_date =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'planting_date', 'project_property');
+
+     return $planting_date->cvterm_id();
+
+ }
+
+=head2 accessors set_design_type(), get_design_type()
+
+  Usage:        $trial->set_design_type("RCBD");
+  Desc:
+  Ret:
+  Args:
+  Side Effects:
+  Example:
+
+=cut
 
 sub get_design_type {
-  my $self = shift;
-  my $design_prop;
-  my $design_type;
+     my $self = shift;
+     my $design_prop;
+     my $design_type;
 
-  my $project = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $self->get_trial_id() });
+     my $project = $self->bcs_schema->resultset("Project::Project")->find( { project_id => $self->get_trial_id() });
 
-  $design_prop =  $project->projectprops->find(
-        { 'type.name' => 'design' },
-        { join => 'type'}
-        ); #there should be only one design prop.
-  if (!$design_prop) {
-    return;
-  }
-  $design_type = $design_prop->value;
-  if (!$design_type) {
-    return;
-  }
-  return $design_type;
+     $design_prop =  $project->projectprops->find(
+	 { 'type.name' => 'design' },
+	 { join => 'type'}
+	 ); #there should be only one design prop.
+     if (!$design_prop) {
+	 return;
+     }
+     $design_type = $design_prop->value;
+     if (!$design_type) {
+	 return;
+     }
+     return $design_type;
 }
+
+
+
+sub duplicate {
+}
+
+=head2 get_accessions
+
+ Usage:        my $accessions = $t->get_accessions();
+ Desc:         retrieves the accessions used in this trial.
+ Ret:          an arrayref of { accession_name => acc_name, stock_id => stock_id }
+ Args:         none
+ Side Effects:
+ Example:
+
+=cut
 
 sub get_accessions {
 	my $self = shift;
@@ -1228,47 +1550,130 @@ sub get_accessions {
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
+	my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
 	my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
 
-	my $trial_accession_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock")->search_related("stock_relationship_subjects", { 'stock_relationship_subjects.type_id' => [$plot_of_cvterm_id, $tissue_sample_of_cvterm_id] } );
+	my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename
+		FROM stock as accession
+		JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id)
+		JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id)
+		JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id)
+		JOIN nd_experiment using(nd_experiment_id)
+		JOIN nd_experiment_project using(nd_experiment_id)
+		JOIN project using(project_id)
+		WHERE accession.type_id = $accession_cvterm_id
+		AND stock_relationship.type_id IN ($plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id)
+		AND project.project_id = ?
+		GROUP BY accession.stock_id
+		ORDER BY accession.stock_id;";
 
-	my %unique_accessions;
-	while(my $rs = $trial_accession_rs->next()) {
-		my $r = $rs->object;
-		if ($r->type_id == $accession_cvterm_id) {
-			$unique_accessions{$r->uniquename} = $r->stock_id;
-		}
-	}
-	foreach (keys %unique_accessions) {
-		push @accessions, {accession_name=>$_, stock_id=>$unique_accessions{$_} };
+#Removed nd_experiment.type_id IN ($field_trial_cvterm_id, $genotyping_trial_cvterm_id) AND
+
+	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+	$h->execute($self->get_trial_id());
+	while (my ($stock_id, $uniquename) = $h->fetchrow_array()) {
+		push @accessions, {accession_name=>$uniquename, stock_id=>$stock_id };
 	}
 
 	return \@accessions;
 }
 
+=head2 get_plants
+
+ Usage:        $plants = $t->get_plants();
+ Desc:         retrieves that plants that are part of the design for this trial.
+ Ret:          an array ref containing [ plant_name, plant_stock_id ]
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_plants {
+	my $self = shift;
+	my @plants;
+
+	my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant', 'stock_type' )->cvterm_id();
+	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
+	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
+
+	my $trial_plant_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$plant_cvterm_id});
+
+	# removed "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id]
+
+	my %unique_plants;
+	while(my $rs = $trial_plant_rs->next()) {
+		$unique_plants{$rs->uniquename} = $rs->stock_id;
+	}
+	foreach (keys %unique_plants) {
+		my $combine = [$unique_plants{$_}, $_ ];
+		push @plants, $combine;
+	}
+
+	return \@plants;
+}
+
+
+=head2 get_plots
+
+ Usage:         my $plots = $trial->get_plots();
+ Desc:          returns a list of plots that are defined for the trial.
+ Ret:           an array ref of elements that contain
+                [ plot_name, plot_stock_id ]
+ Args:          none
+ Side Effects:  db access
+ Example:
+
+=cut
+
 sub get_plots {
 	my $self = shift;
 	my @plots;
 
+	# note: this function also retrieves stocks of type tissue_sample (for genotyping trials).
 	my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type' )->cvterm_id();
+	my $tissue_sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type');
+	my $tissue_sample_cvterm_id;
+	if ($tissue_sample_cvterm) {
+	    $tissue_sample_cvterm_id = $tissue_sample_cvterm->cvterm_id();
+	}
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 
-	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$plot_cvterm_id});
+	my @type_ids;
+	push @type_ids, $plot_cvterm_id if $plot_cvterm_id;
+	push @type_ids, $tissue_sample_cvterm_id if $tissue_sample_cvterm_id;
+
+	print STDERR "TYPE IDS: ".join(", ", @type_ids);
+	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=> { in => [@type_ids] }});
+
+	# removed "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id]
 
 	my %unique_plots;
 	while(my $rs = $trial_plot_rs->next()) {
 		$unique_plots{$rs->uniquename} = $rs->stock_id;
 	}
 	foreach (keys %unique_plots) {
-		#push @plots, {plot_name=> $_, plot_id=>$unique_plots{$_} } ; 
+		#push @plots, {plot_name=> $_, plot_id=>$unique_plots{$_} } ;
 		my $combine = [$unique_plots{$_}, $_ ];
 		push @plots, $combine;
 	}
-	
+
 	return \@plots;
-	 
+
 }
+
+=head2 get_controls
+
+ Usage:        my $controls = $t->get_controls();
+ Desc:         Returns the accessions that were used as controls in the design
+ Ret:          an arrayref containing
+               { accession_name => control_name, stock_id => control_stock_id }
+ Args:         none
+ Side Effects:
+ Example:
+
+=cut
 
 sub get_controls {
 	my $self = shift;
@@ -1278,30 +1683,66 @@ sub get_controls {
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
+	my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
 	my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
+	my $control_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "is a control", 'stock_property')->cvterm_id();
 
-	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks");
+	my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename
+		FROM stock as accession
+		JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id)
+		JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id)
+		JOIN stockprop as control on (plot.stock_id=control.stock_id)
+		JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id)
+		JOIN nd_experiment using(nd_experiment_id)
+		JOIN nd_experiment_project using(nd_experiment_id)
+		JOIN project using(project_id)
+		WHERE accession.type_id = $accession_cvterm_id
+		AND stock_relationship.type_id IN ($plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id)
+		AND project.project_id = ?
+		AND control.type_id = $control_type_id
+		GROUP BY accession.stock_id
+		ORDER BY accession.stock_id;";
 
-	my %unique_controls;
-	while(my $rs = $trial_plot_rs->next()) {
-		my $r = $rs->stock()->stockprops->find( { 'type.name' => 'is a control' }, { join => 'type'} );
+	#removed nd_experiment.type_id IN ($field_trial_cvterm_id, $genotyping_trial_cvterm_id) AND
 
-		my $is_a_control;
-		if ($r) {
-			$is_a_control = $r->value();
-		}
-		if ($is_a_control) {
-			my $accession = $rs->search_related("stock")->search_related('stock_relationship_subjects')->find({ 'type_id' => [$plot_of_cvterm_id, $tissue_sample_of_cvterm_id ]})->object;
-			if ($accession->type_id == $accession_cvterm_id) {
-				$unique_controls{$accession->uniquename}=$accession->stock_id;
-			}
-		}
-	}
-	foreach (keys %unique_controls) {
-		push @controls, {accession_name=> $_, stock_id=>$unique_controls{$_} } ;
+	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+	$h->execute($self->get_trial_id());
+	while (my ($stock_id, $uniquename) = $h->fetchrow_array()) {
+		push @controls, {accession_name=> $uniquename, stock_id=>$stock_id } ;
 	}
 
 	return \@controls;
 }
+
+=head2 get_controls_by_plot
+
+ Usage:        my $controls = $t->get_controls_by_plot(\@plot_ids);
+ Desc:         Returns the accessions that were used as controls in a trial from a list of trial plot ids. Improves on speed of get_controls by avoiding a join through nd_experiment_stock
+ Ret:          an arrayref containing
+               { accession_name => control_name, stock_id => control_stock_id }
+ Args:         none
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_controls_by_plot {
+	my $self = shift;
+	my $plot_ids = shift;
+	my @ids = @$plot_ids;
+	my @controls;
+
+	my $accession_rs = $self->bcs_schema->resultset('Stock::Stock')->search(
+		{ 'subject.stock_id' => { 'in' => \@ids} , 'type.name' => 'is a control' },
+		{ join => { stock_relationship_objects => { subject => { stockprops => 'type' }}}, group_by => 'me.stock_id',},
+  );
+
+	while(my $accession = $accession_rs->next()) {
+		push @controls, { accession_name => $accession->uniquename, stock_id => $accession->stock_id };
+	}
+
+	return \@controls;
+}
+
 
 1;

@@ -61,6 +61,12 @@ has 'user_name' => (
     isa => 'Str',
     required => 1,
 );
+
+has 'data_level' => (
+    is => 'ro',
+    isa => 'Str',
+    default => 'plots',
+);
   
 has 'file_metadata' => (isa => 'Str', is => 'rw', predicate => 'has_file_metadata');
 
@@ -91,26 +97,53 @@ sub download {
         $errors{'error_messages'} = \@error_messages;
         return \%errors;
     }
-    
+
     my $trial_name =  $trial_layout->get_trial_name();
-    $ws->write(0, 0, 'plot_id');
-    $ws->write(0, 1, 'range');
-    $ws->write(0, 2, 'plot');
-    $ws->write(0, 3, 'rep');
-    $ws->write(0, 4, 'accession');
-    $ws->write(0, 5, 'is_a_control');
+
+    if ($self->data_level eq 'plots') {
+        $ws->write(0, 0, 'plot_id');
+        $ws->write(0, 1, 'range');
+        $ws->write(0, 2, 'plot');
+        $ws->write(0, 3, 'rep');
+        $ws->write(0, 4, 'accession');
+        $ws->write(0, 5, 'is_a_control');
+    } elsif ($self->data_level eq 'plants') {
+        $ws->write(0, 0, 'plot_id');
+        $ws->write(0, 1, 'range');
+        $ws->write(0, 2, 'plant');
+        $ws->write(0, 3, 'plot');
+        $ws->write(0, 4, 'rep');
+        $ws->write(0, 5, 'accession');
+        $ws->write(0, 6, 'is_a_control');
+    }
 
     my %design = %{$trial_layout->get_design()};
     my $row_num = 1;
     foreach my $key (sort { $a <=> $b} keys %design) {
-    my %design_info = %{$design{$key}};
-    $ws->write($row_num,0,$design_info{'plot_name'});
-    $ws->write($row_num,1,$design_info{'block_number'});
-    $ws->write($row_num,2,$design_info{'plot_number'});
-    $ws->write($row_num,3,$design_info{'rep_number'});
-    $ws->write($row_num,4,$design_info{'accession_name'});
-    $ws->write($row_num,5,$design_info{'is_a_control'});
-    $row_num++;
+        my %design_info = %{$design{$key}};
+        if ($self->data_level eq 'plots') {
+            $ws->write($row_num,0,$design_info{'plot_name'});
+            $ws->write($row_num,1,$design_info{'block_number'});
+            $ws->write($row_num,2,$design_info{'plot_number'});
+            $ws->write($row_num,3,$design_info{'rep_number'});
+            $ws->write($row_num,4,$design_info{'accession_name'});
+            $ws->write($row_num,5,$design_info{'is_a_control'});
+            $row_num++;
+        } elsif ($self->data_level eq 'plants'){
+            my $plant_names = $design_info{'plant_names'};
+            my $plant_num = 1;
+            foreach (@$plant_names) {
+                $ws->write($row_num,0,$_);
+                $ws->write($row_num,1,$design_info{'block_number'});
+                $ws->write($row_num,2,$plant_num);
+                $ws->write($row_num,3,$design_info{'plot_number'});
+                $ws->write($row_num,4,$design_info{'rep_number'});
+                $ws->write($row_num,5,$design_info{'accession_name'});
+                $ws->write($row_num,6,$design_info{'is_a_control'});
+                $plant_num++;
+                $row_num++;
+            }
+        }
     }
     $wb->close();
 

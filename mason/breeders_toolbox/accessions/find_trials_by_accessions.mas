@@ -10,7 +10,7 @@
   <p>Select accession list:</p>
     <td>
       <div id="accession_list">
-      </div>      
+      </div>
     </td>
     <td>
       <input class="btn btn-primary" type="button" id="find_trials" value="Find Trials" />
@@ -51,7 +51,7 @@
 	</tr>
 	<tr>
 	<td>
-		<button class="btn btn-default btn-sm" id="c1_select_all" align="center"/>Select All</button>
+		<button class="btn btn-default btn-sm" id="c1_select_all" name ="1" align="center"/>Select All</button>
 	</td>
 </tr>
 </tbody>
@@ -65,7 +65,7 @@ jQuery(document).ready(function() {
 
 jQuery('#trial_summary_data').hide();
 jQuery('#shared_trials_2_lists').hide();
-	   
+
     var lo = new CXGN.List();
 
     jQuery('#accession_list').html(lo.listSelect('accession_list', [ 'accessions' ], 'select'));
@@ -76,36 +76,36 @@ jQuery('#shared_trials_2_lists').hide();
 		});
 
     jQuery('#find_trials').click(function() {
-   
+
 	disable_ui();
 
 	var accession_list_id = jQuery('#accession_list_list_select').val();
 
       	var accession_validation = 1;
       	if (accession_list_id) { accession_validation = lo.validate(accession_list_id, 'accessions', true); }
-      
+
 	if (!accession_list_id) {
       	    enable_ui();
       	    alert("You need to select an accession list!");
-	    return; 
+	    return;
       	    }
 
-      	if (accession_validation != 1) { 
+      	if (accession_validation != 1) {
       	    enable_ui();
       	    alert("Accession list did not pass validation. Please correct the list and try again");
 	    return;
       	    }
-      
+
 	var transform_name = 'accessions_2_accession_ids';
 	var stock_ids = [];
 
       	jQuery.ajax( {   //convert accession names to ids
 	    url: '/list/transform/'+accession_list_id+'/'+transform_name,
-	    success: function(response) { 
-		if (response.error) { 
+	    success: function(response) {
+		if (response.error) {
 		    alert(response.error);
 		    }
-		else { 
+		else {
 		     stock_ids = response.transform;
 		     jQuery.ajax({   // get shared trials using accession ids
 				url: '/stock/get_shared_trials',
@@ -119,11 +119,11 @@ jQuery('#shared_trials_2_lists').hide();
 			enable_ui();
 			jQuery('#trial_summary_data').show();
 			jQuery('#shared_trials_2_lists').show();
-			});    	 
+			});
 		    }
 	    	    },
 	    error: function(response) { alert("An error occurred while transforming the list "+list_id); }
-	    });      
+	    });
   });
 
   function disable_ui() {
@@ -134,10 +134,10 @@ jQuery('#shared_trials_2_lists').hide();
   	   jQuery('#working_modal').modal("hide");
   }
 
-  function format_options_list(items) { //take only id and name of shared trials and format for selectbox 
+  function format_options_list(items) { //take only id and name of shared trials and format for selectbox
     var html = '';
-    if (items) { 
-	for(var i=0; i<items.length; i++) { 
+    if (items) {
+	for(var i=0; i<items.length; i++) {
 	    html = html + '<option value="'+items[i][0]+'">'+items[i][1]+'</a>\n';
 	}
 	return html;

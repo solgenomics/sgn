@@ -276,7 +276,7 @@ after 'description' => sub {
     my $description = shift;
     
     if (!$description) { 
-	print STDERR "NO desc provided... skipping!\n";
+	#print STDERR "NO desc provided... skipping!\n";
 	return; 
     }
 
@@ -353,7 +353,54 @@ sub remove_element_by_id {
     }
     
     return 0;
-}   
+}
+
+sub update_element_by_id {
+	my $self = shift;
+	my $element_id = shift;
+	my $content = shift;
+	my $h = $self->dbh()->prepare("UPDATE sgn_people.list_item SET content=? where list_id=? and list_item_id=?");
+
+	eval { 
+		$h->execute($content, $self->list_id(), $element_id);
+	};
+	if ($@) {
+		return "An error occurred while attempting to update item $element_id";
+	}
+
+	return;
+}
+
+sub replace_by_name {
+	my $self = shift;
+	my $item_name = shift;
+	my $new_name = shift;
+	my $h = $self->dbh()->prepare("UPDATE sgn_people.list_item SET content=? where list_id=? and content=?");
+
+	eval {
+		$h->execute($new_name, $self->list_id(), $item_name);
+	};
+	if ($@) {
+		return "An error occurred while attempting to update item $item_name";
+	}
+
+	return;
+}
+
+sub remove_by_name {
+	my $self = shift;
+	my $item_name = shift;
+	my $h = $self->dbh()->prepare("DELETE FROM sgn_people.list_item WHERE list_id=? and content=?");
+
+	eval {
+		$h->execute($self->list_id(), $item_name);
+	};
+	if ($@) {
+		return "An error occurred while attempting to remove item $item_name";
+	}
+
+	return;
+}
 
 sub list_size { 
     my $self = shift;

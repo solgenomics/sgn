@@ -21,7 +21,7 @@ my $test_breeding_program = $schema->resultset("Project::Project")->find( { name
 my $folder = CXGN::Trial::Folder->create({
   bcs_schema => $schema,
   parent_folder_id => 0,
-  name => 'F1',
+  name => 'Ftest',
   breeding_program_id => $test_breeding_program->project_id(),
 });
 
@@ -29,7 +29,7 @@ my $F1_id = $folder->folder_id;
 ok($F1_id, "created folder has id");
 
 my $F1_name = $folder->name;
-ok($F1_name eq 'F1', "created folder name is right");
+ok($F1_name eq 'Ftest', "created folder name is right");
 
 my $F1_type = $folder->folder_type;
 ok($F1_type eq 'folder', "created folder type is right");
@@ -57,7 +57,7 @@ my $F1_folder_id = $folder->folder_id;
 ok($F1_id == $F1_folder_id, "built folder has id");
 
 $F1_name = $folder->name;
-ok($F1_name eq 'F1', "built folder name is right");
+ok($F1_name eq 'Ftest', "built folder name is right");
 
 $F1_type = $folder->folder_type;
 ok($F1_type eq 'folder', "built folder type is right");
@@ -150,7 +150,7 @@ my $folder = CXGN::Trial::Folder->new({
 
 my $parent_folder_children = $parent_folder->children();
 ok(scalar(@$parent_folder_children) == 2, "folder has 2 children");
-ok(@$parent_folder_children[0]->name eq 'F1', "folder has child named 'F1'");
+ok(@$parent_folder_children[0]->name eq 'Ftest', "folder has child named 'F1'");
 ok(@$parent_folder_children[1]->name eq 'test_trial', "folder has child named 'test_trial'");
 
 my $folder_children = $folder->children();
@@ -169,7 +169,7 @@ $trial_folder_bp = $trial_folder->breeding_program->name;
 ok($trial_folder_bp eq 'test', "trial folder in right breeding program");
 
 $trial_folder_pf = $trial_folder->project_parent->name;
-ok($trial_folder_pf eq 'F1', "trial folder has parent folder");
+ok($trial_folder_pf eq 'Ftest', "trial folder has parent folder");
 
 $parent_folder = CXGN::Trial::Folder->new({
   bcs_schema => $schema,
@@ -183,7 +183,7 @@ my $folder = CXGN::Trial::Folder->new({
 
 my $parent_folder_children = $parent_folder->children();
 ok(scalar(@$parent_folder_children) == 1, "folder has 1 child");
-ok(@$parent_folder_children[0]->name eq 'F1', "folder has child named 'F1'");
+ok(@$parent_folder_children[0]->name eq 'Ftest', "folder has child named 'F1'");
 
 my $folder_children = $folder->children();
 ok(scalar(@$folder_children) == 1, "folder has 1 child");
@@ -239,7 +239,7 @@ ok($folder3_is_folder == 1, "folder3 is_folder");
 
 $folder3_children = $folder3->children;
 ok(scalar(@$folder3_children) == 1, "folder3 has 1 child");
-ok(@$folder3_children[0]->name eq 'F1', "folder3 has child named 'F1'");
+ok(@$folder3_children[0]->name eq 'Ftest', "folder3 has child named 'F1'");
 
 $folder3_bp = $folder3->breeding_program->name;
 ok($folder3_bp eq 'test', "folder3 in right breeding program");
@@ -253,7 +253,7 @@ my $folder = CXGN::Trial::Folder->new({
 });
 
 $folder3_name = $folder->name;
-ok($folder3_name eq 'F1', "folder name is right");
+ok($folder3_name eq 'Ftest', "folder name is right");
 
 $folder3_type = $folder->folder_type;
 ok($folder3_type eq 'folder', "folder type is right");
@@ -308,7 +308,7 @@ $folder3_bp = $folder3->breeding_program->name;
 ok($folder3_bp eq 'test', "folder3 in right breeding program");
 
 $folder3_pf = $folder3->project_parent->name;
-ok($folder3_pf eq 'F1', "folder3 has parent folder F1");
+ok($folder3_pf eq 'Ftest', "folder3 has parent folder F1");
 
 my $folder = CXGN::Trial::Folder->new({
   bcs_schema => $schema,
@@ -316,7 +316,7 @@ my $folder = CXGN::Trial::Folder->new({
 });
 
 my $folder_name = $folder->name;
-ok($folder_name eq 'F1', "folder name is right");
+ok($folder_name eq 'Ftest', "folder name is right");
 
 my $folder_type = $folder->folder_type;
 ok($folder_type eq 'folder', "folder type is right");
@@ -489,7 +489,7 @@ ok($folder_is_folder == 1, "folder is_folder");
 my $folder_children = $folder->children;
 ok(scalar(@$folder_children) == 1, "folder has 1 child");
 #print STDERR Dumper @$folder_children[0]->name;
-ok(@$folder_children[0]->name eq 'F1', "folder has child named 'F1'");
+ok(@$folder_children[0]->name eq 'Ftest', "folder has child named 'F1'");
 
 my $folder_bp = $folder->breeding_program->name;
 ok($folder_bp eq 'test', "folder in right breeding program");
@@ -503,7 +503,7 @@ my $folder = CXGN::Trial::Folder->new({
 });
 
 my $folder_name = $folder->name;
-ok($folder_name eq 'F1', "folder name is right");
+ok($folder_name eq 'Ftest', "folder name is right");
 
 my $folder_type = $folder->folder_type;
 ok($folder_type eq 'folder', "folder type is right");
@@ -539,5 +539,35 @@ my $folder = CXGN::Trial::Folder->new({
 my $delete_folder = $folder->delete_folder();
 ok($delete_folder == 1, "folder deleted.");
 
+
+
+my $folder4 = CXGN::Trial::Folder->create({
+  bcs_schema => $schema,
+  name => 'F4',
+  breeding_program_id => $test_breeding_program->project_id(),
+  folder_for_trials => 1,
+  folder_for_crosses => 1
+});
+my $F4_id = $folder4->folder_id;
+
+$folder = CXGN::Trial::Folder->new({
+  bcs_schema => $schema,
+  folder_id => $F4_id
+});
+ok($folder->folder_for_trials == 1, "check create folder with folder_for_trials");
+ok($folder->folder_for_crosses == 1, "check create folder with folder_for_crosses");
+
+$folder->set_folder_content_type('folder_for_trials', 0);
+$folder->set_folder_content_type('folder_for_crosses', 0);
+
+$folder = CXGN::Trial::Folder->new({
+  bcs_schema => $schema,
+  folder_id => $F4_id
+});
+ok(!$folder->folder_for_trials, "check unset folder_for_trials");
+ok(!$folder->folder_for_crosses, "check unset folder_for_crosses");
+
+my $delete_folder = $folder->delete_folder();
+ok($delete_folder == 1, "folder deleted.");
 
 done_testing();

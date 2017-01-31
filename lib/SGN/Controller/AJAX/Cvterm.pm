@@ -21,6 +21,8 @@ use Moose;
 use List::MoreUtils qw /any /;
 use Try::Tiny;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html commify_number /;
+use CXGN::Chado::Cvterm;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -157,6 +159,24 @@ sub evidence_description_GET :Args(0) {
     $c->stash->{rest} = $hashref;
 }
 
+sub get_synonyms : Path('/ajax/cvterm/get_synonyms') Args(0) {
+
+  my $self = shift;
+  my $c = shift;
+  my @trait_ids = $c->req->param('trait_ids[]');
+  print STDERR "Trait ids = @trait_ids\n";
+  my $dbh = $c->dbc->dbh();
+  my $synonyms = {};
+
+  foreach my $trait_id (@trait_ids) {
+    my $cvterm = CXGN::Chado::Cvterm->new( $dbh, $trait_id );
+    my $found_cvterm_id = $cvterm->get_cvterm_id;
+    $synonyms->{$trait_id} = $cvterm->get_uppercase_synonym();
+  }
+
+  $c->stash->{rest} = { synonyms => $synonyms };
+
+}
 
 sub get_annotated_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/annotated_stocks') Args(0) {
     my ($self, $c) = @_;
@@ -164,10 +184,10 @@ sub get_annotated_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/an
     my $cvterm_id = $cvterm->get_cvterm_id;
     my $q = <<'';
 SELECT DISTINCT
-        type.name
-        stock_id
-      , stock.uniquename
-      , stock.description
+    type.name,
+    stock_id,
+    stock.uniquename,
+    stock.description
 FROM cvtermpath
 JOIN cvterm on (cvtermpath.object_id = cvterm.cvterm_id OR cvtermpath.subject_id = cvterm.cvterm_id )
 JOIN stock_cvterm on (stock_cvterm.cvterm_id = cvterm.cvterm_id)
@@ -186,7 +206,7 @@ ORDER BY stock.uniquename
 
     my $sth = $c->dbc->dbh->prepare($q);
     my $rows = $c->stash->{rest}{count} = 0 + $sth->execute($cvterm_id, 'false');
-    
+
     my @stock_data;
         while ( my ($type, $stock_id , $stock_name, $description) = $sth->fetchrow_array ) {
             my $stock_link = qq|<a href="/stock/$stock_id/view">$stock_name</a> |;
@@ -236,7 +256,7 @@ sub get_phenotyped_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/p
     my ($self, $c) = @_;
     my $cvterm =  $c->stash->{cvterm};
     my $cvterm_id  = $cvterm->get_cvterm_id;
-  
+
     my $q = "SELECT DISTINCT stock_id,  stock.uniquename, stock.description, type.name
              FROM cvtermpath
               JOIN cvterm ON (cvtermpath.object_id = cvterm.cvterm_id
@@ -244,12 +264,12 @@ sub get_phenotyped_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/p
                JOIN phenotype on cvterm.cvterm_id = phenotype.observable_id
                JOIN nd_experiment_phenotype USING (phenotype_id)
                JOIN nd_experiment_stock USING (nd_experiment_id)
-               JOIN stock USING (stock_id) 
+               JOIN stock USING (stock_id)
                JOIN cvterm as type on type.cvterm_id = stock.type_id
-               
-             WHERE pathdistance > 0 
+
+             WHERE pathdistance > 0
              AND cvtermpath.object_id = ? ORDER BY stock_id " ;
-	 
+
 
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute($cvterm_id) ;
@@ -272,14 +292,14 @@ sub get_direct_trials :Chained('/cvterm/get_cvterm') :PathPart('datatables/direc
     my $cvterm_id = $cvterm->get_cvterm_id;
     my $q = "SELECT DISTINCT project_id, project.name, project.description
              FROM public.project
-              JOIN nd_experiment_project USING (project_id)  
+              JOIN nd_experiment_project USING (project_id)
               JOIN nd_experiment_stock USING (nd_experiment_id)
               JOIN nd_experiment_phenotype USING (nd_experiment_id)
-              JOIN phenotype USING (phenotype_id) 
+              JOIN phenotype USING (phenotype_id)
               JOIN cvterm on cvterm.cvterm_id = phenotype.observable_id
-             WHERE observable_id = ? 
+             WHERE observable_id = ?
     ";
- 
+
     my $sth = $c->dbc->dbh->prepare($q);
     my $count = 0 + $sth->execute($cvterm_id );
     my @data;

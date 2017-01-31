@@ -1,0 +1,46 @@
+<%args>
+</%args>
+
+<div id="brapi_home_study_observations_div">
+
+    <h4>Study Observations</h4>
+    <input name="brapi_home_studyobservationsdbid" id="brapi_home_studyobservationsdbid" class="form-control" type="text" placeholder="StudyDbId e.g. 139" value="139"/>
+    <input name="brapi_home_studyobservationdbid1" id="brapi_home_studyobservationdbid1" class="form-control" type="text" placeholder="ObservationDbId e.g. 70741" value="70741"/>
+    <input name="brapi_home_studyobservationdbid2" id="brapi_home_studyobservationdbid2" class="form-control" type="text" placeholder="ObservationDbId e.g. 70666" value="70666"/>
+    <select name="brapi_home_studyobservations_level" id="brapi_home_studyobservations_level" class="form-control" />
+        <option value="all">All</option>
+        <option value="plot">Plot</option>
+        <option value="plant">Plant</option>
+    </select>
+    <button class="btn btn-primary" name="brapi_home_studyobservations_submit" id="brapi_home_studyobservations_submit">Get Observations</button>
+    <br/><br/>
+    <div id="brapi_studyobservations_data_result_div">
+    </div>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery("#brapi_home_studyobservations_submit").click(function() {
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies/'+jQuery('#brapi_home_studyobservationsdbid').val()+'/observations?observationVariableDbId='+jQuery('#brapi_home_studyobservationdbid1').val()+'&observationVariableDbId='+jQuery('#brapi_home_studyobservationdbid2').val()+'&observationLevel='+jQuery('#brapi_home_studyobservations_level').val(),
+          'method': 'GET',
+          'beforeSend': function() {
+            jQuery('#working_modal').modal('show');
+          },
+          'success': function(response) {
+            jQuery('#working_modal').modal('hide');
+            console.log(response);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_studyobservations_data_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies/'+jQuery('#brapi_home_studyobservationsdbid').val()+'/observations?observationVariableDbId='+jQuery('#brapi_home_studyobservationdbid1').val()+'&observationVariableDbId='+jQuery('#brapi_home_studyobservationdbid2').val()+'&observationLevel='+jQuery('#brapi_home_studyobservations_level').val(), undefined);
+
+          },
+          error: function(response) {
+            jQuery('#working_modal').modal('hide');
+            alert('An error occurred');
+          }
+        });
+    });
+});
+
+</script>

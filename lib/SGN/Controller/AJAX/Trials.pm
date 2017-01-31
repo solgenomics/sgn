@@ -9,6 +9,7 @@ use Data::Dumper;
 use Carp;
 use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -49,7 +50,7 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     my $html = "";
     foreach my $project (@$projects) { 
 	   my $folder = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => $project->[0] });
-	   $html .= $folder->get_jstree_html('breeding_program');
+	   $html .= $folder->get_jstree_html('breeding_program', 'trial');
     }
     
     my $dir = catdir($c->site_cluster_shared_dir, "folder");
@@ -83,4 +84,27 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
 
     #print STDERR $html;
     $c->stash->{rest} = { html => $html };
+}
+
+sub trial_autocomplete : Local : ActionClass('REST') { }
+
+sub trial_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my $trial_design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), "design", "project_property")->cvterm_id();
+    my @response_list;
+    my $q = "select distinct(name) from project join projectprop using(project_id) where project.name ilike ? and projectprop.type_id = ? ORDER BY name";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%', $trial_design_cvterm_id);
+    while (my ($project_name) = $sth->fetchrow_array) {
+        push @response_list, $project_name;
+    }
+    print STDERR Dumper \@response_list;
+
+    $c->{stash}->{rest} = \@response_list;
 }

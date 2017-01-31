@@ -42,7 +42,7 @@ my @prove_args = @ARGV;
 
 $ENV{SGN_CONFIG_LOCAL_SUFFIX} = 'fixture';
 #my $conf_file_base = 'sgn_local.conf'; # which conf file the sgn_fixture.conf should be based on
-my $conf_file_base = 'sgn_local.conf'; 
+my $conf_file_base = 'sgn_local.conf';
 my $template_file = 'sgn_fixture_template.conf';
 # get some defaults from sgn_local.conf
 #
@@ -53,14 +53,14 @@ my $template = $cfg->[1]->{$template_file};
 
 #print STDERR Dumper($cfg);
 my $db_user_password = $config->{dbpass};
-my $dbhost = $config->{dbhost};
+my $dbhost = $config->{db_host} || 'localhost';
 my $db_postgres_password = $config->{DatabaseConnection}->{sgn_test}->{password};
 my $test_dsn = $config->{DatabaseConnection}->{sgn_test}->{dsn};
 my $catalyst_server_port = 3010;
 
 # replace the keys in the sgn local file with what's in the template
 #
-foreach my $k (keys %{$template}) { 
+foreach my $k (keys %{$template}) {
     #print STDERR "Replacing key $k : $config->{$k} with $template->{$k}\n";
     $config->{$k} = $template->{$k};
 }
@@ -101,21 +101,27 @@ open(my $NEWCONF, ">", "sgn_fixture.conf") || die "Can't open sgn_fixture.conf f
 print $NEWCONF $new_conf;
 close($NEWCONF);
 
+# run the materialized views creation script
+#
+print STDERR "Running matview refresh with -H $dbhost -D $dbname -U postgres -P $db_postgres_password\n";
+system("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U postgres -P $db_postgres_password");
+
+
 print STDERR "Done.\n";
 
 # start the test web server
 #
 my $server_pid;
 my $logfile;
-if ($noserver) { 
+if ($noserver) {
     print STDERR "# [ --noserver option: not starting web server]\n";
 }
-else { 
+else {
     $server_pid = fork;
     $logfile  = "logfile.$$.txt";
 
     unless( $server_pid ) {
-    
+
 	# web server process
 	#
 	#$ENV{SGN_TEST_MODE} = 1;
@@ -123,13 +129,13 @@ else {
 	    -p => $catalyst_server_port,
 	    ( $noparallel ? () : ('--fork') ),
 	    );
-	
-	if (!$verbose) { 
+
+	if (!$verbose) {
 	    print STDERR "# [Server logfile at $logfile]\n";
 	    open (STDERR, ">$logfile") || die "can't open logfile.";
 	}
 	Catalyst::ScriptRunner->run('SGN', 'Server');
-	
+
 	exit;
     }
     print STDERR  "# Starting web server (PID=$server_pid)... ";
@@ -145,8 +151,8 @@ else {
     };
     print STDERR "Done.\n";
 
-    if (!$noserver) { 
-	sleep 1 until !kill(0, $server_pid) || get "http://localhost:$catalyst_server_port";    
+    if (!$noserver) {
+	sleep 1 until !kill(0, $server_pid) || get "http://localhost:$catalyst_server_port";
     }
 }
 
@@ -189,70 +195,70 @@ waitpid $server_pid, 0;
 sleep(3);
 print STDERR "Done.\n";
 
-if (!$nocleanup) { 
+if (!$nocleanup) {
     print STDERR "# Removing test database ($dbname)... ";
     system("dropdb -h $config->{dbhost} -U postgres --no-password $dbname");
     print STDERR "Done.\n";
 
-    if ($noserver) { 
+    if ($noserver) {
 	print STDERR "# [ --noserver option: No logfile to remove]\n";
     }
-    else { 
+    else {
 	print STDERR "# Delete server logfile... ";
 	close($logfile);
 	unlink $logfile;
 	print STDERR "Done.\n";
-	
+
 	print STDERR "# Delete fixture conf file... ";
 	unlink "sgn_fixture.conf";
 	print STDERR "Done.\n";
     }
 }
-else { 
+else {
     print STDERR "# --nocleanup option: not removing db or files.\n";
 }
 print STDERR "# Test run complete.\n\n";
 
 
 
-sub hash2config { 
+sub hash2config {
     my $hash = shift;
 
     my $s = "";
-    foreach my $k (keys(%$hash)) { 
-	if (ref($hash->{$k}) eq "ARRAY") { 
-	    foreach my $v (@{$hash->{$k}}) { 
+    foreach my $k (keys(%$hash)) {
+	if (ref($hash->{$k}) eq "ARRAY") {
+	    foreach my $v (@{$hash->{$k}}) {
 		$s .= "$k $v\n";
 	    }
 	}
-	elsif (ref($hash->{$k}) eq "HASH") { 
-	    foreach my $n (keys(%{$hash->{$k}})) { 
-		if (ref($hash->{$k}->{$n}) eq "HASH") { 
+	elsif (ref($hash->{$k}) eq "HASH") {
+	    foreach my $n (keys(%{$hash->{$k}})) {
+		if (ref($hash->{$k}->{$n}) eq "HASH") {
 		    $s .= "<$k $n>\n";
 		    $s .= hash2config($hash->{$k}->{$n});
 		}
-		else { 
+		else {
 		    $s .= "<$k>\n";
 		    $s .= hash2config($hash->{$k});
 		}
 		$s .= "</$k>\n";
 	    }
 	}
-	else { 
+	else {
 	    $s .= "$k $hash->{$k}\n";
 	}
     }
 
     # if nothing matched the replace keys, add them here
     #
-    
-#    if (exists($hash->{dbname})) { 
+
+#    if (exists($hash->{dbname})) {
 #	$s .= "dbname $dbname\n";
  #  }
-    
+
     return $s;
 }
-    
+
 
 
 __END__
@@ -281,15 +287,15 @@ t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
 
   --fixture_path specify a path to the fixture different from the default
                  (../fixture/cxgn_fixture.pl). Note: You can also set the env
-                 variable DATABASE_FIXTURE_PATH, which will overrule this 
+                 variable DATABASE_FIXTURE_PATH, which will overrule this
                  option.
 
-  -- -v          options specified after two dashes will be passed to prove 
+  -- -v          options specified after two dashes will be passed to prove
                  directly, such -v will run prove in verbose mode.
 
 =head1 AUTHORS
 
     Robert Buels (initial script)
     Lukas Mueller <lam87@cornell.edu> (fixture implementation)
-    
+
 =cut

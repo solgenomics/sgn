@@ -1,0 +1,38 @@
+<%args>
+</%args>
+
+<div id="brapi_home_traits_div">
+
+    <h4>Traits</h4>
+    <button class="btn btn-primary" name="brapi_home_traits_submit" id="brapi_home_traits_submit">Get Traits</button>
+    <br/><br/>
+    <div id="brapi_traits_data_result_div">
+    </div>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery("#brapi_home_traits_submit").click(function() {
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/traits',
+          'method': 'GET',
+          'beforeSend': function() {
+            jQuery('#working_modal').modal('show');
+          },
+          'success': function(response) {
+            jQuery('#working_modal').modal('hide');
+            console.log(response);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_traits_data_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/traits', undefined);
+
+          },
+          error: function(response) {
+            jQuery('#working_modal').modal('hide');
+            alert('An error occurred');
+          }
+        });
+    });
+});
+
+</script>
