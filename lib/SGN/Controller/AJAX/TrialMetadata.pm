@@ -507,42 +507,82 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
   $c->stash->{rest} = { success => 1};
 }
 
-sub update_field_coord : Chained('trial') PathPart('update_field_coords') Args(0) {
+sub substitute_accession : Chained('trial') PathPart('substitute_accession') Args(0) {
   my $self = shift;
 	my $c = shift;
   my $schema = $c->dbic_schema('Bio::Chado::Schema');
-	my $plotIDs_accessions = $c->req->param('plot_infor');
+  my $trial_id = $c->stash->{trial_id};
+  my $plot_1_info = $c->req->param('plot_1_info');
+  my $plot_2_info = $c->req->param('plot_2_info');
 
-  my ($accession_1, $plot_1_id, $accession_2, $plot_2_id) = split /,/, $plotIDs_accessions;
-
-   if ($self->privileges_denied($c)) {
-     $c->stash->{rest} = { error => "You have insufficient access privileges to update this map." };
-     return;
-   }
-
-   my $trial_id = $c->stash->{trial_id};
-   my $fieldmap = CXGN::Trial::FieldMap->new({
-     bcs_schema => $schema,
-     trial_id => $trial_id,
-     first_plot_selected => $plot_1_id,
-     second_plot_selected => $plot_2_id,
-     first_accession_selected => $accession_1,
-     second_accession_selected => $accession_2,
-   });
-
-  my $return_error = $fieldmap->update_fieldmap_precheck();
-  if ($return_error) {
-    $c->stash->{rest} = { error => $return_error };
+  print "$plot_1_info and $plot_2_info\n";
+  my ($plot_1_id, $accession_1) = split /,/, $plot_1_info;
+  my ($plot_2_id, $accession_2) = split /,/, $plot_2_info;
+  print "1plot: $plot_1_id, 1acc: $accession_1\n";
+  if ($self->privileges_denied($c)) {
+    $c->stash->{rest} = { error => "You have insufficient access privileges to update this map." };
     return;
   }
-  my $update_return_error = $fieldmap->update_fieldmap();
+
+  if ($plot_1_id == $plot_2_id){
+    $c->stash->{rest} = { error => "Choose a different plot/accession in 'select Accession 2' to perform this operation." };
+    return;
+  }
+
+  my $fieldmap = CXGN::Trial::FieldMap->new({
+    bcs_schema => $schema,
+    trial_id => $trial_id,
+    first_plot_selected => $plot_1_id,
+    second_plot_selected => $plot_2_id,
+    first_accession_selected => $accession_1,
+    second_accession_selected => $accession_2,
+  });
+
+  my $update_return_error = $fieldmap->substitute_accession_fieldmap();
   if ($update_return_error) {
     $c->stash->{rest} = { error => $update_return_error };
     return;
   }
 
-  $c->stash->{rest} = {success => 1};
+  $c->stash->{rest} = { success => 1};
 }
+
+# sub update_field_coord : Chained('trial') PathPart('update_field_coords') Args(0) {
+#   my $self = shift;
+# 	my $c = shift;
+#   my $schema = $c->dbic_schema('Bio::Chado::Schema');
+# 	my $plotIDs_accessions = $c->req->param('plot_infor');
+#
+#   my ($accession_1, $plot_1_id, $accession_2, $plot_2_id) = split /,/, $plotIDs_accessions;
+#
+#    if ($self->privileges_denied($c)) {
+#      $c->stash->{rest} = { error => "You have insufficient access privileges to update this map." };
+#      return;
+#    }
+#
+#    my $trial_id = $c->stash->{trial_id};
+#    my $fieldmap = CXGN::Trial::FieldMap->new({
+#      bcs_schema => $schema,
+#      trial_id => $trial_id,
+#      first_plot_selected => $plot_1_id,
+#      second_plot_selected => $plot_2_id,
+#      first_accession_selected => $accession_1,
+#      second_accession_selected => $accession_2,
+#    });
+#
+#   my $return_error = $fieldmap->update_fieldmap_precheck();
+#   if ($return_error) {
+#     $c->stash->{rest} = { error => $return_error };
+#     return;
+#   }
+#   my $update_return_error = $fieldmap->update_fieldmap();
+#   if ($update_return_error) {
+#     $c->stash->{rest} = { error => $update_return_error };
+#     return;
+#   }
+#
+#   $c->stash->{rest} = {success => 1};
+# }
 
 
 sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0) {

@@ -235,7 +235,7 @@ sub update_fieldmap_precheck {
 	return $error;
 }
 
-sub update_fieldmap {
+sub substitute_accession_fieldmap {
 	my $self = shift;
 	my $error;
 	my $plot_1_id = $self->first_plot_selected;

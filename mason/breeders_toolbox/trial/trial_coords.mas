@@ -69,22 +69,22 @@ var trial_id = <% $trial_id %>;
 //alert("trial_id: "+trial_id)
    jQuery(document).ready( function() {
 
-   var container_new = new Container();
-   var result;
-   
+   //var container_new = new Container();
+   //var result;
+
    //var container_string = container_new;
-   function Container(){
-          this.variables = [];
-       }
-       Container.prototype.addVar = function(info_acc){
-          this.variables.push(info_acc);
-       }
-       Container.prototype.toString = function(){
-          var result = '';
-          for(var i in this.variables)
-              result += this.variables[i];
-          return result;
-   }
+   //function Container(){
+  //        this.variables = [];
+  //     }
+  //     Container.prototype.addVar = function(info_acc){
+  //        this.variables.push(info_acc);
+  //     }
+  //     Container.prototype.toString = function(){
+  //        var result = '';
+  //        for(var i in this.variables)
+  //            result += this.variables[i];
+  //        return result;
+  //}
 
      jQuery('#physical_layout_onswitch').click( function() {
 
@@ -336,33 +336,33 @@ var trial_id = <% $trial_id %>;
 	   //   window.location.href = 'http://cassavabase.org/stock/'+plot_id+'/view';
     // });
 
-    myRectangle.on('dragstart', function(){
-      myRectangle.moveToTop();
-      plot_layer.add(plot_txt_info);
-    });
-    myRectangle.on('dragend',function(){
-      var a = accessions+","+plot_id+",";
+    //myRectangle.on('dragstart', function(){
+    //  myRectangle.moveToTop();
+    //  plot_layer.add(plot_txt_info);
+    //});
+    //myRectangle.on('dragend',function(){
+    //  var a = accessions+","+plot_id+",";
       //alert("1: "+a);
-      alert(accessions+" in plot "+plot_number+ " was moved to a different plot.");
-      if (!container_new.variables[2]) {
-        container_new.addVar(a);
-      }
-      if (container_new.variables[1] == container_new.variables[0]){
-        if (container_new.variables[2]){
-          container_new.variables[1] = container_new.variables[2];
-          container_new.variables[2] = '';
+    //  alert(accessions+" in plot "+plot_number+ " was moved to a different plot.");
+    //  if (!container_new.variables[2]) {
+    //    container_new.addVar(a);
+    //  }
+    //  if (container_new.variables[1] == container_new.variables[0]){
+    //    if (container_new.variables[2]){
+    //      container_new.variables[1] = container_new.variables[2];
+    //      container_new.variables[2] = '';
           //alert(container_new.toString());
-          result = container_new.toString();
-          jQuery('#update_field_map_link').find('button').trigger('click');
-        }
-      } else if ((container_new.variables[1]) && (container_new.variables[1] != container_new.variables[0])){
-          //alert(container_new.toString());
-          result = container_new.toString();
-          jQuery('#update_field_map_link').find('button').trigger('click');
+    //      result = container_new.toString();
+    //      jQuery('#update_field_map_link').find('button').trigger('click');
+    //    }
+    //  } else if ((container_new.variables[1]) && (container_new.variables[1] != container_new.variables[0])){
+    //      //alert(container_new.toString());
+    //      result = container_new.toString();
+    //      jQuery('#update_field_map_link').find('button').trigger('click');
 
-      }
+    //  }
 
-    });
+    //});
 
       plot_layer.add(myRectangle);
       plot_layer.add(plot_txt_info);
@@ -382,24 +382,24 @@ var trial_id = <% $trial_id %>;
  }, false);
 
 
- jQuery("#update_field_map_dialog").dialog({
- autoOpen: false,
- modal: true,
- autoResize:true,
-     width: 500,
-     position: ['top', 75],
- buttons: {
-         "Cancel": function () {
-             jQuery('#update_field_map_dialog').dialog("close");
-             location.reload();
-         },
-   "Ok": {text: "Ok", id:"update_field_coords_ok_button", click:function () {
- update_field_map(result);
-             jQuery('#update_field_map_dialog').dialog("close");
-     }
-   }
- }
- });
+ //jQuery("#update_field_map_dialog").dialog({
+ //autoOpen: false,
+ //modal: true,
+ //autoResize:true,
+//     width: 500,
+//     position: ['top', 75],
+// buttons: {
+//         "Cancel": function () {
+//             jQuery('#update_field_map_dialog').dialog("close");
+//             location.reload();
+//         },
+//   "Ok": {text: "Ok", id:"update_field_coords_ok_button", click:function () {
+// update_field_map(result);
+//             jQuery('#update_field_map_dialog').dialog("close");
+//     }
+//   }
+// }
+// });
 
 
 });
@@ -407,36 +407,36 @@ var trial_id = <% $trial_id %>;
 
 /////////UPDATE//////////////
 
-function update_field_map(result) {
-    jQuery('#update_field_map_dialog').dialog("close");
-    jQuery('#working_modal').modal("show");
-
-  var plotID_accessions = result;
+//function update_field_map(result) {
+//    jQuery('#update_field_map_dialog').dialog("close");
+//    jQuery('#working_modal').modal("show");
+//
+//  var plotID_accessions = result;
   //var container_string = JSON.stringify(plotID_accessions);
-  new jQuery.ajax({
-   type: 'POST',
-   url: '/ajax/breeders/trial/<% $trial_id %>/update_field_coords',
-   dataType: "json",
-   data: {
-             'plot_infor': plotID_accessions,
-   },
+//  new jQuery.ajax({
+//   type: 'POST',
+//   url: '/ajax/breeders/trial/<% $trial_id %>/update_field_coords',
+//   dataType: "json",
+//   data: {
+//             'plot_infor': plotID_accessions,
+//   },
 
-   success: function (response) {
-       jQuery('#working_modal').modal("hide");
+//   success: function (response) {
+//       jQuery('#working_modal').modal("hide");
 
-      if (response.error) {
-          alert("Error Updating Field Map: "+response.error);
-      } else {
+//      if (response.error) {
+//          alert("Error Updating Field Map: "+response.error);
+//      } else {
           //alert("Field map deletion Successful...");
-          jQuery('#update_field_map_dialog_message').dialog("open");
-          }
-   },
-   error: function () {
-       jQuery('#working_modal').modal("hide");
-             alert('An error occurred updating field map.');
-   }
-  });
- }
+//          jQuery('#update_field_map_dialog_message').dialog("open");
+//          }
+//   },
+//   error: function () {
+//       jQuery('#working_modal').modal("hide");
+//             alert('An error occurred updating field map.');
+//   }
+//  });
+// }
 
 </script>
 

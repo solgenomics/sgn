@@ -132,6 +132,31 @@ $trial_name
     </div>
 </div>
 
+<div class="modal  fade" id="sub_success_message" name="sub_success_message" tabindex="-1" role="dialog" aria-labelledby="SubsFieldMapDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="SubsFieldMapDialog">Substitute Plot Accessions </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="subs_field_map_form" name="subs_field_map_form">
+
+                    <p3> Accessions were substituted successfully...</p3>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_subs_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 jQuery(document).ready( function() {
 
@@ -175,8 +200,8 @@ jQuery(document).ready(function () {
 				 console.log(response.plot_name);
 				 console.log(response.plot_id);
 
-				 var trial_plot_name_html = "<select class='form-control' id='trial_plot_name_table'>";
-				 var trial_plot_number_html = "<select class='form-control' id='sub_plot_accession_in_trial'>";
+				 var trial_plot_name_html = "<select class='form-control' id='trial_plot_1_name_table'>";
+				 var trial_plot_number_html = "<select class='form-control' id='trial_plot_2_name_table'>";
 				 //var trial_plot_accession_html = "<select class='form-control' id='trial_plot_accession_table'>";
 
 				  for (n=0; n<response.plot_name.length; n++){
@@ -240,6 +265,44 @@ jQuery(document).ready(function () {
   jQuery('#close_replace_field_map_dialog').click( function() {
     location.reload();
   });
+
+  jQuery('#close_subs_field_map_dialog').click( function() {
+    location.reload();
+  });
+
+  jQuery('#substitute_plot_accession_submit').click( function() {
+    substitute_plot_accession();
+  });
+
+  function substitute_plot_accession() {
+    jQuery('#working_modal').modal("show");
+
+    var plot_1_info = jQuery('#trial_plot_1_name_table').val();
+    var plot_2_info = jQuery('#trial_plot_2_name_table').val();
+
+    new jQuery.ajax({
+      type: 'POST',
+      url: '/ajax/breeders/trial/<% $trial_id %>/substitute_accession',
+      dataType: "json",
+      data: {
+              'plot_1_info': plot_1_info,
+              'plot_2_info': plot_2_info,
+      },
+
+      success: function (response) {
+        jQuery('#working_modal').modal("hide");
+
+        if (response.error){
+          alert("Error Substituting Accessions: "+response.error);
+        } else {
+          jQuery('#sub_success_message').modal("show");
+        }
+      },
+      error: function(){
+        jQuery('#working_modal').modal("hide");
+      }
+    });
+  }
 
 });
 
