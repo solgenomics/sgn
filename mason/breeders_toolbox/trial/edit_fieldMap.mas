@@ -64,7 +64,7 @@ $trial_name
             </div>
             <div class="modal-footer">
                 <button id="close_replace_trial_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="replace_trial_accession_submit" id="replace_trial_accession_submit">Replace Trial Accession</button>
+                <button type="button" class="btn btn-primary" name="replace_accession_submit" id="replace_accession_submit">Replace Trial Accession</button>
             </div>
         </div>
     </div>
@@ -102,6 +102,31 @@ $trial_name
             <div class="modal-footer">
                 <button id="close_substitute_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" name="substitute_plot_accession_submit" id="substitute_plot_accession_submit">Substitute Plot Accession</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal  fade" id="replace_accessions_dialog_success_message" name="replace_accessions_dialog_success_message" tabindex="-1" role="dialog" aria-labelledby="ReplaceFieldMapDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="ReplaceFieldMapDialog">Replace Trial Accessions </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="edit_field_map_form" name="edit_field_map_form">
+
+                    <p3> Accession was replaced successfully...</p3>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_replace_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
             </div>
         </div>
     </div>
@@ -175,6 +200,46 @@ jQuery(document).ready(function () {
 			 }
 	});
 
+  jQuery('#replace_accession_submit').click(function() {
+    replace_accession_in_trial()
+  });
+
+  function replace_accession_in_trial() {
+    jQuery('#replace_trial_accessions_dialog').modal("hide");
+    jQuery('#working_modal').modal("show");
+    var old_accession_id = jQuery('#trial_accessions_table').val();
+    var new_accession = jQuery('#replace_database_accession').val();
+    //alert(old_accession + "and" + new_accession);
+
+    new jQuery.ajax({
+      type: 'POST',
+      url: '/ajax/breeders/trial/<% $trial_id %>/replace_accession',
+      dataType: "json",
+      data: {
+              'old_accession_id': old_accession_id,
+              'new_accession': new_accession,
+      },
+
+      success: function (response) {
+        jQuery('#working_modal').modal("hide");
+
+        if (response.error) {
+          alert("Error Replacing Accession: "+response.error);
+        }else {
+            jQuery('#replace_accessions_dialog_success_message').modal("show");
+        }
+      },
+      error: function() {
+        jQuery('#working_modal').modal("hide");
+        alert('An error occurred replacing accession');
+      }
+    });
+
+  }
+
+  jQuery('#close_replace_field_map_dialog').click( function() {
+    location.reload();
+  });
 
 });
 

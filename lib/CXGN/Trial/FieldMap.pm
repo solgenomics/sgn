@@ -46,6 +46,10 @@ has 'old_plot_id' => (isa => "Int",
 			is => 'rw',
 	);
 
+has 'old_accession_id' => (isa => "Int",
+				is => 'rw',
+	);
+
 sub display_fieldmap {
 	my $self = shift;
 	my $schema = $self->bcs_schema;
@@ -289,7 +293,7 @@ sub replace_plot_accession_fieldMap {
 	}
 	print "NEW ACCESSION ID: $new_accession_id\n";
 	print "OLD ACCESSION ID: $old_accession_id\n";
-	
+
 	my $h_old_plot_id = $dbh->prepare("select object_id from stock_relationship where subject_id=?;");
 	$h_old_plot_id->execute($old_plot_id);
 	while (my $old_plot_objectID = $h_old_plot_id->fetchrow_array()) {
@@ -301,6 +305,38 @@ sub replace_plot_accession_fieldMap {
 
 	return $error;
 
+}
+
+
+sub replace_trial_accession_fieldMap {
+	my $self = shift;
+	my $error;
+	my $dbh = $self->bcs_schema->storage->dbh;
+	my $new_accession = $self->new_accession;
+	my $old_accession_id = $self->old_accession_id;
+	my $trial_id = $self->trial_id;
+
+	print "$new_accession and $old_accession_id\n";
+
+	my $new_accession_id;
+	my $h_new = $dbh->prepare("select stock_id from stock where uniquename=?;");
+	$h_new->execute($new_accession);
+	while ( my $new_accession_id_ = $h_new->fetchrow_array()) {
+			$new_accession_id = $new_accession_id_;
+	}
+	print "IDDDDDDDDDDD: $new_accession_id\n";
+
+	my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
+	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
+	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
+	my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
+
+	print "ACC: $accession_cvterm_id, LAYOUT: $field_trial_cvterm_id, PLOT_OF: $plot_of_cvterm_id, PLANT_OF: $plant_of_cvterm_id\n";
+
+	my $h_update = $dbh->prepare("update stock_relationship set object_id=? where stock_relationship_id in (SELECT stock_relationship.stock_relationship_id FROM stock as accession JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id) JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id) JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment using(nd_experiment_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE accession.type_id =? AND stock_relationship.type_id IN ($plot_of_cvterm_id, $plant_of_cvterm_id) AND project.project_id =? and nd_experiment.type_id=?) and object_id=?;");
+	$h_update->execute($new_accession_id,$accession_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_accession_id);
+
+	return $error;
 }
 
 1;

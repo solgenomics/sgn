@@ -435,6 +435,40 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
   $c->stash->{rest} = {success => 1};
 }
 
+sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Args(0) {
+  my $self = shift;
+  my $c = shift;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema');
+  my $old_accession_id = $c->req->param('old_accession_id');
+  my $new_accession = $c->req->param('new_accession');
+  my $trial_id = $c->stash->{trial_id};
+
+  if ($self->privileges_denied($c)) {
+    $c->stash->{rest} = { error => "You have insufficient access privileges to edit this map." };
+    return;
+  }
+
+  if (!$new_accession){
+    $c->stash->{rest} = { error => "Provide new accession name." };
+    return;
+  }
+
+  my $replace_accession_fieldmap = CXGN::Trial::FieldMap->new({
+    bcs_schema => $schema,
+    trial_id => $trial_id,
+    old_accession_id => $old_accession_id,
+    new_accession => $new_accession,
+  });
+
+  my $replace_return_error = $replace_accession_fieldmap->replace_trial_accession_fieldMap();
+  if ($replace_return_error) {
+    $c->stash->{rest} = { error => $replace_return_error };
+    return;
+  }
+
+  $c->stash->{rest} = { success => 1};
+}
+
 sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions') Args(0) {
   my $self = shift;
   my $c = shift;
@@ -445,7 +479,12 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
   my $trial_id = $c->stash->{trial_id};
 
   if ($self->privileges_denied($c)) {
-    $c->stash->{rest} = { error => "You have insufficient access privileges to update this map." };
+    $c->stash->{rest} = { error => "You have insufficient access privileges to edit this map." };
+    return;
+  }
+
+  if (!$new_accession){
+    $c->stash->{rest} = { error => "Provide new accession name." };
     return;
   }
 
@@ -463,8 +502,6 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
     $c->stash->{rest} = { error => $replace_return_error };
     return;
   }
-
-
 
   print "OldAccession: $old_accession, NewAcc: $new_accession, OldPlotId: $old_plot_id\n";
   $c->stash->{rest} = { success => 1};
