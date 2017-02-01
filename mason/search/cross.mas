@@ -1,0 +1,127 @@
+<%args>
+
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<& /page/page_title.mas, title=>'Cross Search' &>
+
+<div class="row" id="cross_search_form" >
+  <div class="col-sm-1">
+  </div>
+  <div class="col-sm-12 well">
+    <div class="row">
+     <div class="col-sm-8">
+       <div class="form-horizontal">
+        <div class="form-group">
+          <label class="control-label col-sm-4">Female Parent:</label>
+            <div class="col-sm-8">
+             <div class="input-group">
+               <input type="text" class="form-control" id="female_parent" placeholder="Enter female parent">
+                <div class="input-group-btn">
+                 <button class="btn btn-info" id="search_male_parents"><i class="glyphicon glyphicon-search"></i> Male Parent </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        <div class="form-group">
+         <label class="control-label col-sm-4">Male Parent:</label>
+          <div class="col-sm-8" >
+           <div class="input-group">
+            <select class="form-control" id="male_parent">
+            <option value="">Choose female parent first</option>
+            </select>
+           </select>
+          <div class="input-group-btn">
+           <button class="btn btn-info" id="search_crosses"><i class="glyphicon glyphicon-search"></i> Cross Info </button>
+          </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+</div>
+ <div class="col-sm-1">
+  </div>
+
+<br />
+
+<&| /page/info_section.mas, title => 'Search Results' , collapsible=>1, collapsed=>0 &>
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<table id="cross_search_results" width="100%" class="table table-hover table-striped">
+<thead>
+  <tr>
+    <th>Female Parent</th>
+    <th>Male Parent</th>
+    <th>Cross Name</th>
+  </tr>
+</thead>
+
+</table>
+</&>
+</div>
+
+
+
+<script>
+
+jQuery(document).ready(function () {
+
+  jQuery("#female_parent").autocomplete({
+    source:'/ajax/stock/accession_autocomplete',
+  });
+
+  $("#search_male_parents").click(function(){
+
+  jQuery.ajax({
+    url:'/ajax/search/male_parents',
+    data:{'female_parent':$('#female_parent').val()},
+    success: function(response){
+    console.log(response);
+    var html = '<select id = "male_parent" >';
+    for (var i=0; i<response.data.length; i++) {
+    html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][0] + "</option>";
+    }
+    html = html + "</select>";
+    console.log(html);
+
+    if(i ==''){
+      alert("No male parent");
+      return;
+    }
+
+    jQuery('#male_parent').html(html);
+    },
+    error:function(response){
+    alert("An error occurred");
+          }
+        });
+      });
+    });
+
+jQuery(document).ready(function(){
+
+  $('#search_crosses').click(function(){
+
+  var table = jQuery('#cross_search_results').DataTable({
+
+    'searching'  : false,
+    'paging'     : false,
+    'ordering'   : false,
+    'processing' : true,
+    'serverSide' : false,
+    'destroy'    : true,
+    'ajax':{'url':'/ajax/search/cross_info',
+      data:{'female_parent':$('#female_parent').val(),
+           'male_parent':$('#male_parent').val()},
+           }
+        });
+     });
+  });
+
+</script>
