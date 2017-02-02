@@ -65,8 +65,13 @@ sub get_matches {
 	my @stock_names = keys %uniquename_hash;
 	my @synonym_names = keys %synonym_uniquename_lookup;
 	push (@stock_names, @synonym_names);
+	my %stock_names_hash = map {$_ => 1} @stock_names;
 
   foreach my $accession_name (@accession_list) {
+	  if (exists($stock_names_hash{$accession_name})){
+		  push @found_accessions, {"matched_string" => $accession_name, "unique_name" => $accession_name};
+		  next;
+	  }
     my @matches;
     my @accession_matches = @{$fuzzy_string_search->get_matches($accession_name, \@stock_names, $max_distance)};
     my $more_than_one_perfect_match = 0;

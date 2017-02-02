@@ -10,7 +10,7 @@ Will do the following:
 3) Will associate the location to the project through the nd_experiment as well as through a projectprop. Location lookup happens based on location name that is provided. Assumes locations already stored in database.
 4) Will associate the trial to its breeding program. Lookup is by breeding program name that is provided and assumes bp already exists in database. Will return an error if breeding program name not found.
 5) Creates a single nd_experiment_project entry, linking project to nd_experiment.
-6) Creates a year and design projectprop.
+6) Creates a year and design projectprop. Also a project_type projectprop if provided.
 7) Calls the CXGN::Trial::TrialDesignStore object to handle storing stocks (plots and plants) and stockprops (rep, block, etc)
 
 =head1 USAGE
@@ -27,6 +27,7 @@ Will do the following:
 	trial_description => $project_description,
 	trial_location => $location->name(),
 	trial_name => $trial_name,
+	trial_type => $trialtype
  });
  try {
    $trial_create->save_trial();
@@ -96,6 +97,7 @@ has 'trial_location' => (isa => 'Str', is => 'rw', predicate => 'has_trial_locat
 has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', required => 1);
 has 'design' => (isa => 'HashRef[HashRef[Str|ArrayRef]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 1);
+has 'trial_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_type', required => 0);
 
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
 has 'genotyping_user_id' => (isa => 'Str', is => 'rw');
@@ -201,6 +203,9 @@ sub save_trial {
 	});
 	$t->set_location($geolocation->nd_geolocation_id()); # set location also as a project prop
 	$t->set_breeding_program($self->get_breeding_program_id);
+	if ($self->get_trial_type){
+		$t->set_project_type($self->get_trial_type);
+	}
 
 	#link to the project
 	$nd_experiment->find_or_create_related('nd_experiment_projects',{project_id => $project->project_id()});

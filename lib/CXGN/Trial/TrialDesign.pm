@@ -303,7 +303,7 @@ sub _get_crd_design {
           } else {
             @col_number_fieldmaps = ((1..$fieldmap_col_number) x $fieldmap_row_number);
           }
-          print STDERR Dumper(\@col_number_fieldmaps);
+          #print STDERR Dumper(\@col_number_fieldmaps);
         }
         elsif ($plot_layout_format eq "serpentine") {
           if (!$fieldmap_row_number)  {

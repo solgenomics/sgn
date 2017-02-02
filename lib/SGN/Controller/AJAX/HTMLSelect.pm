@@ -151,8 +151,13 @@ sub get_trial_type_select : Path('/ajax/html/select/trial_types') Args(0) {
 
     my $id = $c->req->param("id") || "trial_type_select";
     my $name = $c->req->param("name") || "trial_type_select";
+    my $empty = $c->req->param("empty") || ""; # set if an empty selection should be present
 
     my @types = CXGN::Trial::get_all_project_types($c->dbic_schema("Bio::Chado::Schema"));
+
+    if ($empty) {
+        unshift @types, [ '', "None" ];
+    }
 
     my $default = $c->req->param("default") || $types[0]->[0];
 
