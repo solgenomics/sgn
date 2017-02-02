@@ -460,6 +460,12 @@ sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Arg
     new_accession => $new_accession,
   });
 
+  my $return_error = $replace_accession_fieldmap->update_fieldmap_precheck();
+     if ($return_error) {
+       $c->stash->{rest} = { error => $return_error };
+       return;
+     }
+
   my $replace_return_error = $replace_accession_fieldmap->replace_trial_accession_fieldMap();
   if ($replace_return_error) {
     $c->stash->{rest} = { error => $replace_return_error };
@@ -496,6 +502,13 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
     old_plot_id => $old_plot_id,
 
   });
+
+  my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
+     if ($return_error) {
+       $c->stash->{rest} = { error => $return_error };
+       return;
+     }
+
   print "Calling Replace Function...............\n";
   my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap();
   if ($replace_return_error) {
@@ -537,6 +550,12 @@ sub substitute_accession : Chained('trial') PathPart('substitute_accession') Arg
     first_accession_selected => $accession_1,
     second_accession_selected => $accession_2,
   });
+
+  my $return_error = $fieldmap->update_fieldmap_precheck();
+     if ($return_error) {
+       $c->stash->{rest} = { error => $return_error };
+       return;
+     }
 
   my $update_return_error = $fieldmap->substitute_accession_fieldmap();
   if ($update_return_error) {

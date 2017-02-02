@@ -157,6 +157,65 @@ $trial_name
     </div>
 </div>
 
+
+<div class="modal  fade" id="fieldmap_usage_modal" name="fieldmap_usage_modal" tabindex="-1" role="dialog" aria-labelledby="UsageFieldMapDialog">
+    <div class="modal-dialog modal-lg " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="UsageFieldMapDialog">How to Use and Edit Field Map </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                <h4>
+                  Background:
+                </h4>
+                  <center><p>Field map is a tool that enable users to view the physical layout of plots in a trial. Maps can be generated on the fly while adding or uploading a trial, if that option is enabled or rows and column numbers provided in the trial upload files respectively. Field map coordinates can also be uploaded independently after trials have been added or uploaded. It's a very intuitive, flexible and user friendly tool for manipulation/making changes to field trial layouts before phenotypes are uploaded. </p></center>
+
+                <h4>
+                  Editing Options:
+                </h4>
+                <dl>
+                  <dt>Replace Plot Accession</dt>
+                  <dd>A plot accession can be replaced by an accession within or outside of the trial. To do this, <b>click on the plot</b> and <b>provide the name of the new accession</b> (must already exist in the database).</dd>
+                  <dt>Replace Trial Accession</dt>
+                  <dd>An accession used in a trial can be replaced by a new accession or another accession from the trial. When this replace option is used, it replaces every instances (plots and plants) of that accession in the trial. To do this, <b>click on the Edit Field Map link</b> by the top right of the physical trial layout section; <b>click on Replace Accession button</b>; <b>select accession</b> to replace from the trial and <b>provide a new accession</b> (must already exit in the database); <b>click on Replace Trial Accession button</b> to complete the operation.</dd>
+                  <dt>Substitute Plot Accessions<dt>
+                  <dd>This feature allows you to switch plot accessions between any two plots. To switch the accessions of two plots, <b>click on the Edit Field Map link</b>; <b>click on Substitute Accession button</b>; <b>select the plots to switch there accessions</b>; <b>click on Substitute Plot Accession</b> to switch the accession in those plots.</dd>
+                </dl>
+
+                <h4>
+                  Features:
+                </h4>
+                <dt>Mouse Over<dt>
+                <dd>Displays plot field information.</dd>
+                <dt>Double Click</dt>
+                <dd>Double clicking on a plot, opens the stock page for that plot.</dd>
+                <dt>Download Map<dt>
+                <dd>Field Map can be downloaded as image using the download button below the map.</dd>
+                <dt>Delete Map</dt>
+                <dd>Field Map can be deleted if the user have the right privilege.</dd>
+
+                <h4>
+                  Note:
+                </h4>
+                <dd>- You have to be a <b>curator</b> or a <b>submitter and associated to the breeding program</b> of the trial to use the features of this tool.</dd>
+                <dd>- <b>Input boxes</b> used within the field map tool will automatically (<b>autocomplete</b>) give accession name options from the database when you start typing the accession name.</dd>
+                <dd>- <b>Changes can only be made to the physical layout when phenotypes are not yet upload for the trial.</b></dd>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_usage_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 <script>
 jQuery(document).ready( function() {
 

@@ -207,21 +207,21 @@ sub delete_fieldmap {
 sub update_fieldmap_precheck {
 	my $self = shift;
 	my $error;
-	my $plot_1_id = $self->first_plot_selected;
-	my $plot_2_id = $self->second_plot_selected;
-	my $accession_1 = $self->first_accession_selected;
-	my $accession_2 = $self->second_accession_selected;
+	# my $plot_1_id = $self->first_plot_selected;
+	# my $plot_2_id = $self->second_plot_selected;
+	# my $accession_1 = $self->first_accession_selected;
+	# my $accession_2 = $self->second_accession_selected;
 	my $trial_id = $self->trial_id;
 
-	if (!$accession_1 || !$accession_2){
-    $error = "Dragged plot has no accession.";
-  }
-  if (!$plot_1_id || !$plot_2_id ){
-    $error = "Dragged plot is empty.";
-  }
-  if ($plot_1_id == $plot_2_id){
-    $error = "You have dragged a plot twice.";
-  }
+	# if (!$accession_1 || !$accession_2){
+  #   $error = "Dragged plot has no accession.";
+  # }
+  # if (!$plot_1_id || !$plot_2_id ){
+  #   $error = "Dragged plot is empty.";
+  # }
+  # if ($plot_1_id == $plot_2_id){
+  #   $error = "You have dragged a plot twice.";
+  # }
 	my $trial = CXGN::Trial->new({
 		bcs_schema => $self->bcs_schema,
 		trial_id => $trial_id
