@@ -12,13 +12,6 @@ $organism
 
 <& /homepage/tomato_genome_publication.mas &>
 
-<br />
-<br />
-<center>
-  <img style="display: block" src="/documents/img/tomato_varieties_720x.jpg" border="0" width="720" />
-</center>
-<br />
-<br />
 
 <&| /page/info_section.mas,
     title  => 'Data release policy',
