@@ -113,7 +113,7 @@ has 'unique_trait_stock' => (isa => "HashRef",
 );
 
 #build is used for creating hash lookups in this case
-sub BUILD {
+sub create_hash_lookups {
     my $self = shift;
 
     #Find trait cvterm objects and put them in a hash
@@ -151,7 +151,6 @@ sub verify {
     my $self = shift;
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
-    my %trait_objs = %{$self->trait_objs};
     my %plot_trait_value = %{$self->values_hash};
     my %phenotype_metadata = %{$self->metadata_hash};
     my $timestamp_included = $self->has_timestamps;
@@ -175,6 +174,8 @@ sub verify {
         return ($warning_message, $error_message);
     }
 
+    $self->create_hash_lookups();
+    my %trait_objs = %{$self->trait_objs};
     my %check_unique_value_trait_stock = %{$self->unique_value_trait_stock};
     my %check_unique_trait_stock = %{$self->unique_trait_stock};
 
@@ -309,6 +310,7 @@ sub verify {
 
 sub store {
     my $self = shift;
+    $self->create_hash_lookups();
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
     my %trait_objs = %{$self->trait_objs};

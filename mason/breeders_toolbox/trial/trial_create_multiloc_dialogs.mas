@@ -37,7 +37,6 @@ $breeding_programs
                             <label class="col-sm-3 control-label">Locations: </label>
                             <div class="col-sm-9">
                                 <select multiple class="form-control" id="add_multi_project_location" name="add_multi_project_location">
-                                <option value="">select locations</option>
                                 <%perl>foreach my $location (@$locations) { print "
                                     <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
                                 </%perl>
