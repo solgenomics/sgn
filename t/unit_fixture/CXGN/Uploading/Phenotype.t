@@ -2881,6 +2881,44 @@ $traits_assayed  = $tn->get_traits_assayed();
 #print STDERR Dumper \@traits_assayed_sorted;
 is_deeply(\@traits_assayed_sorted, [[70666,'fresh root weight|CO:0000012'], [70668,'harvest index variable|CO:0000015'], [70681, 'top yield|CO:0000017'], [70700, 'sprouting proportion|CO:0000008'], [70706, 'root number counting|CO:0000011'], [70713, 'flower|CO:0000111'], [70727, 'dry yield|CO:0000014'], [70741,'dry matter content percentage|CO:0000092'], [70773,'fresh shoot weight measurement in kg|CO:0000016'] ], 'check traits assayed after plant upload' );
 
+
+my $files_uploaded = $tn->get_phenotype_metadata();
+my %file_names;
+foreach (@$files_uploaded){
+	$file_names{$_->[4]} = [$_->[4], $_->[6]];
+}
+#print STDERR Dumper \%file_names;
+is_deeply(\%file_names, {
+          'upload_phenotypin_spreadsheet.xls' => [
+                                                   'upload_phenotypin_spreadsheet.xls',
+                                                   'spreadsheet phenotype file'
+                                                 ],
+          'fieldbook_phenotype_file.csv' => [
+                                              'fieldbook_phenotype_file.csv',
+                                              'tablet phenotype file'
+                                            ],
+          'upload_phenotypin_spreadsheet_large.xls' => [
+                                                         'upload_phenotypin_spreadsheet_large.xls',
+                                                         'spreadsheet phenotype file'
+                                                       ],
+          'upload_phenotypin_spreadsheet_plants.xls' => [
+                                                          'upload_phenotypin_spreadsheet_plants.xls',
+                                                          'spreadsheet phenotype file'
+                                                        ],
+          'data_collector_upload.xls' => [
+                                           'data_collector_upload.xls',
+                                           'tablet phenotype file'
+                                         ],
+          'fieldbook_phenotype_plants_file.csv' => [
+                                                     'fieldbook_phenotype_plants_file.csv',
+                                                     'tablet phenotype file'
+                                                   ],
+          'upload_phenotypin_spreadsheet_duplicate.xls' => [
+                                                             'upload_phenotypin_spreadsheet_duplicate.xls',
+                                                             'spreadsheet phenotype file'
+                                                           ]
+        }, "uploaded file metadata");
+
 $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id}, {order_by => {-asc => 'nd_experiment_id'}});
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
