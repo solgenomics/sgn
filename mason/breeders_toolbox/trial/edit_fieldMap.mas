@@ -228,7 +228,6 @@ jQuery(document).ready( function() {
 
 jQuery(document).ready(function () {
 
-
 	jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
 
@@ -236,7 +235,6 @@ jQuery(document).ready(function () {
 	         //console.log(response);
 
 		var trial_accessions_html = "<select class='form-control' id='trial_accessions_table'>";
-		//trial_accessions_html = trial_accessions_html + '<option value="all">All</option>';
 		for (i=0; i<response.accessions[0].length; i++) {
 		    trial_accessions_html = trial_accessions_html + "<option value=" + response.accessions[0][i].stock_id + ">" + response.accessions[0][i].accession_name + "</option>";
 
@@ -255,9 +253,6 @@ jQuery(document).ready(function () {
 			 url: '/ajax/breeders/trial/'+trial_id+'/coords',
 
 				 success: function(response) {
-				 console.log(response.acc);
-				 console.log(response.plot_name);
-				 console.log(response.plot_id);
 
 				 var trial_plot_name_html = "<select class='form-control' id='trial_plot_1_name_table'>";
 				 var trial_plot_number_html = "<select class='form-control' id='trial_plot_2_name_table'>";
@@ -267,7 +262,6 @@ jQuery(document).ready(function () {
 			 			for (i=0; i<response.plot_name[n].length; i++) {
 			 		    trial_plot_name_html = trial_plot_name_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + "Plot:" + response.plot_name[n][i] + "," + " Number:" + response.plot_number[n][i] + "," +" Accession:"+ response.acc[n][i] +"</option>";
 							trial_plot_number_html = trial_plot_number_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + "Plot:" + response.plot_name[n][i] + "," + " Number:" + response.plot_number[n][i] + "," +" Accession:"+ response.acc[n][i] + "</option>";
-						//	trial_plot_accession_html = trial_plot_accession_html + "<option value=" + response.acc[0][i] + ">" + response.acc[0][i] + "</option>";
 				 		}
 					}
 					trial_plot_name_html = trial_plot_name_html + "</select>";
@@ -278,9 +272,6 @@ jQuery(document).ready(function () {
 					jQuery('#sub_plot_accession_in_trial').empty();
 					jQuery('#sub_plot_accession_in_trial').html(trial_plot_number_html);
 
-				//	trial_plot_accession_html = trial_plot_accession_html + "</select>";
-				//	jQuery('#plot_accession_in_trial').empty();
-				//	jQuery('#plot_accession_in_trial').html(trial_plot_accession_html);
 			 }
 	});
 
@@ -293,7 +284,6 @@ jQuery(document).ready(function () {
     jQuery('#working_modal').modal("show");
     var old_accession_id = jQuery('#trial_accessions_table').val();
     var new_accession = jQuery('#replace_database_accession').val();
-    //alert(old_accession + "and" + new_accession);
 
     new jQuery.ajax({
       type: 'POST',

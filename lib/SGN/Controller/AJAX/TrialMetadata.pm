@@ -528,10 +528,9 @@ sub substitute_accession : Chained('trial') PathPart('substitute_accession') Arg
   my $plot_1_info = $c->req->param('plot_1_info');
   my $plot_2_info = $c->req->param('plot_2_info');
 
-  print "$plot_1_info and $plot_2_info\n";
   my ($plot_1_id, $accession_1) = split /,/, $plot_1_info;
   my ($plot_2_id, $accession_2) = split /,/, $plot_2_info;
-  print "1plot: $plot_1_id, 1acc: $accession_1\n";
+  
   if ($self->privileges_denied($c)) {
     $c->stash->{rest} = { error => "You have insufficient access privileges to update this map." };
     return;
