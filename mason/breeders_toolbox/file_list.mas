@@ -4,6 +4,7 @@
 
 <%args>
 $files => []
+$allow_delete => 0
 </%args>
 
 % if (scalar(@$files)>0) {
@@ -16,7 +17,11 @@ $files => []
   <tr>
     <td><% $f->{basename} %></td>
     <td><% $f->{create_date} %></td>
-    <td><a id="delete_pheno_file_link" href="/breeders/phenotyping/delete/<% $f->{file_id} %>" >Delete</a> | <a href="/breeders/phenotyping/view/<% $f->{file_id} %>">View</a> | <a href="/breeders/phenotyping/download/<% $f->{file_id} %>">Download</a></td>
+    <td>
+% if ($allow_delete){
+    <a id="delete_pheno_file_link" href="/breeders/phenotyping/delete/<% $f->{file_id} %>" >Delete</a> | 
+% }
+    <a href="/breeders/phenotyping/view/<% $f->{file_id} %>">View</a> | <a href="/breeders/phenotyping/download/<% $f->{file_id} %>">Download</a></td>
   </tr>
 % }
 </tbody>
