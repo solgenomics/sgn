@@ -1,0 +1,38 @@
+
+<%args>
+</%args>
+
+<& /page/page_title.mas, title=>"Compose a new trait" &>
+
+<form>
+  <div class="form-group">
+    <label for="entitySelect">Entity</label>
+    <select class="form-control" id="entitySelect">
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="qualitySelect">Quality</label>
+    <select class="form-control" id="qualitySelect">
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="methodSelect">Method</label>
+    <select class="form-control" id="methodSelect">
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="unitSelect">Unit</label>
+    <select class="form-control" id="unitSelect">
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="timeSelect">Time</label>
+    <select class="form-control" id="timeSelect">
+    </select>
+  </div>
+  <div class="form-group">
+    <label>Definition</label>
+    <textarea class="form-control" id="definition" rows="3"></textarea>
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
