@@ -3,11 +3,14 @@
 
 args=(commandArgs(TRUE))
 
+
+trait = ''
+
 if(length(args)==0){
     print("No arguments supplied.")
     ##supply default values
     phenotype_file = 'phenotypes.txt'
-    output_file = paste(phenotype_file, ".png")
+    output_file = paste0(phenotype_file, ".png", sep="")
     trait = ''
 }else{
     for(i in 1:length(args)){
@@ -15,9 +18,11 @@ if(length(args)==0){
     }
 }
 
-print(paste("phenotype file: ", phenotype_file))
-print(paste("output_file: ", output_file))
-print(paste("trait: ", trait))
+write(paste("phenotype file: ", phenotype_file), stderr())
+write(paste("output_file: ", output_file), stderr())
+write(paste("trait: ", trait), stderr())
+
+errorfile = paste(phenotype_file, ".err", sep="");
 
 phenodata = read.csv(phenotype_file, sep=",", header = T, stringsAsFactors = T, na.strings="NA")
 
@@ -35,7 +40,7 @@ for (i in 1:(length(studyNames))) {
     for (n in 1:length(blocks)) { 
         print(paste("StudyName: ", studyNames[i], n))
         trialdata = phenodata[phenodata[,"studyName"]==studyNames[i] & phenodata[,"blockNumber"]==n, ]
-	show(trialdata)
+	#	show(trialdata)
        for (m in 1:length(all_accessions)) { 
 	
 	    acc_slice = trialdata[trialdata[,"germplasmName"] ==  as.character(all_accessions[m] ), 16 ]
@@ -77,7 +82,15 @@ for (i in 1:length(empty_cols)) {
     datamatrix <- datamatrix[,-empty_cols[i]]
 }
 
-show(datamatrix)
+if (nrow(datamatrix)==0) { 
+   write("No data was retrieved from the database for this combination of trials and ", file = errorfile);
+}
+if (ncol(datamatrix) < 2) { 
+   write("No data. Try again", file = errorfile);
+}
+
+write("blablabla", file = errorfile);
+#show(datamatrix)
 
 
 #correlation
