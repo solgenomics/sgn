@@ -1,0 +1,168 @@
+BGV	Country	genus	sp_libreta	species	synonyms 	population_name
+BGV007854	Mexico	Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+BGV007857	Mexico	Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+BGV007860	Mexico	Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+BGV007862	Mexico	Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+BGV007863	Mexico	Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+BGV007864	Mexico	Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+BGV007865	Mexico	Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+BGV007867	Mexico	Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+BGV007870	Mexico	Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+BGV007871	Mexico	Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+BGV007872	Mexico	Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+BGV007875	Mexico	Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+BGV007876	Mexico	Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+BGV007878	Mexico	Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+BGV007936	Mexico	Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+LA0767		Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+Tegucigalpa		Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+Voyage		Solanum	lycopersicum	Solanum lycopersicum		UGA accessions lycopersicum
+BGV006148	Ecuador	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV006208	Ecuador	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV006327	Peru	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV006336	Peru	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV006347	Peru	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV006353	Peru	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV006363	Peru	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV006370	Peru	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV006454	Peru	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV006457	Peru	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV006478	Peru	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV007109	Ecuador	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV007111	Ecuador	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV007149	Ecuador	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV007151	Ecuador	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV007152	Ecuador	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV007155	Ecuador	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV007158	Ecuador	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV007161	Ecuador	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV007169	Ecuador	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV007181	Ecuador	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV007194	Ecuador	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV007198	Ecuador	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV015380	Peru	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV015382	Peru	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+PAS014479	Peru	Solanum	pimpinellipolium	Solanum pimpinellifolium		UGA accessions pimpinellifolium
+BGV004584	Colombia	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV005895	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV005912	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006175	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006225	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006229	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006230	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006231	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006232	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006234	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006235	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006753	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006767	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006768	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006777	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006779	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006792	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006806	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006825	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006828	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006852	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006859	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006865	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006867	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006881	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006896	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006899	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006901	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006904	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006906	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006907	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006910	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006927	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006931	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006934	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007015	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007017	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007023	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007894	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007895	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007899	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007900	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007901	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007902	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007908	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007909	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007910	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007911	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007918	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007920	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007921	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007927	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007931	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007933	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007934	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007935	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007981	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007989	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007990	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007992	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008036	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008037	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008041	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008042	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008051	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008058	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008061	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008065	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008067	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008070	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008077	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008095	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008096	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008098	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008100	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008106	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008108	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008189	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008218	Costa Rica	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008219	Costa Rica	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008221	El Salvador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008223	Honduras	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008224	Nicaragua	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008225	Nicaragua	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008345	El Salvador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008348	Costa Rica	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV008354	Costa Rica	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV012613	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV012614	Mexico	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV012615	Colombia	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV012625	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV012626	Colombia	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV012627	Colombia	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV012639	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV012640	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV013134	Costa Rica	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV013161	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV013175	Colombia	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV013945	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV014508	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV014514	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV014515	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV014516	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV014518	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV014519	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV014522	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV015726	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV015727	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV015730	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV015734	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+CATIE-11106/1	Honduras	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+LA1712	Costa Rica	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+LA2309	Peru	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+LA2697	Colombia	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+PI129026	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+PI129033	Ecuador	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+PI129088	Colombia	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+PI378994		Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+PI406890	Honduras	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+PI487625	Costa Rica	Solanum	lycopersicum	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV006775	Ecuador	Solanum	pimpinellifolium	Solanum lycopersicum var. cerasiforme		UGA accessions cerasiforme
+BGV007339				Solanum lycopersicum		UGA accessions lycopersicum
+BGV007366				Solanum lycopersicum		UGA accessions lycopersicum

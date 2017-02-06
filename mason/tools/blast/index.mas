@@ -107,7 +107,7 @@
 
 % if ($blast_db_icons) {
 <!-- images to get direct access to the model plant dbs. db_id is the blast_db_id on the SGN database -->
-<img class="fruit_icon" height="25" src="/documents/img/blast_icons/tomato.png" db_id="32" title="Tomato current DB">
+<img class="fruit_icon" height="25" src="/documents/img/blast_icons/tomato.png" db_id="34" title="Tomato current DB">
 <img class="fruit_icon" height="18" src="/documents/img/blast_icons/potato.png" db_id="10" title="Potato current DB">
 <img class="fruit_icon" height="25" src="/documents/img/blast_icons/pepper.png" db_id="21" title="Pepper current DB">
 <img class="fruit_icon" height="25" src="/documents/img/blast_icons/eggplant.png" db_id="29" title="Eggplant current DB">
