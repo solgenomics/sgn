@@ -354,15 +354,15 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
     </&>
     <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=> '[<a id="create_DataCollector_link">Create DataCollector Spreadsheet</a>]' &>
     </&>
-  </&>
-  <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+  </&><!-- closes create new phenotyping file section -->
+  <&| /page/info_section.mas, title=>"Upload Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
     <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link">Upload</a>]'&>
     </&>
     <&| /page/info_section.mas, title=>"Android Field Book Exported", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_fieldbook_phenotypes_link">Upload</a>]'&>
     </&>
     <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_datacollector_phenotypes_link">Upload</a>]'&>
     </&>
-  </&>
+  </&><!-- closes upload new phenotype file section -->
   <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
 
   <table class="table table-bordered files_datatables" alt="">
@@ -382,11 +382,11 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
   </tbody>
   </table>
 
-  </&>
+  </&><!-- closes uploaded file section -->
 
 </div><!-- closes well -->
 
-</&>
+</&><!-- closes entire phenotyping file section -->
 
 <& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
 <& /fieldbook/upload_phenotype_fieldbook.mas &>
