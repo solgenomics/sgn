@@ -8,6 +8,7 @@ use Data::Dumper;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use List::Util 'max';
+use Bio::Chado::Schema;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 	is => 'rw',
@@ -207,21 +208,8 @@ sub delete_fieldmap {
 sub update_fieldmap_precheck {
 	my $self = shift;
 	my $error;
-	# my $plot_1_id = $self->first_plot_selected;
-	# my $plot_2_id = $self->second_plot_selected;
-	# my $accession_1 = $self->first_accession_selected;
-	# my $accession_2 = $self->second_accession_selected;
 	my $trial_id = $self->trial_id;
 
-	# if (!$accession_1 || !$accession_2){
-  #   $error = "Dragged plot has no accession.";
-  # }
-  # if (!$plot_1_id || !$plot_2_id ){
-  #   $error = "Dragged plot is empty.";
-  # }
-  # if ($plot_1_id == $plot_2_id){
-  #   $error = "You have dragged a plot twice.";
-  # }
 	my $trial = CXGN::Trial->new({
 		bcs_schema => $self->bcs_schema,
 		trial_id => $trial_id
@@ -271,6 +259,7 @@ sub substitute_accession_fieldmap {
 sub replace_plot_accession_fieldMap {
 	my $self = shift;
 	my $error;
+	my $schema = $self->bcs_schema;
 	my $dbh = $self->bcs_schema->storage->dbh;
 	my $new_accession = $self->new_accession;
 	my $old_accession = $self->old_accession;
@@ -278,19 +267,22 @@ sub replace_plot_accession_fieldMap {
 
 	print "New Accession: $new_accession, Old Accession: $old_accession, Old Plot Id: $old_plot_id\n";
 
-	my $new_accession_id;
-	my $h_new = $dbh->prepare("select stock_id from stock where uniquename=?;");
-	$h_new->execute($new_accession);
-	while ( my $new_accession_id_ = $h_new->fetchrow_array()) {
-			$new_accession_id = $new_accession_id_;
-	}
+	my $new_accession_id = $schema->resultset("Stock::Stock")->search({uniquename => $new_accession})->first->stock_id();
+	# my $new_accession_id;
+	# my $h_new = $dbh->prepare("select stock_id from stock where uniquename=?;");
+	# $h_new->execute($new_accession);
+	# while ( my $new_accession_id_ = $h_new->fetchrow_array()) {
+	# 		$new_accession_id = $new_accession_id_;
+	# }
 
-	my $old_accession_id;
-	my $h_old = $dbh->prepare("select stock_id from stock where uniquename=?;");
-	$h_old->execute($old_accession);
-	while ( my $old_accession_id_ = $h_old->fetchrow_array()) {
-		$old_accession_id = $old_accession_id_;
-	}
+	my $old_accession_id = $schema->resultset("Stock::Stock")->search({uniquename => $old_accession})->first->stock_id();
+	# my $old_accession_id;
+	# my $h_old = $dbh->prepare("select stock_id from stock where uniquename=?;");
+	# $h_old->execute($old_accession);
+	# while ( my $old_accession_id_ = $h_old->fetchrow_array()) {
+	# 	$old_accession_id = $old_accession_id_;
+	# }
+  print "NEWID.....: $new_accession_id and OLDID......: $old_accession_id\n";
 
 	my $h_old_plot_id = $dbh->prepare("select object_id from stock_relationship where subject_id=?;");
 	$h_old_plot_id->execute($old_plot_id);
@@ -308,6 +300,7 @@ sub replace_plot_accession_fieldMap {
 sub replace_trial_accession_fieldMap {
 	my $self = shift;
 	my $error;
+	my $schema = $self->bcs_schema;
 	my $dbh = $self->bcs_schema->storage->dbh;
 	my $new_accession = $self->new_accession;
 	my $old_accession_id = $self->old_accession_id;
@@ -315,12 +308,15 @@ sub replace_trial_accession_fieldMap {
 
 	print "New Accession: $new_accession and OLD Accession: $old_accession_id\n";
 
-	my $new_accession_id;
-	my $h_new = $dbh->prepare("select stock_id from stock where uniquename=?;");
-	$h_new->execute($new_accession);
-	while ( my $new_accession_id_ = $h_new->fetchrow_array()) {
-			$new_accession_id = $new_accession_id_;
-	}
+	my $new_accession_id = $schema->resultset("Stock::Stock")->search({uniquename => $new_accession})->first->stock_id();
+
+	print "NEWACCID........: $new_accession_id\n";
+	#my $new_accession_id;
+	# my $h_new = $dbh->prepare("select stock_id from stock where uniquename=?;");
+	# $h_new->execute($new_accession);
+	# while ( my $new_accession_id_ = $h_new->fetchrow_array()) {
+	# 		$new_accession_id = $new_accession_id_;
+	# }
 
 	my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();

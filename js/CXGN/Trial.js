@@ -537,35 +537,9 @@ buttons: {
 
 });
 
-
 jQuery('#update_field_map_link').click(function () {
     jQuery('#update_field_map_dialog').dialog("open");
 });
-
-// jQuery("#replace_plot_accessions_dialog").dialog({
-//   autoOpen: false,
-//   modal: true,
-//   // buttons: {
-//   //           "Cancel": function(){
-//   //                       jQuery('#replace_plot_accessions_dialog').dialog("close");
-//   //                     },
-//   //
-//   //         "OK" :  function() {
-//   //                 replace_accessions();
-//   //                 jQuery('#replace_plot_accessions_dialog').dialog("close");
-//   //               }
-//   //               //text: "Replace"
-//   //
-//   //     }
-// })
-
-// jQuery('#replace_accessions_link').click(function() {
-//   jQuery('#replace_plot_accessions_dialog').modal("show");
-// });
-
-// jQuery('input[id*="enter_database_accession"]').autocomplete({
-//     source: '/ajax/stock/accession_autocomplete'
-// });
 
 }
 
