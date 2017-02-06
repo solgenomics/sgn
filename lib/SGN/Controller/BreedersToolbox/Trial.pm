@@ -79,6 +79,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{harvest_date} = $trial->get_harvest_date();
 
     $c->stash->{trial_description} = $trial->get_description();
+    $c->stash->{trial_phenotype_files} = $trial->get_phenotype_metadata();
 
     my $location_data = $trial->get_location();
     $c->stash->{location_id} = $location_data->[0];
