@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 07:02:2017 10:27
+date: 07:02:2017 13:39
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -712,7 +712,7 @@ xref: PATO:0000125
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-relationship: part_of SP:0000037 ! fruit
+relationship: variable_of SP:0000037 ! fruit
 created_by: naama
 creation_date: 2008-02-12T03:11:00Z
 
@@ -805,7 +805,7 @@ synonym: "lcn" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000011 ! fruit morphology
+relationship: variable_of SP:0000011 ! fruit morphology
 created_by: naama
 creation_date: 2008-02-12T03:30:00Z
 
@@ -3526,7 +3526,7 @@ creation_date: 2012-11-02T04:03:23Z
 id: SP:0000394
 name: fruit solids percentage
 def: "Net dry weight (after 1 week in oven) divided by net fresh weight of the fruit and multiplied by 100." [SGN:EVDK]
-relationship: part_of SP:0000080 ! fruit mass
+relationship: variable_of SP:0000080 ! fruit mass
 created_by: naama
 creation_date: 2017-02-06T15:17:20Z
 
