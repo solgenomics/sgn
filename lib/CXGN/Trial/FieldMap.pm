@@ -268,20 +268,7 @@ sub replace_plot_accession_fieldMap {
 	print "New Accession: $new_accession, Old Accession: $old_accession, Old Plot Id: $old_plot_id\n";
 
 	my $new_accession_id = $schema->resultset("Stock::Stock")->search({uniquename => $new_accession})->first->stock_id();
-	# my $new_accession_id;
-	# my $h_new = $dbh->prepare("select stock_id from stock where uniquename=?;");
-	# $h_new->execute($new_accession);
-	# while ( my $new_accession_id_ = $h_new->fetchrow_array()) {
-	# 		$new_accession_id = $new_accession_id_;
-	# }
-
 	my $old_accession_id = $schema->resultset("Stock::Stock")->search({uniquename => $old_accession})->first->stock_id();
-	# my $old_accession_id;
-	# my $h_old = $dbh->prepare("select stock_id from stock where uniquename=?;");
-	# $h_old->execute($old_accession);
-	# while ( my $old_accession_id_ = $h_old->fetchrow_array()) {
-	# 	$old_accession_id = $old_accession_id_;
-	# }
   print "NEWID.....: $new_accession_id and OLDID......: $old_accession_id\n";
 
 	my $h_old_plot_id = $dbh->prepare("select object_id from stock_relationship where subject_id=?;");
@@ -309,15 +296,6 @@ sub replace_trial_accession_fieldMap {
 	print "New Accession: $new_accession and OLD Accession: $old_accession_id\n";
 
 	my $new_accession_id = $schema->resultset("Stock::Stock")->search({uniquename => $new_accession})->first->stock_id();
-
-	print "NEWACCID........: $new_accession_id\n";
-	#my $new_accession_id;
-	# my $h_new = $dbh->prepare("select stock_id from stock where uniquename=?;");
-	# $h_new->execute($new_accession);
-	# while ( my $new_accession_id_ = $h_new->fetchrow_array()) {
-	# 		$new_accession_id = $new_accession_id_;
-	# }
-
 	my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();

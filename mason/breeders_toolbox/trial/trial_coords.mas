@@ -206,7 +206,7 @@ var trial_id = <% $trial_id %>;
     fill: color,
   	stroke: stroke_col,
   	strokeWidth:3,
-    draggable: true
+    //draggable: true
   });
 
 	var plot_txt_info = new Kinetic.Text({
