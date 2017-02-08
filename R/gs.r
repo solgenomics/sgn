@@ -125,9 +125,8 @@ if (datasetInfo == 'combined populations') {
    
       phenoTrait            <- as.data.frame(phenoTrait)   
       colnames(phenoTrait)  <- c('genotypes', trait)
-    }
-   
-} else {
+    }   
+ } else {
 
   if (!is.null(formattedPhenoData)) {
     phenoTrait <- subset(formattedPhenoData, select = c('V1', trait))
@@ -174,8 +173,32 @@ if (datasetInfo == 'combined populations') {
         phenoTrait           <- round(phenoTrait, 2)       
         phenoTrait$genotypes <- rownames(phenoTrait)
         phenoTrait           <- phenoTrait[, c(2,1)]
+      }            
+    } else if ((experimentalDesign == 'CRD')  &&  length(unique(phenoTrait$replicate)) > 1) {
+
+      message("GS experimental design: ", experimentalDesign)
+
+      crdData <- subset(phenoTrait, select = c("object_name", "object_id",  "replicate",  trait))
+
+      colnames(crdData)[1] <- "genotypes"
+      colnames(crdData)[4] <- "trait"
+
+      model <- try(lmer(trait ~ 0 + genotypes + (1|replicate),
+                        crdData,
+                        na.action = na.omit))
+
+      if (class(model) != "try-error") {
+        phenoTrait <- data.frame(fixef(model))
+        
+        colnames(phenoTrait) <- trait
+
+        nn <- gsub('genotypes', '', rownames(phenoTrait))  
+        rownames(phenoTrait) <- nn
+      
+        phenoTrait           <- round(phenoTrait, 2)       
+        phenoTrait$genotypes <- rownames(phenoTrait)
+        phenoTrait           <- phenoTrait[, c(2,1)]
       }
-            
     } else if (experimentalDesign == 'Alpha') {
    
       message("Experimental desgin: ", experimentalDesign)
@@ -202,8 +225,7 @@ if (datasetInfo == 'combined populations') {
         phenoTrait           <- round(phenoTrait, 2)
         phenoTrait$genotypes <- rownames(phenoTrait)
         phenoTrait           <- phenoTrait[, c(2,1)]     
-      }
-      
+      }     
     } else {
 
       phenoTrait <- subset(phenoData,
