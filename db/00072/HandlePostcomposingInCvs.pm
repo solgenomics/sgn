@@ -51,6 +51,13 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 --do your SQL here
 
+-- add cv and db for composed traitsXyears
+insert into db (name) value ('COMP');
+CREATE SEQUENCE postcomposed_trait_ids;
+insert into cv (name) values ('composed_traits');
+insert into dbxref (db_id, accession) select db_id, nextval('postcomposed_trait_ids') from db where name = 'COMP';
+insert into cvterm (cv_id,name,dbxref_id) select cv_id, 'Composed trait ontology', dbxref_id from cv join db on true AND db.name = 'COMP' join dbxref using(db_id) where cv.name = 'composed_traits';
+
 -- REDEFINE materialized_phenoview, DROP UNNECESSARY FIELDS AND PUT TRAIT IDS IN JSON ARRAY:
 
 DROP MATERIALIZED VIEW IF EXISTS public.materialized_phenoview CASCADE;
