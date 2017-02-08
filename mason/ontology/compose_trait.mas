@@ -1,38 +1,64 @@
 
 <%args>
+$entity_namespaces => undef
+$quality_namespaces => undef
+$unit_namespaces => undef
+$time_namespaces => undef
 </%args>
 
 <& /page/page_title.mas, title=>"Compose a new trait" &>
+</br>
 
+<div class="container">
 <form>
-  <div class="form-group">
-    <label for="entitySelect">Entity</label>
-    <select class="form-control" id="entitySelect">
-    </select>
+  <div class="row">
+    <div class="col-md-6 form-group">
+      <label for="entity_select_div" class="control-label">Entity</label>
+      <p class="help-block"><small>Pick the entity the new trait measures</small></p>
+      <div id="entity_select_div">
+      </div>
+    </div>
+    <div class="col-md-6 form-group">
+      <center><label class="control-label">Exisiting Traits</label></center>
+      <center><p class="help-block"><small>Existing traits that match the current selections</small></p></center>
+    </div>
   </div>
-  <div class="form-group">
-    <label for="qualitySelect">Quality</label>
-    <select class="form-control" id="qualitySelect">
-    </select>
+  <div class="row">
+    <div class="col-md-6 form-group">
+      <label for="quality_select_div" class="control-label">Quality</label>
+      <p class="help-block"><small>Pick the quality the new trait measures</small></p>
+      <div id="quality_select_div">
+      </div>
+    </div>
   </div>
-  <div class="form-group">
-    <label for="methodSelect">Method</label>
-    <select class="form-control" id="methodSelect">
-    </select>
+  <div class="row">
+    <div class="col-md-6 form-group">
+      <label for="unit_select_div" class="control-label">Unit</label>
+      <p class="help-block"><small>Pick the units in which the new trait is measured</small></p>
+      <div id="unit_select_div">
+      </div>
+    </div>
   </div>
-  <div class="form-group">
-    <label for="unitSelect">Unit</label>
-    <select class="form-control" id="unitSelect">
-    </select>
+  <div class="row">
+    <div class="col-md-6 form-group">
+      <label for="time_select_div" class="control-label">Time</label>
+      <p class="help-block"><small>If applicable, pick the time at which the new trait is measured</small></p>
+      <div id="time_select_div">
+      </div>
+    </div>
+    <div class="col-md-6 form-group">
+      <label for="definition" class="control-label">Definition</label>
+      <textarea class="form-control" id="definition" rows="3"></textarea>
+    </div>
   </div>
-  <div class="form-group">
-    <label for="timeSelect">Time</label>
-    <select class="form-control" id="timeSelect">
-    </select>
-  </div>
-  <div class="form-group">
-    <label>Definition</label>
-    <textarea class="form-control" id="definition" rows="3"></textarea>
-  </div>
-  <button type="submit" class="btn btn-primary">Submit</button>
+  <center><button type="submit" id="compose_trait" class="btn btn-primary">Submit</button></center>
 </form>
+</div>
+
+<script>
+get_select_box('trait_components', 'entity_select_div', { 'id' : 'entity_select', 'name': 'entity_select', 'default': 'Select an entity', 'namespaces': '<%$entity_namespaces%>' });
+get_select_box('trait_components', 'quality_select_div', { 'id' : 'quality_select', 'name': 'quality_select', 'default': 'Select a quality', 'namespaces': '<%$quality_namespaces%>' });
+get_select_box('trait_components', 'unit_select_div', { 'id' : 'unit_select', 'name': 'unit_select', 'default': 'Select a unit', 'namespaces': '<%$unit_namespaces%>' });
+get_select_box('trait_components', 'time_select_div', { 'id' : 'time_select', 'name': 'time_select', 'default': 'Select a time', 'namespaces': '<%$time_namespaces%>' });
+
+</script>

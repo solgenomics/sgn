@@ -26,6 +26,7 @@ use CXGN::BreedersToolbox::Projects;
 use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
 use Scalar::Util qw | looks_like_number |;
 use CXGN::Trial;
+use CXGN::Onto;
 use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
 
@@ -327,6 +328,33 @@ sub get_genotyping_protocols_select : Path('/ajax/html/select/genotyping_protoco
       selected => $gtps{$default_gtp}
     );
     $c->stash->{rest} = { select => $html };
+}
+
+sub get_trait_components_select : Path('/ajax/html/select/trait_components') Args(0) {
+
+  my $self = shift;
+  my $c = shift;
+
+  my $namespaces = $c->req->param('namespaces');
+  print STDERR "namespaces = $namespaces\n";
+  my $id = $c->req->param("id") || "component_select";
+  my $name = $c->req->param("name") || "component_select";
+  my $default = $c->req->param("default") || "Select a term";
+
+  my $dbh = $c->dbc->dbh();
+  my $onto = CXGN::Onto->new( { dbh=>$dbh } );
+  my @components = $onto->get_terms($namespaces);
+
+  if ($default) { unshift @components, [ '', $default ]; }
+
+  my $html = simple_selectbox_html(
+    name => $name,
+    id => $id,
+    choices => \@components
+  );
+
+  $c->stash->{rest} = { select => $html };
+
 }
 
 
