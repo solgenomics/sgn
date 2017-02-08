@@ -149,8 +149,8 @@ if (datasetInfo == 'combined populations') {
     }
       
     if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
-    
-    if ((experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD')  &&  unique(phenoTrait$block) > 1) {
+   
+    if ((experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD')  &&  length(unique(phenoTrait$block)) > 1) {
 
       message("GS experimental design: ", experimentalDesign)
 
@@ -171,7 +171,9 @@ if (datasetInfo == 'combined populations') {
         nn <- gsub('genotypes', '', rownames(phenoTrait))  
         rownames(phenoTrait) <- nn
       
-        phenoTrait <- round(phenoTrait, digits = 2)
+        phenoTrait           <- round(phenoTrait, 2)       
+        phenoTrait$genotypes <- rownames(phenoTrait)
+        phenoTrait           <- phenoTrait[, c(2,1)]
       }
             
     } else if (experimentalDesign == 'Alpha') {
@@ -197,8 +199,9 @@ if (datasetInfo == 'combined populations') {
         nn <- gsub('genotypes', '', rownames(phenoTrait))     
         rownames(phenoTrait) <- nn
       
-        phenoTrait <- round(phenoTrait, digits = 2)
-        
+        phenoTrait           <- round(phenoTrait, 2)
+        phenoTrait$genotypes <- rownames(phenoTrait)
+        phenoTrait           <- phenoTrait[, c(2,1)]     
       }
       
     } else {
@@ -222,8 +225,8 @@ if (datasetInfo == 'combined populations') {
       message('phenotyped lines after averaging: ', length(row.names(phenoTrait)))
         
       phenoTrait <- subset(phenoTrait, select = c("object_name", trait))
+      
       colnames(phenoTrait)[1] <- 'genotypes'
-       
     }
   }
 }
