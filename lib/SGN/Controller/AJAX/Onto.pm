@@ -56,7 +56,7 @@ sub compose_trait: Path('/ajax/onto/compose') Args(0) {
   my $dbh = $c->dbc->dbh();
   my $onto = CXGN::Onto->new( { dbh=>$dbh } );
 
-  my $composed_trait = $onto->composed_trait($ids);
+  my $composed_trait = $onto->compose_trait($ids);
 
   $c->stash->{rest} = { success => $composed_trait };
 

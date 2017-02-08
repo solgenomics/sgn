@@ -50,4 +50,42 @@ sub get_terms {
       return @results;
 }
 
+
+sub compose_trait {
+      my $self = shift;
+      my $ids = shift;
+      print STDERR "Ids for composing in CXGN:Onto = $ids\n";
+
+      my $db = $schema->resultset("General::Db")->find_or_create(
+          { name => 'COMP' });
+
+      my $cv= $schema->resultset('Cv::Cv')->find_or_create( { name => 'composed_traits' });
+
+      my $new_term_dbxref =  $schema->resultset("General::Dbxref")->create(
+      {   db_id     => $db->get_column('db_id'),
+		      accession => "SELECT nextval('postcomposed_trait_ids')"
+		  });
+
+    my $new_term= $schema->resultset("Cv::Cvterm")->create(
+      { cv_id  =>$cv->cv_id(),
+        name   => "SELECT string_agg(cvterm.name::text, ' ') FROM cvterm where cvterm id IN ($ids)",
+        dbxref_id  => $new_term_dbxref-> dbxref_id()
+      });
+
+    my $relationship = $schema->resultset("Cv::Cvterm")->search(
+  	    { name => 'contains',
+      });
+
+    foreach $component_id (@component_ids) {
+      my $new_rel = $schema->resultset('Cv::CvtermRelationship')->create(
+        { subject_id => $component_id
+          object_id  => $new_term->cvterm_id(),
+          type_id    => $relationship->cvterm_id(),
+      });
+    }
+
+    return $new_term;
+}
+
+
 1;

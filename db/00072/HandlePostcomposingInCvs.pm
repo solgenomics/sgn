@@ -51,7 +51,7 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 --do your SQL here
 
--- add cv and db for composed traitsXyears
+-- add cv and db for composed traits
 insert into db (name) value ('COMP');
 CREATE SEQUENCE postcomposed_trait_ids;
 insert into cv (name) values ('composed_traits');
