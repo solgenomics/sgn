@@ -223,6 +223,33 @@ sub update_fieldmap_precheck {
 	return $error;
 }
 
+sub substitute_accession_precheck {
+	my $self = shift;
+	my $error;
+	my @plots;
+	my @ids;
+	my $dbh = $self->bcs_schema->storage->dbh;
+	my $plot_1_id = $self->first_plot_selected;
+	my $plot_2_id = $self->second_plot_selected;
+	push @ids, $plot_1_id;
+	push @ids, $plot_2_id;
+
+	my $isAcontrol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'is a control', 'stock_property' )->cvterm_id();
+
+	foreach my $id (@ids) {
+		my $h = $dbh->prepare("select value from stockprop where stock_id=? and type_id=?;");
+		$h->execute($id,$isAcontrol_cvterm_id);
+		while (my $plot = $h->fetchrow_array()) {
+			push @plots, $plot;
+		}
+	}
+	
+	if (scalar(@plots) != 0)  {
+	 $error = "Controlled (check) plots can not be substituted..";
+	}
+	return $error;
+}
+
 sub substitute_accession_fieldmap {
 	my $self = shift;
 	my $error;
