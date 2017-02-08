@@ -150,9 +150,9 @@ function addToggleIds () {
 }
 
 function retrieve_and_display_set(categories, data, this_section) {
-    //if (window.console) console.log("categories = "+categories);
-    //if (window.console) console.log("data = "+JSON.stringify(data));
-    //if (window.console) console.log("querytypes="+get_querytypes(this_section));
+    if (window.console) console.log("categories = "+categories);
+    if (window.console) console.log("data = "+JSON.stringify(data));
+    if (window.console) console.log("querytypes="+get_querytypes(this_section));
     jQuery.ajax( {
 	url: '/ajax/breeder/search',
 	timeout: 60000,

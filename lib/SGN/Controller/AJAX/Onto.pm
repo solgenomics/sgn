@@ -28,6 +28,7 @@ package SGN::Controller::AJAX::Onto;
 
 use Moose;
 use CXGN::Chado::Cvterm;
+use CXGN::Onto;
 
 use namespace::autoclean;
 
@@ -39,6 +40,27 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
+=head2 compose_trait
+
+Creates a new term in the designated composed trait cv and links it to component terms through cvterm_relationship
+
+=cut
+
+
+sub compose_trait: Path('/ajax/onto/compose') Args(0) {
+
+  my $self = shift;
+  my $c = shift;
+
+  my $ids = $c->req->param("ids[]");
+  my $dbh = $c->dbc->dbh();
+  my $onto = CXGN::Onto->new( { dbh=>$dbh } );
+
+  my $composed_trait = $onto->composed_trait($ids);
+
+  $c->stash->{rest} = { success => $composed_trait };
+
+}
 
 =head2 children
 

@@ -14,13 +14,15 @@ $time_namespaces => undef
   <div class="row">
     <div class="col-md-6 form-group">
       <label for="entity_select_div" class="control-label">Entity</label>
-      <p class="help-block"><small>Pick the entity the new trait measures</small></p>
+      <p class="help-block"><small>Pick the entity on/over which the new trait is measured</small></p>
       <div id="entity_select_div">
       </div>
     </div>
     <div class="col-md-6 form-group">
       <center><label class="control-label">Exisiting Traits</label></center>
       <center><p class="help-block"><small>Existing traits that match the current selections</small></p></center>
+      <div id="matched_traits_div">
+      </div>
     </div>
   </div>
   <div class="row">
@@ -46,19 +48,93 @@ $time_namespaces => undef
       <div id="time_select_div">
       </div>
     </div>
-    <div class="col-md-6 form-group">
+  <!--  <div class="col-md-6 form-group">
       <label for="definition" class="control-label">Definition</label>
       <textarea class="form-control" id="definition" rows="3"></textarea>
     </div>
+-->  </div>
+<br>
+  <div class="row">
+    <div class="col-md-6 form-group">
+      <center><button type="submit" id="compose_trait" class="btn btn-primary">Submit</button></center>
+    </div>
   </div>
-  <center><button type="submit" id="compose_trait" class="btn btn-primary">Submit</button></center>
 </form>
 </div>
 
 <script>
 get_select_box('trait_components', 'entity_select_div', { 'id' : 'entity_select', 'name': 'entity_select', 'default': 'Select an entity', 'namespaces': '<%$entity_namespaces%>' });
-get_select_box('trait_components', 'quality_select_div', { 'id' : 'quality_select', 'name': 'quality_select', 'default': 'Select a quality', 'namespaces': '<%$quality_namespaces%>' });
+get_select_box('trait_components', 'quality_select_div', { 'id' : 'entity_select', 'name': 'quality_select', 'default': 'Select a quality', 'namespaces': '<%$quality_namespaces%>' });
 get_select_box('trait_components', 'unit_select_div', { 'id' : 'unit_select', 'name': 'unit_select', 'default': 'Select a unit', 'namespaces': '<%$unit_namespaces%>' });
 get_select_box('trait_components', 'time_select_div', { 'id' : 'time_select', 'name': 'time_select', 'default': 'Select a time', 'namespaces': '<%$time_namespaces%>' });
+
+jQuery('#entity_select, #quality_select, #unit_select, #time_select').change(  // retrieve matching traits each time component selection changes
+  function() {
+    matching_traits = retrieve_matching_traits();
+    jQUery('#matched_traits_div').html(matching_traits);
+});
+
+jQuery('#compose_trait').on('click', function () {
+
+    var entity = jQuery("#entity_select").val();
+    var quality = jQuery("#quality_select").val();
+    var unit = jQuery("#unit_select").val();
+    var time = jQuery("#time_select").val();
+
+    matching_traits = retrieve_matching_traits();
+    if (matching_traits.length > 0) {
+      alert("Error. This combination in not new. Use trait"+matching_traits);
+    }
+    else {
+      jQuery.ajax( {
+        url: '/ajax/breeder/search',
+        timeout: 60000,
+        async: false,
+        method: 'POST',
+        data: {'categories': ['trait_components','traits'], 'data': component_ids, 'querytypes': 1},
+        beforeSend: function(){
+          disable_ui();
+        },
+        complete : function(){
+          enable_ui();
+        },
+        success: function(response) {
+
+        },
+        error: function(request, status, err) {
+
+        }
+      });
+    }
+  });
+
+function retrieve_matching_traits () {
+
+  var component_ids = [];
+  var traits = [];
+  component_ids.push(jQuery("#entity_select").val());
+  component_ids.push(jQuery("#quality_select").val());
+  component_ids.push(jQuery("#unit_select").val());
+  component_ids.push(jQuery("#time_select").val());
+
+  jQuery.ajax( {
+    url: '/ajax/breeder/search',
+	  timeout: 60000,
+    async: false,
+    method: 'POST',
+    data: {'categories': ['trait_components','traits'], 'data': component_ids, 'querytypes': 1},
+	  success: function(response) {
+      traits = response.list || [];
+      console.log("traits="+traits);
+    },
+	  error: function(request, status, err) {
+
+    }
+	});
+
+  return traits;
+
+}
+
 
 </script>
