@@ -1,0 +1,27 @@
+
+<%doc>
+
+
+</%doc>
+
+<%args>
+
+</%args>
+
+<& '/page/page_title.mas', title => "Compare trials" &>
+
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup' ] &>
+<table>
+<tr><th>Trial 1</th><th>Trial 2</th><th>Trait</th></tr>
+<tr><td width="200"><input id="trial_1" /></td><td width="200"><input id="trial_2" /></td><td width="200"><select></select></td></tr>
+</table>
+
+<script>
+
+jQuery('#trial_1').autocomplete( 
+   { source: '/ajax/trials/trial_autocomplete' });
+
+jQuery('#trial_2').autocomplete(
+   { source: '/ajax/trials/trial_autocomplete' });
+
+</script>
