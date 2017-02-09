@@ -28,14 +28,14 @@ sub search_male_parents :Path('/ajax/search/male_parents') :Args(0){
 
     my $q = "SELECT DISTINCT female_parent.stock_id, male_parent.stock_id, male_parent.uniquename FROM stock as female_parent
     INNER JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id=stock_relationship1.subject_id)
-    AND stock_relationship1.type_id= '$female_parent_typeid' INNER JOIN stock_relationship AS stock_relationship2
+    AND stock_relationship1.type_id= ? INNER JOIN stock_relationship AS stock_relationship2
     ON (stock_relationship1.object_id=stock_relationship2.object_id) INNER JOIN stock AS male_parent
-    ON (male_parent.stock_id=stock_relationship2.subject_id) AND stock_relationship2.type_id= '$male_parent_typeid'
-    WHERE female_parent.uniquename= '$female_parent' ORDER BY male_parent.uniquename ASC";
+    ON (male_parent.stock_id=stock_relationship2.subject_id) AND stock_relationship2.type_id= ?
+    WHERE female_parent.uniquename= ? ORDER BY male_parent.uniquename ASC";
 
 
     my $h = $dbh->prepare($q);
-    $h->execute();
+    $h->execute($female_parent_typeid, $male_parent_typeid, $female_parent);
 
     my @male_parents=();
     while(my ($female_parent_id, $male_parent_id, $male_parent_name) = $h->fetchrow_array()){
@@ -71,14 +71,14 @@ sub search_cross_info : Path('/ajax/search/cross_info') Args(0) {
 
     my $q = "SELECT female_parent.stock_id, male_parent.stock_id, cross_entry.stock_id, female_parent.uniquename, male_parent.uniquename, cross_entry.uniquename, stock_relationship1.value
     FROM stock as female_parent INNER JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id=stock_relationship1.subject_id)
-    AND stock_relationship1.type_id='$female_parent_typeid' INNER JOIN stock_relationship AS stock_relationship2
+    AND stock_relationship1.type_id= ? INNER JOIN stock_relationship AS stock_relationship2
     ON (stock_relationship1.object_id=stock_relationship2.object_id) INNER JOIN stock AS male_parent
-    ON (male_parent.stock_id=stock_relationship2.subject_id) AND stock_relationship2.type_id='$male_parent_typeid'
-    INNER JOIN stock AS cross_entry ON (cross_entry.stock_id=stock_relationship2.object_id) AND cross_entry.type_id='$cross_typeid'
-    WHERE female_parent.uniquename = '$female_parent' AND male_parent.uniquename = '$male_parent' ORDER BY stock_relationship1.value, male_parent.uniquename ASC";
+    ON (male_parent.stock_id=stock_relationship2.subject_id) AND stock_relationship2.type_id= ?
+    INNER JOIN stock AS cross_entry ON (cross_entry.stock_id=stock_relationship2.object_id) AND cross_entry.type_id= ?
+    WHERE female_parent.uniquename = ? AND male_parent.uniquename = ? ORDER BY stock_relationship1.value, male_parent.uniquename ASC";
 
     my $h = $dbh->prepare($q);
-    $h->execute();
+    $h->execute($female_parent_typeid, $male_parent_typeid, $cross_typeid, $female_parent, $male_parent);
 
     my @cross_info = ();
     while (my ($female_parent_id, $male_parent_id, $cross_entry_id, $female_parent_name, $male_parent_name, $cross_name, $cross_type) = $h->fetchrow_array()) {
@@ -112,14 +112,14 @@ sub search_all_crosses : Path('/ajax/search/all_crosses') Args(0) {
 
     my $q = "SELECT female_parent.stock_id, male_parent.stock_id, cross_entry.stock_id, female_parent.uniquename, male_parent.uniquename, cross_entry.uniquename, stock_relationship1.value
     FROM stock as female_parent INNER JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id=stock_relationship1.subject_id)
-    AND stock_relationship1.type_id='$female_parent_typeid' INNER JOIN stock_relationship AS stock_relationship2
+    AND stock_relationship1.type_id= ? INNER JOIN stock_relationship AS stock_relationship2
     ON (stock_relationship1.object_id=stock_relationship2.object_id) INNER JOIN stock AS male_parent
-    ON (male_parent.stock_id=stock_relationship2.subject_id) AND stock_relationship2.type_id='$male_parent_typeid'
-    INNER JOIN stock AS cross_entry ON (cross_entry.stock_id=stock_relationship2.object_id) AND cross_entry.type_id='$cross_typeid'
-    WHERE female_parent.uniquename = '$female_parent' ORDER BY stock_relationship1.value, male_parent.uniquename ASC";
+    ON (male_parent.stock_id=stock_relationship2.subject_id) AND stock_relationship2.type_id= ?
+    INNER JOIN stock AS cross_entry ON (cross_entry.stock_id=stock_relationship2.object_id) AND cross_entry.type_id= ?
+    WHERE female_parent.uniquename = ? ORDER BY stock_relationship1.value, male_parent.uniquename ASC";
 
     my $h = $dbh->prepare($q);
-    $h->execute();
+    $h->execute($female_parent_typeid, $male_parent_typeid, $cross_typeid, $female_parent);
 
     my @cross_info = ();
     while (my ($female_parent_id, $male_parent_id, $cross_entry_id, $female_parent_name, $male_parent_name, $cross_name, $cross_type) = $h->fetchrow_array()) {
