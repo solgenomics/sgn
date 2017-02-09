@@ -12,7 +12,7 @@ use CXGN::Trial;
 use SGN::Model::Cvterm;
 use DateTime;
 use Data::Dumper;
-use CXGN::Phenotypes::Search;
+use CXGN::Phenotypes::SearchFactory;
 use CXGN::BreederSearch;
 
 my $f = SGN::Test::Fixture->new();
@@ -3086,17 +3086,19 @@ my @phenosearch_test1_data = [
           '2014	137	test_trial	CRD	23	test_location	38841	test_accession2	test_accession2_synonym1,test_accession2_synonym2	plot	38865	test_trial29	1	1	9	35	24	1	15	28	8.8	6	76	3'
         ];
 
-my $phenotypes_search = CXGN::Phenotypes::Search->new({
-    bcs_schema=>$f->bcs_schema,
-    data_level=>'plot',
-    trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
-    trial_list=>[137,900],
-    plot_list=>\@plot_ids,
-    include_timestamp=>0,
-    phenotype_min_value=>1,
-    phenotype_max_value=>100,
-		search_type=>'complete'
-});
+my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+	'Native',    #can be either 'MaterializedView', or 'Native'
+	{
+		bcs_schema=>$f->bcs_schema,
+	    data_level=>'plot',
+	    trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
+	    trial_list=>[137,900],
+	    plot_list=>\@plot_ids,
+	    include_timestamp=>0,
+	    phenotype_min_value=>1,
+	    phenotype_max_value=>100,
+	}
+);
 my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 #print STDERR Dumper \@data;
 is_deeply(\@data, @phenosearch_test1_data, 'pheno search test1 complete');
@@ -3106,34 +3108,37 @@ my $refresh = 'SELECT refresh_materialized_views()';
 my $h = $f->dbh->prepare($refresh);
 $h->execute();
 
-my $phenotypes_search = CXGN::Phenotypes::Search->new({
-    bcs_schema=>$f->bcs_schema,
-    data_level=>'plot',
-    trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
-    trial_list=>[137,900],
-    plot_list=>\@plot_ids,
-    include_timestamp=>0,
-    phenotype_min_value=>1,
-    phenotype_max_value=>100,
-		search_type=>'fast'
-});
+my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+	'MaterializedView',    #can be either 'MaterializedView', or 'Native'
+	{
+		bcs_schema=>$f->bcs_schema,
+	    data_level=>'plot',
+	    trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
+	    trial_list=>[137,900],
+	    plot_list=>\@plot_ids,
+	    include_timestamp=>0,
+	    phenotype_min_value=>1,
+	    phenotype_max_value=>100,
+	}
+);
 my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 #print STDERR Dumper \@data;
 is_deeply(\@data, @phenosearch_test1_data, 'pheno search test1 fast');
 
-
-my $phenotypes_search = CXGN::Phenotypes::Search->new({
-    bcs_schema=>$f->bcs_schema,
-    data_level=>'plant',
-    trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
-    trial_list=>[137,900],
-    accession_list=>\@accession_ids,
-    include_timestamp=>1,
-    trait_contains=>['r'],
-    phenotype_min_value=>20,
-    phenotype_max_value=>100,
-		search_type=>'complete'
-});
+my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+	'Native',    #can be either 'MaterializedView', or 'Native'
+	{
+		bcs_schema=>$f->bcs_schema,
+	    data_level=>'plant',
+	    trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
+	    trial_list=>[137,900],
+	    accession_list=>\@accession_ids,
+	    include_timestamp=>1,
+	    trait_contains=>['r'],
+	    phenotype_min_value=>20,
+	    phenotype_max_value=>100,
+	}
+);
 my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 #print STDERR Dumper \@data;
 
@@ -3172,20 +3177,22 @@ is_deeply(\@test_result, [
           '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plant	variable	test_trial28_plant_2	2	1	8	25		35'
         ], 'pheno search test2');
 
-my $phenotypes_search = CXGN::Phenotypes::Search->new({
-    bcs_schema=>$f->bcs_schema,
-    data_level=>'all',
-    trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
-    trial_list=>[137,900],
-    accession_list=>\@accession_ids,
-	plot_list=>\@plot_ids,
-	plant_list=>\@plant_ids,
-    include_timestamp=>1,
-    trait_contains=>['r','t'],
-    phenotype_min_value=>20,
-    phenotype_max_value=>80,
-		search_type=>'complete'
-});
+my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+	'Native',    #can be either 'MaterializedView', or 'Native'
+	{
+		bcs_schema=>$f->bcs_schema,
+	    data_level=>'all',
+	    trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
+	    trial_list=>[137,900],
+	    accession_list=>\@accession_ids,
+		plot_list=>\@plot_ids,
+		plant_list=>\@plant_ids,
+	    include_timestamp=>1,
+	    trait_contains=>['r','t'],
+	    phenotype_min_value=>20,
+	    phenotype_max_value=>80,
+	}
+);
 my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 #print STDERR Dumper \@data;
 

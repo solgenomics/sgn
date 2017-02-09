@@ -1,25 +1,31 @@
-package CXGN::Phenotypes::Search;
+package CXGN::Phenotypes::Search::Native;
 
 =head1 NAME
 
-CXGN::Phenotypes::Download - an object to handle searching phenotypes for trials or stocks
+CXGN::Phenotypes::Search::Native - an object to handle searching phenotypes across database. called from factory CXGN::Phenotypes::SearchFactory. Processes phenotype search against cxgn schema.
 
 =head1 USAGE
 
-my $phenotypes_search = CXGN::Phenotypes::Search->new({
-    bcs_schema=>$schema,
-    data_level=>$data_level,
-    trait_list=>$trait_list,
-    trial_list=>$trial_list,
-    accession_list=>$accession_list,
-    plot_list=>$plot_list,
-    plant_list=>$plant_list,
-    include_timestamp=>$include_timestamp,
-    trait_contains=>$trait_contains,
-    phenotype_min_value=>$phenotype_min_value,
-    phenotype_max_value=>$phenotype_max_value,
-    search_type=>$search_type
-});
+my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+    'Native',    #can be either 'MaterializedView', or 'Native'
+    {
+        bcs_schema=>$schema,
+        data_level=>$data_level,
+        trait_list=>$trait_list,
+        trial_list=>$trial_list,
+        year_list=>$year_list,
+        location_list=>$location_list,
+        accession_list=>$accession_list,
+        plot_list=>$plot_list,
+        plant_list=>$plant_list,
+        include_timestamp=>$include_timestamp,
+        trait_contains=>$trait_contains,
+        phenotype_min_value=>$phenotype_min_value,
+        phenotype_max_value=>$phenotype_max_value,
+        limit=>$limit,
+        offset=>$offset
+    }
+);
 my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 
 =head1 DESCRIPTION
@@ -27,10 +33,6 @@ my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 
 =head1 AUTHORS
 
- Nicolas Morales <nm529@cornell.edu>
- With code moved from CXGN::BreederSearch
- Lukas Mueller <lam87@cornell.edu>
- Aimin Yan <ay247@cornell.edu>
 
 =cut
 
@@ -108,11 +110,6 @@ has 'phenotype_max_value' => (
     is => 'rw'
 );
 
-has 'search_type' => (
-    isa => 'Str',
-    is => 'rw'
-);
-
 has 'limit' => (
     isa => 'Int|Undef',
     is => 'rw'
@@ -137,36 +134,11 @@ sub search {
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $include_timestamp = $self->include_timestamp;
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
-    my %synonym_hash_lookup = %{$self->get_synonym_hash_lookup()};
 
-    my $search_type = $self->search_type;
-    if ($search_type ne 'fast' && $search_type ne 'complete') {
-      return "Search type must be set, valid options are 'fast' and 'complete'\n";
-    }
+    my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
+    my %synonym_hash_lookup = %{$stock_lookup->get_synonym_hash_lookup()};
 
-    my %matview_columns = (
-      accession_id=> 'accession_id',
-      plot_id=> 'plot_id',
-      trial_id=> 'trial_id',
-      trait_id=> 'trait_id',
-      location_id=> 'location_id',
-      year_id=> 'year_id',
-      trait_name=> 'trait_name',
-      phenotype_value=> 'phenotype_value',
-      trial_name=> 'trial_name',
-      plot_name=> 'plot_name',
-      accession_name=> 'accession_name',
-      location_name=> 'location_name',
-      trial_design=> 'trial_design_value',
-      plot_type=> "'plot' AS plot_type",
-      from_clause=> " FROM materialized_phenoview
-             LEFT JOIN stockprop AS rep ON (plot_id=rep.stock_id AND rep.type_id = $rep_type_id)
-             LEFT JOIN stockprop AS block_number ON (plot_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
-             LEFT JOIN stockprop AS plot_number ON (plot_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
-             JOIN phenotype USING(phenotype_id)",
-    );
-
-    my %db_columns = (
+    my %columns = (
       accession_id=> 'accession.stock_id',
       plot_id=> 'plot.stock_id',
       trial_id=> 'project.project_id',
@@ -200,13 +172,6 @@ sub search {
       LEFT JOIN projectprop as year ON (project.project_id=year.project_id AND year.type_id = $year_type_id)
       LEFT JOIN projectprop as design ON (project.project_id=design.project_id AND design.type_id = $design_type_id)",
     );
-
-    my %column_lookup = (
-      fast=>\%matview_columns,
-      complete=>\%db_columns
-    );
-
-    my %columns = %{$column_lookup{$search_type}};
 
     my $select_clause = "SELECT ".$columns{'year_id'}.", ".$columns{'trial_name'}.", ".$columns{'accession_name'}.", ".$columns{'location_name'}.", ".$columns{'trait_name'}.", ".$columns{'phenotype_value'}.", ".$columns{'plot_name'}.",
           rep.value, block_number.value, plot_number.value, ".$columns{'trait_id'}.", ".$columns{'trial_id'}.", ".$columns{'location_id'}.", ".$columns{'accession_id'}.", ".$columns{'plot_id'}.", phenotype.uniquename, ".$columns{'trial_design'}.", ".$columns{'plot_type'}.", phenotype.phenotype_id, count(phenotype.phenotype_id) OVER() AS full_count";
@@ -269,10 +234,10 @@ sub search {
         push @where_clause, $columns{'phenotype_value'}."~\'$numeric_regex\'";
     }
 
-    if ($self->data_level ne 'all' && $search_type eq 'complete') {
+    if ($self->data_level ne 'all') {
       my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $self->data_level, 'stock_type')->cvterm_id();
       push @where_clause, "plot.type_id = $stock_type_id"; #ONLY plots or plants
-    } elsif ($search_type eq 'complete') {
+    } else {
       push @where_clause, "(plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id)"; #plots AND plants
     }
 
@@ -393,21 +358,4 @@ sub get_extended_phenotype_info_matrix {
     return @info;
 }
 
-
-sub get_synonym_hash_lookup {
-    my $self = shift;
-    print STDERR "Synonym Start:".localtime."\n";
-    my $schema = $self->bcs_schema();
-    my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
-    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-    my $q = "SELECT stock.uniquename, stockprop.value FROM stock JOIN stockprop USING(stock_id) WHERE stock.type_id=$accession_type_id AND stockprop.type_id=$synonym_type_id;";
-    my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute();
-    my %result;
-    while (my ($uniquename, $synonym) = $h->fetchrow_array()) {
-        push @{$result{$uniquename}}, $synonym;
-    }
-    print STDERR "Synonym End:".localtime."\n";
-    return \%result;
-}
 1;

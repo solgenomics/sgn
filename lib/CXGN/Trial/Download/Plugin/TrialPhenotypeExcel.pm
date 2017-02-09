@@ -5,7 +5,7 @@ use Moose::Role;
 
 use Spreadsheet::WriteExcel;
 use CXGN::Trial;
-use CXGN::Phenotypes::Search;
+use CXGN::Phenotypes::SearchFactory;
 use Data::Dumper;
 
 sub verify {
@@ -36,22 +36,31 @@ sub download {
 
     $self->trial_download_log($trial_id, "trial phenotypes");
 
-    my $phenotypes_search = CXGN::Phenotypes::Search->new({
-        bcs_schema=>$schema,
-        data_level=>$data_level,
-        trait_list=>$trait_list,
-        trial_list=>$trial_list,
-        accession_list=>$accession_list,
-        plot_list=>$plot_list,
-        plant_list=>$plant_list,
-        include_timestamp=>$include_timestamp,
-        trait_contains=>$trait_contains,
-        phenotype_min_value=>$phenotype_min_value,
-        phenotype_max_value=>$phenotype_max_value,
-        location_list=>$location_list,
-        year_list=>$year_list,
-        search_type=>$search_type
-    });
+    my $factory_type;
+    if ($search_type eq 'complete'){
+        $factory_type = 'Native';
+    }
+    if ($search_type eq 'fast'){
+        $factory_type = 'MaterializedView';
+    }
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        $factory_type,    #can be either 'MaterializedView', or 'Native'
+        {
+            bcs_schema=>$schema,
+            data_level=>$data_level,
+            trait_list=>$trait_list,
+            trial_list=>$trial_list,
+            year_list=>$year_list,
+            location_list=>$location_list,
+            accession_list=>$accession_list,
+            plot_list=>$plot_list,
+            plant_list=>$plant_list,
+            include_timestamp=>$include_timestamp,
+            trait_contains=>$trait_contains,
+            phenotype_min_value=>$phenotype_min_value,
+            phenotype_max_value=>$phenotype_max_value,
+        }
+    );
     my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
     #print STDERR Dumper \@data;
 

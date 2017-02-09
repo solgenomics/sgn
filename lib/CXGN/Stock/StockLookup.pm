@@ -23,6 +23,7 @@ use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
+use SGN::Model::Cvterm;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -95,6 +96,23 @@ sub get_matching_stock_count {
     return;
   }
   return $stock_match_count;
+}
+
+sub get_synonym_hash_lookup {
+    my $self = shift;
+    print STDERR "Synonym Start:".localtime."\n";
+    my $schema = $self->get_schema();
+    my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $q = "SELECT stock.uniquename, stockprop.value FROM stock JOIN stockprop USING(stock_id) WHERE stock.type_id=$accession_type_id AND stockprop.type_id=$synonym_type_id;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+    my %result;
+    while (my ($uniquename, $synonym) = $h->fetchrow_array()) {
+        push @{$result{$uniquename}}, $synonym;
+    }
+    print STDERR "Synonym End:".localtime."\n";
+    return \%result;
 }
 
 sub _get_stock_resultset {
