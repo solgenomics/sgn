@@ -60,7 +60,7 @@ $trial_id
     <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
     <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
   </ul> </br> -->
-   <a id="download" class="btn btn-primary">Download as Image</a> &nbsp; <a id="delete_field_map_link"><button class="btn btn-danger"  type="button" id="delete_map_button" value="delete_cords" >Delete Map</button></a> &nbsp; <a id="update_field_map_link"><button class="btn btn-success"  type="button" id="update_map_button" value="update_cords" style="display:none;">Update Map</button></a>
+   <a id="download" class="btn btn-primary">Download as Image</a> &nbsp; <a id="delete_field_map_link"><button class="btn btn-danger"  type="button" id="delete_map_button" value="delete_cords" >Delete Map</button></a> &nbsp; <a id="update_field_map_link"><button class="btn btn-success"  type="button" id="update_map_button" value="update_cords" style="display:none;">Update Map</button></a> &nbsp; <a id="replace_accessions_link"><button class="btn btn-success"  type="button" id="replace_accession_button" value="replace_accession" style="display:none;">Replace Accession</button></a>
  </div>
 
 
@@ -69,37 +69,7 @@ var trial_id = <% $trial_id %>;
 //alert("trial_id: "+trial_id)
    jQuery(document).ready( function() {
 
-   var container_new = new Container();
-   var result;
-   //var container_string = container_new;
-   function Container(){
-          this.variables = [];
-       }
-       Container.prototype.addVar = function(info_acc){
-          this.variables.push(info_acc);
-       }
-       Container.prototype.toString = function(){
-          var result = '';
-          for(var i in this.variables)
-              result += this.variables[i];
-          return result;
-   }
-
-     jQuery('#physical_layout_onswitch').click( function() {
-
-//   jQuery(function() {
-//    jQuery("#downloadImgLink").click(function() {
-//        html2canvas(jQuery("#container"), {
-//            onrendered: function(canvas) {
-//                theCanvas = canvas;
-//
-//                canvas.toBlob(function(blob) {
-//                  saveAs(blob, "Dashboard.png");
-//            });
-//        }
-//      });
-//    });
-//  });
+  jQuery('#physical_layout_onswitch').click( function() {
 
 	jQuery.ajax( {
 	     url: '/ajax/breeders/trial/'+trial_id+'/coords',
@@ -148,12 +118,6 @@ var trial_id = <% $trial_id %>;
 			for ( x = 0; x < max_col; x = x + 1){
 
 				plot_counter++;
-        //array_index = response.plot_number[y][x] - 1;
-
-        //if (response.plot_number[y][x].match(/[0-9]{3}$/)){
-          //alert("single digit: "+response.plot_number[y][x]);
-        //  array_index = response.sudo_plot_no[plot_counter] - 2;
-        //}
 
 				if (response.plot_number[y][x]){
 
@@ -170,14 +134,13 @@ var trial_id = <% $trial_id %>;
 		stage.add(popup_layer);
 
 	    },
-             error: function(reponse) {
+      error: function(reponse) {
 	       jQuery("#working_modal").modal("hide");
-              // alert('an error occurred');
-             }
-        });
-     });
+      }
+    });
+  });
 
-    function draw_rect(stage, plot_layer, popup_layer, plot_msg, x, y, max_col, col_number, row_number, plot_counter, plot_id, plot_number, max_rep, max_block, controls, accessions, blk, rep_no, plot_name){
+ function draw_rect(stage, plot_layer, popup_layer, plot_msg, x, y, max_col, col_number, row_number, plot_counter, plot_id, plot_number, max_rep, max_block, controls, accessions, blk, rep_no, plot_name){
 //alert("plot id: "+plot_id+ ", accession: "+accessions );
   var width = 65;
 	var popup_x = width;
@@ -243,7 +206,7 @@ var trial_id = <% $trial_id %>;
     fill: color,
   	stroke: stroke_col,
   	strokeWidth:3,
-    draggable: true
+    //draggable: true
   });
 
 	var plot_txt_info = new Kinetic.Text({
@@ -281,7 +244,6 @@ var trial_id = <% $trial_id %>;
          cornerRadius: 10
       });
 
-
       popup_layer.add(plot_popup);
       popup_layer.add(plot_txt);
       popup_layer.draw();
@@ -290,53 +252,36 @@ var trial_id = <% $trial_id %>;
 
       myRectangle.on('mouseout', function() {
 
-	//this.setFill('#C0C0C0');
-	//plot_layer.draw();
+	     //this.setFill('#C0C0C0');
+	      //plot_layer.draw();
 
        	popup_layer.removeChildren();
 	       popup_layer.draw();
 
       });
 
+    myRectangle.on('click', function() {
+      var  replace_accession = accessions;
+      var  replace_plot_id = plot_id;
+      var  replace_plot_name = plot_name;
+      var replace_plot_number = plot_number;
+      //alert(replace_accession+","+replace_plot_id+ "and" +replace_plot_name );
+
+      jQuery('#replace_accessions_link').find('button').trigger('click');
+      jQuery('#edit_plot_information').html('<b>Selected Plot Information: </b>');
+      jQuery('#edit_plot_name').html(replace_plot_name);
+      jQuery('#edit_plot_number').html(replace_plot_number);
+      old_plot_id = jQuery('#edit_plot_id').html(replace_plot_id);
+      old_plot_accession = jQuery('#edit_plot_accession').html(replace_accession);
+
+      jQuery('#replace_plot_accessions_dialog').modal('show');
+    });
+
       myRectangle.addEventListener("dblclick", myFunction);
 
       function myFunction() {
         window.location.href = '/stock/'+plot_id+'/view';
       }
-
-      //myRectangle.on('mousedown', function() {
-
-	    //  window.location.href = '/stock/'+plot_id+'/view';
-	   //   window.location.href = 'http://cassavabase.org/stock/'+plot_id+'/view';
-    // });
-
-    myRectangle.on('dragstart', function(){
-      myRectangle.moveToTop();
-      plot_layer.add(plot_txt_info);
-    });
-    myRectangle.on('dragend',function(){
-      var a = accessions+","+plot_id+",";
-      //alert("1: "+a);
-      alert(accessions+" in plot "+plot_number+ " was moved to a different plot.");
-      if (!container_new.variables[2]) {
-        container_new.addVar(a);
-      }
-      if (container_new.variables[1] == container_new.variables[0]){
-        if (container_new.variables[2]){
-          container_new.variables[1] = container_new.variables[2];
-          container_new.variables[2] = '';
-          //alert(container_new.toString());
-          result = container_new.toString();
-          jQuery('#update_field_map_link').find('button').trigger('click');
-        }
-      } else if ((container_new.variables[1]) && (container_new.variables[1] != container_new.variables[0])){
-          //alert(container_new.toString());
-          result = container_new.toString();
-          jQuery('#update_field_map_link').find('button').trigger('click');
-
-      }
-
-    });
 
       plot_layer.add(myRectangle);
       plot_layer.add(plot_txt_info);
@@ -355,61 +300,7 @@ var trial_id = <% $trial_id %>;
        downloadCanvas(this, 'container', 'fieldMap.png');
  }, false);
 
-
- jQuery("#update_field_map_dialog").dialog({
- autoOpen: false,
- modal: true,
- autoResize:true,
-     width: 500,
-     position: ['top', 75],
- buttons: {
-         "Cancel": function () {
-             jQuery('#update_field_map_dialog').dialog("close");
-             location.reload();
-         },
-   "Ok": {text: "Ok", id:"update_field_coords_ok_button", click:function () {
- update_field_map(result);
-             jQuery('#update_field_map_dialog').dialog("close");
-     }
-   }
- }
- });
-
 });
-
-
-/////////UPDATE//////////////
-
-function update_field_map(result) {
-    jQuery('#update_field_map_dialog').dialog("close");
-    jQuery('#working_modal').modal("show");
-
-  var plotID_accessions = result;
-  //var container_string = JSON.stringify(plotID_accessions);
-  new jQuery.ajax({
-   type: 'POST',
-   url: '/ajax/breeders/trial/<% $trial_id %>/update_field_coords',
-   dataType: "json",
-   data: {
-             'plot_infor': plotID_accessions,
-   },
-
-   success: function (response) {
-       jQuery('#working_modal').modal("hide");
-
-      if (response.error) {
-          alert("Error Updating Field Map: "+response.error);
-      } else {
-          //alert("Field map deletion Successful...");
-          jQuery('#update_field_map_dialog_message').dialog("open");
-          }
-   },
-   error: function () {
-       jQuery('#working_modal').modal("hide");
-             alert('An error occurred updating field map.');
-   }
-  });
- }
 
 </script>
 
@@ -438,12 +329,130 @@ function update_field_map(result) {
    </div>
 </div>
 
+<div id="replace_accessions_dialog_message" title="Replace Plot Accessions" style="display:none;">
+   <p>
+       <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+       Plot accession was replaced successfully...
+   </p>
+</div>
+
 <div id="update_field_map_dialog_message" title="Update Physical Field Map" style="display:none;">
    <p>
        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
        The field coordinates were updated successfully...
    </p>
 </div>
+
+<div class="modal fade" id="replace_plot_accessions_dialog" name="replace_plot_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="ReplacePlotAccessionsDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="ReplacePlotAccessionsDialog">Replace Plot Accession</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="replace_plot_accession_form" name="replace_plot_accession_form">
+                      <div id="edit_plot_information">
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Name: </label>
+                        <div class="col-sm-9" id="edit_plot_name">
+
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Number: </label>
+                        <div class="col-sm-9" id="edit_plot_number">
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Database ID: </label>
+                        <div class="col-sm-9" id="edit_plot_id">
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Accession: </label>
+                        <div class="col-sm-9" id="edit_plot_accession">
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Enter New Accession: </label>
+                        <div class="col-sm-9" >
+                          <input class="form-control" id="enter_database_accession" name="enter_database_accession"></input>
+                        </div>
+                      </div>
+
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_replace_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="replace_plot_accession_submit" id="replace_plot_accession_submit">Replace Plot Accession</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+jQuery(document).ready( function() {
+
+  jQuery('input[id*="enter_database_accession"]').autocomplete({
+      appendTo: "#replace_plot_accessions_dialog",
+      source: '/ajax/stock/accession_autocomplete'
+  });
+
+  jQuery('#replace_plot_accession_submit').click( function() {
+    replace_plotAccession_fieldMap();
+  });
+
+  function replace_plotAccession_fieldMap() {
+    jQuery('#replace_plot_accessions_dialog').modal("hide");
+    jQuery('#working_modal').modal("show");
+
+    var new_accession = jQuery('#enter_database_accession').val();
+    var old_accession = jQuery('#edit_plot_accession').html();
+    var old_plot_id = jQuery('#edit_plot_id').html();
+    //alert(new_accession +","+ old_accession +","+ old_plot_id);
+
+    new jQuery.ajax({
+      type: 'POST',
+      url: '/ajax/breeders/trial/<% $trial_id %>/replace_plot_accessions',
+      dataType: "json",
+      data: {
+              'new_accession': new_accession,
+              'old_accession': old_accession,
+              'old_plot_id': old_plot_id,
+      },
+
+      success: function (response) {
+        jQuery('#working_modal').modal("hide");
+
+        if (response.error) {
+          alert("Error Replacing Plot Accession: "+response.error);
+        }
+        else {
+          jQuery('#replace_accessions_dialog_message').dialog("open");
+        }
+      },
+      error: function () {
+        jQuery('#working_modal').modal("hide");
+        alert('An error occurred replacing plot accession');
+      }
+    });
+  }
+
+});
+</script>
+
+
 
 <style>
 #download {
