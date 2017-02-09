@@ -52,13 +52,15 @@ sub compose_trait: Path('/ajax/onto/compose') Args(0) {
   my $self = shift;
   my $c = shift;
 
-  my $ids = $c->req->param("ids[]");
-  my $dbh = $c->dbc->dbh();
-  my $onto = CXGN::Onto->new( { dbh=>$dbh } );
+  my @ids = $c->req->param("ids[]");
+  print STDERR "Ids array for composing in AJAX Onto = @ids\n";
+  my $ids = join ',', @ids;
+  print STDERR "Ids string for composing in AJAX Onto = $ids\n";
+  my $onto = CXGN::Onto->new( { dbh => $c->dbc->dbh(), schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
 
-  my $composed_trait = $onto->compose_trait($ids);
+  my $composed_trait_id = $onto->compose_trait($ids);
 
-  $c->stash->{rest} = { success => $composed_trait };
+  $c->stash->{rest} = { success => $composed_trait_id };
 
 }
 

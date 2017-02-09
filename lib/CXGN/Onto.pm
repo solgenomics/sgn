@@ -5,6 +5,7 @@ use Moose::Util::TypeConstraints;
 use Data::Dumper;
 use JSON::Any;
 use Try::Tiny;
+use Bio::Chado::Schema;
 
 has 'dbh' => (
     is  => 'rw',
@@ -13,6 +14,10 @@ has 'dbh' => (
 has 'dbname' => (
     is => 'rw',
     isa => 'Str',
+    );
+has 'schema' => (
+    isa => 'Bio::Chado::Schema',
+    is => 'rw',
     );
 
 =head2 get_terms
@@ -56,35 +61,52 @@ sub compose_trait {
       my $ids = shift;
       print STDERR "Ids for composing in CXGN:Onto = $ids\n";
 
+      my $schema = $self->schema();
+
       my $db = $schema->resultset("General::Db")->find_or_create(
           { name => 'COMP' });
 
       my $cv= $schema->resultset('Cv::Cv')->find_or_create( { name => 'composed_traits' });
 
+      my $accession_query = "SELECT nextval('postcomposed_trait_ids')";
+      my $name_query = "SELECT string_agg(ordered_components.name::text, ' ') FROM (select cvterm.name, cv_id from cvterm where cvterm_id IN ($ids) order by (case when cv_id = 56 then 1 when cv_id = 59 then 2 when cv_id = 58 then 3 when cv_id = 57 then 4 end)) ordered_components";
+      my $h = $self->dbh->prepare($accession_query);
+      $h->execute();
+      my $accession = $h->fetchrow_array();
+      $h = $self->dbh->prepare($name_query);
+      $h->execute();
+      my $name = $h->fetchrow_array();
+      print STDERR "New trait accession = $accession and name = $name\n";
+
       my $new_term_dbxref =  $schema->resultset("General::Dbxref")->create(
       {   db_id     => $db->get_column('db_id'),
-		      accession => "SELECT nextval('postcomposed_trait_ids')"
+		      accession => $accession
 		  });
 
-    my $new_term= $schema->resultset("Cv::Cvterm")->create(
+    my $new_term= $schema->resultset("Cv::Cvterm")->find_or_create(
       { cv_id  =>$cv->cv_id(),
-        name   => "SELECT string_agg(cvterm.name::text, ' ') FROM cvterm where cvterm id IN ($ids)",
+        name   => $name,
         dbxref_id  => $new_term_dbxref-> dbxref_id()
       });
 
-    my $relationship = $schema->resultset("Cv::Cvterm")->search(
+    print STDERR "dumper new term:" . $new_term->cvterm_id();
+
+    my $relationship = $schema->resultset("Cv::Cvterm")->find(
   	    { name => 'contains',
       });
 
-    foreach $component_id (@component_ids) {
+    print STDERR "dumper relationship:" . $relationship->cvterm_id();
+    my @component_ids = split ',', $ids;
+
+    foreach my $component_id (@component_ids) {
       my $new_rel = $schema->resultset('Cv::CvtermRelationship')->create(
-        { subject_id => $component_id
+        { subject_id => $component_id,
           object_id  => $new_term->cvterm_id(),
-          type_id    => $relationship->cvterm_id(),
+          type_id    => $relationship->cvterm_id()
       });
     }
 
-    return $new_term;
+    return $new_term->cvterm_id();
 }
 
 
