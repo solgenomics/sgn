@@ -7,7 +7,7 @@ use Moose;
 use Data::Dumper;
 use File::Temp qw | tempfile |;
 use File::Slurp;
-use CXGN::BreederSearch;
+use CXGN::Dataset;
 use SGN::Model::Cvterm;
 
 
@@ -38,8 +38,7 @@ sub compare_trials_GET : Args(0) {
 
     my $trial_1 = $c->req->param('trial_1');
     my $trial_2 = $c->req->param('trial_2');
-    my $cvterm = $c->req->param('cvterm');
-
+    my $cvterm_id = $c->req->param('cvterm_id');
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id_rs = $schema->resultset("Project::Project")->search( { name => { in => [ $trial_1, $trial_2 ]} });
@@ -51,28 +50,23 @@ sub compare_trials_GET : Args(0) {
 	return;
     }
 
-    my $cv_name = $c->config->{trait_ontology_db_name};
-    
-    
-    my $cv_term_id = SGN::Model::Cvterm->get_cvterm_row($schema, $cvterm, $cv_name);
 
-    my $trial_sql = join ",", map { "\'$_\'" } @trial_ids;
-    my $bs = CXGN::Phenotypes::Search->new( 
-	{ 
-	    bcs_schema => $schema,
-	    data_level => 'plot',
-	    search_type => 'fast',
-	    trial_list => [ @trial_ids ],
-	    trait_contains => [ $cvterm ],			       
-	});
+ #   my $cv_name = $c->config->{trait_ontology_db_name};
+    
+#    my $cv_term_id = SGN::Model::Cvterm->get_cvterm_row($schema, $cvterm, $cv_name);
 
-    my @data = $bs->get_extended_phenotype_info_matrix();
+    my $ds = CXGN::Dataset->new( people_schema => $c->dbic_schema("CXGN::People::Schema"), schema => $schema);
+    
+    $ds->trials( [ @trial_ids ]);
+    $ds->traits( [ $cvterm_id ]);
+    
+    my $data = $ds->retrieve_phenotypes();
 
     $c->tempfiles_subdir("compare_trials");
 
-    print STDERR Dumper(\@data);
+    print STDERR Dumper($data);
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"compare_trials/trial_phenotypes_download_XXXXX");
-    foreach my $line (@data) { 
+    foreach my $line (@$data) { 
 	my @columns = split "\t", $line;
 	my $csv_line = join ",", @columns;
 	print $fh $csv_line."\n";
@@ -85,7 +79,8 @@ sub compare_trials_GET : Args(0) {
 
     my $errorfile = $temppath.".err";
     if (-e $errorfile) { 
-	my $error = File::Slurp->read_file($errorfile);
+	print STDERR "ERROR FILE EXISTS! $errorfile\n";
+	my $error = read_file($errorfile);
 	$c->stash->{rest} = { error => $error };
 	return;
     }
@@ -93,6 +88,37 @@ sub compare_trials_GET : Args(0) {
     $c->stash->{rest} = { file => $tempfile, png => $tempfile.".png" };
 }
 
+sub common_traits : Path('/ajax/trial/common_traits') : ActionClass('REST') {}
 
+sub common_traits_GET : Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $trial_1 = $c->req->param("trial_1");
+    my $trial_2 = $c->req->param("trial_2");
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id_rs = $schema->resultset("Project::Project")->search( { name => { in => [ $trial_1, $trial_2 ]} });
+    my @trial_ids = map { $_->project_id() } $trial_id_rs->all();
+
+    my $ds = CXGN::Dataset->new( people_schema => $c->dbic_schema("CXGN::People::Schema"), schema => $schema);
+    
+    $ds->trials( [ @trial_ids ]);
+
+    my $traits = $ds->retrieve_traits();
+
+    print STDERR "Traits:\n";
+    print STDERR Dumper($traits);
+    
+    my @options;
+    foreach my $t (@$traits) { 
+	push @options, [ $t->[0], $t->[1] ];
+    }
+
+    $c->stash->{rest} = { options => \@options };
+
+
+    }
 
 1;

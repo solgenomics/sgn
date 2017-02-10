@@ -13,8 +13,13 @@
 <& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup' ] &>
 <table>
 <tr><th>Trial 1</th><th>Trial 2</th><th>Trait</th></tr>
-<tr><td width="200"><input id="trial_1" /></td><td width="200"><input id="trial_2" /></td><td width="200"><select></select></td></tr>
+<tr><td width="200"><input id="trial_1" /></td><td width="200"><input id="trial_2" /></td><td width="200"><select id="trait_select"><option disabled="1">select trials first</option></select></td></tr>
+<tr><td><button id="submit_trial_comparison">Submit</button></td></tr>
 </table>
+
+<div id="result_div">
+
+</div>
 
 <script>
 
@@ -23,5 +28,48 @@ jQuery('#trial_1').autocomplete(
 
 jQuery('#trial_2').autocomplete(
    { source: '/ajax/trials/trial_autocomplete' });
+
+jQuery('#trait_select').focus( function() {   
+   var trial_1 = jQuery('#trial_1').val();
+   var trial_2 = jQuery('#trial_2').val();
+   
+   jQuery.ajax( { 
+      url: '/ajax/trial/common_traits',
+      data: { 'trial_1': trial_1, 'trial_2': trial_2 },
+      success: function(response) { 
+         if (response.error) { jQuery('#trait_select').val('error'); }
+         else {
+            var option_html = '';
+            for (var i =0 ; i < response.options.length; i++) {
+	       option_html += '<option value="'+response.options[i][0]+'">'+(response.options[i][1])+'</option>';
+            }
+            jQuery('#trait_select').html(option_html);
+         }
+      }
+    
+   });
+
+});
+
+jQuery('#submit_trial_comparison').click( function() { 
+   jQuery.ajax( { 
+    url: '/ajax/trial/compare',
+    data: { 'trial_1' : jQuery('#trial_1').val(), 'trial_2': jQuery('#trial_2').val(), 'cvterm_id' : jQuery('#trait_select').val() },
+    success: function(response) { 
+       if (response.error) { 
+	  alert(response.error);
+       }
+       else { 
+	  if (response.png) { 
+	     jQuery('#result_div').html('<img src="'+response.png+'" />');
+          }
+          alert("SUCCESS!");
+       }
+    }
+
+   });
+
+});
+
 
 </script>

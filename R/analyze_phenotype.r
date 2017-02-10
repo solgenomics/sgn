@@ -89,8 +89,7 @@ if (ncol(datamatrix) < 2) {
    write("No data. Try again", file = errorfile);
 }
 
-write("blablabla", file = errorfile);
-#show(datamatrix)
+show(datamatrix)
 
 
 #correlation
