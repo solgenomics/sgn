@@ -86,11 +86,8 @@ sub download {
 
     for (my $line=0; $line< scalar(@data); $line++) {
         my @columns = split /\t/, $data[$line];
-        for(my $col = 0; $col<@columns; $col++) {
-            $ws->write($line+3, $col, $columns[$col]);
-        }
+        $ws->write_row($line+3, 0, \@columns);
     }
-    #$ws->write(0, 0, "$program_name, $location ($year)");
     $ss ->close();
     print STDERR "Print Excel End:".localtime."\n";
 }

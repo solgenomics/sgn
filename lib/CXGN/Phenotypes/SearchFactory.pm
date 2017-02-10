@@ -47,9 +47,9 @@ sub instantiate {
     my $class = shift;
     my $type = shift;
     my $location = "CXGN/Phenotypes/Search/$type.pm";
-    my $class = "CXGN::Phenotypes::Search::$type";
+    my $obj_class = "CXGN::Phenotypes::Search::$type";
     require $location;
-    return $class->new(@_);
+    return $obj_class->new(@_);
 }
 
 1;
