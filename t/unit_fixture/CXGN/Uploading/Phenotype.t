@@ -3275,61 +3275,61 @@ is(scalar keys %{$contents->[1]}, 491);
 my $csv_response = [
           '
 ,,,,,,,,,,variable',
-          'studyYear,studyDbId,studyName,studyDesign,locationDbId,locationName,germplasmDbId,germplasmName,germplasmSynonyms,observationLevel,variable,observationUnitName,replicate,blockNumber,plotNumber,dry matter content percentage|CO:0000092,fresh root weight|CO:0000012,fresh shoot weight measurement in kg|CO:0000016,sprouting proportion|CO:0000008
+          '"studyYear","studyDbId","studyName","studyDesign","locationDbId","locationName","germplasmDbId","germplasmName","germplasmSynonyms","observationLevel",variable,"observationUnitName","replicate","blockNumber","plotNumber","dry matter content percentage|CO:0000092","fresh root weight|CO:0000012","fresh shoot weight measurement in kg|CO:0000016","sprouting proportion|CO:0000008"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38843,test_accession4,,plot,variable,test_trial21,1,1,1,35,36,20,45
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plot",variable,"test_trial21","1","1","1","35","36","20","45"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38842,test_accession3,test_accession3_synonym1,plot,variable,test_trial210,3,1,10,30,45,29,45
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plot",variable,"test_trial210","3","1","10","30","45","29","45"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38842,test_accession3,test_accession3_synonym1,plant,variable,test_trial210_plant_1,3,1,10,28,38
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial210_plant_1","3","1","10","28","38"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38842,test_accession3,test_accession3_synonym1,plant,variable,test_trial210_plant_2,3,1,10,29
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial210_plant_2","3","1","10","29"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38840,test_accession1,test_accession1_synonym1,plot,variable,test_trial211,3,1,11,38,46,30
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plot",variable,"test_trial211","3","1","11","38","46","30"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38840,test_accession1,test_accession1_synonym1,plant,variable,test_trial211_plant_1,3,1,11,30,40
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial211_plant_1","3","1","11","30","40"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38840,test_accession1,test_accession1_synonym1,plant,variable,test_trial211_plant_2,3,1,11,31,41
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial211_plant_2","3","1","11","31","41"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38843,test_accession4,,plot,variable,test_trial214,3,1,14,30,49,33
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plot",variable,"test_trial214","3","1","14","30","49","33"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38843,test_accession4,,plant,variable,test_trial214_plant_1,3,1,14,36,46
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial214_plant_1","3","1","14","36","46"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38843,test_accession4,,plant,variable,test_trial214_plant_2,3,1,14,37,47
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial214_plant_2","3","1","14","37","47"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38843,test_accession4,,plant,variable,test_trial21_plant_1,1,1,1,42,2016-01-07 12:08:24-0500,20
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial21_plant_1","1","1","1","42,2016-01-07 12:08:24-0500","20"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38843,test_accession4,,plant,variable,test_trial21_plant_2,1,1,1,42,2016-01-07 12:08:24-0500,21
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial21_plant_2","1","1","1","42,2016-01-07 12:08:24-0500","21"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38842,test_accession3,test_accession3_synonym1,plot,variable,test_trial23,1,1,3,38,38,22,23
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plot",variable,"test_trial23","1","1","3","38","38","22","23"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38842,test_accession3,test_accession3_synonym1,plant,variable,test_trial23_plant_1,1,1,3,41,2016-01-07 12:08:27-0500,24
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial23_plant_1","1","1","3","41,2016-01-07 12:08:27-0500","24"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38842,test_accession3,test_accession3_synonym1,plant,variable,test_trial23_plant_2,1,1,3,41,2016-01-07 12:08:27-0500,25
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial23_plant_2","1","1","3","41,2016-01-07 12:08:27-0500","25"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38842,test_accession3,test_accession3_synonym1,plot,variable,test_trial24,2,1,4,39,39,23,78
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plot",variable,"test_trial24","2","1","4","39","39","23","78"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38842,test_accession3,test_accession3_synonym1,plant,variable,test_trial24_plant_1,2,1,4,,26
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial24_plant_1","2","1","4","","26"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38842,test_accession3,test_accession3_synonym1,plant,variable,test_trial24_plant_2,2,1,4,,27
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial24_plant_2","2","1","4","","27"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38840,test_accession1,test_accession1_synonym1,plot,variable,test_trial25,1,1,5,35,40,24,56
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plot",variable,"test_trial25","1","1","5","35","40","24","56"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38840,test_accession1,test_accession1_synonym1,plant,variable,test_trial25_plant_1,1,1,5,,28
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial25_plant_1","1","1","5","","28"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38840,test_accession1,test_accession1_synonym1,plant,variable,test_trial25_plant_2,1,1,5,,29
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial25_plant_2","1","1","5","","29"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38843,test_accession4,,plot,variable,test_trial26,2,1,6,30,41,25,45
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plot",variable,"test_trial26","2","1","6","30","41","25","45"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38843,test_accession4,,plant,variable,test_trial26_plant_1,2,1,6,20,30
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial26_plant_1","2","1","6","20","30"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38843,test_accession4,,plant,variable,test_trial26_plant_2,2,1,6,21
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial26_plant_2","2","1","6","21"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38840,test_accession1,test_accession1_synonym1,plot,variable,test_trial28,2,1,8,39,43,27,23
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plot",variable,"test_trial28","2","1","8","39","43","27","23"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38840,test_accession1,test_accession1_synonym1,plant,variable,test_trial28_plant_1,2,1,8,,34
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial28_plant_1","2","1","8","","34"
 ',
-          '2014,137,test_trial,CRD,23,test_location,38840,test_accession1,test_accession1_synonym1,plant,variable,test_trial28_plant_2,2,1,8,25,35
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial28_plant_2","2","1","8","25","35"
 '
         ];
 

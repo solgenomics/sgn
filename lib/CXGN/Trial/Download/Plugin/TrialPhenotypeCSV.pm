@@ -4,6 +4,7 @@ package CXGN::Trial::Download::Plugin::TrialPhenotypeCSV;
 use Moose::Role;
 use CXGN::Trial;
 use CXGN::Phenotypes::SearchFactory;
+use Data::Dumper;
 
 sub verify {
     1;
@@ -83,7 +84,8 @@ sub download {
         my $num_col = scalar(@header);
         for (my $line =0; $line< @data; $line++) {
             my @columns = split /\t/, $data[$line];
-            print $F join(',',@columns)."\n";
+            print $F join ',', map { qq!"$_"! } @columns;
+            print $F "\n";
         }
     close($F);
 }
