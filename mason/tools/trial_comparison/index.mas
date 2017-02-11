@@ -45,6 +45,9 @@ jQuery('#trait_select').focus( function() {
             }
             jQuery('#trait_select').html(option_html);
          }
+      },
+      error: function(response) { 
+         alert("An error occurred, the service may temporarily be unavailable");
       }
     
    });

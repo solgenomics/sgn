@@ -68,13 +68,14 @@ sub compare_trials_GET : Args(0) {
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"compare_trials/trial_phenotypes_download_XXXXX");
     foreach my $line (@$data) { 
 	my @columns = split "\t", $line;
-	my $csv_line = join ",", @columns;
+	my @quoted_columns = map { "\"$_\"" }  @columns;
+	my $csv_line = join ",", @quoted_columns;
 	print $fh $csv_line."\n";
     }
     my $temppath = $c->config->{basepath}."/".$tempfile;
 
     print STDERR "RUNNING R SCRIPT... ";
-    system('R', 'CMD', 'BATCH', '--no-save', '--no-restore', "--args phenotype_file=\"$temppath\" output_file=\"$temppath.png\"", $c->config->{basepath}.'/R/'.'analyze_phenotype.r', 'analyze_phenotype_output.txt' );
+    system('R', 'CMD', 'BATCH', '--no-save', '--no-restore', "--args phenotype_file=\"$temppath\" output_file=\"$temppath.png\"", $c->config->{basepath}.'/R/'.'analyze_phenotype.r', $temppath."_output.txt" );
     print STDERR "Done.\n";
 
     my $errorfile = $temppath.".err";
