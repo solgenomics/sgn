@@ -24,9 +24,10 @@ write(paste("trait: ", trait), stderr())
 
 errorfile = paste(phenotype_file, ".err", sep="");
 
-phenodata = read.csv(phenotype_file, sep=",", header = T, stringsAsFactors = T, na.strings="NA")
+phenodata = read.csv(phenotype_file,fill=TRUE, sep=",", header = T, stringsAsFactors = T, na.strings="NA")
 
 blocks = unique(phenodata$blockNumber)
+print(paste("blocks: ", blocks));
 studyNames = unique(phenodata$studyName)
 accessions = unique(phenodata$germplasmName)
 datamatrix <- c()
@@ -34,13 +35,13 @@ datasetnames <- c()
 trial_accessions <- c()
 all_accessions = unique(phenodata$germplasmName)
 
-datamatrix = matrix(nrow = length(all_accessions), ncol=length(studyNames)* length(blocks))
+datamatrix = matrix(nrow = length(all_accessions), ncol=length(studyNames)) # * length(blocks))
 
 for (i in 1:(length(studyNames))) {
-    for (n in 1:length(blocks)) { 
-        print(paste("StudyName: ", studyNames[i], n))
-        trialdata = phenodata[phenodata[,"studyName"]==studyNames[i] & phenodata[,"blockNumber"]==n, ]
-	#	show(trialdata)
+   # for (n in 1:length(blocks)) { 
+        print(paste("StudyName: ", studyNames[i]))
+        trialdata = phenodata[phenodata[,"studyName"]==studyNames[i], ] # & phenodata[,"blockNumber"]==n, ]
+		show(trialdata)
        for (m in 1:length(all_accessions)) { 
 	
 	    acc_slice = trialdata[trialdata[,"germplasmName"] ==  as.character(all_accessions[m] ), 16 ]
@@ -48,22 +49,28 @@ for (i in 1:(length(studyNames))) {
 	    acc_avg  = mean(as.numeric(acc_slice))
 	    print(paste("Average for accession", all_accessions[m]))
             show(acc_avg)
-	    col = (i-1) * length(blocks) + n;
+	    #	    col = (i-1) * length(blocks) + n;
+	    col = i;
 	    print(paste("row: ", m, "col", col, "avg", acc_avg))
-            datamatrix[m, col  ] = acc_avg
+            datamatrix[m, col] = acc_avg
 	}
 
-	colname = paste(studyNames[i],"_B",blocks[n], sep="")
+	#	colname = paste(studyNames[i],"_B",blocks[n], sep="")
+	colname = studyNames[i]
         datasetnames = c(datasetnames, colname)
-    }		
+    #}		
 }
 
 
 colnames(datamatrix) <- datasetnames
 rownames(datamatrix) <- all_accessions
 
+show(datamatrix)
+
 # remove columns containing only NULL values
+#
 dims = dim(datamatrix)
+print(paste("Dimension: ", dims))
 empty_cols <- c()
 for (i in 1:dims[2]) { 
     legal_values = datamatrix[ is.finite(datamatrix[,i]), i ]
@@ -78,19 +85,38 @@ for (i in 1:dims[2]) {
 print("empty cols")
 show(empty_cols)
 
-for (i in 1:length(empty_cols)) { 
-    datamatrix <- datamatrix[,-empty_cols[i]]
+#for (i in 1:length(empty_cols)) { 
+#   datamatrix <- datamatrix[,-empty_cols[i]]
+#}
+
+
+# remove empty rows
+#
+empty_rows <- c()
+
+legal_values_in_cols_count = datamatrix[ i, is.finite(datamatrix[i,]) ]
+show(legal_values_in_cols_count)
+if (length(legal_values_in_cols_count) == 0) { 
+   print(paste("empty values", length(legal_values_in_cols_count), "dims", dims[1]))
+   print(paste("found empty row ", i))
+   empty_rows <- c(empty_rows, i)
 }
 
+#for (i in 1:length(empty_rows)) { 
+#    datamatrix <- datamatrix[-empty_rows[i],]
+#}
+
+
 if (nrow(datamatrix)==0) { 
-   write("No data was retrieved from the database for this combination of trials and ", file = errorfile);
+   write("No data was retrieved from the database for this combination of trials: ", file = errorfile);
 }
 if (ncol(datamatrix) < 2) { 
    write("No data. Try again", file = errorfile);
 }
 
+print("Datamatrix:")
 show(datamatrix)
-
+#write(datamatrix, file=errorfile, append=TRUE);
 
 #correlation
 
