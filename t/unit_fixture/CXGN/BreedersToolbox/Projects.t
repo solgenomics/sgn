@@ -93,6 +93,76 @@ is_deeply(\@sorted_cross_trials, [
             '150',
             'cross_test3',
             'cross_test3'
+          ],
+          [
+            '151',
+            'TestCross1',
+            'TestCross1'
+          ],
+          [
+            '152',
+            'TestCross2',
+            'TestCross2'
+          ],
+          [
+            '153',
+            'TestCross3',
+            'TestCross3'
+          ],
+          [
+            '154',
+            'TestCross4',
+            'TestCross4'
+          ],
+          [
+            '155',
+            'TestCross5',
+            'TestCross5'
+          ],
+          [
+            '156',
+            'TestCross6',
+            'TestCross6'
+          ],
+          [
+            '157',
+            'TestCross7',
+            'TestCross7'
+          ],
+          [
+            '158',
+            'TestCross8',
+            'TestCross8'
+          ],
+          [
+            '159',
+            'TestCross9',
+            'TestCross9'
+          ],
+          [
+            '160',
+            'TestCross10',
+            'TestCross10'
+          ],
+          [
+            '161',
+            'TestCross11',
+            'TestCross11'
+          ],
+          [
+            '162',
+            'TestCross12',
+            'TestCross12'
+          ],
+          [
+            '163',
+            'TestCross13',
+            'TestCross13'
+          ],
+          [
+            '164',
+            'TestCross14',
+            'TestCross14'
           ]
         ], 'test get crosses');
 #print STDERR Dumper $genotyping_trials;

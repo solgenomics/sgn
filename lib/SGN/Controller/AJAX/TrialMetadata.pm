@@ -541,6 +541,10 @@ sub substitute_accession : Chained('trial') PathPart('substitute_accession') Arg
     return;
   }
 
+  my @controls;
+  my @ids, $plot_1_id;
+	@ids, $plot_2_id;
+
   my $fieldmap = CXGN::Trial::FieldMap->new({
     bcs_schema => $schema,
     trial_id => $trial_id,
@@ -551,10 +555,16 @@ sub substitute_accession : Chained('trial') PathPart('substitute_accession') Arg
   });
 
   my $return_error = $fieldmap->update_fieldmap_precheck();
-     if ($return_error) {
-       $c->stash->{rest} = { error => $return_error };
-       return;
-     }
+  if ($return_error) {
+    $c->stash->{rest} = { error => $return_error };
+    return;
+  }
+
+  my $return_check_error = $fieldmap->substitute_accession_precheck();
+  if ($return_check_error) {
+    $c->stash->{rest} = { error => $return_check_error };
+    return;
+  }
 
   my $update_return_error = $fieldmap->substitute_accession_fieldmap();
   if ($update_return_error) {

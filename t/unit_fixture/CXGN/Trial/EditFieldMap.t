@@ -56,7 +56,7 @@ ok(my $accession_cvterm = $chado_schema->resultset("Cv::Cvterm")
 		 }));
 my @stock_names;
 for (my $i = 1; $i <= 10; $i++) {
-    push(@stock_names, "test_stock_for_trial".$i);
+    push(@stock_names, "test_stock_for_fieldmap_trial".$i);
 }
 
 ok(my $organism = $chado_schema->resultset("Organism::Organism")
@@ -77,7 +77,7 @@ foreach my $stock_name (@stock_names) {
 };
 
 ok(my $trial_design = CXGN::Trial::TrialDesign->new(), "create trial design object");
-ok($trial_design->set_trial_name("test_trial"), "set trial name");
+ok($trial_design->set_trial_name("new_test_trial_fieldmap_name"), "set trial name");
 ok($trial_design->set_stock_list(\@stock_names), "set stock list");
 ok($trial_design->set_plot_start_number(1), "set plot start number");
 ok($trial_design->set_plot_number_increment(1), "set plot increment");
@@ -96,7 +96,7 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_year => "2015",
     trial_description => "test description",
     trial_location => "test_location_for_trial",
-    trial_name => "new_test_trial_name",
+    trial_name => "new_test_trial_fieldmap_name",
     design_type => "RCBD",
     plot_layout_format => "serpentine",
 						    }), "create trial object");
@@ -104,7 +104,7 @@ ok($trial_create->save_trial(), "save trial");
 
 ok(my $trial_lookup = CXGN::Trial::TrialLookup->new({
     schema => $chado_schema,
-    trial_name => "new_test_trial_name",
+    trial_name => "new_test_trial_fieldmap_name",
 						    }), "create trial lookup object");
 ok(my $trial = $trial_lookup->get_trial());
 ok(my $trial_id = $trial->project_id());
@@ -115,8 +115,8 @@ ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
 						    }), "create trial layout object");
 
 #replace trial accession
-ok(my $old_accession = "test_stock_for_trial1");
-ok(my $new_accession = "test_stock_for_trial2");
+ok(my $old_accession = "test_stock_for_fieldmap_trial1");
+ok(my $new_accession = "test_stock_for_fieldmap_trial2");
 ok(my $stock_id = $chado_schema->resultset('Stock::Stock')->find({'uniquename' => $old_accession})->stock_id(), "get stock id");
 
 my $replace_accession_fieldmap = CXGN::Trial::FieldMap->new({
@@ -151,8 +151,8 @@ ok(!$replace_plot_accession_fieldmap->replace_plot_accession_fieldMap(), "replac
 # accessions substitution
 ok(my $plot_1_id = $data[0]->[0][0]);
 ok(my $plot_2_id = $data[0]->[1][0]);
-ok(my $accession_1 = "test_stock_for_trial1");
-ok(my $accession_2 = "test_stock_for_trial2");
+ok(my $accession_1 = "test_stock_for_fieldmap_trial1");
+ok(my $accession_2 = "test_stock_for_fieldmap_trial2");
 
 my $fieldmap = CXGN::Trial::FieldMap->new({
   bcs_schema => $chado_schema,

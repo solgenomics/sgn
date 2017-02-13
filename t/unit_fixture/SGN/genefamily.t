@@ -7,7 +7,7 @@ use File::Spec::Functions;
 
 use_ok('SGN::Genefamily');
 
-my $test_dir = catdir($FindBin::Bin,'genefamily_data');
+my $test_dir = 't/data/genefamily_data';
 my $gf = SGN::Genefamily->new( files_dir => $test_dir,
 			       dataset   => 'test',
 			       name      => 'family_0'
