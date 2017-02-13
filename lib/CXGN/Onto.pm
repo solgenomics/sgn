@@ -83,26 +83,41 @@ sub compose_trait {
 		      accession => $accession
 		  });
 
+    my $parent_term= $schema->resultset("Cv::Cvterm")->find_or_create(
+        { cv_id  =>$cv->cv_id(),
+          name   => 'Composed traits',
+      });
+
     my $new_term= $schema->resultset("Cv::Cvterm")->find_or_create(
       { cv_id  =>$cv->cv_id(),
         name   => $name,
         dbxref_id  => $new_term_dbxref-> dbxref_id()
       });
 
-    print STDERR "dumper new term:" . $new_term->cvterm_id();
+    #print STDERR "dumper new term:" . $new_term->cvterm_id();
 
-    my $relationship = $schema->resultset("Cv::Cvterm")->find(
-  	    { name => 'contains',
+    my $isa_relationship = $schema->resultset("Cv::Cvterm")->find(
+    	  { name => 'is_a',
       });
 
-    print STDERR "dumper relationship:" . $relationship->cvterm_id();
+    my $contains_relationship = $schema->resultset("Cv::Cvterm")->find(
+        { name => 'contains',
+      });
+
+    #print STDERR "dumper relationship:" . $contains_relationship->cvterm_id();
     my @component_ids = split ',', $ids;
 
+    my $isa_rel = $schema->resultset('Cv::CvtermRelationship')->create(
+      { subject_id => $new_term->cvterm_id(),
+        object_id  => $parent_term->cvterm_id(),
+        type_id    => $isa_relationship->cvterm_id()
+    });
+
     foreach my $component_id (@component_ids) {
-      my $new_rel = $schema->resultset('Cv::CvtermRelationship')->create(
+      my $contains_rel = $schema->resultset('Cv::CvtermRelationship')->create(
         { subject_id => $component_id,
           object_id  => $new_term->cvterm_id(),
-          type_id    => $relationship->cvterm_id()
+          type_id    => $contains_relationship->cvterm_id()
       });
     }
 

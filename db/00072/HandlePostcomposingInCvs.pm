@@ -52,13 +52,13 @@ sub patch {
 --do your SQL here
 
 -- add cv and db for composed traits
-#insert into db (name) value ('COMP');
-#CREATE SEQUENCE postcomposed_trait_ids;
-#ALTER SEQUENCE postcomposed_trait_ids OWNER TO web_usr;
-#ALTER TABLE cvterm_relationship owner to web_usr;
-#insert into cv (name) values ('composed_traits');
-#insert into dbxref (db_id, accession) select db_id, nextval('postcomposed_trait_ids') from db where name = 'COMP';
-#insert into cvterm (cv_id,name,dbxref_id) select cv_id, 'Composed trait ontology', dbxref_id from cv join db on true AND db.name = 'COMP' join dbxref using(db_id) where cv.name = 'composed_traits';
+insert into db (name) value ('COMP');
+CREATE SEQUENCE postcomposed_trait_ids;
+ALTER SEQUENCE postcomposed_trait_ids OWNER TO web_usr;
+GRANT ALL ON TABLE cvterm_relationship to web_usr;
+insert into cv (name) values ('composed_traits');
+insert into dbxref (db_id, accession) select db_id, nextval('postcomposed_trait_ids') from db where name = 'COMP';
+insert into cvterm (cv_id,name,dbxref_id) select cv_id, 'Composed traits', dbxref_id from cv join db on true AND db.name = 'COMP' join dbxref using(db_id) where cv.name = 'composed_traits';
 
 -- REDEFINE materialized_phenoview, DROP UNNECESSARY FIELDS AND PUT TRAIT IDS IN JSON ARRAY:
 
