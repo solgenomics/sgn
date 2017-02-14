@@ -3,11 +3,11 @@
 
 =head1 NAME
 
-HandlePostcomposingInCvs.pm
+UpdateMaterializedPhenoview.pm
 
 =head1 SYNOPSIS
 
-mx-run HandlePostcomposingInCvs [options] -H hostname -D dbname -u username [-F]
+mx-run UpdateMaterializedPhenoview [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
@@ -30,7 +30,7 @@ it under the same terms as Perl itself.
 =cut
 
 
-package HandlePostcomposingInCvs;
+package UpdateMaterializedPhenoview;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';
@@ -51,16 +51,7 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 --do your SQL here
 
--- add cv and db for composed traits
-insert into db (name) values ('COMP');
-CREATE SEQUENCE postcomposed_trait_ids;
-ALTER SEQUENCE postcomposed_trait_ids OWNER TO web_usr;
-GRANT ALL ON TABLE cvterm_relationship to web_usr;
-insert into cv (name) values ('composed_traits');
-insert into dbxref (db_id, accession) select db_id, nextval('postcomposed_trait_ids') from db where name = 'COMP';
-insert into cvterm (cv_id,name,dbxref_id) select cv_id, 'Composed traits', dbxref_id from cv join db on true AND db.name = 'COMP' join dbxref using(db_id) where cv.name = 'composed_traits';
-
--- REDEFINE materialized_phenoview, DROP UNNECESSARY FIELDS AND PUT TRAIT IDS IN JSON ARRAY:
+-- REDEFINE materialized_phenoview, fixing handling of plant vs plot and dropping unnecessary fields:
 
 DROP MATERIALIZED VIEW IF EXISTS public.materialized_phenoview CASCADE;
 CREATE MATERIALIZED VIEW public.materialized_phenoview AS
@@ -119,7 +110,7 @@ ALTER MATERIALIZED VIEW trials OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.trait_components;
 CREATE MATERIALIZED VIEW public.trait_components AS
-SELECT cvterm_id AS trait_component_id, 
+SELECT cvterm_id AS trait_component_id,
 (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_component_name
             FROM cvterm
             JOIN dbxref USING(dbxref_id)
