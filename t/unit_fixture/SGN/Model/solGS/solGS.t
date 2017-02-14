@@ -2,7 +2,7 @@
 # use warnings;
 
 # use lib 't/lib';
-# use Test::More tests => 27;
+use Test::More;
 # use SGN::Test::WWW::Mechanize;
 
 # BEGIN {use_ok('SGN::Model::solGS::solGS');}
@@ -75,6 +75,6 @@
 # my $plot_id = $stock_plot_rs->single->stock_id;
 # ok($model->map_subject_to_object($plot_id), 'map_subject_to_object...ok');
  
-
+done_testing;
 
 
