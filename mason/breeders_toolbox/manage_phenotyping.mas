@@ -17,15 +17,15 @@ $locations => undef
 <& /breeders_toolbox/trial/create_spreadsheet_dialog.mas &>
 <& /fieldbook/upload_phenotype_fieldbook.mas &>
 
-<&| /page/info_section.mas, title=>'Uploaded Files', is_subsection=>1, subtitle=>'[<a id="upload_fieldbook_phenotypes_link" >Upload Fieldbook</a>]    [<a id="upload_spreadsheet_phenotypes_link" >Upload Spreadsheet</a>]' &>
+<&| /page/info_section.mas, title=>'Your Uploaded Files', is_subsection=>1, subtitle=>'[<a id="upload_fieldbook_phenotypes_link" >Upload Fieldbook</a>]    [<a id="upload_spreadsheet_phenotypes_link" >Upload Spreadsheet</a>]' &>
   <br/>
-  <& /breeders_toolbox/file_list.mas, files=>$phenotype_files &>
+  <& /breeders_toolbox/file_list.mas, files=>$phenotype_files, allow_delete=>1 &>
 
 </&>
 
-<&| /page/info_section.mas, title=>'Removed Files', is_subsection=>1 &>
+<&| /page/info_section.mas, title=>'Your Removed Files', subtitle=>'These files will not be shown anywhere else on the website', is_subsection=>1 &>
 
-  <& /breeders_toolbox/file_list.mas, files=>$deleted_phenotype_files &>
+  <& /breeders_toolbox/file_list.mas, files=>$deleted_phenotype_files, allow_delete=>0 &>
 
 </&>
 

@@ -16,6 +16,7 @@ use CXGN::Trial::TrialCreate;
 use CXGN::Trial::Folder;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Trial::Search;
+use SGN::Model::Cvterm;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
@@ -288,6 +289,7 @@ my $trial_design = $td->get_design();
 #print STDERR Dumper $trial_design;
 
 my $breeding_program_row = $f->bcs_schema->resultset("Project::Project")->find( { name => 'test' });
+my $trial_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'Advanced Yield Trial', 'project_type')->cvterm_id();
 
 my $new_trial = CXGN::Trial::TrialCreate->new(
     {
@@ -298,6 +300,7 @@ my $new_trial = CXGN::Trial::TrialCreate->new(
 	trial_year => 2014,
 	trial_description => 'another test trial...',
 	design_type => 'RCBD',
+    trial_type => $trial_type_cvterm_id,
 	trial_location => 'test_location',
 	trial_name => "anothertrial",
 	design => $trial_design,
@@ -698,7 +701,7 @@ is_deeply($trial->get_location(), [ 23, 'test_location' ], "set location");
 
 # test project type accessors
 #
-is($trial->get_project_type(), undef, "get type test");
+is($trial->get_project_type()->[1], "Advanced Yield Trial", "get type test");
 
 my $error = $trial->set_project_type("77106");
 

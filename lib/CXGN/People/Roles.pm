@@ -30,6 +30,28 @@ has 'bcs_schema' => (
 	is => 'rw',
 );
 
+sub add_sp_role {
+	my $self = shift;
+	my $name = shift;
+	my $dbh = $self->bcs_schema->storage->dbh;
+
+	my $q="SELECT sp_role_id FROM sgn_people.sp_roles where name=?;";
+	my $sth = $dbh->prepare($q);
+	$sth->execute($name);
+	my $count = $sth->rows;
+	if ($count > 0){
+		print STDERR "A role with that name already exists.\n";
+		return;
+	}
+	eval {
+		my $q="INSERT INTO sgn_people.sp_roles (name) VALUES (?);";
+		my $sth = $dbh->prepare($q);
+		$sth->execute($name);
+	};
+	if ($@) {
+		return "An error occurred while storing a new role. ($@)";
+	}
+}
 
 sub get_breeding_program_roles {
 	my $self = shift;

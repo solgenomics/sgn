@@ -155,7 +155,7 @@ sub verify_fuzzy_options_POST : Args(0) {
             my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$select_name})->stock_id();
             my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
             $stock->add_synonym($item_name);
-            $list->replace_by_name($item_name, $select_name);
+            #$list->replace_by_name($item_name, $select_name);
         }
     }
 

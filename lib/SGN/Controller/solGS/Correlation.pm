@@ -154,8 +154,8 @@ sub combine_gebvs_of_traits {
         my $pred_pop_id = $c->stash->{prediction_pop_id};
         my $model_id    = $c->stash->{model_id};
         my $identifier  =  $pred_pop_id ? $model_id . "_" . $pred_pop_id :  $model_id; 
-    
-        my $combined_gebvs_file = $c->controller("solGS::solGS")->create_tempfile($c, "combined_gebvs_${identifier}"); 
+	my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
+        my $combined_gebvs_file = $c->controller("solGS::solGS")->create_tempfile($tmp_dir, "combined_gebvs_${identifier}"); 
    
         $c->stash->{input_files}  = $gebvs_files;
         $c->stash->{output_files} = $combined_gebvs_file;
@@ -260,8 +260,9 @@ sub genetic_correlation_output_files {
     my $identifier  =  $type =~ /selection/ ? $model_id . "_" . $corre_pop_id :  $corre_pop_id; 
 
     my $solgs_controller = $c->controller("solGS::solGS");
-    my $corre_json_file  = $solgs_controller->create_tempfile($c, "genetic_corre_json_${identifier}");
-    my $corre_table_file = $solgs_controller->create_tempfile($c, "genetic_corre_table_${identifier}");
+    my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $corre_json_file  = $solgs_controller->create_tempfile($tmp_dir, "genetic_corre_json_${identifier}");
+    my $corre_table_file = $solgs_controller->create_tempfile($tmp_dir, "genetic_corre_table_${identifier}");
    
     $c->stash->{genetic_corre_table_file} = $corre_table_file;
     $c->stash->{genetic_corre_json_file}  = $corre_json_file;

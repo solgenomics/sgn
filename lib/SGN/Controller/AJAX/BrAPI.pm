@@ -17,7 +17,7 @@ use CXGN::Location::LocationLookup;
 use JSON qw( decode_json );
 use Data::Dumper;
 use Try::Tiny;
-use CXGN::Phenotypes::Search;
+use CXGN::Phenotypes::SearchFactory;
 use File::Slurp qw | read_file |;
 use Spreadsheet::WriteExcel;
 use Time::Piece;
@@ -2682,13 +2682,23 @@ sub studies_table_GET {
     my $search_type = $c->req->param("search_type") || 'complete';
     my $include_timestamp = $c->req->param("timestamp") || 0;
     my $trial_id = $c->stash->{study_id};
-    my $phenotypes_search = CXGN::Phenotypes::Search->new({
-        bcs_schema=>$self->bcs_schema,
-        data_level=>$data_level,
-        trial_list=>[$trial_id],
-        search_type=>$search_type,
-        include_timestamp=>$include_timestamp,
-    });
+
+    my $factory_type;
+    if ($search_type eq 'complete'){
+        $factory_type = 'Native';
+    }
+    if ($search_type eq 'fast'){
+        $factory_type = 'MaterializedView';
+    }
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        $factory_type,    #can be either 'MaterializedView', or 'Native'
+        {
+            bcs_schema=>$self->bcs_schema,
+            data_level=>$data_level,
+            trial_list=>[$trial_id],
+            include_timestamp=>$include_timestamp,
+        }
+    );
     my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 
     #print STDERR Dumper \@data;
@@ -2897,19 +2907,29 @@ sub process_phenotypes_search {
     my @locations_array = split /,/, $location_ids;
     my @years_array = split /,/, $year_ids;
     my $offset = $c->stash->{current_page}*$c->stash->{page_size};
-    my $phenotypes_search = CXGN::Phenotypes::Search->new({
-        bcs_schema=>$self->bcs_schema,
-        data_level=>$data_level,
-        stock_list=>\@stocks_array,
-        trial_list=>\@trials_array,
-        location_list=>\@locations_array,
-        trait_list=>\@traits_array,
-        year_list=>\@years_array,
-        search_type=>$search_type,
-        include_timestamp=>1,
-        limit=>$c->stash->{page_size},
-        offset=>$offset
-    });
+
+    my $factory_type;
+    if ($search_type eq 'complete'){
+        $factory_type = 'Native';
+    }
+    if ($search_type eq 'fast'){
+        $factory_type = 'MaterializedView';
+    }
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        $factory_type,    #can be either 'MaterializedView', or 'Native'
+        {
+            bcs_schema=>$self->bcs_schema,
+            data_level=>$data_level,
+            stock_list=>\@stocks_array,
+            trial_list=>\@trials_array,
+            location_list=>\@locations_array,
+            trait_list=>\@traits_array,
+            year_list=>\@years_array,
+            include_timestamp=>1,
+            limit=>$c->stash->{page_size},
+            offset=>$offset
+        }
+    );
     my $search_result = $phenotypes_search->search();
     #print STDERR Dumper $search_result;
     my $total_count = 0;
