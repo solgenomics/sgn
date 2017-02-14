@@ -4,6 +4,7 @@ package SGN::Controller::AJAX::Search::Cross;
 
 use Moose;
 use Data::Dumper;
+use CXGN::Cross;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -61,30 +62,15 @@ sub search_cross_info : Path('/ajax/search/cross_info') Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $male_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
-    my $female_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
-    my $cross_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $cross_search = CXGN::Cross->new({bcs_schema => $schema, female_parent => $female_parent, male_parent=>$male_parent});
+    my $result = $cross_search->get_cross_info();
+    my @cross_info;
+    foreach my $r (@$result){
+      print STDERR Dumper $r;
 
-    my $dbh = $schema->storage->dbh();
-
-
-
-    my $q = "SELECT female_parent.stock_id, male_parent.stock_id, cross_entry.stock_id, female_parent.uniquename, male_parent.uniquename, cross_entry.uniquename, stock_relationship1.value
-    FROM stock as female_parent INNER JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id=stock_relationship1.subject_id)
-    AND stock_relationship1.type_id= ? INNER JOIN stock_relationship AS stock_relationship2
-    ON (stock_relationship1.object_id=stock_relationship2.object_id) INNER JOIN stock AS male_parent
-    ON (male_parent.stock_id=stock_relationship2.subject_id) AND stock_relationship2.type_id= ?
-    INNER JOIN stock AS cross_entry ON (cross_entry.stock_id=stock_relationship2.object_id) AND cross_entry.type_id= ?
-    WHERE female_parent.uniquename = ? AND male_parent.uniquename = ? ORDER BY stock_relationship1.value, male_parent.uniquename ASC";
-
-    my $h = $dbh->prepare($q);
-    $h->execute($female_parent_typeid, $male_parent_typeid, $cross_typeid, $female_parent, $male_parent);
-
-    my @cross_info = ();
-    while (my ($female_parent_id, $male_parent_id, $cross_entry_id, $female_parent_name, $male_parent_name, $cross_name, $cross_type) = $h->fetchrow_array()) {
-
-	push @cross_info, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a}, qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a}, qq{<a href="/stock/$cross_entry_id/view">$cross_name</a}, $cross_type];
-  print STDERR "Cross info =" . Dumper(@cross_info) . "\n";
+    my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_entry_id, $cross_name, $cross_type) = @$r;
+	  push @cross_info, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a}, qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a}, qq{<a href="/stock/$cross_entry_id/view">$cross_name</a}, $cross_type];
+    print STDERR "Cross info =" . Dumper(@cross_info) . "\n";
   }
 
   $c->stash->{rest}={ data=> \@cross_info};
@@ -102,35 +88,21 @@ sub search_all_crosses : Path('/ajax/search/all_crosses') Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $male_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
-    my $female_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
-    my $cross_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $cross_search = CXGN::Cross->new({bcs_schema => $schema, female_parent => $female_parent});
+    my $result = $cross_search->get_cross_info();
+    my @cross_info;
+    foreach my $r (@$result){
+      print STDERR Dumper $r;
 
-    my $dbh = $schema->storage->dbh();
-
-
-
-    my $q = "SELECT female_parent.stock_id, male_parent.stock_id, cross_entry.stock_id, female_parent.uniquename, male_parent.uniquename, cross_entry.uniquename, stock_relationship1.value
-    FROM stock as female_parent INNER JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id=stock_relationship1.subject_id)
-    AND stock_relationship1.type_id= ? INNER JOIN stock_relationship AS stock_relationship2
-    ON (stock_relationship1.object_id=stock_relationship2.object_id) INNER JOIN stock AS male_parent
-    ON (male_parent.stock_id=stock_relationship2.subject_id) AND stock_relationship2.type_id= ?
-    INNER JOIN stock AS cross_entry ON (cross_entry.stock_id=stock_relationship2.object_id) AND cross_entry.type_id= ?
-    WHERE female_parent.uniquename = ? ORDER BY stock_relationship1.value, male_parent.uniquename ASC";
-
-    my $h = $dbh->prepare($q);
-    $h->execute($female_parent_typeid, $male_parent_typeid, $cross_typeid, $female_parent);
-
-    my @cross_info = ();
-    while (my ($female_parent_id, $male_parent_id, $cross_entry_id, $female_parent_name, $male_parent_name, $cross_name, $cross_type) = $h->fetchrow_array()) {
-
-	push @cross_info, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a}, qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a}, qq{<a href="/stock/$cross_entry_id/view">$cross_name</a}, $cross_type];
-  print STDERR "Cross info =" . Dumper(@cross_info) . "\n";
+    my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_entry_id, $cross_name, $cross_type) = @$r;
+    push @cross_info, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a}, qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a}, qq{<a href="/stock/$cross_entry_id/view">$cross_name</a}, $cross_type];
+    print STDERR "Cross info =" . Dumper(@cross_info) . "\n";
   }
 
   $c->stash->{rest}={ data=> \@cross_info};
 
-}
+  }
+
 
 
 
