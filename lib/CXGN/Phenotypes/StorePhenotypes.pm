@@ -17,7 +17,8 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     has_timestamps=>$timestamp_included,
     overwrite_values=>$overwrite,
     metadata_hash=>$phenotype_metadata,
-    image_zipfile_path=>$image_zip
+    image_zipfile_path=>$image_zip,
+    has_trait_variable_of=>1
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 my $stored_phenotype_error = $store_phenotypes->store();
@@ -83,6 +84,11 @@ has 'values_hash' => (isa => "HashRef",
 has 'has_timestamps' => (isa => "Bool",
     is => 'rw',
     default => 0
+);
+
+has 'has_trait_variable_of' => (isa => "Bool",
+    is => 'rw',
+    default => 1
 );
 
 has 'overwrite_values' => (isa => "Bool",
@@ -160,8 +166,9 @@ sub verify {
     #print STDERR Dumper \%plot_trait_value;
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
+    my $traits_have_variable_of = $self->has_trait_variable_of();
     my @plots_missing = @{$plot_validator->validate($schema,'plots_or_plants',\@plot_list)->{'missing'}};
-    my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
+    my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list, $traits_have_variable_of)->{'missing'}};
     my $error_message;
     my $warning_message;
 

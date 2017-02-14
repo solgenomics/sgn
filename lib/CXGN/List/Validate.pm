@@ -17,7 +17,7 @@ sub validate {
 
     foreach my $p ($self->plugins()) {
         if ($type eq $p->name()) {
-	     $data = $p->validate($schema, $list, $self);
+	     $data = $p->validate($schema, $list, $self, @_);
 	}
     }
     return $data;
