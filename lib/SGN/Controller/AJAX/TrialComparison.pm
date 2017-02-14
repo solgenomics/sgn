@@ -9,7 +9,8 @@ use File::Temp qw | tempfile |;
 use File::Slurp;
 use CXGN::Dataset;
 use SGN::Model::Cvterm;
-
+use CXGN::List;
+use CXGN::List::Validate;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -30,6 +31,8 @@ has 'schema' => (
 # /ajax/trial/compare?trial_id=345&trial_id=4848&trial_id=38484&cvterm_id=84848
 
 
+
+
 sub compare_trials : Path('/ajax/trial/compare') : ActionClass('REST') {}
 
 sub compare_trials_GET : Args(0) { 
@@ -38,6 +41,7 @@ sub compare_trials_GET : Args(0) {
 
     my $trial_1 = $c->req->param('trial_1');
     my $trial_2 = $c->req->param('trial_2');
+    
     my $cvterm_id = $c->req->param('cvterm_id');
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
@@ -50,11 +54,84 @@ sub compare_trials_GET : Args(0) {
 	return;
     }
 
+    $self->make_graph($c, $cvterm_id, @trial_ids);
+}
 
  #   my $cv_name = $c->config->{trait_ontology_db_name};
     
 #    my $cv_term_id = SGN::Model::Cvterm->get_cvterm_row($schema, $cvterm, $cv_name);
+sub compare_trial_list : Path('/ajax/trial/compare_list') : ActionClass('REST') {}
 
+sub compare_trial_list_GET : Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $list_id = $c->req->param("list_id");
+
+    my $user = $c->user();
+    
+    if (!$user) { 
+	$c->stash->{rest} = { error => "Must be logged in to use functionality associated with lists." };
+	return;
+    }
+    
+    my $user_id = $user->get_object()->get_sp_person_id();
+
+    print STDERR "USER ID : $user_id\n";
+
+    if (!$list_id) { 
+	$c->stash->{rest} = { error => "Error: No list_id provided." };
+	return;
+    }
+
+    my $cvterm_id = $c->req->param("cvterm_id");
+    if (!$cvterm_id) { 
+	$c->stash->{rest} = { error => "Error: No cvterm_id provided." };
+	return;
+    }
+
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $v = CXGN::List::Validate->new();
+    my $r = $v->validate($schema, "trial", $list_id);
+    
+    if ($r->{missing}) { 
+	$c->stash->{rest} = { error => "Not all trials could be found in the database." };
+	return;
+    }
+    
+    my $dbh = $schema->storage()->dbh();
+    my $tl = CXGN::List->new({ dbh => $dbh, list_id => $list_id, owner => $user_id });
+
+    if (! $tl) { 
+	$c->stash->{rest} = { error => "The specified list does not exist, is not owned by you, or is not a trial list" };
+	return;
+    }
+
+    my @trials = $tl->elements();
+
+    my $trial_id_rs = $schema->resultset("Project::Project")->search( { name => { in => [ @trials ]} });
+
+    my @trial_ids = map { $_->project_id() } $trial_id_rs->all();
+
+    if (@trial_ids < 2) { 
+	$c->stash->{rest} = { error => "One or both trials are not found in the database. Please try again." };
+	return;
+    }
+
+    $self->make_graph($c, $cvterm_id, @trial_ids);
+}
+    
+
+
+sub make_graph { 
+    my $self = shift;
+    my $c = shift;
+    my $cvterm_id = shift;
+    my @trial_ids = @_;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema"); 
     my $ds = CXGN::Dataset->new( people_schema => $c->dbic_schema("CXGN::People::Schema"), schema => $schema);
     
     $ds->trials( [ @trial_ids ]);
