@@ -59,8 +59,22 @@ sub patch {
 INSERT into db (name) values ('COMP');
 CREATE SEQUENCE postcomposed_trait_ids;
 ALTER SEQUENCE postcomposed_trait_ids OWNER TO web_usr;
+INSERT INTO cvprop (cv_id,type_id) values ()
 GRANT ALL ON TABLE cvterm_relationship to web_usr;
 INSERT into cv (name) values ('composed_traits');
+
+INSERT into cv (name) values ('cv_type');
+ALTER TABLE sgn.cvprop SET SCHEMA public;
+INSERT into cvterm (cv_id,name) select cv_id, 'trait_component_ontology' from cv where cv.name = 'cv_type';
+INSERT into cvterm (cv_id,name) select cv_id, 'entity_ontology' from cv where cv.name = 'cv_type';
+INSERT into cvterm (cv_id,name) select cv_id, 'quality_ontology' from cv where cv.name = 'cv_type';
+INSERT into cvterm (cv_id,name) select cv_id, 'unit_ontology' from cv where cv.name = 'cv_type';
+INSERT into cvterm (cv_id,name) select cv_id, 'time_ontology' from cv where cv.name = 'cv_type';
+INSERT INTO cvprop (cv_id,type_id) select cv_id, cvterm_id from cv join cvterm on true where cv.name = 'cass_tissue_ontology' AND cvterm.name = 'trait_component_ontology';
+INSERT INTO cvprop (cv_id,type_id) select cv_id, cvterm_id from cv join cvterm on true where cv.name = 'cass_tissue_ontology' AND cvterm.name = 'entity_ontology';
+
+
+
 INSERT into dbxref (db_id, accession) select db_id, nextval('postcomposed_trait_ids') from db where name = 'COMP';
 INSERT into cvterm (cv_id,name,dbxref_id) select cv_id, 'Composed traits', dbxref_id from cv join db on true AND db.name = 'COMP' join dbxref using(db_id) where cv.name = 'composed_traits';
 
