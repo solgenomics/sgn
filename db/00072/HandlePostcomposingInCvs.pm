@@ -52,7 +52,7 @@ sub patch {
 --do your SQL here
 
 -- add cv and db for composed traits
-insert into db (name) value ('COMP');
+insert into db (name) values ('COMP');
 CREATE SEQUENCE postcomposed_trait_ids;
 ALTER SEQUENCE postcomposed_trait_ids OWNER TO web_usr;
 GRANT ALL ON TABLE cvterm_relationship to web_usr;
@@ -119,7 +119,8 @@ ALTER MATERIALIZED VIEW trials OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.trait_components;
 CREATE MATERIALIZED VIEW public.trait_components AS
-SELECT cvterm_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS name
+SELECT cvterm_id AS trait_component_id, 
+(((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_component_name
             FROM cvterm
             JOIN dbxref USING(dbxref_id)
             JOIN db ON(dbxref.db_id = db.db_id AND db.name IN ('CASSTISS', 'CASSTIME', 'CASSUNIT', 'CHEBI'))
