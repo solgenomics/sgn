@@ -147,8 +147,53 @@ SELECT cvterm.cvterm_id AS trait_component_id,
     ALTER MATERIALIZED VIEW trait_components OWNER TO web_usr;
 
 
-    DROP MATERIALIZED VIEW IF EXISTS public.traits;
-    CREATE MATERIALIZED VIEW public.traits AS
+DROP MATERIALIZED VIEW IF EXISTS public.traits;
+CREATE MATERIALIZED VIEW public.traits AS
+  SELECT cvterm.cvterm_id AS trait_id,
+  (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
+	FROM cv
+    JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'trait_ontology'))
+    JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
+	  JOIN dbxref USING(dbxref_id)
+    JOIN db ON(dbxref.db_id = db.db_id)
+    LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
+    LEFT JOIN cvterm_relationship is_object ON cvterm.cvterm_id = is_object.object_id
+    WHERE is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
+UNION
+  SELECT parent.cvterm AS trait_id,
+  children.trait_name as trait_name
+	FROM cv
+    JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'composed_trait_ontology'))
+    JOIN cvterm parent ON(cvprop.cv_id = cvterm.cv_id)
+	  JOIN LATERAL (SELECT string_agg(child.name::text, ' ')
+                         FROM cvterm_relationship rel ON(parent.cvterm_id = rel.object_id AND rel.type_id = (SELECT cvterm_id from cvterm where name = 'contains' ))
+                         JOIN cvterm child ON(child.cvterm = rel.subject_id)
+                         JOIN cv ON(child.cv_id = cv_id)
+                         JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND )
+
+                         ORDER BY i2.inspected_at DESC
+                         LIMIT 1) i
+ON true
+cvterm children ON(cvterm_relationship.subject_id = children.cvterm_id)
+	  JOIN dbxref ON(parent.dbxref_id = dbxref.dbxref_id)
+            JOIN db ON(dbxref.db_id = db.db_id)
+            LEFT JOIN cvterm_relationship is_subject ON parent.cvterm_id = is_subject.subject_id
+            LEFT JOIN cvterm_relationship is_object ON (parent.cvterm_id = is_object.object_id AND is_object.type_id =(SELECT cvterm_id from cvterm where name = 'is_a'))
+            WHERE is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
+            order by (case when cv.cv_id = 56 then 1 when cv_id = 59 then 2 when cv_id = 58 then 3 when cv_id = 57 then 4 end
+
+
+
+
+
+
+
+
+
+
+
+
+
     SELECT cvterm_id AS trait_id,
     (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
                 FROM cvterm

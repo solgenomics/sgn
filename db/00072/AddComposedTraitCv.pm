@@ -57,12 +57,12 @@ sub patch {
 -- add cv and db for composed traits
 
 INSERT into db (name) values ('COMP');
-CREATE SEQUENCE postcomposed_trait_ids;
-ALTER SEQUENCE postcomposed_trait_ids OWNER TO web_usr;
+CREATE SEQUENCE composed_trait_ids;
+ALTER SEQUENCE composed_trait_ids OWNER TO web_usr;
 GRANT ALL ON TABLE cvterm_relationship to web_usr;
-INSERT into cv (name) values ('composed_traits');
-INSERT into dbxref (db_id, accession) select db_id, nextval('postcomposed_trait_ids') from db where name = 'COMP';
-INSERT into cvterm (cv_id,name,dbxref_id) select cv_id, 'Composed traits', dbxref_id from cv join db on true AND db.name = 'COMP' join dbxref using(db_id) where cv.name = 'composed_traits';
+INSERT into cv (name) values ('composed_trait');
+INSERT into dbxref (db_id, accession) select db_id, nextval('composed_trait_ids') from db where name = 'COMP';
+INSERT into cvterm (cv_id,name,dbxref_id) select cv_id, 'Composed traits', dbxref_id from cv join db on true AND db.name = 'COMP' join dbxref using(db_id) where cv.name = 'composed_trait';
 
 EOSQL
 

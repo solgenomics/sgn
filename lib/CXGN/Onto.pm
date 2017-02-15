@@ -69,13 +69,11 @@ sub compose_trait {
       my $cv= $schema->resultset('Cv::Cv')->find_or_create( { name => 'composed_traits' });
 
       my $accession_query = "SELECT nextval('postcomposed_trait_ids')";
-      my $name_query = "SELECT string_agg(ordered_components.name::text, ' ') FROM (select cvterm.name, cv_id from cvterm where cvterm_id IN ($ids) order by (case when cv_id = 56 then 1 when cv_id = 59 then 2 when cv_id = 58 then 3 when cv_id = 57 then 4 end)) ordered_components";
       my $h = $self->dbh->prepare($accession_query);
       $h->execute();
       my $accession = $h->fetchrow_array();
-      $h = $self->dbh->prepare($name_query);
-      $h->execute();
-      my $name = $h->fetchrow_array();
+    
+      my $name = "Postcomposed trait " . $accession;
       print STDERR "New trait accession = $accession and name = $name\n";
 
       my $new_term_dbxref =  $schema->resultset("General::Dbxref")->create(

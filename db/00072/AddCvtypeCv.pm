@@ -59,17 +59,23 @@ sub patch {
 
 INSERT into cv (name) values ('cv_type');
 ALTER TABLE sgn.cvprop SET SCHEMA public;
-INSERT into dbxref (db_id, accession) select db_id, 'entity_ontology' from db where name = 'COMP';
+INSERT into dbxref (db_id, accession) select db_id, 'trait_ontology' from db where name = 'null';
+INSERT into cvterm (cv_id,name,dbxref_id) select cv_id, 'trait_ontology', dbxref_id from cv join dbxref on true where cv.name = 'cv_type' and dbxref.accession = 'trait_ontology';
+INSERT into dbxref (db_id, accession) select db_id, 'composed_trait_ontology' from db where name = 'null';
+INSERT into cvterm (cv_id,name,dbxref_id) select cv_id, 'composed_trait_ontology', dbxref_id from cv join dbxref on true where cv.name = 'cv_type' and dbxref.accession = 'composed_trait_ontology';
+INSERT into dbxref (db_id, accession) select db_id, 'entity_ontology' from db where name = 'null';
 INSERT into cvterm (cv_id,name,dbxref_id) select cv_id, 'entity_ontology', dbxref_id from cv join dbxref on true where cv.name = 'cv_type' and dbxref.accession = 'entity_ontology';
-INSERT into dbxref (db_id, accession) select db_id, 'quality_ontology' from db where name = 'COMP';
+INSERT into dbxref (db_id, accession) select db_id, 'quality_ontology' from db where name = 'null';
 INSERT into cvterm (cv_id,name,dbxref_id) select cv_id, 'quality_ontology', dbxref_id from cv join dbxref on true where cv.name = 'cv_type' and dbxref.accession = 'quality_ontology';
-INSERT into dbxref (db_id, accession) select db_id, 'unit_ontology' from db where name = 'COMP';
+INSERT into dbxref (db_id, accession) select db_id, 'unit_ontology' from db where name = 'null';
 INSERT into cvterm (cv_id,name,dbxref_id) select cv_id, 'unit_ontology', dbxref_id from cv join dbxref on true where cv.name = 'cv_type' and dbxref.accession = 'unit_ontology';
-INSERT into dbxref (db_id, accession) select db_id, 'time_ontology' from db where name = 'COMP';
+INSERT into dbxref (db_id, accession) select db_id, 'time_ontology' from db where name = 'null';
 INSERT into cvterm (cv_id,name,dbxref_id) select cv_id, 'time_ontology', dbxref_id from cv join dbxref on true where cv.name = 'cv_type' and dbxref.accession = 'time_ontology';
+INSERT INTO cvprop (cv_id,type_id) select cv.cv_id, cvterm_id from cv join cvterm on true where cv.name = 'cassava_trait' AND cvterm.name = 'trait_ontology';
+INSERT INTO cvprop (cv_id,type_id) select cv.cv_id, cvterm_id from cv join cvterm on true where cv.name = 'composed_trait' AND cvterm.name = 'composed_trait_ontology';
 INSERT INTO cvprop (cv_id,type_id) select cv.cv_id, cvterm_id from cv join cvterm on true where cv.name = 'cass_tissue_ontology' AND cvterm.name = 'entity_ontology';
 INSERT INTO cvprop (cv_id,type_id) select cv.cv_id, cvterm_id from cv join cvterm on true where cv.name = 'chebi_ontology' AND cvterm.name = 'quality_ontology';
-INSERT INTO cvprop (cv_id,type_id) select cv.cv_id, cvterm_id from cv join cvterm on true where cv.name = 'cass_units_ontology' AND cvterm.name = 'unit_ontology';
+INSERT INTO cvprop (cv_id,type_id) select cv.cv_id, cvterm_id from cv join cvterm on true where cv.name = 'cass_unit_ontology' AND cvterm.name = 'unit_ontology';
 INSERT INTO cvprop (cv_id,type_id) select cv.cv_id, cvterm_id from cv join cvterm on true where cv.name = 'cass_time_ontology' AND cvterm.name = 'time_ontology';
 
 EOSQL
