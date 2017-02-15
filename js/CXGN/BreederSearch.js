@@ -80,6 +80,7 @@ window.onload = function initialize() {
 	  case "locations":
 	      window.open("../../breeders/locations");
 	      break;
+    case "trait_components":
 	  case "traits":
 	      window.open("../../cvterm/"+this.value+"/view");
 	      break;
@@ -277,7 +278,7 @@ function get_selected_genotyping_protocols () {
 function update_select_categories(this_section, selected_categories) {
     //console.log("selected_categories="+selected_categories);
     if (selected_categories === undefined) var selected_categories = get_selected_categories(this_section);
-    var categories = { '': 'please select', accessions : 'accessions', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', plants : 'plants', plots : 'plots', traits : 'traits', trials : 'trials', trial_designs : 'trial_designs', trial_types : 'trial_types', years : 'years'};
+    var categories = { '': 'please select', accessions : 'accessions', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', plants : 'plants', plots : 'plots', trait_components : 'trait_components', traits : 'traits', trials : 'trials', trial_designs : 'trial_designs', trial_types : 'trial_types', years : 'years'};
     var all_categories = copy_hash(categories);
 
     for (i=0; i < this_section; i++) {
@@ -533,7 +534,7 @@ function get_querytypes(this_section) {
 }
 
 function initialize_first_select() {
-  var starting_categories = { '': 'Select a starting category', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', traits : 'traits', trials : 'trials', trial_designs : 'trial_designs', trial_types : 'trial_types', years : 'years'};
+  var starting_categories = { '': 'Select a starting category', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', trait_components : 'trait_components', traits : 'traits', trials : 'trials', trial_designs : 'trial_designs', trial_types : 'trial_types', years : 'years'};
   var start = format_options(starting_categories);
   jQuery('#select1').html(start);
 }
