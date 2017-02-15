@@ -14,7 +14,7 @@ see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This patch updates the index of materialized_fullview and the queries used to create the materialized view for each individual category.
+This patch updates the materialized_phenoview view and the binary views that depend on it to remove unnecessary fields and better handle plants vs plots.
 
 =head1 AUTHOR
 
@@ -37,7 +37,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch updates the index of materialized_fullview and the queries used to create the materialized view for each individual category. It adds views for new categories: trial type and trial design
+This patch updates the materialized_phenoview view and the binary views that depend on it to remove unnecessary fields and better handle plants vs plots.
 
 sub patch {
     my $self=shift;
@@ -89,6 +89,27 @@ CREATE INDEX trial_id_idx ON public.materialized_phenoview(trial_id) WITH (fillf
 CREATE INDEX year_id_idx ON public.materialized_phenoview(year_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW materialized_phenoview OWNER TO web_usr;
 
+DROP MATERIALIZED VIEW IF EXISTS public.materialized_genoview CASCADE;
+CREATE MATERIALIZED VIEW public.materialized_genoview AS
+ SELECT stock.stock_id AS accession_id,
+    nd_experiment_protocol.nd_protocol_id AS genotyping_protocol_id,
+    genotype.genotype_id AS genotype_id
+   FROM stock
+     LEFT JOIN nd_experiment_stock ON stock.stock_id = nd_experiment_stock.stock_id
+     LEFT JOIN nd_experiment_protocol ON nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id
+     LEFT JOIN nd_protocol ON nd_experiment_protocol.nd_protocol_id = nd_protocol.nd_protocol_id
+     LEFT JOIN nd_experiment_genotype ON nd_experiment_stock.nd_experiment_id = nd_experiment_genotype.nd_experiment_id
+     LEFT JOIN genotype ON genotype.genotype_id = nd_experiment_genotype.genotype_id
+  WHERE stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'accession')
+  GROUP BY stock.stock_id, nd_experiment_protocol.nd_protocol_id, genotype.genotype_id
+  WITH DATA;
+
+CREATE UNIQUE INDEX unq_geno_idx ON public.materialized_genoview(accession_id,genotype_id) WITH (fillfactor=100);
+CREATE INDEX accession_id_geno_idx ON public.materialized_genoview(accession_id) WITH (fillfactor=100);
+CREATE INDEX genotyping_protocol_id_idx ON public.materialized_genoview(genotyping_protocol_id) WITH (fillfactor=100);
+CREATE INDEX genotype_id_idx ON public.materialized_genoview(genotype_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW materialized_genoview OWNER TO web_usr;
+
 UPDATE matviews set mv_dependents = '{"accessionsXbreeding_programs","accessionsXlocations","accessionsXplants","accessionsXplots","accessionsXtrait_components","accessionsXtraits","accessionsXtrials","accessionsXtrial_designs","accessionsXtrial_types","accessionsXyears","breeding_programsXgenotyping_protocols","breeding_programsXlocations","breeding_programsXplants","breeding_programsXplots","breeding_programsXtrait_components","breeding_programsXtraits","breeding_programsXtrials","breeding_programsXtrial_designs","breeding_programsXtrial_types","breeding_programsXyears","genotyping_protocolsXlocations","genotyping_protocolsXplants","genotyping_protocolsXplots","genotyping_protocolsXtrait_components","genotyping_protocolsXtraits","genotyping_protocolsXtrials","genotyping_protocolsXtrial_designs","genotyping_protocolsXtrial_types","genotyping_protocolsXyears","locationsXplants","locationsXplots","locationsXtrait_components","locationsXtraits","locationsXtrials","locationsXtrial_designs","locationsXtrial_types","locationsXyears","plantsXplots","plantsXtrait_components","plantsXtraits","plantsXtrials","plantsXtrial_designs","plantsXtrial_types","plantsXyears","plotsXtraits","plotsXtrait_components","plotsXtrials","plotsXtrial_designs","plotsXtrial_types","plotsXyears","trait_componentsXtraits","trait_componentsXtrial_designs","trait_componentsXtrial_types","trait_componentsXtrials","trait_componentsXyears","traitsXtrials","traitsXtrial_designs","traitsXtrial_types","traitsXyears","trial_designsXtrials","trial_typesXtrials","trialsXyears","trial_designsXtrial_types","trial_designsXyears","trial_typesXyears"}' WHERE mv_name = 'materialized_phenoview';
 
 -- REDEFINE TRAIT VIEW, getting all proximal terms from cvs that have a term associated with at least one phenotype measurement
@@ -110,15 +131,17 @@ ALTER MATERIALIZED VIEW trials OWNER TO web_usr;
 
 DROP MATERIALIZED VIEW IF EXISTS public.trait_components;
 CREATE MATERIALIZED VIEW public.trait_components AS
-SELECT cvterm_id AS trait_component_id,
+SELECT cvterm.cvterm_id AS trait_component_id,
 (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_component_name
-            FROM cvterm
+            FROM cv
+            JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = ANY ('{entity_ontology,quality_ontology,unit_ontology,time_ontology}')))
+            JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
             JOIN dbxref USING(dbxref_id)
-            JOIN db ON(dbxref.db_id = db.db_id AND db.name IN ('CASSTISS', 'CASSTIME', 'CASSUNIT', 'CHEBI'))
+            JOIN db ON(dbxref.db_id = db.db_id)
             LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
             LEFT JOIN cvterm_relationship is_object ON cvterm.cvterm_id = is_object.object_id
             WHERE is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
-            ORDER BY 2,1
+            GROUP BY 2,1 ORDER BY 2,1
     WITH DATA;
     CREATE UNIQUE INDEX trait_components_idx ON public.trait_components(trait_component_id) WITH (fillfactor=100);
     ALTER MATERIALIZED VIEW trait_components OWNER TO web_usr;
@@ -126,14 +149,15 @@ SELECT cvterm_id AS trait_component_id,
 
     DROP MATERIALIZED VIEW IF EXISTS public.traits;
     CREATE MATERIALIZED VIEW public.traits AS
-    SELECT cvterm_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS name
+    SELECT cvterm_id AS trait_id,
+    (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
                 FROM cvterm
                 JOIN dbxref USING(dbxref_id)
                 JOIN db ON(dbxref.db_id = db.db_id AND db.name IN ('CO','COMP'))
                 LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
                 LEFT JOIN cvterm_relationship is_object ON cvterm.cvterm_id = is_object.object_id
                 WHERE is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
-                ORDER BY 2,1
+                GROUP BY 2,1 ORDER BY 2,1
   WITH DATA;
   CREATE UNIQUE INDEX traits_idx ON public.traits(trait_id) WITH (fillfactor=100);
   ALTER MATERIALIZED VIEW traits OWNER TO web_usr;
