@@ -18,23 +18,38 @@ my $mech = Test::WWW::Mechanize->new;
 my $response;
 
 #$mech->post_ok('http://localhost:3010/ajax/search/male_parents?female_parent=UG120001');
-$mech->post_ok('http://localhost:3010/ajax/search/male_parents',["female_parent" => "UG120001"] );
+$mech->post_ok('http://localhost:3010/ajax/search/male_parents',["female_parent" => "TestAccession1"] );
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
 is_deeply($response, {'data' => [
-['UG120002'],
-['UG120007'],
-['UG120008'],
-['UG120009']
+['TestAccession1'],
+['TestAccession2'],
+['TestAccession3'],
+['TestAccession4'],
+['TestPopulation1'],
+['TestPopulation2']
 ]},'male parent search');
 
-$mech->post_ok('http://localhost:3010/ajax/search/cross_info',["female_parent" => "UG120001","male_parent" => "UG120002"] );
+$mech->post_ok('http://localhost:3010/ajax/search/cross_info',["female_parent" => "TestAccession1","male_parent" => "TestAccession2"] );
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
 is_deeply($response, {'data' => [
-['<a href="/stock/38878/view">UG120001</a','<a href="/stock/38879/view">UG120002</a','<a href="/stock/41248/view">cross_test1</a']
+['<a href="/stock/41254/view">TestAccession1</a','<a href="/stock/41255/view">TestAccession2</a','<a href="/stock/41264/view">TestCross1</a', 'biparental']
 ]}, 'cross info search');
+
+$mech->post_ok('http://localhost:3010/ajax/search/all_crosses',["female_parent" => "TestAccession1"] );
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+
+is_deeply($response, {'data' => [
+['<a href="/stock/41254/view">TestAccession1</a','<a href="/stock/41255/view">TestAccession2</a','<a href="/stock/41264/view">TestCross1</a', 'biparental'],
+['<a href="/stock/41254/view">TestAccession1</a','<a href="/stock/41256/view">TestAccession3</a','<a href="/stock/41265/view">TestCross2</a', 'biparental'],
+['<a href="/stock/41254/view">TestAccession1</a','<a href="/stock/41257/view">TestAccession4</a','<a href="/stock/41266/view">TestCross3</a', 'biparental'],
+['<a href="/stock/41254/view">TestAccession1</a','<a href="/stock/41259/view">TestPopulation1</a','<a href="/stock/41268/view">TestCross5</a', 'open'],
+['<a href="/stock/41254/view">TestAccession1</a','<a href="/stock/41260/view">TestPopulation2</a','<a href="/stock/41269/view">TestCross6</a', 'open'],
+['<a href="/stock/41254/view">TestAccession1</a','<a href="/stock/41254/view">TestAccession1</a','<a href="/stock/41267/view">TestCross4</a', 'self']
+]}, 'all crosses search');
 
 done_testing();
