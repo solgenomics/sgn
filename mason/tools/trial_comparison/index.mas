@@ -10,16 +10,27 @@
 
 <& '/page/page_title.mas', title => "Compare trials" &>
 
-<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup' ] &>
-<table>
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'CXGN.List' ] &>
+<!-- table>
 <tr><th>Trial 1</th><th>Trial 2</th><th>Trait</th></tr>
 <tr><td width="200"><input id="trial_1" /></td><td width="200"><input id="trial_2" /></td><td width="200"><select id="trait_select"><option disabled="1">select trials first</option></select></td></tr>
 <tr><td><button id="submit_trial_comparison">Submit</button></td></tr>
-</table>
+</table -->
+
+Choose a trial list:<br />
+
+<div id="trial_list_select_div">
+</div>
+
+Choose trait:<br />
+<div><select id="trait_select"><option disabled="1">select trials first</option></select></div>
 
 <div id="result_div">
 
 </div>
+
+
+<button id="submit_trial_list">Compare</button>
 
 <script>
 
@@ -32,10 +43,10 @@ jQuery('#trial_2').autocomplete(
 jQuery('#trait_select').focus( function() {   
    var trial_1 = jQuery('#trial_1').val();
    var trial_2 = jQuery('#trial_2').val();
-   
+   var trial_list_id = jQuery('#trial_list_select_list_select').val();
    jQuery.ajax( { 
       url: '/ajax/trial/common_traits',
-      data: { 'trial_1': trial_1, 'trial_2': trial_2 },
+      data: { 'trial_1': trial_1, 'trial_2': trial_2, 'list_id': trial_list_id },
       success: function(response) { 
          if (response.error) { jQuery('#trait_select').val('error'); }
          else {
@@ -66,13 +77,35 @@ jQuery('#submit_trial_comparison').click( function() {
 	  if (response.png) { 
 	     jQuery('#result_div').html('<img src="'+response.png+'" />');
           }
-          alert("SUCCESS!");
        }
     }
 
    });
 
 });
+
+lo = new CXGN.List();
+var select_html = lo.listSelect('trial_list_select', ['trials'], 'select');
+jQuery('#trial_list_select_div').html(select_html);
+
+jQuery('#submit_trial_list').click( function() { 
+   var list_id = jQuery('#trial_list_select_list_select').val();
+   jQuery.ajax( { 
+     url: '/ajax/trial/compare_list',
+     data: { 'cvterm_id' : jQuery('#trait_select').val(), 'list_id': list_id },
+     success: function(response) { 
+        if (response.error) { 
+           alert(response.error);
+        }
+        else { 
+           jQuery('#result_div').html('<img src="'+response.png+'" />');
+        }
+     }
+   });
+});
+
+     
+     				
 
 
 </script>

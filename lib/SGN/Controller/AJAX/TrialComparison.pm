@@ -174,23 +174,75 @@ sub common_traits_GET : Args(0) {
     
     my $trial_1 = $c->req->param("trial_1");
     my $trial_2 = $c->req->param("trial_2");
+    
+    my $trial_list_id = $c->req->param("list_id");
+
+    my @trials;
+
+    if ($trial_list_id) { 
+	print STDERR "Parsing trial_list_id...\n";
+	my $list = CXGN::List->new(
+	    { 
+		dbh => $c->dbic_schema("Bio::Chado::Schema")->storage->dbh(),
+		list_id => $trial_list_id,
+	    });
+	my $trials = $list->elements();
+	print STDERR Dumper(\@trials);
+	@trials = @$trials;
+    }
+    else { 
+	print STDERR "Parsing trial_1 and trial_2...\n";
+	if ( ($trial_1 ne "") && ($trial_2 ne "")) { 
+	    @trials = ($trial_1, $trial_2);
+	}
+    }
+    
+    $self->get_common_traits($c, @trials);
+    
+
+}
+
+
+sub get_common_traits { 
+    my $self = shift;
+    my $c = shift;
+    my @trials = @_;
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $trial_id_rs = $schema->resultset("Project::Project")->search( { name => { in => [ $trial_1, $trial_2 ]} });
+    my $trial_id_rs = $schema->resultset("Project::Project")->search( { name => { in => [ @trials ]} });
     my @trial_ids = map { $_->project_id() } $trial_id_rs->all();
 
     my $ds = CXGN::Dataset->new( people_schema => $c->dbic_schema("CXGN::People::Schema"), schema => $schema);
     
-    $ds->trials( [ @trial_ids ]);
+    my @trait_lists;
+    foreach my $t (@trial_ids) { 
+	$ds->trials( [ $t ]);
 
-    my $traits = $ds->retrieve_traits();
+	my $traits = $ds->retrieve_traits();
+	push @trait_lists, $traits;
+    }
+    
+    print STDERR Dumper(\@trait_lists);
+    my @common_traits = @{$trait_lists[0]};
+    for(my $i=1; $i<@trait_lists; $i++ ) { 
+	my @local_common = ();
+	for(my $n=0; $n<@common_traits; $n++) { 
+	    for(my $m=0; $m<@{$trait_lists[$i]}; $m++) { 
+		if ($common_traits[$n]->[0] == $trait_lists[$i][$m]->[0]) { 
+		    push @local_common, $common_traits[$n];
+		}
+	    }
+	}
+	@common_traits = @local_common;
+    }
+	    
 
     print STDERR "Traits:\n";
-    print STDERR Dumper($traits);
+    print STDERR Dumper(\@common_traits);
     
     my @options;
-    foreach my $t (@$traits) { 
+    foreach my $t (@common_traits) { 
 	push @options, [ $t->[0], $t->[1] ];
     }
 
