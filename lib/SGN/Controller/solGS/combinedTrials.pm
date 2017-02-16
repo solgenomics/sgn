@@ -565,18 +565,8 @@ sub find_common_traits {
 sub save_common_traits_acronyms {
     my ($self, $c) = @_;
     
-     my $combo_pops_id = $c->stash->{combo_pops_id};
+    my $combo_pops_id = $c->stash->{combo_pops_id};
     
-    # $self->get_combined_pops_arrayref($c);
-    # my $combined_pops_list = $c->stash->{arrayref_combined_pops_ids};
-    
-    # my $solgs_controller = $c->controller('solGS::solGS');
-   
-    # $solgs_controller->multi_pops_pheno_files($c, $combined_pops_list);
-    # my $all_pheno_files = $c->stash->{multi_pops_pheno_files};        
-    # my @all_pheno_files = split(/\t/, $all_pheno_files);
-    
-    #$self->find_common_traits($c, \@all_pheno_files);
     $self->find_common_traits($c);
     my $common_traits = $c->stash->{common_traits};
        
