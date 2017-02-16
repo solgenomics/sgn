@@ -146,6 +146,7 @@ SELECT cvterm.cvterm_id AS trait_component_id,
     CREATE UNIQUE INDEX trait_components_idx ON public.trait_components(trait_component_id) WITH (fillfactor=100);
     ALTER MATERIALIZED VIEW trait_components OWNER TO web_usr;
 
+# ORDER by (case when cv_id = 56 then 1 when cv_id = 59 then 2 when cv_id = 58 then 3 when cv_id = 57 then 4 end)
 
 DROP MATERIALIZED VIEW IF EXISTS public.traits;
 CREATE MATERIALIZED VIEW public.traits AS
@@ -159,21 +160,29 @@ CREATE MATERIALIZED VIEW public.traits AS
     LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
     LEFT JOIN cvterm_relationship is_object ON cvterm.cvterm_id = is_object.object_id
     WHERE is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
-UNION
-  SELECT parent.cvterm AS trait_id,
-  children.trait_name as trait_name
+UNION ALL
+  SELECT parent.cvterm_id AS trait_id,
+  (((aggregated.child_names::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
 	FROM cv
     JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'composed_trait_ontology'))
-    JOIN cvterm parent ON(cvprop.cv_id = cvterm.cv_id)
-	  JOIN LATERAL (SELECT string_agg(child.name::text, ' ')
-                         FROM cvterm_relationship rel ON(parent.cvterm_id = rel.object_id AND rel.type_id = (SELECT cvterm_id from cvterm where name = 'contains' ))
-                         JOIN cvterm child ON(child.cvterm = rel.subject_id)
-                         JOIN cv ON(child.cv_id = cv_id)
-                         JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND )
-
-                         ORDER BY i2.inspected_at DESC
-                         LIMIT 1) i
+    JOIN cvterm parent ON(cvprop.cv_id = parent.cv_id)
+    JOIN dbxref ON(parent.dbxref_id = dbxref.dbxref_id)
+            JOIN db ON(dbxref.db_id = db.db_id)
+            LEFT JOIN cvterm_relationship is_subject ON parent.cvterm_id = is_subject.subject_id
+            LEFT JOIN cvterm_relationship is_object ON (parent.cvterm_id = is_object.object_id AND is_object.type_id =(SELECT cvterm_id from cvterm where name = 'is_a'))
+	  JOIN LATERAL (SELECT string_agg(child.name::text, ' ') AS child_names
+                         FROM cvterm_relationship rel
+                         JOIN cvterm child ON(child.cvterm_id = rel.subject_id)
+                         JOIN cv ON(child.cv_id = cv.cv_id)
+                         JOIN cvprop ON(cv.cv_id = cvprop.cv_id)
+                         JOIN cvterm type ON(cvprop.type_id = type.cvterm_id)
+                         WHERE parent.cvterm_id = rel.object_id AND rel.type_id = (SELECT cvterm_id from cvterm where name = 'contains')
+                         GROUP BY type.name
+                         ORDER by (case when type.name = 'entity_ontology' then 1 when type.name = 'quality_ontology' then 2 when type.name = 'unit_ontology' then 3 when type.name = 'time_ontology' then 4 end)
+                         LIMIT 1) aggregated
 ON true
+WHERE is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
+
 cvterm children ON(cvterm_relationship.subject_id = children.cvterm_id)
 	  JOIN dbxref ON(parent.dbxref_id = dbxref.dbxref_id)
             JOIN db ON(dbxref.db_id = db.db_id)
