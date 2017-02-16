@@ -17,20 +17,21 @@
 <tr><td><button id="submit_trial_comparison">Submit</button></td></tr>
 </table -->
 
-Choose a trial list:<br />
 
-<div id="trial_list_select_div">
-</div>
-
-Choose trait:<br />
-<div><select id="trait_select"><option disabled="1">select trials first</option></select></div>
+<center>
+<table>
+<tr><td>Choose a trial list:</td></tr>
+<tr><td><div id="trial_list_select_div" width="200"></td></tr>
+<tr><td>Choose trait:</td></tr>
+<tr><td><select id="trait_select"><option disabled="1">select trials first</option></select></td></tr>
+<tr><td><button id="submit_trial_list">Compare</button></td></tr>
+</table>
 
 <div id="result_div">
-
 </div>
 
+</center>
 
-<button id="submit_trial_list">Compare</button>
 
 <script>
 

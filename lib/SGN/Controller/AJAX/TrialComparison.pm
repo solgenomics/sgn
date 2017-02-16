@@ -109,9 +109,9 @@ sub compare_trial_list_GET : Args(0) {
 	return;
     }
 
-    my @trials = $tl->elements();
+    my $trials = $tl->elements();
 
-    my $trial_id_rs = $schema->resultset("Project::Project")->search( { name => { in => [ @trials ]} });
+    my $trial_id_rs = $schema->resultset("Project::Project")->search( { name => { in => [ @$trials ]} });
 
     my @trial_ids = map { $_->project_id() } $trial_id_rs->all();
 
@@ -187,7 +187,7 @@ sub common_traits_GET : Args(0) {
 		list_id => $trial_list_id,
 	    });
 	my $trials = $list->elements();
-	print STDERR Dumper(\@trials);
+	print STDERR Dumper($trials);
 	@trials = @$trials;
     }
     else { 
