@@ -32,20 +32,22 @@ Side Effects: none
 
 sub get_terms {
       my $self = shift;
-      my $namespaces = shift;
-      print STDERR "Namespaces in CXGN:Onto = $namespaces\n";
+      my $cv_type = shift;
 
       my $query = "SELECT cvterm_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS name
-                  FROM cvterm
+                  FROM cv
+                  JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = ?))
+                  JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
                   JOIN dbxref USING(dbxref_id)
-                  JOIN db ON(dbxref.db_id = db.db_id AND db.name = ?)
+                  JOIN db USING(db_id)
                   LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
                   LEFT JOIN cvterm_relationship is_object ON cvterm.cvterm_id = is_object.object_id
                   WHERE is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
+                  GROUP BY 1,2
                   ORDER BY 2,1";
 
       my $h = $self->dbh->prepare($query);
-      $h->execute($namespaces);
+      $h->execute($cv_type);
 
       my @results;
       while (my ($id, $name) = $h->fetchrow_array()) {
@@ -66,43 +68,48 @@ sub compose_trait {
       my $db = $schema->resultset("General::Db")->find_or_create(
           { name => 'COMP' });
 
-      my $cv= $schema->resultset('Cv::Cv')->find_or_create( { name => 'composed_traits' });
+      my $cv= $schema->resultset('Cv::Cv')->find_or_create( { name => 'composed_trait' });
 
-      my $accession_query = "SELECT nextval('postcomposed_trait_ids')";
+      my $accession_query = "SELECT nextval('composed_trait_ids')";
       my $h = $self->dbh->prepare($accession_query);
       $h->execute();
       my $accession = $h->fetchrow_array();
-    
-      my $name = "Postcomposed trait " . $accession;
-      print STDERR "New trait accession = $accession and name = $name\n";
+
+      my $name = "Composed trait " . $accession;
+      #print STDERR "New trait accession = $accession and name = $name\n";
 
       my $new_term_dbxref =  $schema->resultset("General::Dbxref")->create(
       {   db_id     => $db->get_column('db_id'),
 		      accession => $accession
 		  });
 
-    my $parent_term= $schema->resultset("Cv::Cvterm")->find_or_create(
+    my $parent_term= $schema->resultset("Cv::Cvterm")->find(
         { cv_id  =>$cv->cv_id(),
           name   => 'Composed traits',
       });
 
-    my $new_term= $schema->resultset("Cv::Cvterm")->find_or_create(
+    #print STDERR "Parent cvterm_id = " . $parent_term->cvterm_id();
+
+    my $new_term= $schema->resultset("Cv::Cvterm")->create(
       { cv_id  =>$cv->cv_id(),
         name   => $name,
         dbxref_id  => $new_term_dbxref-> dbxref_id()
       });
 
-    #print STDERR "dumper new term:" . $new_term->cvterm_id();
+    #print STDERR "New term cvterm_id = " . $new_term->cvterm_id();
 
     my $isa_relationship = $schema->resultset("Cv::Cvterm")->find(
     	  { name => 'is_a',
       });
 
+    #print STDERR "Is a relationship cvterm_id = " . $isa_relationship->cvterm_id();
+
     my $contains_relationship = $schema->resultset("Cv::Cvterm")->find(
         { name => 'contains',
       });
 
-    #print STDERR "dumper relationship:" . $contains_relationship->cvterm_id();
+    #print STDERR "Contains relationship cvterm_id = " . $contains_relationship->cvterm_id();
+
     my @component_ids = split ',', $ids;
 
     my $isa_rel = $schema->resultset('Cv::CvtermRelationship')->create(

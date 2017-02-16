@@ -160,6 +160,7 @@ CREATE MATERIALIZED VIEW public.traits AS
     LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
     LEFT JOIN cvterm_relationship is_object ON cvterm.cvterm_id = is_object.object_id
     WHERE is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
+    GROUP BY 1,2
 UNION ALL
   SELECT parent.cvterm_id AS trait_id,
   (((aggregated.child_names::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
@@ -183,6 +184,7 @@ UNION ALL
         LIMIT 1
     ) aggregated ON true
     WHERE is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
+    GROUP BY 1,2
   WITH DATA;
   CREATE UNIQUE INDEX traits_idx ON public.traits(trait_id) WITH (fillfactor=100);
   ALTER MATERIALIZED VIEW traits OWNER TO web_usr;

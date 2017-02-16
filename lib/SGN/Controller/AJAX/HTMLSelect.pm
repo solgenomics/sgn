@@ -335,15 +335,15 @@ sub get_trait_components_select : Path('/ajax/html/select/trait_components') Arg
   my $self = shift;
   my $c = shift;
 
-  my $namespaces = $c->req->param('namespaces');
-  print STDERR "namespaces = $namespaces\n";
+  my $cv_type = $c->req->param('cv_type');
+  print STDERR "cv_type = $cv_type\n";
   my $id = $c->req->param("id") || "component_select";
   my $name = $c->req->param("name") || "component_select";
   my $default = $c->req->param("default") || "Select a term";
 
   my $dbh = $c->dbc->dbh();
   my $onto = CXGN::Onto->new( { dbh=>$dbh } );
-  my @components = $onto->get_terms($namespaces);
+  my @components = $onto->get_terms($cv_type);
 
   if ($default) { unshift @components, [ '', $default ]; }
 

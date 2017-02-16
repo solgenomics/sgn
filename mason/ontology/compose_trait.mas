@@ -1,9 +1,5 @@
 
 <%args>
-$entity_namespaces => undef
-$quality_namespaces => undef
-$unit_namespaces => undef
-$time_namespaces => undef
 </%args>
 
 <& /page/page_title.mas, title=>"Compose a new trait" &>
@@ -61,10 +57,10 @@ $time_namespaces => undef
 </div>
 
 <script>
-get_select_box('trait_components', 'entity_select_div', { 'id' : 'entity_select', 'name': 'entity_select', 'default': 'Select an entity', 'namespaces': '<%$entity_namespaces%>' });
-get_select_box('trait_components', 'quality_select_div', { 'id' : 'quality_select', 'name': 'quality_select', 'default': 'Select a quality', 'namespaces': '<%$quality_namespaces%>' });
-get_select_box('trait_components', 'unit_select_div', { 'id' : 'unit_select', 'name': 'unit_select', 'default': 'Select a unit', 'namespaces': '<%$unit_namespaces%>' });
-get_select_box('trait_components', 'time_select_div', { 'id' : 'time_select', 'name': 'time_select', 'default': 'Select a time', 'namespaces': '<%$time_namespaces%>' });
+get_select_box('trait_components', 'entity_select_div', { 'id' : 'entity_select', 'name': 'entity_select', 'default': 'Select an entity', 'cv_type': 'entity_ontology' });
+get_select_box('trait_components', 'quality_select_div', { 'id' : 'quality_select', 'name': 'quality_select', 'default': 'Select a quality', 'cv_type': 'quality_ontology' });
+get_select_box('trait_components', 'unit_select_div', { 'id' : 'unit_select', 'name': 'unit_select', 'default': 'Select a unit', 'cv_type': 'unit_ontology' });
+get_select_box('trait_components', 'time_select_div', { 'id' : 'time_select', 'name': 'time_select', 'default': 'Select a time', 'cv_type': 'time_ontology' });
 
 jQuery('#entity_select, #quality_select, #unit_select, #time_select').change(  // retrieve matching traits each time component selection changes
   function() {
