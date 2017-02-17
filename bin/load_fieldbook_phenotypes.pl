@@ -94,6 +94,23 @@ my $timestamp_included = 1;
 my $upload = $opt_i;
 my $data_level = $opt_d;
 
+my $time = DateTime->now();
+my $timestamp = $time->ymd()."_".$time->hms();
+my %phenotype_metadata;
+$phenotype_metadata{'archived_file'} = $upload;
+$phenotype_metadata{'archived_file_type'} = $metadata_file_type;
+$phenotype_metadata{'operator'} = $opt_u;
+$phenotype_metadata{'date'} = $timestamp;
+
+#my $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+#my $md5 = $uploader->get_md5($archived_filename_with_path);
+#if (!$archived_filename_with_path) {
+#    die "Could not archive file!\n";
+#} else {
+#    print STDERR "File saved in archive.\n";
+#}
+#unlink $upload_tempfile;
+
 my $validate_file = $parser->validate($validate_type, $upload, $timestamp_included, $data_level);
 if (!$validate_file) {
     die "Input file itself not valid.\n";
@@ -105,14 +122,6 @@ if ($validate_file == 1){
         die $validate_file->{'error'}."\n";
     }
 }
-
-my $time = DateTime->now();
-my $timestamp = $time->ymd()."_".$time->hms();
-my %phenotype_metadata;
-$phenotype_metadata{'archived_file'} = $upload;
-$phenotype_metadata{'archived_file_type'} = $metadata_file_type;
-$phenotype_metadata{'operator'} = $opt_u;
-$phenotype_metadata{'date'} = $timestamp;
 
 my $parsed_file = $parser->parse($validate_type, $upload, $timestamp_included);
 if (!$parsed_file) {

@@ -702,14 +702,6 @@ sub project_description {
 }
 
 
-# sub select_traits   {
-#     my ($self, $c) = @_;
-
-#     #$self->load_yaml_file($c, 'population/traits.yml');
-#    # $c->stash->{traits_form} = $c->stash->{form};
-# }
-
-
 sub selection_trait :Path('/solgs/selection/') Args(5) {
     my ($self, $c, $selection_pop_id, 
         $model_key, $model_id, 
@@ -2153,7 +2145,7 @@ sub rank_genotypes : Private {
     $c->stash->{output_files} = $output_file;
     $c->stash->{input_files}  = $input_file;   
     $c->stash->{r_temp_file}  = "rank-gebv-genotypes-${pop_id}${pred_file_suffix}";  
-    $c->stash->{r_script}     = 'R/selection_index.r';
+    $c->stash->{r_script}     = 'R/solGS/selection_index.r';
     
     $self->run_r_script($c);
     $self->download_urls($c);
@@ -4990,7 +4982,7 @@ sub run_rrblup  {
         $c->stash->{r_temp_file} = "gs-rrblup-combo-${trait_id}-${combo_identifier}"; 
     }
    
-    $c->stash->{r_script}    = 'R/gs.r';
+    $c->stash->{r_script}    = 'R/solGS/gs.r';
     $self->run_r_script($c);
 
 }
@@ -5039,7 +5031,7 @@ sub r_combine_populations  {
     $c->stash->{input_files}  = $tempfile_input;
     $c->stash->{output_files} = $tempfile_output;
     $c->stash->{r_temp_file}  = "combine-pops-${trait_id}";
-    $c->stash->{r_script}     = 'R/combine_populations.r';
+    $c->stash->{r_script}     = 'R/solGS/combine_populations.r';
     
     $self->run_r_script($c);
   
@@ -5268,8 +5260,11 @@ sub run_r_script {
  
 sub get_solgs_dirs {
     my ($self, $c) = @_;
-   
-    my $tmp_dir         = $c->site_cluster_shared_dir;      
+        
+    my $geno_version    = $c->config->{default_genotyping_protocol};    
+    $geno_version       =~ s/\s+//g;
+    my $tmp_dir         = $c->site_cluster_shared_dir;    
+    $tmp_dir            = catdir($tmp_dir, $geno_version);
     my $solgs_dir       = catdir($tmp_dir, "solgs");
     my $solgs_cache     = catdir($tmp_dir, 'solgs', 'cache'); 
     my $solgs_tempfiles = catdir($tmp_dir, 'solgs', 'tempfiles');  
@@ -5329,23 +5324,6 @@ sub cache_file {
 
     $c->stash->{$cache_data->{stash_key}} = $file;
     $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
-}
-
-
-sub load_yaml_file {
-    my ($self, $c, $file) = @_;
-
-    $file =~ s/\.\w+//;
-    $file =~ s/(^\/)//;
-   
-    my $form = $self->form;
-    my $yaml_dir = '/forms/solgs';
- 
-    $form->load_config_filestem($c->path_to(catfile($yaml_dir, $file)));
-    $form->process;
-    
-    $c->stash->{form} = $form;
- 
 }
 
 
