@@ -72,7 +72,7 @@ sub pca_result :Path('/pca/result/') Args(1) {
     if ($c->stash->{genotype_files_list}) 
     {
 	@genotype_files_list = @{$c->stash->{genotype_files_list}};
-	$geno_file = $genotype_files_list[0] if !$genotype_files_list[0];
+	$geno_file = $genotype_files_list[0] if !$genotype_files_list[1];
     }
     else 
     {
