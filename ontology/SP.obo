@@ -1,0 +1,3568 @@
+format-version: 1.2
+date: 07:02:2017 13:39
+saved-by: naama
+auto-generated-by: OBO-Edit 2.3.1
+default-namespace: solanaceae_phenotype
+
+[Term]
+id: SP:0000000
+name: placenta color
+def: "The color of the placenta." [SGN:NM]
+xref: PATO:0000014
+is_a: SP:0000012 ! fruit color
+
+[Term]
+id: SP:0000001
+name: seedling
+synonym: "TO:0000620" RELATED []
+xref: PO:0007057
+is_a: SP:0000205 ! whole plant phenotype
+
+[Term]
+id: SP:0000002
+name: plant size
+synonym: "TO:0000207" RELATED []
+xref: PATO:0000117
+xref: PO:0000003
+xref: PO:0007130
+xref: TO:0000207
+is_a: SP:0000205 ! whole plant phenotype
+
+[Term]
+id: SP:0000003
+name: plant habit
+synonym: "TO:0000357" RELATED []
+xref: PO:0007134
+is_a: SP:0000205 ! whole plant phenotype
+
+[Term]
+id: SP:0000004
+name: leaf morphology
+synonym: "TO:0000419" RELATED []
+xref: PATO:0000051
+xref: PO:0001050
+xref: PO:0009025
+is_a: SP:0000108 ! leaf
+
+[Term]
+id: SP:0000005
+name: leaf color
+synonym: "TO:0000326" RELATED []
+xref: PATO:0000014
+xref: PO:0005645
+is_a: SP:0000108 ! leaf
+
+[Term]
+id: SP:0000006
+name: flowering
+def: "Traits and phenotypes related to flowering." []
+xref: PO:0007016
+xref: PO:0009046
+is_a: SP:0001000 ! Solanaceae phenotype ontology
+
+[Term]
+id: SP:0000007
+name: inflorescence
+synonym: "TO:0000373" RELATED []
+xref: PO:0001083
+xref: PO:0009049
+relationship: part_of SP:0000192 ! shoot phenotype
+
+[Term]
+id: SP:0000008
+name: flower morphology
+synonym: "TO:0000499" RELATED []
+xref: PATO:0000051
+xref: PO:0007615
+xref: PO:0009046
+relationship: part_of SP:0000115 ! flower
+
+[Term]
+id: SP:0000009
+name: flower color
+synonym: "TO:0000537" RELATED []
+xref: PATO:0000014
+xref: PO:0007600
+xref: PO:0009046
+relationship: part_of SP:0000115 ! flower
+
+[Term]
+id: SP:0000010
+name: fruit size
+xref: PATO:0000117
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000011 ! fruit morphology
+
+[Term]
+id: SP:0000011
+name: fruit morphology
+xref: PATO:0000051
+xref: PO:0007042
+xref: PO:0009001
+relationship: part_of SP:0000037 ! fruit
+
+[Term]
+id: SP:0000012
+name: fruit color
+xref: PATO:0000014
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+relationship: part_of SP:0000037 ! fruit
+
+[Term]
+id: SP:0000013
+name: fruit ripening
+def: "Fruit ripening process." [SGN:NM]
+xref: PO:0007010
+xref: PO:0009001
+is_a: SP:0000037 ! fruit
+
+[Term]
+id: SP:0000014
+name: sterility
+synonym: "TO:0000485" RELATED []
+xref: PO:0007616
+xref: PO:0009046
+is_a: SP:0001000 ! Solanaceae phenotype ontology
+
+[Term]
+id: SP:0000015
+name: disease and stress response
+synonym: "TO:0000063" RELATED []
+xref: PO:0000003
+xref: PO:0007130
+xref: PO:0007134
+is_a: SP:0000205 ! whole plant phenotype
+
+[Term]
+id: SP:0000016
+name: anthocyanin content
+synonym: "TO:0000071" RELATED []
+is_a: SP:0000019 ! biochemical metabolites
+
+[Term]
+id: SP:0000017
+name: chlorophyll content
+synonym: "TO:0000495" RELATED []
+is_a: SP:0000019 ! biochemical metabolites
+
+[Term]
+id: SP:0000018
+name: hair modifications
+synonym: "trichomes" RELATED []
+xref: PO:0000282
+is_a: SP:0001000 ! Solanaceae phenotype ontology
+
+[Term]
+id: SP:0000019
+name: biochemical metabolites
+synonym: "TO:0000277" RELATED []
+is_a: SP:0001000 ! Solanaceae phenotype ontology
+
+[Term]
+id: SP:0000020
+name: root modifications
+xref: PO:0007520
+xref: PO:0009005
+is_a: SP:0001000 ! Solanaceae phenotype ontology
+
+[Term]
+id: SP:0000021
+name: extremely small plant
+xref: PATO:0000969
+xref: PO:0000003
+xref: PO:0007130
+xref: PO:0007134
+is_a: SP:0000002 ! plant size
+
+[Term]
+id: SP:0000022
+name: small plant
+xref: PATO:0000587
+xref: PO:0000003
+xref: PO:0007130
+xref: PO:0007134
+is_a: SP:0000002 ! plant size
+
+[Term]
+id: SP:0000023
+name: large plant
+xref: PATO:0000586
+xref: PO:0000003
+xref: PO:0007130
+xref: PO:0007134
+is_a: SP:0000002 ! plant size
+
+[Term]
+id: SP:0000024
+name: seed morphology
+xref: PATO:0000051
+xref: PO:0001170
+xref: PO:0009010
+is_a: SP:0000100 ! seed
+
+[Term]
+id: SP:0000025
+name: nutritional or hormonal disorder
+is_a: SP:0001000 ! Solanaceae phenotype ontology
+
+[Term]
+id: SP:0000026
+name: virescent leaf
+def: "Chlorophyll deficiency localized at growing point." [TGRC:F]
+xref: PATO:0001941
+xref: PO:0001050
+xref: PO:0005645
+is_a: SP:0000054 ! yellow-green leaf
+
+[Term]
+id: SP:0000027
+name: disease resistance
+xref: PO:0000003
+xref: PO:0007130
+xref: PO:0007134
+is_a: SP:0000015 ! disease and stress response
+
+[Term]
+id: SP:0000028
+name: brown green leaf color
+def: "Olive, brown, blue-green leaf." [TGRC:U]
+xref: PATO:0001942
+xref: PO:0001050
+xref: PO:0005645
+is_a: SP:0000005 ! leaf color
+
+[Term]
+id: SP:0000029
+name: allozyme variant
+is_a: SP:0001000 ! Solanaceae phenotype ontology
+
+[Term]
+id: SP:0000030
+name: vascular tissue
+is_a: SP:0001000 ! Solanaceae phenotype ontology
+
+[Term]
+id: SP:0000031
+name: internode length
+synonym: "TO:0000145" RELATED []
+xref: PATO:0000122
+xref: PO:0007089
+xref: PO:0020142
+is_a: SP:0000003 ! plant habit
+
+[Term]
+id: SP:0000032
+name: branching
+synonym: "TO:0000361" RELATED []
+xref: PO:0006343
+xref: PO:0007073
+is_a: SP:0000003 ! plant habit
+
+[Term]
+id: SP:0000033
+name: aborted growth
+synonym: "TO:0000195" RELATED []
+xref: PATO:0000297
+xref: PO:0007112
+xref: PO:0009006
+is_a: SP:0000003 ! plant habit
+
+[Term]
+id: SP:0000034
+name: other plant habit
+def: "OBSOLETE. Use parent term instead SP:0000003." [SGN:NM]
+xref: PO:0007134
+is_obsolete: true
+
+[Term]
+id: SP:0000035
+name: nutritional disorder
+is_a: SP:0000019 ! biochemical metabolites
+
+[Term]
+id: SP:0000036
+name: hormonal disorder
+is_a: SP:0000019 ! biochemical metabolites
+
+[Term]
+id: SP:0000037
+name: fruit
+def: "Fruit related traits and phenotypes." [SP:NM]
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0001000 ! Solanaceae phenotype ontology
+
+[Term]
+id: SP:0000038
+name: fruit shape
+def: "The shape of a fruit." [SGN:NM]
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000011 ! fruit morphology
+
+[Term]
+id: SP:0000039
+name: fruit shape index
+def: "Shape ratio." [SGN:EVDK]
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000038 ! fruit shape
+
+[Term]
+id: SP:0000040
+name: fruit shape index external
+def: "Maximum height/maximum width ratio." [SGN:EVDK]
+synonym: "fruit shape index 1" RELATED []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000039 ! fruit shape index
+
+[Term]
+id: SP:0000041
+name: leaf width
+synonym: "TO:0000370" RELATED []
+xref: PATO:0000921
+xref: PO:0001052
+xref: PO:0009025
+is_a: SP:0000042 ! leaf size
+
+[Term]
+id: SP:0000042
+name: leaf size
+synonym: "TO:0000542" RELATED []
+xref: PATO:0000117
+xref: PO:0001052
+xref: PO:0009025
+is_a: SP:0000004 ! leaf morphology
+
+[Term]
+id: SP:0000044
+name: leaf texture
+xref: PATO:0000150
+xref: PO:0001050
+xref: PO:0006016
+is_a: SP:0000004 ! leaf morphology
+
+[Term]
+id: SP:0000045
+name: leaf complexity
+alt_id: SP:0000043
+synonym: "leaf complexity" EXACT []
+xref: PATO:0001502
+xref: PO:0001050
+xref: PO:0009025
+is_a: SP:0000004 ! leaf morphology
+
+[Term]
+id: SP:0000046
+name: fruit shape index external 2
+def: "Midheight/midwidth ratio." [SGN:EVDK]
+synonym: "fruit shape index 2" RELATED []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000039 ! fruit shape index
+
+[Term]
+id: SP:0000047
+name: tuber
+def: "Swollen storage shoot with determinate growth." [POC:curators]
+xref: PO:0004547 "subterranean tuber"
+is_a: SP:0000192 ! shoot phenotype
+
+[Term]
+id: SP:0000048
+name: shape index internal
+def: "Internal ellipse height/width ratio." [SGN:EVDK]
+synonym: "pei" RELATED []
+synonym: "pericarp elongation index" RELATED []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000039 ! fruit shape index
+
+[Term]
+id: SP:0000049
+name: fruit shape triangle
+def: "Proximal/distal width ratio." [SGN:EVDK]
+synonym: "tri" RELATED []
+xref: PATO:0001875
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000038 ! fruit shape
+
+[Term]
+id: SP:0000050
+name: fruit shape circular
+def: "Fitting precision R2. How well the boundary of a perfect circle fits the boundary of a fruit." [SGN:EVDK]
+synonym: "cir" RELATED []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000038 ! fruit shape
+
+[Term]
+id: SP:0000051
+name: purple leaf
+xref: PATO:0000951
+xref: PO:0001050
+xref: PO:0005645
+is_a: SP:0000005 ! leaf color
+
+[Term]
+id: SP:0000052
+name: white leaf
+xref: PATO:0000323
+xref: PO:0001050
+xref: PO:0005645
+is_a: SP:0000005 ! leaf color
+
+[Term]
+id: SP:0000053
+name: yellow leaf
+xref: PATO:0000342
+xref: PO:0001050
+xref: PO:0005645
+is_a: SP:0000005 ! leaf color
+
+[Term]
+id: SP:0000054
+name: yellow-green leaf
+xref: PATO:0001941
+xref: PO:0001050
+xref: PO:0005645
+is_a: SP:0000005 ! leaf color
+
+[Term]
+id: SP:0000055
+name: dull green/grey leaf
+xref: PATO:0000950
+xref: PO:0001050
+xref: PO:0005645
+is_a: SP:0000005 ! leaf color
+
+[Term]
+id: SP:0000056
+name: dark green leaf
+xref: PATO:0001249
+xref: PO:0001050
+xref: PO:0005645
+is_a: SP:0000005 ! leaf color
+
+[Term]
+id: SP:0000057
+name: leaf variegation
+synonym: "TO:0000069" RELATED []
+xref: PATO:0001533
+xref: PO:0001050
+xref: PO:0005645
+is_a: SP:0000005 ! leaf color
+
+[Term]
+id: SP:0000058
+name: fruit shape eccentric
+def: "The asymmetry of the fruit. Height of internal ellipse / total height." [SGN:EVDK]
+synonym: "ecc" EXACT []
+synonym: "eccenticity" RELATED []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000038 ! fruit shape
+
+[Term]
+id: SP:0000059
+name: obovoid
+def: "1/2fOb(y) x Tob. The degree of pear-shapeness." [SGN:EVDK]
+synonym: "obo" RELATED []
+synonym: "obovate" RELATED []
+synonym: "pear shape" RELATED []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000058 ! fruit shape eccentric
+
+[Term]
+id: SP:0000060
+name: ovoid
+def: "1/2fOv(y) x Tov. The opposite of pear-shapeness." [SGN:EVDK]
+synonym: "ovate" RELATED []
+synonym: "ovo" RELATED []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000058 ! fruit shape eccentric
+
+[Term]
+id: SP:0000061
+name: flowering timing
+synonym: "TO:0000344" RELATED []
+synonym: "TO:0000366" RELATED []
+xref: PATO:0000165
+xref: PO:0007016
+xref: PO:0009046
+relationship: part_of SP:0000006 ! flowering
+
+[Term]
+id: SP:0000062
+name: heart shape
+def: "0.25 x [1/2fOv(y) x Tov] + 20 x [(H_sl + H_sr)/2*H] the degree of heart shapeness." [SGN:EVDK]
+synonym: "hrt" RELATED []
+xref: PATO:0000948
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000038 ! fruit shape
+
+[Term]
+id: SP:0000063
+name: distal eccentricity index
+def: "Internal ellipse height / height top ellipse-bottom fruit ratio." [SGN:EVDK]
+synonym: "dec" RELATED []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000058 ! fruit shape eccentric
+
+[Term]
+id: SP:0000064
+name: proximal eccentricity index
+def: "internal ellipse height/height bottom ellipse-top fruit ratio ." [SGN:EVDK]
+synonym: "pec" RELATED []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000058 ! fruit shape eccentric
+
+[Term]
+id: SP:0000065
+name: horizontal asymmetry
+def: "[sum|n-ny|]/L. Degree of horizontal asymmetry ." [SGN:EVDK]
+synonym: "hor" RELATED []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000058 ! fruit shape eccentric
+
+[Term]
+id: SP:0000066
+name: vertical asymmetry
+def: "[sum|m-mi|]/L. Degree of vertical asymmetry ." [SGN:EVDK]
+synonym: "ver" RELATED []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000058 ! fruit shape eccentric
+
+[Term]
+id: SP:0000067
+name: fruit shape ellipsoid
+def: "Fitting precision R2. How well the boundary of a perfect ellipse fits the boundary of a fruit." [SGN:EVDK]
+synonym: "ell" RELATED []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000038 ! fruit shape
+
+[Term]
+id: SP:0000068
+name: fruit shape rectangular
+def: "Sin/Sout. The ratio of maximum area inscribing the rectangle to the minimum area of the enclosing rectangle." [PMID:16684933]
+synonym: "rec" RELATED []
+xref: PATO:0001867
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000038 ! fruit shape
+
+[Term]
+id: SP:0000069
+name: fruit end
+def: "The ends of the fruit." [SGN:EVDK]
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+relationship: part_of SP:0000037 ! fruit
+
+[Term]
+id: SP:0000070
+name: distal fruit end shape
+def: "The shape of the distal end of the fruit." [SGN:EVDK]
+synonym: "blossom end" RELATED []
+xref: PATO:0000052
+xref: PATO:0001234
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008001
+is_a: SP:0000038 ! fruit shape
+is_a: SP:0000179 ! distal fruit end
+
+[Term]
+id: SP:0000071
+name: inflorescence structure
+xref: PATO:0000141
+xref: PO:0001083
+xref: PO:0009049
+is_a: SP:0000007 ! inflorescence
+
+[Term]
+id: SP:0000072
+name: proximal fruit end shape
+def: "The shape of the proximal end of the fruit." [SGN:EVDK]
+synonym: "stem end" RELATED []
+xref: PATO:0000052
+xref: PATO:0001195
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008002
+is_a: SP:0000038 ! fruit shape
+is_a: SP:0000180 ! proximal fruit end
+
+[Term]
+id: SP:0000073
+name: distal fruit end angle
+def: "Angle between intersection of two lines representing the slope at the fruit distal end." [SGN:evdk]
+synonym: "dan" RELATED []
+xref: PATO:0000133
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008001
+is_a: SP:0000070 ! distal fruit end shape
+
+[Term]
+id: SP:0000074
+name: proximal fruit end angle
+def: "Angle between intersection of two lines representing the slope of the proximal fruit end." [SGN:EVDK]
+synonym: "pan" RELATED []
+xref: PATO:0000133
+xref: PATO:0001195
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008002
+is_a: SP:0000072 ! proximal fruit end shape
+
+[Term]
+id: SP:0000075
+name: distal fruit end blockiness
+def: "Distal fruit end width/mid width ratio." [SGN:EVDK]
+synonym: "dblk" RELATED []
+xref: PATO:0001234
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008001
+is_a: SP:0000070 ! distal fruit end shape
+
+[Term]
+id: SP:0000076
+name: distal fruit end indentation
+def: "Fruit end indented area/total fruit area." [SGN:EVDK]
+synonym: "diar" RELATED []
+xref: PATO:0001234
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008001
+is_a: SP:0000070 ! distal fruit end shape
+
+[Term]
+id: SP:0000077
+name: distal fruit end protrusion
+def: "Distal fruit end protruded area/total fruit area." [SGN:EVDK]
+synonym: "nipple tip" RELATED []
+xref: PATO:0001234
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008001
+is_a: SP:0000070 ! distal fruit end shape
+
+[Term]
+id: SP:0000078
+name: proximal fruit end blockiness
+def: "Proximal fruit end proximal end width/mid width ratio." [SGN:EVDK]
+synonym: "pblk" RELATED []
+xref: PATO:0001195
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008002
+is_a: SP:0000072 ! proximal fruit end shape
+
+[Term]
+id: SP:0000079
+name: proximal fruit end indentation
+def: "Proximal fruit end indented area/total fruit area." [SGN:EVDK]
+xref: PATO:0001195
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008002
+is_a: SP:0000072 ! proximal fruit end shape
+
+[Term]
+id: SP:0000080
+name: fruit mass
+def: "The mass of the fruit measured in grams." [SGN:EVDK]
+synonym: "fruit weight" RELATED []
+synonym: "fw" RELATED []
+xref: PATO:0000125
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+relationship: variable_of SP:0000037 ! fruit
+created_by: naama
+creation_date: 2008-02-12T03:11:00Z
+
+[Term]
+id: SP:0000081
+name: homeotic mutation
+xref: PO:0007600
+xref: PO:0009046
+is_a: SP:0000008 ! flower morphology
+
+[Term]
+id: SP:0000082
+name: flower organ size
+xref: PATO:0000117
+xref: PO:0007600
+xref: PO:0009046
+is_a: SP:0000008 ! flower morphology
+
+[Term]
+id: SP:0000083
+name: flower organ width
+xref: PATO:0000921
+xref: PO:0007600
+xref: PO:0009046
+is_a: SP:0000082 ! flower organ size
+
+[Term]
+id: SP:0000084
+name: other flower morphology
+def: "OBSOLETE. Replaced by parent term SP:0000008 flower morphology." [SGN:nm]
+xref: PO:0007600
+is_obsolete: true
+
+[Term]
+id: SP:0000085
+name: fruit area
+def: "The area of the fruit." [SGN:EVDK]
+xref: PATO:0001323
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000010 ! fruit size
+created_by: naama
+creation_date: 2008-02-12T03:11:00Z
+
+[Term]
+id: SP:0000086
+name: fruit length
+def: "The length of the fruit." [SGN:EVDK]
+synonym: "fruit height" EXACT []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000010 ! fruit size
+created_by: naama
+creation_date: 2008-02-12T03:11:00Z
+
+[Term]
+id: SP:0000087
+name: fruit perimeter
+def: "The maximum perimeter of the fruit." [SGN:EVDK]
+synonym: "fruit circumference" RELATED []
+synonym: "per" RELATED []
+xref: PATO:0001711
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000010 ! fruit size
+created_by: naama
+creation_date: 2008-02-12T03:11:00Z
+
+[Term]
+id: SP:0000088
+name: fruit width
+def: "The width of the fruit." [SGN:EVDK]
+synonym: "fd1" RELATED []
+synonym: "fruit diameter" RELATED []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000010 ! fruit size
+created_by: naama
+creation_date: 2008-02-12T03:11:00Z
+
+[Term]
+id: SP:0000089
+name: fruit locule number
+def: "The number of locules in the fruit." [SGN:EVDK]
+synonym: "lcn" RELATED []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+relationship: variable_of SP:0000011 ! fruit morphology
+created_by: naama
+creation_date: 2008-02-12T03:30:00Z
+
+[Term]
+id: SP:0000090
+name: placenta area
+def: "The area of the placenta." [SGN:EVDK]
+xref: PO:0004535
+xref: PO:0007010
+xref: PO:0007042
+is_a: SP:0000010 ! fruit size
+created_by: naama
+creation_date: 2008-02-13T09:41:00Z
+
+[Term]
+id: SP:0000091
+name: white flower
+xref: PATO:0000323
+xref: PO:0007600
+xref: PO:0009046
+is_a: SP:0000009 ! flower color
+
+[Term]
+id: SP:0000092
+name: pale yellow flower
+xref: PATO:0001264
+xref: PO:0007600
+xref: PO:0009046
+is_a: SP:0000228 ! yellow flower color
+
+[Term]
+id: SP:0000093
+name: strong yellow flower
+xref: PATO:0001263
+xref: PO:0007600
+xref: PO:0009046
+is_a: SP:0000228 ! yellow flower color
+
+[Term]
+id: SP:0000094
+name: fruit color uniformity
+def: "The proportion of the 2D area of the red color epicarp out of the total epicarp area visible from a top view of the proximal fruit end." [SGN:EVDK]
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000012 ! fruit color
+created_by: naama
+creation_date: 2008-02-13T10:05:00Z
+
+[Term]
+id: SP:0000095
+name: pericarp area
+def: "The area of the pericarp." [SGN:EVDK]
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009084
+relationship: part_of SP:0000371 ! pericarp
+created_by: naama
+creation_date: 2008-02-12T03:36:00Z
+
+[Term]
+id: SP:0000096
+name: septum area
+def: "The sum of the areas of the septum and the pericarp." [SGN:EVDK]
+xref: PO:0005008
+xref: PO:0007010
+xref: PO:0007042
+is_a: SP:0000010 ! fruit size
+created_by: naama
+creation_date: 2008-02-12T03:36:00Z
+
+[Term]
+id: SP:0000097
+name: epicarp color
+xref: PATO:0000014
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009085
+is_a: SP:0000012 ! fruit color
+created_by: naama
+creation_date: 2008-02-12T03:40:00Z
+
+[Term]
+id: SP:0000098
+name: mesocarp color
+xref: PATO:0000014
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009087
+is_a: SP:0000012 ! fruit color
+created_by: naama
+creation_date: 2008-02-12T03:40:00Z
+
+[Term]
+id: SP:0000099
+name: endocarp color
+xref: PATO:0000014
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009086
+is_a: SP:0000012 ! fruit color
+created_by: naama
+creation_date: 2008-02-12T03:40:00Z
+
+[Term]
+id: SP:0000100
+name: seed
+xref: PO:0001170
+xref: PO:0009010
+is_a: SP:0001000 ! Solanaceae phenotype ontology
+created_by: naama
+creation_date: 2008-02-22T10:02:00Z
+
+[Term]
+id: SP:0000101
+name: small fruit
+xref: PATO:0000587
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000010 ! fruit size
+
+[Term]
+id: SP:0000102
+name: large fruit
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000010 ! fruit size
+
+[Term]
+id: SP:0000103
+name: fruit lobedness degree
+def: "Fruit bumpiness index." [SGN:EVDK]
+synonym: "fruit bumpiness" RELATED []
+xref: PATO:0000052
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000038 ! fruit shape
+created_by: naama
+creation_date: 2008-02-22T10:26:00Z
+
+[Term]
+id: SP:0000104
+name: seed weight
+xref: PATO:0000125
+xref: PO:0001170
+xref: PO:0009010
+is_a: SP:0000100 ! seed
+created_by: naama
+creation_date: 2008-02-22T10:27:00Z
+
+[Term]
+id: SP:0000105
+name: seed number
+def: "Average number of seeds per fruit." [SGN:EVDK]
+xref: PATO:0000053
+xref: PO:0001170
+xref: PO:0009010
+is_a: SP:0000100 ! seed
+created_by: naama
+creation_date: 2008-02-22T10:27:00Z
+
+[Term]
+id: SP:0000106
+name: fruit number
+def: "Number of fruits per plant." [SGM:NM]
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000037 ! fruit
+is_a: SP:0000198 ! yield
+created_by: naama
+creation_date: 2008-02-22T10:28:00Z
+
+[Term]
+id: SP:0000107
+name: Percent of fruits with less than 10 seeds
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000106 ! fruit number
+created_by: naama
+creation_date: 2008-02-22T10:29:00Z
+
+[Term]
+id: SP:0000108
+name: leaf
+xref: PO:0001050
+xref: PO:0009025
+is_a: SP:0001000 ! Solanaceae phenotype ontology
+created_by: naama
+creation_date: 2008-02-22T10:30:00Z
+
+[Term]
+id: SP:0000109
+name: leaf number
+xref: PATO:0000053
+xref: PO:0001050
+xref: PO:0009025
+is_a: SP:0000108 ! leaf
+created_by: naama
+creation_date: 2008-02-22T10:30:00Z
+
+[Term]
+id: SP:0000110
+name: germination
+xref: PO:0007057
+xref: PO:0009010
+is_a: SP:0000001 ! seedling
+
+[Term]
+id: SP:0000111
+name: long fruit
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000038 ! fruit shape
+
+[Term]
+id: SP:0000112
+name: rounded fruit
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000038 ! fruit shape
+
+[Term]
+id: SP:0000113
+name: other fruit morphology
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_obsolete: true
+
+[Term]
+id: SP:0000114
+name: number of leaves to 1st inflorescence
+xref: PATO:0000053
+xref: PO:0007047
+xref: PO:0009025
+is_a: SP:0000109 ! leaf number
+created_by: naama
+creation_date: 2008-02-22T10:30:00Z
+
+[Term]
+id: SP:0000115
+name: flower
+def: "Flower related traits and phenotypes." []
+xref: PO:0007615
+xref: PO:0009046
+is_a: SP:0001000 ! Solanaceae phenotype ontology
+created_by: naama
+creation_date: 2008-02-22T10:47:00Z
+
+[Term]
+id: SP:0000116
+name: number of flowers per inflorescence
+def: "Count of the number of flowers per one inflorescence." []
+xref: PATO:0000053
+xref: PO:0007615
+xref: PO:0009046
+is_a: SP:0000007 ! inflorescence
+relationship: part_of SP:0000117 ! flower number
+created_by: naama
+creation_date: 2008-02-22T10:47:00Z
+
+[Term]
+id: SP:0000117
+name: flower number
+synonym: "count" RELATED []
+xref: PATO:0000053
+xref: PO:0007615
+xref: PO:0009046
+is_a: SP:0000115 ! flower
+created_by: naama
+creation_date: 2008-02-22T10:47:00Z
+
+[Term]
+id: SP:0000118
+name: fruit glossiness
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009085
+is_a: SP:0000097 ! epicarp color
+created_by: naama
+creation_date: 2008-02-22T10:47:00Z
+
+[Term]
+id: SP:0000119
+name: fruit firmness
+xref: PATO:0000037
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000013 ! fruit ripening
+created_by: naama
+creation_date: 2008-02-22T10:47:00Z
+
+[Term]
+id: SP:0000120
+name: seedling lethal
+xref: PATO:0000718
+xref: PO:0000003
+xref: PO:0007030
+xref: PO:0007131
+is_a: SP:0000001 ! seedling
+
+[Term]
+id: SP:0000121
+name: yellow fruit
+xref: PATO:0000324
+xref: PO:0007038
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000012 ! fruit color
+
+[Term]
+id: SP:0000122
+name: orange fruit
+xref: PATO:0000953
+xref: PO:0007038
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000012 ! fruit color
+
+[Term]
+id: SP:0000123
+name: dark red fruit
+xref: PATO:0001261
+xref: PO:0007038
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000012 ! fruit color
+
+[Term]
+id: SP:0000124
+name: epicarp texture
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009085
+is_a: SP:0000011 ! fruit morphology
+
+[Term]
+id: SP:0000125
+name: green fruit
+xref: PATO:0000320
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000012 ! fruit color
+
+[Term]
+id: SP:0000126
+name: days to first flowering
+def: "Opening of third inflorescence after transplanting." [SGN:EVDK]
+xref: PATO:0000081
+xref: PO:0007016
+xref: PO:0009046
+is_a: SP:0000061 ! flowering timing
+created_by: naama
+creation_date: 2008-02-22T03:31:00Z
+
+[Term]
+id: SP:0000127
+name: radial fruit cracking
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009085
+is_a: SP:0000124 ! epicarp texture
+created_by: naama
+creation_date: 2008-02-22T10:47:00Z
+
+[Term]
+id: SP:0000128
+name: plant habit index
+synonym: "growth habit" RELATED []
+synonym: "plant habit " RELATED []
+is_a: SP:0000003 ! plant habit
+created_by: naama
+creation_date: 2008-02-22T10:47:00Z
+
+[Term]
+id: SP:0000129
+name: fruits per flower
+def: "A measure of how many flowers develop into fruit." [SGN:EVDK]
+xref: PATO:0000053
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000106 ! fruit number
+created_by: naama
+creation_date: 2008-02-22T03:36:00Z
+
+[Term]
+id: SP:0000130
+name: slow germination
+xref: PATO:0001494
+xref: PO:0007030
+xref: PO:0007057
+xref: PO:0009010
+is_a: SP:0000110 ! germination
+
+[Term]
+id: SP:0000131
+name: early ripe
+xref: PATO:0000694
+xref: PO:0007010
+xref: PO:0009001
+is_a: SP:0000365 ! fruit ripening timing
+
+[Term]
+id: SP:0000132
+name: late ripe
+xref: PATO:0000502
+xref: PO:0007010
+xref: PO:0009001
+is_a: SP:0000365 ! fruit ripening timing
+
+[Term]
+id: SP:0000133
+name: fruit mid-height width
+xref: PATO:0000921
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000088 ! fruit width
+created_by: naama
+creation_date: 2008-03-12T01:08:00Z
+
+[Term]
+id: SP:0000134
+name: fruit widest width
+synonym: "fruit maximum width" RELATED []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:9001
+is_a: SP:0000088 ! fruit width
+created_by: naama
+creation_date: 2008-03-12T01:08:00Z
+
+[Term]
+id: SP:0000135
+name: fruit length mid-width
+synonym: "height mid-width" EXACT []
+xref: PATO:0000122
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000086 ! fruit length
+created_by: naama
+creation_date: 2008-03-12T01:11:00Z
+
+[Term]
+id: SP:0000136
+name: fruit longest length
+synonym: "fruit highest height" EXACT []
+xref: PATO:0000122
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000086 ! fruit length
+created_by: naama
+creation_date: 2008-03-12T01:11:00Z
+
+[Term]
+id: SP:0000137
+name: proximal fruit end blockiness 5%
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008002
+is_a: SP:0000078 ! proximal fruit end blockiness
+created_by: naama
+creation_date: 2008-03-12T01:26:00Z
+
+[Term]
+id: SP:0000138
+name: proximal fruit end blockiness 10%
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008002
+is_a: SP:0000078 ! proximal fruit end blockiness
+created_by: naama
+creation_date: 2008-03-12T01:26:00Z
+
+[Term]
+id: SP:0000139
+name: proximal fruit end blockiness 20%
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008002
+is_a: SP:0000078 ! proximal fruit end blockiness
+created_by: naama
+creation_date: 2008-03-12T01:26:00Z
+
+[Term]
+id: SP:0000140
+name: proximal fruit end blockiness 30%
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008002
+is_a: SP:0000078 ! proximal fruit end blockiness
+created_by: naama
+creation_date: 2008-03-12T01:26:00Z
+
+[Term]
+id: SP:0000141
+name: partial sterility
+xref: PO:0007042
+xref: PO:0007616
+xref: PO:0009046
+is_a: SP:0000014 ! sterility
+
+[Term]
+id: SP:0000142
+name: full sterility
+xref: PO:0007042
+xref: PO:0007616
+xref: PO:0009046
+is_a: SP:0000014 ! sterility
+
+[Term]
+id: SP:0000143
+name: distal fruit end blockiness 5%
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008001
+is_a: SP:0000075 ! distal fruit end blockiness
+created_by: naama
+creation_date: 2008-03-12T01:26:00Z
+
+[Term]
+id: SP:0000144
+name: distal fruit end blockiness 10%
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008001
+is_a: SP:0000075 ! distal fruit end blockiness
+created_by: naama
+creation_date: 2008-03-12T01:26:00Z
+
+[Term]
+id: SP:0000145
+name: distal fruit end blockiness 20%
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008001
+is_a: SP:0000075 ! distal fruit end blockiness
+created_by: naama
+creation_date: 2008-03-12T01:26:00Z
+
+[Term]
+id: SP:0000146
+name: distal fruit end blockiness 30%
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008001
+is_a: SP:0000075 ! distal fruit end blockiness
+created_by: naama
+creation_date: 2008-03-12T01:26:00Z
+
+[Term]
+id: SP:0000147
+name: fruit shape triangle 5%
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000049 ! fruit shape triangle
+created_by: naama
+creation_date: 2008-03-12T01:27:00Z
+
+[Term]
+id: SP:0000148
+name: fruit shape triangle 10%
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000049 ! fruit shape triangle
+created_by: naama
+creation_date: 2008-03-12T01:27:00Z
+
+[Term]
+id: SP:0000149
+name: fruit shape triangle 20%
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000049 ! fruit shape triangle
+created_by: naama
+creation_date: 2008-03-12T01:27:00Z
+
+[Term]
+id: SP:0000150
+name: fruit shape triangle 30%
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000049 ! fruit shape triangle
+created_by: naama
+creation_date: 2008-03-12T01:27:00Z
+
+[Term]
+id: SP:0000151
+name: necrosis
+xref: PO:0007130
+xref: PO:0007134
+xref: PO:0009025
+is_a: SP:0000015 ! disease and stress response
+
+[Term]
+id: SP:0000152
+name: wilting
+xref: PO:0000003
+xref: PO:0007130
+xref: PO:0007134
+xref: PO:0009025
+is_a: SP:0000015 ! disease and stress response
+
+[Term]
+id: SP:0000153
+name: other disease response
+def: "OBSOLETE. Replaced by parent term SP:0000015 (disease and stress response)." [SGN:nm]
+xref: PO:0000003
+xref: PO:0007130
+xref: PO:0007134
+is_obsolete: true
+
+[Term]
+id: SP:0000154
+name: proximal fruit end height
+synonym: "shoulder height" RELATED []
+xref: PATO:0001195
+xref: PATO:f0000119
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0008002
+is_a: SP:0000072 ! proximal fruit end shape
+created_by: naama
+creation_date: 2008-03-17T01:50:00Z
+
+[Term]
+id: SP:0000155
+name: distal angle micro 2%
+is_a: SP:0000073 ! distal fruit end angle
+created_by: naama
+creation_date: 2008-03-25T11:13:00Z
+
+[Term]
+id: SP:0000156
+name: distal angle micro 3%
+is_a: SP:0000073 ! distal fruit end angle
+created_by: naama
+creation_date: 2008-03-25T11:13:00Z
+
+[Term]
+id: SP:0000157
+name: distal angle micro 5%
+is_a: SP:0000073 ! distal fruit end angle
+created_by: naama
+creation_date: 2008-03-25T11:13:00Z
+
+[Term]
+id: SP:0000158
+name: distal angle macro 10%
+is_a: SP:0000073 ! distal fruit end angle
+created_by: naama
+creation_date: 2008-03-25T11:13:00Z
+
+[Term]
+id: SP:0000159
+name: distal angle macro 15%
+is_a: SP:0000073 ! distal fruit end angle
+created_by: naama
+creation_date: 2008-03-25T11:13:00Z
+
+[Term]
+id: SP:0000160
+name: distal angle macro 20%
+is_a: SP:0000073 ! distal fruit end angle
+created_by: naama
+creation_date: 2008-03-25T11:13:00Z
+
+[Term]
+id: SP:0000161
+name: horizontal asymmetry obovoid
+is_a: SP:0000065 ! horizontal asymmetry
+created_by: naama
+creation_date: 2008-03-25T11:17:00Z
+
+[Term]
+id: SP:0000162
+name: horizontal asymmetry ovoid
+is_a: SP:0000065 ! horizontal asymmetry
+created_by: naama
+creation_date: 2008-03-25T11:17:00Z
+
+[Term]
+id: SP:0000163
+name: distal angle macro 25%
+is_a: SP:0000073 ! distal fruit end angle
+created_by: naama
+creation_date: 2008-03-25T11:19:00Z
+
+[Term]
+id: SP:0000164
+name: eccentricity area index
+def: "Area ellipse / total fruit area." [SGN:EVDK]
+synonym: "obovate (ellipse)" RELATED []
+synonym: "oel" EXACT []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+is_a: SP:0000058 ! fruit shape eccentric
+created_by: naama
+creation_date: 2008-03-31T10:09:00Z
+
+[Term]
+id: SP:0000165
+name: total soluble solids
+def: "The total soluble solids in the fruit (usually sugars and acids)." [SGN:NM]
+synonym: "Brix" EXACT []
+is_a: SP:0000167 ! fruit metabolites
+is_a: SP:0000385 ! sugars
+
+[Term]
+id: SP:0000166
+name: citric acid
+def: "Citric acid content in the fruit." [SGN:NM]
+is_a: SP:0000019 ! biochemical metabolites
+is_a: SP:0000167 ! fruit metabolites
+
+[Term]
+id: SP:0000167
+name: fruit metabolites
+def: "The metabolites present in the fruit." [SGN:NM]
+relationship: part_of SP:0000037 ! fruit
+
+[Term]
+id: SP:0000168
+name: malic acid
+def: "Malic acid content in the fruit." [SGN:NM]
+is_a: SP:0000019 ! biochemical metabolites
+is_a: SP:0000167 ! fruit metabolites
+
+[Term]
+id: SP:0000169
+name: glutamic acid
+def: "Glutamic acid content." [SGN:NM]
+is_a: SP:0000019 ! biochemical metabolites
+is_a: SP:0000167 ! fruit metabolites
+
+[Term]
+id: SP:0000170
+name: pH
+def: "The pH of the fruit." [SGN:NM]
+is_a: SP:0000167 ! fruit metabolites
+
+[Term]
+id: SP:0000171
+name: Total organic acids
+def: "The total content of organic acids." [SGN:NM]
+is_a: SP:0000019 ! biochemical metabolites
+is_a: SP:0000167 ! fruit metabolites
+
+[Term]
+id: SP:0000172
+name: total acids
+def: "The total acid content." [SGN:NM]
+is_a: SP:0000019 ! biochemical metabolites
+is_a: SP:0000167 ! fruit metabolites
+
+[Term]
+id: SP:0000173
+name: fasciated
+def: "Fasciated fruit shape. Multipe locules." [SGN:NM]
+xref: PATO:0000949
+is_a: SP:0000038 ! fruit shape
+
+[Term]
+id: SP:0000174
+name: determinate
+def: "Determinate growth of plant branches terminating with an inflorescence." [SGN:NM]
+is_a: SP:0000128 ! plant habit index
+
+[Term]
+id: SP:0000175
+name: semi determinate
+def: "Semi-determinate growth of plant branches producing more inflorescences than determinate plants, but eventually terminating." [SGN:NM]
+is_a: SP:0000128 ! plant habit index
+
+[Term]
+id: SP:0000176
+name: indeterminate
+def: "Ineterminate growth of plant branches. Continual twig elongation and bud formation." [SGN:NM]
+is_a: SP:0000128 ! plant habit index
+
+[Term]
+id: SP:0000177
+name: compound leaf
+xref: PATO:0001504
+xref: PO:0001050
+xref: PO:0009025
+is_a: SP:0000045 ! leaf complexity
+
+[Term]
+id: SP:0000178
+name: simple leaf
+xref: PATO:0001503
+xref: PO:0001050
+xref: PO:0009025
+is_a: SP:0000045 ! leaf complexity
+
+[Term]
+id: SP:0000179
+name: distal fruit end
+def: "The distal end of the fruit (tip)." [SGN:NM]
+xref: PATO:0001234
+is_a: SP:0000069 ! fruit end
+
+[Term]
+id: SP:0000180
+name: proximal fruit end
+def: "The proximal end of the fruit (shoulders)." [SGN:NM]
+synonym: "shoulders" EXACT []
+xref: PATO:0001195
+is_a: SP:0000069 ! fruit end
+
+[Term]
+id: SP:0000181
+name: distal fruit end color
+def: "The color of the distal fruit end." [SGN:NM]
+xref: PATO:0000014
+xref: PATO:0001234
+is_a: SP:0000012 ! fruit color
+is_a: SP:0000179 ! distal fruit end
+
+[Term]
+id: SP:0000182
+name: proximal fruit end color
+def: "The color of the proximal fruit end (shoulders)." [SGN:NM]
+xref: PATO:0000014
+xref: PATO:0001195
+is_a: SP:0000012 ! fruit color
+is_a: SP:0000180 ! proximal fruit end
+
+[Term]
+id: SP:0000183
+name: leaf veins
+def: "The leaf vascular tissue." [SGN:NM]
+xref: PO:0020139
+is_a: SP:0000004 ! leaf morphology
+
+[Term]
+id: SP:0000184
+name: tuber epidermis
+def: "Epidermal layer of a tuber." [SGN:NM]
+synonym: "tuber skin" EXACT []
+xref: PO:0025048 "subterranean tuber epidermis"
+relationship: part_of SP:0000047 ! tuber
+
+[Term]
+id: SP:0000185
+name: tuber epidermis color
+def: "The color of the tuber epidermal layer." [SGN:NM]
+synonym: "skin color" EXACT []
+xref: PATO:0000014
+xref: PO:0025048
+is_a: SP:0000184 ! tuber epidermis
+
+[Term]
+id: SP:0000186
+name: tuber epidermis texture
+def: "The texture of the tuber epidermal layer." [SGN:NM]
+synonym: "skin texture" EXACT []
+xref: PATO:0000150
+xref: PO:0025048
+is_a: SP:0000184 ! tuber epidermis
+
+[Term]
+id: SP:0000187
+name: tuber flesh
+def: "The flesh layer of the tuber." [SGN:NM]
+xref: PO:0025038 "subterranean tuber storage parenchyma"
+relationship: part_of SP:0000047 ! tuber
+
+[Term]
+id: SP:0000188
+name: tuber flesh color
+def: "The color of the tuber flesh layer." [SGN:NM]
+xref: PATO:0000014
+xref: PO:0025038
+relationship: part_of SP:0000187 ! tuber flesh
+
+[Term]
+id: SP:0000189
+name: tuber flesh pigment pattern
+def: "The pattern of pigmentation of the tuber flesh." [SGN:NM]
+xref: PATO:0000060
+xref: PO:0025038
+is_a: SP:0000187 ! tuber flesh
+
+[Term]
+id: SP:0000190
+name: tuber eye
+def: "A structure on the tuber surface that can sprout. It also has a significance in determining the processing quality." [SGN:curators]
+xref: PO:0025042 "A tuber axillary vegetative bud that is part of a subterranean tuber"
+relationship: part_of SP:0000047 ! tuber
+
+[Term]
+id: SP:0000191
+name: tuber eye depth
+def: "The depth of the tuber eye." [SGN:curators]
+xref: PATO:0001595
+xref: PO:0025042
+relationship: part_of SP:0000190 ! tuber eye
+
+[Term]
+id: SP:0000192
+name: shoot phenotype
+def: "Phenotype measured using part of the sporophyte, which is composed of the stems and leaves, and includes shoot apical meristems." [SGN:curators]
+synonym: "vine phenotype" EXACT []
+xref: PO:0009006
+is_a: SP:0001000 ! Solanaceae phenotype ontology
+
+[Term]
+id: SP:0000193
+name: stem
+def: "The axial system of plants that bears leaves and buds." [APWeb:Glossary]
+xref: PO:0007089
+xref: PO:0009047
+relationship: part_of SP:0000192 ! shoot phenotype
+
+[Term]
+id: SP:0000194
+name: erect
+def: "Erect plant growth habit." [PVP:3]
+synonym: "upright" EXACT []
+xref: PATO:0000622
+is_a: SP:0000128 ! plant habit index
+
+[Term]
+id: SP:0000195
+name: semi erect
+def: "Semi erect plant growth habit." [PVP:5]
+is_a: SP:0000128 ! plant habit index
+
+[Term]
+id: SP:0000196
+name: spreading
+def: "Spreading plant growth habit." [PVP:7]
+synonym: "horizontal" RELATED []
+xref: PATO:0001855
+is_a: SP:0000128 ! plant habit index
+
+[Term]
+id: SP:0000197
+name: post harvest quality
+def: "After-harvest quality." [SGN:NM]
+is_a: SP:0001000 ! Solanaceae phenotype ontology
+
+[Term]
+id: SP:0000198
+name: yield
+def: "The total yield of the harvest." [SGN:NM]
+is_a: SP:0000197 ! post harvest quality
+
+[Term]
+id: SP:0000199
+name: tuber epidermis pigment pattern
+def: "The pattern of the tuber pigmentation." [SGN:NM]
+xref: PATO:0000060
+xref: PO:0025048
+is_a: SP:0000184 ! tuber epidermis
+
+[Term]
+id: SP:0000200
+name: tuber morphology
+def: "The morphological characteristics of the tuber." [SGN:NM]
+xref: PO:0004547
+relationship: part_of SP:0000047 ! tuber
+
+[Term]
+id: SP:0000201
+name: tuber shape
+def: "The shape of the tuber." [SGN:NM]
+xref: PATO:0000052
+xref: PO:0004547
+is_a: SP:0000200 ! tuber morphology
+
+[Term]
+id: SP:0000202
+name: tuber size
+def: "The physical size of the tuber." [SGN:NM]
+xref: PATO:0000117
+xref: PO:0004547
+is_a: SP:0000200 ! tuber morphology
+
+[Term]
+id: SP:0000203
+name: tuber length
+xref: PATO:0000122
+xref: PO:0004547
+is_a: SP:0000202 ! tuber size
+
+[Term]
+id: SP:0000204
+name: tuber width
+xref: PATO:0000921
+xref: PO:0004547
+is_a: SP:0000202 ! tuber size
+
+[Term]
+id: SP:0000205
+name: whole plant phenotype
+def: "A phenotype of the entire plant, including roots, shoots and leaves, at any stage of its life cycle." [SGN:AP]
+xref: PO:0000003
+is_a: SP:0001000 ! Solanaceae phenotype ontology
+
+[Term]
+id: SP:0000206
+name: shoot maturity
+def: "An assessment of the maturity of the shoot (vine)." [SGN:curators]
+synonym: "potato vine maturity (Potato Cooperators: There is considerable diversity among varieties with respect to how long they grow until they naturally senesce. 95 and 120DAP were chosen so we could evaluate differences among early-maturing varieties (95DAP) and among later maturing varieties (120DAP) )." RELATED [Potato_Cooperators:WSD]
+synonym: "vine maturity" EXACT []
+xref: PATO:0000261
+xref: PO:0007112
+xref: PO:0009006
+is_a: SP:0000192 ! shoot phenotype
+is_a: SP:0000205 ! whole plant phenotype
+
+[Term]
+id: SP:0000207
+name: early shoot maturity
+def: "An assesment of the shoot at an early stage of maturity." [SGN:curators]
+synonym: "Potato: 95 days after pollination (95DAP)" RELATED [POtato_Cooperators:WSD]
+is_obsolete: true
+
+[Term]
+id: SP:0000208
+name: mid shoot maturity
+def: "An assesment of the shoot at a mid stage of maturity." [SGN:curators]
+is_obsolete: true
+
+[Term]
+id: SP:0000209
+name: late shoot maturity
+def: "An assesment of the shoot at a late stage of maturity." [SGN:curators]
+synonym: "Potato: 120 days after pollination (120DAP)" RELATED [Potato_Cooperators:WSD]
+is_obsolete: true
+
+[Term]
+id: SP:0000210
+name: shoot maturity 120 DAP
+def: "Assessment of the shoot maturity 120 days after pollination (DAP)." [potato_cooperators:WDJ]
+synonym: "potato vine maturity 120 DAP" RELATED []
+xref: PATO:0000261
+xref: PO:0007112
+xref: PO:0009006
+is_a: SP:0000206 ! shoot maturity
+created_by: naamamenda
+creation_date: 2010-05-14T03:02:56Z
+
+[Term]
+id: SP:0000211
+name: shoot maturity 95DAP
+def: "Assessment of the shoot maturity 95 days after pollination (DAP)." [potato_cooperators:WDJ]
+synonym: "potato vine maturity 95 DAP" RELATED []
+xref: PATO:0000261
+xref: PO:0007112
+xref: PO:0009006
+is_a: SP:0000206 ! shoot maturity
+created_by: naamamenda
+creation_date: 2010-05-14T02:59:49Z
+
+[Term]
+id: SP:0000212
+name: tuber appearance
+def: "The overall appearance of the tuber. A 1-9 scale is used, with 1 the lowest score (\"very poor\") and 9 the highest (excellent)." [NE:1014]
+xref: PO:0004547
+is_a: SP:0000200 ! tuber morphology
+created_by: naamamenda
+creation_date: 2010-05-14T02:53:14Z
+
+[Term]
+id: SP:0000213
+name: tuber height
+xref: PATO:0000119
+xref: PO:0004547
+is_a: SP:0000202 ! tuber size
+created_by: naamamenda
+creation_date: 2010-05-14T02:51:40Z
+
+[Term]
+id: SP:0000214
+name: sucrose
+def: "Sucrose content in mg/g fresh weight." [SGN:NM]
+is_a: SP:0000385 ! sugars
+created_by: Naama
+creation_date: 2010-05-14T03:59:01Z
+
+[Term]
+id: SP:0000215
+name: glucose
+def: "Glucose content in mg/g fresh weight." [SGN:NM]
+is_a: SP:0000385 ! sugars
+created_by: Naama
+creation_date: 2010-05-14T04:02:11Z
+
+[Term]
+id: SP:0000216
+name: tuber mass
+def: "The mass of the tuber." [SGN:NM]
+synonym: "tuber weight" RELATED []
+xref: PATO:0000125
+xref: PO:0004547
+relationship: part_of SP:0000047 ! tuber
+created_by: Naama
+creation_date: 2010-05-18T11:03:02Z
+
+[Term]
+id: SP:0000217
+name: specific gravity
+def: "Weight in air / (weight in air -weight in water)." [potato_cooperators:WDJ]
+xref: PO:0004547
+relationship: part_of SP:0000080 ! fruit mass
+relationship: part_of SP:0000216 ! tuber mass
+created_by: Naama
+creation_date: 2010-05-18T11:49:44Z
+
+[Term]
+id: SP:0000218
+name: specific gravity at harvest
+def: "Weight in air / (weight in air -weight in water) measured at the time of harvest." [potato_cooperators:WDJ]
+xref: PO:0004547
+is_a: SP:0000217 ! specific gravity
+created_by: Naama
+creation_date: 2010-05-18T11:54:44Z
+
+[Term]
+id: SP:0000219
+name: specific gravity at storage
+def: "Weight in air / (weight in air -weight in water) measured at storage." [potato_cooperators:WDJ]
+xref: PO:0004547
+is_a: SP:0000197 ! post harvest quality
+is_a: SP:0000217 ! specific gravity
+created_by: Naama
+creation_date: 2010-05-18T11:54:44Z
+
+[Term]
+id: SP:0000220
+name: heat sprout rating
+def: "A scale to measure the propensity of tubers to sprout in the soil under high temperatures." [potato_cooperators:DSD]
+is_a: SP:0000197 ! post harvest quality
+created_by: Naama
+creation_date: 2010-05-18T12:37:10Z
+
+[Term]
+id: SP:0000221
+name: processing quality
+def: "Quality of processed plant product, typically used by the food industry." [SGN:NM]
+is_a: SP:0001000 ! Solanaceae phenotype ontology
+created_by: Naama
+creation_date: 2010-05-18T12:44:57Z
+
+[Term]
+id: SP:0000222
+name: chip color
+def: "The color of a fried chip." [SGN:NM]
+xref: PATO:0000014
+xref: PO:0025038
+is_a: SP:0000221 ! processing quality
+relationship: part_of SP:0000188 ! tuber flesh color
+created_by: Naama
+creation_date: 2010-05-18T12:46:26Z
+
+[Term]
+id: SP:0000223
+name: Qualitative color
+def: "An estimate for the chip color. Scale is 1-5 with 1 being a light colored chip." [potato_cooperators:DSD]
+xref: PATO:0000014
+xref: PO:0025038
+is_a: SP:0000222 ! chip color
+created_by: Naama
+creation_date: 2010-05-18T12:47:53Z
+
+[Term]
+id: SP:0000224
+name: Quantitative color
+def: "A measurement of the chip color with a colorimeter at a specific wavelength." [potato_cooperators:DSD]
+xref: PATO:0000014
+xref: PO:0025038
+is_a: SP:0000222 ! chip color
+created_by: Naama
+creation_date: 2010-05-18T12:47:53Z
+
+[Term]
+id: SP:0000225
+name: tuber cross section
+xref: PO:0004547
+is_a: SP:0000200 ! tuber morphology
+created_by: Naama
+creation_date: 2010-05-19T11:59:39Z
+
+[Term]
+id: SP:0000226
+name: tuber epidermis set depth
+synonym: "tuber skin set depth " RELATED []
+xref: PATO:0001595
+xref: PO:0025048
+is_a: SP:0000184 ! tuber epidermis
+created_by: Naama
+creation_date: 2010-05-19T12:04:16Z
+
+[Term]
+id: SP:0000227
+name: tuber epidermis texture russet
+xref: PO:0025048
+is_a: SP:0000186 ! tuber epidermis texture
+created_by: Naama
+creation_date: 2010-05-24T02:24:59Z
+
+[Term]
+id: SP:0000228
+name: yellow flower color
+xref: PATO:0000324
+xref: PO:0007600
+xref: PO:0009046
+is_a: SP:0000009 ! flower color
+created_by: Naama
+creation_date: 2010-05-20T02:33:53Z
+
+[Term]
+id: SP:0000229
+name: leaf length
+synonym: "TO:0000370" RELATED []
+xref: PATO:0000122
+xref: PO:0001052
+xref: PO:0009025
+is_a: SP:0000042 ! leaf size
+created_by: Naama
+creation_date: 2010-05-22T01:59:28Z
+
+[Term]
+id: SP:0000230
+name: compound inflorescence
+xref: PATO:0001504
+xref: PO:0001083
+xref: PO:0009049
+is_a: SP:0000071 ! inflorescence structure
+created_by: Naama
+creation_date: 2010-05-22T02:08:21Z
+
+[Term]
+id: SP:0000231
+name: shoot maturity very early
+def: "Vine 100% dead" [potato_cooperators:1]
+is_a: SP:0000210 ! shoot maturity 120 DAP
+is_a: SP:0000211 ! shoot maturity 95DAP
+created_by: Naama
+creation_date: 2010-05-25T01:30:26Z
+
+[Term]
+id: SP:0000232
+name: shoot maturity early
+def: "Vine starting to senesce (yellowing evident)." [potato_cooperators:4]
+is_a: SP:0000210 ! shoot maturity 120 DAP
+is_a: SP:0000211 ! shoot maturity 95DAP
+created_by: Naama
+creation_date: 2010-05-25T01:29:01Z
+
+[Term]
+id: SP:0000233
+name: tuber thickness
+xref: PATO:0000915
+xref: PO:0004547
+xref: PVP:5
+is_a: SP:0000202 ! tuber size
+created_by: Naama
+creation_date: 2010-05-19T01:14:50Z
+
+[Term]
+id: SP:0000234
+name: simple inflorescence
+xref: PATO:0001503
+xref: PO:0001083
+xref: PO:0009049
+is_a: SP:0000071 ! inflorescence structure
+created_by: Naama
+creation_date: 2010-05-22T02:08:21Z
+
+[Term]
+id: SP:0000235
+name: decumbent
+is_a: SP:0000128 ! plant habit index
+created_by: Naama
+creation_date: 2010-05-24T12:11:36Z
+
+[Term]
+id: SP:0000236
+name: plant canopy
+is_a: SP:0000003 ! plant habit
+created_by: Naama
+creation_date: 2010-05-24T12:13:17Z
+
+[Term]
+id: SP:0000237
+name: poor canopy
+is_a: SP:0000236 ! plant canopy
+created_by: Naama
+creation_date: 2010-05-24T12:13:59Z
+
+[Term]
+id: SP:0000238
+name: fair canopy
+is_a: SP:0000236 ! plant canopy
+created_by: Naama
+creation_date: 2010-05-24T12:13:59Z
+
+[Term]
+id: SP:0000239
+name: good canopy
+is_a: SP:0000236 ! plant canopy
+created_by: Naama
+creation_date: 2010-05-24T12:13:59Z
+
+[Term]
+id: SP:0000240
+name: tuber epidermis texture netted
+def: "Netted skin texture." [NE1014:5]
+xref: PATO:0001947
+xref: PO:0025048
+is_a: SP:0000186 ! tuber epidermis texture
+created_by: Naama
+creation_date: 2010-05-24T02:24:59Z
+
+[Term]
+id: SP:0000241
+name: tuber epidermis texture smooth
+def: "Smooth skin texture." [NE1014:8]
+xref: PATO:0000701
+xref: PO:0025048
+is_a: SP:0000186 ! tuber epidermis texture
+created_by: Naama
+creation_date: 2010-05-24T02:24:59Z
+
+[Term]
+id: SP:0000242
+name: tuber epidermis texture slight net
+def: "Slight net skin texture." [NE1014:6]
+xref: PATO:0001947
+xref: PO:0025048
+is_a: SP:0000240 ! tuber epidermis texture netted
+created_by: Naama
+creation_date: 2010-05-24T02:25:04Z
+
+[Term]
+id: SP:0000243
+name: partial russet
+def: "Partial russet skin texture." [NE1014:1]
+xref: PO:0025048
+is_a: SP:0000227 ! tuber epidermis texture russet
+created_by: Naama
+creation_date: 2010-05-24T02:27:57Z
+
+[Term]
+id: SP:0000244
+name: heavy russet
+def: "Heavy russet skin texture." [NE1014:2]
+xref: PO:0025048
+is_a: SP:0000227 ! tuber epidermis texture russet
+created_by: Naama
+creation_date: 2010-05-24T02:27:57Z
+
+[Term]
+id: SP:0000245
+name: moderate russet
+def: "Moderate russet skin texture." [NE1014:3]
+xref: PO:0025048
+is_a: SP:0000227 ! tuber epidermis texture russet
+created_by: Naama
+creation_date: 2010-05-24T02:27:57Z
+
+[Term]
+id: SP:0000246
+name: light russet
+def: "Light russet skin texture." [NE1014:4]
+xref: PO:0025048
+is_a: SP:0000227 ! tuber epidermis texture russet
+created_by: Naama
+creation_date: 2010-05-24T02:27:57Z
+
+[Term]
+id: SP:0000247
+name: tuber epidermis texture moderately smooth
+def: "Moderately smooth skin texture." [NE1014:7]
+xref: PATO:0000701
+xref: PO:0025048
+is_a: SP:0000241 ! tuber epidermis texture smooth
+created_by: Naama
+creation_date: 2010-05-24T02:46:16Z
+
+[Term]
+id: SP:0000248
+name: tuber epidermis texture very smooth
+def: "Very smooth skin texture." [NE1014:9]
+xref: PATO:0000701
+xref: PO:0025048
+is_a: SP:0000241 ! tuber epidermis texture smooth
+created_by: Naama
+creation_date: 2010-05-24T02:46:16Z
+
+[Term]
+id: SP:0000249
+name: tuber cross section vary flat
+xref: NE1014:1
+xref: PO:0004547
+is_a: SP:0000225 ! tuber cross section
+created_by: Naama
+creation_date: 2010-05-24T03:10:05Z
+
+[Term]
+id: SP:0000250
+name: tuber cross section flat
+xref: NE1014:3
+xref: PO:0004547
+is_a: SP:0000225 ! tuber cross section
+created_by: Naama
+creation_date: 2010-05-24T03:10:05Z
+
+[Term]
+id: SP:0000251
+name: tuber cross section intermediate/oval
+xref: NE1014:5
+xref: PO:0004547
+is_a: SP:0000225 ! tuber cross section
+created_by: Naama
+creation_date: 2010-05-24T03:10:05Z
+
+[Term]
+id: SP:0000252
+name: tuber cross section mostly round
+xref: NE1014:7
+xref: PO:0004547
+is_a: SP:0000225 ! tuber cross section
+created_by: Naama
+creation_date: 2010-05-24T03:10:05Z
+
+[Term]
+id: SP:0000253
+name: tuber cross section round
+xref: NE1014:8
+xref: PO:0004547
+is_a: SP:0000225 ! tuber cross section
+created_by: Naama
+creation_date: 2010-05-24T03:10:05Z
+
+[Term]
+id: SP:0000254
+name: tuber cross section very round
+xref: NE1014:9
+xref: PO:0004547
+is_a: SP:0000225 ! tuber cross section
+created_by: Naama
+creation_date: 2010-05-24T03:10:05Z
+
+[Term]
+id: SP:0000255
+name: skin set depth very poor
+xref: NE1014:1
+xref: PO:0025048
+is_a: SP:0000226 ! tuber epidermis set depth
+created_by: Naama
+creation_date: 2010-05-24T03:14:57Z
+
+[Term]
+id: SP:0000256
+name: skin set depth poor
+xref: NE1014:3
+xref: PO:0025048
+is_a: SP:0000226 ! tuber epidermis set depth
+created_by: Naama
+creation_date: 2010-05-24T03:14:57Z
+
+[Term]
+id: SP:0000257
+name: skin set depth fair
+xref: NE1014:5
+xref: PO:0025048
+is_a: SP:0000226 ! tuber epidermis set depth
+created_by: Naama
+creation_date: 2010-05-24T03:14:57Z
+
+[Term]
+id: SP:0000258
+name: skin set depth good
+xref: NE1014:7
+xref: PO:0025048
+is_a: SP:0000226 ! tuber epidermis set depth
+created_by: Naama
+creation_date: 2010-05-24T03:14:57Z
+
+[Term]
+id: SP:0000259
+name: skin set depth excellent
+xref: NE1014:9
+xref: PO:0025048
+is_a: SP:0000226 ! tuber epidermis set depth
+created_by: Naama
+creation_date: 2010-05-24T03:14:57Z
+
+[Term]
+id: SP:0000260
+name: tuber size small
+def: "Small tuber size." [NE1014:1]
+xref: PATO:0000587
+xref: PO:0004547
+is_a: SP:0000322 ! tuber size index
+created_by: Naama
+creation_date: 2010-05-25T12:38:06Z
+
+[Term]
+id: SP:0000261
+name: tuber size small-medium
+def: "Small-medium tuber size." [NE1014:3]
+xref: PATO:0000587
+xref: PO:0004547
+is_a: SP:0000322 ! tuber size index
+created_by: Naama
+creation_date: 2010-05-25T12:38:06Z
+
+[Term]
+id: SP:0000262
+name: tuber size medium
+def: "Medium tuber size." [NE1014:5]
+xref: PO:0004547
+is_a: SP:0000322 ! tuber size index
+created_by: Naama
+creation_date: 2010-05-25T12:38:06Z
+
+[Term]
+id: SP:0000263
+name: tuber size medium-large
+def: "Medium-large tuber size." [NE1014:7]
+xref: PATO:0000586
+xref: PO:0004547
+is_a: SP:0000322 ! tuber size index
+created_by: Naama
+creation_date: 2010-05-25T12:38:06Z
+
+[Term]
+id: SP:0000264
+name: tuber size large
+def: "Large tuber size." [NE1014:9]
+xref: PATO:0000586
+xref: PO:0004547
+is_a: SP:0000322 ! tuber size index
+created_by: Naama
+creation_date: 2010-05-25T12:38:06Z
+
+[Term]
+id: SP:0000265
+name: tuber appearance very poor
+def: "Very poor tuber appearance." [NE1014:1]
+xref: PO:0004547
+is_a: SP:0000212 ! tuber appearance
+created_by: Naama
+creation_date: 2010-05-25T01:09:49Z
+
+[Term]
+id: SP:0000266
+name: tuber appearance poor
+def: "Poor tuber appearance." [NE1014:3]
+xref: PO:0004547
+is_a: SP:0000212 ! tuber appearance
+created_by: Naama
+creation_date: 2010-05-25T01:10:08Z
+
+[Term]
+id: SP:0000267
+name: tuber appearance fair
+def: "Fair tuber appearance." [NE1014:5]
+xref: PO:0004547
+is_a: SP:0000212 ! tuber appearance
+created_by: Naama
+creation_date: 2010-05-25T01:10:27Z
+
+[Term]
+id: SP:0000268
+name: tuber appearance good
+def: "Good tuber appearance." [NE1014:7]
+xref: PO:0004547
+is_a: SP:0000212 ! tuber appearance
+created_by: Naama
+creation_date: 2010-05-25T01:10:43Z
+
+[Term]
+id: SP:0000269
+name: tuber appearance excellent
+xref: NE1014:9
+xref: PO:0004547
+is_a: SP:0000212 ! tuber appearance
+created_by: Naama
+creation_date: 2010-05-25T01:10:59Z
+
+[Term]
+id: SP:0000270
+name: shoot maturity mid-season
+def: "Green vine, done flowering." [potato_cooperators:6]
+is_a: SP:0000210 ! shoot maturity 120 DAP
+is_a: SP:0000211 ! shoot maturity 95DAP
+created_by: Naama
+creation_date: 2010-05-25T01:31:19Z
+
+[Term]
+id: SP:0000271
+name: shoot maturity late
+def: "Green Vine; Some flowers yet in bloom." [potato_cooperators:7]
+is_a: SP:0000210 ! shoot maturity 120 DAP
+is_a: SP:0000211 ! shoot maturity 95DAP
+created_by: Naama
+creation_date: 2010-05-25T01:31:45Z
+
+[Term]
+id: SP:0000272
+name: shoot maturity very late
+def: "Full bloom with buds evident as well." [potato_cooperators:9]
+is_a: SP:0000210 ! shoot maturity 120 DAP
+is_a: SP:0000211 ! shoot maturity 95DAP
+created_by: Naama
+creation_date: 2010-05-25T01:32:07Z
+
+[Term]
+id: SP:0000273
+name: tuber skin color white
+xref: PATO:0000323
+xref: PO:0025048
+xref: PVP:1
+is_a: SP:0000185 ! tuber epidermis color
+created_by: Naama
+creation_date: 2010-05-25T01:45:53Z
+
+[Term]
+id: SP:0000274
+name: tuber skin color light yellow
+xref: PATO:0001264
+xref: PO:0025048
+xref: PVP:3
+is_a: SP:0000185 ! tuber epidermis color
+created_by: Naama
+creation_date: 2010-05-25T01:46:14Z
+
+[Term]
+id: SP:0000275
+name: tuber skin color yellow
+xref: PATO:0000324
+xref: PO:0025048
+xref: PVP:3
+is_a: SP:0000185 ! tuber epidermis color
+created_by: Naama
+creation_date: 2010-05-25T01:47:11Z
+
+[Term]
+id: SP:0000276
+name: tuber skin color pale yellow
+synonym: "buff" RELATED []
+xref: PATO:0001286
+xref: PO:0025048
+xref: PVP:4
+is_a: SP:0000185 ! tuber epidermis color
+created_by: Naama
+creation_date: 2010-05-25T03:06:13Z
+
+[Term]
+id: SP:0000277
+name: tuber skin color pale brown
+synonym: "tan" RELATED []
+xref: PATO:0001268
+xref: PO:0025048
+xref: PVP:5
+is_a: SP:0000185 ! tuber epidermis color
+created_by: Naama
+creation_date: 2010-05-25T03:07:50Z
+
+[Term]
+id: SP:0000278
+name: tuber skin color brown
+xref: PATO:0000952
+xref: PO:0025048
+xref: PVP:6
+is_a: SP:0000185 ! tuber epidermis color
+created_by: Naama
+creation_date: 2010-05-25T03:09:11Z
+
+[Term]
+id: SP:0000279
+name: tuber skin color pink
+xref: PATO:0000954
+xref: PO:0025048
+xref: PVP:7
+is_a: SP:0000185 ! tuber epidermis color
+created_by: Naama
+creation_date: 2010-05-25T03:09:57Z
+
+[Term]
+id: SP:0000280
+name: tuber skin color red
+xref: PATO:0000322
+xref: PO:0025048
+xref: PVP:8
+is_a: SP:0000185 ! tuber epidermis color
+created_by: Naama
+creation_date: 2010-05-25T03:10:27Z
+
+[Term]
+id: SP:0000281
+name: tuber skin color maroon
+synonym: "purplish red " RELATED []
+xref: PATO:0001426
+xref: PO:0025048
+xref: PVP:9
+is_a: SP:0000185 ! tuber epidermis color
+created_by: Naama
+creation_date: 2010-05-25T03:10:54Z
+
+[Term]
+id: SP:0000282
+name: tuber skin color purple
+xref: PATO:0000951
+xref: PO:0025048
+xref: PVP:10
+is_a: SP:0000185 ! tuber epidermis color
+created_by: Naama
+creation_date: 2010-05-25T03:13:00Z
+
+[Term]
+id: SP:0000283
+name: tuber skin color dark purple
+xref: PATO:0001259
+xref: PO:0025048
+xref: PVP:11
+is_a: SP:0000185 ! tuber epidermis color
+created_by: Naama
+creation_date: 2010-05-25T03:14:06Z
+
+[Term]
+id: SP:0000284
+name: tuber thickness round
+xref: PO:0004547
+xref: PVP:1
+is_a: SP:0000233 ! tuber thickness
+created_by: Naama
+creation_date: 2010-05-25T03:17:39Z
+
+[Term]
+id: SP:0000285
+name: tuber thickness medium
+xref: PO:0004547
+xref: PVP:2
+is_a: SP:0000233 ! tuber thickness
+created_by: Naama
+creation_date: 2010-05-25T03:19:04Z
+
+[Term]
+id: SP:0000286
+name: tuber thickness slightly flattened
+xref: PO:0004547
+xref: PVP:3
+is_a: SP:0000233 ! tuber thickness
+created_by: Naama
+creation_date: 2010-05-25T03:19:19Z
+
+[Term]
+id: SP:0000287
+name: tuber thickness flattened
+xref: PO:0004547
+xref: PVP:4
+is_a: SP:0000233 ! tuber thickness
+created_by: Naama
+creation_date: 2010-05-25T03:19:41Z
+
+[Term]
+id: SP:0000288
+name: tuber flesh color brown
+xref: PATO:0000952
+xref: PO:0025038
+xref: PVP:6
+is_a: SP:0000188 ! tuber flesh color
+created_by: Naama
+creation_date: 2010-05-25T03:22:15Z
+
+[Term]
+id: SP:0000289
+name: tuber flesh color light yellow
+xref: PATO:0001264
+xref: PO:0025038
+xref: PVP:2
+xref: solcap:7
+is_a: SP:0000188 ! tuber flesh color
+created_by: Naama
+creation_date: 2010-05-25T11:01:55Z
+
+[Term]
+id: SP:0000290
+name: tuber flesh color maroon
+synonym: "purplish red " RELATED []
+xref: PATO:0001426
+xref: PO:0025038
+xref: PVP:9
+is_a: SP:0000188 ! tuber flesh color
+created_by: Naama
+creation_date: 2010-05-25T11:02:30Z
+
+[Term]
+id: SP:0000291
+name: tuber flesh color pale brown
+synonym: "tan" RELATED []
+xref: PATO:0001268
+xref: PO:0025038
+xref: PVP:5
+is_a: SP:0000188 ! tuber flesh color
+created_by: Naama
+creation_date: 2010-05-25T11:03:05Z
+
+[Term]
+id: SP:0000292
+name: tuber flesh color dark purple
+xref: PATO:0001259
+xref: PO:0025038
+xref: PVP:11
+is_a: SP:0000188 ! tuber flesh color
+created_by: Naama
+creation_date: 2010-05-25T11:03:46Z
+
+[Term]
+id: SP:0000293
+name: tuber flesh color purple
+xref: PATO:0000951
+xref: PO:0025038
+xref: PVP:10
+xref: solcap:2
+is_a: SP:0000188 ! tuber flesh color
+created_by: Naama
+creation_date: 2010-05-25T11:05:33Z
+
+[Term]
+id: SP:0000294
+name: tuber flesh color pale yellow
+synonym: "buff" RELATED []
+xref: PATO:0001286
+xref: PO:0025038
+xref: PVP:4
+xref: solcap:8
+is_a: SP:0000188 ! tuber flesh color
+created_by: Naama
+creation_date: 2010-05-25T11:06:29Z
+
+[Term]
+id: SP:0000295
+name: tuber flesh color pink
+xref: PATO:0000954
+xref: PO:0025038
+xref: PVP:7
+xref: solcap:4
+is_a: SP:0000188 ! tuber flesh color
+created_by: Naama
+creation_date: 2010-05-25T11:07:00Z
+
+[Term]
+id: SP:0000296
+name: tuber flesh color red
+xref: PATO:0000322
+xref: PO:0025038
+xref: PVP:8
+xref: solcap:3
+is_a: SP:0000188 ! tuber flesh color
+created_by: Naama
+creation_date: 2010-05-25T11:07:47Z
+
+[Term]
+id: SP:0000297
+name: tuber flesh color white
+xref: PATO:0000323
+xref: PO:0025038
+xref: PVP:1
+xref: solcap:9
+is_a: SP:0000188 ! tuber flesh color
+created_by: Naama
+creation_date: 2010-05-25T11:08:41Z
+
+[Term]
+id: SP:0000298
+name: tuber flesh color yellow
+xref: PATO:0000324
+xref: PO:0025038
+xref: PVP:3
+xref: solcap:6
+is_a: SP:0000188 ! tuber flesh color
+created_by: Naama
+creation_date: 2010-05-25T11:09:32Z
+
+[Term]
+id: SP:0000299
+name: tuber eye depth protruding
+def: "Protruding tuber eyes." [PVP:1]
+xref: PATO:0001598
+xref: PO:0025042
+is_a: SP:0000191 ! tuber eye depth
+created_by: Naama
+creation_date: 2010-05-25T11:44:29Z
+
+[Term]
+id: SP:0000300
+name: tuber eye depth shallow
+def: "Shallow tuber eyes." [PVP:3]
+xref: PATO:0001692
+xref: PO:0025042
+is_a: SP:0000191 ! tuber eye depth
+created_by: Naama
+creation_date: 2010-05-26T10:36:18Z
+
+[Term]
+id: SP:0000301
+name: tuber eye depth intermediate
+def: "Intermediate tuber eye depth." [PVP:5]
+xref: PATO:0001596
+xref: PO:0025042
+is_a: SP:0000191 ! tuber eye depth
+created_by: Naama
+creation_date: 2010-05-26T10:37:14Z
+
+[Term]
+id: SP:0000302
+name: tuber eye depth deep
+def: "Deep tuber eyes." [PVP:7]
+xref: PATO:0001666
+xref: PO:0025042
+is_a: SP:0000191 ! tuber eye depth
+created_by: Naama
+creation_date: 2010-05-26T10:38:50Z
+
+[Term]
+id: SP:0000303
+name: tuber eye depth very deep
+def: "Very deep tuber eyes." [PVP:9]
+xref: PATO:0001666
+xref: PO:0025042
+is_a: SP:0000191 ! tuber eye depth
+created_by: Naama
+creation_date: 2010-05-26T10:39:15Z
+
+[Term]
+id: SP:0000304
+name: heat sprout rating swollen eyes
+xref: potato_cooperators:2
+is_a: SP:0000220 ! heat sprout rating
+created_by: Naama
+creation_date: 2010-05-26T10:52:46Z
+
+[Term]
+id: SP:0000305
+name: heat sprout rating sprouts caliber 1/4 inch
+xref: potato_cooperators:3
+is_a: SP:0000220 ! heat sprout rating
+created_by: Naama
+creation_date: 2010-05-26T10:53:40Z
+
+[Term]
+id: SP:0000306
+name: heat sprout rating sprouts caliber 1/2 inch
+xref: potato_cooperators:4
+is_a: SP:0000220 ! heat sprout rating
+created_by: Naama
+creation_date: 2010-05-26T10:54:11Z
+
+[Term]
+id: SP:0000307
+name: heat sprout rating sprouts caliber 1 inch
+xref: potato_cooperators:5
+is_a: SP:0000220 ! heat sprout rating
+created_by: Naama
+creation_date: 2010-05-26T10:54:25Z
+
+[Term]
+id: SP:0000308
+name: heat sprout rating sprouts caliber 2 inches
+xref: potato_cooperators:6
+is_a: SP:0000220 ! heat sprout rating
+created_by: Naama
+creation_date: 2010-05-26T10:54:42Z
+
+[Term]
+id: SP:0000309
+name: heat sprout rating sprouts caliber 3 inches
+xref: potato_cooperators:7
+is_a: SP:0000220 ! heat sprout rating
+created_by: Naama
+creation_date: 2010-05-26T10:55:00Z
+
+[Term]
+id: SP:0000310
+name: heat sprout rating chain tubers
+xref: potato_cooperators:9
+is_a: SP:0000220 ! heat sprout rating
+created_by: Naama
+creation_date: 2010-05-26T10:55:25Z
+
+[Term]
+id: SP:0000311
+name: tuber epidermis pigment pattern eyes
+def: "Tuber skin pigment pattern has eyes. See potato cooperators guide Figure 13." [potato_cooperators:fig13]
+xref: PO:0025048
+xref: potato_cooperators:1
+is_a: SP:0000199 ! tuber epidermis pigment pattern
+created_by: Naama
+creation_date: 2010-05-26T10:57:25Z
+
+[Term]
+id: SP:0000312
+name: tuber epidermis pigment pattern eyebrows
+def: "Tuber skin pigment pattern has eyebrows. See potato cooperators guide Figure 13." [potato_cooperators:fig13]
+xref: PO:0025048
+xref: potato_cooperators:2
+is_a: SP:0000199 ! tuber epidermis pigment pattern
+created_by: Naama
+creation_date: 2010-05-26T10:59:31Z
+
+[Term]
+id: SP:0000313
+name: tuber epidermis pigment pattern splashed
+def: "Tuber skin pigment pattern is splashed. See potato cooperators guide Figure 13." [potato_cooperators:fig13]
+xref: PO:0025048
+xref: potato_cooperators:3
+is_a: SP:0000199 ! tuber epidermis pigment pattern
+created_by: Naama
+creation_date: 2010-05-26T11:06:50Z
+
+[Term]
+id: SP:0000314
+name: tuber epidermis pigment pattern scattered
+def: "Tuber skin pigment pattern is scattered See potato cooperators guide Figure 13." [potato_cooperators:fig13]
+xref: PO:0025048
+xref: potato_cooperators:4
+is_a: SP:0000199 ! tuber epidermis pigment pattern
+created_by: Naama
+creation_date: 2010-05-26T11:08:01Z
+
+[Term]
+id: SP:0000315
+name: tuber epidermis pigment pattern spectacled
+def: "Tuber skin pigment pattern is scattered See potato cooperators guide Figure 13." [potato_cooperators:fig13]
+xref: PO:0025048
+xref: potato_cooperators:5
+is_a: SP:0000199 ! tuber epidermis pigment pattern
+created_by: Naama
+creation_date: 2010-05-26T11:08:25Z
+
+[Term]
+id: SP:0000316
+name: tuber epidermis pigment pattern stippled
+def: "Tuber skin pigment pattern is stippled See potato cooperators guide Figure 13." [potato_cooperators:fig13]
+xref: PO:0025048
+xref: potato_cooperators:6
+is_a: SP:0000199 ! tuber epidermis pigment pattern
+created_by: Naama
+creation_date: 2010-05-26T11:10:42Z
+
+[Term]
+id: SP:0000317
+name: tuber shape compressed
+def: "Compressed shape. See potato cooperators guide, Figure 14." [potato_cooperators:fig14]
+xref: PATO:0001840
+xref: PO:0004547
+xref: potato_cooperators:1
+is_a: SP:0000201 ! tuber shape
+created_by: Naama
+creation_date: 2010-05-26T12:18:26Z
+
+[Term]
+id: SP:0000318
+name: tuber shape round
+def: "Round shape. See potato cooperators guide, Figure 14." [potato_cooperators:fig14]
+xref: PATO:0000411
+xref: PO:0004547
+xref: potato_cooperators:2
+is_a: SP:0000201 ! tuber shape
+created_by: Naama
+creation_date: 2010-05-26T12:23:21Z
+
+[Term]
+id: SP:0000319
+name: tuber shape oval
+def: "Oval shape. See potato cooperators guide, Figure 14." [potato_cooperators:fig14]
+synonym: "ovate" RELATED []
+xref: PATO:0001891
+xref: PO:0004547
+xref: potato_cooperators:3
+is_a: SP:0000201 ! tuber shape
+created_by: Naama
+creation_date: 2010-05-26T12:25:26Z
+
+[Term]
+id: SP:0000320
+name: tuber shape long
+def: "Long tuber shape. See potato cooperators guide, Figure 14." [potato_cooperators:fig14]
+xref: PO:0004547
+xref: potato_cooperators:5
+is_a: SP:0000201 ! tuber shape
+created_by: Naama
+creation_date: 2010-05-26T12:26:01Z
+
+[Term]
+id: SP:0000321
+name: tuber shape oblong
+def: "Elongated tuber shape. See potato cooperators guide, Figure 14." [potato_cooperators:fig14]
+xref: PATO:0000946
+xref: PO:0004547
+xref: potato_cooperators:4
+is_a: SP:0000201 ! tuber shape
+created_by: Naama
+creation_date: 2010-05-26T12:26:59Z
+
+[Term]
+id: SP:0000322
+name: tuber size index
+xref: PO:0004547
+is_a: SP:0000202 ! tuber size
+created_by: Naama
+creation_date: 2010-05-26T03:32:52Z
+
+[Term]
+id: SP:0000323
+name: heat sprout rating none
+xref: potato_cooperators:1
+is_a: SP:0000220 ! heat sprout rating
+created_by: Naama
+creation_date: 2010-05-28T02:26:47Z
+
+[Term]
+id: SP:0000324
+name: heat sprout rating new top growth
+xref: potato_cooperators:8
+is_a: SP:0000220 ! heat sprout rating
+created_by: Naama
+creation_date: 2010-05-28T02:30:09Z
+
+[Term]
+id: SP:0000325
+name: shoot maturity very early 2
+def: "Between very early and early." [potato_cooperators:2]
+is_a: SP:0000211 ! shoot maturity 95DAP
+is_a: SP:0000231 ! shoot maturity very early
+created_by: Naama
+creation_date: 2010-06-02T01:34:00Z
+
+[Term]
+id: SP:0000326
+name: shoot maturity very early 3
+def: "Between very early and early." [potato_cooperators:3]
+is_a: SP:0000211 ! shoot maturity 95DAP
+is_a: SP:0000231 ! shoot maturity very early
+created_by: Naama
+creation_date: 2010-06-02T01:35:11Z
+
+[Term]
+id: SP:0000327
+name: shoot maturity mid-season 5
+def: "Between early and mid-season." [potato_cooperators:5]
+is_a: SP:0000211 ! shoot maturity 95DAP
+is_a: SP:0000270 ! shoot maturity mid-season
+created_by: Naama
+creation_date: 2010-06-02T01:41:17Z
+
+[Term]
+id: SP:0000328
+name: shoot maturity late 8
+def: "Between late and very late." [potato_cooperators:8]
+is_a: SP:0000211 ! shoot maturity 95DAP
+is_a: SP:0000271 ! shoot maturity late
+created_by: Naama
+creation_date: 2010-06-02T01:41:57Z
+
+[Term]
+id: SP:0000329
+name: erect 1
+def: "Erect plant growth habit. close to 90 degrees." [PVP:1]
+synonym: "upright" EXACT []
+xref: PATO:0000622
+is_a: SP:0000194 ! erect
+created_by: Naama
+creation_date: 2010-06-02T01:44:31Z
+
+[Term]
+id: SP:0000330
+name: erect 2
+def: "Erect plant growth habit. Between 90-45 degrees" [PVP:2]
+synonym: "upright" EXACT []
+xref: PATO:0000622
+is_a: SP:0000194 ! erect
+created_by: Naama
+creation_date: 2010-06-02T01:45:17Z
+
+[Term]
+id: SP:0000331
+name: semi-erect 4
+def: "Semi-erect plant growth habit. 45 degrees." [PVP:4]
+synonym: "upright" EXACT []
+xref: PATO:0000622
+is_a: SP:0000195 ! semi erect
+created_by: Naama
+creation_date: 2010-06-02T01:47:35Z
+
+[Term]
+id: SP:0000332
+name: spreading 6
+def: "Spreading plant growth habit. Less than 30 degrees" [PVP:6]
+synonym: "upright" EXACT []
+xref: PATO:0001855
+is_a: SP:0000196 ! spreading
+created_by: Naama
+creation_date: 2010-06-02T01:49:13Z
+
+[Term]
+id: SP:0000333
+name: spreading 8
+def: "Spreading plant growth habit. Less than 15 degrees" [PVP:8]
+synonym: "upright" EXACT []
+xref: PATO:0001855
+is_a: SP:0000196 ! spreading
+created_by: Naama
+creation_date: 2010-06-02T01:51:05Z
+
+[Term]
+id: SP:0000334
+name: spreading 9
+def: "Spreading plant growth habit. Zero degrees." [PVP:9]
+synonym: "upright" EXACT []
+xref: PATO:0001855
+is_a: SP:0000196 ! spreading
+created_by: Naama
+creation_date: 2010-06-02T01:51:45Z
+
+[Term]
+id: SP:0000335
+name: tuber size small 2
+def: "Small to small-medium tuber size." [NE1014:2]
+xref: PATO:0000587
+xref: PO:0004547
+is_a: SP:0000260 ! tuber size small
+created_by: Naama
+creation_date: 2010-06-02T11:13:04Z
+
+[Term]
+id: SP:0000336
+name: tuber size small 4
+def: "Small-medium to medium tuber size." [NE1014:4]
+xref: PATO:0000587
+xref: PO:0004547
+is_a: SP:0000261 ! tuber size small-medium
+created_by: Naama
+creation_date: 2010-06-02T11:13:58Z
+
+[Term]
+id: SP:0000337
+name: tuber size medium 6
+def: "Medium to medium-large tuber size." [NE1014:6]
+xref: PO:0004547
+is_a: SP:0000262 ! tuber size medium
+created_by: Naama
+creation_date: 2010-06-02T11:14:57Z
+
+[Term]
+id: SP:0000338
+name: tuber size medium-large 8
+def: "Medium-large to large tuber size." [NE1014:8]
+xref: PATO:0000586
+xref: PO:0004547
+is_a: SP:0000263 ! tuber size medium-large
+created_by: Naama
+creation_date: 2010-06-02T11:16:02Z
+
+[Term]
+id: SP:0000339
+name: tuber appearance very poor 2
+def: "Very poor to poor tuber appearance." [NE1014:2]
+xref: PO:0004547
+is_a: SP:0000265 ! tuber appearance very poor
+created_by: Naama
+creation_date: 2010-06-04T02:39:11Z
+
+[Term]
+id: SP:0000340
+name: tuber appearance good 8
+def: "Good to excellent tuber appearance." [NE1014:8]
+xref: PO:0004547
+is_a: SP:0000268 ! tuber appearance good
+created_by: Naama
+creation_date: 2010-06-04T02:40:33Z
+
+[Term]
+id: SP:0000341
+name: tuber appearance poor 4
+def: "Poor to fair tuber appearance." [NE1014:4]
+xref: PO:0004547
+is_a: SP:0000266 ! tuber appearance poor
+created_by: Naama
+creation_date: 2010-06-04T02:40:54Z
+
+[Term]
+id: SP:0000342
+name: tuber appearance fair 6
+def: "Fair to good tuber appearance." [NE1014:6]
+xref: PO:0004547
+is_a: SP:0000267 ! tuber appearance fair
+created_by: Naama
+creation_date: 2010-06-04T02:42:42Z
+
+[Term]
+id: SP:0000343
+name: hypocotyl
+xref: PO:0007043
+relationship: part_of SP:0000001 ! seedling
+created_by: Naama
+creation_date: 2010-07-15T03:19:16Z
+
+[Term]
+id: SP:0000344
+name: hypocotyl anthocyanin content
+is_a: SP:0000016 ! anthocyanin content
+relationship: part_of SP:0000343 ! hypocotyl
+created_by: Naama
+creation_date: 2010-07-15T03:25:42Z
+
+[Term]
+id: SP:0000345
+name: titratable acids
+def: "Grams of citric acid per 100ml. Method for measuring is NaOH titration." [SolCAP:DF]
+is_a: SP:0000166 ! citric acid
+created_by: Naama
+creation_date: 2010-07-15T03:39:19Z
+
+[Term]
+id: SP:0000346
+name: fruit color uniformity external
+def: "The proportion of the 2D area of the red color epicarp out of the total epicarp area visible from a top view of the proximal fruit end." [SGN:EVDK]
+synonym: "epicarp color uniformity" EXACT [SGN:NM]
+is_a: SP:0000094 ! fruit color uniformity
+is_a: SP:0000097 ! epicarp color
+created_by: Naama
+creation_date: 2010-07-15T03:45:08Z
+
+[Term]
+id: SP:0000347
+name: fruit color uniformity internal
+is_a: SP:0000094 ! fruit color uniformity
+is_a: SP:0000099 ! endocarp color
+created_by: Naama
+creation_date: 2010-07-15T03:47:35Z
+
+[Term]
+id: SP:0000348
+name: internal color uniformity cross section
+synonym: "internal color uniformity latitudinal cross section" RELATED [SGN:NM]
+is_a: SP:0000347 ! fruit color uniformity internal
+created_by: Naama
+creation_date: 2010-07-15T03:52:29Z
+
+[Term]
+id: SP:0000349
+name: internal color uniformity longitudinal
+is_a: SP:0000347 ! fruit color uniformity internal
+created_by: Naama
+creation_date: 2010-07-15T03:52:29Z
+
+[Term]
+id: SP:0000350
+name: fruit color uniformity cross section percent red
+def: "Percentage of surface area with hue angle between 0-50 on a 0-360 scale." [SGN:DF]
+is_a: SP:0000348 ! internal color uniformity cross section
+created_by: Naama
+creation_date: 2010-07-15T04:00:40Z
+
+[Term]
+id: SP:0000351
+name: fruit color uniformity cross section percent yellow
+def: "Percentage of surface area with hue angle between 70-100 on a 0-360 scale." [SGN:DF]
+is_a: SP:0000348 ! internal color uniformity cross section
+created_by: Naama
+creation_date: 2010-07-15T04:00:40Z
+
+[Term]
+id: SP:0000352
+name: Cross section average RGB red
+def: "Measurement of the color red of the cross section on RGB scale." [SGN:DF]
+is_a: SP:0000353 ! endocarp cross section color
+created_by: Naama
+creation_date: 2010-07-15T04:07:07Z
+
+[Term]
+id: SP:0000353
+name: endocarp cross section color
+is_a: SP:0000099 ! endocarp color
+created_by: Naama
+creation_date: 2010-07-15T04:10:25Z
+
+[Term]
+id: SP:0000354
+name: endocarp longitudinal section
+is_a: SP:0000099 ! endocarp color
+created_by: Naama
+creation_date: 2010-07-15T04:10:25Z
+
+[Term]
+id: SP:0000355
+name: Cross section average RGB green
+def: "Measurement of the color green of the cross section on RGB scale." [SGN:DF]
+is_a: SP:0000353 ! endocarp cross section color
+created_by: Naama
+creation_date: 2010-07-15T04:10:39Z
+
+[Term]
+id: SP:0000356
+name: Cross section average RGB blue
+def: "Measurement of the color blue of the cross section on RGB scale." [SGN:DF]
+is_a: SP:0000353 ! endocarp cross section color
+created_by: Naama
+creation_date: 2010-07-15T04:10:55Z
+
+[Term]
+id: SP:0000357
+name: Cross section average L value
+def: "THe average L value of all the pixels in CIELab color space." [JASHS:(2008) 133(4)\:579-586]
+is_a: SP:0000353 ! endocarp cross section color
+created_by: Naama
+creation_date: 2010-07-15T04:12:02Z
+
+[Term]
+id: SP:0000358
+name: Cross section average 'a' value
+def: "THe average 'a' value of all the pixels in CIELab color space." [JASHS:(2008) 133(4)\:579-586]
+is_a: SP:0000353 ! endocarp cross section color
+created_by: Naama
+creation_date: 2010-07-15T04:16:45Z
+
+[Term]
+id: SP:0000359
+name: Cross section average 'b' value
+def: "THe average 'b' value of all the pixels in CIELab color space." [JASHS:(2008) 133(4)\:579-586]
+is_a: SP:0000353 ! endocarp cross section color
+created_by: Naama
+creation_date: 2010-07-15T04:17:20Z
+
+[Term]
+id: SP:0000360
+name: Cross section average luminosity
+def: "A measure of brightness. Average luminosity of all the pixels in the cross section. Luminosity = (maxCol + minCol) * 240/(2* 255) where maxCol is the highest of the RGB values, and minCol is the lowest value per pixel." [JASHS:(2008) 133(4)\:579-586]
+is_a: SP:0000353 ! endocarp cross section color
+created_by: Naama
+creation_date: 2010-07-15T04:20:01Z
+
+[Term]
+id: SP:0000361
+name: Cross section average hue
+def: "Hue is a measure of color in CIELab colorspace.\nFor 'a' values > 0, hue is 180/pi * cos[a / chroma].\nFor 'a' values < 0 , hues is 360 - {180/pi * acos[a / chroma] }." [JASHS:(2008) 133(4)\:579-586]
+is_a: SP:0000353 ! endocarp cross section color
+created_by: Naama
+creation_date: 2010-07-15T04:23:43Z
+
+[Term]
+id: SP:0000362
+name: Cross section average chroma
+def: "Chroma is a measure of saturation in CIELab colorspace.\nChroma is the square root of (a^2 + b^2)." [JASHS:(2008) 133(4)\:579-586]
+is_a: SP:0000353 ! endocarp cross section color
+created_by: Naama
+creation_date: 2010-07-15T04:27:15Z
+
+[Term]
+id: SP:0000363
+name: flower fasciation
+is_a: SP:0000008 ! flower morphology
+created_by: Naama
+creation_date: 2010-07-19T10:27:21Z
+
+[Term]
+id: SP:0000364
+name: peduncle
+def: "The stalk of an inflorescence; that part of the inflorescence below the first flower or inflorescence branch and above the last foliage leaf/pair of foliage leaves." [PO:0009053]
+synonym: "inflorescence abscission layer" RELATED []
+xref: PO:0009053
+is_a: SP:0000007 ! inflorescence
+created_by: Naama
+creation_date: 2010-07-19T10:44:41Z
+
+[Term]
+id: SP:0000365
+name: fruit ripening timing
+is_a: SP:0000013 ! fruit ripening
+created_by: Naama
+creation_date: 2010-07-19T11:25:30Z
+
+[Term]
+id: SP:0000366
+name: days to fruit ripening
+synonym: "days to fruit maturity" RELATED []
+is_a: SP:0000365 ! fruit ripening timing
+created_by: Naama
+creation_date: 2010-07-19T11:26:41Z
+
+[Term]
+id: SP:0000367
+name: distal fruit end scar
+synonym: "blossom scar" RELATED []
+relationship: part_of SP:0000070 ! distal fruit end shape
+created_by: Naama
+creation_date: 2010-07-19T11:30:20Z
+
+[Term]
+id: SP:0000368
+name: distal fruit end scar size
+synonym: "blossom scar size" EXACT []
+is_a: SP:0000367 ! distal fruit end scar
+created_by: Naama
+creation_date: 2010-07-19T11:31:07Z
+
+[Term]
+id: SP:0000369
+name: proximal angle micro 2%
+is_a: SP:0000074 ! proximal fruit end angle
+created_by: Naama
+creation_date: 2010-07-19T12:39:49Z
+
+[Term]
+id: SP:0000370
+name: proximal angle macro 20%
+is_a: SP:0000074 ! proximal fruit end angle
+created_by: Naama
+creation_date: 2010-07-19T12:40:13Z
+
+[Term]
+id: SP:0000371
+name: pericarp
+relationship: part_of SP:0000037 ! fruit
+created_by: Naama
+creation_date: 2010-07-19T01:12:38Z
+
+[Term]
+id: SP:0000372
+name: pericarp thickness
+synonym: "pericarp width" RELATED []
+relationship: part_of SP:0000371 ! pericarp
+created_by: Naama
+creation_date: 2010-07-19T01:14:10Z
+
+[Term]
+id: SP:0000373
+name: fruit anthocyanin content
+is_a: SP:0000016 ! anthocyanin content
+is_a: SP:0000167 ! fruit metabolites
+created_by: Naama
+creation_date: 2010-09-17T03:40:45Z
+
+[Term]
+id: SP:0000374
+name: Cotyledon
+relationship: part_of SP:0000001 ! seedling
+created_by: Naama
+creation_date: 2011-01-17T11:45:36Z
+
+[Term]
+id: SP:0000375
+name: cotyledon color
+relationship: part_of SP:0000374 ! Cotyledon
+created_by: Naama
+creation_date: 2011-01-17T11:47:14Z
+
+[Term]
+id: SP:0000376
+name: cotyledon number
+relationship: part_of SP:0000374 ! Cotyledon
+created_by: Naama
+creation_date: 2011-01-17T11:47:14Z
+
+[Term]
+id: SP:0000377
+name: cotyledon size
+relationship: part_of SP:0000374 ! Cotyledon
+created_by: Naama
+creation_date: 2011-01-17T11:47:14Z
+
+[Term]
+id: SP:0000378
+name: cotyledon morphology
+relationship: part_of SP:0000374 ! Cotyledon
+created_by: Naama
+creation_date: 2011-01-17T11:47:14Z
+
+[Term]
+id: SP:0000379
+name: seed germination inside fruit
+def: "The seed begins germinating inside the fruit. Often associated with a delay in fruit harvesting (the fruit is too ripe), the pre- germination could also be caused by an altered fruit flesh pH or by hormonal imbalance." [LycoTILL:OD]
+is_a: SP:0000110 ! germination
+is_a: SP:0000197 ! post harvest quality
+created_by: Naama
+creation_date: 2011-01-31T09:54:16Z
+
+[Term]
+id: SP:0000380
+name: increased fruit number
+is_a: SP:0000106 ! fruit number
+created_by: Naama
+creation_date: 2011-01-31T09:59:18Z
+
+[Term]
+id: SP:0000381
+name: decreased fruit number
+is_a: SP:0000106 ! fruit number
+created_by: Naama
+creation_date: 2011-01-31T09:59:18Z
+
+[Term]
+id: SP:0000382
+name: no fruit setting
+is_a: SP:0000106 ! fruit number
+created_by: Naama
+creation_date: 2011-01-31T09:59:18Z
+
+[Term]
+id: SP:0000383
+name: intermediate inflorescence
+xref: PO:0001083
+xref: PO:0009049
+is_a: SP:0000071 ! inflorescence structure
+created_by: Naama
+creation_date: 2011-09-16T02:49:09Z
+
+[Term]
+id: SP:0000384
+name: fruit height at widest position asymmetry
+def: "The ratio of the height at which the maximum width occurs, to the Maximum Height." [SGN:EVDK]
+is_a: SP:0000058 ! fruit shape eccentric
+created_by: Naama
+creation_date: 2011-09-26T10:46:06Z
+
+[Term]
+id: SP:0000385
+name: sugars
+is_a: SP:0000019 ! biochemical metabolites
+created_by: Naama
+creation_date: 2012-11-01T04:06:13Z
+
+[Term]
+id: SP:0000386
+name: fructose
+is_a: SP:0000385 ! sugars
+created_by: Naama
+creation_date: 2012-11-01T04:07:53Z
+
+[Term]
+id: SP:0000387
+name: field sucrose
+def: "sucrose measured in the field (mg/g fresh weight)." [SGN:NM]
+is_a: SP:0000214 ! sucrose
+created_by: Naama
+creation_date: 2012-11-01T04:16:50Z
+
+[Term]
+id: SP:0000388
+name: storage sucrose
+def: "sucrose measured in storage (mg/g fresh weight)." [SGN:NM]
+is_a: SP:0000197 ! post harvest quality
+is_a: SP:0000214 ! sucrose
+created_by: Naama
+creation_date: 2012-11-01T04:18:34Z
+
+[Term]
+id: SP:0000389
+name: field glucose
+def: "glucose measured in the field (mg/g fresh weight)" [SGN:NM]
+is_a: SP:0000215 ! glucose
+created_by: Naama
+creation_date: 2012-11-01T04:19:27Z
+
+[Term]
+id: SP:0000390
+name: storage glucose
+def: "glucose measured in the field (mg/g fresh weight)." [SGN:NM]
+is_a: SP:0000197 ! post harvest quality
+is_a: SP:0000215 ! glucose
+created_by: Naama
+creation_date: 2012-11-01T04:19:27Z
+
+[Term]
+id: SP:0000391
+name: potato fry color
+def: "potato fry color rating based on reflectance measured from light to dark." [SGN:NM]
+is_a: SP:0000221 ! processing quality
+created_by: Naama
+creation_date: 2012-11-01T04:24:02Z
+
+[Term]
+id: SP:0000392
+name: tuber flesh color blue
+xref: PATO:0000952
+xref: PO:0025038
+xref: solcap:1
+is_a: SP:0000188 ! tuber flesh color
+created_by: Naama
+creation_date: 2012-11-02T04:02:18Z
+
+[Term]
+id: SP:0000393
+name: tuber flesh color dark-yellow to orange
+xref: PATO:0001944
+xref: PO:0025038
+xref: solcap:5
+is_a: SP:0000188 ! tuber flesh color
+created_by: Naama
+creation_date: 2012-11-02T04:03:23Z
+
+[Term]
+id: SP:0000394
+name: fruit solids percentage
+def: "Net dry weight (after 1 week in oven) divided by net fresh weight of the fruit and multiplied by 100." [SGN:EVDK]
+relationship: variable_of SP:0000080 ! fruit mass
+created_by: naama
+creation_date: 2017-02-06T15:17:20Z
+
+[Term]
+id: SP:0000706
+name: male sterility
+synonym: "TO:0000437" RELATED []
+xref: PO:0007042
+xref: PO:0007616
+xref: PO:0009046
+is_a: SP:0000141 ! partial sterility
+is_a: SP:0000142 ! full sterility
+
+[Term]
+id: SP:0000707
+name: female sterility
+synonym: "TO:0000358" RELATED []
+xref: PO:0007042
+xref: PO:0007616
+xref: PO:0009046
+is_a: SP:0000141 ! partial sterility
+is_a: SP:0000142 ! full sterility
+
+[Term]
+id: SP:0001000
+name: Solanaceae phenotype ontology
+
+[Typedef]
+id: attribute_of
+name: attribute_of
+
+[Typedef]
+id: part_of
+name: part of
+
+[Typedef]
+id: variable_of
+name: variable_of
+
