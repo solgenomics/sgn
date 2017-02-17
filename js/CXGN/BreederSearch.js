@@ -560,7 +560,7 @@ function refresh_matviews() {
 		    var error_html = '<div class="well well-sm" id="update_wizard_error"><font color="red">'+response.error+'</font></div>';
 		    jQuery('#update_wizard_error').replaceWith(error_html);
 		} else {
-		    var success_html = '<div class="well well-sm" id="update_wizard_error"><font color="green">Success! Update initiated.</font></div>';
+		    var success_html = '<div class="well well-sm" id="update_wizard_error"><font color="green">'+response.message+'</font></div>';
 		    jQuery('#update_wizard_error').replaceWith(success_html);
 		    matviews_update_options();
 		}

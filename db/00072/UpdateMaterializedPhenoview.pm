@@ -145,6 +145,7 @@ SELECT cvterm.cvterm_id AS trait_component_id,
     WITH DATA;
     CREATE UNIQUE INDEX trait_components_idx ON public.trait_components(trait_component_id) WITH (fillfactor=100);
     ALTER MATERIALIZED VIEW trait_components OWNER TO web_usr;
+    INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_components', FALSE, CURRENT_TIMESTAMP);
 
 
 
@@ -163,7 +164,7 @@ CREATE MATERIALIZED VIEW public.traits AS
     GROUP BY 1,2
 UNION ALL
   SELECT parent.cvterm_id AS trait_id,
-  (((aggregated.child_names::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
+  (((composed_name || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
 	FROM cv
     JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'composed_trait_ontology'))
     JOIN cvterm parent ON(cvprop.cv_id = parent.cv_id)
@@ -172,17 +173,20 @@ UNION ALL
     LEFT JOIN cvterm_relationship is_subject ON parent.cvterm_id = is_subject.subject_id
     LEFT JOIN cvterm_relationship is_object ON (parent.cvterm_id = is_object.object_id AND is_object.type_id =(SELECT cvterm_id from cvterm where name = 'is_a'))
 	  JOIN LATERAL (
-      SELECT string_agg(child.name::text, ' ') AS child_names
-        FROM cvterm_relationship rel
-        JOIN cvterm child ON(child.cvterm_id = rel.subject_id)
-        JOIN cv ON(child.cv_id = cv.cv_id)
-        JOIN cvprop ON(cv.cv_id = cvprop.cv_id)
-        JOIN cvterm type ON(cvprop.type_id = type.cvterm_id)
-        WHERE parent.cvterm_id = rel.object_id AND rel.type_id = (SELECT cvterm_id from cvterm where name = 'contains')
-        GROUP BY type.name
-        ORDER by (case when type.name = 'entity_ontology' then 1 when type.name = 'quality_ontology' then 2 when type.name = 'unit_ontology' then 3 when type.name = 'time_ontology' then 4 end)
-        LIMIT 1
-    ) aggregated ON true
+        SELECT string_agg(children.child_name::text, ' ') AS composed_name
+        FROM (
+          SELECT child.name AS child_name,
+          type.name AS type_name,
+          rel.object_id
+          FROM cvterm_relationship rel
+          JOIN cvterm child ON(child.cvterm_id = rel.subject_id)
+          JOIN cv ON(child.cv_id = cv.cv_id)
+          JOIN cvprop ON(cv.cv_id = cvprop.cv_id)
+          JOIN cvterm type ON(cvprop.type_id = type.cvterm_id)
+          WHERE parent.cvterm_id = rel.object_id AND rel.type_id = (SELECT cvterm_id from cvterm where name = 'contains')
+          ORDER BY (case when type.name = 'entity_ontology' then 1 when type.name = 'quality_ontology' then 2 when type.name = 'unit_ontology' then 3 when type.name = 'time_ontology' then 4 end)
+        ) children LIMIT 1
+    ) composed_names ON true
     WHERE is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
     GROUP BY 1,2
   WITH DATA;
@@ -208,6 +212,16 @@ SELECT public.materialized_phenoview.breeding_program_id,
 WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXtraits_idx ON public.breeding_programsXtraits(breeding_program_id, trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXtraits OWNER TO web_usr;
+
+CREATE MATERIALIZED VIEW public.genotyping_protocolsXtraits AS
+SELECT public.materialized_genoview.genotyping_protocol_id,
+    public.materialized_phenoview.trait_id
+   FROM public.materialized_genoview
+   JOIN public.materialized_phenoview USING(accession_id)
+  GROUP BY public.materialized_genoview.genotyping_protocol_id, public.materialized_phenoview.trait_id
+  WITH DATA;
+CREATE UNIQUE INDEX genotyping_protocolsXtraits_idx ON public.genotyping_protocolsXtraits(genotyping_protocol_id, trait_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW genotyping_protocolsXtraits OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.locationsXtraits AS
 SELECT public.materialized_phenoview.location_id,
