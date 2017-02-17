@@ -2145,7 +2145,7 @@ sub rank_genotypes : Private {
     $c->stash->{output_files} = $output_file;
     $c->stash->{input_files}  = $input_file;   
     $c->stash->{r_temp_file}  = "rank-gebv-genotypes-${pop_id}${pred_file_suffix}";  
-    $c->stash->{r_script}     = 'R/selection_index.r';
+    $c->stash->{r_script}     = 'R/solGS/selection_index.r';
     
     $self->run_r_script($c);
     $self->download_urls($c);
@@ -4982,7 +4982,7 @@ sub run_rrblup  {
         $c->stash->{r_temp_file} = "gs-rrblup-combo-${trait_id}-${combo_identifier}"; 
     }
    
-    $c->stash->{r_script}    = 'R/gs.r';
+    $c->stash->{r_script}    = 'R/solGS/gs.r';
     $self->run_r_script($c);
 
 }
@@ -5031,7 +5031,7 @@ sub r_combine_populations  {
     $c->stash->{input_files}  = $tempfile_input;
     $c->stash->{output_files} = $tempfile_output;
     $c->stash->{r_temp_file}  = "combine-pops-${trait_id}";
-    $c->stash->{r_script}     = 'R/combine_populations.r';
+    $c->stash->{r_script}     = 'R/solGS/combine_populations.r';
     
     $self->run_r_script($c);
   

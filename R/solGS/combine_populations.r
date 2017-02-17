@@ -131,7 +131,7 @@ for (popPhenoNum in 1:popsPhenoSize) {
       
       phenoTrait <- round(phenoTrait,  2)
     }      
-  } else if ((experimentalDesign == 'CRD')  &&  length(unique(phenoTrait$replicate)) > 1) {
+  } else if ((experimentalDesign == 'CRD')  &&  length(unique(phenoData$replicate)) > 1) {
 
     message("GS experimental design: ", experimentalDesign)
 

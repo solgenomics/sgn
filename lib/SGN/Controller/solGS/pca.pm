@@ -389,7 +389,7 @@ sub run_pca {
     $c->stash->{input_files}  = $geno_file;
     $c->stash->{output_files} = $pca_output_file;
     $c->stash->{r_temp_file}  = "pca-${pop_id}";
-    $c->stash->{r_script}     = 'R/pca.r';
+    $c->stash->{r_script}     = 'R/solGS/pca.r';
 
     $c->controller("solGS::solGS")->run_r_script($c);
     
