@@ -60,7 +60,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list trials pop')->click();
     sleep(30);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(60);
+    sleep(120);
     $d->find_element_ok('dry matter content percentage', 'link_text', 'build combined DM model')->click();
     sleep(30);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();

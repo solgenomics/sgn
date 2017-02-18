@@ -620,25 +620,25 @@ return 0;
 
   #check that maternal name is not blank
   if ($maternal eq "") {
-    $c->stash->{rest} = {error =>  "maternal parent name cannot be blank." };
+    $c->stash->{rest} = {error =>  "Female parent name cannot be blank." };
     return 0;
   }
 
   #if required, check that paternal parent name is not blank;
-  if ($paternal eq "" && ($cross_type ne "open" || $cross_type ne "bulk_open")) {
-    $c->stash->{rest} = {error =>  "paternal parent name cannot be blank." };
+  if ($paternal eq "" && ($cross_type ne "open") && ($cross_type ne "bulk_open")) {
+    $c->stash->{rest} = {error =>  "Male parent name cannot be blank." };
     return 0;
   }
 
   #check that parents exist in the database
   if (! $chado_schema->resultset("Stock::Stock")->find({name=>$maternal,})){
-    $c->stash->{rest} = {error =>  "maternal parent does not exist." };
+    $c->stash->{rest} = {error =>  "Female parent does not exist." };
     return 0;
   }
 
   if ($paternal) {
     if (! $chado_schema->resultset("Stock::Stock")->find({name=>$paternal,})){
-$c->stash->{rest} = {error =>  "paternal parent does not exist." };
+$c->stash->{rest} = {error =>  "Male parent does not exist." };
 return 0;
     }
   }

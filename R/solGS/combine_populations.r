@@ -89,78 +89,98 @@ popsGenoSize      <- length(allGenoFiles)
 popIds            <- c()
 combinedPhenoPops <- c()
 
-for (popPhenoNum in 1:popsPhenoSize)
-  {
-    popId <- str_extract(allPhenoFiles[[popPhenoNum]], "\\d+")
-    popIds <- append(popIds, popId)
+for (popPhenoNum in 1:popsPhenoSize) {
+  popId <- str_extract(allPhenoFiles[[popPhenoNum]], "\\d+")
+  popIds <- append(popIds, popId)
 
-    phenoData <- fread(allPhenoFiles[[popPhenoNum]],
+  phenoData <- fread(allPhenoFiles[[popPhenoNum]],
                             na.strings = c("NA", " ", "--", "-", "."),
                            )
-
-
-    phenoTrait <- subset(phenoData,
-                         select = c("object_name", "object_id", "design", "block", "replicate", traitName)
-                         )
+  phenoTrait <- subset(phenoData,
+                       select = c("object_name", "object_id", "design", "block", "replicate", traitName)
+                       )
+  phenoTrait  <- as.data.frame(phenoTrait)
   
-    experimentalDesign <- phenoTrait[2, 'design']
+  experimentalDesign <- phenoTrait[2, 'design']
     
-    if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
+  if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
 
-    if ((experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD')  &&  unique(phenoTrait$block) > 1) { 
+  if ((experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD')  &&  length(phenoTrait$block) > 1) { 
 
-      message("experimental design: ", experimentalDesign)
+    message("experimental design: ", experimentalDesign)
 
-      augData <- subset(phenoTrait,
-                        select = c("object_name", "object_id",  "block",  traitName)
-                        )
+    augData <- subset(phenoTrait,
+                      select = c("object_name", "object_id",  "block",  traitName)
+                      )
 
-      colnames(augData)[1] <- "genotypes"
-      colnames(augData)[4] <- "trait"
+    colnames(augData)[1] <- "genotypes"
+    colnames(augData)[4] <- "trait"
 
-      model <- try(lmer(trait ~ 0 + genotypes + (1|block),
-                        augData,
-                        na.action = na.omit
-                        ))
+    model <- try(lmer(trait ~ 0 + genotypes + (1|block),
+                      augData,
+                      na.action = na.omit
+                      ))
      
-      if (class(model) != "try-error") {
-        phenoTrait <- data.frame(fixef(model))
+    if (class(model) != "try-error") {
+      phenoTrait <- data.frame(fixef(model))
         
-        colnames(phenoTrait) <- traitName
+      colnames(phenoTrait) <- traitName
 
-        nn <- gsub('genotypes', '', rownames(phenoTrait))  
-        rownames(phenoTrait) <- nn
+      nn <- gsub('genotypes', '', rownames(phenoTrait))  
+      rownames(phenoTrait) <- nn
       
-        phenoTrait <- round(phenoTrait, digits = 2)
+      phenoTrait <- round(phenoTrait,  2)
+    }      
+  } else if ((experimentalDesign == 'CRD')  &&  length(unique(phenoData$replicate)) > 1) {
+
+    message("GS experimental design: ", experimentalDesign)
+
+    crdData <- subset(phenoData, select = c("object_name", "object_id",  "replicate",  trait))
+
+    colnames(crdData)[1] <- "genotypes"
+    colnames(crdData)[4] <- "trait"
+
+    model <- try(lmer(trait ~ 0 + genotypes + (1|replicate),
+                        crdData,
+                        na.action = na.omit))
+
+    if (class(model) != "try-error") {
+      phenoTrait <- data.frame(fixef(model))
+        
+      colnames(phenoTrait) <- trait
+
+      nn <- gsub('genotypes', '', rownames(phenoTrait))  
+      rownames(phenoTrait) <- nn
+      
+      phenoTrait           <- round(phenoTrait, 2)       
   
-        formattedPhenoData[, traitName] <- phenoTrait
-      }
+    }
+  } else if (experimentalDesign == 'Alpha') {
+
+    message("experimental design: ", experimentalDesign)
+     
+    alphaData <- subset(phenoData,
+                        select = c("object_name", "object_id", "block", "replicate", traitName)
+                        )
       
-    } else if (experimentalDesign == 'Alpha') {
-
-      alphaData <-  phenoTrait 
-
-      colnames(alphaData)[1] <- "genotypes"
-      colnames(alphaData)[5] <- "trait"
-         
-      model <- try(lmer(trait ~ 0 + genotypes + (1|replicate/block),
-                        alphaData,
-                        na.action = na.omit
-                        ))
+    colnames(alphaData)[1] <- "genotypes"
+    colnames(alphaData)[5] <- "trait"
+   
+    model <- try(lmer(trait ~ 0 + genotypes + (1|replicate/block),
+                      alphaData,
+                      na.action = na.omit
+                      ))
         
-      if (class(model) != "try-error") {
-        phenoTrait <- data.frame(fixef(model))
+    if (class(model) != "try-error") {
+      phenoTrait <- data.frame(fixef(model))
       
-        colnames(phenoTrait) <- traitName
-
-        nn <- gsub('genotypes', '', rownames(phenotrait))     
-        rownames(phenoTrait) <- nn
+      colnames(phenoTrait) <- traitName
+        
+      nn <- gsub('genotypes', '', rownames(phenoTrait))     
+      rownames(phenoTrait) <- nn
       
-        phenoTrait <- round(phenoTrait, digits = 2)
-
-        formattedPhenoData[, i] <- phenoTrait
-      }
-      
+      phenoTrait <- round(phenoTrait, 2)
+    }      
   } else {
 
     phenoTrait <- subset(phenoData,
@@ -188,7 +208,7 @@ for (popPhenoNum in 1:popsPhenoSize)
       row.names(phenoTrait) <- phenoTrait[, 1]
       phenoTrait[, 1] <- NULL
 
-      phenoTrait <- round(phenoTrait, digits = 2)
+      phenoTrait <- round(phenoTrait, 2)
 
     } else {
       print ('No missing data')
@@ -206,8 +226,7 @@ for (popPhenoNum in 1:popsPhenoSize)
       row.names(phenoTrait) <- phenoTrait[, 1]
       phenoTrait[, 1] <- NULL
 
-      phenoTrait <- round(phenoTrait, digits = 2)
-
+      phenoTrait <- round(phenoTrait, 2)    
     }
   }    
     newTraitName = paste(traitName, popId, sep = "_")

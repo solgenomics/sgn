@@ -7,7 +7,7 @@ BEGIN { extends 'Catalyst::Controller::REST' }
 
 use Data::Dumper;
 use JSON::Any;
-use CXGN::Phenotypes::Search;
+use CXGN::Stock::StockLookup;
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -171,8 +171,8 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 	}
 	);
 
-    my $phenotypes_search = CXGN::Phenotypes::Search->new({bcs_schema=>$schema});
-    my $synonym_hash = $phenotypes_search->get_synonym_hash_lookup();
+    my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
+    my $synonym_hash = $stock_lookup->get_synonym_hash_lookup();
 
     my @result;
     while (my $a = $rs2->next()) {
