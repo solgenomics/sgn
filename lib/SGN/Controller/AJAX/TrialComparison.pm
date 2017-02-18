@@ -120,7 +120,8 @@ sub compare_trial_list_GET : Args(0) {
 	return;
     }
 
-    $self->make_graph($c, $cvterm_id, @trial_ids);
+    my ($file, $png, $errorfile) = $self->make_graph($c, $cvterm_id, @trial_ids);
+    $c->stash->{rest} = { file => $file, png => $png };
 }
     
 
@@ -162,8 +163,10 @@ sub make_graph {
 	$c->stash->{rest} = { error => $error };
 	return;
     }
-
-    $c->stash->{rest} = { file => $tempfile, png => $tempfile.".png" };
+    print STDERR "NO ERROR FILE, RETURNING DATA...\n";
+    my $file = $tempfile.""; # convert from object to string
+    return ( $file, $tempfile.".png", $errorfile );
+    print STDERR "returning...\n";
 }
 
 sub common_traits : Path('/ajax/trial/common_traits') : ActionClass('REST') {}
