@@ -1,0 +1,34 @@
+<%args>
+
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<& /page/page_title.mas, title=>'Accession Usage' &>
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<table id="accession_usage" width="100%" class="table table-hover table-striped">
+<thead>
+  <tr>
+    <th>Accession Name</th>
+    <th>Number of Trials</th>
+  </tr>
+</thead>
+
+</table>
+
+<script>
+
+
+jQuery(document).ready(function() {
+
+  jquery('#accession_usage').DataTable({
+
+     'ajax':'ajax/accession_usage'
+  });
+
+});
+
+</script>
