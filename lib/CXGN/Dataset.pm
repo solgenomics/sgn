@@ -47,6 +47,7 @@ Lukas Mueller <lam87@cornell.edu>
 
 =cut
 
+
 package CXGN::Dataset;
 
 use Moose;
@@ -55,7 +56,7 @@ use Data::Dumper;
 use JSON::Any;
 use CXGN::BreederSearch;
 use CXGN::People::Schema;
-use CXGN::Phenotypes::Search;
+use CXGN::Phenotypes::SearchFactory;
 use CXGN::Genotype::Search;
 
 =head2 people_schema()
@@ -79,6 +80,7 @@ has 'schema' =>       ( isa => "Bio::Chado::Schema", is => 'rw', required => 1 )
 accessor for sp_dataset primary key
 
 =cut
+
 
 has 'sp_dataset_id' => ( isa => 'Int', 
 			 is => 'rw',
@@ -137,16 +139,19 @@ has 'plots' =>       ( isa => 'Maybe[ArrayRef]',
 		       predicate => 'has_plots',
     );
 
+
 =head2 trials()
 
 accessor for defining the trials that are part of this dataset (ArrayRef).
 
 =cut
 
+
 has 'trials' =>      ( isa => 'Maybe[ArrayRef]', 
 		       is => 'rw',
 		       predicate => 'has_trials',
     );
+
 
 =head2 traits()
 
@@ -160,6 +165,7 @@ has 'traits' =>      ( isa => 'Maybe[ArrayRef]',
 =head2 years()
 
 =cut
+
 
 has 'years' =>       ( isa => 'Maybe[ArrayRef]', 
 		       is => 'rw',
@@ -179,6 +185,7 @@ has 'is_live' =>     ( isa => 'Bool',
 		       is => 'rw',
 		       default => 0,
     );
+
 
 =head2 data_level()
 
@@ -212,11 +219,15 @@ sub BUILD {
 	$self->breeding_programs($dataset->{breeding_programs});
 	$self->is_live($dataset->{is_live});
     }
+
+
     else { print STDERR "Creating empty dataset object\n"; }
+
     my $bs = CXGN::BreederSearch->new(dbh => $self->schema->storage->dbh());
     $self->breeder_search($bs);
 
 }
+
 
 =head1 CLASS METHODS
 
@@ -239,6 +250,7 @@ sub datasets_by_person {
 
     return \@datasets;
 }    
+
 
 =head1 METHODS
 
@@ -263,6 +275,8 @@ sub store {
 		 description => $self->description(),
 		 dataset => $json,
 	};
+
+
 
     print STDERR "dataset_id = ".$self->sp_dataset_id()."\n";
     if (!$self->has_sp_dataset_id()) { 
@@ -327,8 +341,8 @@ sub retrieve_genotypes {
 	trial_list => $self->trials(),
 	protocol_id => $protocol_id
 	); 
-    my $resultset = $genotypes_search->get_genotype_info(); 
-    my $genotypes = $resultset->{genotypes};	
+    my ($total_count, $dataref) = $genotypes_search->get_genotype_info(); 
+    return $dataref;	
 }
 
 =head2 retrieve_phenotypes()
@@ -339,13 +353,16 @@ retrieves phenotypes as a listref of listrefs
 
 sub retrieve_phenotypes { 
     my $self = shift;
-    my $phenotypes_search = CXGN::Phenotypes::Search->new({
-        bcs_schema => $self->schema(),
-        trait_list => $self->traits(),
-        trial_list => $self->trials(),
-        accession_list => $self->accessions(),
-        data_level => $self->data_level(),
-    });
+	my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+		'MaterializedView',    #can be either 'MaterializedView', or 'Native'
+		{
+		    bcs_schema=>$self->schema(),
+		    data_level=>$self->data_level(),
+		    trait_list=>$self->traits(),
+		    trial_list=>$self->trials(),
+		    accession_list=>$self->accessions(),
+		}
+	);
 
     my @data =
 	$phenotypes_search->get_extended_phenotype_info_matrix();
@@ -369,7 +386,8 @@ sub retrieve_accessions {
     else {
 	my $criteria = $self->_get_criteria();
 	push @$criteria, "accessions";
-	$accessions = $self->breeder_search()->metadata_query(undef, $criteria, $self->_get_source_dataref("accessions"));						
+
+	$accessions = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("accessions"));						
     }
     return $accessions->{results};
 }
@@ -389,7 +407,7 @@ sub retrieve_plots {
     else {
 	my $criteria = $self->_get_criteria();
 	push @$criteria, "plots";
-	$plots = $self->breeder_search()->metadata_query(undef, $criteria, $self->_get_source_dataref("plots"));						
+	$plots = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("plots"));						
     }
     return $plots->{results};
 }
@@ -409,7 +427,7 @@ sub retrieve_trials {
     else {
 	my $criteria = $self->_get_criteria();
 	push @$criteria, "trials";
-	$trials = $self->breeder_search()->metadata_query(undef, $criteria, $self->_get_source_dataref("trials"));						
+	$trials = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("trials"));						
     }
     print STDERR "TRIALS: ".Dumper($trials);
     return $trials->{results};
@@ -430,7 +448,7 @@ sub retrieve_traits {
     else {
 	my $criteria = $self->_get_criteria();
 	push @$criteria, "traits";
-	$traits = $self->breeder_search()->metadata_query(undef, $criteria, $self->_get_source_dataref("traits"));						
+	$traits = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("traits"));						
     }
     return $traits->{results};
 
@@ -451,7 +469,7 @@ sub retrieve_years {
     else {
 	my $criteria = $self->_get_criteria();
 	push @$criteria, "years";
-	my $year_data = $self->breeder_search()->metadata_query(undef, $criteria, $self->_get_source_dataref("years"));
+	my $year_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("years"));
 	my $year_list = $year_data->{result};
 
 	foreach my $y (@$year_list) { 

@@ -76,6 +76,7 @@ has 'nd_geolocation_id' => (isa => 'Int', is => 'rw', predicate => 'has_nd_geolo
 has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', required => 1);
 has 'design' => (isa => 'HashRef[HashRef[Str|ArrayRef]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
+has 'stocks_exist' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 
 sub validate_design {
 	print STDERR "validating design\n";
@@ -103,7 +104,7 @@ sub validate_design {
 			'stock_name',
 			'plot_name'
 		);
-		#plot_name is tissue sample name in well. during store, the stock is saved as stock_type 'tissue_sample' with uniquename = plot_name 
+		#plot_name is tissue sample name in well. during store, the stock is saved as stock_type 'tissue_sample' with uniquename = plot_name
 	} elsif ($design_type eq 'CRD' || $design_type eq 'Alpha' || $design_type eq 'Augmented' || $design_type eq 'RCBD'){
 		@valid_properties = (
 			'stock_name',
@@ -136,9 +137,9 @@ sub validate_design {
 			}
 			if ($property eq 'plot_name') {
 				my $plot_name = $design{$stock}->{$property};
-				if (exists($saved_stocks{$plot_name})) {
-					$error .= "Plot or tissue $plot_name already exists in the database.";
-				}
+				 if (exists($saved_stocks{$plot_name}) && $self->get_stocks_exist() == 0) {
+				 	$error .= "Plot or tissue $plot_name already exists in the database.";
+				 }
 			}
 			if ($property eq 'plant_names') {
 				my $plant_names = $design{$stock}->{$property};
@@ -412,7 +413,7 @@ sub store {
 		}
 
 	};
-	
+
 	my $transaction_error;
 	try {
 		$chado_schema->txn_do($coderef);

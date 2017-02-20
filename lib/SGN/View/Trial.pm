@@ -92,7 +92,7 @@ sub design_layout_view {
     foreach my $key (sort { $a <=> $b} keys %design) {
         my $plot_name = $design{$key}->{plot_name} || '';
         my $stock_name = $design{$key}->{stock_name} || '';
-        my $check_name = $design{$key}->{check_name} || '';
+        my $check_name = $design{$key}->{is_a_control} || '';
         my $row_number = $design{$key}->{row_number} || '';
         my $col_number = $design{$key}->{col_number} || '';
         my $block_number = $design{$key}->{block_number} || '';
@@ -162,6 +162,9 @@ sub design_info_view {
   }
   if ($design_info{'number_of_stocks'}) {
     $design_info_html .= "<dt>Number of accessions</dt><dd>".$design_info{'number_of_stocks'}."</dd>";
+  }
+  if ($design_info{'number_of_checks'}) {
+    $design_info_html .= "<dt>Number of checks</dt><dd>".$design_info{'number_of_checks'}."</dd>";
   }
   if ($design_info{'number_of_controls'}) {
     $design_info_html .= "<dt>Number of controls</dt><dd>".$design_info{'number_of_controls'}."</dd>";

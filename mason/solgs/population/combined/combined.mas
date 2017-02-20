@@ -17,7 +17,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 $combo_pops_id
 $show_data => 1;
-$traits_form
+$traits_form => ''
 $all_traits_file
 $project_name
 $project_desc

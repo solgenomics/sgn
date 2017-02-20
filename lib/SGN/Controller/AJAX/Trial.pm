@@ -42,6 +42,7 @@ use CXGN::BreedersToolbox::Delete;
 use CXGN::UploadFile;
 use CXGN::Trial::ParseUpload;
 use CXGN::List::Transform;
+use CXGN::List::Validate;
 use SGN::Model::Cvterm;
 use JSON;
 
@@ -135,6 +136,7 @@ sub generate_experimental_design_POST : Args(0) {
   #my $trial_name = $c->req->param('project_name');
   my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
   my $use_same_layout = $c->req->param('use_same_layout');
+  my $number_of_checks = scalar(@control_names_crbd);
   #my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
   if ($design_type eq "RCBD" || $design_type eq "Alpha" || $design_type eq "CRD") {
     if (@control_names_crbd) {
@@ -274,6 +276,9 @@ my $location_number = scalar(@locations);
   if ($location_number) {
     $design_info{'number_of_locations'} = $location_number;
   }
+  if($number_of_checks){
+    $design_info{'number_of_checks'} = $number_of_checks;
+  }
   if ($design_type) {
     $trial_design->set_design_type($design_type);
     $design_info{'design_type'} = $design_type;
@@ -363,6 +368,7 @@ sub save_experimental_design_POST : Args(0) {
   my $multi_location;
   my $trial_locations = $c->req->param('trial_location');
   my $trial_name = $c->req->param('project_name');
+  my $trial_type = $c->req->param('trial_type');
   my $breeding_program = $c->req->param('breeding_program_name');
   my $schema = $c->dbic_schema("Bio::Chado::Schema");
   my $breeding_program_id = $schema->resultset("Project::Project")->find({name=>$breeding_program})->project_id();
@@ -422,6 +428,7 @@ sub save_experimental_design_POST : Args(0) {
         trial_location => $trial_location,
         trial_name => $trial_name,
         design_type => $c->req->param('design_type'),
+        trial_type => $trial_type
 	  });
 
   #$trial_create->set_user($c->user()->id());
@@ -478,55 +485,32 @@ sub save_experimental_design_POST : Args(0) {
 sub verify_stock_list : Path('/ajax/trial/verify_stock_list') : ActionClass('REST') { }
 
 sub verify_stock_list_POST : Args(0) {
-  my ($self, $c) = @_;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  my @stock_names;
-  my $error;
-  my %errors;
-  my $error_alert;
-  if ($c->req->param('stock_list')) {
-    @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
-    #my $data = $self->transform_stock_list($c, \@raw_stock_names);
-    #if (exists($data->{missing}) && ref($data->{missing}) && @{$data->{missing}} >0) {
-#	$c->stash->{rest} = { error => "Some stocks were not found. Please edit the list and try again." };
-#	return;
- #   }
-  #  if ($data->{transform} && @{$data->{transform}}>0) {
-#	@stock_names = @{$data->{transform}};
- #   }
-  }
-
-  if (!@stock_names) {
-    $c->stash->{rest} = {error => "No stock names supplied"};
-    return;
-  }
-
-
-  foreach my $stock_name (@stock_names) {
-
-    my $stock;
-    my $number_of_stocks_found;
-    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
-    $stock_lookup->set_stock_name($stock_name);
-    $stock = $stock_lookup->get_stock();
-    $number_of_stocks_found = $stock_lookup->get_matching_stock_count();
-    if ($number_of_stocks_found > 1) {
-      $errors{$stock_name} = "Multiple stocks found matching $stock_name\n";
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my @stock_names;
+    my $error;
+    my %errors;
+    my $error_alert;
+    if ($c->req->param('stock_list')) {
+        @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
     }
-    if (!$number_of_stocks_found) {
-      $errors{$stock_name} = "No stocks found matching $stock_name\n";
+
+    if (!@stock_names) {
+        $c->stash->{rest} = {error => "No stock names supplied"};
+        $c->detach;
     }
-  }
-  if (%errors) {
-    foreach my $key (keys %errors) {
-      $error_alert .= "Stock $key: ".$errors{$key}."\n";
+
+    my $lv = CXGN::List::Validate->new();
+    my @accessions_missing = @{$lv->validate($schema,'accessions',\@stock_names)->{'missing'}};
+
+    if (scalar(@accessions_missing) > 0){
+        my $error = 'The following accessions are not valid in the database, so you must add them first: '.join ',', @accessions_missing;
+        $c->stash->{rest} = {error => $error};
+    } else {
+        $c->stash->{rest} = {
+            success => "1",
+        };
     }
-    $c->stash->{rest} = {error => $error_alert};
-  } else {
-    $c->stash->{rest} = {
-		       success => "1",
-		      };
-  }
 }
 
 sub _parse_list_from_json {
@@ -574,6 +558,7 @@ sub upload_trial_file_POST : Args(0) {
   my $trial_location = $c->req->param('trial_upload_location');
   my $trial_name = $c->req->param('trial_upload_name');
   my $trial_year = $c->req->param('trial_upload_year');
+  my $trial_type = $c->req->param('trial_upload_trial_type');
   my $trial_description = $c->req->param('trial_upload_description');
   my $trial_design_method = $c->req->param('trial_upload_design_method');
   my $upload = $c->req->upload('trial_uploaded_file');
@@ -673,6 +658,7 @@ sub upload_trial_file_POST : Args(0) {
 	   trial_year => $trial_year,
 	   trial_description => $trial_description,
 	   trial_location => $trial_location,
+	   trial_type => $trial_type,
 	   trial_name => $trial_name,
 	   user_name => $user_name, #not implemented
 	   design_type => $trial_design_method,

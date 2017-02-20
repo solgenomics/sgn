@@ -106,7 +106,7 @@ sub manage_roles : Path("/breeders/manage_roles") Args(0) {
         return;
     }
 
-    $c->stash->{user_can_add_roles} = $c->user->check_roles("curator");
+    $c->stash->{is_curator} = $c->user->check_roles("curator");
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $person_roles = CXGN::People::Roles->new({ bcs_schema=>$schema });
@@ -539,7 +539,7 @@ sub get_phenotyping_data : Private {
     my $file_info = [];
     my $deleted_file_info = [];
 
-     my $metadata_rs = $metadata_schema->resultset("MdMetadata")->search( { create_person_id => $c->user()->get_object->get_sp_person_id(), obsolete => 0 }, { order_by => 'create_date' } );
+     my $metadata_rs = $metadata_schema->resultset("MdMetadata")->search( { create_person_id => $c->user()->get_object->get_sp_person_id() }, { order_by => 'create_date' } );
 
     print STDERR "RETRIEVED ".$metadata_rs->count()." METADATA ENTRIES...\n";
 

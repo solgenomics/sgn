@@ -303,16 +303,8 @@ ok($create_fieldbook_return, "check that download trial fieldbook returns someth
 my @contents = ReadData ($create_fieldbook_return->{'file'});
 
 #print STDERR Dumper @contents->[0]->[0];
-is_deeply(@contents->[0]->[0], {
-          'version' => '0.65',
-          'sheets' => 1,
-          'sheet' => {
-                       'Sheet1' => 1
-                     },
-          'type' => 'xls',
-          'parser' => 'Spreadsheet::ParseExcel',
-          'error' => undef
-      }, "check fieldbook creation of plots after plant addition");
+is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
+is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
 
 my $columns = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
@@ -445,16 +437,8 @@ ok($create_fieldbook_return, "check that download trial fieldbook returns someth
 my @contents = ReadData ($create_fieldbook_return->{'file'});
 
 #print STDERR Dumper @contents->[0]->[0];
-is_deeply(@contents->[0]->[0], {
-          'parser' => 'Spreadsheet::ParseExcel',
-          'sheets' => 1,
-          'sheet' => {
-                       'Sheet1' => 1
-                     },
-          'type' => 'xls',
-          'version' => '0.65',
-          'error' => undef
-      }, "check fieldbook creation of plant file");
+is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
+is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
 
 my $columns = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
@@ -699,16 +683,8 @@ my $columns = @contents->[0]->[1]->{'cell'};
 ok(scalar(@$columns) == 9, "check number of col in created file.");
 
 #print STDERR Dumper @contents->[0]->[0];
-is_deeply(@contents->[0]->[0], {
-              'version' => '0.65',
-              'sheets' => 1,
-              'error' => undef,
-              'type' => 'xls',
-              'sheet' => {
-                           'Sheet1' => 1
-                         },
-              'parser' => 'Spreadsheet::ParseExcel'
-          }, "check spreadsheet creation for plots after plants added");
+is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
+is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
 
 #print STDERR Dumper @contents->[0]->[1]->{'cell'}->[1];
 is_deeply(@contents->[0]->[1]->{'cell'}->[1], [
@@ -899,16 +875,8 @@ my $columns = @contents->[0]->[1]->{'cell'};
 ok(scalar(@$columns) == 11, "check number of col in created file.");
 
 #print STDERR Dumper @contents->[0];
-is_deeply(@contents->[0]->[0], {
-            'version' => '0.65',
-            'sheet' => {
-                         'Sheet1' => 1
-                       },
-            'sheets' => 1,
-            'error' => undef,
-            'type' => 'xls',
-            'parser' => 'Spreadsheet::ParseExcel'
-        }, "check spreadsheet creation for plants after plants added");
+is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
+is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
 
 #print STDERR Dumper @contents->[0]->[1]->{'cell'}->[1];
 is_deeply(@contents->[0]->[1]->{'cell'}->[1], [

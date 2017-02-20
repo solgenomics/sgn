@@ -35,23 +35,8 @@ my @contents = ReadData ($tempfile);
 #print STDERR Dumper \@contents;
 
 #print STDERR Dumper @contents->[0]->[0];
-is_deeply(@contents->[0]->[0], {
-          'parser' => 'Spreadsheet::ParseExcel',
-          'type' => 'xls',
-          'version' => '0.65',
-          'sheet' => {
-                       'Installation' => 2,
-                       'Weather_data' => 5,
-                       'Field Book' => 8,
-                       'Crop_management' => 6,
-                       'Minimal' => 1,
-                       'Soil_analysis' => 4,
-                       'Var List' => 7,
-                       'Material List' => 3
-                     },
-          'sheets' => 8,
-          'error' => undef
-      }, "check that type of file is correct.");
+is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
+is(@contents->[0]->[0]->{'sheets'}, '8', "check that type of file is correct");
 
 my $columns_1 = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns_1);
