@@ -54,7 +54,8 @@ sub compare_trials_GET : Args(0) {
 	return;
     }
 
-    $self->make_graph($c, $cvterm_id, @trial_ids);
+    my ($file, $png, $errorfile) = $self->make_graph($c, $cvterm_id, @trial_ids);
+    $c->stash->{rest} = { file => $file, png => $png };
 }
 
  #   my $cv_name = $c->config->{trait_ontology_db_name};
@@ -183,18 +184,18 @@ sub common_traits_GET : Args(0) {
     my @trials;
 
     if ($trial_list_id) { 
-	print STDERR "Parsing trial_list_id...\n";
+	#print STDERR "Parsing trial_list_id...\n";
 	my $list = CXGN::List->new(
 	    { 
 		dbh => $c->dbic_schema("Bio::Chado::Schema")->storage->dbh(),
 		list_id => $trial_list_id,
 	    });
 	my $trials = $list->elements();
-	print STDERR Dumper($trials);
+	#print STDERR Dumper($trials);
 	@trials = @$trials;
     }
     else { 
-	print STDERR "Parsing trial_1 and trial_2...\n";
+	#print STDERR "Parsing trial_1 and trial_2...\n";
 	if ( ($trial_1 ne "") && ($trial_2 ne "")) { 
 	    @trials = ($trial_1, $trial_2);
 	}
@@ -226,7 +227,7 @@ sub get_common_traits {
 	push @trait_lists, $traits;
     }
     
-    print STDERR Dumper(\@trait_lists);
+    #print STDERR Dumper(\@trait_lists);
     my @common_traits = @{$trait_lists[0]};
     for(my $i=1; $i<@trait_lists; $i++ ) { 
 	my @local_common = ();
@@ -239,7 +240,35 @@ sub get_common_traits {
 	}
 	@common_traits = @local_common;
     }
-	    
+
+    my $common_trait_count = scalar(@common_traits);
+    
+    my $ds2 = CXGN::Dataset->new( people_schema => $c->dbic_schema("CXGN::People::Schema"), schema => $schema);
+    my @common_accessions;
+    foreach my $t (@trial_ids) { 
+	$ds2->trials( [ $t ]);
+	my $accessions = $ds2->retrieve_accessions();
+	push @common_accessions, $accessions;
+    }
+
+    if (!@common_accessions) { @common_accessions = (); }
+
+    my @total_accessions;
+
+    my @previous_accessions = @{$common_accessions[0]};
+    for(my $i = 1; $i<@common_accessions; $i++) { 
+	my @previous_accession_names = map { $_->[1] } @previous_accessions;
+	my @accession_names = map { $_->[1] } @{$common_accessions[$i]};
+	
+	my $list = List::Compare->new(\@previous_accession_names, \@accession_names);
+	
+	@previous_accessions = $list->get_intersection();
+	@total_accessions = $list->get_union();
+    }
+
+    @common_accessions = @previous_accessions;
+    my $common_accession_count = scalar(@common_accessions);
+    my $total_accession_count = scalar(@total_accessions);
 
     print STDERR "Traits:\n";
     print STDERR Dumper(\@common_traits);
@@ -249,9 +278,16 @@ sub get_common_traits {
 	push @options, [ $t->[0], $t->[1] ];
     }
 
-    $c->stash->{rest} = { options => \@options };
+    $c->stash->{rest} = { 
+	options => \@options ,
+	common_accession_count => $common_accession_count,
+        common_trait_count => $common_trait_count,
+	total_accession_count => $total_accession_count,
+    };
 
 
-    }
+}
+
+
 
 1;
