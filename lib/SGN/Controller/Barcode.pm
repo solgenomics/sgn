@@ -77,28 +77,6 @@ sub barcode_image : Path('/barcode/image') Args(0) {
     $c->res->body($barcode->png());
 }
 
-sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
-  my $self = shift;
-  my $c = shift;
-  my $stock_id = shift;
-  my $stock_name = shift;
-  my $field_info = shift;
-
-  $c->tempfiles_subdir('barcode');
-  my ($file, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
-
-  my $qrcode = SGN::Controller::QRcode->new(
-
-  );
-   my $barcode = $qrcode->barcode_qrcordes(
-        $stock_id,
-        $stock_name,
-        $field_info,
-        $file,
-   );
-
-  return $barcode;
-}
 
 sub barcode_tempfile_jpg : Path('/barcode/tempfile') Args(4) {
     my $self = shift;
@@ -113,7 +91,7 @@ sub barcode_tempfile_jpg : Path('/barcode/tempfile') Args(4) {
 				 $text,
 				 $size,
 				 $top,
-	  );
+	);
 
     $c->tempfiles_subdir('barcode');
     my ($file, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
