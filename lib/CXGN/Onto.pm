@@ -61,6 +61,7 @@ sub get_terms {
 sub compose_trait {
       my $self = shift;
       my $ids = shift;
+      my @ids = split(',', $ids);
       print STDERR "Ids for composing in CXGN:Onto = $ids\n";
 
       my $schema = $self->schema();
@@ -77,34 +78,37 @@ sub compose_trait {
 
       #print STDERR "New trait accession = $accession and name = $name\n";
 
-      my $compose_query = "SELECT string_agg(ordered_components.name::text, ' '),
-                            string_agg(ordered_components.synonym::text, ' ')
-                    FROM (
-                    SELECT cvterm.name, synonym.synonym, cv.cv_id
-                      FROM cvterm
-                      LEFT JOIN LATERAL (
-                        SELECT length(cvtermsynonym.synonym), synonym
-                        FROM cvtermsynonym
-                        WHERE cvterm.cvterm_id = cvtermsynonym.cvterm_id
-                        GROUP by 2
-                        ORDER BY 1
-                        LIMIT 1
-                      ) synonym on true
-                      JOIN cv USING(cv_id)
-                      JOIN cvprop ON(cv.cv_id = cvprop.cv_id)
-                      JOIN cvterm type ON(cvprop.type_id = type.cvterm_id)
-                      WHERE cvterm.cvterm_id IN (?)
-                      ORDER BY (
-                        case when type.name = 'entity_ontology' then 1
-                              when type.name = 'quality_ontology' then 2
-                              when type.name = 'unit_ontology' then 3
-                              when type.name = 'time_ontology' then 4
-                        end
-                      )
-                    ) ordered_components";
+      my $compose_query = " SELECT string_agg(ordered_components.name::text, ' '),
+                                  string_agg(ordered_components.synonym::text, '_')
+                            FROM (
+                              SELECT cvterm.name,
+                                    synonym.synonym,
+                                    cv.cv_id
+                              FROM cvterm
+                              LEFT JOIN LATERAL (
+                                SELECT length(substring(synonym from '\"(.+)\"')) AS length,
+                                      substring(synonym from '\"(.+)\"') AS synonym
+                                FROM cvtermsynonym
+                                WHERE cvterm.cvterm_id = cvtermsynonym.cvterm_id
+                                GROUP by 2
+                                ORDER BY 1
+                                LIMIT 1
+                              ) synonym on true
+                              JOIN cv USING(cv_id)
+                              JOIN cvprop ON(cv.cv_id = cvprop.cv_id)
+                              JOIN cvterm type ON(cvprop.type_id = type.cvterm_id)
+                              WHERE cvterm.cvterm_id IN (@{[join',', ('?') x @ids]})
+                              ORDER BY (
+                                case when type.name = 'entity_ontology' then 1
+                                    when type.name = 'quality_ontology' then 2
+                                    when type.name = 'unit_ontology' then 3
+                                    when type.name = 'time_ontology' then 4
+                                end
+                              )
+                            ) ordered_components";
 
       $h = $self->dbh->prepare($compose_query);
-      $h->execute($ids);
+      $h->execute(@ids);
       my ($name, $synonym) = $h->fetchrow_array();
 
       print STDERR "New trait name = $name and synonym = $synonym\n";
@@ -114,7 +118,7 @@ sub compose_trait {
 		      accession => $accession
 		  });
 
-    my $parent_term= $schema->resultset("Cv::Cvterm")->find(
+      my $parent_term= $schema->resultset("Cv::Cvterm")->find(
         { cv_id  =>$cv->cv_id(),
           name   => 'Composed traits',
       });
@@ -126,6 +130,11 @@ sub compose_trait {
         name   => $name,
         dbxref_id  => $new_term_dbxref-> dbxref_id()
       });
+
+      my $new_term_synonym= $schema->resultset("Cv::Cvtermsynonym")->create(
+        { cvterm_id  =>$new_term->cvterm_id(),
+          synonym   => $synonym
+        });
 
     #print STDERR "New term cvterm_id = " . $new_term->cvterm_id();
 
