@@ -283,7 +283,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
         my $font = $pdf->font('BaseFont' => 'Times-Roman');
         foreach my $label_count (1..$labels_per_row) {
           my $xposition = $left_margin + ($label_count -1) * $final_barcode_width + 20;
-          my $yposition = $ypos -10;
+          my $yposition = $ypos -7;
           print "My X Position: $xposition and Y Position: $ypos\n";
           my $label_text = $found[$i]->[1];
           my $label_size =  11;
@@ -299,7 +299,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           print "My label Count: $label_count\n";
           my $label_count_15_xter_plot_name =  1-1;
           my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 20;
-          my $yposition = $ypos -10;
+          my $yposition = $ypos -7;
           print "My X Position: $xposition and Y Position: $ypos\n";
           my $label_size =  11;
           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
