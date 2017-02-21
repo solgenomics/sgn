@@ -28,4 +28,28 @@ sub barcode_qrcordes {
     return $file;
 }
 
+sub phenotyping_qrcordes {
+  my $self = shift;
+  my $stock_id = shift;
+  my $stock_name = shift;
+  my $field_info = shift;
+  my $file = shift;
+#  my $text = url;
+
+    my $qrcode = Imager::QRCode->new(
+        size          => 5,
+        margin        => 5,
+        version       => 1,
+        level         => 'M',
+        casesensitive => 1,
+        lightcolor    => Imager::Color->new(255, 255, 255),
+        darkcolor     => Imager::Color->new(0, 0, 0),
+    );
+    my $barcode = $qrcode->plot('http://m.cindyruppert.com');
+    $barcode->write(file => $file);
+
+    return $file;
+
+}
+
 1;
