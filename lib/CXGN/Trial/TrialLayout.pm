@@ -338,7 +338,7 @@ sub _get_plot_dimensions_from_trial {
   }
   
       my $plants_per_plot = '';
-  my $plants_per_plot_cvterm_id = $schema->resultset("Cv::Cvterm")->find({name => 'plot_length'});
+  my $plants_per_plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_has_plant_entries', 'project_property');
   my $plants_per_plot_type_id = '';
   if ($plants_per_plot_cvterm_id) {
       $plants_per_plot_type_id = $plants_per_plot_cvterm_id->cvterm_id;

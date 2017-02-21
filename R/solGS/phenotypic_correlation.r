@@ -147,7 +147,7 @@ if (length(refererQtl) == 0  ) {
         experimentalDesign <- c('No Design')
       }
 
-      if ((experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD')  &&  unique(phenoData$block) > 1) {
+      if ((experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD')  &&  length(unique(phenoData$block)) > 1) {
 
       message("GS experimental design: ", experimentalDesign)
 
@@ -183,6 +183,41 @@ if (length(refererQtl) == 0  ) {
         formattedPhenoData[, 1] <- NULL
       }
       
+    } else if ((experimentalDesign == 'CRD')  &&  length(unique(phenoData$replicate)) > 1) {
+
+      message("GS experimental design: ", experimentalDesign)
+
+      crdData <- subset(phenoData,
+                        select = c("object_name", "object_id",  "replicate",  trait)
+                        )
+
+      colnames(crdData)[1] <- "genotypes"
+      colnames(crdData)[4] <- "trait"
+
+      model <- try(lmer(trait ~ 0 + genotypes + (1|replicate),
+                        crdData,
+                        na.action = na.omit
+                        ))
+      genoEffects <- c()
+
+      if (class(model) != "try-error") {
+        genoEffects <- data.frame(fixef(model))
+        
+        colnames(genoEffects) <- trait
+
+        nn <- gsub('genotypes', '', rownames(genoEffects))  
+        rownames(genoEffects) <- nn
+      
+        genoEffects <- round(genoEffects, digits = 2)
+      }
+  
+      if (cnt == 1 ) {
+        formattedPhenoData <- data.frame(genoEffects)
+      } else {
+        formattedPhenoData <-  merge(formattedPhenoData, genoEffects, by=0, all=TRUE)
+        row.names(formattedPhenoData) <- formattedPhenoData[, 1]
+        formattedPhenoData[, 1] <- NULL
+      }
     } else if (experimentalDesign == 'Alpha') {
       trait <- i
       

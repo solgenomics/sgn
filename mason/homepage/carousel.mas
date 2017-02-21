@@ -16,19 +16,20 @@
 
 
       <div class="item">
-        <div style="background:url(/documents/img/homepage_carousel/carousel_tomato1.jpeg) center center; background-size:cover;" class="slider-size">
+        <div style="background:url(/documents/img/homepage_carousel/5.jpg) center center; background-size:cover;" class="slider-size">
           <div class="carousel-sgn-caption">
             <h3><a href="/organism/Solanum_lycopersicum/genome">Tomato Genome</a></h3>
-            <p><a href="http://www.nature.com/nature/journal/v485/n7400/full/nature11119.html" target="_blank">The tomato genome sequence provides insights into fleshy fruit evolution</a></p>
+            <p><a href="/organism/Solanum_lycopersicum/genome">The new Tomato Genome assembly (SL3.0) and annotations (ITAG3.0) are now available on SGN</a></p>
+            <!--<p><a href="http://www.nature.com/nature/journal/v485/n7400/full/nature11119.html" target="_blank">The tomato genome sequence provides insights into fleshy fruit evolution</a></p> -->
           </div>
 
           <div class="carousel-sgn-links">
             <ul class="sgn_sm_list">
-              <a href="/jbrowse_solgenomics"><li>Browse the tomato genome</li></a>
-              <a href="/tools/blast?db_id=224"><li>Find sequences by similarity</li></a>
-              <a href="http://vigs.solgenomics.net"><li>Design VIGS constructs</li></a>
-              <a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG2.4_release/"><li>Download the annotations</li></a>
-              <a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/assembly/build_2.50/"><li>Download the Genome Sequence</li></a>
+              <a href="/jbrowse_solgenomics/?data=data/json/SL3.0"><li>Browse the tomato genome</li></a>
+              <a href="/tools/blast?db_id=283"><li>Find sequences by similarity</li></a>
+              <!--<a href="http://vigs.solgenomics.net"><li>Design VIGS constructs</li></a> -->
+              <a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG3.0_release/"><li>Download the annotations</li></a>
+              <a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/assembly/build_3.00/"><li>Download the Genome Sequence</li></a>
             </ul>
           </div>
         </div>

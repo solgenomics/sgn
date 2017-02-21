@@ -12,8 +12,10 @@ use CXGN::Trial;
 use SGN::Model::Cvterm;
 use DateTime;
 use Data::Dumper;
-use CXGN::Phenotypes::Search;
+use CXGN::Phenotypes::SearchFactory;
 use CXGN::BreederSearch;
+use Spreadsheet::Read;
+use CXGN::Trial::Download;
 
 my $f = SGN::Test::Fixture->new();
 
@@ -2881,6 +2883,44 @@ $traits_assayed  = $tn->get_traits_assayed();
 #print STDERR Dumper \@traits_assayed_sorted;
 is_deeply(\@traits_assayed_sorted, [[70666,'fresh root weight|CO:0000012'], [70668,'harvest index variable|CO:0000015'], [70681, 'top yield|CO:0000017'], [70700, 'sprouting proportion|CO:0000008'], [70706, 'root number counting|CO:0000011'], [70713, 'flower|CO:0000111'], [70727, 'dry yield|CO:0000014'], [70741,'dry matter content percentage|CO:0000092'], [70773,'fresh shoot weight measurement in kg|CO:0000016'] ], 'check traits assayed after plant upload' );
 
+
+my $files_uploaded = $tn->get_phenotype_metadata();
+my %file_names;
+foreach (@$files_uploaded){
+	$file_names{$_->[4]} = [$_->[4], $_->[6]];
+}
+#print STDERR Dumper \%file_names;
+is_deeply(\%file_names, {
+          'upload_phenotypin_spreadsheet.xls' => [
+                                                   'upload_phenotypin_spreadsheet.xls',
+                                                   'spreadsheet phenotype file'
+                                                 ],
+          'fieldbook_phenotype_file.csv' => [
+                                              'fieldbook_phenotype_file.csv',
+                                              'tablet phenotype file'
+                                            ],
+          'upload_phenotypin_spreadsheet_large.xls' => [
+                                                         'upload_phenotypin_spreadsheet_large.xls',
+                                                         'spreadsheet phenotype file'
+                                                       ],
+          'upload_phenotypin_spreadsheet_plants.xls' => [
+                                                          'upload_phenotypin_spreadsheet_plants.xls',
+                                                          'spreadsheet phenotype file'
+                                                        ],
+          'data_collector_upload.xls' => [
+                                           'data_collector_upload.xls',
+                                           'tablet phenotype file'
+                                         ],
+          'fieldbook_phenotype_plants_file.csv' => [
+                                                     'fieldbook_phenotype_plants_file.csv',
+                                                     'tablet phenotype file'
+                                                   ],
+          'upload_phenotypin_spreadsheet_duplicate.xls' => [
+                                                             'upload_phenotypin_spreadsheet_duplicate.xls',
+                                                             'spreadsheet phenotype file'
+                                                           ]
+        }, "uploaded file metadata");
+
 $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id}, {order_by => {-asc => 'nd_experiment_id'}});
 $post1_experiment_count = $experiment->count();
 $post1_experiment_diff = $post1_experiment_count - $pre_experiment_count;
@@ -3048,17 +3088,19 @@ my @phenosearch_test1_data = [
           '2014	137	test_trial	CRD	23	test_location	38841	test_accession2	test_accession2_synonym1,test_accession2_synonym2	plot	38865	test_trial29	1	1	9	35	24	1	15	28	8.8	6	76	3'
         ];
 
-my $phenotypes_search = CXGN::Phenotypes::Search->new({
-    bcs_schema=>$f->bcs_schema,
-    data_level=>'plot',
-    trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
-    trial_list=>[137,900],
-    plot_list=>\@plot_ids,
-    include_timestamp=>0,
-    phenotype_min_value=>1,
-    phenotype_max_value=>100,
-		search_type=>'complete'
-});
+my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+	'Native',    #can be either 'MaterializedView', or 'Native'
+	{
+		bcs_schema=>$f->bcs_schema,
+	    data_level=>'plot',
+	    trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
+	    trial_list=>[137,900],
+	    plot_list=>\@plot_ids,
+	    include_timestamp=>0,
+	    phenotype_min_value=>1,
+	    phenotype_max_value=>100,
+	}
+);
 my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 #print STDERR Dumper \@data;
 is_deeply(\@data, @phenosearch_test1_data, 'pheno search test1 complete');
@@ -3068,34 +3110,37 @@ my $refresh = 'SELECT refresh_materialized_views()';
 my $h = $f->dbh->prepare($refresh);
 $h->execute();
 
-my $phenotypes_search = CXGN::Phenotypes::Search->new({
-    bcs_schema=>$f->bcs_schema,
-    data_level=>'plot',
-    trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
-    trial_list=>[137,900],
-    plot_list=>\@plot_ids,
-    include_timestamp=>0,
-    phenotype_min_value=>1,
-    phenotype_max_value=>100,
-		search_type=>'fast'
-});
+my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+	'MaterializedView',    #can be either 'MaterializedView', or 'Native'
+	{
+		bcs_schema=>$f->bcs_schema,
+	    data_level=>'plot',
+	    trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
+	    trial_list=>[137,900],
+	    plot_list=>\@plot_ids,
+	    include_timestamp=>0,
+	    phenotype_min_value=>1,
+	    phenotype_max_value=>100,
+	}
+);
 my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 #print STDERR Dumper \@data;
 is_deeply(\@data, @phenosearch_test1_data, 'pheno search test1 fast');
 
-
-my $phenotypes_search = CXGN::Phenotypes::Search->new({
-    bcs_schema=>$f->bcs_schema,
-    data_level=>'plant',
-    trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
-    trial_list=>[137,900],
-    accession_list=>\@accession_ids,
-    include_timestamp=>1,
-    trait_contains=>['r'],
-    phenotype_min_value=>20,
-    phenotype_max_value=>100,
-		search_type=>'complete'
-});
+my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+	'Native',    #can be either 'MaterializedView', or 'Native'
+	{
+		bcs_schema=>$f->bcs_schema,
+	    data_level=>'plant',
+	    trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
+	    trial_list=>[137,900],
+	    accession_list=>\@accession_ids,
+	    include_timestamp=>1,
+	    trait_contains=>['r'],
+	    phenotype_min_value=>20,
+	    phenotype_max_value=>100,
+	}
+);
 my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 #print STDERR Dumper \@data;
 
@@ -3134,20 +3179,22 @@ is_deeply(\@test_result, [
           '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plant	variable	test_trial28_plant_2	2	1	8	25		35'
         ], 'pheno search test2');
 
-my $phenotypes_search = CXGN::Phenotypes::Search->new({
-    bcs_schema=>$f->bcs_schema,
-    data_level=>'all',
-    trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
-    trial_list=>[137,900],
-    accession_list=>\@accession_ids,
-	plot_list=>\@plot_ids,
-	plant_list=>\@plant_ids,
-    include_timestamp=>1,
-    trait_contains=>['r','t'],
-    phenotype_min_value=>20,
-    phenotype_max_value=>80,
-		search_type=>'complete'
-});
+my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+	'Native',    #can be either 'MaterializedView', or 'Native'
+	{
+		bcs_schema=>$f->bcs_schema,
+	    data_level=>'all',
+	    trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
+	    trial_list=>[137,900],
+	    accession_list=>\@accession_ids,
+		plot_list=>\@plot_ids,
+		plant_list=>\@plant_ids,
+	    include_timestamp=>1,
+	    trait_contains=>['r','t'],
+	    phenotype_min_value=>20,
+	    phenotype_max_value=>80,
+	}
+);
 my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
 #print STDERR Dumper \@data;
 
@@ -3191,5 +3238,133 @@ is_deeply(\@test_result, [
           '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plant	variable	test_trial28_plant_1	2	1	8		34',
           '2014	137	test_trial	CRD	23	test_location	38840	test_accession1	test_accession1_synonym1	plant	variable	test_trial28_plant_2	2	1	8	25	35'
         ], 'pheno search test3');
+
+my $tempfile = '/tmp/test_download_search_pheno1.xls';
+my $download = CXGN::Trial::Download->new({
+	bcs_schema=>$f->bcs_schema,
+	data_level=>'all',
+	trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
+	trial_list=>[137,900],
+	year_list => [2014],
+	location_list => [23],
+	accession_list=>\@accession_ids,
+	plot_list=>\@plot_ids,
+	plant_list=>\@plant_ids,
+	include_timestamp=>1,
+	trait_contains=>['r','t'],
+	phenotype_min_value=>20,
+	phenotype_max_value=>80,
+	search_type=>'complete',
+	filename => $tempfile,
+	format => 'TrialPhenotypeExcel'
+});
+my $error = $download->download();
+my $contents = ReadData ($tempfile);
+#print STDERR Dumper $contents;
+
+is($contents->[0]->{'type'}, 'xls', "check that type of file is correct");
+is($contents->[0]->{'sheets'}, '1', "check that type of file is correct");
+
+my $columns = $contents->[1]->{'cell'};
+#print STDERR Dumper scalar(@$columns);
+is(scalar(@$columns),20);
+#print STDERR Dumper scalar keys %{$contents->[1]};
+is(scalar keys %{$contents->[1]}, 491);
+
+
+my $csv_response = [
+          '
+,,,,,,,,,,variable',
+          '"studyYear","studyDbId","studyName","studyDesign","locationDbId","locationName","germplasmDbId","germplasmName","germplasmSynonyms","observationLevel",variable,"observationUnitName","replicate","blockNumber","plotNumber","dry matter content percentage|CO:0000092","fresh root weight|CO:0000012","fresh shoot weight measurement in kg|CO:0000016","sprouting proportion|CO:0000008"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plot",variable,"test_trial21","1","1","1","35","36","20","45"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plot",variable,"test_trial210","3","1","10","30","45","29","45"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial210_plant_1","3","1","10","28","38"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial210_plant_2","3","1","10","29"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plot",variable,"test_trial211","3","1","11","38","46","30"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial211_plant_1","3","1","11","30","40"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial211_plant_2","3","1","11","31","41"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plot",variable,"test_trial214","3","1","14","30","49","33"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial214_plant_1","3","1","14","36","46"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial214_plant_2","3","1","14","37","47"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial21_plant_1","1","1","1","42,2016-01-07 12:08:24-0500","20"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial21_plant_2","1","1","1","42,2016-01-07 12:08:24-0500","21"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plot",variable,"test_trial23","1","1","3","38","38","22","23"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial23_plant_1","1","1","3","41,2016-01-07 12:08:27-0500","24"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial23_plant_2","1","1","3","41,2016-01-07 12:08:27-0500","25"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plot",variable,"test_trial24","2","1","4","39","39","23","78"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial24_plant_1","2","1","4","","26"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38842","test_accession3","test_accession3_synonym1","plant",variable,"test_trial24_plant_2","2","1","4","","27"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plot",variable,"test_trial25","1","1","5","35","40","24","56"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial25_plant_1","1","1","5","","28"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial25_plant_2","1","1","5","","29"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plot",variable,"test_trial26","2","1","6","30","41","25","45"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial26_plant_1","2","1","6","20","30"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38843","test_accession4","","plant",variable,"test_trial26_plant_2","2","1","6","21"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plot",variable,"test_trial28","2","1","8","39","43","27","23"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial28_plant_1","2","1","8","","34"
+',
+          '"2014","137","test_trial","CRD","23","test_location","38840","test_accession1","test_accession1_synonym1","plant",variable,"test_trial28_plant_2","2","1","8","25","35"
+'
+        ];
+
+my $tempfile = '/tmp/test_download_search_pheno2.xls';
+my $download = CXGN::Trial::Download->new({
+	bcs_schema=>$f->bcs_schema,
+	data_level=>'all',
+	trait_list=>[70666,70668,70681,70700,70706,70713,70727,70741,70773],
+	trial_list=>[137,900],
+	year_list => [2014],
+	location_list => [23],
+	accession_list=>\@accession_ids,
+	plot_list=>\@plot_ids,
+	plant_list=>\@plant_ids,
+	include_timestamp=>1,
+	trait_contains=>['r','t'],
+	phenotype_min_value=>20,
+	phenotype_max_value=>80,
+	search_type=>'complete',
+	filename => $tempfile,
+	format => 'TrialPhenotypeCSV'
+});
+my $error = $download->download();
+
+my @data;
+open my $fh, '<', $tempfile;
+while(my $line = <$fh>){
+	my @arr = split(',',$line);
+	$arr[10]= 'variable';
+	my $line = join(',',@arr);
+	push @data, $line;
+}
+my $first_row = shift @data;
+my $sec_row = shift @data;
+#print STDERR Dumper \@data;
+is_deeply(\@data, $csv_response);
 
 done_testing();

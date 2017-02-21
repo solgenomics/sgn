@@ -8,6 +8,7 @@ use Data::Dumper;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use List::Util 'max';
+use Bio::Chado::Schema;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 	is => 'rw',
@@ -34,6 +35,21 @@ has 'second_accession_selected' => (isa => "Str",
 	is => 'rw',
 );
 
+has 'new_accession' => (isa => "Str",
+	is => 'rw',
+	);
+
+has 'old_accession' => (isa => "Str",
+		is => 'rw',
+	);
+
+has 'old_plot_id' => (isa => "Int",
+			is => 'rw',
+	);
+
+has 'old_accession_id' => (isa => "Int",
+				is => 'rw',
+	);
 
 sub display_fieldmap {
 	my $self = shift;
@@ -192,21 +208,8 @@ sub delete_fieldmap {
 sub update_fieldmap_precheck {
 	my $self = shift;
 	my $error;
-	my $plot_1_id = $self->first_plot_selected;
-	my $plot_2_id = $self->second_plot_selected;
-	my $accession_1 = $self->first_accession_selected;
-	my $accession_2 = $self->second_accession_selected;
 	my $trial_id = $self->trial_id;
 
-	if (!$accession_1 || !$accession_2){
-    $error = "Dragged plot has no accession.";
-  }
-  if (!$plot_1_id || !$plot_2_id ){
-    $error = "Dragged plot is empty.";
-  }
-  if ($plot_1_id == $plot_2_id){
-    $error = "You have dragged a plot twice.";
-  }
 	my $trial = CXGN::Trial->new({
 		bcs_schema => $self->bcs_schema,
 		trial_id => $trial_id
@@ -220,7 +223,34 @@ sub update_fieldmap_precheck {
 	return $error;
 }
 
-sub update_fieldmap {
+sub substitute_accession_precheck {
+	my $self = shift;
+	my $error;
+	my @plots;
+	my @ids;
+	my $dbh = $self->bcs_schema->storage->dbh;
+	my $plot_1_id = $self->first_plot_selected;
+	my $plot_2_id = $self->second_plot_selected;
+	push @ids, $plot_1_id;
+	push @ids, $plot_2_id;
+
+	my $isAcontrol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'is a control', 'stock_property' )->cvterm_id();
+
+	foreach my $id (@ids) {
+		my $h = $dbh->prepare("select value from stockprop where stock_id=? and type_id=?;");
+		$h->execute($id,$isAcontrol_cvterm_id);
+		while (my $plot = $h->fetchrow_array()) {
+			push @plots, $plot;
+		}
+	}
+	
+	if (scalar(@plots) != 0)  {
+	 $error = "Controlled (check) plots can not be substituted..";
+	}
+	return $error;
+}
+
+sub substitute_accession_fieldmap {
 	my $self = shift;
 	my $error;
 	my $plot_1_id = $self->first_plot_selected;
@@ -250,6 +280,57 @@ sub update_fieldmap {
 		my $h2 = $dbh->prepare("update stock_relationship set object_id =? where object_id=? and subject_id=?;");
 		$h2->execute($plot_2_objectIDs[$n],$plot_1_objectIDs[$n],$plot_1_id);
 	}
+	return $error;
+}
+
+sub replace_plot_accession_fieldMap {
+	my $self = shift;
+	my $error;
+	my $schema = $self->bcs_schema;
+	my $dbh = $self->bcs_schema->storage->dbh;
+	my $new_accession = $self->new_accession;
+	my $old_accession = $self->old_accession;
+	my $old_plot_id = $self->old_plot_id;
+
+	print "New Accession: $new_accession, Old Accession: $old_accession, Old Plot Id: $old_plot_id\n";
+
+	my $new_accession_id = $schema->resultset("Stock::Stock")->search({uniquename => $new_accession})->first->stock_id();
+	my $old_accession_id = $schema->resultset("Stock::Stock")->search({uniquename => $old_accession})->first->stock_id();
+  print "NEWID.....: $new_accession_id and OLDID......: $old_accession_id\n";
+
+	my $h_old_plot_id = $dbh->prepare("select object_id from stock_relationship where subject_id=?;");
+	$h_old_plot_id->execute($old_plot_id);
+	while (my $old_plot_objectID = $h_old_plot_id->fetchrow_array()) {
+
+		my $h_replace = $dbh->prepare("update stock_relationship set object_id =? where object_id=? and subject_id=?;");
+		$h_replace->execute($new_accession_id,$old_plot_objectID,$old_plot_id);
+	}
+
+	return $error;
+
+}
+
+
+sub replace_trial_accession_fieldMap {
+	my $self = shift;
+	my $error;
+	my $schema = $self->bcs_schema;
+	my $dbh = $self->bcs_schema->storage->dbh;
+	my $new_accession = $self->new_accession;
+	my $old_accession_id = $self->old_accession_id;
+	my $trial_id = $self->trial_id;
+
+	print "New Accession: $new_accession and OLD Accession: $old_accession_id\n";
+
+	my $new_accession_id = $schema->resultset("Stock::Stock")->search({uniquename => $new_accession})->first->stock_id();
+	my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
+	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
+	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
+	my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
+
+	my $h_update = $dbh->prepare("update stock_relationship set object_id=? where stock_relationship_id in (SELECT stock_relationship.stock_relationship_id FROM stock as accession JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id) JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id) JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment using(nd_experiment_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE accession.type_id =? AND stock_relationship.type_id IN ($plot_of_cvterm_id, $plant_of_cvterm_id) AND project.project_id =? and nd_experiment.type_id=?) and object_id=?;");
+	$h_update->execute($new_accession_id,$accession_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_accession_id);
+
 	return $error;
 }
 

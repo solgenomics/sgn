@@ -12,25 +12,26 @@
   </div>
   <div class="col-sm-12 well">
     <div class="row">
-     <div class="col-sm-8">
+     <div class="col-sm-11">
        <div class="form-horizontal">
         <div class="form-group">
-          <label class="control-label col-sm-4">Female Parent:</label>
+          <label class="control-label col-sm-4">Female Parent/Population:</label>
             <div class="col-sm-8">
              <div class="input-group">
-               <input type="text" class="form-control" id="female_parent" placeholder="Enter female parent">
+               <input type="text" class="form-control" id="female_parent" placeholder="Enter female parent/population">
                 <div class="input-group-btn">
                  <button class="btn btn-info" id="search_male_parents"><i class="glyphicon glyphicon-search"></i> Male Parent </button>
+                 <button class="btn btn-primary" id="search_all_crosses"><i class="glyphicon glyphicon-search"></i> All Crosses </button>
                 </div>
               </div>
             </div>
           </div>
         <div class="form-group">
-         <label class="control-label col-sm-4">Male Parent:</label>
+         <label class="control-label col-sm-4">Male Parent/Population:</label>
           <div class="col-sm-8" >
            <div class="input-group">
             <select class="form-control" id="male_parent">
-            <option value="">Choose female parent first</option>
+            <option value="">Choose female parent/population first</option>
             </select>
            </select>
           <div class="input-group-btn">
@@ -59,6 +60,7 @@
     <th>Female Parent</th>
     <th>Male Parent</th>
     <th>Cross Name</th>
+    <th>Cross Type</th>
   </tr>
 </thead>
 
@@ -70,10 +72,11 @@
 
 <script>
 
+
 jQuery(document).ready(function () {
 
   jQuery("#female_parent").autocomplete({
-    source:'/ajax/stock/accession_autocomplete',
+    source:'/ajax/stock/accession_population_autocomplete',
   });
 
   $("#search_male_parents").click(function(){
@@ -99,10 +102,10 @@ jQuery(document).ready(function () {
     },
     error:function(response){
     alert("An error occurred");
-          }
-        });
-      });
-    });
+           }
+         });
+       });
+     });
 
 jQuery(document).ready(function(){
 
@@ -123,5 +126,24 @@ jQuery(document).ready(function(){
         });
      });
   });
+
+  jQuery(document).ready(function(){
+
+    $('#search_all_crosses').click(function(){
+
+    var table = jQuery('#cross_search_results').DataTable({
+
+      'searching'  : true,
+      'paging'     : false,
+      'ordering'   : false,
+      'processing' : true,
+      'serverSide' : false,
+      'destroy'    : true,
+      'ajax':{'url':'/ajax/search/all_crosses',
+        data:{'female_parent':$('#female_parent').val()},
+             }
+          });
+       });
+    });
 
 </script>
