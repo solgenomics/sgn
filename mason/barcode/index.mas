@@ -156,6 +156,17 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 </script>
     </div>
   </div>
+
+  <div class="form-group form-group-sm">
+    <label class="col-sm-4 control-label">Barcode Type: </label>
+    <div class="col-sm-8">
+        <select class="form-control" id="select_barcode_type" name="select_barcode_type">
+          <option value="1D">1D Barcode</option>
+          <option value="2D">2D Barcode</option>
+        </select>
+    </div>
+  </div>
+
   <div class="form-group form-group-sm">
     <label class="col-sm-4 control-label">Or Upload <font size="3" color="#5bc0de">Tab-delimited Text File</font> With Stock Names: </label>
     <div class="col-sm-8">
