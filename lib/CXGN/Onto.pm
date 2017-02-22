@@ -80,32 +80,29 @@ sub compose_trait {
 
       my $compose_query = " SELECT string_agg(ordered_components.name::text, ' '),
                                   string_agg(ordered_components.synonym::text, '_')
-                            FROM (
-                              SELECT cvterm.name,
-                                    synonym.synonym,
-                                    cv.cv_id
-                              FROM cvterm
-                              LEFT JOIN LATERAL (
-                                SELECT length(substring(synonym from '\"(.+)\"')) AS length,
-                                      substring(synonym from '\"(.+)\"') AS synonym
-                                FROM cvtermsynonym
-                                WHERE cvterm.cvterm_id = cvtermsynonym.cvterm_id
-                                GROUP by 2
-                                ORDER BY 1
-                                LIMIT 1
-                              ) synonym on true
-                              JOIN cv USING(cv_id)
-                              JOIN cvprop ON(cv.cv_id = cvprop.cv_id)
-                              JOIN cvterm type ON(cvprop.type_id = type.cvterm_id)
-                              WHERE cvterm.cvterm_id IN (@{[join',', ('?') x @ids]})
-                              ORDER BY (
-                                case when type.name = 'entity_ontology' then 1
-                                    when type.name = 'quality_ontology' then 2
-                                    when type.name = 'unit_ontology' then 3
-                                    when type.name = 'time_ontology' then 4
-                                end
-                              )
-                            ) ordered_components";
+                                  FROM (
+                                    SELECT cvterm.name,
+                                          CASE WHEN synonym IS NULL THEN cvterm.name
+                                            ELSE substring(synonym from '\"(.+)\"')
+                                          END AS synonym,
+                                          cv.cv_id
+                                    FROM cvterm
+                                    LEFT JOIN cvtermsynonym syn ON (cvterm.cvterm_id = syn.cvterm_id AND syn.type_id = (SELECT cvterm_id from cvterm where name = 'preferred_synonym'))
+                                    JOIN cv USING(cv_id)
+                                    JOIN cvprop ON(cv.cv_id = cvprop.cv_id)
+                                    JOIN cvterm type ON(cvprop.type_id = type.cvterm_id)
+                                    WHERE cvterm.cvterm_id IN (@{[join',', ('?') x @ids]})
+                                    ORDER BY (
+                                      case when type.name = 'entity_ontology' then 1
+                                          when type.name = 'quality_ontology' then 2
+                                          when type.name = 'method_ontology' then 3
+                                          when type.name = 'unit_ontology' then 4
+                                          when type.name = 'time_ontology' then 5
+                                      end
+                                    )
+                                  ) ordered_components";
+
+      print STDERR "Compose query = $compose_query\n";
 
       $h = $self->dbh->prepare($compose_query);
       $h->execute(@ids);

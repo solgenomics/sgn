@@ -128,13 +128,12 @@ WITH DATA;
 CREATE UNIQUE INDEX trials_idx ON public.trials(trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trials OWNER TO web_usr;
 
-
 DROP MATERIALIZED VIEW IF EXISTS public.trait_components;
 CREATE MATERIALIZED VIEW public.trait_components AS
 SELECT cvterm.cvterm_id AS trait_component_id,
 (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_component_name
             FROM cv
-            JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = ANY ('{entity_ontology,quality_ontology,unit_ontology,time_ontology}')))
+            JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = ANY ('{entity_ontology,quality_ontology,method_ontology,unit_ontology,time_ontology}')))
             JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
             JOIN dbxref USING(dbxref_id)
             JOIN db ON(dbxref.db_id = db.db_id)
@@ -147,46 +146,17 @@ SELECT cvterm.cvterm_id AS trait_component_id,
     ALTER MATERIALIZED VIEW trait_components OWNER TO web_usr;
     INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_components', FALSE, CURRENT_TIMESTAMP);
 
-
-
 DROP MATERIALIZED VIEW IF EXISTS public.traits;
 CREATE MATERIALIZED VIEW public.traits AS
   SELECT cvterm.cvterm_id AS trait_id,
   (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
 	FROM cv
-    JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'trait_ontology'))
+    JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = ANY ('{trait_ontology,composed_trait_ontology}')))
     JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
 	  JOIN dbxref USING(dbxref_id)
     JOIN db ON(dbxref.db_id = db.db_id)
     LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
     LEFT JOIN cvterm_relationship is_object ON cvterm.cvterm_id = is_object.object_id
-    WHERE is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
-    GROUP BY 1,2
-UNION ALL
-  SELECT parent.cvterm_id AS trait_id,
-  (((composed_name || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
-	FROM cv
-    JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'composed_trait_ontology'))
-    JOIN cvterm parent ON(cvprop.cv_id = parent.cv_id)
-    JOIN dbxref ON(parent.dbxref_id = dbxref.dbxref_id)
-    JOIN db ON(dbxref.db_id = db.db_id)
-    LEFT JOIN cvterm_relationship is_subject ON parent.cvterm_id = is_subject.subject_id
-    LEFT JOIN cvterm_relationship is_object ON (parent.cvterm_id = is_object.object_id AND is_object.type_id =(SELECT cvterm_id from cvterm where name = 'is_a'))
-	  JOIN LATERAL (
-        SELECT string_agg(children.child_name::text, ' ') AS composed_name
-        FROM (
-          SELECT child.name AS child_name,
-          type.name AS type_name,
-          rel.object_id
-          FROM cvterm_relationship rel
-          JOIN cvterm child ON(child.cvterm_id = rel.subject_id)
-          JOIN cv ON(child.cv_id = cv.cv_id)
-          JOIN cvprop ON(cv.cv_id = cvprop.cv_id)
-          JOIN cvterm type ON(cvprop.type_id = type.cvterm_id)
-          WHERE parent.cvterm_id = rel.object_id AND rel.type_id = (SELECT cvterm_id from cvterm where name = 'contains')
-          ORDER BY (case when type.name = 'entity_ontology' then 1 when type.name = 'quality_ontology' then 2 when type.name = 'unit_ontology' then 3 when type.name = 'time_ontology' then 4 end)
-        ) children LIMIT 1
-    ) composed_names ON true
     WHERE is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
     GROUP BY 1,2
   WITH DATA;
