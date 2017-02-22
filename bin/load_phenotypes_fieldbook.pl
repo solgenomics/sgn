@@ -111,6 +111,12 @@ my $uploader = CXGN::UploadFile->new({
    user_role => 'curator'
 });
 my $archived_filename_with_path = $uploader->archive();
+my $md5 = $uploader->get_md5($archived_filename_with_path);
+if (!$archived_filename_with_path) {
+    die "Could not archive file!\n";
+} else {
+    print STDERR "File saved in archive.\n";
+}
 
 my %phenotype_metadata;
 $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
