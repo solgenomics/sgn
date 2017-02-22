@@ -135,7 +135,7 @@ sub create_hash_lookups {
     my $previous_phenotype_rs = $schema->resultset('Phenotype::Phenotype')->search({'me.cvalue_id'=>{-in=>\@cvterm_ids}}, {'join'=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>{'nd_experiment_stocks'=>'stock'}}}, 'select' => ['me.value', 'me.cvalue_id', 'stock.stock_id'], 'as' => ['value', 'cvterm_id', 'stock_id']});
     while (my $previous_phenotype_cvterm = $previous_phenotype_rs->next() ) {
         my $cvterm_id = $previous_phenotype_cvterm->get_column('cvterm_id');
-        my $stock_id = $previous_phenotype_cvterm->get_column('stock_id');
+        my $stock_id = $previous_phenotype_cvterm->get_column('stock_id') || ' ';
         my $previous_value = $previous_phenotype_cvterm->get_column('value') || ' ';
 
         $check_unique_trait_stock{$cvterm_id, $stock_id} = $previous_value;

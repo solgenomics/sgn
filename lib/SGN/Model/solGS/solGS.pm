@@ -298,8 +298,9 @@ sub all_gs_projects {
     my $order_by = 'CASE WHEN trials.trial_name ~ \'\\m[0-9]+\' THEN 1 ELSE 0 END, trials.trial_name DESC';
 
     my $q = "SELECT trials.trial_name, trials.trial_id                
-                 FROM trials 
-                 JOIN traitsXtrials USING (trial_id)
+                 FROM traits 
+                 JOIN traitsXtrials USING (trait_id)
+                 JOIN trials USING (trial_id)
                  JOIN genotyping_protocolsXtrials USING (trial_id)
                  JOIN genotyping_protocols USING (genotyping_protocol_id)
 		 WHERE genotyping_protocols.genotyping_protocol_name ILIKE ? 
@@ -352,7 +353,7 @@ sub has_phenotype {
     my $has_phenotype;
     if ($pr_id) 
     {
-	my $q = "SELECT distinct(trial_id)
+	my $q = "SELECT trait_id
                  FROM traitsXtrials 
                  WHERE trial_id = ?";
 
