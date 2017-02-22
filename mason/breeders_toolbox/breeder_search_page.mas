@@ -12,3 +12,9 @@
   <& /breeders_toolbox/breeder_search_download.mas &>
 
 </&>
+
+<&| /page/info_section.mas, title=>"Store Dataset for selected data" &>
+
+  <& /breeders_toolbox/breeder_search_dataset.mas &>
+
+</&>
