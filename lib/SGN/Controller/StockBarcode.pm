@@ -329,6 +329,7 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
 
   my $stock_names = $c->req->param("stock_names_2");
   my $stock_names_file = $c->req->upload("stock_names_file_2");
+  my $added_text =  $c->req->upload("select_barcode_text");
   my $labels_per_page =  7;
   my $page_format = "letter";
   my $labels_per_row  = 1;
@@ -474,7 +475,7 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
 
     # my $lebel_number = scalar($#{$found[$i]});
 
-    if ($barcode_type eq "2D") {
+
       my $font = $pdf->font('BaseFont' => 'Times-Roman');
       foreach my $label_count (1..$labels_per_row) {
         my $xposition = $left_margin + ($label_count -1) * $final_barcode_width + 20;
@@ -499,7 +500,7 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
         my $label_size =  11;
         $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
       }
-  }
+  
 
 }
 
