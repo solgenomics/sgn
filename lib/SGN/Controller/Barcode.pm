@@ -110,6 +110,7 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
    my $stock_name = shift;
    my $field_info = shift;
 
+
    $c->tempfiles_subdir('barcode');
    my ($file, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
 
@@ -121,6 +122,7 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
          $stock_name,
          $field_info,
          $file,
+         
     );
 
    return $barcode;
@@ -132,6 +134,7 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
     my $stock_id = shift;
     my $stock_name = shift;
     my $field_info = shift;
+    my $base_url = $c->config->{main_production_site_url};
 
     $c->tempfiles_subdir('barcode');
     my ($file, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
@@ -144,6 +147,7 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
           $stock_name,
           $field_info,
           $file,
+          $base_url,
      );
 
     return $barcode;

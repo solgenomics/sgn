@@ -34,8 +34,11 @@ sub phenotyping_qrcordes {
   my $stock_name = shift;
   my $field_info = shift;
   my $file = shift;
-#  my $text = url;
+  my $base_url = shift;
 
+
+
+my $text = "$base_url/breeders/plot_phenotyping?stock_id=.$stock_id";
     my $qrcode = Imager::QRCode->new(
         size          => 5,
         margin        => 5,
@@ -45,7 +48,7 @@ sub phenotyping_qrcordes {
         lightcolor    => Imager::Color->new(255, 255, 255),
         darkcolor     => Imager::Color->new(0, 0, 0),
     );
-    my $barcode = $qrcode->plot('http://m.cindyruppert.com');
+    my $barcode = $qrcode->plot($text);
     $barcode->write(file => $file);
 
     return $file;

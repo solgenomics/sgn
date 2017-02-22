@@ -500,7 +500,7 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
         my $label_size =  11;
         $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
       }
-  
+
 
 }
 
