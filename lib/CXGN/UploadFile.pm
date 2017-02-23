@@ -7,10 +7,10 @@ CXGN::UploadFile - an object to handle uploading files
 =head1 USAGE
 
  my $uploader = CXGN::UploadFile->new({
-    tempfile => 'myfile.csv',
+    tempfile => '/tmp/myfile.csv',
     subdirectory => 'some_directory',
     archive_path => '/some/path/to/dir',
-    archive_filename => 'myfile.csv',
+    archive_filename => 'myfilename.csv',
     timestamp => '2016-09-24_10:30:30',
     user_id => 41,
     user_role => 'curator'
@@ -18,7 +18,7 @@ CXGN::UploadFile - an object to handle uploading files
  my $uploaded_file = $uploader->archive();
  my $md5 = $uploader->get_md5($uploaded_file);
 
- In this example, the tempfile myfile.csv will be saved in: /some/path/to/dir/41/some_directory/2016-09-24_10:30:30_myfile.csv
+ In this example, the tempfile myfile.csv will be saved in: /some/path/to/dir/41/some_directory/2016-09-24_10:30:30_myfilename.csv
 
 =head1 DESCRIPTION
 
