@@ -649,12 +649,20 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     my $upload_tempfile  = $upload->tempname;
     my $upload_original_name  = $upload->filename();
     my $md5;
-    my $uploader = CXGN::UploadFile->new();
     my %upload_metadata;
 
     # Store uploaded temporary file in archive
     print STDERR "TEMP FILE: $upload_tempfile\n";
-    my $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $c->user()->roles
+    });
+    my $archived_filename_with_path = $uploader->archive();
 
     if (!$archived_filename_with_path) {
     	$c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
