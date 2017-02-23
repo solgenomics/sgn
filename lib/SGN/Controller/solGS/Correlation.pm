@@ -160,7 +160,7 @@ sub combine_gebvs_of_traits {
         $c->stash->{input_files}  = $gebvs_files;
         $c->stash->{output_files} = $combined_gebvs_file;
         $c->stash->{r_temp_file}  = "combining-gebvs-${identifier}";
-        $c->stash->{r_script}     = 'R/combine_gebvs_files.r';
+        $c->stash->{r_script}     = 'R/solGS/combine_gebvs_files.r';
 
         $c->controller("solGS::solGS")->run_r_script($c);
         $c->stash->{combined_gebvs_file} = $combined_gebvs_file;
@@ -355,7 +355,7 @@ sub run_pheno_correlation_analysis {
     $c->stash->{referer} = $c->req->referer;
     
     $c->stash->{correlation_type} = "pheno_correlation_${pop_id}";
-    $c->stash->{correlation_script} = "R/phenotypic_correlation.r";
+    $c->stash->{correlation_script} = "R/solGS/phenotypic_correlation.r";
     
     $self->run_correlation_analysis($c);
 
@@ -374,7 +374,7 @@ sub run_genetic_correlation_analysis {
     $c->stash->{referer} = $c->req->referer;
     
     $c->stash->{correlation_type} = "genetic_correlation_${pop_id}";
-    $c->stash->{correlation_script} = "R/genetic_correlation.r";
+    $c->stash->{correlation_script} = "R/solGS/genetic_correlation.r";
     $self->run_correlation_analysis($c);
 
 }
