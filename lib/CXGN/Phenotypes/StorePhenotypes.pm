@@ -466,14 +466,8 @@ sub save_archived_file_metadata {
     my $archived_file_type = shift;
     my $experiment_ids = shift;
 
-    ## Insert metadata about the uploaded file only after a successful phenotype data transaction
-    my $md5 = Digest::MD5->new();
-    if ($archived_file ne 'none') {
-        open(my $F, "<", $archived_file) || die "Can't open file ".$archived_file;
-        binmode $F;
-        $md5->addfile($F);
-        close($F);
-    }
+    my $upload_file = CXGN::UploadFile->new();
+    my $md5 = $upload_file->get_md5($archived_file);
 
     my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id,});
     $md_row->insert();
