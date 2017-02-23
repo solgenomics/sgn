@@ -56,7 +56,7 @@ sub pca_result :Path('/pca/result/') Args(1) {
     my $list_type   = $c->req->param('list_type');
     my $list_name   = $c->req->param('list_name');
     my $pop_list_id = $c->req->param('population_id');
-    print STDERR "\n list id: $list_id -- type: $list_type -- name: $list_name -- pop_list_id: $pop_list_id\n";
+ 
     if ($list_id) 
     {
 	$c->stash->{pop_id}   = $list_id;
@@ -94,8 +94,7 @@ sub pca_result :Path('/pca/result/') Args(1) {
 	}
 	else 
 	{
-	    $self->run_pca($c);
-	
+	    $self->run_pca($c);	
 	}
     }
     
@@ -212,31 +211,27 @@ sub create_pca_genotype_data {
 	my $referer = $c->req->referer;
 	if ($referer =~ /solgs\/trait\/\d+\/population\//) 
 	{
-		my $user_id = $c->user->id;
-       	
-		my $exp = "genotype_data_${user_id}_uploaded_${list_id}";
-		my $dir = $c->stash->{solgs_prediction_upload_dir};
-	
-		my ($geno_file) = $c->controller("solGS::solGS")->grep_file($dir, $exp);
-	
-		$c->stash->{genotype_file} = $geno_file;
+	    my $exp = "genotype_data_uploaded_${list_id}";
+	    my $dir = $c->stash->{solgs_prediction_upload_dir};
+	  
+	    my ($geno_file) = $c->controller("solGS::solGS")->grep_file($dir, $exp);
+
+	    $c->stash->{genotype_file} = $geno_file;
 	} 	   
 	elsif ($list_type eq 'accessions') 
-	{
-	    
-		my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-		my @genotypes_list = @{$list->elements};
+	{	    
+	    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+	    my @genotypes_list = @{$list->elements};
 
-		$c->stash->{genotypes_list} = \@genotypes_list;
-		$c->model("solGS::solGS")->format_user_list_genotype_data;
-		my $geno_data = $c->stash->{user_selection_list_genotype_data};
-
-		my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
-		my $file = "genotype_data_${list_id}";     
-		$file = $c->controller("solGS::solGS")->create_tempfile($tmp_dir, $file);    
-            
-		write_file($file, $geno_data);
-		$c->stash->{genotype_file} = $file; 
+	    $c->stash->{genotypes_list} = \@genotypes_list;
+	   
+	    my $geno_data = $c->model('solGS::solGS')->genotypes_list_genotype_data(\@genotypes_list);
+	    my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
+	    my $file = "genotype_data_uploaded_${list_id}";     
+	    $file = $c->controller("solGS::solGS")->create_tempfile($tmp_dir, $file);    
+	   
+	    write_file($file, $geno_data);
+	    $c->stash->{genotype_file} = $file; 
 	    
 	} 
 	elsif ( $list_type eq 'trials') 
@@ -253,8 +248,6 @@ sub create_pca_genotype_data {
 		    ->project_id;
 
 		$c->stash->{pop_id} = $trial_id; 
-	  
-		#$c->controller("solGS::solGS")->genotype_file($c);
 		$self->_pca_genotype_data($c);
 		push @genotype_files, $c->stash->{genotype_file};
 	    }
@@ -264,7 +257,6 @@ sub create_pca_genotype_data {
     else 
     {
 	$self->_pca_genotype_data($c);
-	#$c->controller("solGS::solGS")->genotype_file($c);
     }
 
 }
@@ -389,7 +381,7 @@ sub run_pca {
     $c->stash->{input_files}  = $geno_file;
     $c->stash->{output_files} = $pca_output_file;
     $c->stash->{r_temp_file}  = "pca-${pop_id}";
-    $c->stash->{r_script}     = 'R/pca.r';
+    $c->stash->{r_script}     = 'R/solGS/pca.r';
 
     $c->controller("solGS::solGS")->run_r_script($c);
     

@@ -20,6 +20,7 @@ jQuery(document).ready(function ($) {
 
     var list = new CXGN.List();
     var accessionList;
+    var accession_list_id;
     var validSpecies;
 
     function disable_ui() {
@@ -217,6 +218,7 @@ jQuery(document).ready(function ($) {
     function review_verification_results(verifyResponse, accession_list_id){
         var i;
         var j;
+        accessionList;
         //console.log(verifyResponse);
         //console.log(accession_list_id);
 
@@ -286,8 +288,8 @@ jQuery(document).ready(function ($) {
     }
 
     function verify_accession_list() {
-        var accession_list_id = $('#accessions_list_select').val();
-        var accession_list = JSON.stringify(list.getList(accession_list_id));
+        accession_list_id = $('#accessions_list_select').val();
+        accession_list = JSON.stringify(list.getList(accession_list_id));
         doFuzzySearch = $('#fuzzy_check').attr('checked'); //fuzzy search is always checked in a hidden input
         //alert("should be disabled");
         //alert(accession_list);
@@ -331,6 +333,8 @@ jQuery(document).ready(function ($) {
         $("#list_div").html(list.listSelect("accessions"));
     });
 
-
+    $('body').on('hidden.bs.modal', '.modal', function () {
+        $(this).removeData('bs.modal');
+    });
 
 });

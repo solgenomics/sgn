@@ -64,7 +64,6 @@ sub upload_cross_file_POST : Args(0) {
   my $suffix = $c->req->param('upload_suffix');
   my $folder_name = $c->req->param('upload_folder_name');
   my $folder_id = $c->req->param('upload_folder_id');
-  my $uploader = CXGN::UploadFile->new();
   my $parser;
   my $parsed_data;
   my $upload_original_name = $upload->filename();
@@ -108,8 +107,18 @@ sub upload_cross_file_POST : Args(0) {
 
   $owner_name = $c->user()->get_object()->get_username();
 
+  my $uploader = CXGN::UploadFile->new({
+    tempfile => $upload_tempfile,
+    subdirectory => $subdirectory,
+    archive_path => $c->config->{archive_path},
+    archive_filename => $upload_original_name,
+    timestamp => $timestamp,
+    user_id => $user_id,
+    user_role => $c->user()->roles
+  });
+
   ## Store uploaded temporary file in archive
-  $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+  $archived_filename_with_path = $uploader->archive();
   $md5 = $uploader->get_md5($archived_filename_with_path);
   if (!$archived_filename_with_path) {
       $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
@@ -620,25 +629,25 @@ return 0;
 
   #check that maternal name is not blank
   if ($maternal eq "") {
-    $c->stash->{rest} = {error =>  "maternal parent name cannot be blank." };
+    $c->stash->{rest} = {error =>  "Female parent name cannot be blank." };
     return 0;
   }
 
   #if required, check that paternal parent name is not blank;
-  if ($paternal eq "" && ($cross_type ne "open" || $cross_type ne "bulk_open")) {
-    $c->stash->{rest} = {error =>  "paternal parent name cannot be blank." };
+  if ($paternal eq "" && ($cross_type ne "open") && ($cross_type ne "bulk_open")) {
+    $c->stash->{rest} = {error =>  "Male parent name cannot be blank." };
     return 0;
   }
 
   #check that parents exist in the database
   if (! $chado_schema->resultset("Stock::Stock")->find({name=>$maternal,})){
-    $c->stash->{rest} = {error =>  "maternal parent does not exist." };
+    $c->stash->{rest} = {error =>  "Female parent does not exist." };
     return 0;
   }
 
   if ($paternal) {
     if (! $chado_schema->resultset("Stock::Stock")->find({name=>$paternal,})){
-$c->stash->{rest} = {error =>  "paternal parent does not exist." };
+$c->stash->{rest} = {error =>  "Male parent does not exist." };
 return 0;
     }
   }

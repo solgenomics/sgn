@@ -435,44 +435,145 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
   $c->stash->{rest} = {success => 1};
 }
 
+sub replace_trial_accession : Chained('trial') PathPart('replace_accession') Args(0) {
+  my $self = shift;
+  my $c = shift;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema');
+  my $old_accession_id = $c->req->param('old_accession_id');
+  my $new_accession = $c->req->param('new_accession');
+  my $trial_id = $c->stash->{trial_id};
 
-sub update_field_coord : Chained('trial') PathPart('update_field_coords') Args(0) {
+  if ($self->privileges_denied($c)) {
+    $c->stash->{rest} = { error => "You have insufficient access privileges to edit this map." };
+    return;
+  }
+
+  if (!$new_accession){
+    $c->stash->{rest} = { error => "Provide new accession name." };
+    return;
+  }
+
+  my $replace_accession_fieldmap = CXGN::Trial::FieldMap->new({
+    bcs_schema => $schema,
+    trial_id => $trial_id,
+    old_accession_id => $old_accession_id,
+    new_accession => $new_accession,
+  });
+
+  my $return_error = $replace_accession_fieldmap->update_fieldmap_precheck();
+     if ($return_error) {
+       $c->stash->{rest} = { error => $return_error };
+       return;
+     }
+
+  my $replace_return_error = $replace_accession_fieldmap->replace_trial_accession_fieldMap();
+  if ($replace_return_error) {
+    $c->stash->{rest} = { error => $replace_return_error };
+    return;
+  }
+
+  $c->stash->{rest} = { success => 1};
+}
+
+sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions') Args(0) {
+  my $self = shift;
+  my $c = shift;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema');
+  my $old_accession = $c->req->param('old_accession');
+  my $new_accession = $c->req->param('new_accession');
+  my $old_plot_id = $c->req->param('old_plot_id');
+  my $trial_id = $c->stash->{trial_id};
+
+  if ($self->privileges_denied($c)) {
+    $c->stash->{rest} = { error => "You have insufficient access privileges to edit this map." };
+    return;
+  }
+
+  if (!$new_accession){
+    $c->stash->{rest} = { error => "Provide new accession name." };
+    return;
+  }
+
+  my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
+    bcs_schema => $schema,
+    trial_id => $trial_id,
+    new_accession => $new_accession,
+    old_accession => $old_accession,
+    old_plot_id => $old_plot_id,
+
+  });
+
+  my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
+     if ($return_error) {
+       $c->stash->{rest} = { error => $return_error };
+       return;
+     }
+
+  print "Calling Replace Function...............\n";
+  my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap();
+  if ($replace_return_error) {
+    $c->stash->{rest} = { error => $replace_return_error };
+    return;
+  }
+
+  print "OldAccession: $old_accession, NewAcc: $new_accession, OldPlotId: $old_plot_id\n";
+  $c->stash->{rest} = { success => 1};
+}
+
+sub substitute_accession : Chained('trial') PathPart('substitute_accession') Args(0) {
   my $self = shift;
 	my $c = shift;
   my $schema = $c->dbic_schema('Bio::Chado::Schema');
-	my $plotIDs_accessions = $c->req->param('plot_infor');
+  my $trial_id = $c->stash->{trial_id};
+  my $plot_1_info = $c->req->param('plot_1_info');
+  my $plot_2_info = $c->req->param('plot_2_info');
 
-  my ($accession_1, $plot_1_id, $accession_2, $plot_2_id) = split /,/, $plotIDs_accessions;
+  my ($plot_1_id, $accession_1) = split /,/, $plot_1_info;
+  my ($plot_2_id, $accession_2) = split /,/, $plot_2_info;
 
-   if ($self->privileges_denied($c)) {
-     $c->stash->{rest} = { error => "You have insufficient access privileges to update this map." };
-     return;
-   }
+  if ($self->privileges_denied($c)) {
+    $c->stash->{rest} = { error => "You have insufficient access privileges to update this map." };
+    return;
+  }
 
-   my $trial_id = $c->stash->{trial_id};
-   my $fieldmap = CXGN::Trial::FieldMap->new({
-     bcs_schema => $schema,
-     trial_id => $trial_id,
-     first_plot_selected => $plot_1_id,
-     second_plot_selected => $plot_2_id,
-     first_accession_selected => $accession_1,
-     second_accession_selected => $accession_2,
-   });
+  if ($plot_1_id == $plot_2_id){
+    $c->stash->{rest} = { error => "Choose a different plot/accession in 'select Accession 2' to perform this operation." };
+    return;
+  }
+
+  my @controls;
+  my @ids, $plot_1_id;
+	@ids, $plot_2_id;
+
+  my $fieldmap = CXGN::Trial::FieldMap->new({
+    bcs_schema => $schema,
+    trial_id => $trial_id,
+    first_plot_selected => $plot_1_id,
+    second_plot_selected => $plot_2_id,
+    first_accession_selected => $accession_1,
+    second_accession_selected => $accession_2,
+  });
 
   my $return_error = $fieldmap->update_fieldmap_precheck();
   if ($return_error) {
     $c->stash->{rest} = { error => $return_error };
     return;
   }
-  my $update_return_error = $fieldmap->update_fieldmap();
+
+  my $return_check_error = $fieldmap->substitute_accession_precheck();
+  if ($return_check_error) {
+    $c->stash->{rest} = { error => $return_check_error };
+    return;
+  }
+
+  my $update_return_error = $fieldmap->substitute_accession_fieldmap();
   if ($update_return_error) {
     $c->stash->{rest} = { error => $update_return_error };
     return;
   }
 
-  $c->stash->{rest} = {success => 1};
+  $c->stash->{rest} = { success => 1};
 }
-
 
 sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0) {
     my $self = shift;
@@ -548,12 +649,20 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     my $upload_tempfile  = $upload->tempname;
     my $upload_original_name  = $upload->filename();
     my $md5;
-    my $uploader = CXGN::UploadFile->new();
     my %upload_metadata;
 
     # Store uploaded temporary file in archive
     print STDERR "TEMP FILE: $upload_tempfile\n";
-    my $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $c->user()->roles
+    });
+    my $archived_filename_with_path = $uploader->archive();
 
     if (!$archived_filename_with_path) {
     	$c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};

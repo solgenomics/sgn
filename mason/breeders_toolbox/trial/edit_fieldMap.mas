@@ -1,0 +1,358 @@
+<%args>
+$trial_id
+$trial_name
+</%args>
+
+
+<& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js' ] &>
+
+
+<div class="modal  fade" id="edit_field_map_dialog" name="edit_field_map_dialog" tabindex="-1" role="dialog" aria-labelledby="EditFieldMapDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="EditFieldMapDialog">Edit Field Map For <% $trial_name %></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="edit_field_map_form" name="edit_field_map_form">
+
+                    <p3> Replace Trial Accessions Or Substitute Accessions Within A Trial Plots</p3>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_edit_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="replace_trial_accession_submit" id="replace_trial_accession_submit">Replace Accession</button>
+                <button type="button" class="btn btn-primary" name="substitute_accession_submit" id="substitute_accession_submit">Substitute Accession</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="replace_trial_accessions_dialog" name="replace_trial_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="ReplaceTrialAccessionsDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="ReplaceTrialAccessionsDialog">Replace Trial Accession In <% $trial_name %></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="replace_trial_accession_form" name="replace_trial_accession_form">
+
+	                    <div class="form-group">
+	                      <label class="col-sm-3 control-label">Select Accession: </label>
+	                      <div class="col-sm-9" id="accessions_in_trial">
+	                        <!--<select class="form-control" id="accessions_in_trial" name="accessions_in_trial"></select>-->
+	                      </div>
+	                    </div>
+
+	                      <div class="form-group">
+	                        <label class="col-sm-3 control-label">Enter New Accession: </label>
+	                        <div class="col-sm-9" >
+	                          <input class="form-control" id="replace_database_accession" name="replace_database_accession"></input>
+	                        </div>
+	                      </div>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_replace_trial_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="replace_accession_submit" id="replace_accession_submit">Replace Trial Accession</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="subtitute_plot_accessions_dialog" name="subtitute_plot_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="SubstitutePlotAccessionsDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="SubstitutePlotAccessionsDialog">Substitute Plot Accession In <% $trial_name %></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="substitute_plot_accession_form" name="substitute_plot_accession_form">
+
+											<div class="form-group">
+												<label class="col-sm-3 control-label">Select Plot 1: </label>
+												<div class="col-sm-9" id="plot_name_in_trial">
+
+												</div>
+											</div>
+
+											<div class="form-group">
+												<label class="col-sm-3 control-label">Select Plot 2: </label>
+												<div class="col-sm-9" id="sub_plot_accession_in_trial">
+												</div>
+											</div>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_substitute_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="substitute_plot_accession_submit" id="substitute_plot_accession_submit">Substitute Plot Accession</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal  fade" id="replace_accessions_dialog_success_message" name="replace_accessions_dialog_success_message" tabindex="-1" role="dialog" aria-labelledby="ReplaceFieldMapDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="ReplaceFieldMapDialog">Replace Trial Accessions </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="edit_field_map_form" name="edit_field_map_form">
+
+                    <p3> Accession was replaced successfully...</p3>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_replace_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal  fade" id="sub_success_message" name="sub_success_message" tabindex="-1" role="dialog" aria-labelledby="SubsFieldMapDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="SubsFieldMapDialog">Substitute Plot Accessions </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="subs_field_map_form" name="subs_field_map_form">
+
+                    <p3> Accessions were substituted successfully...</p3>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_subs_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal  fade" id="fieldmap_usage_modal" name="fieldmap_usage_modal" tabindex="-1" role="dialog" aria-labelledby="UsageFieldMapDialog">
+    <div class="modal-dialog modal-lg " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="UsageFieldMapDialog">How to Use and Edit Field Map </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                <h4>
+                  Background:
+                </h4>
+                  <center><p>Field map is a tool that enable users to view the physical layout of plots in a trial. Maps can be generated on the fly while adding or uploading a trial, if that option is enabled or rows and column numbers provided in the trial upload files respectively. Field map coordinates can also be uploaded independently after trials have been added or uploaded. It's a very intuitive, flexible and user friendly tool for manipulation/making changes to field trial layouts before phenotypes are uploaded. </p></center>
+
+                <h4>
+                  Editing Options:
+                </h4>
+                <dl>
+                  <dt>Replace Plot Accession</dt>
+                  <dd>A plot accession can be replaced by an accession within or outside of the trial. To do this, <b>click on the plot</b> and <b>provide the name of the new accession</b> (must already exist in the database).</dd>
+                  <dt>Replace Trial Accession</dt>
+                  <dd>An accession used in a trial can be replaced by a new accession or another accession from the trial. When this replace option is used, it replaces every instances (plots and plants) of that accession in the trial. To do this, <b>click on the Edit Field Map link</b> by the top right of the physical trial layout section; <b>click on Replace Accession button</b>; <b>select accession</b> to replace from the trial and <b>provide a new accession</b> (must already exit in the database); <b>click on Replace Trial Accession button</b> to complete the operation.</dd>
+                  <dt>Substitute Plot Accessions<dt>
+                  <dd>This feature allows you to switch plot accessions between any two plots. To switch the accessions of two plots, <b>click on the Edit Field Map link</b>; <b>click on Substitute Accession button</b>; <b>select the plots to switch there accessions</b>; <b>click on Substitute Plot Accession</b> to switch the accession in those plots.</dd>
+                </dl>
+
+                <h4>
+                  Features:
+                </h4>
+                <dt>Mouse Over<dt>
+                <dd>Displays plot field information.</dd>
+                <dt>Double Click</dt>
+                <dd>Double clicking on a plot, opens the stock page for that plot.</dd>
+                <dt>Download Map<dt>
+                <dd>Field Map can be downloaded as image using the download button below the map.</dd>
+                <dt>Delete Map</dt>
+                <dd>Field Map can be deleted if the user have the right privilege.</dd>
+
+                <h4>
+                  Note:
+                </h4>
+                <dd>- You have to be a <b>curator</b> or a <b>submitter and associated to the breeding program</b> of the trial to use the features of this tool.</dd>
+                <dd>- <b>Input boxes</b> used within the field map tool will automatically (<b>autocomplete</b>) give accession name options from the database when you start typing the accession name.</dd>
+                <dd>- <b>Changes can only be made to the physical layout when phenotypes are not yet upload for the trial.</b></dd>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_usage_field_map_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+jQuery(document).ready( function() {
+
+  jQuery('input[id*="replace_database_accession"]').autocomplete({
+      appendTo: "#replace_trial_accessions_dialog",
+      source: '/ajax/stock/accession_autocomplete'
+  });
+});
+
+
+jQuery(document).ready(function () {
+
+	jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
+
+	    success: function(response){
+	         //console.log(response);
+
+		var trial_accessions_html = "<select class='form-control' id='trial_accessions_table'>";
+		for (i=0; i<response.accessions[0].length; i++) {
+		    trial_accessions_html = trial_accessions_html + "<option value=" + response.accessions[0][i].stock_id + ">" + response.accessions[0][i].accession_name + "</option>";
+
+		}
+		trial_accessions_html = trial_accessions_html + "</select>";
+		jQuery('#accessions_in_trial').empty();
+		jQuery('#accessions_in_trial').html(trial_accessions_html);
+
+	    },
+	    error: function(response){
+		alert("Error retrieving accessions.");
+	    }
+	});
+
+	jQuery.ajax( {
+			 url: '/ajax/breeders/trial/'+trial_id+'/coords',
+
+				 success: function(response) {
+
+				 var trial_plot_name_html = "<select class='form-control' id='trial_plot_1_name_table'>";
+				 var trial_plot_number_html = "<select class='form-control' id='trial_plot_2_name_table'>";
+				 //var trial_plot_accession_html = "<select class='form-control' id='trial_plot_accession_table'>";
+
+				  for (n=0; n<response.plot_name.length; n++){
+			 			for (i=0; i<response.plot_name[n].length; i++) {
+			 		    trial_plot_name_html = trial_plot_name_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + "Plot:" + response.plot_name[n][i] + "," + " Number:" + response.plot_number[n][i] + "," +" Accession:"+ response.acc[n][i] +"</option>";
+							trial_plot_number_html = trial_plot_number_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + "Plot:" + response.plot_name[n][i] + "," + " Number:" + response.plot_number[n][i] + "," +" Accession:"+ response.acc[n][i] + "</option>";
+				 		}
+					}
+					trial_plot_name_html = trial_plot_name_html + "</select>";
+					jQuery('#plot_name_in_trial').empty();
+					jQuery('#plot_name_in_trial').html(trial_plot_name_html);
+
+					trial_plot_number_html = trial_plot_number_html + "</select>";
+					jQuery('#sub_plot_accession_in_trial').empty();
+					jQuery('#sub_plot_accession_in_trial').html(trial_plot_number_html);
+
+			 }
+	});
+
+  jQuery('#replace_accession_submit').click(function() {
+    replace_accession_in_trial()
+  });
+
+  function replace_accession_in_trial() {
+    jQuery('#replace_trial_accessions_dialog').modal("hide");
+    jQuery('#working_modal').modal("show");
+    var old_accession_id = jQuery('#trial_accessions_table').val();
+    var new_accession = jQuery('#replace_database_accession').val();
+
+    new jQuery.ajax({
+      type: 'POST',
+      url: '/ajax/breeders/trial/<% $trial_id %>/replace_accession',
+      dataType: "json",
+      data: {
+              'old_accession_id': old_accession_id,
+              'new_accession': new_accession,
+      },
+
+      success: function (response) {
+        jQuery('#working_modal').modal("hide");
+
+        if (response.error) {
+          alert("Error Replacing Accession: "+response.error);
+        }else {
+            jQuery('#replace_accessions_dialog_success_message').modal("show");
+        }
+      },
+      error: function() {
+        jQuery('#working_modal').modal("hide");
+        alert('An error occurred replacing accession');
+      }
+    });
+
+  }
+
+  jQuery('#close_replace_field_map_dialog').click( function() {
+    location.reload();
+  });
+
+  jQuery('#close_subs_field_map_dialog').click( function() {
+    location.reload();
+  });
+
+  jQuery('#substitute_plot_accession_submit').click( function() {
+    substitute_plot_accession();
+  });
+
+  function substitute_plot_accession() {
+    jQuery('#working_modal').modal("show");
+
+    var plot_1_info = jQuery('#trial_plot_1_name_table').val();
+    var plot_2_info = jQuery('#trial_plot_2_name_table').val();
+
+    new jQuery.ajax({
+      type: 'POST',
+      url: '/ajax/breeders/trial/<% $trial_id %>/substitute_accession',
+      dataType: "json",
+      data: {
+              'plot_1_info': plot_1_info,
+              'plot_2_info': plot_2_info,
+      },
+
+      success: function (response) {
+        jQuery('#working_modal').modal("hide");
+
+        if (response.error){
+          alert("Error Substituting Accessions: "+response.error);
+        } else {
+          jQuery('#sub_success_message').modal("show");
+        }
+      },
+      error: function(){
+        jQuery('#working_modal').modal("hide");
+      }
+    });
+  }
+
+});
+
+</script

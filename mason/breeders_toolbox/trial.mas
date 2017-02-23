@@ -33,6 +33,7 @@ $folder_name => undef
 $folder_id => undef
 $plants_per_plot => undef
 $cassbase_to_cea => undef
+$trial_phenotype_files => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
@@ -173,14 +174,12 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 </table>
 </div>
 
-</&>
-
-<& /breeders_toolbox/trial/edit_trial_details_dialog.mas, trial_name => $trial_name, breeding_program => $breeding_program_id, location => $location_id, year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description &>
-
 % my $folder_collapsed = 1;
 % if ($folder_id) {
 % $folder_collapsed = 0;
 % }
+
+<div class="well well-sm">
 
 <&| /page/info_section.mas, title=>"Folder", collaspible=>1, collapsed=>$folder_collapsed,
   subtitle => '[<a id="new_folder_dialog_link">New Folder</a>] | [<a id="open_folder_dialog_link">Change</a>]' &>
@@ -192,6 +191,11 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 </&>
 
+</div><!--closes well-->
+
+</&>
+
+<& /breeders_toolbox/trial/edit_trial_details_dialog.mas, trial_name => $trial_name, breeding_program => $breeding_program_id, location => $location_id, year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description &>
 
 % if ($hidap_enabled) {
 
@@ -199,11 +203,12 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 % }
 
-
-<&| /page/info_section.mas, id => "physical_layout", title=>"Physical Trial Layout", collapsible=>1, collapsed => 1, subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>]' &>
+<& /breeders_toolbox/trial/edit_fieldMap.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<&| /page/info_section.mas, id => "physical_layout", title=>"Physical Trial Layout", collapsible=>1, collapsed => 1, subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>] [<a id="edit_field_map_link">Edit Field Map</a>] [<button type="button" class="btn btn-link" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>]' &>
 
 
   <& /breeders_toolbox/trial/trial_coords.mas, trial_id => $trial_id &>
+
 
 </&>
 
@@ -257,6 +262,8 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 <&| /page/info_section.mas, id => "trial_design_section", title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"[<a id='trial_download_layout_button'>Download Layout</a>]"  &>
 
+<div class="well well-sm">
+
 <& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
 
 <&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1 &>
@@ -291,12 +298,13 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 % }
 
-</div>
+</div><!--closes plant_entries_section -->
 
 </&>
 
-</&>
+</div><!-- closes well -->
 
+</&>
 
 <& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 
@@ -337,6 +345,9 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 </&>
 
 <&| /page/info_section.mas, title=>"Files", collapsible=>1, collapsed=>0 &>
+
+<div class="well well-sm">
+
   <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
     <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a name="create_spreadsheet_link">Create Spreadsheet</a>]' &>
     </&>
@@ -344,16 +355,39 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
     </&>
     <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=> '[<a id="create_DataCollector_link">Create DataCollector Spreadsheet</a>]' &>
     </&>
-  </&>
-  <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+  </&><!-- closes create new phenotyping file section -->
+  <&| /page/info_section.mas, title=>"Upload Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
     <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link">Upload</a>]'&>
     </&>
     <&| /page/info_section.mas, title=>"Android Field Book Exported", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_fieldbook_phenotypes_link">Upload</a>]'&>
     </&>
     <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_datacollector_phenotypes_link">Upload</a>]'&>
     </&>
-  </&>
-</&>
+  </&><!-- closes upload new phenotype file section -->
+  <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+
+  <table class="table table-bordered files_datatables" alt="">
+  <thead>
+    <tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>File Type</th><th>Options</th></tr>
+  </thead>
+  <tbody>
+% foreach my $f (@$trial_phenotype_files) {
+    <tr>
+      <td><% $f->[4] %></td>
+      <td><% $f->[1] %></td>
+      <td><a href="/solpeople/profile/<% $f->[2] %>"><% $f->[3] %></a></td>
+      <td><% $f->[6] %></td>
+      <td><a href="/breeders/phenotyping/view/<% $f->[0] %>">View</a> | <a href="/breeders/phenotyping/download/<% $f->[0] %>">Download</a></td>
+    </tr>
+% }
+  </tbody>
+  </table>
+
+  </&><!-- closes uploaded file section -->
+
+</div><!-- closes well -->
+
+</&><!-- closes entire phenotyping file section -->
 
 <& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
 <& /fieldbook/upload_phenotype_fieldbook.mas &>
