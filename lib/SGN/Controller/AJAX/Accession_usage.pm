@@ -26,7 +26,7 @@ __PACKAGE__->config(
                FROM stock as accession JOIN stock_relationship on (accession.stock_id=stock_relationship.object_id)
                JOIN stock as plot on (plot.stock_id=stock_relationship.subject_id) JOIN nd_experiment_stock
                ON (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_project USING (nd_experiment_id)
-               JOIN project USING (project_id) WHERE accession.type_id =? GROUP BY accession.stock_id ORDER BY trials DESC LIMIT 100";
+               JOIN project USING (project_id) WHERE accession.type_id =? GROUP BY accession.stock_id ORDER BY trials DESC";
 
       my $h = $dbh->prepare($q);
       $h->execute($accession_type_id);
