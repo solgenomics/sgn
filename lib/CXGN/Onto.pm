@@ -87,7 +87,7 @@ sub compose_trait {
                                           END AS synonym,
                                           cv.cv_id
                                     FROM cvterm
-                                    LEFT JOIN cvtermsynonym syn ON (cvterm.cvterm_id = syn.cvterm_id AND syn.type_id = (SELECT cvterm_id from cvterm where name = 'preferred_synonym'))
+                                    LEFT JOIN cvtermsynonym syn ON (cvterm.cvterm_id = syn.cvterm_id AND syn.type_id = (SELECT cvterm_id from cvterm where name = 'EXACT'))
                                     JOIN cv USING(cv_id)
                                     JOIN cvprop ON(cv.cv_id = cvprop.cv_id)
                                     JOIN cvterm type ON(cvprop.type_id = type.cvterm_id)
