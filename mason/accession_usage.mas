@@ -22,10 +22,11 @@
 <script>
 
 
-jQuery(document).ready(function() {
+jQuery(document).ready(function(){
 
-  jquery('#accession_usage').DataTable({
+  jQuery('#accession_usage').DataTable({
 
+     'ordering' : false,
      'ajax':'ajax/accession_usage'
   });
 
