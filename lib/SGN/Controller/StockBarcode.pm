@@ -338,7 +338,9 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
   my $bottom_margin_mm = 12;
   my $right_margin_mm = 20;
   my $schema = $c->dbic_schema('Bio::Chado::Schema');
-
+  my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type' )->cvterm_id();
+  my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type' )->cvterm_id();
+print "ACC: $accession_cvterm_id and plot: $plot_cvterm_id\n";
   # convert mm into pixels
   #
   my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } ($top_margin_mm,
@@ -378,6 +380,11 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
     }
 
     my $stock_id = $stock->stock_id();
+    my $type_id = $stock->type_id();
+    if ($type_id == $accession_cvterm_id) {
+      print "You are using accessions\n";
+      #$c->stash->{template} = { error => "Used only for downloading Plot barcodes." };
+    }
 
     my $dbh = $c->dbc->dbh();
     my $h = $dbh->prepare("select name, value from cvterm inner join stockprop on cvterm.cvterm_id = stockprop.type_id where stockprop.stock_id=?;");
