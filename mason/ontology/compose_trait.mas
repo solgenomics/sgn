@@ -8,9 +8,9 @@
 <div class="container">
   <div class="row">
     <div class="col-md-6 form-group">
-      <label for="entity_select_div" class="control-label">Entity</label>
-      <p class="help-block"><small>Pick the entity on/over which the new trait is measured</small></p>
-      <div id="entity_select_div">
+      <label for="object_select_div" class="control-label">Object</label>
+      <p class="help-block"><small>Pick the object which the new trait is measures</small></p>
+      <div id="object_select_div">
       </div>
     </div>
     <div class="col-md-6 form-group">
@@ -22,9 +22,9 @@
   </div>
   <div class="row">
     <div class="col-md-6 form-group">
-      <label for="quality_select_div" class="control-label">Quality</label>
-      <p class="help-block"><small>Pick the quality the new trait measures</small></p>
-      <div id="quality_select_div">
+      <label for="attribute_select_div" class="control-label">Attribute</label>
+      <p class="help-block"><small>Pick the attribute the new trait measures</small></p>
+      <div id="attribute_select_div">
       </div>
     </div>
   </div>
@@ -57,12 +57,12 @@
 </div>
 
 <script>
-get_select_box('trait_components', 'entity_select_div', { 'id' : 'entity_select', 'name': 'entity_select', 'default': 'Select an entity', 'cv_type': 'entity_ontology' });
-get_select_box('trait_components', 'quality_select_div', { 'id' : 'quality_select', 'name': 'quality_select', 'default': 'Select a quality', 'cv_type': 'quality_ontology' });
+get_select_box('trait_components', 'object_select_div', { 'id' : 'object_select', 'name': 'object_select', 'default': 'Select an object', 'cv_type': 'object_ontology' });
+get_select_box('trait_components', 'attribute_select_div', { 'id' : 'attribute_select', 'name': 'attribute_select', 'default': 'Select a attribute', 'cv_type': 'attribute_ontology' });
 get_select_box('trait_components', 'unit_select_div', { 'id' : 'unit_select', 'name': 'unit_select', 'default': 'Select a unit', 'cv_type': 'unit_ontology' });
 get_select_box('trait_components', 'time_select_div', { 'id' : 'time_select', 'name': 'time_select', 'default': 'Select a time', 'cv_type': 'time_ontology' });
 
-jQuery('#entity_select, #quality_select, #unit_select, #time_select').change(  // retrieve matching traits each time component selection changes
+jQuery('#object_select, #attribute_select, #unit_select, #time_select').change(  // retrieve matching traits each time component selection changes
   function() {
     var component_ids = get_component_ids();
     //matching_traits = retrieve_matching_traits(component_ids);
@@ -102,8 +102,8 @@ jQuery('#compose_trait').on('click', function () {
 
 function get_component_ids () {
   var component_ids = [];
-  component_ids.push(jQuery("#entity_select").val());
-  component_ids.push(jQuery("#quality_select").val());
+  component_ids.push(jQuery("#object_select").val());
+  component_ids.push(jQuery("#attribute_select").val());
   component_ids.push(jQuery("#unit_select").val());
   component_ids.push(jQuery("#time_select").val());
   return component_ids;
