@@ -93,6 +93,7 @@ my $build = SGN::Build->new(
         'File::Temp'                               => 0, 
         'Number::Bytes::Human'                     => '0.07',
         'GD'                                       => 0,
+        'GD::Barcode::QRcode'                      => 0,
 	'GD::Graph::bars'                          => 0,
         'GD::Graph::Map'                           => 0,
         'GD::Graph::points'                        => 0,
