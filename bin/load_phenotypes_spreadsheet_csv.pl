@@ -6,7 +6,7 @@ load_phenotypes_spreadsheet_csv.pl - backend script for loading phenotypes into 
 
 =head1 SYNOPSIS
 
-    load_phenotypes_spreadsheet_csv.pl -H [dbhost] -D [dbname] -U [dbuser] -P [dbpass] -i [infile] -d [datalevel] -u [username] -t [timestamps included] -o [overwrite previous values]
+    load_phenotypes_spreadsheet_csv.pl -H [dbhost] -D [dbname] -U [dbuser] -P [dbpass] -i [infile] -a [archive path on server] -d [datalevel] -u [username] -t [timestamps included] -o [overwrite previous values]
 
 =head1 COMMAND-LINE OPTIONS
   ARGUMENTS
@@ -15,6 +15,7 @@ load_phenotypes_spreadsheet_csv.pl - backend script for loading phenotypes into 
  -U database username (required)
  -P database userpass (required)
  -i path to infile (required)
+ -a archive path (required) e.g. /export/prod/archive/
  -d datalevel (required) must be plots or plants
  -u username (required) username in database of peron uploading phenotypes
  -t timestamps included (optional) 1 or 0
@@ -22,7 +23,7 @@ load_phenotypes_spreadsheet_csv.pl - backend script for loading phenotypes into 
 
 =head1 DESCRIPTION
 
-perl bin/load_phenotypes_spreadsheet_csv.pl -D cass -H localhost -U postgres -P postgres -u nmorales -i ~/Downloads/combined_counts.csv -d plants
+perl bin/load_phenotypes_spreadsheet_csv.pl -D cass -H localhost -U postgres -P postgres -u nmorales -i ~/Downloads/combined_counts.csv -a /export/prod/archive/ -d plants
 
 This script will parse and validate the input file. If there are any warnings or errors during validation it will die.
 If there are no warnings or errors during validation it will then store the data.
@@ -51,13 +52,15 @@ use CXGN::Phenome::Schema;
 use CXGN::DB::InsertDBH;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Phenotypes::ParseUpload;
+use CXGN::UploadFile;
+use File::Basename;
 
-our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_i, $opt_d, $opt_u, $opt_t, $opt_o);
+our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_i, $opt_a, $opt_d, $opt_u, $opt_t, $opt_o);
 
-getopts('H:D:U:P:i:d:u:t:o:');
+getopts('H:D:U:P:i:a:d:u:t:o:');
 
-if (!$opt_H || !$opt_D || !$opt_U ||!$opt_P || !$opt_i || !$opt_d || !$opt_u ) {
-    die "Must provide options -H (hostname), -D (database name), -U (database user), -P (database password), -i (input file), -d (datalevel), -u (username in db)\n";
+if (!$opt_H || !$opt_D || !$opt_U ||!$opt_P || !$opt_i || !$opt_a || !$opt_d || !$opt_u ) {
+    die "Must provide options -H (hostname), -D (database name), -U (database user), -P (database password), -i (input file), -a (archive path), -d (datalevel), -u (username in db)\n";
 }
 
 my $schema = Bio::Chado::Schema->connect(
@@ -108,22 +111,31 @@ my $data_level = $opt_d;
 
 my $time = DateTime->now();
 my $timestamp = $time->ymd()."_".$time->hms();
+
+my $uploader = CXGN::UploadFile->new({
+   tempfile => $upload,
+   subdirectory => $subdirectory,
+   archive_path => $opt_a,
+   archive_filename => basename($upload),
+   timestamp => $timestamp,
+   user_id => $sp_person_id,
+   user_role => 'curator'
+});
+my $archived_filename_with_path = $uploader->archive();
+my $md5 = $uploader->get_md5($archived_filename_with_path);
+if (!$archived_filename_with_path) {
+    die "Could not archive file!\n";
+} else {
+    print STDERR "File saved in archive.\n";
+}
+
 my %phenotype_metadata;
-$phenotype_metadata{'archived_file'} = $upload;
+$phenotype_metadata{'archived_file'} = $archived_filename_with_path;
 $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
 $phenotype_metadata{'operator'} = $opt_u;
 $phenotype_metadata{'date'} = $timestamp;
 
-#my $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
-#my $md5 = $uploader->get_md5($archived_filename_with_path);
-#if (!$archived_filename_with_path) {
-#    die "Could not archive file!\n";
-#} else {
-#    print STDERR "File saved in archive.\n";
-#}
-#unlink $upload_tempfile;
-
-my $validate_file = $parser->validate($validate_type, $upload, $timestamp_included, $data_level);
+my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level);
 if (!$validate_file) {
     die "Input file itself not valid.\n";
 }
@@ -135,7 +147,7 @@ if ($validate_file == 1){
     }
 }
 
-my $parsed_file = $parser->parse($validate_type, $upload, $timestamp_included);
+my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included);
 if (!$parsed_file) {
     die "Error parsing file.\n";
 }
