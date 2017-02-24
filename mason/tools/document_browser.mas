@@ -3,7 +3,7 @@
 $files
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form' ] &>
 
 <& /page/page_title.mas, title=>'Document Browser' &>
 
@@ -117,11 +117,11 @@ jQuery(document).ready(function() {
             },
             success: function(response){
                 //console.log(response);
-                var html = "<table class='table table-hover table-bordered'><thead><tr><th>Select</th><th>Search Result</th></tr></thead><tbody>";
+                var html = "<div class='well'><table class='table table-hover table-bordered'><thead><tr><th>Select All<br/><input type='checkbox' id='document_browser_select_all_results' /></th><th>Search Result</th></tr></thead><tbody>";
                 for (var i=0; i<response.found_lines.length; i++){
                     html = html + "<tr><td><input type='checkbox' name='document_browser_search_result_select' value='"+response.list_elements[i]+"' /></td><td>"+response.found_lines[i]+"</td></tr>";
                 }
-                html = html + "</tbody></table>";
+                html = html + "</tbody></table></div>";
                 jQuery('#document_browser_search_results').html(html);
             },
             error: function(response){
@@ -132,12 +132,7 @@ jQuery(document).ready(function() {
     });
 
     jQuery(document).on('change', 'input[name="document_browser_search_result_select"]', function() {
-        var html = '';
-        jQuery.each(jQuery("input[name='document_browser_search_result_select']:checked"), function(){
-            html = html + jQuery(this).val() + "\n";
-        });
-        //console.log(html);
-        jQuery('#document_browser_search_results_selected').html(html);
+        updateListAdditions();
     });
 
     addToListMenu('document_browser_search_results_to_list', 'document_browser_search_results_selected', {
@@ -150,20 +145,28 @@ jQuery(document).ready(function() {
 
     jQuery('#upload_document_browser_file_submit').click( function() {
         initializeUpload();
-        jQuery("#upload_document_browser_file_form").iframePostForm({
-            json: true,
-            post: function () { },
-            timeout: 7200000,
-            complete: function (response) {
-                hideWorkingModal();
-                if (response.error){
-                    jQuery('#upload_document_browser_file_status').html(response.error);
-                } else {
-                    jQuery('#upload_document_browser_file_status').html(response.success);
-                }
-                jQuery("#upload_document_browser_file_status_dialog").modal('show');
+    });
+    jQuery("#upload_document_browser_file_form").iframePostForm({
+        json: true,
+        post: function () { },
+        timeout: 7200000,
+        complete: function (response) {
+            console.log(response);
+            hideWorkingModal();
+            if (response.error){
+                jQuery('#upload_document_browser_file_status').html(response.error);
+            } else {
+                jQuery('#upload_document_browser_file_status').html(response.success);
             }
+            jQuery("#upload_document_browser_file_status_dialog").modal('show');
+        }
+    });
+
+    jQuery(document).on('change', '#document_browser_select_all_results', function(){
+        jQuery('input[name="document_browser_search_result_select"]').each(function(){
+            this.checked = true;
         });
+        updateListAdditions();
     });
 
     jQuery('#upload_document_browser_file_status_dialog').on('hidden.bs.modal', function () {
@@ -192,5 +195,13 @@ function initializeUpload() {
     }
 }
 
+function updateListAdditions() {
+    var html = '';
+    jQuery.each(jQuery("input[name='document_browser_search_result_select']:checked"), function(){
+        html = html + jQuery(this).val() + "\n";
+    });
+    //console.log(html);
+    jQuery('#document_browser_search_results_selected').html(html);
+}
 
 </script>
