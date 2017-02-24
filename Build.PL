@@ -105,6 +105,7 @@ my $build = SGN::Build->new(
         'IO::String'                               => 0,
 	'IPC::Run3'                                => 0,
         'Image::Size'                              => 0,
+        'Imager::QRCode'                           => 0,
         'JSAN::ServerSide'                         => '0.06',
         'JSON'                                     => 0,
         'JSON::XS'                                 => '2.24',
