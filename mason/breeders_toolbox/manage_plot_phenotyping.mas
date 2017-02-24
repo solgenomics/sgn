@@ -13,7 +13,6 @@ $plot_name
     </div>
     <div class="col-md-10 col-lg-10">
 
-
       <div class="form-group form-group-sm">
         <label class="col-sm-4 control-label for="plot_name">Plot:</label>
         <div class="col-sm-8">
@@ -38,7 +37,6 @@ $plot_name
             <input type="number" class="form-control" id="select_pheno_value" name="select_pheno_value"></input>
         </div>
       </div>
-
 
     </div>
     <div class="col-md-1 col-lg-1">
@@ -112,10 +110,7 @@ $plot_name
 
       });
 
-
     });
-
-
 
   });
 

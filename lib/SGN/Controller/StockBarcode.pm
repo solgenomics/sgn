@@ -329,7 +329,7 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
 
   my $stock_names = $c->req->param("stock_names_2");
   my $stock_names_file = $c->req->upload("stock_names_file_2");
-  my $added_text =  $c->req->upload("select_barcode_text");
+  my $added_text =  $c->req->param("select_barcode_text");
   my $labels_per_page =  7;
   my $page_format = "letter";
   my $labels_per_row  = 1;
@@ -340,7 +340,6 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
   my $schema = $c->dbic_schema('Bio::Chado::Schema');
   my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type' )->cvterm_id();
   my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type' )->cvterm_id();
-print "ACC: $accession_cvterm_id and plot: $plot_cvterm_id\n";
   # convert mm into pixels
   #
   my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } ($top_margin_mm,
@@ -360,7 +359,6 @@ print "ACC: $accession_cvterm_id and plot: $plot_cvterm_id\n";
 
   my @not_found;
   my @found;
-
 
   my ($row, $stockprop_name, $value, $fdata, $accession_name, $female_parent, $male_parent, @parents_info, $parents);
 
@@ -383,24 +381,23 @@ print "ACC: $accession_cvterm_id and plot: $plot_cvterm_id\n";
     my $type_id = $stock->type_id();
     if ($type_id == $accession_cvterm_id) {
       print "You are using accessions\n";
-      #$c->stash->{template} = { error => "Used only for downloading Plot barcodes." };
+      my $error = "used only for downloading Plot barcodes.";
+      $c->stash->{error} = $error;
+      $c->stash->{template} = '/barcode/stock_download_result.mas';
+      $c->detach;
     }
 
     my $dbh = $c->dbc->dbh();
     my $h = $dbh->prepare("select name, value from cvterm inner join stockprop on cvterm.cvterm_id = stockprop.type_id where stockprop.stock_id=?;");
-
     $h->execute($stock_id);
-
     my %stockprop_hash;
      while (($stockprop_name, $value) = $h->fetchrow_array) {
        $stockprop_hash{$stock_id}->{$stockprop_name} = $value;
-
     }
     $row = $stockprop_hash{$stock_id}->{'replicate'};
     $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."block:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
 
     my $h_acc = $dbh->prepare("select stock.uniquename AS acesssion_name FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
-
     $h_acc->execute($stock_id);
     while (my($accession) = $h_acc->fetchrow_array) {
       $accession_name = $accession;
@@ -480,34 +477,44 @@ print "ACC: $accession_cvterm_id and plot: $plot_cvterm_id\n";
 
     $pages[$page_nr-1]->line($page_width -100, $label_boundary, $page_width, $label_boundary);
 
-    # my $lebel_number = scalar($#{$found[$i]});
-
-
       my $font = $pdf->font('BaseFont' => 'Times-Roman');
       foreach my $label_count (1..$labels_per_row) {
-        my $xposition = $left_margin + ($label_count -1) * $final_barcode_width + 20;
-        my $yposition = $ypos -7;
-        print "My X Position: $xposition and Y Position: $ypos\n";
-        my $label_text = $found[$i]->[1];
-        my $label_size =  11;
+        #my $xposition = $left_margin + ($label_count -1) * $final_barcode_width + 20;
+        #my $yposition = $ypos -7;
+        #print "My X Position: $xposition and Y Position: $ypos\n";
+        #my $label_text = $found[$i]->[1];
+        #my $label_size =  11;
         $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
 
-        if (length($label_text) <= 15){
-            $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
-        }
+        # if (length($label_text) <= 15){
+        #     $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
+        # }
       }
 
       my $label_text = $found[$i]->[1];
-      if (length($label_text) > 15) {
-        print "My label Count: $label_count\n";
+      my $label_text_2 = "Accession: ".$found[$i]->[2];
+      my $label_text_3 = $found[$i]->[3];
+      my $label_text_4 = "Pedigree: ".$found[$i]->[4];
+      # if (length($label_text) > 15) {
+      #   print "My label Count: $label_count\n";
         my $label_count_15_xter_plot_name =  1-1;
-        my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 20;
-        my $yposition = $ypos -7;
+        my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 118.63;
+        my $yposition = $ypos - 30;
+        my $yposition_2 = $ypos - 40;
+        my $yposition_3 = $ypos - 50;
+        my $yposition_4 = $ypos - 60;
+        my $yposition_5 = $ypos - 70;
         print "My X Position: $xposition and Y Position: $ypos\n";
         my $label_size =  11;
         $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
-      }
-
+        $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text_2);
+        $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_3);
+        if ($found[$i]->[4] =~ m/^\//){
+          $label_text_4 = "Pedigree: No pedigree available for ".$found[$i]->[2];
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_4);
+        }
+        $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $added_text);
+      # }
 
 }
 

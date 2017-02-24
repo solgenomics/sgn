@@ -297,7 +297,20 @@ sub update_plot_phenotype_POST : Args(0) {
   my $time = DateTime->now();
   my $timestamp = $time->ymd()."_".$time->hms();
   my $dbh = $c->dbc->dbh();
+  my $schema = $c->dbic_schema("Bio::Chado::Schema");
+  my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+  my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
   my (@plots, @traits, %data, $trait);
+  my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type' )->cvterm_id();
+
+  my $plot = $schema->resultset("Stock::Stock")->find( { uniquename=>$plot_name });
+  my $plot_type_id = $plot->type_id();
+
+  if ($plot_type_id == $accession_cvterm_id) {
+    print "You are using accessions\n";
+    $c->stash->{rest} = {error => "Used only for Plot Phenotyping."};
+    return;
+  }
 
   my $h = $dbh->prepare("SELECT cvterm.cvterm_id AS trait_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id WHERE db.db_id = (( SELECT dbxref_1.db_id FROM stock JOIN nd_experiment_stock USING (stock_id) JOIN nd_experiment_phenotype USING (nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm cvterm_1 ON phenotype.cvalue_id = cvterm_1.cvterm_id JOIN dbxref dbxref_1 ON cvterm_1.dbxref_id = dbxref_1.dbxref_id LIMIT 1)) AND cvterm_id =? GROUP BY cvterm.cvterm_id, ((((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text);");
   $h->execute($trait_id);
@@ -306,13 +319,9 @@ sub update_plot_phenotype_POST : Args(0) {
   }
   push @plots, $plot_name;
   push @traits, $trait;
-  print "Trait Name: $trait\n";
 
   $data{$plot_name}->{$trait} = [$trait_value,$timestamp];
 
-  my $schema = $c->dbic_schema("Bio::Chado::Schema");
-  my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
-  my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
   my %phenotype_metadata;
   $phenotype_metadata{'archived_file'} = 'none';
   $phenotype_metadata{'archived_file_type'}="generated from plot barcode phenotyping";
@@ -331,7 +340,6 @@ sub update_plot_phenotype_POST : Args(0) {
       has_timestamps=> 1,
       overwrite_values=> 1,
       metadata_hash=>\%phenotype_metadata,
-
   );
 
   my $store_error = $store_phenotypes->store();
