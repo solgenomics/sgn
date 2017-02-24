@@ -562,7 +562,7 @@ sub get_phenotyping_data : Private {
     print STDERR "RETRIEVED ".$metadata_rs->count()." METADATA ENTRIES...\n";
 
     while (my $md_row = ($metadata_rs->next())) {
-	my $file_rs = $metadata_schema->resultset("MdFiles")->search( { metadata_id => $md_row->metadata_id() } );
+	my $file_rs = $metadata_schema->resultset("MdFiles")->search( { metadata_id => $md_row->metadata_id(), filetype => {'!=' => 'document_browser'} } );
 
 	if (!$md_row->obsolete) {
 	    while (my $file_row = $file_rs->next()) {
