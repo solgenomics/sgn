@@ -44,6 +44,7 @@ use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
 use SGN::Image;
 use CXGN::ZipFile;
+use CXGN::UploadFile;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
