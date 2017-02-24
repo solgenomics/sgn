@@ -7,17 +7,10 @@ use JSON::Any;
 use Try::Tiny;
 use Bio::Chado::Schema;
 
-has 'dbh' => (
-    is  => 'rw',
-    required => 1,
-    );
-has 'dbname' => (
-    is => 'rw',
-    isa => 'Str',
-    );
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
     is => 'rw',
+    required => 1
     );
 
 =head2 get_terms
@@ -46,7 +39,7 @@ sub get_terms {
                   GROUP BY 1,2
                   ORDER BY 2,1";
 
-      my $h = $self->dbh->prepare($query);
+      my $h = $self->schema->storage->dbh->prepare($query);
       $h->execute($cv_type);
 
       my @results;
@@ -66,6 +59,7 @@ sub compose_trait {
       print STDERR "Ids for composing in CXGN:Onto = $ids\n";
 
       my $schema = $self->schema();
+      my $dbh = $schema->storage->dbh;
 
       my $db = $schema->resultset("General::Db")->find_or_create(
           { name => 'COMP' });
@@ -73,7 +67,7 @@ sub compose_trait {
       my $cv= $schema->resultset('Cv::Cv')->find_or_create( { name => 'composed_trait' });
 
       my $accession_query = "SELECT nextval('composed_trait_ids')";
-      my $h = $self->dbh->prepare($accession_query);
+      my $h = $dbh->prepare($accession_query);
       $h->execute();
       my $accession = $h->fetchrow_array();
 
@@ -105,7 +99,7 @@ sub compose_trait {
 
       print STDERR "Compose query = $compose_query\n";
 
-      $h = $self->dbh->prepare($compose_query);
+      $h = $dbh->prepare($compose_query);
       $h->execute(@ids);
       my ($name, $synonym) = $h->fetchrow_array();
 

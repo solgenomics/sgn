@@ -342,7 +342,7 @@ sub get_trait_components_select : Path('/ajax/html/select/trait_components') Arg
   my $default = $c->req->param("default") || "Select a term";
 
   my $dbh = $c->dbc->dbh();
-  my $onto = CXGN::Onto->new( { dbh=>$dbh } );
+  my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
   my @components = $onto->get_terms($cv_type);
 
   if ($default) { unshift @components, [ '', $default ]; }
