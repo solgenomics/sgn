@@ -183,7 +183,7 @@ if (length(refererQtl) == 0  ) {
         formattedPhenoData[, 1] <- NULL
       }
       
-    } else if ((experimentalDesign == 'CRD')  &&  length(unique(phenoData$block)) > 1) {
+    } else if ((experimentalDesign == 'CRD')  &&  length(unique(phenoData$replicate)) > 1) {
 
       message("GS experimental design: ", experimentalDesign)
 

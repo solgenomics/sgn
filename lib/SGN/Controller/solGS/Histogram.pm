@@ -126,7 +126,7 @@ sub create_trait_phenodata {
         } qw / in out /;
     
 	{
-	    my $histogram_commands_file = $c->path_to('/R/histogram.r');
+	    my $histogram_commands_file = $c->path_to('/R/solGS/histogram.r');
 	    copy( $histogram_commands_file, $histogram_commands_temp )
             or die "could not copy '$histogram_commands_file' to '$histogram_commands_temp'";
 	}
