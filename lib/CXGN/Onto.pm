@@ -61,6 +61,7 @@ sub get_terms {
 sub compose_trait {
       my $self = shift;
       my $ids = shift;
+
       my @ids = split(',', $ids);
       print STDERR "Ids for composing in CXGN:Onto = $ids\n";
 
@@ -128,10 +129,7 @@ sub compose_trait {
         dbxref_id  => $new_term_dbxref-> dbxref_id()
       });
 
-      my $new_term_synonym= $schema->resultset("Cv::Cvtermsynonym")->create(
-        { cvterm_id  =>$new_term->cvterm_id(),
-          synonym   => $synonym
-        });
+      $new_term->add_synonym($synonym, { synonym_type => 'EXACT' , autocreate => 1});  #adds synonym with type
 
     #print STDERR "New term cvterm_id = " . $new_term->cvterm_id();
 
