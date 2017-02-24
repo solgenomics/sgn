@@ -94,8 +94,8 @@ sub compose_trait {
                                     JOIN cvterm type ON(cvprop.type_id = type.cvterm_id)
                                     WHERE cvterm.cvterm_id IN (@{[join',', ('?') x @ids]})
                                     ORDER BY (
-                                      case when type.name = 'entity_ontology' then 1
-                                          when type.name = 'quality_ontology' then 2
+                                      case when type.name = 'object_ontology' then 1
+                                          when type.name = 'attribute_ontology' then 2
                                           when type.name = 'method_ontology' then 3
                                           when type.name = 'unit_ontology' then 4
                                           when type.name = 'time_ontology' then 5
