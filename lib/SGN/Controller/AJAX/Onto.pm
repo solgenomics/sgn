@@ -56,7 +56,7 @@ sub compose_trait: Path('/ajax/onto/compose') Args(0) {
   print STDERR "Ids array for composing in AJAX Onto = @ids\n";
   my $ids = join ',', @ids;
   print STDERR "Ids string for composing in AJAX Onto = $ids\n";
-  my $onto = CXGN::Onto->new( { dbh => $c->dbc->dbh(), schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+  my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
 
   my $composed_trait_id = $onto->compose_trait($ids);
 
