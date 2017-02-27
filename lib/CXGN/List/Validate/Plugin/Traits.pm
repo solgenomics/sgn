@@ -22,12 +22,11 @@ sub validate {
     foreach my $term (@$list) {
         print STDERR $term."\n";
         my $delim = "|";
-        my $full_accession = substr $term, rindex( $term, $delim ) + length $delim;
-        my $full_accession_length = length($full_accession)+1;
+        my $full_accession = substr $term, rindex( $term, $delim ) + length($delim);
+        my $full_accession_length = length($full_accession) + length($delim);
         $term = substr($term, 0, -$full_accession_length);
         print STDERR $full_accession."\n";
         print STDERR $term."\n";
-        #my ($trait_name, $full_accession) = split (/\|/, $term);
         my ($db_name, $accession) = split ":", $full_accession;
 
         if ($accession) {

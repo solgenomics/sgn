@@ -80,8 +80,11 @@ sub get_cvterm_row_from_trait_name {
         return $trait_cvterm;
     }
 
-    #fieldbook trait string should be "$trait_name|$dbname:$trait_accession" e.g. plant height|CO:0000123
-    my ( $full_cvterm_name, $full_accession) = split (/\|/, $trait_name);
+    #fieldbook trait string should be "$trait_name|$dbname:$trait_accession" e.g. plant height|CO:0000123. substring on last occurance of |
+    my $delim = "|";
+    my $full_accession = substr $trait_name, rindex( $trait_name, $delim ) + length($delim);
+    my $full_accession_length = length($full_accession) + length($delim);
+    my $full_cvterm_name = substr($trait_name, 0, -$full_accession_length);
     my ( $db_name , $accession ) = split (/:/ , $full_accession);
 
     #check if the trait name string does have  
