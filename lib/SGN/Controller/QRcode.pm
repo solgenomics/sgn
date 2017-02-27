@@ -36,7 +36,7 @@ sub phenotyping_qrcordes {
   my $file = shift;
   my $base_url = shift;
 
-  my $text = "$base_url/breeders/plot_phenotyping?stock_id=.$stock_id";
+  my $text = "$base_url/breeders/plot_phenotyping?stock_id=$stock_id";
   my $qrcode = Imager::QRCode->new(
         size          => 5,
         margin        => 5,

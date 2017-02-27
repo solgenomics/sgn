@@ -412,8 +412,8 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
     }
 
     $parents = $female_parent."/".$male_parent;
-    push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents];
-
+  #  push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents];
+    push @found, [ $stock_id, $name, $accession_name, $fdata, $parents];
   }
 
   my $dir = $c->tempfiles_subdir('pdfs');
