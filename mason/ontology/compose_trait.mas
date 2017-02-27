@@ -9,7 +9,7 @@
   <div class="row">
     <div class="col-md-6 form-group">
       <label for="object_select_div" class="control-label">Object</label>
-      <p class="help-block"><small>Pick the object which the new trait is measures</small></p>
+      <p class="help-block"><small>Pick the object on which the new trait is measured</small></p>
       <div id="object_select_div">
       </div>
     </div>
@@ -62,21 +62,21 @@ get_select_box('trait_components', 'attribute_select_div', { 'id' : 'attribute_s
 get_select_box('trait_components', 'unit_select_div', { 'id' : 'unit_select', 'name': 'unit_select', 'default': 'Select a unit', 'cv_type': 'unit_ontology' });
 get_select_box('trait_components', 'time_select_div', { 'id' : 'time_select', 'name': 'time_select', 'default': 'Select a time', 'cv_type': 'time_ontology' });
 
-jQuery('#object_select, #attribute_select, #unit_select, #time_select').change(  // retrieve matching traits each time component selection changes
-  function() {
+jQuery(document).on('change','#object_select, #attribute_select, #unit_select, #time_select', function() { // retrieve matching traits each time component selection changes
+    console.log("Change in component selects\n");
     var component_ids = get_component_ids();
-    //matching_traits = retrieve_matching_traits(component_ids);
+    matching_traits = retrieve_matching_traits(component_ids);
     jQuery('#matched_traits_div').html(matching_traits);
 });
 
 jQuery('#compose_trait').on('click', function () {
 
   var component_ids = get_component_ids();
-  //matching_traits = retrieve_matching_traits(component_ids);
-  //if (matching_traits.length > 0) {
-  //  alert("Error. This combination in not new. Use trait"+matching_traits);
-  //}
-  //else {
+  matching_traits = retrieve_matching_traits(component_ids);
+  if (matching_traits.length > 0) {
+    alert("Error. This combination in not new. Use trait"+matching_traits);
+  }
+  else {
     jQuery.ajax( {
       url: '/ajax/onto/compose',
       timeout: 60000,
@@ -84,10 +84,10 @@ jQuery('#compose_trait').on('click', function () {
       method: 'POST',
       data: {'ids': component_ids},
       beforeSend: function(){
-        //disable_ui();
+        disable_ui();
       },
       complete : function(){
-        //enable_ui();
+        enable_ui();
       },
       success: function(response) {
         console.log("Success! Stored new term with id "+response.success);
@@ -97,7 +97,7 @@ jQuery('#compose_trait').on('click', function () {
 
       }
     });
-  //}
+  }
 });
 
 function get_component_ids () {
@@ -122,7 +122,7 @@ function retrieve_matching_traits (component_ids) {
       console.log("traits="+traits);
     },
 	  error: function(request, status, err) {
-
+      console.log("Error retrieving matching traits\n");
     }
 	});
 

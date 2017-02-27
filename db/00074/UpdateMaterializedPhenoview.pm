@@ -133,7 +133,7 @@ CREATE MATERIALIZED VIEW public.trait_components AS
 SELECT cvterm.cvterm_id AS trait_component_id,
 (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_component_name
             FROM cv
-            JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = ANY ('{entity_ontology,quality_ontology,method_ontology,unit_ontology,time_ontology}')))
+            JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = ANY ('{object_ontology,attribute_ontology,method_ontology,unit_ontology,time_ontology}')))
             JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
             JOIN dbxref USING(dbxref_id)
             JOIN db ON(dbxref.db_id = db.db_id)
@@ -151,7 +151,7 @@ CREATE MATERIALIZED VIEW public.traits AS
   SELECT cvterm.cvterm_id AS trait_id,
   (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
 	FROM cv
-    JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = ANY ('{trait_ontology,composed_trait_ontology}')))
+    JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'trait_ontology'))
     JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
 	  JOIN dbxref USING(dbxref_id)
     JOIN db ON(dbxref.db_id = db.db_id)
@@ -159,6 +159,17 @@ CREATE MATERIALIZED VIEW public.traits AS
     LEFT JOIN cvterm_relationship is_object ON cvterm.cvterm_id = is_object.object_id
     WHERE is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
     GROUP BY 1,2
+  UNION
+  SELECT cvterm.cvterm_id AS trait_id,
+  (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
+  FROM cv
+    JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'composed_trait_ontology'))
+    JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
+    JOIN dbxref USING(dbxref_id)
+    JOIN db ON(dbxref.db_id = db.db_id)
+    LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
+    WHERE is_subject.subject_id IS NOT NULL
+    GROUP BY 1,2 ORDER BY 2
   WITH DATA;
   CREATE UNIQUE INDEX traits_idx ON public.traits(trait_id) WITH (fillfactor=100);
   ALTER MATERIALIZED VIEW traits OWNER TO web_usr;
