@@ -66,7 +66,8 @@ jQuery(document).on('change','#object_select, #attribute_select, #unit_select, #
     console.log("Change in component selects\n");
     var component_ids = get_component_ids();
     matching_traits = retrieve_matching_traits(component_ids);
-    jQuery('#matched_traits_div').html(matching_traits);
+    var trait_html = format_options(matching_traits);
+    jQuery('#matched_traits_div').html(trait_html);
 });
 
 jQuery('#compose_trait').on('click', function () {
@@ -102,21 +103,34 @@ jQuery('#compose_trait').on('click', function () {
 
 function get_component_ids () {
   var component_ids = [];
-  component_ids.push(jQuery("#object_select").val());
-  component_ids.push(jQuery("#attribute_select").val());
-  component_ids.push(jQuery("#unit_select").val());
-  component_ids.push(jQuery("#time_select").val());
+  if (jQuery("#object_select").val()) { component_ids.push(jQuery("#object_select").val()); }
+  if (jQuery("#attribute_select").val()) { component_ids.push(jQuery("#attribute_select").val()); }
+  if (jQuery("#unit_select").val()) { component_ids.push(jQuery("#unit_select").val()); }
+  if (jQuery("#time_select").val()) { component_ids.push(jQuery("#time_select").val()); }
   return component_ids;
 }
 
-function retrieve_matching_traits (component_ids) {
+function format_options(items) {
+    var html = '';
+    if (items) {
+	for(var i=0; i<items.length; i++) {
+	    html = html + '<option value="'+items[i][0]+'" title="'+items[i][1]+'">'+items[i][1]+'</a>\n';
+	}
+	return html;
+    }
+    return "no data";
+}
 
+function retrieve_matching_traits (component_ids) {
+var categories = ['trait_components','traits'];
+var querytype = [1];
+var data = [component_ids];
   jQuery.ajax( {
     url: '/ajax/breeder/search',
 	  timeout: 60000,
     async: false,
     method: 'POST',
-    data: {'categories': ['trait_components','traits'], 'data': component_ids, 'querytypes': 1},
+    data: {'categories': categories, 'data': data, 'querytypes': querytype},
 	  success: function(response) {
       traits = response.list || [];
       console.log("traits="+traits);
