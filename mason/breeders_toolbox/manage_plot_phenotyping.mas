@@ -82,7 +82,8 @@ $plot_name
     });
 
 
-    jQuery("#select_traits_for_trait_file").click(function() {
+    //jQuery("#select_traits_for_trait_file").click(function() {
+    jQuery("#select_traits_for_trait_file").on('change', function() {
       var plot_name = jQuery("#plot_name").val();
       var trait = jQuery("#select_traits_for_trait_file").val();
       //alert(plot_name+","+trait);
