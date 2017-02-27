@@ -108,7 +108,7 @@ sub compose_trait {
 
       my $new_term_dbxref =  $schema->resultset("General::Dbxref")->create(
       {   db_id     => $db->get_column('db_id'),
-		      accession => $accession
+		      accession => sprintf("%07d",$accession)
 		  });
 
       my $parent_term= $schema->resultset("Cv::Cvterm")->find(
