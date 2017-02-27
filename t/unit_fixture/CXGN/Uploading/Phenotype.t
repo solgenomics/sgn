@@ -3293,8 +3293,11 @@ is($contents->[0]->{'sheets'}, '1', "check that type of file is correct");
 my $columns = $contents->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
 is(scalar(@$columns),20);
+if (exists($contents->[1]->{parser})){
+    delete($contents->[1]->{parser});
+}
 #print STDERR Dumper scalar keys %{$contents->[1]};
-is(scalar keys %{$contents->[1]}, 491);
+is(scalar keys %{$contents->[1]}, 490);
 
 
 my $csv_response = [
