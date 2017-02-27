@@ -77,9 +77,10 @@ sub compose_trait {
                                   string_agg(ordered_components.synonym::text, '_')
                                   FROM (
                                     SELECT cvterm.name,
-                                          CASE WHEN synonym IS NULL THEN cvterm.name
-                                            ELSE substring(synonym from '\"(.+)\"')
-                                          END AS synonym,
+                                    CASE WHEN synonym IS NULL THEN cvterm.name
+                                      WHEN substring(synonym from '\"(.+)\"') IS NULL THEN synonym
+                                      ELSE substring(synonym from '\"(.+)\"')
+                                    END AS synonym,
                                           cv.cv_id
                                     FROM cvterm
                                     LEFT JOIN cvtermsynonym syn ON (cvterm.cvterm_id = syn.cvterm_id AND syn.type_id = (SELECT cvterm_id from cvterm where name = 'EXACT'))
