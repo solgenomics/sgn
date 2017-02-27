@@ -12,6 +12,7 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         bcs_schema=>$schema,
         data_level=>$data_level,
         trait_list=>$trait_list,
+        trait_component_list=>$trait_component_list,
         trial_list=>$trial_list,
         year_list=>$year_list,
         location_list=>$location_list,

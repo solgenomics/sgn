@@ -106,4 +106,24 @@ sub get_cvterm_row_from_trait_name {
     return $trait_cvterm;
 }
 
+sub get_traits_from_components {
+    my $self= shift;
+    my $schema = shift;
+    my $component_cvterm_ids = shift;
+
+    my @intersect_selects;
+    foreach my $cvterm_id (@$component_cvterm_ids){
+        push @intersect_selects, "SELECT object_id FROM cvterm_relationship WHERE subject_id = $cvterm_id";
+    }
+    push @intersect_selects, "SELECT object_id FROM cvterm_relationship HAVING count(object_id) = ".scalar(@$component_cvterm_ids);
+    my $intersect_sql = join ' INTERSECT ', @intersect_selects;
+    my $h = $schema->storage->dbh->prepare($intersect_sql);
+    $h->execute();
+    my @trait_cvterm_ids;
+    while(my ($trait_cvterm_id) = $h->fetchrow_array()){
+        push @trait_cvterm_ids, $trait_cvterm_id;
+    }
+    return \@trait_cvterm_ids;
+}
+
 1;

@@ -12,6 +12,7 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         bcs_schema=>$schema,
         data_level=>$data_level,
         trait_list=>$trait_list,
+        trait_component_list=>$trait_component_list,
         trial_list=>$trial_list,
         year_list=>$year_list,
         location_list=>$location_list,
@@ -61,6 +62,11 @@ has 'trial_list' => (
 );
 
 has 'trait_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'trait_component_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
@@ -240,6 +246,12 @@ sub search {
       push @where_clause, "plot.type_id = $stock_type_id"; #ONLY plots or plants
     } else {
       push @where_clause, "(plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id)"; #plots AND plants
+    }
+
+    if ($self->trait_component_list){
+        my $trait_cvterm_ids = SGN::Model::Cvterm->get_traits_from_components($schema, $self->trait_component_list);
+        my $trait_ids_sql = _sql_from_arrayref($trait_cvterm_ids);
+        push @where_clause, "cvterm.cvterm_id IN ($trait_ids_sql)";
     }
 
     my $where_clause = "WHERE " . (join (" AND " , @where_clause));
