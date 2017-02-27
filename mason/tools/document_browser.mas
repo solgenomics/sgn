@@ -151,7 +151,7 @@ jQuery(document).ready(function() {
         post: function () { },
         timeout: 7200000,
         complete: function (response) {
-            console.log(response);
+            //console.log(response);
             hideWorkingModal();
             if (response.error){
                 jQuery('#upload_document_browser_file_status').html(response.error);
