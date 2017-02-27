@@ -356,11 +356,10 @@ ALTER MATERIALIZED VIEW plotsXtrait_components OWNER TO web_usr;
 INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('plotsXtrait_components', FALSE, CURRENT_TIMESTAMP);
 
 CREATE MATERIALIZED VIEW public.trait_componentsXtraits AS
-SELECT public.materialized_phenoview.trait_id,
+SELECT traits.trait_id,
 trait_component.cvterm_id AS trait_component_id
-FROM materialized_phenoview
-JOIN cvterm trait ON(materialized_phenoview.trait_id = trait.cvterm_id)
-JOIN cvterm_relationship ON(trait.cvterm_id = cvterm_relationship.object_id AND cvterm_relationship.type_id = (SELECT cvterm_id from cvterm where name = 'contains'))
+FROM traits
+JOIN cvterm_relationship ON(traits.trait_id = cvterm_relationship.object_id AND cvterm_relationship.type_id = (SELECT cvterm_id from cvterm where name = 'contains'))
 JOIN cvterm trait_component ON(cvterm_relationship.subject_id = trait_component.cvterm_id)
 GROUP BY 1,2
 WITH DATA;
