@@ -97,11 +97,16 @@ $plot_name
         },
 
         success: function (response) {
+          var value = response.trait_value;
+          var black = {'color': 'red'};
 
           if (response.error){
             alert("Error Retrieving Trait Value: "+response.error);
           }else{
-              jQuery("#select_pheno_value").val(response.trait_value);
+            if (value){
+              jQuery("#select_pheno_value").css(black);
+            }
+              jQuery("#select_pheno_value").val(value);
           }
         },
           error: function() {
