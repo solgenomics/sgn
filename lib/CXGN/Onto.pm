@@ -73,7 +73,7 @@ sub compose_trait {
 
       #print STDERR "New trait accession = $accession and name = $name\n";
 
-      my $compose_query = " SELECT string_agg(ordered_components.name::text, ' '),
+      my $compose_query = " SELECT string_agg(ordered_components.name::text, '|'),
                                   string_agg(ordered_components.synonym::text, '_')
                                   FROM (
                                     SELECT cvterm.name,
