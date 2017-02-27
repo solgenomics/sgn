@@ -479,24 +479,14 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
 
       my $font = $pdf->font('BaseFont' => 'Times-Roman');
       foreach my $label_count (1..$labels_per_row) {
-        #my $xposition = $left_margin + ($label_count -1) * $final_barcode_width + 20;
-        #my $yposition = $ypos -7;
-        #print "My X Position: $xposition and Y Position: $ypos\n";
-        #my $label_text = $found[$i]->[1];
-        #my $label_size =  11;
         $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
-
-        # if (length($label_text) <= 15){
-        #     $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
-        # }
       }
 
       my $label_text = $found[$i]->[1];
       my $label_text_2 = "Accession: ".$found[$i]->[2];
       my $label_text_3 = $found[$i]->[3];
       my $label_text_4 = "Pedigree: ".$found[$i]->[4];
-      # if (length($label_text) > 15) {
-      #   print "My label Count: $label_count\n";
+
         my $label_count_15_xter_plot_name =  1-1;
         my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 118.63;
         my $yposition = $ypos - 30;
@@ -514,7 +504,6 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_4);
         }
         $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $added_text);
-      # }
 
 }
 

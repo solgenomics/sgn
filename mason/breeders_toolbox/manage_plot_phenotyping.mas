@@ -56,7 +56,6 @@ $plot_name
       var plot_name = jQuery("#plot_name").val();
       var trait = jQuery("#select_traits_for_trait_file").val();
       var trait_value = jQuery("#select_pheno_value").val();
-      //alert(plot_name+","+trait+","+trait_value);
 
       new jQuery.ajax ( {
         type: 'POST',
@@ -86,7 +85,6 @@ $plot_name
     jQuery("#select_traits_for_trait_file").on('change', function() {
       var plot_name = jQuery("#plot_name").val();
       var trait = jQuery("#select_traits_for_trait_file").val();
-      //alert(plot_name+","+trait);
 
       new jQuery.ajax ( {
         type: 'POST',
