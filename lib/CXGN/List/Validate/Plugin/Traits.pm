@@ -17,7 +17,14 @@ sub validate {
 #    print STDERR "LIST: ".Data::Dumper::Dumper($list);
 
     foreach my $term (@$list) {
-        my ($trait_name, $full_accession) = split (/\|/, $term);
+        print STDERR $term."\n";
+        my $delim = "|";
+        my $full_accession = substr $term, rindex( $term, $delim ) + length $delim;
+        my $full_accession_length = length($full_accession)+1;
+        $term = substr($term, 0, -$full_accession_length);
+        print STDERR $full_accession."\n";
+        print STDERR $term."\n";
+        #my ($trait_name, $full_accession) = split (/\|/, $term);
         my ($db_name, $accession) = split ":", $full_accession;
 
         if ($accession) {
@@ -47,7 +54,8 @@ sub validate {
             #        if ($rs_var->count == 0) {
             #            push @missing, $_;
             #        }
-            
+            }
+
             if ($db->name eq 'COMP'){
 
                 my $object_ont_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'object_ontology', 'composable_cvtypes')->cvterm_id;
@@ -56,7 +64,7 @@ sub validate {
                 my $trait_ont_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trait_ontology', 'composable_cvtypes')->cvterm_id;
                 my $unit_ont_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'unit_ontology', 'composable_cvtypes')->cvterm_id;
                 my $time_ont_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'time_ontology', 'composable_cvtypes')->cvterm_id;
-                my %cvtypes = { $object_ont_cvterm_id => 1, $attribute_ont_cvterm_id => 1, $method_ont_cvterm_id => 1, $trait_ont_cvterm_id => 1, $unit_ont_cvterm_id => 1, $time_ont_cvterm_id => 1};
+                my %cvtypes = ( $object_ont_cvterm_id => 1, $attribute_ont_cvterm_id => 1, $method_ont_cvterm_id => 1, $trait_ont_cvterm_id => 1, $unit_ont_cvterm_id => 1, $time_ont_cvterm_id => 1 );
 
                 my $cvterm_rs = $schema->resultset("Cv::Cvterm")->search({ name => $term });
                 if ($cvterm_rs->count == 0){
@@ -68,11 +76,13 @@ sub validate {
 
                 my $contains_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'contains', 'relationship')->cvterm_id();
 
-                my $component_rs = $cvterm_rs->first->search_related('cvterm_relationship_objects', {'cvterm_relationship_objects.type_id' => $contains_cvterm_id});
+                my $component_rs = $cvterm_rs->first->search_related('cvterm_relationship_objects', {'me.type_id' => $contains_cvterm_id});
                 while(my $r = $component_rs->next){
                     my $component_cvterm = $r->subject();
-                    my $component_cvprops = $component_cvterm->cv_props;
-                    while(my $cvprop = $component_cvprops->next){
+                    print STDERR $component_cvterm->name."\n";
+                    my $component_cvprops_rs = $schema->resultset('Cv::Cvprop')->search({cv_id=>$component_cvterm->cv_id});
+                    while(my $cvprop = $component_cvprops_rs->next){
+                        print STDERR $cvprop->type_id."\n";
                         if (!exists($cvtypes{$cvprop->type_id})){
                             print STDERR "Component not part of allowed cv ontologies\n";
                             push @missing, $term;
