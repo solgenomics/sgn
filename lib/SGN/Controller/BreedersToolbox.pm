@@ -241,6 +241,7 @@ sub manage_plot_phenotyping :Path("/breeders/plot_phenotyping") Args(0) {
     my $stock = $schema->resultset("Stock::Stock")->find( { stock_id=>$stock_id })->uniquename();
 
     $c->stash->{plot_name} = $stock;
+    $c->stash->{stock_id} = $stock_id;
     $c->stash->{template} = '/breeders_toolbox/manage_plot_phenotyping.mas';
 
 }
