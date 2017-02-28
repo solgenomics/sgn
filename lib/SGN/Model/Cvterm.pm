@@ -97,19 +97,16 @@ sub get_cvterm_row_from_trait_name {
 sub get_trait_from_exact_components {
     my $self= shift;
     my $schema = shift;
-    my $component_ids_ref = shift;
-    print STDERR "comp ids = $component_ids_ref\n";
-    my @component_cvterm_ids = @$component_ids_ref;
+    my $component_cvterm_ids = shift;
 
-    my $contains = $schema->resultset("Cv::Cvterm")->find(
-        { name => 'contains',
-      });
-
-    my $q = "SELECT object_id FROM cvterm_relationship WHERE type_id = ? AND subject_id IN (@{[join',', ('?') x @component_cvterm_ids]}) GROUP BY 1";
-
-    my $h = $schema->storage->dbh->prepare($q);
-
-    $h->execute($contains->cvterm_id(), @component_cvterm_ids);
+    my @intersect_selects;
+    foreach my $cvterm_id (@$component_cvterm_ids){
+        push @intersect_selects, "SELECT object_id FROM cvterm_relationship WHERE subject_id = $cvterm_id";
+    }
+    push @intersect_selects, "SELECT object_id FROM cvterm_relationship HAVING count(object_id) = ".scalar(@$component_cvterm_ids);
+    my $intersect_sql = join ' INTERSECT ', @intersect_selects;
+    my $h = $schema->storage->dbh->prepare($intersect_sql);
+    $h->execute();
     my @trait_cvterm_ids;
     while(my ($trait_cvterm_id) = $h->fetchrow_array()){
         push @trait_cvterm_ids, $trait_cvterm_id;
@@ -125,15 +122,14 @@ sub get_traits_from_components {
     my $self= shift;
     my $schema = shift;
     my $component_cvterm_ids = shift;
+    my @component_cvterm_ids = @$component_cvterm_ids;
 
-    my @intersect_selects;
     my $contains_cvterm_id = $self->get_cvterm_row($schema, 'contains', 'relationship')->cvterm_id();
-    foreach my $cvterm_id (@$component_cvterm_ids){
-        push @intersect_selects, "SELECT object_id FROM cvterm_relationship WHERE subject_id = $cvterm_id and type_id = $contains_cvterm_id";
-    }
-    my $intersect_sql = join ' UNION ', @intersect_selects;
-    my $h = $schema->storage->dbh->prepare($intersect_sql);
-    $h->execute();
+
+    my $q = "SELECT object_id FROM cvterm_relationship WHERE type_id = ? AND subject_id IN (@{[join',', ('?') x @component_cvterm_ids]}) GROUP BY 1";
+
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($contains_cvterm_id, @component_cvterm_ids);
     my @trait_cvterm_ids;
     while(my ($trait_cvterm_id) = $h->fetchrow_array()){
         push @trait_cvterm_ids, $trait_cvterm_id;
