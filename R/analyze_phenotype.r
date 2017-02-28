@@ -1,5 +1,8 @@
 
 # R CMD BATCH --no-save --no-restore '--args phenotype_file="blabla.txt" output_file="blalba.png" ' analyze_phenotype.r output.txt
+library(plyr)
+library(tidyr)
+library(ggplot2)
 
 args=(commandArgs(TRUE))
 
@@ -31,58 +34,50 @@ trial_accessions <- c()
 all_accessions = unique(phenodata$germplasmName)
 
 datamatrix = matrix(nrow = length(all_accessions), ncol=length(studyNames)) # * length(blocks))
-
+alltrialsdata <- c()
 for (i in 1:(length(studyNames))) {
-   trialdata = phenodata[phenodata[,"studyName"]==studyNames[i], ] # & phenodata[,"blockNumber"]==n, ]
 
-   for (m in 1:length(all_accessions)) { 
-	
-      acc_slice = trialdata[trialdata[,"germplasmName"] ==  as.character(all_accessions[m] ), 16 ]
-	    
-      acc_avg  = mean(as.numeric(acc_slice))
-      col = i;
-      datamatrix[m, col] = acc_avg
-   }
+  trialdata <- phenodata[phenodata[,"studyName"]==studyNames[i], ] # & phenodata[,"blockNumber"]==n, ]
+  print(studyNames[i])
+  print(dim(trialdata))
+  
+  metadata <- c('studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'plotNumber')
+ 
+  trialdata <- trialdata[, !(names(trialdata) %in% metadata)]
+ 
+  print(data.frame(trialdata[1:5, ]))
+
+  trialdata <- trialdata[, !(names(trialdata) %in% c('replicate', 'blockNumber'))]
+
+  trialdata <- ddply(trialdata,
+                     "germplasmName",
+                     colwise(mean, na.rm=TRUE)
+                     )
+  trialdata <- data.frame(trialdata)
+  print(dim(trialdata))
+  print(data.frame(trialdata[1:5, ]))
+  trialdata <- trialdata[complete.cases(trialdata), ]
+  print(dim(trialdata))
+  print(data.frame(trialdata[1:5, ]))
+  message('trial name: ',  make.names(studyNames[i]))
+  colnames(trialdata)[2]<- make.names(studyNames[i])
+  print(trialdata)
+
+  if( i == 1) {
+    alltrialsdata <- trialdata
+  } else {
+    alltrialsdata <- merge(alltrialsdata, trialdata, by="germplasmName")
+  }
 }
 
-colnames(datamatrix) <- studyNames
-rownames(datamatrix) <- all_accessions
+names(alltrialsdata) <- make.names(names(alltrialsdata))
+trialNames <- names(alltrialsdata)
 
-# remove columns containing only NULL values
-#
-dims = dim(datamatrix)
-
-empty_cols <- c()
-for (i in 1:dims[2]) { 
-    legal_values = datamatrix[ is.finite(datamatrix[,i]), i ]
-
-    if (length(legal_values) == 0) { 
-       print(paste("empty values", length(legal_values), "dims", dims[1]))
-       print(paste("found empty col ", i))
-       empty_cols <- c(empty_cols, i)
-    }
-}
-
-#for (i in 1:length(empty_cols)) { 
-#   datamatrix <- datamatrix[,-empty_cols[i]]
-#}
-
-
-# remove empty rows
-#
-empty_rows <- c()
-
-legal_values_in_cols_count = datamatrix[ i, is.finite(datamatrix[i,]) ]
-show(legal_values_in_cols_count)
-if (length(legal_values_in_cols_count) == 0) { 
-   print(paste("empty values", length(legal_values_in_cols_count), "dims", dims[1]))
-   print(paste("found empty row ", i))
-   empty_rows <- c(empty_rows, i)
-}
-
-#for (i in 1:length(empty_rows)) { 
-#    datamatrix <- datamatrix[-empty_rows[i],]
-#}
+longAllTrialsData <- gather(alltrialsdata, Trials, Trait,
+                            Kasese.solgs.trial:trial2.NaCRRI,
+                            factor_key=TRUE)
+print(longAllTrialsData)
+datamatrix <- data.matrix(alltrialsdata)
 
 
 if (nrow(datamatrix)==0) { 
@@ -127,17 +122,113 @@ panel.hist <- function(x, ...)
 {
     usr <- par("usr"); on.exit(par(usr))
     par(usr = c(usr[1:2], 0, 1.5) )
-    h <- hist(x, plot = FALSE)
+    h <- hist(x, plot = TRUE)
     breaks <- h$breaks; nB <- length(breaks)
     y <- h$counts; y <- y/max(y)
-    rect(breaks[-nB], 0, breaks[-1], y, col="grey", ...)
+    rect(breaks[-nB], 0, breaks[-1], y, col="red", ...)
 }
 
-#pairs(data,lower.panel=panel.smooth,upper.panel=panel.hist)
 
-png(output_file)
+scatterPlot <- function () {
+  scatter <- ggplot(alltrialsdata, aes(x=Kasese.solgs.trial, y=trial2.NaCRRI)) +
+                ggtitle("Scatter plot of trait values") +
+                theme(plot.title = element_text(size=18,  face="bold", color="olivedrab4", margin = margin(40, 40, 40, 40)),
+                      axis.title.x = element_text(size=14, face="bold", color="olivedrab4"),
+                      axis.title.y = element_text(size=14, face="bold", color="olivedrab4"),
+                      axis.text.x  = element_text(angle=90, vjust=0.5, size=10, color="olivedrab4"),
+                      axis.text.y  = element_text(size=10, color="olivedrab4")) +
+                geom_point(shape=1, color='DodgerBlue') +
+                scale_x_continuous(breaks = round(seq(min(longAllTrialsData$Trait), max(longAllTrialsData$Trait), by = 2),1)) +
+                scale_y_continuous(breaks = round(seq(min(longAllTrialsData$Trait), max(longAllTrialsData$Trait), by = 2),1)) +
+                geom_smooth(method=lm, se=FALSE) 
 
-pairs(datamatrix,lower.panel=panel.smooth, upper.panel=panel.cor,diag.panel=panel.hist)		
+  return(scatter)
+  
+}
+
+
+freqPlot <- function () {
+
+  averages <- ddply(longAllTrialsData,  "Trials", summarise, traitAverage = mean(Trait))
+  
+  freq <- ggplot(longAllTrialsData, aes(x=Trait, fill=Trials)) +
+  xlab("Trait values") +
+  ylab("Frequency") +
+  ggtitle("Frequency Distribution") +
+  theme(plot.title = element_text(size=18, face="bold", color="olivedrab4",  margin = margin(40, 40, 40, 40)),
+        axis.title.x = element_text(size=14, face="bold", color="olivedrab4"),
+        axis.title.y = element_text(size=14, face="bold", color="olivedrab4"),
+        axis.text.x  = element_text(angle=90, size=10, color="olivedrab4"),
+        axis.text.y  = element_text(size=10, color="olivedrab4"),
+        legend.title=element_blank(),
+        legend.text=element_text(size=12, color="olivedrab4"),
+        legend.position="bottom") +         
+  geom_histogram(binwidth=2, alpha=.5, position="identity") +
+  scale_x_continuous(breaks = round(seq(min(longAllTrialsData$Trait), max(longAllTrialsData$Trait), by = 2),1)) +
+  scale_fill_manual(values=c("ForestGreen", "DodgerBlue")) +
+  geom_vline(data=averages,
+             aes(xintercept=traitAverage,  colour=Trials),
+             linetype="dashed", size=2)
+
+  return(freq)
+}
+
+
+
+# Multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+# http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
+
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+png(output_file, height=400, width=800)
+
+scatter <- scatterPlot()
+freq    <- freqPlot()
+
+multiplot(scatter, freq, cols=2)
 
 dev.off()
+
 
