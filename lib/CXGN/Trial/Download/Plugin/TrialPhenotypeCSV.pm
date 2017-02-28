@@ -16,6 +16,7 @@ sub download {
     my $schema = $self->bcs_schema();
     my $trial_id = $self->trial_id();
     my $trait_list = $self->trait_list();
+    my $trait_component_list = $self->trait_component_list();
     my $trait_contains = $self->trait_contains();
     my $data_level = $self->data_level();
     my $include_timestamp = $self->include_timestamp();
@@ -47,6 +48,7 @@ sub download {
             bcs_schema=>$schema,
             data_level=>$data_level,
             trait_list=>$trait_list,
+            trait_component_list=>$trait_component_list,
             trial_list=>$trial_list,
             year_list=>$year_list,
             location_list=>$location_list,
