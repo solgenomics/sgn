@@ -262,6 +262,35 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_phenotyped_trait_components_select : Path('/ajax/html/select/phenotyped_trait_components') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->req->param('trial_id') || 'all';
+    #my $stock_id = $c->req->param('stock_id') || 'all';
+    #my $stock_type = $c->req->param('stock_type') . 's' || 'none';
+    my $data_level = $c->req->param('data_level') || 'all';
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    if ($data_level eq 'all') {
+        $data_level = '';
+    }
+
+    my @traits;
+    my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$trial_id});
+    my @traits = @{$trial->get_trait_components_assayed($data_level)};
+
+    my $id = $c->req->param("id") || "html_trait_component_select";
+    my $name = $c->req->param("name") || "html_trait_component_select";
+
+    my $html = simple_selectbox_html(
+      multiple => 1,
+      name => $name,
+      id => $id,
+      choices => \@traits,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
     my $self = shift;
     my $c = shift;

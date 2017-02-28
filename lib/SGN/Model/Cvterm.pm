@@ -68,18 +68,6 @@ sub get_cvterm_row_from_trait_name {
 
     #print STDERR $trait_name;
 
-    #for mutiterm trait_name of form term1|CHEBI:0000001||term2|CASSTIME:0000002||term3|CASSTISS:0000001
-    if ($trait_name =~ /\|\|/ ) {
-        my @term_array = split(/\|\|/, $trait_name);
-        my $like_search = '%';
-        foreach (@term_array){
-            my ( $full_cvterm_name, $full_accession) = split (/\|/, $_);
-            $like_search .= "$full_accession%";
-        }
-        my $trait_cvterm = $schema->resultset("Cv::Cvterm")->search({ name => { like => $like_search } })->single();
-        return $trait_cvterm;
-    }
-
     #fieldbook trait string should be "$trait_name|$dbname:$trait_accession" e.g. plant height|CO:0000123. substring on last occurance of |
     my $delim = "|";
     my $full_accession = substr $trait_name, rindex( $trait_name, $delim ) + length($delim);
@@ -106,7 +94,7 @@ sub get_cvterm_row_from_trait_name {
     return $trait_cvterm;
 }
 
-sub get_traits_from_components {
+sub get_trait_from_exact_components {
     my $self= shift;
     my $schema = shift;
     my $component_ids_ref = shift;
@@ -126,7 +114,47 @@ sub get_traits_from_components {
     while(my ($trait_cvterm_id) = $h->fetchrow_array()){
         push @trait_cvterm_ids, $trait_cvterm_id;
     }
+    if (scalar(@trait_cvterm_ids) > 1){
+        die "More than one composed trait returned for a given set of exact componenets\n";
+    }
+    my $trait_cvterm = $schema->resultset('Cv::Cvterm')->find({cvterm_id=>$trait_cvterm_ids[0]});
+    return $trait_cvterm;
+}
+
+sub get_traits_from_components {
+    my $self= shift;
+    my $schema = shift;
+    my $component_cvterm_ids = shift;
+
+    my @intersect_selects;
+    my $contains_cvterm_id = $self->get_cvterm_row($schema, 'contains', 'relationship')->cvterm_id();
+    foreach my $cvterm_id (@$component_cvterm_ids){
+        push @intersect_selects, "SELECT object_id FROM cvterm_relationship WHERE subject_id = $cvterm_id and type_id = $contains_cvterm_id";
+    }
+    my $intersect_sql = join ' UNION ', @intersect_selects;
+    my $h = $schema->storage->dbh->prepare($intersect_sql);
+    $h->execute();
+    my @trait_cvterm_ids;
+    while(my ($trait_cvterm_id) = $h->fetchrow_array()){
+        push @trait_cvterm_ids, $trait_cvterm_id;
+    }
     return \@trait_cvterm_ids;
+}
+
+sub get_components_from_trait {
+    my $self= shift;
+    my $schema = shift;
+    my $trait_cvterm_id = shift;
+
+    my $contains_cvterm_id = $self->get_cvterm_row($schema, 'contains', 'relationship')->cvterm_id();
+    my $q = "SELECT subject_id FROM cvterm_relationship WHERE object_id = $trait_cvterm_id and type_id = $contains_cvterm_id;";
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute();
+    my @component_cvterm_ids;
+    while(my ($component_cvterm_id) = $h->fetchrow_array()){
+        push @component_cvterm_ids, $component_cvterm_id;
+    }
+    return \@component_cvterm_ids;
 }
 
 1;
