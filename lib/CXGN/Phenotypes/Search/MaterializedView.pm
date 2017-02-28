@@ -12,7 +12,6 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         bcs_schema=>$schema,
         data_level=>$data_level,
         trait_list=>$trait_list,
-        trait_component_list=>$trait_component_list,
         trial_list=>$trial_list,
         year_list=>$year_list,
         location_list=>$location_list,
@@ -232,7 +231,7 @@ sub search {
         push @where_clause, $columns{'phenotype_value'}."~\'$numeric_regex\'";
     }
 
-    my $where_clause = "WHERE " . (join (" AND " , @where_clause));
+    my $where_clause = " WHERE " . (join (" AND " , @where_clause));
 
     my $offset_clause = '';
     my $limit_clause = '';

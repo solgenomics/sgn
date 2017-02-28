@@ -25,7 +25,7 @@ package SGN::Model::Cvterm;
 
 use CXGN::Chado::Cvterm;
 
-sub get_cvterm_object { 
+sub get_cvterm_object {
     my $self = shift;
     my $schema = shift;
     my $cvterm_name = shift;
@@ -33,27 +33,27 @@ sub get_cvterm_object {
 
     my $cv = $schema->resultset('Cv::Cv')->find( { name => $cv_name });
 
-    if (! $cv) { 
+    if (! $cv) {
 	print STDERR "CV $cv_name not found. Ignoring.";
 	return undef;
     }
     my $term = CXGN::Chado::Cvterm->new_with_term_name(
-	$self->dbc()->dbh(), 
-	$cvterm_name, 
+	$self->dbc()->dbh(),
+	$cvterm_name,
 	$cv->cv_id()
 	);
-    
+
     return $term;
 }
 
-sub get_cvterm_row { 
+sub get_cvterm_row {
     my $self = shift;
     my $schema = shift;
     my $name = shift;
     my $cv_name = shift;
 
-    my $cvterm = $schema->resultset('Cv::Cvterm')->find( 
-        { 
+    my $cvterm = $schema->resultset('Cv::Cvterm')->find(
+        {
             'me.name' => $name,
             'cv.name' => $cv_name,
         }, { join => 'cv' });
@@ -87,7 +87,7 @@ sub get_cvterm_row_from_trait_name {
     my $full_cvterm_name = substr($trait_name, 0, -$full_accession_length);
     my ( $db_name , $accession ) = split (/:/ , $full_accession);
 
-    #check if the trait name string does have  
+    #check if the trait name string does have
     $accession =~ s/\s+$//;
     $accession =~ s/^\s+//;
     $db_name  =~ s/\s+$//;
@@ -97,7 +97,7 @@ sub get_cvterm_row_from_trait_name {
     my $trait_cvterm = $schema->resultset("Cv::Cvterm")
 	->find({
 	     'dbxref.db_id'     => $db_rs->first()->db_id(),
-	     'dbxref.accession' => $accession 
+	     'dbxref.accession' => $accession
 	      },
 	      {
 	      'join' => 'dbxref'
@@ -109,16 +109,19 @@ sub get_cvterm_row_from_trait_name {
 sub get_traits_from_components {
     my $self= shift;
     my $schema = shift;
-    my $component_cvterm_ids = shift;
+    my $component_ids_ref = shift;
+    print STDERR "comp ids = $component_ids_ref\n";
+    my @component_cvterm_ids = @$component_ids_ref;
 
-    my @intersect_selects;
-    foreach my $cvterm_id (@$component_cvterm_ids){
-        push @intersect_selects, "SELECT object_id FROM cvterm_relationship WHERE subject_id = $cvterm_id";
-    }
-    push @intersect_selects, "SELECT object_id FROM cvterm_relationship HAVING count(object_id) = ".scalar(@$component_cvterm_ids);
-    my $intersect_sql = join ' INTERSECT ', @intersect_selects;
-    my $h = $schema->storage->dbh->prepare($intersect_sql);
-    $h->execute();
+    my $contains = $schema->resultset("Cv::Cvterm")->find(
+        { name => 'contains',
+      });
+
+    my $q = "SELECT object_id FROM cvterm_relationship WHERE type_id = ? AND subject_id IN (@{[join',', ('?') x @component_cvterm_ids]}) GROUP BY 1";
+
+    my $h = $schema->storage->dbh->prepare($q);
+
+    $h->execute($contains->cvterm_id(), @component_cvterm_ids);
     my @trait_cvterm_ids;
     while(my ($trait_cvterm_id) = $h->fetchrow_array()){
         push @trait_cvterm_ids, $trait_cvterm_id;

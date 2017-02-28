@@ -242,13 +242,20 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
             push @trait_list_int, $cvterm_id;
         }
     }
-    my @trait_component_list_int;
-    foreach (@trait_component_list) {
-        if ($_ =~ m/^\d+$/) {
-            push @trait_component_list_int, $_;
-        } else {
+    if ($trait_component_list[0] =~ m/^\d+$/) {
+        my $trait_cvterm_ids = SGN::Model::Cvterm->get_traits_from_components($schema, \@trait_component_list);
+        foreach (@$trait_cvterm_ids) {
+          push @trait_list_int, $_;
+        }
+    } else {
+        my @trait_component_ids;
+        foreach (@trait_component_list) {
             my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $_)->cvterm_id();
-            push @trait_component_list_int, $cvterm_id;
+            push @trait_component_ids, $cvterm_id;
+        }
+        my $trait_cvterm_ids = SGN::Model::Cvterm->get_traits_from_components($schema, \@trait_component_ids);
+        foreach (@$trait_cvterm_ids) {
+          push @trait_list_int, $_;
         }
     }
     my @plot_list_int;
@@ -322,7 +329,6 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $download = CXGN::Trial::Download->new({
         bcs_schema => $schema,
         trait_list => \@trait_list_int,
-        trait_component_list => \@trait_component_list_int,
         year_list => \@year_list,
         location_list => \@location_list_int,
         trial_list => \@trial_list_int,
