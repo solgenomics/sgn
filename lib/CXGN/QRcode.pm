@@ -1,4 +1,4 @@
-package SGN::Controller::QRcode;
+package CXGN::QRcode;
 
 use Moose;
 use GD;

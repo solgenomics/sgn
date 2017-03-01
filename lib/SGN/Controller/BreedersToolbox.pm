@@ -19,7 +19,7 @@ use Try::Tiny;
 use File::Basename qw | basename dirname|;
 use File::Spec::Functions;
 use CXGN::People::Roles;
-use SGN::Controller::AJAX::HTMLSelect;;
+
 
 BEGIN { extends 'Catalyst::Controller'; }
 

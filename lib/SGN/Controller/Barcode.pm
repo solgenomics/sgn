@@ -11,6 +11,7 @@ use GD::Barcode::QRcode;
 use Tie::UrlEncoder;
 use PDF::LabelPage;
 use Math::Base36 ':all';
+use CXGN::QRcode;
 
 our %urlencode;
 
@@ -113,9 +114,7 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
    $c->tempfiles_subdir('barcode');
    my ($file, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
 
-   my $qrcode = SGN::Controller::QRcode->new(
-
-   );
+   my $qrcode = CXGN::QRcode->new();
     my $barcode = $qrcode->barcode_qrcordes(
          $stock_id,
          $stock_name,
@@ -137,7 +136,7 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
     $c->tempfiles_subdir('barcode');
     my ($file, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
 
-    my $qrcode = SGN::Controller::QRcode->new(
+    my $qrcode = CXGN::QRcode->new(
 
     );
      my $barcode = $qrcode->phenotyping_qrcordes(

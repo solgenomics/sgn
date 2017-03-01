@@ -340,9 +340,16 @@ sub update_plot_phenotype_POST : Args(0) {
       metadata_hash=>\%phenotype_metadata,
   );
 
+  my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+  if ($verified_error){
+    $c->stash->{rest} = {error => $verified_error};
+    $c->detach;
+  }
+
   my $store_error = $store_phenotypes->store();
   if ($store_error) {
       $c->stash->{rest} = {error => $store_error};
+      $c->detach;
   }
 
   $c->stash->{rest} = {success => 1}

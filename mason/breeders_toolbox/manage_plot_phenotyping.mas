@@ -46,11 +46,30 @@ $type_name => "plot"
 </div>
 </div>
 
+
+<div class="well well-sm">
+  <div class="row">
+    <div class="col-md-1 col-lg-1">
+    </div>
+    <div class="col-md-10 col-lg-10">
+
 <&| /page/info_section.mas, title => "Trials" &>
 
   <& /stock/trials.mas, stock_id => $stock_id &>
 
 </&>
+
+      </div>
+    <div class="col-md-1 col-lg-1">
+    </div>
+  </div>
+</div>
+
+<div class="well well-sm">
+  <div class="row">
+    <div class="col-md-1 col-lg-1">
+    </div>
+    <div class="col-md-10 col-lg-10">
 
 <& /stock/download_stock_phenotypes_dialog.mas, stock_id => $stock_id, stock_name => $plot_name, stock_type => $type_name &>
 <&| /page/info_section.mas, title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='stock_download_phenotypes_button'>Download Data</a>]" &>
@@ -58,6 +77,12 @@ $type_name => "plot"
   <& /stock/traits.mas, stock_id => $stock_id &>
 
 </&>
+
+      </div>
+    <div class="col-md-1 col-lg-1">
+    </div>
+  </div>
+</div>
 
 <script>
   jQuery(document).ready(function($) {
