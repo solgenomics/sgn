@@ -132,22 +132,18 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
     my $stock_name = shift;
     my $field_info = shift;
     my $base_url = $c->config->{main_production_site_url};
+    my $text = "$base_url/breeders/plot_phenotyping?stock_id=$stock_id";
 
     $c->tempfiles_subdir('barcode');
-    my ($file, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+    my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
 
-    my $qrcode = CXGN::QRcode->new(
-
-    );
-     my $barcode = $qrcode->phenotyping_qrcordes(
-          $stock_id,
-          $stock_name,
-          $field_info,
-          $file,
-          $base_url,
+    my $barcode_generator = CXGN::QRcode->new();
+    my $barcode_file = $barcode_generator->get_barcode_file(
+          $file_location,
+          $text,
      );
 
-    return $barcode;
+    return $barcode_file;
   }
 
 =head2 barcode

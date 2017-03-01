@@ -28,15 +28,11 @@ sub barcode_qrcordes {
     return $file;
 }
 
-sub phenotyping_qrcordes {
+sub get_barcode_file {
   my $self = shift;
-  my $stock_id = shift;
-  my $stock_name = shift;
-  my $field_info = shift;
   my $file = shift;
-  my $base_url = shift;
+  my $text = shift;
 
-  my $text = "$base_url/breeders/plot_phenotyping?stock_id=$stock_id";
   my $qrcode = Imager::QRCode->new(
         size          => 5,
         margin        => 5,
