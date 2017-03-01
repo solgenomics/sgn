@@ -43,8 +43,9 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id) = _prep_upload($c, $file_type);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip) = _prep_upload($c, $file_type);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -89,8 +90,9 @@ sub upload_phenotype_store_POST : Args(1) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id) = _prep_upload($c, $file_type);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip) = _prep_upload($c, $file_type);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -150,7 +152,7 @@ sub upload_phenotype_store_POST : Args(1) {
 
 sub _prep_upload {
     my ($c, $file_type) = @_;
-    my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
+    my $uploader = CXGN::UploadFile->new();
     my $parser = CXGN::Phenotypes::ParseUpload->new();
     my @success_status;
     my @error_status;
@@ -210,16 +212,7 @@ sub _prep_upload {
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_type
-    });
-    my $archived_filename_with_path = $uploader->archive();
+    my $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         push @error_status, "Could not save file $upload_original_name in archive.";
@@ -234,16 +227,10 @@ sub _prep_upload {
     if ($image_zip) {
         my $upload_original_name = $image_zip->filename();
         my $upload_tempfile = $image_zip->tempname;
-        my $uploader = CXGN::UploadFile->new({
-            tempfile => $upload_tempfile,
-            subdirectory => $subdirectory."_images",
-            archive_path => $c->config->{archive_path},
-            archive_filename => $upload_original_name,
-            timestamp => $timestamp,
-            user_id => $user_id,
-            user_role => $user_type
-        });
-        $archived_image_zipfile_with_path = $uploader->archive();
+        my %phenotype_metadata;
+        my $time = DateTime->now();
+
+        $archived_image_zipfile_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
         my $md5 = $uploader->get_md5($archived_image_zipfile_with_path);
         if (!$archived_image_zipfile_with_path) {
             push @error_status, "Could not save images zipfile $upload_original_name in archive.";
@@ -297,7 +284,7 @@ sub _prep_upload {
         }
     }
 
-    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $archived_image_zipfile_with_path, $user_id);
+    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $archived_image_zipfile_with_path);
 }
 
 sub update_plot_phenotype :  Path('/ajax/phenotype/plot_phenotype_upload') : ActionClass('REST') { }
@@ -380,11 +367,9 @@ sub retrieve_plot_phenotype_POST : Args(0) {
   my $stock = $schema->resultset("Stock::Stock")->find( { uniquename=>$plot_name });
   my $stock_id = $stock->stock_id();
 
-  my $h = $dbh->prepare("SELECT object.uniquename AS stock_name, object.stock_id AS stock_id, me.uniquename AS plot_name, phenotype.value FROM stock me LEFT JOIN
-nd_experiment_stock nd_experiment_stocks ON nd_experiment_stocks.stock_id =
-me.stock_id LEFT JOIN nd_experiment nd_experiment ON nd_experiment.nd_experiment_id = nd_experiment_stocks.nd_experiment_id LEFT JOIN nd_experiment_phenotype nd_experiment_phenotypes ON nd_experiment_phenotypes.nd_experiment_id = nd_experiment.nd_experiment_id LEFT JOIN phenotype phenotype ON phenotype.phenotype_id = nd_experiment_phenotypes.phenotype_id LEFT JOIN cvterm observable ON observable.cvterm_id = phenotype.observable_id LEFT JOIN nd_experiment_project nd_experiment_projects ON nd_experiment_projects.nd_experiment_id = nd_experiment.nd_experiment_id LEFT JOIN project project ON project.project_id = nd_experiment_projects.project_id LEFT JOIN stock_relationship stock_relationship_subjects ON stock_relationship_subjects.subject_id = me.stock_id LEFT JOIN stock object ON object.stock_id = stock_relationship_subjects.object_id WHERE ( ( observable.cvterm_id =? and me.stock_id=? ) );");
+  my $h = $dbh->prepare("SELECT phenotype.value FROM stock me LEFT JOIN nd_experiment_stock nd_experiment_stocks ON nd_experiment_stocks.stock_id = me.stock_id LEFT JOIN nd_experiment nd_experiment ON nd_experiment.nd_experiment_id = nd_experiment_stocks.nd_experiment_id LEFT JOIN nd_experiment_phenotype nd_experiment_phenotypes ON nd_experiment_phenotypes.nd_experiment_id = nd_experiment.nd_experiment_id LEFT JOIN phenotype phenotype ON phenotype.phenotype_id = nd_experiment_phenotypes.phenotype_id LEFT JOIN cvterm observable ON observable.cvterm_id = phenotype.observable_id LEFT JOIN nd_experiment_project nd_experiment_projects ON nd_experiment_projects.nd_experiment_id = nd_experiment.nd_experiment_id LEFT JOIN project project ON project.project_id = nd_experiment_projects.project_id LEFT JOIN stock_relationship stock_relationship_subjects ON stock_relationship_subjects.subject_id = me.stock_id LEFT JOIN stock object ON object.stock_id = stock_relationship_subjects.object_id WHERE ( ( observable.cvterm_id =? and me.stock_id=? ) );");
   $h->execute($trait_id,$stock_id);
-  while (my ($s_name, $s_id, $plot_name, $plot_value) = $h->fetchrow_array()) {
+  while (my ($plot_value) = $h->fetchrow_array()) {
     $trait_value = $plot_value;
   }
 
