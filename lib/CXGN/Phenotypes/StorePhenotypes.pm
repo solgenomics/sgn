@@ -469,6 +469,7 @@ sub save_archived_file_metadata {
 
     my $upload_file = CXGN::UploadFile->new();
     my $md5 = $upload_file->get_md5($archived_file);
+
     my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id,});
     $md_row->insert();
     my $file_row = $self->metadata_schema->resultset("MdFiles")
