@@ -60,15 +60,22 @@
 
 <script>
 get_select_box('trait_components', 'object_select_div', { 'id' : 'object_select', 'name': 'object_select', 'default': 'Select an object', 'cv_type': 'object_ontology' });
-get_select_box('trait_components', 'attribute_select_div', { 'id' : 'attribute_select', 'name': 'attribute_select', 'default': 'Select a attribute', 'cv_type': 'attribute_ontology' });
+get_select_box('trait_components', 'attribute_select_div', { 'id' : 'attribute_select', 'name': 'attribute_select', 'default': 'Select an attribute', 'cv_type': 'attribute_ontology' });
 get_select_box('trait_components', 'unit_select_div', { 'id' : 'unit_select', 'name': 'unit_select', 'default': 'Select a unit', 'cv_type': 'unit_ontology' });
 get_select_box('trait_components', 'time_select_div', { 'id' : 'time_select', 'name': 'time_select', 'default': 'Select a time', 'cv_type': 'time_ontology' });
 
 jQuery(document).on('change','#object_select, #attribute_select, #unit_select, #time_select', function() { // retrieve matching traits each time component selection changes
     console.log("Change in component selects\n");
     var component_ids = get_component_ids();
-    matching_traits = retrieve_matching_traits(component_ids);
-    var trait_html = format_options_list(matching_traits);
+    var matching_traits = retrieve_matching_traits(component_ids);
+    var trait_html;
+    if (matching_traits.length > 0) {
+      trait_html = format_options_list(matching_traits);
+    }
+    else {
+      trait_html = 'No matching traits.';
+    }
+
     jQuery('#matched_traits_div').html(trait_html);
 });
 
@@ -113,6 +120,7 @@ function get_component_ids () {
 }
 
 function retrieve_matching_traits (component_ids) {
+if (component_ids.length < 1) { return [];}
 var categories = ['trait_components','traits'];
 var querytype = [1];
 var data = [component_ids];
