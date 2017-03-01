@@ -6,6 +6,7 @@ use Data::Dumper;
 use JSON::Any;
 use Try::Tiny;
 use Bio::Chado::Schema;
+use SGN::Model::Cvterm;
 
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
@@ -60,6 +61,11 @@ sub compose_trait {
 
       my $schema = $self->schema();
       my $dbh = $schema->storage->dbh;
+
+      my $existing_trait_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@ids);
+      if ($existing_trait_id) {
+        die "This composed trait already exists.\n";
+      }
 
       my $db = $schema->resultset("General::Db")->find_or_create(
           { name => 'COMP' });
