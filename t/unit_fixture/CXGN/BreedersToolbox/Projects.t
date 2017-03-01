@@ -53,6 +53,11 @@ is_deeply(\@sorted_field_trials, [
             '144',
             'test_t',
             'test tets'
+          ],
+          [
+            '165',
+            'CASS_6Genotypes_Sampling_2015',
+            'Example trial from cassbase'
           ]
         ], 'test get trials');
 #print STDERR Dumper $cross_trials;
@@ -174,7 +179,7 @@ is_deeply($locations,[
           [
             23,
             'test_location',
-            4
+            5
           ]
         ], 'get locations by bp');
 
@@ -200,7 +205,7 @@ is_deeply($all_locations, [
             undef,
             undef,
             undef,
-            5239
+            5456
           ],
           [
             24,
