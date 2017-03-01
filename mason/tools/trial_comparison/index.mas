@@ -10,24 +10,25 @@
 
 <& '/page/page_title.mas', title => "Compare trials" &>
 
-<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'CXGN.List' ] &>
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'CXGN.List', 'CXGN.Login' ] &>
 <!-- table>
 <tr><th>Trial 1</th><th>Trial 2</th><th>Trait</th></tr>
 <tr><td width="200"><input id="trial_1" /></td><td width="200"><input id="trial_2" /></td><td width="200"><select id="trait_select"><option disabled="1">select trials first</option></select></td></tr>
 <tr><td><button id="submit_trial_comparison">Submit</button></td></tr>
 </table -->
 
-<center>
-<table width="400">
-<tr><td>Choose a trial list:</td></tr>
-<tr><td><div id="trial_list_select_div" width="200"></td></tr>
-<tr><td>Trials contain a total of <span id="total_accession_count">?</span> accessions, with <span id="common_accession_count">?</span> common accessions, phenotyped for <span id="common_trait_count">?</span> common traits</td></tr>
-<tr><td><b>Choose trait:</b></td></tr>
-<tr><td><select id="trait_select"><option disabled="1">select trials first</option></select></td></tr>
-<tr><td><button id="submit_trial_list">Compare</button></td></tr>
-</table>
+  <center>
+  <table width="400">
+  <tr><td>Choose a trial list:</td></tr>
+  <tr><td><div id="trial_list_select_div" width="200"></td></tr>
+  <tr><td>Trials contain a total of <span id="total_accession_count">?</span> accessions, with <span id="common_accession_count">?</span> common accessions, phenotyped for <span id="common_trait_count">?</span> common traits</td></tr>
+  <tr><td><b>Choose trait:</b></td></tr>
+  <tr><td><select id="trait_select"><option disabled="1">select trials first</option></select></td></tr>
+  <tr><td><button id="submit_trial_list">Compare</button></td></tr>
+  </table>
 
 <div id="result_div">
+  <img id="result_image" />
 </div>
 
 </center>
@@ -44,9 +45,16 @@ jQuery('#trait_select').focus( function() {
    var trial_1 = jQuery('#trial_1').val();
    var trial_2 = jQuery('#trial_2').val();
    var trial_list_id = jQuery('#trial_list_select_list_select').val();
+   var list = new CXGN.List;
+   var item_data = list.getListData(trial_list_id);
+   var items = item_data.elements;
+   var params = "";
+   for (n=0; n<items.length; n++) { 
+      params += 'trial_name='+items[n][1]+'&';
+   }
+
    jQuery.ajax( { 
-      url: '/ajax/trial/common_traits',
-      data: { 'trial_1': trial_1, 'trial_2': trial_2, 'list_id': trial_list_id },
+      url: '/ajax/trial/common_traits?'+params,
       success: function(response) { 
          if (response.error) { jQuery('#trait_select').val('error'); }
          else {
@@ -61,7 +69,7 @@ jQuery('#trait_select').focus( function() {
          }
       },
       error: function(response) { 
-         alert("An error occurred, the service may temporarily be unavailable");
+	//alert("An error occurred, the service may temporarily be unavailable");
       }
     
    });
@@ -78,7 +86,7 @@ jQuery('#submit_trial_comparison').click( function() {
        }
        else { 
 	  if (response.png) { 
-	     jQuery('#result_div').html('<img src="'+response.png+'" />');
+	     jQuery('#result_image').attr("src", response.png);
           }
        }
     }
@@ -86,9 +94,14 @@ jQuery('#submit_trial_comparison').click( function() {
    });
 });
 
-lo = new CXGN.List();
-var select_html = lo.listSelect('trial_list_select', ['trials'], 'select');
-jQuery('#trial_list_select_div').html(select_html);
+if (isLoggedIn()) { 
+  lo = new CXGN.List();
+  var select_html = lo.listSelect('trial_list_select', ['trials'], 'select');
+  jQuery('#trial_list_select_div').html(select_html);
+}
+else { 
+  jQuery('#trial_list_select_div').html("[Log in to use lists]");
+}
 
 jQuery('#submit_trial_list').click( function() { 
    var list_id = jQuery('#trial_list_select_list_select').val();
@@ -100,14 +113,12 @@ jQuery('#submit_trial_list').click( function() {
            alert(response.error);
         }
         else { 
-           jQuery('#result_div').html('<img src="'+response.png+'" />');
+           jQuery('#result_image').attr("src", response.png);
         }
      }
    });
 });
 
-     
-     				
 
-
+			
 </script>

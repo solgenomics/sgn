@@ -39,18 +39,25 @@ sub compare_trials_GET : Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $trial_1 = $c->req->param('trial_1');
-    my $trial_2 = $c->req->param('trial_2');
-    
+    my @trial_names = $c->req->param('trial_name');
+
+    print STDERR "TRIAL NAMES: ".(join ",",@trial_names);
     my $cvterm_id = $c->req->param('cvterm_id');
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $trial_id_rs = $schema->resultset("Project::Project")->search( { name => { in => [ $trial_1, $trial_2 ]} });
+    my $trial_id_rs = $schema->resultset("Project::Project")->search( { name => { in => [ @trial_names ]} });
 
     my @trial_ids = map { $_->project_id() } $trial_id_rs->all();
 
+    print STDERR "TRIAL IDS: ".(join ",",@trial_ids)."\n";
+
     if (@trial_ids < 2) { 
 	$c->stash->{rest} = { error => "One or both trials are not found in the database. Please try again." };
+	return;
+    }
+
+    if (!$cvterm_id) { 
+	$c->stash->{rest} = { error => "No cvterm_id supplied." };
 	return;
     }
 
@@ -179,27 +186,25 @@ sub common_traits_GET : Args(0) {
     my $trial_1 = $c->req->param("trial_1");
     my $trial_2 = $c->req->param("trial_2");
     
-    my $trial_list_id = $c->req->param("list_id");
+    my @trials = $c->req->param("trial_name");
 
-    my @trials;
-
-    if ($trial_list_id) { 
-	#print STDERR "Parsing trial_list_id...\n";
-	my $list = CXGN::List->new(
-	    { 
-		dbh => $c->dbic_schema("Bio::Chado::Schema")->storage->dbh(),
-		list_id => $trial_list_id,
-	    });
-	my $trials = $list->elements();
-	#print STDERR Dumper($trials);
-	@trials = @$trials;
-    }
-    else { 
+    # if ($trial_list_id) { 
+    # 	#print STDERR "Parsing trial_list_id...\n";
+    # 	my $list = CXGN::List->new(
+    # 	    { 
+    # 		dbh => $c->dbic_schema("Bio::Chado::Schema")->storage->dbh(),
+    # 		list_id => $trial_list_id,
+    # 	    });
+    # 	my $trials = $list->elements();
+    # 	#print STDERR Dumper($trials);
+    # 	@trials = @$trials;
+    # }
+    #else { 
 	#print STDERR "Parsing trial_1 and trial_2...\n";
 	if ( ($trial_1 ne "") && ($trial_2 ne "")) { 
 	    @trials = ($trial_1, $trial_2);
 	}
-    }
+    #}
     
     $self->get_common_traits($c, @trials);
     
