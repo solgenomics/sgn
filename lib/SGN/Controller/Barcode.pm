@@ -110,19 +110,18 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
    my $stock_id = shift;
    my $stock_name = shift;
    my $field_info = shift;
+   my $text = "stock name: ".$stock_name. "\n stock id: ". $stock_id. "\n".$field_info;
 
    $c->tempfiles_subdir('barcode');
-   my ($file, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+   my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
 
-   my $qrcode = CXGN::QRcode->new();
-    my $barcode = $qrcode->barcode_qrcordes(
-         $stock_id,
-         $stock_name,
-         $field_info,
-         $file,
+   my $barcode_generator = CXGN::QRcode->new();
+   my $barcode_file = $barcode_generator->get_barcode_file(
+         $file_location,
+         $text,
     );
 
-   return $barcode;
+   return $barcode_file;
  }
 
  sub phenotyping_qrcode_jpg : Path('/barcode/tempfile') Args(2){
