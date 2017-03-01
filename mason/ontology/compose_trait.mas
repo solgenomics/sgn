@@ -80,11 +80,11 @@ jQuery(document).on('change','#object_select, #attribute_select, #unit_select, #
 });
 
 jQuery('#compose_trait').on('click', function () {
-
   var component_ids = get_component_ids();
-  matching_traits = retrieve_matching_traits(component_ids);
-  if (matching_traits.length > 0) {
-    alert("Error. This combination in not new. Use trait"+matching_traits);
+  var matching_trait_id = retrieve_exact_trait(component_ids);
+  console.log("matching trait id="+matching_trait_id);
+  if (matching_trait_id) {
+    alert("Error. This combination already exists with id "+matching_trait_id);
   }
   else {
     jQuery.ajax( {
@@ -118,6 +118,27 @@ function get_component_ids () {
   if (jQuery("#time_select").val()) { component_ids.push(jQuery("#time_select").val()); }
   return component_ids;
 }
+
+function retrieve_exact_trait (component_ids) {
+jQuery.ajax( {
+  url: '/ajax/onto/get_trait_from_exact_components',
+  async: false,
+  data: {'ids': component_ids},
+  success: function(response) {
+    if(response.trait_id) {
+      trait_id = response.trait_id;
+    }
+    if(response.error) {
+      trait_id = 0;
+    };
+  },
+  error: function(request, status, err) {
+    console.log("Error retrieving exact match");
+  }
+});
+  return trait_id;
+}
+
 
 function retrieve_matching_traits (component_ids) {
 if (component_ids.length < 1) { return [];}

@@ -103,7 +103,7 @@ sub get_trait_from_exact_components {
     foreach my $cvterm_id (@$component_cvterm_ids){
         push @intersect_selects, "SELECT object_id FROM cvterm_relationship WHERE subject_id = $cvterm_id";
     }
-    push @intersect_selects, "SELECT object_id FROM cvterm_relationship HAVING count(object_id) = ".scalar(@$component_cvterm_ids);
+    push @intersect_selects, "SELECT object_id FROM cvterm_relationship GROUP BY 1 HAVING count(object_id) = ".scalar(@$component_cvterm_ids);
     my $intersect_sql = join ' INTERSECT ', @intersect_selects;
     my $h = $schema->storage->dbh->prepare($intersect_sql);
     $h->execute();
@@ -112,10 +112,9 @@ sub get_trait_from_exact_components {
         push @trait_cvterm_ids, $trait_cvterm_id;
     }
     if (scalar(@trait_cvterm_ids) > 1){
-        die "More than one composed trait returned for a given set of exact componenets\n";
+        die "More than one composed trait returned for the given set of exact componenets\n";
     }
-    my $trait_cvterm = $schema->resultset('Cv::Cvterm')->find({cvterm_id=>$trait_cvterm_ids[0]});
-    return $trait_cvterm;
+    return $trait_cvterm_ids[0];
 }
 
 sub get_traits_from_components {

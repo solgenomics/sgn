@@ -27,6 +27,7 @@ Lukas Mueller <lam87@cornell.edu>
 package SGN::Controller::AJAX::Onto;
 
 use Moose;
+use SGN::Model::Cvterm;
 use CXGN::Chado::Cvterm;
 use CXGN::Onto;
 
@@ -46,7 +47,6 @@ Creates a new term in the designated composed trait cv and links it to component
 
 =cut
 
-
 sub compose_trait: Path('/ajax/onto/compose') Args(0) {
 
   my $self = shift;
@@ -62,6 +62,28 @@ sub compose_trait: Path('/ajax/onto/compose') Args(0) {
 
   $c->stash->{rest} = { success => $composed_trait_id };
 
+}
+
+=head2 get_trait_from_exact_components
+
+searches for and returns (if found) a composed trait that contains the exact components supplied
+
+=cut
+
+sub get_trait_from_exact_components: Path('/ajax/onto/get_trait_from_exact_components') Args(0) {
+
+  my $self = shift;
+  my $c = shift;
+  my @component_ids = $c->req->param("ids[]");
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+  my $trait_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@component_ids);
+  if (!$trait_id) {
+    $c->stash->{rest} = { error => "No exact matches found."};
+  }
+  else {
+    $c->stash->{rest} = { trait_id => $trait_id };
+  }
 }
 
 =head2 children

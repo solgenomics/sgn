@@ -156,6 +156,14 @@ sub compose_trait {
       });
     }
 
+    my $refresh1 = "REFRESH MATERIALIZED VIEW traits";
+    $h = $dbh->prepare($refresh1);
+    $h->execute();
+
+    my $refresh2 = "REFRESH MATERIALIZED VIEW trait_componentsXtraits";
+    $h = $dbh->prepare($refresh2);
+    $h->execute();
+
     return $new_term->cvterm_id();
 }
 
