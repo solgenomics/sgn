@@ -36,8 +36,14 @@ sub submit_contact_form_POST : Args(0) {
     my $c = shift;
     my $title = $c->req->param('title');
     my $body = $c->req->param('body');
-    #print STDERR "$title\n";
-    #print STDERR "$body\n";
+    my $security_answer = $c->req->param('security_answer');
+    my $security_attempt = $c->req->param('security_attempt');
+
+    if (!$security_attempt || !$security_answer || $security_answer ne $security_attempt){
+        $c->stash->{rest} = {error => "You must be a clever bot"};
+        $c->detach;
+    }
+
     my $github_access_token = $c->config->{github_access_token};
     my $website_name = $c->config->{project_name};
     my $ua = LWP::UserAgent->new;
@@ -57,10 +63,10 @@ sub submit_contact_form_POST : Args(0) {
         if ($message_hash->{id}){
             $c->stash->{rest} = {success => 1};
         } else {
-            $c->stash->{rest} = {error => $message};
+            $c->stash->{rest} = {error => 'The message was not posted to github correctly. Please try again.'};
         }
     } else {
-        $c->stash->{rest} = {error => 1};
+        $c->stash->{rest} = {error => "There was an error submitting the message. Please try again."};
     }
 }
 
