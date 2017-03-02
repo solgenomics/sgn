@@ -17,10 +17,11 @@ sub form :Path('/contact/form') :Args(0) {
     my ($self, $c) = @_;
     my ($username, $useremail) = _load_user($c);
 
-    my $val_1 = int rand(20);
+    my $random_factor = int rand(5);
+    my $minimum = int(rand(10)) * 10**$random_factor;
     my $val_2 = int rand(20);
-    my $question = "$val_1 + $val_2";
-    my $answer = $val_1 + $val_2;
+    my $question = "$minimum + $val_2";
+    my $answer = $minimum + $val_2;
 
     $c->stash->{website_name} = $c->config->{project_name};
     #$c->stash->{captcha_public_key} = $c->config->{captcha_public_key};
