@@ -3,7 +3,6 @@ package SGN::Controller::Contact;
 use Moose;
 use namespace::autoclean;
 use CXGN::People;
-use LWP::UserAgent;
 
 BEGIN { extends 'Catalyst::Controller' }
 
