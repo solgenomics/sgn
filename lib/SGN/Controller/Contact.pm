@@ -19,6 +19,8 @@ sub form :Path('/contact/form') :Args(0) {
     my ($username, $useremail) = _load_user($c);
 
     $c->stash->{website_name} = $c->config->{project_name};
+    $c->stash->{captcha_public_key} = $c->config->{captcha_public_key};
+    $c->stash->{captcha_private_key} = $c->config->{captcha_private_key};
     $c->stash->{contact_form_human_question} = $c->config->{contact_form_human_question};
     $c->stash->{contact_form_human_answer} = $c->config->{contact_form_human_answer};
     $c->stash->{email_address_to_display} = $c->config->{feedback_email};
