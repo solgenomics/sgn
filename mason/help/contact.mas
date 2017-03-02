@@ -2,7 +2,6 @@
 $contact_form_human_answer => ''
 $contact_form_human_question => ''
 $website_name => ''
-$github_access_token => ''
 $email_address_to_display => ''
 </%args>
 
@@ -88,6 +87,26 @@ my $infoNeeded = ["name", "email", "subject", ];
   </div>   
 </div>
 
+<div class="modal fade" id="submit_contact_form_response" name="submit_contact_form_response" tabindex="-1" role="dialog" aria-labelledby="submitContactResponseDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="submitContactResponseDialog">Contact Form</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="submit_contact_form_response_message">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 
 jQuery(document).ready(function () {
@@ -110,21 +129,33 @@ jQuery(document).ready(function () {
             alert("Body is required. Please fill in this field.");
         } else {
             jQuery.ajax ( {
-                url : 'https://api.github.com/repos/solgenomics/contactform/issues?access_token=<% $github_access_token %>',
+                url : '/ajax/contact/submit',
                 type: "POST",
-                contentType: "application/json",
-                dataType: "json",
-                data: JSON.stringify({
+                beforeSend: function(){
+                    jQuery('#working_modal').modal('show');
+                },
+                data: {
                     "title": subject,
-                    "body": body + '\n\n From: ' + name + '\n Email: ' + email,
-                    "labels":["<% $website_name %>"],
-                }),
+                    "body": body + '\n\nFrom: ' + name + '\nEmail: ' + email,
+                },
                 success: function(response){
                     //console.log(response);
-                    alert("Thank you for your message. We will reply as soon as possible.");
+                    jQuery('#working_modal').modal('hide');
+                    var html = '';
+                    if (response.error){
+                        html = "There was an error submitting the message. Please try again.";
+                    } else {
+                        html = "Thank you for your message. We will reply as soon as possible.";
+                    }
+                    jQuery('#submit_contact_form_response_message').html(html);
+                    jQuery('#submit_contact_form_response').modal('show');
                 },
                 error: function(response){
-                    alert("Error posting message! Please contact us. : "+response);
+                    console.log(response);
+                    jQuery('#working_modal').modal('hide');
+                    var html = "Error posting message! Please contact us. : "+response;
+                    jQuery('#submit_contact_form_response_message').html(html);
+                    jQuery('#submit_contact_form_response').modal('show');
                 }
             });
         }

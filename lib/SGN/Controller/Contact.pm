@@ -3,6 +3,7 @@ package SGN::Controller::Contact;
 use Moose;
 use namespace::autoclean;
 use CXGN::People;
+use LWP::UserAgent;
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -29,9 +30,7 @@ sub form :Path('/contact/form') :Args(0) {
     $c->stash->{contact_form_human_question} = $question;
     $c->stash->{contact_form_human_answer} = $answer;
     $c->stash->{email_address_to_display} = $c->config->{feedback_email};
-    $c->stash->{github_access_token} = $c->config->{github_access_token};
-    
-     $c->stash->{template} = '/help/contact.mas';
+    $c->stash->{template} = '/help/contact.mas';
 }
 
 #Loads the user if he has an account
