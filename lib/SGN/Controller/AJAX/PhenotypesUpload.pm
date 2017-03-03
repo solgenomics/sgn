@@ -43,9 +43,8 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip) = _prep_upload($c, $file_type);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id) = _prep_upload($c, $file_type);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -90,9 +89,8 @@ sub upload_phenotype_store_POST : Args(1) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
-    my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip) = _prep_upload($c, $file_type);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id) = _prep_upload($c, $file_type);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -152,7 +150,7 @@ sub upload_phenotype_store_POST : Args(1) {
 
 sub _prep_upload {
     my ($c, $file_type) = @_;
-    my $uploader = CXGN::UploadFile->new();
+    my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
     my $parser = CXGN::Phenotypes::ParseUpload->new();
     my @success_status;
     my @error_status;
@@ -212,7 +210,16 @@ sub _prep_upload {
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
-    my $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_type
+    });
+    my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         push @error_status, "Could not save file $upload_original_name in archive.";
@@ -227,10 +234,16 @@ sub _prep_upload {
     if ($image_zip) {
         my $upload_original_name = $image_zip->filename();
         my $upload_tempfile = $image_zip->tempname;
-        my %phenotype_metadata;
-        my $time = DateTime->now();
-
-        $archived_image_zipfile_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory."_images",
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_type
+        });
+        $archived_image_zipfile_with_path = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_image_zipfile_with_path);
         if (!$archived_image_zipfile_with_path) {
             push @error_status, "Could not save images zipfile $upload_original_name in archive.";
@@ -284,7 +297,102 @@ sub _prep_upload {
         }
     }
 
-    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $archived_image_zipfile_with_path);
+    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $archived_image_zipfile_with_path, $user_id);
+}
+
+sub update_plot_phenotype :  Path('/ajax/phenotype/plot_phenotype_upload') : ActionClass('REST') { }
+sub update_plot_phenotype_POST : Args(0) {
+  my $self = shift;
+  my $c = shift;
+  my $plot_name = $c->req->param("plot_name");
+  my $trait_id = $c->req->param("trait");
+  my $trait_value = $c->req->param("trait_value");
+  my $time = DateTime->now();
+  my $timestamp = $time->ymd()."_".$time->hms();
+  my $dbh = $c->dbc->dbh();
+  my $schema = $c->dbic_schema("Bio::Chado::Schema");
+  my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+  my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+  my (@plots, @traits, %data, $trait);
+  my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type' )->cvterm_id();
+
+  my $plot = $schema->resultset("Stock::Stock")->find( { uniquename=>$plot_name });
+  my $plot_type_id = $plot->type_id();
+
+  if ($plot_type_id == $accession_cvterm_id) {
+    print "You are using accessions\n";
+    $c->stash->{rest} = {error => "Used only for Plot Phenotyping."};
+    return;
+  }
+
+  my $h = $dbh->prepare("SELECT cvterm.cvterm_id AS trait_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id WHERE db.db_id = (( SELECT dbxref_1.db_id FROM stock JOIN nd_experiment_stock USING (stock_id) JOIN nd_experiment_phenotype USING (nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm cvterm_1 ON phenotype.cvalue_id = cvterm_1.cvterm_id JOIN dbxref dbxref_1 ON cvterm_1.dbxref_id = dbxref_1.dbxref_id LIMIT 1)) AND cvterm_id =? GROUP BY cvterm.cvterm_id, ((((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text);");
+  $h->execute($trait_id);
+  while (my ($id, $trait_name) = $h->fetchrow_array()) {
+    $trait = $trait_name;
+  }
+  push @plots, $plot_name;
+  push @traits, $trait;
+
+  $data{$plot_name}->{$trait} = [$trait_value,$timestamp];
+
+  my %phenotype_metadata;
+  $phenotype_metadata{'operator'}=$c->user()->get_object()->get_sp_person_id();
+  $phenotype_metadata{'date'}="$timestamp";
+  my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
+
+  my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+      bcs_schema=>$schema,
+      metadata_schema=>$metadata_schema,
+      phenome_schema=>$phenome_schema,
+      user_id=>$user_id,
+      stock_list=>\@plots,
+      trait_list=>\@traits,
+      values_hash=>\%data,
+      has_timestamps=> 1,
+      overwrite_values=> 1,
+      metadata_hash=>\%phenotype_metadata,
+  );
+
+  my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+  if ($verified_error){
+    $c->stash->{rest} = {error => $verified_error};
+    $c->detach;
+  }
+
+  my $store_error = $store_phenotypes->store();
+  if ($store_error) {
+      $c->stash->{rest} = {error => $store_error};
+      $c->detach;
+  }
+
+  $c->stash->{rest} = {success => 1}
+}
+
+sub retrieve_plot_phenotype :  Path('/ajax/phenotype/plot_phenotype_retrieve') : ActionClass('REST') { }
+sub retrieve_plot_phenotype_POST : Args(0) {
+  my $self = shift;
+  my $c = shift;
+  my $dbh = $c->dbc->dbh();
+  my $schema = $c->dbic_schema("Bio::Chado::Schema");
+  my $plot_name = $c->req->param("plot_name");
+  my $trait_id = $c->req->param("trait");
+  my $trait_value;
+  my $stock = $schema->resultset("Stock::Stock")->find( { uniquename=>$plot_name });
+  my $stock_id = $stock->stock_id();
+
+  my $h = $dbh->prepare("SELECT phenotype.value FROM stock
+    JOIN nd_experiment_stock USING(stock_id)
+    JOIN nd_experiment_phenotype USING(nd_experiment_id)
+    JOIN phenotype USING(phenotype_id)
+    WHERE cvalue_id =? and stock_id=?;"
+    );
+  $h->execute($trait_id,$stock_id);
+  while (my ($plot_value) = $h->fetchrow_array()) {
+    $trait_value = $plot_value;
+  }
+
+  $c->stash->{rest} = {trait_value => $trait_value};
+
 }
 
 #########
