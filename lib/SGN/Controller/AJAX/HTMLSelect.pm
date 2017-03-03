@@ -367,7 +367,8 @@ sub get_trait_components_select : Path('/ajax/html/select/trait_components') Arg
   print STDERR "cv_type = $cv_type\n";
   my $id = $c->req->param("id") || "component_select";
   my $name = $c->req->param("name") || "component_select";
-  my $default = $c->req->param("default") || "Select a term";
+  my $default = $c->req->param("default") || 0;
+  my $multiple =  $c->req->param("multiple") || 0;
 
   my $dbh = $c->dbc->dbh();
   my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
@@ -377,6 +378,7 @@ sub get_trait_components_select : Path('/ajax/html/select/trait_components') Arg
 
   my $html = simple_selectbox_html(
     name => $name,
+    multiple => $multiple,
     id => $id,
     choices => \@components
   );
@@ -396,6 +398,7 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
     my $select_id = $c->request->param("selectbox_id");
 
     my $empty = $c->request->param("empty") || '';
+    my $multiple =  $c->req->param("multiple") || 0;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $parent_node_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $parent_node_cvterm)->cvterm_id();
@@ -404,11 +407,12 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
     my $ontology_children_ref = $schema->resultset("Cv::CvtermRelationship")->search({type_id => $rel_cvterm_id, object_id => $parent_node_cvterm_id})->search_related('subject');
     my @ontology_children;
     while (my $child = $ontology_children_ref->next() ) {
+        my $cvterm_id = $child->cvterm_id();
         my $dbxref_info = $child->search_related('dbxref');
         my $accession = $dbxref_info->first()->accession();
         my $db_info = $dbxref_info->search_related('db');
         my $db_name = $db_info->first()->name();
-        push @ontology_children, [$child->name."|".$db_name.":".$accession, $child->name."|".$db_name.":".$accession];
+        push @ontology_children, [$cvterm_id, $child->name."|".$db_name.":".$accession];
     }
 
     @ontology_children = sort { $a->[1] cmp $b->[1] } @ontology_children;
@@ -419,6 +423,7 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
     my $html = simple_selectbox_html(
         name => $select_name,
         id => $select_id,
+        multiple => $multiple,
         choices => \@ontology_children,
     );
     $c->stash->{rest} = { select => $html };

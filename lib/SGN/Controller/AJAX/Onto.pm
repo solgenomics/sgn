@@ -86,6 +86,48 @@ sub get_trait_from_exact_components: Path('/ajax/onto/get_trait_from_exact_compo
   }
 }
 
+=head2 get_trait_from_component_categories
+
+searches for and returns traits that contain one of the ids from each id category supplied
+
+=cut
+
+sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_component_categories') Args(0) {
+
+  my $self = shift;
+  my $c = shift;
+
+  my @object_ids = $c->req->param("object_ids[]");
+  my @attribute_ids = $c->req->param("attribute_ids[]");
+  my @method_ids = $c->req->param("method_ids[]");
+  my @unit_ids = $c->req->param("unit_ids[]");
+  my @tod_ids = $c->req->param("tod_ids[]");
+  my @week_ids = $c->req->param("week_ids[]");
+  my @month_ids = $c->req->param("month_ids[]");
+
+  print STDERR "Obj ids are @object_ids\n Attr ids are @attribute_ids\n Method ids are @method_ids\n unit ids are @unit_ids\n tod ids are @tod_ids\n week ids are @week_ids\n month ids are @month_ids\n";
+
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+  my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, {
+      object_ids => \@object_ids,
+      attribute_ids => \@attribute_ids,
+      method_ids => \@method_ids,
+      unit_ids => \@unit_ids,
+      tod_ids => \@tod_ids,
+      week_ids => \@week_ids,
+      month_ids => \@month_ids,
+  });
+
+  if (!$traits) {
+    $c->stash->{rest} = { error => "No matches found."};
+  }
+  else {
+    $c->stash->{rest} = { traits => $traits };
+  }
+}
+
+
 =head2 children
 
 Public Path: /<ns>/children

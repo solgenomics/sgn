@@ -24,6 +24,7 @@ Lukas Mueller
 package SGN::Model::Cvterm;
 
 use CXGN::Chado::Cvterm;
+use Data::Dumper;
 
 sub get_cvterm_object {
     my $self = shift;
@@ -115,6 +116,34 @@ sub get_trait_from_exact_components {
         die "More than one composed trait returned for the given set of exact componenets\n";
     }
     return $trait_cvterm_ids[0];
+}
+
+sub get_traits_from_component_categories {
+    my $self= shift;
+    my $schema = shift;
+    my $cvterm_id_hash = shift;
+    #print STDERR "cvterm hash ". Dumper(%$cvterm_id_hash)."\n";
+
+    my $contains_cvterm_id = $self->get_cvterm_row($schema, 'contains', 'relationship')->cvterm_id();
+
+    my @intersect_selects;
+    while(my($key, $value) = each %$cvterm_id_hash){
+        if (scalar @$value > 0) {
+          my @quoted_ids= map {"'$_'"} @$value;
+          my $id_string = join ",", @quoted_ids;
+          push @intersect_selects, "SELECT cvterm_id, name FROM cvterm_relationship JOIN cvterm ON(object_id = cvterm_id) WHERE type_id = $contains_cvterm_id AND subject_id IN ($id_string)";
+        }
+    }
+
+    my $intersect_sql = join ' INTERSECT ', @intersect_selects;
+    my $h = $schema->storage->dbh->prepare($intersect_sql);
+    $h->execute();
+
+    my @traits;
+    while(my ($id, $name) = $h->fetchrow_array()){
+        push @traits, [ $id, $name ];
+    }
+    return \@traits;
 }
 
 sub get_traits_from_components {
