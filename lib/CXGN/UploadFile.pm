@@ -42,37 +42,37 @@ use Data::Dumper;
 
 has 'tempfile' => (isa => "Str",
     is => 'rw',
-    required => 1
+    required => 0
 );
 
 has 'subdirectory' => (isa => "Str",
     is => 'rw',
-    required => 1
+    required => 0
 );
 
 has 'archive_path' => (isa => "Str",
     is => 'rw',
-    required => 1
+    required => 0
 );
 
 has 'archive_filename' => (isa => "Str",
     is => 'rw',
-    required => 1
+    required => 0
 );
 
 has 'timestamp' => (isa => "Str",
     is => 'rw',
-    required => 1
+    required => 0
 );
 
 has 'user_id' => (isa => "Int",
     is => 'rw',
-    required => 1
+    required => 0
 );
 
 has 'user_role' => (isa => "Str",
     is => 'rw',
-    required => 1
+    required => 0
 );
 
 sub archive {
@@ -85,6 +85,10 @@ sub archive {
     my $user_id = $self->user_id;
     my $file_destination;
     my $error;
+
+    if (!$subdirectory || !$tempfile || !$archive_filename || !$timestamp || !$archive_path || !$user_id){
+        die "To archive a tempfile you need to provide: tempfile, subdirectory, archive_filename, timestamp, archive_path, and user_id\n";
+    }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($self->user_role)  ) {
 	die  "You have insufficient privileges to archive a file.\n";

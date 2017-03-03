@@ -28,6 +28,7 @@ use Scalar::Util qw | looks_like_number |;
 use CXGN::Trial;
 use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
+use CXGN::Chado::Stock;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -233,14 +234,12 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
       @traits = @{$query->{results}};
       #print STDERR "Traits: ".Dumper(@traits)."\n";
     } elsif (looks_like_number($stock_id)) {
-      my $bs = CXGN::BreederSearch->new( { dbh=> $c->dbc->dbh() } );
-      my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
-      if ($status->{'error'}) {
-        $c->stash->{rest} = { error => $status->{'error'}};
-        return;
-      }
-      my $query = $bs->metadata_query([$stock_type,'traits'],{'traits' => {$stock_type => $stock_id}},{'traits' => {$stock_type => 0}});
-      @traits = @{$query->{results}};
+        my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+        my @trait_list = $stock->get_trait_list();
+        foreach (@trait_list){
+            my @val = ($_->[0], $_->[2]."|".$_->[1]);
+            push @traits, \@val;
+        }
     } elsif (looks_like_number($trial_id)) {
       my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$trial_id});
       my $traits_assayed = $trial->get_traits_assayed($data_level);
