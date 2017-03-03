@@ -52,10 +52,11 @@ sub compose_trait: Path('/ajax/onto/compose') Args(0) {
   my $self = shift;
   my $c = shift;
 
-  my @ids = $c->req->param("ids[]");
+  #my @ids = $c->req->param("ids[]");
   #print STDERR "Ids array for composing in AJAX Onto = @ids\n";
-  my $ids = join ',', @ids;
-  #print STDERR "Ids string for composing in AJAX Onto = $ids\n";
+
+  my $ids = $c->req->param("ids");
+  print STDERR "Ids string for composing in AJAX Onto = $ids\n";
   my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
 
   my $composed_trait_id = $onto->compose_trait($ids);
@@ -123,7 +124,7 @@ sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_compo
     $c->stash->{rest} = { error => "No matches found."};
   }
   else {
-    $c->stash->{rest} = { 
+    $c->stash->{rest} = {
       existing_traits => $traits->{existing_traits},
       new_traits => $traits->{new_traits}
     };

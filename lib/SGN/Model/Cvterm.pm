@@ -127,18 +127,13 @@ sub get_traits_from_component_categories {
     my @id_strings;
 
     delete @id_hash{ grep { scalar @{$id_hash{$_}} < 1 } keys %id_hash }; #remove cvtypes with no ids
-
     my @keys = sort keys %id_hash;
 
-    #product { print STDERR join(',', map { "'$_[$_]'" } 0 .. $#keys); } @id_hash{@keys};
     product { push @id_strings, join(',', map { "'$_[$_]'" } 0 .. $#keys); } @id_hash{@keys};
-
-    print STDERR "id strings are: ".Dumper(@id_strings)."\n";
+    #print STDERR "id strings are: ".Dumper(@id_strings)."\n";
 
     my $select = "SELECT string_agg(ordered_components.name::text, '|'), array_agg(ordered_components.cvterm_id)";
-    my $from = " FROM (SELECT cvterm.name, cvterm.cvterm_id, cv.cv_id FROM cvterm JOIN cv USING(cv_id)
-                                  JOIN cvprop ON(cv.cv_id = cvprop.cv_id)
-                                  JOIN cvterm type ON(cvprop.type_id = type.cvterm_id)";
+    my $from = " FROM (SELECT cvterm.name, cvterm.cvterm_id, cv.cv_id FROM cvterm JOIN cv USING(cv_id) JOIN cvprop ON(cv.cv_id = cvprop.cv_id) JOIN cvterm type ON(cvprop.type_id = type.cvterm_id)";
     my $where = " WHERE cvterm.cvterm_id IN (";
     my $order = ") ORDER BY ( case when type.name = 'object_ontology' then 1
                                     when type.name = 'attribute_ontology' then 2
@@ -151,16 +146,16 @@ sub get_traits_from_component_categories {
 
     my %possible_traits;
     foreach my $id_string (@id_strings) {
-      print STDERR "This id string is ".$id_string."\n";
+      #print STDERR "This id string is ".$id_string."\n";
       my $new_trait_q = $select . $from . $where . $id_string . $order;
-      print STDERR "QUERY is $new_trait_q\n";
+      #print STDERR "QUERY is $new_trait_q\n";
       my $h = $schema->storage->dbh->prepare($new_trait_q);
       $h->execute();
       while(my ($name, @ids) = $h->fetchrow_array()){
           $possible_traits{$name} = \@ids;
       }
     }
-    print STDERR "possible traits are: ".Dumper(%possible_traits)."\n";
+    #print STDERR "possible traits are: ".Dumper(%possible_traits)."\n";
 
     my $contains_cvterm_id = $self->get_cvterm_row($schema, 'contains', 'relationship')->cvterm_id();
 
@@ -188,7 +183,7 @@ sub get_traits_from_component_categories {
         push @new_traits, [ $value, $key];
     }
 
-    print STDERR "existing traits are: ".Dumper(@traits)." and new traits are".Dumper(@new_traits)."\n";
+    #print STDERR "existing traits are: ".Dumper(@traits)." and new traits are".Dumper(@new_traits)."\n";
 
     return {
       existing_traits => \@traits,
