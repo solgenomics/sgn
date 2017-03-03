@@ -11,6 +11,7 @@ use GD::Barcode::QRcode;
 use Tie::UrlEncoder;
 use PDF::LabelPage;
 use Math::Base36 ':all';
+use CXGN::QRcode;
 
 our %urlencode;
 
@@ -109,22 +110,40 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
    my $stock_id = shift;
    my $stock_name = shift;
    my $field_info = shift;
+   my $text = "stock name: ".$stock_name. "\n stock id: ". $stock_id. "\n".$field_info;
 
    $c->tempfiles_subdir('barcode');
-   my ($file, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+   my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
 
-   my $qrcode = SGN::Controller::QRcode->new(
-
-   );
-    my $barcode = $qrcode->barcode_qrcordes(
-         $stock_id,		
-         $stock_name,
-         $field_info,
-         $file,
+   my $barcode_generator = CXGN::QRcode->new();
+   my $barcode_file = $barcode_generator->get_barcode_file(
+         $file_location,
+         $text,
     );
 
-   return $barcode;
+   return $barcode_file;
  }
+
+ sub phenotyping_qrcode_jpg : Path('/barcode/tempfile') Args(2){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = shift;
+    my $stock_name = shift;
+    my $field_info = shift;
+    my $base_url = $c->config->{main_production_site_url};
+    my $text = "$base_url/breeders/plot_phenotyping?stock_id=$stock_id";
+
+    $c->tempfiles_subdir('barcode');
+    my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+
+    my $barcode_generator = CXGN::QRcode->new();
+    my $barcode_file = $barcode_generator->get_barcode_file(
+          $file_location,
+          $text,
+     );
+
+    return $barcode_file;
+  }
 
 =head2 barcode
 

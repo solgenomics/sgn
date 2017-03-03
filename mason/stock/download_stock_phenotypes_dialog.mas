@@ -30,8 +30,8 @@ $stock_name => undef
                 <label class="col-sm-3 control-label">Data Level: </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_stock_phenotypes_level_option">
-                        <option value="plots">Plots</option>
-                        <option value="plants">Plants</option>
+                        <option value="plot">Plots</option>
+                        <option value="plant">Plants</option>
                         <option value="all">All</option>
                     </select>
                 </div>

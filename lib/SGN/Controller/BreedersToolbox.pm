@@ -20,6 +20,7 @@ use File::Basename qw | basename dirname|;
 use File::Spec::Functions;
 use CXGN::People::Roles;
 
+
 BEGIN { extends 'Catalyst::Controller'; }
 
 sub manage_breeding_programs : Path("/breeders/manage_programs") :Args(0) {
@@ -224,6 +225,24 @@ sub manage_phenotyping :Path("/breeders/phenotyping") Args(0) {
     $c->stash->{deleted_phenotype_files} = $data->{deleted_phenotype_files};
 
     $c->stash->{template} = '/breeders_toolbox/manage_phenotyping.mas';
+
+}
+
+sub manage_plot_phenotyping :Path("/breeders/plot_phenotyping") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $stock_id = $c->req->param('stock_id');
+
+    if (!$c->user()) {
+	     $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	      return;
+    }
+    my $stock = $schema->resultset("Stock::Stock")->find( { stock_id=>$stock_id })->uniquename();
+
+    $c->stash->{plot_name} = $stock;
+    $c->stash->{stock_id} = $stock_id;
+    $c->stash->{template} = '/breeders_toolbox/manage_plot_phenotyping.mas';
 
 }
 
@@ -544,7 +563,7 @@ sub get_phenotyping_data : Private {
     print STDERR "RETRIEVED ".$metadata_rs->count()." METADATA ENTRIES...\n";
 
     while (my $md_row = ($metadata_rs->next())) {
-	my $file_rs = $metadata_schema->resultset("MdFiles")->search( { metadata_id => $md_row->metadata_id() } );
+	my $file_rs = $metadata_schema->resultset("MdFiles")->search( { metadata_id => $md_row->metadata_id(), filetype => {'!=' => 'document_browser'} } );
 
 	if (!$md_row->obsolete) {
 	    while (my $file_row = $file_rs->next()) {
