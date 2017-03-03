@@ -9,66 +9,75 @@
 
 <div class="container">
   <div class="row">
-    <div class="col-md-6 form-group">
+    <div class="col-md-4 form-group">
       <label for="object_select_div" class="control-label">Object</label>
       <p class="help-block"><small>Pick the object on which the new trait is measured</small></p>
       <div id="object_select_div">
-      </div>
+      </div><br>
+      <button class="btn btn-default btn-sm" id="object_select_all" name="object_select_all"/>Select All</button>
+      <button class="btn btn-default btn-sm" id="object_select_clear" name="object_select_clear"/>Clear</button>
     </div>
-    <div class="col-md-6 form-group">
-      <center><label class="control-label">Exisiting Traits</label></center>
-      <center><p class="help-block"><small>Existing traits that match the current selections</small></p></center>
-      <div id="matched_traits_div">
-      </div>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-md-6 form-group">
+    <div class="col-md-4 form-group">
       <label for="attribute_select_div" class="control-label">Attribute</label>
       <p class="help-block"><small>Pick the attribute the new trait measures</small></p>
       <div id="attribute_select_div">
-      </div>
+      </div><br>
+      <button class="btn btn-default btn-sm" id="attribute_select_all" name="attribute_select_all"/>Select All</button>
+      <button class="btn btn-default btn-sm" id="attribute_select_clear" name="attribute_select_clear"/>Clear</button>
     </div>
-  </div>
-  <div class="row">
-    <div class="col-md-6 form-group">
+    <div class="col-md-4 form-group">
       <label for="unit_select_div" class="control-label">Unit</label>
       <p class="help-block"><small>Pick the units in which the new trait is measured</small></p>
       <div id="unit_select_div">
-      </div>
+      </div><br>
+      <button class="btn btn-default btn-sm" id="unit_select_all" name="unit_select_all"/>Select All</button>
+      <button class="btn btn-default btn-sm" id="unit_select_clear" name="unit_select_clear"/>Clear</button>
     </div>
   </div>
+  <hr style="margin-top:4px;margin-bottom:4px" /><br>
   <div class="row">
-    <div class="col-md-6 form-group">
+    <div class="col-md-4 form-group">
       <label for="tod_select_div" class="control-label">Time of Day</label>
       <p class="help-block"><small><i>Optional</i> Pick the time of day at which the new trait is measured</small></p>
       <div id="tod_select_div">
-      </div>
+      </div><br>
+      <button class="btn btn-default btn-sm" id="tod_select_all" name="tod_select_all"/>Select All</button>
+      <button class="btn btn-default btn-sm" id="tod_select_clear" name="tod_select_clear"/>Clear</button>
     </div>
-  </div>
-  <div class="row">
-    <div class="col-md-6 form-group">
+    <div class="col-md-4 form-group">
       <label for="week_select_div" class="control-label">Week</label>
       <p class="help-block"><small><i>Optional</i> Pick the week in which the new trait is measured</small></p>
       <div id="week_select_div">
-      </div>
+      </div><br>
+      <button class="btn btn-default btn-sm" id="week_select_all" name="week_select_all"/>Select All</button>
+      <button class="btn btn-default btn-sm" id="week_select_clear" name="week_select_clear"/>Clear</button>
     </div>
-  </div>
-  <div class="row">
-    <div class="col-md-6 form-group">
+    <div class="col-md-4 form-group">
       <label for="month_select_div" class="control-label">Month</label>
       <p class="help-block"><small><i>Optional</i> Pick the month in which the new trait is measured</small></p>
       <div id="month_select_div">
-      </div>
+      </div><br>
+      <button class="btn btn-default btn-sm" id="month_select_all" name="month_select_all"/>Select All</button>
+      <button class="btn btn-default btn-sm" id="month_select_clear" name="month_select_clear"/>Clear</button>
     </div>
+  </div>
   <!--  <div class="col-md-6 form-group">
       <label for="definition" class="control-label">Definition</label>
       <textarea class="form-control" id="definition" rows="3"></textarea>
     </div>
--->  </div>
+-->
+<hr style="margin-top:4px;margin-bottom:4px" /><br>
+<div class="row">
+<div class="col-md-12 form-group">
+  <center><label class="control-label">Exisiting Traits</label></center>
+  <center><p class="help-block"><small>Existing traits that match the current selections</small></p></center>
+  <div id="matched_traits_div">
+  </div>
+</div>
+</div>
 <br>
   <div class="row">
-    <div class="col-md-6 form-group">
+    <div class="col-md-12 form-group">
       <center><button id="compose_trait" class="btn btn-primary">Submit</button></center>
     </div>
   </div>
@@ -85,20 +94,25 @@ get_select_box('ontology_children', 'month_select_div', { 'selectbox_id' : 'mont
 
 
 jQuery(document).on('change','#object_select, #attribute_select, #unit_select, #tod_select, #week_select, #month_select', function() { // retrieve matching traits each time component selection changes
-    console.log("Change in component selects\n");
-    var component_ids = get_component_ids();
-    console.log("Component ids are "+component_ids);
-    var matching_traits = retrieve_matching_traits(component_ids);
-    var trait_html;
-    if (matching_traits.length > 0) {
-      trait_html = format_options_list(matching_traits);
-    }
-    else {
-      trait_html = 'No matching traits.';
-    }
-
-    jQuery('#matched_traits_div').html(trait_html);
+  display_matching_traits();
 });
+
+jQuery('#object_select_all, #attribute_select_all, #unit_select_all, #tod_select_all, #week_select_all, #month_select_all').click( // select all data in a panel
+  function() {
+  var name = jQuery(this).attr('name');
+  var select_id = name.substring(0, name.length - 4);
+  selectAllOptions(document.getElementById(select_id));
+  display_matching_traits();
+});
+
+jQuery('#object_select_clear, #attribute_select_clear, #unit_select_clear, #tod_select_clear, #week_select_clear, #month_select_clear').click( // clear all selections in a panel
+  function() {
+  var name = jQuery(this).attr('name');
+  var select_id = name.substring(0, name.length - 6);
+  clearAllOptions(document.getElementById(select_id));
+  display_matching_traits();
+});
+
 
 jQuery('#compose_trait').on('click', function () {
   var component_ids = get_component_ids();
@@ -130,6 +144,22 @@ jQuery('#compose_trait').on('click', function () {
     });
   }
 });
+
+function display_matching_traits () {
+console.log("Change in component selects\n");
+var component_ids = get_component_ids();
+console.log("Component ids are "+component_ids);
+var matching_traits = retrieve_matching_traits(component_ids);
+var trait_html;
+if (matching_traits.length > 0) {
+  trait_html = format_options_list(matching_traits);
+}
+else {
+  trait_html = 'No matching traits.';
+}
+
+jQuery('#matched_traits_div').html(trait_html);
+}
 
 function get_component_ids () {
   var component_ids = [];

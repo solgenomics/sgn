@@ -504,6 +504,13 @@ function selectAllOptions(obj) {
     }
 }
 
+function clearAllOptions(obj) {
+    if (!obj || obj.options.length ==0) { return; }
+    for (var i=0; i<obj.options.length; i++) {
+      obj.options[i].selected = false;
+    }
+}
+
 function check_missing_criteria(categories, data, this_section) {
     var test = data.length + 1;
     if (categories.length > test) {
