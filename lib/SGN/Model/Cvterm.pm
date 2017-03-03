@@ -25,6 +25,7 @@ package SGN::Model::Cvterm;
 
 use CXGN::Chado::Cvterm;
 use Data::Dumper;
+use Set::Product qw(product);
 
 sub get_cvterm_object {
     my $self = shift;
@@ -122,7 +123,44 @@ sub get_traits_from_component_categories {
     my $self= shift;
     my $schema = shift;
     my $cvterm_id_hash = shift;
-    #print STDERR "cvterm hash ". Dumper(%$cvterm_id_hash)."\n";
+    my %id_hash = %$cvterm_id_hash;
+    my @id_strings;
+
+    delete @id_hash{ grep { scalar @{$id_hash{$_}} < 1 } keys %id_hash }; #remove cvtypes with no ids
+
+    my @keys = sort keys %id_hash;
+
+    #product { print STDERR join(',', map { "'$_[$_]'" } 0 .. $#keys); } @id_hash{@keys};
+    product { push @id_strings, join(',', map { "'$_[$_]'" } 0 .. $#keys); } @id_hash{@keys};
+
+    print STDERR "id strings are: ".Dumper(@id_strings)."\n";
+
+    my $select = "SELECT string_agg(ordered_components.name::text, '|'), array_agg(ordered_components.cvterm_id)";
+    my $from = " FROM (SELECT cvterm.name, cvterm.cvterm_id, cv.cv_id FROM cvterm JOIN cv USING(cv_id)
+                                  JOIN cvprop ON(cv.cv_id = cvprop.cv_id)
+                                  JOIN cvterm type ON(cvprop.type_id = type.cvterm_id)";
+    my $where = " WHERE cvterm.cvterm_id IN (";
+    my $order = ") ORDER BY ( case when type.name = 'object_ontology' then 1
+                                    when type.name = 'attribute_ontology' then 2
+                                    when type.name = 'method_ontology' then 3
+                                    when type.name = 'unit_ontology' then 4
+                                    when type.name = 'time_ontology' then 5
+                                  end
+                                )
+                              ) ordered_components";
+
+    my @possible_traits;
+    foreach my $id_string (@id_strings) {
+      print STDERR "This id string is ".$id_string."\n";
+      my $new_trait_q = $select . $from . $where . $id_string . $order;
+      print STDERR "QUERY is $new_trait_q\n";
+      my $h = $schema->storage->dbh->prepare($new_trait_q);
+      $h->execute();
+      while(my ($name, @ids) = $h->fetchrow_array()){
+          push @possible_traits, [ @ids, $name ];
+      }
+    }
+    print STDERR "possible traits are: ".Dumper(@possible_traits)."\n";
 
     my $contains_cvterm_id = $self->get_cvterm_row($schema, 'contains', 'relationship')->cvterm_id();
 
@@ -136,7 +174,7 @@ sub get_traits_from_component_categories {
     }
 
     my $intersect_sql = join ' INTERSECT ', @intersect_selects;
-    my $h = $schema->storage->dbh->prepare($intersect_sql);
+    $h = $schema->storage->dbh->prepare($intersect_sql);
     $h->execute();
 
     my @traits;

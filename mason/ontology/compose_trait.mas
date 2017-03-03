@@ -68,10 +68,17 @@
 -->
 <hr style="margin-top:4px;margin-bottom:4px" /><br>
 <div class="row">
-<div class="col-md-12 form-group">
-  <center><label class="control-label">Exisiting Traits</label></center>
+<div class="col-md-6 form-group">
+  <center><label class="control-label">Existing Traits</label></center>
   <center><p class="help-block"><small>Existing traits that match the current selections</small></p></center>
   <div id="matched_traits_div">
+  </div>
+</div>
+<div class="col-md-6 form-group">
+  <center><label class="control-label">New Traits</label></center>
+  <center><p class="help-block"><small>New traits that can be made from the current selections</small></p></center>
+  <div id="matched_traits_div">
+    A minimum of 1 object, 1 attribute, 1 method, and 1 unit must be selected to compose a new trait.
   </div>
 </div>
 </div>
@@ -81,6 +88,7 @@
       <center><button id="compose_trait" class="btn btn-primary">Submit</button></center>
     </div>
   </div>
+</div>
 </div>
 
 <script>
