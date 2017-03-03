@@ -79,21 +79,21 @@ ok($md5);
 #check that parse fails for fieldbook file when using phenotype spreadsheet parser
 my $parser = CXGN::Phenotypes::ParseUpload->new();
 my $filename = "t/data/fieldbook/fieldbook_phenotype_file.csv";
-my $validate_file = $parser->validate('phenotype spreadsheet', $filename, 1);
+my $validate_file = $parser->validate('phenotype spreadsheet', $filename, 1, 'plots', $f->bcs_schema);
 ok($validate_file != 1, "Check if parse validate phenotype spreadsheet fails for fieldbook");
 
 #check that parse fails for datacollector file when using phenotype spreadsheet parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/data_collector_upload.xls";
-$validate_file = $parser->validate('phenotype spreadsheet', $filename, 1);
+$validate_file = $parser->validate('phenotype spreadsheet', $filename, 1, 'plots', $f->bcs_schema);
 ok($validate_file != 1, "Check if parse validate phenotype spreadsheet fails for datacollector");
 
 #Now parse phenotyping spreadsheet file using correct parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
-$validate_file = $parser->validate('phenotype spreadsheet', $archived_filename_with_path, 1, 'plots');
+$validate_file = $parser->validate('phenotype spreadsheet', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
 ok($validate_file == 1, "Check if parse validate works for phenotype file");
 
-my $parsed_file = $parser->parse('phenotype spreadsheet', $archived_filename_with_path, 1, 'plots');
+my $parsed_file = $parser->parse('phenotype spreadsheet', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
 ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
 #print STDERR Dumper $parsed_file;
@@ -518,10 +518,10 @@ ok($post1_exp_md_files_diff == 60, "Check num rows in NdExperimentMdFIles table 
 
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/upload_phenotypin_spreadsheet_duplicate.xls";
-$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plots');
+$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plots', $f->bcs_schema);
 ok($validate_file == 1, "Check if parse validate works for phenotype file");
 
-my $parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0), 'plots';
+my $parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0, 'plots', $f->bcs_schema);
 ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
 my %phenotype_metadata;
@@ -645,22 +645,22 @@ ok($post2_exp_md_files_diff == 120, "Check num rows in NdExperimentMdFIles table
 #check that parse fails for spreadsheet file when using fieldbook parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/upload_phenotypin_spreadsheet.xls";
-$validate_file = $parser->validate('field book', $filename, 1);
+$validate_file = $parser->validate('field book', $filename, 1, 'plots', $f->bcs_schema);
 ok($validate_file != 1, "Check if parse validate fieldbook fails for spreadsheet file");
 
 #check that parse fails for datacollector file when using fieldbook parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/data_collector_upload.xls";
-$validate_file = $parser->validate('field book', $filename, 1);
+$validate_file = $parser->validate('field book', $filename, 1, 'plots', $f->bcs_schema);
 ok($validate_file != 1, "Check if parse validate fieldbook fails for datacollector");
 
 #Now parse fieldbook file using correct parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/fieldbook/fieldbook_phenotype_file.csv";
-$validate_file = $parser->validate('field book', $filename, 1);
+$validate_file = $parser->validate('field book', $filename, 1, 'plots', $f->bcs_schema);
 ok($validate_file == 1, "Check if parse validate works for fieldbook");
 
-$parsed_file = $parser->parse('field book', $filename, 1);
+$parsed_file = $parser->parse('field book', $filename, 1, 'plots', $f->bcs_schema);
 ok($parsed_file, "Check if parse parse fieldbook works");
 
 #print STDERR Dumper $parsed_file;
@@ -966,22 +966,22 @@ ok($post1_exp_md_files_diff == 150, "Check num rows in NdExperimentMdFIles table
 #check that parse fails for spreadsheet file when using datacollector parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/upload_phenotypin_spreadsheet.xls";
-$validate_file = $parser->validate('datacollector spreadsheet', $filename, 0);
+$validate_file = $parser->validate('datacollector spreadsheet', $filename, 0, 'plots', $f->bcs_schema);
 ok($validate_file != 1, "Check if parse validate datacollector fails for spreadsheet file");
 
 #check that parse fails for fieldbook file when using datacollector parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/fieldbook/fieldbook_phenotype_file.csv";
-$validate_file = $parser->validate('datacollector spreadsheet', $filename, 0);
+$validate_file = $parser->validate('datacollector spreadsheet', $filename, 0, 'plots', $f->bcs_schema);
 ok($validate_file != 1, "Check if parse validate datacollector fails for fieldbook");
 
 #Now parse datacollector file using correct parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/data_collector_upload.xls";
-$validate_file = $parser->validate('datacollector spreadsheet', $filename, 0);
+$validate_file = $parser->validate('datacollector spreadsheet', $filename, 0, 'plots', $f->bcs_schema);
 ok($validate_file == 1, "Check if parse validate worksfor datacollector");
 
-$parsed_file = $parser->parse('datacollector spreadsheet', $filename, 0);
+$parsed_file = $parser->parse('datacollector spreadsheet', $filename, 0, 'plots', $f->bcs_schema);
 ok($parsed_file, "Check if parse parse datacollector works");
 
 #print STDERR Dumper $parsed_file;
@@ -1407,10 +1407,10 @@ ok($post1_exp_md_files_diff == 207, "Check num rows in NdExperimentMdFIles table
 
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/upload_phenotypin_spreadsheet_large.xls";
-$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plots');
+$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plots', $f->bcs_schema);
 ok($validate_file == 1, "Check if parse validate works for large phenotype file");
 
-$parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0, 'plots');
+$parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0, 'plots', $f->bcs_schema);
 ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
 #print STDERR Dumper $parsed_file;
@@ -2171,13 +2171,13 @@ if (!$tn->has_plant_entries) {
 #check that parse fails for plant spreadsheet file when using plot parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/trial/upload_phenotypin_spreadsheet_plants.xls";
-$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plots');
+$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plots', $f->bcs_schema);
 ok($validate_file != 1, "Check if parse validate plot fails for plant spreadsheet file");
 
-$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plants');
+$validate_file = $parser->validate('phenotype spreadsheet', $filename, 0, 'plants', $f->bcs_schema);
 ok($validate_file == 1, "Check if parse validate works for plant spreadsheet file");
 
-$parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0, 'plants');
+$parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0, 'plants', $f->bcs_schema);
 ok($parsed_file, "Check if parse parse phenotype plant spreadsheet works");
 
 #print STDERR Dumper $parsed_file;
@@ -2794,10 +2794,10 @@ while (my $rs = $exp_md_files_table_tail->next() ) {
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/fieldbook/fieldbook_phenotype_plants_file.csv";
 
-$validate_file = $parser->validate('field book', $filename, 1);
+$validate_file = $parser->validate('field book', $filename, 1, 'plots', $f->bcs_schema);
 ok($validate_file == 1, "Check if parse validate works for plant fieldbook file");
 
-$parsed_file = $parser->parse('field book', $filename, 1);
+$parsed_file = $parser->parse('field book', $filename, 1, 'plots', $f->bcs_schema);
 ok($parsed_file, "Check if parse parse phenotype plant fieldbook works");
 
 #print STDERR Dumper $parsed_file;
