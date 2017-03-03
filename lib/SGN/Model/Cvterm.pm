@@ -149,7 +149,7 @@ sub get_traits_from_component_categories {
                                 )
                               ) ordered_components";
 
-    my @possible_traits;
+    my %possible_traits;
     foreach my $id_string (@id_strings) {
       print STDERR "This id string is ".$id_string."\n";
       my $new_trait_q = $select . $from . $where . $id_string . $order;
@@ -157,15 +157,15 @@ sub get_traits_from_component_categories {
       my $h = $schema->storage->dbh->prepare($new_trait_q);
       $h->execute();
       while(my ($name, @ids) = $h->fetchrow_array()){
-          push @possible_traits, [ @ids, $name ];
+          $possible_traits{$name} = \@ids;
       }
     }
-    print STDERR "possible traits are: ".Dumper(@possible_traits)."\n";
+    print STDERR "possible traits are: ".Dumper(%possible_traits)."\n";
 
     my $contains_cvterm_id = $self->get_cvterm_row($schema, 'contains', 'relationship')->cvterm_id();
 
     my @intersect_selects;
-    while(my($key, $value) = each %$cvterm_id_hash){
+    while(my($key, $value) = each %id_hash){
         if (scalar @$value > 0) {
           my @quoted_ids= map {"'$_'"} @$value;
           my $id_string = join ",", @quoted_ids;
@@ -180,9 +180,21 @@ sub get_traits_from_component_categories {
     my @traits;
     while(my ($id, $name) = $h->fetchrow_array()){
         push @traits, [ $id, $name ];
+        delete($possible_traits{$name});
     }
-    return \@traits;
-}
+
+    my @new_traits;
+    while(my($key, $value) = each %possible_traits){
+        push @new_traits, [ $value, $key];
+    }
+
+    print STDERR "existing traits are: ".Dumper(@traits)." and new traits are".Dumper(@new_traits)."\n";
+
+    return {
+      existing_traits => \@traits,
+      new_traits => \@new_traits
+    };
+  }
 
 sub get_traits_from_components {
     my $self= shift;

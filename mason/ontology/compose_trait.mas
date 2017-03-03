@@ -77,7 +77,7 @@
 <div class="col-md-6 form-group">
   <center><label class="control-label">New Traits</label></center>
   <center><p class="help-block"><small>New traits that can be made from the current selections</small></p></center>
-  <div id="matched_traits_div">
+  <div id="new_traits_div">
     A minimum of 1 object, 1 attribute, 1 method, and 1 unit must be selected to compose a new trait.
   </div>
 </div>
@@ -157,16 +157,27 @@ function display_matching_traits () {
 console.log("Change in component selects\n");
 var component_ids = get_component_ids();
 console.log("Component ids are "+component_ids);
-var matching_traits = retrieve_matching_traits(component_ids);
+
+var response = retrieve_matching_traits(component_ids);
+var matching_traits = response[0];
+var new_traits = response[1];
 var trait_html;
+var new_trait_html;
 if (matching_traits.length > 0) {
   trait_html = format_options_list(matching_traits);
 }
 else {
   trait_html = 'No matching traits.';
 }
+if (new_traits.length > 0) {
+  new_trait_html = format_options_list(new_traits);
+}
+else {
+  new_trait_html = 'No new traits.';
+}
 
 jQuery('#matched_traits_div').html(trait_html);
+jQuery('#new_traits_div').html(new_trait_html);
 }
 
 function get_component_ids () {
@@ -226,14 +237,15 @@ jQuery.ajax( {
           'month_ids': ids["month_ids"],
         },
   success: function(response) {
-    traits = response.traits || [];
-    console.log("traits="+traits);
+    traits = response.existing_traits || [];
+    new_traits = response.new_traits || [];
+    console.log("traits="+traits+"\n newtraits="+new_traits);
   },
   error: function(request, status, err) {
     console.log("Error retrieving matches");
   }
 });
-  return traits;
+  return [traits, new_traits];
 }
 
 

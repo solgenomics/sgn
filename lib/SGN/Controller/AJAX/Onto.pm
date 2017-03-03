@@ -123,7 +123,10 @@ sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_compo
     $c->stash->{rest} = { error => "No matches found."};
   }
   else {
-    $c->stash->{rest} = { traits => $traits };
+    $c->stash->{rest} = { 
+      existing_traits => $traits->{existing_traits},
+      new_traits => $traits->{new_traits}
+    };
   }
 }
 
