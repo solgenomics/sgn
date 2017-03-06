@@ -75,7 +75,7 @@ jQuery(document).ready(function ($) {
       });
     });
 
-    function add_accessions(accessionsToAdd, speciesName, populationName) {
+    function add_accessions(accessionsToAdd, speciesName, populationName, organizationName  ) {
         var accessionsAsJSON = JSON.stringify(accessionsToAdd);
         $.ajax({
             type: 'POST',
@@ -87,6 +87,7 @@ jQuery(document).ready(function ($) {
                 'accession_list': accessionsAsJSON,
                 'species_name': speciesName,
                 'population_name': populationName,
+                'organization_name': organizationName
             },
             beforeSend: function(){
                 disable_ui();
@@ -197,6 +198,7 @@ jQuery(document).ready(function ($) {
     $('#review_absent_accessions_submit').click(function () {
         var speciesName = $("#species_name_input").val();
         var populationName = $("#population_name_input").val();
+        var organizationName = $("#organization_name_input").val();
         var accessionsToAdd = accessionList;
         if (!speciesName) {
             alert("Species name required");
@@ -209,7 +211,7 @@ jQuery(document).ready(function ($) {
             alert("No accessions to add");
             return;
         }
-        add_accessions(accessionsToAdd, speciesName, populationName);
+        add_accessions(accessionsToAdd, speciesName, populationName, organizationName);
         $('#review_absent_dialog').modal("hide");
         location.reload();
     });
