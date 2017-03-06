@@ -63,10 +63,6 @@ jQuery(document).ready(function(){
      'ajax':'ajax/accession_usage_trials'
   });
 
-});
-
-
-jQuery(document).ready(function(){
 
   jQuery('#accession_usage_female').DataTable({
 
@@ -74,10 +70,6 @@ jQuery(document).ready(function(){
      'ajax':'ajax/accession_usage_female'
   });
 
-});
-
-
-jQuery(document).ready(function(){
 
   jQuery('#accession_usage_male').DataTable({
 
