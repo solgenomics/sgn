@@ -8,7 +8,7 @@ sub accession_usage : Path('/accession_usage') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    $c->stash->{template} = '/accession_usage.mas';
+    $c->stash->{template} = '/stock/accession_usage.mas';
 
 }
 
