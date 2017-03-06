@@ -38,30 +38,23 @@ alltrialsdata <- c()
 for (i in 1:(length(studyNames))) {
 
   trialdata <- phenodata[phenodata[,"studyName"]==studyNames[i], ] # & phenodata[,"blockNumber"]==n, ]
-  print(studyNames[i])
-  print(dim(trialdata))
-  
+ 
   metadata <- c('studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'plotNumber')
  
   trialdata <- trialdata[, !(names(trialdata) %in% metadata)]
  
-  print(data.frame(trialdata[1:5, ]))
-
   trialdata <- trialdata[, !(names(trialdata) %in% c('replicate', 'blockNumber'))]
 
   trialdata <- ddply(trialdata,
                      "germplasmName",
                      colwise(mean, na.rm=TRUE)
                      )
+  
   trialdata <- data.frame(trialdata)
-  print(dim(trialdata))
-  print(data.frame(trialdata[1:5, ]))
+
   trialdata <- trialdata[complete.cases(trialdata), ]
-  print(dim(trialdata))
-  print(data.frame(trialdata[1:5, ]))
-  message('trial name: ',  make.names(studyNames[i]))
+
   colnames(trialdata)[2]<- make.names(studyNames[i])
-  print(trialdata)
 
   if( i == 1) {
     alltrialsdata <- trialdata
@@ -71,12 +64,11 @@ for (i in 1:(length(studyNames))) {
 }
 
 names(alltrialsdata) <- make.names(names(alltrialsdata))
-trialNames <- names(alltrialsdata)
 
 longAllTrialsData <- gather(alltrialsdata, Trials, Trait,
-                            Kasese.solgs.trial:trial2.NaCRRI,
+                            2:length(alltrialsdata),
                             factor_key=TRUE)
-print(longAllTrialsData)
+
 datamatrix <- data.matrix(alltrialsdata)
 
 
@@ -128,9 +120,8 @@ panel.hist <- function(x, ...)
     rect(breaks[-nB], 0, breaks[-1], y, col="red", ...)
 }
 
-
 scatterPlot <- function () {
-  scatter <- ggplot(alltrialsdata, aes(x=Kasese.solgs.trial, y=trial2.NaCRRI)) +
+  scatter <- ggplot(alltrialsdata, aes_string(x=names(alltrialsdata)[2], y=names(alltrialsdata)[3])) +
                 ggtitle("Scatter plot of trait values") +
                 theme(plot.title = element_text(size=18,  face="bold", color="olivedrab4", margin = margin(40, 40, 40, 40)),
                       axis.title.x = element_text(size=14, face="bold", color="olivedrab4"),
@@ -174,31 +165,17 @@ freqPlot <- function () {
 }
 
 
-
-# Multiple plot function
-#
-# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
-# - cols:   Number of columns in layout
-# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
-#
-# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
-# then plot 1 will go in the upper left, 2 will go in the upper right, and
-# 3 will go all the way across the bottom.
+# Multiple plot function: for how to use this function go here:
 # http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
 
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   library(grid)
 
-  # Make a list from the ... arguments and plotlist
   plots <- c(list(...), plotlist)
 
   numPlots = length(plots)
 
-  # If layout is NULL, then use 'cols' to determine layout
   if (is.null(layout)) {
-    # Make the panel
-    # ncol: Number of columns of plots
-    # nrow: Number of rows needed, calculated from # of cols
     layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
                     ncol = cols, nrow = ceiling(numPlots/cols))
   }
@@ -207,13 +184,10 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     print(plots[[1]])
 
   } else {
-    # Set up the page
     grid.newpage()
     pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
 
-    # Make each plot, in the correct location
     for (i in 1:numPlots) {
-      # Get the i,j matrix positions of the regions that contain this subplot
       matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
 
       print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
