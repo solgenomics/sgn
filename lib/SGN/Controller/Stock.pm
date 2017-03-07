@@ -18,7 +18,7 @@ use File::Slurp;
 use JSON::Any;
 
 use CXGN::Chado::Stock;
-use SGN::View::Stock qw/stock_link stock_organisms stock_types breeding_programs /;
+use SGN::View::Stock qw/stock_link stock_organisms stock_types breeding_programs stock_owners organizations/;
 use Bio::Chado::NaturalDiversity::Reports;
 use SGN::Model::Cvterm;
 
@@ -48,6 +48,7 @@ has 'default_page_size' => (
 
 sub stock_search :Path('/search/stocks') Args(0) {
     my ($self, $c ) = @_;
+    print STDERR "HERE\n";
     $c->stash(
 	template => '/search/stocks.mas',
 
@@ -58,6 +59,8 @@ sub stock_search :Path('/search/stocks') Args(0) {
         onto_autocomplete_uri      => $c->uri_for('/ajax/cvterm/autocomplete'),
 	trait_db_name              => $c->get_conf('trait_ontology_db_name'),
 	breeding_programs          => breeding_programs($self->schema),
+    owners => stock_owners($self->schema),
+    organizations => organizations($self->schema)
 	);
 
 }

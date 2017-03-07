@@ -115,6 +115,37 @@ sub get_synonym_hash_lookup {
     return \%result;
 }
 
+sub get_owner_hash_lookup {
+    my $self = shift;
+    print STDERR "StockOwner Start:".localtime."\n";
+    my $schema = $self->get_schema();
+    my $q = "SELECT stock_id, sp_person_id, username FROM sgn_people.sp_person JOIN phenome.stock_owner USING(sp_person_id);";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+    my %result;
+    while (my ($stock_id, $sp_person_id, $username) = $h->fetchrow_array()) {
+        push @{$result{$stock_id}}, [$sp_person_id, $username];
+    }
+    print STDERR "StockOwner End:".localtime."\n";
+    return \%result;
+}
+
+sub get_organization_hash_lookup {
+    my $self = shift;
+    print STDERR "StockOrg Start:".localtime."\n";
+    my $schema = $self->get_schema();
+	my $organization_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'organization', 'stock_property')->cvterm_id();
+    my $q = "SELECT stock_id, value FROM stockprop WHERE type_id=$organization_type_id;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+    my %result;
+    while (my ($stock_id, $organization) = $h->fetchrow_array()) {
+        push @{$result{$stock_id}}, $organization;
+    }
+    print STDERR "StockOrg End:".localtime."\n";
+    return \%result;
+}
+
 sub _get_stock_resultset {
   my $self = shift;
   my $schema = $self->get_schema();

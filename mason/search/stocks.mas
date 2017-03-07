@@ -9,6 +9,8 @@
   $organisms       => undef
   $stock_types     => undef
   $breeding_programs => undef
+  $owners => undef
+  $organizations => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects', 'CXGN.List' ] &>
@@ -44,15 +46,27 @@ my $organism_select = simple_selectbox_html(
 
 my $breeding_programs_select = simple_selectbox_html(
     choices => $breeding_programs,
+    id      => "breeding_program" ,
+);
+
+my $organization_select = simple_selectbox_html(
+    choices => $organizations,
     id      => "organization" ,
 );
 
+my $owners_select = simple_selectbox_html(
+    choices => $owners,
+    id      => "person" ,
+);
 
 </%perl>
 
 <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0, subtitle=>'[<a href="/stock/0/new/">Submit New Stock</a>]' &>
 
   <div id="stock_search_form" class="form-horizontal well">
+      <center><h4>Properties</h4></center>
+      <hr>
+
     <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
@@ -100,19 +114,23 @@ my $breeding_programs_select = simple_selectbox_html(
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Stock Owner: </label>
           <div class="col-sm-9" >
-            <input type="text" class="form-control" id="person" />
+            <% $owners_select %>
           </div>
         </div>
       </div>
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Trait: </label>
+          <label class="col-sm-3 control-label">Organization: </label>
           <div class="col-sm-9" >
-            <input type="text" class="form-control" id="trait" />
+            <% $organization_select %>
           </div>
         </div>
       </div>
     </div>
+    <hr>
+    <center><h4>Usage</h4></center>
+    <hr>
+
     <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
@@ -142,14 +160,27 @@ my $breeding_programs_select = simple_selectbox_html(
       </div>
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Organization: </label>
+          <label class="col-sm-3 control-label">Breeding Program: </label>
           <div class="col-sm-9" >
             <% $breeding_programs_select %>
           </div>
         </div>
       </div>
     </div>
+
+    <hr>
+    <center><h4>Phenotypes</h4></center>
+    <hr>
+
     <div class="row">
+        <div class="col-sm-6">
+          <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Trait: </label>
+            <div class="col-sm-9" >
+              <input type="text" class="form-control" id="trait" />
+            </div>
+          </div>
+        </div>
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Minimum Trait Value: </label>
@@ -158,6 +189,8 @@ my $breeding_programs_select = simple_selectbox_html(
           </div>
         </div>
       </div>
+      </div>
+      <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Maximum Trait Value: </label>
@@ -185,6 +218,8 @@ my $breeding_programs_select = simple_selectbox_html(
     <th>Stock Type</th>
     <th>Organism</th>
     <th>Synonyms</th>
+    <th>Owners</th>
+    <th>Organizations</th>
 </tr>
 </thead>
 
@@ -245,6 +280,7 @@ jQuery(document).ready(function () {
                   d.project      = jQuery('#project').val();
                   d.location     = jQuery('#location').val();
                   d.year         = jQuery('#year').val();
+                  d.breeding_program = jQuery('#breeding_program').val();
                   d.organization = jQuery('#organization').val();
              }
          }

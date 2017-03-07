@@ -7,6 +7,7 @@ our @EXPORT_OK = qw/
     stock_link organism_link cvterm_link
     stock_table related_stats
     stock_organisms stock_types breeding_programs
+    stock_owners organizations
 /;
 our @EXPORT = ();
 
@@ -85,6 +86,21 @@ sub breeding_programs {
 	];
 }
 
+sub organizations {
+    my ($schema) = @_;
+    return [
+        [ 0, '' ],
+        map [ $_->value, $_->value ],
+        $schema
+             ->resultset('Stock::Stockprop')->search(
+             { 'type.name' => 'organization' },
+             {
+                join      => ['type'],
+                distinct => 1,
+                order_by => 'me.value',
+            })
+    ];
+}
 
 sub stock_organisms {
     my ($schema) = @_;
@@ -132,6 +148,21 @@ sub stock_dbxrefprops {
         my $db_name = $p->type->dbxref->db->name;
 
     }
+}
+
+sub stock_owners {
+    my $schema = shift;
+    my @owners;
+    push @owners, [ 0, '' ];
+
+    my $dbh = $schema->storage->dbh;
+    my $q = "SELECT sp_person_id, username FROM sgn_people.sp_person JOIN phenome.stock_owner USING(sp_person_id) GROUP BY sp_person_id, username ORDER BY username ;";
+    my $sth = $dbh->prepare($q);
+	$sth->execute();
+	while (my ($sp_person_id, $username) = $sth->fetchrow_array ) {
+		push @owners, [$sp_person_id, $username];
+	}
+    return \@owners;
 }
 
 ######

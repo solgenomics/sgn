@@ -67,9 +67,12 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         $and_conditions->{'me.organism_id'} = $params->{organism} ;
     }
 
+    my $stock_type_search;
     if (exists($params->{stock_type} ) && $params->{stock_type} ) {
         $and_conditions->{'me.type_id'} = $params->{stock_type} ;
+        $stock_type_search = $params->{stock_type};
     }
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
     if (exists($params->{person} ) && $params->{person} ) {
 	my $editor = $params->{person};
@@ -97,6 +100,14 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 	$and_conditions->{'me.stock_id'} = { '-in' => \@stock_ids } ;
     }
 ###############
+
+    my $phenotype_join;
+    if ($stock_type_search == $accession_cvterm_id){
+        $phenotype_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}}}};
+    } else {
+        $phenotype_join = { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}};
+    }
+
     if (exists($params->{trait} ) && $params->{trait} ) {
 	$and_conditions->{ 'observable.name' }  = $params->{trait} ;
     }
@@ -119,9 +130,12 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 	$and_conditions->{ 'lower(projectprops.value)' } = { -like  => lc($params->{year} ) } ;
     }
 
-    if (exists($params->{organization} ) && $params->{organization} ) {
-	$and_conditions->{ 'project_relationship_subject_projects.object_project_id' } = $params->{organization} ;
+    if (exists($params->{breeding_program} ) && $params->{breeding_program} ) {
+        $and_conditions->{ 'project_relationship_subject_projects.object_project_id' } = $params->{breeding_program} ;
+    }
 
+    if (exists($params->{organization} ) && $params->{organization} ) {
+        $and_conditions->{ 'lower(stockprops.value)' } = { -like  => lc($params->{organization} ) } ;
     }
 
     my $draw = $params->{draw};
@@ -131,6 +145,8 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $start = $params->{start};
 
     my $page = int($start / $rows)+1;
+
+    my $project_join = { nd_experiment_stocks => { nd_experiment => [ 'nd_geolocation', { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects' ] } } ] } };
 
     # get the count first
     my $rs = $schema->resultset("Stock::Stock")->search(
@@ -142,7 +158,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 		],
 	},
 	{
-	    join => ['type', 'organism', 'stockprops', { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}}, { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects'] }  } } }, { nd_experiment_stocks => { nd_experiment => 'nd_geolocation' } } ],
+	    join => ['type', 'organism', 'stockprops', $phenotype_join, $project_join ],
 	    distinct => 1,
 	}
     );
@@ -160,7 +176,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 		],
 	} ,
 	{
-	    join => ['type', 'organism', 'stockprops', { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}} ,  { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects'] } } } } , { nd_experiment_stocks => { nd_experiment => 'nd_geolocation' } } ],
+	    join => ['type', 'organism', 'stockprops', $phenotype_join, $project_join ],
 
 	    '+select' => [ 'type.name' , 'organism.species' ],
 	    '+as'     => [ 'cvterm_name' , 'species' ],
@@ -173,6 +189,8 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my $synonym_hash = $stock_lookup->get_synonym_hash_lookup();
+    my $owners_hash = $stock_lookup->get_owner_hash_lookup();
+    my $organizations_hash = $stock_lookup->get_organization_hash_lookup();
 
     my @result;
     while (my $a = $rs2->next()) {
@@ -186,7 +204,20 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         if (exists($synonym_hash->{$uniquename})) {
             $synonym_string = join ', ', @{$synonym_hash->{$uniquename}};
         }
-        push @result, [  "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string ];
+        my $owners_string = '';
+        if (exists($owners_hash->{$stock_id})) {
+            my @owners = @{$owners_hash->{$stock_id}};
+            my @owners_html;
+            foreach (@owners){
+                push @owners_html ,'<a href="/solpeople/profile/'.$_->[0].'">'.$_->[1].'</a>';
+            }
+            $owners_string = join ', ', @owners_html;
+        }
+        my $organizations = '';
+        if (exists($organizations_hash->{$stock_id})) {
+            $organizations = join ', ', @{$organizations_hash->{$stock_id}};
+        }
+        push @result, [  "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string, $organizations ];
 
     }
 
