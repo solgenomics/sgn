@@ -96,7 +96,6 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 	    my $stock_id = $o->stock_id;
 	    push @stock_ids, $stock_id ;
 	}
-	my $stock_ids = $stock_owner_rs->get_column('stock_id');
 	$and_conditions->{'me.stock_id'} = { '-in' => \@stock_ids } ;
     }
 ###############
@@ -209,7 +208,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
             my @owners = @{$owners_hash->{$stock_id}};
             my @owners_html;
             foreach (@owners){
-                push @owners_html ,'<a href="/solpeople/profile/'.$_->[0].'">'.$_->[1].'</a>';
+                push @owners_html ,'<a href="/solpeople/personal-info.pl?sp_person_id='.$_->[0].'">'.$_->[1].'</a>';
             }
             $owners_string = join ', ', @owners_html;
         }
