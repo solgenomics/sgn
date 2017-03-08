@@ -7,7 +7,6 @@ our @EXPORT_OK = qw/
     stock_link organism_link cvterm_link
     stock_table related_stats
     stock_organisms stock_types breeding_programs
-    stock_owners organizations
 /;
 our @EXPORT = ();
 

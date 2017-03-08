@@ -18,7 +18,7 @@ use File::Slurp;
 use JSON::Any;
 
 use CXGN::Chado::Stock;
-use SGN::View::Stock qw/stock_link stock_organisms stock_types breeding_programs stock_owners organizations/;
+use SGN::View::Stock qw/stock_link stock_organisms stock_types breeding_programs/;
 use Bio::Chado::NaturalDiversity::Reports;
 use SGN::Model::Cvterm;
 
