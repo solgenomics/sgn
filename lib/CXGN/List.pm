@@ -296,7 +296,11 @@ after 'description' => sub {
 sub add_element {
     my $self = shift;
     my $element = shift;
-    
+    #remove trailing spaces
+    $element =~ s/^\s+|\s+$//g;
+    if (!$element) { 
+	return "Empty list elements are not allowed"; 
+    }
     if ($self->exists_element($element)) { 
 	return "The element $element already exists";
     }
