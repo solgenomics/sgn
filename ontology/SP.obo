@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 07:02:2017 13:39
+date: 09:02:2017 11:24
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -1526,7 +1526,7 @@ name: total soluble solids
 def: "The total soluble solids in the fruit (usually sugars and acids)." [SGN:NM]
 synonym: "Brix" EXACT []
 is_a: SP:0000167 ! fruit metabolites
-is_a: SP:0000385 ! sugars
+relationship: variable_of SP:0000385 ! sugars
 
 [Term]
 id: SP:0000166
