@@ -9,8 +9,6 @@
   $organisms       => undef
   $stock_types     => undef
   $breeding_programs => undef
-  $owners => undef
-  $organizations => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects', 'CXGN.List' ] &>
@@ -47,16 +45,6 @@ my $organism_select = simple_selectbox_html(
 my $breeding_programs_select = simple_selectbox_html(
     choices => $breeding_programs,
     id      => "breeding_program" ,
-);
-
-my $organization_select = simple_selectbox_html(
-    choices => $organizations,
-    id      => "organization" ,
-);
-
-my $owners_select = simple_selectbox_html(
-    choices => $owners,
-    id      => "person" ,
 );
 
 </%perl>
@@ -114,7 +102,7 @@ my $owners_select = simple_selectbox_html(
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Stock Owner: </label>
           <div class="col-sm-9" >
-            <% $owners_select %>
+            <input type="text" class="form-control" id="person" />
           </div>
         </div>
       </div>
@@ -122,7 +110,7 @@ my $owners_select = simple_selectbox_html(
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Organization: </label>
           <div class="col-sm-9" >
-            <% $organization_select %>
+            <input type="text" class="form-control" id="organization" />
           </div>
         </div>
       </div>
@@ -259,6 +247,9 @@ jQuery(document).ready(function () {
      });
      jQuery("#year").autocomplete({
         source: '/ajax/stock/project_year_autocomplete',
+     });
+     jQuery("#organization").autocomplete({
+        source: '/ajax/stock/stock_organization_autocomplete',
      });
 
    var stock_table = jQuery('#stock_search_results').DataTable( {

@@ -757,6 +757,35 @@ sub project_year_autocomplete_GET :Args(0) {
     $c->stash->{rest} = \@response_list;
 }
 
+=head2 stock_organization_autocomplete
+
+Public Path: /ajax/stock/stock_organization_autocomplete
+
+Autocomplete a stock organization. Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+Finds only organization stockprops that are linked with a stock
+
+=cut
+
+sub stock_organization_autocomplete : Local : ActionClass('REST') { }
+
+sub stock_organization_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+
+    my $term = $c->req->param('term');
+    # trim and regularize whitespace
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+    my $q = "SELECT  distinct value FROM stockprop JOIN cvterm on cvterm_id = type_id WHERE cvterm.name = ? AND value ilike ?";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute( 'organization' , '%'.$term.'%');
+    while  (my ($organization_name) = $sth->fetchrow_array ) {
+        push @response_list, $organization_name;
+    }
+    $c->stash->{rest} = \@response_list;
+}
+
 =head2 geolocation_autocomplete
 
 Public Path: /ajax/stock/geolocation_autocomplete
