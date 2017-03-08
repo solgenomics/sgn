@@ -34,7 +34,7 @@ trial_accessions <- c()
 all_accessions = unique(phenodata$germplasmName)
 
 datamatrix = matrix(nrow = length(all_accessions), ncol=length(studyNames)) # * length(blocks))
-alltrialsdata <- c()
+wfAlltrialsdata <- c()
 for (i in 1:(length(studyNames))) {
 
   trialdata <- phenodata[phenodata[,"studyName"]==studyNames[i], ] # & phenodata[,"blockNumber"]==n, ]
@@ -57,19 +57,26 @@ for (i in 1:(length(studyNames))) {
   colnames(trialdata)[2]<- make.names(studyNames[i])
 
   if( i == 1) {
-    alltrialsdata <- trialdata
+    wfAllTrialsData <- trialdata
   } else {
-    alltrialsdata <- merge(alltrialsdata, trialdata, by="germplasmName")
+    wfAllTrialsData <- merge(wfAllTrialsData, trialdata, by="germplasmName")
   }
 }
 
-names(alltrialsdata) <- make.names(names(alltrialsdata))
+#wfAllTrialsData <- merge(wfAllTrialsData, wfAllTrialsData, by="germplasmName")
+ 
+names(wfAllTrialsData) <- make.names(names(wfAllTrialsData))
+print(wfAllTrialsData[1:5, ])
+lfTrialsData <- function (wfTrialsData) {
+ lfTrDa <- gather(wfTrialsData, Trials, Trait,
+                        2:length(wfTrialsData),
+                        factor_key=TRUE)
+ 
+  return (lfTrDa)
+}
 
-longAllTrialsData <- gather(alltrialsdata, Trials, Trait,
-                            2:length(alltrialsdata),
-                            factor_key=TRUE)
 
-datamatrix <- data.matrix(alltrialsdata)
+datamatrix <- data.matrix(wfAllTrialsData)
 
 
 if (nrow(datamatrix)==0) { 
@@ -120,32 +127,35 @@ panel.hist <- function(x, ...)
     rect(breaks[-nB], 0, breaks[-1], y, col="red", ...)
 }
 
-scatterPlot <- function () {
-  scatter <- ggplot(alltrialsdata, aes_string(x=names(alltrialsdata)[2], y=names(alltrialsdata)[3])) +
-                ggtitle("Scatter plot of trait values") +
+scatterPlot <- function (wfTrialsData) {
+
+  lfTrDa <-  lfTrialsData(wfTrialsData)
+
+  scatter <- ggplot(wfTrialsData, aes_string(x=names(wfTrialsData)[2], y=names(wfTrialsData)[3])) +
                 theme(plot.title = element_text(size=18,  face="bold", color="olivedrab4", margin = margin(40, 40, 40, 40)),
                       axis.title.x = element_text(size=14, face="bold", color="olivedrab4"),
                       axis.title.y = element_text(size=14, face="bold", color="olivedrab4"),
                       axis.text.x  = element_text(angle=90, vjust=0.5, size=10, color="olivedrab4"),
                       axis.text.y  = element_text(size=10, color="olivedrab4")) +
                 geom_point(shape=1, color='DodgerBlue') +
-                scale_x_continuous(breaks = round(seq(min(longAllTrialsData$Trait), max(longAllTrialsData$Trait), by = 2),1)) +
-                scale_y_continuous(breaks = round(seq(min(longAllTrialsData$Trait), max(longAllTrialsData$Trait), by = 2),1)) +
+                scale_x_continuous(breaks = round(seq(min(lfTrDa$Trait), max(lfTrDa$Trait), by = 2),1)) +
+                scale_y_continuous(breaks = round(seq(min(lfTrDa$Trait), max(lfTrDa$Trait), by = 2),1)) +
                 geom_smooth(method=lm, se=FALSE) 
 
-  return(scatter)
+ return(scatter)
   
 }
 
 
-freqPlot <- function () {
-
-  averages <- ddply(longAllTrialsData,  "Trials", summarise, traitAverage = mean(Trait))
+freqPlot <- function (wfTrialsData) {
   
-  freq <- ggplot(longAllTrialsData, aes(x=Trait, fill=Trials)) +
+  lfTrDa <- lfTrialsData(wfTrialsData)
+
+  averages <- ddply(lfTrDa,  "Trials", summarise, traitAverage = mean(Trait))
+  
+  freq <- ggplot(lfTrDa, aes(x=Trait, fill=Trials)) +
   xlab("Trait values") +
   ylab("Frequency") +
-  ggtitle("Frequency Distribution") +
   theme(plot.title = element_text(size=18, face="bold", color="olivedrab4",  margin = margin(40, 40, 40, 40)),
         axis.title.x = element_text(size=14, face="bold", color="olivedrab4"),
         axis.title.y = element_text(size=14, face="bold", color="olivedrab4"),
@@ -155,13 +165,13 @@ freqPlot <- function () {
         legend.text=element_text(size=12, color="olivedrab4"),
         legend.position="bottom") +         
   geom_histogram(binwidth=2, alpha=.5, position="identity") +
-  scale_x_continuous(breaks = round(seq(min(longAllTrialsData$Trait), max(longAllTrialsData$Trait), by = 2),1)) +
+  scale_x_continuous(breaks = round(seq(min(lfTrDa$Trait), max(lfTrDa$Trait), by = 2),1)) +
   scale_fill_manual(values=c("ForestGreen", "DodgerBlue")) +
   geom_vline(data=averages,
              aes(xintercept=traitAverage,  colour=Trials),
              linetype="dashed", size=2)
 
-  return(freq)
+ return(freq)
 }
 
 
@@ -196,12 +206,65 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   }
 }
 
-png(output_file, height=400, width=800)
 
-scatter <- scatterPlot()
-freq    <- freqPlot()
+getTrialsPairs <- function (wfAllTrialsData) {
+  combiTrMx <- combn(names(wfAllTrialsData[, 2:length(names(wfAllTrialsData))]), 2)
+  nPairs   <- dim(combiTrMx)[2]
 
-multiplot(scatter, freq, cols=2)
+  allPairs <- c()
+  for (i in 1:nPairs) {
+    pairs  <- combiTrMx[, i]
+   message("pair  " , i, " ",  pairs )
+    allPairs[i] <- list(i=pairs)
+  }
+
+ return (list("trialsPairs"= allPairs, "pairsCount"= nPairs))
+}
+
+
+prTr        <- getTrialsPairs(wfAllTrialsData)
+trialsPairs <- prTr[["trialsPairs"]]
+pairsCount  <- prTr[["pairsCount"]]
+
+message("pairs count ", pairsCount)
+
+createPlotNames <- function (pairsCount) {
+  plotNames <- c()
+  
+  for (i in 1:pairsCount) {
+    pf <- paste("freq", i, sep="")
+    ps <- paste("scatter", i, sep="")
+   
+    plotNames[i] <- list(i=c(ps, pf))
+  }
+
+  return(plotNames)
+}
+
+
+png(output_file, height= pairsCount * 300, width=800)
+
+plotNames <- createPlotNames(pairsCount)
+
+for (i in 1:pairsCount) {
+  pnames <- plotNames[[i]]
+  message(pnames, "  ", pnames[1], " ", pnames[2])
+  
+  scatter <- scatterPlot(wfAllTrialsData[, c("germplasmName", trialsPairs[[i]])])
+  freq <- freqPlot(wfAllTrialsData[, c("germplasmName", trialsPairs[[i]])])
+
+  assign(pnames[1], scatter)
+  assign(pnames[2], freq)
+
+}
+
+if (pairsCount == 1) {
+  multiplot(scatter1, freq1, cols=2)  
+} else if (pairsCount == 3) {
+  multiplot(scatter1, freq1, scatter2, freq2, scatter3, freq3, cols=2)
+} else if (pairsCount == 6) {  
+  multiplot(scatter1, freq1, scatter2, freq2, scatter3, freq3, scatter4, freq4, scatter5, freq5, scatter6, freq6, cols=2)  
+}
 
 dev.off()
 
