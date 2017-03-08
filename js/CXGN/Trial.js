@@ -10,12 +10,11 @@ function delete_phenotype_data_by_trial_id(trial_id) {
         jQuery('#working_modal').modal('show');
       },
       success: function(response) {
+        jQuery('#working_modal').modal('hide');
         if (response.error) {
-           jQuery('#working_modal').modal('hide');
            alert(response.error);
 		       }
 		    else {
-		       jQuery('#working_modal').modal('hide');
 		       alert('The phenotypic data has been deleted.'); // to do: give some idea how many items were deleted.
 		    window.location.href="/breeders/trial/"+trial_id;
 		}
@@ -39,12 +38,11 @@ function delete_layout_data_by_trial_id(trial_id) {
         jQuery('#working_modal').modal('show');
       },
       success: function(response) {
-		    if (response.error) {
         jQuery('#working_modal').modal('hide');
+		    if (response.error) {
 		    alert(response.error);
 		    }
 		    else {
-		    jQuery('#working_modal').modal('hide');
 		    alert('The layout data has been deleted.'); // to do: give some idea how many items were deleted.
 		    window.location.href="/breeders/trial/"+trial_id;
 		    }
@@ -67,12 +65,11 @@ function delete_project_entry_by_trial_id(trial_id) {
         jQuery('#working_modal').modal('show');
         },
         success: function(response) {
+          jQuery('#working_modal').modal('hide');
 		      if (response.error) {
-		      jQuery('#working_modal').modal('hide');
 		      alert(response.error);
 		      }
 		      else {
-		      jQuery('#working_modal').modal('hide');
 		      alert('The project entry has been deleted.'); // to do: give some idea how many items were deleted.
 		      window.location.href="/breeders/trial/"+trial_id;
 		      }
