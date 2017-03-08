@@ -524,7 +524,7 @@ sub add_bulk {
 	my %elements_in_list;
 	my @elements_added;
 	my @duplicates;
-
+	s/^\s+|\s+$//g for @$elements;
 	#print STDERR Dumper $elements;
 
 	my $q = "SELECT content FROM sgn_people.list join sgn_people.list_item using(list_id) where list.list_id =?";
@@ -547,7 +547,7 @@ sub add_bulk {
 
 		my @values;
 		foreach (@$elements) {
-			if (!exists $elements_in_list{$_}){
+			if ($_ && !exists $elements_in_list{$_}){
 				push @values, [$list_item_id, $list_id, $_];
 				$elements_in_list{$_} = 1;
 				push @elements_added, $_;
