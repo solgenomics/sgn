@@ -143,48 +143,27 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $rows = $params->{length} || 10;
     my $start = $params->{start};
 
-    my $page = int($start / $rows)+1;
-
     my $project_join = { nd_experiment_stocks => { nd_experiment => [ 'nd_geolocation', { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects' ] } } ] } };
 
-    # get the count first
     my $rs = $schema->resultset("Stock::Stock")->search(
-	{
-	    'me.is_obsolete'   => 'f',
-	    -and => [
-		 $or_conditions,
-		 $and_conditions
-		],
-	},
-	{
-	    join => ['type', 'organism', 'stockprops', $phenotype_join, $project_join ],
-	    distinct => 1,
-	}
+    {
+        'me.is_obsolete'   => 'f',
+        -and => [
+        $or_conditions,
+        $and_conditions
+        ],
+    },
+    {
+        join => ['type', 'organism', 'stockprops', $phenotype_join, $project_join ],
+        '+select' => [ 'type.name' , 'organism.species' ],
+        '+as'     => [ 'cvterm_name' , 'species' ],
+        order_by  => 'me.name',
+        distinct  => 1,
+    }
     );
 
-
     my $records_total = $rs->count();
-
-    #
-    my $rs2 = $schema->resultset("Stock::Stock")->search(
-	{
-	    'me.is_obsolete'   => 'f',
-	    -and => [
-		 $or_conditions,
-		 $and_conditions
-		],
-	} ,
-	{
-	    join => ['type', 'organism', 'stockprops', $phenotype_join, $project_join ],
-
-	    '+select' => [ 'type.name' , 'organism.species' ],
-	    '+as'     => [ 'cvterm_name' , 'species' ],
-	    page      => $page,
-	    rows      => $rows,
-	    order_by  => 'me.name',
-	    distinct  => 1,
-	}
-	);
+    my $rs_slice = $rs->slice($start, ($start+$rows)-1);
 
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my $synonym_hash = $stock_lookup->get_synonym_hash_lookup();
@@ -192,7 +171,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $organizations_hash = $stock_lookup->get_organization_hash_lookup();
 
     my @result;
-    while (my $a = $rs2->next()) {
+    while (my $a = $rs_slice->next()) {
         my $uniquename  = $a->uniquename;
         my $type_id     = $a->type_id ;
         my $type        = $a->get_column('cvterm_name');
