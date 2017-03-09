@@ -19,6 +19,7 @@ use Try::Tiny;
 use File::Basename qw | basename dirname|;
 use File::Spec::Functions;
 use CXGN::People::Roles;
+use CXGN::Trial::TrialLayout;
 
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -243,6 +244,49 @@ sub manage_plot_phenotyping :Path("/breeders/plot_phenotyping") Args(0) {
     $c->stash->{plot_name} = $stock;
     $c->stash->{stock_id} = $stock_id;
     $c->stash->{template} = '/breeders_toolbox/manage_plot_phenotyping.mas';
+
+}
+
+sub manage_trial_phenotyping :Path("/breeders/trial_phenotyping") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->req->param('trial_id');
+
+    if (!$c->user()) {
+	     $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	      return;
+    }
+    my $project_name = $schema->resultset("Project::Project")->find( { project_id=>$trial_id })->name();
+
+    my $layout = CXGN::Trial::TrialLayout->new({
+  		schema => $schema,
+  		trial_id => $trial_id
+  	});
+
+  	my $design = $layout-> get_design();
+
+    my @layout_info;
+  	foreach my $plot_number (keys %{$design}) {
+  		push @layout_info, {
+  		plot_id => $design->{$plot_number}->{plot_id},
+  		plot_number => $plot_number,
+  		row_number => $design->{$plot_number}->{row_number},
+  		col_number => $design->{$plot_number}->{col_number},
+  		block_number=> $design->{$plot_number}-> {block_number},
+  		rep_number =>  $design->{$plot_number}-> {rep_number},
+  		plot_name => $design->{$plot_number}-> {plot_name},
+  		accession_name => $design->{$plot_number}-> {accession_name},
+  		plant_names => $design->{$plot_number}-> {plant_names},
+  		};
+  		print STDERR Dumper(@layout_info);
+  	}
+
+
+    $c->stash->{layout_info} = \@layout_info;
+    $c->stash->{trial_name} = $project_name;
+    $c->stash->{trial_id} = $trial_id;
+    $c->stash->{template} = '/breeders_toolbox/manage_trial_phenotyping.mas';
 
 }
 

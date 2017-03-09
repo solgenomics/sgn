@@ -1,0 +1,10 @@
+<%args>
+$trial_id
+$trial_name
+$layout_info
+</%args>
+
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+
+<& /page/page_title.mas, title=>"Manage Phenotyping for $trial_name" &>
