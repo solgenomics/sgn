@@ -82,7 +82,9 @@ sub do_fuzzy_search {
 	$c->stash->{rest} = {error =>  "You have insufficient privileges to add accessions." };
 	return;
     }
-
+    #remove all trailing and ending spaces from accessions 
+    s/^\s+|\s+$//g for @accession_list;
+   
     $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
     #print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
 
