@@ -23,9 +23,6 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $params = $c->req->params() || {};
     #print STDERR Dumper $params;
 
-    my %query;
-
-
     my $matchtype = $params->{any_name_matchtype};
     my $any_name  = $params->{any_name};
 
@@ -100,11 +97,11 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     }
 ###############
 
-    my $phenotype_join;
+    my $stock_join;
     if ($stock_type_search == $accession_cvterm_id){
-        $phenotype_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}}}};
+        $stock_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => [ 'nd_geolocation', {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}, { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects' ] } } ] }}}};
     } else {
-        $phenotype_join = { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}};
+        $stock_join = { nd_experiment_stocks => { nd_experiment => [ 'nd_geolocation', {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}, { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects' ] } } ] } };
     }
 
     if (exists($params->{trait} ) && $params->{trait} ) {
@@ -143,7 +140,6 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $rows = $params->{length} || 10;
     my $start = $params->{start};
 
-    my $project_join = { nd_experiment_stocks => { nd_experiment => [ 'nd_geolocation', { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects' ] } } ] } };
 
     my $rs = $schema->resultset("Stock::Stock")->search(
     {
@@ -154,7 +150,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         ],
     },
     {
-        join => ['type', 'organism', 'stockprops', $phenotype_join, $project_join ],
+        join => ['type', 'organism', 'stockprops', $stock_join],
         '+select' => [ 'type.name' , 'organism.species' ],
         '+as'     => [ 'cvterm_name' , 'species' ],
         order_by  => 'me.name',
