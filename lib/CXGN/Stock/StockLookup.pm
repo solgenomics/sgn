@@ -119,7 +119,7 @@ sub get_owner_hash_lookup {
     my $self = shift;
     print STDERR "StockOwner Start:".localtime."\n";
     my $schema = $self->get_schema();
-    my $q = "SELECT stock_id, sp_person_id, username FROM sgn_people.sp_person JOIN phenome.stock_owner USING(sp_person_id);";
+    my $q = "SELECT stock_id, sp_person_id, username FROM sgn_people.sp_person JOIN phenome.stock_owner USING(sp_person_id) ORDER BY sp_person_id;";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my %result;
@@ -135,7 +135,7 @@ sub get_organization_hash_lookup {
     print STDERR "StockOrg Start:".localtime."\n";
     my $schema = $self->get_schema();
 	my $organization_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'organization', 'stock_property')->cvterm_id();
-    my $q = "SELECT stock_id, value FROM stockprop WHERE type_id=$organization_type_id;";
+    my $q = "SELECT stock_id, value FROM stockprop WHERE type_id=$organization_type_id ORDER BY value;";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my %result;
