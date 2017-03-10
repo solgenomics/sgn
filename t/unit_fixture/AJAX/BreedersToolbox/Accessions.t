@@ -56,15 +56,25 @@ print STDERR Dumper $response;
 
 is_deeply($response, {'success' => '1'});
 
-$mech->post_ok('http://localhost:3010/ajax/accession_list/add', [ "accession_list"=> $json->encode($final_response->{'names_to_add'}), "species_name"=>"Manihot esculenta", "population_name"=>"population_ajax_test_1" ]);
+$mech->post_ok('http://localhost:3010/ajax/accession_list/add', [ "accession_list"=> $json->encode($final_response->{'names_to_add'}), "species_name"=>"Manihot esculenta", "population_name"=>"population_ajax_test_1", "organization_name"=>"test" ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
 is_deeply($response, {'success' => '1'});
 
-#Remove synonym so tests downstream do not fail.
+#Remove added synonym so tests downstream do not fail.
 my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_accession1'})->stock_id();
 my $stock = CXGN::Chado::Stock->new($schema,$stock_id);
 $stock->remove_synonym('test_accessiony');
+
+#Remove added stock so tests downstream do not fail
+my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_accessionz'})->stock_id();
+my $stock = CXGN::Chado::Stock->new($schema,$stock_id);
+$stock->set_is_obsolete(1) ;
+$stock->store();
+
+#remove added population so tets downstreadm do not fail
+my $population = $schema->resultset("Stock::Stock")->find({uniquename => 'population_ajax_test_1'});
+$population->delete();
 
 done_testing();

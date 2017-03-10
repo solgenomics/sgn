@@ -21,4 +21,8 @@ $response = decode_json $mech->content;
 print STDERR Dumper $response;
 is($response->{'message'}, 'Success! Population created');
 
+#Remove added population so tests downstream do not fail
+my $population = $schema->resultset("Stock::Stock")->find({uniquename => 'ajax_test_pop_1'});
+$population->delete();
+
 done_testing();
