@@ -2,13 +2,26 @@ use strict;
 
 use CXGN::Page;
 
-my $page = CXGN::Page->new("SGN Featured Lab: The Rose Lab, Department of Plant Biology, Cornell University", "Adri");
+my $page = CXGN::Page->new("SGN Featured Lab: The Rose Lab, School of integrative plant science", "Adri");
+# my $page = CXGN::Page->new("SGN Featured Lab: The Rose Lab, Department of Plant Biology, Cornell University", "Adri");
 
-$page->header("The Rose Lab, Department of Plant Biology, Cornell University", "The Rose Lab, Department of Plant Biology, Cornell University");
+$page->header("The Rose Lab, School of integrative plant science", "The Rose Lab, School of integrative plant science");
+# $page->header("The Rose Lab, Department of Plant Biology, Cornell University", "The Rose Lab, Department of Plant Biology, Cornell University");
 
 print <<HTML;
 
-<p>Research in the Rose lab broadly spans the structure, function and practical uses of plant cell walls. We have a long standing interest in cell wall metabolism as it relates to plant growth, development and interactions with pathogens, but additionally, cellulosic cell walls represent a central component of the biofuels industry, as well as providing the building blocks for a many plant-derived products.</p>
+<center>
+<br>
+<br>
+<p style="font-size:20px">
+  Please visit the <a href="http://labs.plantbio.cornell.edu/rose/index.html" target="blank">Rose Lab official website</a>
+</p>
+
+<br>
+<br>
+</center>
+
+<!-- <p>Research in the Rose lab broadly spans the structure, function and practical uses of plant cell walls. We have a long standing interest in cell wall metabolism as it relates to plant growth, development and interactions with pathogens, but additionally, cellulosic cell walls represent a central component of the biofuels industry, as well as providing the building blocks for a many plant-derived products.</p>
 
 <center><img src="/static_content/community/feature/200911-group.jpg" /></center>
 
@@ -50,7 +63,7 @@ print <<HTML;
 <h4>Contact Information</h4>
 Dr. Jocelyn Rose<br />
 Associate Professor<br />
-Department of Plant Biology,<br /> 
+Department of Plant Biology,<br />
 412 Mann Library Building<br />
 Cornell University, Ithaca, NY 14853 USA<br />
 <br />
@@ -59,7 +72,7 @@ Fax: (+1) 607-255-5407<br />
 <br />
 <a href="http://labs.plantbio.cornell.edu/rose">http://labs.plantbio.cornell.edu/rose</a><br />
 <a href="http://solgenomics.net/secretom">http://solgenomics.net/secretom</a><br />
-<a href="http://cisbc.net">http://cisbc.net</a>
+<a href="http://cisbc.net">http://cisbc.net</a> -->
 
 HTML
 

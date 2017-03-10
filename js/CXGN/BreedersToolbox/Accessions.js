@@ -252,7 +252,7 @@ jQuery(document).ready(function ($) {
                 for(j=0; j < verifyResponse.fuzzy[i].matches.length; j++){
                     fuzzy_html = fuzzy_html + '<option value="' + verifyResponse.fuzzy[i].matches[j].name + '">' + verifyResponse.fuzzy[i].matches[j].name + '</option>';
                 }
-                fuzzy_html = fuzzy_html + '</select></td><td><select class="form-control" name="fuzzy_option"><option value="replace">Replace name in your list with selected existing name</option><option value="keep">Continue saving name in your list</option><option value="remove">Remove name in your list and ignore</option><option value="synonymize">Add name in your list as a synonym to selected existing name</option></select></td></tr>';
+                fuzzy_html = fuzzy_html + '</select></td><td><select class="form-control" name="fuzzy_option"><option value="keep">Continue saving name in your list</option><option value="replace">Replace name in your list with selected existing name</option><option value="remove">Remove name in your list and ignore</option><option value="synonymize">Add name in your list as a synonym to selected existing name</option></select></td></tr>';
             }
             fuzzy_html = fuzzy_html + '</tbody></table>';
             $('#view_fuzzy_matches').html(fuzzy_html);

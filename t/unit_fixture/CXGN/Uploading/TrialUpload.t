@@ -14,6 +14,7 @@ use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
 use CXGN::List;
 use CXGN::Trial::TrialDesign;
+use DateTime;
 
 my $f = SGN::Test::Fixture->new();
 
@@ -44,21 +45,41 @@ my $pre_project_relationship_count = $c->bcs_schema->resultset('Project::Project
 
 my %upload_metadata;
 my $file_name = 't/data/trial/trial_layout_example.xls';
-$upload_metadata{'archived_file'} = $file_name;
+my $time = DateTime->now();
+my $timestamp = $time->ymd()."_".$time->hms();
+
+#Test archive upload file
+my $uploader = CXGN::UploadFile->new({
+  tempfile => $file_name,
+  subdirectory => 'temp_trial_upload',
+  archive_path => '/tmp',
+  archive_filename => 'trial_layout_example.xls',
+  timestamp => $timestamp,
+  user_id => 41, #janedoe in fixture
+  user_role => 'curator'
+});
+
+## Store uploaded temporary file in archive
+my $archived_filename_with_path = $uploader->archive();
+my $md5 = $uploader->get_md5($archived_filename_with_path);
+ok($archived_filename_with_path);
+ok($md5);
+
+$upload_metadata{'archived_file'} = $archived_filename_with_path;
 $upload_metadata{'archived_file_type'}="trial upload file";
 $upload_metadata{'user_id'}=$c->sp_person_id;
 $upload_metadata{'date'}="2014-02-14_09:10:11";
 
 
 #parse uploaded file with wrong plugin
-my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $file_name);
+my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $archived_filename_with_path);
 $parser->load_plugin('ParseIGDFile');
 my $parsed_data = $parser->parse();
 ok(!$parsed_data, "Check if parse validate igd file fails for excel");
 ok($parser->has_parse_errors(), "Check that parser errors occur");
 
 #parse uploaded file with appropriate plugin
-$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $file_name);
+$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $archived_filename_with_path);
 $parser->load_plugin('TrialExcelFormat');
 $parsed_data = $parser->parse();
 ok($parsed_data, "Check if parse validate excel file works");
@@ -163,7 +184,7 @@ my $trial_create = CXGN::Trial::TrialCreate
 	   design_type => "RCBD",
 	   design => $parsed_data,
 	   program => "test",
-	   upload_trial_file => $file_name,
+	   upload_trial_file => $archived_filename_with_path,
 	  });
 
 $trial_create->save_trial();

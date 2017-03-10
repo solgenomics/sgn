@@ -44,6 +44,7 @@ use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
 use SGN::Image;
 use CXGN::ZipFile;
+use CXGN::UploadFile;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -135,7 +136,7 @@ sub create_hash_lookups {
     my $previous_phenotype_rs = $schema->resultset('Phenotype::Phenotype')->search({'me.cvalue_id'=>{-in=>\@cvterm_ids}}, {'join'=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>{'nd_experiment_stocks'=>'stock'}}}, 'select' => ['me.value', 'me.cvalue_id', 'stock.stock_id'], 'as' => ['value', 'cvterm_id', 'stock_id']});
     while (my $previous_phenotype_cvterm = $previous_phenotype_rs->next() ) {
         my $cvterm_id = $previous_phenotype_cvterm->get_column('cvterm_id');
-        my $stock_id = $previous_phenotype_cvterm->get_column('stock_id');
+        my $stock_id = $previous_phenotype_cvterm->get_column('stock_id') || ' ';
         my $previous_value = $previous_phenotype_cvterm->get_column('value') || ' ';
 
         $check_unique_trait_stock{$cvterm_id, $stock_id} = $previous_value;
@@ -466,14 +467,8 @@ sub save_archived_file_metadata {
     my $archived_file_type = shift;
     my $experiment_ids = shift;
 
-    ## Insert metadata about the uploaded file only after a successful phenotype data transaction
-    my $md5 = Digest::MD5->new();
-    if ($archived_file ne 'none') {
-        open(my $F, "<", $archived_file) || die "Can't open file ".$archived_file;
-        binmode $F;
-        $md5->addfile($F);
-        close($F);
-    }
+    my $upload_file = CXGN::UploadFile->new();
+    my $md5 = $upload_file->get_md5($archived_file);
 
     my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id,});
     $md_row->insert();
