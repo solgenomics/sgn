@@ -210,6 +210,8 @@ sub associate_locus_GET :Args(0) {
     $locus_data =~ m/(.*)\s\((.*)\)/ ;
     my $locus_name = $1;
     my $locus_symbol = $2;
+    #print STDERR "Name: $locus_name Symbol: $locus_symbol Allele: $allele_symbol Default: $is_default\n";
+
     my $schema =  $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
     my ($allele) = $c->dbic_schema('CXGN::Phenome::Schema')
         ->resultset('Locus')
