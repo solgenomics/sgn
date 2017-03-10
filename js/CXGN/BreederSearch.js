@@ -139,6 +139,43 @@ window.onload = function initialize() {
         manage_dl_with_cookie(token, ladda);
         window.location.href = '/breeders/download_gbs_action/?ids='+accession_ids.join(",")+'&protocol_id='+protocol_id+'&token='+token+'&format=accession_ids&trial_ids='+trial_ids.join(",");
     });
+
+    jQuery('#wizard_save_dataset_button').click( function() { 
+	jQuery('#save_wizard_dataset_dialog').modal("show");
+    });
+
+    jQuery('#wizard_save_dataset_submit_button').click( function() { 
+	var accessions = get_selected_results('accessions');
+	var trials = get_selected_results('trials');
+	var plots = get_selected_results('plots');
+	var years = get_selected_results('years');
+	var locations = get_selected_results('locations');
+	var traits = get_selected_results('traits');
+	var breeding_programs = get_selected_results('breeding_program');
+	var genotyping_protocols = get_selected_results('genotyping_protocols');
+	var trial_types = get_selected_results('trial_types');
+	var trial_designs = get_selected_results('trial_designs');
+	var plants = get_selected_results('plants');
+
+	var params =  "trials="+JSON.stringify(trials)+"&traits="+JSON.stringify(traits)+"&accessions="+JSON.stringify(accessions)+"&plots="+JSON.stringify(plots)+"&plants="+JSON.stringify(plants)+"&locations="+JSON.stringify(locations)+"&years="+JSON.stringify(years);
+
+	jQuery.ajax( { 
+	    'url': '/ajax/dataset/save?'+params,
+            'method': 'POST',
+	    'success' : function(response) { 
+	        alert("success!");
+
+	    },
+            'error': function(response) { 
+	        alert("An error occurrrrrrrrrred!");
+	    }
+	});
+	
+	alert("Saved dataset!");
+
+
+
+    });
 }
 
 function addToggleIds () {
