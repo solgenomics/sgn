@@ -69,7 +69,9 @@ sub search_cross_info : Path('/ajax/search/cross_info') Args(0) {
       print STDERR Dumper $r;
 
     my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_entry_id, $cross_name, $cross_type) = @$r;
-	  push @cross_info, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a}, qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a}, qq{<a href="/stock/$cross_entry_id/view">$cross_name</a}, $cross_type];
+	  push @cross_info, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a},
+    qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a},
+    qq{<a href="/cross/$cross_entry_id">$cross_name</a}, $cross_type];
     print STDERR "Cross info =" . Dumper(@cross_info) . "\n";
   }
 
@@ -95,7 +97,9 @@ sub search_all_crosses : Path('/ajax/search/all_crosses') Args(0) {
       print STDERR Dumper $r;
 
     my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_entry_id, $cross_name, $cross_type) = @$r;
-    push @cross_info, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a}, qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a}, qq{<a href="/stock/$cross_entry_id/view">$cross_name</a}, $cross_type];
+    push @cross_info, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a},
+    qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a},
+    qq{<a href="/cross/$cross_entry_id">$cross_name</a}, $cross_type];
     print STDERR "Cross info =" . Dumper(@cross_info) . "\n";
   }
 
