@@ -1,10 +1,8 @@
 package CXGN::BrAPI::v1::Authentication;
 
-use CXGN::Chado::Cvterm;
-
 use Moose;
-use SGN::Model::Cvterm;
 use Data::Dumper;
+use CXGN::BrAPI::Pagination;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
 	is => 'rw',
@@ -62,7 +60,14 @@ sub login {
 	} else {
 		push @$status, { 'error' => 'Login Not Allowed At This Time.' };
 	}
-	return ($status, $first_name, $last_name, $cookie);
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,1,0);
+	my $response = {
+		'status' => $status,
+		'pagination' => $pagination,
+		'result' => { 'first_name' => $first_name, 'last_name' => $last_name, 'cookie' =>$cookie },
+		'datafiles' => []
+	};
+	return $response;
 }
 
 sub logout {
@@ -71,7 +76,14 @@ sub logout {
 	my $status = $self->status;
 	$login_controller->logout_user();
 	push @$status, { 'success' => 'User Logged Out'};
-	return $status;
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,1,0);
+	my $response = {
+		'status' => $status,
+		'pagination' => $pagination,
+		'result' => {},
+		'datafiles' => []
+	};
+	return $response;
 }
 
 1;

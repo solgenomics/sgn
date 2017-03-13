@@ -22,8 +22,7 @@ use File::Slurp qw | read_file |;
 use Spreadsheet::WriteExcel;
 use Time::Piece;
 
-use CXGN::BrAPI::Pagination;
-use CXGN::BrAPI::v1::Authentication;
+use CXGN::BrAPI;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -33,13 +32,8 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON' },
    );
 
-has 'bcs_schema' => (
-    isa => 'Bio::Chado::Schema',
-    is => 'rw',
-);
-
-has 'version' => (
-    isa => 'Str',
+has 'brapi_module' => (
+    isa => 'CXGN::BrAPI',
     is => 'rw',
 );
 
@@ -51,15 +45,30 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     my $version = shift;
     my @status;
 
-    $self->bcs_schema( $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') );
-    $self->version($version);
+    my $page = $c->req->param("page") || 0;
+    my $page_size = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
+    my $session_token = $c->req->param("session_token");
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    push @status, { 'info' => "BrAPI base call found with page=$page, pageSize=$page_size" };
+
+    my $brapi = CXGN::BrAPI->new({
+        bcs_schema => $bcs_schema,
+        phenome_schema => $phenome_schema,
+        metadata_schema => $metadata_schema,
+        version => $version,
+        page_size => $page_size,
+        page => $page,
+        status => \@status
+    });
+    $self->brapi_module($brapi);
 
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
-    $c->stash->{status} = \@status;
-    $c->stash->{session_token} = $c->req->param("session_token");
-    $c->stash->{current_page} = $c->req->param("page") || 0;
-    $c->stash->{page_size} = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
+    $c->stash->{session_token} = $session_token;
+    $c->stash->{current_page} = $page;
+    $c->stash->{page_size} = $page_size;
 }
 
 sub _authenticate_user {
@@ -129,17 +138,15 @@ sub authenticate_token : Chained('brapi') PathPart('token') Args(0) : ActionClas
 sub authenticate_token_DELETE {
     my $self = shift;
     my $c = shift;
+    my $brapi = $self->brapi_module;
+    my $brapi_package_result = $brapi->logout();
+    my $status = $brapi_package_result->{status};
+    my $pagination = $brapi_package_result->{pagination};
+    my $result = $brapi_package_result->{result};
+    my $datafiles = $brapi_package_result->{datafiles};
 
-    my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Authentication';
-    my $brapi_auth = $brapi_package->new({
-        bcs_schema => $self->bcs_schema,
-        status => $c->stash->{status}
-    });
-    my $status = $brapi_auth->logout();
-
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,1,0);
-    my %metadata = (pagination=>$pagination, status=>$status, datafiles=>[]);
-    my %response = (metadata=>\%metadata, result=>{});
+    my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
+    my %response = (metadata=>\%metadata, result=>$result);
     $c->stash->{rest} = \%response;
 }
 
@@ -158,21 +165,22 @@ sub authenticate_token_POST {
 sub process_authenticate_token {
     my $self = shift;
     my $c = shift;
-
-    my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Authentication';
-    my $brapi_auth = $brapi_package->new({
-        bcs_schema => $self->bcs_schema,
-        status => $c->stash->{status}
-    });
-    my ($status, $first_name, $last_name, $cookie) = $brapi_auth->login(
+    my $brapi = $self->brapi_module;
+    my $brapi_package_result = $brapi->login(
         $c->req->param('grant_type'),
         $c->req->param('password'),
         $c->req->param('username'),
         $c->req->param('client_id'),
     );
+    my $status = $brapi_package_result->{status};
+    my $pagination = $brapi_package_result->{pagination};
+    my $result = $brapi_package_result->{result};
+    my $datafiles = $brapi_package_result->{datafiles};
 
-    my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,1,0);
-    my %metadata = (pagination=>$pagination, status=>$status, datafiles=>[]);
+    my $first_name = $result->{first_name};
+    my $last_name = $result->{last_name};
+    my $cookie = $result->{cookie};
+    my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
     my %response = (metadata=>\%metadata, access_token=>$cookie, userDisplayName=>"$first_name $last_name", expires_in=>$CXGN::Login::LOGIN_TIMEOUT);
     $c->stash->{rest} = \%response;
 }
@@ -239,65 +247,17 @@ sub calls : Chained('brapi') PathPart('calls') Args(0) : ActionClass('REST') { }
 sub calls_GET {
     my $self = shift;
     my $c = shift;
-    my $datatype_param = $c->req->param('datatype');
-
-    my $status = $c->stash->{status};
-    my @available = (
-        ['token', ['json'], ['POST','DELETE'] ],
-        ['calls', ['json'], ['GET'] ],
-        ['observationLevels', ['json'], ['GET'] ],
-        ['germplasm-search', ['json'], ['GET','POST'] ],
-        ['germplasm/id', ['json'], ['GET'] ],
-        ['germplasm/id/pedigree', ['json'], ['GET'] ],
-        ['germplasm/id/markerprofiles', ['json'], ['GET'] ],
-        ['germplasm/id/attributes', ['json'], ['GET'] ],
-        ['attributes', ['json'], ['GET'] ],
-        ['attributes/categories', ['json'], ['GET'] ],
-        ['markerprofiles', ['json'], ['GET'] ],
-        ['markerprofiles/id', ['json'], ['GET'] ],
-        ['allelematrix-search', ['json','tsv','csv'], ['GET','POST'] ],
-        ['programs', ['json'], ['GET'] ],
-        ['crops', ['json'], ['GET'] ],
-        ['seasons', ['json'], ['GET','POST'] ],
-        ['studyTypes', ['json'], ['GET','POST'] ],
-        ['trials', ['json'], ['GET','POST'] ],
-        ['trials/id', ['json'], ['GET'] ],
-        ['studies-search', ['json'], ['GET','POST'] ],
-        ['studies/id', ['json'], ['GET'] ],
-        ['studies/id/germplasm', ['json'], ['GET'] ],
-        ['studies/id/table', ['json','csv','xls'], ['GET'] ],
-        ['studies/id/layout', ['json'], ['GET'] ],
-        ['studies/id/observations', ['json'], ['GET'] ],
-        ['phenotypes-search', ['json'], ['GET','POST'] ],
-        ['traits', ['json'], ['GET'] ],
-        ['traits/id', ['json'], ['GET'] ],
-        ['maps', ['json'], ['GET'] ],
-        ['maps/id', ['json'], ['GET'] ],
-        ['maps/id/positions', ['json'], ['GET'] ],
-        ['locations', ['json'], ['GET'] ],
+    my $brapi = $self->brapi_module;
+    my $brapi_package_result = $brapi->calls(
+        $c->req->param('datatype'),
     );
+    my $status = $brapi_package_result->{status};
+    my $pagination = $brapi_package_result->{pagination};
+    my $result = $brapi_package_result->{result};
+    my $datafiles = $brapi_package_result->{datafiles};
 
-    my @data;
-    my $start = $c->stash->{page_size}*$c->stash->{current_page};
-    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-    for( my $i = $start; $i <= $end; $i++ ) {
-        if ($available[$i]) {
-            if ($datatype_param) {
-                if( $datatype_param ~~ @{$available[$i]->[1]} ){
-                    push @data, {call=>$available[$i]->[0], datatypes=>$available[$i]->[1], methods=>$available[$i]->[2]};
-                }
-            }
-            else {
-                push @data, {call=>$available[$i]->[0], datatypes=>$available[$i]->[1], methods=>$available[$i]->[2]};
-            }
-        }
-    }
-
-    my $total_count = scalar(@available);
-    my %result = (data=>\@data);
-    my @data_files;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
+    my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
+    my %response = (metadata=>\%metadata, result=>$result);
     $c->stash->{rest} = \%response;
 }
 
