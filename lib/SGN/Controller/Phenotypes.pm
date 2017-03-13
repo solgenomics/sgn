@@ -68,10 +68,19 @@ sub delete_uploaded_phenotype_files : Path('/breeders/phenotyping/delete/') Args
      my $dbh = $c->dbc->dbh();
      #my $h = $dbh->prepare("delete from metadata.md_files where file_id=?;");
      my $h = $dbh->prepare("UPDATE metadata.md_metadata SET obsolete = 1 where metadata_id IN (SELECT metadata_id from metadata.md_files where file_id=?);");
-
      $h->execute($decoded);
-     print STDERR "Phenotype file successfully made obsolete (AKA deleted).\n";
-	$c->response->redirect('/breeders/phenotyping');	
+     print STDERR "Phenotype file successfully made obsolete.\n";
+
+	my $delete_md_files_q = "CREATE TEMP TABLE nd_experiment_ids_to_delete AS SELECT nd_experiment_id FROM phenome.nd_experiment_md_files join nd_experiment using(nd_experiment_id) join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) where file_id =?;
+
+		DELETE FROM phenome.nd_experiment_md_files where nd_experiment_id IN (SELECT nd_experiment_id FROM nd_experiment_ids_to_delete);
+		DELETE FROM nd_experiment where nd_experiment_id IN (SELECT nd_experiment_id FROM nd_experiment_ids_to_delete);
+	";
+	my $h = $dbh->prepare($delete_md_files_q);
+	$h->execute($decoded);
+	print STDERR "Deleted all phenotype datapoints saved in the database that originated from the file. ".$h->rows." \n";
+
+	$c->response->redirect('/breeders/phenotyping');
 }
 
 #
