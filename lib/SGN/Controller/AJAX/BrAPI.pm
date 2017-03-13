@@ -72,6 +72,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 }
 
 sub _standard_response_construction {
+    my $c = shift;
     my $brapi_package_result = shift;
     my $status = $brapi_package_result->{status};
     my $pagination = $brapi_package_result->{pagination};
@@ -152,7 +153,7 @@ sub authenticate_token_DELETE {
     my $c = shift;
     my $brapi = $self->brapi_module;
     my $brapi_package_result = $brapi->logout();
-    _standard_response_construction($brapi_package_result);
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 #sub authenticate_token_GET {
@@ -256,7 +257,7 @@ sub calls_GET {
     my $brapi_package_result = $brapi->calls(
         $c->req->param('datatype'),
     );
-    _standard_response_construction($brapi_package_result);
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 sub crops : Chained('brapi') PathPart('crops') Args(0) : ActionClass('REST') { }
@@ -267,7 +268,7 @@ sub crops_GET {
     my $supported_crop = $c->config->{'supportedCrop'};
     my $brapi = $self->brapi_module;
     my $brapi_package_result = $brapi->crops($supported_crop);
-    _standard_response_construction($brapi_package_result);
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 sub observation_levels : Chained('brapi') PathPart('observationLevels') Args(0) : ActionClass('REST') { }
@@ -277,7 +278,7 @@ sub observation_levels_GET {
     my $c = shift;
     my $brapi = $self->brapi_module;
     my $brapi_package_result = $brapi->observation_levels();
-    _standard_response_construction($brapi_package_result);
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 sub seasons : Chained('brapi') PathPart('seasons') Args(0) : ActionClass('REST') { }
