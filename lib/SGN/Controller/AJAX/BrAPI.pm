@@ -71,6 +71,18 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     $c->stash->{page_size} = $page_size;
 }
 
+sub _standard_response_construction {
+    my $brapi_package_result = shift;
+    my $status = $brapi_package_result->{status};
+    my $pagination = $brapi_package_result->{pagination};
+    my $result = $brapi_package_result->{result};
+    my $datafiles = $brapi_package_result->{datafiles};
+
+    my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
+    my %response = (metadata=>\%metadata, result=>$result);
+    $c->stash->{rest} = \%response;
+}
+
 sub _authenticate_user {
     my $c = shift;
     my $status = $c->stash->{status};
@@ -140,14 +152,7 @@ sub authenticate_token_DELETE {
     my $c = shift;
     my $brapi = $self->brapi_module;
     my $brapi_package_result = $brapi->logout();
-    my $status = $brapi_package_result->{status};
-    my $pagination = $brapi_package_result->{pagination};
-    my $result = $brapi_package_result->{result};
-    my $datafiles = $brapi_package_result->{datafiles};
-
-    my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
-    my %response = (metadata=>\%metadata, result=>$result);
-    $c->stash->{rest} = \%response;
+    _standard_response_construction($brapi_package_result);
 }
 
 #sub authenticate_token_GET {
@@ -251,14 +256,7 @@ sub calls_GET {
     my $brapi_package_result = $brapi->calls(
         $c->req->param('datatype'),
     );
-    my $status = $brapi_package_result->{status};
-    my $pagination = $brapi_package_result->{pagination};
-    my $result = $brapi_package_result->{result};
-    my $datafiles = $brapi_package_result->{datafiles};
-
-    my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
-    my %response = (metadata=>\%metadata, result=>$result);
-    $c->stash->{rest} = \%response;
+    _standard_response_construction($brapi_package_result);
 }
 
 sub crops : Chained('brapi') PathPart('crops') Args(0) : ActionClass('REST') { }
@@ -269,14 +267,7 @@ sub crops_GET {
     my $supported_crop = $c->config->{'supportedCrop'};
     my $brapi = $self->brapi_module;
     my $brapi_package_result = $brapi->crops($supported_crop);
-    my $status = $brapi_package_result->{status};
-    my $pagination = $brapi_package_result->{pagination};
-    my $result = $brapi_package_result->{result};
-    my $datafiles = $brapi_package_result->{datafiles};
-
-    my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
-    my %response = (metadata=>\%metadata, result=>$result);
-    $c->stash->{rest} = \%response;
+    _standard_response_construction($brapi_package_result);
 }
 
 sub observation_levels : Chained('brapi') PathPart('observationLevels') Args(0) : ActionClass('REST') { }
@@ -284,16 +275,9 @@ sub observation_levels : Chained('brapi') PathPart('observationLevels') Args(0) 
 sub observation_levels_GET {
     my $self = shift;
     my $c = shift;
-    my $status = $c->stash->{status};
-
-    my %pagination = ();
-    my %result = (data=>
-        ['plant','plot','all']
-    );
-    my @data_files;
-    my %metadata = (pagination=>\%pagination, status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+    my $brapi = $self->brapi_module;
+    my $brapi_package_result = $brapi->observation_levels();
+    _standard_response_construction($brapi_package_result);
 }
 
 sub seasons : Chained('brapi') PathPart('seasons') Args(0) : ActionClass('REST') { }

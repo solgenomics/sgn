@@ -5,6 +5,7 @@ use Data::Dumper;
 use CXGN::BrAPI::v1::Authentication;
 use CXGN::BrAPI::v1::Calls;
 use CXGN::BrAPI::v1::Crops;
+use CXGN::BrAPI::v1::ObservationVariables;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -100,10 +101,23 @@ sub crops {
 
 	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Crops';
 	push @$status, { 'info' => "Loading $brapi_package" };
-	my $brapi_calls = $brapi_package->new({
+	my $brapi_crops = $brapi_package->new({
 		status => $self->status
 	});
-	my $brapi_package_result = $brapi_calls->crops($supported_crop, $self->page_size, $self->page);
+	my $brapi_package_result = $brapi_crops->crops($supported_crop, $self->page_size, $self->page);
+	return $brapi_package_result;
+}
+
+sub observation_levels {
+	my $self = shift;
+	my $status = $self->status;
+
+	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::ObservationVariables';
+	push @$status, { 'info' => "Loading $brapi_package" };
+	my $brapi_obs = $brapi_package->new({
+		status => $self->status
+	});
+	my $brapi_package_result = $brapi_obs->observation_levels($self->page_size, $self->page);
 	return $brapi_package_result;
 }
 
