@@ -165,7 +165,12 @@ sub get_traits_from_component_categories {
         if (scalar @$value > 0) {
           my @quoted_ids= map {"'$_'"} @$value;
           my $id_string = join ",", @quoted_ids;
-          push @intersect_selects, "SELECT cvterm_id, name FROM cvterm_relationship JOIN cvterm ON(object_id = cvterm_id) WHERE type_id = $contains_cvterm_id AND subject_id IN ($id_string)";
+          push @intersect_selects, "SELECT cvterm_id,
+                                    (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS name
+                                      FROM cvterm_relationship JOIN cvterm ON(object_id = cvterm_id)
+                                      JOIN dbxref USING(dbxref_id)
+                                      JOIN db ON(dbxref.db_id = db.db_id)
+                                      WHERE type_id = $contains_cvterm_id AND subject_id IN ($id_string)";
         }
     }
 

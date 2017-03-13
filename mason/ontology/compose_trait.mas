@@ -85,12 +85,14 @@
 <div class="col-md-6 form-group">
   <center><label class="control-label">Existing Traits</label></center>
   <center><p class="help-block"><small>Existing traits that match the current selections</small></p></center>
-  <select multiple class="form-control" id="matched_traits_div"></select>
+  <select multiple class="form-control" id="existing_traits"></select>
+  </br>
+  <div id="existing_traits_to_list"></div>
 </div>
 <div class="col-md-6 form-group">
   <center><label class="control-label">New Traits</label></center>
   <center><p class="help-block"><small>New traits that can be made from the current selections</small></p></center>
-  <select multiple class="form-control" id="new_traits_div"></select>
+  <select multiple class="form-control" id="new_traits"></select>
 </div>
 </div>
 <br>
@@ -111,6 +113,10 @@ get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_se
 get_select_box('ontology_children', 'week_select_div', { 'selectbox_id' : 'week_select', 'selectbox_name': 'week_select', 'multiple': 'true', 'parent_node_cvterm': 'weeks|CASSTIME:0000005', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
 get_select_box('ontology_children', 'month_select_div', { 'selectbox_id' : 'month_select', 'selectbox_name': 'month_select', 'multiple': 'true', 'parent_node_cvterm': 'months|CASSTIME:0000006', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
 
+addToListMenu('existing_traits_to_list', 'existing_traits', {
+  selectText: true,
+  listType: 'traits'
+});
 
 jQuery(document).on('change','#object_select, #attribute_select, #unit_select, #trait_select, #tod_select, #week_select, #month_select', function() { // retrieve matching traits each time component selection changes
   display_matching_traits();
@@ -191,8 +197,8 @@ else {
   new_trait_html = 'No new traits.';
 }
 
-jQuery('#matched_traits_div').html(trait_html);
-jQuery('#new_traits_div').html(new_trait_html);
+jQuery('#existing_traits').html(trait_html);
+jQuery('#new_traits').html(new_trait_html);
 
 }
 
