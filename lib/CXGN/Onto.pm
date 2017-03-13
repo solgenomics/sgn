@@ -77,6 +77,8 @@ sub compose_trait {
       $h->execute();
       my $accession = $h->fetchrow_array();
 
+      # check for minimum of OBJ, ATTR, METH, UNIT OR TRAIT + TIME
+
       #print STDERR "New trait accession = $accession and name = $name\n";
 
       my $compose_query = " SELECT string_agg(ordered_components.name::text, '|'),
@@ -99,7 +101,8 @@ sub compose_trait {
                                           when type.name = 'attribute_ontology' then 2
                                           when type.name = 'method_ontology' then 3
                                           when type.name = 'unit_ontology' then 4
-                                          when type.name = 'time_ontology' then 5
+                                          when type.name = 'trait_ontology' then 5
+                                          when type.name = 'time_ontology' then 6
                                       end
                                     )
                                   ) ordered_components";

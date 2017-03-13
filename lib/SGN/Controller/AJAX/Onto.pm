@@ -102,11 +102,12 @@ sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_compo
   my @attribute_ids = $c->req->param("attribute_ids[]");
   my @method_ids = $c->req->param("method_ids[]");
   my @unit_ids = $c->req->param("unit_ids[]");
+  my @trait_ids = $c->req->param("trait_ids[]");
   my @tod_ids = $c->req->param("tod_ids[]");
   my @week_ids = $c->req->param("week_ids[]");
   my @month_ids = $c->req->param("month_ids[]");
 
-  print STDERR "Obj ids are @object_ids\n Attr ids are @attribute_ids\n Method ids are @method_ids\n unit ids are @unit_ids\n tod ids are @tod_ids\n week ids are @week_ids\n month ids are @month_ids\n";
+  print STDERR "Obj ids are @object_ids\n Attr ids are @attribute_ids\n Method ids are @method_ids\n unit ids are @unit_ids\n trait ids are @trait_ids\n tod ids are @tod_ids\n week ids are @week_ids\n month ids are @month_ids\n";
 
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
@@ -115,6 +116,7 @@ sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_compo
       attribute_ids => \@attribute_ids,
       method_ids => \@method_ids,
       unit_ids => \@unit_ids,
+      trait_ids => \@trait_ids,
       tod_ids => \@tod_ids,
       week_ids => \@week_ids,
       month_ids => \@month_ids,

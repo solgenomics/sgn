@@ -139,7 +139,8 @@ sub get_traits_from_component_categories {
                                     when type.name = 'attribute_ontology' then 2
                                     when type.name = 'method_ontology' then 3
                                     when type.name = 'unit_ontology' then 4
-                                    when type.name = 'time_ontology' then 5
+                                    when type.name = 'trait_ontology' then 5
+                                    when type.name = 'time_ontology' then 6
                                   end
                                 )
                               ) ordered_components";
@@ -183,7 +184,7 @@ sub get_traits_from_component_categories {
         push @new_traits, [ $value, $key];
     }
 
-    #print STDERR "existing traits are: ".Dumper(@traits)." and new traits are".Dumper(@new_traits)."\n";
+    print STDERR "existing traits are: ".Dumper(@traits)." and new traits are".Dumper(@new_traits)."\n";
 
     return {
       existing_traits => \@traits,
