@@ -63,10 +63,11 @@ for (i in 1:(length(studyNames))) {
   }
 }
 
+#create a fake 4 trials dataset
 #wfAllTrialsData <- merge(wfAllTrialsData, wfAllTrialsData, by="germplasmName")
  
 names(wfAllTrialsData) <- make.names(names(wfAllTrialsData))
-print(wfAllTrialsData[1:5, ])
+
 lfTrialsData <- function (wfTrialsData) {
  lfTrDa <- gather(wfTrialsData, Trials, Trait,
                         2:length(wfTrialsData),
@@ -133,6 +134,7 @@ scatterPlot <- function (wfTrialsData) {
 
   scatter <- ggplot(wfTrialsData, aes_string(x=names(wfTrialsData)[2], y=names(wfTrialsData)[3])) +
                 theme(plot.title = element_text(size=18,  face="bold", color="olivedrab4", margin = margin(40, 40, 40, 40)),
+                      plot.margin = unit(c(0.75, 1, 0.75, 1), "cm"),
                       axis.title.x = element_text(size=14, face="bold", color="olivedrab4"),
                       axis.title.y = element_text(size=14, face="bold", color="olivedrab4"),
                       axis.text.x  = element_text(angle=90, vjust=0.5, size=10, color="olivedrab4"),
@@ -157,6 +159,7 @@ freqPlot <- function (wfTrialsData) {
   xlab("Trait values") +
   ylab("Frequency") +
   theme(plot.title = element_text(size=18, face="bold", color="olivedrab4",  margin = margin(40, 40, 40, 40)),
+        plot.margin = unit(c(0.75, 1, 0.75, 1), "cm"),
         axis.title.x = element_text(size=14, face="bold", color="olivedrab4"),
         axis.title.y = element_text(size=14, face="bold", color="olivedrab4"),
         axis.text.x  = element_text(angle=90, size=10, color="olivedrab4"),
@@ -228,26 +231,26 @@ pairsCount  <- prTr[["pairsCount"]]
 
 message("pairs count ", pairsCount)
 
-createPlotNames <- function (pairsCount) {
-  plotNames <- c()
+createGraphNames <- function (pairsCount) {
+  graphNames <- c()
   
   for (i in 1:pairsCount) {
     pf <- paste("freq", i, sep="")
     ps <- paste("scatter", i, sep="")
    
-    plotNames[i] <- list(i=c(ps, pf))
+    graphNames[i] <- list(i=c(ps, pf))
   }
 
-  return(plotNames)
+  return(graphNames)
 }
 
 
-png(output_file, height= pairsCount * 300, width=800)
+png(output_file, height= pairsCount * 400, width=800)
 
-plotNames <- createPlotNames(pairsCount)
+graphNames <- createGraphNames(pairsCount)
 
 for (i in 1:pairsCount) {
-  pnames <- plotNames[[i]]
+  pnames <- graphNames[[i]]
   message(pnames, "  ", pnames[1], " ", pnames[2])
   
   scatter <- scatterPlot(wfAllTrialsData[, c("germplasmName", trialsPairs[[i]])])
