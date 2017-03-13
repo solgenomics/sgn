@@ -22,6 +22,9 @@ use File::Slurp qw | read_file |;
 use Spreadsheet::WriteExcel;
 use Time::Piece;
 
+use CXGN::BrAPI::Pagination;
+use CXGN::BrAPI::v1::Authentication;
+
 BEGIN { extends 'Catalyst::Controller::REST' };
 
 __PACKAGE__->config(
@@ -30,37 +33,33 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON' },
    );
 
-has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
-		      is => 'rw',
-    );
+has 'bcs_schema' => (
+    isa => 'Bio::Chado::Schema',
+    is => 'rw',
+);
+
+has 'version' => (
+    isa => 'Str',
+    is => 'rw',
+);
 
 my $DEFAULT_PAGE_SIZE=20;
-
-sub pagination_response {
-    my $data_count = shift;
-    my $page_size = shift;
-    my $page = shift;
-    my $total_pages_decimal = $data_count/$page_size;
-    my $total_pages = ($total_pages_decimal == int $total_pages_decimal) ? $total_pages_decimal : int($total_pages_decimal + 1);
-    my %pagination = (pageSize=>$page_size, currentPage=>$page, totalCount=>$data_count, totalPages=>$total_pages);
-    return \%pagination;
-}
 
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     my $self = shift;
     my $c = shift;
     my $version = shift;
-    my %status;
+    my @status;
 
     $self->bcs_schema( $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') );
-    $c->stash->{api_version} = $version;
+    $self->version($version);
+
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
-    $c->stash->{status} = \%status;
+    $c->stash->{status} = \@status;
     $c->stash->{session_token} = $c->req->param("session_token");
     $c->stash->{current_page} = $c->req->param("page") || 0;
     $c->stash->{page_size} = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
-
 }
 
 sub _authenticate_user {
@@ -131,18 +130,16 @@ sub authenticate_token_DELETE {
     my $self = shift;
     my $c = shift;
 
-    my $login_controller = CXGN::Login->new($c->dbc->dbh);
+    my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Authentication';
+    my $brapi_auth = $brapi_package->new({
+        bcs_schema => $self->bcs_schema,
+        status => $c->stash->{status}
+    });
+    my $status = $brapi_auth->logout();
 
-    my $status = $c->stash->{status};
-
-    $login_controller->logout_user();
-
-    my %pagination = ();
-    my %result;
-    my @data_files;
-    $status->{'message'} = 'Successfully logged out.';
-    my %metadata = (pagination=>\%pagination, status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,1,0);
+    my %metadata = (pagination=>$pagination, status=>$status, datafiles=>[]);
+    my %response = (metadata=>\%metadata, result=>{});
     $c->stash->{rest} = \%response;
 }
 
@@ -161,46 +158,21 @@ sub authenticate_token_POST {
 sub process_authenticate_token {
     my $self = shift;
     my $c = shift;
-    my $login_controller = CXGN::Login->new($c->dbc->dbh);
-    my $params = $c->req->params();
 
-    my $status = $c->stash->{status};
-    my $message = '';
-    my $cookie = '';
-    my $first_name = '';
-    my $last_name = '';
+    my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Authentication';
+    my $brapi_auth = $brapi_package->new({
+        bcs_schema => $self->bcs_schema,
+        status => $c->stash->{status}
+    });
+    my ($status, $first_name, $last_name, $cookie) = $brapi_auth->login(
+        $c->req->param('grant_type'),
+        $c->req->param('password'),
+        $c->req->param('username'),
+        $c->req->param('client_id'),
+    );
 
-    if ( $login_controller->login_allowed() ) {
-        if ($params->{grant_type} eq 'password' || !$params->{grant_type}) {
-            my $login_info = $login_controller->login_user( $params->{username}, $params->{password} );
-            if ($login_info->{account_disabled}) {
-                $message .= 'Account Disabled';
-            }
-            if ($login_info->{incorrect_password}) {
-                $message .= 'Incorrect Password';
-            }
-            if ($login_info->{duplicate_cookie_string}) {
-                $message .= 'Duplicate Cookie String';
-            }
-            if ($login_info->{logins_disabled}) {
-                $message .= 'Logins Disabled';
-            }
-            if ($login_info->{person_id}) {
-                $message .= 'Login Successfull';
-                $cookie = $login_info->{cookie_string};
-                $first_name = $login_info->{first_name};
-                $last_name = $login_info->{last_name};
-            }
-        } else {
-            $message .= 'Grant Type Not Supported. Valid grant type: password';
-        }
-    } else {
-        $message .= 'Login Not Allowed At This Time.';
-    }
-    my %pagination = ();
-    my @data_files;
-    $status->{'message'} = $message;
-    my %metadata = (pagination=>\%pagination, status=>[$status], datafiles=>\@data_files);
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,1,0);
+    my %metadata = (pagination=>$pagination, status=>$status, datafiles=>[]);
     my %response = (metadata=>\%metadata, access_token=>$cookie, userDisplayName=>"$first_name $last_name", expires_in=>$CXGN::Login::LOGIN_TIMEOUT);
     $c->stash->{rest} = \%response;
 }
