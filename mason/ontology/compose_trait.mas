@@ -16,8 +16,9 @@
 </ul>
 </br>
 <div class="tab-content">
-  <div id="components" class="row tab-pane fade in active">
-    <div class="col-md-4 form-group">
+  <div id="components" class="tab-pane fade in active">
+  <div class="row">
+    <div class="col-md-6 form-group">
       <label for="object_select_div" class="control-label">Object</label>
       <p class="help-block"><small>Pick the object on which the new trait is measured</small></p>
       <div id="object_select_div">
@@ -25,7 +26,7 @@
       <button class="btn btn-default btn-sm" id="object_select_all" name="object_select_all"/>Select All</button>
       <button class="btn btn-default btn-sm" id="object_select_clear" name="object_select_clear"/>Clear</button>
     </div>
-    <div class="col-md-4 form-group">
+    <div class="col-md-6 form-group">
       <label for="attribute_select_div" class="control-label">Attribute</label>
       <p class="help-block"><small>Pick the attribute the new trait measures</small></p>
       <div id="attribute_select_div">
@@ -33,13 +34,24 @@
       <button class="btn btn-default btn-sm" id="attribute_select_all" name="attribute_select_all"/>Select All</button>
       <button class="btn btn-default btn-sm" id="attribute_select_clear" name="attribute_select_clear"/>Clear</button>
     </div>
-    <div class="col-md-4 form-group">
+    </div>
+    <div class="row">
+    <div class="col-md-6 form-group">
+      <label for="method_select_div" class="control-label">Method</label>
+      <p class="help-block"><small>Pick the method by which the new trait is measured</small></p>
+      <div id="method_select_div">
+      </div><br>
+      <button class="btn btn-default btn-sm" id="method_select_all" name="method_select_all"/>Select All</button>
+      <button class="btn btn-default btn-sm" id="method_select_clear" name="method_select_clear"/>Clear</button>
+    </div>
+    <div class="col-md-6 form-group">
       <label for="unit_select_div" class="control-label">Unit</label>
       <p class="help-block"><small>Pick the units in which the new trait is measured</small></p>
       <div id="unit_select_div">
       </div><br>
       <button class="btn btn-default btn-sm" id="unit_select_all" name="unit_select_all"/>Select All</button>
       <button class="btn btn-default btn-sm" id="unit_select_clear" name="unit_select_clear"/>Clear</button>
+    </div>
     </div>
   </div>
   <div id="traits" class="tab-pane fade row">
@@ -107,6 +119,7 @@
 <script>
 get_select_box('trait_components', 'object_select_div', { 'id' : 'object_select', 'name': 'object_select', 'multiple': 'true', 'cv_type': 'object_ontology' });
 get_select_box('trait_components', 'attribute_select_div', { 'id' : 'attribute_select', 'name': 'attribute_select', 'multiple': 'true', 'cv_type': 'attribute_ontology' });
+get_select_box('trait_components', 'method_select_div', { 'id' : 'method_select', 'name': 'method_select', 'multiple': 'true', 'cv_type': 'method_ontology' });
 get_select_box('trait_components', 'unit_select_div', { 'id' : 'unit_select', 'name': 'unit_select', 'multiple': 'true', 'cv_type': 'unit_ontology' });
 get_select_box('trait_components', 'trait_select_div', { 'id' : 'trait_select', 'name': 'trait_select', 'multiple': 'true', 'cv_type': 'trait_ontology' });
 get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': 'time of day|CASSTIME:0000001', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
@@ -118,11 +131,11 @@ addToListMenu('existing_traits_to_list', 'existing_traits', {
   listType: 'traits'
 });
 
-jQuery(document).on('change','#object_select, #attribute_select, #unit_select, #trait_select, #tod_select, #week_select, #month_select', function() { // retrieve matching traits each time component selection changes
+jQuery(document).on('change','#object_select, #attribute_select, #method_select, #unit_select, #trait_select, #tod_select, #week_select, #month_select', function() { // retrieve matching traits each time component selection changes
   display_matching_traits();
 });
 
-jQuery('#object_select_all, #attribute_select_all, #unit_select_all, #trait_select_all, #tod_select_all, #week_select_all, #month_select_all').click( // select all data in a panel
+jQuery('#object_select_all, #attribute_select_all, #method_select_all, #unit_select_all, #trait_select_all, #tod_select_all, #week_select_all, #month_select_all').click( // select all data in a panel
   function() {
   var name = jQuery(this).attr('name');
   var select_id = name.substring(0, name.length - 4);
@@ -130,7 +143,7 @@ jQuery('#object_select_all, #attribute_select_all, #unit_select_all, #trait_sele
   display_matching_traits();
 });
 
-jQuery('#object_select_clear, #attribute_select_clear, #unit_select_clear, #trait_select_clear, #tod_select_clear, #week_select_clear, #month_select_clear').click( // clear all selections in a panel
+jQuery('#object_select_clear, #attribute_select_clear, #method_select_clear, #unit_select_clear, #trait_select_clear, #tod_select_clear, #week_select_clear, #month_select_clear').click( // clear all selections in a panel
   function() {
   var name = jQuery(this).attr('name');
   var select_id = name.substring(0, name.length - 6);
@@ -206,6 +219,7 @@ function get_component_ids () {
   var component_ids = [];
   if (jQuery("#object_select").val()) { component_ids.push(jQuery("#object_select").val()); }
   if (jQuery("#attribute_select").val()) { component_ids.push(jQuery("#attribute_select").val()); }
+  if (jQuery("#method_select").val()) { component_ids.push(jQuery("#method_select").val()); }
   if (jQuery("#unit_select").val()) { component_ids.push(jQuery("#unit_select").val()); }
   if (jQuery("#trait_select").val()) { component_ids.push(jQuery("#trait_select").val()); }
   if (jQuery("#tod_select").val()) { component_ids.push(jQuery("#tod_select").val()); }
