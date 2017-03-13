@@ -75,6 +75,7 @@ sub delete_uploaded_phenotype_files : Path('/breeders/phenotyping/delete/') Args
 
 		DELETE FROM phenome.nd_experiment_md_files where nd_experiment_id IN (SELECT nd_experiment_id FROM nd_experiment_ids_to_delete);
 		DELETE FROM nd_experiment where nd_experiment_id IN (SELECT nd_experiment_id FROM nd_experiment_ids_to_delete);
+		DISCARD TEMP;
 	";
 	my $h = $dbh->prepare($delete_md_files_q);
 	$h->execute($decoded);
