@@ -266,15 +266,16 @@ sub crops : Chained('brapi') PathPart('crops') Args(0) : ActionClass('REST') { }
 sub crops_GET {
     my $self = shift;
     my $c = shift;
-    my $status = $c->stash->{status};
+    my $supported_crop = $c->config->{'supportedCrop'};
+    my $brapi = $self->brapi_module;
+    my $brapi_package_result = $brapi->crops($supported_crop);
+    my $status = $brapi_package_result->{status};
+    my $pagination = $brapi_package_result->{pagination};
+    my $result = $brapi_package_result->{result};
+    my $datafiles = $brapi_package_result->{datafiles};
 
-    my %pagination = ();
-    my %result = (data=>
-        [$c->config->{'supportedCrop'}]
-    );
-    my @data_files;
-    my %metadata = (pagination=>\%pagination, status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
+    my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
+    my %response = (metadata=>\%metadata, result=>$result);
     $c->stash->{rest} = \%response;
 }
 

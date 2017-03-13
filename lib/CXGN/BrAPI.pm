@@ -4,6 +4,7 @@ use Moose;
 use Data::Dumper;
 use CXGN::BrAPI::v1::Authentication;
 use CXGN::BrAPI::v1::Calls;
+use CXGN::BrAPI::v1::Crops;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -89,6 +90,20 @@ sub calls {
 		status => $self->status
 	});
 	my $brapi_package_result = $brapi_calls->calls($datatype, $self->page_size, $self->page);
+	return $brapi_package_result;
+}
+
+sub crops {
+	my $self = shift;
+	my $supported_crop = shift;
+	my $status = $self->status;
+
+	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Crops';
+	push @$status, { 'info' => "Loading $brapi_package" };
+	my $brapi_calls = $brapi_package->new({
+		status => $self->status
+	});
+	my $brapi_package_result = $brapi_calls->crops($supported_crop, $self->page_size, $self->page);
 	return $brapi_package_result;
 }
 
