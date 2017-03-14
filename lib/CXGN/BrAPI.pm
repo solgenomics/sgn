@@ -6,24 +6,7 @@ use CXGN::BrAPI::v1::Authentication;
 use CXGN::BrAPI::v1::Calls;
 use CXGN::BrAPI::v1::Crops;
 use CXGN::BrAPI::v1::ObservationVariables;
-
-has 'bcs_schema' => (
-	isa => 'Bio::Chado::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'metadata_schema' => (
-	isa => 'CXGN::Metadata::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'phenome_schema' => (
-	isa => 'CXGN::Phenome::Schema',
-	is => 'rw',
-	required => 1,
-);
+use CXGN::BrAPI::v1::Studies;
 
 has 'version' => (
 	isa => 'Str',
@@ -31,93 +14,84 @@ has 'version' => (
 	required => 1,
 );
 
-has 'page_size' => (
-	isa => 'Int',
+has 'brapi_module_inst' => (
+	isa => 'HashRef',
 	is => 'rw',
 	required => 1,
 );
 
-has 'page' => (
-	isa => 'Int',
-	is => 'rw',
-	required => 1,
-);
-
-has 'status' => (
-	isa => 'ArrayRef[Maybe[HashRef]]',
-	is => 'rw',
-	required => 1,
-);
-
-sub logout {
+sub brapi_logout {
 	my $self = shift;
-	my $status = $self->status;
 	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Authentication';
-	push @$status, { 'info' => "Loading $brapi_package" };
-	my $brapi_auth = $brapi_package->new({
-        bcs_schema => $self->bcs_schema,
-        status => $status
-    });
+	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	my $brapi_auth = $brapi_package->new($self->brapi_module_inst);
     my $brapi_package_result = $brapi_auth->logout();
 	return $brapi_package_result;
 }
 
-sub login {
+sub brapi_login {
 	my $self = shift;
 	my $grant_type = shift;
 	my $password = shift;
 	my $username = shift;
 	my $client_id = shift;
-	my $status = $self->status;
 
 	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Authentication';
-	push @$status, { 'info' => "Loading $brapi_package" };
-	my $brapi_auth = $brapi_package->new({
-		bcs_schema => $self->bcs_schema,
-		status => $status
-	});
+	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	my $brapi_auth = $brapi_package->new($self->brapi_module_inst);
 	my $brapi_package_result = $brapi_auth->login($grant_type, $password, $username, $client_id);
 	return $brapi_package_result;
 }
 
-sub calls {
+sub brapi_calls {
 	my $self = shift;
 	my $datatype = shift;
-	my $status = $self->status;
 
 	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Calls';
-	push @$status, { 'info' => "Loading $brapi_package" };
-	my $brapi_calls = $brapi_package->new({
-		status => $self->status
-	});
-	my $brapi_package_result = $brapi_calls->calls($datatype, $self->page_size, $self->page);
+	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	my $brapi_calls = $brapi_package->new($self->brapi_module_inst);
+	my $brapi_package_result = $brapi_calls->calls($datatype);
 	return $brapi_package_result;
 }
 
-sub crops {
+sub brapi_crops {
 	my $self = shift;
 	my $supported_crop = shift;
-	my $status = $self->status;
 
 	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Crops';
-	push @$status, { 'info' => "Loading $brapi_package" };
-	my $brapi_crops = $brapi_package->new({
-		status => $self->status
-	});
-	my $brapi_package_result = $brapi_crops->crops($supported_crop, $self->page_size, $self->page);
+	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	my $brapi_crops = $brapi_package->new($self->brapi_module_inst);
+	my $brapi_package_result = $brapi_crops->crops($supported_crop);
 	return $brapi_package_result;
 }
 
-sub observation_levels {
+sub brapi_observation_levels {
 	my $self = shift;
-	my $status = $self->status;
 
 	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::ObservationVariables';
-	push @$status, { 'info' => "Loading $brapi_package" };
-	my $brapi_obs = $brapi_package->new({
-		status => $self->status
-	});
-	my $brapi_package_result = $brapi_obs->observation_levels($self->page_size, $self->page);
+	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	my $brapi_obs = $brapi_package->new($self->brapi_module_inst);
+	my $brapi_package_result = $brapi_obs->observation_levels();
+	return $brapi_package_result;
+}
+
+sub brapi_seasons {
+	my $self = shift;
+
+	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Studies';
+	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	my $brapi_obs = $brapi_package->new($self->brapi_module_inst);
+	my $brapi_package_result = $brapi_obs->seasons();
+	return $brapi_package_result;
+}
+
+sub brapi_study_types {
+	my $self = shift;
+
+	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Studies';
+	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	my $brapi_studies = $brapi_package->new($self->brapi_module_inst);
+	my $brapi_package_result = $brapi_studies->study_types();
 	return $brapi_package_result;
 }
 

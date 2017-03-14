@@ -4,12 +4,14 @@ use Moose;
 use Data::Dumper;
 use CXGN::BrAPI::Pagination;
 
-has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
+has 'bcs_schema' => (
+	isa => 'Bio::Chado::Schema',
 	is => 'rw',
 	required => 1,
 );
 
-has 'status' => ( isa => 'ArrayRef[Maybe[HashRef]]',
+has 'status' => (
+	isa => 'ArrayRef[Maybe[HashRef]]',
 	is => 'rw',
 	required => 1,
 );

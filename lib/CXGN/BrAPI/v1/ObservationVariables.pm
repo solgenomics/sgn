@@ -4,15 +4,28 @@ use Moose;
 use Data::Dumper;
 use CXGN::BrAPI::Pagination;
 
-has 'status' => ( isa => 'ArrayRef[Maybe[HashRef]]',
+has 'page_size' => (
+	isa => 'Int',
+	is => 'rw',
+	required => 1,
+);
+
+has 'page' => (
+	isa => 'Int',
+	is => 'rw',
+	required => 1,
+);
+
+has 'status' => (
+	isa => 'ArrayRef[Maybe[HashRef]]',
 	is => 'rw',
 	required => 1,
 );
 
 sub observation_levels {
 	my $self = shift;
-	my $page_size = shift;
-	my $page = shift;
+	my $page_size = $self->page_size;
+	my $page = $self->page;
 
 	my $status = $self->status;
 	my @available = (

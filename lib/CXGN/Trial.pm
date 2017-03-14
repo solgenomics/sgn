@@ -487,10 +487,10 @@ sub get_all_project_types {
     ##my $class = shift;
     my $schema = shift;
     my $project_type_cv_id = $schema->resultset('Cv::Cv')->find( { name => 'project_type' } )->cv_id();
-    my $rs = $schema->resultset('Cv::Cvterm')->search( { cv_id=> $project_type_cv_id });
+    my $rs = $schema->resultset('Cv::Cvterm')->search( { cv_id=> $project_type_cv_id }, {order_by=>'me.cvterm_id'} );
     my @cvterm_ids;
     if ($rs->count() > 0) {
-	@cvterm_ids = map { [ $_->cvterm_id(), $_->name() ] } ($rs->all());
+	@cvterm_ids = map { [ $_->cvterm_id(), $_->name(), $_->definition ] } ($rs->all());
     }
     return @cvterm_ids;
 }

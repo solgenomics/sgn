@@ -54,13 +54,15 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     push @status, { 'info' => "BrAPI base call found with page=$page, pageSize=$page_size" };
 
     my $brapi = CXGN::BrAPI->new({
-        bcs_schema => $bcs_schema,
-        phenome_schema => $phenome_schema,
-        metadata_schema => $metadata_schema,
         version => $version,
-        page_size => $page_size,
-        page => $page,
-        status => \@status
+		brapi_module_inst => {
+			bcs_schema => $bcs_schema,
+			metadata_schema => $metadata_schema,
+			phenome_schema => $phenome_schema,
+			page_size => $page_size,
+			page => $page,
+			status => \@status
+		}
     });
     $self->brapi_module($brapi);
 
@@ -152,7 +154,7 @@ sub authenticate_token_DELETE {
     my $self = shift;
     my $c = shift;
     my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->logout();
+    my $brapi_package_result = $brapi->brapi_logout();
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -172,7 +174,7 @@ sub process_authenticate_token {
     my $self = shift;
     my $c = shift;
     my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->login(
+    my $brapi_package_result = $brapi->brapi_login(
         $c->req->param('grant_type'),
         $c->req->param('password'),
         $c->req->param('username'),
@@ -254,7 +256,7 @@ sub calls_GET {
     my $self = shift;
     my $c = shift;
     my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->calls(
+    my $brapi_package_result = $brapi->brapi_calls(
         $c->req->param('datatype'),
     );
     _standard_response_construction($c, $brapi_package_result);
@@ -267,7 +269,7 @@ sub crops_GET {
     my $c = shift;
     my $supported_crop = $c->config->{'supportedCrop'};
     my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->crops($supported_crop);
+    my $brapi_package_result = $brapi->brapi_crops($supported_crop);
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -277,7 +279,7 @@ sub observation_levels_GET {
     my $self = shift;
     my $c = shift;
     my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->observation_levels();
+    my $brapi_package_result = $brapi->brapi_observation_levels();
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -298,25 +300,9 @@ sub seasons_GET {
 sub seasons_process {
     my $self = shift;
     my $c = shift;
-    my $status = $c->stash->{status};
-    my @data;
-    my $total_count = 0;
-    my $year_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'project year', 'project_property')->cvterm_id();
-    my $project_years_rs = $self->bcs_schema()->resultset("Project::Project")->search_related('projectprops', {'projectprops.type_id'=>$year_cvterm_id}, {order_by=>'projectprops.projectprop_id'});
-    my $rs_slice = $project_years_rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
-    while (my $p_year = $rs_slice->next()) {
-        push @data, {
-            seasonsDbId=>$p_year->projectprop_id(),
-            season=>'',
-            year=>$p_year->value()
-        }
-    }
-    my %result = (data=>\@data);
-    $total_count = $project_years_rs->count();
-    my @data_files;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $brapi = $self->brapi_module;
+    my $brapi_package_result = $brapi->brapi_seasons();
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -370,24 +356,9 @@ sub study_types_GET {
 sub study_types_process {
     my $self = shift;
     my $c = shift;
-    my $status = $c->stash->{status};
-    my @data;
-    my $total_count = 0;
-    my $project_rs = $self->bcs_schema()->resultset("Cv::Cv")->search_related('cvterms', {'me.name'=>'project_type'}, {order_by=>'cvterms.cvterm_id'});
-    my $rs_slice = $project_rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
-    while (my $pp = $rs_slice->next()) {
-        push @data, {
-            studyTypeDbId=>$pp->cvterm_id(),
-            name=>$pp->name(),
-            description=>$pp->definition(),
-        }
-    }
-    my %result = (data=>\@data);
-    $total_count = $project_rs->count();
-    my @data_files;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $brapi = $self->brapi_module;
+    my $brapi_package_result = $brapi->brapi_study_types();
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 
