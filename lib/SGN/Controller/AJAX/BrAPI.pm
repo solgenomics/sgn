@@ -71,19 +71,20 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     $c->stash->{session_token} = $session_token;
     $c->stash->{current_page} = $page;
     $c->stash->{page_size} = $page_size;
+
+	$c->stash->{clean_inputs} = _clean_inputs($c->req->params);
 }
 
-sub _standard_response_construction {
-    my $c = shift;
-    my $brapi_package_result = shift;
-    my $status = $brapi_package_result->{status};
-    my $pagination = $brapi_package_result->{pagination};
-    my $result = $brapi_package_result->{result};
-    my $datafiles = $brapi_package_result->{datafiles};
-
-    my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
-    my %response = (metadata=>\%metadata, result=>$result);
-    $c->stash->{rest} = \%response;
+#useful because javascript can pass 'undef' as an empty value
+sub _clean_inputs {
+	my $params = shift;
+	#print STDERR Dumper $params;
+	foreach (keys %$params){
+		my @values = $params->{$_};
+		my @clean_values = grep {$_ ne undef} @values;
+		$params->{$_} = \@clean_values;
+	}
+	return $params;
 }
 
 sub _authenticate_user {
@@ -101,6 +102,19 @@ sub _authenticate_user {
     }
 
     return 1;
+}
+
+sub _standard_response_construction {
+    my $c = shift;
+    my $brapi_package_result = shift;
+    my $status = $brapi_package_result->{status};
+    my $pagination = $brapi_package_result->{pagination};
+    my $result = $brapi_package_result->{result};
+    my $datafiles = $brapi_package_result->{datafiles};
+
+    my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
+    my %response = (metadata=>\%metadata, result=>$result);
+    $c->stash->{rest} = \%response;
 }
 
 =head2 /brapi/v1/token
@@ -173,12 +187,13 @@ sub authenticate_token_POST {
 sub process_authenticate_token {
     my $self = shift;
     my $c = shift;
+	my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_package_result = $brapi->brapi_login(
-        $c->req->param('grant_type'),
-        $c->req->param('password'),
-        $c->req->param('username'),
-        $c->req->param('client_id'),
+        $clean_inputs->{grant_type}->[0],
+        $clean_inputs->{password}->[0],
+        $clean_inputs->{username}->[0],
+        $clean_inputs->{client_id}->[0],
     );
     my $status = $brapi_package_result->{status};
     my $pagination = $brapi_package_result->{pagination};
@@ -255,9 +270,10 @@ sub calls : Chained('brapi') PathPart('calls') Args(0) : ActionClass('REST') { }
 sub calls_GET {
     my $self = shift;
     my $c = shift;
+	my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_package_result = $brapi->brapi_calls(
-        $c->req->param('datatype'),
+        $clean_inputs->{datatype}->[0],
     );
     _standard_response_construction($c, $brapi_package_result);
 }
@@ -471,117 +487,20 @@ sub germplasm_list_POST {
 sub germplasm_search_process {
     my $self = shift;
     my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $params = $c->req->params();
-
-    my $status = $c->stash->{status};
-    my $message = '';
-
-    my @germplasm_names = $params->{germplasmName};
-    @germplasm_names = grep {$_ ne undef} @germplasm_names;
-    my @accession_numbers = $params->{accessionNumber};
-    @accession_numbers = grep {$_ ne undef} @accession_numbers;
-    my $genus = $params->{germplasmGenus};
-    my $subtaxa = $params->{germplasmSubTaxa};
-    my $species = $params->{germplasmSpecies};
-    my @germplasm_ids = $params->{germplasmDbId};
-    @germplasm_ids = grep {$_ ne undef} @germplasm_ids;
-    my $permplasm_pui = $params->{germplasmPUI};
-    my $match_method = $params->{matchMethod};
-    my %result;
-
-    if ($match_method && ($match_method ne 'exact' && $match_method ne 'wildcard')) {
-        $message .= "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters.";
-        $status->{'message'} = $message;
-        $c->stash->{rest} = {
-            metadata => { pagination=>{}, status => $status, datafiles=>[] },
-            result => \%result,
-        };
-        $c->detach;
-    }
-    my $total_count = 0;
-
-    my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
-    my %search_params;
-    my %order_params;
-
-    $search_params{'me.type_id'} = $accession_type_cvterm_id;
-    $order_params{'-asc'} = 'me.stock_id';
-
-    if (@germplasm_names && scalar(@germplasm_names)>0){
-        if (!$match_method || $match_method eq 'exact') {
-            $search_params{'me.uniquename'} = \@germplasm_names;
-        } elsif ($match_method eq 'wildcard') {
-            my @wildcard_names;
-            foreach (@germplasm_names) {
-                $_ =~ tr/*?/%_/;
-                push @wildcard_names, $_;
-            }
-            $search_params{'me.uniquename'} = { 'ilike' => \@wildcard_names };
-        }
-    }
-
-    if (@germplasm_ids && scalar(@germplasm_ids)>0){
-        if (!$match_method || $match_method eq 'exact') {
-            $search_params{'me.stock_id'} = \@germplasm_ids;
-        } elsif ($match_method eq 'wildcard') {
-            my @wildcard_ids;
-            foreach (@germplasm_ids) {
-                $_ =~ tr/*?/%_/;
-                push @wildcard_ids, $_;
-            }
-            $search_params{'me.stock_id::varchar(255)'} = { 'ilike' => \@wildcard_ids };
-        }
-    }
-
-    #print STDERR Dumper \%search_params;
-    #$self->bcs_schema->storage->debug(1);
-    my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'stock_synonym', 'stock_property')->cvterm_id();
-    my %extra_params = ('+select'=>['me.uniquename'], '+as'=>['accession_number'], 'order_by'=> \%order_params);
-    if (@accession_numbers && scalar(@accession_numbers)>0) {
-        $search_params{'stockprops.type_id'} = $synonym_id;
-        $search_params{'stockprops.value'} = \@accession_numbers;
-        %extra_params = ('join'=>{'stockprops'}, '+select'=>['stockprops.value'], '+as'=>['accession_number'], 'order_by'=> \%order_params);
-    }
-    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, \%extra_params );
-
-    my @data;
-    if ($rs) {
-        $total_count = $rs->count();
-        my $rs_slice = $rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
-        while (my $stock = $rs_slice->next()) {
-            push @data, {
-                germplasmDbId=>$stock->stock_id,
-                defaultDisplayName=>$stock->uniquename,
-                germplasmName=>$stock->uniquename,
-                accessionNumber=>$stock->get_column('accession_number'),
-                germplasmPUI=>$c->config->{main_production_site_url}."/stock/".$stock->stock_id."/view",
-                pedigree=>germplasm_pedigree_string($self->bcs_schema(), $stock->stock_id),
-                germplasmSeedSource=>'',
-                synonyms=>germplasm_synonyms($self->bcs_schema(), $stock->stock_id, $synonym_id),
-                commonCropName=>$stock->search_related('organism')->first()->common_name(),
-                instituteCode=>'',
-                instituteName=>'',
-                biologicalStatusOfAccessionCode=>'',
-                countryOfOriginCode=>'',
-                typeOfGermplasmStorageCode=>'Not Stored',
-                genus=>$stock->search_related('organism')->first()->genus(),
-                species=>$stock->search_related('organism')->first()->species(),
-                speciesAuthority=>'',
-                subtaxa=>'',
-                subtaxaAuthority=>'',
-                donors=>[],
-                acquisitionDate=>'',
-            };
-        }
-    }
-
-    %result = (data => \@data);
-    $status->{'message'} = $message;
-    my @data_files;
-    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+    my $brapi_package_result = $brapi->brapi_germplasm_search({
+		germplasmName => $clean_inputs->{germplasmName},
+		accessionNumber => $clean_inputs->{accessionNumber},
+		germplasmGenus => $clean_inputs->{germplasmGenus},
+		germplasmSubTaxa => $clean_inputs->{germplasmSubTaxa},
+		germplasmSpecies => $clean_inputs->{germplasmSpecies},
+		germplasmDbId => $clean_inputs->{germplasmDbId},
+		germplasmPUI => $clean_inputs->{germplasmPUI},
+		matchMethod => $clean_inputs->{matchMethod},
+	});
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 

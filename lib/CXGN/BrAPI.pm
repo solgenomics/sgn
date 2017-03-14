@@ -7,6 +7,7 @@ use CXGN::BrAPI::v1::Calls;
 use CXGN::BrAPI::v1::Crops;
 use CXGN::BrAPI::v1::ObservationVariables;
 use CXGN::BrAPI::v1::Studies;
+use CXGN::BrAPI::v1::Germplasm;
 
 has 'version' => (
 	isa => 'Str',
@@ -22,6 +23,7 @@ has 'brapi_module_inst' => (
 
 sub brapi_logout {
 	my $self = shift;
+
 	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Authentication';
 	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
 	my $brapi_auth = $brapi_package->new($self->brapi_module_inst);
@@ -92,6 +94,17 @@ sub brapi_study_types {
 	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
 	my $brapi_studies = $brapi_package->new($self->brapi_module_inst);
 	my $brapi_package_result = $brapi_studies->study_types();
+	return $brapi_package_result;
+}
+
+sub brapi_germplasm_search {
+	my $self = shift;
+	my $search_params = shift;
+
+	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Germplasm';
+	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	my $brapi_studies = $brapi_package->new($self->brapi_module_inst);
+	my $brapi_package_result = $brapi_studies->germplasm_search($search_params);
 	return $brapi_package_result;
 }
 

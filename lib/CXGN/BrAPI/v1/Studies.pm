@@ -12,6 +12,18 @@ has 'bcs_schema' => (
 	required => 1,
 );
 
+has 'metadata_schema' => (
+	isa => 'CXGN::Metadata::Schema',
+	is => 'rw',
+	required => 1,
+);
+
+has 'phenome_schema' => (
+	isa => 'CXGN::Phenome::Schema',
+	is => 'rw',
+	required => 1,
+);
+
 has 'page_size' => (
 	isa => 'Int',
 	is => 'rw',

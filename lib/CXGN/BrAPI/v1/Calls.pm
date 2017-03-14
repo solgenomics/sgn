@@ -64,25 +64,29 @@ sub calls {
 		['locations', ['json'], ['GET'] ],
 	);
 
+	my @call_search;
+	if ($datatype_param){
+		foreach my $a (@available){
+			foreach (@{$a->[1]}){
+				if ($_ eq $datatype_param){
+					push @call_search, $a;
+				}
+			}
+		}
+	} else {
+		@call_search = @available;
+	}
+
 	my @data;
 	my $start = $page_size*$page;
 	my $end = $page_size*($page+1)-1;
 	for( my $i = $start; $i <= $end; $i++ ) {
-		if ($available[$i]) {
-			if ($datatype_param) {
-				foreach (@{$available[$i]->[1]}){
-					if ($_ eq $datatype_param){
-						push @data, {call=>$available[$i]->[0], datatypes=>$available[$i]->[1], methods=>$available[$i]->[2]};
-					}
-				}
-			}
-			else {
-				push @data, {call=>$available[$i]->[0], datatypes=>$available[$i]->[1], methods=>$available[$i]->[2]};
-			}
+		if ($call_search[$i]) {
+			push @data, {call=>$call_search[$i]->[0], datatypes=>$call_search[$i]->[1], methods=>$call_search[$i]->[2]};
 		}
 	}
 
-	my $total_count = scalar(@available);
+	my $total_count = scalar(@call_search);
 	my %result = (data=>\@data);
 	push @$status, { 'success' => 'Calls result constructed' };
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
