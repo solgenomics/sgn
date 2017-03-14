@@ -77,12 +77,13 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 
 #useful because javascript can pass 'undef' as an empty value
 sub _clean_inputs {
+	no warnings 'uninitialized';
 	my $params = shift;
 	#print STDERR Dumper $params;
 	foreach (keys %$params){
 		my @values = $params->{$_};
-		my @clean_values = grep {$_ ne undef} @values;
-		$params->{$_} = \@clean_values;
+		@values = grep {$_ ne undef} @values;
+		$params->{$_} = \@values;
 	}
 	return $params;
 }
