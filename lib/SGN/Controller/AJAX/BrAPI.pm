@@ -856,7 +856,6 @@ sub trials_single  : Chained('brapi') PathPart('trials') CaptureArgs(1) {
     my $folder_id = shift;
 
     $c->stash->{trial_id} = $folder_id;
-    $c->stash->{trial} = CXGN::Trial::Folder->new(bcs_schema=>$self->bcs_schema(), folder_id=>$folder_id);
 }
 
 
@@ -874,47 +873,13 @@ sub trials_detail_POST {
 sub trials_detail_GET {
     my $self = shift;
     my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $folder = $c->stash->{trial};
-    my $schema = $self->bcs_schema();
-    my $status = $c->stash->{status};
-    my $message = '';
-
-    my $total_count = 0;
-
-    my %result;
-    if ($folder->is_folder) {
-        $total_count = 1;
-        my @folder_studies;
-        my %additional_info;
-        my $children = $folder->children();
-        foreach (@$children) {
-            push @folder_studies, {
-                studyDbId=>$_->folder_id,
-                studyName=>$_->name,
-                locationDbId=>$_->location_id
-            };
-        }
-        %result = (
-            trialDbId=>$folder->folder_id,
-            trialName=>$folder->name,
-            programDbId=>$folder->breeding_program->project_id(),
-            programName=>$folder->breeding_program->name(),
-            startDate=>'',
-            endDate=>'',
-            active=>'',
-            studies=>\@folder_studies,
-            additionalInfo=>\%additional_info
-        );
-    } else {
-        $message .= 'The given trialDbId does not match an actual trial.';
-    }
-
-    my @datafiles;
-    $status->{'message'} = $message;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+    my $brapi_package_result = $brapi->brapi_trial_details(
+		$c->stash->{trial_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 =head2 brapi/v1/studies/{studyId}/germplasm?pageSize=20&page=1

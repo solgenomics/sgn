@@ -128,4 +128,54 @@ sub trials_search {
 	return $response;
 }
 
+sub trial_details {
+	my $self = shift;
+	my $folder_id = shift;
+
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my $status = $self->status;
+	my $schema = $self->bcs_schema;
+	my $folder = CXGN::Trial::Folder->new(bcs_schema=>$self->bcs_schema(), folder_id=>$folder_id);
+	my $total_count = 0;
+
+    my %result;
+    if ($folder->is_folder) {
+        $total_count = 1;
+        my @folder_studies;
+        my %additional_info;
+        my $children = $folder->children();
+        foreach (@$children) {
+            push @folder_studies, {
+                studyDbId=>$_->folder_id,
+                studyName=>$_->name,
+                locationDbId=>$_->location_id
+            };
+        }
+        %result = (
+            trialDbId=>$folder->folder_id,
+            trialName=>$folder->name,
+            programDbId=>$folder->breeding_program->project_id(),
+            programName=>$folder->breeding_program->name(),
+            startDate=>'',
+            endDate=>'',
+            active=>'',
+            studies=>\@folder_studies,
+            additionalInfo=>\%additional_info
+        );
+		push @$status, { 'success' => 'Trial detail result constructed' };
+    } else {
+        push @$status, { 'error' => 'The given trialDbId does not match an actual trial.' };
+    }
+
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+	my $response = {
+		'status' => $status,
+		'pagination' => $pagination,
+		'result' => \%result,
+		'datafiles' => []
+	};
+	return $response;
+}
+
 1;

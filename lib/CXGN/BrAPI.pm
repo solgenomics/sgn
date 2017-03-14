@@ -142,5 +142,16 @@ sub brapi_trials_search {
 	return $brapi_package_result;
 }
 
+sub brapi_trial_details {
+	my $self = shift;
+	my $folder_id = shift;
+
+	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Trials';
+	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	my $brapi_trials = $brapi_package->new($self->brapi_module_inst);
+	my $brapi_package_result = $brapi_trials->trial_details($folder_id);
+	return $brapi_package_result;
+}
+
 
 1;
