@@ -8,6 +8,7 @@ use CXGN::BrAPI::v1::Crops;
 use CXGN::BrAPI::v1::ObservationVariables;
 use CXGN::BrAPI::v1::Studies;
 use CXGN::BrAPI::v1::Germplasm;
+use CXGN::BrAPI::v1::Trials;
 
 has 'version' => (
 	isa => 'Str',
@@ -129,5 +130,17 @@ sub brapi_studies_search {
 	my $brapi_package_result = $brapi_studies->studies_search($search_params);
 	return $brapi_package_result;
 }
+
+sub brapi_trials_search {
+	my $self = shift;
+	my $search_params = shift;
+
+	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Trials';
+	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	my $brapi_trials = $brapi_package->new($self->brapi_module_inst);
+	my $brapi_package_result = $brapi_trials->trials_search($search_params);
+	return $brapi_package_result;
+}
+
 
 1;

@@ -837,88 +837,16 @@ sub trials_list_POST {
 }
 
 sub trials_search_process {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $params = $c->req->params();
-
-    my $status = $c->stash->{status};
-    my $message = '';
-
-    my $location_id = $params->{locationDbId};
-    my $program_id = $params->{programDbId};
-    my $active = $params->{active};
-    my %result;
-    my $total_count = 0;
-
-    my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
-    my $folder_rs = $self->bcs_schema()->resultset("Project::Project")->search_related('projectprops', {'projectprops.type_id'=>$folder_cvterm_id});
-
-    my @folder_studies;
-    my %additional_info;
-    my @data;
-    if ($folder_rs) {
-        $total_count = $folder_rs->count();
-        my $rs_slice = $folder_rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
-        while (my $p = $rs_slice->next()) {
-            my $folder = CXGN::Trial::Folder->new({bcs_schema=>$self->bcs_schema, folder_id=>$p->project_id});
-            if ($folder->is_folder) {
-                my $children = $folder->children();
-                foreach (@$children) {
-                    if ($location_id) {
-                        if ($location_id == $_->location_id) {
-                            push @folder_studies, {
-                                studyDbId=>$_->folder_id,
-                                studyName=>$_->name,
-                                locationDbId=>$_->location_id
-                            };
-                        }
-                    } else {
-                        push @folder_studies, {
-                            studyDbId=>$_->folder_id,
-                            studyName=>$_->name,
-                            locationDbId=>$_->location_id
-                        };
-                    }
-                }
-
-                if ($program_id) {
-                    if ($program_id == $folder->breeding_program->project_id) {
-                        push @data, {
-                            trialDbId=>$folder->folder_id,
-                            trialName=>$folder->name,
-                            programDbId=>$folder->breeding_program->project_id(),
-                            programName=>$folder->breeding_program->name(),
-                            startDate=>'',
-                            endDate=>'',
-                            active=>'',
-                            studies=>\@folder_studies,
-                            additionalInfo=>\%additional_info
-                        };
-                    }
-                } else {
-                    push @data, {
-                        trialDbId=>$folder->folder_id,
-                        trialName=>$folder->name,
-                        programDbId=>$folder->breeding_program->project_id(),
-                        programName=>$folder->breeding_program->name(),
-                        startDate=>'',
-                        endDate=>'',
-                        active=>'',
-                        studies=>\@folder_studies,
-                        additionalInfo=>\%additional_info
-                    };
-                }
-            }
-        }
-    }
-
-    %result = (data => \@data);
-    $status->{'message'} = $message;
-    my @data_files;
-    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+    my $brapi_package_result = $brapi->brapi_trials_search({
+		locationDbIds => $clean_inputs->{locationDbIds},
+		programDbIds => $clean_inputs->{programDbIds},
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 

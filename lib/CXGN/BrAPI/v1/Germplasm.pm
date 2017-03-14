@@ -51,13 +51,13 @@ sub germplasm_search {
 	my $page = $self->page;
 	my $status = $self->status;
 
-	my @germplasm_names = @{$search_params->{germplasmName}};
-    my @accession_numbers = @{$search_params->{accessionNumber}};
-    my @genus = @{$search_params->{germplasmGenus}};
+	my @germplasm_names = $search_params->{germplasmName} ? @{$search_params->{germplasmName}} : ();
+    my @accession_numbers = $search_params->{accessionNumber} ? @{$search_params->{accessionNumber}} : ();
+    my @genus = $search_params->{germplasmGenus} ? @{$search_params->{germplasmGenus}} : ();
     my $subtaxa = $search_params->{germplasmSubTaxa}->[0];
-    my @species = @{$search_params->{germplasmSpecies}};
-    my @germplasm_ids = @{$search_params->{germplasmDbId}};
-    my @germplasm_puis = @{$search_params->{germplasmPUI}};
+    my @species = $search_params->{germplasmSpecies} ? @{$search_params->{germplasmSpecies}} : ();
+    my @germplasm_ids = $search_params->{germplasmDbId} ? @{$search_params->{germplasmDbId}} : ();
+    my @germplasm_puis = $search_params->{germplasmPUI} ? @{$search_params->{germplasmPUI}} : ();
     my $match_method = $search_params->{matchMethod}->[0];
     my %result;
 

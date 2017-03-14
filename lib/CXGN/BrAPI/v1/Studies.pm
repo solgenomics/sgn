@@ -102,6 +102,7 @@ sub study_types {
     }
     my %result = (data=>\@data);
     my $total_count = scalar(@project_type_ids);
+	push @$status, { 'success' => 'StudyTypes result constructed' };
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 	my $response = { 
 		'status' => $status,
@@ -121,13 +122,13 @@ sub studies_search {
 	my $schema = $self->bcs_schema;
     #my $auth = _authenticate_user($c);
 
-    my @program_dbids = @{$search_params->{programDbIds}};
-    my @program_names = @{$search_params->{programNames}};
-    my @study_dbids = @{$search_params->{studyDbIds}};
-    my @study_names = @{$search_params->{studyNames}};
-    my @location_ids = @{$search_params->{studyLocationDbIds}};
-    my @location_names = @{$search_params->{studyLocationNames}};
-    my @study_type_list = @{$search_params->{studyTypeName}};
+    my @program_dbids = $search_params->{programDbIds} ? @{$search_params->{programDbIds}} : ();
+    my @program_names = $search_params->{programNames} ? @{$search_params->{programNames}} : ();
+    my @study_dbids = $search_params->{studyDbIds} ? @{$search_params->{studyDbIds}} : ();
+    my @study_names = $search_params->{studyNames} ? @{$search_params->{studyNames}} : ();
+    my @location_ids = $search_params->{studyLocationDbIds} ? @{$search_params->{studyLocationDbIds}} : ();
+    my @location_names = $search_params->{studyLocationNames} ? @{$search_params->{studyLocationNames}} : ();
+    my @study_type_list = $search_params->{studyTypeName} ? @{$search_params->{studyTypeName}} : ();
     #my @germplasm_dbids = @{$search_params->{germplasmDbIds}};
     #my @germplasm_names = @{$search_params->{germplasmNames}};
     #my @obs_variable_ids = @{$search_params->{observationVariableDbIds}};
@@ -180,6 +181,7 @@ sub studies_search {
 
     my %result = (data=>\@data_window);
     my $total_count = scalar(@$data);
+	push @$status, { 'success' => 'Studies-search result constructed' };
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 	my $response = {
 		'status' => $status,
