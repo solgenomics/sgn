@@ -937,9 +937,6 @@ sub studies_single  : Chained('brapi') PathPart('studies') CaptureArgs(1) {
     my $study_id = shift;
 
     $c->stash->{study_id} = $study_id;
-    my $t = CXGN::Trial->new( { trial_id => $study_id, bcs_schema => $self->bcs_schema } );
-    $c->stash->{study} = $t;
-    $c->stash->{studyName} = $t->get_name();
 }
 
 
@@ -968,44 +965,11 @@ sub studies_germplasm_GET {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my %result;
-    my $status = $c->stash->{status};
-    my $total_count = 0;
-
-    my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'stock_synonym', 'stock_property')->cvterm_id();
-    my $tl = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $c->stash->{study_id} });
-    my $accessions = $tl->get_accessions();
-    my @germplasm_data;
-
-    if ($accessions) {
-        $total_count = scalar(@$accessions);
-        my $start = $c->stash->{page_size}*$c->stash->{current_page};
-        my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-        for( my $i = $start; $i <= $end; $i++ ) {
-            if (@$accessions[$i]) {
-                push @germplasm_data, {
-                    germplasmDbId=>@$accessions[$i]->{stock_id},
-                    germplasmName=>@$accessions[$i]->{accession_name},
-                    entryNumber=>'',
-                    accessionNumber=>@$accessions[$i]->{accession_name},
-                    germplasmPUI=>@$accessions[$i]->{accession_name},
-                    pedigree=>germplasm_pedigree_string($self->bcs_schema, @$accessions[$i]->{stock_id}),
-                    seedSource=>'',
-                    synonyms=>germplasm_synonyms($self->bcs_schema, @$accessions[$i]->{stock_id}, $synonym_id)
-                };
-            }
-        }
-    }
-
-    %result = (
-        studyDbId=>$c->stash->{study_id},
-        studyName=>$c->stash->{studyName},
-        data =>\@germplasm_data
-    );
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $brapi = $self->brapi_module;
+    my $brapi_package_result = $brapi->brapi_studies_germplasm(
+		$c->stash->{study_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -1045,40 +1009,14 @@ sub germplasm_pedigree_POST {
 sub germplasm_pedigree_GET {
     my $self = shift;
     my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $schema = $self->bcs_schema();
-    my %result;
-    my $status = $c->stash->{status};
-    my $message = '';
-    my $total_count = 0;
-
-    if ($c->req->param('notation')) {
-        $message .= 'Notation not yet implemented. Returns a simple parent1/parent2 string.';
-        if ($c->req->param('notation') ne 'purdy') {
-            $message .= 'Unsupported notation code. Allowed notation: purdy';
-        }
-    }
-
-    my $s = $c->stash->{stock};
-    if ($s) {
-        $total_count = 1;
-    }
-
-    my @direct_parents = $s->get_direct_parents();
-
-    %result = (
-        germplasmDbId=>$c->stash->{stock_id},
-        pedigree=>germplasm_pedigree_string($schema, $c->stash->{stock_id}),
-        parent1Id=>$direct_parents[0][0],
-        parent2Id=>$direct_parents[1][0]
-    );
-
-    my %pagination;
-    my @datafiles;
-    $status->{'message'} = $message;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+    my $brapi_package_result = $brapi->brapi_germplasm_pedigree({
+		stock_id => $c->stash->{stock_id},
+		notation => $clean_inputs->{notation}->[0]
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 

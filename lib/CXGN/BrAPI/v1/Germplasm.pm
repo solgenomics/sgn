@@ -127,7 +127,7 @@ sub germplasm_search {
         $total_count = $rs->count();
         my $rs_slice = $rs->slice($page_size*$page, $page_size*($page+1)-1);
         while (my $stock = $rs_slice->next()) {
-			my $stockprop_hash = $self->get_stockprop_hash($stock->stock_id);
+			my $stockprop_hash = CXGN::Chado::Stock->new($self->bcs_schema, $stock->stock_id)->get_stockprop_hash();
 			my @donor_array;
 			my $donor_accessions = $stockprop_hash->{'donor'} ? $stockprop_hash->{'donor'} : [];
 			my $donor_institutes = $stockprop_hash->{'donor institute'} ? $stockprop_hash->{'donor institute'} : [];
@@ -173,18 +173,6 @@ sub germplasm_search {
 	return $response;
 }
 
-sub get_stockprop_hash {
-	my $self = shift;
-	my $stock_id = shift;
-	my $stockprop_rs = $self->bcs_schema->resultset('Stock::Stockprop')->search({stock_id => $stock_id}, {join=>['type'], +select=>['type.name', 'me.value'], +as=>['name', 'value']});
-	my $stockprop_hash;
-	while (my $r = $stockprop_rs->next()){
-		push @{ $stockprop_hash->{$r->get_column('name')} }, $r->get_column('value');
-	}
-	#print STDERR Dumper $stockprop_hash;
-	return $stockprop_hash;
-}
-
 sub germplasm_pedigree_string {
 	my $self = shift;
 	my $stock_id = shift;
@@ -217,7 +205,7 @@ sub germplasm_detail {
 		};
 		return $response;
 	}
-	my $stockprop_hash = $self->get_stockprop_hash($stock_id);
+	my $stockprop_hash = $stock->get_stockprop_hash();
 
 	my @donor_array;
 	my $donor_accessions = $stockprop_hash->{'donor'} ? $stockprop_hash->{'donor'} : [];
@@ -260,5 +248,44 @@ sub germplasm_detail {
 	};
 	return $response;
 }
+
+sub germplasm_pedigree {
+	my $self = shift;
+	my $inputs = shift;
+	my $stock_id = $inputs->{stock_id};
+	my $notation = $inputs->{notation};
+	my $status = $self->status;
+	if ($notation) {
+        push @$status, { 'info' => 'Notation not yet implemented. Returns a simple parent1/parent2 string.' };
+        if ($notation ne 'purdy') {
+            push @$status, { 'error' => 'Unsupported notation code. Allowed notation: purdy' };
+        }
+    }
+
+	my %result;
+	my $total_count = 0;
+    my $s = CXGN::Chado::Stock->new($self->bcs_schema(), $stock_id);
+    if ($s) {
+        $total_count = 1;
+		my @direct_parents = $s->get_direct_parents();
+	    %result = (
+	        germplasmDbId=>$stock_id,
+	        pedigree=>$self->germplasm_pedigree_string($stock_id),
+	        parent1Id=>$direct_parents[0][0],
+	        parent2Id=>$direct_parents[1][0]
+	    );
+    }
+
+	push @$status, { 'success' => 'Germplasm-pedigree result constructed' };
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
+	my $response = {
+		'status' => $status,
+		'pagination' => $pagination,
+		'result' => \%result,
+		'datafiles' => []
+	};
+	return $response;
+}
+
 
 1;

@@ -153,5 +153,27 @@ sub brapi_trial_details {
 	return $brapi_package_result;
 }
 
+sub brapi_studies_germplasm {
+	my $self = shift;
+	my $study_id = shift;
+
+	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Studies';
+	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	my $brapi_studies = $brapi_package->new($self->brapi_module_inst);
+	my $brapi_package_result = $brapi_studies->studies_germplasm($study_id);
+	return $brapi_package_result;
+}
+
+sub brapi_germplasm_pedigree {
+	my $self = shift;
+	my $inputs = shift;
+
+	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Germplasm';
+	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	my $brapi_germplasm = $brapi_package->new($self->brapi_module_inst);
+	my $brapi_package_result = $brapi_germplasm->germplasm_pedigree($inputs);
+	return $brapi_package_result;
+}
+
 
 1;

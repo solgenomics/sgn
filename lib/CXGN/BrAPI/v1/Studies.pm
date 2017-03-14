@@ -192,4 +192,64 @@ sub studies_search {
 	return $response;
 }
 
+sub studies_germplasm {
+	my $self = shift;
+	my $study_id = shift;
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my $status = $self->status;
+	my $schema = $self->bcs_schema;
+
+	my $total_count = 0;
+
+    my $tl = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $study_id });
+    my $accessions = $tl->get_accessions();
+    my @germplasm_data;
+
+    if ($accessions) {
+        $total_count = scalar(@$accessions);
+        my $start = $page_size*$page;
+        my $end = $page_size*($page+1)-1;
+        for( my $i = $start; $i <= $end; $i++ ) {
+            if (@$accessions[$i]) {
+				my $stockprop_hash = CXGN::Chado::Stock->new($self->bcs_schema, @$accessions[$i]->{stock_id})->get_stockprop_hash();
+                push @germplasm_data, {
+                    germplasmDbId=>@$accessions[$i]->{stock_id},
+                    germplasmName=>@$accessions[$i]->{accession_name},
+                    entryNumber=>'',
+                    accessionNumber=>$stockprop_hash->{'accession number'} ? join ',', @{$stockprop_hash->{'accession number'}} : '',
+                    germplasmPUI=>$stockprop_hash->{'PUI'} ? join ',', @{$stockprop_hash->{'PUI'}} : '',
+                    pedigree=>$self->germplasm_pedigree_string(@$accessions[$i]->{stock_id}),
+                    seedSource=>$stockprop_hash->{'seed source'} ? join ',', @{$stockprop_hash->{'seed source'}} : '',
+                    synonyms=>$stockprop_hash->{'stock_synonym'} ? join ',', @{$stockprop_hash->{'stock_synonym'}} : '',
+                };
+            }
+        }
+    }
+
+    my %result = (
+        studyDbId=>$study_id,
+        studyName=>$tl->get_name,
+        data =>\@germplasm_data
+    );
+	push @$status, { 'success' => 'Studies-germplasm result constructed' };
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+	my $response = {
+		'status' => $status,
+		'pagination' => $pagination,
+		'result' => \%result,
+		'datafiles' => []
+	};
+	return $response;
+}
+
+sub germplasm_pedigree_string {
+	my $self = shift;
+	my $stock_id = shift;
+    my $s = CXGN::Chado::Stock->new($self->bcs_schema, $stock_id);
+    my $pedigree_root = $s->get_parents('1');
+    my $pedigree_string = $pedigree_root->get_pedigree_string('1');
+    return $pedigree_string;
+}
+
 1;
