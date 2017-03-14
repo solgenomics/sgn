@@ -4,6 +4,7 @@ use Moose;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
+use CXGN::Chado::Stock;
 use CXGN::BrAPI::Pagination;
 
 has 'bcs_schema' => (
@@ -191,6 +192,73 @@ sub germplasm_pedigree_string {
     my $pedigree_root = $s->get_parents('1');
     my $pedigree_string = $pedigree_root->get_pedigree_string('1');
     return $pedigree_string;
+}
+
+sub germplasm_detail {
+	my $self = shift;
+	my $stock_id = shift;
+	my $status = $self->status;
+	my %result;
+
+	my $verify_id = $self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$stock_id});
+	my $stock = CXGN::Chado::Stock->new($self->bcs_schema(), $stock_id);
+
+	my $total_count = 0;
+    if ($verify_id) {
+        $total_count = 1;
+    } else {
+		push @$status, { 'error' => 'GermplasmDbId does not exist in thie database' };
+		my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,1,0);
+		my $response = { 
+			'status' => $status,
+			'pagination' => $pagination,
+			'result' => \%result,
+			'datafiles' => []
+		};
+		return $response;
+	}
+	my $stockprop_hash = $self->get_stockprop_hash($stock_id);
+
+	my @donor_array;
+	my $donor_accessions = $stockprop_hash->{'donor'} ? $stockprop_hash->{'donor'} : [];
+	my $donor_institutes = $stockprop_hash->{'donor institute'} ? $stockprop_hash->{'donor institute'} : [];
+	my $donor_puis = $stockprop_hash->{'donor PUI'} ? $stockprop_hash->{'donor PUI'} : [];
+	for (0 .. scalar(@$donor_accessions)){
+		push @donor_array, { 'donorGermplasmName'=>$donor_accessions->[$_], 'donorAccessionNumber'=>$donor_accessions->[$_], 'donorInstituteCode'=>$donor_institutes->[$_], 'germplasmPUI'=>$donor_puis->[$_] };
+	}
+
+	%result = (
+        germplasmDbId=>$stock_id,
+        defaultDisplayName=>$stock->get_name(),
+        germplasmName=>$stock->get_uniquename(),
+        accessionNumber=>$stock->get_uniquename(),
+        germplasmPUI=>$stock->get_uniquename(),
+        pedigree=>$self->germplasm_pedigree_string($stock_id),
+        germplasmSeedSource=>$stockprop_hash->{'seed source'} ? join ',', @{$stockprop_hash->{'seed source'}} : '',,
+        synonyms=>$stockprop_hash->{'stock_synonym'} ? join ',', @{$stockprop_hash->{'stock_synonym'}} : '',
+        commonCropName=>$stock->get_organism->common_name(),
+		instituteCode=>$stockprop_hash->{'institute code'} ? join ',', @{$stockprop_hash->{'institute code'}} : '',
+		instituteName=>$stockprop_hash->{'institute name'} ? join ',', @{$stockprop_hash->{'institute name'}} : '',
+		biologicalStatusOfAccessionCode=>$stockprop_hash->{'biological status of accession code'} ? join ',', @{$stockprop_hash->{'biological status of accession code'}} : '',
+		countryOfOriginCode=>$stockprop_hash->{'country'} ? join ',', @{$stockprop_hash->{'country'}} : '',
+		typeOfGermplasmStorageCode=>$stockprop_hash->{'type of germplasm storage code'} ? join ',', @{$stockprop_hash->{'type of germplasm storage code'}} : '',
+        genus=>$stock->get_organism->genus(),
+        species=>$stock->get_organism->species(),
+        speciesAuthority=>'',
+        subtaxa=>'',
+        subtaxaAuthority=>'',
+        donors=>\@donor_array,
+        acquisitionDate=>'',
+    );
+	push @$status, { 'success' => 'Germplasm-search result constructed' };
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
+	my $response = { 
+		'status' => $status,
+		'pagination' => $pagination,
+		'result' => \%result,
+		'datafiles' => []
+	};
+	return $response;
 }
 
 1;

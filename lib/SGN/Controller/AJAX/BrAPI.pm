@@ -486,8 +486,8 @@ sub germplasm_list_POST {
 }
 
 sub germplasm_search_process {
-    my $self = shift;
-    my $c = shift;
+	my $self = shift;
+	my $c = shift;
 	#my $auth = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
@@ -501,7 +501,7 @@ sub germplasm_search_process {
 		germplasmPUI => $clean_inputs->{germplasmPUI},
 		matchMethod => $clean_inputs->{matchMethod},
 	});
-    _standard_response_construction($c, $brapi_package_result);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -537,7 +537,6 @@ sub germplasm_single  : Chained('brapi') PathPart('germplasm') CaptureArgs(1) {
     my $stock_id = shift;
 
     $c->stash->{stock_id} = $stock_id;
-    $c->stash->{stock} = CXGN::Chado::Stock->new($self->bcs_schema(), $stock_id);
 }
 
 
@@ -555,47 +554,13 @@ sub germplasm_detail_POST {
 sub germplasm_detail_GET {
     my $self = shift;
     my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $rs = $c->stash->{stock};
-    my $schema = $self->bcs_schema();
-    my $status = $c->stash->{status};
-
-    my $total_count = 0;
-    if ($c->stash->{stock}) {
-        $total_count = 1;
-    }
-
-    my %result;
-    my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'stock_synonym', 'stock_property')->cvterm_id();
-
-    %result = (
-        germplasmDbId=>$c->stash->{stock_id},
-        defaultDisplayName=>$c->stash->{stock}->get_name(),
-        germplasmName=>$c->stash->{stock}->get_uniquename(),
-        accessionNumber=>$c->stash->{stock}->get_uniquename(),
-        germplasmPUI=>$c->stash->{stock}->get_uniquename(),
-        pedigree=>germplasm_pedigree_string($self->bcs_schema(), $c->stash->{stock_id}),
-        germplasmSeedSource=>'',
-        synonyms=>germplasm_synonyms($schema, $c->stash->{stock_id}, $synonym_id),
-        commonCropName=>$c->stash->{stock}->get_organism->common_name(),
-        instituteCode=>'',
-        instituteName=>'',
-        biologicalStatusOfAccessionCode=>'',
-        countryOfOriginCode=>'',
-        typeOfGermplasmStorageCode=>'Not Stored',
-        genus=>$c->stash->{stock}->get_organism->genus(),
-        species=>$c->stash->{stock}->get_organism->species(),
-        speciesAuthority=>'',
-        subtaxa=>'',
-        subtaxaAuthority=>'',
-        donors=>[],
-        acquisitionDate=>'',
-    );
-
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+    my $brapi_package_result = $brapi->brapi_germplasm_detail(
+		$c->stash->{stock_id}
+	);
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 =head2 brapi/v1/germplasm/{id}/MCPD

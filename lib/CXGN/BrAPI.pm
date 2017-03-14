@@ -103,8 +103,19 @@ sub brapi_germplasm_search {
 
 	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Germplasm';
 	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
-	my $brapi_studies = $brapi_package->new($self->brapi_module_inst);
-	my $brapi_package_result = $brapi_studies->germplasm_search($search_params);
+	my $brapi_germplasm = $brapi_package->new($self->brapi_module_inst);
+	my $brapi_package_result = $brapi_germplasm->germplasm_search($search_params);
+	return $brapi_package_result;
+}
+
+sub brapi_germplasm_detail {
+	my $self = shift;
+	my $stock_id = shift;
+
+	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Germplasm';
+	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	my $brapi_germplasm = $brapi_package->new($self->brapi_module_inst);
+	my $brapi_package_result = $brapi_germplasm->germplasm_detail($stock_id);
 	return $brapi_package_result;
 }
 
