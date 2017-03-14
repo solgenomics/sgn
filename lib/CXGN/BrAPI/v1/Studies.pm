@@ -4,6 +4,7 @@ use Moose;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
+use CXGN::Trial::Search;
 use CXGN::BrAPI::Pagination;
 
 has 'bcs_schema' => (
@@ -103,6 +104,84 @@ sub study_types {
     my $total_count = scalar(@project_type_ids);
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 	my $response = { 
+		'status' => $status,
+		'pagination' => $pagination,
+		'result' => \%result,
+		'datafiles' => []
+	};
+	return $response;
+}
+
+sub studies_search {
+	my $self = shift;
+	my $search_params = shift;
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my $status = $self->status;
+	my $schema = $self->bcs_schema;
+    #my $auth = _authenticate_user($c);
+
+    my @program_dbids = @{$search_params->{programDbIds}};
+    my @program_names = @{$search_params->{programNames}};
+    my @study_dbids = @{$search_params->{studyDbIds}};
+    my @study_names = @{$search_params->{studyNames}};
+    my @location_ids = @{$search_params->{studyLocationDbIds}};
+    my @location_names = @{$search_params->{studyLocationNames}};
+    my @study_type_list = @{$search_params->{studyTypeName}};
+    #my @germplasm_dbids = @{$search_params->{germplasmDbIds}};
+    #my @germplasm_names = @{$search_params->{germplasmNames}};
+    #my @obs_variable_ids = @{$search_params->{observationVariableDbIds}};
+    #my @obs_variable_names = @{$search_params->{observationVariableNames}};
+    #my $sort_by = $c->req->param("sortBy");
+    #my $sort_order = $c->req->param("sortOrder");
+
+	#$self->bcs_schema->storage->debug(1);
+    my $trial_search = CXGN::Trial::Search->new({
+        bcs_schema=>$schema,
+        location_list=>\@location_names,
+        location_id_list=>\@location_ids,
+        trial_type_list=>\@study_type_list,
+        trial_id_list=>\@study_dbids,
+        trial_name_list=>\@study_names,
+        trial_name_is_exact=>1,
+        program_list=>\@program_names,
+        program_id_list=>\@program_dbids,
+    });
+    my $data = $trial_search->search();
+    my @data_window;
+    my $start = $page_size*$page;
+    my $end = $page_size*($page+1)-1;
+    for( my $i = $start; $i <= $end; $i++ ) {
+        if (@$data[$i]) {
+            my %additional_info = (
+                design => @$data[$i]->{design},
+                description => @$data[$i]->{description},
+            );
+            my %data_obj = (
+                studyDbId => @$data[$i]->{trial_id},
+                studyName => @$data[$i]->{trial_name},
+                trialDbId => @$data[$i]->{folder_id},
+                trialName => @$data[$i]->{folder_name},
+                studyType => @$data[$i]->{trial_type},
+                seasons => [@$data[$i]->{year}],
+                locationDbId => @$data[$i]->{location_id},
+                locationName => @$data[$i]->{location_name},
+                programDbId => @$data[$i]->{breeding_program_id},
+                programName => @$data[$i]->{breeding_program_name},
+                startDate => @$data[$i]->{harvest_date},
+                endDate => @$data[$i]->{planting_date},
+                active=>'',
+                additionalInfo=>\%additional_info
+            );
+            push @data_window, \%data_obj;
+        }
+    }
+    #print STDERR Dumper \@data_window;
+
+    my %result = (data=>\@data_window);
+    my $total_count = scalar(@$data);
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+	my $response = {
 		'status' => $status,
 		'pagination' => $pagination,
 		'result' => \%result,

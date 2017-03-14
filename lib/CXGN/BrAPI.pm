@@ -119,4 +119,15 @@ sub brapi_germplasm_detail {
 	return $brapi_package_result;
 }
 
+sub brapi_studies_search {
+	my $self = shift;
+	my $search_params = shift;
+
+	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::Studies';
+	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	my $brapi_studies = $brapi_package->new($self->brapi_module_inst);
+	my $brapi_package_result = $brapi_studies->studies_search($search_params);
+	return $brapi_package_result;
+}
+
 1;
