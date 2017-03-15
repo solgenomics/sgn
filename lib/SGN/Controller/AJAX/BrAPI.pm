@@ -1090,32 +1090,13 @@ sub germplasm_markerprofile_GET {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $schema = $self->bcs_schema();
-    my %result;
-    my $status = $c->stash->{status};
-    my @marker_profiles;
-
-    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
-
-    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-  	    {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'stock.stock_id'=>$c->stash->{stock_id}},
-  	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-  	     select=> ['genotypeprops.genotypeprop_id'],
-  	     as=> ['genotypeprop_id'],
-  	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
-  	    }
-  	);
-
-    my $rs_slice = $rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
-    while (my $gt = $rs_slice->next()) {
-      push @marker_profiles, $gt->get_column('genotypeprop_id');
-    }
-    %result = (germplasmDbId=>$c->stash->{stock_id}, markerProfiles=>\@marker_profiles);
-    my $total_count = scalar(@marker_profiles);
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+    my $brapi_package_result = $brapi_module->germplasm_markerprofiles(
+		$c->stash->{stock_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
