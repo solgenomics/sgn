@@ -8,6 +8,7 @@ use CXGN::BrAPI::v1::Crops;
 use CXGN::BrAPI::v1::ObservationVariables;
 use CXGN::BrAPI::v1::Studies;
 use CXGN::BrAPI::v1::Germplasm;
+use CXGN::BrAPI::v1::GermplasmAttributes;
 use CXGN::BrAPI::v1::Trials;
 
 has 'version' => (
@@ -175,5 +176,36 @@ sub brapi_germplasm_pedigree {
 	return $brapi_package_result;
 }
 
+sub brapi_germplasm_attributes_list {
+	my $self = shift;
+	my $inputs = shift;
+
+	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::GermplasmAttributes';
+	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	my $brapi_germplasm = $brapi_package->new($self->brapi_module_inst);
+	my $brapi_package_result = $brapi_germplasm->germplasm_attributes_list($inputs);
+	return $brapi_package_result;
+}
+
+sub brapi_germplasm_attributes_germplasm_detail {
+	my $self = shift;
+	my $inputs = shift;
+
+	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::GermplasmAttributes';
+	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	my $brapi_germplasm = $brapi_package->new($self->brapi_module_inst);
+	my $brapi_package_result = $brapi_germplasm->germplasm_attributes_germplasm_detail($inputs);
+	return $brapi_package_result;
+}
+
+sub brapi_germplasm_attributes_categories_list {
+	my $self = shift;
+
+	my $brapi_package = 'CXGN::BrAPI::'.$self->version().'::GermplasmAttributes';
+	push @{$self->brapi_module_inst->{status}}, { 'info' => "Loading $brapi_package" };
+	my $brapi_germplasm = $brapi_package->new($self->brapi_module_inst);
+	my $brapi_package_result = $brapi_germplasm->germplasm_attributes_categories_list();
+	return $brapi_package_result;
+}
 
 1;
