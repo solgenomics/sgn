@@ -169,7 +169,8 @@ sub authenticate_token_DELETE {
     my $self = shift;
     my $c = shift;
     my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->brapi_logout();
+	my $brapi_module = $brapi->brapi_wrapper('Authentication');
+    my $brapi_package_result = $brapi_module->logout();
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -190,7 +191,8 @@ sub process_authenticate_token {
     my $c = shift;
 	my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->brapi_login(
+	my $brapi_module = $brapi->brapi_wrapper('Authentication');
+    my $brapi_package_result = $brapi_module->login(
         $clean_inputs->{grant_type}->[0],
         $clean_inputs->{password}->[0],
         $clean_inputs->{username}->[0],
@@ -273,7 +275,8 @@ sub calls_GET {
     my $c = shift;
 	my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->brapi_calls(
+	my $brapi_module = $brapi->brapi_wrapper('Calls');
+    my $brapi_package_result = $brapi_module->calls(
         $clean_inputs->{datatype}->[0],
     );
     _standard_response_construction($c, $brapi_package_result);
@@ -286,7 +289,8 @@ sub crops_GET {
     my $c = shift;
     my $supported_crop = $c->config->{'supportedCrop'};
     my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->brapi_crops($supported_crop);
+	my $brapi_module = $brapi->brapi_wrapper('Crops');
+    my $brapi_package_result = $brapi_module->crops($supported_crop);
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -296,7 +300,8 @@ sub observation_levels_GET {
     my $self = shift;
     my $c = shift;
     my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->brapi_observation_levels();
+	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
+    my $brapi_package_result = $brapi_module->observation_levels();
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -318,7 +323,8 @@ sub seasons_process {
     my $self = shift;
     my $c = shift;
 	my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->brapi_seasons();
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+    my $brapi_package_result = $brapi_module->seasons();
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -374,7 +380,8 @@ sub study_types_process {
     my $self = shift;
     my $c = shift;
 	my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->brapi_study_types();
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+    my $brapi_package_result = $brapi_module->study_types();
     _standard_response_construction($c, $brapi_package_result);
 }
 
@@ -491,7 +498,8 @@ sub germplasm_search_process {
 	#my $auth = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->brapi_germplasm_search({
+	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+    my $brapi_package_result = $brapi_module->germplasm_search({
 		germplasmName => $clean_inputs->{germplasmName},
 		accessionNumber => $clean_inputs->{accessionNumber},
 		germplasmGenus => $clean_inputs->{germplasmGenus},
@@ -557,7 +565,8 @@ sub germplasm_detail_GET {
 	#my $auth = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->brapi_germplasm_detail(
+	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+    my $brapi_package_result = $brapi_module->germplasm_detail(
 		$c->stash->{stock_id}
 	);
     _standard_response_construction($c, $brapi_package_result);
@@ -805,7 +814,8 @@ sub studies_search_process {
 	#my $auth = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->brapi_studies_search({
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+    my $brapi_package_result = $brapi_module->studies_search({
 		programDbIds => $clean_inputs->{programDbIds},
 		programNames => $clean_inputs->{programNames},
 		studyDbIds => $clean_inputs->{studyDbIds},
@@ -842,7 +852,8 @@ sub trials_search_process {
 	#my $auth = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->brapi_trials_search({
+	my $brapi_module = $brapi->brapi_wrapper('Trials');
+    my $brapi_package_result = $brapi_module->trials_search({
 		locationDbIds => $clean_inputs->{locationDbIds},
 		programDbIds => $clean_inputs->{programDbIds},
 	});
@@ -876,7 +887,8 @@ sub trials_detail_GET {
 	#my $auth = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->brapi_trial_details(
+	my $brapi_module = $brapi->brapi_wrapper('Trials');
+    my $brapi_package_result = $brapi_module->trial_details(
 		$c->stash->{trial_id}
 	);
 	_standard_response_construction($c, $brapi_package_result);
@@ -966,7 +978,8 @@ sub studies_germplasm_GET {
     my $c = shift;
     #my $auth = _authenticate_user($c);
 	my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->brapi_studies_germplasm(
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+    my $brapi_package_result = $brapi_module->studies_germplasm(
 		$c->stash->{study_id}
 	);
 	_standard_response_construction($c, $brapi_package_result);
@@ -1012,7 +1025,8 @@ sub germplasm_pedigree_GET {
 	#my $auth = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->brapi_germplasm_pedigree({
+	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+    my $brapi_package_result = $brapi_module->germplasm_pedigree({
 		stock_id => $c->stash->{stock_id},
 		notation => $clean_inputs->{notation}->[0]
 	});
@@ -1030,7 +1044,8 @@ sub germplasm_attributes_detail_GET {
     #my $auth = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->brapi_germplasm_attributes_germplasm_detail({
+	my $brapi_module = $brapi->brapi_wrapper('GermplasmAttributes');
+    my $brapi_package_result = $brapi_module->germplasm_attributes_germplasm_detail({
 		stock_id => $c->stash->{stock_id},
 		attribute_dbids => $clean_inputs->{attributeDbId}
 	});
@@ -1122,7 +1137,8 @@ sub germplasm_attributes_process {
     #my $auth = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->brapi_germplasm_attributes_list({
+	my $brapi_module = $brapi->brapi_wrapper('GermplasmAttributes');
+    my $brapi_package_result = $brapi_module->germplasm_attributes_list({
 		attribute_category_dbids => $clean_inputs->{attributeCategoryDbId}
 	});
 	_standard_response_construction($c, $brapi_package_result);
@@ -1142,7 +1158,8 @@ sub germplasm_attributes_categories_process {
     my $c = shift;
     #my $auth = _authenticate_user($c);
 	my $brapi = $self->brapi_module;
-    my $brapi_package_result = $brapi->brapi_germplasm_attributes_categories_list();
+	my $brapi_module = $brapi->brapi_wrapper('GermplasmAttributes');
+    my $brapi_package_result = $brapi_module->germplasm_attributes_categories_list();
 	_standard_response_construction($c, $brapi_package_result);
 }
 
