@@ -104,6 +104,14 @@ sub markerprofiles_detail {
 	my $page = $self->page;
 	my $status = $self->status;
 	my $genotypeprop_id = $inputs->{markerprofile_id};
+	my $sep_phased = $inputs->{sep_phased};
+	my $sep_unphased = $inputs->{sep_unphased};
+	my $unknown_string = $inputs->{unknown_string};
+	my $expand_homozygotes = $inputs->{expand_homozygotes};
+
+	if ($sep_phased || $sep_unphased || $expand_homozygotes || $unknown_string){
+		push @$status, {'error' => 'The following parameters are not implemented: expandHomozygotes, unknownString, sepPhased, sepUnphased'};
+	}
 
 	my $total_count = 0;
     my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->find(
@@ -174,6 +182,131 @@ sub markerprofiles_methods {
 		'pagination' => $pagination,
 		'result' => \%result,
 		'datafiles' => []
+	};
+	return $response;
+}
+
+sub markerprofiles_allelematrix {
+	my $self = shift;
+	my $inputs = shift;
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my $status = $self->status;
+	my @markerprofile_ids = $inputs->{markerprofile_ids} ? @{$inputs->{markerprofile_ids}} : ();
+	my @marker_ids = $inputs->{marker_ids} ? @{$inputs->{marker_ids}} : ();
+	my $sep_phased = $inputs->{sep_phased};
+	my $sep_unphased = $inputs->{sep_unphased};
+	my $unknown_string = $inputs->{unknown_string};
+	my $expand_homozygotes = $inputs->{expand_homozygotes};
+	my $data_format = $inputs->{format};
+	my $file_path = $inputs->{file_path};
+	my $uri = $inputs->{file_uri};
+
+	if ($sep_phased || $sep_unphased || $expand_homozygotes || $unknown_string){
+		push @$status, { 'error' => 'The following parameters are not implemented: expandHomozygotes, unknownString, sepPhased, sepUnphased' };
+	}
+
+	my @datafiles;
+	my $data_file_path;
+	my %result;
+
+	if ($data_format ne 'json' && $data_format ne 'tsv' && $data_format ne 'csv') {
+		push @$status, { 'error' => 'Unsupported Format Given. Supported values are: json, tsv, csv' };
+	}
+
+	my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@markerprofile_ids }});
+
+	my @scores;
+	my $total_pages;
+	my $total_count;
+	my @ordered_refmarkers;
+	my $markers;
+	if ($rs->count() > 0) {
+		while (my $profile = $rs->next()) {
+			my $profile_json = $profile->value();
+			my $refmarkers = JSON::Any->decode($profile_json);
+			#print STDERR Dumper($refmarkers);
+			push @ordered_refmarkers, sort genosort keys(%$refmarkers);
+		}
+		#print Dumper(\@ordered_refmarkers);
+		my %unique_markers;
+		foreach (@ordered_refmarkers) {
+			$unique_markers{$_} = 1;
+		}
+
+        my $json = JSON->new();
+        $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@markerprofile_ids }});
+        while (my $profile = $rs->next()) {
+            my $markers_json = $profile->value();
+            $markers = $json->decode($markers_json);
+            my $genotypeprop_id = $profile->genotypeprop_id();
+            foreach my $m (sort keys %unique_markers) {
+                push @scores, [$m, $genotypeprop_id, $self->convert_dosage_to_genotype($markers->{$m})];
+            }
+        }
+    }
+
+    #print STDERR Dumper \@scores;
+
+    my @scores_seen;
+    if (!$data_format || $data_format eq 'json' ){
+
+        for (my $n = $page_size*$page; $n< ($page_size*($page+1)-1); $n++) {
+            push @scores_seen, $scores[$n];
+        }
+		%result = (data=>\@scores_seen);
+
+    } elsif ($data_format eq 'tsv' || $data_format eq 'csv') {
+
+        my @header_row;
+        push @header_row, 'markerprofileDbIds';
+        foreach (@markerprofile_ids){
+            push @header_row, $_;
+        }
+
+        my %markers;
+        foreach (@scores){
+            $markers{$_->[0]}->{$_->[1]} = $_->[2];
+        }
+        #print STDERR Dumper \%markers;
+
+        my $delim;
+        if ($data_format eq 'tsv') {
+            $delim = "\t";
+        } elsif ($data_format eq 'csv') {
+            $delim = ",";
+        }
+        open(my $fh, ">", $file_path);
+            print STDERR $file_path."\n";
+            print $fh join("$delim", @header_row),"\n";
+            #print $fh "markerprofileDbIds\t", join($delim, @lines), "\n";
+            foreach (keys %markers) {
+                print $fh $_.$delim;
+                my $count = 1;
+                foreach my $profile_id (@markerprofile_ids) {
+                    print $fh $markers{$_}->{$profile_id};
+                    if ($count < scalar(@markerprofile_ids)){
+                        print $fh $delim;
+                    }
+                    #print $fh .join("$delim", @{$_}),"\n";
+                    $count++;
+                }
+                print $fh "\n";
+            }
+
+        close $fh;
+        $data_file_path = $inputs->{main_production_site_url}.$uri;
+		push @datafiles, $data_file_path;
+    }
+
+    $total_count = scalar(@scores);
+	push @$status, { 'success' => 'Markerprofiles allelematrix result constructed' };
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+	my $response = {
+		'status' => $status,
+		'pagination' => $pagination,
+		'result' => \%result,
+		'datafiles' => \@datafiles
 	};
 	return $response;
 }

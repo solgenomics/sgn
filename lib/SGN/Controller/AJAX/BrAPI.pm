@@ -85,11 +85,19 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 sub _clean_inputs {
 	no warnings 'uninitialized';
 	my $params = shift;
-	#print STDERR Dumper $params;
 	foreach (keys %$params){
-		my @values = $params->{$_};
-		@values = grep {$_ ne undef} @values;
-		$params->{$_} = \@values;
+		my $values = $params->{$_};
+		my $ret_val;
+		if (ref \$values eq 'SCALAR'){
+			push @$ret_val, $values;
+		} elsif (ref $values eq 'ARRAY'){
+			$ret_val = $values;
+		} else {
+			die "Input is not a scalar or an arrayref\n";
+		}
+		@$ret_val = grep {$_ ne undef} @$ret_val;
+		@$ret_val = grep {$_ ne ''} @$ret_val;
+		$params->{$_} = $ret_val;
 	}
 	return $params;
 }
@@ -1276,20 +1284,16 @@ sub genotype_fetch_GET {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my $unknown_string = $c->req->param('unknownString') || '';
-    my $expand_homozygotes = $c->req->param('expandHomozygotes') || '';
-    my $sep_phased = $c->req->param('sepPhased') || '|';
-    my $sep_unphased = $c->req->param('sepUnphased') || '/';
-    my @data;
-    my %result;
-
 	my $default_protocol_id = $self->bcs_schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$c->config->{default_genotyping_protocol}})->nd_protocol_id();
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
     my $brapi_package_result = $brapi_module->markerprofiles_detail({
 		markerprofile_id => $c->stash->{markerprofile_id},
+		unknown_string => $clean_inputs->{unknownString}->[0],
+		sep_phased => $clean_inputs->{sepPhased}->[0],
+		sep_unphased => $clean_inputs->{sepUnphased}->[0],
+		expand_homozygotes => $clean_inputs->{expandHomozygotes}->[0],
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -1395,131 +1399,33 @@ sub allelematrix_GET {
 }
 
 sub allelematrix_search_process {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my $message = '';
-    my @profile_ids = $c->req->param('markerprofileDbId');
-    my @marker_ids = $c->req->param('markerDbId');
-    my $unknown_string = $c->req->param('unknownString') || '';
-    my $sep_phased = $c->req->param('sepPhased') || '|';
-    my $sep_unphased = $c->req->param('sepUnphased') || '/';
-    my $data_format = $c->req->param('format') || 'json';
-    my %metadata;
-    my $data_file_path;
-    my %result;
-    #print STDERR Dumper \@profile_ids;
-    #my @profile_ids = split ",", $markerprofile_ids;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 
-    if ($data_format ne 'json' && $data_format ne 'tsv' && $data_format ne 'csv') {
-        $message .= 'Unsupported Format Given. Supported values are: json, tsv, csv';
-        $status->{'message'} = $message;
-        $c->stash->{rest} = {
-            metadata => { pagination=>{}, status => [$status], datafiles=>[$data_file_path] },
-            result => \%result,
-        };
-        $c->detach;
-    }
-
-    my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
-
-    my @scores;
-    my $total_pages;
-    my $total_count;
-    my @ordered_refmarkers;
-    my $markers;
-    if ($rs->count() > 0) {
-        while (my $profile = $rs->next()) {
-            my $profile_json = $profile->value();
-            my $refmarkers = JSON::Any->decode($profile_json);
-            #print STDERR Dumper($refmarkers);
-            push @ordered_refmarkers, sort genosort keys(%$refmarkers);
-        }
-        #print Dumper(\@ordered_refmarkers);
-        my %unique_markers;
-        foreach (@ordered_refmarkers) {
-            $unique_markers{$_} = 1;
-        }
-
-        my $json = JSON->new();
-        $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
-        while (my $profile = $rs->next()) {
-            my $markers_json = $profile->value();
-            $markers = $json->decode($markers_json);
-            my $genotypeprop_id = $profile->genotypeprop_id();
-            foreach my $m (sort keys %unique_markers) {
-                push @scores, [$m, $genotypeprop_id, $self->convert_dosage_to_genotype($markers->{$m})];
-            }
-        }
-    }
-
-    #print STDERR Dumper \@scores;
-
-    my $file_path;
-    my @scores_seen;
-    if (!$data_format || $data_format eq 'json' ){
-
-        for (my $n = $c->stash->{page_size}*$c->stash->{current_page}; $n< ($c->stash->{page_size}*($c->stash->{current_page}+1)-1); $n++) {
-            push @scores_seen, $scores[$n];
-        }
-
-    } elsif ($data_format eq 'tsv' || $data_format eq 'csv') {
-
-        my @header_row;
-        push @header_row, 'markerprofileDbIds';
-        foreach (@profile_ids){
-            push @header_row, $_;
-        }
-
-        my %markers;
-        foreach (@scores){
-            $markers{$_->[0]}->{$_->[1]} = $_->[2];
-        }
-        #print STDERR Dumper \%markers;
-
-        my $delim;
-        if ($data_format eq 'tsv') {
-            $delim = "\t";
-        } elsif ($data_format eq 'csv') {
-            $delim = ",";
-        }
-        my $dir = $c->tempfiles_subdir('download');
-        my ($file_path, $uri) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$data_format.'_'.'XXXXX');
-        #$file_path = $c->config->{main_production_sitae_url}.":".$c->config->{basepath}."/".$tempfile.".$data_format";
-        open(my $fh, ">", $file_path);
-            print STDERR $file_path."\n";
-            print $fh join("$delim", @header_row),"\n";
-            #print $fh "markerprofileDbIds\t", join($delim, @lines), "\n";
-            foreach (keys %markers) {
-                print $fh $_.$delim;
-                my $count = 1;
-                foreach my $profile_id (@profile_ids) {
-                    print $fh $markers{$_}->{$profile_id};
-                    if ($count < scalar(@profile_ids)){
-                        print $fh $delim;
-                    }
-                    #print $fh .join("$delim", @{$_}),"\n";
-                    $count++;
-                }
-                print $fh "\n";
-            }
-
-        close $fh;
-        $data_file_path = $c->config->{main_production_site_url}.$uri;
-        #$c->res->content_type('Application/'.$data_format);
-        #$c->res->header('Content-Disposition', qq[attachment; filename="$data_file_path"]);
-        #my $output = read_file($data_file_path);
-        #$c->res->body($output);
-    }
-
-    $total_count = scalar(@scores);
-
-    $c->stash->{rest} = {
-        metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => [$status], datafiles=>[$data_file_path] },
-        result => {data => \@scores_seen},
-    };
-
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $format = $clean_inputs->{format}->[0];
+	my $file_path;
+	my $uri;
+	if ($format eq 'tsv' || $format eq 'csv'){
+		my $dir = $c->tempfiles_subdir('download');
+		($file_path, $uri) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$format.'_'.'XXXXX');
+	}
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
+	my $brapi_package_result = $brapi_module->markerprofiles_allelematrix({
+		markerprofile_ids => $clean_inputs->{markerprofileDbId},
+		marker_ids => $clean_inputs->{markerDbId},
+		unknown_string => $clean_inputs->{unknownString}->[0],
+		sep_phased => $clean_inputs->{sepPhased}->[0],
+		sep_unphased => $clean_inputs->{sepUnphased}->[0],
+		expand_homozygotes => $clean_inputs->{expandHomozygotes}->[0],
+		format => $format,
+		main_production_site_url => $c->config->{main_production_site_url},
+		file_path => $file_path,
+		file_uri => $uri
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
