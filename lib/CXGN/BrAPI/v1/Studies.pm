@@ -243,6 +243,101 @@ sub studies_germplasm {
 	return $response;
 }
 
+sub studies_detail {
+	my $self = shift;
+	my $study_id = shift;
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my $status = $self->status;
+
+	my $total_count = 0;
+	my %result;
+	my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $study_id });
+	if ($t) {
+		$total_count = 1;
+		my $folder = CXGN::Trial::Folder->new( { folder_id => $study_id, bcs_schema => $self->bcs_schema } );
+		if ($folder->folder_type eq 'trial') {
+
+			my @years = ($t->get_year());
+			my %additional_info = ();
+			my $project_type = '';
+			if ($t->get_project_type()) {
+				$project_type = $t->get_project_type()->[1];
+			}
+			my $location_id = '';
+			my $location_name = '';
+			if ($t->get_location()) {
+				$location_id = $t->get_location()->[0];
+				$location_name = $t->get_location()->[1];
+			}
+			my $planting_date = '';
+			if ($t->get_planting_date()) {
+				$planting_date = $t->get_planting_date();
+				my $t = Time::Piece->strptime($planting_date, "%Y-%B-%d");
+				$planting_date = $t->strftime("%Y-%m-%d");
+			}
+			my $harvest_date = '';
+			if ($t->get_harvest_date()) {
+				$harvest_date = $t->get_harvest_date();
+				my $t = Time::Piece->strptime($harvest_date, "%Y-%B-%d");
+				$harvest_date = $t->strftime("%Y-%m-%d");
+			}
+			my $contacts = $t->get_trial_contacts();
+			my $brapi_contacts;
+			foreach (@$contacts){
+				push @$brapi_contacts, {
+					contactDbId => $_->{sp_person_id},
+					name => $_->{salutation}." ".$_->{first_name}." ".$_->{last_name},
+					email => $_->{email},
+					type => '',
+					orcid => ''
+				};
+			}
+			my $location = CXGN::Trial::get_all_locations($self->bcs_schema, $location_id)->[0];
+			%result = (
+				studyDbId=>$t->get_trial_id(),
+				studyName=>$t->get_name(),
+				trialDbId=>$folder->project_parent->project_id(),
+				trialName=>$folder->project_parent->name(),
+				studyType=>$project_type,
+				seasons=>\@years,
+				locationDbId=>$location_id,
+				locationName=>$location_name,
+				programDbId=>$folder->breeding_program->project_id(),
+				programName=>$folder->breeding_program->name(),
+				startDate => $planting_date,
+				endDate => $harvest_date,
+				additionalInfo=>\%additional_info,
+				active=>'',
+				location=> {
+					locationDbId => $location->[0],
+	                locationType=>'',
+	                name=> $location->[1],
+	                abbreviation=>'',
+	                countryCode=> $location->[6],
+	                countryName=> $location->[5],
+	                latitude=>$location->[2],
+	                longitude=>$location->[3],
+	                altitude=>$location->[4],
+	                additionalInfo=> $location->[7]
+				},
+				contacts=>$brapi_contacts
+			);
+		}
+	} else {
+		push @$status, { 'error' => "StudyDbId not found." };
+	}
+	push @$status, { 'success' => 'Studies detail result constructed' };
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+	my $response = {
+		'status' => $status,
+		'pagination' => $pagination,
+		'result' => \%result,
+		'datafiles' => []
+	};
+	return $response;
+}
+
 sub germplasm_pedigree_string {
 	my $self = shift;
 	my $stock_id = shift;

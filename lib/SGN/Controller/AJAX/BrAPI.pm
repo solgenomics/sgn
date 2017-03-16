@@ -1478,9 +1478,9 @@ sub programs_list_POST {
 }
 
 sub programs_list_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Programs');
@@ -1492,30 +1492,6 @@ sub programs_list_GET {
 }
 
 
-
-sub studies_instances  : Chained('studies_single') PathPart('instances') Args(0) : ActionClass('REST') { }
-
-sub studies_instances_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status=>$status};
-}
-
-sub studies_instances_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my %result;
-    my $status = $c->stash->{status};
-    my $total_count = 0;
-
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status]);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
-}
 
 
 sub studies_info  : Chained('studies_single') PathPart('') Args(0) : ActionClass('REST') { }
@@ -1530,76 +1506,16 @@ sub studies_info_POST {
 }
 
 sub studies_info_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my %result;
-    my $status = $c->stash->{status};
-    my $message = '';
-    my $total_count = 0;
-    my $study_id = $c->stash->{study_id};
-    my $t = $c->stash->{study};
-    if ($t) {
-        $total_count = 1;
-        my $folder = CXGN::Trial::Folder->new( { folder_id => $study_id, bcs_schema => $self->bcs_schema } );
-        if ($folder->folder_type eq 'trial') {
-
-            my @years = ($t->get_year());
-            my %additional_info = (
-                studyPUI=>'',
-            );
-            my $project_type = '';
-            if ($t->get_project_type()) {
-               $project_type = $t->get_project_type()->[1];
-            }
-            my $location_id = '';
-            my $location_name = '';
-            if ($t->get_location()) {
-               $location_id = $t->get_location()->[0];
-               $location_name = $t->get_location()->[1];
-            }
-            my $planting_date = '';
-            if ($t->get_planting_date()) {
-                $planting_date = $t->get_planting_date();
-                my $t = Time::Piece->strptime($planting_date, "%Y-%B-%d");
-                $planting_date = $t->strftime("%Y-%m-%d");
-            }
-            my $harvest_date = '';
-            if ($t->get_harvest_date()) {
-                $harvest_date = $t->get_harvest_date();
-                my $t = Time::Piece->strptime($harvest_date, "%Y-%B-%d");
-                $harvest_date = $t->strftime("%Y-%m-%d");
-            }
-            %result = (
-                studyDbId=>$t->get_trial_id(),
-                name=>$t->get_name(),
-                trialDbId=>$folder->project_parent->project_id(),
-                trialName=>$folder->project_parent->name(),
-                studyType=>$project_type,
-                seasons=>\@years,
-                locationDbId=>$location_id,
-                locationName=>$location_name,
-                programDbId=>$folder->breeding_program->project_id(),
-                programName=>$folder->breeding_program->name(),
-                startDate => $planting_date,
-                endDate => $harvest_date,
-                additionalInfo=>\%additional_info,
-                active=>'',
-                observationVariables=>"/brapi/v1/studies/$study_id/observationVariables",
-                germplasm=>"/brapi/v1/studies/$study_id/germplasm",
-                observationUnits=>"/brapi/v1/studies/$study_id/observationUnits",
-                layout=>"/brapi/v1/studies/$study_id/layout",
-                location=>"/brapi/v1/locations/$location_id",
-            );
-        }
-    } else {
-        $message .= "StudyDbId not found.";
-    }
-    $status->{'message'} = $message;
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+	my $brapi_package_result = $brapi_module->studies_detail(
+		$c->stash->{study_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -2728,39 +2644,14 @@ sub locations_list_POST {
 }
 
 sub locations_list_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my @data;
-    my @attributes;
-
-    my $locations = CXGN::Trial::get_all_locations($self->bcs_schema);
-
-    my $total_count = scalar(@$locations);
-    my $start = $c->stash->{page_size}*$c->stash->{current_page};
-    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-    for( my $i = $start; $i <= $end; $i++ ) {
-        if (@$locations[$i]) {
-            push @data, {
-                locationDbId => @$locations[$i]->[0],
-                locationType=>'',
-                name=> @$locations[$i]->[1],
-                abbreviation=>'',
-                countryCode=> @$locations[$i]->[6],
-                countryName=> @$locations[$i]->[5],
-                latitude=>@$locations[$i]->[2],
-                longitude=>@$locations[$i]->[3],
-                altitude=>@$locations[$i]->[4],
-                additionalInfo=> @$locations[$i]->[7]
-            };
-        }
-    }
-
-    my %result = (data=>\@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Locations');
+	my $brapi_package_result = $brapi_module->locations_list();
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 

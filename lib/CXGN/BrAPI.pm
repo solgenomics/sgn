@@ -12,6 +12,7 @@ use CXGN::BrAPI::v1::GermplasmAttributes;
 use CXGN::BrAPI::v1::Trials;
 use CXGN::BrAPI::v1::Markerprofiles;
 use CXGN::BrAPI::v1::Programs;
+use CXGN::BrAPI::v1::Locations;
 
 has 'version' => (
 	isa => 'Str',

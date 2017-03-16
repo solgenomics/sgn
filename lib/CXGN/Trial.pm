@@ -246,15 +246,20 @@ sub set_location {
 
 sub get_all_locations {
     my $schema = shift;
+	my $location_id = shift;
     my @locations;
 
-    my $loc = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { }, {order_by => { -asc => 'nd_geolocation_id' }} );
+	my %search_params;
+	if ($location_id){
+		$search_params{'nd_geolocation_id'} = $location_id;
+	}
+
+    my $loc = $schema->resultset('NaturalDiversity::NdGeolocation')->search( \%search_params, {order_by => { -asc => 'nd_geolocation_id' }} );
     while (my $s = $loc->next()) {
         my $loc_props = $schema->resultset('NaturalDiversity::NdGeolocationprop')->search( { nd_geolocation_id => $s->nd_geolocation_id() }, {join=>'type', '+select'=>['me.value', 'type.name'], '+as'=>['value', 'cvterm_name'] } );
-        my @attributes;
 
-        my %attr = ('geodetic datum' => $s->geodetic_datum() );
-        push @attributes, \%attr;
+		my %attr;
+        $attr{'geodetic datum'} = $s->geodetic_datum();
 
         my $country = '';
         my $country_code = '';
@@ -265,12 +270,11 @@ sub get_all_locations {
             } elsif ($sp->get_column('cvterm_name') eq 'Country Code') {
                 $country_code = $sp->get_column('value');
             } else {
-                my %attr = ( $sp->get_column('cvterm_name') => $sp->get_column('value') );
-                push @attributes, \%attr;
+                $attr{$sp->get_column('cvterm_name')} = $sp->get_column('value') ;
             }
         }
 
-        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \@attributes],
+        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr],
     }
 
     return \@locations;
@@ -1771,6 +1775,46 @@ sub get_controls_by_plot {
 	}
 
 	return \@controls;
+}
+
+=head2 get_trial_contacts
+
+ Usage:        my $contacts = $t->get_trial_contacts();
+ Desc:         Returns an arrayref of hashrefs that contain all sp_person info fpr sp_person_ids saved as projectprops to this trial
+ Ret:          an arrayref containing
+               { sp_person_id => 1, salutation => 'Mr.', first_name => 'joe', last_name => 'doe', email => 'j@d.com' }
+ Args:         none
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_trial_contacts {
+	my $self = shift;
+	my @contacts;
+
+	my $sp_person_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'sp_person_id','local')->cvterm_id;
+	my $prop_rs = $self->bcs_schema->resultset('Project::Projectprop')->search(
+		{ 'project_id' => $self->get_trial_id, 'type_id'=>$sp_person_id_cvterm_id }
+	);
+
+	while(my $prop = $prop_rs->next()) {
+		my $q = "SELECT sp_person_id, username, salutation, first_name, last_name, contact_email FROM sgn_people.sp_person WHERE sp_person_id=?;";
+		my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+		$h->execute($prop->value);
+		while (my ($sp_person_id, $username, $salutation, $first_name, $last_name, $email) = $h->fetchrow_array()){
+			push @contacts, {
+				sp_person_id => $sp_person_id,
+				salutation => $salutation,
+				first_name => $first_name,
+				last_name => $last_name,
+				username => $username,
+				email => $email
+			};
+		}
+	}
+
+	return \@contacts;
 }
 
 

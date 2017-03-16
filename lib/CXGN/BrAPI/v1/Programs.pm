@@ -86,7 +86,7 @@ sub programs_list {
 	}
 
 	my %result = (data=>\@data);
-	push @$status, { 'success' => 'Germplasm-attributes list result constructed' };
+	push @$status, { 'success' => 'Program list result constructed' };
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 	my $response = { 
 		'status' => $status,
