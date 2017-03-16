@@ -10,6 +10,7 @@ use CXGN::BrAPI::v1::Studies;
 use CXGN::BrAPI::v1::Germplasm;
 use CXGN::BrAPI::v1::GermplasmAttributes;
 use CXGN::BrAPI::v1::Trials;
+use CXGN::BrAPI::v1::Markerprofiles;
 
 has 'version' => (
 	isa => 'Str',

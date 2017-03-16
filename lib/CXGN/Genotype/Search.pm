@@ -117,7 +117,7 @@ sub get_genotype_info {
     #$self->bcs_schema->storage->debug(1);
     my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
         \%search_params,
-        {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_projects'}, {'nd_experiment_stocks' => 'stock'} ],
+        {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, 'nd_experiment_projects', {'nd_experiment_stocks' => 'stock'} ],
         select=> \@select_list,
         as=> \@select_as_list,
         order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }

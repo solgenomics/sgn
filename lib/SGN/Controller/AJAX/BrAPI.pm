@@ -37,6 +37,11 @@ has 'brapi_module' => (
     is => 'rw',
 );
 
+has 'bcs_schema' => (
+    isa => 'Bio::Chado::Schema',
+    is => 'rw',
+);
+
 my $DEFAULT_PAGE_SIZE=20;
 
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
@@ -65,6 +70,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 		}
     });
     $self->brapi_module($brapi);
+    $self->bcs_schema($bcs_schema);
 
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
@@ -1189,61 +1195,18 @@ sub markerprofile_search_process {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my @germplasm_ids;
-    my @study_ids;
-    my $germplasm = $c->req->param("germplasmDbId");
-    if ($germplasm){
-        push @germplasm_ids, $germplasm;
-    }
-    my $study = $c->req->param("studyDbId");
-    if ($study){
-        push @study_ids, $study;
-    }
-    my $extract = $c->req->param("extract");
-    my $method = $c->req->param("methodDbId");
-    if (!$method){
-        my $default_genotyping_protocol = $c->config->{default_genotyping_protocol};
-        $method = $self->bcs_schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
-    }
-
-    my $status = $c->stash->{status};
-    my $message = '';
-    my @data;
-    my %result;
-
-    if ($extract) {
-        $message .= 'Extract not supported';
-    }
-
-    my $genotypes_search = CXGN::Genotype::Search->new({
-        bcs_schema=>$self->bcs_schema,
-        accession_list=>\@germplasm_ids,
-        trial_list=>\@study_ids,
-        protocol_id=>$method,
-        offset=>$c->stash->{page_size}*$c->stash->{current_page},
-        limit=>$c->stash->{page_size}*($c->stash->{current_page}+1)-1
-    });
-    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
-
-    foreach (@$genotypes){
-        push @data, {
-            markerProfileDbId => $_->{markerProfileDbId},
-            germplasmDbId => $_->{germplasmDbId},
-            uniqueDisplayName => $_->{genotypeUniquename},
-            extractDbId => "",
-            sampleDbId => "",
-            analysisMethod => $_->{analysisMethod},
-            resultCount => $_->{resultCount}
-        };
-    }
-
-    %result = (data => \@data);
-    $status->{'code'} = 'message';
-    $status->{'message'} = $message;
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $default_protocol_id = $self->bcs_schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$c->config->{default_genotyping_protocol}})->nd_protocol_id();
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
+    my $brapi_package_result = $brapi_module->markerprofiles_search({
+		study_ids => $clean_inputs->{studyDbId},
+		stock_ids => $clean_inputs->{germplasmDbId},
+		extract_ids => $clean_inputs->{extractDbId},
+		sample_ids => $clean_inputs->{sampleDbId},
+		protocol_id => $clean_inputs->{methodDbId}->[0] ? $clean_inputs->{methodDbId}->[0] : $default_protocol_id
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 sub markerprofiles_list : Chained('brapi') PathPart('markerprofiles') Args(0) : ActionClass('REST') { }
