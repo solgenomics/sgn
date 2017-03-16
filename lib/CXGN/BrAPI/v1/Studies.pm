@@ -5,6 +5,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Trial::Search;
+use CXGN::Trait;
 use CXGN::BrAPI::Pagination;
 
 has 'bcs_schema' => (
@@ -328,6 +329,69 @@ sub studies_detail {
 		push @$status, { 'error' => "StudyDbId not found." };
 	}
 	push @$status, { 'success' => 'Studies detail result constructed' };
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+	my $response = {
+		'status' => $status,
+		'pagination' => $pagination,
+		'result' => \%result,
+		'datafiles' => []
+	};
+	return $response;
+}
+
+sub studies_observation_variables {
+	my $self = shift;
+	my $study_id = shift;
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my $status = $self->status;
+
+	my $total_count = 0;
+	my %result;
+	$result{studyDbId} = $study_id;
+	my @data;
+	my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $study_id });
+	if ($t) {
+		my $traits_assayed = $t->get_traits_assayed();
+		$total_count = scalar(@$traits_assayed);
+		my $start = $page_size*$page;
+		my $end = $page_size*($page+1)-1;
+		for( my $i = $start; $i <= $end; $i++ ) {
+			if (@$traits_assayed[$i]) {
+				my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>@$traits_assayed[$i]->[0]});
+				my $categories = $trait->categories;
+				my @brapi_categories = split '/', $categories;
+				push @data, {
+					observationVariableDbId => $trait->cvterm_id,
+					name => $trait->display_name,
+					ontologyDbId => $trait->db_id,
+					ontologyName => $trait->db,
+					trait => {
+						traitDbId => $trait->cvterm_id,
+						name => $trait->name,
+						description => $trait->definition,
+					},
+					method => {},
+					scale => {
+						scalreDbId =>'',
+						name =>'',
+						datatype=>$trait->format,
+						decimalPlaces=>'',
+						xref=>'',
+						validValues=> {
+							min=>$trait->minimum,
+							max=>$trait->maximum,
+							categories=>\@brapi_categories
+						}
+					},
+					xref => $trait->term,
+					defaultValue => $trait->default_value
+				};
+			}
+		}
+		$result{data} = \@data;
+	}
+	push @$status, { 'success' => 'Studies observation variables result constructed' };
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 	my $response = {
 		'status' => $status,

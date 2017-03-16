@@ -1602,21 +1602,15 @@ sub studies_observation_variables_POST {
 }
 
 sub studies_observation_variables_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my %result;
-    my $total_count = 0;
-
-    my $t = CXGN::Trial->new( { schema => $self->bcs_schema, trial_id => $c->stash->{study_id} });
-    my @data;
-
-    %result = (data=>\@data);
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+	my $brapi_package_result = $brapi_module->studies_observation_variables(
+		$c->stash->{study_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
