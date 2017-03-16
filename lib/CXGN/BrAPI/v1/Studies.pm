@@ -465,6 +465,93 @@ sub studies_layout {
 }
 
 
+sub observation_units {
+	my $self = shift;
+	my $inputs = shift;
+	my $study_id = $inputs->{study_id};
+	my $data_level = $inputs->{data_level} || 'plot';
+	my @trait_ids_array = $inputs->{observationVariableDbIds} ? @{$inputs->{observationVariableDbIds}} : ();
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my $status = $self->status;
+	my $t = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $study_id });
+	my $phenotype_data;
+	if ($data_level eq 'all') {
+		$phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'all', ['plot_of','plant_of'], 'accession', 'subject');
+	} elsif ($data_level eq 'plot') {
+		$phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plot', ['plot_of'], 'accession', 'subject');
+	} elsif ($data_level eq 'plant') {
+		$phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plant', ['plant_of'], 'accession', 'subject');
+	}
+	#print STDERR Dumper $phenotype_data;
+
+	my %obs_hash;
+	foreach (@$phenotype_data){
+		my $pheno_uniquename = $_->[5];
+		my ($part1 , $part2) = split( /date: /, $pheno_uniquename);
+		my ($timestamp , $operator) = split( /\ \ operator = /, $part2);
+
+		if(exists($obs_hash{$_->[0]})){
+			my $observations = $obs_hash{$_->[0]}->{observations};
+			push @$observations, {
+				observationDbId => $_->[4],
+				observationVariableDbId => $_->[2],
+				observationVariableName => $_->[3],
+				collector => $operator,
+				observationTimeStamp => $timestamp,
+				value => $_->[7]
+			};
+			 $obs_hash{$_->[0]}->{observations} = $observations;
+		} else {
+			my $is_a_control_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'is a control', 'stock_property')->cvterm_id();
+			my $is_a_control = $self->bcs_schema->resultset('Stock::Stockprop')->find({stock_id=>$_->[0], type_id=>$is_a_control_cvterm_id});
+			$obs_hash{$_->[0]} = {
+				observationUnitDbId => $_->[0],
+				observationUnitName => $_->[1],
+				germplasmDbId => $_->[8],
+				germplasmName => $_->[9],
+				pedigree => $self->germplasm_pedigree_string($_->[8]),
+				entryNumber => '',
+				entryType => $is_a_control ? 'Check' : 'Test',
+				plotNumber => '',
+				plantNumber => '',
+				blockNumber => '',
+				X => '',
+				Y=> '',
+				replicate=> '',
+				observations => [{
+					observationDbId => $_->[4],
+					observationVariableDbId => $_->[2],
+					observationVariableName => $_->[3],
+					collector => $operator,
+					observationTimeStamp => $timestamp,
+					value => $_->[7]
+				}]
+			}
+		}
+	}
+    my @data;
+    my $total_count = scalar(keys %obs_hash);
+	my $count = 0;
+	my $offset = $page*$page_size;
+	my $limit = $page_size*($page+1)-1;
+	foreach my $stock_id (sort keys %obs_hash) {
+		if ($count >= $offset && $count <= ($offset+$limit)){
+			push @data, $obs_hash{$stock_id};
+		}
+	}
+    my %result = (data=>\@data);
+	push @$status, { 'success' => 'Studies observations result constructed' };
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+	my $response = {
+		'status' => $status,
+		'pagination' => $pagination,
+		'result' => \%result,
+		'datafiles' => []
+	};
+	return $response;
+}
+
 sub germplasm_pedigree_string {
 	my $self = shift;
 	my $stock_id = shift;

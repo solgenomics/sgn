@@ -1195,9 +1195,13 @@ sub get_stock_phenotypes_for_traits {
     my @data;
 	#$self->bcs_schema->storage->debug(1);
     my $dbh = $self->bcs_schema->storage()->dbh();
-	my $sql_trait_ids = join ("," , @$trait_ids);
-	my $where_clause = "WHERE project_id=? and a.cvterm_id IN ($sql_trait_ids) and b.cvterm_id = ? and phenotype.value~? ";
+	my $where_clause = "WHERE project_id=? and b.cvterm_id = ? and phenotype.value~? ";
 	my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+
+	if (scalar(@$trait_ids)>0){
+		my $sql_trait_ids = join ("," , @$trait_ids);
+		$where_clause .= "and a.cvterm_id IN ($sql_trait_ids) ";
+	}
 
 	my $relationship_join = '';
 	if ($subject_or_object eq 'object') {

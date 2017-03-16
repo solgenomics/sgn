@@ -1627,9 +1627,9 @@ sub studies_layout_POST {
 }
 
 sub studies_layout_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Studies');
 	my $brapi_package_result = $brapi_module->studies_layout(
@@ -1674,7 +1674,7 @@ sub studies_layout_GET {
 
 =cut
 
-sub studies_observations : Chained('studies_single') PathPart('observations') Args(0) : ActionClass('REST') { }
+sub studies_observations : Chained('studies_single') PathPart('observationUnits') Args(0) : ActionClass('REST') { }
 
 sub studies_observations_POST {
     my $self = shift;
@@ -1688,64 +1688,16 @@ sub studies_observations_POST {
 sub studies_observations_GET {
     my $self = shift;
     my $c = shift;
-    my @trait_ids_array = $c->req->param('observationVariableDbId');
-    my $data_level = $c->req->param('observationLevel') || 'plot';
+	my $clean_inputs = $c->stash->{clean_inputs};
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my %result;
-    #my @trait_ids_array;
-    #if(ref($trait_ids) eq 'ARRAY') {
-    #    @trait_ids_array = @{$trait_ids};
-    #} elsif(ref($trait_ids) eq 'SCALAR') {
-    #    @trait_ids_array = ($trait_ids);
-    #}
-    #print STDERR Dumper $trait_ids;
-    #print STDERR Dumper \@trait_ids_array;
-    my $t = $c->stash->{study};
-    my $phenotype_data;
-    if ($data_level eq 'all') {
-        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'all', ['plot_of','plant_of'], 'accession', 'subject');
-    } elsif ($data_level eq 'plot') {
-        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plot', ['plot_of'], 'accession', 'subject');
-    } elsif ($data_level eq 'plant') {
-        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plant', ['plant_of'], 'accession', 'subject');
-    }
-
-    #print STDERR Dumper $phenotype_data;
-
-    my @data;
-    my $total_count = scalar(@$phenotype_data);
-    my $start = $c->stash->{page_size}*$c->stash->{current_page};
-    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-    for( my $i = $start; $i <= $end; $i++ ) {
-        if (@$phenotype_data[$i]) {
-            my $pheno_uniquename = @$phenotype_data[$i]->[5];
-            my ($part1 , $part2) = split( /date: /, $pheno_uniquename);
-            my ($timestamp , $operator) = split( /\ \ operator = /, $part2);
-
-            my %data_hash = (
-                studyDbId => $c->stash->{study_id},
-                observationDbId=>@$phenotype_data[$i]->[4],
-                observationVariableDbId => @$phenotype_data[$i]->[2],
-                observationVariableName => @$phenotype_data[$i]->[3],
-                observationUnitDbId => @$phenotype_data[$i]->[0],
-                observationUnitName => @$phenotype_data[$i]->[1],
-                observationLevel => @$phenotype_data[$i]->[10],
-                observationTimestamp => $timestamp,
-                uploadedBy => @$phenotype_data[$i]->[6],
-                operator => $operator,
-                germplasmDbId => @$phenotype_data[$i]->[8],
-                germplasmName => @$phenotype_data[$i]->[9],
-                value => @$phenotype_data[$i]->[7]
-            );
-            push @data, \%data_hash;
-        }
-    }
-
-    %result = (data=>\@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+	my $brapi_package_result = $brapi_module->observation_units({
+		study_id => $c->stash->{study_id},
+		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
+		data_level => $clean_inputs->{observationLevel}->[0]
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
