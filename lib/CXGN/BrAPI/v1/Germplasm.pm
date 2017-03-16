@@ -222,7 +222,7 @@ sub germplasm_detail {
         accessionNumber=>$stock->get_uniquename(),
         germplasmPUI=>$stock->get_uniquename(),
         pedigree=>$self->germplasm_pedigree_string($stock_id),
-        germplasmSeedSource=>$stockprop_hash->{'seed source'} ? join ',', @{$stockprop_hash->{'seed source'}} : '',,
+        germplasmSeedSource=>$stockprop_hash->{'seed source'} ? join ',', @{$stockprop_hash->{'seed source'}} : '',
         synonyms=>$stockprop_hash->{'stock_synonym'} ? join ',', @{$stockprop_hash->{'stock_synonym'}} : '',
         commonCropName=>$stock->get_organism->common_name(),
 		instituteCode=>$stockprop_hash->{'institute code'} ? join ',', @{$stockprop_hash->{'institute code'}} : '',

@@ -1481,48 +1481,14 @@ sub programs_list_GET {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my $program_name = $c->req->param('programName');
-    my $abbreviation = $c->req->param('abbreviation');
-    my %result;
-    my @data;
-
-    my $ps = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
-
-    my $programs = $ps -> get_breeding_programs();
-    my $total_count = scalar(@$programs);
-
-    my $start = $c->stash->{page_size}*$c->stash->{current_page};
-    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-    for( my $i = $start; $i <= $end; $i++ ) {
-        if (@$programs[$i]) {
-            if ($program_name) {
-                if ($program_name eq @$programs[$i]->[1]) {
-                    push @data, {
-                        programDbId=>@$programs[$i]->[0],
-                        name=>@$programs[$i]->[1],
-                        abbreviation=>@$programs[$i]->[1],
-                        objective=>@$programs[$i]->[2],
-                        leadPerson=>''
-                    };
-                }
-            } else {
-                push @data, {
-                    programDbId=>@$programs[$i]->[0],
-                    name=>@$programs[$i]->[1],
-                    abbreviation=>@$programs[$i]->[1],
-                    objective=>@$programs[$i]->[2],
-                    leadPerson=>''
-                };
-            }
-        }
-    }
-
-    %result = (data=>\@data);
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Programs');
+	my $brapi_package_result = $brapi_module->programs_list({
+		program_names => $clean_inputs->{programName},
+		abbreviations => $clean_inputs->{abbreviation},
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
