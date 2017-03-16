@@ -42,6 +42,7 @@ sub calls {
 		['attributes/categories', ['json'], ['GET'] ],
 		['markerprofiles', ['json'], ['GET'] ],
 		['markerprofiles/id', ['json'], ['GET'] ],
+		['markerprofiles/methods', ['json'], ['GET'] ],
 		['allelematrix-search', ['json','tsv','csv'], ['GET','POST'] ],
 		['programs', ['json'], ['GET'] ],
 		['crops', ['json'], ['GET'] ],

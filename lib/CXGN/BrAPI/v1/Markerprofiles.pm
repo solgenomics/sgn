@@ -151,6 +151,34 @@ sub markerprofiles_detail {
 	return $response;
 }
 
+sub markerprofiles_methods {
+	my $self = shift;
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my $status = $self->status;
+	my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search({});
+	my $total_count = $rs->count;
+	my $rs_slice= $rs->slice($page_size*$page, $page_size*($page+1)-1);
+	my @data;
+	while (my $row = $rs_slice->next()) {
+		push @data, {
+			'analysisMethodDbId' => $row->nd_protocol_id(),
+			'analysisMethod' => $row->name()
+		};
+	}
+	my %result = (data => \@data);
+	push @$status, { 'success' => 'Markerprofiles methods result constructed' };
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+	my $response = {
+		'status' => $status,
+		'pagination' => $pagination,
+		'result' => \%result,
+		'datafiles' => []
+	};
+	return $response;
+}
+
+
 sub genosort {
     my ($a_chr, $a_pos, $b_chr, $b_pos);
     if ($a =~ m/S(\d+)\_(.*)/) {

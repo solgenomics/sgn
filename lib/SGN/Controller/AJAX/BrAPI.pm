@@ -1299,15 +1299,10 @@ sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods')
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
-    my @response;
-    while (my $row = $rs->next()) {
-	push @response, [ $row->nd_protocol_id(), $row->name() ];
-    }
-    $c->stash->{rest} = \@response;
-
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
+    my $brapi_package_result = $brapi_module->markerprofiles_methods();
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
