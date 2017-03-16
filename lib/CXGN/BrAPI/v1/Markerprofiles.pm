@@ -4,6 +4,7 @@ use Moose;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Genotype::Search;
+use JSON;
 use CXGN::BrAPI::Pagination;
 
 has 'bcs_schema' => (
@@ -96,5 +97,102 @@ sub markerprofiles_search {
 	return $response;
 }
 
+sub markerprofiles_detail {
+	my $self = shift;
+	my $inputs = shift;
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my $status = $self->status;
+	my $genotypeprop_id = $inputs->{markerprofile_id};
+
+	my $total_count = 0;
+    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->find(
+        {'genotypeprops.genotypeprop_id' => $genotypeprop_id },
+        {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
+         select=> ['genotypeprops.value', 'nd_protocol.name', 'stock.stock_id', 'stock.uniquename', 'genotype.uniquename'],
+         as=> ['value', 'protocol_name', 'stock_id', 'uniquename', 'genotype_uniquename'],
+        }
+    );
+
+	my @data;
+	my %result;
+    if ($rs) {
+        my $genotype_json = $rs->get_column('value');
+        my $genotype = JSON::Any->decode($genotype_json);
+        $total_count = scalar keys %$genotype;
+
+        foreach my $m (sort genosort keys %$genotype) {
+            push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}) };
+        }
+
+        my $start = $page_size*$page;
+        my $end = $page_size*($page+1)-1;
+        my @data_window = splice @data, $start, $end;
+
+        %result = (
+            germplasmDbId=>$rs->get_column('stock_id'),
+            uniqueDisplayName=>$rs->get_column('uniquename'),
+            extractDbId=>$rs->get_column('genotype_uniquename'),
+            markerprofileDbId=>$genotypeprop_id,
+            analysisMethod=>$rs->get_column('protocol_name'),
+            #encoding=>"AA,BB,AB",
+            data => \@data_window
+        );
+    }
+
+	push @$status, { 'success' => 'Markerprofiles detail result constructed' };
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+	my $response = {
+		'status' => $status,
+		'pagination' => $pagination,
+		'result' => \%result,
+		'datafiles' => []
+	};
+	return $response;
+}
+
+sub genosort {
+    my ($a_chr, $a_pos, $b_chr, $b_pos);
+    if ($a =~ m/S(\d+)\_(.*)/) {
+	$a_chr = $1;
+	$a_pos = $2;
+    }
+    if ($b =~ m/S(\d+)\_(.*)/) {
+	$b_chr = $1;
+	$b_pos = $2;
+    }
+
+    if ($a_chr && $b_chr) {
+      if ($a_chr == $b_chr) {
+          return $a_pos <=> $b_pos;
+      }
+      return $a_chr <=> $b_chr;
+    } else {
+      return -1;
+    }
+}
+
+
+sub convert_dosage_to_genotype {
+    my $self = shift;
+    my $dosage = shift;
+
+    my $genotype;
+    if ($dosage eq "NA") {
+	return "NA";
+    }
+    if ($dosage == 1) {
+	return "AA";
+    }
+    elsif ($dosage == 0) {
+	return "BB";
+    }
+    elsif ($dosage == 2) {
+	return "AB";
+    }
+    else {
+	return "NA";
+    }
+}
 
 1;

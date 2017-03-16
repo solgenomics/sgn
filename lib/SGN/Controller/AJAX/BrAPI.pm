@@ -1284,43 +1284,14 @@ sub genotype_fetch_GET {
     my @data;
     my %result;
 
-    my $total_count = 0;
-    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->find(
-        {'genotypeprops.genotypeprop_id' => $c->stash->{markerprofile_id} },
-        {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-         select=> ['genotypeprops.value', 'nd_protocol.name', 'stock.stock_id', 'stock.uniquename'],
-         as=> ['value', 'protocol_name', 'stock_id', 'uniquename'],
-        }
-    );
-
-    if ($rs) {
-        my $genotype_json = $rs->get_column('value');
-        my $genotype = JSON::Any->decode($genotype_json);
-        $total_count = scalar keys %$genotype;
-
-        foreach my $m (sort genosort keys %$genotype) {
-            push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}) };
-        }
-
-        my $start = $c->stash->{page_size}*$c->stash->{current_page};
-        my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-        my @data_window = splice @data, $start, $end;
-
-        %result = (
-            germplasmDbId=>$rs->get_column('stock_id'),
-            uniqueDisplayName=>$rs->get_column('uniquename'),
-            extractDbId=>'',
-            markerprofileDbId=>$c->stash->{markerprofile_id},
-            analysisMethod=>$rs->get_column('protocol_name'),
-            #encoding=>"AA,BB,AB",
-            data => \@data_window
-        );
-    }
-
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $default_protocol_id = $self->bcs_schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$c->config->{default_genotyping_protocol}})->nd_protocol_id();
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
+    my $brapi_package_result = $brapi_module->markerprofiles_detail({
+		markerprofile_id => $c->stash->{markerprofile_id},
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 

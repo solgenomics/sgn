@@ -125,7 +125,7 @@ sub get_genotype_info {
     );
 
     if ($rs) {
-        if ($limit && $offset){
+        if ($limit && defined($offset)){
             my $rs_slice = $rs->slice($offset, $limit);
             $rs = $rs_slice;
         }
@@ -151,11 +151,6 @@ sub get_genotype_info {
     return ($total_count, \@data);
 }
 
-sub _sql_from_arrayref {
-    my $arrayref = shift;
-    my $sql = join ("," , @$arrayref);
-    return $sql;
-}
 
 
 1;
