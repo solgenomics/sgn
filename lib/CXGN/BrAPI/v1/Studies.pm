@@ -5,6 +5,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Trial::Search;
+use CXGN::Trial::TrialLayout;
 use CXGN::Trait;
 use CXGN::BrAPI::Pagination;
 
@@ -401,6 +402,68 @@ sub studies_observation_variables {
 	};
 	return $response;
 }
+
+sub studies_layout {
+	my $self = shift;
+	my $study_id = shift;
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my $status = $self->status;
+	my $tl = CXGN::Trial::TrialLayout->new({ schema => $self->bcs_schema, trial_id => $study_id });
+	my $design = $tl->get_design();
+
+	my $plot_data = [];
+	my $formatted_plot = {};
+	my %additional_info;
+	my $check_id;
+	my $type;
+	my $count = 0;
+	my $offset = $page*$page_size;
+	my $limit = $page_size*($page+1)-1;
+	foreach my $plot_number (sort keys %$design) {
+		if ($count >= $offset && $count <= ($offset+$limit)){
+			$check_id = $design->{$plot_number}->{is_a_control} ? 1 : 0;
+			if ($check_id == 1) {
+				$type = 'Check';
+			} else {
+				$type = 'Test';
+			}
+			if ($design->{$plot_number}->{plant_names}){
+				$additional_info{plantNames} = $design->{$plot_number}->{plant_names};
+			}
+			if ($design->{$plot_number}->{plant_ids}){
+				$additional_info{plantDbIds} = $design->{$plot_number}->{plant_ids};
+			}
+			$formatted_plot = {
+				studyDbId => $study_id,
+				observationUnitDbId => $design->{$plot_number}->{plot_id},
+				observationUnitName => $design->{$plot_number}->{plot_name},
+				observationLevel => 'plot',
+				replicate => $design->{$plot_number}->{replicate} ? $design->{$plot_number}->{replicate} : '',
+				blockNumber => $design->{$plot_number}->{block_number} ? $design->{$plot_number}->{block_number} : '',
+				X => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} : '',
+				Y => $design->{$plot_number}->{col_number} ? $design->{$plot_number}->{col_number} : '',
+				entryType => $type,
+				germplasmName => $design->{$plot_number}->{accession_name},
+				germplasmDbId => $design->{$plot_number}->{accession_id},
+				additionalInfo => \%additional_info
+			};
+			push @$plot_data, $formatted_plot;
+		}
+		$count++;
+	}
+	my %result = (data=>$plot_data);
+	push @$status, { 'success' => 'Studies layout result constructed' };
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
+	my $response = {
+		'status' => $status,
+		'pagination' => $pagination,
+		'result' => \%result,
+		'datafiles' => []
+	};
+	return $response;
+}
+
 
 sub germplasm_pedigree_string {
 	my $self = shift;

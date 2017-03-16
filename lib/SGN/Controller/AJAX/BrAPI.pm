@@ -1630,47 +1630,12 @@ sub studies_layout_GET {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my %result;
-    my $total_count = 0;
-
-    my $tl = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $c->stash->{study_id} });
-    my $design = $tl->get_design();
-
-    my $plot_data = [];
-    my $formatted_plot = {};
-    my %optional_info;
-    my $check_id;
-    my $type;
-
-    foreach my $plot_number (keys %$design) {
-	$check_id = $design->{$plot_number}->{is_a_control} ? 1 : 0;
-	if ($check_id == 1) {
-	    $type = 'Check';
-	} else {
-	    $type = 'Test';
-	}
-	$formatted_plot = {
-	    studyDbId => $c->stash->{study_id},
-	    observationUnitDbId => $design->{$plot_number}->{plot_id},
-	    observationUnitName => $design->{$plot_number}->{plot_name},
-        observationLevel => 'plot',
-	    replicate => $design->{$plot_number}->{replicate} ? $design->{$plot_number}->{replicate} : '',
-        blockNumber => $design->{$plot_number}->{block_number} ? $design->{$plot_number}->{block_number} : '',
-        X => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} : '',
-        Y => $design->{$plot_number}->{col_number} ? $design->{$plot_number}->{col_number} : '',
-        entryType => $type,
-        germplasmName => $design->{$plot_number}->{accession_name},
-	    germplasmDbId => $design->{$plot_number}->{accession_id},
-	    optionalInfo => \%optional_info
-	};
-	push @$plot_data, $formatted_plot;
-	$total_count += 1;
-    }
-    %result = (data=>$plot_data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status]);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+	my $brapi_package_result = $brapi_module->studies_layout(
+		$c->stash->{study_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
