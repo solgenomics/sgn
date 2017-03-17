@@ -53,6 +53,8 @@ sub calls {
 		['studies-search', ['json'], ['GET','POST'] ],
 		['studies/id', ['json'], ['GET'] ],
 		['studies/id/germplasm', ['json'], ['GET'] ],
+		['studies/id/observationVariables', ['json'], ['GET'] ],
+		['studies/id/observationUnits', ['json'], ['GET'] ],
 		['studies/id/table', ['json','csv','xls'], ['GET'] ],
 		['studies/id/layout', ['json'], ['GET'] ],
 		['studies/id/observations', ['json'], ['GET'] ],
@@ -62,6 +64,7 @@ sub calls {
 		['maps', ['json'], ['GET'] ],
 		['maps/id', ['json'], ['GET'] ],
 		['maps/id/positions', ['json'], ['GET'] ],
+		['maps/id/positions/id', ['json'], ['GET'] ],
 		['locations', ['json'], ['GET'] ],
 	);
 
