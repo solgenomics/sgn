@@ -1639,7 +1639,7 @@ sub studies_layout_GET {
 }
 
 
-=head2 brapi/v1/studies/<studyDbId>/observations?observationVariableDbId=2
+=head2 brapi/v1/studies/<studyDbId>/observationUnits?observationVariableDbId=2
 
  Usage: To retrieve phenotypic values on a the plot level for an entire trial
  Desc:
@@ -1766,6 +1766,7 @@ sub studies_table_GET {
 		study_id => $c->stash->{study_id},
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
+		trait_ids => $clean_inputs->{observationVariableDbId},
 		format => $format,
 		main_production_site_url => $c->config->{main_production_site_url},
 		file_path => $file_path,
@@ -1774,6 +1775,68 @@ sub studies_table_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+
+=head2 brapi/v1/studies/<studyDbId>/observations?observationVariableDbId=2
+
+ Usage: To retrieve phenotypic values on a the plot level for an entire trial
+ Desc:
+ Return JSON example:
+        {
+            "metadata" : "status": [],
+                "pagination": {
+                    "pageSize": 1,
+                    "currentPage": 1,
+                    "totalCount": 1,
+                    "totalPages": 1
+                },
+            "result" : {
+                "data" : [
+                    {
+                        "studyDbId": 1,
+                        "plotDbId": 11,
+                        "observationVariableDbId" : 393939,
+                        "observationVariableName" : "Yield",
+                        "plotName": "ZIPA_68_Ibadan_2014",
+                        "timestamp" : "2015-11-05 15:12",
+                        "uploadedBy" : {dbUserId},
+                        "operator" : "Jane Doe",
+                        "germplasmName": 143,
+                        "value" : 5,
+                    }
+                ]
+            }
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+sub studies_observations_granular : Chained('studies_single') PathPart('observations') Args(0) : ActionClass('REST') { }
+
+sub studies_observations_granular_POST {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+
+    $c->stash->{rest} = {status => $status};
+}
+
+sub studies_observations_granular_GET {
+    my $self = shift;
+    my $c = shift;
+	my $clean_inputs = $c->stash->{clean_inputs};
+    #my $auth = _authenticate_user($c);
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+	my $brapi_package_result = $brapi_module->observation_units_granular({
+		study_id => $c->stash->{study_id},
+		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
+		data_level => $clean_inputs->{observationLevel}->[0],
+		search_type => $clean_inputs->{search_type}->[0],
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
 
 =head2 brapi/v1/phenotypes?observationUnitLevel=plot&studyDbId=876&studyPUI=&studyLocation=&studySet=&studyProject=&treatmentFactor=lowInput&germplasmGenus=&germplasmSubTaxa=&germplasmDbId&germplasmPUI=http://data.inra.fr/accession/234Col342&germplasmSpecies=Triticum&panel=diversitypanel1&collection=none&observationVariables=CO_321:000034,CO_321:000025&location=bergheim&season=2005,2006&pageSize={pageSize}&page={page}
 

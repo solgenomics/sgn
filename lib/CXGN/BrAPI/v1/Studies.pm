@@ -561,7 +561,7 @@ sub studies_table {
 	my $format = $inputs->{format} || 'json';
 	my $file_path = $inputs->{file_path};
 	my $file_uri = $inputs->{file_uri};
-	my @trait_ids_array = $inputs->{observationVariableDbIds} ? @{$inputs->{observationVariableDbIds}} : ();
+	my @trait_ids_array = $inputs->{trait_ids} ? @{$inputs->{trait_ids}} : ();
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
@@ -579,6 +579,7 @@ sub studies_table {
             bcs_schema=>$self->bcs_schema,
             data_level=>$data_level,
             trial_list=>[$study_id],
+			trait_list=>\@trait_ids_array,
             include_timestamp=>1,
         }
     );
@@ -671,6 +672,71 @@ sub studies_table {
 		'pagination' => $pagination,
 		'result' => \%result,
 		'datafiles' => \@datafiles
+	};
+	return $response;
+}
+
+sub observation_units_granular {
+	my $self = shift;
+	my $inputs = shift;
+	my $study_id = $inputs->{study_id};
+	my $data_level = $inputs->{data_level} || 'plot';
+	my $search_type = $inputs->{search_type} || 'complete';
+	my @trait_ids_array = $inputs->{observationVariableDbIds} ? @{$inputs->{observationVariableDbIds}} : ();
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my $status = $self->status;
+
+	my $factory_type;
+    if ($search_type eq 'complete'){
+        $factory_type = 'Native';
+    }
+    if ($search_type eq 'fast'){
+        $factory_type = 'MaterializedView';
+    }
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        $factory_type,    #can be either 'MaterializedView', or 'Native'
+        {
+            bcs_schema=>$self->bcs_schema,
+            data_level=>$data_level,
+            trial_list=>[$study_id],
+			trait_list=>\@trait_ids_array,
+            include_timestamp=>1,
+        }
+    );
+    my $data = $phenotypes_search->search();
+    #print STDERR Dumper $data;
+	my $total_count = scalar(@$data);
+	my $start = $page_size*$page;
+	my $end = $page_size*($page+1)-1;
+	my @data_window;
+	for (my $line = $start; $line < $end; $line++) {
+		if ($data->[$line]) {
+			push @data_window, {
+				studyDbId => $data->[$line]->[11],
+				observationDbId => $data->[$line]->[19],
+				observationUnitDbId => $data->[$line]->[14],
+				observationUnitName => $data->[$line]->[6],
+				observationLevel => $data->[$line]->[18],
+				observationVariableDbId => $data->[$line]->[10],
+				observationVariableName => $data->[$line]->[4],
+				observationTimestamp => $data->[$line]->[15],
+				uploadedBy => '',
+				operator => '',
+				germplasmDbId => $data->[$line]->[13],
+				germplasmName => $data->[$line]->[2],
+				value => $data->[$line]->[5],
+			};
+		}
+	}
+	my %result = (data=>\@data_window);
+	push @$status, { 'success' => 'Studies observations result constructed' };
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+	my $response = {
+		'status' => $status,
+		'pagination' => $pagination,
+		'result' => \%result,
+		'datafiles' => []
 	};
 	return $response;
 }
