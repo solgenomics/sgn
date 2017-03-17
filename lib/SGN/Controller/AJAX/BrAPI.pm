@@ -1935,86 +1935,19 @@ sub process_phenotypes_search {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my @data;
-    my $stock_ids = $c->req->param('germplasmDbIds');
-    my $trait_ids = $c->req->param('observationVariableDbIds');
-    my $trial_ids = $c->req->param('studyDbIds');
-    my $location_ids = $c->req->param('locationDbIds');
-    my $year_ids = $c->req->param('seasonDbIds');
-    my $data_level = $c->req->param('observationLevel') || 'plot';
-    my $search_type = $c->req->param("search_type") || 'complete';
-    my @stocks_array = split /,/, $stock_ids;
-    my @traits_array = split /,/, $trait_ids;
-    my @trials_array = split /,/, $trial_ids;
-    my @locations_array = split /,/, $location_ids;
-    my @years_array = split /,/, $year_ids;
-    my $offset = $c->stash->{current_page}*$c->stash->{page_size};
-
-    my $factory_type;
-    if ($search_type eq 'complete'){
-        $factory_type = 'Native';
-    }
-    if ($search_type eq 'fast'){
-        $factory_type = 'MaterializedView';
-    }
-    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-        $factory_type,    #can be either 'MaterializedView', or 'Native'
-        {
-            bcs_schema=>$self->bcs_schema,
-            data_level=>$data_level,
-            stock_list=>\@stocks_array,
-            trial_list=>\@trials_array,
-            location_list=>\@locations_array,
-            trait_list=>\@traits_array,
-            year_list=>\@years_array,
-            include_timestamp=>1,
-            limit=>$c->stash->{page_size},
-            offset=>$offset
-        }
-    );
-    my $search_result = $phenotypes_search->search();
-    #print STDERR Dumper $search_result;
-    my $total_count = 0;
-    if (scalar(@$search_result)>0){
-        $total_count = $search_result->[0]->[21];
-    }
-    foreach my $result (@$search_result){
-            my %data_entry = (
-                observationDbId=>$result->[20],
-                observationUnitDbId=>$result->[15],
-                observationUnitName=>$result->[6],
-                studyDbId=>$result->[12],
-                studyName=>$result->[1],
-                studyLocationDbId=>$result->[13],
-                studyLocation=>$result->[3],
-                programName=>'',
-                observationLevel=>$result->[19],
-                germplasmDbId=>$result->[14],
-                germplasmName=>$result->[2],
-                observationVariableName=>$result->[4]."|".$result->[7],
-                observationVariableDbId=>$result->[11],
-                season=>$result->[0],
-                value=>$result->[5],
-                observationTimeStamp=>$result->[16],
-                collector=>'',
-                uploadedBy=>'',
-                additionalInfo=>{
-                    'block'=>$result->[9],
-                    'replicate'=>$result->[8],
-                    'plotNumber'=>$result->[10],
-                    'germplasmSynonyms'=>$result->[17],
-                    'design'=>$result->[18],
-                }
-            );
-            push @data, \%data_entry;
-        #}
-    }
-
-    my %result = (data => \@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
+	my $brapi_package_result = $brapi_module->search({
+		trait_ids => $clean_inputs->{observationVariableDbIds},
+		accession_ids => $clean_inputs->{germplasmDbIds},
+		study_ids => $clean_inputs->{studyDbIds},
+		location_ids => $clean_inputs->{locationDbIds},
+		years => $clean_inputs->{seasonDbIds},
+		data_level => $clean_inputs->{observationLevel}->[0],
+		search_type => $clean_inputs->{search_type}->[0],
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 sub traits_list : Chained('brapi') PathPart('traits') Args(0) : ActionClass('REST') { }

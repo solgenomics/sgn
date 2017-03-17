@@ -13,6 +13,7 @@ use CXGN::BrAPI::v1::Trials;
 use CXGN::BrAPI::v1::Markerprofiles;
 use CXGN::BrAPI::v1::Programs;
 use CXGN::BrAPI::v1::Locations;
+use CXGN::BrAPI::v1::Phenotypes;
 
 has 'version' => (
 	isa => 'Str',
