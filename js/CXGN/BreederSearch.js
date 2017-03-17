@@ -156,25 +156,29 @@ window.onload = function initialize() {
 	var trial_types = get_selected_results('trial_types');
 	var trial_designs = get_selected_results('trial_designs');
 	var plants = get_selected_results('plants');
+	var name = jQuery('#save_wizard_dataset_name').val();
 
-	var params =  "trials="+JSON.stringify(trials)+"&traits="+JSON.stringify(traits)+"&accessions="+JSON.stringify(accessions)+"&plots="+JSON.stringify(plots)+"&plants="+JSON.stringify(plants)+"&locations="+JSON.stringify(locations)+"&years="+JSON.stringify(years);
+	var params =  "trials="+JSON.stringify(trials)+"&traits="+JSON.stringify(traits)+"&accessions="+JSON.stringify(accessions)+"&plots="+JSON.stringify(plots)+"&plants="+JSON.stringify(plants)+"&locations="+JSON.stringify(locations)+"&years="+JSON.stringify(years)+"&name="+name;
 
 	jQuery.ajax( { 
 	    'url': '/ajax/dataset/save?'+params,
             'method': 'POST',
 	    'success' : function(response) { 
-	        alert("success!");
+		if (response.error) { 
+		    alert(response.error);
+		}
+		else { 
+	            alert("Successfully stored the dataset!");
+		    jQuery('#save_wizard_dataset_dialog').modal("hide");
+		}
 
 	    },
             'error': function(response) { 
-	        alert("An error occurrrrrrrrrred!");
+	        alert("An error occurred.");
+		jQuery('#save_wizard_dataset_dialog').modal("hide");
 	    }
 	});
 	
-	alert("Saved dataset!");
-
-
-
     });
 }
 

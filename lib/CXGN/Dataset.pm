@@ -117,6 +117,17 @@ has 'description' => ( isa => 'Maybe[Str]',
 		       is => 'rw'
     );
 
+=head2 sp_person_id()
+
+accessor for sp_person_id (owner of the dataset)
+
+=cut
+
+has 'sp_person_id' => ( isa => 'Maybe[Int]',
+			is => 'rw',
+    );
+
+
 =head2 accessions()
 
 accessor for defining the accessions that are part of this dataset (ArrayRef).
@@ -181,6 +192,18 @@ has 'breeding_programs' => ( isa => 'Maybe[ArrayRef]',
 			     predicate => 'has_breeding_programs',
     );
 
+=head2 locations()
+
+=cut
+
+has 'locations' => ( isa => 'Maybe[ArrayRef]',
+		     is => 'rw',
+		     predicate => 'has_locations',
+    );
+
+
+
+
 has 'is_live' =>     ( isa => 'Bool', 
 		       is => 'rw',
 		       default => 0,
@@ -211,11 +234,13 @@ sub BUILD {
 	$self->data($dataset);
 	$self->name($row->name());
 	$self->description($row->description());
+	$self->sp_person_id($row->sp_person_id());
 	$self->accessions($dataset->{accessions});
 	$self->plots($dataset->{plots});
 	$self->trials($dataset->{trials});
 	$self->traits($dataset->{traits});
 	$self->years($dataset->{years});
+	$self->locations($dataset->{locations});
 	$self->breeding_programs($dataset->{breeding_programs});
 	$self->is_live($dataset->{is_live});
     }
@@ -236,7 +261,7 @@ sub BUILD {
 
 =cut
 
-sub datasets_by_person { 
+sub get_datasets_by_user { 
     my $class = shift;
     my $people_schema = shift;
     my $sp_person_id = shift;
@@ -245,11 +270,37 @@ sub datasets_by_person {
 
     my @datasets;
     while (my $row = $rs->next()) { 
-	push @datasets, $row->sp_dataset_id(), $row->name();
+	push @datasets,  [ $row->sp_dataset_id(), $row->name(), $row->description() ];
     }
 
     return \@datasets;
 }    
+
+=head2 exists_dataset_name
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub exists_dataset_name { 
+    my $class = shift;
+    my $people_schema = shift;
+    my $name = shift;
+    
+    my $rs = $people_schema->resultset("SpDataset")->search( { name  =>  { -ilike => $name}});
+
+    if ($rs->count() > 0) { 
+	return 1;
+    }
+    else { 
+	return 0;
+    }
+}
 
 
 =head1 METHODS
@@ -268,11 +319,13 @@ sub store {
     $dataref->{traits} = $self->traits() if $self->has_traits();
     $dataref->{years} = $self->years() if $self->has_years();
     $dataref->{breeding_programs} = $self->breeding_programs() if $self->has_breeding_programs();
-    
+    $dataref->{locations} = $self->locations() if $self->has_locations();
+
     my $json = JSON::Any->encode($dataref);
    
     my $data = { name => $self->name(), 
 		 description => $self->description(),
+		 sp_person_id => $self->sp_person_id(),
 		 dataset => $json,
 	};
 
@@ -311,6 +364,7 @@ sub _get_dataref {
     $dataref->{traits} = join(",", @{$self->traits()}) if $self->has_traits();
     $dataref->{years} = join(",", @{$self->years()}) if $self->has_years();
     $dataref->{breeding_programs} = join(",", @{$self->breeding_programs()}) if $self->has_breeding_programs();
+    $dataref->{locations} = join(",", @{$self->locations()}) if $self->has_locations();
     return $dataref;
 }
     
@@ -384,7 +438,7 @@ sub retrieve_accessions {
 	return $self->accessions();
     }
     else {
-	my $criteria = $self->_get_criteria();
+	my $criteria = $self->get_dataset_definition();
 	push @$criteria, "accessions";
 
 	$accessions = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("accessions"));						
@@ -405,7 +459,7 @@ sub retrieve_plots {
 	return $self->plots();
     }
     else {
-	my $criteria = $self->_get_criteria();
+	my $criteria = $self->get_dataset_definition();
 	push @$criteria, "plots";
 	$plots = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("plots"));						
     }
@@ -425,7 +479,7 @@ sub retrieve_trials {
 	return $self->trials();
     }
     else {
-	my $criteria = $self->_get_criteria();
+	my $criteria = $self->get_dataset_definition();
 	push @$criteria, "trials";
 	$trials = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("trials"));						
     }
@@ -446,7 +500,7 @@ sub retrieve_traits {
 	return $self->traits();
     }
     else {
-	my $criteria = $self->_get_criteria();
+	my $criteria = $self->get_dataset_definition();
 	push @$criteria, "traits";
 	$traits = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("traits"));						
     }
@@ -467,7 +521,7 @@ sub retrieve_years {
 	return $self->years();
     }
     else {
-	my $criteria = $self->_get_criteria();
+	my $criteria = $self->get_dataset_definition();
 	push @$criteria, "years";
 	my $year_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("years"));
 	my $year_list = $year_data->{result};
@@ -479,7 +533,33 @@ sub retrieve_years {
     return \@years;
 }
 
-sub _get_criteria { 
+=head2 retrieve_years()
+
+retrieves years as a listref of listrefs
+
+=cut
+
+sub retrieve_locations { 
+    my $self = shift;
+    my @locations;
+    if ($self->has_locations()) { 
+	return $self->locations();
+    }
+    else {
+	my $criteria = $self->get_dataset_definition();
+	push @$criteria, "locations";
+	my $location_data = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("locations"));
+	my $location_list = $location_data->{result};
+
+	foreach my $y (@$location_list) { 
+	    push @locations, $y->[0];
+	}
+    }
+    return \@locations;
+}
+
+
+sub get_dataset_definition  { 
     my $self = shift;
     my @criteria;
 
@@ -497,6 +577,9 @@ sub _get_criteria {
     }
     if ($self->has_years()) { 
 	push @criteria, "years";
+    }
+    if ($self->has_locations()) { 
+	push @criteria, "locations";
     }
 
     return \@criteria;
