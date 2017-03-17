@@ -14,6 +14,7 @@ use CXGN::BrAPI::v1::Markerprofiles;
 use CXGN::BrAPI::v1::Programs;
 use CXGN::BrAPI::v1::Locations;
 use CXGN::BrAPI::v1::Phenotypes;
+use CXGN::BrAPI::v1::Traits;
 
 has 'version' => (
 	isa => 'Str',

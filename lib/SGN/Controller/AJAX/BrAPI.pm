@@ -1965,52 +1965,11 @@ sub traits_list_GET {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    #my $db_rs = $self->bcs_schema()->resultset("General::Db")->search( { name => $c->config->{trait_ontology_db_name} } );
-    #if ($db_rs->count ==0) { return undef; }
-    #my $db_id = $db_rs->first()->db_id();
-
-    #my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, cvtermprop.value, dbxref.accession FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) WHERE dbxref.db_id=?";
-    #my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
-    #$h->execute($db_id);
-
-    my @trait_ids;
-    my $q = "SELECT trait_id FROM traitsxtrials ORDER BY trait_id;";
-    my $p = $self->bcs_schema()->storage->dbh()->prepare($q);
-    $p->execute();
-    while (my ($cvterm_id) = $p->fetchrow_array()) {
-        push @trait_ids, $cvterm_id;
-    }
-
-    my @data;
-    foreach my $cvterm_id (@trait_ids){
-        my $q2 = "SELECT cvterm.definition, cvtermprop.value, dbxref.accession, db.name, cvterm.name FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) JOIN db using(db_id) WHERE cvterm.cvterm_id=?";
-        my $h = $self->bcs_schema()->storage->dbh()->prepare($q2);
-        $h->execute($cvterm_id);
-
-        while (my ($description, $scale, $accession, $db, $name) = $h->fetchrow_array()) {
-            my @observation_vars = ();
-            push @observation_vars, $name.'|'.$db.":".$accession;
-            push @data, {
-                traitDbId => $cvterm_id,
-                traitId => $db.':'.$accession,
-                name => $name,
-                description => $description,
-                observationVariables => \@observation_vars,
-                defaultValue => '',
-                #scale =>$scale
-            };
-        }
-    }
-
-    my $total_count = $p->rows;
-    my %result = (data => \@data);
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
-
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Traits');
+	my $brapi_package_result = $brapi_module->list();
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -2029,32 +1988,13 @@ sub trait_detail_GET {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $cvterm_id = $c->stash->{trait_id};
-    my $status = $c->stash->{status};
-    my %result;
-
-    my $q = "SELECT cvterm.definition, cvtermprop.value, dbxref.accession, db.name, cvterm.name FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) WHERE cvterm.cvterm_id=?";
-    my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
-    $h->execute($cvterm_id);
-    my $total_count = 0;
-    while (my ($description, $scale, $accession, $db, $name) = $h->fetchrow_array()) {
-        $total_count++;
-        my @observation_vars = ();
-        push @observation_vars, $name.'|'.$db.':'.$accession;
-        %result = (
-            traitDbId => $cvterm_id,
-            traitId => $db.':'.$accession,
-            name => $name,
-            description => $description,
-            observationVariables => \@observation_vars,
-            defaultValue => '',
-            scale =>$scale
-        );
-    }
-
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Traits');
+	my $brapi_package_result = $brapi_module->detail(
+		$c->stash->{trait_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
