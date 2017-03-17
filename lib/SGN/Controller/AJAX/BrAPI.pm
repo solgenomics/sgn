@@ -1749,123 +1749,29 @@ sub studies_table_GET {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my $data_level = $c->req->param('observationLevel') || 'plot';
-    my $format = $c->req->param('format') || 'json';
-    my %result;
-    my $search_type = $c->req->param("search_type") || 'complete';
-    my $include_timestamp = $c->req->param("timestamp") || 0;
-    my $trial_id = $c->stash->{study_id};
 
-    my $factory_type;
-    if ($search_type eq 'complete'){
-        $factory_type = 'Native';
-    }
-    if ($search_type eq 'fast'){
-        $factory_type = 'MaterializedView';
-    }
-    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-        $factory_type,    #can be either 'MaterializedView', or 'Native'
-        {
-            bcs_schema=>$self->bcs_schema,
-            data_level=>$data_level,
-            trial_list=>[$trial_id],
-            include_timestamp=>$include_timestamp,
-        }
-    );
-    my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
-
-    #print STDERR Dumper \@data;
-
-    if ($format eq 'json') {
-        my $total_count = scalar(@data)-1;
-        my @header_names = split /\t/, $data[0];
-        #print STDERR Dumper \@header_names;
-        my @trait_names = @header_names[15 .. $#header_names];
-        #print STDERR Dumper \@trait_names;
-        my @header_ids;
-        foreach my $t (@trait_names) {
-            push @header_ids, SGN::Model::Cvterm->get_cvterm_row_from_trait_name($self->bcs_schema, $t)->cvterm_id();
-        }
-
-        my $start = $c->stash->{page_size}*$c->stash->{current_page};
-        my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-        my @data_window;
-        for (my $line = $start; $line < $end; $line++) {
-            if ($data[$line]) {
-                my @columns = split /\t/, $data[$line], -1;
-
-                push @data_window, \@columns;
-            }
-        }
-
-        #print STDERR Dumper \@data_window;
-
-        %result = (
-            studyDbId => $c->stash->{study_id},
-            headerRow => ['studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber'],
-            observationVariableDbIds => \@header_ids,
-            observationVariableNames => \@trait_names,
-            data=>\@data_window
-        );
-        my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
-        my %response = (metadata=>\%metadata, result=>\%result);
-        $c->stash->{rest} = \%response;
-
-    } else {
-        # if xls or csv, create tempfile name and place to save it
-        my $what = "phenotype_download";
-        my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
-        my $dir = $c->tempfiles_subdir('download');
-        my $temp_file_name = $time_stamp . "$what" . "XXXX";
-        my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
-        my $tempfile = $c->config->{basepath}."/".$rel_file;
-
-        if ($format eq "csv") {
-
-            #build csv with column names
-            open(CSV, ">", $tempfile) || die "Can't open file $tempfile\n";
-                my @header = split /\t/, $data[0];
-                my $num_col = scalar(@header);
-                for (my $line =0; $line< @data; $line++) {
-                    my @columns = split /\t/, $data[$line];
-                    my $step = 1;
-                    for(my $i=0; $i<$num_col; $i++) {
-                        if ($columns[$i]) {
-                            print CSV "\"$columns[$i]\"";
-                        } else {
-                            print CSV "\"\"";
-                        }
-                        if ($step < $num_col) {
-                            print CSV ",";
-                        }
-                        $step++;
-                    }
-                    print CSV "\n";
-                }
-            close CSV;
-
-        } elsif ($format = 'xls') {
-            my $ss = Spreadsheet::WriteExcel->new($tempfile);
-            my $ws = $ss->add_worksheet();
-
-            for (my $line =0; $line< @data; $line++) {
-                my @columns = split /\t/, $data[$line];
-                for(my $col = 0; $col<@columns; $col++) {
-                    $ws->write($line, $col, $columns[$col]);
-                }
-            }
-            #$ws->write(0, 0, "$program_name, $location ($year)");
-            $ss ->close();
-        }
-
-        #Using tempfile and new filename,send file to client
-        my $file_name = $time_stamp . "$what" . ".$format";
-        $c->res->content_type('Application/'.$format);
-        $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-        my $output = read_file($tempfile);
-        $c->res->body($output);
-    }
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $format = $clean_inputs->{format}->[0];
+	my $file_path;
+	my $uri;
+	if ($format eq 'tsv' || $format eq 'csv'){
+		my $dir = $c->tempfiles_subdir('download');
+		my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
+		my $temp_file_name = $time_stamp . "phenotype_download_$format"."_XXXX";
+        ($file_path, $uri) = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+	}
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+	my $brapi_package_result = $brapi_module->studies_table({
+		study_id => $c->stash->{study_id},
+		data_level => $clean_inputs->{observationLevel}->[0],
+		search_type => $clean_inputs->{search_type}->[0],
+		format => $format,
+		main_production_site_url => $c->config->{main_production_site_url},
+		file_path => $file_path,
+		file_uri => $uri
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 

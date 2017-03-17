@@ -7,6 +7,7 @@ use CXGN::Trial;
 use CXGN::Trial::Search;
 use CXGN::Trial::TrialLayout;
 use CXGN::Trait;
+use CXGN::Phenotypes::SearchFactory;
 use CXGN::BrAPI::Pagination;
 
 has 'bcs_schema' => (
@@ -503,8 +504,7 @@ sub observation_units {
 			};
 			 $obs_hash{$_->[0]}->{observations} = $observations;
 		} else {
-			my $is_a_control_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'is a control', 'stock_property')->cvterm_id();
-			my $is_a_control = $self->bcs_schema->resultset('Stock::Stockprop')->find({stock_id=>$_->[0], type_id=>$is_a_control_cvterm_id});
+			my $prop_hash = $self->get_stockprop_hash($_->[0]);
 			$obs_hash{$_->[0]} = {
 				observationUnitDbId => $_->[0],
 				observationUnitName => $_->[1],
@@ -512,13 +512,13 @@ sub observation_units {
 				germplasmName => $_->[9],
 				pedigree => $self->germplasm_pedigree_string($_->[8]),
 				entryNumber => '',
-				entryType => $is_a_control ? 'Check' : 'Test',
-				plotNumber => '',
+				entryType => $prop_hash->{'is a control'} ? 'Check' : 'Test',
+				plotNumber => $prop_hash->{'plot number'} ? join ',', @{$prop_hash->{'plot number'}} : '',
 				plantNumber => '',
-				blockNumber => '',
-				X => '',
-				Y=> '',
-				replicate=> '',
+				blockNumber => $prop_hash->{'block'} ? join ',', @{$prop_hash->{'block'}} : '',,
+				X => $prop_hash->{'row_number'} ? join ',', @{$prop_hash->{'row_number'}} : '',
+				Y=> $prop_hash->{'col_number'} ? join ',', @{$prop_hash->{'col_number'}} : '',
+				replicate=> $prop_hash->{'replicate'} ? join ',', @{$prop_hash->{'replicate'}} : '',
 				observations => [{
 					observationDbId => $_->[4],
 					observationVariableDbId => $_->[2],
@@ -552,6 +552,130 @@ sub observation_units {
 	return $response;
 }
 
+sub studies_table {
+	my $self = shift;
+	my $inputs = shift;
+	my $study_id = $inputs->{study_id};
+	my $data_level = $inputs->{data_level} || 'plot';
+	my $search_type = $inputs->{search_type} || 'complete';
+	my $format = $inputs->{format} || 'json';
+	my $file_path = $inputs->{file_path};
+	my $file_uri = $inputs->{file_uri};
+	my @trait_ids_array = $inputs->{observationVariableDbIds} ? @{$inputs->{observationVariableDbIds}} : ();
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my $status = $self->status;
+
+	my $factory_type;
+    if ($search_type eq 'complete'){
+        $factory_type = 'Native';
+    }
+    if ($search_type eq 'fast'){
+        $factory_type = 'MaterializedView';
+    }
+    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
+        $factory_type,    #can be either 'MaterializedView', or 'Native'
+        {
+            bcs_schema=>$self->bcs_schema,
+            data_level=>$data_level,
+            trial_list=>[$study_id],
+            include_timestamp=>1,
+        }
+    );
+    my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
+    #print STDERR Dumper \@data;
+
+	my %result;
+	my @datafiles;
+	my $total_count = 0;
+	if ($format eq 'json') {
+        $total_count = scalar(@data)-1;
+        my @header_names = split /\t/, $data[0];
+        #print STDERR Dumper \@header_names;
+        my @trait_names = @header_names[15 .. $#header_names];
+        #print STDERR Dumper \@trait_names;
+        my @header_ids;
+        foreach my $t (@trait_names) {
+            push @header_ids, SGN::Model::Cvterm->get_cvterm_row_from_trait_name($self->bcs_schema, $t)->cvterm_id();
+        }
+
+        my $start = $page_size*$page;
+        my $end = $page_size*($page+1)-1;
+        my @data_window;
+        for (my $line = $start; $line < $end; $line++) {
+            if ($data[$line]) {
+                my @columns = split /\t/, $data[$line], -1;
+
+                push @data_window, \@columns;
+            }
+        }
+
+        #print STDERR Dumper \@data_window;
+
+        %result = (
+            studyDbId => $study_id,
+            headerRow => ['studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber'],
+            observationVariableDbIds => \@header_ids,
+            observationVariableNames => \@trait_names,
+            data=>\@data_window
+        );
+
+    } else {
+        # if xls or csv, create tempfile name and place to save it
+
+        if ($format eq "csv") {
+
+            #build csv with column names
+            open(CSV, ">", $file_path) || die "Can't open file $file_path\n";
+                my @header = split /\t/, $data[0];
+                my $num_col = scalar(@header);
+                for (my $line =0; $line< @data; $line++) {
+                    my @columns = split /\t/, $data[$line];
+                    my $step = 1;
+                    for(my $i=0; $i<$num_col; $i++) {
+                        if ($columns[$i]) {
+                            print CSV "\"$columns[$i]\"";
+                        } else {
+                            print CSV "\"\"";
+                        }
+                        if ($step < $num_col) {
+                            print CSV ",";
+                        }
+                        $step++;
+                    }
+                    print CSV "\n";
+                }
+            close CSV;
+
+        } elsif ($format = 'xls') {
+            my $ss = Spreadsheet::WriteExcel->new($file_path);
+            my $ws = $ss->add_worksheet();
+
+            for (my $line =0; $line< @data; $line++) {
+                my @columns = split /\t/, $data[$line];
+                for(my $col = 0; $col<@columns; $col++) {
+                    $ws->write($line, $col, $columns[$col]);
+                }
+            }
+            #$ws->write(0, 0, "$program_name, $location ($year)");
+            $ss ->close();
+        }
+
+		my $data_file_path = $inputs->{main_production_site_url}.$file_uri;
+		push @datafiles, $data_file_path;
+    }
+	push @$status, { 'success' => 'Studies observations table result constructed' };
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+	my $response = {
+		'status' => $status,
+		'pagination' => $pagination,
+		'result' => \%result,
+		'datafiles' => \@datafiles
+	};
+	return $response;
+}
+
+
 sub germplasm_pedigree_string {
 	my $self = shift;
 	my $stock_id = shift;
@@ -559,6 +683,18 @@ sub germplasm_pedigree_string {
     my $pedigree_root = $s->get_parents('1');
     my $pedigree_string = $pedigree_root->get_pedigree_string('1');
     return $pedigree_string;
+}
+
+sub get_stockprop_hash {
+	my $self = shift;
+	my $stock_id = shift;
+	my $prop_rs = $self->bcs_schema->resultset('Stock::Stockprop')->search({'me.stock_id' => $stock_id}, {join=>['type'], +select=>['type.name', 'me.value'], +as=>['name', 'value']});
+	my $prop_hash;
+	while (my $r = $prop_rs->next()){
+		push @{ $prop_hash->{$r->get_column('name')} }, $r->get_column('value');
+	}
+	#print STDERR Dumper $prop_hash;
+	return $prop_hash;
 }
 
 1;
