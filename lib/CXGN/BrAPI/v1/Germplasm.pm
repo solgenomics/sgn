@@ -178,7 +178,7 @@ sub germplasm_pedigree_string {
 	my $stock_id = shift;
     my $s = CXGN::Chado::Stock->new($self->bcs_schema, $stock_id);
     my $pedigree_root = $s->get_parents('1');
-    my $pedigree_string = $pedigree_root->get_pedigree_string('1');
+    my $pedigree_string = $pedigree_root ? $pedigree_root->get_pedigree_string('1') : '';
     return $pedigree_string;
 }
 

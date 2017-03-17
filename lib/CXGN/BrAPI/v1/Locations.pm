@@ -57,9 +57,9 @@ sub locations_list {
         if (@$locations[$i]) {
             push @data, {
                 locationDbId => @$locations[$i]->[0],
-                locationType=>'',
+                locationType=> @$locations[$i]->[8],
                 name=> @$locations[$i]->[1],
-                abbreviation=>'',
+                abbreviation=>@$locations[$i]->[9],
                 countryCode=> @$locations[$i]->[6],
                 countryName=> @$locations[$i]->[5],
                 latitude=>@$locations[$i]->[2],

@@ -1203,7 +1203,8 @@ sub markerprofile_search_process {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-	my $default_protocol_id = $self->bcs_schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$c->config->{default_genotyping_protocol}})->nd_protocol_id();
+	my $default_protocol = $self->bcs_schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$c->config->{default_genotyping_protocol}});
+	my $default_protocol_id = $default_protocol ? $default_protocol->nd_protocol_id : 0;
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
@@ -1284,7 +1285,6 @@ sub genotype_fetch_GET {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-	my $default_protocol_id = $self->bcs_schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$c->config->{default_genotyping_protocol}})->nd_protocol_id();
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');

@@ -292,8 +292,8 @@ sub studies_detail {
 					contactDbId => $_->{sp_person_id},
 					name => $_->{salutation}." ".$_->{first_name}." ".$_->{last_name},
 					email => $_->{email},
-					type => '',
-					orcid => ''
+					type => $_->{user_type},
+					orcid =>$_->{phone_number}
 				};
 			}
 			my $location = CXGN::Trial::get_all_locations($self->bcs_schema, $location_id)->[0];
@@ -314,9 +314,9 @@ sub studies_detail {
 				active=>'',
 				location=> {
 					locationDbId => $location->[0],
-	                locationType=>'',
+	                locationType=>$location->[8],
 	                name=> $location->[1],
-	                abbreviation=>'',
+	                abbreviation=>$location->[9],
 	                countryCode=> $location->[6],
 	                countryName=> $location->[5],
 	                latitude=>$location->[2],
@@ -375,7 +375,7 @@ sub studies_observation_variables {
 					},
 					method => {},
 					scale => {
-						scalreDbId =>'',
+						scaleDbId =>'',
 						name =>'',
 						datatype=>$trait->format,
 						decimalPlaces=>'',
@@ -747,7 +747,7 @@ sub germplasm_pedigree_string {
 	my $stock_id = shift;
     my $s = CXGN::Chado::Stock->new($self->bcs_schema, $stock_id);
     my $pedigree_root = $s->get_parents('1');
-    my $pedigree_string = $pedigree_root->get_pedigree_string('1');
+    my $pedigree_string = $pedigree_root ? $pedigree_root->get_pedigree_string('1') : '';
     return $pedigree_string;
 }
 

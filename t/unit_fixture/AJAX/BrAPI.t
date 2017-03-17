@@ -19,25 +19,25 @@ $mech->get_ok('http://localhost:3010/brapi/v1/calls?pageSize=5&page=3');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
-is_deeply($response, {'metadata' => {'datafiles' => [],'status' => [{}],'pagination' => {'totalCount' => 32,'currentPage' => 3,'pageSize' => 5,'totalPages' => 7}},'result' => {'data' => [{'datatypes' => ['json'],'call' => 'seasons','methods' => ['GET','POST']},{'datatypes' => ['json'],'methods' => ['GET','POST'],'call' => 'studyTypes'},{'methods' => ['GET','POST'],'call' => 'trials','datatypes' => ['json']},{'datatypes' => ['json'],'methods' => ['GET'],'call' => 'trials/id'},{'datatypes' => ['json'],'call' => 'studies-search','methods' => ['GET','POST']}]}}, 'check calls response content');
+is_deeply($response, {'result' => {'data' => [{'call' => 'crops','datatypes' => ['json'],'methods' => ['GET']},{'call' => 'seasons','datatypes' => ['json'],'methods' => ['GET','POST']},{'datatypes' => ['json'],'call' => 'studyTypes','methods' => ['GET','POST']},{'methods' => ['GET','POST'],'call' => 'trials','datatypes' => ['json']},{'methods' => ['GET'],'datatypes' => ['json'],'call' => 'trials/id'}]},'metadata' => {'status' => [{'info' => 'BrAPI base call found with page=3, pageSize=5'},{'info' => 'Loading CXGN::BrAPI::v1::Calls'},{'success' => 'Calls result constructed'}],'pagination' => {'totalCount' => 36,'currentPage' => 3,'pageSize' => 5,'totalPages' => 8},'datafiles' => []}}, 'check calls response content');
 
 $mech->get_ok('http://localhost:3010/brapi/v1/calls?pageSize=50&datatype=tsv');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
-is_deeply($response, {'metadata' => {'status' => [{}],'pagination' => {'totalPages' => 1,'currentPage' => 0,'totalCount' => 32,'pageSize' => 50},'datafiles' => []},'result' => {'data' => [{'datatypes' => ['json','tsv','csv'],'methods' => ['GET','POST'],'call' => 'allelematrix-search'}]}}, 'check calls response content');
+is_deeply($response, {'metadata' => {'datafiles' => [],'pagination' => {'totalPages' => 1,'pageSize' => 50,'totalCount' => 1,'currentPage' => 0},'status' => [{'info' => 'BrAPI base call found with page=0, pageSize=50'},{'info' => 'Loading CXGN::BrAPI::v1::Calls'},{'success' => 'Calls result constructed'}]},'result' => {'data' => [{'datatypes' => ['json','tsv','csv'],'call' => 'allelematrix-search','methods' => ['GET','POST']}]}}, 'check calls response content');
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is($response->{'metadata'}->{'status'}->[0]->{'message'}, 'Login Successfull');
+is($response->{'metadata'}->{'status'}->[2]->{'success'}, 'Login Successfull');
 is($response->{'userDisplayName'}, 'Jane Doe');
 is($response->{'expires_in'}, '7200');
 
 $mech->delete_ok('http://localhost:3010/brapi/v1/token');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is($response->{'metadata'}->{'status'}->[0]->{'message'}, 'Successfully logged out.');
+is($response->{'metadata'}->{'status'}->[2]->{'success'}, 'User Logged Out');
 
 $mech->get_ok('http://localhost:3010/brapi/v1/germplasm-search?pageSize=2&page=3');
 $response = decode_json $mech->content;

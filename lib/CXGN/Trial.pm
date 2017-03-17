@@ -263,18 +263,24 @@ sub get_all_locations {
 
         my $country = '';
         my $country_code = '';
+        my $location_type = '';
+        my $abbreviation = '';
 
         while (my $sp = $loc_props->next()) {
-            if ($sp->get_column('cvterm_name') eq 'Country') {
+            if ($sp->get_column('cvterm_name') eq 'country') {
                 $country = $sp->get_column('value');
-            } elsif ($sp->get_column('cvterm_name') eq 'Country Code') {
+            } elsif ($sp->get_column('cvterm_name') eq 'country code') {
                 $country_code = $sp->get_column('value');
+            } elsif ($sp->get_column('cvterm_name') eq 'location type') {
+                $location_type = $sp->get_column('value');
+            } elsif ($sp->get_column('cvterm_name') eq 'abbreviation') {
+                $abbreviation = $sp->get_column('value');
             } else {
                 $attr{$sp->get_column('cvterm_name')} = $sp->get_column('value') ;
             }
         }
 
-        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr],
+        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr, $location_type, $abbreviation],
     }
 
     return \@locations;
@@ -1803,17 +1809,19 @@ sub get_trial_contacts {
 	);
 
 	while(my $prop = $prop_rs->next()) {
-		my $q = "SELECT sp_person_id, username, salutation, first_name, last_name, contact_email FROM sgn_people.sp_person WHERE sp_person_id=?;";
+		my $q = "SELECT sp_person_id, username, salutation, first_name, last_name, contact_email, user_type, phone_number FROM sgn_people.sp_person WHERE sp_person_id=?;";
 		my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
 		$h->execute($prop->value);
-		while (my ($sp_person_id, $username, $salutation, $first_name, $last_name, $email) = $h->fetchrow_array()){
+		while (my ($sp_person_id, $username, $salutation, $first_name, $last_name, $email, $user_type, $phone) = $h->fetchrow_array()){
 			push @contacts, {
 				sp_person_id => $sp_person_id,
 				salutation => $salutation,
 				first_name => $first_name,
 				last_name => $last_name,
 				username => $username,
-				email => $email
+				email => $email,
+				type => $user_type,
+				phone_number => $phone
 			};
 		}
 	}
