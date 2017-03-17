@@ -15,6 +15,7 @@ use CXGN::BrAPI::v1::Programs;
 use CXGN::BrAPI::v1::Locations;
 use CXGN::BrAPI::v1::Phenotypes;
 use CXGN::BrAPI::v1::Traits;
+use CXGN::BrAPI::v1::GenomeMaps;
 
 has 'version' => (
 	isa => 'Str',
