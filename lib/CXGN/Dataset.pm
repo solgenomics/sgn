@@ -190,6 +190,7 @@ has 'years' =>       ( isa => 'Maybe[ArrayRef]',
 has 'breeding_programs' => ( isa => 'Maybe[ArrayRef]', 
 			     is => 'rw',
 			     predicate => 'has_breeding_programs',
+			     default => sub { [] },
     );
 
 =head2 locations()
@@ -200,6 +201,13 @@ has 'locations' => ( isa => 'Maybe[ArrayRef]',
 		     is => 'rw',
 		     predicate => 'has_locations',
     );
+
+
+has 'category_order' => ( isa => 'Maybe[ArrayRef]',
+			  is => 'rw',
+			  predicate => 'has_category_order',
+    );
+                       
 
 
 
@@ -227,36 +235,38 @@ sub BUILD {
     my $self = shift;
     
     print STDERR "Processing dataset_id ".$self->sp_dataset_id()."\n";
+    my $bs = CXGN::BreederSearch->new(dbh => $self->schema->storage->dbh());
+    $self->breeder_search($bs);
+
     if ($self->has_sp_dataset_id()) { 
 	my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $self->sp_dataset_id() });
-	
+	if (!$row) { die "The dataset with id ".$self->sp_dataset_id()." does not exist"; }
 	my $dataset = JSON::Any->decode($row->dataset());
 	$self->data($dataset);
 	$self->name($row->name());
 	$self->description($row->description());
 	$self->sp_person_id($row->sp_person_id());
-	$self->accessions($dataset->{accessions});
-	$self->plots($dataset->{plots});
-	$self->trials($dataset->{trials});
-	$self->traits($dataset->{traits});
-	$self->years($dataset->{years});
-	$self->locations($dataset->{locations});
-	$self->breeding_programs($dataset->{breeding_programs});
+	$self->accessions($dataset->{categories}->{accessions});
+	$self->plots($dataset->{categories}->{plots});
+	$self->trials($dataset->{categories}->{trials});
+	$self->traits($dataset->{categories}->{traits});
+	$self->years($dataset->{categories}->{years});
+	$self->locations($dataset->{categories}->{locations});
+	$self->breeding_programs($dataset->{categories}->{breeding_programs});
+	$self->category_order($dataset->{category_order});
 	$self->is_live($dataset->{is_live});
     }
 
 
     else { print STDERR "Creating empty dataset object\n"; }
 
-    my $bs = CXGN::BreederSearch->new(dbh => $self->schema->storage->dbh());
-    $self->breeder_search($bs);
 
 }
 
 
 =head1 CLASS METHODS
 
-=head2 datasets_by_person()
+=head2 datasets_by_user()
 
 
 =cut
@@ -312,14 +322,7 @@ sub exists_dataset_name {
 sub store { 
     my $self = shift;
 
-    my $dataref;
-    $dataref->{accessions} = $self->accessions() if $self->has_accessions();
-    $dataref->{plots} = $self->plots() if $self->has_plots();
-    $dataref->{trials} = $self->trials() if $self->has_trials();
-    $dataref->{traits} = $self->traits() if $self->has_traits();
-    $dataref->{years} = $self->years() if $self->has_years();
-    $dataref->{breeding_programs} = $self->breeding_programs() if $self->has_breeding_programs();
-    $dataref->{locations} = $self->locations() if $self->has_locations();
+    my $dataref = $self->get_dataset_data();
 
     my $json = JSON::Any->encode($dataref);
    
@@ -345,6 +348,7 @@ sub store {
 	    $row->name($self->name());
 	    $row->description($self->description());
 	    $row->dataset($json);
+	    $row->sp_person_id($self->sp_person_id());
 	    $row->update();
 	    return $row->sp_dataset_id();
 	}
@@ -354,17 +358,31 @@ sub store {
     }
 }
 
+sub get_dataset_data { 
+    my $self = shift;
+    my $dataref;
+    $dataref->{categories}->{accessions} = $self->accessions() if $self->has_accessions();
+    $dataref->{categories}->{plots} = $self->plots() if $self->has_plots();
+    $dataref->{categories}->{trials} = $self->trials() if $self->has_trials();
+    $dataref->{categories}->{traits} = $self->traits() if $self->has_traits();
+    $dataref->{categories}->{years} = $self->years() if $self->has_years();
+    $dataref->{categories}->{breeding_programs} = $self->breeding_programs() if $self->has_breeding_programs();
+    $dataref->{categories}->{locations} = $self->locations() if $self->has_locations();
+    $dataref->{category_order} = $self->category_order();
+    return $dataref;
+}
+
 sub _get_dataref { 
     my $self = shift;
      my $dataref;
     
-    $dataref->{accessions} = join(",", @{$self->accessions()}) if $self->has_accessions();
-    $dataref->{plots} = join(",", @{$self->plots()}) if $self->has_plots();
-    $dataref->{trials} = join(",", @{$self->trials()}) if $self->has_trials();
-    $dataref->{traits} = join(",", @{$self->traits()}) if $self->has_traits();
-    $dataref->{years} = join(",", @{$self->years()}) if $self->has_years();
-    $dataref->{breeding_programs} = join(",", @{$self->breeding_programs()}) if $self->has_breeding_programs();
-    $dataref->{locations} = join(",", @{$self->locations()}) if $self->has_locations();
+    $dataref->{categories}->{accessions} = join(",", @{$self->accessions()}) if $self->has_accessions();
+    $dataref->{categories}->{plots} = join(",", @{$self->plots()}) if $self->has_plots();
+    $dataref->{categories}->{trials} = join(",", @{$self->trials()}) if $self->has_trials();
+    $dataref->{categories}->{traits} = join(",", @{$self->traits()}) if $self->has_traits();
+    $dataref->{categories}->{years} = join(",", @{$self->years()}) if $self->has_years();
+    $dataref->{categories}->{breeding_programs} = join(",", @{$self->breeding_programs()}) if $self->has_breeding_programs();
+    $dataref->{categories}->{locations} = join(",", @{$self->locations()}) if $self->has_locations();
     return $dataref;
 }
     
@@ -558,6 +576,22 @@ sub retrieve_locations {
     return \@locations;
 }
 
+=head2 retrieve_breeding_programs
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub retrieve_breeding_programs { 
+    my $self = shift;
+
+
+}
 
 sub get_dataset_definition  { 
     my $self = shift;
@@ -585,6 +619,44 @@ sub get_dataset_definition  {
     return \@criteria;
 
 }
+
+=head2 delete()
+
+ Usage:        $dataset->delete();
+ Desc:         Deletes the specified dataset. Returns a string with an 
+               error message is unsuccessful. 
+ Ret:          string if failure, undef if success
+ Args:
+ Side Effects: The function does not check for ownership of the dataset,
+               this has to be implemented in the calling function.
+ Example:
+
+=cut
+
+sub delete { 
+    my $self = shift;
+    
+    my $row = $self->people_schema()->resultset("SpDataset")->find( { sp_dataset_id => $self->sp_dataset_id() });
+    
+    if (! $row) { 
+	return "The specified dataset does not exist";
+    }
+    
+    else { 
+	eval { 
+	    $row->delete();
+	};
+	if ($@) { 
+	    return "An error occurred, $@";
+	}
+	
+	else { 
+	    return undef;
+	}
+		
+    }
+}
+
 
 
 1;

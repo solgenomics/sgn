@@ -157,8 +157,10 @@ window.onload = function initialize() {
 	var trial_designs = get_selected_results('trial_designs');
 	var plants = get_selected_results('plants');
 	var name = jQuery('#save_wizard_dataset_name').val();
-
-	var params =  "trials="+JSON.stringify(trials)+"&traits="+JSON.stringify(traits)+"&accessions="+JSON.stringify(accessions)+"&plots="+JSON.stringify(plots)+"&plants="+JSON.stringify(plants)+"&locations="+JSON.stringify(locations)+"&years="+JSON.stringify(years)+"&name="+name;
+	var description = jQuery('#save_wizard_dataset_description').val();
+	var category_order = get_selected_categories(4);
+	alert(JSON.stringify(category_order));
+	var params =  "trials="+JSON.stringify(trials)+"&traits="+JSON.stringify(traits)+"&accessions="+JSON.stringify(accessions)+"&plots="+JSON.stringify(plots)+"&plants="+JSON.stringify(plants)+"&locations="+JSON.stringify(locations)+"&years="+JSON.stringify(years)+"&name="+name+"&description="+description+"&category_order="+JSON.stringify(category_order);
 
 	jQuery.ajax( { 
 	    'url': '/ajax/dataset/save?'+params,
@@ -666,4 +668,34 @@ function manage_dl_with_cookie (token, ladda) {
       ladda.stop();
     }
   }, 500);
+}
+
+function replay_dataset_info(dataset_id) { 
+
+    if (!dataset_id) { return; }
+    var d = new CXGN.Dataset();
+    var dataset = d.getDataset(dataset_id);
+    alert(JSON.stringify(dataset));
+    alert('Replaying dataset info for dataset '+dataset_id);
+
+    var category_order = dataset.category_order;
+    if (!category_order) { 
+	category_order = dataset.categories.keys();
+    }
+    alert("Category_order "+JSON.stringify(category_order));
+    var dropdown =1;
+    for (var i=0; i<category_order.length; i++) { 
+	alert('selecting dropdown '+dropdown+' with '+category_order[i]);
+	jQuery('#select'+dropdown).val(category_order[i]);
+	retrieve_and_display_set(category_order[i], [], dropdown);
+	dropdown++;
+	//for (var n=0; n<dataset.categories[category_order[i]].length; n++) { 
+	    alert('would hilite '+JSON.stringify(dataset.categories[category_order[i]]));
+	    // highlight selected items in multiple select boxes
+	//}
+	
+
+
+    }
+
 }

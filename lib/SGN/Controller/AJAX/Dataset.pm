@@ -32,11 +32,11 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
 	}
     }
 	    
-
     my %data;
 
     my $dataset_name = $c->req->param("name");
-    
+    my $dataset_description = $c->req->param("description");
+
     my $people_schema =  $c->dbic_schema("CXGN::People::Schema");
     if (CXGN::Dataset->exists_dataset_name($people_schema, $dataset_name)) { 
 	$c->stash->{rest} = { error => "The dataset with name $dataset_name already exists. Please chose another name." };
@@ -52,8 +52,9 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
     
     $dataset->sp_person_id($user_id);
     $dataset->name($dataset_name);
+    $dataset->description($dataset_description);
     
-    foreach my $type (qw | trials accessions years locations plots traits breeding_programs genotyping_protocols trial_types trial_designs |) { 
+    foreach my $type (qw | trials accessions years locations plots traits breeding_programs genotyping_protocols trial_types trial_designs category_order |) { 
 	print STDERR "Storing data: $type. $data{$type}\n";
 	
 	my $json = $c->req->param($type);
@@ -65,8 +66,7 @@ sub store_dataset :Path('/ajax/dataset/save') Args(0) {
 
     $dataset->store();
 
-    $c->stash->{rest} = { message => "Peace on earth!" };
-
+    $c->stash->{rest} = { message => "Stored Dataset Successfully!" };
 }
 
 sub get_datasets_by_user :Path('/ajax/dataset/by_user') Args(0) { 
@@ -84,7 +84,7 @@ sub get_datasets_by_user :Path('/ajax/dataset/by_user') Args(0) {
 	$user->get_object()->get_sp_person_id()
 	);
 
-    $c->stash->{rest} = $datasets;
+    $c->stash->{rest} = { datasets => $datasets };
 }
 
 sub get_dataset :Path('/ajax/dataset/get') Args(1) { 
@@ -96,13 +96,47 @@ sub get_dataset :Path('/ajax/dataset/get') Args(1) {
 	{ 
 	    schema => $c->dbic_schema("Bio::Chado::Schema"),
 	    people_schema => $c->dbic_schema("CXGN::People::Schema"),
-	    dataset_id=> $dataset_id,
+	    sp_dataset_id=> $dataset_id,
 	});
 	    
-    my $dataset_definition = $dataset->get_dataset_definition();
+    my $dataset_data = $dataset->get_dataset_data();
     
-    $c->stash->{rest} = { dataset => $dataset_definition };
+    $c->stash->{rest} = { dataset => $dataset_data };
 }
 
+sub delete_dataset :Path('/ajax/dataset/delete') Args(1) { 
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+
+    if (!$c->user()) { 
+	$c->stash->{rest} = { error => "Deleting datasets requires login" };
+	return;
+    }
+    
+    my $logged_in_user = $c->user()->get_object()->get_sp_person_id();
+
+    my $dataset = CXGN::Dataset->new( 
+	{ 
+	    schema => $c->dbic_schema("Bio::Chado::Schema"),
+	    people_schema => $c->dbic_schema("CXGN::People::Schema"),
+	    sp_dataset_id=> $dataset_id,
+	});
+    
+    print STDERR "Dataset owner: ".$dataset->sp_person_id.", logged in: $logged_in_user\n";
+    if ($dataset->sp_person_id() != $logged_in_user) { 
+	$c->stash->{rest} = { error => "Only the owner can delete a dataset" };
+	return;
+    }
+    
+    my $error = $dataset->delete();
+
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+    }
+    else { 
+	$c->stash->{rest} = { success => 1 };
+    }
+}
 
 1;
