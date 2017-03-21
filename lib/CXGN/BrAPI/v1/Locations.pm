@@ -12,18 +12,6 @@ has 'bcs_schema' => (
 	required => 1,
 );
 
-has 'metadata_schema' => (
-	isa => 'CXGN::Metadata::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'phenome_schema' => (
-	isa => 'CXGN::Phenome::Schema',
-	is => 'rw',
-	required => 1,
-);
-
 has 'page_size' => (
 	isa => 'Int',
 	is => 'rw',
@@ -49,31 +37,26 @@ sub locations_list {
 	my $status = $self->status;
 
 	my $locations = CXGN::Trial::get_all_locations($self->bcs_schema);
+	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array($locations,$page_size,$page);
 	my @data;
-    my $total_count = scalar(@$locations);
-    my $start = $page_size*$page;
-    my $end = $page_size*($page+1)-1;
-    for( my $i = $start; $i <= $end; $i++ ) {
-        if (@$locations[$i]) {
-            push @data, {
-                locationDbId => @$locations[$i]->[0],
-                locationType=> @$locations[$i]->[8],
-                name=> @$locations[$i]->[1],
-                abbreviation=>@$locations[$i]->[9],
-                countryCode=> @$locations[$i]->[6],
-                countryName=> @$locations[$i]->[5],
-                latitude=>@$locations[$i]->[2],
-                longitude=>@$locations[$i]->[3],
-                altitude=>@$locations[$i]->[4],
-                additionalInfo=> @$locations[$i]->[7]
-            };
-        }
-    }
+	foreach (@$data_window){
+		push @data, {
+			locationDbId => $_->[0],
+			locationType=> $_->[8],
+			name=> $_->[1],
+			abbreviation=>$_->[9],
+			countryCode=> $_->[6],
+			countryName=> $_->[5],
+			latitude=>$_->[2],
+			longitude=>$_->[3],
+			altitude=>$_->[4],
+			additionalInfo=> $_->[7]
+		};
+	}
 
-    my %result = (data=>\@data);
+	my %result = (data=>\@data);
 	push @$status, { 'success' => 'Locations list result constructed' };
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = { 
+	my $response = {
 		'status' => $status,
 		'pagination' => $pagination,
 		'result' => \%result,
