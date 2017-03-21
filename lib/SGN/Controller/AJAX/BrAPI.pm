@@ -566,9 +566,6 @@ sub germplasm_detail_POST {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status=>$status};
 }
 
 sub germplasm_detail_GET {
@@ -888,9 +885,6 @@ sub trials_detail_POST {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status=>$status};
 }
 
 sub trials_detail_GET {
@@ -970,7 +964,6 @@ sub studies_germplasm_POST {
     my $self = shift;
     my $c = shift;
     my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
 
     my $metadata = $c->req->params("metadata");
     my $result = $c->req->params("result");
@@ -981,8 +974,6 @@ sub studies_germplasm_POST {
     print STDERR Dumper($result);
 
     my $pagintation = $metadata_hash{"pagination"};
-
-    $c->stash->{rest} = {status=>$status};
 }
 
 sub studies_germplasm_GET {
@@ -1026,9 +1017,6 @@ sub germplasm_pedigree_POST {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status=>$status};
 }
 
 sub germplasm_pedigree_GET {
@@ -1093,9 +1081,6 @@ sub germplasm_markerprofile_POST {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status=>$status};
 }
 
 sub germplasm_markerprofile_GET {
@@ -1274,9 +1259,6 @@ sub genotype_fetch_POST {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status=>$status};
 }
 
 sub genotype_fetch_GET {
@@ -1426,9 +1408,6 @@ sub programs_list_POST {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status=>$status};
 }
 
 sub programs_list_GET {
@@ -1454,9 +1433,6 @@ sub studies_info_POST {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
 }
 
 sub studies_info_GET {
@@ -1550,9 +1526,6 @@ sub studies_observation_variables_POST {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
 }
 
 sub studies_observation_variables_GET {
@@ -1575,9 +1548,6 @@ sub studies_layout_POST {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
 }
 
 sub studies_layout_GET {
@@ -1634,9 +1604,6 @@ sub studies_observations_POST {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
 }
 
 sub studies_observations_GET {
@@ -1694,9 +1661,6 @@ sub studies_table_POST {
     my $c = shift;
     my $trait_id = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
 }
 
 sub studies_table_GET {
@@ -1771,9 +1735,6 @@ sub studies_observations_granular_POST {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
 }
 
 sub studies_observations_granular_GET {
@@ -1910,9 +1871,6 @@ sub traits_list_POST {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
 }
 
 sub traits_list_GET {
@@ -2005,9 +1963,6 @@ sub maps_list_POST {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
 }
 
 sub maps_list_GET {
@@ -2077,9 +2032,6 @@ sub maps_details_POST {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
 }
 
 sub maps_details_GET {
@@ -2133,9 +2085,6 @@ sub maps_marker_detail_POST {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
 }
 
 sub maps_marker_detail_GET {
@@ -2179,9 +2128,6 @@ sub locations_list_POST {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
 }
 
 sub locations_list_GET {
@@ -2201,9 +2147,6 @@ sub observationvariable_data_type_list_POST {
     my $self = shift;
     my $c = shift;
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
 }
 
 sub observationvariable_data_type_list_GET {
@@ -2216,6 +2159,37 @@ sub observationvariable_data_type_list_GET {
 	my $brapi_package_result = $brapi_module->observation_variable_data_types();
 	_standard_response_construction($c, $brapi_package_result);
 }
+
+sub observationvariable_ontologies : Chained('brapi') PathPart('ontologies') Args(0) : ActionClass('REST') { }
+
+sub observationvariable_ontologies_POST {
+    my $self = shift;
+    my $c = shift;
+    #my $auth = _authenticate_user($c);
+}
+
+sub observationvariable_ontologies_GET {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+
+	#Using code pattern found in SGN::Controller::Ontology->onto_browser
+	my $onto_root_namespaces = $c->config->{onto_root_namespaces};
+	my @namespaces = split ", ", $onto_root_namespaces;
+	foreach my $n (@namespaces) {
+		$n =~ s/\s*(\w+)\s*\(.*\)/$1/g;
+	}
+	#print STDERR Dumper \@namespaces;
+
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
+	my $brapi_package_result = $brapi_module->observation_variable_ontologies({
+		name_spaces => \@namespaces
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
 
 sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) {
     my $self = shift;
