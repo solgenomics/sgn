@@ -87,18 +87,16 @@ sub calls {
 	}
 
 	my @data;
-	my $start = $page_size*$page;
-	my $end = $page_size*($page+1)-1;
-	for( my $i = $start; $i <= $end; $i++ ) {
-		if ($call_search[$i]) {
-			push @data, {call=>$call_search[$i]->[0], datatypes=>$call_search[$i]->[1], methods=>$call_search[$i]->[2]};
-		}
+	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@call_search, $page_size, $page);
+	foreach (@$data_window){
+		push @data, {
+			call=>$_->[0],
+			datatype=>$_->[1],
+			methods=>$_->[2]
+		};
 	}
-
-	my $total_count = scalar(@call_search);
 	my %result = (data=>\@data);
 	push @$status, { 'success' => 'Calls result constructed' };
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 	my $response = { 
 		'status' => $status,
 		'pagination' => $pagination,

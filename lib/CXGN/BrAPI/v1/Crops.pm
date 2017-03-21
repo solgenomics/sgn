@@ -34,19 +34,9 @@ sub crops {
 		$supported_crop
 	);
 
-	my @data;
-	my $start = $page_size*$page;
-	my $end = $page_size*($page+1)-1;
-	for( my $i = $start; $i <= $end; $i++ ) {
-		if ($available[$i]) {
-			push @data, $available[$i];
-		}
-	}
-
-	my $total_count = scalar(@available);
-	my %result = (data=>\@data);
+	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@available, $page_size, $page);
+	my %result = (data=>$data_window);
 	push @$status, { 'success' => 'Crops result constructed' };
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 	my $response = { 
 		'status' => $status,
 		'pagination' => $pagination,
