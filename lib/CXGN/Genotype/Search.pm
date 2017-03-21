@@ -157,5 +157,24 @@ sub _sql_from_arrayref {
     return $sql;
 }
 
+sub get_genotype_info_as_genotype_objects { 
+    my $self = shift;
+    my @params = @_;
+    
+    my ($total_count, $data) = $self->get_genotype_info(@_);
+
+    my @genotypes;
+    foreach my $d (@$data) { 
+	print STDERR "Processing entry ".$d->{germplasmName}."\n";
+	my $gt = CXGN::Genotype->new();
+	$gt->id($d->{markerProfileDbId});
+	$gt->name($d->{germplasmName});
+	$gt->markers([keys %{$d->{genotype_hash}}]);
+	$gt->markerscores($d->{genotype_hash});
+	$gt->dosages($d->{genotype_hash});
+	push @genotypes, $gt;
+    }
+    return @genotypes;
+}
 
 1;
