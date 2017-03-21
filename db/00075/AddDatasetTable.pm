@@ -59,7 +59,7 @@ sub patch {
 --do your SQL here
 --
 
-CREATE TABLE sgn_people.sp_dataset (sp_dataset_id serial PRIMARY KEY, sp_person_id bigint REFERENCES sgn_people.sp_person, name varchar(255), descripton text, dataset jsonb, is_live boolean);
+CREATE TABLE sgn_people.sp_dataset (sp_dataset_id serial PRIMARY KEY, sp_person_id bigint REFERENCES sgn_people.sp_person, name varchar(255), description text, dataset jsonb, is_live boolean);
 
     GRANT SELECT, DELETE, INSERT, UPDATE ON sgn_people.sp_dataset TO web_usr;
 
