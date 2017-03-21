@@ -77,7 +77,7 @@ sub delete_uploaded_phenotype_files : Path('/breeders/phenotyping/delete/') Args
 		DELETE FROM nd_experiment where nd_experiment_id IN (SELECT nd_experiment_id FROM nd_experiment_ids_to_delete);
 		DISCARD TEMP;
 	";
-	my $h = $dbh->prepare($delete_md_files_q);
+	$h = $dbh->prepare($delete_md_files_q);
 	$h->execute($decoded);
 	print STDERR "Deleted all phenotype datapoints saved in the database that originated from the file. ".$h->rows." \n";
 
