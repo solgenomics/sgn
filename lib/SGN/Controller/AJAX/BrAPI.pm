@@ -2190,6 +2190,70 @@ sub observationvariable_ontologies_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+sub observationvariable_search : Chained('brapi') PathPart('variables-search') Args(0) : ActionClass('REST') { }
+
+sub observationvariable_search_POST {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	_observationvariable_search_process($self, $c);
+}
+
+sub observationvariable_search_GET {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	_observationvariable_search_process($self, $c);
+}
+
+sub _observationvariable_search_process {
+	my $self = shift;
+	my $c = shift;
+
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
+	my $brapi_package_result = $brapi_module->observation_variable_search({
+		observationvariable_db_ids => $clean_inputs->{observationVariableDbIds},
+		ontology_db_names => $clean_inputs->{ontologyXrefs},
+		ontology_dbxref_terms => $clean_inputs->{ontologyDbIds},
+		method_db_ids => $clean_inputs->{methodDbIds},
+		scale_db_ids => $clean_inputs->{scaleDbIds},
+		observationvariable_names => $clean_inputs->{names},
+		observationvariable_datatypes => $clean_inputs->{datatypes},
+		observationvariable_classes => $clean_inputs->{traitClasses},
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub observationvariable_list : Chained('brapi') PathPart('variables') Args(0) : ActionClass('REST') { }
+
+sub observationvariable_list_GET {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
+	my $brapi_package_result = $brapi_module->observation_variable_search();
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub observationvariable_detail : Chained('brapi') PathPart('variables') Args(1) : ActionClass('REST') { }
+
+sub observationvariable_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my $trait_id = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
+	my $brapi_package_result = $brapi_module->observation_variable_detail(
+		$trait_id
+	);
+	_standard_response_construction($c, $brapi_package_result);
+}
 
 sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) {
     my $self = shift;

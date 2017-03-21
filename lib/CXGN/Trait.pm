@@ -84,7 +84,7 @@ has 'db'   => ( isa => 'Str',
 		    my $rs = $self->bcs_schema()->resultset("Cv::Cvterm")->search( { cvterm_id => $self->cvterm_id()})->search_related("dbxref")->search_related("db");
 		    if ($rs->count() == 1) { 
 			my $db_name =  $rs->first()->get_column("name");
-			print STDERR "DBNAME = $db_name\n";
+			#print STDERR "DBNAME = $db_name\n";
 			return $db_name;
 		    }
 		    return "";
@@ -101,14 +101,14 @@ has 'db_id'   => (
 		my $rs = $self->cvterm->search_related("dbxref");
 		if ($rs->count() == 1) {
 			my $db_id =  $rs->first()->get_column("db_id");
-			print STDERR "DBID = $db_id\n";
+			#print STDERR "DBID = $db_id\n";
 			return $db_id;
 		}
 		return "";
 	}
 );
 
-has 'definition' => (isa => 'Str',
+has 'definition' => (isa => 'Maybe[Str]',
 		     is => 'ro',
 		     lazy => 1,
 		     default => sub { 

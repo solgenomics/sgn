@@ -67,6 +67,10 @@ sub calls {
 		['maps/id/positions/id', ['json'], ['GET'] ],
 		['locations', ['json'], ['GET'] ],
 		['variables/datatypes', ['json'], ['GET'] ],
+		['ontologies', ['json'], ['GET'] ],
+		['variables', ['json'], ['GET'] ],
+		['variables/id', ['json'], ['GET'] ],
+		['variables-search', ['json'], ['GET','POST'] ],
 	);
 
 	my @call_search;
