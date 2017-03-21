@@ -81,7 +81,8 @@ sub patch {
 		],
 		'cvterm_property' => [
 			'uri',
-			'date determined',
+			#'date determined',
+			'datatype'
 		],
 		'geolocations_property' => [
 			'country',

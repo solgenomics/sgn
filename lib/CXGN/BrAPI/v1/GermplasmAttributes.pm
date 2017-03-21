@@ -89,7 +89,7 @@ sub germplasm_attributes_list {
             description => $attribute_hash{$_}->[4],
             attributeCategoryDbId => $attribute_hash{$_}->[0],
             attributeCategoryName => $attribute_hash{$_}->[1],
-            datatype => $prophash->{'date determined'} ? join ',', @{$prophash->{'date determined'}} : '',
+            datatype => $prophash->{'datatype'} ? join ',', @{$prophash->{'datatype'}} : '',
             values => $attribute_hash{$_}->[5]
         };
     }
@@ -188,7 +188,7 @@ sub germplasm_attributes_germplasm_detail {
             attributeCategoryDbId => $attributeCategoryDbId,
             attributeCategoryName => $attributeCategoryName,
             value => $value,
-            dateDetermined => $prophash->{'date determined'} ? join ',', @{$prophash->{'date determined'}} : '',
+            dateDetermined => '',
         };
     }
     my $start = $page_size*$page;
