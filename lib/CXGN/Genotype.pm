@@ -191,48 +191,56 @@ sub compare_parental_genotypes {
     foreach my $m (keys %$self_markers) { 
 	
 	my @matrix; #mom, dad, self, 1=possible 0=impossible
-	$matrix[ 0 ][ 0 ][ 0 ] ==1;
-	$matrix[ 0 ][ 0 ][ 1 ] ==0;
-	$matrix[ 0 ][ 0 ][ 2 ] ==0;
-	$matrix[ 0 ][ 1 ][ 0 ] ==1;
-	$matrix[ 0 ][ 1 ][ 1 ] ==1;
-	$matrix[ 0 ][ 1 ][ 2 ] ==0;
-	$matrix[ 0 ][ 2 ][ 1 ] ==1;
-	$matrix[ 0 ][ 2 ][ 0 ] ==1;
-	$matrix[ 0 ][ 2 ][ 2 ] ==0;
+	$matrix[ 0 ][ 0 ][ 0 ] =1;
+	$matrix[ 0 ][ 0 ][ 1 ] =0;
+	$matrix[ 0 ][ 0 ][ 2 ] =0;
+	$matrix[ 0 ][ 1 ][ 0 ] =1;
+	$matrix[ 0 ][ 1 ][ 1 ] =1;
+	$matrix[ 0 ][ 1 ][ 2 ] =0;
+	$matrix[ 0 ][ 2 ][ 1 ] =1;
+	$matrix[ 0 ][ 2 ][ 0 ] =1;
+	$matrix[ 0 ][ 2 ][ 2 ] =0;
 
-	$matrix[ 1 ][ 0 ][ 0 ] ==1;
-	$matrix[ 1 ][ 0 ][ 1 ] ==1;
-	$matrix[ 1 ][ 0 ][ 2 ] ==0;
-	$matrix[ 1 ][ 1 ][ 0 ] ==1;
-	$matrix[ 1 ][ 1 ][ 1 ] ==1;
-	$matrix[ 1 ][ 1 ][ 2 ] ==0;
-	$matrix[ 1 ][ 2 ][ 0 ] ==0;
-	$matrix[ 1 ][ 2 ][ 1 ] ==1;
-	$matrix[ 1 ][ 2 ][ 2 ] ==1;
+	$matrix[ 1 ][ 0 ][ 0 ] =1;
+	$matrix[ 1 ][ 0 ][ 1 ] =1;
+	$matrix[ 1 ][ 0 ][ 2 ] =0;
+	$matrix[ 1 ][ 1 ][ 0 ] =-1;
+	$matrix[ 1 ][ 1 ][ 1 ] =-1;
+	$matrix[ 1 ][ 1 ][ 2 ] =0;
+	$matrix[ 1 ][ 2 ][ 0 ] =0;
+	$matrix[ 1 ][ 2 ][ 1 ] =1;
+	$matrix[ 1 ][ 2 ][ 2 ] =1;
 	
-
-	$matrix[ 2 ][ 0 ][ 0 ] == 0;
-	$matrix[ 2 ][ 0 ][ 1 ] == 1;
-	$matrix[ 2 ][ 0 ][ 2 ] == 0;
-	$matrix[ 2 ][ 1 ][ 0 ] == 1;
-        $matrix[ 2 ][ 1 ][ 1 ] == 1;
-	$matrix[ 2 ][ 1 ][ 2 ] == 1;
-	$matrix[ 2 ][ 2 ][ 0 ] == 0;
-	$matrix[ 2 ][ 2 ][ 1 ] == 0;
-	$matrix[ 2 ][ 2 ][ 2 ] == 1;
+	$matrix[ 2 ][ 0 ][ 0 ] = 0;
+	$matrix[ 2 ][ 0 ][ 1 ] = 1;
+	$matrix[ 2 ][ 0 ][ 2 ] = 0;
+	$matrix[ 2 ][ 1 ][ 0 ] = 1;
+        $matrix[ 2 ][ 1 ][ 1 ] = 1;
+	$matrix[ 2 ][ 1 ][ 2 ] = 1;
+	$matrix[ 2 ][ 2 ][ 0 ] = 0;
+	$matrix[ 2 ][ 2 ][ 1 ] = 0;
+	$matrix[ 2 ][ 2 ][ 2 ] = 1;
 
 	print STDERR "checking $mom_markers->{$m} and $dad_markers->{$m} against $self_markers->{$m}\n";
-	if ($matrix[ $mom_markers->{$m}]->[ $dad_markers->{$m}]->[ $self_markers->{$m}] == 1) { 
-	    $concordant++;
-	    print STDERR "Plausible. \n";
-	}
-	else { 
-	    $non_concordant++;
-	    print STDERR "NOT Plausible. \n";
+
+	if (defined($mom_markers->{$m}) && defined($dad_markers->{$m}) && defined($self_markers->{$m})) { 
+	    
+	    my $score = $matrix[ $mom_markers->{$m}]->[ $dad_markers->{$m}]->[ $self_markers->{$m}];
+	    if ($score == 1) { 
+		$concordant++;
+		print STDERR "Plausible. \n";
+	    }
+	    elsif ($score == -1)  { 
+		$non_informative++;
+	    }
+	    else { 
+		
+		$non_concordant++;
+		print STDERR "NOT Plausible. \n";
+	    }
 	}
     }
-    return ($concordant, $non_concordant);
+    return ($concordant, $non_concordant, $non_informative);
 }
 
 

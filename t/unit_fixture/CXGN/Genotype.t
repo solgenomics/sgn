@@ -49,9 +49,9 @@ my $gts = CXGN::Genotype::Search->new({
 
 my @genotypes = $gts->get_genotype_info_as_genotype_objects();
 
-my ($concordant, $discordant) = $genotypes[0]->compare_parental_genotypes($genotypes[1], $genotypes[2]);
+my ($concordant, $discordant, $non_informative) = $genotypes[0]->compare_parental_genotypes($genotypes[1], $genotypes[2]);
 
-print STDERR "Concordant markers: $concordant Not concordant: $discordant\n";
+print STDERR "Concordant markers: $concordant Not concordant: $discordant Not ifnormative: $non_informative\n";
 
 
 
