@@ -75,8 +75,6 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
     $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
     $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
     $c->stash->{session_token} = $session_token;
-    $c->stash->{current_page} = $page;
-    $c->stash->{page_size} = $page_size;
 
 	$c->stash->{clean_inputs} = _clean_inputs($c->req->params);
 }
@@ -567,7 +565,7 @@ sub germplasm_detail  : Chained('germplasm_single') PathPart('') Args(0) : Actio
 sub germplasm_detail_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
 
     $c->stash->{rest} = {status=>$status};
@@ -1027,7 +1025,7 @@ sub germplasm_pedigree : Chained('germplasm_single') PathPart('pedigree') Args(0
 sub germplasm_pedigree_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
 
     $c->stash->{rest} = {status=>$status};
@@ -1094,7 +1092,7 @@ sub germplasm_markerprofile : Chained('germplasm_single') PathPart('markerprofil
 sub germplasm_markerprofile_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
 
     $c->stash->{rest} = {status=>$status};
@@ -1275,7 +1273,7 @@ sub genotype_fetch : Chained('markerprofiles_single') PathPart('') Args(0) : Act
 sub genotype_fetch_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
 
     $c->stash->{rest} = {status=>$status};
@@ -1427,7 +1425,7 @@ sub programs_list : Chained('brapi') PathPart('programs') Args(0) : ActionClass(
 sub programs_list_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
 
     $c->stash->{rest} = {status=>$status};
@@ -1455,7 +1453,7 @@ sub studies_info  : Chained('studies_single') PathPart('') Args(0) : ActionClass
 sub studies_info_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
 
     $c->stash->{rest} = {status => $status};
@@ -1551,7 +1549,7 @@ sub studies_observation_variables : Chained('studies_single') PathPart('observat
 sub studies_observation_variables_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
 
     $c->stash->{rest} = {status => $status};
@@ -1576,7 +1574,7 @@ sub studies_layout : Chained('studies_single') PathPart('layout') Args(0) : Acti
 sub studies_layout_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
 
     $c->stash->{rest} = {status => $status};
@@ -1635,7 +1633,7 @@ sub studies_observations : Chained('studies_single') PathPart('observationUnits'
 sub studies_observations_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
 
     $c->stash->{rest} = {status => $status};
@@ -1695,7 +1693,7 @@ sub studies_table_POST {
     my $self = shift;
     my $c = shift;
     my $trait_id = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
 
     $c->stash->{rest} = {status => $status};
@@ -1772,7 +1770,7 @@ sub studies_observations_granular : Chained('studies_single') PathPart('observat
 sub studies_observations_granular_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
 
     $c->stash->{rest} = {status => $status};
@@ -1911,7 +1909,7 @@ sub traits_list : Chained('brapi') PathPart('traits') Args(0) : ActionClass('RES
 sub traits_list_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
 
     $c->stash->{rest} = {status => $status};
@@ -2006,7 +2004,7 @@ sub maps_list : Chained('brapi') PathPart('maps') Args(0) : ActionClass('REST') 
 sub maps_list_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
 
     $c->stash->{rest} = {status => $status};
@@ -2078,7 +2076,7 @@ sub maps_details : Chained('maps_single') PathPart('') Args(0) : ActionClass('RE
 sub maps_details_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
 
     $c->stash->{rest} = {status => $status};
@@ -2134,7 +2132,7 @@ sub maps_marker_detail : Chained('maps_single') PathPart('positions') Args(0) : 
 sub maps_marker_detail_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
 
     $c->stash->{rest} = {status => $status};
@@ -2180,7 +2178,7 @@ sub locations_list : Chained('brapi') PathPart('locations') Args(0) : ActionClas
 sub locations_list_POST {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c);
     my $status = $c->stash->{status};
 
     $c->stash->{rest} = {status => $status};
@@ -2197,7 +2195,27 @@ sub locations_list_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+sub observationvariable_data_type_list : Chained('brapi') PathPart('variables/datatypes') Args(0) : ActionClass('REST') { }
 
+sub observationvariable_data_type_list_POST {
+    my $self = shift;
+    my $c = shift;
+    #my $auth = _authenticate_user($c);
+    my $status = $c->stash->{status};
+
+    $c->stash->{rest} = {status => $status};
+}
+
+sub observationvariable_data_type_list_GET {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
+	my $brapi_package_result = $brapi_module->observation_variable_data_types();
+	_standard_response_construction($c, $brapi_package_result);
+}
 
 sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) {
     my $self = shift;
