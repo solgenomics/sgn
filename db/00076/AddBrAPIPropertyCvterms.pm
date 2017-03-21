@@ -72,7 +72,7 @@ sub patch {
 			'institute code',
 			'institute name',
 			'biological status of accession code',
-			'country',
+			'country of origin',
 			'type of germplasm storage code',
 			'entry number'
 		],
@@ -84,7 +84,7 @@ sub patch {
 			'date determined',
 		],
 		'geolocations_property' => [
-			#'country',
+			'country',
 			'country code',
 			'abbreviation',
 			'location type'
