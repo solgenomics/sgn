@@ -115,8 +115,8 @@ sub xls {
 	my $ws = $ss->add_worksheet();
 
 	for (my $line=0; $line< scalar(@$data_array); $line++) {
-        $ws->write_row($line, 0, $data_array->[$line]);
-    }
+		$ws->write_row($line, 0, $data_array->[$line]);
+	}
 	$ss ->close();
 	my @datafiles = ($self->absolute_file_uri);
 	return @datafiles;

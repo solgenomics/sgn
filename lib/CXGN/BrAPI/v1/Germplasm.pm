@@ -6,7 +6,7 @@ use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Chado::Stock;
 use CXGN::BrAPI::Pagination;
-use CXGN::BrAPI::ErrorResponse;
+use CXGN::BrAPI::JSONResponse;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -61,6 +61,7 @@ sub germplasm_search {
 	my @germplasm_puis = $search_params->{germplasmPUI} ? @{$search_params->{germplasmPUI}} : ();
 	my $match_method = $search_params->{matchMethod}->[0];
 	my %result;
+	my @data_files;
 
 	if ($match_method && ($match_method ne 'exact' && $match_method ne 'wildcard')) {
 		push @$status, { 'error' => "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters." };
@@ -163,15 +164,8 @@ sub germplasm_search {
 	}
 
 	%result = (data => \@data);
-	push @$status, { 'success' => 'Germplasm-search result constructed' };
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm-search result constructed');
 }
 
 sub germplasm_pedigree_string {
@@ -188,6 +182,7 @@ sub germplasm_detail {
 	my $stock_id = shift;
 	my $status = $self->status;
 	my %result;
+	my @data_files;
 
 	my $verify_id = $self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$stock_id});
 	my $stock = CXGN::Chado::Stock->new($self->bcs_schema(), $stock_id);
@@ -196,8 +191,7 @@ sub germplasm_detail {
 	if ($verify_id) {
 		$total_count = 1;
 	} else {
-		push @$status, { 'error' => 'GermplasmDbId does not exist in the database' };
-		return CXGN::BrAPI::ErrorResponse->return_error($status);
+		return CXGN::BrAPI::JSONResponse->return_error($status, 'GermplasmDbId does not exist in the database');
 	}
 	my $stockprop_hash = $stock->get_stockprop_hash();
 
@@ -232,15 +226,8 @@ sub germplasm_detail {
 		donors=>\@donor_array,
 		acquisitionDate=>'',
 	);
-	push @$status, { 'success' => 'Germplasm-search result constructed' };
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm detail result constructed');
 }
 
 sub germplasm_pedigree {
@@ -257,6 +244,7 @@ sub germplasm_pedigree {
 	}
 
 	my %result;
+	my @data_files;
 	my $total_count = 0;
 	my $s = CXGN::Chado::Stock->new($self->bcs_schema(), $stock_id);
 	if ($s) {
@@ -270,15 +258,8 @@ sub germplasm_pedigree {
 		);
 	}
 
-	push @$status, { 'success' => 'Germplasm-pedigree result constructed' };
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,1,0);
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm pedigree result constructed');
 }
 
 sub germplasm_markerprofiles {
@@ -310,15 +291,9 @@ sub germplasm_markerprofiles {
 		germplasmDbId=>$stock_id,
 		markerProfiles=>\@marker_profiles
 	);
-	push @$status, { 'success' => 'Germplasm-markerprofiles result constructed' };
+	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm markerprofiles result constructed');
 }
 
 

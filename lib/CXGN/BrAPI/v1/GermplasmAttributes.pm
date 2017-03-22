@@ -6,6 +6,7 @@ use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Chado::Stock;
 use CXGN::BrAPI::Pagination;
+use CXGN::BrAPI::JSONResponse;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -85,14 +86,8 @@ sub germplasm_attributes_list {
 
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
 	my %result = (data => $data_window);
-	push @$status, { 'success' => 'Germplasm-attributes list result constructed' };
-	my $response = { 
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	my @data_files;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm-attributes list result constructed');
 }
 
 sub germplasm_attributes_categories_list {
@@ -122,14 +117,8 @@ sub germplasm_attributes_categories_list {
 	}
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
 	my %result = (data => $data_window);
-	push @$status, { 'success' => 'Germplasm-attributes categories list result constructed' };
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	my @data_files;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm-attributes categories list result constructed');
 }
 
 
@@ -183,15 +172,9 @@ sub germplasm_attributes_germplasm_detail {
 		germplasmDbId=>$stock_id,
 		data => \@data
 	);
-	push @$status, { 'success' => 'Germplasm-attributes detail result constructed' };
+	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm-attributes detail result constructed');
 }
 
 sub get_cvtermprop_hash {

@@ -5,6 +5,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use JSON;
 use CXGN::BrAPI::Pagination;
+use CXGN::BrAPI::JSONResponse;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -38,7 +39,7 @@ sub list {
 	my $status = $self->status;
 
 	my $start = $page_size*$page;
-    my $end = $page_size*($page+1)-1;
+	my $end = $page_size*($page+1)-1;
 	my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
 	my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
 	my $total_count = $rs->count;
@@ -84,16 +85,10 @@ sub list {
 		push @data, \%map_info;
 	}
 
-    my %result = (data => \@data);
-	push @$status, { 'success' => 'Maps list result constructed' };
+	my %result = (data => \@data);
+	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Maps list result constructed');
 }
 
 sub detail {
@@ -163,15 +158,8 @@ sub detail {
 		unit => "bp",
 		linkageGroups => $data_window,
 	);
-
-	push @$status, { 'success' => 'Map detail result constructed' };
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	my @data_files;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Maps detail result constructed');
 }
 
 sub positions {
@@ -249,14 +237,8 @@ sub positions {
 	}
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@markers,$page_size,$page);
 	my %result = (data => $data_window);
-	push @$status, { 'success' => 'Map positions result constructed' };
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	my @data_files;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Map positions result constructed');
 }
 
 sub genosort {

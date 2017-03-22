@@ -3,6 +3,7 @@ package CXGN::BrAPI::v1::Crops;
 use Moose;
 use Data::Dumper;
 use CXGN::BrAPI::Pagination;
+use CXGN::BrAPI::JSONResponse;
 
 has 'page_size' => (
 	isa => 'Int',
@@ -36,14 +37,8 @@ sub crops {
 
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@available, $page_size, $page);
 	my %result = (data=>$data_window);
-	push @$status, { 'success' => 'Crops result constructed' };
-	my $response = { 
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	my @data_files;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Crops result constructed');
 }
 
 1;

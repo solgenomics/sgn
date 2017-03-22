@@ -3,6 +3,7 @@ package CXGN::BrAPI::v1::Calls;
 use Moose;
 use Data::Dumper;
 use CXGN::BrAPI::Pagination;
+use CXGN::BrAPI::JSONResponse;
 
 has 'page_size' => (
 	isa => 'Int',
@@ -91,19 +92,13 @@ sub calls {
 	foreach (@$data_window){
 		push @data, {
 			call=>$_->[0],
-			datatype=>$_->[1],
+			datatypes=>$_->[1],
 			methods=>$_->[2]
 		};
 	}
 	my %result = (data=>\@data);
-	push @$status, { 'success' => 'Calls result constructed' };
-	my $response = { 
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	my @data_files;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Calls result constructed');
 }
 
 1;
