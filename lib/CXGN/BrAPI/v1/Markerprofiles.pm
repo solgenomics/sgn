@@ -254,7 +254,7 @@ sub markerprofiles_allelematrix {
 		}
 		%result = (data=>\@scores_seen);
 
-	} elsif ($data_format eq 'tsv' || $data_format eq 'csv') {
+	} elsif ($data_format eq 'tsv' || $data_format eq 'csv' || $data_format eq 'xls') {
 
 		my @header_row;
 		push @header_row, 'markerprofileDbIds';
@@ -280,9 +280,11 @@ sub markerprofiles_allelematrix {
 		}
 		my $file_response = CXGN::BrAPI::FileResponse->new({
 			absolute_file_path => $file_path,
-			absolute_file_uri => $inputs->{main_production_site_url}.$uri
+			absolute_file_uri => $inputs->{main_production_site_url}.$uri,
+			format => $data_format,
+			data => \@data_out
 		});
-		@datafiles = $file_response->tsv_or_csv($data_format, \@data_out);
+		@datafiles = $file_response->get_datafiles();
 	}
 
 	$total_count = scalar(@scores);

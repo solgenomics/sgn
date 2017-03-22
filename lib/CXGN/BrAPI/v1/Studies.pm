@@ -9,6 +9,7 @@ use CXGN::Trial::TrialLayout;
 use CXGN::Trait;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::BrAPI::Pagination;
+use CXGN::BrAPI::FileResponse;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -621,50 +622,24 @@ sub studies_table {
             data=>\@data_window
         );
 
-    } else {
-        # if xls or csv, create tempfile name and place to save it
+	} elsif ($data_format eq 'tsv' || $data_format eq 'csv' || $data_format eq 'xls') {
+		# if xls or csv or tsv, create tempfile name and place to save it
 
-        if ($format eq "csv") {
+		my @data_out;
+		foreach (@data){
+			my @line = split /\t/, $_;
+			push @data_out, \@line;
+		}
 
-            #build csv with column names
-            open(CSV, ">", $file_path) || die "Can't open file $file_path\n";
-                my @header = split /\t/, $data[0];
-                my $num_col = scalar(@header);
-                for (my $line =0; $line< @data; $line++) {
-                    my @columns = split /\t/, $data[$line];
-                    my $step = 1;
-                    for(my $i=0; $i<$num_col; $i++) {
-                        if ($columns[$i]) {
-                            print CSV "\"$columns[$i]\"";
-                        } else {
-                            print CSV "\"\"";
-                        }
-                        if ($step < $num_col) {
-                            print CSV ",";
-                        }
-                        $step++;
-                    }
-                    print CSV "\n";
-                }
-            close CSV;
+		my $file_response = CXGN::BrAPI::FileResponse->new({
+			absolute_file_path => $file_path,
+			absolute_file_uri => $inputs->{main_production_site_url}.$file_uri,
+			format => $format,
+			data => \@data_out
+		});
+		@datafiles = $file_response->get_datafiles();
 
-        } elsif ($format = 'xls') {
-            my $ss = Spreadsheet::WriteExcel->new($file_path);
-            my $ws = $ss->add_worksheet();
-
-            for (my $line =0; $line< @data; $line++) {
-                my @columns = split /\t/, $data[$line];
-                for(my $col = 0; $col<@columns; $col++) {
-                    $ws->write($line, $col, $columns[$col]);
-                }
-            }
-            #$ws->write(0, 0, "$program_name, $location ($year)");
-            $ss ->close();
-        }
-
-		my $data_file_path = $inputs->{main_production_site_url}.$file_uri;
-		push @datafiles, $data_file_path;
-    }
+	}
 	push @$status, { 'success' => 'Studies observations table result constructed' };
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 	my $response = {

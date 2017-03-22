@@ -1343,7 +1343,7 @@ sub allelematrix_search_process {
 	my $format = $clean_inputs->{format}->[0];
 	my $file_path;
 	my $uri;
-	if ($format eq 'tsv' || $format eq 'csv'){
+	if ($format eq 'tsv' || $format eq 'csv' || $format eq 'xls'){
 		my $dir = $c->tempfiles_subdir('download');
 		($file_path, $uri) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$format.'_'.'XXXXX');
 	}
@@ -1672,7 +1672,7 @@ sub studies_table_GET {
 	my $format = $clean_inputs->{format}->[0];
 	my $file_path;
 	my $uri;
-	if ($format eq 'tsv' || $format eq 'csv'){
+	if ($format eq 'tsv' || $format eq 'csv' || $format eq 'xls'){
 		my $dir = $c->tempfiles_subdir('download');
 		my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
 		my $temp_file_name = $time_stamp . "phenotype_download_$format"."_XXXX";
