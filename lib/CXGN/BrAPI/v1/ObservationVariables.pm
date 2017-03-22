@@ -181,11 +181,14 @@ sub observation_variable_search {
 	my $and_where_clause = join ' AND ', @and_wheres;
 
 	my @data;
-	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db using(db_id) JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) $join WHERE $and_where_clause;";
+	my $limit = $page_size;
+	my $offset = $page*$page_size;
+	my $total_count = 0;
+	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db using(db_id) JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) $join WHERE $and_where_clause ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset;";
 	my $sth = $self->bcs_schema->storage->dbh->prepare($q);
 	$sth->execute();
-	while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $accession) = $sth->fetchrow_array()) {
-
+	while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $accession, $count) = $sth->fetchrow_array()) {
+		$total_count = $count;
 		my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
 		my $categories = $trait->categories;
 		my @brapi_categories = split '/', $categories;
@@ -217,17 +220,7 @@ sub observation_variable_search {
 		};
 	}
 
-	my @data_window;
-	my $start = $page_size*$page;
-	my $end = $page_size*($page+1)-1;
-	for( my $i = $start; $i <= $end; $i++ ) {
-		if ($data[$i]) {
-			push @data_window, $data[$i];
-		}
-	}
-
-	my $total_count = scalar(@data);
-	my %result = (data=>\@data_window);
+	my %result = (data=>\@data);
 	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observationvariable search result constructed');

@@ -6,21 +6,10 @@ use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Trait;
 use CXGN::BrAPI::Pagination;
+use CXGN::BrAPI::JSONResponse;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'metadata_schema' => (
-	isa => 'CXGN::Metadata::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'phenome_schema' => (
-	isa => 'CXGN::Phenome::Schema',
 	is => 'rw',
 	required => 1,
 );
@@ -50,45 +39,32 @@ sub list {
 	my $page = $self->page;
 	my $status = $self->status;
 
-	my @trait_ids;
-    my $q = "SELECT trait_id FROM traitsxtrials ORDER BY trait_id;";
-    my $p = $self->bcs_schema()->storage->dbh()->prepare($q);
-    $p->execute();
-    while (my ($cvterm_id) = $p->fetchrow_array()) {
-        push @trait_ids, $cvterm_id;
-    }
+	my $limit = $page_size;
+	my $offset = $page*$page_size;
+	my $total_count = 0;
+	my @data;
+	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db using(db_id) JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) WHERE reltype.name='VARIABLE_OF' ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset;";
+	my $sth = $self->bcs_schema->storage->dbh->prepare($q);
+	$sth->execute();
+	while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $accession, $count) = $sth->fetchrow_array()) {
+		$total_count = $count;
+		my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$cvterm_id});
+		push @data, {
+			traitDbId => $cvterm_id,
+			traitId => $db_name.":".$accession,
+			name => $cvterm_name,
+			description => $cvterm_definition,
+			observationVariables => [
+				$cvterm_name."|".$db_name.":".$accession
+			],
+			defaultValue => $trait->default_value,
+		};
+	}
 
-    my @data;
-	my $start = $page_size*$page;
-	my $end = $page_size*($page+1)-1;
-	my @data_window;
-	for (my $line = $start; $line < $end; $line++) {
-		if ($trait_ids[$line]) {
-			my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$trait_ids[$line]});
-	        push @data_window, {
-	            traitDbId => $trait->cvterm_id,
-	            traitId => $trait->term,
-	            name => $trait->name,
-	            description => $trait->definition,
-	            observationVariables => [
-					$trait->display_name
-				],
-	            defaultValue => $trait->default_value,
-	        };
-		}
-    }
-
-    my $total_count = $p->rows;
-    my %result = (data => \@data_window);
-	push @$status, { 'success' => 'Traits list result constructed' };
+	my %result = (data => \@data);
+	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Traits list result constructed');
 }
 
 sub detail {
@@ -104,25 +80,18 @@ sub detail {
 		$total_count = 1;
 	}
 	my %result = (
-        traitDbId => $trait->cvterm_id,
-        traitId => $trait->term,
-        name => $trait->name,
-        description => $trait->definition,
-        observationVariables => [
+		traitDbId => $trait->cvterm_id,
+		traitId => $trait->term,
+		name => $trait->name,
+		description => $trait->definition,
+		observationVariables => [
 			$trait->display_name
 		],
-        defaultValue => $trait->default_value,
-    );
-
-	push @$status, { 'success' => 'Trait detail result constructed' };
+		defaultValue => $trait->default_value,
+	);
+	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Trait detail result constructed');
 }
 
 1;
