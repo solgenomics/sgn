@@ -43,27 +43,57 @@ while (my $row = $stock_rs->next()) {
 	
 	my $gts = CXGN::Genotype::Search->new( { 
 	    bcs_schema => $schema,
-	    accession_list => [ $row->stock_id, $parents[0]->[0],
-				$parents[1]->[0] ],
+	    accession_list => [ $row->stock_id ],
 	    protocol_id => $protocol_id,
 							    });
 	
-	my @genotypes = $gts->get_genotype_info_as_genotype_objects();
+	my (@self_gts) = $gts->get_genotype_info_as_genotype_objects();
+
+	$gts = CXGN::Genotype::Search->new( { 
+	    bcs_schema => $schema,
+	    accession_list => [ $parents[0]->[0]],
+	    protocol_id => $protocol_id,
+							    });
 	
-	if (@genotypes != 3) { 
-	    print $row->uniquename()."\thas".scalar(@genotypes).". Need 3.\n";
+	my (@mom_gts) = $gts->get_genotype_info_as_genotype_objects();
+
+	$gts = CXGN::Genotype::Search->new( { 
+	    bcs_schema => $schema,
+	    accession_list => [ $parents[1]->[0]],
+	    protocol_id => $protocol_id,
+							    });
+
+	my (@dad_gts) = $gts->get_genotype_info_as_genotype_objects();
+
+	if (! (@self_gts)) { 
+	    print STDERR "Genotype of accession ".$row->uniquename()." not availalbe. Skipping...\n"; 
+	    next;
+	}
+	if (!@mom_gts) { 
+	    print STDERR "Genotype of female parent missing. Skipping.\n";
+	    next;
+	}
+	if (! @dad_gts) { 
+	    print STDERR "Genotype of male parent missing. Skipping.\n";
 	    next;
 	}
 
-	my ($concordant, $discordant, $non_informative) = 
-	    $genotypes[0]->compare_parental_genotypes($genotypes[1], $genotypes[2]);
-	my $score = $concordant / ($concordant + $discordant);
-	push @scores, $score;
-	
-	print  join "\t", map { $_->name() } @genotypes;
-	print "\t$score\n";
+	foreach my $s (@self_gts) { 
+	    foreach my $m (@mom_gts) { 
+		foreach my $d (@dad_gts) { 
+		    my ($concordant, $discordant, $non_informative) = 
+			$s->compare_parental_genotypes($m, $d);
+		    my $score = $concordant / ($concordant + $discordant);
+		    push @scores, $score;
+		    
+		    print  join "\t", map { $_->name() } ($s, $m, $d);
+		    print "\t$score\n";
+		}
+	    }
+	}
     }
 }
 
 $dbh->disconnect();
 
+print STDERR "Done.\n";

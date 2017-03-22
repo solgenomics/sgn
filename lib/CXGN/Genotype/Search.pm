@@ -165,7 +165,7 @@ sub get_genotype_info_as_genotype_objects {
 
     my @genotypes;
     foreach my $d (@$data) { 
-	print STDERR "Processing entry ".$d->{germplasmName}."\n";
+	#print STDERR "Processing entry ".$d->{germplasmName}."\n";
 	my $gt = CXGN::Genotype->new();
 	$gt->id($d->{markerProfileDbId});
 	$gt->name($d->{germplasmName});
