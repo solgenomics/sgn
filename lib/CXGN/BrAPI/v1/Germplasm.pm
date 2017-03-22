@@ -6,6 +6,7 @@ use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Chado::Stock;
 use CXGN::BrAPI::Pagination;
+use CXGN::BrAPI::ErrorResponse;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -196,14 +197,7 @@ sub germplasm_detail {
 		$total_count = 1;
 	} else {
 		push @$status, { 'error' => 'GermplasmDbId does not exist in the database' };
-		my $pagination = CXGN::BrAPI::Pagination->pagination_response(0,1,0);
-		my $response = { 
-			'status' => $status,
-			'pagination' => $pagination,
-			'result' => \%result,
-			'datafiles' => []
-		};
-		return $response;
+		return CXGN::BrAPI::ErrorResponse->return_error($status);
 	}
 	my $stockprop_hash = $stock->get_stockprop_hash();
 

@@ -622,7 +622,7 @@ sub studies_table {
             data=>\@data_window
         );
 
-	} elsif ($data_format eq 'tsv' || $data_format eq 'csv' || $data_format eq 'xls') {
+	} elsif ($format eq 'tsv' || $format eq 'csv' || $format eq 'xls') {
 		# if xls or csv or tsv, create tempfile name and place to save it
 
 		my @data_out;
