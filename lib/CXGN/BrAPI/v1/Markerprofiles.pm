@@ -5,6 +5,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Genotype::Search;
 use JSON;
+use CXGN::BrAPI::FileResponse;
 use CXGN::BrAPI::Pagination;
 
 has 'bcs_schema' => (
@@ -63,32 +64,32 @@ sub markerprofiles_search {
 	}
 
 	my $genotypes_search = CXGN::Genotype::Search->new({
-        bcs_schema=>$self->bcs_schema,
-        accession_list=>\@germplasm_ids,
-        trial_list=>\@study_ids,
-        protocol_id=>$method,
-        offset=>$page_size*$page,
-        limit=>$page_size*($page+1)-1
-    });
-    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
+		bcs_schema=>$self->bcs_schema,
+		accession_list=>\@germplasm_ids,
+		trial_list=>\@study_ids,
+		protocol_id=>$method,
+		offset=>$page_size*$page,
+		limit=>$page_size*($page+1)-1
+	});
+	my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
 
 	my @data;
-    foreach (@$genotypes){
-        push @data, {
-            markerProfileDbId => $_->{markerProfileDbId},
-            germplasmDbId => $_->{germplasmDbId},
-            uniqueDisplayName => $_->{genotypeUniquename},
-            extractDbId => $_->{genotypeUniquename},
-            sampleDbId => $_->{genotypeUniquename},
-            analysisMethod => $_->{analysisMethod},
-            resultCount => $_->{resultCount}
-        };
-    }
+	foreach (@$genotypes){
+		push @data, {
+			markerProfileDbId => $_->{markerProfileDbId},
+			germplasmDbId => $_->{germplasmDbId},
+			uniqueDisplayName => $_->{genotypeUniquename},
+			extractDbId => $_->{genotypeUniquename},
+			sampleDbId => $_->{genotypeUniquename},
+			analysisMethod => $_->{analysisMethod},
+			resultCount => $_->{resultCount}
+		};
+	}
 
-    my %result = (data => \@data);
+	my %result = (data => \@data);
 	push @$status, { 'success' => 'Markerprofiles-search result constructed' };
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = { 
+	my $response = {
 		'status' => $status,
 		'pagination' => $pagination,
 		'result' => \%result,
@@ -114,42 +115,39 @@ sub markerprofiles_detail {
 	}
 
 	my $total_count = 0;
-    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->find(
-        {'genotypeprops.genotypeprop_id' => $genotypeprop_id },
-        {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-         select=> ['genotypeprops.value', 'nd_protocol.name', 'stock.stock_id', 'stock.uniquename', 'genotype.uniquename'],
-         as=> ['value', 'protocol_name', 'stock_id', 'uniquename', 'genotype_uniquename'],
-        }
-    );
+	my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->find(
+		{'genotypeprops.genotypeprop_id' => $genotypeprop_id },
+		{join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
+		select=> ['genotypeprops.value', 'nd_protocol.name', 'stock.stock_id', 'stock.uniquename', 'genotype.uniquename'],
+		as=> ['value', 'protocol_name', 'stock_id', 'uniquename', 'genotype_uniquename'],
+		}
+	);
 
 	my @data;
 	my %result;
-    if ($rs) {
-        my $genotype_json = $rs->get_column('value');
-        my $genotype = JSON::Any->decode($genotype_json);
-        $total_count = scalar keys %$genotype;
+	my $pagination;
+	if ($rs) {
+		my $genotype_json = $rs->get_column('value');
+		my $genotype = JSON::Any->decode($genotype_json);
+		$total_count = scalar keys %$genotype;
 
-        foreach my $m (sort genosort keys %$genotype) {
-            push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}) };
-        }
+		foreach my $m (sort genosort keys %$genotype) {
+			push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}) };
+		}
 
-        my $start = $page_size*$page;
-        my $end = $page_size*($page+1)-1;
-        my @data_window = splice @data, $start, $end;
-
-        %result = (
-            germplasmDbId=>$rs->get_column('stock_id'),
-            uniqueDisplayName=>$rs->get_column('uniquename'),
-            extractDbId=>$rs->get_column('genotype_uniquename'),
-            markerprofileDbId=>$genotypeprop_id,
-            analysisMethod=>$rs->get_column('protocol_name'),
-            #encoding=>"AA,BB,AB",
-            data => \@data_window
-        );
-    }
+		my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
+		%result = (
+			germplasmDbId=>$rs->get_column('stock_id'),
+			uniqueDisplayName=>$rs->get_column('uniquename'),
+			extractDbId=>$rs->get_column('genotype_uniquename'),
+			markerprofileDbId=>$genotypeprop_id,
+			analysisMethod=>$rs->get_column('protocol_name'),
+			#encoding=>"AA,BB,AB",
+			data => $data_window
+		);
+	}
 
 	push @$status, { 'success' => 'Markerprofiles detail result constructed' };
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 	my $response = {
 		'status' => $status,
 		'pagination' => $pagination,
@@ -234,72 +232,60 @@ sub markerprofiles_allelematrix {
 			$unique_markers{$_} = 1;
 		}
 
-        my $json = JSON->new();
-        $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@markerprofile_ids }});
-        while (my $profile = $rs->next()) {
-            my $markers_json = $profile->value();
-            $markers = $json->decode($markers_json);
-            my $genotypeprop_id = $profile->genotypeprop_id();
-            foreach my $m (sort keys %unique_markers) {
-                push @scores, [$m, $genotypeprop_id, $self->convert_dosage_to_genotype($markers->{$m})];
-            }
-        }
-    }
+		my $json = JSON->new();
+		$rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@markerprofile_ids }});
+		while (my $profile = $rs->next()) {
+			my $markers_json = $profile->value();
+			$markers = $json->decode($markers_json);
+			my $genotypeprop_id = $profile->genotypeprop_id();
+			foreach my $m (sort keys %unique_markers) {
+				push @scores, [$m, $genotypeprop_id, $self->convert_dosage_to_genotype($markers->{$m})];
+			}
+		}
+	}
 
-    #print STDERR Dumper \@scores;
+	#print STDERR Dumper \@scores;
 
-    my @scores_seen;
-    if (!$data_format || $data_format eq 'json' ){
+	my @scores_seen;
+	if (!$data_format || $data_format eq 'json' ){
 
-        for (my $n = $page_size*$page; $n< ($page_size*($page+1)-1); $n++) {
-            push @scores_seen, $scores[$n];
-        }
+		for (my $n = $page_size*$page; $n< ($page_size*($page+1)-1); $n++) {
+			push @scores_seen, $scores[$n];
+		}
 		%result = (data=>\@scores_seen);
 
-    } elsif ($data_format eq 'tsv' || $data_format eq 'csv') {
+	} elsif ($data_format eq 'tsv' || $data_format eq 'csv') {
 
-        my @header_row;
-        push @header_row, 'markerprofileDbIds';
-        foreach (@markerprofile_ids){
-            push @header_row, $_;
-        }
+		my @header_row;
+		push @header_row, 'markerprofileDbIds';
+		foreach (@markerprofile_ids){
+			push @header_row, $_;
+		}
 
-        my %markers;
-        foreach (@scores){
-            $markers{$_->[0]}->{$_->[1]} = $_->[2];
-        }
-        #print STDERR Dumper \%markers;
+		my %markers;
+		foreach (@scores){
+			$markers{$_->[0]}->{$_->[1]} = $_->[2];
+		}
+		#print STDERR Dumper \%markers;
 
-        my $delim;
-        if ($data_format eq 'tsv') {
-            $delim = "\t";
-        } elsif ($data_format eq 'csv') {
-            $delim = ",";
-        }
-        open(my $fh, ">", $file_path);
-            print STDERR $file_path."\n";
-            print $fh join("$delim", @header_row),"\n";
-            #print $fh "markerprofileDbIds\t", join($delim, @lines), "\n";
-            foreach (keys %markers) {
-                print $fh $_.$delim;
-                my $count = 1;
-                foreach my $profile_id (@markerprofile_ids) {
-                    print $fh $markers{$_}->{$profile_id};
-                    if ($count < scalar(@markerprofile_ids)){
-                        print $fh $delim;
-                    }
-                    #print $fh .join("$delim", @{$_}),"\n";
-                    $count++;
-                }
-                print $fh "\n";
-            }
+		my @data_out;
+		push @data_out, \@header_row;
+		foreach (keys %markers){
+			my @data_row;
+			push @data_row, $_;
+			foreach my $profile_id (@markerprofile_ids) {
+				push @data_row, $markers{$_}->{$profile_id};
+			}
+			push @data_out, \@data_row;
+		}
+		my $file_response = CXGN::BrAPI::FileResponse->new({
+			absolute_file_path => $file_path,
+			absolute_file_uri => $inputs->{main_production_site_url}.$uri
+		});
+		@datafiles = $file_response->tsv_or_csv($data_format, \@data_out);
+	}
 
-        close $fh;
-        $data_file_path = $inputs->{main_production_site_url}.$uri;
-		push @datafiles, $data_file_path;
-    }
-
-    $total_count = scalar(@scores);
+	$total_count = scalar(@scores);
 	push @$status, { 'success' => 'Markerprofiles allelematrix result constructed' };
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 	my $response = {
