@@ -36,12 +36,11 @@ my $stock_rs = $schema->resultset("Stock::Stock")->search( { type_id => $accessi
 my @scores;
 
 while (my $row = $stock_rs->next()) { 
-    print STDERR "Processing accession ".$row->uniquename()."\n";
     my $stock = CXGN::Chado::Stock->new($schema, $row->stock_id());
     my @parents = $stock->get_direct_parents();
     
     if (@parents == 2) { 
-	print STDERR "has two parents in the database...\n";
+	
 	my $gts = CXGN::Genotype::Search->new( { 
 	    bcs_schema => $schema,
 	    accession_list => [ $row->stock_id, $parents[0]->[0],
@@ -52,16 +51,17 @@ while (my $row = $stock_rs->next()) {
 	my @genotypes = $gts->get_genotype_info_as_genotype_objects();
 	
 	if (@genotypes != 3) { 
-	    print STDERR "There are ".scalar(@genotypes).". Need 3.\n";
+	    print $row->uniquename()."\thas".scalar(@genotypes).". Need 3.\n";
 	    next;
 	}
-	    
+
 	my ($concordant, $discordant, $non_informative) = 
 	    $genotypes[0]->compare_parental_genotypes($genotypes[1], $genotypes[2]);
 	my $score = $concordant / ($concordant + $discordant);
 	push @scores, $score;
 	
-	print STDERR "Score: $score\n";
+	print  join "\t", map { $_->name() } @genotypes;
+	print "\t$score\n";
     }
 }
 
