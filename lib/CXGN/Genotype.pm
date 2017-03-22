@@ -221,14 +221,14 @@ sub compare_parental_genotypes {
 	$matrix[ 2 ][ 2 ][ 1 ] = 0;
 	$matrix[ 2 ][ 2 ][ 2 ] = 1;
 
-	print STDERR "checking $mom_markers->{$m} and $dad_markers->{$m} against $self_markers->{$m}\n";
+	#print STDERR "checking $mom_markers->{$m} and $dad_markers->{$m} against $self_markers->{$m}\n";
 
 	if (defined($mom_markers->{$m}) && defined($dad_markers->{$m}) && defined($self_markers->{$m})) { 
 	    
-	    my $score = $matrix[ $mom_markers->{$m}]->[ $dad_markers->{$m}]->[ $self_markers->{$m}];
+	    my $score = $matrix[ Math::Round($mom_markers->{$m})]->[ Math::Round($dad_markers->{$m})]->[ Math::Round($self_markers->{$m})];
 	    if ($score == 1) { 
 		$concordant++;
-		print STDERR "Plausible. \n";
+	#	print STDERR "Plausible. \n";
 	    }
 	    elsif ($score == -1)  { 
 		$non_informative++;
@@ -236,7 +236,7 @@ sub compare_parental_genotypes {
 	    else { 
 		
 		$non_concordant++;
-		print STDERR "NOT Plausible. \n";
+	#	print STDERR "NOT Plausible. \n";
 	    }
 	}
     }
