@@ -225,7 +225,7 @@ sub compare_parental_genotypes {
 
 	if (defined($mom_markers->{$m}) && defined($dad_markers->{$m}) && defined($self_markers->{$m})) { 
 	    
-	    my $score = $matrix[ Math::Round($mom_markers->{$m})]->[ Math::Round($dad_markers->{$m})]->[ Math::Round($self_markers->{$m})];
+	    my $score = $matrix[ round($mom_markers->{$m})]->[ round($dad_markers->{$m})]->[ round($self_markers->{$m})];
 	    if ($score == 1) { 
 		$concordant++;
 	#	print STDERR "Plausible. \n";
