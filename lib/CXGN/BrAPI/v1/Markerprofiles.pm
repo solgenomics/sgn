@@ -7,6 +7,7 @@ use CXGN::Genotype::Search;
 use JSON;
 use CXGN::BrAPI::FileResponse;
 use CXGN::BrAPI::Pagination;
+use CXGN::BrAPI::JSONResponse;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -87,15 +88,9 @@ sub markerprofiles_search {
 	}
 
 	my %result = (data => \@data);
-	push @$status, { 'success' => 'Markerprofiles-search result constructed' };
+	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Markerprofiles-search result constructed');
 }
 
 sub markerprofiles_detail {
@@ -125,6 +120,7 @@ sub markerprofiles_detail {
 
 	my @data;
 	my %result;
+	my @data_files;
 	my $pagination;
 	if ($rs) {
 		my $genotype_json = $rs->get_column('value');
@@ -147,14 +143,7 @@ sub markerprofiles_detail {
 		);
 	}
 
-	push @$status, { 'success' => 'Markerprofiles detail result constructed' };
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Markerprofiles detail result constructed');
 }
 
 sub markerprofiles_methods {
@@ -173,15 +162,9 @@ sub markerprofiles_methods {
 		};
 	}
 	my %result = (data => \@data);
-	push @$status, { 'success' => 'Markerprofiles methods result constructed' };
+	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Markerprofiles methods result constructed');
 }
 
 sub markerprofiles_allelematrix {
@@ -204,8 +187,7 @@ sub markerprofiles_allelematrix {
 		push @$status, { 'error' => 'The following parameters are not implemented: expandHomozygotes, unknownString, sepPhased, sepUnphased' };
 	}
 
-	my @datafiles;
-	my $data_file_path;
+	my @data_files;
 	my %result;
 
 	if ($data_format ne 'json' && $data_format ne 'tsv' && $data_format ne 'csv') {
@@ -284,19 +266,12 @@ sub markerprofiles_allelematrix {
 			format => $data_format,
 			data => \@data_out
 		});
-		@datafiles = $file_response->get_datafiles();
+		@data_files = $file_response->get_datafiles();
 	}
 
 	$total_count = scalar(@scores);
-	push @$status, { 'success' => 'Markerprofiles allelematrix result constructed' };
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => \@datafiles
-	};
-	return $response;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Markerprofiles allelematrix result constructed');
 }
 
 

@@ -5,21 +5,10 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::BrAPI::Pagination;
+use CXGN::BrAPI::JSONResponse;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'metadata_schema' => (
-	isa => 'CXGN::Metadata::Schema',
-	is => 'rw',
-	required => 1,
-);
-
-has 'phenome_schema' => (
-	isa => 'CXGN::Phenome::Schema',
 	is => 'rw',
 	required => 1,
 );
@@ -68,33 +57,22 @@ sub programs_list {
 			push @available, $_;
 		}
 	}
-	my $total_count = scalar(@available);
+	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@available, $page_size, $page);
 	my @data;
-	my $start = $page_size*$page;
-	my $end = $page_size*($page+1)-1;
-	for( my $i = $start; $i <= $end; $i++ ) {
-		if ($available[$i]) {
-			my $prop_hash = $self->get_projectprop_hash($available[$i]->[0]);
-			push @data, {
-				programDbId=>$available[$i]->[0],
-				name=>$available[$i]->[1],
-				abbreviation=>$available[$i]->[1],
-				objective=>$available[$i]->[2],
-				leadPerson=> $prop_hash->{sp_person_id} ? join ',', @{$prop_hash->{sp_person_id}} : '',
-			};
-		}
+	my @data_files;
+	foreach (@$data_window){
+		my $prop_hash = $self->get_projectprop_hash($_->[0]);
+		push @data, {
+			programDbId=>$_->[0],
+			name=>$_->[1],
+			abbreviation=>$_->[1],
+			objective=>$_->[2],
+			leadPerson=> $prop_hash->{sp_person_id} ? join ',', @{$prop_hash->{sp_person_id}} : '',
+		};
 	}
 
 	my %result = (data=>\@data);
-	push @$status, { 'success' => 'Program list result constructed' };
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = { 
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Program list result constructed');
 }
 
 

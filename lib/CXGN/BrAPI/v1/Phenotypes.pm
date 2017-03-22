@@ -7,6 +7,7 @@ use CXGN::Trial;
 use CXGN::Trait;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::BrAPI::Pagination;
+use CXGN::BrAPI::JSONResponse;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -140,15 +141,9 @@ sub search {
 		}
 	}
 	my %result = (data=>\@data_window);
-	push @$status, { 'success' => 'Studies observations result constructed' };
+	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies observations result constructed');
 }
 
 1;

@@ -5,6 +5,7 @@ use Data::Dumper;
 use JSON;
 use CXGN::Trait;
 use CXGN::BrAPI::Pagination;
+use CXGN::BrAPI::JSONResponse;
 
 has 'bcs_schema' => (
 	isa => 'Bio::Chado::Schema',
@@ -51,15 +52,9 @@ sub observation_levels {
 
 	my $total_count = scalar(@available);
 	my %result = (data=>\@data);
-	push @$status, { 'success' => 'Observation Levels result constructed' };
+	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = { 
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observation Levels result constructed');
 }
 
 sub observation_variable_data_types {
@@ -87,15 +82,9 @@ sub observation_variable_data_types {
 
 	my $total_count = scalar(@available);
 	my %result = (data=>\@data);
-	push @$status, { 'success' => 'Observation variable data types result constructed' };
+	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observation variable data types result constructed');
 }
 
 sub observation_variable_ontologies {
@@ -128,26 +117,10 @@ sub observation_variable_ontologies {
 		}
 	}
 
-	my @data;
-	my $start = $page_size*$page;
-	my $end = $page_size*($page+1)-1;
-	for( my $i = $start; $i <= $end; $i++ ) {
-		if ($available[$i]) {
-			push @data, $available[$i];
-		}
-	}
-
-	my $total_count = scalar(@available);
-	my %result = (data=>\@data);
-	push @$status, { 'success' => 'Ontologies result constructed' };
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@available,$page_size,$page);
+	my %result = (data=>$data_window);
+	my @data_files;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Ontologies result constructed');
 }
 
 sub observation_variable_search {
@@ -255,16 +228,9 @@ sub observation_variable_search {
 
 	my $total_count = scalar(@data);
 	my %result = (data=>\@data_window);
-	push @$status, { 'success' => 'Observationvariable search result constructed' };
+	my @data_files;
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
-
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observationvariable search result constructed');
 }
 
 sub observation_variable_detail {
@@ -275,6 +241,7 @@ sub observation_variable_detail {
 	my $status = $self->status;
 
 	my %result;
+	my @data_files;
 	my $total_count = 0;
 	my $trait = CXGN::Trait->new({bcs_schema=>$self->bcs_schema, cvterm_id=>$trait_id});
 	if ($trait->display_name){
@@ -308,15 +275,8 @@ sub observation_variable_detail {
 		);
 	}
 	$total_count = 1;
-	push @$status, { 'success' => 'Observationvariable detail result constructed' };
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
-	my $response = {
-		'status' => $status,
-		'pagination' => $pagination,
-		'result' => \%result,
-		'datafiles' => []
-	};
-	return $response;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observationvariable detail result constructed');
 }
 
 
