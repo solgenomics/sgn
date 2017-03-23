@@ -267,11 +267,11 @@ sub get_all_locations {
         my $abbreviation = '';
 
         while (my $sp = $loc_props->next()) {
-            if ($sp->get_column('cvterm_name') eq 'country') {
+            if ($sp->get_column('cvterm_name') eq 'country_name') {
                 $country = $sp->get_column('value');
-            } elsif ($sp->get_column('cvterm_name') eq 'country code') {
+            } elsif ($sp->get_column('cvterm_name') eq 'country_code') {
                 $country_code = $sp->get_column('value');
-            } elsif ($sp->get_column('cvterm_name') eq 'location type') {
+            } elsif ($sp->get_column('cvterm_name') eq 'location_type') {
                 $location_type = $sp->get_column('value');
             } elsif ($sp->get_column('cvterm_name') eq 'abbreviation') {
                 $abbreviation = $sp->get_column('value');

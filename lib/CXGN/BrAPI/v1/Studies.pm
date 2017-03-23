@@ -69,10 +69,11 @@ sub seasons {
 
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@sorted_years, $page_size, $page);
 	foreach (@$data_window){
+		my ($year, $season) = split '|', $_->[0];
 		push @data, {
 			seasonsDbId=>$_->[1],
-			season=>$_->[0],
-			year=>$_->[0]
+			season=>$season,
+			year=>$year
 		};
 	}
 	my %result = (data=>\@data);

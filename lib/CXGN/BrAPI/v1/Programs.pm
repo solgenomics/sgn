@@ -62,12 +62,22 @@ sub programs_list {
 	my @data_files;
 	foreach (@$data_window){
 		my $prop_hash = $self->get_projectprop_hash($_->[0]);
+		my @sp_persons = $prop_hash->{sp_person_id} ? @{$prop_hash->{sp_person_id}} : ();
+		my @sp_person_names;
+		my $q = "SELECT username FROM sgn_people.sp_person where sp_person_id = ?;";
+		my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+		foreach (@sp_persons){
+			$h->execute($_);
+			while (my ($username) = $h->fetchrow_array()) {
+				push @sp_person_names, $username;
+			}
+		}
 		push @data, {
 			programDbId=>$_->[0],
 			name=>$_->[1],
-			abbreviation=>$_->[1],
+			abbreviation=>$prop_hash->{breeding_program_abbreviation} ? join ',', @{$prop_hash->{breeding_program_abbreviation}} : '',,
 			objective=>$_->[2],
-			leadPerson=> $prop_hash->{sp_person_id} ? join ',', @{$prop_hash->{sp_person_id}} : '',
+			leadPerson=> join ',', @sp_person_names,
 		};
 	}
 

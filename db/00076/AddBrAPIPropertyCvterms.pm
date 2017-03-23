@@ -78,7 +78,8 @@ sub patch {
 			'acquisition date'
 		],
 		'project_property' => [
-			'active'
+			'active',
+			'breeding_program_abbreviation'
 		],
 		'cvterm_property' => [
 			'uri',
@@ -87,10 +88,19 @@ sub patch {
 			'code'
 		],
 		'geolocations_property' => [
-			'country',
-			'country code',
+			'country_name',
+			'country_code',
 			'abbreviation',
-			'location type'
+			'location_type',
+			'annual_total_precipitation',
+			'continent',
+			'annual_mean_temperature',
+			'adm1',
+			'adm2',
+			'adm3',
+			'local_name',
+			'region',
+			'alternative_name'
 		],
 		'organism_property' => [
 			'species authority',
