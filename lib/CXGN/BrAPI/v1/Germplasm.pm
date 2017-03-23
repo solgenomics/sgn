@@ -5,6 +5,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Chado::Stock;
+use CXGN::Chado::Organism;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 
@@ -122,7 +123,7 @@ sub germplasm_search {
 	}
 
 	push @join_params, 'organism';
-	my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, {join=>\@join_params, '+select'=>['organism.genus', 'organism.species', 'organism.common_name'], '+as'=>['genus','species','common_name'], order_by=>'me.uniquename'} );
+	my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, {join=>\@join_params, '+select'=>['organism.organism_id', 'organism.genus', 'organism.species', 'organism.common_name'], '+as'=>['organism_id', 'genus','species','common_name'], order_by=>'me.uniquename'} );
 
 	my @data;
 	if ($rs) {
@@ -130,6 +131,7 @@ sub germplasm_search {
 		my $rs_slice = $rs->slice($page_size*$page, $page_size*($page+1)-1);
 		while (my $stock = $rs_slice->next()) {
 			my $stockprop_hash = CXGN::Chado::Stock->new($self->bcs_schema, $stock->stock_id)->get_stockprop_hash();
+			my $organismprop_hash = CXGN::Chado::Organism->new($self->bcs_schema, $stock->get_column('organism_id'))->get_organismprop_hash();
 			my @donor_array;
 			my $donor_accessions = $stockprop_hash->{'donor'} ? $stockprop_hash->{'donor'} : [];
 			my $donor_institutes = $stockprop_hash->{'donor institute'} ? $stockprop_hash->{'donor institute'} : [];
@@ -154,11 +156,11 @@ sub germplasm_search {
 				typeOfGermplasmStorageCode=>$stockprop_hash->{'type of germplasm storage code'} ? join ',', @{$stockprop_hash->{'type of germplasm storage code'}} : '',
 				genus=>$stock->get_column('genus'),
 				species=>$stock->get_column('species'),
-				speciesAuthority=>'',
-				subtaxa=>'',
-				subtaxaAuthority=>'',
+				speciesAuthority=>$organismprop_hash->{'species authority'} ? join ',', @{$organismprop_hash->{'species authority'}} : '',
+				subtaxa=>$organismprop_hash->{'subtaxa'} ? join ',', @{$organismprop_hash->{'subtaxa'}} : '',
+				subtaxaAuthority=>$organismprop_hash->{'subtaxa authority'} ? join ',', @{$organismprop_hash->{'subtaxa authority'}} : '',
 				donors=>\@donor_array,
-				acquisitionDate=>'',
+				acquisitionDate=>$stockprop_hash->{'acquisition date'} ? join ',', @{$stockprop_hash->{'acquisition date'}} : '',,
 			};
 		}
 	}

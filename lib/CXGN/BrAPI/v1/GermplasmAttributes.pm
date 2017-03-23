@@ -73,7 +73,7 @@ sub germplasm_attributes_list {
 		my $prophash = $self->get_cvtermprop_hash($_);
 		push @data, {
 			attributeDbId => $_,
-			code => $attribute_hash{$_}->[3],
+			code => $prophash->{'code'} ? join ',', @{$prophash->{'code'}} : '',
 			uri => $prophash->{'uri'} ? join ',', @{$prophash->{'uri'}} : '',
 			name => $attribute_hash{$_}->[3],
 			description => $attribute_hash{$_}->[4],

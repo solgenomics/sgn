@@ -74,7 +74,8 @@ sub patch {
 			'biological status of accession code',
 			'country of origin',
 			'type of germplasm storage code',
-			'entry number'
+			'entry number',
+			'acquisition date'
 		],
 		'project_property' => [
 			'active'
@@ -82,13 +83,19 @@ sub patch {
 		'cvterm_property' => [
 			'uri',
 			#'date determined',
-			'datatype'
+			'datatype',
+			'code'
 		],
 		'geolocations_property' => [
 			'country',
 			'country code',
 			'abbreviation',
 			'location type'
+		],
+		'organism_property' => [
+			'species authority',
+			'subtaxa',
+			'subtaxa authority',
 		]
 	};
 
