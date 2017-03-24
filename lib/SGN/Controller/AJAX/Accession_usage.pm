@@ -49,18 +49,18 @@ __PACKAGE__->config(
         my $self = shift;
         my $c = shift;
 
-        my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+        my $schema = $c->dbic_schema("Bio::Chado::Schema");
         my $female_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
-
+        my $cross_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
         my $dbh = $schema->storage->dbh();
 
         my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, COUNT (DISTINCT cross_id.stock_id) AS cross_number
                  FROM stock as female_parent JOIN stock_relationship ON (female_parent.stock_id=stock_relationship.subject_id) AND stock_relationship.type_id=?
-                 JOIN stock AS cross_id ON (cross_id.stock_id=stock_relationship.object_id)
+                 JOIN stock AS cross_id ON (cross_id.stock_id=stock_relationship.object_id) AND cross_id.type_id=?
                  GROUP BY female_parent.stock_id ORDER BY cross_number DESC";
 
         my $h = $dbh->prepare($q);
-        $h->execute($female_parent_typeid);
+        $h->execute($female_parent_typeid, $cross_typeid);
 
         my@female_parents =();
         while (my ($female_parent_id, $female_parent_name, $cross_number) = $h->fetchrow_array()){
@@ -76,18 +76,18 @@ __PACKAGE__->config(
       my $self = shift;
       my $c = shift;
 
-      my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+      my $schema = $c->dbic_schema("Bio::Chado::Schema");
       my $male_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
-
+      my $cross_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
       my $dbh = $schema->storage->dbh();
 
       my $q = "SELECT DISTINCT male_parent.stock_id, male_parent.uniquename, COUNT (DISTINCT cross_id.stock_id) AS cross_number
                FROM stock as male_parent JOIN stock_relationship ON (male_parent.stock_id=stock_relationship.subject_id) AND stock_relationship.type_id=?
-               JOIN stock AS cross_id ON (cross_id.stock_id=stock_relationship.object_id)
+               JOIN stock AS cross_id ON (cross_id.stock_id=stock_relationship.object_id) and cross_id.type_id=?
                GROUP BY male_parent.stock_id ORDER BY cross_number DESC";
 
       my $h = $dbh->prepare($q);
-      $h->execute($male_parent_typeid);
+      $h->execute($male_parent_typeid, $cross_typeid);
 
       my@male_parents =();
       while (my ($male_parent_id, $male_parent_name, $cross_number) = $h->fetchrow_array()){
