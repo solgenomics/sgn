@@ -115,4 +115,18 @@ $response = decode_json $mech->content;
 
 is_deeply($response, {'data' => [['<a href="/stock/39691/view">KASESE_TP2013_1000</a>','plot','Solanum lycopersicum','','',''],['<a href="/stock/39493/view">KASESE_TP2013_1001</a>','plot','Solanum lycopersicum','','',''],['<a href="/stock/39819/view">KASESE_TP2013_1002</a>','plot','Solanum lycopersicum','','',''],['<a href="/stock/39311/view">KASESE_TP2013_1003</a>','plot','Solanum lycopersicum','','',''],['<a href="/stock/39632/view">KASESE_TP2013_1004</a>','plot','Solanum lycopersicum','','',''],['<a href="/stock/39846/view">KASESE_TP2013_1005</a>','plot','Solanum lycopersicum','','',''],['<a href="/stock/39919/view">KASESE_TP2013_1006</a>','plot','Solanum lycopersicum','','',''],['<a href="/stock/39836/view">KASESE_TP2013_1007</a>','plot','Solanum lycopersicum','','',''],['<a href="/stock/39350/view">KASESE_TP2013_1008</a>','plot','Solanum lycopersicum','','',''],['<a href="/stock/39322/view">KASESE_TP2013_1009</a>','plot','Solanum lycopersicum','','','']],'recordsTotal' => 1935,'recordsFiltered' => 1935,'draw' => undef}, 'test stock search 15');
 
+#add an organization stockprop to an existing stockprop, then search for stocks with that stockprop. login required to add stockprops
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
+$response = decode_json $mech->content;
+#print STDERR Dumper $response;
+is($response->{'metadata'}->{'status'}->[0]->{'message'}, 'Login Successfull');
+$mech->post_ok('http://localhost:3010/stock/prop/add',["stock_id"=>"38842", "prop"=>"organization_name_1", "prop_type"=>"organization"] );
+$response = decode_json $mech->content;
+#print STDERR Dumper $response;
+$mech->post_ok('http://localhost:3010/ajax/search/stocks',["organization"=>"organization_name_1"] );
+$response = decode_json $mech->content;
+#print STDERR Dumper $response;
+
+is_deeply($response, {'recordsFiltered' => 1,'recordsTotal' => 1,'draw' => undef,'data' => [['<a href="/stock/38842/view">test_accession3</a>','accession','Solanum lycopersicum','test_accession3_synonym1','','organization_name_1']]}, 'test stock search 16');
+
 done_testing();
