@@ -239,9 +239,11 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 &>
 </td></tr>
 <tr><td>
-% if ($locus_id) {
+% if ($locus_id && $person_id) {
   <a href="/phenome/claim_locus_ownership.pl?locus_id=<% $locus_id %>&amp;action=confirm"> [Request editor privileges]</a><br /><br />
-% }
+% } elsif ( $locus_id ) { 
+  <span class="ghosted">[log-in to request editor privileges]</span><br />
+%}
 <& /locus/edits_info.mas, locus=>$locus  &>
         </td></tr>
       </table>
