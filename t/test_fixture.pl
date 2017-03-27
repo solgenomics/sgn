@@ -86,7 +86,7 @@ print STDERR "Done.\n";
 
 my $dump_path = $use_brapi_fixture ? $brapi_fixture : $fixture_path;
 my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || $dump_path;
-print STDERR "# Loading database fixture... $database_fixture_dump";
+print STDERR "# Loading database fixture... $database_fixture_dump ... ";
 system("createdb -h $config->{dbhost} -U postgres -T template0 -E SQL_ASCII --no-password $dbname");
 system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbname > /dev/null");
 
