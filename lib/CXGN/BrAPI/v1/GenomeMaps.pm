@@ -70,15 +70,16 @@ sub list {
 		}
 		my $lg_count = scalar(keys(%chrs));
 
+		my $prophash = $self->get_protocolprop_hash($row->nd_protocol_id());
 		%map_info = (
 			mapDbId =>  $row->nd_protocol_id(),
 			name => $row->name(),
 			species => $lg_row->get_column('description'),
-			type => "physical",
-			unit => "bp",
+			type => $prophash->{'protocol type'} ? join ',', @{$prophash->{'protocol type'}} : '',
+			unit => $prophash->{'protocol unit'} ? join ',', @{$prophash->{'protocol unit'}} : '',
 			markerCount => $marker_count,
-			publishedDate => undef,
-			comments => "",
+			publishedDate => $prophash->{'published date'} ? join ',', @{$prophash->{'published date'}} : '',
+			comments => $prophash->{'protocol comment'} ? join ',', @{$prophash->{'protocol comment'}} : '',
 			linkageGroupCount => $lg_count,
 		);
 
@@ -262,6 +263,16 @@ sub genosort {
     }
 }
 
-
+sub get_protocolprop_hash {
+	my $self = shift;
+	my $nd_protocol_id = shift;
+	my $prop_rs = $self->bcs_schema->resultset('NaturalDiversity::NdProtocolprop')->search({'me.nd_protocol_id' => $nd_protocol_id}, {join=>['type'], +select=>['type.name', 'me.value'], +as=>['name', 'value']});
+	my $prop_hash;
+	while (my $r = $prop_rs->next()){
+		push @{ $prop_hash->{$r->get_column('name')} }, $r->get_column('value');
+	}
+	#print STDERR Dumper $prop_hash;
+	return $prop_hash;
+}
 
 1;

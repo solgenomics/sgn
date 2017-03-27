@@ -106,6 +106,12 @@ sub patch {
 			'species authority',
 			'subtaxa',
 			'subtaxa authority',
+		],
+		'protocol_property' => [
+			'published date',
+			'protocol type',
+			'protocol unit',
+			'protocol comment'
 		]
 	};
 
