@@ -9,6 +9,12 @@ use SGN::Test::WWW::WebDriver;
 my $d = SGN::Test::WWW::WebDriver->new();
 
 
+# check if the page forwards to login page without login
+#
+$d->get_ok('/tools/trial/comparison/list');
+
+sleep(2);
+$d->find_element_ok('unamefield', 'id', "find username input field");
 
 $d->while_logged_in_as('submitter', sub {
     $d->get_ok('/tools');  # something else than the index page, which has a dialog that messes up the test
@@ -51,7 +57,7 @@ sleep(1);
 
     sleep(1);
 
-    $d->get_ok('/tools/trial/comparison');
+    $d->get_ok('/tools/trial/comparison/list');
 
     sleep(1);
 
@@ -85,5 +91,15 @@ sleep(1);
     like($source, qr/254/, "common accession count");
 
 		       });
+
+
+
+
+
+$d->get_ok('/tools/trial/comparison/params?trial_name=Kasese+solgs+trial&trial_name=trial2+NaCRRI&cvterm_id=70666');
+sleep(1);
+
+$d->find_element_ok('result_image', 'id', "find result image");
+
 
 done_testing();
