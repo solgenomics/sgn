@@ -9,7 +9,8 @@ CXGN::Trial::Search - an object to handle searching for trials given criteria
 my $trial_search = CXGN::Trial::Search->new({
     bcs_schema=>$schema,
     location_list=>\@locations,
-    program_list=>\@breeding_programs,
+    program_list=>\@breeding_program_names,
+    program_id_list=>\@breeding_programs_ids,
     year_list=>\@years,
     trial_type_list=>\@trial_types,
     trial_id_list=>\@trial_ids,
@@ -45,8 +46,18 @@ has 'program_list' => (
     is => 'rw',
 );
 
+has 'program_id_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
 has 'location_list' => (
     isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+has 'location_id_list' => (
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
 
@@ -104,9 +115,17 @@ sub search {
     if ($self->program_list){
         %program_list = map { $_ => 1} @{$self->program_list};
     }
+	my %program_id_list;
+    if ($self->program_id_list){
+        %program_id_list = map { $_ => 1} @{$self->program_id_list};
+    }
     my %location_list;
     if ($self->location_list){
         %location_list = map { $_ => 1} @{$self->location_list};
+    }
+	my %location_id_list;
+    if ($self->location_id_list){
+        %location_id_list = map { $_ => 1} @{$self->location_id_list};
     }
     my %year_list;
     if ($self->year_list){
@@ -254,14 +273,23 @@ sub search {
     }
 
     foreach my $t ( sort( keys(%trials) ) ) {
+		no warnings 'uninitialized';
 
         if (scalar(keys %location_list)>0){
             next
                 unless ( exists( $location_list{$trials{$t}->{location}->[1]} ) );
         }
+		if (scalar(keys %location_id_list)>0){
+            next
+                unless ( exists( $location_id_list{$trials{$t}->{location}->[0]} ) );
+        }
         if (scalar(keys %program_list)>0){
             next
                 unless ( exists( $program_list{$trials{$t}->{breeding_program}->[1]} ) );
+        }
+		if (scalar(keys %program_id_list)>0){
+            next
+                unless ( exists( $program_id_list{$trials{$t}->{breeding_program}->[0]} ) );
         }
         if (scalar(keys %year_list)>0){
             next
