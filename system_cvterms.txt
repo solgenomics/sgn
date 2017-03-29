@@ -18,6 +18,19 @@ genotype_property	infinium array					sgn database
 genotype_property	snp genotyping					
 geolocations_property	geolocation address				00052	
 geolocations_property	geolocation year				00052	
+geolocations_property	country_name	From BrAPI	03/27/2017	nm529	00076	
+geolocations_property	country_code	From BrAPI	03/27/2017	nm529	00076	
+geolocations_property	abbreviation	From BrAPI	03/27/2017	nm529	00076	
+geolocations_property	location_type	From BrAPI	03/27/2017	nm529	00076	
+geolocations_property	annual_total_precipitation	From BrAPI	03/27/2017	nm529	00076	
+geolocations_property	continent	From BrAPI	03/27/2017	nm529	00076	
+geolocations_property	annual_mean_temperature	From BrAPI	03/27/2017	nm529	00076	
+geolocations_property	adm1	From BrAPI	03/27/2017	nm529	00076	
+geolocations_property	adm2	From BrAPI	03/27/2017	nm529	00076	
+geolocations_property	adm3	From BrAPI	03/27/2017	nm529	00076	
+geolocations_property	local_name	From BrAPI	03/27/2017	nm529	00076	
+geolocations_property	region	From BrAPI	03/27/2017	nm529	00076	
+geolocations_property	alternative_name	From BrAPI	03/27/2017	nm529	00076	
 list_types	accessions					
 list_types	crosses				00067	
 list_types	dataset				00067	
@@ -63,6 +76,9 @@ nd_experiment_property	number_of_seeds_germinated				00066
 nd_experiment_property	number_of_seeds_planted				00066	
 nd_experiment_property	number_of_viable_seeds				00066	
 organism_property	organism_synonym				00052	
+organism_property	species authority	From BrAPI	03/27/2017	nm529	00076	
+organism_property	subtaxa	From BrAPI	03/27/2017	nm529	00076	
+organism_property	subtaxa authority	From BrAPI	03/27/2017	nm529	00076	
 project_property	breeding_program				00051	
 project_property	data_agreement					
 project_property	design					
@@ -86,6 +102,8 @@ project_property	project_has_plant_entries				00054
 project_property	trial_folder					
 project_property	folder_for_trials	For determining if a folder appears on manage trials page	12/6/16	nm529	00071	
 project_property	folder_for_crosses	For determining if a folder appears on manage crosses page	12/6/16	nm529	00071	
+project_property	active	From BrAPI	03/27/2017	nm529	00076	
+project_property	breeding_program_abbreviation	From BrAPI	03/27/2017	nm529	00076	
 project_relationship	breeding_program_trial_relationship				00051	
 project_type	Advanced Yeld Trials				00052	
 project_type	Advanced Yield Trial					
@@ -112,6 +130,19 @@ stock_property	stock_synonym				00046
 stock_property	T1				00052	
 stock_property	T2				00052	
 stock_property	transgenic				00052	
+stock_property	accession number	From BrAPI	03/27/2017	nm529	00076	
+stock_property	PUI	From BrAPI	03/27/2017	nm529	00076	
+stock_property	donor	From BrAPI	03/27/2017	nm529	00076	
+stock_property	donor institute	From BrAPI	03/27/2017	nm529	00076	
+stock_property	donor PUI	From BrAPI	03/27/2017	nm529	00076	
+stock_property	seed source	From BrAPI	03/27/2017	nm529	00076	
+stock_property	institute code	From BrAPI	03/27/2017	nm529	00076	
+stock_property	institute name	From BrAPI	03/27/2017	nm529	00076	
+stock_property	biological status of accession code	From BrAPI	03/27/2017	nm529	00076	
+stock_property	country of origin	From BrAPI	03/27/2017	nm529	00076	
+stock_property	type of germplasm storage code	From BrAPI	03/27/2017	nm529	00076	
+stock_property	entry number	From BrAPI	03/27/2017	nm529	00076	
+stock_property	acquisition date	From BrAPI	03/27/2017	nm529	00076	
 stock_relationship	cross_relationship				00052	
 stock_relationship	female_parent				00052	
 stock_relationship	male_parent				00052	
@@ -140,4 +171,11 @@ trait_property	trait_minimum
 trial_type	crossing_trial					
 trial_type	genotyping_trial					
 trial_type	phenotyping_trial					
+cvterm_property	uri	From BrAPI	03/27/2017	nm529	00076	
+cvterm_property	datatype	From BrAPI	03/27/2017	nm529	00076	
+cvterm_property	code	From BrAPI	03/27/2017	nm529	00076	
+protocol_property	published date	From BrAPI	03/27/2017	nm529	00076	
+protocol_property	protocol type	From BrAPI	03/27/2017	nm529	00076	
+protocol_property	protocol unit	From BrAPI	03/27/2017	nm529	00076	
+protocol_property	protocol comment	From BrAPI	03/27/2017	nm529	00076	
 project_design? 						suggested to move the trial design names from projectprop.value to projectprop.type_id
