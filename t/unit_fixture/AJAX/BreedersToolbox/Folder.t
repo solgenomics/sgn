@@ -27,7 +27,7 @@ is_deeply($response, {'error' => 'You need to be logged in.'}, 'check not logged
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw"=> "grant_type"=> "password" ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is($response->{'metadata'}->{'status'}->[0]->{'message'}, 'Login Successfull');
+is($response->{'metadata'}->{'status'}->[2]->{'success'}, 'Login Successfull');
 
 $mech->post_ok('http://localhost:3010/ajax/folder/new', [ "folder_name"=> "test_folder_1", "breeding_program_id"=> $breeding_program_id, "folder_for_trials"=>'true', "folder_for_crosses"=>'true' ]);
 $response = decode_json $mech->content;
