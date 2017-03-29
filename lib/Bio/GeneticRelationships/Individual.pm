@@ -119,12 +119,12 @@ sub get_pedigree_string {
     #print STDERR Dumper(\@levels);
 
     if ($level == 1) {
-	print STDERR "Creating pedigree string of level 1...\n";
+	#print STDERR "Creating pedigree string of level 1...\n";
 	$s = $levels[0]->{parent_string};
     }
 
     if ($level == 2) {
-	print STDERR "Creating pedigree string of level 2...\n";
+	#print STDERR "Creating pedigree string of level 2...\n";
 	# find appropriate levels
 	my @appropriate_levels;
 	foreach my $l (@levels) { 

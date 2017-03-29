@@ -9,15 +9,10 @@
 
 <input name="brapi_germplasm_search_germplasmName" id="brapi_germplasm_search_germplasmname" class="form-control" type="text" placeholder="GermplasmName" />
 <input name="brapi_germplasm_search_accessionNumber" id="brapi_germplasm_search_accessionNumber" class="form-control" type="text" placeholder="AccessionNumber" />
-<!--
 <input name="brapi_germplasm_search_germplasmGenus" id="brapi_germplasm_search_germplasmGenus" class="form-control" type="text" placeholder="GermplasmGenus" />
-<input name="brapi_germplasm_search_germplasmSubTaxa" id="brapi_germplasm_search_germplasmSubTaxa" class="form-control" type="text" placeholder="GermplasmSubTaxa" />
 <input name="brapi_germplasm_search_germplasmSpecies" id="brapi_germplasm_search_germplasmSpecies" class="form-control" type="text" placeholder="GermplasmSpecies" />
--->
 <input name="brapi_germplasm_search_germplasmDbId" id="brapi_germplasm_search_germplasmDbId" class="form-control" type="text" placeholder="GermplasmDbId" />
-<!--
 <input name="brapi_germplasm_search_germplasmPUI" id="brapi_germplasm_search_germplasmPUI" class="form-control" type="text" placeholder="GermplasmPUI" />
--->
 <select name="brapi_germplasm_search_matchMethod" id="brapi_germplasm_search_matchMethod" class="form-control" />
     <option value="exact">Exact</option>
     <option value="wildcard">Wildcard. Wildcard allows % or * for multiple characters and ? for single characters.</option>
