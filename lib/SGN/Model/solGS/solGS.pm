@@ -1388,7 +1388,6 @@ sub prediction_pops {
 		  my $stock_genotype_rs = $self->prediction_genotypes_rs($project_id);
 		  my $stocks_count = $stock_genotype_rs->count;         
 		  my $first_geno   =  $stock_genotype_rs->single;
-		  my $obj_name     = $first_geno->get_column('stock_name');
         
 		  if ($stocks_count > 10 &&  $first_geno)             
 		  {  
