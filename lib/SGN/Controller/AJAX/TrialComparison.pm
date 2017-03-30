@@ -65,9 +65,6 @@ sub compare_trials_GET : Args(0) {
     $c->stash->{rest} = { file => $file, png => $png };
 }
 
- #   my $cv_name = $c->config->{trait_ontology_db_name};
-    
-#    my $cv_term_id = SGN::Model::Cvterm->get_cvterm_row($schema, $cvterm, $cv_name);
 sub compare_trial_list : Path('/ajax/trial/compare_list') : ActionClass('REST') {}
 
 sub compare_trial_list_GET : Args(0) { 
@@ -97,7 +94,6 @@ sub compare_trial_list_GET : Args(0) {
 	$c->stash->{rest} = { error => "Error: No cvterm_id provided." };
 	return;
     }
-
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
@@ -141,24 +137,41 @@ sub make_graph {
     my @trial_ids = @_;
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema"); 
-    my $ds = CXGN::Dataset->new( people_schema => $c->dbic_schema("CXGN::People::Schema"), schema => $schema);
+    # my $ds = CXGN::Dataset->new( people_schema => $c->dbic_schema("CXGN::People::Schema"), schema => $schema);
     
-    $ds->trials( [ @trial_ids ]);
-    $ds->traits( [ $cvterm_id ]);
+    # $ds->trials( [ @trial_ids ]);
+    # $ds->traits( [ $cvterm_id ]);
     
-    my $data = $ds->retrieve_phenotypes();
+    # my $data = $ds->retrieve_phenotypes();
 
     $c->tempfiles_subdir("compare_trials");
 
-    print STDERR Dumper($data);
-    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"compare_trials/trial_phenotypes_download_XXXXX");
-    foreach my $line (@$data) { 
-	my @columns = split "\t", $line;
-	my @quoted_columns = map { "\"$_\"" }  @columns;
-	my $csv_line = join ",", @quoted_columns;
-	print $fh $csv_line."\n";
-    }
+    # print STDERR Dumper($data);
+     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"compare_trials/trial_phenotypes_download_XXXXX");
+    # foreach my $line (@$data) { 
+    # 	my @columns = split "\t", $line;
+    # 	my @quoted_columns = map { "\"$_\"" }  @columns;
+    # 	my $csv_line = join ",", @quoted_columns;
+    # 	print $fh $csv_line."\n";
+#}
+    
     my $temppath = $c->config->{basepath}."/".$tempfile;
+
+    my $download = CXGN::Trial::Download->new({
+    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+    trial_list => \@trial_ids,
+    trait_list => [ $cvterm_id ],
+    filename => $temppath,
+    format => 'TrialPhenotypeCSV',
+    data_level => 'plot', #'plot' or 'plant' or 'all'. CXGN::Dataset would default to 'plot'
+    search_type=> 'complete', #'complete' or 'fast'. CXGN::Dataset would default to 'fast'
+});
+my $error = $download->download();
+
+
+
+
+
 
     print STDERR "RUNNING R SCRIPT... ";
     system('R', 'CMD', 'BATCH', '--no-save', '--no-restore', "--args phenotype_file=\"$temppath\" output_file=\"$temppath.png\"", $c->config->{basepath}.'/R/'.'analyze_phenotype.r', $temppath."_output.txt" );
@@ -183,8 +196,8 @@ sub common_traits_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     
-    my $trial_1 = $c->req->param("trial_1");
-    my $trial_2 = $c->req->param("trial_2");
+    #my $trial_1 = $c->req->param("trial_1");
+    #my $trial_2 = $c->req->param("trial_2");
     
     my @trials = $c->req->param("trial_name");
 
@@ -201,9 +214,9 @@ sub common_traits_GET : Args(0) {
     # }
     #else { 
 	#print STDERR "Parsing trial_1 and trial_2...\n";
-	if ( ($trial_1 ne "") && ($trial_2 ne "")) { 
-	    @trials = ($trial_1, $trial_2);
-	}
+    #if ( ($trial_1 ne "") && ($trial_2 ne "")) { 
+#	    @trials = ($trial_1, $trial_2);
+#	}
     #}
     
     $self->get_common_traits($c, @trials);
@@ -222,13 +235,14 @@ sub get_common_traits {
     my $trial_id_rs = $schema->resultset("Project::Project")->search( { name => { in => [ @trials ]} });
     my @trial_ids = map { $_->project_id() } $trial_id_rs->all();
 
-    my $ds = CXGN::Dataset->new( people_schema => $c->dbic_schema("CXGN::People::Schema"), schema => $schema);
+    #my $ds = CXGN::Dataset->new( people_schema => $c->dbic_schema("CXGN::People::Schema"), schema => $schema);
     
     my @trait_lists;
     foreach my $t (@trial_ids) { 
-	$ds->trials( [ $t ]);
-
-	my $traits = $ds->retrieve_traits();
+	#$ds->trials( [ $t ]);
+	my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $t });
+	my $traits = $trial->get_traits_assayed();
+	#my $traits = $ds->retrieve_traits();
 	push @trait_lists, $traits;
     }
     
