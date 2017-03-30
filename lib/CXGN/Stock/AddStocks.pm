@@ -39,6 +39,7 @@ has 'schema' => (
 has 'stocks' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_stocks');
 has 'species' => (isa => 'Str', is => 'rw', predicate => 'has_species');
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name',required => 1,);
+has 'organization_name' => (isa => 'Str', is => 'rw', predicate => 'has_organization_name',required => 0);
 has 'population_name' => (isa => 'Str', is => 'rw', predicate => 'has_population_name');
 has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 has 'phenome_schema' => (
@@ -132,7 +133,10 @@ sub _add_stocks {
 	      subject_id => $stock->stock_id(),
 					 } );
       }
-
+	  if ($self->has_organization_name && $self->get_organization_name){
+		  my $org_stockprop = SGN::Model::Cvterm->get_cvterm_row($schema, 'organization', 'stock_property')->name();
+		  my $organization = $stock->create_stockprops({ $org_stockprop => $self->get_organization_name});
+	  }
       push (@added_stock_ids,  $stock->stock_id());
     }
   };
