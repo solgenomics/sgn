@@ -1371,7 +1371,7 @@ sub get_harvest_date_cvterm_id {
     my $self = shift;
 
     my $harvest_date_cvterm_id;
-    my $harvest_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'harvest_date', 'project_property');
+    my $harvest_date_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project harvest date', 'project_property');
     if ($harvest_date_cvterm) {
         $harvest_date_cvterm_id = $harvest_date_cvterm->cvterm_id();
     }
@@ -1531,7 +1531,7 @@ sub has_plant_entries {
 
  sub get_planting_date_cvterm_id {
      my $self = shift;
-     my $planting_date =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'planting_date', 'project_property');
+     my $planting_date =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project planting date', 'project_property');
 
      return $planting_date->cvterm_id();
 
