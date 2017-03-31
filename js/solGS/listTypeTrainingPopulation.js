@@ -113,8 +113,9 @@ function askJobQueueing (listId) {
  
     var args = createReqArgs(listId);
     var modelId = args.population_id;
-    
-    var page = '/solgs/population/' + modelId;
+      
+    var hostName = window.location.protocol + '//' + window.location.host;    
+    var page     = hostName + '/solgs/population/' + modelId;
 
     solGS.waitPage(page, args);
 
@@ -122,12 +123,12 @@ function askJobQueueing (listId) {
 
 
 function createReqArgs (listId) {
-    
+
     var genoList  = getListTypeTrainingPopDetail(listId);
     var listName  = genoList.name;
     var list      = genoList.list;
     var popId     = getModelId(listId);
-
+ 
     var popType = 'uploaded_reference';
 
     var args = {
