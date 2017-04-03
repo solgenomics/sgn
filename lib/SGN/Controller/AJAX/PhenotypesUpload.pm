@@ -44,7 +44,11 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
+<<<<<<< HEAD
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $has_trait_variable_of) = _prep_upload($c, $file_type);
+=======
     my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id) = _prep_upload($c, $file_type);
+>>>>>>> master
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -53,6 +57,12 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $timestamp = 0;
     if ($timestamp_included) {
         $timestamp = 1;
+    }
+
+    if ($has_trait_variable_of){
+        $has_trait_variable_of = 1;
+    } else {
+        $has_trait_variable_of = 0;
     }
 
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
@@ -66,6 +76,7 @@ sub upload_phenotype_verify_POST : Args(1) {
         has_timestamps=>$timestamp,
         metadata_hash=>$phenotype_metadata,
         image_zipfile_path=>$image_zip,
+        has_trait_variable_of=>$has_trait_variable_of
     );
 
     my $warning_status;
@@ -203,10 +214,11 @@ sub _prep_upload {
     }
 
     my $overwrite_values = $c->req->param('phenotype_upload_overwrite_values');
-    if ($overwrite_values) {
+    my $has_trait_variable_of = $c->req->param('phenotype_upload_has_trait_variable_of');
+    if ($overwrite_values || !$has_trait_variable_of) {
         #print STDERR $user_type."\n";
         if ($user_type ne 'curator') {
-            push @error_status, 'Must be a curator to overwrite values! Please contact us!';
+            push @error_status, 'Must be a curator to overwrite values or upload traits that are not variables! Please contact us!';
             return (\@success_status, \@error_status);
         }
     }
@@ -304,7 +316,11 @@ sub _prep_upload {
         }
     }
 
+<<<<<<< HEAD
+    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $archived_image_zipfile_with_path, $has_trait_variable_of);
+=======
     return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $archived_image_zipfile_with_path, $user_id);
+>>>>>>> master
 }
 
 sub update_plot_phenotype :  Path('/ajax/phenotype/plot_phenotype_upload') : ActionClass('REST') { }

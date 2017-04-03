@@ -45,6 +45,16 @@
                     </div>
                 </div>
 
+% if ($c->user->get_object->get_user_type() eq 'curator') {
+                <div class="form-group">
+                    <label class="col-sm-6 control-label">Enforce Trait "Variable Of" <br/><small>(Visible only to Curators)</small>: </label>
+                    <div class="col-sm-6" >
+                        <input type="checkbox" id="phenotype_upload_has_trait_variable_of" name="phenotype_upload_has_trait_variable_of" checked/>
+                    </div>
+                </div>
+% } else {
+                <input type="hidden" id="phenotype_upload_has_trait_variable_of" name="phenotype_upload_has_trait_variable_of" value='1'/>
+% }
 
                 <div id="upload_phenotype_spreadsheet_verify_status"></div>
                 </div>

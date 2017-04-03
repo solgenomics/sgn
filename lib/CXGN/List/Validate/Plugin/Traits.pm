@@ -12,6 +12,8 @@ sub validate {
     my $self = shift;
     my $schema = shift;
     my $list = shift;
+    my $validate = shift;
+    my $variable_of_option = shift // 1;
 
 #    print STDERR "LIST: ".Data::Dumper::Dumper($list);
 
@@ -47,7 +49,7 @@ sub validate {
                     push @missing, $_;
                 } else {
 
-                    if (!$trait_has_components) {
+                    if (!$trait_has_components && $variable_of_option) {
                         my $rs_var = $rs->search_related('cvterm_relationship_subjects', {'type.name' => 'VARIABLE_OF'}, { 'join' => 'type'});
                         if ($rs_var->count == 0) {
                             push @missing, $_;
