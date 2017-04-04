@@ -210,6 +210,8 @@ sub associate_locus_GET :Args(0) {
     $locus_data =~ m/(.*)\s\((.*)\)/ ;
     my $locus_name = $1;
     my $locus_symbol = $2;
+    #print STDERR "Name: $locus_name Symbol: $locus_symbol Allele: $allele_symbol Default: $is_default\n";
+
     my $schema =  $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
     my ($allele) = $c->dbic_schema('CXGN::Phenome::Schema')
         ->resultset('Locus')
@@ -753,6 +755,35 @@ sub project_year_autocomplete_GET :Args(0) {
     $sth->execute( '%year%' , '%'.$term.'%');
     while  (my ($project_name) = $sth->fetchrow_array ) {
         push @response_list, $project_name;
+    }
+    $c->stash->{rest} = \@response_list;
+}
+
+=head2 stock_organization_autocomplete
+
+Public Path: /ajax/stock/stock_organization_autocomplete
+
+Autocomplete a stock organization. Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+Finds only organization stockprops that are linked with a stock
+
+=cut
+
+sub stock_organization_autocomplete : Local : ActionClass('REST') { }
+
+sub stock_organization_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+
+    my $term = $c->req->param('term');
+    # trim and regularize whitespace
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+    my $q = "SELECT  distinct value FROM stockprop JOIN cvterm on cvterm_id = type_id WHERE cvterm.name = ? AND value ilike ?";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute( 'organization' , '%'.$term.'%');
+    while  (my ($organization_name) = $sth->fetchrow_array ) {
+        push @response_list, $organization_name;
     }
     $c->stash->{rest} = \@response_list;
 }

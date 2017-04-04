@@ -151,10 +151,17 @@ sub upload_phenotype_store_POST : Args(1) {
 
 sub _prep_upload {
     my ($c, $file_type, $schema) = @_;
+	my @success_status;
+	my @error_status;
+
+	my $user = $c->user();
+	if (!$user) {
+		push @error_status, 'Must be logged in to upload phenotypes!';
+		return (\@success_status, \@error_status);
+	}
+
     my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
     my $parser = CXGN::Phenotypes::ParseUpload->new();
-    my @success_status;
-    my @error_status;
     my $timestamp_included;
     my $upload;
     my $subdirectory;
@@ -190,7 +197,7 @@ sub _prep_upload {
         $upload = $c->req->upload('upload_datacollector_phenotype_file_input');
     }
 
-    my $user_type = $c->user()->get_object->get_user_type();
+    my $user_type = $user->get_object->get_user_type();
     if ($user_type ne 'submitter' && $user_type ne 'curator') {
         push @error_status, 'Must have submitter privileges to upload phenotypes! Please contact us!';
         return (\@success_status, \@error_status);
@@ -274,7 +281,7 @@ sub _prep_upload {
     ## Set metadata
     $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
     $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
-    my $operator = $c->user()->get_object()->get_username();
+    my $operator = $user->get_object()->get_username();
     $phenotype_metadata{'operator'} = $operator;
     $phenotype_metadata{'date'} = $timestamp;
 
