@@ -17,7 +17,6 @@ use CXGN::Location::LocationLookup;
 use JSON qw( decode_json );
 use Data::Dumper;
 use Try::Tiny;
-use CXGN::Phenotypes::SearchFactory;
 use File::Slurp qw | read_file |;
 use Spreadsheet::WriteExcel;
 use Time::Piece;
