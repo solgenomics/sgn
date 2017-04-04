@@ -29,8 +29,6 @@ id: UO:0100002
 name: dL
 def: "Deciliter. One-tenth of a Liter." []
 is_a: UO:0100000
-synonym: "cubic decimeter" EXACT [UO]
-synonym: "cubic decimetre" EXACT [UO]
 synonym: "deciliter" EXACT [UO]
 synonym: "decilitre" EXACT [UO]
 
@@ -39,12 +37,6 @@ id: UO:0100003
 name: cL
 def: "Centiliter. One-hundredth of a Liter." []
 is_a: UO:0100000
-synonym: "cc" EXACT [UO]
-synonym: "ccm" EXACT [UO]
-synonym: "cubic centimeter" EXACT [UO]
-synonym: "cubic centimetre" EXACT [UO]
-synonym: "cm^3" EXACT [UO]
-synonym: "cm3" EXACT [UO]
 synonym: "centiliter" EXACT [UO]
 synonym: "centilitre" EXACT [UO]
 
@@ -53,8 +45,12 @@ id: UO:0100004
 name: mL
 def: "Milliliter. One-thousandth of a Liter." []
 is_a: UO:0100000
-synonym: "cubic millimeter" EXACT [UO]
-synonym: "cubic millimetre" EXACT [UO]
+synonym: "cc" EXACT [UO]
+synonym: "ccm" EXACT [UO]
+synonym: "cubic centimeter" EXACT [UO]
+synonym: "cubic centimetre" EXACT [UO]
+synonym: "cm^3" EXACT [UO]
+synonym: "cm3" EXACT [UO]
 synonym: "milliliter" EXACT [UO]
 synonym: "millilitre" EXACT [UO]
 
