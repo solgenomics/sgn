@@ -61,12 +61,12 @@ sub get_cross_info {
 
     my $where_female = "";
     if ($female_parent){
-    $where_female = " WHERE female_parent.uniquename = '$female_parent'";
+    $where_female = " WHERE female_parent.uniquename = ?";
     };
 
     my $where_male ="";
     if ($male_parent){
-      $where_male = " AND male_parent.uniquename = '$male_parent'";
+      $where_male = " AND male_parent.uniquename = ?";
     }
 
    my $q = "SELECT female_parent.stock_id, male_parent.stock_id, cross_entry.stock_id, female_parent.uniquename, male_parent.uniquename, cross_entry.uniquename, stock_relationship1.value
@@ -78,10 +78,18 @@ sub get_cross_info {
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-
-        $h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid);
-
-
+    if ($female_parent && $male_parent) { 
+	$h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid, $female_parent, $male_parent);
+    }
+    elsif ($female_parent) { 
+	$h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid, $female_parent);
+    }
+    elsif ($male_parent) { 
+	$h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid, $male_parent);
+    }
+    else {
+	$h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid);
+    }
 
     my @cross_info = ();
     while (my ($female_parent_id, $male_parent_id, $cross_entry_id, $female_parent_name, $male_parent_name, $cross_name, $cross_type) = $h->fetchrow_array()){
@@ -89,7 +97,6 @@ sub get_cross_info {
     }
 
     return \@cross_info;
-
 }
 
 
