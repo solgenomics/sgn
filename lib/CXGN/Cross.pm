@@ -25,10 +25,14 @@ has 'male_parent' => (isa => 'Str',
   required => 0,
 );
 
-
+sub BUILD { 
+    my $self = shift;
+    my $args = shift;
+}
 
 sub get_cross_relationships {
     my $self = shift;
+    
     my $crs = $self->bcs_schema->resultset("Stock::StockRelationship")->search( { object_id => $self->cross_stock_id } );
 
     my $maternal_parent = "";
@@ -49,12 +53,23 @@ sub get_cross_relationships {
     return ($maternal_parent, $paternal_parent, \@progeny);
 }
 
+=head2 get_cross_info
+
+ Usage:         CXGN::Cross->get_cross_info( $schema, $female_parent, $male_parent);
+ Desc:          Class method
+ Ret: 
+ Args:
+ Side Effects:
+ Example:
+
+=cut
 
 sub get_cross_info {
-    my $self = shift;
-    my $female_parent = $self->female_parent;
-    my $male_parent = $self->male_parent;
-    my $schema = $self->bcs_schema();
+    my $class = shift;
+    my $schema = shift;
+    my $female_parent = shift;
+    my $male_parent = shift;
+
     my $male_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
     my $female_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
     my $cross_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
@@ -95,9 +110,64 @@ sub get_cross_info {
     while (my ($female_parent_id, $male_parent_id, $cross_entry_id, $female_parent_name, $male_parent_name, $cross_name, $cross_type) = $h->fetchrow_array()){
       push @cross_info, [$female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_entry_id, $cross_name, $cross_type]
     }
-
+    print STDERR Dumper(\@cross_info);
     return \@cross_info;
 }
 
 
+=head2 delete
+
+ Usage:        $cross->delete();
+ Desc:         Deletes a cross
+ Ret:          error string if error, undef otherwise
+ Args:         none
+ Side Effects: deletes project entry, nd_experiment entry, and stock entry.
+               does not check if 
+ Example:
+
+=cut
+
+
+sub delete { 
+    my $self = shift;
+
+    my $dbh = $self->bcs_schema()->storage()->dbh();
+    my $schema = $self->bcs_schema();
+
+    eval { 
+	
+	$dbh->begin_work();
+
+	my $cross_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();   
+	# delete the project entries
+	#
+	print STDERR "Deleting project entry for cross...\n";
+	my $q1 = "delete from project where project_id=(SELECT project_id FROM nd_experiment_project JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) where stock_id=? and type_id = ?)";
+	my $h1 = $dbh->prepare($q1);
+	$h1->execute($self->cross_stock_id(), $cross_typeid);
+	
+	# delete the nd_experiment entries
+	#
+	print STDERR "Deleting nd_experiment entry for cross...\n";
+	my $q2= "delete from nd_experiment where nd_experiment.nd_experiment_id=(SELECT nd_experiment_id FROM nd_experiment_stock JOIN stock USING (stock_id) where stock.stock_id=? and stock.type_id =?)";
+	my $h2 = $dbh->prepare($q2);
+	$h2->execute($self->cross_stock_id(), $cross_typeid);    
+	
+	# delete the stock entries
+	#
+	my $q3 = "delete from stock where stock.stock_id=523823 and stock.type_id = ?";
+	my $h3 = $dbh->prepare($q3);
+	$h3->execute($self->cross_stock_id(), $cross_typeid);
+    };
+    
+    if ($@) { 
+	print STDERR "An error occurred while deleting cross id ".$self->cross_stock_id()."\n";
+	$dbh->rollback();
+	return $@;
+    }
+    else { 
+	$dbh->commit();
+    }
+}
+   
 1;

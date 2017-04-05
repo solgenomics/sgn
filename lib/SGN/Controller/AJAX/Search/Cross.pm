@@ -62,8 +62,8 @@ sub search_cross_info : Path('/ajax/search/cross_info') Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $cross_search = CXGN::Cross->new({bcs_schema => $schema, female_parent => $female_parent, male_parent=>$male_parent});
-    my $result = $cross_search->get_cross_info();
+    #my $cross_search = CXGN::Cross->new({bcs_schema => $schema, female_parent => $female_parent, male_parent=>$male_parent});
+    my $result = CXGN::Cross->get_cross_info($schema, $female_parent, $male_parent);
     my @cross_info;
     foreach my $r (@$result){
       print STDERR Dumper $r;
@@ -90,8 +90,8 @@ sub search_all_crosses : Path('/ajax/search/all_crosses') Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $cross_search = CXGN::Cross->new({bcs_schema => $schema, female_parent => $female_parent});
-    my $result = $cross_search->get_cross_info();
+    #my $cross_search = CXGN::Cross->new({bcs_schema => $schema, female_parent => $female_parent});
+    my $result = CXGN::Cross->get_cross_info($schema, $female_parent);
     my @cross_info;
     foreach my $r (@$result){
       print STDERR Dumper $r;
