@@ -59,9 +59,14 @@ sub get_cross_info {
     my $female_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
     my $cross_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
 
-		my $where = "";
+		my $where_female = "";
+	  if ($female_parent){
+		$where_female = " WHERE female_parent.uniquename = '$female_parent'";
+	  };
+
+		my $where_male ="";
 		if ($male_parent){
-			$where = " AND male_parent.uniquename = '$male_parent'";
+			$where_male = " AND male_parent.uniquename = '$male_parent'";
 		}
 
    my $q = "SELECT female_parent.stock_id, male_parent.stock_id, cross_entry.stock_id, female_parent.uniquename, male_parent.uniquename, cross_entry.uniquename, stock_relationship1.value
@@ -69,11 +74,14 @@ sub get_cross_info {
     AND stock_relationship1.type_id= ? INNER JOIN stock AS cross_entry ON (cross_entry.stock_id=stock_relationship1.object_id) AND cross_entry.type_id= ?
 		LEFT JOIN stock_relationship AS stock_relationship2 ON (cross_entry.stock_id=stock_relationship2.object_id) AND stock_relationship2.type_id= ?
 		LEFT JOIN stock AS male_parent ON (male_parent.stock_id=stock_relationship2.subject_id)
-    WHERE female_parent.uniquename = ? $where ORDER BY stock_relationship1.value, male_parent.uniquename ASC";
+    $where_female $where_male ORDER BY stock_relationship1.value";
 
 		my $h = $schema->storage->dbh()->prepare($q);
 
-		$h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid, $female_parent);
+
+				$h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid);
+
+
 
 		my @cross_info = ();
     while (my ($female_parent_id, $male_parent_id, $cross_entry_id, $female_parent_name, $male_parent_name, $cross_name, $cross_type) = $h->fetchrow_array()){
