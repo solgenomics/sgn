@@ -2,6 +2,7 @@
 <%args>
 $trial_id
 $trial_name
+$plate_id
 $location_data => undef
 $year => undef
 $trial_type => undef
@@ -48,9 +49,23 @@ $identifier_prefix => 'SGN'
 
 <center><& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", text=> "$identifier_prefix trial $trial_id ($trial_name)", format=>"code128"  &></center><br />
 
+<center>
+<div id="genotyping_trial_status_info">
+[loading...]
+</div>
+</center>
+
+<div id="download_trial_pdf">
+[loading...]
+</div>
+
 <center><a id="genotyping_trial_spreadsheet_link" class="btn btn-default" href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a></center><br />
 
-<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
+<&| /page/info_section.mas,
+    title => "Design",
+  collapsible => 1,
+  collapsed => 0,
+  subtitle => "Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
 
 <& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
 
@@ -97,5 +112,6 @@ $identifier_prefix => 'SGN'
 <script>
 
   load_breeding_program_info(<% $trial_id %>);
+  load_genotyping_status_info(<% $plate_id %>);
 
 </script>

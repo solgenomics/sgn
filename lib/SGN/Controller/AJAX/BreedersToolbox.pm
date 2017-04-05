@@ -363,10 +363,11 @@ sub get_all_trial_types : Path('/ajax/breeders/trial/alltypes') Args(0) {
     $c->stash->{rest} = { types => \@types };
 }
 
-sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
+sub genotype_trial  : Path('/ajax/breeders/genotypetrial') : ActionClass('REST') { } 
+
+sub genotype_trial_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-
 
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
         $c->stash->{rest} = { error => 'You do not have the required privileges to create a genotyping trial.' };
@@ -413,7 +414,6 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
         $c->stash->{rest} = $design;
         $c->detach();
     }
-    #print STDERR Dumper($design);
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $location = $schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $location_id } );
@@ -427,7 +427,6 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
         $c->stash->{rest} = { error => "Unknown breeding program" };
         $c->detach();
     }
-
 
     my $ct = CXGN::Trial::TrialCreate->new( {
         chado_schema => $c->dbic_schema("Bio::Chado::Schema"),
@@ -463,13 +462,19 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
         message => "Successfully stored the trial.",
         trial_id => $message{trial_id},
     };
-    #print STDERR Dumper(%message);
-}
+ }
 
+sub genotype_trial_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    $self->genotype_trial_POST($c);
+}
 
 # this version of the genotype trial requires the upload of a file from the IGD
 #
-sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') Args(0) {
+sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') ActionClass('REST') {
+
+sub igd_genotype_trial_POST : Args(0) {
     my $self = shift;
     my $c = shift;
 

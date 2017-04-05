@@ -81,9 +81,7 @@ $trials_by_breeding_project => ()
               </div>
 	    </div>
 	    <div class="form-group">
-      	      <label class="col-sm-3 control-label">Upload Genotyping Excel Sheet From IGD: </label>
       	      <div class="col-sm-9">
-	        <input type="file" name="igd_genotyping_trial_upload_file" id="igd_genotyping_trial_upload_file" encoding="multipart/form-data" />
               </div>
 	    </div>
 	    <div class="form-group">
