@@ -28,25 +28,25 @@ has 'male_parent' => (isa => 'Str',
 
 
 sub get_cross_relationships {
-  my $self = shift;
-  my $crs = $self->bcs_schema->resultset("Stock::StockRelationship")->search( { object_id => $self->cross_stock_id } );
+    my $self = shift;
+    my $crs = $self->bcs_schema->resultset("Stock::StockRelationship")->search( { object_id => $self->cross_stock_id } );
 
-  my $maternal_parent = "";
-  my $paternal_parent = "";
-  my @progeny = ();
+    my $maternal_parent = "";
+    my $paternal_parent = "";
+    my @progeny = ();
 
-  foreach my $child ($crs->all()) {
-    if ($child->type->name() eq "female_parent") {
-      $maternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
+    foreach my $child ($crs->all()) {
+        if ($child->type->name() eq "female_parent") {
+          $maternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
+        }
+        if ($child->type->name() eq "male_parent") {
+          $paternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
+        }
+        if ($child->type->name() eq "member_of") {
+          push @progeny, [ $child->subject->name, $child->subject->stock_id() ];
+        }
     }
-    if ($child->type->name() eq "male_parent") {
-      $paternal_parent = [ $child->subject->name, $child->subject->stock_id() ];
-    }
-    if ($child->type->name() eq "member_of") {
-      push @progeny, [ $child->subject->name, $child->subject->stock_id() ];
-    }
-  }
-  return ($maternal_parent, $paternal_parent, \@progeny);
+    return ($maternal_parent, $paternal_parent, \@progeny);
 }
 
 
