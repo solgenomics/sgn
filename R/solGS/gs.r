@@ -14,6 +14,7 @@ library(lme4)
 library(randomForest)
 library(data.table)
 library(parallel)
+library(genoDataFilter)
 
 allArgs <- commandArgs()
 
@@ -255,48 +256,10 @@ if (datasetInfo == 'combined populations') {
 
 phenoTrait <- as.data.frame(phenoTrait)
 
-### MAF calculation ###
-calculateMAF <- function(x) {
-  a0 <-  length(x[x==0])
-  a1 <-  length(x[x==1])
-  a2 <-  length(x[x==2])
-  aT <- a0 + a1 + a2
-
-  p <- ((2*a0)+a1)/(2*aT)
-  q <- 1- p
-
-  maf <- min(p, q)
-  
-  return (maf)
-
-}
-
-
 if (is.null(filteredGenoData)) {
-
-  #remove markers with > 60% missing marker data
-  message('no of markers before filtering out: ', ncol(genoData))
-  genoData[, which(colSums(is.na(genoData)) >= nrow(genoData) * 0.6) := NULL]
-  message('no of markers after filtering out 60% missing: ', ncol(genoData))
-
-  #remove indls with > 80% missing marker data
-  genoData[, noMissing := apply(.SD, 1, function(x) sum(is.na(x)))]
-  genoData <- genoData[noMissing <= ncol(genoData) * 0.8]
-  genoData[, noMissing := NULL]
-  message('no of indls after filtering out ones with 80% missing: ', nrow(genoData))
-
-  #remove monomorphic markers
-  message('marker no before monomorphic markers cleaning ', ncol(genoData))
-  genoData[, which(apply(genoData, 2,  function(x) length(unique(x))) < 2) := NULL ]
-  message('marker no after monomorphic markers cleaning ', ncol(genoData))
-
-  #remove markers with MAF < 5%
-  genoData[, which(apply(genoData, 2,  calculateMAF) < 0.05) := NULL ]
-  message('marker no after MAF cleaning ', ncol(genoData))
-
-  genoData           <- as.data.frame(genoData)
-  rownames(genoData) <- genoData[, 1]
-  genoData[, 1]      <- NULL
+  
+  #genoDataFilter::filterGenoData
+  genoData <- filterGenoData(genoData)
   filteredGenoData   <- genoData 
 } else {
   genoData           <- as.data.frame(filteredGenoData)
@@ -345,27 +308,9 @@ if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size !=
 } else if (length(predictionFile) != 0) {
     
   predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
-  message('selection population: no of markers before filtering out: ', ncol(predictionData))
-    
-  predictionData[, which(colSums(is.na(predictionData)) >= nrow(predictionData) * 0.6) := NULL]
-
-  #remove indls with > 80% missing marker data
-  predictionData[, noMissing := apply(.SD, 1, function(x) sum(is.na(x)))]
-  predictionData <- predictionData[noMissing <= ncol(predictionData) * 0.8]
-  predictionData[, noMissing := NULL]
-
-  #remove monomorphic markers
-  message('marker no before monomorphic markers cleaning ', ncol(predictionData))
-  predictionData[, which(apply(predictionData, 2,  function(x) length(unique(x))) < 2) := NULL ]
-  message('marker no after monomorphic markers cleaning ', ncol(predictionData))
-
-  predictionData[, which(apply(predictionData, 2,  calculateMAF) < 0.05) := NULL ]
-  message('selection pop marker no after MAF cleaning ', ncol(predictionData))
-
-  predictionData           <- as.data.frame(predictionData)
-  rownames(predictionData) <- predictionData[, 1]
-  predictionData[, 1]      <- NULL
-  filteredPredGenoData     <- predictionData
+ 
+  predictionData <- filterGenoData(predictionData)
+  filteredPredGenoData <- predictionData
 }
 
 

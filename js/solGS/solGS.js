@@ -424,15 +424,15 @@ solGS.waitPage = function (page, args) {
 	} else if (url.match(/solgs\/population\//)) {
 	    
 	    var urlStr = url.split(/\/+/);
-
+	 
 	    if (args === undefined) {
 		args = { 
-		    'population_id' : [ urlStr[3] ], 
+		    'population_id' : [ urlStr[4] ], 
 		    'analysis_type' : 'population download',
 		    'data_set_type' : 'single population'
 		};
 	    } else {
-		args['population_id'] = [ urlStr[3] ];
+		args['population_id'] = [ urlStr[4] ];
 		args['analysis_type'] = 'population download';
 		args['data_set_type'] = 'single population';	
 	    }

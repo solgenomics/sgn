@@ -23,9 +23,6 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $params = $c->req->params() || {};
     #print STDERR Dumper $params;
 
-    my %query;
-
-
     my $matchtype = $params->{any_name_matchtype};
     my $any_name  = $params->{any_name};
 
@@ -67,9 +64,12 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         $and_conditions->{'me.organism_id'} = $params->{organism} ;
     }
 
+    my $stock_type_search;
     if (exists($params->{stock_type} ) && $params->{stock_type} ) {
         $and_conditions->{'me.type_id'} = $params->{stock_type} ;
+        $stock_type_search = $params->{stock_type};
     }
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
     if (exists($params->{person} ) && $params->{person} ) {
 	my $editor = $params->{person};
@@ -93,10 +93,17 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 	    my $stock_id = $o->stock_id;
 	    push @stock_ids, $stock_id ;
 	}
-	my $stock_ids = $stock_owner_rs->get_column('stock_id');
 	$and_conditions->{'me.stock_id'} = { '-in' => \@stock_ids } ;
     }
 ###############
+
+    my $stock_join;
+    if ($stock_type_search == $accession_cvterm_id){
+        $stock_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => [ 'nd_geolocation', {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}, { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects' ] } } ] }}}};
+    } else {
+        $stock_join = { nd_experiment_stocks => { nd_experiment => [ 'nd_geolocation', {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}, { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects' ] } } ] } };
+    }
+
     if (exists($params->{trait} ) && $params->{trait} ) {
 	$and_conditions->{ 'observable.name' }  = $params->{trait} ;
     }
@@ -119,9 +126,12 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 	$and_conditions->{ 'lower(projectprops.value)' } = { -like  => lc($params->{year} ) } ;
     }
 
-    if (exists($params->{organization} ) && $params->{organization} ) {
-	$and_conditions->{ 'project_relationship_subject_projects.object_project_id' } = $params->{organization} ;
+    if (exists($params->{breeding_program} ) && $params->{breeding_program} ) {
+        $and_conditions->{ 'project_relationship_subject_projects.object_project_id' } = $params->{breeding_program} ;
+    }
 
+    if (exists($params->{organization} ) && $params->{organization} ) {
+        $and_conditions->{ 'lower(stockprops.value)' } = { -like  => lc($params->{organization} ) } ;
     }
 
     my $draw = $params->{draw};
@@ -130,52 +140,34 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $rows = $params->{length} || 10;
     my $start = $params->{start};
 
-    my $page = int($start / $rows)+1;
 
-    # get the count first
     my $rs = $schema->resultset("Stock::Stock")->search(
-	{
-	    'me.is_obsolete'   => 'f',
-	    -and => [
-		 $or_conditions,
-		 $and_conditions
-		],
-	},
-	{
-	    join => ['type', 'organism', 'stockprops', { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}}, { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects'] }  } } }, { nd_experiment_stocks => { nd_experiment => 'nd_geolocation' } } ],
-	    distinct => 1,
-	}
+    {
+        'me.is_obsolete'   => 'f',
+        -and => [
+        $or_conditions,
+        $and_conditions
+        ],
+    },
+    {
+        join => ['type', 'organism', 'stockprops', $stock_join],
+        '+select' => [ 'type.name' , 'organism.species' ],
+        '+as'     => [ 'cvterm_name' , 'species' ],
+        order_by  => 'me.name',
+        distinct  => 1,
+    }
     );
 
-
     my $records_total = $rs->count();
-
-    #
-    my $rs2 = $schema->resultset("Stock::Stock")->search(
-	{
-	    'me.is_obsolete'   => 'f',
-	    -and => [
-		 $or_conditions,
-		 $and_conditions
-		],
-	} ,
-	{
-	    join => ['type', 'organism', 'stockprops', { nd_experiment_stocks => { nd_experiment => {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}}} ,  { nd_experiment_stocks => { nd_experiment => { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects'] } } } } , { nd_experiment_stocks => { nd_experiment => 'nd_geolocation' } } ],
-
-	    '+select' => [ 'type.name' , 'organism.species' ],
-	    '+as'     => [ 'cvterm_name' , 'species' ],
-	    page      => $page,
-	    rows      => $rows,
-	    order_by  => 'me.name',
-	    distinct  => 1,
-	}
-	);
+    my $rs_slice = $rs->slice($start, ($start+$rows)-1);
 
     my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
     my $synonym_hash = $stock_lookup->get_synonym_hash_lookup();
+    my $owners_hash = $stock_lookup->get_owner_hash_lookup();
+    my $organizations_hash = $stock_lookup->get_organization_hash_lookup();
 
     my @result;
-    while (my $a = $rs2->next()) {
+    while (my $a = $rs_slice->next()) {
         my $uniquename  = $a->uniquename;
         my $type_id     = $a->type_id ;
         my $type        = $a->get_column('cvterm_name');
@@ -186,7 +178,20 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         if (exists($synonym_hash->{$uniquename})) {
             $synonym_string = join ', ', @{$synonym_hash->{$uniquename}};
         }
-        push @result, [  "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string ];
+        my $owners_string = '';
+        if (exists($owners_hash->{$stock_id})) {
+            my @owners = @{$owners_hash->{$stock_id}};
+            my @owners_html;
+            foreach (@owners){
+                push @owners_html ,'<a href="/solpeople/personal-info.pl?sp_person_id='.$_->[0].'">'.$_->[1].'</a>';
+            }
+            $owners_string = join ', ', @owners_html;
+        }
+        my $organizations = '';
+        if (exists($organizations_hash->{$stock_id})) {
+            $organizations = join ', ', @{$organizations_hash->{$stock_id}};
+        }
+        push @result, [  "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string, $organizations ];
 
     }
 
