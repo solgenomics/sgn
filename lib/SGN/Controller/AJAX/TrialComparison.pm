@@ -11,6 +11,7 @@ use CXGN::Dataset;
 use SGN::Model::Cvterm;
 use CXGN::List;
 use CXGN::List::Validate;
+use CXGN::Trial::Download;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -165,6 +166,7 @@ sub make_graph {
     format => 'TrialPhenotypeCSV',
     data_level => 'plot', #'plot' or 'plant' or 'all'. CXGN::Dataset would default to 'plot'
     search_type=> 'complete', #'complete' or 'fast'. CXGN::Dataset would default to 'fast'
+	has_header => 0
 });
 my $error = $download->download();
 
