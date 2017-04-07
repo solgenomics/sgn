@@ -4,7 +4,7 @@
 
 <%args>
 @trial_names => ()
-$cvterm_id 
+$cvterm_id => undef
 </%args>
 
 <%perl>
@@ -43,14 +43,13 @@ Trait: <select id="trait_select"><option disabled="1">select trials first</optio
 
 <script>
 
-
   jQuery('#trait_select').change( function() { 
   var trait_id = jQuery('#trait_select').val();
     compare(trait_id);
   });
   
   jQuery.ajax( { 
-    beforeSend: function() { alert("showing modal..."); working_modal_show() },
+    beforeSend: function() { working_modal_show(); },
     url: '/ajax/trial/common_traits?<% $url_params %>',
     success: function(response) { 
       working_modal_hide();
@@ -67,7 +66,7 @@ Trait: <select id="trait_select"><option disabled="1">select trials first</optio
         jQuery('#common_accession_count').html(response.common_accession_count);
         jQuery('#common_trait_count').html(response.common_trait_count);  
         compare(jQuery('#trait_select').val);
-        working_modal_hide();
+        
       }
     },
     error: function(response) { 
@@ -76,8 +75,9 @@ Trait: <select id="trait_select"><option disabled="1">select trials first</optio
     
   } );
 
-
-  compare(<% $cvterm_id %>);
+  jQuery(document).ready( function() { 
+    compare(<% $cvterm_id %>);
+  });
     
 function compare(cvterm_id) { 
 
@@ -93,6 +93,5 @@ function compare(cvterm_id) {
       }
    });
 }
-
 
 </script>
