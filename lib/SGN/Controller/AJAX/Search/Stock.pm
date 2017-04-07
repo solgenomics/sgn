@@ -71,9 +71,9 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 		my $stock_id = $_->{stock_id};
 		my $uniquename = $_->{uniquename};
 		my $type = $_->{stock_type};
-		my $organism = $_->{organism};
-		my $synonym_string = join ', ', @{$_->{synonyms}};
-		my $organization_string = join ', ', @{$_->{organizations}};
+		my $organism = $_->{species};
+		my $synonym_string = $_->{synonyms};
+		my $organization_string = $_->{organizations};
 		my @owners = @{$_->{owners}};
 		my @owners_html;
 		foreach (@owners){

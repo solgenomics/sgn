@@ -12,6 +12,12 @@ my $stock_search = CXGN::Stock::Search->new({
 	phenome_schema=>$phenome_schema,
 	match_type=>$match_type,
 	match_name=>$match_name,
+	uniquename_list=>\@uniquename_list,
+	accession_number_list=>\@accession_number_list,
+	pui_list=>\@pui_list,
+	genus_list=>\@genus_list,
+	species_list=>\@species_list,
+	stock_id_list=>\@stock_id_list,
 	organism_id=>$organism_id,
 	stock_type_id=>$stock_type_id,
 	owner_first_name=>$owner_first_name,
@@ -44,6 +50,8 @@ use Moose;
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
+use CXGN::Chado::Stock;
+use CXGN::Chado::Organism;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -60,6 +68,7 @@ has 'phenome_schema' => ( isa => 'CXGN::Phenome::Schema',
     required => 1,
 );
 
+#can be 'exactly, starts_with, ends_with, contains'
 has 'match_type' => (
     isa => 'Str|Undef',
     is => 'rw',
@@ -67,6 +76,36 @@ has 'match_type' => (
 
 has 'match_name' => (
     isa => 'Str|Undef',
+    is => 'rw',
+);
+
+has 'uniquename_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+has 'accession_number_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+has 'pui_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+has 'genus_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+has 'species_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+has 'stock_id_list' => (
+    isa => 'ArrayRef[Str]|Undef',
     is => 'rw',
 );
 
@@ -153,12 +192,18 @@ sub search {
 	my $owner_last_name = $self->owner_last_name;
 	my $minimum_phenotype_value = $self->minimum_phenotype_value;
 	my $maximum_phenotype_value = $self->maximum_phenotype_value;
+	my @uniquename_array = $self->uniquename_list ? @{$self->uniquename_list} : ();
+	my @accession_number_array = $self->accession_number_list ? @{$self->accession_number_list} : ();
 	my @trait_name_array = $self->trait_cvterm_name_list ? @{$self->trait_cvterm_name_list} : ();
 	my @trial_name_array = $self->trial_name_list ? @{$self->trial_name_list} : ();
 	my @location_name_array = $self->location_name_list ? @{$self->location_name_list} : ();
 	my @year_array = $self->year_list ? @{$self->year_list} : ();
 	my @program_id_array = $self->breeding_program_id_list ? @{$self->breeding_program_id_list} : ();
 	my @organization_array = $self->organization_list ? @{$self->organization_list} : ();
+	my @genus_array = $self->genus_list ? @{$self->genus_list} : ();
+	my @species_array = $self->species_list ? @{$self->species_list} : ();
+	my @stock_ids_array = $self->stock_id_list ? @{$self->stock_id_list} : ();
+	my @pui_array = $self->pui_list ? @{$self->pui_list} : ();
 	my $limit = $self->limit;
 	my $offset = $self->offset;
 
@@ -169,27 +214,44 @@ sub search {
 	my ($or_conditions, $and_conditions);
 	$and_conditions->{'me.stock_id'} = { '>' => 0 };
 
+	my $start = '%';
+	my $end = '%';
+	if ( $matchtype eq 'exactly' ) {
+		$start = '';
+		$end = '';
+	} elsif ( $matchtype eq 'starts_with' ) {
+		$start = '';
+	} elsif ( $matchtype eq 'ends_with' ) {
+		$end = '';
+	}
+
 	if ($any_name) {
-		my $start = '%';
-		my $end = '%';
-		if ( $matchtype eq 'exactly' ) {
-			$start = '';
-			$end = '';
-		} elsif ( $matchtype eq 'starts_with' ) {
-			$start = '';
-		} elsif ( $matchtype eq 'ends_with' ) {
-			$end = '';
-		}
-
 		$or_conditions = [
-			{ 'me.name'          => {'ilike', $start.$any_name.$end} },
-			{ 'me.uniquename'    => {'ilike', $start.$any_name.$end} },
-			{ 'me.description'   => {'ilike', $start.$any_name.$end} },
-			{ 'stockprops.value'   => {'ilike', $start.$any_name.$end} }
+			{ 'me.name'          => {'ilike' => $start.$any_name.$end} },
+			{ 'me.uniquename'    => {'ilike' => $start.$any_name.$end} },
+			{ 'me.description'   => {'ilike' => $start.$any_name.$end} },
+			{ 'stockprops.value'   => {'ilike' => $start.$any_name.$end} }
 		];
-
 	} else {
-		$or_conditions = [ { 'me.uniquename' => { '!=', undef } } ];
+		$or_conditions = [ { 'me.uniquename' => { '!=' => undef } } ];
+	}
+
+	foreach (@uniquename_array){
+		if ($_){
+			if ($matchtype eq 'contains'){ #for 'wildcard' matching it replaces * with % and ? with _
+				$_ =~ tr/*?/%_/;
+			}
+			push @{$and_conditions->{'me.uniquename'}}, {'ilike' => $start.$_.$end };
+		}
+	}
+
+	foreach (@stock_ids_array){
+		if ($_){
+			if ($matchtype eq 'contains'){ #for 'wildcard' matching it replaces * with % and ? with _
+				$_ =~ tr/*?/%_/;
+			}
+			push @{$and_conditions->{'me.stock_id::varchar(255)'}}, {'ilike' => $_ };
+		}
 	}
 
 	if ($organism_id) {
@@ -234,11 +296,9 @@ sub search {
 		$stock_join = { nd_experiment_stocks => { nd_experiment => [ 'nd_geolocation', {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}, { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects' ] } } ] } };
 	}
 
-	if (scalar(@trait_name_array) > 0) {
-		foreach (@trait_name_array){
-			if ($_){
-				push @{$and_conditions->{ 'observable.name' }}, $_;
-			}
+	foreach (@trait_name_array){
+		if ($_){
+			push @{$and_conditions->{ 'observable.name' }}, $_;
 		}
 	}
 	if ($minimum_phenotype_value) {
@@ -248,45 +308,65 @@ sub search {
 		$and_conditions->{ 'phenotype.value' }  = { '<' => $maximum_phenotype_value };
 	}
 
-	if (scalar(@trial_name_array) > 0 ){
-		foreach (@trial_name_array){
-			if ($_){
-				push @{$and_conditions->{ 'lower(project.name)' }}, { -like  => lc($_) } ;
-			}
+	foreach (@trial_name_array){
+		if ($_){
+			push @{$and_conditions->{ 'lower(project.name)' }}, { -like  => lc($_) } ;
 		}
 	}
 
-	if (scalar(@location_name_array) > 0 ){
-		foreach (@location_name_array){
-			if ($_){
-				push @{$and_conditions->{ 'lower(nd_geolocation.description)' }}, { -like  => lc($_) };
-			}
+	foreach (@location_name_array){
+		if ($_){
+			push @{$and_conditions->{ 'lower(nd_geolocation.description)' }}, { -like  => lc($_) };
 		}
 	}
 
-	if (scalar(@year_array) > 0){
-		my $year_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id;
-		foreach (@year_array){
-			if ($_){
-				$and_conditions->{ 'projectprops.type_id'} = $year_type_id;
-				push @{$and_conditions->{ 'lower(projectprops.value)' }}, { -like  => lc($_) } ;
-			}
+	my $year_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id;
+	foreach (@year_array){
+		if ($_){
+			$and_conditions->{ 'projectprops.type_id'} = $year_type_id;
+			push @{$and_conditions->{ 'lower(projectprops.value)' }}, { -like  => lc($_) } ;
 		}
 	}
 
-	if (scalar(@program_id_array) > 0){
-		foreach (@program_id_array){
-			if ($_){
-				push @{$and_conditions->{ 'project_relationship_subject_projects.object_project_id' }}, $_ ;
-			}
+	foreach (@program_id_array){
+		if ($_){
+			push @{$and_conditions->{ 'project_relationship_subject_projects.object_project_id' }}, $_ ;
 		}
 	}
 
-	if (scalar(@organization_array) > 0){
-		foreach (@organization_array){
-			if ($_){
-				push @{$and_conditions->{ 'lower(stockprops.value)' }}, { -like  => lc($_) } ;
-			}
+	my $organization_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'organization', 'stock_property')->cvterm_id();
+	foreach (@organization_array){
+		if ($_){
+			$and_conditions->{ 'stockprops.type_id'} = $organization_type_id;
+			push @{$and_conditions->{ 'lower(stockprops.value)' }}, { -like  => lc($_) } ;
+		}
+	}
+
+	my $accession_number_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession number', 'stock_property')->cvterm_id();
+	foreach (@accession_number_array){
+		if ($_){
+			$and_conditions->{ 'stockprops.type_id'} = $accession_number_type_id;
+			push @{$and_conditions->{ 'lower(stockprops.value)' }}, { -like  => lc($_) } ;
+		}
+	}
+
+	my $pui_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'PUI', 'stock_property')->cvterm_id();
+	foreach (@pui_array){
+		if ($_){
+			$and_conditions->{ 'stockprops.type_id'} = $pui_type_id;
+			push @{$and_conditions->{ 'lower(stockprops.value)' }}, { -like  => lc($_) } ;
+		}
+	}
+
+	foreach (@genus_array){
+		if ($_){
+			push @{$and_conditions->{ 'lower(organism.genus)' }}, { -like  => lc($_) } ;
+		}
+	}
+
+	foreach (@species_array){
+		if ($_){
+			push @{$and_conditions->{ 'lower(organism.species)' }}, { -like  => lc($_) } ;
 		}
 	}
 
@@ -301,8 +381,8 @@ sub search {
 	},
 	{
 		join => ['type', 'organism', 'stockprops', $stock_join],
-		'+select' => [ 'type.name' , 'organism.species' ],
-		'+as'     => [ 'cvterm_name' , 'species' ],
+		'+select' => [ 'type.name' , 'organism.species' , 'organism.common_name', 'organism.genus'],
+		'+as'     => [ 'cvterm_name' , 'species', 'common_name', 'genus' ],
 		order_by  => 'me.name',
 		distinct  => 1,
 	}
@@ -314,36 +394,70 @@ sub search {
 	}
 
 	my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
-	my $synonym_hash = $stock_lookup->get_synonym_hash_lookup();
 	my $owners_hash = $stock_lookup->get_owner_hash_lookup();
-	my $organizations_hash = $stock_lookup->get_organization_hash_lookup();
 
 	my @result;
 	while (my $a = $rs->next()) {
 		my $uniquename  = $a->uniquename;
+		my $stock_name  = $a->name;
 		my $type_id     = $a->type_id ;
 		my $type        = $a->get_column('cvterm_name');
 		my $organism_id = $a->organism_id;
-		my $organism    = $a->get_column('species');
+		my $species    = $a->get_column('species');
 		my $stock_id    = $a->stock_id;
-		my @synonyms = $synonym_hash->{$uniquename} ? @{$synonym_hash->{$uniquename}} : ();
+		my $common_name = $a->get_column('common_name');
+		my $genus       = $a->get_column('genus');
 		my @owners = $owners_hash->{$stock_id} ? @{$owners_hash->{$stock_id}} : ();
-		my @organizations = $organizations_hash->{$stock_id} ? @{$organizations_hash->{$stock_id}} : ();
+		my $stockprop_hash = CXGN::Chado::Stock->new($self->bcs_schema, $stock_id)->get_stockprop_hash();
+		my $organismprop_hash = CXGN::Chado::Organism->new($self->bcs_schema, $organism_id)->get_organismprop_hash();
+		my @donor_array;
+		my $donor_accessions = $stockprop_hash->{'donor'} ? $stockprop_hash->{'donor'} : [];
+		my $donor_institutes = $stockprop_hash->{'donor institute'} ? $stockprop_hash->{'donor institute'} : [];
+		my $donor_puis = $stockprop_hash->{'donor PUI'} ? $stockprop_hash->{'donor PUI'} : [];
+		for (0 .. scalar(@$donor_accessions)){
+			push @donor_array, { 'donorGermplasmName'=>$donor_accessions->[$_], 'donorAccessionNumber'=>$donor_accessions->[$_], 'donorInstituteCode'=>$donor_institutes->[$_], 'germplasmPUI'=>$donor_puis->[$_] };
+		}
 		push @result, {
 			stock_id => $stock_id,
 			uniquename => $uniquename,
+			stock_name => $stock_name,
 			stock_type => $type,
 			stock_type_id => $type_id,
-			organism => $organism,
+			species => $species,
+			genus => $genus,
+			common_name => $common_name,
 			organism_id => $organism_id,
-			synonyms => \@synonyms,
 			owners => \@owners,
-			organizations => \@organizations
+			organization =>$stockprop_hash->{'orgnization'} ? join ',', @{$stockprop_hash->{'orgnization'}} : '',
+			accessionNumber=>$stockprop_hash->{'accession number'} ? join ',', @{$stockprop_hash->{'accession number'}} : '',
+			germplasmPUI=>$stockprop_hash->{'PUI'} ? join ',', @{$stockprop_hash->{'PUI'}} : '',
+			pedigree=>$self->germplasm_pedigree_string($stock_id),
+			germplasmSeedSource=>$stockprop_hash->{'seed source'} ? join ',', @{$stockprop_hash->{'seed source'}} : '',
+			synonyms=> $stockprop_hash->{'stock_synonym'} ? join ',', @{$stockprop_hash->{'stock_synonym'}} : '',
+			instituteCode=>$stockprop_hash->{'institute code'} ? join ',', @{$stockprop_hash->{'institute code'}} : '',
+			instituteName=>$stockprop_hash->{'institute name'} ? join ',', @{$stockprop_hash->{'institute name'}} : '',
+			biologicalStatusOfAccessionCode=>$stockprop_hash->{'biological status of accession code'} ? join ',', @{$stockprop_hash->{'biological status of accession code'}} : '',
+			countryOfOriginCode=>$stockprop_hash->{'country of origin'} ? join ',', @{$stockprop_hash->{'country of origin'}} : '',
+			typeOfGermplasmStorageCode=>$stockprop_hash->{'type of germplasm storage code'} ? join ',', @{$stockprop_hash->{'type of germplasm storage code'}} : '',
+			speciesAuthority=>$organismprop_hash->{'species authority'} ? join ',', @{$organismprop_hash->{'species authority'}} : '',
+			subtaxa=>$organismprop_hash->{'subtaxa'} ? join ',', @{$organismprop_hash->{'subtaxa'}} : '',
+			subtaxaAuthority=>$organismprop_hash->{'subtaxa authority'} ? join ',', @{$organismprop_hash->{'subtaxa authority'}} : '',
+			donors=>\@donor_array,
+			acquisitionDate=>$stockprop_hash->{'acquisition date'} ? join ',', @{$stockprop_hash->{'acquisition date'}} : '',
 		};
 	}
 
 	#print STDERR Dumper \@result;
 	return (\@result, $records_total);
+}
+
+sub germplasm_pedigree_string {
+	my $self = shift;
+	my $stock_id = shift;
+	my $s = CXGN::Chado::Stock->new($self->bcs_schema, $stock_id);
+	my $pedigree_root = $s->get_parents('1');
+	my $pedigree_string = $pedigree_root ? $pedigree_root->get_pedigree_string('1') : '';
+	return $pedigree_string;
 }
 
 1;
