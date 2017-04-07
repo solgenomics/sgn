@@ -57,7 +57,9 @@ sub compare_trials_GET : Args(0) {
 	return;
     }
 
-    if (!$cvterm_id) { 
+    print STDERR "CVTERM_ID = ".$cvterm_id."\n";
+    if (!$cvterm_id || $cvterm_id eq "undefined") { 
+	print STDERR "No cvterm supplied!\n";
 	$c->stash->{rest} = { error => "No cvterm_id supplied." };
 	return;
     }
@@ -91,6 +93,7 @@ sub compare_trial_list_GET : Args(0) {
     }
 
     my $cvterm_id = $c->req->param("cvterm_id");
+
     if (!$cvterm_id) { 
 	$c->stash->{rest} = { error => "Error: No cvterm_id provided." };
 	return;
@@ -236,20 +239,20 @@ sub get_common_traits {
 
     my $trial_id_rs = $schema->resultset("Project::Project")->search( { name => { in => [ @trials ]} });
     my @trial_ids = map { $_->project_id() } $trial_id_rs->all();
-
-    #my $ds = CXGN::Dataset->new( people_schema => $c->dbic_schema("CXGN::People::Schema"), schema => $schema);
     
     my @trait_lists;
+    my @trial_objects;
     foreach my $t (@trial_ids) { 
-	#$ds->trials( [ $t ]);
 	my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $t });
+	push @trial_objects, $trial;
 	my $traits = $trial->get_traits_assayed();
-	#my $traits = $ds->retrieve_traits();
 	push @trait_lists, $traits;
     }
     
-    #print STDERR Dumper(\@trait_lists);
+    print STDERR Dumper(\@trait_lists);
     my @common_traits = @{$trait_lists[0]};
+
+
     for(my $i=1; $i<@trait_lists; $i++ ) { 
 	my @local_common = ();
 	for(my $n=0; $n<@common_traits; $n++) { 
@@ -264,11 +267,9 @@ sub get_common_traits {
 
     my $common_trait_count = scalar(@common_traits);
     
-    my $ds2 = CXGN::Dataset->new( people_schema => $c->dbic_schema("CXGN::People::Schema"), schema => $schema);
     my @common_accessions;
-    foreach my $t (@trial_ids) { 
-	$ds2->trials( [ $t ]);
-	my $accessions = $ds2->retrieve_accessions();
+    foreach my $t (@trial_objects) { 
+	my $accessions = $t->get_accessions();
 	push @common_accessions, $accessions;
     }
 
@@ -277,20 +278,17 @@ sub get_common_traits {
     my @total_accessions;
 
     my @previous_accessions = @{$common_accessions[0]};
+    my @accessions;
     for(my $i = 1; $i<@common_accessions; $i++) { 
-	my @previous_accession_names = map { $_->[1] } @previous_accessions;
-	my @accession_names = map { $_->[1] } @{$common_accessions[$i]};
+	my $list = List::Compare->new(\@previous_accessions, \@accessions);
 	
-	my $list = List::Compare->new(\@previous_accession_names, \@accession_names);
-	
-	@previous_accessions = $list->get_intersection();
+	@accessions = $list->get_intersection();
 	@total_accessions = $list->get_union();
     }
 
     @common_accessions = @previous_accessions;
     my $common_accession_count = scalar(@common_accessions);
     my $total_accession_count = scalar(@total_accessions);
-
     print STDERR "Traits:\n";
     print STDERR Dumper(\@common_traits);
     
