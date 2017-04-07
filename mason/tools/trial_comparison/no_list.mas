@@ -58,7 +58,8 @@ Trait: <select id="trait_select"><option disabled="1">select trials first</optio
         var option_html = '';
         for (var i =0 ; i < response.options.length; i++) {
         var selected = "";
-        if (response.options[i][0]==<% $cvterm_id %>) { selected="selected"; }
+	var cvterm_id = '<% $cvterm_id %>';
+        if (response.options[i][0]== cvterm_id) { selected="selected"; }
           option_html += '<option value="'+response.options[i][0]+'" '+selected+'>'+(response.options[i][1])+'</option>\n';
         }
         jQuery('#trait_select').html(option_html);
