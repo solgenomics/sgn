@@ -514,6 +514,8 @@ sub studies_table {
 	my $file_path = $inputs->{file_path};
 	my $file_uri = $inputs->{file_uri};
 	my @trait_ids_array = $inputs->{trait_ids} ? @{$inputs->{trait_ids}} : ();
+	my @trial_ids_array = $inputs->{trial_ids} ? @{$inputs->{trial_ids}} : ();
+	push @trial_ids_array, $study_id;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
@@ -530,7 +532,7 @@ sub studies_table {
 		{
 			bcs_schema=>$self->bcs_schema,
 			data_level=>$data_level,
-			trial_list=>[$study_id],
+			trial_list=>\@trial_ids_array,
 			trait_list=>\@trait_ids_array,
 			include_timestamp=>1,
 		}

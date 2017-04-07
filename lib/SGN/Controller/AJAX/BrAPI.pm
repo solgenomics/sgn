@@ -1685,6 +1685,7 @@ sub studies_table_GET {
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
 		trait_ids => $clean_inputs->{observationVariableDbId},
+		trial_ids => $clean_inputs->{studyDbId},
 		format => $format,
 		main_production_site_url => $c->config->{main_production_site_url},
 		file_path => $file_path,
