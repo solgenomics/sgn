@@ -43,35 +43,41 @@ Trait: <select id="trait_select"><option disabled="1">select trials first</optio
 
 <script>
 
-     jQuery.ajax( { 
-      url: '/ajax/trial/common_traits?<% $url_params %>',
-      success: function(response) { 
-         if (response.error) { jQuery('#trait_select').val('error'); }
-         else {
-            var option_html = '';
-            for (var i =0 ; i < response.options.length; i++) {
-               var selected = "";
-               if (response.options[i][0]==<% $cvterm_id %>) { selected="selected"; }
-	       option_html += '<option value="'+response.options[i][0]+'" '+selected+'>'+(response.options[i][1])+'</option>\n';
-            }
-            jQuery('#trait_select').html(option_html);
-            jQuery('#total_accession_count').html(response.total_accession_count);
-	    jQuery('#common_accession_count').html(response.common_accession_count);
-	    jQuery('#common_trait_count').html(response.common_trait_count);
-               jQuery('#trait_select').click( function() { 
-               compare(jQuery('#trait_select').val);
-            });
 
-         }
-      },
-      error: function(response) { 
-	//alert("An error occurred, the service may temporarily be unavailable");
+  jQuery('#trait_select').change( function() { 
+  var trait_id = jQuery('#trait_select').val();
+    compare(trait_id);
+  });
+  
+  jQuery.ajax( { 
+    beforeSend: function() { alert("showing modal..."); working_modal_show() },
+    url: '/ajax/trial/common_traits?<% $url_params %>',
+    success: function(response) { 
+      working_modal_hide();
+      if (response.error) { jQuery('#trait_select').val('error'); }
+      else {
+        var option_html = '';
+        for (var i =0 ; i < response.options.length; i++) {
+        var selected = "";
+        if (response.options[i][0]==<% $cvterm_id %>) { selected="selected"; }
+          option_html += '<option value="'+response.options[i][0]+'" '+selected+'>'+(response.options[i][1])+'</option>\n';
+        }
+        jQuery('#trait_select').html(option_html);
+        jQuery('#total_accession_count').html(response.total_accession_count);
+        jQuery('#common_accession_count').html(response.common_accession_count);
+        jQuery('#common_trait_count').html(response.common_trait_count);  
+        compare(jQuery('#trait_select').val);
+        working_modal_hide();
       }
+    },
+    error: function(response) { 
+       //alert("An error occurred, the service may temporarily be unavailable");
+    }
     
-   });
+  } );
 
 
-   compare(<% $cvterm_id %>);
+  compare(<% $cvterm_id %>);
     
 function compare(cvterm_id) { 
 
