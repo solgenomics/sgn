@@ -134,15 +134,6 @@ sub germplasm_search {
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Germplasm-search result constructed');
 }
 
-sub germplasm_pedigree_string {
-	my $self = shift;
-	my $stock_id = shift;
-	my $s = CXGN::Chado::Stock->new($self->bcs_schema, $stock_id);
-	my $pedigree_root = $s->get_parents('1');
-	my $pedigree_string = $pedigree_root ? $pedigree_root->get_pedigree_string('1') : '';
-	return $pedigree_string;
-}
-
 sub germplasm_detail {
 	my $self = shift;
 	my $stock_id = shift;
@@ -215,9 +206,11 @@ sub germplasm_pedigree {
 	if ($s) {
 		$total_count = 1;
 		my @direct_parents = $s->get_direct_parents();
+		my $pedigree_root = $s->get_parents('1');
+		my $pedigree_string = $pedigree_root ? $pedigree_root->get_pedigree_string('1') : '';
 		%result = (
 			germplasmDbId=>$stock_id,
-			pedigree=>$self->germplasm_pedigree_string($stock_id),
+			pedigree=>$pedigree_string,
 			parent1Id=>$direct_parents[0][0],
 			parent2Id=>$direct_parents[1][0]
 		);
