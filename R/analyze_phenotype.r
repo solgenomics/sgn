@@ -22,7 +22,7 @@ write(paste("output_file: ", output_file), stderr())
 
 errorfile = paste(phenotype_file, ".err", sep="");
 
-phenodata = read.csv(phenotype_file,fill=TRUE, sep=",", header = T, stringsAsFactors = T, na.strings="NA", skip=3)
+phenodata = read.csv(phenotype_file,fill=TRUE, sep=",", header = TRUE, stringsAsFactors = T, na.strings="NA");
 
 blocks = unique(phenodata$blockNumber)
 print(paste("blocks: ", blocks));
