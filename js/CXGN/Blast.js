@@ -114,13 +114,40 @@ function finish_blast(jobid, seq_count) {
 
   var blast_reports = new Array();
   var prereqs = new Array();
-
+  var database = jQuery('#database').val();
+  
   if (seq_count > 1) { 
     format = [ "Table", "Basic" ];
     alert("Multiple sequences were detected. The output will be shown in the tabular and basic format");
+  } else {
+    
+    
+    
+    jQuery.ajax( { 
+      url: '/tools/blast/render_graph/'+jobid,
+      data: { 'db_id': database },
+    
+      success: function(response) { 
+        var sgn_graph_array = response.desc_array;
+        var seq_length = response.sequence_length;
+        
+        // alert("descriptions: "+response.sequence_length);
+        jQuery('#blast_query_length').html("Query length ("+seq_length+")");
+        
+        draw_blast_graph(sgn_graph_array, seq_length);
+        jQuery('#sgn_blast_graph').css("display", "inline");
+        
+        enable_ui();
+      },
+      error: function(response) { alert("SGN BLAST Graph: An error occurred. "+response.error); enable_ui();}
+    });
+    
+    
+    
+    
   }
 
-  var database = jQuery('#database').val();
+  
 
   for (var n in format) { 
     update_status('Formatting output ('+format[n]+')<br />');
