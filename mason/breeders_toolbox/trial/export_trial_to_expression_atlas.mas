@@ -13,7 +13,7 @@ $site_project_name
 
 
 <div class="modal fade" id="export_to_expression_atlas_dialog" name="export_to_expression_atlas_dialog" tabindex="-1" role="dialog" aria-labelledby="expressionAtlasExportDialog">
-  <div class="modal-dialog" role="document">
+  <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -43,18 +43,18 @@ $site_project_name
 					</div>
 				</div>
 				<div class="form-group">
-					<label class="col-sm-3 control-label">Trait Name(s): </label>
+					<label class="col-sm-3 control-label">Trait Name(s): <br/><small>Select None for All</small></label>
 					<div class="col-sm-9" >
 						<div id="expression_atlas_trait_select_div">
-							[Select Trial(s)...]
+							<p>First Select One or More Trials</p>
 						</div>
 					</div>
 				</div>
 				<div class="form-group">
-					<label class="col-sm-3 control-label">Accession Name(s): </label>
+					<label class="col-sm-3 control-label">Accession Name(s): <br/><small>Select None for All</small></label>
 					<div class="col-sm-9" >
 						<div id="expression_atlas_accession_select_div">
-							[Select Trial(s)...]
+							<p>First Select One or More Trials</p>
 						</div>
 					</div>
 				</div>
@@ -87,7 +87,9 @@ $site_project_name
 jQuery(document).ready(function() {
 
 	if(jQuery("#expression_atlas_trial_id").length == 0) {
-		get_select_box('trials', 'expression_atlas_trial_select_div', { 'name' : 'expression_atlas_trial_id', 'id' : 'expression_atlas_trial_id', 'size' : 10 });
+		get_select_box('trials', 'expression_atlas_trial_select_div', { 'name' : 'expression_atlas_trial_id', 'id' : 'expression_atlas_trial_id', 'size' : 7 });
+	} else {
+		expression_atlas_change_trials();
 	}
 
 	jQuery(document).on('change', "#expression_atlas_trial_id", function() {
@@ -99,10 +101,11 @@ jQuery(document).ready(function() {
 	});
 
 	jQuery("#expression_atlas_export_ok_button").click( function () {
-		var trial_id = "<% $trial_id %>";
-		var trial_id_array = trial_id.split(",");
-		var accession_id_array = [];
-		var trait_id_array = [];
+		var trial_id_array = [<% $trial_id %>];
+		var selected_trial_ids = jQuery('#expression_atlas_trial_id').val();
+		var combined_trial_ids = trial_id_array.concat(selected_trial_ids);
+		var accession_id_array = jQuery('#expression_atlas_accession_ids').val();
+		var trait_id_array = jQuery('#expression_atlas_trait_ids').val();
 		var export_name = jQuery('#expression_atlas_export_name').val();
 		var export_type = jQuery('#expression_atlas_export_type').val();
 		new jQuery.ajax({
@@ -126,9 +129,16 @@ jQuery(document).ready(function() {
 
 function expression_atlas_change_trials () {
 	var trial_ids = jQuery('#expression_atlas_trial_id').val();
-	console.log(trial_ids);
-	var trait_ids_string = trial_ids.join();
-	get_select_box('stocks', 'expression_atlas_accession_select_div', { 'name' : 'expression_atlas_accession_ids', 'id' : 'expression_atlas_accession_ids', 'size' : 7, 'stock_type_name':'accession', 'trial_id_list':trial_ids });
+	var trial_ids_array = [];
+	var trial_ids_string = '';
+	if ( jQuery.isArray(trial_ids) ) {
+		trial_ids_array = trial_ids;
+		trial_ids_string = trial_ids.join();
+	} else {
+		trial_ids_array = [trial_ids];
+		trial_ids_string = trial_ids;
+	}
+	get_select_box('stocks', 'expression_atlas_accession_select_div', { 'name' : 'expression_atlas_accession_ids', 'id' : 'expression_atlas_accession_ids', 'size' : 7, 'stock_type_name':'accession', 'trial_id_list':trial_ids_array });
 	get_select_box('traits', 'expression_atlas_trait_select_div', { 'name' : 'expression_atlas_trait_ids', 'id' : 'expression_atlas_trait_ids', 'size' : 7, 'trial_ids':trial_ids_string });
 };
 

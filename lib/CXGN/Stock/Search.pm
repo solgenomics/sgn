@@ -339,7 +339,6 @@ sub search {
 		}
 	}
 
-	print STDERR Dumper \@trial_id_array;
 	foreach (@trial_id_array){
 		if ($_){
 			print STDERR $_."\n";
@@ -403,7 +402,7 @@ sub search {
 		}
 	}
 
-	$schema->storage->debug(1);
+	#$schema->storage->debug(1);
 	my $rs = $schema->resultset("Stock::Stock")->search(
 	{
 		'me.is_obsolete'   => 'f',

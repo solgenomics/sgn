@@ -196,7 +196,7 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
           push @trials, $_;
       }
     }
-    @trials = sort @trials;
+    @trials = sort { $a->[1] cmp $b->[1] } @trials;
 
     if ($empty) { unshift @trials, [ "", "Please select a trial" ]; }
 
@@ -214,7 +214,7 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 	my $self = shift;
 	my $c = shift;
 	my $params = _clean_inputs($c->req->params);
-	print STDERR Dumper $params;
+
 	my $stock_search = CXGN::Stock::Search->new({
 		bcs_schema=>$c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
 		people_schema=>$c->dbic_schema("CXGN::People::Schema"),
@@ -255,7 +255,7 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 	foreach my $r (@$result) {
 		push @stocks, [ $r->{stock_id}, $r->{uniquename} ];
 	}
-	@stocks = sort @stocks;
+	@stocks = sort { $a->[1] cmp $b->[1] } @stocks;
 
 	if ($empty) { unshift @stocks, [ "", "Please select a stock" ]; }
 
@@ -302,24 +302,31 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
         }
 	} elsif ($trial_ids ne 'all') {
 		my @trial_ids = split ',', $trial_ids;
+		my %unique_traits_ids;
 		foreach (@trial_ids){
 			my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
 			my $traits_assayed = $trial->get_traits_assayed($data_level);
 			foreach (@$traits_assayed) {
-				my @val = ($_->[0], $_->[1]);
-				push @traits, \@val;
+				$unique_traits_ids{$_->[0]} = [$_->[0], $_->[1]];
 			}
+		}
+		while ( my ($key, $value) = each %unique_traits_ids ){
+			push @traits, $value;
 		}
 	}
 
+	@traits = sort { $a->[1] cmp $b->[1] } @traits;
+
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
+	my $size = $c->req->param("size");
 
     my $html = simple_selectbox_html(
       multiple => 1,
       name => $name,
       id => $id,
       choices => \@traits,
+	  size => $size
     );
     $c->stash->{rest} = { select => $html };
 }
