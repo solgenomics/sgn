@@ -20,18 +20,21 @@ my $stock_search = CXGN::Stock::Search->new({
 	stock_id_list=>\@stock_id_list,
 	organism_id=>$organism_id,
 	stock_type_id=>$stock_type_id,
+	stock_type_name=>$stock_type_name,
 	owner_first_name=>$owner_first_name,
 	owner_last_name=>$owner_last_name,
 	trait_cvterm_name_list=>\@trait_cvterm_name_list,
 	minimum_phenotype_value=>$minimum_phenotype_value,
 	maximum_phenotype_value=>$maximum_phenotype_value,
+	trial_id_list=>\@trial_id_list,
 	trial_name_list=>\@trial_name_list,
 	breeding_program_id_list=>\@breeding_program_id_list,
 	location_name_list=>\@location_name_list,
 	year_list=>\@year_list,
 	organization_list=>\@organization_list,
 	limit=>$limit,
-	offset=>$offset
+	offset=>$offset,
+	minimal_info=>o  #for only returning stock_id and uniquenames
 });
 my ($result, $records_total) = $stock_search->search();
 
@@ -119,6 +122,11 @@ has 'stock_type_id' => (
     is => 'rw',
 );
 
+has 'stock_type_name' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+);
+
 has 'owner_first_name' => (
     isa => 'Str|Undef',
     is => 'rw',
@@ -146,6 +154,11 @@ has 'maximum_phenotype_value' => (
 
 has 'trial_name_list' => (
     isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+has 'trial_id_list' => (
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
 
@@ -179,6 +192,12 @@ has 'offset' => (
     is => 'rw',
 );
 
+has 'minimal_info' => (
+    isa => 'Bool',
+    is => 'rw',
+	default => 0
+);
+
 sub search {
 	my $self = shift;
 	my $schema = $self->bcs_schema;
@@ -188,6 +207,7 @@ sub search {
 	my $any_name = $self->match_name;
 	my $organism_id = $self->organism_id;
 	my $stock_type_id = $self->stock_type_id;
+	my $stock_type_name = $self->stock_type_name;
 	my $owner_first_name = $self->owner_first_name;
 	my $owner_last_name = $self->owner_last_name;
 	my $minimum_phenotype_value = $self->minimum_phenotype_value;
@@ -196,6 +216,7 @@ sub search {
 	my @accession_number_array = $self->accession_number_list ? @{$self->accession_number_list} : ();
 	my @trait_name_array = $self->trait_cvterm_name_list ? @{$self->trait_cvterm_name_list} : ();
 	my @trial_name_array = $self->trial_name_list ? @{$self->trial_name_list} : ();
+	my @trial_id_array = $self->trial_id_list ? @{$self->trial_id_list} : ();
 	my @location_name_array = $self->location_name_list ? @{$self->location_name_list} : ();
 	my @year_array = $self->year_list ? @{$self->year_list} : ();
 	my @program_id_array = $self->breeding_program_id_list ? @{$self->breeding_program_id_list} : ();
@@ -258,7 +279,11 @@ sub search {
 		$and_conditions->{'me.organism_id'} = $organism_id;
 	}
 
-	my $stock_type_search;
+	if ($stock_type_name){
+		$stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type_name, 'stock_type')->cvterm_id();
+	}
+
+	my $stock_type_search = 0;
 	if ($stock_type_id) {
 		$and_conditions->{'me.type_id'} = $stock_type_id;
 		$stock_type_search = $stock_type_id;
@@ -311,6 +336,14 @@ sub search {
 	foreach (@trial_name_array){
 		if ($_){
 			push @{$and_conditions->{ 'lower(project.name)' }}, { -like  => lc($_) } ;
+		}
+	}
+
+	print STDERR Dumper \@trial_id_array;
+	foreach (@trial_id_array){
+		if ($_){
+			print STDERR $_."\n";
+			push @{$and_conditions->{ 'project.project_id' }}, $_ ;
 		}
 	}
 
@@ -370,7 +403,7 @@ sub search {
 		}
 	}
 
-	#$schema->storage->debug(1);
+	$schema->storage->debug(1);
 	my $rs = $schema->resultset("Stock::Stock")->search(
 	{
 		'me.is_obsolete'   => 'f',
@@ -399,52 +432,59 @@ sub search {
 	my @result;
 	while (my $a = $rs->next()) {
 		my $uniquename  = $a->uniquename;
-		my $stock_name  = $a->name;
-		my $type_id     = $a->type_id ;
-		my $type        = $a->get_column('cvterm_name');
-		my $organism_id = $a->organism_id;
-		my $species    = $a->get_column('species');
 		my $stock_id    = $a->stock_id;
-		my $common_name = $a->get_column('common_name');
-		my $genus       = $a->get_column('genus');
-		my @owners = $owners_hash->{$stock_id} ? @{$owners_hash->{$stock_id}} : ();
-		my $stockprop_hash = CXGN::Chado::Stock->new($self->bcs_schema, $stock_id)->get_stockprop_hash();
-		my $organismprop_hash = CXGN::Chado::Organism->new($self->bcs_schema, $organism_id)->get_organismprop_hash();
-		my @donor_array;
-		my $donor_accessions = $stockprop_hash->{'donor'} ? $stockprop_hash->{'donor'} : [];
-		my $donor_institutes = $stockprop_hash->{'donor institute'} ? $stockprop_hash->{'donor institute'} : [];
-		my $donor_puis = $stockprop_hash->{'donor PUI'} ? $stockprop_hash->{'donor PUI'} : [];
-		for (0 .. scalar(@$donor_accessions)){
-			push @donor_array, { 'donorGermplasmName'=>$donor_accessions->[$_], 'donorAccessionNumber'=>$donor_accessions->[$_], 'donorInstituteCode'=>$donor_institutes->[$_], 'germplasmPUI'=>$donor_puis->[$_] };
+		if (!$self->minimal_info){
+			my $type_id     = $a->type_id ;
+			my $type        = $a->get_column('cvterm_name');
+			my $organism_id = $a->organism_id;
+			my $species    = $a->get_column('species');
+			my $stock_name  = $a->name;
+			my $common_name = $a->get_column('common_name');
+			my $genus       = $a->get_column('genus');
+			my @owners = $owners_hash->{$stock_id} ? @{$owners_hash->{$stock_id}} : ();
+			my $stockprop_hash = CXGN::Chado::Stock->new($self->bcs_schema, $stock_id)->get_stockprop_hash();
+			my $organismprop_hash = CXGN::Chado::Organism->new($self->bcs_schema, $organism_id)->get_organismprop_hash();
+			my @donor_array;
+			my $donor_accessions = $stockprop_hash->{'donor'} ? $stockprop_hash->{'donor'} : [];
+			my $donor_institutes = $stockprop_hash->{'donor institute'} ? $stockprop_hash->{'donor institute'} : [];
+			my $donor_puis = $stockprop_hash->{'donor PUI'} ? $stockprop_hash->{'donor PUI'} : [];
+			for (0 .. scalar(@$donor_accessions)){
+				push @donor_array, { 'donorGermplasmName'=>$donor_accessions->[$_], 'donorAccessionNumber'=>$donor_accessions->[$_], 'donorInstituteCode'=>$donor_institutes->[$_], 'germplasmPUI'=>$donor_puis->[$_] };
+			}
+			push @result, {
+				stock_id => $stock_id,
+				uniquename => $uniquename,
+				stock_name => $stock_name,
+				stock_type => $type,
+				stock_type_id => $type_id,
+				species => $species,
+				genus => $genus,
+				common_name => $common_name,
+				organism_id => $organism_id,
+				owners => \@owners,
+				organizations =>$stockprop_hash->{'organization'} ? join ',', @{$stockprop_hash->{'organization'}} : undef,
+				accessionNumber=>$stockprop_hash->{'accession number'} ? join ',', @{$stockprop_hash->{'accession number'}} : undef,
+				germplasmPUI=>$stockprop_hash->{'PUI'} ? join ',', @{$stockprop_hash->{'PUI'}} : undef,
+				pedigree=>$self->germplasm_pedigree_string($stock_id),
+				germplasmSeedSource=>$stockprop_hash->{'seed source'} ? join ',', @{$stockprop_hash->{'seed source'}} : undef,
+				synonyms=> $stockprop_hash->{'stock_synonym'} ? join ',', @{$stockprop_hash->{'stock_synonym'}} : undef,
+				instituteCode=>$stockprop_hash->{'institute code'} ? join ',', @{$stockprop_hash->{'institute code'}} : undef,
+				instituteName=>$stockprop_hash->{'institute name'} ? join ',', @{$stockprop_hash->{'institute name'}} : undef,
+				biologicalStatusOfAccessionCode=>$stockprop_hash->{'biological status of accession code'} ? join ',', @{$stockprop_hash->{'biological status of accession code'}} : undef,
+				countryOfOriginCode=>$stockprop_hash->{'country of origin'} ? join ',', @{$stockprop_hash->{'country of origin'}} : undef,
+				typeOfGermplasmStorageCode=>$stockprop_hash->{'type of germplasm storage code'} ? join ',', @{$stockprop_hash->{'type of germplasm storage code'}} : undef,
+				speciesAuthority=>$organismprop_hash->{'species authority'} ? join ',', @{$organismprop_hash->{'species authority'}} : undef,
+				subtaxa=>$organismprop_hash->{'subtaxa'} ? join ',', @{$organismprop_hash->{'subtaxa'}} : undef,
+				subtaxaAuthority=>$organismprop_hash->{'subtaxa authority'} ? join ',', @{$organismprop_hash->{'subtaxa authority'}} : undef,
+				donors=>\@donor_array,
+				acquisitionDate=>$stockprop_hash->{'acquisition date'} ? join ',', @{$stockprop_hash->{'acquisition date'}} : undef,
+			};
+		} else {
+			push @result, {
+				stock_id => $stock_id,
+				uniquename => $uniquename
+			};
 		}
-		push @result, {
-			stock_id => $stock_id,
-			uniquename => $uniquename,
-			stock_name => $stock_name,
-			stock_type => $type,
-			stock_type_id => $type_id,
-			species => $species,
-			genus => $genus,
-			common_name => $common_name,
-			organism_id => $organism_id,
-			owners => \@owners,
-			organizations =>$stockprop_hash->{'organization'} ? join ',', @{$stockprop_hash->{'organization'}} : undef,
-			accessionNumber=>$stockprop_hash->{'accession number'} ? join ',', @{$stockprop_hash->{'accession number'}} : undef,
-			germplasmPUI=>$stockprop_hash->{'PUI'} ? join ',', @{$stockprop_hash->{'PUI'}} : undef,
-			pedigree=>$self->germplasm_pedigree_string($stock_id),
-			germplasmSeedSource=>$stockprop_hash->{'seed source'} ? join ',', @{$stockprop_hash->{'seed source'}} : undef,
-			synonyms=> $stockprop_hash->{'stock_synonym'} ? join ',', @{$stockprop_hash->{'stock_synonym'}} : undef,
-			instituteCode=>$stockprop_hash->{'institute code'} ? join ',', @{$stockprop_hash->{'institute code'}} : undef,
-			instituteName=>$stockprop_hash->{'institute name'} ? join ',', @{$stockprop_hash->{'institute name'}} : undef,
-			biologicalStatusOfAccessionCode=>$stockprop_hash->{'biological status of accession code'} ? join ',', @{$stockprop_hash->{'biological status of accession code'}} : undef,
-			countryOfOriginCode=>$stockprop_hash->{'country of origin'} ? join ',', @{$stockprop_hash->{'country of origin'}} : undef,
-			typeOfGermplasmStorageCode=>$stockprop_hash->{'type of germplasm storage code'} ? join ',', @{$stockprop_hash->{'type of germplasm storage code'}} : undef,
-			speciesAuthority=>$organismprop_hash->{'species authority'} ? join ',', @{$organismprop_hash->{'species authority'}} : undef,
-			subtaxa=>$organismprop_hash->{'subtaxa'} ? join ',', @{$organismprop_hash->{'subtaxa'}} : undef,
-			subtaxaAuthority=>$organismprop_hash->{'subtaxa authority'} ? join ',', @{$organismprop_hash->{'subtaxa authority'}} : undef,
-			donors=>\@donor_array,
-			acquisitionDate=>$stockprop_hash->{'acquisition date'} ? join ',', @{$stockprop_hash->{'acquisition date'}} : undef,
-		};
 	}
 
 	#print STDERR Dumper \@result;

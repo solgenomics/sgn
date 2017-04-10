@@ -29,6 +29,7 @@ use CXGN::Trial;
 use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Stock;
+use CXGN::Stock::Search;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -209,6 +210,65 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
+	my $self = shift;
+	my $c = shift;
+	my $params = _clean_inputs($c->req->params);
+	print STDERR Dumper $params;
+	my $stock_search = CXGN::Stock::Search->new({
+		bcs_schema=>$c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
+		people_schema=>$c->dbic_schema("CXGN::People::Schema"),
+		phenome_schema=>$c->dbic_schema("CXGN::Phenome::Schema"),
+		match_type=>$params->{match_type}->[0],
+		match_name=>$params->{match_type}->[0],
+		uniquename_list=>$params->{uniquename_list},
+		accession_number_list=>$params->{accession_number_list},
+		pui_list=>$params->{pui_list},
+		genus_list=>$params->{genus_list},
+		species_list=>$params->{species_list},
+		stock_id_list=>$params->{stock_id_list},
+		organism_id=>$params->{organism_id}->[0],
+		stock_type_name=>$params->{stock_type_name}->[0],
+		stock_type_id=>$params->{stock_type_id}->[0],
+		owner_first_name=>$params->{owner_first_name}->[0],
+		owner_last_name=>$params->{owner_last_name}->[0],
+		trait_cvterm_name_list=>$params->{trait_cvterm_name_list},
+		minimum_phenotype_value=>$params->{minimum_phenotype_value}->[0],
+		maximum_phenotype_value=>$params->{maximum_phenotype_value}->[0],
+		trial_name_list=>$params->{trial_name_list},
+		trial_id_list=>$params->{'trial_id_list[]'},
+		breeding_program_id_list=>$params->{breeding_program_id_list},
+		location_name_list=>$params->{location_name_list},
+		year_list=>$params->{year_list},
+		organization_list=>$params->{organization_list},
+		limit=>$params->{limit}->[0],
+		offset=>$params->{offset}->[0],
+		minimal_info=>1
+	});
+	my ($result, $records_total) = $stock_search->search();
+	#print STDERR Dumper $result;
+	my $id = $c->req->param("id") || "html_trial_select";
+	my $name = $c->req->param("name") || "html_trial_select";
+	my $size = $c->req->param("size");
+	my $empty = $c->req->param("empty") || "";
+	my @stocks;
+	foreach my $r (@$result) {
+		push @stocks, [ $r->{stock_id}, $r->{uniquename} ];
+	}
+	@stocks = sort @stocks;
+
+	if ($empty) { unshift @stocks, [ "", "Please select a stock" ]; }
+
+	my $html = simple_selectbox_html(
+		multiple => 1,
+		name => $name,
+		id => $id,
+		size => $size,
+		choices => \@stocks,
+	);
+	$c->stash->{rest} = { select => $html };
+}
+
 sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -365,6 +425,26 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         choices => \@ontology_children,
     );
     $c->stash->{rest} = { select => $html };
+}
+
+sub _clean_inputs {
+	no warnings 'uninitialized';
+	my $params = shift;
+	foreach (keys %$params){
+		my $values = $params->{$_};
+		my $ret_val;
+		if (ref \$values eq 'SCALAR'){
+			push @$ret_val, $values;
+		} elsif (ref $values eq 'ARRAY'){
+			$ret_val = $values;
+		} else {
+			die "Input is not a scalar or an arrayref\n";
+		}
+		@$ret_val = grep {$_ ne undef} @$ret_val;
+		@$ret_val = grep {$_ ne ''} @$ret_val;
+		$params->{$_} = $ret_val;
+	}
+	return $params;
 }
 
 1;
