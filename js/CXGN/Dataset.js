@@ -7,52 +7,71 @@ CXGN.Dataset = function () {
 
 
 CXGN.Dataset.prototype = {
-    
+
     // return info on all available datasets
-    getDatasets: function() { 
+    getDatasets: function() {
 	var datasets;
-	jQuery.ajax( { 
+	jQuery.ajax( {
 	    'url' : '/ajax/dataset/by_user',
 	    'async': false,
-	    'success': function(response) { 
-		if (response.error) { 
+	    'success': function(response) {
+		if (response.error) {
 		    alert(response.error);
 		}
-		else { 
+		else {
 		    datasets = response.datasets;
 		}
 	    },
-            'error': function(response) { 
+            'error': function(response) {
 		alert('An error occurred. Please try again.');
 	    }
-	});	
+	});
 	return datasets;
     },
 
-    getDataset: function(id) { 
+    getDataset: function(id) {
 	var dataset;
-	jQuery.ajax( { 
+	jQuery.ajax( {
 	    'url' : '/ajax/dataset/get/'+id,
 	    'async': false,
-	    'success': function(response) { 
-		if (response.error) { 
+	    'success': function(response) {
+		if (response.error) {
 		    alert(response.error);
 		}
-		else { 
+		else {
 		    dataset = response.dataset;
 		}
 	    },
-	    'error': function(response) { 
+	    'error': function(response) {
 		alert('An error occurred. The specified dataset may not exist. Please try again.');
 	    }
 	});
 	return dataset;
-	
+
     },
 
-    deleteDataset: function(id) { 
-	
+    deleteDataset: function(id) {
+
     },
+
+    datasetSelect: function(div_name, empty_element, refresh) {
+  var datasets = this.getDatasets();
+  var html = '<select class="form-control input-sm" id="'+div_name+'_dataset_select" name="'+div_name+'_dataset_select" >';
+  if (empty_element) {
+      html += '<option value="">'+empty_element+'</option>\n';
+        }
+  for (var n=0; n<datasets.length; n++) {
+      html += '<option value='+datasets[n][0]+'>'+datasets[n][1]+'</option>';
+  }
+  if (refresh) {
+    html = '<div class="input-group">'+html+'</select><span class="input-group-btn"><button class="btn btn-default" type="button" id="'+div_name+'_dataset_refresh" title="Refresh datasets" onclick="refreshDatasetSelect(\''+div_name+'_dataset_select\',\'Options refreshed.\')"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></span></div>';
+    return html;
+  }
+  else {
+    html = html + '</select>';
+    return html;
+  }
+},
 
     renderDatasets: function(div) {
 	var datasets = this.getDatasets();
@@ -78,16 +97,16 @@ CXGN.Dataset.prototype = {
 	jQuery('#'+div+'_div').html(html);
     },
 
-    renderItems: function(div, dataset_id) { 
+    renderItems: function(div, dataset_id) {
 	var dataset = this.getDataset(dataset_id);
 
 	var html = '';
 	for(var key in dataset.categories) {
-	    if (dataset.categories.hasOwnProperty(key)) { 
-		if (dataset.categories[key]===null || dataset.categories[key].length===0) { 
+	    if (dataset.categories.hasOwnProperty(key)) {
+		if (dataset.categories[key]===null || dataset.categories[key].length===0) {
 		    // do nothing?
 		}
-		else { 
+		else {
 		    html += '<b>'+key+'</b>'+JSON.stringify(dataset.categories[key])+"<br />";
 		}
 	    }
@@ -96,6 +115,18 @@ CXGN.Dataset.prototype = {
     }
 }
 
+function refreshDatasetSelect(div_name, empty_element) {
+  var l = new CXGN.Dataset();
+  var datasets = l.getDatasets();
+  var html;
+  if (empty_element) {
+      html += '<option value="">'+empty_element+'</option>\n';
+        }
+  for (var n=0; n<datasets.length; n++) {
+      html += '<option value='+datasets[n][0]+'>'+datasets[n][1]+'</option>';
+  }
+  jQuery('#'+div_name).html(html);
+}
 
 function setUpDatasets() {
     jQuery("button[name='datasets_link']").click(
@@ -109,21 +140,21 @@ function show_datasets() {
     l.renderDatasets('dataset_dialog');
 }
 
-function deleteDataset(dataset_id) { 
+function deleteDataset(dataset_id) {
     var reply = confirm("Are you sure you want to delete the dataset with id "+dataset_id+"? Please note that deletion cannot be undone.");
 
-    if (reply) { 
-	jQuery.ajax( { 
+    if (reply) {
+	jQuery.ajax( {
 	    'url' : '/ajax/dataset/delete/'+dataset_id,
-	    'success': function(response) { 
-		if (response.error) { 
+	    'success': function(response) {
+		if (response.error) {
 		    alert(response.error);
 		}
-		else { 
+		else {
 		    alert('Successfully deleted dataset with id '+dataset_id);
 		}
 	    },
-	    'error': function(response) { 
+	    'error': function(response) {
 		alert('A processing error occurred.');
 	    }
 	})
@@ -131,13 +162,13 @@ function deleteDataset(dataset_id) {
 
 }
 
-function showDatasetItems(div, dataset_id) { 
+function showDatasetItems(div, dataset_id) {
 
     working_modal_show();
 
-    var d = new CXGN.Dataset();    
+    var d = new CXGN.Dataset();
     d.renderItems(div, dataset_id);
     jQuery('#'+div).modal("show");
-    
+
     working_modal_hide();
 }
