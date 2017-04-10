@@ -272,7 +272,7 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $trial_id = $c->req->param('trial_id') || 'all';
+    my $trial_ids = $c->req->param('trial_ids') || 'all';
     my $stock_id = $c->req->param('stock_id') || 'all';
     my $stock_type = $c->req->param('stock_type') . 's' || 'none';
     my $data_level = $c->req->param('data_level') || 'all';
@@ -283,7 +283,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     }
 
     my @traits;
-    if (($trial_id eq 'all') && ($stock_id eq 'all')) {
+    if (($trial_ids eq 'all') && ($stock_id eq 'all')) {
       my $bs = CXGN::BreederSearch->new( { dbh=> $c->dbc->dbh() } );
       my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
       if ($status->{'error'}) {
@@ -300,14 +300,17 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
             my @val = ($_->[0], $_->[2]."|".$_->[1]);
             push @traits, \@val;
         }
-    } elsif (looks_like_number($trial_id)) {
-      my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$trial_id});
-      my $traits_assayed = $trial->get_traits_assayed($data_level);
-      foreach (@$traits_assayed) {
-          my @val = ($_->[0], $_->[1]);
-          push @traits, \@val;
-      }
-    }
+	} elsif ($trial_ids ne 'all') {
+		my @trial_ids = split ',', $trial_ids;
+		foreach (@trial_ids){
+			my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
+			my $traits_assayed = $trial->get_traits_assayed($data_level);
+			foreach (@$traits_assayed) {
+				my @val = ($_->[0], $_->[1]);
+				push @traits, \@val;
+			}
+		}
+	}
 
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
