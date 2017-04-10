@@ -16,6 +16,7 @@ use CXGN::Phenotypes::SearchFactory;
 use CXGN::BreederSearch;
 use Spreadsheet::Read;
 use CXGN::Trial::Download;
+use DateTime;
 
 my $f = SGN::Test::Fixture->new();
 
@@ -54,6 +55,27 @@ my $pre_exp_md_files_count = $exp_md_files_rs->count();
 ########################################
 #Tests for phenotype spreadsheet parsing
 
+my $filename = "t/data/trial/upload_phenotypin_spreadsheet.xls";
+my $time = DateTime->now();
+my $timestamp = $time->ymd()."_".$time->hms();
+
+#Test archive upload file
+my $uploader = CXGN::UploadFile->new({
+  tempfile => $filename,
+  subdirectory => 'temp_fieldbook',
+  archive_path => '/tmp',
+  archive_filename => 'upload_phenotypin_spreadsheet.xls',
+  timestamp => $timestamp,
+  user_id => 41, #janedoe in fixture
+  user_role => 'curator'
+});
+
+## Store uploaded temporary file in archive
+my $archived_filename_with_path = $uploader->archive();
+my $md5 = $uploader->get_md5($archived_filename_with_path);
+ok($archived_filename_with_path);
+ok($md5);
+
 #check that parse fails for fieldbook file when using phenotype spreadsheet parser
 my $parser = CXGN::Phenotypes::ParseUpload->new();
 my $filename = "t/data/fieldbook/fieldbook_phenotype_file.csv";
@@ -68,11 +90,10 @@ ok($validate_file != 1, "Check if parse validate phenotype spreadsheet fails for
 
 #Now parse phenotyping spreadsheet file using correct parser
 $parser = CXGN::Phenotypes::ParseUpload->new();
-$filename = "t/data/trial/upload_phenotypin_spreadsheet.xls";
-$validate_file = $parser->validate('phenotype spreadsheet', $filename, 1, 'plots');
+$validate_file = $parser->validate('phenotype spreadsheet', $archived_filename_with_path, 1, 'plots');
 ok($validate_file == 1, "Check if parse validate works for phenotype file");
 
-my $parsed_file = $parser->parse('phenotype spreadsheet', $filename, 1, 'plots');
+my $parsed_file = $parser->parse('phenotype spreadsheet', $archived_filename_with_path, 1, 'plots');
 ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
 #print STDERR Dumper $parsed_file;
@@ -377,7 +398,7 @@ is_deeply($parsed_file, {
 
 
 my %phenotype_metadata;
-$phenotype_metadata{'archived_file'} = $filename;
+$phenotype_metadata{'archived_file'} = $archived_filename_with_path;
 $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-16_01:10:56";
@@ -2890,11 +2911,15 @@ foreach (@$files_uploaded){
 	$file_names{$_->[4]} = [$_->[4], $_->[6]];
 }
 #print STDERR Dumper \%file_names;
+my $found_timestamp_name;
+foreach (keys %file_names){
+	if (index($_, '_upload_phenotypin_spreadsheet.xls') != -1) {
+		$found_timestamp_name = 1;
+		delete($file_names{$_});
+	}
+}
+ok($found_timestamp_name);
 is_deeply(\%file_names, {
-          'upload_phenotypin_spreadsheet.xls' => [
-                                                   'upload_phenotypin_spreadsheet.xls',
-                                                   'spreadsheet phenotype file'
-                                                 ],
           'fieldbook_phenotype_file.csv' => [
                                               'fieldbook_phenotype_file.csv',
                                               'tablet phenotype file'
@@ -3268,8 +3293,11 @@ is($contents->[0]->{'sheets'}, '1', "check that type of file is correct");
 my $columns = $contents->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
 is(scalar(@$columns),20);
+if (exists($contents->[1]->{parser})){
+    delete($contents->[1]->{parser});
+}
 #print STDERR Dumper scalar keys %{$contents->[1]};
-is(scalar keys %{$contents->[1]}, 491);
+is(scalar keys %{$contents->[1]}, 490);
 
 
 my $csv_response = [

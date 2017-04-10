@@ -44,15 +44,17 @@ my $organism_select = simple_selectbox_html(
 
 my $breeding_programs_select = simple_selectbox_html(
     choices => $breeding_programs,
-    id      => "organization" ,
+    id      => "breeding_program" ,
 );
-
 
 </%perl>
 
 <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0, subtitle=>'[<a href="/stock/0/new/">Submit New Stock</a>]' &>
 
   <div id="stock_search_form" class="form-horizontal well">
+      <center><h4>Properties</h4></center>
+      <hr>
+
     <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
@@ -100,25 +102,29 @@ my $breeding_programs_select = simple_selectbox_html(
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Stock Owner: </label>
           <div class="col-sm-9" >
-            <input type="text" class="form-control" id="person" />
+            <input type="text" class="form-control" id="person" placeholder="Type to Autocomplete"/>
           </div>
         </div>
       </div>
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Trait: </label>
+          <label class="col-sm-3 control-label">Organization: </label>
           <div class="col-sm-9" >
-            <input type="text" class="form-control" id="trait" />
+            <input type="text" class="form-control" id="organization" placeholder="Type to Autocomplete"/>
           </div>
         </div>
       </div>
     </div>
+    <hr>
+    <center><h4>Usage</h4></center>
+    <hr>
+
     <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Project Name: </label>
           <div class="col-sm-9" >
-            <input type="text" class="form-control" id="project" />
+            <input type="text" class="form-control" id="project" placeholder="Type to Autocomplete"/>
           </div>
         </div>
       </div>
@@ -126,7 +132,7 @@ my $breeding_programs_select = simple_selectbox_html(
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Project Location: </label>
           <div class="col-sm-9" >
-            <input type="text" class="form-control" id="location" />
+            <input type="text" class="form-control" id="location" placeholder="Type to Autocomplete"/>
           </div>
         </div>
       </div>
@@ -136,20 +142,33 @@ my $breeding_programs_select = simple_selectbox_html(
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Project Year: </label>
           <div class="col-sm-9" >
-            <input type="text" class="form-control" id="year" />
+            <input type="text" class="form-control" id="year" placeholder="Type to Autocomplete"/>
           </div>
         </div>
       </div>
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Organization: </label>
+          <label class="col-sm-3 control-label">Breeding Program: </label>
           <div class="col-sm-9" >
             <% $breeding_programs_select %>
           </div>
         </div>
       </div>
     </div>
+
+    <hr>
+    <center><h4>Phenotypes</h4></center>
+    <hr>
+
     <div class="row">
+        <div class="col-sm-6">
+          <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Trait: </label>
+            <div class="col-sm-9" >
+              <input type="text" class="form-control" id="trait" placeholder="Type to Autocomplete"/>
+            </div>
+          </div>
+        </div>
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Minimum Trait Value: </label>
@@ -158,6 +177,8 @@ my $breeding_programs_select = simple_selectbox_html(
           </div>
         </div>
       </div>
+      </div>
+      <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Maximum Trait Value: </label>
@@ -185,6 +206,8 @@ my $breeding_programs_select = simple_selectbox_html(
     <th>Stock Type</th>
     <th>Organism</th>
     <th>Synonyms</th>
+    <th>Owners</th>
+    <th>Organizations</th>
 </tr>
 </thead>
 
@@ -225,6 +248,9 @@ jQuery(document).ready(function () {
      jQuery("#year").autocomplete({
         source: '/ajax/stock/project_year_autocomplete',
      });
+     jQuery("#organization").autocomplete({
+        source: '/ajax/stock/stock_organization_autocomplete',
+     });
 
    var stock_table = jQuery('#stock_search_results').DataTable( {
 
@@ -245,6 +271,7 @@ jQuery(document).ready(function () {
                   d.project      = jQuery('#project').val();
                   d.location     = jQuery('#location').val();
                   d.year         = jQuery('#year').val();
+                  d.breeding_program = jQuery('#breeding_program').val();
                   d.organization = jQuery('#organization').val();
              }
          }

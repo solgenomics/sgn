@@ -93,6 +93,9 @@ $preferred_species => ""
     	  <label for="population_name_input">Population name for added accessions (optional)</label>
   	  <input class="form-control" type="text" id="population_name_input"></input>
   	  <br><br>
+          <label for="organization_name_input">Organization name for added accessions (optional)</label>
+      <input class="form-control" type="text" id="organization_name_input"></input>
+      <br><br>
   	  <b>The following accessions will be added to the database:</b>
   	  <div id="count_of_absent_accessions"></div>
   	  <br>

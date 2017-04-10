@@ -75,7 +75,7 @@ jQuery(document).ready(function ($) {
       });
     });
 
-    function add_accessions(accessionsToAdd, speciesName, populationName) {
+    function add_accessions(accessionsToAdd, speciesName, populationName, organizationName  ) {
         var accessionsAsJSON = JSON.stringify(accessionsToAdd);
         $.ajax({
             type: 'POST',
@@ -87,6 +87,7 @@ jQuery(document).ready(function ($) {
                 'accession_list': accessionsAsJSON,
                 'species_name': speciesName,
                 'population_name': populationName,
+                'organization_name': organizationName
             },
             beforeSend: function(){
                 disable_ui();
@@ -197,6 +198,7 @@ jQuery(document).ready(function ($) {
     $('#review_absent_accessions_submit').click(function () {
         var speciesName = $("#species_name_input").val();
         var populationName = $("#population_name_input").val();
+        var organizationName = $("#organization_name_input").val();
         var accessionsToAdd = accessionList;
         if (!speciesName) {
             alert("Species name required");
@@ -209,7 +211,7 @@ jQuery(document).ready(function ($) {
             alert("No accessions to add");
             return;
         }
-        add_accessions(accessionsToAdd, speciesName, populationName);
+        add_accessions(accessionsToAdd, speciesName, populationName, organizationName);
         $('#review_absent_dialog').modal("hide");
         location.reload();
     });
@@ -252,7 +254,7 @@ jQuery(document).ready(function ($) {
                 for(j=0; j < verifyResponse.fuzzy[i].matches.length; j++){
                     fuzzy_html = fuzzy_html + '<option value="' + verifyResponse.fuzzy[i].matches[j].name + '">' + verifyResponse.fuzzy[i].matches[j].name + '</option>';
                 }
-                fuzzy_html = fuzzy_html + '</select></td><td><select class="form-control" name="fuzzy_option"><option value="replace">Replace name in your list with selected existing name</option><option value="keep">Continue saving name in your list</option><option value="remove">Remove name in your list and ignore</option><option value="synonymize">Add name in your list as a synonym to selected existing name</option></select></td></tr>';
+                fuzzy_html = fuzzy_html + '</select></td><td><select class="form-control" name="fuzzy_option"><option value="keep">Continue saving name in your list</option><option value="replace">Replace name in your list with selected existing name</option><option value="remove">Remove name in your list and ignore</option><option value="synonymize">Add name in your list as a synonym to selected existing name</option></select></td></tr>';
             }
             fuzzy_html = fuzzy_html + '</tbody></table>';
             $('#view_fuzzy_matches').html(fuzzy_html);

@@ -468,8 +468,10 @@ sub structure_output_details {
 	else 
 	{	    
 	    $solgs_controller->phenotype_file_name($c);	
-	    $solgs_controller->genotype_file_name($c);
-	
+	    $solgs_controller->genotype_file_name($c);	    
+	    $pheno_file = $c->stash->{phenotype_file_name};
+	    $geno_file  = $c->stash->{genotype_file_name};
+	  
 	    $solgs_controller->get_project_details($c, $pop_id);
 	    $pop_name = $c->stash->{project_name};
 	}
