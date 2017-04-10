@@ -151,7 +151,7 @@ window.onload = function initialize() {
 	var years = get_selected_results('years');
 	var locations = get_selected_results('locations');
 	var traits = get_selected_results('traits');
-	var breeding_programs = get_selected_results('breeding_program');
+	var breeding_programs = get_selected_results('breeding_programs');
 	var genotyping_protocols = get_selected_results('genotyping_protocols');
 	var trial_types = get_selected_results('trial_types');
 	var trial_designs = get_selected_results('trial_designs');
@@ -160,7 +160,7 @@ window.onload = function initialize() {
 	var description = jQuery('#save_wizard_dataset_description').val();
 	var category_order = get_selected_categories(4);
 	alert(JSON.stringify(category_order));
-	var params =  "trials="+JSON.stringify(trials)+"&traits="+JSON.stringify(traits)+"&accessions="+JSON.stringify(accessions)+"&plots="+JSON.stringify(plots)+"&plants="+JSON.stringify(plants)+"&locations="+JSON.stringify(locations)+"&years="+JSON.stringify(years)+"&name="+name+"&description="+description+"&category_order="+JSON.stringify(category_order);
+	var params =  "accessions="+JSON.stringify(accessions)+"&trials="+JSON.stringify(trials)+"&plots="+JSON.stringify(plots)+"&years="+JSON.stringify(years)+"&locations="+JSON.stringify(locations)+"&traits="+JSON.stringify(traits)+"&breeding_programs="+JSON.stringify(breeding_programs)+"&genotyping_protocols="+JSON.stringify(genotyping_protocols)+"&trial_types="+JSON.stringify(trial_types)+"&trial_designs="+JSON.stringify(trial_designs)+"&plants="+JSON.stringify(plants)+"&name="+name+"&description="+description+"&category_order="+JSON.stringify(category_order);
 
 	jQuery.ajax( {
 	    'url': '/ajax/dataset/save?'+params,
