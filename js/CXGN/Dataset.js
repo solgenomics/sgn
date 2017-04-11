@@ -10,17 +10,16 @@ CXGN.Dataset.prototype = {
 
     // return info on all available datasets
     getDatasets: function() {
-	var datasets;
+	var datasets=[];
 	jQuery.ajax( {
 	    'url' : '/ajax/dataset/by_user',
 	    'async': false,
 	    'success': function(response) {
 		if (response.error) {
-		    alert(response.error);
+		    //alert(response.error);
 		}
-		else {
-		    datasets = response.datasets;
-		}
+		    datasets = response;
+
 	    },
             'error': function(response) {
 		alert('An error occurred. Please try again.');
@@ -55,7 +54,9 @@ CXGN.Dataset.prototype = {
     },
 
     datasetSelect: function(div_name, empty_element, refresh) {
-  var datasets = this.getDatasets();
+
+  var datasets = new Array();
+  datasets = this.getDatasets();
   var html = '<select class="form-control input-sm" id="'+div_name+'_dataset_select" name="'+div_name+'_dataset_select" >';
   if (empty_element) {
       html += '<option value="">'+empty_element+'</option>\n';
