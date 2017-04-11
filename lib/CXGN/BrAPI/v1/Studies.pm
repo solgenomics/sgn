@@ -8,6 +8,7 @@ use CXGN::Trial::Search;
 use CXGN::Trial::TrialLayout;
 use CXGN::Trait;
 use CXGN::Phenotypes::SearchFactory;
+use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::FileResponse;
 use CXGN::BrAPI::JSONResponse;
@@ -525,17 +526,15 @@ sub studies_table {
 	if ($search_type eq 'fast'){
 		$factory_type = 'MaterializedView';
 	}
-	my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-		$factory_type,    #can be either 'MaterializedView', or 'Native'
-		{
-			bcs_schema=>$self->bcs_schema,
-			data_level=>$data_level,
-			trial_list=>[$study_id],
-			trait_list=>\@trait_ids_array,
-			include_timestamp=>1,
-		}
+	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+		search_type=>$factory_type,
+		bcs_schema=>$self->bcs_schema,
+		data_level=>$data_level,
+		trial_list=>[$study_id],
+		trait_list=>\@trait_ids_array,
+		include_timestamp=>1,
 	);
-	my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
+	my @data = $phenotypes_search->get_phenotype_matrix();
 	#print STDERR Dumper \@data;
 
 	my %result;
@@ -543,7 +542,7 @@ sub studies_table {
 	my $total_count = 0;
 	if ($format eq 'json') {
 		$total_count = scalar(@data)-1;
-		my @header_names = split /\t/, $data[0];
+		my @header_names = @{$data[0]};
 		#print STDERR Dumper \@header_names;
 		my @trait_names = @header_names[15 .. $#header_names];
 		#print STDERR Dumper \@trait_names;
@@ -557,9 +556,8 @@ sub studies_table {
 		my @data_window;
 		for (my $line = $start; $line < $end; $line++) {
 			if ($data[$line]) {
-				my @columns = split /\t/, $data[$line], -1;
-
-				push @data_window, \@columns;
+				my $columns = $data[$line];
+				push @data_window, $columns;
 			}
 		}
 
@@ -576,17 +574,11 @@ sub studies_table {
 	} elsif ($format eq 'tsv' || $format eq 'csv' || $format eq 'xls') {
 		# if xls or csv or tsv, create tempfile name and place to save it
 
-		my @data_out;
-		foreach (@data){
-			my @line = split /\t/, $_;
-			push @data_out, \@line;
-		}
-
 		my $file_response = CXGN::BrAPI::FileResponse->new({
 			absolute_file_path => $file_path,
 			absolute_file_uri => $inputs->{main_production_site_url}.$file_uri,
 			format => $format,
-			data => \@data_out
+			data => \@data
 		});
 		@data_files = $file_response->get_datafiles();
 
