@@ -29,7 +29,7 @@ use SGN::Model::Cvterm;
 use CXGN::Trial::TrialLookup;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
-use CXGN::Phenotypes::SearchFactory;
+use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Genotype::Search;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
@@ -451,18 +451,16 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     if ($search_type eq 'fast'){
         $factory_type = 'MaterializedView';
     }
-    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-        $factory_type,    #can be either 'MaterializedView', or 'Native'
-        {
-            bcs_schema=>$schema,
-            trait_list=>$trait_id_data->{transform},
-            trial_list=>$trial_id_data->{transform},
-            accession_list=>$accession_id_data->{transform},
-            include_timestamp=>$timestamp_included,
-            data_level=>$datalevel,
-        }
-    );
-    my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
+	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+		bcs_schema=>$schema,
+		search_type=>$factory_type,
+		trait_list=>$trait_id_data->{transform},
+		trial_list=>$trial_id_data->{transform},
+		accession_list=>$accession_id_data->{transform},
+		include_timestamp=>$timestamp_included,
+		data_level=>$datalevel,
+	);
+	my @data = $phenotypes_search->get_phenotype_matrix();
 
     if ($format eq "html") { #dump html in browser
         $output = "";

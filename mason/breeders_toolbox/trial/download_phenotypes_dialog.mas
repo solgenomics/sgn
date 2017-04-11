@@ -1,7 +1,8 @@
 
 <%args>
-$trial_id
-$trial_name => undef
+$trial_ids
+$dialog_type => undef
+$dialog_name => undef
 </%args>
 
 
@@ -10,7 +11,7 @@ $trial_name => undef
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="downloadTrialPhenotypesDialog">Download Phenotypes for Trial  <% $trial_name %></h4>
+        <h4 class="modal-title" id="downloadTrialPhenotypesDialog">Download Phenotypes for <% $dialog_type %>  <% $dialog_name %></h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -20,8 +21,8 @@ $trial_name => undef
                 <label class="col-sm-3 control-label">Format: </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_trial_phenotypes_format">
-                        <option value="xls">Excel (xls)</option>
                         <option value="csv">CSV</option>
+						<option value="xls">Excel (xls)</option>
                     </select>
                 </div>
 	        </div>
@@ -110,8 +111,8 @@ jQuery(document).ready(function() {
   });
 
   jQuery('#download_trial_phenotypes_submit_button').click( function () {
-    var trial_id = "<% $trial_id %>";
-    var trial_id_array = trial_id.split(",");
+    var trial_ids = "<% $trial_ids %>";
+    var trial_id_array = trial_ids.split(",");
     var format = jQuery("#download_trial_phenotypes_format").val();
     var timestamp = jQuery("#download_trial_phenotypes_timestamp_option").val();
     var trait_contains = jQuery("#download_trial_phenotype_trait_contains").val();
@@ -129,6 +130,6 @@ jQuery(document).ready(function() {
 });
 
 function data_level_change_traits() {
-    get_select_box('traits', 'download_trial_phenotypes_traits', { 'name' : 'download_trial_phenotypes_traits_select', 'id' : 'download_trial_phenotypes_traits_select', 'trial_id':<% $trial_id %>, 'data_level':jQuery('#download_trial_phenotypes_level_option').val() });
+    get_select_box('traits', 'download_trial_phenotypes_traits', { 'name' : 'download_trial_phenotypes_traits_select', 'id' : 'download_trial_phenotypes_traits_select', 'trial_ids':'<% $trial_ids %>', 'data_level':jQuery('#download_trial_phenotypes_level_option').val() });
 }
 </script>
