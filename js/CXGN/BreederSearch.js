@@ -235,6 +235,7 @@ function retrieve_and_display_set(categories, data, this_section, selected, data
         }
         var data = jQuery('#'+data_id).val() || [];;
 		    show_list_counts(count_id, list.length, data.length);
+        update_download_options(this_section, categories);
 
 		    if (jQuery('#navbar_lists').length) {
           addToListMenu(listmenu_id, data_id, {
@@ -294,7 +295,7 @@ function get_selected_categories(this_section) {
   for (i=2; i <= this_section; i++) {
     var element_id = "select"+i;
     var category = jQuery("#"+element_id).val();
-    selected_categories.push(category);
+    if (category != '') { selected_categories.push(category) };
   }
   var next_section = this_section +1;
   var next_select_id = "select"+next_section;
@@ -734,13 +735,11 @@ function replay_dataset_info(dataset_id, section_number) {
   if (error) return;
   if (data.length >= categories.length) data.pop(); //remove extra data array if exists
   var selected = dataset.categories[category_order[i]];
-  //alert('highlighting '+JSON.stringify(selected));
   var next_section_number = section_number + 1;
-  if (next_section_number < category_order.length) {
+  if (section_number < category_order.length) {
     retrieve_and_display_set(categories, data, section_number, selected, dataset_id, replay_dataset_info);
   } else {
     retrieve_and_display_set(categories, data, section_number, selected);
     enable_ui();
   }
-      update_download_options(section_number);
-    }
+}
