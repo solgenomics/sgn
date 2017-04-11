@@ -27,7 +27,7 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         offset=>$offset
     }
 );
-my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
+my @data = $phenotypes_search->search();
 
 =head1 DESCRIPTION
 

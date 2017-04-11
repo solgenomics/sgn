@@ -26,7 +26,7 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         offset=>$offset
     }
 );
-my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
+my @data = $phenotypes_search->search();
 
 =head1 DESCRIPTION
 
@@ -284,79 +284,5 @@ sub _sql_from_arrayref {
     return $sql;
 }
 
-
-sub get_extended_phenotype_info_matrix {
-    my $self = shift;
-    my $data = $self->search();
-    my %plot_data;
-    my %traits;
-    my $include_timestamp = $self->include_timestamp;
-
-    print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
-    print STDERR "Construct Pheno Matrix Start:".localtime."\n";
-    my @unique_plot_list = ();
-    my %seen_plots;
-    foreach my $d (@$data) {
-
-        my ($year, $project_name, $stock_name, $location, $cvterm, $value, $plot_name, $rep, $block_number, $plot_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id) = @$d;
-
-        if (!exists($seen_plots{$plot_id})) {
-            push @unique_plot_list, $plot_id;
-            $seen_plots{$plot_id} = 1;
-        }
-
-        #my $cvterm = $trait."|".$cvterm_accession;
-        if ((!exists($plot_data{$plot_id}->{$cvterm})) && $include_timestamp && $timestamp_value) {
-            $plot_data{$plot_id}->{$cvterm} = "$value,$timestamp_value";
-        } elsif (!exists($plot_data{$plot_id}->{$cvterm})) {
-            $plot_data{$plot_id}->{$cvterm} = $value;
-        }
-        my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
-        $plot_data{$plot_id}->{metadata} = {
-            replicate => $rep,
-            studyName => $project_name,
-            germplasmName => $stock_name,
-            locationName => $location,
-            blockNumber => $block_number,
-            plotNumber => $plot_number,
-            observationUnitName => $plot_name,
-            year => $year,
-            studyDbId => $project_id,
-            locationDbId => $location_id,
-            germplasmDbId => $stock_id,
-            observationUnitDbId => $plot_id,
-            germplasmSynonyms => $synonym_string,
-            studyDesign => $design,
-            observationLevel => $stock_type_name
-        };
-        $traits{$cvterm}++;
-    }
-    #print STDERR Dumper \%plot_data;
-
-    my @info = ();
-    my $line = join "\t", qw | studyYear studyDbId studyName studyDesign locationDbId locationName germplasmDbId germplasmName germplasmSynonyms observationLevel observationUnitDbId observationUnitName replicate blockNumber plotNumber|;
-
-    # generate header line
-    #
-    my @sorted_traits = sort keys(%traits);
-    foreach my $trait (@sorted_traits) {
-        $line .= "\t".$trait;
-    }
-    push @info, $line;
-
-    #print STDERR Dumper \@unique_plot_list;
-
-    foreach my $p (@unique_plot_list) {
-        $line = join "\t", map { $plot_data{$p}->{metadata}->{$_} } ( "year", "studyDbId", "studyName", "studyDesign", "locationDbId", "locationName", "germplasmDbId", "germplasmName", "germplasmSynonyms", "observationLevel", "observationUnitDbId", "observationUnitName", "replicate", "blockNumber", "plotNumber" );
-
-        foreach my $trait (@sorted_traits) {
-            my $tab = $plot_data{$p}->{$trait};
-            $line .= defined($tab) ? "\t".$tab : "\t";
-        }
-        push @info, $line;
-    }
-    print STDERR "Construct Pheno Matrix End:".localtime."\n";
-    return @info;
-}
 
 1;
