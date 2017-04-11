@@ -76,9 +76,11 @@ sub download {
 
 	no warnings 'uninitialized';
     open(my $F, ">", $self->filename()) || die "Can't open file ".$self->filename();
-        print $F "\"Date of Download: $timestamp\"\n";
-        print $F "\"Search Parameters: $search_parameters\"\n";
-        print $F "\n";
+      if ($self->has_header){
+          print $F "\"Date of Download: $timestamp\"\n";
+          print $F "\"Search Parameters: $search_parameters\"\n";
+          print $F "\n";
+      }
         my $header =  $data[0];
         my $num_col = scalar(@$header);
         for (my $line =0; $line< @data; $line++) {
