@@ -267,36 +267,35 @@ sub get_common_traits {
 
     my $common_trait_count = scalar(@common_traits);
     
-    my @common_accessions;
+    my @common_accessions = ();
+
     foreach my $t (@trial_objects) { 
 	my $accessions = $t->get_accessions();
 	push @common_accessions, $accessions;
     }
-
-    if (!@common_accessions) { @common_accessions = (); }
-
+    
     my @total_accessions;
-
     my @previous_accessions = @{$common_accessions[0]};
-    my @accessions;
     for(my $i = 1; $i<@common_accessions; $i++) { 
-	my $list = List::Compare->new(\@previous_accessions, \@accessions);
+ 	my @previous_accession_names = map { $_->{accession_name} } @previous_accessions;
+ 	my @accession_names = map { $_->{accession_name} } @{$common_accessions[$i]};
 	
-	@accessions = $list->get_intersection();
+	my $list = List::Compare->new(\@previous_accession_names, \@accession_names);
+	
+	@previous_accessions = $list->get_intersection();
 	@total_accessions = $list->get_union();
     }
-
+    
     @common_accessions = @previous_accessions;
     my $common_accession_count = scalar(@common_accessions);
     my $total_accession_count = scalar(@total_accessions);
-    print STDERR "Traits:\n";
-    print STDERR Dumper(\@common_traits);
-    
+
+  
+       
     my @options;
     foreach my $t (@common_traits) { 
 	push @options, [ $t->[0], $t->[1] ];
     }
-
     $c->stash->{rest} = { 
 	options => \@options ,
 	common_accession_count => $common_accession_count,
