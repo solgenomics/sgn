@@ -18,4 +18,12 @@ sub input :Path('/tools/expression/')  :Args(0) {
 }
 
 
+sub expression_atlas :Path('/tools/expression_atlas/')  :Args(0) {
+	my ($self, $c) = @_;
+	$c->stash->{has_expression_atlas} = $c->config->{has_expression_atlas};
+	$c->stash->{expression_atlas_url} = $c->config->{expression_atlas_url};
+	$c->stash->{site_project_name} = $c->config->{project_name};
+	$c->stash->{template} = '/tools/expression/expression_atlas.mas';
+}
+
 1;

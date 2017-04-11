@@ -5,7 +5,7 @@ use Moose::Role;
 
 use Spreadsheet::WriteExcel;
 use CXGN::Trial;
-use CXGN::Phenotypes::SearchFactory;
+use CXGN::Phenotypes::PhenotypeMatrix;
 use Data::Dumper;
 
 sub verify {
@@ -43,25 +43,23 @@ sub download {
     if ($search_type eq 'fast'){
         $factory_type = 'MaterializedView';
     }
-    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-        $factory_type,    #can be either 'MaterializedView', or 'Native'
-        {
-            bcs_schema=>$schema,
-            data_level=>$data_level,
-            trait_list=>$trait_list,
-            trial_list=>$trial_list,
-            year_list=>$year_list,
-            location_list=>$location_list,
-            accession_list=>$accession_list,
-            plot_list=>$plot_list,
-            plant_list=>$plant_list,
-            include_timestamp=>$include_timestamp,
-            trait_contains=>$trait_contains,
-            phenotype_min_value=>$phenotype_min_value,
-            phenotype_max_value=>$phenotype_max_value,
-        }
-    );
-    my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
+	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+		bcs_schema=>$schema,
+		search_type=>$factory_type,
+		data_level=>$data_level,
+		trait_list=>$trait_list,
+		trial_list=>$trial_list,
+		year_list=>$year_list,
+		location_list=>$location_list,
+		accession_list=>$accession_list,
+		plot_list=>$plot_list,
+		plant_list=>$plant_list,
+		include_timestamp=>$include_timestamp,
+		trait_contains=>$trait_contains,
+		phenotype_min_value=>$phenotype_min_value,
+		phenotype_max_value=>$phenotype_max_value,
+	);
+	my @data = $phenotypes_search->get_phenotype_matrix();
     #print STDERR Dumper \@data;
 
     print STDERR "Print Excel Start:".localtime."\n";
@@ -90,8 +88,8 @@ sub download {
 	}
 
     for (my $line=0; $line< scalar(@data); $line++) {
-        my @columns = split /\t/, $data[$line];
-        $ws->write_row($line+$header_offset, 0, \@columns);
+        my $columns = $data[$line];
+        $ws->write_row($line+$header_offset, 0, $columns);
     }
     $ss ->close();
     print STDERR "Print Excel End:".localtime."\n";
