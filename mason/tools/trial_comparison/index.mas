@@ -23,7 +23,7 @@
   <tr><td><div id="trial_list_select_div" width="200"></td></tr>
   <tr><td>Trials contain a total of <span id="total_accession_count">?</span> accessions, with <span id="common_accession_count">?</span> common accessions, phenotyped for <span id="common_trait_count">?</span> common traits</td></tr>
   <tr><td><b>Choose trait:</b></td></tr>
-  <tr><td><select id="trait_select"><option disabled="1">select trials first</option></select></td></tr>
+  <tr><td><select class="form-control" id="trait_select"><option disabled="1">select trials first</option></select></td></tr>
   <tr><td><button id="submit_trial_list">Compare</button></td></tr>
   </table>
 
