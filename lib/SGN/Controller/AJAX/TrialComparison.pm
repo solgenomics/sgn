@@ -141,23 +141,10 @@ sub make_graph {
     my @trial_ids = @_;
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema"); 
-    # my $ds = CXGN::Dataset->new( people_schema => $c->dbic_schema("CXGN::People::Schema"), schema => $schema);
-    
-    # $ds->trials( [ @trial_ids ]);
-    # $ds->traits( [ $cvterm_id ]);
-    
-    # my $data = $ds->retrieve_phenotypes();
 
     $c->tempfiles_subdir("compare_trials");
 
-    # print STDERR Dumper($data);
      my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"compare_trials/trial_phenotypes_download_XXXXX");
-    # foreach my $line (@$data) { 
-    # 	my @columns = split "\t", $line;
-    # 	my @quoted_columns = map { "\"$_\"" }  @columns;
-    # 	my $csv_line = join ",", @quoted_columns;
-    # 	print $fh $csv_line."\n";
-#}
     
     my $temppath = $c->config->{basepath}."/".$tempfile;
 
@@ -201,32 +188,9 @@ sub common_traits_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     
-    #my $trial_1 = $c->req->param("trial_1");
-    #my $trial_2 = $c->req->param("trial_2");
-    
     my @trials = $c->req->param("trial_name");
 
-    # if ($trial_list_id) { 
-    # 	#print STDERR "Parsing trial_list_id...\n";
-    # 	my $list = CXGN::List->new(
-    # 	    { 
-    # 		dbh => $c->dbic_schema("Bio::Chado::Schema")->storage->dbh(),
-    # 		list_id => $trial_list_id,
-    # 	    });
-    # 	my $trials = $list->elements();
-    # 	#print STDERR Dumper($trials);
-    # 	@trials = @$trials;
-    # }
-    #else { 
-	#print STDERR "Parsing trial_1 and trial_2...\n";
-    #if ( ($trial_1 ne "") && ($trial_2 ne "")) { 
-#	    @trials = ($trial_1, $trial_2);
-#	}
-    #}
-    
     $self->get_common_traits($c, @trials);
-    
-
 }
 
 
@@ -249,9 +213,7 @@ sub get_common_traits {
 	push @trait_lists, $traits;
     }
     
-    print STDERR Dumper(\@trait_lists);
     my @common_traits = @{$trait_lists[0]};
-
 
     for(my $i=1; $i<@trait_lists; $i++ ) { 
 	my @local_common = ();
@@ -289,8 +251,6 @@ sub get_common_traits {
     @common_accessions = @previous_accessions;
     my $common_accession_count = scalar(@common_accessions);
     my $total_accession_count = scalar(@total_accessions);
-
-  
        
     my @options;
     foreach my $t (@common_traits) { 
@@ -302,10 +262,6 @@ sub get_common_traits {
         common_trait_count => $common_trait_count,
 	total_accession_count => $total_accession_count,
     };
-
-
 }
-
-
 
 1;
