@@ -160,6 +160,7 @@ function pcaResult () {
 
     if (listId || popId) {
 	jQuery("#pca_message").html("Running PCA... please wait...");
+	jQuery("#run_pca").hide();
     }  
    
     jQuery.ajax({
@@ -193,11 +194,13 @@ function pcaResult () {
 		jQuery("#run_pca").hide();
 
             } else {                
-		jQuery("#pca_message").html(response.status); 
+		jQuery("#pca_message").html(response.status);
+		jQuery("#run_pca").show();
             }
 	},
         error: function(response) {                    
             jQuery("#pca_message").html('Error occured running population structure analysis (PCA).');
+	    jQuery("#run_pca").show();
         }  
     });
   
