@@ -260,22 +260,19 @@ sub run : Path('/tools/blast/run') Args(0) {
         @command,
         {
           temp_base => $blast_tmp_output,
-          #queue => $c->config->{'web_cluster_queue'},
-          #working_dir => $blast_tmp_output,
-
-          #out_file => $blast_tmp_output,
-
+          queue => $c->config->{'web_cluster_queue'},
+          working_dir => $blast_tmp_output,
+        
           # temp_base => $c->config->{'cluster_shared_tempdir'},
           # queue => $c->config->{'web_cluster_queue'},
           # working_dir => $c->config->{'cluster_shared_tempdir'},
 
   		    # don't block and wait if the cluster looks full
   		    max_cluster_jobs => 1_000_000_000,
-          backend => 'slurm'
   	    }
   	  );
-
-      print STDERR "Saving job state to $seqfile.job for id ".$job->_jobid()."\n";
+   
+      print STDERR "Saving job state to $seqfile.job for id ".$job->job_id()."\n";
 
       while (my $alive = $job->alive()) {
         sleep(1);
@@ -325,7 +322,6 @@ sub check : Path('/tools/blast/check') Args(1) {
 
     #my $jobid =~ s/\.\.//g; # prevent hacks
     my $job = retrieve($blast_tmp_output."/".$jobid.".job");
-
     if ( $job->alive ){
       # my $t1 = [gettimeofday]; #-------------------------- TIME CHECK
 
