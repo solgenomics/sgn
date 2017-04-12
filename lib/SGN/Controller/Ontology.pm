@@ -40,10 +40,8 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
       return;
     }
 
-    $c->stash->{entity_namespaces} = $c->config->{entity_namespaces};
-    $c->stash->{quality_namespaces} = $c->config->{quality_namespaces};
-    $c->stash->{unit_namespaces} = $c->config->{unit_namespaces};
-    $c->stash->{time_namespaces} = $c->config->{time_namespaces};
+    #$c->stash->{composable_cvs} = $c->config->{composable_cvs};
+    $c->stash->{composing_order} = $c->config->{composing_order};
 
     $c->stash->{user} = $c->user();
     $c->stash->{template} = '/ontology/compose_trait.mas';
