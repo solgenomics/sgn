@@ -280,6 +280,8 @@
       });
       rectangle_layer.add(blastHit);
 
+
+
       if (prev_subject != subject_name) {
         //print subject names
         var subject_text = new Kinetic.Text({
