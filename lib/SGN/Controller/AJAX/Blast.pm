@@ -274,13 +274,11 @@ sub run : Path('/tools/blast/run') Args(0) {
    
       print STDERR "Saving job state to $seqfile.job for id ".$job->job_id()."\n";
 
-      while (my $alive = $job->alive()) {
-        sleep(1);
-      }
 
       $job->do_not_cleanup(1);
 
-      nstore( $job, $seqfile.".job" ) or die 'could not serialize job object';
+      #nstore( $job, $seqfile.".job" ) or die 'could not serialize job object';
+	  nstore( $job->out(), $seqfile.".job" ) or die 'could not serialize job object';
 
     };
 
