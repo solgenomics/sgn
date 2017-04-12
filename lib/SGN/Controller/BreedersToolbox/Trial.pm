@@ -96,7 +96,9 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{has_plant_entries} = $trial->has_plant_entries();
 
     $c->stash->{hidap_enabled} = $c->config->{hidap_enabled};
-    $c->stash->{cassbase_to_cea} = $c->config->{cassbase_to_cea};
+    $c->stash->{has_expression_atlas} = $c->config->{has_expression_atlas};
+    $c->stash->{expression_atlas_url} = $c->config->{expression_atlas_url};
+    $c->stash->{site_project_name} = $c->config->{project_name};
 
     if ($trial->get_folder) {
       $c->stash->{folder_id} = $trial->get_folder()->project_id();
