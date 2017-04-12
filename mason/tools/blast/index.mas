@@ -42,17 +42,17 @@
 
   # array with the preselected output formats
   my @parse_options_selected = ();
-  foreach my $po (@parse_options) {
-    if ($po->[0] eq "SGN") {
-      push @parse_options_selected, $po;
-    }
-    # if (($po->[0] ne "Basic") && ($po->[0] ne "Table") && ($po->[0] ne "Coverage") && ($po->[0] ne "SGN")) {
-    #   push @parse_options_selected, $po;
+  # foreach my $po (@parse_options) {
+    # if ($po->[0] eq "SGN") {
+      # push @parse_options_selected, $po;
     # }
-  }
+    # if (($po->[0] ne "Basic") && ($po->[0] ne "Table") && ($po->[0] ne "Coverage") && ($po->[0] ne "SGN")) {
+      # push @parse_options_selected, $po;
+    # }
+  # }
 
   # output formats alphabetically sorted
-  my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', params=>"size = \"6\" class\=\"form-control input-sm blast_select_box\"", choices => [sort (map { $_->[0] } @parse_options) ], multiple=>1, selected=> [ sort ( map { $_->[0] } @parse_options_selected) ] );
+  my $parse_options_select = $m->scomp('/page/html_select.mas', name=>'parse_options', id=>'parse_options', params=>"size = \"5\" class\=\"form-control input-sm blast_select_box\"", choices => [sort (map { $_->[0] } @parse_options) ], multiple=>1, selected=> [ sort ( map { $_->[0] } @parse_options_selected) ] );
 
   # print STDERR "OUTPUT OPTIONS: ".(join ", ", (sort (map { $_->[0] } @parse_options) ))."\n";
   # print STDERR "OUTPUT SELECTED: ".(join ", ", (sort (map { $_->[0] } @parse_options_selected) ))."\n";
@@ -172,26 +172,17 @@
 
   <center>
     <div id="sgn_blast_graph" style="display:none">
-      <!--  <div class="width-1000" style="margin-bottom:5px">
-          <div class="width-1000 score0"><40</div>
-          <div class="width-1000 score40">40-50</div>
-          <div class="width-1000 score50">50-80</div>
-          <div class="width-1000 score80">80-200</div>
-          <div class="width-1000 score200">>=200</div>
-        </div>
-        <br>
-        <h4 id="blast_query_length">Query length</h4> -->
         <div id="myCanvas">
           Your browser does not support the HTML5 canvas
         </div>
-        <br>
     </div>
   </center>
-
+  <br>
+  <div id="SGN_output"></div>
+  
   <div id="Overview_output"></div>
   <div id="Coverage_output"></div>
   <div id="Table_output" style="min-width:900px;"></div>
-  <div id="SGN_output"></div>
   <div id="Bioperl_output"></div>
   <div id="Basic_output"></div>
 

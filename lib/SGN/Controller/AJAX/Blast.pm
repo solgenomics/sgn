@@ -469,7 +469,7 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
 
 
     my $jbrowse_path = $c->config->{jbrowse_path};;
-    my $db_id = $bdb->blast_db_id();
+    # my $db_id = $bdb->blast_db_id();
     my $jbr_src = $bdb->jbrowse_src();
 
     my $query = "";
@@ -492,6 +492,7 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
 
     my @res_html;
     my @aln_html;
+    push(@aln_html, "<br><pre>");
 
     # variables for the canvas graph
     my @json_array;
@@ -506,7 +507,7 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
 
       if ($line =~ /Query\=\s*(\S+)/) {
         $query = $1;
-        unshift(@res_html, "<center><h3>".$query." vs ".$bdb->title()."</h3>");
+        unshift(@res_html, "<center><h3>".$query." vs ".$bdb->title()."</h3></center>");
         $query_line_on = 1;
       }
 
@@ -533,7 +534,7 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
           my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send,$jbrowse_path);
           ($sstart,$send) = _check_coordinates($sstart,$send);
 
-          push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+          push(@res_html, "<tr><td><a id=\"$subject\" class=\"blast_match_ident\" href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
 
           if (length($desc) > 150) {
             $desc = substr($desc,0,150)." ...";
@@ -566,7 +567,7 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
           $subject = $1;
           $desc = $2;
 
-          print STDERR "subject: $subject\n";
+          # print STDERR "subject: $subject\n";
         }
       }
 
@@ -575,10 +576,10 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
         my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send,$jbrowse_path);
         ($sstart,$send) = _check_coordinates($sstart,$send);
 
-        push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+        push(@res_html, "<tr><td><a id=\"$subject\" class=\"blast_match_ident\" href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
 
-        if (length($desc) > 200) {
-          $desc = substr($desc,0,200)." ...";
+        if (length($desc) > 150) {
+          $desc = substr($desc,0,150)." ...";
         }
 
         my %description_hash;
@@ -644,12 +645,9 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
     my $jbrowse_url = _build_jbrowse_url($jbr_src,$subject,$sstart,$send,$jbrowse_path);
     ($sstart,$send) = _check_coordinates($sstart,$send);
 
-    push(@res_html, "<tr><td><a class=\"blast_match_ident\" href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
-    push(@res_html, "</table></center>");
+    push(@res_html, "<tr><td><a id=\"$subject\" class=\"blast_match_ident\" href=\"/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send\" onclick=\"return resolve_blast_ident( '$subject', '$jbrowse_url', '/tools/blast/show_match_seq.pl?blast_db_id=$db_id;id=$subject;hilite_coords=$sstart-$send', null )\">$subject</a></td><td>$id</td><td>$aln</td><td>$evalue</td><td>$score</td><td>$desc</td></tr>");
+    push(@res_html, "</table>");
 
-    push(@res_html, "<br><pre>");
-    push(@res_html, @aln_html);
-    push(@res_html, "</pre></div><br>");
 
 
     if (length($desc) > 150) {
@@ -665,13 +663,78 @@ sub render_canvas_graph : Path('/tools/blast/render_graph') Args(1) {
     $description_hash{"qstart"} = $qstart;
     $description_hash{"qend"} = $qend;
     push(@json_array, \%description_hash);
+    
+    
+    
+    
+    my $prereqs = <<EOJS;
+
+        <div class="modal fade" id="xref_menu_popup" role="dialog">
+          <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 id="match_name" class="modal-title">Match Information</h4>
+              </div>
+              <div class="modal-body">
+                <dl>
+                    <dd>
+                      <div style="margin: 0.5em 0"><a class="match_details" href="" target="_blank">View matched sequence</a></div>
+                      <div id="jbrowse_div" style="display:none"><a id="jbrowse_link" href="" target="_blank">View in genome context</a></div>
+                    </dd>
+                    <dd class="subject_sequence_xrefs">
+                    </dd>
+                </dl>
+              </div>
+            </div>
+  
+          </div>
+        </div>
 
 
+        <script>
+          function resolve_blast_ident( id, jbrowse_url, match_detail_url, identifier_url ) {
+    
+            var popup = jQuery( "#xref_menu_popup" );
+    
+            jQuery('#match_name').html( id );
+    
+            popup.find('a.match_details').attr( 'href', match_detail_url );
+            popup.find('#jbrowse_link').attr( 'href', jbrowse_url );
+    
+            if (jbrowse_url) {
+              popup.find('#jbrowse_div').css( 'display', 'inline' );
+            }
+    
+            // look up xrefs for overall subject sequence
+            var subj = popup.find('.subject_sequence_xrefs');
+    
+            subj.html( '<img src="/img/throbber.gif" /> searching ...' );
+            subj.load( '/api/v1/feature_xrefs?q='+id );
+    
+            popup.modal("show");
+
+            return false;
+          }
+        </script>
+
+EOJS
+    
+  
+  push(@aln_html, "</pre></div><br>");
+  my $blast_table = join('', @res_html);
+  my $aln_text = join('<br>', @aln_html);
+  
+    
   $c->stash->{rest} = {
-    sgn_html => \@res_html,
+    sgn_html => $blast_table."<br>".$aln_text,
     desc_array => \@json_array,
-    sequence_length => $query_length
+    sequence_length => $query_length,
+    prereqs => $prereqs
   };
+  
 }
 
 

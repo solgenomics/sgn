@@ -290,7 +290,23 @@
           fontSize: 16,
           fontFamily: 'Helvetica'
         });
+        
         rectangle_layer.add(subject_text);
+
+        subject_text.on('mousedown', function() {
+          var gene_name = this.text();
+          document.getElementById(gene_name).click();
+        });
+        
+        
+        subject_text.on('mouseover', function() {
+          document.body.style.cursor = 'pointer';
+        });
+        
+        subject_text.on('mouseout', function() {
+          document.body.style.cursor = 'default';
+        });
+        
         //off_set += before_block; //add some space after the names
       }
 
