@@ -88,7 +88,7 @@ message("filtered genotype file: ", filteredGenoFile)
 
 if (is.null(filteredGenoFile) == TRUE) {
   ##genoDataFilter::filterGenoData
-  genoData <- filterGenoData(genodata)
+  genoData <- filterGenoData(genoData)
 } else {
   genoData           <- as.data.frame(genoData)
   rownames(genoData) <- genoData[, 1]
@@ -114,7 +114,7 @@ snpgdsCreateGeno('genoData.gds', data.matrix(genoData), snpfirstdim=FALSE)
 
 genoDataGdsFile <- snpgdsOpen('genoData.gds')
 
-pcaOut <- snpgdsPCA(genoDataGdsFile, eigen.cnt=10, num.thread=nCores)
+pcaOut <- snpgdsPCA(genoDataGdsFile, remove.monosnp=FALSE, eigen.cnt=10, num.thread=nCores)
 
 variances <- round(pcaOut$varprop*100, 2)
 variances <- as.numeric(grep(pattern="\\d+", variances, value=TRUE))
@@ -131,15 +131,15 @@ scores    <- data.frame(scores)
 loadings  <- data.frame(loadings)
 
 pcs <- c()
-loadingsRows <- c()
+
 for (i in 1:10) {
   pcs[i] <- paste("PC", i, sep='')
-  loadingsRows[i] <- paste("PC", i, sep='')
 }
+
 
 genotypes          <- rownames(genoData)
 markers            <- names(genoData)
-rownames(loadings) <- loadingsRows
+rownames(loadings) <- pcs
 colnames(loadings) <- markers
 colnames(scores)   <- pcs
 rownames(scores)   <- genotypes
