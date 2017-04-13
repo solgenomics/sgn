@@ -508,7 +508,7 @@ jQuery(document).ready(function ($) {
               'use_same_layout': use_same_layout,
               'year': year,
               'trial_type': trial_type,
-              'trial_location': location_list,,
+              'trial_location': location_list,
               'design_type': design_type,
               'design_json': design_json,
               'breeding_program_name': breeding_program_name,
