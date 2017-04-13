@@ -8,3 +8,17 @@ $layout_info
 <& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.HTMLSelect' ] &>
 
 <& /page/page_title.mas, title=>"Manage Phenotyping for $trial_name" &>
+
+<div class="well well-sm">
+  <div class="row">
+    <div class="col-md-1 col-lg-1">
+    </div>
+    <div class="col-md-10 col-lg-10">
+
+
+
+    </div>
+  <div class="col-md-1 col-lg-1">
+  </div>
+  </div>
+</div>
