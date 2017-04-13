@@ -3,7 +3,7 @@ package CXGN::Trial::Download::Plugin::TrialPhenotypeCSV;
 
 use Moose::Role;
 use CXGN::Trial;
-use CXGN::Phenotypes::SearchFactory;
+use CXGN::Phenotypes::PhenotypeMatrix;
 use Data::Dumper;
 
 sub verify {
@@ -41,25 +41,23 @@ sub download {
     if ($search_type eq 'fast'){
         $factory_type = 'MaterializedView';
     }
-    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-        $factory_type,    #can be either 'MaterializedView', or 'Native'
-        {
-            bcs_schema=>$schema,
-            data_level=>$data_level,
-            trait_list=>$trait_list,
-            trial_list=>$trial_list,
-            year_list=>$year_list,
-            location_list=>$location_list,
-            accession_list=>$accession_list,
-            plot_list=>$plot_list,
-            plant_list=>$plant_list,
-            include_timestamp=>$include_timestamp,
-            trait_contains=>$trait_contains,
-            phenotype_min_value=>$phenotype_min_value,
-            phenotype_max_value=>$phenotype_max_value,
-        }
-    );
-    my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
+	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+		bcs_schema=>$schema,
+		search_type=>$factory_type,
+		data_level=>$data_level,
+		trait_list=>$trait_list,
+		trial_list=>$trial_list,
+		year_list=>$year_list,
+		location_list=>$location_list,
+		accession_list=>$accession_list,
+		plot_list=>$plot_list,
+		plant_list=>$plant_list,
+		include_timestamp=>$include_timestamp,
+		trait_contains=>$trait_contains,
+		phenotype_min_value=>$phenotype_min_value,
+		phenotype_max_value=>$phenotype_max_value,
+	);
+	my @data = $phenotypes_search->get_phenotype_matrix();
     #print STDERR Dumper \@data;
 
     my $time = DateTime->now();
@@ -76,15 +74,18 @@ sub download {
     my $year_list_text = $year_list ? join(",", @$year_list) : '';
     my $search_parameters = "Data Level:$data_level  Trait List:$trait_list_text  Trial List:$trial_list_text  Accession List:$accession_list_text  Plot List:$plot_list_text  Plant List:$plant_list_text  Location List:$location_list_text  Year List:$year_list_text  Include Timestamp:$include_timestamp  Trait Contains:$trait_contains_text  Minimum Phenotype: $min_value_text  Maximum Phenotype: $max_value_text";
 
+	no warnings 'uninitialized';
     open(my $F, ">", $self->filename()) || die "Can't open file ".$self->filename();
-        print $F "\"Date of Download: $timestamp\"\n";
-        print $F "\"Search Parameters: $search_parameters\"\n";
-        print $F "\n";
-        my @header = split /\t/, $data[0];
-        my $num_col = scalar(@header);
+      if ($self->has_header){
+          print $F "\"Date of Download: $timestamp\"\n";
+          print $F "\"Search Parameters: $search_parameters\"\n";
+          print $F "\n";
+      }
+        my $header =  $data[0];
+        my $num_col = scalar(@$header);
         for (my $line =0; $line< @data; $line++) {
-            my @columns = split /\t/, $data[$line];
-            print $F join ',', map { qq!"$_"! } @columns;
+            my $columns = $data[$line];
+            print $F join ',', map { qq!"$_"! } @$columns;
             print $F "\n";
         }
     close($F);

@@ -1,0 +1,124 @@
+
+<%doc>
+
+
+</%doc>
+
+<%args>
+
+</%args>
+
+<& '/page/page_title.mas', title => "Compare trials" &>
+
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'CXGN.List', 'CXGN.Login' ] &>
+<!-- table>
+<tr><th>Trial 1</th><th>Trial 2</th><th>Trait</th></tr>
+<tr><td width="200"><input id="trial_1" /></td><td width="200"><input id="trial_2" /></td><td width="200"><select id="trait_select"><option disabled="1">select trials first</option></select></td></tr>
+<tr><td><button id="submit_trial_comparison">Submit</button></td></tr>
+</table -->
+
+  <center>
+  <table width="400">
+  <tr><td>Choose a trial list:</td></tr>
+  <tr><td><div id="trial_list_select_div" width="200"></td></tr>
+  <tr><td>Trials contain a total of <span id="total_accession_count">?</span> accessions, with <span id="common_accession_count">?</span> common accessions, phenotyped for <span id="common_trait_count">?</span> common traits</td></tr>
+  <tr><td><b>Choose trait:</b></td></tr>
+  <tr><td><select class="form-control" id="trait_select"><option disabled="1">select trials first</option></select></td></tr>
+  <tr><td><button id="submit_trial_list">Compare</button></td></tr>
+  </table>
+
+<div id="result_div">
+  <img id="result_image" />
+</div>
+
+</center>
+
+<script>
+
+jQuery('#trial_1').autocomplete( 
+   { source: '/ajax/trials/trial_autocomplete' });
+
+jQuery('#trial_2').autocomplete(
+   { source: '/ajax/trials/trial_autocomplete' });
+
+jQuery('#trait_select').focus( function() {   
+   var trial_1 = jQuery('#trial_1').val();
+   var trial_2 = jQuery('#trial_2').val();
+   var trial_list_id = jQuery('#trial_list_select_list_select').val();
+   var list = new CXGN.List;
+   var item_data = list.getListData(trial_list_id);
+   var items = item_data.elements;
+   var params = "";
+   for (n=0; n<items.length; n++) { 
+      params += 'trial_name='+items[n][1]+'&';
+   }
+
+   jQuery.ajax( { 
+      url: '/ajax/trial/common_traits?'+params,
+      success: function(response) { 
+         if (response.error) { jQuery('#trait_select').val('error'); }
+         else {
+            var option_html = '';
+            for (var i =0 ; i < response.options.length; i++) {
+	       option_html += '<option value="'+response.options[i][0]+'">'+(response.options[i][1])+'</option>';
+            }
+            jQuery('#trait_select').html(option_html);
+            jQuery('#total_accession_count').html(response.total_accession_count);
+	    jQuery('#common_accession_count').html(response.common_accession_count);
+	    jQuery('#common_trait_count').html(response.common_trait_count);
+         }
+      },
+      error: function(response) { 
+	//alert("An error occurred, the service may temporarily be unavailable");
+      }
+    
+   });
+
+});
+
+jQuery('#submit_trial_comparison').click( function() { 
+   jQuery.ajax( { 
+    url: '/ajax/trial/compare',
+    data: { 'trial_1' : jQuery('#trial_1').val(), 'trial_2': jQuery('#trial_2').val(), 'cvterm_id' : jQuery('#trait_select').val() },
+    success: function(response) { 
+       if (response.error) { 
+	  alert(response.error);
+       }
+       else { 
+	  if (response.png) { 
+	     jQuery('#result_image').attr("src", response.png);
+          }
+       }
+    }
+
+   });
+});
+
+if (isLoggedIn()) { 
+  lo = new CXGN.List();
+  var select_html = lo.listSelect('trial_list_select', ['trials'], 'select');
+  jQuery('#trial_list_select_div').html(select_html);
+}
+else { 
+  jQuery('#trial_list_select_div').html("[Log in to use lists]");
+}
+
+jQuery('#submit_trial_list').click( function() { 
+   var list_id = jQuery('#trial_list_select_list_select').val();
+   jQuery.ajax( { 
+     url: '/ajax/trial/compare_list',
+     data: { 'cvterm_id' : jQuery('#trait_select').val(), 'list_id': list_id },
+     success: function(response) { 
+        if (response.error) { 
+           alert(response.error);
+        }
+        else { 
+           jQuery('#result_image').attr("src", response.png);
+        }
+     }
+   });
+});
+
+
+			
+</script>

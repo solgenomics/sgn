@@ -75,7 +75,7 @@ jQuery(document).ready(function ($) {
       });
     });
 
-    function add_accessions(accessionsToAdd, speciesName, populationName) {
+    function add_accessions(accessionsToAdd, speciesName, populationName, organizationName  ) {
         var accessionsAsJSON = JSON.stringify(accessionsToAdd);
         $.ajax({
             type: 'POST',
@@ -87,6 +87,7 @@ jQuery(document).ready(function ($) {
                 'accession_list': accessionsAsJSON,
                 'species_name': speciesName,
                 'population_name': populationName,
+                'organization_name': organizationName
             },
             beforeSend: function(){
                 disable_ui();
@@ -197,6 +198,7 @@ jQuery(document).ready(function ($) {
     $('#review_absent_accessions_submit').click(function () {
         var speciesName = $("#species_name_input").val();
         var populationName = $("#population_name_input").val();
+        var organizationName = $("#organization_name_input").val();
         var accessionsToAdd = accessionList;
         if (!speciesName) {
             alert("Species name required");
@@ -209,7 +211,7 @@ jQuery(document).ready(function ($) {
             alert("No accessions to add");
             return;
         }
-        add_accessions(accessionsToAdd, speciesName, populationName);
+        add_accessions(accessionsToAdd, speciesName, populationName, organizationName);
         $('#review_absent_dialog').modal("hide");
         location.reload();
     });
@@ -245,14 +247,14 @@ jQuery(document).ready(function ($) {
         }
 
         if (verifyResponse.fuzzy.length > 0) {
-            var fuzzy_html = '<table id="add_accession_fuzzy_table" class="table"><thead><tr><th class="col-xs-4">Name in Your List</th><th class="col-xs-4">Existing Name(s) in Database</th><th class="col-xs-4">Options</th></tr></thead><tbody>';
+            var fuzzy_html = '<table id="add_accession_fuzzy_table" class="table"><thead><tr><th class="col-xs-4">Name in Your List</th><th class="col-xs-4">Existing Name(s) in Database</th><th class="col-xs-4">Options&nbsp;&nbsp;&nbsp&nbsp;<input type="checkbox" id="add_accession_fuzzy_option_all"/> Use Same Option for All</th></tr></thead><tbody>';
             for( i=0; i < verifyResponse.fuzzy.length; i++) {
                 fuzzy_html = fuzzy_html + '<tr id="add_accession_fuzzy_option_form'+i+'"><td>'+ verifyResponse.fuzzy[i].name + '<input type="hidden" name="fuzzy_name" value="'+ verifyResponse.fuzzy[i].name + '" /></td>';
                 fuzzy_html = fuzzy_html + '<td><select class="form-control" name ="fuzzy_select">';
                 for(j=0; j < verifyResponse.fuzzy[i].matches.length; j++){
                     fuzzy_html = fuzzy_html + '<option value="' + verifyResponse.fuzzy[i].matches[j].name + '">' + verifyResponse.fuzzy[i].matches[j].name + '</option>';
                 }
-                fuzzy_html = fuzzy_html + '</select></td><td><select class="form-control" name="fuzzy_option"><option value="replace">Replace name in your list with selected existing name</option><option value="keep">Continue saving name in your list</option><option value="remove">Remove name in your list and ignore</option><option value="synonymize">Add name in your list as a synonym to selected existing name</option></select></td></tr>';
+                fuzzy_html = fuzzy_html + '</select></td><td><select class="form-control" name="fuzzy_option"><option value="keep">Continue saving name in your list</option><option value="replace">Replace name in your list with selected existing name</option><option value="remove">Remove name in your list and ignore</option><option value="synonymize">Add name in your list as a synonym to selected existing name</option></select></td></tr>';
             }
             fuzzy_html = fuzzy_html + '</tbody></table>';
             $('#view_fuzzy_matches').html(fuzzy_html);
@@ -336,5 +338,12 @@ jQuery(document).ready(function ($) {
     $('body').on('hidden.bs.modal', '.modal', function () {
         $(this).removeData('bs.modal');
     });
+
+	$(document).on('change', 'select[name="fuzzy_option"]', function() {
+		var value = $(this).val();
+		if ($('#add_accession_fuzzy_option_all').is(":checked")){
+			$('select[name="fuzzy_option"] option[value='+value+']').attr('selected','selected');
+		}
+	});
 
 });

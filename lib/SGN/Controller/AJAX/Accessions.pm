@@ -82,7 +82,9 @@ sub do_fuzzy_search {
 	$c->stash->{rest} = {error =>  "You have insufficient privileges to add accessions." };
 	return;
     }
-
+    #remove all trailing and ending spaces from accessions 
+    s/^\s+|\s+$//g for @accession_list;
+   
     $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
     #print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
 
@@ -176,6 +178,7 @@ sub add_accession_list_POST : Args(0) {
   my $accession_list_json = $c->req->param('accession_list');
   my $species_name = $c->req->param('species_name');
   my $population_name = $c->req->param('population_name');
+  my $organization_name = $c->req->param('organization_name');
   my @accession_list;
   my $stock_add;
   my $validated;
@@ -200,9 +203,9 @@ sub add_accession_list_POST : Args(0) {
 
   @accession_list = @{_parse_list_from_json($accession_list_json)};
   if ($population_name eq '') {
-      $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@accession_list, species => $species_name, owner_name => $owner_name,phenome_schema => $phenome_schema, dbh => $dbh} );
+      $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@accession_list, species => $species_name, owner_name => $owner_name,phenome_schema => $phenome_schema, dbh => $dbh, organization_name => $organization_name} );
   } else {
-      $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@accession_list, species => $species_name, owner_name => $owner_name,phenome_schema => $phenome_schema, dbh => $dbh, population_name => $population_name} );
+      $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@accession_list, species => $species_name, owner_name => $owner_name,phenome_schema => $phenome_schema, dbh => $dbh, population_name => $population_name, organization_name => $organization_name} );
   }
   $validated = $stock_add->validate_stocks();
   if (!$validated) {

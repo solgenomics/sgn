@@ -235,7 +235,8 @@ function getCombinedPopsId(comboPopsList) {
 	    page = '/solgs/trait/' + traitId + '/population/' + popId;
 		    
 	} else {
-	    page = '/solgs/population/' + popId;
+	    var hostName = window.location.protocol + '//' + window.location.host;  
+	    page = hostName +  '/solgs/population/' + popId;
 	}
 	
 	var args = {'population_id'   : [ popId ],
