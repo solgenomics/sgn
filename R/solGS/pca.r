@@ -81,6 +81,8 @@ if (is.null(loadingsFile))
   q("no", 1, FALSE)
 }
 
+#genoDataFile2 <- '/mnt/hgfs/cxgn/genotype-data-443.txt'
+
 genoData <- fread(genoDataFile, na.strings = c("NA", " ", "--", "-", "."))
 filteredGenoFile <- grep("filtered_genotype_data_",  genoDataFile, ignore.case = TRUE, perl=TRUE, value = TRUE)
 
@@ -110,9 +112,12 @@ if (nCores > 1) {
   nCores <- 1
 }
 
-snpgdsCreateGeno('genoData.gds', data.matrix(genoData), snpfirstdim=FALSE)
+gdsFile <- basename(genoDataFile)
+gdsFile <- gsub('.txt', '.gds', gdsFile)
 
-genoDataGdsFile <- snpgdsOpen('genoData.gds')
+snpgdsCreateGeno(gdsFile, data.matrix(genoData), snpfirstdim=FALSE)
+
+genoDataGdsFile <- snpgdsOpen(gdsFile)
 
 pcaOut <- snpgdsPCA(genoDataGdsFile, remove.monosnp=FALSE, eigen.cnt=10, num.thread=nCores)
 
