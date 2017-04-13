@@ -521,6 +521,7 @@ jQuery(document).ready(function ($) {
               'project_description': desc,
               'use_same_layout': use_same_layout,
               'year': year,
+              'trial_type': trial_type,
               'trial_location': location_list,
             //  'stock_list': stock_list,
             //  'control_list': control_list,
