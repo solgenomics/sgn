@@ -20,7 +20,7 @@ $composing_order => undef
 <div class="tab-content">
   <div id="components" class="tab-pane fade in active">
   <div class="row">
-    <div class="col-md-6 form-group">
+    <div id="object_div" style="display:none" class="col-md-6 form-group">
       <label for="object_select_div" class="control-label">Object</label>
       <p class="help-block"><small>Pick the object on which the new trait is measured</small></p>
       <div id="object_select_div">
@@ -28,7 +28,7 @@ $composing_order => undef
       <button class="btn btn-default btn-sm" id="object_select_all" name="object_select_all"/>Select All</button>
       <button class="btn btn-default btn-sm" id="object_select_clear" name="object_select_clear"/>Clear</button>
     </div>
-    <div class="col-md-6 form-group">
+    <div id="attribute_div" style="display:none" class="col-md-6 form-group">
       <label for="attribute_select_div" class="control-label">Attribute</label>
       <p class="help-block"><small>Pick the attribute the new trait measures</small></p>
       <div id="attribute_select_div">
@@ -38,7 +38,7 @@ $composing_order => undef
     </div>
     </div>
     <div class="row">
-    <div class="col-md-6 form-group">
+    <div id="method_div" style="display:none" class="col-md-6 form-group">
       <label for="method_select_div" class="control-label">Method</label>
       <p class="help-block"><small>Pick the method by which the new trait is measured</small></p>
       <div id="method_select_div">
@@ -46,7 +46,7 @@ $composing_order => undef
       <button class="btn btn-default btn-sm" id="method_select_all" name="method_select_all"/>Select All</button>
       <button class="btn btn-default btn-sm" id="method_select_clear" name="method_select_clear"/>Clear</button>
     </div>
-    <div class="col-md-6 form-group">
+    <div id="unit_div" style="display:none" class="col-md-6 form-group">
       <label for="unit_select_div" class="control-label">Unit</label>
       <p class="help-block"><small>Pick the units in which the new trait is measured</small></p>
       <div id="unit_select_div">
@@ -66,6 +66,17 @@ $composing_order => undef
     <button class="btn btn-default btn-sm" id="trait_select_clear" name="trait_select_clear"/>Clear</button>
   </div>
   </div>
+  </div>
+  <hr style="margin-top:4px;margin-bottom:4px" /><br>
+  <div class="row">
+    <div class="col-md-12 form-group">
+      <label for="generation_select_div" class="control-label">Generation</label>
+      <p class="help-block"><small><i>Optional</i> Pick the generation on which the new trait is measured</small></p>
+      <div id="generation_select_div">
+      </div><br>
+      <button class="btn btn-default btn-sm" id="generation_select_all" name="generation_select_all"/>Select All</button>
+      <button class="btn btn-default btn-sm" id="generation_select_clear" name="generation_select_clear"/>Clear</button>
+    </div>
   </div>
   <hr style="margin-top:4px;margin-bottom:4px" /><br>
   <div class="row">
@@ -121,16 +132,7 @@ $composing_order => undef
 <script>
 
 // retrieve composable cvtypes an only load them as selects, in the order from composing order. two parallel columns, components on left and new traits on right
-/*
-get_select_box('trait_components', 'object_select_div', { 'id' : 'object_select', 'name': 'object_select', 'multiple': 'true', 'cv_type': 'object_ontology' });
-get_select_box('trait_components', 'attribute_select_div', { 'id' : 'attribute_select', 'name': 'attribute_select', 'multiple': 'true', 'cv_type': 'attribute_ontology' });
-get_select_box('trait_components', 'method_select_div', { 'id' : 'method_select', 'name': 'method_select', 'multiple': 'true', 'cv_type': 'method_ontology' });
-get_select_box('trait_components', 'unit_select_div', { 'id' : 'unit_select', 'name': 'unit_select', 'multiple': 'true', 'cv_type': 'unit_ontology' });
-get_select_box('trait_components', 'trait_select_div', { 'id' : 'trait_select', 'name': 'trait_select', 'multiple': 'true', 'cv_type': 'trait_ontology' });
-get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': 'time of day|CASSTIME:0000001', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
-get_select_box('ontology_children', 'week_select_div', { 'selectbox_id' : 'week_select', 'selectbox_name': 'week_select', 'multiple': 'true', 'parent_node_cvterm': 'weeks|CASSTIME:0000005', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
-get_select_box('ontology_children', 'month_select_div', { 'selectbox_id' : 'month_select', 'selectbox_name': 'month_select', 'multiple': 'true', 'parent_node_cvterm': 'months|CASSTIME:0000006', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
-*/
+
 console.log("composing order is "+'<% $composing_order %>');
 create_multi_selects('<% $composing_order %>');
 
@@ -139,7 +141,7 @@ addToListMenu('existing_traits_to_list', 'existing_traits', {
   listType: 'traits'
 });
 
-jQuery(document).on('change','#object_select, #attribute_select, #method_select, #unit_select, #trait_select, #tod_select, #week_select, #month_select', function() { // retrieve matching traits each time component selection changes
+jQuery(document).on('change','#object_select, #attribute_select, #method_select, #unit_select, #trait_select, #generation_select, #tod_select, #week_select, #month_select', function() { // retrieve matching traits each time component selection changes
   if (jQuery(this).attr('name') == 'trait_select') {
     //console.log("trait select changed");
     clearAllOptions(document.getElementById('object_select'));
@@ -154,7 +156,7 @@ jQuery(document).on('change','#object_select, #attribute_select, #method_select,
   display_matching_traits();
 });
 
-jQuery('#object_select_all, #attribute_select_all, #method_select_all, #unit_select_all, #trait_select_all, #tod_select_all, #week_select_all, #month_select_all').click( // select all data in a panel
+jQuery('#object_select_all, #attribute_select_all, #method_select_all, #unit_select_all, #trait_select_all, #generation_select_all, #tod_select_all, #week_select_all, #month_select_all').click( // select all data in a panel
   function() {
   var name = jQuery(this).attr('name');
   var select_id = name.substring(0, name.length - 4);
@@ -162,7 +164,7 @@ jQuery('#object_select_all, #attribute_select_all, #method_select_all, #unit_sel
   display_matching_traits();
 });
 
-jQuery('#object_select_clear, #attribute_select_clear, #method_select_clear, #unit_select_clear, #trait_select_clear, #tod_select_clear, #week_select_clear, #month_select_clear').click( // clear all selections in a panel
+jQuery('#object_select_clear, #attribute_select_clear, #method_select_clear, #unit_select_clear, #trait_select_clear, #generation_select_clear, #tod_select_clear, #week_select_clear, #month_select_clear').click( // clear all selections in a panel
   function() {
   var name = jQuery(this).attr('name');
   var select_id = name.substring(0, name.length - 6);
@@ -257,6 +259,7 @@ function get_component_ids () {
   if (jQuery("#method_select").val()) { component_ids.push(jQuery("#method_select").val()); }
   if (jQuery("#unit_select").val()) { component_ids.push(jQuery("#unit_select").val()); }
   if (jQuery("#trait_select").val()) { component_ids.push(jQuery("#trait_select").val()); }
+  if (jQuery("#generation_select").val()) { component_ids.push(jQuery("#generation_select").val()); }
   if (jQuery("#tod_select").val()) { component_ids.push(jQuery("#tod_select").val()); }
   if (jQuery("#week_select").val()) { component_ids.push(jQuery("#week_select").val()); }
   if (jQuery("#month_select").val()) { component_ids.push(jQuery("#month_select").val()); }
@@ -294,6 +297,7 @@ function retrieve_matching_traits (component_ids) {
   ids["method_ids"] = jQuery("#method_select").val();
   ids["unit_ids"] = jQuery("#unit_select").val();
   ids["trait_ids"] = jQuery("#trait_select").val();
+  ids["generation_ids"] = jQuery("#generation_select").val();
   ids["tod_ids"] = jQuery("#tod_select").val();
   ids["week_ids"] = jQuery("#week_select").val();
   ids["month_ids"] = jQuery("#month_select").val();
@@ -306,6 +310,7 @@ jQuery.ajax( {
           'method_ids': ids["method_ids"],
           'unit_ids': ids["unit_ids"],
           'trait_ids': ids["trait_ids"],
+          'generation_ids': ids["generation_ids"],
           'tod_ids': ids["tod_ids"],
           'week_ids': ids["week_ids"],
           'month_ids': ids["month_ids"],
