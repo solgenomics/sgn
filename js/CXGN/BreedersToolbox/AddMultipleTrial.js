@@ -440,6 +440,7 @@ jQuery(document).ready(function ($) {
 
   $('#add_multiloc_project_link').click(function () {
       get_select_box('years', 'add_multi_project_year', {'auto_generate': 1 });
+      get_select_box('trial_types', 'add_multi_project_type', {'empty':1} );
       open_multilocation_project_dialog();
 
   });
@@ -500,6 +501,7 @@ jQuery(document).ready(function ($) {
   //    var start_number = jQuery('#start_number_multi').val();
   //    var increment = jQuery('#increment_multi').val();
       var breeding_program_name = jQuery('#select_breeding_program_multi').val();
+      var trial_type = jQuery('#add_multi_project_type').val();
 
       //var stock_verified = verify_stock_list(stock_list);
       if (desc == '' || year == '') {
