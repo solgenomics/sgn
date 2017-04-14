@@ -1393,112 +1393,112 @@ sub get_harvest_date_cvterm_id {
 =cut
 
 sub create_plant_entities {
-	my $self = shift;
-	my $plants_per_plot = shift || 30;
-
-	my $create_plant_entities_txn = sub {
-		my $chado_schema = $self->bcs_schema();
-		my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id() });
-		my $design = $layout->get_design();
-
-		my $plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
-		my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
-		my $plot_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id();
-		my $plant_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of', 'stock_relationship')->cvterm_id();
-		my $plant_index_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_index_number', 'stock_property')->cvterm_id();
-		my $block_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id();
-		my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id();
-		my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
-		my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
-		my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
-		#my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
-
-		my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-			type_id => $has_plants_cvterm,
-			value => $plants_per_plot,
-			project_id => $self->get_trial_id(),
-		});
-
-
-		foreach my $plot (keys %$design) {
-			print STDERR " ... creating plants for plot $plot...\n";
-			my $plot_row = $chado_schema->resultset("Stock::Stock")->find( { uniquename => $design->{$plot}->{plot_name}, type_id=>$plot_cvterm });
-
-			if (! $plot_row) {
-				print STDERR "The plot $plot is not found in the database\n";
-				return "The plot $plot is not yet in the database. Cannot create plant entries.";
-			}
-
-			my $parent_plot = $plot_row->stock_id();
-			my $parent_plot_name = $plot_row->uniquename();
-			my $parent_plot_organism = $plot_row->organism_id();
-
-			foreach my $number (1..$plants_per_plot) {
-				my $plant_name = $parent_plot_name."_plant_$number";
-				#print STDERR "... ... creating plant $plant_name...\n";
-
-				my $plant = $chado_schema->resultset("Stock::Stock")->find_or_create({
-					organism_id => $parent_plot_organism,
-					name       => $plant_name,
-					uniquename => $plant_name,
-					type_id => $plant_cvterm,
-				});
-
-				my $plantprop = $chado_schema->resultset("Stock::Stockprop")->find_or_create( {
-					stock_id => $plant->stock_id(),
-					type_id => $plant_index_number_cvterm,
-					value => $number,
-				});
-
-				#The plant inherits the properties of the plot.
-				my $plot_props = $chado_schema->resultset("Stock::Stockprop")->search({ stock_id => $parent_plot, type_id => [$block_cvterm, $plot_number_cvterm, $replicate_cvterm] });
-				while (my $prop = $plot_props->next() ) {
-					#print STDERR $plant->uniquename()." ".$prop->type_id()."\n";
-					$plantprop = $chado_schema->resultset("Stock::Stockprop")->find_or_create( {
-						stock_id => $plant->stock_id(),
-						type_id => $prop->type_id(),
-						value => $prop->value(),
-					});
-				}
-
-				#the plant has a relationship to the plot
-				my $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
-					subject_id => $parent_plot,
-					object_id => $plant->stock_id(),
-					type_id => $plant_relationship_cvterm,
-				});
-
-				#the plant has a relationship to the accession
-				my $plot_accession = $self->bcs_schema()->resultset("Stock::StockRelationship")->find({subject_id=>$parent_plot, type_id=>$plot_relationship_cvterm })->object();
-				$stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
-					subject_id => $plant->stock_id(),
-					object_id => $plot_accession->stock_id(),
-					type_id => $plant_relationship_cvterm,
-				});
-
-				#link plant to project through nd_experiment. also add nd_genolocation_id of plot to nd_experiment for the plant
-				my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $field_layout_cvterm })->single();
-				my $plant_nd_experiment_stock = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
-					nd_experiment_id => $field_layout_experiment->nd_experiment_id(),
-					type_id => $field_layout_cvterm,
-					stock_id => $plant->stock_id(),
-				});
-			}
+    my $self = shift;
+    my $plants_per_plot = shift || 30;
+    
+    my $create_plant_entities_txn = sub {
+	my $chado_schema = $self->bcs_schema();
+	my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id() });
+	my $design = $layout->get_design();
+	
+	my $plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
+	my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
+	my $plot_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id();
+	my $plant_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of', 'stock_relationship')->cvterm_id();
+	my $plant_index_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_index_number', 'stock_property')->cvterm_id();
+	my $block_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id();
+	my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id();
+	my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
+	my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
+	my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
+	#my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
+	
+	my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+	    type_id => $has_plants_cvterm,
+	    value => $plants_per_plot,
+	    project_id => $self->get_trial_id(),
+										  });
+	
+	
+	foreach my $plot (keys %$design) {
+	    print STDERR " ... creating plants for plot $plot...\n";
+	    my $plot_row = $chado_schema->resultset("Stock::Stock")->find( { uniquename => $design->{$plot}->{plot_name}, type_id=>$plot_cvterm });
+	    
+	    if (! $plot_row) {
+		print STDERR "The plot $plot is not found in the database\n";
+		return "The plot $plot is not yet in the database. Cannot create plant entries.";
+	    }
+	    
+	    my $parent_plot = $plot_row->stock_id();
+	    my $parent_plot_name = $plot_row->uniquename();
+	    my $parent_plot_organism = $plot_row->organism_id();
+	    
+	    foreach my $number (1..$plants_per_plot) {
+		my $plant_name = $parent_plot_name."_plant_$number";
+		#print STDERR "... ... creating plant $plant_name...\n";
+		
+		my $plant = $chado_schema->resultset("Stock::Stock")->find_or_create({
+		    organism_id => $parent_plot_organism,
+		    name       => $plant_name,
+		    uniquename => $plant_name,
+		    type_id => $plant_cvterm,
+										     });
+		
+		my $plantprop = $chado_schema->resultset("Stock::Stockprop")->find_or_create( {
+		    stock_id => $plant->stock_id(),
+		    type_id => $plant_index_number_cvterm,
+		    value => $number,
+											      });
+		
+		#The plant inherits the properties of the plot.
+		my $plot_props = $chado_schema->resultset("Stock::Stockprop")->search({ stock_id => $parent_plot, type_id => [$block_cvterm, $plot_number_cvterm, $replicate_cvterm] });
+		while (my $prop = $plot_props->next() ) {
+		    #print STDERR $plant->uniquename()." ".$prop->type_id()."\n";
+		    $plantprop = $chado_schema->resultset("Stock::Stockprop")->find_or_create( {
+			stock_id => $plant->stock_id(),
+			type_id => $prop->type_id(),
+			value => $prop->value(),
+											       });
 		}
-	};
-
-     eval {
-	 $self->bcs_schema()->txn_do($create_plant_entities_txn);
-     };
-     if ($@) {
-	 print STDERR "An error occurred creating the plant entities. $@\n";
-	 return 0;
-     }
-
-     print STDERR "Plant entities created.\n";
-     return 1;
-
- }
+		
+		#the plant has a relationship to the plot
+		my $stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
+		    subject_id => $parent_plot,
+		    object_id => $plant->stock_id(),
+		    type_id => $plant_relationship_cvterm,
+													    });
+		
+		#the plant has a relationship to the accession
+		my $plot_accession = $self->bcs_schema()->resultset("Stock::StockRelationship")->find({subject_id=>$parent_plot, type_id=>$plot_relationship_cvterm })->object();
+		$stock_relationship = $self->bcs_schema()->resultset("Stock::StockRelationship")->create({
+		    subject_id => $plant->stock_id(),
+		    object_id => $plot_accession->stock_id(),
+		    type_id => $plant_relationship_cvterm,
+													 });
+		
+		#link plant to project through nd_experiment. also add nd_genolocation_id of plot to nd_experiment for the plant
+		my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $field_layout_cvterm })->single();
+		my $plant_nd_experiment_stock = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
+		    nd_experiment_id => $field_layout_experiment->nd_experiment_id(),
+		    type_id => $field_layout_cvterm,
+		    stock_id => $plant->stock_id(),
+															});
+	    }
+	}
+    };
+    
+    eval {
+	$self->bcs_schema()->txn_do($create_plant_entities_txn);
+    };
+    if ($@) {
+	print STDERR "An error occurred creating the plant entities. $@\n";
+	return 0;
+    }
+    
+    print STDERR "Plant entities created.\n";
+    return 1;
+    
+}
 
 =head2 function has_plant_entries()
 
