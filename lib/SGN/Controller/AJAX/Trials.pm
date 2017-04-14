@@ -92,7 +92,8 @@ sub trial_autocomplete_GET :Args(0) {
     my ($self, $c) = @_;
 
     my $term = $c->req->param('term');
-
+    
+    print STDERR "Term: $term\n";
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
 
@@ -105,6 +106,7 @@ sub trial_autocomplete_GET :Args(0) {
         push @response_list, $project_name;
     }
     print STDERR Dumper \@response_list;
-
-    $c->{stash}->{rest} = \@response_list;
+    
+    print STDERR "Returning...\n";
+    $c->stash->{rest} = \@response_list;
 }

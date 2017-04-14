@@ -53,9 +53,9 @@ sub stock_search :Path('/search/stocks') Args(0) {
 
         stock_types => stock_types($self->schema),
 	organisms   => stock_organisms($self->schema) ,
-	sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
-        trait_autocomplete_uri     => $c->uri_for('/ajax/stock/trait_autocomplete'),
-        onto_autocomplete_uri      => $c->uri_for('/ajax/cvterm/autocomplete'),
+	sp_person_autocomplete_uri => '/ajax/people/autocomplete',
+        trait_autocomplete_uri     => '/ajax/stock/trait_autocomplete',
+        onto_autocomplete_uri      => '/ajax/cvterm/autocomplete',
 	trait_db_name              => $c->get_conf('trait_ontology_db_name'),
 	breeding_programs          => breeding_programs($self->schema),
 	);
