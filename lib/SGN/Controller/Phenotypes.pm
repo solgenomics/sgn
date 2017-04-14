@@ -71,7 +71,7 @@ sub delete_uploaded_phenotype_files : Path('/breeders/phenotyping/delete/') Args
 
      $h->execute($decoded);
      print STDERR "Phenotype file successfully made obsolete (AKA deleted).\n";
-	$c->response->redirect('/breeders/phenotyping');   
+	$c->response->redirect('/breeders/phenotyping');	
 }
 
 #
