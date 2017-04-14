@@ -69,9 +69,9 @@ sub delete_uploaded_phenotype_files : Path('/breeders/phenotyping/delete/') Args
      #my $h = $dbh->prepare("delete from metadata.md_files where file_id=?;");
      my $h = $dbh->prepare("UPDATE metadata.md_metadata SET obsolete = 1 where metadata_id IN (SELECT metadata_id from metadata.md_files where file_id=?);");
 
-      $h->execute($decoded);
+     $h->execute($decoded);
      print STDERR "Phenotype file successfully made obsolete (AKA deleted).\n";
-	$c->response->redirect('/breeders/phenotyping');
+	$c->response->redirect('/breeders/phenotyping');   
 }
 
 #
