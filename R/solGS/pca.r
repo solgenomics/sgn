@@ -82,6 +82,8 @@ if (is.null(loadingsFile))
 }
 
 #genoDataFile2 <- '/mnt/hgfs/cxgn/genotype-data-443.txt'
+#genoDataFile2 <- c('/export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/cache/genotype_data_443.txt')
+#genoDataFile2<- c('/export/prod/tmp/cassava-test.sgn.cornell.edu/GBSApeKICassavagenomev5/solgs/tempfiles/genotype-data-128.txt')
 
 genoData <- fread(genoDataFile, na.strings = c("NA", " ", "--", "-", "."))
 filteredGenoFile <- grep("filtered_genotype_data_",  genoDataFile, ignore.case = TRUE, perl=TRUE, value = TRUE)
@@ -103,6 +105,20 @@ if (is.null(filteredGenoFile) == TRUE) {
 ##   genoDataMissing <- c('yes')
 ##   genoData <- na.roughfix(genoData)
 ## }
+
+print(genoData[1:5, 1:5])
+
+## #genoData <- data.frame(genoData)
+## print('transpose')
+## genoData <- data.frame(t(genoData))
+
+## print(genoData[1:5, 1:5])
+## print('round')
+## genoData <- round(genoData, 0)
+
+
+print(genoData[1:5, 1:5])
+
 
 nCores <- detectCores()
 message('no cores: ', nCores)
@@ -148,6 +164,8 @@ rownames(loadings) <- pcs
 colnames(loadings) <- markers
 colnames(scores)   <- pcs
 rownames(scores)   <- genotypes
+
+scores   <- scores[order(row.names(scores)), ]
 
 fwrite(scores,
        file      = scoresFile,
