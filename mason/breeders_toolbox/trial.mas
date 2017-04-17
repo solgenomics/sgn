@@ -36,6 +36,8 @@ $has_expression_atlas => undef
 $expression_atlas_url => undef
 $site_project_name => undef
 $trial_phenotype_files => undef
+$sgn_session_id => undef
+$user_name => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
@@ -322,7 +324,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 <&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='trial_download_phenotypes_button'>Download Trial Data</a>]" &>
 
 % if ($has_expression_atlas) {
-    <& /breeders_toolbox/trial/export_trial_to_expression_atlas.mas, trial_id => $trial_id, trial_name=>$trial_name, expression_atlas_url=>$expression_atlas_url, site_project_name=>$site_project_name &>
+    <& /breeders_toolbox/trial/export_trial_to_expression_atlas.mas, trial_id => $trial_id, trial_name=>$trial_name, expression_atlas_url=>$expression_atlas_url, site_project_name=>$site_project_name, sgn_session_id=>$sgn_session_id, user_name=>$user_name &>
 % }
 
 <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
