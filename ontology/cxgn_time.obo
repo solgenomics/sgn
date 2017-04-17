@@ -39,8 +39,8 @@ is_a: TIME:0000001
 
 [Term]
 id: TIME:0000005
-name: number of weeks
-def: "Number of weeks." []
+name: time of year
+def: "Weeks and months." []
 is_a: TIME:0000000
 
 [Term]
@@ -409,117 +409,125 @@ is_a: TIME:0000005
 
 [Term]
 id: TIME:0000058
-name: months
-def: "Months." []
-is_a: TIME:0000000
+name: week 53
+synonym: "Wk53" EXACT []
+def: "" []
+is_a: TIME:0000005
 
 [Term]
 id: TIME:0000059
-name: month 1
-synonym: "Mo1" EXACT []
+name: week 54
+synonym: "Wk54" EXACT []
 def: "" []
-is_a: TIME:0000058
+is_a: TIME:0000005
 
 [Term]
 id: TIME:0000060
-name: month 2
-synonym: "Mo2" EXACT []
+name: month 1
+synonym: "Mo1" EXACT []
 def: "" []
-is_a: TIME:0000058
+is_a: TIME:0000005
 
 [Term]
 id: TIME:0000061
-name: month 3
-synonym: "Mo3" EXACT []
+name: month 2
+synonym: "Mo2" EXACT []
 def: "" []
-is_a: TIME:0000058
+is_a: TIME:0000005
 
 [Term]
 id: TIME:0000062
-name: month 4
-synonym: "Mo4" EXACT []
+name: month 3
+synonym: "Mo3" EXACT []
 def: "" []
-is_a: TIME:0000058
+is_a: TIME:0000005
 
 [Term]
 id: TIME:0000063
-name: month 5
-synonym: "Mo5" EXACT []
+name: month 4
+synonym: "Mo4" EXACT []
 def: "" []
-is_a: TIME:0000058
+is_a: TIME:0000005
 
 [Term]
 id: TIME:0000064
-name: month 6
-synonym: "Mo6" EXACT []
+name: month 5
+synonym: "Mo5" EXACT []
 def: "" []
-is_a: TIME:0000058
+is_a: TIME:0000005
 
 [Term]
 id: TIME:0000065
-name: month 7
-synonym: "Mo7" EXACT []
+name: month 6
+synonym: "Mo6" EXACT []
 def: "" []
-is_a: TIME:0000058
+is_a: TIME:0000005
 
 [Term]
 id: TIME:0000066
-name: month 8
-synonym: "Mo8" EXACT []
+name: month 7
+synonym: "Mo7" EXACT []
 def: "" []
-is_a: TIME:0000058
+is_a: TIME:0000005
 
 [Term]
 id: TIME:0000067
-name: month 9
-synonym: "Mo9" EXACT []
+name: month 8
+synonym: "Mo8" EXACT []
 def: "" []
-is_a: TIME:0000058
+is_a: TIME:0000005
 
 [Term]
 id: TIME:0000068
-name: month 10
-synonym: "Mo10" EXACT []
+name: month 9
+synonym: "Mo9" EXACT []
 def: "" []
-is_a: TIME:0000058
+is_a: TIME:0000005
 
 [Term]
 id: TIME:0000069
-name: month 11
-synonym: "Mo11" EXACT []
+name: month 10
+synonym: "Mo10" EXACT []
 def: "" []
-is_a: TIME:0000058
+is_a: TIME:0000005
 
 [Term]
 id: TIME:0000070
-name: month 12
-synonym: "Mo12" EXACT []
+name: month 11
+synonym: "Mo11" EXACT []
 def: "" []
-is_a: TIME:0000058
+is_a: TIME:0000005
 
 [Term]
 id: TIME:0000071
+name: month 12
+synonym: "Mo12" EXACT []
+def: "" []
+is_a: TIME:0000005
+
+[Term]
+id: TIME:0000072
 name: generation
 def: "Categorical plant generations." []
 is_a: TIME:0000000
 
 [Term]
-id: TIME:0000072
+id: TIME:0000073
 name: cycle 1
 synonym: "C1" EXACT []
 def: "First cycle." []
-is_a: TIME:0000071
-
-[Term]
-id: TIME:0000073
-name: cycle 2
-synonym: "C2" EXACT []
-def: "Second cycle." []
-is_a: TIME:0000071
+is_a: TIME:0000072
 
 [Term]
 id: TIME:0000074
+name: cycle 2
+synonym: "C2" EXACT []
+def: "Second cycle." []
+is_a: TIME:0000072
+
+[Term]
+id: TIME:0000075
 name: cycle 3
 synonym: "C3" EXACT []
 def: "Third cycle." []
-is_a: TIME:0000071
+is_a: TIME:0000072
