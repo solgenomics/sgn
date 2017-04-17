@@ -24,61 +24,61 @@ jQuery(document).ready(function ($) {
 
     var design_json;
 
-  function verify_stock_list(stock_list) {
-    alert("verifying stock");
-    console.log("verifying stock...");
-	var return_val = 0;
-	$.ajax({
+    $(document).on('focusout', '#select_list_multi_list_select', function() {
+        if ($('#select_list_multi_list_select').val()) {
+            var stock_list_id = $('#select_list_multi_list_select').val();
+            var stock_list = JSON.stringify(list.getList(stock_list_id));
+            verify_stock_list(stock_list);
+        }
+    });
+
+    $(document).on('focusout', '#list_of_checks_section_multi_list_select', function() {
+        if ($('#list_of_checks_section_multi_list_select').val()) {
+            var stock_list_id = $('#list_of_checks_section_multi_list_select').val();
+            var stock_list = JSON.stringify(list.getList(stock_list_id));
+            verify_stock_list(stock_list);
+        }
+    });
+
+    $(document).on('focusout', '#crbd_list_of_checks_section_multi_list_select', function() {
+        if ($('#crbd_list_of_checks_section_multi_list_select').val()) {
+            var stock_list_id = $('#crbd_list_of_checks_section_multi_list_select').val();
+            var stock_list = JSON.stringify(list.getList(stock_list_id));
+            verify_stock_list(stock_list);
+        }
+    });
+
+    var stock_list_verified = 0;
+    function verify_stock_list(stock_list) {
+        $.ajax({
             type: 'POST',
-	    timeout: 3000000,
+            timeout: 3000000,
             url: '/ajax/trial/verify_stock_list',
-	    dataType: "json",
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            dataType: "json",
             data: {
-                //'stock_list': stock_list.join(","),
                 'stock_list': stock_list,
             },
             success: function (response) {
+                //console.log(response);
+                jQuery('#working_modal').modal('hide');
                 if (response.error) {
                     alert(response.error);
-		    verify_stock_list.return_val = 0;
-                } else {
-		    verify_stock_list.return_val = 1;
+                    stock_list_verified = 0;
+                }
+                if (response.success){
+                    stock_list_verified = 1;
                 }
             },
             error: function () {
+                jQuery('#working_modal').modal('hide');
                 alert('An error occurred. sorry');
-	    verify_stock_list.return_val = 0;
+                stock_list_verified = 0;
             }
-	});
-	   return return_val;
-  }
-
-  function verify_stock_list(control_list_crbd) {
-	var return_val = 0;
-	$.ajax({
-            type: 'POST',
-	    timeout: 3000000,
-            url: '/ajax/trial/verify_stock_list',
-	    dataType: "json",
-            data: {
-                //'stock_list': stock_list.join(","),
-                'stock_list': control_list_crbd,
-            },
-            success: function (response) {
-                if (response.error) {
-                    alert(response.error);
-		    verify_stock_list.return_val = 0;
-                } else {
-		    verify_stock_list.return_val = 1;
-                }
-            },
-            error: function () {
-                alert('An error occurred. sorry');
-	    verify_stock_list.return_val = 0;
-            }
-	});
-	   return return_val;
-  }
+       });
+    }
 
   function generate_multi_experimental_design() {
       var name = $('#new_multi_trial_name').val();
@@ -123,7 +123,6 @@ jQuery(document).ready(function ($) {
       else {
          use_same_layout = "";
       }
-    //  alert(use_same_layout);
 
       var rep_count = $('#rep_count_multi').val();
       var block_size = $('#block_size_multi').val();
@@ -132,22 +131,13 @@ jQuery(document).ready(function ($) {
       var start_number = $('#start_number_multi').val();
       var increment = $('#increment_multi').val();
 
-     if (name == '') {
-          alert('Trial name required');
-          return;
-      }
-
-      if (desc == '' || year == '') {
-          alert('Year and description are required.');
-          return;
-      }
-
-      $('#working_modal').modal("show");
-
       $.ajax({
           type: 'POST',
           timeout: 3000000,
           url: '/ajax/trial/generate_experimental_design',
+          beforeSend: function(){
+              $('#working_modal').modal("show");
+          },
           dataType: "json",
           data: {
               'project_name': name,
@@ -178,14 +168,15 @@ jQuery(document).ready(function ($) {
               } else {
                 $('#multi_trial_design_information').html(response.design_info_view_html);
                 var layout_view = JSON.parse(response.design_layout_view_html);
-                console.log(layout_view);
+                //console.log(layout_view);
                 var layout_html = '';
                 for (var i=0; i<layout_view.length; i++) {
-                  console.log(layout_view[i]);
+                  //console.log(layout_view[i]);
                   layout_html += layout_view[i] + '<br>';
                 }
                 $('#multi_trial_design_view_layout_return').html(layout_html);
                 //$('#multi_trial_design_view_layout_return').html(response.design_layout_view_html);
+
                 $('#working_modal').modal("hide");
                 $('#multi_trial_design_confirm').modal("show");
                 design_json = response.design_json;
@@ -193,17 +184,17 @@ jQuery(document).ready(function ($) {
           },
           error: function () {
             $('#working_modal').modal("hide");
-            alert('An error occurred. sorry. test');
+            alert('An error occurred. sorry.');
           }
      });
   }
 
-  $('#new_multi_trial_submit').click(function () {
+  $(document).on('click', '#new_multi_trial_submit', function () {
         var name = $('#new_multi_trial_name').val();
         var year = $('#add_multi-project_year').val();
         var desc = $('textarea#add_multi-project_description').val();
         var method_to_use = $('.format_type:checked').val();
-        //alert(method_to_use);
+
         if (name == '') {
           alert('Trial name required');
           return;
@@ -214,13 +205,16 @@ jQuery(document).ready(function ($) {
           return;
         }
 
-        if (method_to_use == "create_with_design_tool") {
-          generate_multi_experimental_design();
+        if (stock_list_verified == 1){
+            if (method_to_use == "create_with_design_tool") {
+              generate_multi_experimental_design();
+            }
+        } else {
+            alert('Accession list is not valid!');
+            return;
         }
 
   });
-
-  $("#format_type_radio").change();
 
   $(document).on('change', '#select_multi-design_method', function () {
 
@@ -383,10 +377,9 @@ jQuery(document).ready(function ($) {
     $("#select_list_multi_list_select").remove();
     $("#crbd_list_of_checks_section_multi_list_select").remove();
     $("#select_list_locations_multi").append(list.listSelect("select_list_locations_multi", [ 'locations' ], "select location list" ));
-    $("#select_list_multi").append(list.listSelect("select_list_multi", [ 'accessions' ] ));
-    $("#list_of_checks_section_multi").append(list.listSelect("list_of_checks_section_multi", [ 'accessions' ]));
-    $("#crbd_select_list").append(list.listSelect("crbd_select_list", [ 'accessions' ] ));
-    $("#crbd_list_of_checks_section_multi").append(list.listSelect("crbd_list_of_checks_section_multi", [ 'accessions' ], "select optional check list"));
+    $("#select_list_multi").append(list.listSelect("select_list_multi", [ 'accessions' ], '', 'refresh' ));
+    $("#list_of_checks_section_multi").append(list.listSelect("list_of_checks_section_multi", [ 'accessions' ], '', 'refresh'));
+    $("#crbd_list_of_checks_section_multi").append(list.listSelect("crbd_list_of_checks_section_multi", [ 'accessions' ], "select optional check list", 'refresh'));
 
     //add a blank line to location select dropdown that dissappears when dropdown is opened
     $("#add_project_location").prepend("<option value=''></option>").val('');
@@ -399,14 +392,6 @@ jQuery(document).ready(function ($) {
     $("#select_list_multi_list_select").one('mousedown', function () {
               $("option:first", this).remove();
     });
-    $("#select_list_multi_list_select").focusout(function() {
-        var stock_list_id = $('#select_list_multi_list_select').val();
-        var stock_list;
-        if (stock_list_id != "") {
-      stock_list = JSON.stringify(list.getList(stock_list_id));
-        }
-        verify_stock_list(stock_list);
-    });
 
     //add a blank line to list of checks select dropdown that dissappears when dropdown is opened
     $("#list_of_checks_section_multi_list_select").prepend("<option value=''></option>").val('');
@@ -417,24 +402,6 @@ jQuery(document).ready(function ($) {
     $("#crbd_list_of_checks_section_multi_list_select").prepend("<option value=''></option>").val('');
     $("#crbd_list_of_checks_section_multi_list_select").one('mousedown', function () {
               $("option:first", this).remove();
-    });
-
-    $("#list_of_checks_section_multi_list_select").focusout(function() {
-        var stock_list_id = $('#list_of_checks_section_multi_list_select').val();
-        var stock_list;
-        if (stock_list_id != "") {
-      stock_list = JSON.stringify(list.getList(stock_list_id));
-        }
-        verify_stock_list(stock_list);
-    });
-
-    $("#crbd_list_of_checks_section_multi_list_select").focusout(function() {
-        var stock_list_id = $('#crbd_list_of_checks_section_multi_list_select').val();
-        var stock_list;
-        if (stock_list_id != "") {
-      stock_list = JSON.stringify(list.getList(stock_list_id));
-        }
-        verify_stock_list(stock_list);
     });
 
     //add a blank line to design method select dropdown that dissappears when dropdown is opened
@@ -472,6 +439,7 @@ jQuery(document).ready(function ($) {
 
   $('#add_multiloc_project_link').click(function () {
       get_select_box('years', 'add_multi_project_year', {'auto_generate': 1 });
+      get_select_box('trial_types', 'add_multi_project_type', {'empty':1} );
       open_multilocation_project_dialog();
 
   });
@@ -496,14 +464,7 @@ jQuery(document).ready(function ($) {
       } else {
           location_list = JSON.stringify(trial_location);
       }
-  //    var stock_list;
-  //    if (stock_list_id != "") {
-  //       stock_list = JSON.stringify(list.getList(stock_list_id));
-  //    }
-  //    var control_list;
-  //    if (control_list_id != "") {
-  //       control_list = JSON.stringify(list.getList(control_list_id));
-  //    }
+
       var design_type = jQuery('#select_multi-design_method').val();
       var greenhouse_num_plants = [];
       if (stock_list_id != "" && design_type == 'greenhouse') {
@@ -517,7 +478,6 @@ jQuery(document).ready(function ($) {
           //console.log(greenhouse_num_plants);
       }
 
-      //alert(design_type);
       var use_same_layout;
       if ($('#use_same_layout').is(':checked')) {
          use_same_layout = $('#use_same_layout').val();
@@ -525,13 +485,9 @@ jQuery(document).ready(function ($) {
       else {
          use_same_layout = "";
       }
-  //    var rep_count = jQuery('#rep_count_multi').val();
-  //    var block_size = jQuery('#block_size_multi').val();
-  //    var max_block_size = jQuery('#max_block_size_multi').val();
-  //    var plot_prefix = jQuery('#plot_prefix_multi').val();
-  //    var start_number = jQuery('#start_number_multi').val();
-  //    var increment = jQuery('#increment_multi').val();
+
       var breeding_program_name = jQuery('#select_breeding_program_multi').val();
+      var trial_type = jQuery('#add_multi_project_type').val();
 
       //var stock_verified = verify_stock_list(stock_list);
       if (desc == '' || year == '') {
@@ -551,18 +507,9 @@ jQuery(document).ready(function ($) {
               'project_description': desc,
               'use_same_layout': use_same_layout,
               'year': year,
+              'trial_type': trial_type,
               'trial_location': location_list,
-            //  'stock_list': stock_list,
-            //  'control_list': control_list,
               'design_type': design_type,
-          //    'rep_count': rep_count,
-          //    'block_number': block_number,
-          //    'block_size': block_size,
-            //  'max_block_size': max_block_size,
-          //    'plot_prefix': plot_prefix,
-          //    'start_number': start_number,
-            //  'increment': increment,
-              //'design_json': design_json,
               'design_json': design_json,
               'breeding_program_name': breeding_program_name,
               'greenhouse_num_plants': JSON.stringify(greenhouse_num_plants),

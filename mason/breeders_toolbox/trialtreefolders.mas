@@ -11,6 +11,7 @@ $breeding_programs
 <& /breeders_toolbox/folder/folder_set.mas &>
 <& /breeders_toolbox/folder/folder_new.mas &>
 <& /breeders_toolbox/folder/folder_move.mas &>
+<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Trial', folder_tree_identifier => 'trial_list', folder_tree_refresh_name => 'refresh_jstree_html' &>
 
 <& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
 <& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
@@ -42,7 +43,13 @@ $breeding_programs
       <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
       <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move trial to folder</button><br/><br/>
       <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
-      <br/>
+      
+      <div id="folder_edit_options" style="display:none">
+          <hr>
+          <h5><i>Select multiple folders by holding 'Ctrl'.</i></h5>
+          <button class="btn btn-primary" id="edit_folders_button" title="First Select Folder(s) to Edit">Edit Folder(s)</button>
+          <br/>
+      </div>
 
       <!--<button id="delete" disabled="disabled" >Delete</button -->
       <br />
@@ -102,13 +109,19 @@ $breeding_programs
 
 
 
-  $('#trial_list').on("changed.jstree", function (e, data) {
+  jQuery('#trial_list').on("changed.jstree", function (e, data) {
     //console.log(data);
        if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'trial') {
-         $('#trials_download_phenotypes_button').removeAttr('disabled');
+         jQuery('#trials_download_phenotypes_button').removeAttr('disabled');
+         jQuery("#folder_edit_options").hide();
+       }
+       else if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'folder') {
+         jQuery('#trials_download_phenotypes_button').attr('disabled', 'disabled');
+         jQuery("#folder_edit_options").show();
        }
        else {
-         $('#trials_download_phenotypes_button').attr('disabled', 'disabled');
+         jQuery('#trials_download_phenotypes_button').attr('disabled', 'disabled');
+         jQuery("#folder_edit_options").hide();
        }
     });
 

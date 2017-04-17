@@ -50,6 +50,7 @@ solGS.waitPage = function (page, args) {
 		    Yes: {
 			text: 'Yes',
 			class: 'btn btn-success',
+                        id   : 'queue_job',
 			click: function() {
 			    jQuery(this).dialog("close");			  
 			    
@@ -60,6 +61,7 @@ solGS.waitPage = function (page, args) {
 		    No: { 
 			text: 'No, I will wait...',
 			class: 'btn btn-primary',
+                        id   : 'no_queue',
 			click: function() { 
 			    jQuery(this).dialog("close");
 			    
@@ -70,6 +72,7 @@ solGS.waitPage = function (page, args) {
 		    Cancel: { 
 			text: 'Cancel',
 			class: 'btn btn-info',
+                        id   : 'cancel_queue_info',
 			click: function() { 
 			    jQuery(this).dialog("close");
 			},
@@ -169,8 +172,7 @@ solGS.waitPage = function (page, args) {
 
     function goToPage (page, args) { 
 
-	var matchItems = 'solgs/population/'
-	    + '|solgs/confirm/request'
+	var matchItems = 'solgs/confirm/request'
 	    + '|solgs/trait/'
 	    + '|solgs/model/combined/trials/'
 	    + '|solgs/model/\\w+_\\d+/prediction/'
@@ -227,13 +229,18 @@ solGS.waitPage = function (page, args) {
 	    }
 	   
 	}  else if (page.match(/solgs\/populations\/combined\//)) {
-	    retrievePopsData();  
-	    //window.location = page;
-	}  else {
-
-	    window.location = window.location.href;
+	    retrievePopsData(args.combo_pops_list);  
+	} else if (page.match(/solgs\/population\//)) {
+	    if (page.match(/solgs\/population\/uploaded_/)) {
+		var listId = args.list_id;
+		loadPlotListTypeTrainingPop(listId);  
+	    } else {
+		window.location = page;
+	    }	   
 	}
-	
+	else {
+	    window.location = window.location.href;
+	}	
     }
 
 
@@ -351,7 +358,7 @@ solGS.waitPage = function (page, args) {
 
 
     function getArgsFromUrl (url, args) {
-    	
+    
 	if (window.Prototype) {
 	    delete Array.prototype.toJSON;
 	}
@@ -417,14 +424,14 @@ solGS.waitPage = function (page, args) {
 	} else if (url.match(/solgs\/population\//)) {
 	    
 	    var urlStr = url.split(/\/+/);
-
+	 
 	    if (args === undefined) {
 		args = { 
 		    'population_id' : [ urlStr[4] ], 
 		    'analysis_type' : 'population download',
 		    'data_set_type' : 'single population'
 		};
-	    } else {		
+	    } else {
 		args['population_id'] = [ urlStr[4] ];
 		args['analysis_type'] = 'population download';
 		args['data_set_type'] = 'single population';	
@@ -433,7 +440,7 @@ solGS.waitPage = function (page, args) {
 
 	    var traitId = jQuery('#trait_id').val();
 	    var modelId = jQuery('#model_id').val();
-	    var urlStr = url.split(/\/+/);
+	    var urlStr  = url.split(/\/+/);
 
 	    var dataSetType;
 
@@ -573,78 +580,110 @@ solGS.waitPage = function (page, args) {
 }
 
 
+function selectTraitMessage () {
+    
+    var message = '<p style="text-align:justify;">Please select one or more traits to build prediction models.</p>';
+
+    jQuery('<div />')
+	.html(message)
+	.dialog({	    
+	    height : 200,
+	    width  : 400,
+	    modal  : true,
+	    title  : "Prediction Modeling Message",
+ 		buttons: {	
+		    Yes: {
+			text: 'OK',
+			class: 'btn btn-success',
+                        id   : 'select_trait_message',
+			click: function() {
+			    jQuery(this).dialog("close");			  
+			    
+			},
+		    }, 
+		}
+	    });
+
+}
+
+
 jQuery(document).ready(function (){
  
      jQuery('#runGS').on('click',  function() {
 
-	 var page;
-	 var analysisType;
-	 var dataSetType;
-	 		 
-	 var hostName = window.location.protocol 
-	     + '//' 
-	     + window.location.host;
-	
-	 var referer = window.location.href;
-	 
-	 if ( referer.match(/solgs\/populations\/combined\//) ) {
-		  
-	     dataSetType = 'combined populations';		 		 
-	 }
-
-	 if ( referer.match(/solgs\/population\//) ) {
-		  
-	     dataSetType = 'single population';		 		 
-	 }
-	 
 	 var traitIds = jQuery("#traits_selection_div :checkbox").fieldValue();
-	 var popId = jQuery('#population_id').val(); 
-	 
-	 if (traitIds.length == 1 ) {	   
+	 var popId    = jQuery('#population_id').val(); 
 
-	     analysisType = 'single model';
+	 if (traitIds.length) {	  
+	     var page;
+	     var analysisType;
+	     var dataSetType;
+	 
+		 
+	     var hostName = window.location.protocol 
+		 + '//' 
+		 + window.location.host;
+	     
+	     var referer = window.location.href;
 	     
 	     if ( referer.match(/solgs\/populations\/combined\//) ) {
-		  
-		 page = hostName 
-		     + '/solgs/model/combined/trials/' 
-		     + popId 
-		     + '/trait/' 
-		     + traitIds[0];		 
-		 		 
-	     } else if ( referer.match(/solgs\/population\//)) {
-		
-		 page = hostName 
-		     + '/solgs/trait/' 
-		     + traitIds[0] 
-		     + '/population/' 
-		     + popId;		 
+		 
+		 dataSetType = 'combined populations';		 		 
 	     }
-			 
-	 } else {
+
+	     if ( referer.match(/solgs\/population\//) ) {
+		 
+		 dataSetType = 'single population';		 		 
+	     }
 	     
-	      analysisType = 'multiple models';
-	    
-	     if ( referer.match(/solgs\/populations\/combined\//) ) {
-		 page = hostName 
-		     + '/solgs/models/combined/trials/' 
-		     + popId;
-	    
+	     if (traitIds.length == 1 ) {	   
+
+		 analysisType = 'single model';
+		 
+		 if ( referer.match(/solgs\/populations\/combined\//) ) {
+		     
+		     page = hostName 
+			 + '/solgs/model/combined/trials/' 
+			 + popId 
+			 + '/trait/' 
+			 + traitIds[0];		 
+		     
+		 } else if ( referer.match(/solgs\/population\//)) {
+		     
+		     page = hostName 
+			 + '/solgs/trait/' 
+			 + traitIds[0] 
+			 + '/population/' 
+			 + popId;		 
+		 }
+			 
 	     } else {
 		 
-		 page = hostName 
-		     + '/solgs/analyze/traits/population/' 
-		     + popId;
-	     }	    
-	 }
+		 analysisType = 'multiple models';
+		 
+		 if ( referer.match(/solgs\/populations\/combined\//) ) {
+		     page = hostName 
+			 + '/solgs/models/combined/trials/' 
+			 + popId;
+		     
+		 } else {
+		     
+		     page = hostName 
+			 + '/solgs/analyze/traits/population/' 
+			 + popId;
+		 }	    
+	     }
 	 
-	 var args = {'trait_id'      : traitIds, 
-		     'population_id' : [ popId ], 
-		     'analysis_type' : analysisType,
-		     'data_set_type' : dataSetType,
-		    };
+	     var args = {'trait_id'      : traitIds, 
+			 'population_id' : [ popId ], 
+			 'analysis_type' : analysisType,
+			 'data_set_type' : dataSetType,
+			};
 
-	 solGS.waitPage(page, args);
+	     solGS.waitPage(page, args);
+	 } else {
+	     selectTraitMessage();
+	 }
 
      });
     

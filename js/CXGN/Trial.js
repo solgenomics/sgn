@@ -3,78 +3,82 @@
 function delete_phenotype_data_by_trial_id(trial_id) {
     var yes = confirm("Are you sure you want to delete all phenotypic data associated with trial "+trial_id+" ? This action cannot be undone.");
     if (yes) {
-	jQuery('#working').dialog("open");
+
 	jQuery.ajax( {
-            url: '/ajax/breeders/trial/'+trial_id+'/delete/phenotypes',
-            success: function(response) {
-		if (response.error) {
-		    jQuery('#working').dialog("close");
-		    alert(response.error);
-		}
-		else {
-		    jQuery('#working').dialog("close");
-		    alert('The phenotypic data has been deleted.'); // to do: give some idea how many items were deleted.
+      url: '/ajax/breeders/trial/'+trial_id+'/delete/phenotypes',
+      beforeSend: function(){
+        jQuery('#working_modal').modal('show');
+      },
+      success: function(response) {
+        jQuery('#working_modal').modal('hide');
+        if (response.error) {
+           alert(response.error);
+		       }
+		    else {
+		       alert('The phenotypic data has been deleted.'); // to do: give some idea how many items were deleted.
 		    window.location.href="/breeders/trial/"+trial_id;
 		}
             },
-            error: function(response) {
-		jQuery('#working').dialog("close");
-		alert("An error occurred.");
+      error: function(response) {
+		    jQuery('#working_modal').modal('hide');
+		    alert("An error occurred.");
             }
 	});
-    }
+ }
 }
 
 
 function delete_layout_data_by_trial_id(trial_id) {
     var yes = confirm("Are you sure you want to delete the layout data associated with trial "+trial_id+" ? This action cannot be undone.");
     if (yes) {
-	jQuery('#working').dialog("open");
 
 	jQuery.ajax( {
-            url: '/ajax/breeders/trial/'+trial_id+'/delete/layout',
-            success: function(response) {
-		if (response.error) {
-		    jQuery('#working').dialog("close");
+      url: '/ajax/breeders/trial/'+trial_id+'/delete/layout',
+      beforeSend: function(){
+        jQuery('#working_modal').modal('show');
+      },
+      success: function(response) {
+        jQuery('#working_modal').modal('hide');
+		    if (response.error) {
 		    alert(response.error);
-		}
-		else {
-		    jQuery('#working').dialog("close");
+		    }
+		    else {
 		    alert('The layout data has been deleted.'); // to do: give some idea how many items were deleted.
 		    window.location.href="/breeders/trial/"+trial_id;
-		}
-            },
-            error: function(response) {
-		jQuery('#working').dialog("close");
-		alert("An error occurred.");
-            }
-	});
-    }
+		    }
+       },
+      error: function(response) {
+		    jQuery('#working_modal').modal('hide');
+		    alert("An error occurred.");
+       }
+	 });
+  }
 }
 
 function delete_project_entry_by_trial_id(trial_id) {
        var yes = confirm("Are you sure you want to delete the trial entry for trial "+trial_id+" ? This action cannot be undone.");
     if (yes) {
-	jQuery('#working').dialog("open");
 
 	jQuery.ajax( {
-            url: '/ajax/breeders/trial/'+trial_id+'/delete/entry',
-            success: function(response) {
-		if (response.error) {
-		    jQuery('#working').dialog("close");
-		    alert(response.error);
-		}
-		else {
-		    jQuery('#working').dialog("close");
-		    alert('The project entry has been deleted.'); // to do: give some idea how many items were deleted.
-		    window.location.href="/breeders/trial/"+trial_id;
-		}
-            },
-            error: function(response) {
-		jQuery('#working').dialog("close");
-		alert("An error occurred.");
-            }
-	});
+      url: '/ajax/breeders/trial/'+trial_id+'/delete/entry',
+      beforeSend: function(){
+        jQuery('#working_modal').modal('show');
+        },
+        success: function(response) {
+          jQuery('#working_modal').modal('hide');
+		      if (response.error) {
+		      alert(response.error);
+		      }
+		      else {
+		      alert('The project entry has been deleted.'); // to do: give some idea how many items were deleted.
+		      window.location.href="/breeders/trial/"+trial_id;
+		      }
+        },
+        error: function(response) {
+		      jQuery('#working_modal').modal('hide');
+		      alert("An error occurred.");
+        }
+	    });
     }
 
 }
@@ -247,6 +251,39 @@ function delete_field_map() {
              alert('An error occurred deleting field map.');
 	 }
   });
+}
+
+function replace_accessions() {
+  jQuery('#working_modal').modal("show");
+
+  var trialID = parseInt(jQuery('#trialIDDiv').text());
+  var old_accession_name = jQuery('#old_accession').val();
+  var new_accession_name = jQuery('#new_accession').val();
+  new jQuery.ajax({
+    type: 'POST',
+    url: '/ajax/phenotype/replace_accessions',
+    dataType: "json",
+    data: {
+      'trial_id': trialID,
+      'old_accession_name': old_accession_name,
+      'new_accession_name': new_accession_name,
+    },
+
+    success: function (response) {
+ 	     jQuery('#working_modal').modal("hide");
+
+       if (response.error) {
+ 		      alert("Error replacing accessions: "+response.error);
+       } else {
+           //alert("Field map deletion Successful...");
+ 		      jQuery('#replace_accessions_dialog_message').dialog("open");
+           }
+ 	 },
+ 	 error: function () {
+ 	     jQuery('#working_modal').modal("hide");
+              alert('An error occurred replacing accessions.');
+ 	 }
+ });
 }
 
 
@@ -490,6 +527,20 @@ buttons: {
 
 });
 
+jQuery("#replace_accessions_dialog_message").dialog({
+autoOpen: false,
+modal: true,
+buttons: {
+        Ok: { id: "dismiss_replace_accessions_dialog_message",
+              click: function() {
+                location.reload();
+              },
+              text: "OK"
+            }
+    }
+
+});
+
 jQuery('#update_field_map_link').click(function () {
     jQuery('#update_field_map_dialog').dialog("open");
 });
@@ -684,4 +735,30 @@ jQuery(document).ready(function ($) {
 	$('#upload_trial_coord_dialog').dialog("open");
 
     }
+
+    function open_edit_field_map_dialog() {
+      jQuery('#edit_field_map_dialog').modal('show');
+    }
+
+    $('#edit_field_map_link').click(function () {
+      open_edit_field_map_dialog();
+    });
+
+    function open_replace_trial_accession_dialog() {
+      jQuery('#replace_trial_accessions_dialog').modal('show');
+    }
+
+    $('#replace_trial_accession_submit').click(function () {
+      jQuery('#edit_field_map_dialog').modal('hide');
+      open_replace_trial_accession_dialog();
+    });
+
+    function open_subtitute_plot_accession_dialog() {
+      jQuery('#subtitute_plot_accessions_dialog').modal('show');
+    }
+
+    $('#substitute_accession_submit').click(function () {
+      jQuery('#edit_field_map_dialog').modal('hide');
+      open_subtitute_plot_accession_dialog();
+    });
 });

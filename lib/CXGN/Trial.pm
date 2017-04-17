@@ -246,31 +246,41 @@ sub set_location {
 
 sub get_all_locations {
     my $schema = shift;
+	my $location_id = shift;
     my @locations;
 
-    my $loc = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { }, {order_by => { -asc => 'nd_geolocation_id' }} );
+	my %search_params;
+	if ($location_id){
+		$search_params{'nd_geolocation_id'} = $location_id;
+	}
+
+    my $loc = $schema->resultset('NaturalDiversity::NdGeolocation')->search( \%search_params, {order_by => { -asc => 'nd_geolocation_id' }} );
     while (my $s = $loc->next()) {
         my $loc_props = $schema->resultset('NaturalDiversity::NdGeolocationprop')->search( { nd_geolocation_id => $s->nd_geolocation_id() }, {join=>'type', '+select'=>['me.value', 'type.name'], '+as'=>['value', 'cvterm_name'] } );
-        my @attributes;
 
-        my %attr = ('geodetic datum' => $s->geodetic_datum() );
-        push @attributes, \%attr;
+		my %attr;
+        $attr{'geodetic datum'} = $s->geodetic_datum();
 
         my $country = '';
         my $country_code = '';
+        my $location_type = '';
+        my $abbreviation = '';
 
         while (my $sp = $loc_props->next()) {
-            if ($sp->get_column('cvterm_name') eq 'Country') {
+            if ($sp->get_column('cvterm_name') eq 'country_name') {
                 $country = $sp->get_column('value');
-            } elsif ($sp->get_column('cvterm_name') eq 'Country Code') {
+            } elsif ($sp->get_column('cvterm_name') eq 'country_code') {
                 $country_code = $sp->get_column('value');
+            } elsif ($sp->get_column('cvterm_name') eq 'location_type') {
+                $location_type = $sp->get_column('value');
+            } elsif ($sp->get_column('cvterm_name') eq 'abbreviation') {
+                $abbreviation = $sp->get_column('value');
             } else {
-                my %attr = ( $sp->get_column('cvterm_name') => $sp->get_column('value') );
-                push @attributes, \%attr;
+                $attr{$sp->get_column('cvterm_name')} = $sp->get_column('value') ;
             }
         }
 
-        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \@attributes],
+        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr, $location_type, $abbreviation],
     }
 
     return \@locations;
@@ -487,10 +497,10 @@ sub get_all_project_types {
     ##my $class = shift;
     my $schema = shift;
     my $project_type_cv_id = $schema->resultset('Cv::Cv')->find( { name => 'project_type' } )->cv_id();
-    my $rs = $schema->resultset('Cv::Cvterm')->search( { cv_id=> $project_type_cv_id });
+    my $rs = $schema->resultset('Cv::Cvterm')->search( { cv_id=> $project_type_cv_id }, {order_by=>'me.cvterm_id'} );
     my @cvterm_ids;
     if ($rs->count() > 0) {
-	@cvterm_ids = map { [ $_->cvterm_id(), $_->name() ] } ($rs->all());
+	@cvterm_ids = map { [ $_->cvterm_id(), $_->name(), $_->definition ] } ($rs->all());
     }
     return @cvterm_ids;
 }
@@ -782,6 +792,35 @@ sub delete_field_layout {
     }
 
     return '';
+}
+
+=head2 function get_phenotype_metadata()
+
+ Usage:        $trial->get_phenotype_metadata();
+ Desc:         retrieves metadata.md_file entries for this trial. These entries are created during StorePhenotypes
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_phenotype_metadata {
+	my $self = shift;
+	my $trial_id = $self->get_trial_id();
+	my @file_array;
+	my %file_info;
+	my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype FROM nd_experiment_project JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE project_id=? and m.obsolete = 0 ORDER BY file_id ASC";
+	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+	$h->execute($trial_id);
+
+	while (my ($file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype) = $h->fetchrow_array()) {
+		$file_info{$file_id} = [$file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype];
+	}
+	foreach (keys %file_info){
+		push @file_array, $file_info{$_};
+	}
+	return \@file_array;
 }
 
 =head2 function delete_phenotype_metadata()
@@ -1162,9 +1201,13 @@ sub get_stock_phenotypes_for_traits {
     my @data;
 	#$self->bcs_schema->storage->debug(1);
     my $dbh = $self->bcs_schema->storage()->dbh();
-	my $sql_trait_ids = join ("," , @$trait_ids);
-	my $where_clause = "WHERE project_id=? and a.cvterm_id IN ($sql_trait_ids) and b.cvterm_id = ? and phenotype.value~? ";
+	my $where_clause = "WHERE project_id=? and b.cvterm_id = ? and phenotype.value~? ";
 	my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+
+	if (scalar(@$trait_ids)>0){
+		my $sql_trait_ids = join ("," , @$trait_ids);
+		$where_clause .= "and a.cvterm_id IN ($sql_trait_ids) ";
+	}
 
 	my $relationship_join = '';
 	if ($subject_or_object eq 'object') {
@@ -1561,12 +1604,13 @@ sub get_accessions {
 		JOIN nd_experiment using(nd_experiment_id)
 		JOIN nd_experiment_project using(nd_experiment_id)
 		JOIN project using(project_id)
-		WHERE nd_experiment.type_id IN ($field_trial_cvterm_id, $genotyping_trial_cvterm_id)
-		AND accession.type_id = $accession_cvterm_id
+		WHERE accession.type_id = $accession_cvterm_id
 		AND stock_relationship.type_id IN ($plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id)
 		AND project.project_id = ?
 		GROUP BY accession.stock_id
 		ORDER BY accession.stock_id;";
+
+#Removed nd_experiment.type_id IN ($field_trial_cvterm_id, $genotyping_trial_cvterm_id) AND
 
 	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
 	$h->execute($self->get_trial_id());
@@ -1596,7 +1640,9 @@ sub get_plants {
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 
-	my $trial_plant_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$plant_cvterm_id});
+	my $trial_plant_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$plant_cvterm_id});
+
+	# removed "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id]
 
 	my %unique_plants;
 	while(my $rs = $trial_plant_rs->next()) {
@@ -1642,7 +1688,9 @@ sub get_plots {
 	push @type_ids, $tissue_sample_cvterm_id if $tissue_sample_cvterm_id;
 
 	print STDERR "TYPE IDS: ".join(", ", @type_ids);
-	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id] })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=> { in => [@type_ids] }});
+	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=> { in => [@type_ids] }});
+
+	# removed "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id]
 
 	my %unique_plots;
 	while(my $rs = $trial_plot_rs->next()) {
@@ -1691,13 +1739,14 @@ sub get_controls {
 		JOIN nd_experiment using(nd_experiment_id)
 		JOIN nd_experiment_project using(nd_experiment_id)
 		JOIN project using(project_id)
-		WHERE nd_experiment.type_id IN ($field_trial_cvterm_id, $genotyping_trial_cvterm_id)
-		AND accession.type_id = $accession_cvterm_id
+		WHERE accession.type_id = $accession_cvterm_id
 		AND stock_relationship.type_id IN ($plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id)
 		AND project.project_id = ?
 		AND control.type_id = $control_type_id
 		GROUP BY accession.stock_id
 		ORDER BY accession.stock_id;";
+
+	#removed nd_experiment.type_id IN ($field_trial_cvterm_id, $genotyping_trial_cvterm_id) AND
 
 	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
 	$h->execute($self->get_trial_id());
@@ -1736,6 +1785,48 @@ sub get_controls_by_plot {
 	}
 
 	return \@controls;
+}
+
+=head2 get_trial_contacts
+
+ Usage:        my $contacts = $t->get_trial_contacts();
+ Desc:         Returns an arrayref of hashrefs that contain all sp_person info fpr sp_person_ids saved as projectprops to this trial
+ Ret:          an arrayref containing
+               { sp_person_id => 1, salutation => 'Mr.', first_name => 'joe', last_name => 'doe', email => 'j@d.com' }
+ Args:         none
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_trial_contacts {
+	my $self = shift;
+	my @contacts;
+
+	my $sp_person_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'sp_person_id','local')->cvterm_id;
+	my $prop_rs = $self->bcs_schema->resultset('Project::Projectprop')->search(
+		{ 'project_id' => $self->get_trial_id, 'type_id'=>$sp_person_id_cvterm_id }
+	);
+
+	while(my $prop = $prop_rs->next()) {
+		my $q = "SELECT sp_person_id, username, salutation, first_name, last_name, contact_email, user_type, phone_number FROM sgn_people.sp_person WHERE sp_person_id=?;";
+		my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+		$h->execute($prop->value);
+		while (my ($sp_person_id, $username, $salutation, $first_name, $last_name, $email, $user_type, $phone) = $h->fetchrow_array()){
+			push @contacts, {
+				sp_person_id => $sp_person_id,
+				salutation => $salutation,
+				first_name => $first_name,
+				last_name => $last_name,
+				username => $username,
+				email => $email,
+				type => $user_type,
+				phone_number => $phone
+			};
+		}
+	}
+
+	return \@contacts;
 }
 
 

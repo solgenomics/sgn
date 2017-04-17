@@ -4,7 +4,7 @@ $accessions
 $preferred_species => ""
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery.dataTables-bootstrap-min' ] &>
+<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees' ] &>
 
 <& /page/page_title.mas, title=>"Manage Accessions" &>
 
@@ -58,20 +58,21 @@ $preferred_species => ""
 	        <button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button>
               </div>
 	    </div>
-	    <div class="form-group">
+	    <!--div class="form-group">
       	      <label class="col-sm-6 control-label">Use Fuzzy Search: </label>
       	      <div class="col-sm-6">
 	        <input type="checkbox" id="fuzzy_check" name="fuzzy_check"></input>
 		<br/>
 		<small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search.</small>
               </div>
-	    </div>
+	    </div-->
+        <input type="hidden" id="fuzzy_check" name="fuzzy_check" value="true" checked></input>
 	  </form>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="new_accessions_submit" id="new_accessions_submit">Add Accessions</button>
+        <button type="button" class="btn btn-primary" name="new_accessions_submit" id="new_accessions_submit">Continue</button>
       </div>
     </div>
   </div>
@@ -92,6 +93,9 @@ $preferred_species => ""
     	  <label for="population_name_input">Population name for added accessions (optional)</label>
   	  <input class="form-control" type="text" id="population_name_input"></input>
   	  <br><br>
+          <label for="organization_name_input">Organization name for added accessions (optional)</label>
+      <input class="form-control" type="text" id="organization_name_input"></input>
+      <br><br>
   	  <b>The following accessions will be added to the database:</b>
   	  <div id="count_of_absent_accessions"></div>
   	  <br>
@@ -107,7 +111,7 @@ $preferred_species => ""
 </div>
 
 <div class="modal fade" id="review_fuzzy_matches_dialog" name="review_fuzzy_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFuzzyDialog">
-  <div class="modal-dialog" role="document">
+  <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -121,7 +125,7 @@ $preferred_species => ""
         </div>
       </div>
       <div class="modal-footer">
-        <button id="review_fuzzy_matches_hide" type="button" class="btn btn-default" data-dismiss="modal">OK</button>
+        <button type="button" class="btn btn-primary" name="review_fuzzy_matches_continue" id="review_fuzzy_matches_continue" data-dismiss="modal">Make Changes and Continue</button>
       </div>
     </div>
   </div>
@@ -143,7 +147,7 @@ $preferred_species => ""
         </div>
       </div>
       <div class="modal-footer">
-        <button id="review_found_matches_hide" type="button" class="btn btn-default" data-dismiss="modal">OK</button>
+        <button type="button" class="btn btn-primary" name="review_found_matches_hide" id="review_found_matches_hide" data-dismiss="modal">Continue</button>
       </div>
     </div>
   </div>

@@ -1,6 +1,7 @@
 
 
 <%args>
+$error => undef
 @found => ()
 @not_found => ()
 $file => ''
@@ -9,8 +10,11 @@ $filetype => ''
 
 <& /page/page_title.mas, title=>'Download Barcodes' &>
 
-% if (!@not_found) {
+% if (!@not_found && !$error) {
   All stocks in the list have been found in the database. Please click the link below to download the barcode label file.<br />
+% }
+% elsif ($error){
+    <b>Download Plot Phenotyping Barcode </b>is <%$error%> For general barcode printing use <b>Download Stock Barcodes section.</b>
 % }
 % else {
   The following <% scalar(@not_found) %> stocks were not found in the database:<br />

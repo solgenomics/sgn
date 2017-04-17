@@ -298,8 +298,9 @@ sub all_gs_projects {
     my $order_by = 'CASE WHEN trials.trial_name ~ \'\\m[0-9]+\' THEN 1 ELSE 0 END, trials.trial_name DESC';
 
     my $q = "SELECT trials.trial_name, trials.trial_id                
-                 FROM trials 
-                 JOIN traitsXtrials USING (trial_id)
+                 FROM traits 
+                 JOIN traitsXtrials USING (trait_id)
+                 JOIN trials USING (trial_id)
                  JOIN genotyping_protocolsXtrials USING (trial_id)
                  JOIN genotyping_protocols USING (genotyping_protocol_id)
 		 WHERE genotyping_protocols.genotyping_protocol_name ILIKE ? 
@@ -352,7 +353,7 @@ sub has_phenotype {
     my $has_phenotype;
     if ($pr_id) 
     {
-	my $q = "SELECT distinct(trial_id)
+	my $q = "SELECT trait_id
                  FROM traitsXtrials 
                  WHERE trial_id = ?";
 
@@ -412,7 +413,7 @@ sub project_details_by_exact_name {
     my ($self, $pr_name) = @_;
     
     return $self->schema->resultset("Project::Project")
-        ->search( {'me.name' => {'iLIKE' => $pr_name }});
+        ->search( {'me.name' => {-in => $pr_name }});
 }
 
 
@@ -885,37 +886,15 @@ sub genotype_data {
 }
 
 
-sub format_user_list_genotype_data {
-    my $self = shift;
-
-    my $population_type = $self->context->stash->{population_type};
-   
-    my @genotypes;
-    my @filtered_genotypes;
-
-    if ($population_type =~ /reference/)         
-    {
-	my  @plots = @{ $self->context->stash->{reference_population_plot_names} };
-	my $genotypes_rs = $self->get_genotypes_from_plots(\@plots);
-	
-	while (my $genotype = $genotypes_rs->next) 
-	{
-	    my $name = $genotype->uniquename;
-	    push @genotypes, $name;
-	}
-    }
-    else
-    {
-	@genotypes = @{$self->context->stash->{genotypes_list}};	    
-    }    
- 
-    @genotypes = uniq(@genotypes);
+sub genotypes_list_genotype_data {
+    my ($self, $genotypes) = @_;
    
     my $geno_data;
     my $header_markers;
     my @header_markers;
+    my @filtered_genotypes;
 
-    my $list_genotypes_rs = $self->accessions_list_genotypes_rs(\@genotypes);
+    my $list_genotypes_rs = $self->accessions_list_genotypes_rs($genotypes);
     my $cnt = 0;
     
     while (my $stock_genotype = $list_genotypes_rs->next) 
@@ -954,14 +933,7 @@ sub format_user_list_genotype_data {
 	}    
     }
 
-    if ($population_type =~ /reference/) 
-    {
-        $self->context->stash->{user_reference_list_genotype_data} = $geno_data;
-    }
-    else
-    {
-        $self->context->stash->{user_selection_list_genotype_data} = $geno_data;   
-    }
+    return \$geno_data;
 
 }
 
@@ -984,7 +956,6 @@ sub project_genotypes_rs {
 	);
 
     return $pr_genotypes_rs;
-
 
 }
 
@@ -1417,7 +1388,6 @@ sub prediction_pops {
 		  my $stock_genotype_rs = $self->prediction_genotypes_rs($project_id);
 		  my $stocks_count = $stock_genotype_rs->count;         
 		  my $first_geno   =  $stock_genotype_rs->single;
-		  my $obj_name     = $first_geno->get_column('stock_name');
         
 		  if ($stocks_count > 10 &&  $first_geno)             
 		  {  
@@ -1469,21 +1439,21 @@ sub prediction_pops {
 }
 
 
-sub format_user_reference_list_phenotype_data {
-    my $self = shift;
-
-    my @plots_names;
-    my $population_type = $self->context->stash->{population_type};
-    
-    if ($population_type =~ /reference/)         
+sub plots_list_phenotype_data {
+    my ($self, $plots_names) = @_;
+   
+    if (@$plots_names) 
     {
-        @plots_names = @{ $self->context->stash->{reference_population_plot_names} };
-    }
+	my $stock_pheno_data_rs = $self->plots_list_phenotype_data_rs($plots_names);  
+	my $data                = $self->structure_phenotype_data($stock_pheno_data_rs);
 
-    my $stock_pheno_data_rs = $self->plots_list_phenotype_data_rs(\@plots_names);
-  
-    my $data = $self->structure_phenotype_data($stock_pheno_data_rs);
-    $self->context->stash->{user_reference_list_phenotype_data} = $data;     
+	return \$data;
+    }
+    else
+    {
+	return;
+    }
+   
 }
 
 
@@ -1568,7 +1538,6 @@ sub project_trait_phenotype_data_rs {
     return $rs;
 
 }
-
 
 
 sub get_plot_phenotype_rs {
@@ -1756,7 +1725,7 @@ sub phenotype_data {
 	 $data           = $self->structure_phenotype_data($phenotypes);                   
      }
     
-     return  $data; 
+     return  \$data; 
 }
 
 

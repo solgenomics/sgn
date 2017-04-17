@@ -50,7 +50,7 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     my $html = "";
     foreach my $project (@$projects) { 
 	   my $folder = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => $project->[0] });
-	   $html .= $folder->get_jstree_html('breeding_program');
+	   $html .= $folder->get_jstree_html('breeding_program', 'trial');
     }
     
     my $dir = catdir($c->site_cluster_shared_dir, "folder");
@@ -92,7 +92,8 @@ sub trial_autocomplete_GET :Args(0) {
     my ($self, $c) = @_;
 
     my $term = $c->req->param('term');
-
+    
+    print STDERR "Term: $term\n";
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
 
@@ -105,6 +106,7 @@ sub trial_autocomplete_GET :Args(0) {
         push @response_list, $project_name;
     }
     print STDERR Dumper \@response_list;
-
-    $c->{stash}->{rest} = \@response_list;
+    
+    print STDERR "Returning...\n";
+    $c->stash->{rest} = \@response_list;
 }

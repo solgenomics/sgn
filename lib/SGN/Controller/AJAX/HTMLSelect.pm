@@ -24,9 +24,12 @@ use Moose;
 use Data::Dumper;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
+use Scalar::Util qw | looks_like_number |;
 use CXGN::Trial;
 use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
+use CXGN::Chado::Stock;
+use CXGN::Stock::Search;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -117,6 +120,8 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
     my $c = shift;
 
     my $breeding_program_id = $c->req->param("breeding_program_id");
+    my $folder_for_trials = 1 ? $c->req->param("folder_for_trials") eq 'true' : 0;
+    my $folder_for_crosses = 1 ? $c->req->param("folder_for_crosses") eq 'true' : 0;
 
     my $id = $c->req->param("id") || "folder_select";
     my $name = $c->req->param("name") || "folder_select";
@@ -125,7 +130,9 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
 
     my @folders = CXGN::Trial::Folder->list({
 	    bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-	    breeding_program_id => $breeding_program_id
+	    breeding_program_id => $breeding_program_id,
+        folder_for_trials => $folder_for_trials,
+        folder_for_crosses => $folder_for_crosses
     });
 
     if ($empty) {
@@ -146,8 +153,13 @@ sub get_trial_type_select : Path('/ajax/html/select/trial_types') Args(0) {
 
     my $id = $c->req->param("id") || "trial_type_select";
     my $name = $c->req->param("name") || "trial_type_select";
+    my $empty = $c->req->param("empty") || ""; # set if an empty selection should be present
 
     my @types = CXGN::Trial::get_all_project_types($c->dbic_schema("Bio::Chado::Schema"));
+
+    if ($empty) {
+        unshift @types, [ '', "None" ];
+    }
 
     my $default = $c->req->param("default") || $types[0]->[0];
 
@@ -184,7 +196,7 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
           push @trials, $_;
       }
     }
-    @trials = sort @trials;
+    @trials = sort { $a->[1] cmp $b->[1] } @trials;
 
     if ($empty) { unshift @trials, [ "", "Please select a trial" ]; }
 
@@ -198,32 +210,123 @@ sub get_trials_select : Path('/ajax/html/select/trials') Args(0) {
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
+	my $self = shift;
+	my $c = shift;
+	my $params = _clean_inputs($c->req->params);
+
+	my $stock_search = CXGN::Stock::Search->new({
+		bcs_schema=>$c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
+		people_schema=>$c->dbic_schema("CXGN::People::Schema"),
+		phenome_schema=>$c->dbic_schema("CXGN::Phenome::Schema"),
+		match_type=>$params->{match_type}->[0],
+		match_name=>$params->{match_type}->[0],
+		uniquename_list=>$params->{uniquename_list},
+		accession_number_list=>$params->{accession_number_list},
+		pui_list=>$params->{pui_list},
+		genus_list=>$params->{genus_list},
+		species_list=>$params->{species_list},
+		stock_id_list=>$params->{stock_id_list},
+		organism_id=>$params->{organism_id}->[0],
+		stock_type_name=>$params->{stock_type_name}->[0],
+		stock_type_id=>$params->{stock_type_id}->[0],
+		owner_first_name=>$params->{owner_first_name}->[0],
+		owner_last_name=>$params->{owner_last_name}->[0],
+		trait_cvterm_name_list=>$params->{trait_cvterm_name_list},
+		minimum_phenotype_value=>$params->{minimum_phenotype_value}->[0],
+		maximum_phenotype_value=>$params->{maximum_phenotype_value}->[0],
+		trial_name_list=>$params->{trial_name_list},
+		trial_id_list=>$params->{'trial_id_list[]'},
+		breeding_program_id_list=>$params->{breeding_program_id_list},
+		location_name_list=>$params->{location_name_list},
+		year_list=>$params->{year_list},
+		organization_list=>$params->{organization_list},
+		limit=>$params->{limit}->[0],
+		offset=>$params->{offset}->[0],
+		minimal_info=>1
+	});
+	my ($result, $records_total) = $stock_search->search();
+	#print STDERR Dumper $result;
+	my $id = $c->req->param("id") || "html_trial_select";
+	my $name = $c->req->param("name") || "html_trial_select";
+	my $size = $c->req->param("size");
+	my $empty = $c->req->param("empty") || "";
+	my @stocks;
+	foreach my $r (@$result) {
+		push @stocks, [ $r->{stock_id}, $r->{uniquename} ];
+	}
+	@stocks = sort { $a->[1] cmp $b->[1] } @stocks;
+
+	if ($empty) { unshift @stocks, [ "", "Please select a stock" ]; }
+
+	my $html = simple_selectbox_html(
+		multiple => 1,
+		name => $name,
+		id => $id,
+		size => $size,
+		choices => \@stocks,
+	);
+	$c->stash->{rest} = { select => $html };
+}
+
 sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $trial_id = $c->req->param('trial_id');
+    my $trial_ids = $c->req->param('trial_ids') || 'all';
+    my $stock_id = $c->req->param('stock_id') || 'all';
+    my $stock_type = $c->req->param('stock_type') . 's' || 'none';
     my $data_level = $c->req->param('data_level') || 'all';
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     if ($data_level eq 'all') {
         $data_level = '';
     }
-    my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$trial_id});
-    my $traits_assayed = $trial->get_traits_assayed($data_level);
+
     my @traits;
-    foreach (@$traits_assayed) {
-        my @val = ($_->[0], $_->[1]);
-        push @traits, \@val;
-    }
+    if (($trial_ids eq 'all') && ($stock_id eq 'all')) {
+      my $bs = CXGN::BreederSearch->new( { dbh=> $c->dbc->dbh() } );
+      my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
+      if ($status->{'error'}) {
+        $c->stash->{rest} = { error => $status->{'error'}};
+        return;
+      }
+      my $query = $bs->metadata_query([ 'traits' ], {}, {});
+      @traits = @{$query->{results}};
+      #print STDERR "Traits: ".Dumper(@traits)."\n";
+    } elsif (looks_like_number($stock_id)) {
+        my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+        my @trait_list = $stock->get_trait_list();
+        foreach (@trait_list){
+            my @val = ($_->[0], $_->[2]."|".$_->[1]);
+            push @traits, \@val;
+        }
+	} elsif ($trial_ids ne 'all') {
+		my @trial_ids = split ',', $trial_ids;
+		my %unique_traits_ids;
+		foreach (@trial_ids){
+			my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
+			my $traits_assayed = $trial->get_traits_assayed($data_level);
+			foreach (@$traits_assayed) {
+				$unique_traits_ids{$_->[0]} = [$_->[0], $_->[1]];
+			}
+		}
+		while ( my ($key, $value) = each %unique_traits_ids ){
+			push @traits, $value;
+		}
+	}
+
+	@traits = sort { $a->[1] cmp $b->[1] } @traits;
 
     my $id = $c->req->param("id") || "html_trial_select";
     my $name = $c->req->param("name") || "html_trial_select";
+	my $size = $c->req->param("size");
 
     my $html = simple_selectbox_html(
       multiple => 1,
       name => $name,
       id => $id,
       choices => \@traits,
+	  size => $size
     );
     $c->stash->{rest} = { select => $html };
 }
@@ -321,6 +424,7 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         push @ontology_children, [$child->name."|".$db_name.":".$accession, $child->name."|".$db_name.":".$accession];
     }
 
+    @ontology_children = sort { $a->[1] cmp $b->[1] } @ontology_children;
     if ($empty) {
         unshift @ontology_children, [ 0, "None" ];
     }
@@ -331,6 +435,26 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         choices => \@ontology_children,
     );
     $c->stash->{rest} = { select => $html };
+}
+
+sub _clean_inputs {
+	no warnings 'uninitialized';
+	my $params = shift;
+	foreach (keys %$params){
+		my $values = $params->{$_};
+		my $ret_val;
+		if (ref \$values eq 'SCALAR'){
+			push @$ret_val, $values;
+		} elsif (ref $values eq 'ARRAY'){
+			$ret_val = $values;
+		} else {
+			die "Input is not a scalar or an arrayref\n";
+		}
+		@$ret_val = grep {$_ ne undef} @$ret_val;
+		@$ret_val = grep {$_ ne ''} @$ret_val;
+		$params->{$_} = $ret_val;
+	}
+	return $params;
 }
 
 1;

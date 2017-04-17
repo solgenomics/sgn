@@ -60,15 +60,21 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
 	$c->stash->{rest} = { error => "Pedigree upload requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again." };
 	return;
     }
-			      
-    my $md5;
 
-    my $uploader = CXGN::UploadFile->new();
+    my $md5;
+    print STDERR "TEMP FILE: $upload_tempfile\n";
+    my $uploader = CXGN::UploadFile->new({
+      tempfile => $upload_tempfile,
+      subdirectory => $subdirectory,
+      archive_path => $c->config->{archive_path},
+      archive_filename => $upload_original_name,
+      timestamp => $timestamp,
+      user_id => $user_id,
+      user_role => $c->user()->roles
+    });
 
     my %upload_metadata;
-  ## Store uploaded temporary file in archive
-    print STDERR "TEMP FILE: $upload_tempfile\n";
-    my $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+    my $archived_filename_with_path = $uploader->archive();
 
     if (!$archived_filename_with_path) {
 	$c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};

@@ -79,6 +79,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{harvest_date} = $trial->get_harvest_date();
 
     $c->stash->{trial_description} = $trial->get_description();
+    $c->stash->{trial_phenotype_files} = $trial->get_phenotype_metadata();
 
     my $location_data = $trial->get_location();
     $c->stash->{location_id} = $location_data->[0];
@@ -95,7 +96,9 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{has_plant_entries} = $trial->has_plant_entries();
 
     $c->stash->{hidap_enabled} = $c->config->{hidap_enabled};
-    $c->stash->{cassbase_to_cea} = $c->config->{cassbase_to_cea};
+    $c->stash->{has_expression_atlas} = $c->config->{has_expression_atlas};
+    $c->stash->{expression_atlas_url} = $c->config->{expression_atlas_url};
+    $c->stash->{site_project_name} = $c->config->{project_name};
 
     if ($trial->get_folder) {
       $c->stash->{folder_id} = $trial->get_folder()->project_id();
@@ -176,6 +179,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $data_level = $c->req->param("dataLevel") || "plot";
     my $timestamp_option = $c->req->param("timestamp") || 0;
     my $trait_list = $c->req->param("trait_list");
+    my $search_type = $c->req->param("search_type") || 'fast';
 
     if ($data_level eq 'plants') {
         my $trial = $c->stash->{trial};
@@ -227,6 +231,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         filename => $tempfile,
         format => $plugin,
         data_level => $data_level,
+        search_type => $search_type,
         include_timestamp => $timestamp_option,
     });
 

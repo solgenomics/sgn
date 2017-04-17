@@ -1,0 +1,43 @@
+<%doc>
+
+=head1 NAME 
+
+publication_of_the_week.mas - a mason module to display an html section with news, read from a file.
+
+=head1 DESCRIPTION
+
+The module does not require any parameters. If the file read does not succeed, an error message is displayed.
+
+=head1 AUTHOR
+
+Lukas Mueller <lam87@cornell.edu>
+
+=cut
+
+</%doc>
+
+<%perl>
+
+use strict;
+use File::Spec;
+use CXGN::Tools::File;
+
+my $publication = "The tomato genome release information is currently unavailable.<br /><br />";
+
+eval {
+
+ $publication = CXGN::Tools::File::read_commented_file(File::Spec->catfile($c->get_conf('homepage_files_dir'), "tomato_genome_release.txt"));
+
+};
+
+if ($@) { print "ERROR $@\n"; }
+
+</%perl>
+
+<div class="boxbgcolor1" style="margin:0px;">
+<div class="boxheading">Current Tomato Genome version SL3.0 and Annotation ITAG3.10 <font color="red">       [ New ]</font>  </div>
+
+<div class="boxcontent"><% $publication %>
+
+</div>
+</div>

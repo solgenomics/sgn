@@ -244,24 +244,26 @@ function displayTrainingPopulations (tableDetails) {
     if (data) {
 
 	var tableRows = jQuery('#' + tableId + ' tr').length;
-		if (tableRows > 1) {
-	    jQuery('#' + tableId).dataTable().fnAddData(data);	} else {
+	
+	if (tableRows > 1) {
+	    jQuery('#' + tableId).dataTable().fnAddData(data);	
+	} else {
 	    
 	    var table = createTrialsTable(tableId);
 	   
 	    jQuery('#' + divId).html(table).show();
 	   
 	    jQuery('#' + tableId).dataTable({
-                    'order'     : [[1, "desc"], [4, "desc"]],
-		    'searching' : true,
-		    'ordering'  : true,
-		    'processing': true,
-		    'paging': true,
+                    'order'       : [[1, "desc"], [4, "desc"]],
+		    'searching'   : true,
+		    'ordering'    : true,
+		    'processing'  : true,
+		    'paging'      : true,
 		    'lengthChange': false,
-                    'oLanguage': {
-			"sSearch": "Filter result by: "
-		    },
-		    'data': data,
+                    'oLanguage'   : {
+		                     "sSearch": "Filter result by: "
+		                    },
+		    'data'        : data,
 	    }).draw();
 	}
     }

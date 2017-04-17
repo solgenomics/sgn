@@ -164,13 +164,10 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
    
     my $analysis_profile = $c->req->params;
     $c->stash->{analysis_profile} = $analysis_profile;
-
     $self->parse_arguments($c);
-    
     $self->run_analysis($c);  
-     
     $self->structure_output_details($c); 
-    
+
     my $output_details = $c->stash->{bg_job_output_details};
       
     $c->stash->{r_temp_file} = 'analysis-status';
@@ -191,7 +188,8 @@ sub run_saved_analysis :Path('/solgs/run/saved/analysis/') Args(0) {
     }
     else  
     { 
-	my $output_details_file = $c->controller('solGS::solGS')->create_tempfile($c, 'analysis_report_args');
+	my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
+	my $output_details_file = $c->controller('solGS::solGS')->create_tempfile($tmp_dir, 'analysis_report_args');
 	nstore $output_details, $output_details_file 
 	    or croak "check_analysis_status: $! serializing output_details to $output_details_file";
 	
@@ -259,22 +257,12 @@ sub parse_arguments {
       
       foreach my $k ( keys %{$arguments} ) 
       {
-	  if ($k eq 'population_id') 
-	  {
-	      my @pop_ids = @{ $arguments->{$k} };
-	      $c->stash->{pop_ids} = \@pop_ids;
-	      
-	      if (scalar(@pop_ids) == 1) 
-	      {		  
-		  $c->stash->{pop_id}  = $pop_ids[0];
-	      }
-	  }
-
 	  if ($k eq 'combo_pops_id') 
 	  {
 	      $c->stash->{combo_pops_id}   = @{ $arguments->{$k} }[0];
 	      $c->stash->{training_pop_id} = @{ $arguments->{$k} }[0];	      
 	  }
+
 	  if ($k eq 'population_id') 
 	  {	       
 	      if ($data_set_type =~ /combined populations/)
@@ -282,16 +270,34 @@ sub parse_arguments {
 		  $c->stash->{combo_pops_id} = @{ $arguments->{$k} }[0];
 	      }
 	      else 
-	      {
-		  $c->stash->{pop_id}          = @{ $arguments->{$k} }[0];
-		  $c->stash->{training_pop_id} = @{ $arguments->{$k} }[0];
+	      {   
+		  if (ref($arguments->{k}) eq 'ARRAY')
+		  {
+		      $c->stash->{pop_id}          = @{ $arguments->{$k} }[0];
+		      $c->stash->{training_pop_id} = @{ $arguments->{$k} }[0];
+		      $c->stash->{model_id}        = @{ $arguments->{$k} }[0];
+		  }
+		  else 
+		  {
+		     $c->stash->{pop_id}          = @{$arguments->{$k}}[0];
+		     $c->stash->{training_pop_id} = @{$arguments->{$k}}[0];
+		     $c->stash->{model_id}        = @{$arguments->{$k}}[0];
+		  }
 	      }
 	     
 	  }
+	  
 	  if ($k eq 'selection_pop_id') 
 	  {
 	      $c->stash->{selection_pop_id}  = @{ $arguments->{$k} }[0];
 	      $c->stash->{prediction_pop_id} = @{ $arguments->{$k} }[0];
+	  }
+
+	  if ($k eq 'model_id') 
+	  {
+	      $c->stash->{model_id}        = $arguments->{$k};
+	      $c->stash->{training_pop_id} = $arguments->{$k};
+	      $c->stash->{pop_id}          = $arguments->{$k};
 	  }
 
 	  if ($k eq 'training_pop_id') 
@@ -328,6 +334,16 @@ sub parse_arguments {
 	      }
 	  } 
 	  
+	  if ($k eq 'list') 
+	  {
+	      $c->stash->{list} = $arguments->{$k}; 
+	  }	
+
+	  if ($k eq 'list_name') 
+	  {
+	      $c->stash->{list_name} = $arguments->{$k}; 
+	  }
+	
 	  if ($k eq 'analysis_type') 
 	  {
 	      $c->stash->{analysis_type} = $arguments->{$k};
@@ -336,7 +352,7 @@ sub parse_arguments {
 	  if ($k eq 'data_set_type') 
 	  {
 	      $c->stash->{data_set_type} =  $arguments->{$k};
-	  }	 
+	  }	 	  	 
       }
   }
 	    
@@ -435,20 +451,38 @@ sub structure_output_details {
     elsif ( $analysis_page =~ m/solgs\/population\// ) 
     {
 	my $population_page = $base . "solgs/population/$pop_id";
-	$c->stash->{pop_id} = $pop_id;
+	my $data_set_type   = $c->stash->{data_set_type};
+	my $pheno_file;
+	my $geno_file;
+	my $pop_name;
 
-	$solgs_controller->phenotype_file($c);	
-	$solgs_controller->genotype_file($c);
-	$solgs_controller->get_project_details($c, $pop_id);
+	if ($pop_id =~ /uploaded/) {
+	    my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};;	   
+	    my $files   = $c->controller('solGS::List')->create_list_pop_tempfiles($tmp_dir, $pop_id);
+	    $pheno_file = $files->{pheno_file};
+	    $geno_file  = $files->{geno_file};
 
-	$output_details{'population_id_' . $pop_id} = {
+	    $solgs_controller->uploaded_population_summary($c);
+	    $pop_name = $c->stash->{project_name};	    
+	} 
+	else 
+	{	    
+	    $solgs_controller->phenotype_file_name($c);	
+	    $solgs_controller->genotype_file_name($c);	    
+	    $pheno_file = $c->stash->{phenotype_file_name};
+	    $geno_file  = $c->stash->{genotype_file_name};
+	  
+	    $solgs_controller->get_project_details($c, $pop_id);
+	    $pop_name = $c->stash->{project_name};
+	}
+	    $output_details{'population_id_' . $pop_id} = {
 		'population_page' => $population_page,
 		'population_id'   => $pop_id,
-		'population_name' => $c->stash->{project_name},
-		'phenotype_file'  => $c->stash->{phenotype_file},
-		'genotype_file'   => $c->stash->{genotype_file},  
-		'data_set_type'   => $c->stash->{data_set_type},
-	};		
+		'population_name' => $pop_name,
+		'phenotype_file'  => $pheno_file,
+		'genotype_file'   => $geno_file,  
+		'data_set_type'   => $data_set_type,
+	    };
     }
     elsif ( $analysis_page =~ m/solgs\/model\/\d+\/prediction\// ) 
     {	
@@ -616,8 +650,19 @@ sub run_analysis {
     }
     elsif ($analysis_page =~ /solgs\/population\//)
     {
-	$c->controller('solGS::solGS')->phenotype_file($c);	
-	$c->controller('solGS::solGS')->genotype_file($c);
+	my $pop_id = $c->stash->{model_id};
+
+	if ($pop_id =~ /uploaded/) 
+	{
+	    $c->controller('solGS::List')->plots_list_phenotype_file($c);
+	    $c->controller('solGS::List')->genotypes_list_genotype_file($c);
+	    $c->controller('solGS::List')->create_list_population_metadata_file($c);
+	}
+	else
+	{
+	    $c->controller('solGS::solGS')->phenotype_file($c);	
+	    $c->controller('solGS::solGS')->genotype_file($c);
+	}
     }
     elsif ($analysis_page =~ /solgs\/populations\/combined\//)
     {
@@ -741,12 +786,12 @@ sub confirm_request :Path('/solgs/confirm/request/') Args(0) {
     my ($self, $c) = @_;
     
     my $referer = $c->req->referer;
-    my $sp_person_id => $c->user->get_object->get_sp_person_id;
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
 
     $c->stash->{message} = "<p>Your analysis is running.<br />
                             You will receive an email when it is completed.<br /></p>
                             <p>You can also check the status of the analysis in 
-                            <a href=\"/solpeople/profile/$sp_person_id\">your profile page</a>.</p>
+                            <a href=\"/solpeople/profile/$user_id\">your profile page</a>.</p>
                             <p><a href=\"$referer\">[ Go back ]</a></p>";
 
     $c->stash->{template} = "/generic_message.mas"; 
