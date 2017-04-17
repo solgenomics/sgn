@@ -43,10 +43,11 @@ $seedlots => []
       <div class="modal-body">
         <div class="container-fluid">
 	  <table cellspacing="10">
-	  <tr><td>Name</td><td> <input id="seedlot_name"></td></tr>
-	  <tr><td>Location</td><td><input id="seedlot_location"></td></tr>
-	  <tr><td>Accession</td><td><input id="seedlot_accession"></td></tr>
-	  <tr><td>Cross</td><td><input id="seedlot_cross"></td></tr>
+	  <tr><td>Name</td><td> <input class="form-control" id="seedlot_name"></td></tr>
+	  <tr><td>Location</td><td><input class="form-control" id="seedlot_location"></td></tr>
+	  <tr><td>Accession</td><td><input class="form-control" id="seedlot_accession_id"></td></tr>
+	  <tr><td>Cross</td><td><input class="form-control" id="seedlot_cross_id"></td></tr>
+	  <tr><td>Breeding Program</td><td><input class="form-control" id="seedlot_breeding_program_id"></td></tr>
 	  </table>
 	  
         </div>
@@ -65,14 +66,15 @@ $seedlots => []
   jQuery('#create_new_seedlot_button').click( function() { 
     var name = jQuery('#seedlot_name').val();
     var location = jQuery('#seedlot_location').val();
-    var accession = jQuery('#seedlot_accession').val();
-    var cross = jQuery('#seedlot_cross').val();
+    var accession_id = jQuery('#seedlot_accession_id').val();
+    var cross_id = jQuery('#seedlot_cross_id').val();
+    var breeding_program_id = jQuery('#seedlot_breeding_program_id').val();
     
     if (name == '') { alert("Please provide a name"); }
 
     jQuery.ajax( { 
       url: '/ajax/breeders/seedlot-create',
-      data : { 'seedlot_name' : name, 'seedlot_location': location, 'seedlot_accession': accession, 'seedlot_cross': cross },
+      data : { 'seedlot_name' : name, 'seedlot_location': location, 'seedlot_accession_id': accession_id, 'seedlot_cross_id': cross_id, 'seedlot_breeding_program_id': breeding_program_id },
       success: function(response) { 
         if (response.success == 1) { 
            alert("The seedlot has been created.");

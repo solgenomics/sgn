@@ -4,18 +4,21 @@ $seedlot_id
 $uniquename
 $location_code => ''
 $current_count => 0
+$accessions
+$breeding_program_name
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery.dataTables-bootstrap-min', 'jquery', 'jquery.dataTables' ] &>
 
 <& /page/page_title.mas, title => 'Seedlot '.$uniquename &>
 
-<table>
-<tr><td><b>Name</b></td><td width="20">&nbsp;</td><td><% $uniquename %></td></tr>
-<tr><td><b>Location Code</b></td><td width="20">&nbsp;</td><td><% $location_code %></td></tr>
-<tr><td><b>Accession</b></td><td width="20">&nbsp;</td><td><% %></td></tr>
-<tr><td><b>Cross</b></td><td width="20">&nbsp;</td><td><% %></td></tr>
-<tr><td><b>Current count</b></td><td width="20">&nbsp;</td><td><% $current_count %></td></tr>
+<table class="table table-bordered table-hover">
+<tr><td><b>Name</b></td><td><% $uniquename %></td></tr>
+<tr><td><b>Breeding Program</b></td><td><% $breeding_program_name %></td></tr>
+<tr><td><b>Location Code</b><td><% $location_code %></td></tr>
+<tr><td><b>Accession</b></td><td><% $accessions %></td></tr>
+<tr><td><b>Cross</b></td><td><% %></td></tr>
+<tr><td><b>Current count</b></td><td><% $current_count %></td></tr>
 </table>
 
 <center>

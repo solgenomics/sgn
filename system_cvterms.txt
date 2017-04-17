@@ -13,6 +13,7 @@ experiment_type	field_layout				00052
 experiment_type	genotyping_experiment				00052	
 experiment_type	genotyping_layout				00052	
 experiment_type	phenotyping_experiment				00052	
+experiment_type	seedlot_experiment				00077	
 genotype_property	igd number					
 genotype_property	infinium array					sgn database
 genotype_property	snp genotyping					

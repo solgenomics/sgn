@@ -91,16 +91,9 @@ sub get_transactions_by_seedlot_id {
 sub store { 
     my $self = shift;
     
-    my $transaction_type_id = $self->schema()->resultset("Cv::Cvterm")->find({ name=> 'seed transaction' })->cvterm_id();
+    my $transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seed transaction", "stock_relationship")->cvterm_id();
 
     if (!$self->has_transaction_id()) { 
-	
-	my $value = JSON::Any->encode( 
-		    { 
-			amount => $self->amount(),
-			date => $self->date(),
-			operator => $self->operator(),
-		    });
 	
 	my $row = $self->schema()->resultset("Stock::StockRelationship")
 	    ->find( 
@@ -112,7 +105,6 @@ sub store {
 
 	my $new_rank = 0;
 	if ($row) { 
-	    my $old_rank = $row->rank();
 	    $new_rank = $row->rank()+1;
 	}
 	

@@ -66,21 +66,25 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
 
     my $uniquename = $c->req->param("seedlot_name");
     my $location_code = $c->req->param("seedlot_location");
-    my $organism_id = $c->req->param("seedlot_accession");
-    my $breeding_program_id = $c->req->param("breeding_program_id");
+    my $accession_id = $c->req->param("seedlot_accession_id");
+    my $cross_id = $c->req->param("seedlot_cross_id");
+    my $breeding_program_id = $c->req->param("seedlot_breeding_program_id");
 
 
     print STDERR "Creating new Seedlot $uniquename\n";
     my $seedlot_id;
 
     eval { 
-	my $sl = CXGN::Seedlot->new(schema => $c->dbic_schema("Bio::Chado::Schema"));
-	$sl->uniquename($uniquename);
-	$sl->location_code($location_code);
-	#$sl->organism_id($organism_id);
-	# $sl->breeding_program_id($breeding_program_id); ## add this
-	
-	$seedlot_id = $sl->store();
+        my $sl = CXGN::Seedlot->new(schema => $c->dbic_schema("Bio::Chado::Schema"));
+        $sl->uniquename($uniquename);
+        $sl->location_code($location_code);
+        $sl->accession_stock_ids([$accession_id]);
+
+        #TO DO
+        #$sl->cross_id($cross_id);
+        #$sl->breeding_program_id($breeding_program_id);
+
+        $seedlot_id = $sl->store();
     };
 
     if ($@) { 

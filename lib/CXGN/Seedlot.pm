@@ -73,13 +73,15 @@ The accessions this seedlot is associated with.
 
 =cut
 
-has 'accessions' =>        ( isa => 'ArrayRef',
-			    is => 'rw',  # for setter, use accession_stock_id
-    );
+has 'accessions' => (
+    isa => 'ArrayRef[ArrayRef]',
+    is => 'rw',  # for setter, use accession_stock_id
+);
 
-has 'accession_stock_ids' => (isa => 'ArrayRef',
-			     is => 'rw',
-    );
+has 'accession_stock_ids' => (
+    isa => 'ArrayRef[Int]',
+    is => 'rw',
+);
 
 =head2 Accessor transactions()
 
@@ -140,8 +142,8 @@ sub BUILD {
 	$self->name($self->uniquename());
 	$self->location_code($self->description());
 	$self->seedlot_id($self->stock_id());
-	$self->accession_stock_ids($self->_retrieve_accession());
-	$self->breeding_program($self->_retrieve_breeding_program());
+	$self->_retrieve_accession();
+	$self->_retrieve_breeding_program();
 	#$self->cross($self->_retrieve_cross());
 
 	my $transactions = CXGN::Seedlot::Transaction->get_transactions_by_seedlot_id(
@@ -219,7 +221,7 @@ sub _retrieve_accession {
     $rs = $self->schema()->resultset("Stock::Stock")->search( { stock_id => { in => \@accession_ids }});
     my @names;
     while (my $s = $rs->next()) { 
-	push @names, $s->uniquename();
+        push @names, [ $s->stock_id(), $s->uniquename() ];
     }
     $self->accessions(\@names);
 }

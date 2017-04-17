@@ -69,6 +69,9 @@ sub patch {
 			'collection_of',
             'seed transaction',
 		],
+        'experiment_type' => [
+			'seedlot_experiment',
+		],
 	};
 
 	foreach my $t (keys %$terms){

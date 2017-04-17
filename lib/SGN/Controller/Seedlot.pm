@@ -22,12 +22,20 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     my $seedlot_id = shift;
 
     my $sl = CXGN::Seedlot->new(
-	schema => $c->dbic_schema("Bio::Chado::Schema"), 
-	seedlot_id => $seedlot_id);
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        seedlot_id => $seedlot_id
+    );
+    my $accessions = $sl->accessions();
+    my $accessions_html = '';
+    foreach (@$accessions){
+        $accessions_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> ';
+    }
     $c->stash->{seedlot_id} = $sl->seedlot_id();
     $c->stash->{uniquename} = $sl->uniquename();
     $c->stash->{location_code} = $sl->location_code();
     $c->stash->{current_count} = $sl->current_count();
+    $c->stash->{breeding_program_name} = $sl->breeding_program();
+    $c->stash->{accessions} = $accessions_html;
     $c->stash->{template} = '/breeders_toolbox/seedlot_details.mas';
 }
 
