@@ -45,44 +45,144 @@ Two versions of the <i>Nicotiana tabacum</i> genome (Sierro, N. et al. 2014 and 
   <div class="container-fluid">
     <div class="row">
     
-      <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
-        <b><i>N. tabacum</i> bulk datasets (via FTP)</b><br>
-        <a href="ftp://ftp.solgenomics.net/genomes/Nicotiana_tabacum/">Genome sequence and Annotation</a>
+    <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
+        <b>Genome sequence and Annotation</b><br>
+        <ul>
+          <li>
+            <a href="ftp://ftp.solgenomics.net/genomes/Nicotiana_tabacum/edwards_et_al_2017">Edwards 2017</a>
+          </li>
+          <li>
+            <a href="ftp://ftp.solgenomics.net/genomes/Nicotiana_tabacum/sierro_et_al_2014">Sierro 2014</a>
+          </li>
+        </ul>
       </div>
       
       <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
+        <b>Genome browser (JBrowse)</b><br>
+        <ul>
+          <li>
+            <a href="https://solgenomics.net/jbrowse_solgenomics/?data=data/json/NitabEd17_chr">Nitab v1.0 Chr Edwards 2017</a>
+          </li>
+          <li>
+            <a href="https://solgenomics.net/jbrowse_solgenomics/?data=data/json/NitabEd17">Nitab v1.0 Scf Edwards 2017</a>
+          </li>
+          <li>
+            <a href="/jbrowse_solgenomics/?data=data/json/Ntab_TN90/">TN90 Scf Sierro 2014</a>
+          </li>
+      </div>
+        
+      <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
         <b><i>N. tabacum</i> v1.0 Edwards 2017 BLAST</b><br>
-        <a href="/tools/blast/?db_id=289" target="blank">Genome (Chr)</a> | <a href="/tools/blast/?db_id=290" target="blank">Genome (Scf)</a> | <a href="/tools/blast/?db_id=288" target="blank">cDNA</a> | <a href="/tools/blast/?db_id=291" target="blank">Proteins</a>
+        <ul>
+          <li>
+          <a href="/tools/blast/?db_id=289" target="blank">Genome (Chr)</a>
+          </li>
+          <li>
+          <a href="/tools/blast/?db_id=290" target="blank">Genome (Scf)</a>
+          </li>
+          <li>
+          <a href="/tools/blast/?db_id=288" target="blank">cDNA</a>
+          </li>
+          <li>
+          <a href="/tools/blast/?db_id=291" target="blank">Proteins</a>
+          </li>
+        </ul>
       </div>
 
       <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
         <b><i>N. tabacum</i> TN90 Sierro 2014 BLAST</b><br>
-        <a href="/tools/blast/?db_id=227">Genome (Scf)</a> | <a href="/tools/blast/?db_id=228">CDS</a> | <a href="/tools/blast/?db_id=229">cDNA</a> | <a href="/tools/blast/?db_id=230">Proteins</a>
+        <ul>
+          <li>
+          <a href="/tools/blast/?db_id=227">Genome (Scf)</a>
+          </li>
+          <li>
+          <a href="/tools/blast/?db_id=228">CDS</a>
+          </li>
+          <li>
+          <a href="/tools/blast/?db_id=229">cDNA</a>
+          </li>
+          <li>
+          <a href="/tools/blast/?db_id=230">Proteins</a>
+          </li>
+        </ul>
       </div>
 
       <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
         <b><i>N. tabacum</i> BX Sierro 2014 BLAST</b><br>
-        <a href="/tools/blast/?db_id=231">Genome (Scf)</a> | <a href="/tools/blast/?db_id=232">CDS</a> | <a href="/tools/blast/?db_id=233">cDNA</a> | <a href="/tools/blast/?db_id=234">Proteins</a>
+        <ul>
+          <li>
+            <a href="/tools/blast/?db_id=231">Genome (Scf)</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=232">CDS</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=233">cDNA</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=234">Proteins</a>
+          </li>
+        </ul>
       </div>
 
       <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
         <b><i>N. tabacum</i> K326 Sierro 2014 BLAST</b><br>
-        <a href="/tools/blast/?db_id=235">Genome (Scf)</a> | <a href="/tools/blast/?db_id=236">CDS</a> | <a href="/tools/blast/?db_id=237">cDNA</a> | <a href="/tools/blast/?db_id=238">Proteins</a>
+        <ul>
+          <li>
+            <a href="/tools/blast/?db_id=235">Genome (Scf)</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=236">CDS</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=237">cDNA</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=238">Proteins</a>
+          </li>
+        </ul>
       </div>
 
       <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
         <b><i>N. sylvestris</i> BLAST</b><br>
-        <a href="/tools/blast/?db_id=239">Genome (Scf)</a> | <a href="/tools/blast/?db_id=240">CDS</a> | <a href="/tools/blast/?db_id=241">cDNA</a> | <a href="/tools/blast/?db_id=242">Proteins</a>
+        <ul>
+          <li>
+            <a href="/tools/blast/?db_id=239">Genome (Scf)</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=240">CDS</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=241">cDNA</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=242">Proteins</a>
+          </li>
+        </ul>
       </div>
 
       <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
         <b><i>N. tomentosiformis</i> BLAST</b><br>
-        <a href="/tools/blast/?db_id=243">Genome (Scf)</a> | <a href="/tools/blast/?db_id=244">CDS</a> | <a href="/tools/blast/?db_id=245">cDNA</a>
+        <ul>
+          <li>
+            <a href="/tools/blast/?db_id=243">Genome (Scf)</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=244">CDS</a>
+          </li>
+          <li>
+            <a href="/tools/blast/?db_id=245">cDNA</a>
+          </li>
+        </ul>
       </div>
 
       <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-4 dataset-title">
-        <b><i>N. tabacum</i> Genome browser</b><br>
-        <a href="/jbrowse_solgenomics/?data=data/json/Ntab_TN90/">Jbrowse</a>
+        <b>SGN VIGS Tool</b><br>
+        <ul>
+          <li>
+            <a href="http://vigs.solgenomics.net/">VIGS Tool</a>
+          </li>
+        </ul>
       </div>
         
       </div>
