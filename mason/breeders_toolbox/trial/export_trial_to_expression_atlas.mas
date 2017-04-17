@@ -86,19 +86,18 @@ $site_project_name
 
 jQuery(document).ready(function() {
 
-	if(jQuery("#expression_atlas_trial_id").length == 0) {
-		get_select_box('trials', 'expression_atlas_trial_select_div', { 'name' : 'expression_atlas_trial_id', 'id' : 'expression_atlas_trial_id', 'size' : 7 });
-	} else {
-		expression_atlas_change_trials();
-	}
+    jQuery("#export_trial_to_expression_atlas").click( function () {
+        jQuery('#export_to_expression_atlas_dialog').modal('show');
+        if(jQuery("#expression_atlas_trial_id").length == 0) {
+            get_select_box('trials', 'expression_atlas_trial_select_div', { 'name' : 'expression_atlas_trial_id', 'id' : 'expression_atlas_trial_id', 'size' : 7 });
+        } else {
+            expression_atlas_change_trials();
+        }
+    });
 
 	jQuery(document).on('change', "#expression_atlas_trial_id", function() {
 		expression_atlas_change_trials();
     });
-
-	jQuery("#export_trial_to_expression_atlas").click( function () {
-		jQuery('#export_to_expression_atlas_dialog').modal('show');
-	});
 
 	jQuery("#expression_atlas_export_ok_button").click( function () {
 		var trial_id_array = [<% $trial_id %>];
