@@ -32,7 +32,9 @@ $hidap_enabled => undef
 $folder_name => undef
 $folder_id => undef
 $plants_per_plot => undef
-$cassbase_to_cea => undef
+$has_expression_atlas => undef
+$expression_atlas_url => undef
+$site_project_name => undef
 $trial_phenotype_files => undef
 </%args>
 
@@ -306,7 +308,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 </&>
 
-<& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $trial_id, dialog_name => $trial_name, dialog_type => 'Trial' &>
 
 <&| /page/info_section.mas,
    title       => 'Weather at Trial Location',
@@ -319,8 +321,8 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 <&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='trial_download_phenotypes_button'>Download Trial Data</a>]" &>
 
-% if ($cassbase_to_cea) {
-    <& /breeders_toolbox/trial/cassbase_export_trial_to_expression_atlas.mas, trial_id => $trial_id, trial_name=>$trial_name &>
+% if ($has_expression_atlas) {
+    <& /breeders_toolbox/trial/export_trial_to_expression_atlas.mas, trial_id => $trial_id, trial_name=>$trial_name, expression_atlas_url=>$expression_atlas_url, site_project_name=>$site_project_name &>
 % }
 
 <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
