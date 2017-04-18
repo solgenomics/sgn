@@ -11,6 +11,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     metadata_schema=>$metadata_schema,
     phenome_schema=>$phenome_schema,
     user_id=>$user_id,
+    datatype => "raw" || "averaged", # default is "raw"
     stock_list=>$plots,
     trait_list=>$traits,
     values_hash=>$parsed_data,
@@ -65,6 +66,10 @@ has 'user_id' => (isa => "Int",
     is => 'rw',
     required => 1
 );
+
+has 'datatype' => (isa => "Str",
+		   is => 'rw',
+    );
 
 has 'stock_list' => (isa => "ArrayRef",
     is => 'rw',
@@ -133,7 +138,9 @@ sub create_hash_lookups {
     #for checking if values in the file are already stored in the database or in the same file
     my %check_unique_trait_stock;
     my %check_unique_value_trait_stock;
+
     my $previous_phenotype_rs = $schema->resultset('Phenotype::Phenotype')->search({'me.cvalue_id'=>{-in=>\@cvterm_ids}}, {'join'=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>{'nd_experiment_stocks'=>'stock'}}}, 'select' => ['me.value', 'me.cvalue_id', 'stock.stock_id'], 'as' => ['value', 'cvterm_id', 'stock_id']});
+
     while (my $previous_phenotype_cvterm = $previous_phenotype_rs->next() ) {
         my $cvterm_id = $previous_phenotype_cvterm->get_column('cvterm_id');
         my $stock_id = $previous_phenotype_cvterm->get_column('stock_id') || ' ';
@@ -161,7 +168,14 @@ sub verify {
     #print STDERR Dumper \%plot_trait_value;
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
-    my @plots_missing = @{$plot_validator->validate($schema,'plots_or_plants',\@plot_list)->{'missing'}};
+    
+    my @plots_missing;
+    if ($self->datatype() eq "averaged") { 
+	@plots_missing = @{$plot_validator->validate($schema, 'accessions', \@plot_list)->{missing}};
+    }
+    else { 
+	@plots_missing = @{$plot_validator->validate($schema,'plots_or_plants',\@plot_list)->{'missing'}};
+    }
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
     my $error_message;
     my $warning_message;
@@ -333,6 +347,14 @@ sub store {
     my $upload_date = $phenotype_metadata->{'date'};
 
     my $phenotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+    my $field_layout_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout')->cvterm_id();
+    my $averaged_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'averaged_trial')->cvterm_id();
+
+    my $experiment_type_id = $field_layout_cvterm_id;
+    if ($self->datatype() eq 'averaged') { 
+	$experiment_type_id = $averaged_trial_cvterm_id;
+    }
+	
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
 
@@ -346,7 +368,7 @@ sub store {
     my $rs;
     my %data;
     $rs = $schema->resultset('Stock::Stock')->search(
-        {'type.name' => 'field_layout', 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] },
+        {'type.name' => $experiment_type_id, 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] },
         {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
             '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'],
             '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
