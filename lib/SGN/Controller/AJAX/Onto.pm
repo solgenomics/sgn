@@ -57,11 +57,17 @@ sub compose_trait: Path('/ajax/onto/compose') Args(0) {
 
   my $ids = $c->req->param("ids");
   print STDERR "Ids string for composing in AJAX Onto = $ids\n";
-  my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
-
-  my $composed_trait_id = $onto->compose_trait($ids);
-
-  $c->stash->{rest} = { success => $composed_trait_id };
+  my $composed_trait;
+  eval {
+      my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+      $composed_trait = $onto->compose_trait($ids);
+  };
+  if ($@) {
+      $c->stash->{rest} = { error => "An error occurred saving the new trait details: $@" };
+  }
+  else {
+      $c->stash->{rest} = { success => 'Saved as <a href="/cvterm/'.$composed_trait->cvterm_id().'/view">'.$composed_trait->name().'</a>.' };
+  }
 
 }
 

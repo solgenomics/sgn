@@ -120,8 +120,27 @@ $composing_order => undef
   </div>
 </div>
 
-
-
+<div class="modal fade" id="traits_saved_dialog" tabindex="-1" role="dialog" aria-labelledby="traitsSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="traitsSavedDialog">New Traits Results</h4>
+            </div>
+            <label class="control-label">Traits saved</label>
+            <div class="modal-body" id="traits_saved_body">
+              <ul class="list-group" id="traits_saved_message"></ul>
+            </div>
+            <label class="control-label">Errors</label>
+            <div class="modal-body" id="traits_error_body">
+              <ul class="list-group" id="traits_error_message"></ul>
+            </div>
+            <div class="modal-footer">
+                <button id="traits_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 
@@ -170,10 +189,19 @@ jQuery('#object_select_clear, #attribute_select_clear, #method_select_clear, #un
 jQuery('#compose_trait').on('click', function () {
 
 var new_traits = jQuery("#new_traits").val();
+var new_trait_names = [];
+$("#new_traits option:selected").each(function () {
+   if (jQuery(this).length) {
+    new_trait_names.push(jQuery(this).text());
+   }
+});
+//console.log("new trait names = "+new_trait_names);
+var successes = [];
+var errors = [];
+disable_ui();
 for (var i = 0; i < new_traits.length; i++) {
   var component_ids = new_traits[i];
   var matching_trait_id = retrieve_exact_trait(component_ids);
-
   if (matching_trait_id) {
     alert("Error. This combination already exists with id "+matching_trait_id);
   }
@@ -184,22 +212,30 @@ for (var i = 0; i < new_traits.length; i++) {
       async: false,
       method: 'POST',
       data: {'ids': component_ids},
-      beforeSend: function(){
-        disable_ui();
-      },
-      complete : function(){
-        enable_ui();
-      },
       success: function(response) {
-        console.log("Success! Stored new term with id "+response.success);
-        alert("Success! Stored new term with id "+response.success);
+      if (response.success) {
+        console.log("response success is: "+response.success);
+        successes.push("<li class='list-group-item list-group-item-success'>"+new_trait_names[i]+": "+response.success+"</li>");
+        return;
+      }
+      else {
+        errors.push("<li class='list-group-item list-group-item-danger'>"+new_trait_names[i]+": "+response.error+"</li>");
+        return;
+      }
       },
       error: function(request, status, err) {
-
+        errors.push("<li class='list-group-item list-group-item-danger'>"+new_trait_names[i]+": Save trait AJAX request failed. This trait was not saved.</li>");
+        return;
       }
     });
   }
 }
+enable_ui();
+// display results
+document.getElementById('traits_saved_message').innerHTML = successes;
+document.getElementById('traits_error_message').innerHTML = "<li class='list-group-item list-group-item-danger'>"+errors+"</li>";
+jQuery('#traits_saved_dialog').modal("show");
+
 });
 
 function create_multi_selects(cv_names) {
