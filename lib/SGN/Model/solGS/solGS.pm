@@ -992,49 +992,13 @@ sub project_genotype_data_rs {
     
     while (my $row = $pr_genotypes_rs->next)
     {
-#	push @genotypes_ids, $row->get_column('stock_id');
 	push @genotypes_list, $row->get_column('uniquename');
     }
  
     my $genotype_rs = $self->accessions_list_genotypes_rs(\@genotypes_list);
-    # my $cnt = scalar(@genotypes_ids);
-
-    # my $nd_exp_rs = $self->genotypes_nd_experiment_ids_rs(\@genotypes_ids);
-
-    # my @nd_exp_ids;
-    
-    # while (my $row = $nd_exp_rs->next)
-    # {
-    # 	push @nd_exp_ids, $row->get_column('nd_experiment_id');
-
-    # }
    
-    # my $genotype_rs = $self->schema->resultset("Project::Project")
-    #     ->search({'me.project_id' => $project_id, 
-    # 		  'type.name' => {'ilike' => 'snp genotyping'},
-    # 		  'nd_experiment_genotypes.nd_experiment_id' => {-in => \@nd_exp_ids}
-    # 		 })
-    # 	->search_related('nd_experiment_projects')
-    # 	->search_related('nd_experiment')
-    #     ->search_related('nd_experiment_stocks')       
-    #     ->search_related('stock')
-    #     ->search_related('stock_relationship_subjects')
-    #     ->search_related('object')
-    #     ->search_related('nd_experiment_stocks')
-    #     ->search_related('nd_experiment') 
-    #     ->search_related('nd_experiment_genotypes')
-    #     ->search_related('genotype')
-    #     ->search_related('genotypeprops')
-    # 	->search_related('type',
-    # 			 {},               
-    #                      { select => [qw / object.uniquename object.stock_id  me.name me.project_id 
-    #                                        genotypeprops.genotypeprop_id genotypeprops.value / ],
-    # 			   as     => [ qw / stock_name stock_id project_name project_id genotypeprop_id value/ ],
-    # 				     distinct => 1,
-    #                      }
-    #     );
 
-    # return $genotype_rs;
+    return $genotype_rs;
 
 }
 
