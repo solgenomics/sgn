@@ -1024,7 +1024,7 @@ sub project_genotype_data_rs {
     # }
  
 
-    my $trial = CXGN::Trial->new({'bcs_schema' =>$self->schema, 'trial_id' =>$pr_id});    
+    my $trial = CXGN::Trial->new({'bcs_schema' =>$self->schema, 'trial_id' =>$project_id});    
     my $trial_accessions = $trial->get_accessions();
     
     my @accessions;
