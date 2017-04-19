@@ -1030,7 +1030,7 @@ sub project_genotype_data_rs {
     my @accessions;
 
     foreach my $st  (@$trial_accessions){
-	push @accessions, $st->{uniquename};
+	push @accessions, $st->{accession_name};
     }
 
     my $genotype_rs = $self->accessions_list_genotypes_rs(\@accessions);
