@@ -181,6 +181,7 @@ sub get_traits_from_component_categories {
     my @traits;
     while(my ($id, $name) = $h->fetchrow_array()){
         push @traits, [ $id, $name ];
+        $name =~ s/\|[^\|]+$//; # remove dbname and accession number before using as hash key
         delete($possible_traits{$name});
     }
 

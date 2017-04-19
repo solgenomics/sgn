@@ -66,7 +66,7 @@ sub compose_trait: Path('/ajax/onto/compose') Args(0) {
       $c->stash->{rest} = { error => "An error occurred saving the new trait details: $@" };
   }
   else {
-      $c->stash->{rest} = { success => 'Saved as <a href="/cvterm/'.$composed_trait->cvterm_id().'/view">'.$composed_trait->name().'</a>.' };
+      $c->stash->{rest} = { success => 'Saved new trait <a href="/cvterm/'.$composed_trait->cvterm_id().'/view">'.$composed_trait->name().'</a>.' };
   }
 
 }

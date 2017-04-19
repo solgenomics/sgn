@@ -125,7 +125,7 @@ $composing_order => undef
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="traitsSavedDialog">New Traits Results</h4>
+                <h4 class="modal-title" id="traitsSavedDialog">Results</h4>
             </div>
             <label class="control-label">Traits saved</label>
             <div class="modal-body" id="traits_saved_body">
@@ -215,7 +215,7 @@ for (var i = 0; i < new_traits.length; i++) {
       success: function(response) {
       if (response.success) {
         console.log("response success is: "+response.success);
-        successes.push("<li class='list-group-item list-group-item-success'>"+new_trait_names[i]+": "+response.success+"</li>");
+        successes.push("<li class='list-group-item list-group-item-success'>"+response.success+"</li>");
         return;
       }
       else {
