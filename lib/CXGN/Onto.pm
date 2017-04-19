@@ -173,8 +173,9 @@ sub compose_trait {
     $h = $dbh->prepare($refresh2);
     $h->execute();
 
-    #return $new_term->cvterm_id();
-    return $new_term;
+    return { cvterm_id => $new_term->cvterm_id(),
+            name => $new_term->name().'|COMP:'.sprintf("%07d",$accession)
+        };
 }
 
 

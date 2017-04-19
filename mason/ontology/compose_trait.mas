@@ -127,13 +127,7 @@ $composing_order => undef
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="traitsSavedDialog">Results</h4>
             </div>
-            <label class="control-label">Traits saved</label>
-            <div class="modal-body" id="traits_saved_body">
-              <ul class="list-group" id="traits_saved_message"></ul>
-            </div>
-            <label class="control-label">Errors</label>
-            <div class="modal-body" id="traits_error_body">
-              <ul class="list-group" id="traits_error_message"></ul>
+            <div id="traits_saved_body" class="container-fluid">
             </div>
             <div class="modal-footer">
                 <button id="traits_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -187,7 +181,8 @@ jQuery('#object_select_clear, #attribute_select_clear, #method_select_clear, #un
 
 
 jQuery('#compose_trait').on('click', function () {
-
+    disable_ui();
+    console.log("just disabled ui");
 var new_traits = jQuery("#new_traits").val();
 var new_trait_names = [];
 $("#new_traits option:selected").each(function () {
@@ -198,7 +193,7 @@ $("#new_traits option:selected").each(function () {
 //console.log("new trait names = "+new_trait_names);
 var successes = [];
 var errors = [];
-disable_ui();
+var names = [];
 for (var i = 0; i < new_traits.length; i++) {
   var component_ids = new_traits[i];
   var matching_trait_id = retrieve_exact_trait(component_ids);
@@ -214,8 +209,8 @@ for (var i = 0; i < new_traits.length; i++) {
       data: {'ids': component_ids},
       success: function(response) {
       if (response.success) {
-        console.log("response success is: "+response.success);
         successes.push("<li class='list-group-item list-group-item-success'>"+response.success+"</li>");
+        names.push(response.name+"\n");
         return;
       }
       else {
@@ -232,10 +227,23 @@ for (var i = 0; i < new_traits.length; i++) {
 }
 enable_ui();
 // display results
-document.getElementById('traits_saved_message').innerHTML = successes;
-document.getElementById('traits_error_message').innerHTML = "<li class='list-group-item list-group-item-danger'>"+errors+"</li>";
-jQuery('#traits_saved_dialog').modal("show");
+var results_html = '';
+if (successes.length > 0) {
+    results_html += '<div class="modal-body col-sm-12" id="traits_saved"><label id="success_label" class="control-label">Traits saved</label><ul class="list-group" id="traits_saved_message">'+successes+'</ul></div>';
+}
+if (errors.length > 0) {
+    results_html += '<div class="modal-body col-sm-12" id="traits_errors"><label id="error_label" class="control-label">Errors</label><ul class="list-group" id="traits_saved_message">'+errors+'</ul></div>';
+}
 
+if (successes.length > 0) {
+    results_html += '<label id="list_label" class="control-label">Copy new traits to a list</label><div class="modal-body col-sm-12" id="results_to_list_menu"></div><div id="new_trait_names" style="display: none;"></div>';
+}
+document.getElementById('traits_saved_body').innerHTML = results_html;
+jQuery('#new_trait_names').html(names);
+addToListMenu('results_to_list_menu', 'new_trait_names', {
+  listType: 'traits'
+});
+jQuery('#traits_saved_dialog').modal("show");
 });
 
 function create_multi_selects(cv_names) {
