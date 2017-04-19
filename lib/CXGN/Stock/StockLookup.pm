@@ -104,7 +104,7 @@ sub get_synonym_hash_lookup {
     my $schema = $self->get_schema();
     my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-    my $q = "SELECT stock.uniquename, stockprop.value FROM stock JOIN stockprop USING(stock_id) WHERE stock.type_id=$accession_type_id AND stockprop.type_id=$synonym_type_id;";
+    my $q = "SELECT stock.uniquename, stockprop.value FROM stock JOIN stockprop USING(stock_id) WHERE stock.type_id=$accession_type_id AND stockprop.type_id=$synonym_type_id ORDER BY stockprop.value;";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my %result;
@@ -112,6 +112,37 @@ sub get_synonym_hash_lookup {
         push @{$result{$uniquename}}, $synonym;
     }
     print STDERR "Synonym End:".localtime."\n";
+    return \%result;
+}
+
+sub get_owner_hash_lookup {
+    my $self = shift;
+    print STDERR "StockOwner Start:".localtime."\n";
+    my $schema = $self->get_schema();
+    my $q = "SELECT stock_id, sp_person_id, username FROM sgn_people.sp_person JOIN phenome.stock_owner USING(sp_person_id) ORDER BY sp_person_id;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+    my %result;
+    while (my ($stock_id, $sp_person_id, $username) = $h->fetchrow_array()) {
+        push @{$result{$stock_id}}, [$sp_person_id, $username];
+    }
+    print STDERR "StockOwner End:".localtime."\n";
+    return \%result;
+}
+
+sub get_organization_hash_lookup {
+    my $self = shift;
+    print STDERR "StockOrg Start:".localtime."\n";
+    my $schema = $self->get_schema();
+	my $organization_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'organization', 'stock_property')->cvterm_id();
+    my $q = "SELECT stock_id, value FROM stockprop WHERE type_id=$organization_type_id ORDER BY value;";
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+    my %result;
+    while (my ($stock_id, $organization) = $h->fetchrow_array()) {
+        push @{$result{$stock_id}}, $organization;
+    }
+    print STDERR "StockOrg End:".localtime."\n";
     return \%result;
 }
 
