@@ -335,29 +335,11 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
 
         my $prediction_pop_gebvs_file;
  
-        foreach my $trait_name (@analyzed_traits) 
+        foreach my $trait_abbr (@analyzed_traits) 
         {    
-            my $acronym_pairs = $c->controller("solGS::solGS")->get_acronym_pairs($c);
-            
-            if ($acronym_pairs)
-            {
-                foreach my $r (@$acronym_pairs) 
-                 {
-                     if ($r->[0] eq $trait_name) 
-                     {
-                         $trait_name = $r->[1];
-                         $trait_name =~ s/\n//g;
-                     }
-                 }
-             }
-	    
-	    if ($trait_name) 
-	    {
-		$trait_id =  $c->model("solGS::solGS")->get_trait_id($trait_name);
-	    }
-
-             $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
-             my $trait_abbr = $c->stash->{trait_abbr};
+	    $c->stash->{trait_abbr} = $trait_abbr;
+	    $c->controller("solGS::solGS")->get_trait_details_of_trait_abbr($c);            
+	    my $trait_id = $c->stash->{trait_id};
 
              my $identifier = $model_id . '_uploaded_' . $prediction_pop_id;
              $c->controller("solGS::solGS")->prediction_pop_gebvs_file($c, $identifier, $trait_id);

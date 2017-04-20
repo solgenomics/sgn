@@ -849,7 +849,15 @@ sub trait :Path('/solgs/trait') Args(3) {
                 $c->stash->{template} = "/generic_message.mas";   
             } 
             else 
-	    {            
+	    {    
+		$self->traits_acronym_file($c);
+		my $acronym_file = $c->stash->{traits_acronym_file};
+	
+		if (!-e $acronym_file || !-s $acronym_file) 
+		{
+		    $self->get_all_traits($c);
+		}
+
 		$self->project_description($c, $pop_id); 
 
 		$self->trait_phenotype_stat($c);  
