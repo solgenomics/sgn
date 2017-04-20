@@ -1,7 +1,7 @@
 
 <%args>
-#$composable_cvs => undef
-$composing_order => undef
+$composable_cvs => undef
+$allowed_combinations => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => ['CXGN.BreederSearch'] &>
@@ -140,8 +140,8 @@ $composing_order => undef
 
 // retrieve composable cvtypes an only load them as multiselects
 
-console.log("composing order is "+'<% $composing_order %>');
-create_multi_selects('<% $composing_order %>');
+console.log("composable cvs are "+'<% $composable_cvs %>');
+create_multi_selects('<% $composable_cvs %>');
 
 addToListMenu('existing_traits_to_list', 'existing_traits', {
   selectText: true,
@@ -179,13 +179,17 @@ jQuery('#object_select_clear, #attribute_select_clear, #method_select_clear, #un
   display_matching_traits();
 });
 
+jQuery('#existing_traits').dblclick(function() { // open trait detail page in new window on double-click
+    window.open("../../cvterm/"+this.value+"/view");
+});
+
 
 jQuery('#compose_trait').on('click', function () {
     disable_ui();
     console.log("just disabled ui");
 var new_traits = jQuery("#new_traits").val();
 var new_trait_names = [];
-$("#new_traits option:selected").each(function () {
+jQuery("#new_traits option:selected").each(function () {
    if (jQuery(this).length) {
     new_trait_names.push(jQuery(this).text());
    }
@@ -197,10 +201,6 @@ var names = [];
 for (var i = 0; i < new_traits.length; i++) {
   var component_ids = new_traits[i];
   var matching_trait_id = retrieve_exact_trait(component_ids);
-  if (matching_trait_id) {
-    alert("Error. This combination already exists with id "+matching_trait_id);
-  }
-  else {
     jQuery.ajax( {
       url: '/ajax/onto/compose',
       timeout: 60000,
@@ -210,6 +210,7 @@ for (var i = 0; i < new_traits.length; i++) {
       success: function(response) {
       if (response.success) {
         successes.push("<li class='list-group-item list-group-item-success'>"+response.success+"</li>");
+        console.log("Name is "+response.name);
         names.push(response.name+"\n");
         return;
       }
@@ -223,7 +224,6 @@ for (var i = 0; i < new_traits.length; i++) {
         return;
       }
     });
-  }
 }
 enable_ui();
 // display results
@@ -291,6 +291,8 @@ get_select_box('ontology_children', 'gen_select_div', { 'selectbox_id' : 'gen_se
 function display_matching_traits () {
 
 var component_ids = get_component_ids();
+// restrict to allowed combos here
+console.log("component_ids are "+component_ids);
 var response = retrieve_matching_traits(component_ids);
 var matching_traits = response[0];
 var new_traits = response[1];

@@ -40,8 +40,8 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
       return;
     }
 
-    #$c->stash->{composable_cvs} = $c->config->{composable_cvs};
-    $c->stash->{composing_order} = $c->config->{composing_order};
+    $c->stash->{composable_cvs} = $c->config->{composable_cvs};
+    $c->stash->{allowed_combinations} = $c->config->{allowed_combinations};
 
     $c->stash->{user} = $c->user();
     $c->stash->{template} = '/ontology/compose_trait.mas';
