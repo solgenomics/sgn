@@ -110,7 +110,7 @@ $allowed_combinations => undef
   <center><label class="control-label">New Traits</label></center>
   <center><p class="help-block"><small>New traits that can be made from the current selections</small></p></center>
   <select multiple class="form-control" id="new_traits"></select></br>
-  <center><button id="compose_trait" class="btn btn-primary">Submit</button></center>
+  <center><button id="compose_trait" title="Select at least one new trait to create before submitting" class="btn btn-primary">Submit</button></center>
 </div>
 </div>
 
@@ -183,6 +183,15 @@ jQuery('#existing_traits').dblclick(function() { // open trait detail page in ne
     window.open("../../cvterm/"+this.value+"/view");
 });
 
+jQuery("#new_traits").change(function() {
+var selected = jQuery("#new_traits").val();
+if (selected && selected.length > 0) {
+    jQuery('#compose_trait').prop('disabled', false);
+}
+else {
+    jQuery('#compose_trait').prop('disabled', true);
+}
+});
 
 jQuery('#compose_trait').on('click', function () {
     disable_ui();
@@ -247,7 +256,8 @@ jQuery('#traits_saved_dialog').modal("show");
 });
 
 function create_multi_selects(cv_names) {
-console.log("creating the following multi_selects"+cv_names);
+//console.log("creating the following multi_selects"+cv_names);
+jQuery('#compose_trait').prop('disabled', true);
 var names = cv_names.split(',');
  for(i = 0; i < names.length; i++){
  var cv_name = names[i];
@@ -294,8 +304,11 @@ var component_ids = get_component_ids();
 // restrict to allowed combos here
 console.log("component_ids are "+component_ids);
 var response = retrieve_matching_traits(component_ids);
-var matching_traits = response[0];
-var new_traits = response[1];
+var matching_traits = [];
+if (response[0]) {matching_traits = response[0]};
+var new_traits = [];
+if (response[1]) { new_traits = response[1]};
+console.log("New traits are "+new_traits);
 var trait_html;
 var new_trait_html;
 
@@ -310,10 +323,17 @@ if (new_traits.length > 0) {
 }
 else {
   new_trait_html = 'No new traits.';
+  jQuery('#compose_trait').prop('disabled', true);
 }
 
 jQuery('#existing_traits').html(trait_html);
 jQuery('#new_traits').html(new_trait_html);
+if (jQuery('#new_traits').val()) {
+    jQuery('#compose_trait').prop('disabled', false);
+}
+else {
+    jQuery('#compose_trait').prop('disabled', true);
+}
 
 }
 

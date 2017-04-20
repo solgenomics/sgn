@@ -58,6 +58,9 @@ sub compose_trait {
 
       my @ids = split(',', $ids);
       print STDERR "Ids for composing in CXGN:Onto = $ids\n";
+      if (scalar @ids < 2) {
+        die "Can't create a new trait from fewer than 2 components.\n";
+      }
 
       my $schema = $self->schema();
       my $dbh = $schema->storage->dbh;
