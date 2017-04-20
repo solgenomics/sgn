@@ -150,14 +150,14 @@ addToListMenu('existing_traits_to_list', 'existing_traits', {
 
 jQuery(document).on('change','#object_select, #attribute_select, #method_select, #unit_select, #trait_select, #tod_select, #toy_select, #gen_select', function() { // retrieve matching traits each time component selection changes
   if (jQuery(this).attr('name') == 'trait_select') {
-    console.log("trait select changed");
+    //console.log("trait select changed");
     clearAllOptions(document.getElementById('object_select'));
     clearAllOptions(document.getElementById('attribute_select'));
     clearAllOptions(document.getElementById('method_select'));
     clearAllOptions(document.getElementById('unit_select'));
   }
   else if ((jQuery(this).attr('name') == 'object_select') || (jQuery(this).attr('name') == 'attribute_select') || (jQuery(this).attr('name') == 'method_select') || (jQuery(this).attr('name') == 'unit_select')) {
-    console.log("component select changed");
+    //console.log("component select changed");
     clearAllOptions(document.getElementById('trait_select'));
   }
   display_matching_traits();
@@ -195,7 +195,7 @@ else {
 
 jQuery('#compose_trait').on('click', function () {
     disable_ui();
-    console.log("just disabled ui");
+    //console.log("just disabled ui");
 var new_traits = jQuery("#new_traits").val();
 var new_trait_names = [];
 jQuery("#new_traits option:selected").each(function () {
@@ -209,7 +209,6 @@ var errors = [];
 var names = [];
 for (var i = 0; i < new_traits.length; i++) {
   var component_ids = new_traits[i];
-  var matching_trait_id = retrieve_exact_trait(component_ids);
     jQuery.ajax( {
       url: '/ajax/onto/compose',
       timeout: 60000,
@@ -219,7 +218,7 @@ for (var i = 0; i < new_traits.length; i++) {
       success: function(response) {
       if (response.success) {
         successes.push("<li class='list-group-item list-group-item-success'>"+response.success+"</li>");
-        console.log("Name is "+response.name);
+        //console.log("Name is "+response.name);
         names.push(response.name+"\n");
         return;
       }
@@ -262,7 +261,7 @@ var names = cv_names.split(',');
  for(i = 0; i < names.length; i++){
  var cv_name = names[i];
  var name = cv_name.trim();
- console.log("working on "+ name +'_select_div');
+ //console.log("working on "+ name +'_select_div');
 
  switch (name)
  {
@@ -302,13 +301,13 @@ function display_matching_traits () {
 
 var component_ids = get_component_ids();
 // restrict to allowed combos here
-console.log("component_ids are "+component_ids);
+//console.log("component_ids are "+component_ids);
 var response = retrieve_matching_traits(component_ids);
 var matching_traits = [];
 if (response[0]) {matching_traits = response[0]};
 var new_traits = [];
 if (response[1]) { new_traits = response[1]};
-console.log("New traits are "+new_traits);
+//console.log("New traits are "+new_traits);
 var trait_html;
 var new_trait_html;
 
@@ -349,27 +348,6 @@ function get_component_ids () {
   if (jQuery("#gen_select").val()) { component_ids.push(jQuery("#gen_select").val()); }
   return component_ids;
 }
-
-function retrieve_exact_trait (component_ids) {
-jQuery.ajax( {
-  url: '/ajax/onto/get_trait_from_exact_components',
-  async: false,
-  data: {'ids': component_ids},
-  success: function(response) {
-    if(response.trait_id) {
-      trait_id = response.trait_id;
-    }
-    if(response.error) {
-      trait_id = 0;
-    };
-  },
-  error: function(request, status, err) {
-    console.log("Error retrieving exact match");
-  }
-});
-  return trait_id;
-}
-
 
 function retrieve_matching_traits (component_ids) {
   if (component_ids.length < 1) {
