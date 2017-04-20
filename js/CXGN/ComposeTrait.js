@@ -1,45 +1,43 @@
 
 function create_multi_selects(cv_names) {
-//console.log("creating the following multi_selects"+cv_names);
-jQuery('#compose_trait').prop('disabled', true);
-var names = cv_names.split(',');
- for(i = 0; i < names.length; i++){
- var cv_name = names[i];
- var name = cv_name.trim();
- //console.log("working on "+ name +'_select_div');
+    jQuery('#compose_trait').prop('disabled', true);
+    var names = cv_names.split(',');
 
- switch (name)
- {
- case "object":
-case "attribute":
- case "method":
- case "unit":
- case "trait":
-    jQuery('#'+name+'_div').show();
-     get_select_box('trait_components', name +'_select_div', { 'id' : name +'_select', 'name': name +'_select', 'multiple': 'true', 'cv_type': name +'_ontology' });
-     break;
- case "time":
- jQuery("#tod_div,#toy_div,#gen_div").show();
-get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': 'time of day|TIME:0000001', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
-get_select_box('ontology_children', 'toy_select_div', { 'selectbox_id' : 'toy_select', 'selectbox_name': 'toy_select', 'multiple': 'true', 'parent_node_cvterm': 'time of year|TIME:0000005', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
-get_select_box('ontology_children', 'gen_select_div', { 'selectbox_id' : 'gen_select', 'selectbox_name': 'gen_select', 'multiple': 'true', 'parent_node_cvterm': 'generation|TIME:0000072', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
-     break;
- case "tod":
- jQuery("#tod_div").show();
- get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': 'time of day|TIME:0000001', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
-     break;
- case "toy":
- jQuery("#toy_div").show();
- get_select_box('ontology_children', 'toy_select_div', { 'selectbox_id' : 'toy_select', 'selectbox_name': 'toy_select', 'multiple': 'true', 'parent_node_cvterm': 'time of year|TIME:0000005', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
-     break;
- case "gen":
- jQuery("#gen_div").show();
- get_select_box('ontology_children', 'gen_select_div', { 'selectbox_id' : 'gen_select', 'selectbox_name': 'gen_select', 'multiple': 'true', 'parent_node_cvterm': 'generation|TIME:0000072', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
-     break;
- default:
-     if (window.console) console.log("Did not recognize "+name+" category");
- }
-  }
+    for(i = 0; i < names.length; i++){
+        var cv_name = names[i];
+        var name = cv_name.trim();
+
+        switch (name) {
+            case "object":
+            case "attribute":
+            case "method":
+            case "unit":
+            case "trait":
+                jQuery('#'+name+'_div').show();
+                get_select_box('trait_components', name +'_select_div', { 'id' : name +'_select', 'name': name +'_select', 'multiple': 'true', 'cv_type': name +'_ontology' });
+                break;
+                case "time":
+                jQuery("#tod_div,#toy_div,#gen_div").show();
+                get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': 'time of day|TIME:0000001', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                get_select_box('ontology_children', 'toy_select_div', { 'selectbox_id' : 'toy_select', 'selectbox_name': 'toy_select', 'multiple': 'true', 'parent_node_cvterm': 'time of year|TIME:0000005', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                get_select_box('ontology_children', 'gen_select_div', { 'selectbox_id' : 'gen_select', 'selectbox_name': 'gen_select', 'multiple': 'true', 'parent_node_cvterm': 'generation|TIME:0000072', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                break;
+            case "tod":
+                jQuery("#tod_div").show();
+                get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': 'time of day|TIME:0000001', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                break;
+            case "toy":
+                jQuery("#toy_div").show();
+                get_select_box('ontology_children', 'toy_select_div', { 'selectbox_id' : 'toy_select', 'selectbox_name': 'toy_select', 'multiple': 'true', 'parent_node_cvterm': 'time of year|TIME:0000005', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                break;
+            case "gen":
+                jQuery("#gen_div").show();
+                get_select_box('ontology_children', 'gen_select_div', { 'selectbox_id' : 'gen_select', 'selectbox_name': 'gen_select', 'multiple': 'true', 'parent_node_cvterm': 'generation|TIME:0000072', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                break;
+            default:
+                if (window.console) console.log("Did not recognize "+name+" category");
+        }
+    }
 }
 
 function display_matching_traits () {

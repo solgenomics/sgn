@@ -1,5 +1,10 @@
 
 <%args>
+$object_select => undef
+$attribute_select => undef
+$method_select => undef
+$unit_select => undef
+$trait_select => undef
 $composable_cvs => undef
 $allowed_combinations => undef
 </%args>
@@ -139,6 +144,7 @@ $allowed_combinations => undef
 <script>
 // retrieve composable cvtypes an only load them as multiselects
 console.log("composable cvs are "+'<% $composable_cvs %>');
+
 create_multi_selects('<% $composable_cvs %>');
 
 addToListMenu('existing_traits_to_list', 'existing_traits', {

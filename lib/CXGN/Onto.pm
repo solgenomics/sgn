@@ -26,19 +26,41 @@ Side Effects: none
 
 sub get_terms {
       my $self = shift;
-      my $cv_type = shift;
+      my $cv_id = shift;
 
       my $query = "SELECT cvterm_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS name
-                  FROM cv
-                  JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = ?))
-                  JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
+                  FROM cvterm
                   JOIN dbxref USING(dbxref_id)
                   JOIN db USING(db_id)
                   LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
                   LEFT JOIN cvterm_relationship is_object ON cvterm.cvterm_id = is_object.object_id
-                  WHERE is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
+                  WHERE cv_id = ? AND is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
                   GROUP BY 1,2
                   ORDER BY 2,1";
+
+      my $h = $self->schema->storage->dbh->prepare($query);
+      $h->execute($cv_id);
+
+      my @results;
+      while (my ($id, $name) = $h->fetchrow_array()) {
+        push @results, [$id, $name];
+      }
+
+      return @results;
+}
+
+sub get_root_nodes {
+      my $self = shift;
+      my $cv_type = shift;
+
+      my $query = "SELECT cv.cv_id, (((db.name::text || ':'::text) || dbxref.accession::text) || ' '::text) || cvterm.name AS name
+                    FROM cv
+                    JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = ?))
+                    JOIN cvterm on(cvprop.cv_id = cvterm.cv_id)
+                    JOIN dbxref USING(dbxref_id)
+                    JOIN db USING(db_id)
+                    LEFT JOIN cvterm_relationship ON(cvterm.cvterm_id=cvterm_relationship.subject_id)
+                    WHERE cvterm_relationship.subject_id IS NULL AND cvterm.is_obsolete= 0 AND cvterm.is_relationshiptype = 0";
 
       my $h = $self->schema->storage->dbh->prepare($query);
       $h->execute($cv_type);
