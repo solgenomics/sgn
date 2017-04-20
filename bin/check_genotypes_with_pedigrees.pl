@@ -9,8 +9,8 @@ use CXGN::Chado::Stock;
 use CXGN::Genotype;
 use CXGN::Genotype::Search;
 
-our ($opt_H, $opt_D, $opt_p); # host, database, genotyping protocol_id
-getopts('H:D:p:');
+our ($opt_H, $opt_D, $opt_p, $opt_o); # host, database, genotyping protocol_id
+getopts('H:D:p:o:');
 
 if (!$opt_p) { 
     print STDERR "Need -p with genotyping protocol id.\n";
@@ -26,6 +26,16 @@ my $dbh = CXGN::DB::InsertDBH->new( {
 				    }
     );
 
+my $OUT;
+my $is_stdin =0;
+
+if ($opt_o) { 
+    open($OUT, '>', $opt_o);
+}
+else { 
+    $OUT =  *STDIN;
+    $is_stdin = 1;
+}
 
 my $schema = Bio::Chado::Schema->connect(sub { $dbh });
 
@@ -86,8 +96,8 @@ while (my $row = $stock_rs->next()) {
 		    my $score = $concordant / ($concordant + $discordant);
 		    push @scores, $score;
 		    
-		    print  join "\t", map { $_->name() } ($s, $m, $d);
-		    print "\t$score\n";
+		    print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
+		    print $OUT "\t$score\n";
 		}
 	    }
 	}
