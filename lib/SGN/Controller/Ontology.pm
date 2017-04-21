@@ -74,7 +74,7 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
         }
         else {
             my $cv_id = $root_nodes[0][0];
-           my @components = $onto->get_terms(@root_nodes);
+           my @components = $onto->get_terms($cv_id);
 
            my $id = $name."_select";
            my $name = $name."_select";
