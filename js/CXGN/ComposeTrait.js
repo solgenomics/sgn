@@ -8,15 +8,15 @@ function create_multi_selects(cv_names) {
         var name = cv_name.trim();
 
         switch (name) {
-            case "object":
+            /*case "object":
             case "attribute":
             case "method":
             case "unit":
             case "trait":
                 jQuery('#'+name+'_div').show();
                 get_select_box('trait_components', name +'_select_div', { 'id' : name +'_select', 'name': name +'_select', 'multiple': 'true', 'cv_type': name +'_ontology' });
-                break;
-                case "time":
+                break; */
+            case "time":
                 jQuery("#tod_div,#toy_div,#gen_div").show();
                 get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': 'time of day|TIME:0000001', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
                 get_select_box('ontology_children', 'toy_select_div', { 'selectbox_id' : 'toy_select', 'selectbox_name': 'toy_select', 'multiple': 'true', 'parent_node_cvterm': 'time of year|TIME:0000005', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });

@@ -141,15 +141,60 @@ $allowed_combinations => undef
     </div>
 </div>
 
+<%perl>
+use JSON;
+my $encoder = JSON->new();
+
+my $object_json = $encoder->allow_nonref->encode($object_select);
+my $attribute_json = $encoder->allow_nonref->encode($attribute_select);
+my $method_json = $encoder->allow_nonref->encode($method_select);
+my $unit_json = $encoder->allow_nonref->encode($unit_select);
+my $trait_json = $encoder->allow_nonref->encode($trait_select);
+
+</%perl>
+
 <script>
 // retrieve composable cvtypes an only load them as multiselects
-console.log("composable cvs are "+'<% $composable_cvs %>');
 
+var object_html = <% $object_json %>;
+if (object_html) {
+    jQuery("#object_select_div").html(object_html);
+    jQuery("#object_div").show();
+}
+var attribute_html = <% $attribute_json %>;
+if (attribute_html) {
+    jQuery("#attribute_select_div").html(attribute_html);
+    jQuery("#attribute_div").show();
+}
+var method_html = <% $method_json %>;
+if (method_html) {
+    jQuery("#method_select_div").html(method_html);
+    jQuery("#method_div").show();
+}
+var unit_html = <% $unit_json %>;
+if (unit_html) {
+    jQuery("#unit_select_div").html(unit_html);
+    jQuery("#unit_div").show();
+}
+var trait_html = <% $trait_json %>;
+if (trait_html) {
+    jQuery("#trait_select_div").html(trait_html);
+    jQuery("#trait_div").show();
+}
+
+console.log("composable cvs are "+'<% $composable_cvs %>');
 create_multi_selects('<% $composable_cvs %>');
 
 addToListMenu('existing_traits_to_list', 'existing_traits', {
   selectText: true,
   listType: 'traits'
+});
+
+jQuery(document).on('change','#object_root_select, #attribute_root_select, #method_root_select, #unit_root_select, #trait_root_select', function() { // retrieve multi select once specific onto is picked
+var cv_id = jQuery(this).val();
+var name = jQuery(this).attr('name');
+name = name.replace('_root_select', '');
+get_select_box('trait_components', name +'_select_div', { 'id' : name +'_select', 'name': name +'_select', 'multiple': 'true', 'cv_id': cv_id });
 });
 
 jQuery(document).on('change','#object_select, #attribute_select, #method_select, #unit_select, #trait_select, #tod_select, #toy_select, #gen_select', function() { // retrieve matching traits each time component selection changes

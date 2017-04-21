@@ -433,8 +433,8 @@ sub get_trait_components_select : Path('/ajax/html/select/trait_components') Arg
   my $self = shift;
   my $c = shift;
 
-  my $cv_type = $c->req->param('cv_type');
-  print STDERR "cv_type = $cv_type\n";
+  my $cv_id = $c->req->param('cv_id');
+  #print STDERR "cv_id = $cv_id\n";
   my $id = $c->req->param("id") || "component_select";
   my $name = $c->req->param("name") || "component_select";
   my $default = $c->req->param("default") || 0;
@@ -442,7 +442,7 @@ sub get_trait_components_select : Path('/ajax/html/select/trait_components') Arg
 
   my $dbh = $c->dbc->dbh();
   my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
-  my @components = $onto->get_terms($cv_type);
+  my @components = $onto->get_terms($cv_id);
 
   if ($default) { unshift @components, [ '', $default ]; }
 
