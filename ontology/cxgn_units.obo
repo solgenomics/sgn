@@ -461,13 +461,13 @@ is_a: UO:0000000
 id: UO:0501000
 name: hours
 def: "Number of hours." []
-is_a: UO:500000
+is_a: UO:0500000
 
 [Term]
 id: UO:0501001
 name: days
 def: "Number of days." []
-is_a: UO:500000
+is_a: UO:0500000
 
 [Term]
 id: UO:0502000
