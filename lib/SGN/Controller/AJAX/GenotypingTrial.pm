@@ -3,6 +3,7 @@ package SGN::Controller::AJAX::GenotypingTrial;
 
 use Moose;
 use JSON::Any;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -47,6 +48,8 @@ sub genotype_trial_POST : Args(0) {
     #
     my $meta = JSON::Any->decode($plate_json);
    
+    print STDERR Dumper($meta);
+
     print STDERR "Looking up stock names and converting to IGD accepted names...\n";
     
     my $slu = CXGN::Stock::StockLookup->new({ schema => $schema });
@@ -159,6 +162,24 @@ sub genotype_trial_POST : Args(0) {
         trial_id => $message{trial_id},
     };
     #print STDERR Dumper(%message);
+}
+
+sub get_genotypingserver_credentials : Path('/ajax/breeders/genotyping_credentials') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    if ($c->user && ($c->user->check_roles("submitter") || $c->user->check_roles("curator"))) { 
+	$c->stash->{rest} = { 
+	    host => $c->config->{genotyping_server_host},
+	    username => $c->config->{genotyping_server_username},
+	    password => $c->config->{genotyping_server_password}
+	};
+    }
+    else { 
+	$c->stash->{rest} = { 
+	    error => "Insufficient privileges for this operation." 
+	};
+    }
 }
 
 1;

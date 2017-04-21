@@ -45,7 +45,6 @@ sub insert_new_project : Path("/ajax/breeders/project/insert") Args(0) {
 	return;
     }
 
-
     my $project = $schema->resultset('Project::Project')->find_or_create(
 	{
 	    name => $params->{project_name},
@@ -54,8 +53,6 @@ sub insert_new_project : Path("/ajax/breeders/project/insert") Args(0) {
 	);
 
     my $projectprop_year = $project->create_projectprops( { 'project year' => $params->{year},}, {autocreate=>1}); #cv_name => 'project_property' } );
-
-
 
     $c->stash->{rest} = { error => '' };
 }
@@ -176,7 +173,6 @@ sub new_breeding_program :Path('/breeders/program/new') Args(0) {
 	$c->stash->{rest} = { error => 'You need to be logged in and have sufficient privileges to add a breeding program.' };
     }
 
-
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
 
     my $error = $p->new_breeding_program($name, $desc);
@@ -187,7 +183,6 @@ sub new_breeding_program :Path('/breeders/program/new') Args(0) {
     else {
 	$c->stash->{rest} =  {};
     }
-
 }
 
 sub delete_breeding_program :Path('/breeders/program/delete') Args(1) {
