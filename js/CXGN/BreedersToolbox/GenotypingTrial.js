@@ -163,6 +163,8 @@ jQuery(document).ready(function ($) {
 	    return;
 	}
 	
+	plate_data.elements = elements;
+
 	//$('#working').dialog("open");
 	
 	// get the genotyping data from GDF
