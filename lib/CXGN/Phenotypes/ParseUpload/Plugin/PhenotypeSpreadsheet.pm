@@ -204,8 +204,10 @@ sub parse {
             if ($trait_name) {
                 if ($num_predef_col > 0) {
                     for my $predef_col ($num_fixed_col .. $num_col_before_traits-1) {
-                        #print STDERR $predef_col."\n";
+                        print STDERR $row." ".$predef_col."\n";
+			if ($worksheet->get_cell($row,$predef_col)){
                         $trait_name = $trait_name.'||'.$worksheet->get_cell($row, $predef_col)->value();
+			}
                     }
                 }
 
