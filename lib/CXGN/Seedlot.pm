@@ -142,8 +142,9 @@ sub BUILD {
 	$self->name($self->uniquename());
 	$self->location_code($self->description());
 	$self->seedlot_id($self->stock_id());
-	$self->_retrieve_accession();
-	$self->_retrieve_breeding_program();
+	$self->_retrieve_accessions();
+	$self->_retrieve_organizations();
+	$self->_retrieve_population();
 	#$self->cross($self->_retrieve_cross());
 
 	my $transactions = CXGN::Seedlot::Transaction->get_transactions_by_seedlot_id(
@@ -174,39 +175,45 @@ sub _remove_cross {
     
 }
 
-sub _store_accession { 
+sub _store_accession_relationships {
     my $self = shift;
 
+    foreach my $a (@{$self->accession_stock_ids()}) { 
+        my $organism_id = $self->schema->resultset('Stock::Stock')->find({stock_id => $a})->organism_id();
+        if ($self->organism_id){
+            if ($self->organism_id != $organism_id){
+                die "Accessions must all be the same organism, so that a population can group the seed lots.\n";
+            }
+        }
+        $self->organism_id($organism_id);
+    }
+
     eval { 
-	my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
-	
-	if ($self->accession_stock_ids()) { 
-	    foreach my $a (@{$self->accession_stock_ids()}) { 
-		my $already_exists = $self->schema()->resultset("Stock::StockRelationship")
-		    ->find( { object_id => $self->seedlot_id(), type_id => $type_id });
-		
-		if ($already_exists) { 
-		    print STDERR "Accession with id $a is already associated with seedlot id ".$self->seedlot_id()."\n";
-		    next; 
-		}
-		my $row = $self->schema()->resultset("Stock::StockRelationship")->create( 
-		    { 
-			object_id => $self->seedlot_id(),
-			subject_id => $a,
-			type_id => $type_id,
-		    });
-	    }
-	}
+        my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
+
+        foreach my $a (@{$self->accession_stock_ids()}) { 
+            my $already_exists = $self->schema()->resultset("Stock::StockRelationship")->find( { object_id => $self->seedlot_id(), type_id => $type_id });
+
+            if ($already_exists) { 
+                print STDERR "Accession with id $a is already associated with seedlot id ".$self->seedlot_id()."\n";
+                next; 
+            }
+            my $row = $self->schema()->resultset("Stock::StockRelationship")->create({
+                object_id => $self->seedlot_id(),
+                subject_id => $a,
+                type_id => $type_id,
+            });
+        }
     };
-    
+
     if ($@) { 
 	die $@;
     }    
 }
 
-sub _retrieve_accession { 
+sub _retrieve_accessions {
     my $self = shift;
-    
+
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
 
     my $rs = $self->schema()->resultset("Stock::StockRelationship")->search( { type_id => $type_id, object_id => $self->seedlot_id() } );
@@ -281,18 +288,15 @@ sub store {
     $self->description($self->location_code());
     $self->name($self->uniquename());
 
-    my $type_id = $self->schema()->resultset("Cv::Cvterm")->
-	find( { name => "seedlot" })->cvterm_id();
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'seedlot', 'stock_type')->cvterm_id();
     $self->type_id($type_id);
-    
+
     my $id = $self->SUPER::store();
 
     print STDERR "Saving seedlot returned ID $id.\n";
     $self->seedlot_id($id);
 
-    $self->_store_breeding_program();
-    $self->_store_accession();
-    $self->_store_cross();
+    $self->_store_accession_relationships();
 
     foreach my $t (@{$self->transactions()}) { 
 	

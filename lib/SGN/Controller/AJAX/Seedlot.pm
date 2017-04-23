@@ -28,7 +28,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
 	push @seedlots, [ '<a href="/breeders/seedlot/'.$sl->[0].'">'.$sl->[1].'</a>', $sl->[2], $sl_obj->current_count() ];
     }
 
-    print STDERR Dumper(\@seedlots);
+    #print STDERR Dumper(\@seedlots);
 
     $c->stash->{rest} = { data => \@seedlots };
 }
@@ -67,8 +67,8 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $uniquename = $c->req->param("seedlot_name");
     my $location_code = $c->req->param("seedlot_location");
     my $accession_id = $c->req->param("seedlot_accession_id");
-    my $cross_id = $c->req->param("seedlot_cross_id");
-    my $breeding_program_id = $c->req->param("seedlot_breeding_program_id");
+    my $population_name = $c->req->param("seedlot_population_name");
+    my $organization = $c->req->param("seedlot_organization");
 
 
     print STDERR "Creating new Seedlot $uniquename\n";
@@ -79,10 +79,11 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $sl->uniquename($uniquename);
         $sl->location_code($location_code);
         $sl->accession_stock_ids([$accession_id]);
+        $sl->organization_name($organization);
+        $sl->population_name($population_name);
 
         #TO DO
         #$sl->cross_id($cross_id);
-        #$sl->breeding_program_id($breeding_program_id);
 
         $seedlot_id = $sl->store();
     };

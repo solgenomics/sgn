@@ -30,77 +30,91 @@ use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 use base qw / CXGN::DB::Object / ;
 
-has 'schema' => ( isa => 'Bio::Chado::Schema',
-                  is => 'rw',
+has 'schema' => (
+    isa => 'Bio::Chado::Schema',
+    is => 'rw',
 );
 
-has 'stock_id' => ( isa => 'Maybe[Int]',
-                    is => 'rw',
+has 'stock' => (
+    isa => 'Bio::Chado::Schema::Result::Stock::Stock',
+    is => 'rw',
 );
 
-has 'organism_id' => ( isa => 'Maybe[Int]',
-                       is => 'rw',
+has 'stock_id' => (
+    isa => 'Maybe[Int]',
+    is => 'rw',
 );
 
-has 'species' => ( isa => 'Maybe[Str]',
-                   is => 'rw',
+has 'organism_id' => (
+    isa => 'Maybe[Int]',
+    is => 'rw',
 );
 
-has 'type' => ( isa => 'Str',
-                is => 'rw',
-                default => 'accession',
+has 'species' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
 );
 
-has 'type_id' => ( isa => 'Str',
-                is => 'rw',
+has 'type' => (
+    isa => 'Str',
+    is => 'rw',
+    default => 'accession',
 );
 
-has 'name' => ( isa => 'Str',
-                is => 'rw',
+has 'type_id' => (
+    isa => 'Int',
+    is => 'rw',
 );
 
-has 'uniquename' => ( isa => 'Str',
-                      is => 'rw',
+has 'name' => (
+    isa => 'Str',
+    is => 'rw',
 );
 
-has 'description' => ( isa => 'Str',
-                        is => 'rw',
-                       default => '',
+has 'uniquename' => (
+    isa => 'Str',
+    is => 'rw',
 );
 
-has 'is_obsolete' => ( isa => 'Str',
-                        is => 'rw',
-                        default => 0,
+has 'description' => (
+    isa => 'Str',
+    is => 'rw',
+    default => '',
 );
 
-has 'breeding_program' => ( isa => 'Str',
-                            is => 'rw',
-                      );
+has 'is_obsolete' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => 0,
+);
 
-has 'breeding_program_id' => ( isa => 'Int',
-                               is => 'rw',
+has 'organization_name' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'population_name' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
 );
 
 sub BUILD {
     my $self = shift;
 
     print STDERR "RUNNING BUILD FOR STOCK.PM...\n";
-    ### First, bless the class to create the object and set the schema into the object.
-    #my $self = $class->SUPER::new($schema);
     my $stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() });
     if (defined $stock) {
-	$self->stock_id($stock->stock_id());
-	$self->name($stock->name());
-	$self->uniquename($stock->uniquename());
-	$self->description($stock->description() || '');
-	$self->type_id($stock->type_id());
-	$self->type($self->schema()->resultset("Cv::Cvterm")->find({ cvterm_id=>$self->type_id() })->name());
-	$self->is_obsolete($stock->is_obsolete());
-	$self->organism_id($stock->organism_id());
-    } 
-    else {
-	# we create the empty object
+        $self->stock($stock);
+        $self->stock_id($stock->stock_id());
+        $self->name($stock->name());
+        $self->uniquename($stock->uniquename());
+        $self->description($stock->description() || '');
+        $self->type_id($stock->type_id());
+        $self->type($self->schema()->resultset("Cv::Cvterm")->find({ cvterm_id=>$self->type_id() })->name());
+        $self->is_obsolete($stock->is_obsolete());
+        $self->organism_id($stock->organism_id());
     }
+
     return $self;
 }
 
@@ -109,57 +123,68 @@ sub BUILD {
 =head2 store
 
  Usage: $self->store
- Desc:  store a new stock
+ Desc:  store a new stock or update an existing stock
  Ret:   a database id
  Args:  none
- Side Effects: checks if the stock exists in the database, and if does, will attempt to update
+ Side Effects: checks if the stock exists in the database (if a stock_id is provided), and if does, will attempt to update
  Example:
 
 =cut
 
 sub store {
     my $self = shift;
-    my $id = $self->stock_id();
+
+    my $stock = $self->stock;
     my $schema = $self->schema();
+
     #no stock id . Check first if the name  exists in te database
     my $exists= $self->exists_in_database();
 
     if (!$self->type_id) { 
-	my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), $self->type(), 'stock_type')->cvterm_id();
-	$self->type_id($type_id);
+        my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), $self->type(), 'stock_type')->cvterm_id();
+        $self->type_id($type_id);
     }
-    
-    if (!$id) {
-	if (!$exists) { 
 
-	    my $new_row = $self->schema()->resultset("Stock::Stock")->create( 
-		{
-		    name => $self->name(),
-		    uniquename => $self->uniquename(),
-		    description => $self->description(),
-		    type_id => $self->type_id(),
-		    organism_id => $self->organism_id(),
-		    is_obsolete => $self->is_obsolete(),
-		});
-	    $new_row->insert();
-	    
-	    my $id = $new_row->stock_id();
-	    $self->stock_id($id);
-	}
-	else { 
-	    die "The entry ".$self->uniquename()." already exists in the database\n";
-	}
+    if (!$stock) {
+        if (!$exists) {
+
+            my $new_row = $self->schema()->resultset("Stock::Stock")->create({
+                name => $self->name(),
+                uniquename => $self->uniquename(),
+                description => $self->description(),
+                type_id => $self->type_id(),
+                organism_id => $self->organism_id(),
+                is_obsolete => $self->is_obsolete(),
+            });
+            $new_row->insert();
+
+            my $id = $new_row->stock_id();
+            $self->stock_id($id);
+            $self->stock($new_row);
+
+            if ($self->organization_name){
+                $self->_store_organization();
+            }
+            if ($self->population_name){
+                print STDERR Dumper $self->population_name;
+                $self->_store_population_relationship();
+            }
+
+        }
+        else {
+            die "The entry ".$self->uniquename()." already exists in the database. Error: $exists\n";
+        }
     }
-    else {  # entry exists
-	print STDERR "EXISTS: $exists\n";
-	my $row = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
-	$row->name($self->name());
-	$row->uniquename($self->uniquename());
-	$row->description($self->description());
-	$row->type_id($self->type_id());
-	$row->organism_id($self->organism_id());
-	$row->is_obsolete($self->is_obsolete());
-	$row->update();
+    else {  # entry exists, so update
+        print STDERR "EXISTS: $exists\n";
+        my $row = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
+        $row->name($self->name());
+        $row->uniquename($self->uniquename());
+        $row->description($self->description());
+        $row->type_id($self->type_id());
+        $row->organism_id($self->organism_id());
+        $row->is_obsolete($self->is_obsolete());
+        $row->update();
     }
     return $self->stock_id();
 }
@@ -180,20 +205,25 @@ sub store {
 
 sub exists_in_database {
     my $self = shift;
-    my $stock_id = $self->stock_id();
+    my $schema = $self->schema;
+    my $stock = $self->stock;
+    my $stock_id = $self->stock_id;
     my $uniquename = $self->uniquename || '' ;
-    my ($s) = $self->schema()->resultset('Stock::Stock')->search(
-	{
-	    uniquename => { 'ilike' => $uniquename },
-	});
+    my $stock_lookup = CXGN::Stock::StockLookup->new({
+        schema => $schema,
+        stock_name => $uniquename
+    });
+    my $s = $stock_lookup->get_stock();
 
     # loading new stock - $stock_id is undef
     #
-    if (defined($s) && !$stock_id ) {  return $s->stock_id ; }
+    if (defined($s) && !$stock ) {
+        return "Uniquename already exists in database with stock_id: ".$s->stock_id;
+    }
 
     # updating an existing stock
     #
-    elsif ($stock_id && defined($s) ) {
+    elsif ($stock && defined($s) ) {
 	if ( ($s->stock_id == $stock_id) ) {
 	    return 0;
 	    #trying to update the uniquename
@@ -204,7 +234,7 @@ sub exists_in_database {
 	    # in the stock table..
 	    #
 	} 
-	elsif ($stock_id && !$s->stock_id) {
+	elsif ($stock && !$s->stock_id) {
 	    return 0;
 	}
     }
@@ -531,71 +561,85 @@ sub get_parents {
     return $root;
 }
 
-sub _store_breeding_program { 
+sub _store_organization { 
     my $self = shift;
-
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "breeding_program_project_id", "stock_prop");
-
-    my $already_exists = $self->schema()->resultset("Stock::Stockprop")->find( { stock_id => $self->seedlot_id(), type_id => $type_id });
-
-    if ($already_exists) { 
-	die "The seedlot with stock_id ".$self->seedlot_id()." already has an associated breeding program";
-    }
-    my $projects = CXGN::BreedersToolbox::Projects->new( schema => $self->schema());
-    my $project_list = $projects->get_breeding_programs();
-    foreach my $bp (@$project_list) { 
-	if ($bp->[1] eq $self->breeding_program()) { 
-	    my $row = $self->schema("Stock::Stockprop")->create( 
-		{ 
-		    value => $bp->[0],
-		    type_id => $type_id,
-		    stock_id => $self->seedlot_id(),
-		});
-	    last;
-	}
-    }    
+    my $org_stockprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'organization', 'stock_property')->name();
+    my $organization = $self->stock->create_stockprops({ $org_stockprop => $self->organization_name});
 }
 
-sub _retrieve_breeding_program { 
+sub _retrieve_organizations {
     my $self = shift;
-    
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "breeding_program_project_id", "stock_prop");
-    my $breeding_program_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "breeding_program", "project_property");
-    my $rs = $self->schema()->resultset("Stock::Stockprop")->search( { stock_id => $self->seedlot_id(), type_id => $type_id });
 
-    if ($rs->count() == 1) { 
-	my $bp_rs = $self->schema()->resultset("General::Project")->search( { project_id => $rs->value() });
-	
-	return $bp_rs->first()->name();
+    my $organization_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'organization', 'stock_property')->cvterm_id();
+    my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id(), type_id => $organization_type_id });
+
+    my @organizations;
+    while (my $r = $rs->next()){
+        push @organizations, $r->value;
     }
-    elsif ($rs->count() > 1) { 
-	print STDERR "Warning! More than 1 breeding program associated to stock";
-	
-    }
-    else { 
-	return "";
-    }
+    my $orgs = join ',', @organizations;
+    $self->organization_name($orgs);
+    return $orgs;
 }
 
-sub _remove_breeding_program {
+sub _remove_organization {
     my $self = shift;
+    my $organization = shift;
+    my $organization_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'organization', 'stock_property')->cvterm_id();
+    my $rs = $self->schema()->resultset("Stock::Stockprop")->search( { type_id=>$organization_type_id, stock_id => $self->stock_id(), value=>$organization } );
 
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "breeding_program_project_id", "stock_prop");
-    
-    my $rs = $self->schema()->resultset("Stock::Stockprop")->search( { type_id=>$type_id, stock_id => $self->seedlot_id() } );
-    
-    if ($rs->count() == 1) { 
-	$rs->first->delete(); 
-	return 1;
+    if ($rs->count() == 1) {
+        $rs->first->delete();
+        return 1;
     }
-    elsif ($rs->count() == 0) { 
-	return 0;
+    elsif ($rs->count() == 0) {
+        return 0;
     }
-    else { 
-	print STDERR "Error removing breeding program from stock ".$self->seedlot_id().". Please check this manually.\n";
-	return 0;
+    else {
+        print STDERR "Error removing breeding program from stock ".$self->stock_id().". Please check this manually.\n";
+        return 0;
     }
-	
+
+}
+
+sub _store_population_relationship {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population','stock_type')->cvterm_id();
+    my $population_member_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of','stock_relationship')->cvterm_id();
+
+    my $population = $schema->resultset("Stock::Stock")->find_or_create({
+        uniquename => $self->population_name(),
+        name => $self->population_name(),
+        organism_id => $self->organism_id(),
+        type_id => $population_cvterm_id,
+    });
+    $self->stock->find_or_create_related('stock_relationship_objects', {
+        type_id => $population_member_cvterm_id,
+        object_id => $population->stock_id(),
+        subject_id => $self->stock_id(),
+    });
+}
+
+sub _retrieve_population {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $population_member_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of','stock_relationship')->cvterm_id();
+
+    my $rs = $schema->resultset("Stock::StockRelationship")->search({
+        type_id => $population_member_cvterm_id,
+        subject_id => $self->stock_id(),
+    });
+    if ($rs->count == 1) {
+        my $population = $rs->first->object;
+        $self->population_name($population->uniquename);
+    }
+    elsif ($rs->count > 1) {
+        die "More than one population saved for this stock!\n";
+    }
+    elsif ($rs->count == 0) {
+        die "No population saved for this stock!\n";
+    }
 }
 
 =head2 _new_metadata_id

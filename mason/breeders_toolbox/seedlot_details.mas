@@ -5,7 +5,8 @@ $uniquename
 $location_code => ''
 $current_count => 0
 $accessions
-$breeding_program_name
+$organization_name
+$population_name
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery.dataTables-bootstrap-min', 'jquery', 'jquery.dataTables' ] &>
@@ -14,10 +15,10 @@ $breeding_program_name
 
 <table class="table table-bordered table-hover">
 <tr><td><b>Name</b></td><td><% $uniquename %></td></tr>
-<tr><td><b>Breeding Program</b></td><td><% $breeding_program_name %></td></tr>
+<tr><td><b>Organization</b></td><td><% $organization_name %></td></tr>
 <tr><td><b>Location Code</b><td><% $location_code %></td></tr>
 <tr><td><b>Accession</b></td><td><% $accessions %></td></tr>
-<tr><td><b>Cross</b></td><td><% %></td></tr>
+<tr><td><b>Population</b></td><td><% %></td></tr>
 <tr><td><b>Current count</b></td><td><% $current_count %></td></tr>
 </table>
 
@@ -25,7 +26,7 @@ $breeding_program_name
 <h3>Transactions</h3>
 </center>
 
-<table id="trial_summary_data" class="display">
+<table id="trial_summary_data" class="table table-hover table-bordered">
 <thead>
   <tr>
     <th>Transaction Date</th>
@@ -44,7 +45,7 @@ $breeding_program_name
   jQuery(document).ready(function () {
   
     jQuery('#trial_summary_data').DataTable( { 
-      'ajax': '/ajax/breeders/seedlot/'+<% $seedlot_id %>,
+      'ajax': '/ajax/breeders/seedlot/<% $seedlot_id %>',
     });
   });
 </script>

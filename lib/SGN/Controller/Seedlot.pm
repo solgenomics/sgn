@@ -11,7 +11,6 @@ sub seedlots :Path('/breeders/seedlots') :Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $seedlots = CXGN::Seedlot->list_seedlots($c->dbic_schema("Bio::Chado::Schema"));
     $c->stash->{template} = '/breeders_toolbox/seedlots.mas';
 
 }
@@ -34,7 +33,8 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     $c->stash->{uniquename} = $sl->uniquename();
     $c->stash->{location_code} = $sl->location_code();
     $c->stash->{current_count} = $sl->current_count();
-    $c->stash->{breeding_program_name} = $sl->breeding_program();
+    $c->stash->{organization_name} = $sl->organization_name();
+    $c->stash->{population_name} = $sl->population_name();
     $c->stash->{accessions} = $accessions_html;
     $c->stash->{template} = '/breeders_toolbox/seedlot_details.mas';
 }
