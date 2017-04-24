@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 09:02:2017 11:24
+date: 24:04:2017 15:19
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -3524,8 +3524,9 @@ creation_date: 2012-11-02T04:03:23Z
 
 [Term]
 id: SP:0000394
-name: fruit solids percentage
+name: fruit dry weight percentage
 def: "Net dry weight (after 1 week in oven) divided by net fresh weight of the fruit and multiplied by 100." [SGN:EVDK]
+synonym: "fruit solids percentage" EXACT []
 relationship: variable_of SP:0000080 ! fruit mass
 created_by: naama
 creation_date: 2017-02-06T15:17:20Z
