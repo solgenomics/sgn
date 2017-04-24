@@ -662,7 +662,7 @@ sub run_analysis {
 	    }
 	    else
 	    {
-		$c->controller('solGS::solGS')->phenotype_file();	
+		$c->controller('solGS::solGS')->phenotype_file($c);	
 		$c->controller('solGS::solGS')->genotype_file($c);
 	    }
 	}
