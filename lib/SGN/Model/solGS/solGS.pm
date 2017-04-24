@@ -35,9 +35,9 @@ use Scalar::Util qw(looks_like_number);
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use Math::Round::Var;
-use CXGN::Genotype::Search;
+#use CXGN::Genotype::Search;
 use CXGN::Trial;
-
+use CXGN::Dataset;
 
 extends 'Catalyst::Model';
 
@@ -719,7 +719,7 @@ sub search_stock_using_plot_name {
 
 sub first_stock_genotype_data {
     my ($self, $pr_id) = @_;
-    
+  
     my $stock_subj_rs = $self->project_subject_stocks_rs($pr_id);    
     my $stock_obj_rs  = $self->stocks_object_rs($stock_subj_rs);
    
@@ -727,25 +727,25 @@ sub first_stock_genotype_data {
   
     while (my $single_rs = $stock_obj_rs->next) 
     {
-	my $stock_name = $single_rs->get_column('uniquename');  
-	my $stock_rs   = $self->search_stock($stock_name); 
-	my $geno       = $self->individual_stock_genotypes_rs($stock_rs)->first;
+    	my $stock_name = $single_rs->get_column('uniquename');  
+    	my $stock_rs   = $self->search_stock($stock_name); 
+    	my $geno       = $self->individual_stock_genotypes_rs($stock_rs)->first;
   
-	if ($geno)
-	{  
-	    my $json_values  = $geno->get_column('value');
-	    my $values       = JSON::Any->decode($json_values);
-	    my @markers      = keys %$values;
-	    my $marker_count = scalar(@markers);
+    	if ($geno)
+    	{  
+    	    my $json_values  = $geno->get_column('value');
+    	    my $values       = JSON::Any->decode($json_values);
+    	    my @markers      = keys %$values;
+    	    my $marker_count = scalar(@markers);
 
-	    my $header_markers = join("\t", @markers);
-	    $geno_data         = "\t" . $header_markers . "\n";
+    	    my $header_markers = join("\t", @markers);
+    	    $geno_data         = "\t" . $header_markers . "\n";
 	    
-	    my $geno_values = $self->stock_genotype_values($geno);             
-	    $geno_data     .= $geno_values;
+    	    my $geno_values = $self->stock_genotype_values($geno);             
+    	    $geno_data     .= $geno_values;
 	    
-	    last; 
-	} 	
+    	    last; 
+    	} 	
     }
  
     return $geno_data;
@@ -763,11 +763,13 @@ sub genotype_data {
 
     my $stock_genotype_rs;
     my @genotypes;
-    my $geno_data;
+    my $geno_data = {};
     my $header_markers;
     my @header_markers; 
     my $cnt_clones_diff_markers;
     my @stocks;
+ 
+    print STDERR "\n  Calling protocol: -- project id: $project_id\n"; 
 
     if ($project_id) 
     {    
@@ -831,60 +833,62 @@ sub genotype_data {
             } 
         }        
         else 
-        {          
-            $stock_genotype_rs = $self->project_genotype_data_rs($project_id);
-            my $cnt = 0;
-            while (my $geno = $stock_genotype_rs->next)
-            { 
-                $cnt++;
-              	
-		my $stock = $geno->get_column('stock_name');
-				
-		my $duplicate_stock;
+        {              
+	    my $protocol_id = $self->protocol_id();
+	    
+	    my $dataset = CXGN::Dataset->new({
+ 		people_schema => $self->people_schema,
+ 	    	schema  => $self->schema,
+ 	    	trials  => [$project_id]}
+		);	    
 
-		if ($cnt > 1)
-		{
-		    ($duplicate_stock) = grep(/^$stock$/, @stocks);
-      		}
-                 
-                if ( ($cnt == 1)  || (($cnt > 1) && (!$duplicate_stock)) )
-                {
-		    my $json_values = $geno->get_column('value');
-		    my $values      = JSON::Any->decode($json_values);
-		    my @markers     = keys %$values;
-		    my $marker_count = scalar(@markers);
-		    
-		    if ($cnt == 1) 
-		    {
-			@header_markers = @markers;   
-			$header_markers = join("\t", @header_markers);
-			$geno_data      = "\t" . $header_markers . "\n";
-		    }
-              
-		    my $common_markers = scalar(intersect(@header_markers, @markers));
-
-		    my $similarity = $common_markers / scalar(@header_markers);
-                
-		    if ($similarity == 1)     
-		    {
-			push @stocks, $stock;
-			my $geno_values = $self->stock_genotype_values($geno);             
-			$geno_data     .= $geno_values;
-		    }
-		    else 
-		    {
-			$cnt_clones_diff_markers++;                                     
-		    }
-		}
-            }       
-        }
-        
-        print STDERR "\n$cnt_clones_diff_markers clones were  genotyped using a 
-                        different GBS markers than the ones on the header. 
-                        They are excluded from the training set. \n\n";
+	     my $dataref = $dataset->retrieve_genotypes($protocol_id);
+	     $geno_data  = $self->create_genotype_data_table($dataref);	    
+	}
     }
 
-    return  \$geno_data;   
+    return  $geno_data;   
+
+}
+
+
+sub create_genotype_data_table {
+    my ($self, $dataref) =@_;
+
+    my $geno_row  = @$dataref[0]->{genotype_hash};
+    my $markers   = $self->_get_dataset_markers($geno_row);
+    my $headers   = $self->_create_dataset_headers($markers);
+   
+    my $geno_data .= "\t" . $headers . "\n";    
+   
+    my @stocks;
+    my $duplicate_stock;   
+    my $cnt;
+   
+    foreach my $dg (@$dataref)
+    {
+	$cnt++;
+	
+	my $stock = $dg->{germplasmName};
+	
+	if ($cnt > 1)
+	{
+	    ($duplicate_stock) = grep(/^$stock$/, @stocks);
+	}
+	
+	if ($cnt == 1 ||  (($cnt > 1) && (!$duplicate_stock)) )
+	{
+	    push @stocks, $stock;
+	    
+	    my $geno_hash = $dg->{genotype_hash}; 
+	    
+	    $geno_data .= $stock . "\t";
+	    $geno_data .= $self->_create_genotype_row($geno_hash);
+	    $geno_data .= "\n";
+	}
+    }
+
+    return \$geno_data;
 
 }
 
@@ -892,51 +896,18 @@ sub genotype_data {
 sub genotypes_list_genotype_data {
     my ($self, $genotypes) = @_;
    
-    my $geno_data;
-    my $header_markers;
-    my @header_markers;
-    my @filtered_genotypes;
-
-    my $list_genotypes_rs = $self->accessions_list_genotypes_rs($genotypes);
-    my $cnt = 0;
-    
-    while (my $stock_genotype = $list_genotypes_rs->next) 
-    {
-	$cnt++;
-	my $stock_name = $stock_genotype->get_column('stock_name');
-	my $duplicate_stock;
-       
-	if ($cnt > 1)
-	{
-	    ($duplicate_stock) = grep(/^$stock_name$/, @filtered_genotypes);
-	}
-	
-	if ( ($cnt == 1)  || (($cnt > 1) && (!$duplicate_stock)) )
-	{
-	    unless ($header_markers) 
-	    {
-		$header_markers   = $self->extract_project_markers($stock_genotype);                
-		$geno_data = "\t" . $header_markers . "\n";
-		@header_markers = split(/\t/, $header_markers);
-	    }
+    my $protocol_id = $self->protocol_id();
 	    
-	    my $json_values  = $stock_genotype->get_column('value');
-	    my $values       = JSON::Any->decode($json_values);
-	    my @markers      = keys %$values;
-            
-	    my $common_markers = scalar(intersect(@header_markers, @markers));
-	    my $similarity = $common_markers / scalar(@header_markers);
-	
-	    if ($similarity == 1 )     
-	    {
-		push @filtered_genotypes, $stock_name;
-		my $geno_values = $self->stock_genotype_values($stock_genotype);               
-		$geno_data .= $geno_values;
-	    }   
-	}    
-    }
+    my $dataset = CXGN::Dataset->new({
+	people_schema => $self->people_schema,
+	schema  => $self->schema,
+	accession_list => $genotypes}
+	);	 
 
-    return \$geno_data;
+    my $dataref    = $dataset->retrieve_genotypes($protocol_id);
+    my $geno_data  = $self->create_genotype_data_table($dataref);	   
+
+    return $geno_data;
 
 }
 
@@ -1013,16 +984,6 @@ sub genotypes_nd_experiment_ids_rs {
 
 sub project_genotype_data_rs {
     my ($self, $project_id) = @_;
-
-    # my $pr_genotypes_rs = $self->project_genotypes_rs($project_id);
-
-    # my @genotypes_list;
-    
-    # while (my $row = $pr_genotypes_rs->next)
-    # {
-    # 	push @genotypes_list, $row->get_column('uniquename');
-    # }
- 
 
     my $trial = CXGN::Trial->new({'bcs_schema' =>$self->schema, 'trial_id' =>$project_id});    
     my $trial_accessions = $trial->get_accessions();
@@ -1228,6 +1189,62 @@ sub extract_project_markers {
     }
  
     return $markers;  
+}
+
+
+sub _get_dataset_markers {
+    my ($self, $geno_hash) = @_;
+ 
+    print STDERR "\n calling get dataset markers\n";
+    #my $genotype_hash = JSON::Any->decode($geno_hash);
+    my @markers       = keys %$geno_hash;
+
+    return \@markers;
+  
+} 
+
+sub _create_dataset_headers {
+    my ($self, $markers) = @_; 
+
+    print STDERR "\n calling create dataset headers\n";
+    my $headers;
+    foreach my $marker (@$markers) 
+    {
+	$headers .= $marker;
+	$headers .= "\t" unless $marker eq @$markers[-1];
+    }
+ 
+    return $headers;  
+}
+
+
+sub _create_genotype_row {
+    my ($self, $genotype_hash) = @_; 
+
+    print STDERR "\n calling create genotype row\n";
+    #my $values       = JSON::Any->decode($genotype_hash);
+    my @markers      = keys %$genotype_hash;
+    my $marker_count = scalar(@markers);
+ 
+    my $round = Math::Round::Var->new(0);
+
+    my $geno_values;
+    foreach my $marker (@markers) 
+    {   
+	print STDERR "\nmarker: $marker\n";
+	no warnings 'uninitialized';
+
+        my $genotype =  $genotype_hash->{$marker};
+	 $genotype =  $genotype_hash->{$marker};
+		print STDERR "\nmarker: $marker - $genotype\n";
+        $geno_values .= $genotype =~ /\d+/g ? $round->round($genotype) : $genotype;       
+        $geno_values .= "\t" unless $marker eq $markers[-1];
+    }
+
+    #$geno_values .= "\n";  
+
+    return $geno_values;
+
 }
 
 
@@ -2047,7 +2064,36 @@ sub genotyping_protocol {
 }
 
 
+sub protocol_id {
+    my ($self, $protocol) = @_;
 
+    unless ($protocol) 
+    {
+	$protocol = $self->context->config->{default_genotyping_protocol};
+    }
+
+    #my $protocol_id = $self->schema->resultset("NaturalDiversity::NdProtocol")
+    #->search({'name'=>$protocol})
+    #->first
+    #->nd_protocol_id();
+   
+    my $q = 'SELECT nd_protocol_id FROM nd_protocol WHERE name = ?';
+    my $sth = $self->context->dbc->dbh->prepare($q);
+
+    $sth->execute($protocol);
+
+    my $protocol_id = $sth->fetchrow_array(); 
+   
+    return $protocol_id;
+
+    
+}
+
+
+sub people_schema {
+    my $self = shift;
+    return $self->context->dbic_schema("CXGN::People::Schema");
+}
 
 __PACKAGE__->meta->make_immutable;
 
