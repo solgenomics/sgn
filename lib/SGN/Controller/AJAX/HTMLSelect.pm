@@ -214,6 +214,7 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 	my $self = shift;
 	my $c = shift;
 	my $params = _clean_inputs($c->req->params);
+    my $names_as_select = $params->{names_as_select}->[0] || 0;
 
 	my $stock_search = CXGN::Stock::Search->new({
 		bcs_schema=>$c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
@@ -253,7 +254,11 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 	my $empty = $c->req->param("empty") || "";
 	my @stocks;
 	foreach my $r (@$result) {
-		push @stocks, [ $r->{stock_id}, $r->{uniquename} ];
+        if ($names_as_select) {
+	        push @stocks, [ $r->{uniquename}, $r->{uniquename} ];
+        } else {
+            push @stocks, [ $r->{stock_id}, $r->{uniquename} ];
+        }
 	}
 	@stocks = sort { $a->[1] cmp $b->[1] } @stocks;
 

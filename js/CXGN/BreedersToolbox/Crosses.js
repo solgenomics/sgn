@@ -18,6 +18,10 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function($) {
 
+    $("#create_cross_wishlist").click(function() {
+        $("#create_cross_wishlist_dialog").modal("show");
+    });
+
     $("#create_cross_link").click(function() {
 
         $("#cross_type_info").click(function() {
