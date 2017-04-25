@@ -724,20 +724,21 @@ sub first_stock_genotype_data {
     my $stock_obj_rs  = $self->stocks_object_rs($stock_subj_rs);
    
     my $geno_data;
-  
+ 
     while (my $single_rs = $stock_obj_rs->next) 
     {
-	my $stock_name = $single_rs->get_column('uniquename');  
+	my $stock_name = $single_rs->get_column('uniquename'); 
 	my $stock_rs   = $self->search_stock($stock_name); 
-	my $geno       = $self->individual_stock_genotypes_rs($stock_rs)->first;
+	my $geno_rs    = $self->individual_stock_genotypes_rs($stock_rs);
   
-	if ($geno)
+	while (my $geno = $geno_rs->next)
 	{  
+	   
 	    my $json_values  = $geno->get_column('value');
 	    my $values       = JSON::Any->decode($json_values);
 	    my @markers      = keys %$values;
 	    my $marker_count = scalar(@markers);
-
+  
 	    my $header_markers = join("\t", @markers);
 	    $geno_data         = "\t" . $header_markers . "\n";
 	    
@@ -745,7 +746,9 @@ sub first_stock_genotype_data {
 	    $geno_data     .= $geno_values;
 	    
 	    last; 
-	} 	
+	} 
+
+	last if $geno_data;
     }
  
     return $geno_data;
@@ -1044,10 +1047,34 @@ sub project_genotype_data_rs {
 sub individual_stock_genotypes_rs {
     my ($self, $stock_rs) = @_;
   
-    my @stock_name = ($stock_rs->first->get_column('uniquename'));  
- 
-    my $genotype_rs = $self->accessions_list_genotypes_rs(\@stock_name);
+    my $stock_id = $stock_rs->first()->stock_id;  
+    
+    my $nd_exp_rs = $self->genotypes_nd_experiment_ids_rs([$stock_id]);
+    
+    my @nd_exp_ids;
+    
+    while (my $row = $nd_exp_rs->next)
+    {
+	push @nd_exp_ids, $row->get_column('nd_experiment_id');
+    }
+    
+    my $genotype_rs = $stock_rs
+        ->search_related('nd_experiment_stocks')
+        ->search_related('nd_experiment')
+        ->search_related('nd_experiment_genotypes')
+        ->search_related('genotype')
+        ->search_related('genotypeprops')
+	->search_related('type',
+                         {'type.name' => {'ilike' => 'snp genotyping'},
+			  'nd_experiment_genotypes.nd_experiment_id' => {-in => \@nd_exp_ids}
+			 },
+                         {  
+                             select => [ qw / me.stock_id me.uniquename  genotypeprops.genotypeprop_id genotypeprops.value / ], 
+                             as     => [ qw / stock_id stock_name  genotypeprop_id value/ ] 
+                         }
+        );
 
+    
     return $genotype_rs;
 
 }
@@ -1065,7 +1092,6 @@ sub accessions_list_genotypes_rs {
     }
     
     my $protocol = $self->genotyping_protocol();
-
     my $genotype_rs = $self->schema->resultset('NaturalDiversity::NdExperiment')
 	->search(
 	{ 
