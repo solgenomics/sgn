@@ -758,6 +758,15 @@ return 1;
 
 }
 
+sub create_cross_wishlist : Path('/ajax/cross/create_cross_wishlist') : ActionClass('REST') { }
+
+sub create_cross_wishlist_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $data = $c->req->params;
+    print STDERR Dumper $data;
+    $c->stash->{rest} = { success => 1 };
+}
+
 ###
 1;#
 ###

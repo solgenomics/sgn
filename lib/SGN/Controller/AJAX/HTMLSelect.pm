@@ -252,6 +252,7 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 	my $name = $c->req->param("name") || "html_trial_select";
 	my $size = $c->req->param("size");
 	my $empty = $c->req->param("empty") || "";
+	my $data_related = $c->req->param("data-related") || "";
 	my @stocks;
 	foreach my $r (@$result) {
         if ($names_as_select) {
@@ -270,6 +271,7 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 		id => $id,
 		size => $size,
 		choices => \@stocks,
+        data_related => $data_related
 	);
 	$c->stash->{rest} = { select => $html };
 }
