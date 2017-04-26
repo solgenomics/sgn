@@ -360,7 +360,11 @@ sub studies_observation_variables {
 
 sub studies_layout {
 	my $self = shift;
-	my $study_id = shift;
+	my $inputs = shift;
+    my $study_id = $inputs->{study_id};
+    my $format = $inputs->{format} || 'json';
+	my $file_path = $inputs->{file_path};
+	my $file_uri = $inputs->{file_uri};
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
@@ -407,10 +411,32 @@ sub studies_layout {
 		}
 		$count++;
 	}
-	my %result = (data=>$plot_data);
-	my @data_files;
-	my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
-	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies layout result constructed');
+	my %result;
+    my @data_files;
+    if ($format eq 'json'){
+        %result = (data=>$plot_data);
+    } elsif ($format eq 'tsv' || $format eq 'csv' || $format eq 'xls') {
+       # if xls or csv or tsv, create tempfile name and place to save it
+
+       my @header_row = ('studyDbId', 'observationUnitDbId', 'observationUnitName', 'observationLevel', 'replicate', 'blockNumber', 'X', 'Y', 'entryType', 'germplasmName', 'germplasmDbId');
+       my @data_out;
+       push @data_out, \@header_row;
+       foreach (@$plot_data){
+           my @row = ($_->{studyDbId}, $_->{observationUnitDbId}, $_->{observationUnitName}, $_->{observationLevel}, $_->{replicate}, $_->{blockNumber}, $_->{X}, $_->{Y}, $_->{entryType}, $_->{germplasmName}, $_->{germplasmDbId});
+           push @data_out, \@row;
+       }
+
+       my $file_response = CXGN::BrAPI::FileResponse->new({
+           absolute_file_path => $file_path,
+           absolute_file_uri => $inputs->{main_production_site_url}.$file_uri,
+           format => $format,
+           data => \@data_out
+       });
+       @data_files = $file_response->get_datafiles();
+
+    }
+    my $pagination = CXGN::BrAPI::Pagination->pagination_response($count,$page_size,$page);
+    return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Studies layout result constructed');
 }
 
 
