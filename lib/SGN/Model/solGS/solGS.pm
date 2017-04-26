@@ -35,7 +35,7 @@ use Scalar::Util qw(looks_like_number);
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use Math::Round::Var;
-#use CXGN::Genotype::Search;
+use CXGN::Genotype::Search;
 use CXGN::Trial;
 use CXGN::Dataset;
 
@@ -720,32 +720,26 @@ sub search_stock_using_plot_name {
 sub first_stock_genotype_data {
     my ($self, $pr_id) = @_;
   
-    my $stock_subj_rs = $self->project_subject_stocks_rs($pr_id);    
-    my $stock_obj_rs  = $self->stocks_object_rs($stock_subj_rs);
-   
+    my $protocol_id = $self->protocol_id();
+  
+    my $trial = CXGN::Trial->new({'bcs_schema' => $self->schema, 
+				  'trial_id' => $pr_id});    
+    my $accessions = $trial->get_accessions();
+    
     my $geno_data;
   
-    while (my $single_rs = $stock_obj_rs->next) 
+    foreach my $st (@$accessions) 
     {
-    	my $stock_name = $single_rs->get_column('uniquename');  
-    	my $stock_rs   = $self->search_stock($stock_name); 
-    	my $geno       = $self->individual_stock_genotypes_rs($stock_rs)->first;
-  
-    	if ($geno)
-    	{  
-    	    my $json_values  = $geno->get_column('value');
-    	    my $values       = JSON::Any->decode($json_values);
-    	    my @markers      = keys %$values;
-    	    my $marker_count = scalar(@markers);
+	my $stock_id = $st->{stock_id};
+	my $dataset = CXGN::Dataset->new({
+	    people_schema => $self->people_schema,
+	    schema  => $self->schema,
+	    accessions =>[$stock_id]});
+    
+	my $dataref = $dataset->retrieve_genotypes($protocol_id);
+	$geno_data  = $self->create_genotype_data_table($dataref);
 
-    	    my $header_markers = join("\t", @markers);
-    	    $geno_data         = "\t" . $header_markers . "\n";
-	    
-    	    my $geno_values = $self->stock_genotype_values($geno);             
-    	    $geno_data     .= $geno_values;
-	    
-    	    last; 
-    	} 	
+	last if $geno_data;
     }
  
     return $geno_data;
