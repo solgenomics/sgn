@@ -890,13 +890,20 @@ sub create_genotype_data_table {
 sub genotypes_list_genotype_data {
     my ($self, $genotypes) = @_;
    
+    my $st_rs = $self->get_stocks_rs($genotypes);
+    my @acc_ids;
+
+    while (my $row = $st_rs->next)
+    {    
+	push @acc_ids, $row->get_column('stock_id');	
+    }
+
     my $protocol_id = $self->protocol_id();
 	    
     my $dataset = CXGN::Dataset->new({
 	people_schema => $self->people_schema,
 	schema  => $self->schema,
-	accession_list => $genotypes}
-	);	 
+	accession_list => \@acc_ids});	 
 
     my $dataref    = $dataset->retrieve_genotypes($protocol_id);
     my $geno_data  = $self->create_genotype_data_table($dataref);	   
