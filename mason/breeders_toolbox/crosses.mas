@@ -678,7 +678,7 @@ jQuery(document).ready(function($) {
             value = this.value;
             var male_id = jQuery(this).attr('male_id');
             var female_id = jQuery(this).attr('female_id');
-            cross_data.push({ 'female_id':female_id, 'male_id';male_id, 'priority':value });
+            cross_data.push({ 'female_id':female_id, 'male_id':male_id, 'priority':value });
         });
         console.log(cross_data);
         jQuery.ajax({
