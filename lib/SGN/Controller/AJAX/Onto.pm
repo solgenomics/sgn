@@ -73,9 +73,9 @@ sub children_GET {
         my $child_node = $cvrel_row->subject();
 
         #only report back children of the same cv namespace
-        if ($child_node->cv_id() != $cvterm->cv_id()) {
-            next();
-        }
+      #  if ($child_node->cv_id() != $cvterm->cv_id()) {
+      #      next();
+      #  }
 
         my $responsehash = $self->flatten_node($child_node, $relationship_node);
         push @response_list, $responsehash;
