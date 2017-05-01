@@ -252,7 +252,11 @@ jQuery(document).ready(function ($) {
                 fuzzy_html = fuzzy_html + '<tr id="add_accession_fuzzy_option_form'+i+'"><td>'+ verifyResponse.fuzzy[i].name + '<input type="hidden" name="fuzzy_name" value="'+ verifyResponse.fuzzy[i].name + '" /></td>';
                 fuzzy_html = fuzzy_html + '<td><select class="form-control" name ="fuzzy_select">';
                 for(j=0; j < verifyResponse.fuzzy[i].matches.length; j++){
-                    fuzzy_html = fuzzy_html + '<option value="' + verifyResponse.fuzzy[i].matches[j].name + '">' + verifyResponse.fuzzy[i].matches[j].name + '</option>';
+                    if (verifyResponse.fuzzy[i].matches[j].is_synonym){
+                        fuzzy_html = fuzzy_html + '<option value="' + verifyResponse.fuzzy[i].matches[j].synonym_of + '">' + verifyResponse.fuzzy[i].matches[j].synonym_of + ' (SYNONYM: '+verifyResponse.fuzzy[i].matches[j].name+')</option>';
+                    } else {
+                        fuzzy_html = fuzzy_html + '<option value="' + verifyResponse.fuzzy[i].matches[j].name + '">' + verifyResponse.fuzzy[i].matches[j].name + '</option>';
+                    }
                 }
                 fuzzy_html = fuzzy_html + '</select></td><td><select class="form-control" name="fuzzy_option"><option value="keep">Continue saving name in your list</option><option value="replace">Replace name in your list with selected existing name</option><option value="remove">Remove name in your list and ignore</option><option value="synonymize">Add name in your list as a synonym to selected existing name</option></select></td></tr>';
             }

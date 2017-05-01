@@ -70,9 +70,9 @@ sub do_fuzzy_search {
     my $fuzzy_search_result;
     my $max_distance = 0.2;
     my @accession_list = @$accession_list;
-    my @found_accessions;
-    my @fuzzy_accessions;
-    my @absent_accessions;
+    my $found_accessions;
+    my $fuzzy_accessions;
+    my $absent_accessions;
 
     if (!$c->user()) {
 	$c->stash->{rest} = {error => "You need to be logged in to add accessions." };
@@ -88,15 +88,37 @@ sub do_fuzzy_search {
     $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
     #print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
 
-    @found_accessions = $fuzzy_search_result->{'found'};
-    @fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
-    @absent_accessions = $fuzzy_search_result->{'absent'};
+    $found_accessions = $fuzzy_search_result->{'found'};
+    $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
+    $absent_accessions = $fuzzy_search_result->{'absent'};
+
+    if (scalar(@$fuzzy_accessions)>0){
+        my %synonym_hash;
+        my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id;
+        my $synonym_rs = $schema->resultset('Stock::Stock')->search({'stockprops.type_id'=>$synonym_type_id}, {join=>'stockprops', '+select'=>['stockprops.value'], '+as'=>['value']});
+        while (my $r = $synonym_rs->next()){
+            $synonym_hash{$r->get_column('value')} = $r->uniquename;
+        }
+
+        foreach (@$fuzzy_accessions){
+            my $matches = $_->{matches};
+            foreach my $m (@$matches){
+                my $name = $m->{name};
+                if (exists($synonym_hash{$name})){
+                    $m->{is_synonym} = 1;
+                    $m->{synonym_of} = $synonym_hash{$name};
+                }
+            }
+        }
+    }
+
+    #print STDERR Dumper $fuzzy_accessions;
 
     $c->stash->{rest} = {
 	success => "1",
-	absent => @absent_accessions,
-	fuzzy => @fuzzy_accessions,
-	found => @found_accessions
+	absent => $absent_accessions,
+	fuzzy => $fuzzy_accessions,
+	found => $found_accessions
     };
     return;
 }
