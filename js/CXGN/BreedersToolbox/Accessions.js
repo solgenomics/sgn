@@ -22,6 +22,7 @@ jQuery(document).ready(function ($) {
     var accessionList;
     var accession_list_id;
     var validSpecies;
+    var fuzzyResponse;
 
     function disable_ui() {
         $('#working_modal').modal("show");
@@ -166,7 +167,7 @@ jQuery(document).ready(function ($) {
             },
             success: function (response) {
                 //console.log(response);
-                accessionList = response.names_to_add;
+                accessionList.concat(response.names_to_add);
                 if (accessionList.length > 0){
                     populate_review_absent_dialog(accessionList);
                     jQuery('#review_absent_dialog').modal('show');
@@ -220,7 +221,6 @@ jQuery(document).ready(function ($) {
     function review_verification_results(verifyResponse, accession_list_id){
         var i;
         var j;
-        accessionList;
         //console.log(verifyResponse);
         //console.log(accession_list_id);
 
@@ -247,6 +247,7 @@ jQuery(document).ready(function ($) {
         }
 
         if (verifyResponse.fuzzy.length > 0) {
+            fuzzyResponse = verifyResponse.fuzzy;
             var fuzzy_html = '<table id="add_accession_fuzzy_table" class="table"><thead><tr><th class="col-xs-4">Name in Your List</th><th class="col-xs-4">Existing Name(s) in Database</th><th class="col-xs-4">Options&nbsp;&nbsp;&nbsp&nbsp;<input type="checkbox" id="add_accession_fuzzy_option_all"/> Use Same Option for All</th></tr></thead><tbody>';
             for( i=0; i < verifyResponse.fuzzy.length; i++) {
                 fuzzy_html = fuzzy_html + '<tr id="add_accession_fuzzy_option_form'+i+'"><td>'+ verifyResponse.fuzzy[i].name + '<input type="hidden" name="fuzzy_name" value="'+ verifyResponse.fuzzy[i].name + '" /></td>';
@@ -335,7 +336,15 @@ jQuery(document).ready(function ($) {
     });
 
     $('#add_accessions_link').click(function () {
+        var list = new CXGN.List();
+        var accessionList;
+        var accession_list_id;
+        var validSpecies;
+        var fuzzyResponse;
         $('#add_accessions_dialog').modal("show");
+        $('#review_found_matches_dialog').modal("hide");
+        $('#review_fuzzy_matches_dialog').modal("hide");
+        $('#review_absent_dialog').modal("hide");
         $("#list_div").html(list.listSelect("accessions"));
     });
 
@@ -349,5 +358,10 @@ jQuery(document).ready(function ($) {
 			$('select[name="fuzzy_option"] option[value='+value+']').attr('selected','selected');
 		}
 	});
+
+    $('#review_fuzzy_matches_download').click(function(){
+        //console.log(fuzzyResponse);
+        window.open('/ajax/accession_list/fuzzy_download?fuzzy_response='+JSON.stringify(fuzzyResponse));
+    });
 
 });

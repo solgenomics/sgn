@@ -241,6 +241,39 @@ sub add_accession_list_POST : Args(0) {
   return;
 }
 
+sub fuzzy_response_download : Path('/ajax/accession_list/fuzzy_download') : ActionClass('REST') { }
+
+sub fuzzy_response_download_GET : Args(0) {
+    my ($self, $c) = @_;
+    my $fuzzy_json = $c->req->param('fuzzy_response');
+    my $fuzzy_response = decode_json $fuzzy_json;
+    #print STDERR Dumper $fuzzy_response;
+
+    my @data_out;
+    push @data_out, ['In Your List', 'Database Accession Match', 'Database Synonym Match', 'Distance'];
+    foreach (@$fuzzy_response){
+        my $matches = $_->{matches};
+        my $name = $_->{name};
+        foreach my $m (@$matches){
+            my $match_name = $m->{name};
+            my $synonym_of = '';
+            my $distance = $m->{distance};
+            if ($m->{is_synonym}){
+                $match_name = $m->{synonym_of};
+                $synonym_of = $m->{name};
+            }
+            push @data_out, [$name, $match_name, $synonym_of, $distance];
+        }
+    }
+    my $string ='';
+    foreach (@data_out){
+        $string .= join "\t", @$_;
+        $string .= "\n";
+    }
+    $c->res->content_type("text/plain");
+    $c->res->body($string);
+}
+
 sub populations : Path('/ajax/manage_accessions/populations') : ActionClass('REST') { }
 
 sub populations_GET : Args(0) {
