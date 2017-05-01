@@ -17,6 +17,8 @@ Nicolas Morales
 $has_expression_atlas => undef
 $expression_atlas_url
 $site_project_name
+$sgn_session_id
+$user_name
 </%args>
 
 <& /util/import_javascript.mas, classes => [] &>
@@ -25,8 +27,7 @@ $site_project_name
 <& /page/page_title.mas, title=>"Export Data to Expression Atlas" &>
 
 % if ($has_expression_atlas) {
-    <& /breeders_toolbox/trial/export_trial_to_expression_atlas.mas, expression_atlas_url=>$expression_atlas_url, site_project_name=>$site_project_name &>
+    <& /breeders_toolbox/trial/export_trial_to_expression_atlas.mas, expression_atlas_url=>$expression_atlas_url, site_project_name=>$site_project_name, sgn_session_id=>$sgn_session_id, user_name=>$user_name &>
 % } else {
 	<h3>Expression Atlas not configured for this site! (Check the conf file)</h3>
 % }
-

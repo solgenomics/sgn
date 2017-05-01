@@ -519,7 +519,7 @@ solGS.waitPage = function (page, args) {
 	    success : function(response) {
 		if (response.result) {
 		    runAnalysis(profile);
-		    confirmRequest();
+		    ////confirmRequest();
 		    
 		} else { 
 		    jQuery('<div />', {id: 'error-message'})
@@ -566,6 +566,42 @@ solGS.waitPage = function (page, args) {
 	    type    : 'POST',
  	    data    : profile,
 	    url     : '/solgs/run/saved/analysis/',
+	    success : function(response) {
+		if (response.result.match(/Submitted/)) {
+		    confirmRequest();
+		} else {
+		    jQuery('<div />')
+			.html('Error occured submitting the job. Please contact the developers.' + "\n\nHint: " + response.result)
+			.dialog({
+			    height : 200,
+			    width  : 250,
+			    modal  : true,
+			    title  : 'Error message',
+			    buttons: {
+				OK: function () {
+				    jQuery(this).dialog('close');
+				    window.location = window.location.href;
+				}
+			    }			
+			});	     
+		}
+	    },
+	    error: function (response) {
+		 jQuery('<div />')
+			.html('Error occured submitting the job. Please contact the developers.' + "\n\nHint: " + response.result)
+			.dialog({
+			    height : 200,
+			    width  : 250,
+			    modal  : true,
+			    title  : 'Error message',
+			    buttons: {
+				OK: function () {
+				    jQuery(this).dialog('close');
+				    window.location = window.location.href;
+				}
+			    }			
+			});	     
+	    }
 	});
 	
     }
