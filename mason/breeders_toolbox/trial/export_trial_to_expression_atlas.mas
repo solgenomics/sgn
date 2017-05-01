@@ -109,19 +109,43 @@ $user_name
 
 jQuery(document).ready(function() {
 
-    if(jQuery("#expression_atlas_trial_id").length == 0) {
-        get_select_box('trials', 'expression_atlas_trial_select_div', { 'name' : 'expression_atlas_trial_id', 'id' : 'expression_atlas_trial_id', 'size' : 7 });
-    } else {
-        expression_atlas_change_trials();
-    }
-
-    jQuery(document).on('change', "#expression_atlas_trial_id", function() {
-        expression_atlas_change_trials();
+    jQuery("#export_trial_to_expression_atlas").click( function () {
+        jQuery('#export_to_expression_atlas_dialog').modal('show');
+        if(jQuery("#expression_atlas_trial_id").length == 0) {
+            get_select_box('trials', 'expression_atlas_trial_select_div', { 'name' : 'expression_atlas_trial_id', 'id' : 'expression_atlas_trial_id', 'size' : 7 });
+        } else {
+            expression_atlas_change_trials();
+        }
     });
 
     jQuery("#export_trial_to_expression_atlas").click( function () {
         jQuery('#export_to_expression_atlas_dialog').modal('show');
     });
+
+	//jQuery("#expression_atlas_export_ok_button").click( function () {
+	//	var trial_id_array = [<% $trial_id %>];
+	//	var selected_trial_ids = jQuery('#expression_atlas_trial_id').val();
+	//	var combined_trial_ids = trial_id_array.concat(selected_trial_ids);
+	//	var accession_id_array = jQuery('#expression_atlas_accession_ids').val();
+	//	var trait_id_array = jQuery('#expression_atlas_trait_ids').val();
+	//	var export_name = jQuery('#expression_atlas_export_name').val();
+	//	var export_type = jQuery('#expression_atlas_export_type').val();
+	//	new jQuery.ajax({
+  //          type: 'GET',
+  //          url: "<% $expression_atlas_url %>/external_data_transfer/<% $site_project_name %>?trial_id_list="+JSON.stringify(trial_id_array)+"&trait_id_list="+JSON.stringify(trait_id_array)+"&accession_id_list="+JSON.stringify(accession_id_array)+"&trait_id_list="+JSON.stringify(trait_id_array)+"&project_name="+encodeURIComponent(export_name)+"&type="+export_type,
+  //          beforeSend: function() {
+  //              jQuery('#working_modal').modal('show');
+  //          },
+  //          success: function (response) {
+  //              jQuery('#working_modal').modal("hide");
+  //              alert('Succesfully exported trial to Expression Atlas!');
+  //          },
+  //          error: function () {
+  //              jQuery('#working_modal').modal("hide");
+  //              alert('An error occurred exporting trial to Expression Atlas.');
+  //          }
+  //      });
+  //  });
 
     jQuery("#expression_atlas_export_ok_button").click( function () {
         var trial_id_array = [<% $trial_id %>];
@@ -133,9 +157,9 @@ jQuery(document).ready(function() {
         var combined_trial_ids = trial_id_array.concat(selected_trial_ids);
         var combined_accession_ids = accession_id_array.concat(selected_accession_ids);
         var combined_trait_ids = trait_id_array.concat(selected_trait_ids);
-        combined_trial_ids = combined_trial_ids.filter(function(n){ return n != undefined }); 
-        combined_accession_ids = combined_accession_ids.filter(function(n){ return n != undefined }); 
-        combined_trait_ids = combined_trait_ids.filter(function(n){ return n != undefined }); 
+        combined_trial_ids = combined_trial_ids.filter(function(n){ return n != undefined });
+        combined_accession_ids = combined_accession_ids.filter(function(n){ return n != undefined });
+        combined_trait_ids = combined_trait_ids.filter(function(n){ return n != undefined });
         var export_name = jQuery('#expression_atlas_export_name').val();
         var export_type = jQuery('#expression_atlas_export_type').val();
         if (export_name == '' || !export_name){
