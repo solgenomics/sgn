@@ -86,8 +86,13 @@ sub add_person_role_GET : Args(0) {
     my $self = shift;
     my $c = shift;
     my $user = $c->user();
+    if (!$user){
+        $c->stash->{rest} = {error=>'You must be logged in first!'};
+        $c->detach;
+    }
     if (!$user->check_roles("curator")) {
-        $c->stash->{rest} = {error=>1};
+        $c->stash->{rest} = {error=>'You must be logged in with the correct role!'};
+        $c->detach;
     }
     my $sp_person_id = $c->req->param('sp_person_id');
     my $sp_role_id = $c->req->param('sp_role_id');

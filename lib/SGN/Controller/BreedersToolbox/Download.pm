@@ -1,5 +1,5 @@
 
-###NOTE: This is deprecated and has been moved to CXGN::Trial::Download.
+###NOTE: This controller points to CXGN::Trial::Download for the phenotype download.
 
 package SGN::Controller::BreedersToolbox::Download;
 

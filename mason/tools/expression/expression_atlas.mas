@@ -31,4 +31,3 @@ $user_name
 % } else {
 	<h3>Expression Atlas not configured for this site! (Check the conf file)</h3>
 % }
-

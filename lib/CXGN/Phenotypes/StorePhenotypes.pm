@@ -395,30 +395,41 @@ sub store {
                         "  operator = $operator" ;
 
                     my $phenotype = $trait_cvterm
-                        ->find_or_create_related("phenotype_cvalues", {
+                        ->find_related("phenotype_cvalues", {
                             observable_id => $trait_cvterm->cvterm_id,
                             value => $trait_value ,
                             uniquename => $plot_trait_uniquename,
                         });
 
-                    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
-                        nd_geolocation_id => $location_id,
-                        type_id => $phenotyping_experiment_cvterm_id
-                    });
-                    $experiment->create_nd_experimentprops({date => $upload_date},{autocreate => 1, cv_name => 'local'});
-                    $experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
+                    if (!$phenotype) {
 
-                    ## Link the experiment to the project
-                    $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
+                        my $phenotype = $trait_cvterm
+                            ->create_related("phenotype_cvalues", {
+                                observable_id => $trait_cvterm->cvterm_id,
+                                value => $trait_value ,
+                                uniquename => $plot_trait_uniquename,
+                            });
 
-                    # Link the experiment to the stock
-                    $experiment->create_related('nd_experiment_stocks', { stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id });
+                        my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')->create({
+                            nd_geolocation_id => $location_id,
+                            type_id => $phenotyping_experiment_cvterm_id
+                        });
+                        $experiment->create_nd_experimentprops({date => $upload_date},{autocreate => 1, cv_name => 'local'});
+                        $experiment->create_nd_experimentprops({operator => $operator}, {autocreate => 1 ,cv_name => 'local'});
 
-                    ## Link the phenotype to the experiment
-                    $experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
-                    #print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
+                        ## Link the experiment to the project
+                        $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
 
-                    $experiment_ids{$experiment->nd_experiment_id()}=1;
+                        # Link the experiment to the stock
+                        $experiment->create_related('nd_experiment_stocks', { stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id });
+
+                        ## Link the phenotype to the experiment
+                        $experiment->create_related('nd_experiment_phenotypes', {phenotype_id => $phenotype->phenotype_id });
+                        #print STDERR "[StorePhenotypes] Linking phenotype: $plot_trait_uniquename to experiment " .$experiment->nd_experiment_id . "Time:".localtime()."\n";
+
+                        $experiment_ids{$experiment->nd_experiment_id()}=1;
+
+                    }
                 }
             }
         }

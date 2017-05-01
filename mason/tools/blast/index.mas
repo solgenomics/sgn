@@ -388,54 +388,8 @@ h1 {
   text-align: center;
 }
 
-.score0 {
-  width:20%;
-  float: left;
-  background-color:#000;
-  color:#fff;
-  height: 30px;
-  padding-top: 5px;
-  font-size: 16px;
-}
-
-.score40 {
-  width:20%;
-  float: left;
-  background-color:#0047c8;
-  color:#fff;
-  height: 30px;
-  padding-top: 5px;
-  font-size: 16px;
-}
-
-.score50 {
-  width:20%;
-  float: left;
-  background-color:#77de75;
-  color:#fff;
-  height: 30px;
-  padding-top: 5px;
-  font-size: 16px;
-}
-
-.score80 {
-  width:20%;
-  float: left;
-  background-color:#e967f5;
-  color:#fff;
-  height: 30px;
-  padding-top: 5px;
-  font-size: 16px;
-}
-
-.score200 {
-  width:20%;
-  float: left;
-  background-color:#e83a2d;
-  color:#fff;
-  height: 30px;
-  padding-top: 5px;
-  font-size: 16px;
+#sgn_blast_graph {
+  overflow:hidden;
 }
 
 #myCanvas {
@@ -443,10 +397,10 @@ h1 {
 /*  border-width: 1px;*/
 /*  border-color: #ddd;*/
 /*  border-width:0px 1px 1px 1px;*/
-  height:700px;
-  width:1000px;
-  overflow:hidden;
-/*  overflow:scroll;*/
+  height:450px;
+  width:1020px;
+  overflow:scroll;
+  overflow-x: hidden;
 }
 
 
