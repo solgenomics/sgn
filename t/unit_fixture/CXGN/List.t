@@ -165,7 +165,7 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            11,
+            12,
             'new_test_name',
             'new description',
             1,
@@ -234,7 +234,7 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            11,
+            12,
             'new_test_name',
             'new description',
             1,
