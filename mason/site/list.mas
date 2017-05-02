@@ -74,11 +74,12 @@
                 <div class="container-fluid">
                     <div id="validate_stock_add_missing_accessions_html">
                     </div>
-
+                    <div class="well">
                     <h3>Elements not found:</h3>
                     <table>
                         <tbody></tbody>
                     </table>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
