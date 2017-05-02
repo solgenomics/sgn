@@ -232,29 +232,69 @@ sub list {
 
 ### OBJECT METHODS
 
-
 # return a resultset with children of the folder
 #
 sub _get_children {
+	my $self = shift;
+
+	my @children;
+
+	my $rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_subject_projects', { object_project_id => $self->folder_id() }, { order_by => 'me.name' });
+
+	@children = map { $_->subject_project_id() } $rs->all();
+
+	my @child_folders;
+	foreach my $id (@children) {
+		my $folder = CXGN::Trial::Folder->new({
+			bcs_schema=> $self->bcs_schema(),
+			folder_id=>$id,
+		});
+
+		if ($self->folder_type() eq "breeding_program") {
+			if ($folder->project_parent()) {
+				if ($folder->project_parent()->name() eq $self->name()) {
+					#print STDERR "Pushing ".$folder->name().$folder->folder_type."\n";
+					push @child_folders, $folder;
+				}
+			}
+		} else {
+			#print STDERR "parent is not a breeding program... pushing ".$folder->name().$folder->folder_type."...\n";
+			push @child_folders, $folder;
+		}
+	}
+
+	return \@child_folders;
+}
+
+# return a resultset with children of the folder quickly
+#
+sub fast_children {
 
 	my $self = shift;
     print STDERR "Running get children for project ".$self->name()." at time ".localtime()."\n";
-	my @children;
 
 	my $rs = $self->bcs_schema()->resultset("Project::Project")->search_related(
         'project_relationship_subject_projects',
-        { object_project_id => $self->folder_id() },
+        {   object_project_id => $self->folder_id(),
+            'type.name' => {-in => ['cross','breeding_program','folder_for_trials','folder_for_crosses','trial_folder', 'design']}
+        },
         {   join      => { subject_project => { projectprops => 'type' } },
-            '+select' => ['subject_project.name', 'type.name'],
-            '+as'     => ['project_name', 'project_type'],
-            order_by => 'me.name'
+            '+select' => ['subject_project.name', 'projectprops.value', 'type.name'],
+            '+as'     => ['project_name', 'project_value', 'project_type']
         }
      );
-    #print STDERR "All children dumped:" . Dumper($rs->all());
-	@children = map { { id => $_->subject_project_id(), name => $_->get_column('project_name'), type => $_->get_column('project_type') } } $rs->all();
 
-    print STDERR "Finished running get children for project ".$self->name()." at time ".localtime()."\nChildren are: @children\n";
-	return \@children
+    my %children;
+    while (my $row = $rs->next) {
+        my $id = $row->subject_project_id();
+        $children{$id}{'id'} = $id;
+        $children{$id}{'name'} = $row->get_column('project_name');
+        $children{$id}{$row->get_column('project_value')} = 1;
+        $children{$id}{$row->get_column('project_type')} = 1;
+    }
+
+    print STDERR "Finished running get children for project ".$self->name()." at time ".localtime()."\nChildren are: ".Dumper(%children);
+	return \%children
 }
 
 sub set_folder_content_type {
@@ -281,6 +321,8 @@ sub set_folder_content_type {
 		}
 	}
 }
+
+
 
 sub associate_parent {
     my $self = shift;
@@ -434,24 +476,39 @@ sub get_jstree_html {
 	my $parent_type = shift;
 	my $project_type_of_interest = shift // 'trial';
 
-	my $html = "";
+    my ($folder_type_of_interest, $local_type_of_interest, $html);
+
+    if ($project_type_of_interest eq 'trial') {
+        $local_type_of_interest = 'design'; # there is no 'trial' project prop, so using this as a proxy
+        $folder_type_of_interest = 'folder_for_trials';
+    }
+    elsif ($project_type_of_interest eq 'cross') {
+        $local_type_of_interest = 'cross';
+        $folder_type_of_interest = 'folder_for_crosses';
+    }
+    elsif ($project_type_of_interest eq 'genotyping_trial') {
+        $local_type_of_interest = 'genotyping_plate'; # in order to match projectprop value
+        $folder_type_of_interest = 'folder_for_trials';
+    }
 
 	$html .= $self->_jstree_li_html($parent_type, $self->folder_id(), $self->name());
 	$html .= "<ul>";
     #print STDERR "Starting get children for project ".$self->name()." at time ".localtime()."\n";
-	my $children = $self->children();
+	my $children = $self->fast_children();
     #print STDERR "Finished get children for project ".$self->name()." at time ".localtime()."\nChildren are: $children\n";
 
-	if (@$children > 0) {
-		foreach my $child (@$children) {
-            my $folder_content_check;
-			if ($project_type_of_interest eq 'trial' && $child->{'type'} eq 'folder_for_trials') {
-                $folder_content_check = 1;
-            }
-            if ($project_type_of_interest eq 'cross' && $child->{'type'} eq 'folder_for_crosses'){
-                $folder_content_check = 1;
-            }
-            if ($folder_content_check) {
+	if (%$children) {
+        foreach my $child (values %$children) {
+            print STDERR "Working on child ".$child->{'name'}."\n";
+            #my $folder_content_check;
+			if ($child->{$folder_type_of_interest}) {
+            #    print STDERR "Child ".$child->{'name'}." is a folder and has $folder_type_of_interest as a hash key!\n";
+            #    $folder_content_check = 1;
+            #}
+            #if ($project_type_of_interest eq 'cross' && $child->{'type'} eq 'folder_for_crosses'){
+            #    $folder_content_check = 1;
+            #}
+            #if ($folder_content_check) {
                 print STDERR "Folder ".$child->{'name'}." is a folder for $project_type_of_interest (so we care about it), adding it to html and recursing into it.\n";
                 my $folder = CXGN::Trial::Folder->new({
         			bcs_schema=> $self->bcs_schema(),
@@ -460,9 +517,9 @@ sub get_jstree_html {
                 $html .= $folder->get_jstree_html('folder', $project_type_of_interest);
             }
             #Only display $project of interest types.
-			if ($child->{'type'} eq $project_type_of_interest) {
+			if ($child->{$local_type_of_interest}) {
                 print STDERR "Child ".$child->{'name'}." is a $project_type_of_interest (so we care about it), adding it to jstree html.\n";
-				$html .= $self->_jstree_li_html($child->{'type'}, $child->{'id'}, $child->{'name'})."</li>";
+				$html .= $self->_jstree_li_html($project_type_of_interest, $child->{'id'}, $child->{'name'})."</li>";
 			}
 		}
 	}
