@@ -65,27 +65,56 @@ sub display_fieldmap {
 
 #  print STDERR Dumper($design);
 
-	my @layout_info;
-	foreach my $plot_number (keys %{$design}) {
-		push @layout_info, {
-		plot_id => $design->{$plot_number}->{plot_id},
-		plot_number => $plot_number,
-		row_number => $design->{$plot_number}->{row_number},
-		col_number => $design->{$plot_number}->{col_number},
-		block_number=> $design->{$plot_number}-> {block_number},
-		rep_number =>  $design->{$plot_number}-> {rep_number},
-		plot_name => $design->{$plot_number}-> {plot_name},
-		accession_name => $design->{$plot_number}-> {accession_name},
-		plant_names => $design->{$plot_number}-> {plant_names},
-		};
-		#print STDERR Dumper(@layout_info);
-	}
+    my @row_numbers = ();
+    my @col_numbers = ();
+    my @rep_numbers = ();
+    my @block_numbers = ();
+    my @accession_names = ();
+    my @plot_numbers_not_used;
 
-	my @row_numbers = ();
-	my @col_numbers = ();
-	my @rep_numbers = ();
-	my @block_numbers = ();
-	my @accession_name = ();
+    my @layout_info;
+    while ( my ($k, $v) = (each %$design)) {
+        my $plot_number = $k;
+        my $plot_id = $v->{plot_id};
+        my $row_number = $v->{row_number};
+        my $col_number = $v->{col_number};
+        my $block_number = $v->{block_number};
+        my $rep_number = $v->{rep_number};
+        my $plot_name = $v->{plot_name};
+        my $accession_name = $v->{accession_name};
+        my $plant_names = $v->{plant_names};
+
+        push @layout_info, {
+            plot_id => $plot_id,
+            plot_number => $plot_number,
+            row_number => $row_number,
+            col_number => $col_number,
+            block_number=> $block_number,
+            rep_number =>  $rep_number,
+            plot_name => $plot_name,
+            accession_name => $accession_name,
+            plant_names => $plant_names,
+        };
+        #print STDERR Dumper(@layout_info);
+
+        push @plot_numbers_not_used, $plot_number;
+        if ($col_number) {
+            push @col_numbers, $col_number;
+        }
+        if ($row_number) {
+            push @row_numbers, $row_number;
+        }
+        if ($rep_number) {
+            push @rep_numbers, $rep_number;
+        }
+        if ($block_number) {
+            push @block_numbers, $block_number;
+        }
+        if ($accession_name) {
+            push @accession_names, $accession_name;
+        }
+    }
+
 	my @plot_name = ();
 	my @plot_id = ();
 	my @acc_name = ();
@@ -116,20 +145,8 @@ sub display_fieldmap {
 			}
 		}
 	}
-	# Looping through the hash and printing out all the hash elements.
-	my @plot_numbers_not_used;
-	my @plotcnt;
-	foreach $my_hash (@layout_info) {
-		push @col_numbers, $my_hash->{'col_number'};
-		push @row_numbers, $my_hash->{'row_number'};
-		#push @plot_id, $my_hash->{'plot_id'};
-		push @plot_numbers_not_used, $my_hash->{'plot_number'};
-		push @rep_numbers, $my_hash->{'rep_number'};
-		push @block_numbers, $my_hash->{'block_number'};
-		push @accession_name, $my_hash->{'accession_name'};
-		#push @plot_name, $my_hash->{'plot_name'};
-	}
 
+	my @plotcnt;
 	my $plotcounter_nu = 0;
 	if ($plot_numbers_not_used[0] =~ m/^\d{3}/){
 		foreach my $plot (@plot_numbers_not_used) {
@@ -143,16 +160,12 @@ sub display_fieldmap {
 	my @sorted_block = sort@block_numbers;
 	#my @uniq_block = uniq(@sorted_block);
 
-	my $max_col = 0;
-	$max_col = max( @col_numbers ) if (@col_numbers);
+	my $max_col = scalar(@col_numbers) > 0 ? max( @col_numbers ) : 0;
 	#print "$max_col\n";
-	my $max_row = 0;
-	$max_row = max( @row_numbers ) if (@row_numbers);
+	my $max_row = scalar(@row_numbers) > 0 ? max( @row_numbers ) : 0;
 	#print "$max_row\n";
-	my $max_rep = 0;
-	$max_rep = max(@rep_numbers) if (@rep_numbers);
-	my $max_block = 0;
-	$max_block = max(@block_numbers) if (@block_numbers);
+	my $max_rep = scalar(@rep_numbers) > 0 ? max(@rep_numbers) : 0;
+	my $max_block = scalar(@block_numbers) > 0 ? max(@block_numbers) : 0;
 
 	#print STDERR Dumper \@layout_info;
 
@@ -179,7 +192,7 @@ sub display_fieldmap {
 		plot_msg => \@array_msg,
 		rep => \@rep_numbers,
 		block => \@sorted_block,
-		accessions => \@accession_name,
+		accessions => \@accession_names,
 		plot_name => \@plot_name,
 		plot_id => \@plot_id,
 		plot_number => \@plot_number,
