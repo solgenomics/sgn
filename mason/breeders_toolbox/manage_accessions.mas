@@ -2,6 +2,7 @@
 <%args>
 $accessions
 $preferred_species => ""
+$list_id => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees' ] &>
@@ -312,3 +313,15 @@ $preferred_species => ""
   height: 100px;
 }
 </style>
+
+<script>
+
+jQuery(document).ready(function (){
+
+%  if ($list_id){
+    verify_accession_list(<% $list_id %>);
+%  }
+
+});
+
+</script>
