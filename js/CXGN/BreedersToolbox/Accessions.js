@@ -97,7 +97,7 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    alert("All accessions in your list are in the database. 1");
+                    alert("All accessions in your list are now saved in the database. 1");
                 }
             },
             error: function () {
@@ -292,7 +292,7 @@ function review_verification_results(verifyResponse, accession_list_id){
             if (verifyResponse.absent.length > 0){
                 jQuery('#review_absent_dialog').modal('show');
             } else {
-                alert('All accessions in your list are in the database. 3');
+                alert('All accessions in your list are now saved in the database. 3');
             }
         }
     });
@@ -354,7 +354,7 @@ function process_fuzzy_options(accession_list_id) {
                 populate_review_absent_dialog(accessionList);
                 jQuery('#review_absent_dialog').modal('show');
             } else {
-                alert('All accessions in your list are in the database. 2');
+                alert('All accessions in your list are now saved in the database. 2');
             }
         },
         error: function () {
