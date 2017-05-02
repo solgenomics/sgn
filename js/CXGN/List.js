@@ -688,23 +688,23 @@ CXGN.List.prototype = {
             if (type == 'accessions') {
                 jQuery("#validate_accession_error_display tbody").html('');
 
-                var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing accessions to a list</h3><div id='validate_stock_missing_accessions' style='display:none'></div><div id='validate_stock_add_missing_accessions'></div><hr><h4>Go to <a href='/breeders/accessions'>Manage Accessions</a> to add these new accessions.</h4></div><br/>";
+                var missing_accessions_html = "<div class='well well-sm'><h3>List of Accessions Not Valid!</h3><div id='validate_stock_missing_accessions' style='display:none'></div><div id='validate_stock_add_missing_accessions'></div><button class='btn btn-primary' onclick=\"window.location.href='/breeders/accessions?list_id="+list_id+"'\" >Go to Manage Accessions to add these new accessions now.</button></div>";
 
 
                 jQuery("#validate_stock_add_missing_accessions_html").html(missing_accessions_html);
 
                 var missing_accessions_vals = '';
                 for(var i=0; i<missing.length; i++) {
-                    missing_accessions_vals = missing_accessions_vals + missing[i] + '\n';
+                    missing_accessions_vals = missing_accessions_vals + missing[i] + '<br/>';
                 }
 
                 jQuery("#validate_stock_missing_accessions").html(missing_accessions_vals);
-                addToListMenu('validate_stock_add_missing_accessions', 'validate_stock_missing_accessions', {
-                    selectText: true,
-                    listType: 'accessions'
-                });
+                //addToListMenu('validate_stock_add_missing_accessions', 'validate_stock_missing_accessions', {
+                //    selectText: true,
+                //    listType: 'accessions'
+                //});
 
-                jQuery("#validate_accession_error_display tbody").append(missing.join(","));
+                jQuery("#validate_accession_error_display tbody").append(missing_accessions_vals);
                 jQuery('#validate_accession_error_display').modal("show");
 
                 //alert("List validation failed. Elements not found: "+ missing.join(","));

@@ -48,6 +48,15 @@ $breeding_programs
                             <div class="col-sm-9" id="select_list_locations_multi" name="select_list_multi">
                             </div>
                         </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Trial Type: </label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="add_multi_project_type" name="add_multi_project_type" type="text">
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Year: </label>
                             <div class="col-sm-9">
