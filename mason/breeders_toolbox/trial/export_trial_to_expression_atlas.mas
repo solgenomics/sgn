@@ -3,6 +3,8 @@ $trial_id => undef
 $trial_name => undef
 $expression_atlas_url
 $site_project_name
+$sgn_session_id
+$user_name
 </%args>
 
 <div class="well">
@@ -82,47 +84,89 @@ $site_project_name
   </div>
 </div>
 
+<div class="modal fade" id="submit_export_to_expression_atlas_modal" name="submit_export_to_expression_atlas_modal" tabindex="-1" role="dialog" aria-labelledby="submitExpressionAtlasDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="submitExpressionAtlasDialog">Expression Atlas</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="submit_export_to_expression_atlas_message">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
 
 jQuery(document).ready(function() {
 
-	if(jQuery("#expression_atlas_trial_id").length == 0) {
-		get_select_box('trials', 'expression_atlas_trial_select_div', { 'name' : 'expression_atlas_trial_id', 'id' : 'expression_atlas_trial_id', 'size' : 7 });
-	} else {
-		expression_atlas_change_trials();
-	}
-
-	jQuery(document).on('change', "#expression_atlas_trial_id", function() {
-		expression_atlas_change_trials();
+    jQuery("#export_trial_to_expression_atlas").click( function () {
+        jQuery('#export_to_expression_atlas_dialog').modal('show');
+        if(jQuery("#expression_atlas_trial_id").length == 0) {
+            get_select_box('trials', 'expression_atlas_trial_select_div', { 'name' : 'expression_atlas_trial_id', 'id' : 'expression_atlas_trial_id', 'size' : 7 });
+        } else {
+            expression_atlas_change_trials();
+        }
     });
 
-	jQuery("#export_trial_to_expression_atlas").click( function () {
-		jQuery('#export_to_expression_atlas_dialog').modal('show');
-	});
+    jQuery("#export_trial_to_expression_atlas").click( function () {
+        jQuery('#export_to_expression_atlas_dialog').modal('show');
+    });
 
-	jQuery("#expression_atlas_export_ok_button").click( function () {
-		var trial_id_array = [<% $trial_id %>];
-		var selected_trial_ids = jQuery('#expression_atlas_trial_id').val();
-		var combined_trial_ids = trial_id_array.concat(selected_trial_ids);
-		var accession_id_array = jQuery('#expression_atlas_accession_ids').val();
-		var trait_id_array = jQuery('#expression_atlas_trait_ids').val();
-		var export_name = jQuery('#expression_atlas_export_name').val();
-		var export_type = jQuery('#expression_atlas_export_type').val();
-		new jQuery.ajax({
-            type: 'GET',
-            url: "<% $expression_atlas_url %>/external_data_transfer/<% $site_project_name %>?trial_id_list="+JSON.stringify(trial_id_array)+"&trait_id_list="+JSON.stringify(trait_id_array)+"&accession_id_list="+JSON.stringify(accession_id_array)+"&trait_id_list="+JSON.stringify(trait_id_array)+"&project_name="+encodeURIComponent(export_name)+"&type="+export_type,
-            beforeSend: function() {
-                jQuery('#working_modal').modal('show');
-            },
-            success: function (response) {
-                jQuery('#working_modal').modal("hide");
-                alert('Succesfully exported trial to Expression Atlas!');
-            },
-            error: function () {
-                jQuery('#working_modal').modal("hide");
-                alert('An error occurred exporting trial to Expression Atlas.');
-            }
-        });
+    jQuery("#expression_atlas_export_ok_button").click( function () {
+        var trial_id_array = [<% $trial_id %>];
+        var accession_id_array = [];
+        var trait_id_array = [];
+        var selected_trial_ids = jQuery('#expression_atlas_trial_id').val();
+        var selected_accession_ids = jQuery('#expression_atlas_accession_ids').val();
+        var selected_trait_ids = jQuery('#expression_atlas_trait_ids').val();
+        var combined_trial_ids = trial_id_array.concat(selected_trial_ids);
+        var combined_accession_ids = accession_id_array.concat(selected_accession_ids);
+        var combined_trait_ids = trait_id_array.concat(selected_trait_ids);
+        combined_trial_ids = combined_trial_ids.filter(function(n){ return n != undefined });
+        combined_accession_ids = combined_accession_ids.filter(function(n){ return n != undefined });
+        combined_trait_ids = combined_trait_ids.filter(function(n){ return n != undefined });
+        var export_name = jQuery('#expression_atlas_export_name').val();
+        var export_type = jQuery('#expression_atlas_export_type').val();
+        if (export_name == '' || !export_name){
+            jQuery('#submit_export_to_expression_atlas_message').html("Project Name is required. This is the project name that will appear in the expression atlas.");
+            jQuery('#submit_export_to_expression_atlas_modal').modal('show');
+        } else if (export_type == '' || !export_type){
+            jQuery('#submit_export_to_expression_atlas_message').html("Export type is required.");
+            jQuery('#submit_export_to_expression_atlas_modal').modal('show');
+        } else if (combined_trial_ids.length < 1 || !combined_trial_ids){
+            jQuery('#submit_export_to_expression_atlas_message').html("Please select at least one trial.");
+            jQuery('#submit_export_to_expression_atlas_modal').modal('show');
+        } else {
+
+            new jQuery.ajax({
+                type: 'GET',
+                url: "<% $expression_atlas_url %>/expression_viewer/external_data_transfer/<% $site_project_name %>?trial_id_list="+JSON.stringify(combined_trial_ids)+"&trait_id_list="+JSON.stringify(combined_trait_ids)+"&accession_id_list="+JSON.stringify(combined_accession_ids)+"&project_name="+encodeURIComponent(export_name)+"&type="+export_type+"&<% $sgn_session_id %>&user_name=<% $user_name %>",
+                beforeSend: function() {
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function (response) {
+                    jQuery('#working_modal').modal("hide");
+                    jQuery('#submit_export_to_expression_atlas_message').html("Succesfully exported trial to Expression Atlas!");
+                    jQuery('#submit_export_to_expression_atlas_modal').modal('show');
+                },
+                error: function () {
+                    jQuery('#working_modal').modal("hide");
+                    jQuery('#submit_export_to_expression_atlas_message').html('An error occurred exporting trial to Expression Atlas.');
+                    jQuery('#submit_export_to_expression_atlas_modal').modal('show');
+                }
+            });
+
+        }
     });
 
 });

@@ -197,7 +197,7 @@
     //print the rectangles
     off_set = printRectangles(kjs_canvas,sgn_graph_array,seq_length,img_width);
 
-    $("#myCanvas").css("height",off_set+"px");
+    // $("#myCanvas").css("height",off_set+"px");
     kjs_canvas.height(off_set);
   }
 
@@ -269,6 +269,7 @@
       coord_y = off_set + row*(sqr_height+2);
 
       var blastHit = new Kinetic.Rect({
+        id: subject_name,
         x: m_start,
         y: coord_y-15,
         width: m_width,
@@ -288,25 +289,80 @@
           x: 3,
           y: off_set+4,
           text: subject_name,
-          fill: "#4f4f4f",
+          fill: "#000",
+          // fill: "#4f4f4f",
           fontSize: 16,
           fontFamily: 'Helvetica'
         });
-        
-        rectangle_layer.add(subject_text);
 
+        var gene_bg = new Kinetic.Rect({
+          id: 'bg'+subject_name,
+          x: 0-subject_text.width()-5,
+          y: off_set,
+          width: subject_text.width()+5,
+          height: 22,
+          fill: 'rgba(255,255,255, 0.5)',
+        });
+        
+
+        rectangle_layer.add(gene_bg);
+        rectangle_layer.add(subject_text);
+        
+        // clicking on gene names
         subject_text.on('mousedown', function() {
           var gene_name = this.text();
           document.getElementById(gene_name).click();
         });
         
+        // clicking on hit boxes
+        blastHit.on('mousedown', function() {
+          var hit_id = this.id();
+          document.getElementById(hit_id).click();
+        });
         
+        
+        //over gene names
         subject_text.on('mouseover', function() {
+          
           document.body.style.cursor = 'pointer';
+          var gene_name = this.text();
+          var bg_rect = rectangle_layer.find("#bg"+gene_name);
+          var rect_width = this.width()-5;
+          
+          bg_rect.fill('rgba(255,255,255, 0.5)');
+          
+          var anim = new Kinetic.Animation(function(frame) {
+            
+            bg_rect.setX(0 -rect_width -5 + frame.time);
+            // bg_rect.setX(amplitude * Math.sin(frame.time * 2 * Math.PI / period) + 2);
+            
+            if (frame.time >= rect_width) {
+               anim.stop();
+               bg_rect.setX(0);
+            }
+            
+          }, rectangle_layer);
+
+          anim.start();
         });
         
         subject_text.on('mouseout', function() {
           document.body.style.cursor = 'default';
+          var gene_name = this.text();
+          var bg_rect = rectangle_layer.find("#bg"+gene_name);
+          var rect_width = this.width()-5;
+          
+          var anim = new Kinetic.Animation(function(frame) {
+            bg_rect.setX(0 - frame.time);
+
+            if (frame.time >= rect_width) {
+               anim.stop();
+               bg_rect.setX(0 -rect_width -5);
+            }
+
+          }, rectangle_layer);
+
+          anim.start();
         });
         
         //off_set += before_block; //add some space after the names
@@ -336,13 +392,14 @@
         y: coord_y-15,
         text: subject_id_percent,
         fill: "black",
-        width: id_100,
+        // width: id_100,
         align: "left",
         fontSize: 16,
         fontFamily: 'Helvetica'
       });
       rectangle_layer.add(id_text);
-
+      
+      
       if (subject_name != next_subject) {
 
         // distance between tracks
@@ -370,13 +427,21 @@
   } // close printSquares
 
 
-
+  function move_bg_rect(pos) {
+    
+    pos += 1;
+    
+    return pos;
+  }
 
 
   function draw_popup(canvas_width,blastHit,popup_layer,desc) {
 
     blastHit.on('mouseover', function() {
-
+      
+      
+       var desc_group = new Kinetic.Group();
+      
       document.body.style.cursor = 'pointer';
       var hit_x = this.getAbsolutePosition().x + this.width()/2;
       var hit_y = this.getAbsolutePosition().y-26;
@@ -385,7 +450,6 @@
       var subject_desc = new Kinetic.Text({
         x: hit_x,
         y: hit_y-5,
-//        text: "my description is here",
         text: desc,
         fill: "black",
         fontSize: 16,
@@ -453,12 +517,15 @@
 
          }
        }
-
-       popup_layer.add(down_arrow);
-       popup_layer.add(hit_popup);
-       popup_layer.add(arrow_junction);
-       popup_layer.add(subject_desc);
+       
+       desc_group.add(down_arrow);
+       desc_group.add(hit_popup);
+       desc_group.add(arrow_junction);
+       desc_group.add(subject_desc);
+       
+       popup_layer.add(desc_group);
        popup_layer.draw();
+       
     });
 
     //on mouseout remove popups
