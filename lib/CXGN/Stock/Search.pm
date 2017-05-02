@@ -32,6 +32,8 @@ my $stock_search = CXGN::Stock::Search->new({
 	location_name_list=>\@location_name_list,
 	year_list=>\@year_list,
 	organization_list=>\@organization_list,
+    property_term=>$property_term,
+    $property_value=>$property_value,
 	limit=>$limit,
 	offset=>$offset,
 	minimal_info=>o  #for only returning stock_id and uniquenames
@@ -182,6 +184,16 @@ has 'organization_list' => (
     is => 'rw',
 );
 
+has 'property_term' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+);
+
+has 'property_value' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+);
+
 has 'limit' => (
     isa => 'Int|Undef',
     is => 'rw',
@@ -225,6 +237,8 @@ sub search {
 	my @species_array = $self->species_list ? @{$self->species_list} : ();
 	my @stock_ids_array = $self->stock_id_list ? @{$self->stock_id_list} : ();
 	my @pui_array = $self->pui_list ? @{$self->pui_list} : ();
+    my $property_term = $self->property_term;
+    my $property_value = $self->property_value;
 	my $limit = $self->limit;
 	my $offset = $self->offset;
 
@@ -341,7 +355,6 @@ sub search {
 
 	foreach (@trial_id_array){
 		if ($_){
-			print STDERR $_."\n";
 			push @{$and_conditions->{ 'project.project_id' }}, $_ ;
 		}
 	}
@@ -401,6 +414,12 @@ sub search {
 			push @{$and_conditions->{ 'lower(organism.species)' }}, { -like  => lc($_) } ;
 		}
 	}
+
+    if ($property_term && $property_value){
+        my $property_term_id = SGN::Model::Cvterm->get_cvterm_row($schema, $property_term, 'stock_property')->cvterm_id();
+        $and_conditions->{ 'stockprops.type_id'} = $property_term_id;
+        push @{$and_conditions->{ 'lower(stockprops.value)' }}, { -like  => lc($property_value) } ;
+    }
 
 	#$schema->storage->debug(1);
 	my $rs = $schema->resultset("Stock::Stock")->search(

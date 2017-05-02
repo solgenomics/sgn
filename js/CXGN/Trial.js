@@ -732,17 +732,9 @@ jQuery(document).ready(function ($) {
     }
 
     function open_upload_trial_coord_dialog() {
-	$('#upload_trial_coord_dialog').dialog("open");
+	     $('#upload_trial_coord_dialog').dialog("open");
 
     }
-
-    function open_edit_field_map_dialog() {
-      jQuery('#edit_field_map_dialog').modal('show');
-    }
-
-    $('#edit_field_map_link').click(function () {
-      open_edit_field_map_dialog();
-    });
 
     function open_replace_trial_accession_dialog() {
       jQuery('#replace_trial_accessions_dialog').modal('show');
