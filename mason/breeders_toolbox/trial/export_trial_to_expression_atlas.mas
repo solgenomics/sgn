@@ -122,6 +122,10 @@ jQuery(document).ready(function() {
         jQuery('#export_to_expression_atlas_dialog').modal('show');
     });
 
+    jQuery(document).on('change', '#expression_atlas_trial_id', function() {
+        expression_atlas_change_trials();
+    });
+
     jQuery("#expression_atlas_export_ok_button").click( function () {
         var trial_id_array = [<% $trial_id %>];
         var accession_id_array = [];
