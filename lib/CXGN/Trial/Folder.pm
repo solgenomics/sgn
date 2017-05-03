@@ -271,12 +271,28 @@ sub _get_children {
 sub fast_children {
 
 	my $self = shift;
+    my $parent_type = shift;
+    my (@folder_contents, %children);
+
     print STDERR "Running get children for project ".$self->name()." at time ".localtime()."\n";
+
+    if ($parent_type eq 'breeding_program') {
+        my $rs = $self->bcs_schema()->resultset("Project::Project")->search_related(
+            'project_relationship_subject_projects',
+            {   'type.name' => 'trial_folder'
+            },
+            {   join => 'type'
+            });
+        #'select subject_project_id from project_relationship join cvterm on(type_id = cvterm_id) where cvterm.name = 'trial_folder''
+        @folder_contents = map { $_->subject_project_id() } $rs->all();
+    }
+    my $folder_content_ids = join ",", @folder_contents;
+    print STDERR "Ids of projects in folders: $folder_content_ids\n";
 
 	my $rs = $self->bcs_schema()->resultset("Project::Project")->search_related(
         'project_relationship_subject_projects',
         {   object_project_id => $self->folder_id(),
-            'type.name' => {-in => ['cross','breeding_program','folder_for_trials','folder_for_crosses','trial_folder', 'design']}
+            subject_project_id => { 'not in' => \@folder_contents }
         },
         {   join      => { subject_project => { projectprops => 'type' } },
             '+select' => ['subject_project.name', 'projectprops.value', 'type.name'],
@@ -284,7 +300,6 @@ sub fast_children {
         }
      );
 
-    my %children;
     while (my $row = $rs->next) {
         my $name = $row->get_column('project_name');
         $children{$name}{'name'} = $name;
@@ -494,7 +509,7 @@ sub get_jstree_html {
 	$html .= $self->_jstree_li_html($parent_type, $self->folder_id(), $self->name());
 	$html .= "<ul>";
 
-	my %children = $self->fast_children();
+	my %children = $self->fast_children($parent_type);
 	if (%children) {
         foreach my $child (sort keys %children) {
             print STDERR "Working on child ".$children{$child}->{'name'}."\n";
