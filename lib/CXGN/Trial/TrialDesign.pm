@@ -721,7 +721,7 @@ sub _get_lattice_design {
   if ($block_number_calculated =~ /^\d+$/ ){
       $number_of_blocks = $block_number_calculated;
   } else {
-    die "Square root of Number of stocks (".scalar(@stock_list).") for lattice design should give a whole number\n";
+    die "Square root of Number of stocks (".scalar(@stock_list).") for lattice design should give a whole number.\n";
   }
 
   if ($self->has_control_list_crbd()) {
@@ -729,17 +729,18 @@ sub _get_lattice_design {
     %control_names_lookup = map { $_ => 1 } @control_list_crbd;
     foreach $stock_name_iter (@stock_names) {
       if (exists($control_names_lookup{$stock_name_iter})) {
-	die "Names in stock list cannot be used also as controls\n";
+	       die "Names in stock list cannot be used also as controls\n";
       }
     }
   }
 
    if ($self->has_number_of_reps()) {
      $number_of_reps = $self->get_number_of_reps();
-     print "NUMBER OF REP: $number_of_reps\n";
-     if ($number_of_reps != 2 || $number_of_reps != 3) {
-      # die "Number of reps for lattice design must be 2 or 3\n";
-     }
+     #print "NUMBER OF REP: $number_of_reps\n";
+     #if (!$number_of_reps ) {
+      # die "Number of reps not specified\n";
+      # die "Number of reps for lattice design must be 2 or 3\n";!= 2 || $number_of_reps != 3
+     #}
    } else {
      die "Number of reps not specified\n";
    }
@@ -748,33 +749,33 @@ sub _get_lattice_design {
     $fieldmap_col_number = $self->get_fieldmap_col_number();
   }
 
-   if ($self->has_block_size()) {
-     $block_size = $self->get_block_size();
-    print STDERR "block size = $block_size\n";
-    if ($block_size < 3) {
-      #die "Block size must be greater than 2 for alpha lattice design\n";
-    }
-    	print "stock_list: ".scalar(@stock_list)."block_size: $block_size\n";
-    if (scalar(@stock_list) % $block_size != 0) {
-      #die "Number of stocks (".scalar(@stock_list).") for alpha lattice design is not divisible by the block size ($block_size)\n";
-	}
-    else {
-		my $dummy_var = scalar(@stock_list) % $block_size;
-		my $stocks_to_add = $block_size - $dummy_var;
-#		print "$stock_list\n";
-		foreach my $stock_list_rep(1..$stocks_to_add) {
-			push(@stock_list, $stock_list[0]);
-		}
-		$self->set_stock_list(\@stock_list);
-	}
+#    if ($self->has_block_size()) {
+#      $block_size = $self->get_block_size();
+#     print STDERR "block size = $block_size\n";
+#     if ($block_size < 3) {
+#       #die "Block size must be greater than 2 for alpha lattice design\n";
+#     }
+#     	print "stock_list: ".scalar(@stock_list)."block_size: $block_size\n";
+#     if (scalar(@stock_list) % $block_size != 0) {
+#       #die "Number of stocks (".scalar(@stock_list).") for alpha lattice design is not divisible by the block size ($block_size)\n";
+# 	}
+#     else {
+# 		my $dummy_var = scalar(@stock_list) % $block_size;
+# 		my $stocks_to_add = $block_size - $dummy_var;
+# #		print "$stock_list\n";
+# 		foreach my $stock_list_rep(1..$stocks_to_add) {
+# 			push(@stock_list, $stock_list[0]);
+# 		}
+# 		$self->set_stock_list(\@stock_list);
+# 	}
 
   #    $number_of_blocks = scalar(@stock_list)/$block_size;
   #    if ($number_of_blocks < $block_size) {
   #      die "The number of blocks ($number_of_blocks) for alpha lattice design must not be less than the block size ($block_size)\n";
   #    }
-    } else {
-      #die "No block size specified\n";
-    }
+    # } else {
+    #   #die "No block size specified\n";
+    # }
 
   if ($self->has_fieldmap_row_number()) {
     $fieldmap_row_number = $self->get_fieldmap_row_number();
