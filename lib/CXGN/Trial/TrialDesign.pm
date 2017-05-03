@@ -735,6 +735,10 @@ sub _get_lattice_design {
 
    if ($self->has_number_of_reps()) {
      $number_of_reps = $self->get_number_of_reps();
+     if ($number_of_reps == 2 || $number_of_reps == 3){
+      } else {
+          die "Number of reps should be 2 for SIMPLE and 3 for TRIPLE lattice design.\n";
+      }
    } else {
      die "Number of reps not specified\n";
    }
