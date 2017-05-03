@@ -692,7 +692,6 @@ sub _get_lattice_design {
   my %lattice_design;
   my $rbase = R::YapRI::Base->new();
   my @stock_list;
-  my $block_size;
   my $number_of_blocks;
   my $number_of_reps;
   my $stock_data_matrix;
@@ -736,11 +735,6 @@ sub _get_lattice_design {
 
    if ($self->has_number_of_reps()) {
      $number_of_reps = $self->get_number_of_reps();
-     #print "NUMBER OF REP: $number_of_reps\n";
-     #if (!$number_of_reps ) {
-      # die "Number of reps not specified\n";
-      # die "Number of reps for lattice design must be 2 or 3\n";!= 2 || $number_of_reps != 3
-     #}
    } else {
      die "Number of reps not specified\n";
    }
@@ -748,34 +742,6 @@ sub _get_lattice_design {
   if ($self->has_fieldmap_col_number()) {
     $fieldmap_col_number = $self->get_fieldmap_col_number();
   }
-
-#    if ($self->has_block_size()) {
-#      $block_size = $self->get_block_size();
-#     print STDERR "block size = $block_size\n";
-#     if ($block_size < 3) {
-#       #die "Block size must be greater than 2 for alpha lattice design\n";
-#     }
-#     	print "stock_list: ".scalar(@stock_list)."block_size: $block_size\n";
-#     if (scalar(@stock_list) % $block_size != 0) {
-#       #die "Number of stocks (".scalar(@stock_list).") for alpha lattice design is not divisible by the block size ($block_size)\n";
-# 	}
-#     else {
-# 		my $dummy_var = scalar(@stock_list) % $block_size;
-# 		my $stocks_to_add = $block_size - $dummy_var;
-# #		print "$stock_list\n";
-# 		foreach my $stock_list_rep(1..$stocks_to_add) {
-# 			push(@stock_list, $stock_list[0]);
-# 		}
-# 		$self->set_stock_list(\@stock_list);
-# 	}
-
-  #    $number_of_blocks = scalar(@stock_list)/$block_size;
-  #    if ($number_of_blocks < $block_size) {
-  #      die "The number of blocks ($number_of_blocks) for alpha lattice design must not be less than the block size ($block_size)\n";
-  #    }
-    # } else {
-    #   #die "No block size specified\n";
-    # }
 
   if ($self->has_fieldmap_row_number()) {
     $fieldmap_row_number = $self->get_fieldmap_row_number();
@@ -796,10 +762,9 @@ sub _get_lattice_design {
 						      );
   $r_block = $rbase->create_block('r_block');
   $stock_data_matrix->send_rbase($rbase, 'r_block');
-
   $r_block->add_command('library(agricolae)');
   $r_block->add_command('trt <- stock_data_matrix[1,]');
-  $r_block->add_command('block_size <- '.$block_size);
+  #$r_block->add_command('block_size <- '.$block_size);
   $r_block->add_command('number_of_reps <- '.$number_of_reps);
   #$r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
   if ($self->has_randomization_seed()){
@@ -824,10 +789,7 @@ sub _get_lattice_design {
   print STDERR Dumper(@plot_numbers);
   @block_numbers = $result_matrix->get_column("block");
   my $max = max( @block_numbers );
-  print "MAXI BLOCK NUMBER: $max\n";
-  print STDERR Dumper(\@block_numbers);
   @rep_numbers = $result_matrix->get_column("r");
-  print STDERR Dumper(@rep_numbers);
   @stock_names = $result_matrix->get_column("trt");
   @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
 
@@ -881,7 +843,6 @@ sub _get_lattice_design {
     $lattice_design{$converted_plot_numbers[$i]} = \%plot_info;
   }
   %lattice_design = %{_build_plot_names($self,\%lattice_design)};
-  print STDERR Dumper(%lattice_design);
   return \%lattice_design;
 }
 
