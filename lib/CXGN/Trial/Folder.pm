@@ -293,8 +293,8 @@ sub fast_children {
         $children{$name}{$row->get_column('project_type')} = 1;
     }
 
-    print STDERR "Finished running get children for project ".$self->name()." at time ".localtime()."\nChildren are: ".Dumper(%children);
-	return \%children
+    print STDERR "Finished running get children for project ".$self->name()." at time ".localtime()."\n";  #Children are: ".Dumper(%children);
+	return %children
 }
 
 sub set_folder_content_type {
@@ -493,12 +493,13 @@ sub get_jstree_html {
 
 	$html .= $self->_jstree_li_html($parent_type, $self->folder_id(), $self->name());
 	$html .= "<ul>";
-	my $children = $self->fast_children();
-    my %children = %$children;
+
+	my %children = $self->fast_children();
 	if (%children) {
         foreach my $child (sort keys %children) {
             print STDERR "Working on child ".$children{$child}->{'name'}."\n";
-			if ($children{$child}>{$folder_type_of_interest}) {
+
+			if ($children{$child}->{$folder_type_of_interest}) {
                 print STDERR "Folder ".$children{$child}->{'name'}." is a folder for $project_type_of_interest (so we care about it), adding it to html and recursing into it.\n";
                 my $folder = CXGN::Trial::Folder->new({
         			bcs_schema=> $self->bcs_schema(),
@@ -506,8 +507,15 @@ sub get_jstree_html {
         		});
                 $html .= $folder->get_jstree_html('folder', $project_type_of_interest);
             }
-            #Only display $project of interest types.
-			if ($children{$child}->{$local_type_of_interest}) {
+            elsif (!$children{$child}->{'folder_for_crosses'} && !$children{$child}->{'folder_for_trials'} && $children{$child}->{'trial_folder'}) {
+                print STDERR "Folder ".$children{$child}->{'name'}." has no specific type (so we care about it), adding it to html and recursing into it.\n";
+                my $folder = CXGN::Trial::Folder->new({
+                    bcs_schema=> $self->bcs_schema(),
+                    folder_id=>$children{$child}->{'id'},
+                });
+                $html .= $folder->get_jstree_html('folder', $project_type_of_interest);
+            }
+            elsif ($children{$child}->{$local_type_of_interest}) { #Only display $project of interest types.
                 print STDERR "Child ".$children{$child}->{'name'}." is a $project_type_of_interest (so we care about it), adding it to jstree html.\n";
 				$html .= $self->_jstree_li_html($project_type_of_interest, $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
 			}
