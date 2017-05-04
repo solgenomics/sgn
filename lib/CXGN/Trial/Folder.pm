@@ -271,27 +271,25 @@ sub _get_children {
 sub fast_children {
 
 	my $self = shift;
+    my $schema = shift;
     my $parent_type = shift;
     my (@folder_contents, %children);
 
-    print STDERR "Running get children for project ".$self->name()." at time ".localtime()."\n";
+    print STDERR "Running get children for project ".$self->{'name'}." at time ".localtime()."\n";
 
     if ($parent_type eq 'breeding_program') {
-        my $rs = $self->bcs_schema()->resultset("Project::Project")->search_related(
+        my $rs = $schema->resultset("Project::Project")->search_related(
             'project_relationship_subject_projects',
             {   'type.name' => 'trial_folder'
             },
             {   join => 'type'
             });
-        #'select subject_project_id from project_relationship join cvterm on(type_id = cvterm_id) where cvterm.name = 'trial_folder''
         @folder_contents = map { $_->subject_project_id() } $rs->all();
     }
-    my $folder_content_ids = join ",", @folder_contents;
-    print STDERR "Ids of projects in folders: $folder_content_ids\n";
 
-	my $rs = $self->bcs_schema()->resultset("Project::Project")->search_related(
+	my $rs = $schema->resultset("Project::Project")->search_related(
         'project_relationship_subject_projects',
-        {   object_project_id => $self->folder_id(),
+        {   object_project_id => $self->{'id'},
             subject_project_id => { 'not in' => \@folder_contents }
         },
         {   join      => { subject_project => { projectprops => 'type' } },
@@ -308,7 +306,7 @@ sub fast_children {
         $children{$name}{$row->get_column('project_type')} = 1;
     }
 
-    print STDERR "Finished running get children for project ".$self->name()." at time ".localtime()."\n";  #Children are: ".Dumper(%children);
+    print STDERR "Finished running get children for project ".$self->{'name'}." at time ".localtime()."\n";  #Children are: ".Dumper(%children);
 	return %children
 }
 
@@ -485,12 +483,12 @@ sub remove_child {
 }
 
 sub get_jstree_html {
-
+    shift;
 	my $self = shift;
-    print STDERR "Running get js tree html on project ".$self->name()." at time ".localtime()."\n";
+    my $schema = shift;
 	my $parent_type = shift;
 	my $project_type_of_interest = shift // 'trial';
-
+    #print STDERR "Running get js tree html on project ".$self->{'name'}." with parent type $parent_type and project type of interest $project_type_of_interest at time ".localtime()."\n";
     my ($folder_type_of_interest, $local_type_of_interest, $html);
 
     if ($project_type_of_interest eq 'trial') {
@@ -506,43 +504,35 @@ sub get_jstree_html {
         $folder_type_of_interest = 'folder_for_trials';
     }
 
-	$html .= $self->_jstree_li_html($parent_type, $self->folder_id(), $self->name());
+	$html .= _jstree_li_html($schema, $parent_type, $self->{'id'}, $self->{'name'});
 	$html .= "<ul>";
 
-	my %children = $self->fast_children($parent_type);
+	my %children = fast_children($self, $schema, $parent_type);
 	if (%children) {
         foreach my $child (sort keys %children) {
-            print STDERR "Working on child ".$children{$child}->{'name'}."\n";
+            #print STDERR "Working on child ".$children{$child}->{'name'}."\n";
 
 			if ($children{$child}->{$folder_type_of_interest}) {
-                print STDERR "Folder ".$children{$child}->{'name'}." is a folder for $project_type_of_interest (so we care about it), adding it to html and recursing into it.\n";
-                my $folder = CXGN::Trial::Folder->new({
-        			bcs_schema=> $self->bcs_schema(),
-        			folder_id=>$children{$child}->{'id'},
-        		});
-                $html .= $folder->get_jstree_html('folder', $project_type_of_interest);
+                #print STDERR "Folder ".$children{$child}->{'name'}." is a folder for $project_type_of_interest (so we care about it), adding it to html and recursing into it.\n";
+                $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
             }
             elsif (!$children{$child}->{'folder_for_crosses'} && !$children{$child}->{'folder_for_trials'} && $children{$child}->{'trial_folder'}) {
-                print STDERR "Folder ".$children{$child}->{'name'}." has no specific type (so we care about it), adding it to html and recursing into it.\n";
-                my $folder = CXGN::Trial::Folder->new({
-                    bcs_schema=> $self->bcs_schema(),
-                    folder_id=>$children{$child}->{'id'},
-                });
-                $html .= $folder->get_jstree_html('folder', $project_type_of_interest);
+                #print STDERR "Folder ".$children{$child}->{'name'}." has no specific type (so we care about it), adding it to html and recursing into it.\n";
+                $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
             }
             elsif ($children{$child}->{$local_type_of_interest}) { #Only display $project of interest types.
-                print STDERR "Child ".$children{$child}->{'name'}." is a $project_type_of_interest (so we care about it), adding it to jstree html.\n";
-				$html .= $self->_jstree_li_html($project_type_of_interest, $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
+                #print STDERR "Child ".$children{$child}->{'name'}." is a $project_type_of_interest (so we care about it), adding it to jstree html.\n";
+				$html .= _jstree_li_html($schema, $project_type_of_interest, $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
 			}
 		}
 	}
 	$html .= '</ul></li>';
-    print STDERR "Finished, returning with html.\n";
+    #print STDERR "Finished, returning with html.\n";
 	return $html;
 }
 
 sub _jstree_li_html {
-    my $self = shift;
+    my $schema = shift;
     my $type = shift;
     my $id = shift;
     my $name = shift;
@@ -554,8 +544,8 @@ sub _jstree_li_html {
     	$url = "/folder/".$id;
     } elsif ($type eq 'cross') {
 		print STDERR "$id : $name \n";
-		my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'cross', 'stock_type')->cvterm_id();
-		my $cross_stock = $self->bcs_schema->resultset("Project::Project")->search({ 'me.project_id' => $id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', {'stock.type_id'=>$cross_type_id})->first();
+		my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+		my $cross_stock = $schema->resultset("Project::Project")->search({ 'me.project_id' => $id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', {'stock.type_id'=>$cross_type_id})->first();
 		if ($cross_stock) {
 			$id = $cross_stock->stock_id();
     		$url = "/cross/".$id;
