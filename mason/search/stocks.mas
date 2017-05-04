@@ -9,6 +9,7 @@
   $organisms       => undef
   $stock_types     => undef
   $breeding_programs => undef
+  $editable_stock_props => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects', 'CXGN.List' ] &>
@@ -49,14 +50,14 @@ my $breeding_programs_select = simple_selectbox_html(
 
 </%perl>
 
-<&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0, subtitle=>'[<a href="/stock/0/new/">Submit New Stock</a>]' &>
+<&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
 
   <div id="stock_search_form" class="form-horizontal well">
-      <center><h4>Properties</h4></center>
-      <hr>
+
+    <&| /page/info_section.mas, title => 'Properties', collapsible=>1, collapsed=>0 &>
 
     <div class="row">
-      <div class="col-sm-6">
+      <div class="col-sm-11">
         <div class="form-group form-group-sm">
       	  <label class="col-sm-3 control-label">Stock Name or Description: </label>
           <div class="col-sm-9" >
@@ -72,6 +73,29 @@ my $breeding_programs_select = simple_selectbox_html(
                 </span>
                   <span class="input-group-btn">
                   <input class="form-control" name="any_name" id="any_name" value="" size="30" type="text" placeholder="Type search here..."/>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-11">
+        <div class="form-group form-group-sm">
+      	  <label class="col-sm-3 control-label">Properties: </label>
+          <div class="col-sm-9" >
+            <div class="form-group">
+              <div class="input-group">
+                <span class="input-group-btn" width="20%">
+                  <select class="form-control" id="editable_stockprop_search_term" name="editable_stockprop_search_term">
+%  foreach my $stockprop (@$editable_stock_props){
+                    <option title="<% $stockprop %>" value="<% $stockprop %>" ><% $stockprop %></option>
+%  }
+                  </select>
+                </span>
+                  <span class="input-group-btn">
+                  <input class="form-control" name="editable_stockprop_search_value" id="editable_stockprop_search_value" value="" size="30" type="text" placeholder="Type search here..."/>
                 </span>
               </div>
             </div>
@@ -115,9 +139,9 @@ my $breeding_programs_select = simple_selectbox_html(
         </div>
       </div>
     </div>
-    <hr>
-    <center><h4>Usage</h4></center>
-    <hr>
+
+    </&>
+    <&| /page/info_section.mas, title => 'Usage', collapsible=>1, collapsed=>1 &>
 
     <div class="row">
       <div class="col-sm-6">
@@ -156,9 +180,8 @@ my $breeding_programs_select = simple_selectbox_html(
       </div>
     </div>
 
-    <hr>
-    <center><h4>Phenotypes</h4></center>
-    <hr>
+    </&>
+    <&| /page/info_section.mas, title => 'Phenotypes', collapsible=>1, collapsed=>1 &>
 
     <div class="row">
         <div class="col-sm-6">
@@ -188,7 +211,11 @@ my $breeding_programs_select = simple_selectbox_html(
         </div>
       </div>
     </div>
-    <button style="float:right" class="btn btn-primary" id="submit_stock_search" />Search</button>
+    </&>
+
+    <center>
+    <button class="btn btn-primary" id="submit_stock_search" />Search</button>
+    </center>
     <br/><br/>
   </div>
 </&>
@@ -273,6 +300,8 @@ jQuery(document).ready(function () {
                   d.year         = jQuery('#year').val();
                   d.breeding_program = jQuery('#breeding_program').val();
                   d.organization = jQuery('#organization').val();
+                  d.property_term = jQuery('#editable_stockprop_search_term').val();
+                  d.property_value = jQuery('#editable_stockprop_search_value').val();
              }
          }
     });
