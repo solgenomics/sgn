@@ -543,13 +543,13 @@ sub _jstree_li_html {
     } elsif ($type eq 'folder') {
     	$url = "/folder/".$id;
     } elsif ($type eq 'cross') {
-		print STDERR "$id : $name \n";
-		my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
-		my $cross_stock = $schema->resultset("Project::Project")->search({ 'me.project_id' => $id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', {'stock.type_id'=>$cross_type_id})->first();
-		if ($cross_stock) {
-			$id = $cross_stock->stock_id();
+		#print STDERR "$id : $name \n";
+		#my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+		#my $cross_stock = $schema->resultset("Project::Project")->search({ 'me.project_id' => $id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', {'stock.type_id'=>$cross_type_id})->first();
+		#if ($cross_stock) {
+		#	$id = $cross_stock->stock_id();
     		$url = "/cross/".$id;
-			return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\"><a href=\"$url\">".$name.'</a>';
+		#	return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\"><a href=\"$url\">".$name.'</a>';
 		} else {
 			return;
 		}
