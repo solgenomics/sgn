@@ -50,10 +50,12 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     my $html = "";
     my $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => @$projects[0]->[0] });
     
+    print STDERR "Starting get trials at time ".localtime()."\n";
     foreach my $project (@$projects) {
         my %project = ( "id" => $project->[0], "name" => $project->[1]);
         $html .= $folder_obj->get_jstree_html(\%project, $schema, 'breeding_program', 'trial');
     }
+    print STDERR "Finished get trials at time ".localtime()."\n";
 
     my $dir = catdir($c->site_cluster_shared_dir, "folder");
     eval { make_path($dir) };

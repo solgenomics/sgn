@@ -275,7 +275,7 @@ sub fast_children {
     my $parent_type = shift;
     my (@folder_contents, %children);
 
-    print STDERR "Running get children for project ".$self->{'name'}." at time ".localtime()."\n";
+    #print STDERR "Running get children for project ".$self->{'name'}." at time ".localtime()."\n";
 
     if ($parent_type eq 'breeding_program') {
         my $rs = $schema->resultset("Project::Project")->search_related(
@@ -306,7 +306,7 @@ sub fast_children {
         $children{$name}{$row->get_column('project_type')} = 1;
     }
 
-    print STDERR "Finished running get children for project ".$self->{'name'}." at time ".localtime()."\n";  #Children are: ".Dumper(%children);
+    #print STDERR "Finished running get children for project ".$self->{'name'}." at time ".localtime()."\n";  #Children are: ".Dumper(%children);
 	return %children
 }
 
