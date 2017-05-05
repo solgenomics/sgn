@@ -1703,10 +1703,10 @@ sub _build_plot_names {
 	my $stock_name = $design{$key}->{stock_name};
 	my $rep_number = $design{$key}->{rep_number};
 	if ($self->get_design_type() eq "RCBD") { # as requested by IITA (Prasad)
-	    $design{$key}->{plot_name} = $prefix.$trial_name."_rep".$rep_number."_".$stock_name.$suffix.$key;
+	    $design{$key}->{plot_name} = $prefix.$trial_name."_rep".$rep_number."_".$stock_name."_".$suffix.$key;
 	}
 	elsif ($self->get_design_type() eq "Augmented") {
-	    $design{$key}->{plot_name} = $prefix.$trial_name."_plotno".$key."_".$stock_name.$suffix;
+	    $design{$key}->{plot_name} = $prefix.$trial_name."_plotno".$key."_".$stock_name."_".$suffix;
 	}
 	else {
 	    $design{$key}->{plot_name} = $prefix.$trial_name."_".$key.$suffix;
