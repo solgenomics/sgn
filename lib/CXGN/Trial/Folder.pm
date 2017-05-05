@@ -488,7 +488,7 @@ sub get_jstree_html {
     my $schema = shift;
 	my $parent_type = shift;
 	my $project_type_of_interest = shift // 'trial';
-    #print STDERR "Running get js tree html on project ".$self->{'name'}." with parent type $parent_type and project type of interest $project_type_of_interest at time ".localtime()."\n";
+    #print STDERR "Running get js tree html on project ".$self->{'name'}." at time ".localtime()."\n";
     my ($folder_type_of_interest, $local_type_of_interest, $html);
 
     if ($project_type_of_interest eq 'trial') {
@@ -513,21 +513,18 @@ sub get_jstree_html {
             #print STDERR "Working on child ".$children{$child}->{'name'}."\n";
 
 			if ($children{$child}->{$folder_type_of_interest}) {
-                #print STDERR "Folder ".$children{$child}->{'name'}." is a folder for $project_type_of_interest (so we care about it), adding it to html and recursing into it.\n";
                 $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
             }
             elsif (!$children{$child}->{'folder_for_crosses'} && !$children{$child}->{'folder_for_trials'} && $children{$child}->{'trial_folder'}) {
-                #print STDERR "Folder ".$children{$child}->{'name'}." has no specific type (so we care about it), adding it to html and recursing into it.\n";
                 $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
             }
             elsif ($children{$child}->{$local_type_of_interest}) { #Only display $project of interest types.
-                #print STDERR "Child ".$children{$child}->{'name'}." is a $project_type_of_interest (so we care about it), adding it to jstree html.\n";
 				$html .= _jstree_li_html($schema, $project_type_of_interest, $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
 			}
 		}
 	}
 	$html .= '</ul></li>';
-    #print STDERR "Finished, returning with html.\n";
+    #print STDERR "Finished, returning with html at time ".localtime()."\n";
 	return $html;
 }
 
