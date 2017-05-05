@@ -576,11 +576,19 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
 sub cross_detail : Path('/cross') Args(1) {
     my $self = shift;
     my $c = shift;
-    my $project_id = shift;
-
+    my $id = shift;
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), 'cross', 'stock_type')->cvterm_id();
-	my $cross= $c->dbic_schema("Bio::Chado::Schema")->resultset("Project::Project")->search({ 'me.project_id' => $project_id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', {'stock.type_id'=>$cross_type_id})->first();
-    my $cross_id = $cross->stock_id();
+    my ($cross, $cross_id);
+
+    #get cross info from stock table whether id is the cross stock id or the cross project id
+    $cross = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::Stock")->find( { stock_id => $id, type_id => $cross_type_id } );
+    if ($cross) {
+        $cross_id = $cross->stock_id();
+    }
+    else {
+        $cross= $c->dbic_schema("Bio::Chado::Schema")->resultset("Project::Project")->search({ 'me.project_id' => $id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', {'stock.type_id'=>$cross_type_id})->first();
+        $cross_id = $cross->stock_id();
+    }
 
     my $progeny = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::StockRelationship") -> search( { object_id => $cross_id, 'type.name' => 'member_of'  }, { join =>  'type' } );
 
