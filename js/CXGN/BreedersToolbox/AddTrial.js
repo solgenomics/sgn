@@ -318,6 +318,25 @@ jQuery(document).ready(function ($) {
             $("#design_info").show();
             $("#greenhouse_num_plants_per_accession_section").hide();
             $('#greenhouse_default_num_plants_per_accession').hide();
+        } else if (design_method == "Lattice") {
+            $("#FieldMap").show();
+            $("#trial_design_more_info").show();
+            $("#trial_multi-design_more_info").show();
+            $("#crbd_show_list_of_checks_section").show();
+            $("#show_list_of_checks_section").hide();
+            $("#rep_count_section").show();
+            $("#block_number_section").hide();
+            $("#block_size_section").hide();
+            $("#max_block_size_section").hide();
+            $("#row_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#col_number_per_block_section").hide();
+            $("#col_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#other_parameter_section").hide();
+            $("#design_info").show();
+            $("#greenhouse_num_plants_per_accession_section").hide();
+            $('#greenhouse_default_num_plants_per_accession').hide();
         } else if (design_method == "Augmented") {
             $("#FieldMap").hide();
             $("#trial_design_more_info").show();
