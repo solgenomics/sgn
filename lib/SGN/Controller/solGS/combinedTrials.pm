@@ -325,7 +325,7 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
     if ($selection_pop_id =~ /uploaded/) 
     {
         $c->stash->{prediction_pop_id} = $selection_pop_id;
-        $c->controller('solGS::solGS')->uploaded_population_summary($c);
+        $c->controller('solGS::solGS')->uploaded_population_summary($c, $selection_pop_id);
     }
     else 
     {
@@ -340,7 +340,7 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
     my $identifier    = $model_id . '_' . $selection_pop_id;
     $c->controller('solGS::solGS')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
     my $gebvs_file = $c->stash->{prediction_pop_gebvs_file};
-    
+   
     $c->controller('solGS::solGS')->top_blups($c, $gebvs_file);
  
     $c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$model_id/prediction/$selection_pop_id/$trait_id">Download all GEBVs</a>|; 
