@@ -71,7 +71,7 @@ sub name_var :Path('/test/') :Args(0) {
 	if (scalar (@errors) > 0){
 		my $user_errors = join("<br />", @errors);
 		$c->stash->{error_msg} = join("<br/>", @errors);
-		$c->stash->{template} = '/index.mas';
+		$c->stash->{template} = '/tools/motifs_finder/index.mas';
 		return;
 	}
 	else {
@@ -91,14 +91,14 @@ sub name_var :Path('/test/') :Args(0) {
 
             # to run Gibbs motifs sampler
             #my $err = system("/home/vagrant/programs/motif_sampler/Gibbs.linux ".$filename."_input.txt $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
-          	my $err = system("/home/vagrant/cxgn/Gibbs.linux ".$filename."_input.txt $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
+          	my $err = system("/home/vagrant/cxgn/sgn/bin/Gibbs.linux ".$filename."_input.txt $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
            	print STDOUT "print $err\n";
 
 	    }
 	       elsif ($seq_file) {
 
 			#my $err = system("/home/vagrant/programs/motif_sampler/Gibbs.linux $seq_file $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
-      my $err = system("/home/vagrant/cxgn/Gibbs.linux $seq_file $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
+      my $err = system("/home/vagrant/cxgn/sgn/bin/Gibbs.linux $seq_file $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
       print STDOUT "print $err\n";
 
 	}
@@ -309,8 +309,6 @@ sub name_var :Path('/test/') :Args(0) {
 
 	}
 
-
-
   }
 
 	#print "Motif table Path: @motif_table_file\n";
@@ -364,7 +362,7 @@ sub name_var :Path('/test/') :Args(0) {
 	my $cmd;
 
 	foreach $filename (@motif_element){
-		$cmd = "./weblogo/seqlogo -F PNG -d 0.5 -T 1 -b -e -B 2 -h 5 -w 18 -y bits -a -M -n -Y -c -f $filename -o ".$filename."_weblogo";
+		$cmd = "./bin/seqlogo -F PNG -d 0.5 -T 1 -b -e -B 2 -h 5 -w 18 -y bits -a -M -n -Y -c -f $filename -o ".$filename."_weblogo";
 		push (@logo_image, basename($filename."_weblogo.png"));
 		my $error = system($cmd);
 
