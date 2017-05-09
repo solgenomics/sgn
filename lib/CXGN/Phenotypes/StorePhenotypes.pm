@@ -69,6 +69,7 @@ has 'user_id' => (isa => "Int",
 
 has 'datatype' => (isa => "Str",
 		   is => 'rw',
+		   default => 'raw',
     );
 
 has 'stock_list' => (isa => "ArrayRef",

@@ -365,7 +365,7 @@ my $trial_create = CXGN::Trial::TrialCreate
 	design_type => 'genotyping_plate',
 	design => $design,
 	trial_name => "test_genotyping_trial_upload",
-	is_genotyping => 1,
+	trial_type => "genotyping",
 	genotyping_user_id => $meta->{user_id} || "unknown",
 	genotyping_project_name => $meta->{project_name} || "unknown",
 	  });

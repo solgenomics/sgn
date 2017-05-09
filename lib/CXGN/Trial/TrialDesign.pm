@@ -18,6 +18,7 @@ This module uses the the R CRAN package "Agricolae" to calculate experimental de
 
  Jeremy D. Edwards (jde22@cornell.edu)
  Aimin Yan (ay247@cornell.edu)
+
 =cut
 
 use Moose;
@@ -61,7 +62,7 @@ has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', def
 
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" },
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "averaged_trial" },
   message { "The string, $_, was not a valid design type" };
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
@@ -99,14 +100,23 @@ sub calculate_design {
     elsif($self->get_design_type() eq "MAD") {
 	$design = _get_madiii_design($self);
     }
-    elsif ($self->get_design_type() eq "genotyping_plate") {
-	$design = $self->_get_genotyping_plate();
-    }
 #    elsif($self->get_design_type() eq "MADIV") {
 #        $design = _get_madiv_design($self);
 #    }
     elsif($self->get_design_type() eq "greenhouse") {
         $design = _get_greenhouse_design($self);
+    }
+    
+    # genotyping trial design
+    #
+    elsif ($self->get_design_type() eq "genotyping_plate") {
+	$design = $self->_get_genotyping_plate();
+    }
+
+    # averaged_trail designs
+    #
+    elsif ($self->get_design_type() eq "averaged_trial") { 
+	$design = $self->_get_averaged_trial_design();
     }
     else {
       die "Trial design" . $self->get_design_type() ." not supported\n";
@@ -1588,5 +1598,39 @@ sub _get_greenhouse_design {
     #print STDERR Dumper \%greenhouse_design;
     return \%greenhouse_design;
 }
+
+sub _get_averaged_trial_design {
+    my $self = shift;
+    my %avg_design;
+
+    my @accession_list = sort @{ $self->get_stock_list() };
+    my $trial_name = $self->get_trial_name;
+    my %num_accession_hash;
+
+    my @plot_numbers = (1..scalar(@accession_list));
+    for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
+        my %plot_info;
+        $plot_info{'stock_name'} = $accession_list[$i];
+        $plot_info{'plot_name'} = "averaged_accession_$accession_list[$i]";
+        $avg_design{$plot_numbers[$i]} = \%plot_info;
+    }
+    %avg_design = %{_build_plot_names($self,\%avg_design)};
+
+    foreach my $plot_num (keys %avg_design) {
+        my @plant_names;
+        my $plot_name = $avg_design{$plot_num}->{'plot_name'};
+        my $stock_name = $avg_design{$plot_num}->{'stock_name'};
+        for my $n (1..$num_accession_hash{$stock_name}) {
+            my $plant_name = $plot_name."_plant_$n";
+            push @plant_names, $plant_name;
+        }
+        $avg_design{$plot_num}->{'plant_names'} = \@plant_names;
+    }
+
+    #print STDERR Dumper \%greenhouse_design;
+    return \%avg_design;
+}
+
+
 
 1;

@@ -440,7 +440,7 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
         design_type => 'genotyping_plate',
         design => $design,
         trial_name => $name,
-        is_genotyping => 1,
+        trial_type => "genotyping",
     });
 
     my %message;
@@ -599,7 +599,7 @@ sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') Args(0) {
         design_type => 'genotyping_plate',
         design => $design,
         trial_name => $meta->{trial_name},
-        is_genotyping => 1,
+        trial_type => "genotyping",
         genotyping_user_id => $meta->{user_id} || "unknown",
         genotyping_project_name => $meta->{project_name} || "unknown",
     });
