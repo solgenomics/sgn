@@ -231,6 +231,9 @@ sub create_list_pop_tempfiles {
     my $geno_file  = catfile($dir, $geno_name);
       
     my $files = { pheno_file => $pheno_file, geno_file => $geno_file};
+    
+    #write_file($pheno_file, '');
+    #write_file($geno_file, '');
 
     return $files;
 
@@ -328,7 +331,7 @@ sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
 	   
 	$self->predict_list_selection_pop_single_pop_model($c);
 	my $status = $c->stash->{status};
-	print STDERR "\nstatus: $status\n";
+	
 	$ret->{status} = $c->stash->{status};
 	#$ret->{output} = $download_prediction;
 	#}
@@ -371,6 +374,8 @@ sub predict_list_selection_pop_single_pop_model {
     my $training_pop_id  = $c->stash->{training_pop_id};
     my $selection_pop_id = $c->stash->{selection_pop_id};
     
+    $c->stash->{uploaded_prediction} = 1;
+
     my $identifier = $training_pop_id . '_' . $selection_pop_id;
     $c->controller('solGS::solGS')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
     my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
@@ -406,22 +411,11 @@ sub predict_list_selection_pop_single_pop_model {
 	$c->stash->{genotype_file}  = $geno_file;
 
 	$self->user_prediction_population_file($c, $selection_pop_id); 
-	my $selection_pop_file = $c->stash->{genotypes_list_genotype_data_file};
 
-	$c->controller("solGS::solGS")->compare_genotyping_platforms($c, [$geno_file, $selection_pop_file]);
-	my $no_match = $c->stash->{pops_with_no_genotype_match};
-	
-	if (!$no_match)
-	{
-	    $c->stash->{pop_id} = $c->stash->{training_pop_id};
-	    $c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
-	    $c->controller("solGS::solGS")->get_rrblup_output($c);
-	    $c->stash->{status} = 'success';
-	}
-	else 
-	{
-	  $c->stash->{status} = 'The selection population was genotyped by a set of markers different from the ones used for the training population. Therefore, this model can not be applied on this selection population.';                        
-	}
+	$c->stash->{pop_id} = $c->stash->{training_pop_id};
+	$c->controller("solGS::solGS")->get_trait_details($c, $trait_id);
+	$c->controller("solGS::solGS")->get_rrblup_output($c);
+	$c->stash->{status} = 'success';
     }
     else 
     {
@@ -466,11 +460,12 @@ sub predict_list_selection_pop_combined_pops_model {
    
     $c->stash->{prediction_pop_id} = $c->stash->{selection_pop_id};
     $c->stash->{pop_id} = $training_pop_id;
-   
+    $c->stash->{uploaded_prediction} = 1;
+
     my $identifier = $training_pop_id . '_' . $selection_pop_id;
     $c->controller("solGS::solGS")->prediction_pop_gebvs_file($c, $identifier, $trait_id);        
     my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
-   
+  
     if (!-s $prediction_pop_gebvs_file)
     {    
 	    $c->controller("solGS::solGS")->cache_combined_pops_data($c);
@@ -479,21 +474,9 @@ sub predict_list_selection_pop_combined_pops_model {
 	    my $geno_file  = $c->stash->{trait_combined_geno_file};
 	    
 	    $self->user_prediction_population_file($c, $selection_pop_id);
-	    my $selection_pop_file = $c->stash->{genotypes_list_genotype_data_file};
-
-	    $c->controller("solGS::solGS")->compare_genotyping_platforms($c, [$geno_file, $selection_pop_file]);
-	    my $no_match = $c->stash->{pops_with_no_genotype_match};
-	
-	    if(!$no_match)
-	    {	
-		$c->controller("solGS::solGS")->get_rrblup_output($c);
-		$c->stash->{status} = 'success';
-	    }
-	    else 
-	    {
-		$c->stash->{status} = 'The selection population was genotyped by a set of markers different from the ones used for the training population. Therefore, you can\'t use this prediction model on it.';   
-		
-	    }
+	  
+	    $c->controller("solGS::solGS")->get_rrblup_output($c);
+	    $c->stash->{status} = 'success';
 	} 
 	else
 	{
@@ -551,9 +534,10 @@ sub user_prediction_population_file {
                                    DIR => $upload_dir
         );
 
-    my $exp = "genotype_data_${pred_pop_id}"; 
-    my  $pred_pop_file = $c->controller("solGS::solGS")->grep_file($upload_dir, $exp);
- 
+    
+    $c->controller("solGS::solGS")->genotype_file_name($c, $pred_pop_id);
+    my $pred_pop_file = $c->stash->{genotype_file_name};
+
     $c->stash->{genotypes_list_genotype_data_file} = $pred_pop_file;
    
     $fh->print($pred_pop_file);
@@ -706,8 +690,11 @@ sub genotypes_list_genotype_file {
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $background_job = $c->stash->{background_job};
 
+    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $report_file = $c->controller('solGS::solGS')->create_tempfile($temp_dir, 'geno-data-query-report-args');
+    $c->stash->{report_file} = $report_file;
+
     my $status;
- 
     try 
     { 
         my $geno_job = CXGN::Tools::Run->run_cluster_perl({
@@ -725,7 +712,7 @@ sub genotypes_list_genotype_file {
          });
 
 	$c->stash->{r_job_tempdir} = $geno_job->tempdir();
-	$c->stash->{r_job_id} = $geno_job->job_id();
+	$c->stash->{geno_data_query_job_id} = $geno_job->job_id();
 	$c->stash->{cluster_job} = $geno_job;
 
 	unless ($background_job)
@@ -799,7 +786,7 @@ sub plots_list_phenotype_file {
  
     try 
     { 
-        my $geno_job = CXGN::Tools::Run->run_cluster_perl({
+        my $pheno_job = CXGN::Tools::Run->run_cluster_perl({
            
             method        => ["SGN::Controller::solGS::List" => "plots_list_phenotype_data"],
     	    args          => [$args],
@@ -813,13 +800,13 @@ sub plots_list_phenotype_file {
 	    
          });
 
-	$c->stash->{r_job_tempdir} = $geno_job->tempdir();
-	$c->stash->{r_job_id} = $geno_job->job_id();
-	$c->stash->{cluster_job} = $geno_job;
+	$c->stash->{r_job_tempdir} = $pheno_job->tempdir();
+	$c->stash->{pheno_data_query_job_id} = $pheno_job->job_id();
+	$c->stash->{cluster_job} = $pheno_job;
 
 	unless ($background_job)
 	{
-	    $geno_job->wait();
+	    $pheno_job->wait();
 	}
 	
     }
