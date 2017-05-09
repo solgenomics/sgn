@@ -27,22 +27,6 @@ my $trial_search = CXGN::Trial::Search->new({
 my $result = $trial_search->search();
 print STDERR Dumper $result;
 is_deeply($result, [
-            {
-            'design' => 'RCBD',
-            'location_id' => '23',
-            'location_name' => 'test_location',
-            'folder_id' => undef,
-            'planting_date' => undef,
-            'trial_name' => 'CASS_6Genotypes_Sampling_2015',
-            'trial_type' => undef,
-            'breeding_program_name' => 'test',
-            'description' => 'Example trial from cassbase',
-            'trial_id' => 165,
-            'breeding_program_id' => 134,
-            'folder_name' => undef,
-            'year' => '2015',
-            'harvest_date' => undef
-            },
           {
             'folder_name' => undef,
             'breeding_program_name' => 'test',
@@ -197,22 +181,6 @@ $trial_search = CXGN::Trial::Search->new({
 $result = $trial_search->search();
 print STDERR Dumper $result;
 is_deeply($result, [
-            {
-            'design' => 'RCBD',
-            'location_id' => '23',
-            'location_name' => 'test_location',
-            'folder_id' => undef,
-            'planting_date' => undef,
-            'trial_name' => 'CASS_6Genotypes_Sampling_2015',
-            'trial_type' => undef,
-            'breeding_program_name' => 'test',
-            'description' => 'Example trial from cassbase',
-            'trial_id' => 165,
-            'breeding_program_id' => 134,
-            'folder_name' => undef,
-            'year' => '2015',
-            'harvest_date' => undef
-            },
           {
             'location_name' => 'test_location',
             'design' => 'RCBD',
