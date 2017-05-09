@@ -229,7 +229,6 @@ sub run_dependent_job {
       $combine_done = 1;
   }
  
- 
   my $modeling_done;
   if ($combine_done || $dependency_type =~ /combine_populations/)
   {
@@ -243,8 +242,26 @@ sub run_dependent_job {
       } 
       
       $modeling_done = 1;          
-  }  
-  
+  } 
+  elsif ($dependency_type =~ /download_data/)
+  {
+      sleep 120;
+      my $model_job = $self->run_model();
+     
+      while (1) 
+      {	 
+	  last if !$model_job->alive();
+	  sleep 120 if $model_job->alive();
+      } 
+      
+      $modeling_done = 1;          
+  } 
+  else
+  {
+      print STDERR "\nNo depedent job provided. Exiting program.\n";
+      exit();
+  }
+    
    return $modeling_done;
 
 }
