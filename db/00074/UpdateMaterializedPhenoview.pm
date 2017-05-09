@@ -155,9 +155,8 @@ CREATE MATERIALIZED VIEW public.traits AS
     JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
 	  JOIN dbxref USING(dbxref_id)
     JOIN db ON(dbxref.db_id = db.db_id)
-    LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
-    LEFT JOIN cvterm_relationship is_object ON cvterm.cvterm_id = is_object.object_id
-    WHERE is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
+    LEFT JOIN cvterm_relationship is_variable ON cvterm.cvterm_id = is_variable.subject_id AND is_variable.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'VARIABLE_OF')
+    WHERE is_variable.subject_id IS NOT NULL
     GROUP BY 1,2
   UNION
   SELECT cvterm.cvterm_id AS trait_id,
