@@ -52,12 +52,13 @@ sub name_var :Path('/test/') :Args(0) {
 	#print "REV COMPLEMENT: $rev_complement\n";
 	#print "SEQUENCE FILE ATTACHED: $seq_file\n";
 
-           # validate the Nucleic Acid in sequence. To ensure the return of line is not seen as a space.
+  # validate the Nucleic Acid in sequence. To ensure the return of line is not seen as a space.
 	my @seq;
 	my @errors;
 
 	# to generate temporary file name for the analysis
-	my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/motifs_finder/root/static/tempfile_motif/');
+	#my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/motifs_finder/root/static/tempfile_motif/');
+    my ($fh, $filename) =tempfile("XXXXX", DIR => '/static/documents/tempfiles/tempfile_motif/');
 
 	#if (not (defined($seq_file)) && ($sequence !~ /^>/))  {
 	if ($sequence !~ /^>/ && $seq_file eq '')  {
@@ -79,23 +80,22 @@ sub name_var :Path('/test/') :Args(0) {
 		$sequence =~ s/[ \,\-\.\#\(\)\%\'\"\[\]\{\}\:\;\=\+\\\/]/_/gi;
 		@seq = split(/\s/,$sequence);
 
+            #to generate temporary file name for the analysis
+        	#my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/production/cxgn/motifs_finder/root/static/tempfile_motif/');
 
-        # to generate temporary file name for the analysis
-	#my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/production/cxgn/motifs_finder/root/static/tempfile_motif/');
+            #to open and write and print the input file
+        	open (my $out_fh, ">", $filename."_input.txt") || die ("\nERROR: the file ".$filename."_input.txt could not be found\n");
 
-          # to open and write and print the input file
-	open (my $out_fh, ">", $filename."_input.txt") || die ("\nERROR: the file ".$filename."_input.txt could not be found\n");
-
-		print $out_fh join("\n",@seq);
+        	print $out_fh join("\n",@seq);
 
 
-         # to run Gibbs motifs sampler
-    #my $err = system("/home/vagrant/programs/motif_sampler/Gibbs.linux ".$filename."_input.txt $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
-  	my $err = system("/home/vagrant/cxgn/Gibbs.linux ".$filename."_input.txt $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
+            # to run Gibbs motifs sampler
+            #my $err = system("/home/vagrant/programs/motif_sampler/Gibbs.linux ".$filename."_input.txt $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
+          	my $err = system("/home/vagrant/cxgn/Gibbs.linux ".$filename."_input.txt $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
+           	print STDOUT "print $err\n";
 
-   		print STDOUT "print $err\n";
-	}
-	elsif ($seq_file) {
+	    }
+	       elsif ($seq_file) {
 
 			#my $err = system("/home/vagrant/programs/motif_sampler/Gibbs.linux $seq_file $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
       my $err = system("/home/vagrant/cxgn/Gibbs.linux $seq_file $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
@@ -198,7 +198,8 @@ sub name_var :Path('/test/') :Args(0) {
 
 		        elsif ($line =~ m/^\s+\*+/ ) {
 				$logo = 0;
-		     		my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/motifs_finder/root/static/tempfile_motif/');
+                #my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/motifs_finder/root/static/tempfile_motif/');
+		     	my ($fh, $filename) =tempfile("XXXXX", DIR => '/static/documents/tempfiles/tempfile_motif/');
 			}
 
 
@@ -219,7 +220,7 @@ sub name_var :Path('/test/') :Args(0) {
 
 			elsif ($line =~ m/^site\s+/ ) {
 				$freq_tab = 0;
-				my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/motifs_finder/root/static/tempfile_motif/');
+				my ($fh, $filename) =tempfile("XXXXX", DIR => '/static/documents/tempfiles/tempfile_motif/');
 			}
 
 
@@ -240,7 +241,7 @@ sub name_var :Path('/test/') :Args(0) {
 
 			elsif ($line =~ m/^Background\sprobability\smodel/ ) {
 				$prob_tab = 0;
-				my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/motifs_finder/root/static/tempfile_motif/');
+				my ($fh, $filename) =tempfile("XXXXX", DIR => '/static/documents/tempfiles/tempfile_motif/');
 			}
 
 
@@ -261,7 +262,7 @@ sub name_var :Path('/test/') :Args(0) {
 
 			elsif ($line =~ m/^\s+\d\.\d+\s\d\.\d+\s/ ) {
 				$BGPM_tab = 0;
-				my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/motifs_finder/root/static/tempfile_motif/');
+				my ($fh, $filename) =tempfile("XXXXX", DIR => '/static/documents/tempfiles/tempfile_motif/');
 			}
 
 			if ($sum_indv_tab == 1 ) {
@@ -281,7 +282,7 @@ sub name_var :Path('/test/') :Args(0) {
 
 			elsif ($line =~ m/^Log\sFragmentation\sportion\sof\sMAP\sfor\smotif\s/ ) {
 				$sum_indv_tab = 0;
-				my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/motifs_finder/root/static/tempfile_motif/');
+				my ($fh, $filename) =tempfile("XXXXX", DIR => '/static/documents/tempfiles/tempfile_motif/');
 			}
 
 	}
