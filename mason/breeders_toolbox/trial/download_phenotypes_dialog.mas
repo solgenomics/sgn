@@ -53,6 +53,13 @@ $dialog_name => undef
                 </div>
             </div>
             <div class="form-group">
+                <label class="col-sm-3 control-label">Trait Components:<br/><small>(Select none for all)</small></label>
+                <div class="col-sm-9" >
+                    <div id="download_trial_phenotypes_trait_components">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
                 <label class="col-sm-3 control-label">Trait Name Contains: </label>
                 <div class="col-sm-9" >
                     <input id="download_trial_phenotype_trait_contains" name="download_trial_phenotype_trait_contains" type="text" class="form-control" placeholder="Example: storage root,oxoglutarate"/>
@@ -118,12 +125,13 @@ jQuery(document).ready(function() {
     var trait_contains = jQuery("#download_trial_phenotype_trait_contains").val();
     var trait_contains_array = trait_contains.split(",");
     var traits = jQuery("#download_trial_phenotypes_traits_select").val();
+    var trait_components = jQuery("#download_trial_phenotypes_trait_components_select").val();
     var data_level = jQuery("#download_trial_phenotypes_level_option").val();
     var phenotype_min_value = jQuery("#download_trial_phenotype_phenotype_min").val();
     var phenotype_max_value = jQuery("#download_trial_phenotype_phenotype_max").val();
     var search_type = jQuery('input[name=trial_search_type]:checked').val()
 
-    window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&format="+format+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_list="+JSON.stringify(traits)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&search_type="+search_type);
+    window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&format="+format+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_component_list="+JSON.stringify(trait_components)+"&trait_list="+JSON.stringify(traits)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&search_type="+search_type);
 
   });
 
@@ -131,5 +139,6 @@ jQuery(document).ready(function() {
 
 function data_level_change_traits() {
     get_select_box('traits', 'download_trial_phenotypes_traits', { 'name' : 'download_trial_phenotypes_traits_select', 'id' : 'download_trial_phenotypes_traits_select', 'trial_ids':'<% $trial_ids %>', 'data_level':jQuery('#download_trial_phenotypes_level_option').val() });
+    get_select_box('phenotyped_trait_components', 'download_trial_phenotypes_trait_components', { 'name' : 'download_trial_phenotypes_trait_components_select', 'id' : 'download_trial_phenotypes_trait_components_select', 'trial_ids':<% $trial_ids %>, 'data_level':jQuery('#download_trial_phenotypes_level_option').val() });
 }
 </script>

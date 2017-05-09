@@ -14,6 +14,7 @@ sub validate {
     my $filename = shift;
     my $timestamp_included = shift;
     my $data_level = shift;
+    my $schema = shift;
     my $delimiter = ',';
     my %parse_result;
 
@@ -115,6 +116,9 @@ sub validate {
 sub parse {
     my $self = shift;
     my $filename = shift;
+    my $timestamp_included = shift;
+    my $data_level = shift;
+    my $schema = shift;
     my $delimiter = ',';
     my %parse_result;
 
