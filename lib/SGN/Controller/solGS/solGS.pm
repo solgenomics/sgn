@@ -1557,25 +1557,24 @@ sub predict_selection_pop_combined_pops_model {
 }
 
 
-sub prediction_population :Path('/solgs/model') Args(3) {
-    my ($self, $c, $model_id, $pop, $prediction_pop_id) = @_;
-
-    my $referer = $c->req->referer;
-    my $base    = $c->req->base;
-    $referer    =~ s/$base//;
+sub selection_prediction :Path('/solgs/model') Args(3) {
+    my ($self, $c, $training_pop_id, $pop, $selection_pop_id) = @_;
+   
+    my $referer = $c->req->referer;    
     my $path    = $c->req->path;
-    $path       =~ s/$base//;
-    my $page    = 'solgs/model/combined/populations/';
+   
+    $c->stash->{training_pop_id}   = $training_pop_id;
+    $c->stash->{model_id}          = $training_pop_id;
+    $c->stash->{pop_id}            = $training_pop_id;
+    $c->stash->{prediction_pop_id} = $selection_pop_id; 
+    $c->stash->{selection_pop_id}  = $selection_pop_id; 
 
-    if ($referer =~ /$page/)
+    if ($referer =~ /solgs\/model\/combined\/populations\//)
     {   
-        $model_id =~ s/combined_//;
         my ($combo_pops_id, $trait_id) = $referer =~ m/(\d+)/g;
 
         $c->stash->{data_set_type}     = "combined populations"; 
-        $c->stash->{combo_pops_id}     = $model_id;
-        $c->stash->{model_id}          = $model_id;                          
-        $c->stash->{prediction_pop_id} = $prediction_pop_id;  
+        $c->stash->{combo_pops_id}     = $combo_pops_id;                            
         $c->stash->{trait_id}          = $trait_id;
        
 	$self->predict_selection_pop_combined_pops_model($c);
@@ -1584,88 +1583,49 @@ sub prediction_population :Path('/solgs/model') Args(3) {
         $self->trait_phenotype_stat($c);
         $self->gs_files($c);
 	
-        $c->res->redirect("/solgs/model/combined/populations/$model_id/trait/$trait_id"); 
+        $c->res->redirect("/solgs/model/combined/populations/$combo_pops_id/trait/$trait_id"); 
         $c->detach();
     }
     elsif ($referer =~ /solgs\/trait\//) 
     {
         my ($trait_id, $pop_id) = $referer =~ m/(\d+)/g;
-        if ($model_id =~ /uploaded/) {$pop_id = $model_id;}
-       
-        $c->stash->{data_set_type}     = "single population"; 
-        $c->stash->{pop_id}            = $pop_id;
-        $c->stash->{model_id}          = $model_id;
-	$c->stash->{training_pop_id}   = $pop_id;
-        $c->stash->{prediction_pop_id} = $prediction_pop_id;  
-        $c->stash->{trait_id}          = $trait_id;
+              
+        $c->stash->{data_set_type} = "single population"; 
+        $c->stash->{trait_id}      = $trait_id;
 
 	$self->predict_selection_pop_single_pop_model($c);
 
 	$self->trait_phenotype_stat($c);
         $self->gs_files($c);
 
-	$c->res->redirect("/solgs/trait/$trait_id/population/$pop_id");
+	$c->res->redirect("/solgs/trait/$trait_id/population/$training_pop_id");
 	$c->detach();          
     }
     elsif ($referer =~ /solgs\/models\/combined\/trials/) 
     { 
-        my ($model_id, $prediction_pop_id) = $path =~ m/(\d+)/g;
-
-        $c->stash->{data_set_type}     = "combined populations"; 
-        # $c->stash->{pop_id}            = $model_id;
-        $c->stash->{model_id}          = $model_id;  
-        $c->stash->{combo_pops_id}     = $model_id;
-        $c->stash->{prediction_pop_id} = $prediction_pop_id;  
-        
-        $self->analyzed_traits($c);
-        my @traits_ids = @{ $c->stash->{analyzed_traits_ids} };
-
-        foreach my $trait_id (@traits_ids) 
-        {            
-            $self->get_trait_details($c, $trait_id);
-            my $trait_abbr = $c->stash->{trait_abbr};
-
-            my $identifier = $model_id . '_' . $prediction_pop_id;
-            $self->prediction_pop_gebvs_file($c, $identifier, $trait_id);
-        
-            my $prediction_pop_gebvs_file = $c->stash->{prediction_pop_gebvs_file};
-             
-            if (! -s $prediction_pop_gebvs_file)
-            {
-                my $dir = $c->stash->{solgs_cache_dir};
-                
-                $self->cache_combined_pops_data($c);
- 
-                my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
-                my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
-             
-                $c->stash->{pheno_file} = $combined_pops_pheno_file;
-                $c->stash->{geno_file}  = $combined_pops_geno_file;
-
-                $c->stash->{prediction_pop_id} = $prediction_pop_id;
-                $self->prediction_population_file($c, $prediction_pop_id);
-                
-                $self->get_rrblup_output($c); 
-               
-             }
+        $c->stash->{data_set_type}     = "combined populations";         
+        $c->stash->{combo_pops_id}     = $training_pop_id; 
+       	    
+	$self->traits_with_valid_models($c);
+	my @traits_abbrs = @ {$c->stash->{traits_with_valid_models}};
+       
+        foreach my $trait_abbr (@traits_abbrs) 
+        {  
+	    $c->stash->{trait_abbr} = $trait_abbr;
+	    $self->get_trait_details_of_trait_abbr($c);
+	    $self->predict_selection_pop_combined_pops_model($c);                        
          }
             
-        $c->res->redirect("/solgs/models/combined/trials/$model_id");
+        $c->res->redirect("/solgs/models/combined/trials/$training_pop_id");
         $c->detach();
     }
     elsif ($referer =~ /solgs\/traits\/all\/population\//) 
-    {
-	my ($training_pop_id, $prediction_pop_id) = $path =~ m/(\d+)/g;
-	
-	$c->stash->{data_set_type}     = "single population"; 
-        $c->stash->{pop_id}            = $training_pop_id;
-        $c->stash->{model_id}          = $training_pop_id;
-	$c->stash->{training_pop_id}   = $training_pop_id;
-        $c->stash->{prediction_pop_id} = $prediction_pop_id; 
+    {	
+	$c->stash->{data_set_type}  = "single population"; 
 
 	$self->predict_selection_pop_multi_traits($c);
 
-        $c->res->redirect("/solgs/analyze/traits/population/$training_pop_id/$prediction_pop_id");
+        $c->res->redirect("/solgs/traits/all/population/$training_pop_id");
         $c->detach();
     }
  
@@ -1843,14 +1803,8 @@ sub download_prediction_urls {
 
         my $trait_abbr = $c->stash->{trait_abbr};
         my $trait_name = $c->stash->{trait_name};
+	
 
-        # if  ($c->stash->{uploaded_prediction}) 
-        # {  
-        #     unless ($prediction_pop_id =~ /uploaded/) 
-        #     {
-        #         $prediction_pop_id = 'uploaded_' . $prediction_pop_id;
-        #     }
-        # }
 	if ($page =~ /solgs\/traits\/all\/|solgs\/models\/combined\//)
 	{
 	    $model_tr_id   = $trait_id;
