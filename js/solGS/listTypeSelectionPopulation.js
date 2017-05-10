@@ -85,6 +85,8 @@ function checkPredictedListSelection () {
 		  
 		    if (response.output) {		    
 			displayPredictedListTypeSelectionPops(args, response.output);  
+			listSelectionIndexPopulations();
+			listGenCorPopulations();			
 		    }
 		}
 	    });
@@ -290,94 +292,94 @@ function predictGenotypesListSelectionPop (args) {
 
 
 
-function loadGenotypesList(listId) {
+// function loadGenotypesList(listId) {
      
-    var genoList       = getGenotypesList(listId);
-    var listName       = genoList.name;
-    var list           = genoList.list;
-    var modelId        = getModelId();
-    var traitId        = getTraitId();
-    var selectionPopId = listId;
+//     var genoList       = getGenotypesList(listId);
+//     var listName       = genoList.name;
+//     var list           = genoList.list;
+//     var modelId        = getModelId();
+//     var traitId        = getTraitId();
+//     var selectionPopId = listId;
 
-    var args  = createSelectionReqArgs(listId);
-     if (window.Prototype) {
-	delete Array.prototype.toJSON;
-    }
+//     var args  = createSelectionReqArgs(listId);
+//      if (window.Prototype) {
+// 	delete Array.prototype.toJSON;
+//     }
     
-    args = JSON.stringify(args);
+//     args = JSON.stringify(args);
 
-    if ( list.length === 0) {       
-        alert('The list is empty. Please select a list with content.' );
-    }
-    else {  
+//     if ( list.length === 0) {       
+//         alert('The list is empty. Please select a list with content.' );
+//     }
+//     else {  
 
-        jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
-        jQuery.blockUI({message: 'Please wait..'});
+//         jQuery.blockUI.defaults.applyPlatformOpacityRules = false;
+//         jQuery.blockUI({message: 'Please wait..'});
 
-        jQuery.ajax({
-            type: 'POST',
-            dataType: 'json',
-            data: {'arguments': args},
-            url: '/solgs/load/genotypes/list/selection',
+//         jQuery.ajax({
+//             type: 'POST',
+//             dataType: 'json',
+//             data: {'arguments': args},
+//             url: '/solgs/load/genotypes/list/selection',
                    
-            success: function(response) {
+//             success: function(response) {
                    
-                if (response.status == 'success') {
+//                 if (response.status == 'success') {
     
-                    var predictedListTypeSelectionPops = jQuery("#uploaded_selection_pops_table").doesExist();
+//                     var predictedListTypeSelectionPops = jQuery("#uploaded_selection_pops_table").doesExist();
                        
-                    if (predictedListTypeSelectionPops == false) {  
+//                     if (predictedListTypeSelectionPops == false) {  
                             
-			predictedListTypeSelectionPops = displayPredictedListTypeSelectionPops(listId); 
-                        jQuery("#uploaded_selection_populations").append(predictedListTypeSelectionPops).show();
+// 			predictedListTypeSelectionPops = displayPredictedListTypeSelectionPops(listId); 
+//                         jQuery("#uploaded_selection_populations").append(predictedListTypeSelectionPops).show();
                            
-                    }
-                    else {
+//                     }
+//                     else {
                             
-                        var url =   '\'/solgs/model/'+ modelId + '/uploaded/prediction/'+ selectionPopId + '\'' ;
-                        var listIdArg = '\'' + listId +'\'';
-                        var listSource = '\'from_db\'';
+//                         var url =   '\'/solgs/model/'+ modelId + '/uploaded/prediction/'+ selectionPopId + '\'' ;
+//                         var listIdArg = '\'' + listId +'\'';
+//                         var listSource = '\'from_db\'';
 			
-                        var popIdName   = {id : 'uploaded_' + listId, name: listName, pop_type: 'list_selection'};
-                        popIdName       = JSON.stringify(popIdName);
-                        var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
+//                         var popIdName   = {id : 'uploaded_' + listId, name: listName, pop_type: 'list_selection'};
+//                         popIdName       = JSON.stringify(popIdName);
+//                         var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
                         
-                        var addRow = '<tr><td>'
-                            +'<a href="#" onclick="javascript:loadPredictionOutput(' + url + ',' 
-                            + listIdArg + ',' + listSource + '); return false;">' + '<data>'+ hiddenInput + '</data>'
-                            + listName + '</a>'
-                            + '</td>'
-                            + '<td id="list_prediction_output_' + listId +  '">'
-                            + '<a href="#" onclick="javascript:loadPredictionOutput(' + url + ',' 
-                            + listIdArg + ',' + listSource + '); return false;">' 
-                            + '[ Predict ]'+ '</a>'             
-                            + '</td><tr>';
+//                         var addRow = '<tr><td>'
+//                             +'<a href="#" onclick="javascript:loadPredictionOutput(' + url + ',' 
+//                             + listIdArg + ',' + listSource + '); return false;">' + '<data>'+ hiddenInput + '</data>'
+//                             + listName + '</a>'
+//                             + '</td>'
+//                             + '<td id="list_prediction_output_' + listId +  '">'
+//                             + '<a href="#" onclick="javascript:loadPredictionOutput(' + url + ',' 
+//                             + listIdArg + ',' + listSource + '); return false;">' 
+//                             + '[ Predict ]'+ '</a>'             
+//                             + '</td><tr>';
 
-                        var tdId = '#list_prediction_output_' + listId;
-                        var addedRow = jQuery(tdId).doesExist();
+//                         var tdId = '#list_prediction_output_' + listId;
+//                         var addedRow = jQuery(tdId).doesExist();
                         
-                        if (addedRow == false) {
-                            jQuery("#uploaded_selection_pops_table tr:last").after(addRow);
+//                         if (addedRow == false) {
+//                             jQuery("#uploaded_selection_pops_table tr:last").after(addRow);
 
-                        }                          
-                        }
-                    jQuery.unblockUI();                        
+//                         }                          
+//                         }
+//                     jQuery.unblockUI();                        
                       
-                } else {
+//                 } else {
                        
-                    alert("Error occured while uploading the list of selection genotypes.");                      
-                    jQuery.unblockUI();   
-                }
+//                     alert("Error occured while uploading the list of selection genotypes.");                      
+//                     jQuery.unblockUI();   
+//                 }
                      
-            },
-                    error: function(res) {
+//             },
+//                     error: function(res) {
                  
-                    jQuery.unblockUI();
-                    alert("Error occured while uploading the list of selection genotypes.\n\n" + res.responseText);
-                }            
-            });        
-    }
-}
+//                     jQuery.unblockUI();
+//                     alert("Error occured while uploading the list of selection genotypes.\n\n" + res.responseText);
+//                 }            
+//             });        
+//     }
+// }
 
 
 jQuery.fn.doesExist = function(){
@@ -437,19 +439,21 @@ function getTraitId () {
 function displayPredictedListTypeSelectionPops(args, output) {
    
     //var genoList       = getGenotypesList(listId);
+    //args = JSON.parse(args);
+
     var listName       = args.list_name;
     var listId         = args.list_id;
-    var modelId        = args.model_id;
     var traitId        = args.trait_id;
     var selectionPopId = args.selection_pop_id;
+    var trainingPopId  = args.training_pop_id;
    
-    var url         =   '\'/solgs/model/'+ modelId + '/uploaded/prediction/'+ selectionPopId + '\'' ;
+    var url =   '/solgs/model/'+ trainingPopId + '/prediction/'+ selectionPopId;
     var listIdArg   = '\'' + listId +'\'';
     var listSource  = '\'from_db\'';
     var popIdName   = {'id' : 'uploaded_' + listId, 'name' : listName, 'pop_type': 'list_selection'};
     popIdName       = JSON.stringify(popIdName);
     var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
-  
+ 
     var predictedListTypeSelectionPops = jQuery("#uploaded_selection_pops_table").doesExist();
                        
     if ( predictedListTypeSelectionPops == false) {  
@@ -458,19 +462,17 @@ function displayPredictedListTypeSelectionPops(args, output) {
             + '<th>List-based selection population</th>'
             + '<th>View GEBVs</th>'
             +'</tr>'
-            + '<tr>'
+            + '<tr id="list_prediction_output_' + listId +  '">'
             + '<td>'
-            + '<a href="#">' + '<data>'+ hiddenInput + '</data>'
-            + listName + '</a>'
+            + '<b>' + listName + '</b>'
             + '</td>'
-            + '<td id="list_prediction_output_' + listId +  '">'               
+            + '<td><data>'+ hiddenInput + '</data>'               
             + output
             + '</td></tr></table>';
 	
 	jQuery("#uploaded_selection_populations").append(predictedListTypeSelectionTable).show();
 
     } else {
-	var url =   '\'/solgs/model/'+ modelId + '/uploaded/prediction/'+ selectionPopId + '\'' ;
         var listIdArg = '\'' + listId +'\'';
         var listSource = '\'from_db\'';
 			
@@ -478,21 +480,23 @@ function displayPredictedListTypeSelectionPops(args, output) {
         popIdName       = JSON.stringify(popIdName);
         var hiddenInput =  '<input type="hidden" value=\'' + popIdName + '\'/>';
         
-        var addRow = '<tr><td>'                           
-            + '<a href="#">' + '<data>'+ hiddenInput + '</data>'
-            + listName + '</a>'
+        var addRow = '<tr id="list_prediction_output_' + listId +  '"><td>'       
+	    + '<b>' + listName 
             + '</td>'
-            + '<td id="list_prediction_output_' + listId +  '">'               
+            + '<td> <data>'+ hiddenInput + '</data>'               
             + output
             + '</td></tr>';
         
-	var tdId = '#list_prediction_output_' + listId;
-        var addedRow = jQuery(tdId).doesExist();
+	var trId = '#list_prediction_output_' + listId;
+        var samePop = jQuery(trId).doesExist();
         
-        if (addedRow == false) {
+        if (samePop == false) {
             jQuery("#uploaded_selection_pops_table tr:last").after(addRow);
 
-        }                          
+        } else {
+	    jQuery(trId).remove();
+	    jQuery("#uploaded_selection_pops_table").append(addRow).show();
+	}                          
         
     }
 
