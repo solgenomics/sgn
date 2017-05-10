@@ -84,9 +84,12 @@ function checkPredictedListSelection () {
 		    args = JSON.parse(args);
 		  
 		    if (response.output) {		    
-			displayPredictedListTypeSelectionPops(args, response.output);  
-			listSelectionIndexPopulations();
-			listGenCorPopulations();			
+			displayPredictedListTypeSelectionPops(args, response.output); 
+			
+			if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
+			    listSelectionIndexPopulations();
+			    listGenCorPopulations();
+			}			
 		    }
 		}
 	    });
