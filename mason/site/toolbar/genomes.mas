@@ -22,14 +22,5 @@
     <li><a href="/organism/Solanum_lycopersicum/tomato_150">150 Tomato Genome Resequencing Project</a></li>
     <li><a href="/organism/Solanum_lycopersicum/tomato_360">BGI Tomato 360 genomes</a></li>
     
-    <li role="separator" class="divider"></li>
-    <li class="dropdown-header">Projects</li>
-    <li><a href="/solanaceae-project/index.pl">Solanaceae project (SOL)</a></li>
-    <li><a href="/organism/sol100/view">SOL-100 Project</a></li>
-    <li><a href="/organism/Solanum_lycopersicum/genome">International Tomato Sequencing Project</a></li>
-    <li><a href="/about/us_tomato_sequencing.pl">U.S. tomato sequencing project</a></li>
-    <li><a href="http://bti.cornell.edu/research/projects/nicotiana-benthamiana"><i>Nicotiana benthamiana</i> BTI site</a></li>
-    <li><a href="/projects/varitome">Varitome project</a></li>
-    
   </ul>
 </li>
