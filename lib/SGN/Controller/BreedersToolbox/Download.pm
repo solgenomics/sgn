@@ -1,5 +1,5 @@
 
-###NOTE: This is deprecated and has been moved to CXGN::Trial::Download.
+###NOTE: This controller points to CXGN::Trial::Download for the phenotype download.
 
 package SGN::Controller::BreedersToolbox::Download;
 
@@ -31,6 +31,7 @@ use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Genotype::Search;
+use CXGN::Login;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -190,13 +191,22 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sgn_session_id = $c->req->param("sgn_session_id");
 
     my $user = $c->user();
-    if (!$user) {
+    if (!$user && !$sgn_session_id) {
         $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
         return;
+    } elsif (!$user && $sgn_session_id) {
+        my $login = CXGN::Login->new($schema->storage->dbh);
+        my $logged_in = $login->query_from_cookie($sgn_session_id);
+        if (!$logged_in){
+            $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+            return;
+        }
     }
 
+    my $has_header = defined($c->req->param('has_header')) ? $c->req->param('has_header') : 1;
     my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xls";
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
@@ -323,7 +333,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         trait_contains => \@trait_contains_list,
         phenotype_min_value => $phenotype_min_value,
         phenotype_max_value => $phenotype_max_value,
-        search_type=>$search_type
+        search_type=>$search_type,
+        has_header=>$has_header
     });
 
     my $error = $download->download();

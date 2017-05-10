@@ -70,9 +70,9 @@ sub do_fuzzy_search {
     my $fuzzy_search_result;
     my $max_distance = 0.2;
     my @accession_list = @$accession_list;
-    my @found_accessions;
-    my @fuzzy_accessions;
-    my @absent_accessions;
+    my $found_accessions;
+    my $fuzzy_accessions;
+    my $absent_accessions;
 
     if (!$c->user()) {
 	$c->stash->{rest} = {error => "You need to be logged in to add accessions." };
@@ -88,15 +88,37 @@ sub do_fuzzy_search {
     $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
     #print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
 
-    @found_accessions = $fuzzy_search_result->{'found'};
-    @fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
-    @absent_accessions = $fuzzy_search_result->{'absent'};
+    $found_accessions = $fuzzy_search_result->{'found'};
+    $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
+    $absent_accessions = $fuzzy_search_result->{'absent'};
+
+    if (scalar(@$fuzzy_accessions)>0){
+        my %synonym_hash;
+        my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id;
+        my $synonym_rs = $schema->resultset('Stock::Stock')->search({'stockprops.type_id'=>$synonym_type_id}, {join=>'stockprops', '+select'=>['stockprops.value'], '+as'=>['value']});
+        while (my $r = $synonym_rs->next()){
+            $synonym_hash{$r->get_column('value')} = $r->uniquename;
+        }
+
+        foreach (@$fuzzy_accessions){
+            my $matches = $_->{matches};
+            foreach my $m (@$matches){
+                my $name = $m->{name};
+                if (exists($synonym_hash{$name})){
+                    $m->{is_synonym} = 1;
+                    $m->{synonym_of} = $synonym_hash{$name};
+                }
+            }
+        }
+    }
+
+    #print STDERR Dumper $fuzzy_accessions;
 
     $c->stash->{rest} = {
 	success => "1",
-	absent => @absent_accessions,
-	fuzzy => @fuzzy_accessions,
-	found => @found_accessions
+	absent => $absent_accessions,
+	fuzzy => $fuzzy_accessions,
+	found => $found_accessions
     };
     return;
 }
@@ -217,6 +239,39 @@ sub add_accession_list_POST : Args(0) {
   }
   $c->stash->{rest} = {success => "1"};
   return;
+}
+
+sub fuzzy_response_download : Path('/ajax/accession_list/fuzzy_download') : ActionClass('REST') { }
+
+sub fuzzy_response_download_GET : Args(0) {
+    my ($self, $c) = @_;
+    my $fuzzy_json = $c->req->param('fuzzy_response');
+    my $fuzzy_response = decode_json $fuzzy_json;
+    #print STDERR Dumper $fuzzy_response;
+
+    my @data_out;
+    push @data_out, ['In Your List', 'Database Accession Match', 'Database Synonym Match', 'Distance'];
+    foreach (@$fuzzy_response){
+        my $matches = $_->{matches};
+        my $name = $_->{name};
+        foreach my $m (@$matches){
+            my $match_name = $m->{name};
+            my $synonym_of = '';
+            my $distance = $m->{distance};
+            if ($m->{is_synonym}){
+                $match_name = $m->{synonym_of};
+                $synonym_of = $m->{name};
+            }
+            push @data_out, [$name, $match_name, $synonym_of, $distance];
+        }
+    }
+    my $string ='';
+    foreach (@data_out){
+        $string .= join "\t", @$_;
+        $string .= "\n";
+    }
+    $c->res->content_type("text/plain");
+    $c->res->body($string);
 }
 
 sub populations : Path('/ajax/manage_accessions/populations') : ActionClass('REST') { }

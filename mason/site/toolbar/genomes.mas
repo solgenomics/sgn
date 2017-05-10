@@ -3,7 +3,7 @@
   <ul class="dropdown-menu">
     <li class="dropdown-header">Completed Genomes</li>
     <li><a href="/organism/Solanum_lycopersicum/genome">Tomato</a></li>
-    <li><a target="_blank" href="http://tomato-webapollo.sgn.cornell.edu/WebApollo">Tomato - WebApollo</a></li>
+    <li><a target="_blank" href="http://apollo.sgn.cornell.edu/apollo/8738/jbrowse/index.html?loc=SL3.0ch01&tracks=ITAG3.2%20gene%20models%2CXY%20plot-All%20merged%20reads">Tomato - Apollo genome annotation editor</a></li>
     <li><a href="/organism/Solanum_tuberosum/genome">Potato</a></li>
     <li><a href="/organism/Capsicum_annuum/genome">Pepper</a></li>
     <li><a href="/organism/Solanum_pennellii/genome"><i>Solanum pennellii</i></a></li>
@@ -29,6 +29,7 @@
     <li><a href="/organism/Solanum_lycopersicum/genome">International Tomato Sequencing Project</a></li>
     <li><a href="/about/us_tomato_sequencing.pl">U.S. tomato sequencing project</a></li>
     <li><a href="http://bti.cornell.edu/research/projects/nicotiana-benthamiana"><i>Nicotiana benthamiana</i> BTI site</a></li>
+    <li><a href="/projects/varitome">Varitome project</a></li>
     
   </ul>
 </li>

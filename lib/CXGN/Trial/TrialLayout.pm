@@ -27,6 +27,7 @@ use CXGN::Stock::StockLookup;
 use CXGN::Location::LocationLookup;
 use Data::Dumper;
 use SGN::Model::Cvterm;
+use CXGN::Chado::Stock;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -188,72 +189,75 @@ sub _get_design_from_trial {
 	->search_related("nd_experimentprops")
 	->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
 #print STDERR "Check 2.3.4.3: ".localtime()."\n";
-    
-    my $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
-    my $tissue_sample_of_cv = $schema->resultset("Cv::Cvterm")->find({ name=>'tissue_sample_of' });
-    my $plant_rel_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_of', 'stock_relationship' );
-    
-    @plots = @{$plots_ref};
-    foreach my $plot (@plots) {
-	#print STDERR "_get_design_from_trial. Working on plot ".$plot->uniquename()."\n";
-	my %design_info;
-	
-	if ($genotyping_user_id_row) {       
-	    $design_info{genotyping_user_id} = $genotyping_user_id_row->get_column("value") || "unknown";
-	    #print STDERR "RETRIEVED: genotyping_user_id: $design{genotyping_user_id}\n";
-	}
-	if ($genotyping_project_name_row) { 
-	    $design_info{genotyping_project_name} = $genotyping_project_name_row->get_column("value") || "unknown";
-	    #print STDERR "RETRIEVED: genotyping_project_name: $design{genotyping_project_name}\n";
-	}
-	my $plot_name = $plot->uniquename;
-	my $plot_number_prop = $plot->stockprops->find( { 'type.name' => 'plot number' }, { join => 'type'} );
-	my $block_number_prop = $plot->stockprops->find( { 'type.name' => 'block' }, { join => 'type'} );
-	my $replicate_number_prop = $plot->stockprops->find( { 'type.name' => 'replicate' }, { join => 'type'} );
-	my $range_number_prop = $plot->stockprops->find( { 'type.name' => 'range' }, { join => 'type'} );
-	my $is_a_control_prop = $plot->stockprops->find( { 'type.name' => 'is a control' }, { join => 'type'} );
-	my $row_number_prop = $plot->stockprops->find( { 'type.name' => 'row_number' }, { join => 'type'} );
-	my $col_number_prop = $plot->stockprops->find( { 'type.name' => 'col_number' }, { join => 'type'} );
-	my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id() ] } })->object;
-	my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm->cvterm_id() })->search_related('object');
-	
-	my $accession_name = $accession->uniquename;
-	my $accession_id = $accession->stock_id;
-	
-	$design_info{"plot_name"}=$plot_name;
-	$design_info{"plot_id"}=$plot->stock_id;
-	
-	if ($plot_number_prop) {
-	    $design_info{"plot_number"}=$plot_number_prop->value();
-	}
-	else { 
-	    die "no plot number stockprop found for plot $plot_name"; 
-	}
-	
-	if ($block_number_prop) {
-	    $design_info{"block_number"}=$block_number_prop->value();
-	}
+  my $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
+  my $tissue_sample_of_cv = $schema->resultset("Cv::Cvterm")->find({ name=>'tissue_sample_of' });
+  my $plant_rel_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_of', 'stock_relationship' );
+
+  @plots = @{$plots_ref};
+  foreach my $plot (@plots) {
+      #print STDERR "_get_design_from_trial. Working on plot ".$plot->uniquename()."\n";
+    my %design_info;
+
+    if ($genotyping_user_id_row) {       
+	$design_info{genotyping_user_id} = $genotyping_user_id_row->get_column("value") || "unknown";
+	#print STDERR "RETRIEVED: genotyping_user_id: $design{genotyping_user_id}\n";
+    }
+    if ($genotyping_project_name_row) { 
+	$design_info{genotyping_project_name} = $genotyping_project_name_row->get_column("value") || "unknown";
+	#print STDERR "RETRIEVED: genotyping_project_name: $design{genotyping_project_name}\n";
+    }
+    my $plot_name = $plot->uniquename;
+    my $plot_id = $plot->stock_id;
+    my $stockprop_hash = CXGN::Chado::Stock->new($schema, $plot_id)->get_stockprop_hash();
+    #print STDERR Dumper $stockprop_hash;
+    my $plot_number_prop = $stockprop_hash->{'plot number'} ? join ',', @{$stockprop_hash->{'plot number'}} : undef;
+    my $block_number_prop = $stockprop_hash->{'block'} ? join ',', @{$stockprop_hash->{'block'}} : undef;
+    my $replicate_number_prop = $stockprop_hash->{'replicate'} ? join ',', @{$stockprop_hash->{'replicate'}} : undef;
+    my $range_number_prop = $stockprop_hash->{'range'} ? join ',', @{$stockprop_hash->{'range'}} : undef;
+    my $is_a_control_prop = $stockprop_hash->{'is a control'} ? join ',', @{$stockprop_hash->{'is a control'}} : undef;
+    my $row_number_prop = $stockprop_hash->{'row_number'} ? join ',', @{$stockprop_hash->{'row_number'}} : undef;
+    my $col_number_prop = $stockprop_hash->{'col_number'} ? join ',', @{$stockprop_hash->{'col_number'}} : undef;
+    my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id() ] } })->object;
+    my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm->cvterm_id() })->search_related('object');
+
+    my $accession_name = $accession->uniquename;
+    my $accession_id = $accession->stock_id;
+
+    $design_info{"plot_name"}=$plot_name;
+    $design_info{"plot_id"}=$plot_id;
+
+      if ($plot_number_prop) {
+	  $design_info{"plot_number"}=$plot_number_prop;
+      }
+      else { 
+	  die "no plot number stockprop found for plot $plot_name"; 
+      }
+
+    if ($block_number_prop) {
+      $design_info{"block_number"}=$block_number_prop;
+    }
 	if ($row_number_prop) {
-	    $design_info{"row_number"}=$row_number_prop->value();
-	}
+      $design_info{"row_number"}=$row_number_prop;
+    }
 	if ($col_number_prop) {
-	    $design_info{"col_number"}=$col_number_prop->value();
-	}
-	if ($replicate_number_prop) {
-	    $design_info{"rep_number"}=$replicate_number_prop->value();
-	}
-	if ($range_number_prop) {
-	    $design_info{"range_number"}=$replicate_number_prop->value();
-	}
-	if ($is_a_control_prop) {
-	    $design_info{"is_a_control"}=$is_a_control_prop->value();
-	}
-	if ($accession_name) {
-	    $design_info{"accession_name"}=$accession_name;
-	}
-	if ($accession_id) {
-	    $design_info{"accession_id"}=$accession_id;
-	}
+      $design_info{"col_number"}=$col_number_prop;
+    }
+    if ($replicate_number_prop) {
+      $design_info{"rep_number"}=$replicate_number_prop;
+    }
+    if ($range_number_prop) {
+      $design_info{"range_number"}=$replicate_number_prop;
+    }
+    if ($is_a_control_prop) {
+      $design_info{"is_a_control"}=$is_a_control_prop;
+    }
+    if ($accession_name) {
+      $design_info{"accession_name"}=$accession_name;
+    }
+    if ($accession_id) {
+      $design_info{"accession_id"}=$accession_id;
+    }
+
 	if ($plants) {
 	    my @plant_names;
 	    my @plant_ids;
@@ -266,9 +270,10 @@ sub _get_design_from_trial {
 	    $design_info{"plant_names"}=\@plant_names;
 	    $design_info{"plant_ids"}=\@plant_ids;
 	}
+
 	$design{$plot_number_prop->value}=\%design_info;
     }
-    #print STDERR "Check 2.3.4.4: ".localtime()."\n";
+
    
     return \%design;
 }
