@@ -21,7 +21,8 @@ $mech->get_ok('http://localhost:3010/ajax/accession_usage_trials');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 my $data = $response->{data};
-ok(scalar(@$data) == 432);
+print STDERR Dumper scalar(@$data);
+ok(scalar(@$data) == 439);
 
 print STDERR Dumper $data->[0];
 print STDERR "\n";
