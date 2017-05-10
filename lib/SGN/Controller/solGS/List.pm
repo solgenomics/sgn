@@ -270,101 +270,101 @@ sub create_list_population_metadata_file {
 }
 
 
-sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
-    my ($self, $c, $model_id,  $uploaded, $prediction, $prediction_pop_id) = @_;
+# sub user_uploaded_prediction_population :Path('/solgs/model') Args(4) {
+#     my ($self, $c, $model_id,  $uploaded, $prediction, $prediction_pop_id) = @_;
    
-    my $referer = $c->req->referer;
-    my $base    = $c->req->base;
-    $referer    =~ s/$base//;
-    my $path    = $c->req->path;
-    $path       =~ s/$base//;
-    my $page    = "solgs/model/combined/populations/";
+#     my $referer = $c->req->referer;
+#     my $base    = $c->req->base;
+#     $referer    =~ s/$base//;
+#     my $path    = $c->req->path;
+#     $path       =~ s/$base//;
+#     my $page    = "solgs/model/combined/populations/";
    
-    my $ret->{status} = 'failed';
+#     my $ret->{status} = 'failed';
     
-    if ($referer =~ m/$page/)
-    {
-        my $trait_id = $c->req->param('trait_id');
-        my $combo_pops_id = $model_id;
-        my $uploaded_prediction = $c->req->param('uploaded_prediction');
-        my $list_source = $c->req->param('list_source');
+#     if ($referer =~ m/$page/)
+#     {
+#         my $trait_id = $c->req->param('trait_id');
+#         my $combo_pops_id = $model_id;
+#         my $uploaded_prediction = $c->req->param('uploaded_prediction');
+#         my $list_source = $c->req->param('list_source');
       
-        $c->stash->{data_set_type}       = "combined populations"; 
-        $c->stash->{combo_pops_id}       = $model_id;
-        $c->stash->{model_id}            = $model_id;                          
-        $c->stash->{selection_pop_id}    = $prediction_pop_id;  
-        $c->stash->{uploaded_prediction} = $uploaded_prediction;
-        $c->stash->{list_source}         = $list_source;
+#         $c->stash->{data_set_type}       = "combined populations"; 
+#         $c->stash->{combo_pops_id}       = $model_id;
+#         $c->stash->{model_id}            = $model_id;                          
+#         $c->stash->{selection_pop_id}    = $prediction_pop_id;  
+#         $c->stash->{uploaded_prediction} = $uploaded_prediction;
+#         $c->stash->{list_source}         = $list_source;
 
-	$self->predict_list_selection_pop_combined_pops_model($c);  
+# 	$self->predict_list_selection_pop_combined_pops_model($c);  
         
-	$c->controller("solGS::solGS")->gs_files($c);   
-	$c->controller("solGS::solGS")->download_prediction_urls($c, $combo_pops_id,  $prediction_pop_id );
-	my $download_prediction = $c->stash->{download_prediction};
+# 	$c->controller("solGS::solGS")->gs_files($c);   
+# 	$c->controller("solGS::solGS")->download_prediction_urls($c, $combo_pops_id,  $prediction_pop_id );
+# 	my $download_prediction = $c->stash->{download_prediction};
         
-	#if (-s $prediction_pop_gebvs_file) 
-	#{
-	$ret->{status} = $c->stash->{status};
-	$ret->{output} = $download_prediction;
-	#}
+# 	#if (-s $prediction_pop_gebvs_file) 
+# 	#{
+# 	$ret->{status} = $c->stash->{status};
+# 	$ret->{output} = $download_prediction;
+# 	#}
               
-	$ret = to_json($ret);
+# 	$ret = to_json($ret);
        
-	$c->res->content_type('application/json');
-	$c->res->body($ret);
+# 	$c->res->content_type('application/json');
+# 	$c->res->body($ret);
        
-    }
-    elsif ($referer =~ /solgs\/trait\//) 
-    {
-        my $trait_id = $c->req->param('trait_id');
-        my $uploaded_prediction = $c->req->param('uploaded_prediction');
-        my $list_source = $c->req->param('list_source');
+#     }
+#     elsif ($referer =~ /solgs\/trait\//) 
+#     {
+#         my $trait_id = $c->req->param('trait_id');
+#         my $uploaded_prediction = $c->req->param('uploaded_prediction');
+#         my $list_source = $c->req->param('list_source');
 
-        $c->stash->{data_set_type}       = "single population"; 
-        $c->stash->{pop_id}              = $model_id;
-	$c->stash->{training_pop_id}     = $model_id;
-        $c->stash->{model_id}            = $model_id;                          
-        $c->stash->{selection_pop_id}    = $prediction_pop_id;  
-        $c->stash->{uploaded_prediction} = $uploaded_prediction;
-        $c->stash->{list_source}         = $list_source;
-	$c->stash->{trait_id}            = $trait_id;                          
+#         $c->stash->{data_set_type}       = "single population"; 
+#         $c->stash->{pop_id}              = $model_id;
+# 	$c->stash->{training_pop_id}     = $model_id;
+#         $c->stash->{model_id}            = $model_id;                          
+#         $c->stash->{selection_pop_id}    = $prediction_pop_id;  
+#         $c->stash->{uploaded_prediction} = $uploaded_prediction;
+#         $c->stash->{list_source}         = $list_source;
+# 	$c->stash->{trait_id}            = $trait_id;                          
 	   
-	$self->predict_list_selection_pop_single_pop_model($c);
-	my $status = $c->stash->{status};
+# 	$self->predict_list_selection_pop_single_pop_model($c);
+# 	my $status = $c->stash->{status};
 	
-	$ret->{status} = $c->stash->{status};
-	#$ret->{output} = $download_prediction;
-	#}
+# 	$ret->{status} = $c->stash->{status};
+# 	#$ret->{output} = $download_prediction;
+# 	#}
 	
-	$ret = to_json($ret);
+# 	$ret = to_json($ret);
 	
-	$c->res->content_type('application/json');
-	$c->res->body($ret);      
+# 	$c->res->content_type('application/json');
+# 	$c->res->body($ret);      
             
-    }
-    elsif ($referer =~ /solgs\/traits\/all\//) 
-    {    
-	$self->predict_list_selection_pop_multi_traits($c);
+#     }
+#     elsif ($referer =~ /solgs\/traits\/all\//) 
+#     {    
+# 	$self->predict_list_selection_pop_multi_traits($c);
               
-	$c->controller("solGS::solGS")->trait_phenotype_stat($c);  
-	$c->controller("solGS::solGS")->gs_files($c);               
+# 	$c->controller("solGS::solGS")->trait_phenotype_stat($c);  
+# 	$c->controller("solGS::solGS")->gs_files($c);               
 	
-	$c->controller("solGS::solGS")->download_prediction_urls($c, $model_id, $prediction_pop_id );
-	my $download_prediction = $c->stash->{download_prediction};
+# 	$c->controller("solGS::solGS")->download_prediction_urls($c, $model_id, $prediction_pop_id );
+# 	my $download_prediction = $c->stash->{download_prediction};
 	
-	#if (-s $prediction_pop_gebvs_file) 
-	#{
-	$ret->{status} = $c->stash->{status};
-	$ret->{output} = $download_prediction;
-	#}
+# 	#if (-s $prediction_pop_gebvs_file) 
+# 	#{
+# 	$ret->{status} = $c->stash->{status};
+# 	$ret->{output} = $download_prediction;
+# 	#}
 	
-	$ret = to_json($ret);
+# 	$ret = to_json($ret);
 	
-	$c->res->content_type('application/json');
-	$c->res->body($ret);         
-    }
+# 	$c->res->content_type('application/json');
+# 	$c->res->body($ret);         
+#     }
 
-}
+# }
 
 
 sub predict_list_selection_pop_single_pop_model {
