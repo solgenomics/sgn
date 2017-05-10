@@ -1562,7 +1562,9 @@ sub selection_prediction :Path('/solgs/model') Args(3) {
    
     my $referer = $c->req->referer;    
     my $path    = $c->req->path;
-   
+    my $base    = $c->req->base;
+    $referer    =~ s/$base//;
+
     $c->stash->{training_pop_id}   = $training_pop_id;
     $c->stash->{model_id}          = $training_pop_id;
     $c->stash->{pop_id}            = $training_pop_id;
@@ -1592,7 +1594,7 @@ sub selection_prediction :Path('/solgs/model') Args(3) {
               
         $c->stash->{data_set_type} = "single population"; 
         $c->stash->{trait_id}      = $trait_id;
-
+ 
 	$self->predict_selection_pop_single_pop_model($c);
 
 	$self->trait_phenotype_stat($c);
