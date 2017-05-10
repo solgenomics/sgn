@@ -271,7 +271,7 @@ sub _get_design_from_trial {
 	    $design_info{"plant_ids"}=\@plant_ids;
 	}
 
-	$design{$plot_number_prop->value}=\%design_info;
+	$design{$plot_number_prop}=\%design_info;
     }
 
    
