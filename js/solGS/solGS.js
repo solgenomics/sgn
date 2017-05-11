@@ -235,11 +235,8 @@ solGS.waitPage = function (page, args) {
 	    } else {
 		window.location = page;
 	    }	   
-	} else if (page.match(/solgs\/model\//)) {
-	    
-	    var referer = window.location.href;
-	  
-	    if (page.match(/solgs\/model\/\d+\/prediction\/\w+_|solgs\/model\/\w+_\d+\/prediction\/\w+_\//)) {		 
+	} else if (page.match(/solgs\/model\//)) {	    
+	    if (page.match(/solgs\/model\/\d+\/prediction\/\w+_|solgs\/model\/\w+_\d+\/prediction\/\w+_/)) {	
 		loadGenotypesListTypeSelectionPop(args);
 	    } else {
 		window.location = page;
