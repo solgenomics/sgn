@@ -110,7 +110,8 @@ sub load_genotypes_list_selection :Path('/solgs/load/genotypes/list/selection') 
     my $data = $c->model('solGS::solGS')->genotypes_list_genotype_data($genotypes_list);
     $c->stash->{genotypes_list_genotype_data} = $data;
   
-    my $selection_pop_id = $args->{selection_pop_id};  
+    my $selection_pop_id = $args->{selection_pop_id}; 
+
     $self->genotypes_list_genotype_data_file($c, $selection_pop_id);   
     my $genotype_file = $c->stash->{genotypes_list_genotype_data_file};
 
@@ -468,22 +469,25 @@ sub predict_list_selection_pop_combined_pops_model {
   
     if (!-s $prediction_pop_gebvs_file)
     {    
-	    $c->controller("solGS::solGS")->cache_combined_pops_data($c);
-	    
-	    my $pheno_file = $c->stash->{trait_combined_pheno_file};
-	    my $geno_file  = $c->stash->{trait_combined_geno_file};
-	    
-	    $self->user_prediction_population_file($c, $selection_pop_id);
-	  
-	    $c->controller("solGS::solGS")->get_rrblup_output($c);
-	    $c->stash->{status} = 'success';
-	} 
-	else
-	{
-	    $c->stash->{status} = 'success';
-	}
+	$c->controller("solGS::solGS")->get_trait_details($c, $trait_id); 
 	
-	$c->controller("solGS::solGS")->download_prediction_urls($c, $training_pop_id, $selection_pop_id );   
+	$c->controller("solGS::solGS")->cache_combined_pops_data($c);
+	    
+	my $pheno_file = $c->stash->{trait_combined_pheno_file};
+	my $geno_file  = $c->stash->{trait_combined_geno_file};
+	
+	$self->user_prediction_population_file($c, $selection_pop_id);
+	
+	$c->controller("solGS::solGS")->get_rrblup_output($c);
+	$c->stash->{status} = 'success';
+    } 
+    else
+    {
+	$c->stash->{status} = 'success';
+    }
+    
+    $c->controller("solGS::solGS")->download_prediction_urls($c, $training_pop_id, $selection_pop_id ); 
+  
 }
 
 
