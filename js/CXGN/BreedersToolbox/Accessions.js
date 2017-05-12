@@ -172,7 +172,7 @@ jQuery(document).ready(function ($) {
         $('#review_found_matches_dialog').modal("hide");
         $('#review_fuzzy_matches_dialog').modal("hide");
         $('#review_absent_dialog').modal("hide");
-        $("#list_div").html(list.listSelect("accessions"));
+        $("#list_div").html(list.listSelect("list_div", ["accessions"] ));
     });
 
     $('body').on('hidden.bs.modal', '.modal', function () {
