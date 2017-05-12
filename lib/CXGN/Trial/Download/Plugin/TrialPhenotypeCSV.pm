@@ -16,6 +16,7 @@ sub download {
     my $schema = $self->bcs_schema();
     my $trial_id = $self->trial_id();
     my $trait_list = $self->trait_list();
+    my $trait_component_list = $self->trait_component_list();
     my $trait_contains = $self->trait_contains();
     my $data_level = $self->data_level();
     my $include_timestamp = $self->include_timestamp();
@@ -41,11 +42,13 @@ sub download {
     if ($search_type eq 'fast'){
         $factory_type = 'MaterializedView';
     }
+
 	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
 		bcs_schema=>$schema,
 		search_type=>$factory_type,
 		data_level=>$data_level,
 		trait_list=>$trait_list,
+    trait_component_list=>$trait_component_list,
 		trial_list=>$trial_list,
 		year_list=>$year_list,
 		location_list=>$location_list,
@@ -58,6 +61,7 @@ sub download {
 		phenotype_max_value=>$phenotype_max_value,
 	);
 	my @data = $phenotypes_search->get_phenotype_matrix();
+
     #print STDERR Dumper \@data;
 
     my $time = DateTime->now();

@@ -15,6 +15,7 @@ sub validate {
     my $filename = shift;
     my $timestamp_included = shift;
     my $data_level = shift;
+    my $schema = shift;
     my @file_lines;
     my $delimiter = ',';
     my $header;
@@ -139,6 +140,9 @@ sub validate {
 sub parse {
     my $self = shift;
     my $filename = shift;
+    my $timestamp_included = shift;
+    my $data_level = shift;
+    my $schema = shift;
     my %parse_result;
     my @file_lines;
     my $delimiter = ',';
@@ -203,10 +207,14 @@ sub parse {
             }
             if ($trait_name) {
                 if ($num_predef_col > 0) {
+                    my @component_cvterm_ids;
                     for my $predef_col ($num_fixed_col .. $num_col_before_traits-1) {
-                        #print STDERR $predef_col."\n";
-                        $trait_name = $trait_name.'||'.$worksheet->get_cell($row, $predef_col)->value();
+                        my $component_term = $worksheet->get_cell($row, $predef_col)->value();
+                        #print STDERR $component_term."\n";
+                        my $component_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $component_term)->cvterm_id();
+                        push @component_cvterm_ids, $component_cvterm_id;
                     }
+                    $trait_name = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@component_cvterm_ids)->name();
                 }
 
                 $traits_seen{$trait_name} = 1;

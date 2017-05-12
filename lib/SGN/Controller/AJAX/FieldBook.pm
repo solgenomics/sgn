@@ -29,7 +29,6 @@ use Digest::MD5;
 use JSON -support_by_pp;
 use Spreadsheet::WriteExcel;
 use SGN::View::Trial qw/design_layout_view design_info_view/;
-use CXGN::Phenotypes::ParseUpload;
 use CXGN::Trial::TrialLayout;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;

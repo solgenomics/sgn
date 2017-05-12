@@ -33,6 +33,10 @@ is_deeply($results, {
                               [
                                 '2016',
                                 '2016'
+                              ],
+                              [
+                                '2017',
+                                '2017'
                               ]
                             ]
              }, 'wizard one category query');

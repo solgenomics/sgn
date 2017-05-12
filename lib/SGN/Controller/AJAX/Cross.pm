@@ -553,11 +553,15 @@ sub get_crosses_with_folders : Path('/ajax/breeders/get_crosses_with_folders') A
     my $projects = $p->get_breeding_programs();
 
     my $html = "";
-    foreach my $project (@$projects) {
-	   my $folder = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => $project->[0] });
-	   $html .= $folder->get_jstree_html('breeding_program', 'cross');
-    }
+    my $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => @$projects[0]->[0] });
 
+    print STDERR "Starting get crosses at time ".localtime()."\n";
+    foreach my $project (@$projects) {
+        my %project = ( "id" => $project->[0], "name" => $project->[1]);
+        $html .= $folder_obj->get_jstree_html(\%project, $schema, 'breeding_program', 'cross');
+    }
+    print STDERR "Finished get crosses at time ".localtime()."\n";
+    
     my $dir = catdir($c->site_cluster_shared_dir, "folder");
     eval { make_path($dir) };
     if ($@) {

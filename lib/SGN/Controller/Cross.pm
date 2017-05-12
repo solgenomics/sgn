@@ -59,13 +59,13 @@ sub upload_cross :  Path('/cross/upload_cross')  Args(0) {
    if ($format_type eq "spreadsheet") {
      print STDERR "is spreadsheet \n";
 
-     if (!$c->user()) { 
+     if (!$c->user()) {
        print STDERR "User not logged in... not adding crosses.\n";
        $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
        return;
      }
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) { 
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
 	print STDERR "User does not have sufficient privileges.\n";
 	$c->stash->{rest} = {error =>  "you have insufficient privileges to add a cross." };
 	return;
@@ -297,7 +297,7 @@ sub _add_cross {
   my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
       { name   => 'cross',
       });
-  
+
   my $cross_type_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_type', 'nd_experiment_property');
 
   my $female_parent_stock = $schema->resultset("Stock::Stock")->find(
@@ -315,7 +315,7 @@ sub _add_cross {
 	type_id => $population_cvterm->cvterm_id,
       } );
   my $female_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship');
-	
+
   my $male_parent =  SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship');
 
   ## change 'cross_name' to a more explicit term
@@ -358,7 +358,7 @@ sub _add_cross {
 	  value  =>  $number_of_seeds,
 					  });
   }
-  
+
   if ($cross_type) {
       $experiment->find_or_create_related('nd_experimentprops' , {
 	  nd_experiment_id => $experiment->nd_experiment_id(),
@@ -366,7 +366,7 @@ sub _add_cross {
 	  value  =>  $cross_type,
 					  });
   }
-  
+
   ############
   #if progeny number exists
   my $increment = 1;
@@ -396,8 +396,8 @@ sub _add_cross {
 					       } );
       #######################
       #link the experiment to the progeny
-      
-      
+
+
     if ($visible_to_role) {
 	my $accession_stock_prop = $schema->resultset("Stock::Stockprop")->find_or_create(
 	    { type_id =>$visible_to_role_cvterm->cvterm_id(),
@@ -408,25 +408,25 @@ sub _add_cross {
       $increment++;
 
   }
-  
-  if ($@) { 
+
+  if ($@) {
       $c->stash->{rest} = { error => "An error occurred: $@"};
   }
-  
+
   $c->stash->{rest} = { error => '', };
-  
+
 
 }
 
-sub make_cross_form :Path("/stock/cross/new") :Args(0) { 
+sub make_cross_form :Path("/stock/cross/new") :Args(0) {
     my ($self, $c) = @_;
     $c->stash->{template} = '/breeders_toolbox/new_cross.mas';
-    if ($c->user()) { 
+    if ($c->user()) {
       my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
       # get projects
       my @rows = $schema->resultset('Project::Project')->all();
       my @projects = ();
-      foreach my $row (@rows) { 
+      foreach my $row (@rows) {
 	push @projects, [ $row->project_id, $row->name, $row->description ];
       }
       $c->stash->{project_list} = \@projects;
@@ -446,7 +446,7 @@ sub make_cross_form :Path("/stock/cross/new") :Args(0) {
 }
 
 
-sub make_cross :Path("/stock/cross/generate") :Args(0) { 
+sub make_cross :Path("/stock/cross/generate") :Args(0) {
     my ($self, $c) = @_;
     $c->stash->{template} = '/breeders_toolbox/progeny_from_crosses.mas';
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -461,7 +461,7 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     my $suffix = $c->req->param('suffix');
     my $progeny_number = $c->req->param('progeny_number');
     my $visible_to_role = $c->req->param('visible_to_role');
-    
+
     if (! $c->user()) { # redirect
 	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
@@ -506,7 +506,7 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
     my $organism_id = $organism->organism_id();
 
     my $accession_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
- 
+
 
     my $population_cvterm = $schema->resultset("Cv::Cvterm")->find(
       { name   => 'population',
@@ -569,40 +569,50 @@ sub make_cross :Path("/stock/cross/generate") :Args(0) {
       $increment++;
 
     }
-    if ($@) { 
+    if ($@) {
     }
 }
 
-sub cross_detail : Path('/cross') Args(1) { 
+sub cross_detail : Path('/cross') Args(1) {
     my $self = shift;
     my $c = shift;
-    my $cross_id = shift;
+    my $id = shift;
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), 'cross', 'stock_type')->cvterm_id();
+    my ($cross, $cross_id);
 
-    my $cross = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::Stock")->find( { stock_id => $cross_id } );
+    #get cross info from stock table whether id is the cross stock id or the cross project id
+    $cross = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::Stock")->find( { stock_id => $id, type_id => $cross_type_id } );
+    if ($cross) {
+        $cross_id = $cross->stock_id();
+    }
+    else {
+        $cross= $c->dbic_schema("Bio::Chado::Schema")->resultset("Project::Project")->search({ 'me.project_id' => $id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', {'stock.type_id'=>$cross_type_id})->first();
+        $cross_id = $cross->stock_id();
+    }
 
     my $progeny = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::StockRelationship") -> search( { object_id => $cross_id, 'type.name' => 'member_of'  }, { join =>  'type' } );
 
     my $progeny_count = $progeny->count();
-    
 
-    if (!$cross) { 
+
+    if (!$cross) {
 	$c->stash->{template} = '/generic_message.mas';
 	$c->stash->{message} = 'The requested cross does not exist.';
 	return;
     }
 
-    if ($cross->type()->name() ne "cross") { 
+    if ($cross->type()->name() ne "cross") {
 	$c->stash->{template} = '/generic_message.mas';
 	$c->stash->{message} = 'The requested id does not correspond to a cross and cannot be displayed by this page.';
 	return;
     }
-    
+
     $c->stash->{cross_name} = $cross->uniquename();
     $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
     $c->stash->{cross_id} = $cross_id;
     $c->stash->{progeny_count} = $progeny_count;
     $c->stash->{template} = '/breeders_toolbox/cross/index.mas';
-    
+
 }
 
 
