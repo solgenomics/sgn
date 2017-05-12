@@ -157,7 +157,7 @@ jQuery(document).ready(function ($) {
     });
 
     $('#new_accessions_submit').click(function () {
-        accession_list_id = $('#accessions_list_select').val();
+        accession_list_id = $('#list_div_list_select').val();
         verify_accession_list(accession_list_id);
         $('#add_accessions_dialog').modal("hide");
     });
@@ -172,7 +172,7 @@ jQuery(document).ready(function ($) {
         $('#review_found_matches_dialog').modal("hide");
         $('#review_fuzzy_matches_dialog').modal("hide");
         $('#review_absent_dialog').modal("hide");
-        $("#list_div").html(list.listSelect("accessions"));
+        $("#list_div").html(list.listSelect("list_div", ["accessions"] ));
     });
 
     $('body').on('hidden.bs.modal', '.modal', function () {
@@ -188,10 +188,18 @@ jQuery(document).ready(function ($) {
 
     $('#review_fuzzy_matches_download').click(function(){
         //console.log(fuzzyResponse);
-        window.open('/ajax/accession_list/fuzzy_download?fuzzy_response='+JSON.stringify(fuzzyResponse));
+        openWindowWithPost(JSON.stringify(fuzzyResponse));
+        //window.open('/ajax/accession_list/fuzzy_download?fuzzy_response='+JSON.stringify(fuzzyResponse));
     });
 
 });
+
+function openWindowWithPost(fuzzyResponse) {
+    var f = document.getElementById('add_accession_fuzzy_match_download');
+    f.fuzzy_response.value = fuzzyResponse;
+    window.open('', 'TheWindow');
+    f.submit();
+}
 
 function verify_accession_list(accession_list_id) {
     accession_list = JSON.stringify(list.getList(accession_list_id));
@@ -346,10 +354,11 @@ function process_fuzzy_options(accession_list_id) {
         data: {
             'accession_list_id': accession_list_id,
             'fuzzy_option_data': JSON.stringify(data),
+            'names_to_add': JSON.stringify(accessionList)
         },
         success: function (response) {
             //console.log(response);
-            accessionList.concat(response.names_to_add);
+            accessionList = response.names_to_add;
             if (accessionList.length > 0){
                 populate_review_absent_dialog(accessionList);
                 jQuery('#review_absent_dialog').modal('show');
