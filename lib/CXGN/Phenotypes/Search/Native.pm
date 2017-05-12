@@ -10,7 +10,7 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
     'Native',    #can be either 'MaterializedView', or 'Native'
     {
         bcs_schema=>$schema,
-        data_level=>$data_level,
+        data_level=>$data_level,  # plots, plants or averaged_accessions
         trait_list=>$trait_list,
         trial_list=>$trial_list,
         year_list=>$year_list,

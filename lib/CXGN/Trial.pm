@@ -1195,10 +1195,10 @@ sub get_phenotypes_for_trait {
 sub get_stock_phenotypes_for_traits {
     my $self = shift;
     my $trait_ids = shift;
-    my $stock_type = shift; #plot, plant, all
-    my $stock_relationships = shift; #arrayref. plot_of, plant_of
+    my $stock_type = shift; #plot, plant, averaged_accession, all
+    my $stock_relationships = shift; #arrayref. plot_of, plant_of, average_of
     my $relationship_stock_type = shift; #plot, plant
-	my $subject_or_object = shift;
+    my $subject_or_object = shift;
     my @data;
 	#$self->bcs_schema->storage->debug(1);
     my $dbh = $self->bcs_schema->storage()->dbh();

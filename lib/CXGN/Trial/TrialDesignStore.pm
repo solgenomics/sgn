@@ -204,8 +204,8 @@ sub store {
     }
     elsif ($self->get_trial_class() eq "averaged_trial") { 
 	$nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'averaged_trial', 'experiment_type')->cvterm_id();
-	$stock_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
-	$stock_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship')->cvterm_id();	
+	$stock_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'averaged_accession', 'stock_type')->cvterm_id();
+	$stock_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'average_of', 'stock_relationship')->cvterm_id();	
 	# # the trial should already exist, let's retrieve it and its member accessions. The user should not call
 	# # the set_stock_names(), it will be overwritten with the correct values here anyway.
 	# # 
