@@ -161,28 +161,33 @@ sub verify_fuzzy_options_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $accession_list_id = $c->req->param('accession_list_id');
     my $fuzzy_option_hash = decode_json($c->req->param('fuzzy_option_data'));
+    my $names_to_add = decode_json($c->req->param('names_to_add'));
     #print STDERR Dumper $fuzzy_option_hash;
     my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $accession_list_id } );
 
-    my @names_to_add;
+    my %names_to_add = map {$_ => 1} @$names_to_add;
     foreach my $form_name (keys %$fuzzy_option_hash){
         my $item_name = $fuzzy_option_hash->{$form_name}->{'fuzzy_name'};
         my $select_name = $fuzzy_option_hash->{$form_name}->{'fuzzy_select'};
         my $fuzzy_option = $fuzzy_option_hash->{$form_name}->{'fuzzy_option'};
         if ($fuzzy_option eq 'replace'){
             $list->replace_by_name($item_name, $select_name);
+            delete $names_to_add{$item_name};
         } elsif ($fuzzy_option eq 'keep'){
-            push @names_to_add, $item_name;
+            $names_to_add{$item_name} = 1;
         } elsif ($fuzzy_option eq 'remove'){
             $list->remove_by_name($item_name);
+            delete $names_to_add{$item_name};
         } elsif ($fuzzy_option eq 'synonymize'){
             my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$select_name})->stock_id();
             my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
             $stock->add_synonym($item_name);
             #$list->replace_by_name($item_name, $select_name);
+            delete $names_to_add{$item_name};
         }
     }
 
+    my @names_to_add = keys %names_to_add;
     my $rest = {
         success => "1",
         names_to_add => \@names_to_add
@@ -243,7 +248,7 @@ sub add_accession_list_POST : Args(0) {
 
 sub fuzzy_response_download : Path('/ajax/accession_list/fuzzy_download') : ActionClass('REST') { }
 
-sub fuzzy_response_download_GET : Args(0) {
+sub fuzzy_response_download_POST : Args(0) {
     my ($self, $c) = @_;
     my $fuzzy_json = $c->req->param('fuzzy_response');
     my $fuzzy_response = decode_json $fuzzy_json;
