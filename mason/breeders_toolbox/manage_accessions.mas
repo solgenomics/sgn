@@ -36,6 +36,10 @@ $list_id => undef
 
 <& /breeders_toolbox/accessions/pedigree_spreadsheet_upload_format_info.mas &>
 
+<form id="add_accession_fuzzy_match_download" method="post" action="/ajax/accession_list/fuzzy_download" target="TheWindow">
+    <input type="hidden" name="fuzzy_response" value="" />
+</form>
+
 <!-- Modal Dialogs Below Here -->
 
 <div class="modal fade" id="add_accessions_dialog" name="add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsDialog" data-backdrop="static" data-keyboard="false">
