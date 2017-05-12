@@ -1,39 +1,71 @@
 
 <div class="modal fade" id="create_cross_wishlist_dialog" name="create_cross_wishlist_dialog" tabindex="-1" role="dialog" aria-labelledby="createCrossWishlistDialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="createCrossWishlistDialog">Create Cross Wishlist</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-        <form class="form-horizontal" >
-            <div class="form-group">
-                <label class="col-sm-3 control-label">Trial Name(s): </label>
-                <div class="col-sm-9" >
-                    <div id="cross_wishlist_trial_select_div">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="createCrossWishlistDialog">Create Cross Wishlist</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <ul class="nav nav-pills nav-justified">
+                        <li class="active"><a data-toggle="tab" href="#with_lists">Using Lists</a></li>
+                        <li><a data-toggle="tab" href="#not_with_lists">Not Using Lists</a></li>
+                    </ul>
+
+                    <div class="tab-content">
+
+                        <div id="with_lists" class="tab-pane fade in active">
+                            <hr>
+                            <form class="form-horizontal" >
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Female Accession List: </label>
+                                    <div class="col-sm-9" id="female_accession_list_div" name="female_accession_list_div">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Male Accession List: </label>
+                                    <div class="col-sm-9" id="male_accession_list_div" name="male_accession_list_div">
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div id="not_with_lists" class="tab-pane fade">
+                            <hr>
+
+                            <form class="form-horizontal" >
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Trial Name(s): </label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_trial_select_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Female Accession Name(s):</label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_female_accession_select_div">
+                                            <p>First Select One or More Trials</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id ="cross_wishlist_male_parent_div">
+                                </div>
+                            </form>
+                        </div>
+
                     </div>
                 </div>
             </div>
-            <div class="form-group">
-                <label class="col-sm-3 control-label">Female Accession Name(s):</label>
-                <div class="col-sm-9" >
-                    <div id="cross_wishlist_female_accession_select_div">
-                        <p>First Select One or More Trials</p>
-                    </div>
-                </div>
-            </div>
-            <div id ="cross_wishlist_male_parent_div">
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="cross_wishlist_submit" name="cross_wishlist_submits">Create Cross Wishlist</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-primary" id="cross_wishlist_submit" name="cross_wishlist_submits">Create Cross Wishlist</button>
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
     </div>
-  </div>
 </div>
 
 <script>
@@ -42,6 +74,9 @@ jQuery(document).ready(function($) {
 
     jQuery("#create_cross_wishlist").click(function() {
         jQuery("#create_cross_wishlist_dialog").modal("show");
+        var list = new CXGN.List();
+        jQuery("#female_accession_list_div").html(list.listSelect('female_accession_list_div', ["accessions"] ));
+        jQuery("#male_accession_list_div").html(list.listSelect('male_accession_list_div', ["accessions"] ));
     });
 
 
