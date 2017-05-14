@@ -216,7 +216,7 @@ sub add_accession_list_POST : Args(0) {
   my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
   if (!$c->user()) {
-    $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
+    $c->stash->{rest} = {error => "You need to be logged in to submit accessions." };
     return;
   }
 
@@ -224,7 +224,7 @@ sub add_accession_list_POST : Args(0) {
   $owner_name = $c->user()->get_object()->get_username();
 
   if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to submit accessions." };
     return;
   }
 
