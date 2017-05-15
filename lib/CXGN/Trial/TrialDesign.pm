@@ -1700,10 +1700,11 @@ sub _build_plot_names {
 
     foreach my $key (keys %design) {
 	$trial_name ||="";
+  my $block_number = $design{$key}->{block_number};
 	my $stock_name = $design{$key}->{stock_name};
 	my $rep_number = $design{$key}->{rep_number};
 	if ($self->get_design_type() eq "RCBD") { # as requested by IITA (Prasad)
-	    $design{$key}->{plot_name} = $prefix.$trial_name."_rep1_".$stock_name."_1".sprintf("%02d",$suffix).$key;
+	    $design{$key}->{plot_name} = $prefix.$trial_name."_rep1_".$stock_name."_".$block_number.sprintf("%02d",$suffix).$key;
 	}
 	elsif ($self->get_design_type() eq "Augmented") {
 	    $design{$key}->{plot_name} = $prefix.$trial_name."_plotno".$key."_".$stock_name."_".$suffix;
