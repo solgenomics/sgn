@@ -44,7 +44,7 @@ my $fuzzy_option_data = {
     "option_form3" => { "fuzzy_name" => "test_accessionz", "fuzzy_select" => "test_accession1", "fuzzy_option" => "keep" }
 };
 
-$mech->post_ok('http://localhost:3010/ajax/accession_list/fuzzy_options', [ "accession_list_id"=> '3', "fuzzy_option_data"=>$json->encode($fuzzy_option_data) ]);
+$mech->post_ok('http://localhost:3010/ajax/accession_list/fuzzy_options', [ "accession_list_id"=> '3', "fuzzy_option_data"=>$json->encode($fuzzy_option_data), "names_to_add"=> ['test_accessionz'] ]);
 my $final_response = decode_json $mech->content;
 print STDERR Dumper $final_response;
 
