@@ -271,7 +271,7 @@ function review_verification_results(verifyResponse, accession_list_id){
             fuzzy_html = fuzzy_html + '<td><select class="form-control" name ="fuzzy_select">';
             for(j=0; j < verifyResponse.fuzzy[i].matches.length; j++){
                 if (verifyResponse.fuzzy[i].matches[j].is_synonym){
-                    fuzzy_html = fuzzy_html + '<option value="' + verifyResponse.fuzzy[i].matches[j].synonym_of + '">' + verifyResponse.fuzzy[i].matches[j].synonym_of + ' (SYNONYM: '+verifyResponse.fuzzy[i].matches[j].name+')</option>';
+                    fuzzy_html = fuzzy_html + '<option value="' + verifyResponse.fuzzy[i].matches[j].synonym_of + '">' + verifyResponse.fuzzy[i].matches[j].name + ' (SYNONYM OF: '+verifyResponse.fuzzy[i].matches[j].synonym_of+')</option>';
                 } else {
                     fuzzy_html = fuzzy_html + '<option value="' + verifyResponse.fuzzy[i].matches[j].name + '">' + verifyResponse.fuzzy[i].matches[j].name + '</option>';
                 }
