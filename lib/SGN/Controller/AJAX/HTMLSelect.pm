@@ -275,7 +275,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $c = shift;
     my $trial_ids = $c->req->param('trial_ids') || 'all';
     my $stock_id = $c->req->param('stock_id') || 'all';
-    my $stock_type = $c->req->param('stock_type') . 's' || 'none';
+    my $stock_type = $c->req->param('stock_type') ? $c->req->param('stock_type') . 's' : 'none';
     my $data_level = $c->req->param('data_level') || 'all';
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
@@ -335,7 +335,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
 sub get_phenotyped_trait_components_select : Path('/ajax/html/select/phenotyped_trait_components') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $trial_id = $c->req->param('trial_id') || 'all';
+    my $trial_ids = $c->req->param('trial_ids');
     #my $stock_id = $c->req->param('stock_id') || 'all';
     #my $stock_type = $c->req->param('stock_type') . 's' || 'none';
     my $data_level = $c->req->param('data_level') || 'all';
@@ -345,9 +345,13 @@ sub get_phenotyped_trait_components_select : Path('/ajax/html/select/phenotyped_
         $data_level = '';
     }
 
+    my @trial_ids = split ',', $trial_ids;
+
     my @traits;
-    my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$trial_id});
-    my @traits = @{$trial->get_trait_components_assayed($data_level)};
+    foreach (@trial_ids){
+        my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
+        push @traits, @{$trial->get_trait_components_assayed($data_level)};
+    }
 
     my $id = $c->req->param("id") || "html_trait_component_select";
     my $name = $c->req->param("name") || "html_trait_component_select";

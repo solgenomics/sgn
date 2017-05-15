@@ -44,11 +44,11 @@ my $fuzzy_option_data = {
     "option_form3" => { "fuzzy_name" => "test_accessionz", "fuzzy_select" => "test_accession1", "fuzzy_option" => "keep" }
 };
 
-$mech->post_ok('http://localhost:3010/ajax/accession_list/fuzzy_options', [ "accession_list_id"=> '3', "fuzzy_option_data"=>$json->encode($fuzzy_option_data), "names_to_add"=> ['test_accessionz'] ]);
+$mech->post_ok('http://localhost:3010/ajax/accession_list/fuzzy_options', [ "accession_list_id"=> '3', "fuzzy_option_data"=>$json->encode($fuzzy_option_data), "names_to_add"=>$json->encode($response->{'absent'}) ]);
 my $final_response = decode_json $mech->content;
 print STDERR Dumper $final_response;
 
-is_deeply($final_response, {'names_to_add' => ['test_accessionz'],'success' => '1'}, 'check verify fuzzy options response content');
+is_deeply($final_response, {'names_to_add' => ['new_accession1','test_accessionz'],'success' => '1'}, 'check verify fuzzy options response content');
 
 $mech->get_ok('http://localhost:3010/organism/verify_name?species_name='.uri_encode("Manihot esculenta") );
 $response = decode_json $mech->content;

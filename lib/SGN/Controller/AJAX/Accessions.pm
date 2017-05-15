@@ -187,7 +187,7 @@ sub verify_fuzzy_options_POST : Args(0) {
         }
     }
 
-    my @names_to_add = keys %names_to_add;
+    my @names_to_add = sort keys %names_to_add;
     my $rest = {
         success => "1",
         names_to_add => \@names_to_add
