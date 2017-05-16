@@ -694,7 +694,6 @@ sub genotypes_list_genotype_file {
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $background_job = $c->stash->{background_job};
 
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
     my $report_file = $c->controller('solGS::solGS')->create_tempfile($temp_dir, 'geno-data-query-report-args');
     $c->stash->{report_file} = $report_file;
 
