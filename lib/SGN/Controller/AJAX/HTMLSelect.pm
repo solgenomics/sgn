@@ -475,7 +475,11 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
     my $multiple =  $c->req->param("multiple") || 0;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $parent_node_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $parent_node_cvterm)->cvterm_id();
+    my $parent_node_cvterm_row = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $parent_node_cvterm);
+    my $parent_node_cvterm_id;
+    if ($parent_node_cvterm_row){
+        my $parent_node_cvterm_id = $parent_node_cvterm_row->cvterm_id();
+    }
     my $rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $rel_cvterm, $rel_cv)->cvterm_id();
 
     my $ontology_children_ref = $schema->resultset("Cv::CvtermRelationship")->search({type_id => $rel_cvterm_id, object_id => $parent_node_cvterm_id})->search_related('subject');

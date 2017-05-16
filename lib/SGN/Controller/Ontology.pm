@@ -6,6 +6,7 @@ use CXGN::People::Roles;
 use URI::FromHash 'uri';
 use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
 use CXGN::Onto;
+use Data::Dumper;
 
 use Moose;
 
@@ -57,17 +58,17 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
 
 
         my @root_nodes = $onto->get_root_nodes($cv_type);
-        #print STDERR "root nodes are: @root_nodes\n";
+        #print STDERR Dumper \@root_nodes;
         if (scalar @root_nodes > 1) {
             #create simple selectbox of root_nodes
             my $id = $name."_root_select";
             my $name = $name."_root_select";
-            my $default = 'Pick an ontology';
-            if ($default) { unshift @root_nodes, [ '', $default ]; }
             my $html = simple_selectbox_html(
                name => $name,
                id => $id,
-               choices => \@root_nodes
+               choices => \@root_nodes,
+               #size => '20',
+               default => 'Pick an Ontology'
             );
             #put html in hash
             $html_hash{$cv_type} = $html;
@@ -86,7 +87,8 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
               name => $name,
               multiple => $multiple,
               id => $id,
-              choices => \@components
+              choices => \@components,
+              #size => '20'
            );
            #put html in hash
            $html_hash{$cv_type} = $html;

@@ -84,15 +84,18 @@ sub get_cvterm_row_from_trait_name {
     $db_name  =~ s/^\s+//;
 
     my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
-    my $trait_cvterm = $schema->resultset("Cv::Cvterm")
-	->find({
-	     'dbxref.db_id'     => $db_rs->first()->db_id(),
-	     'dbxref.accession' => $accession
-	      },
-	      {
-	      'join' => 'dbxref'
-	      }
-	);
+    my $trait_cvterm;
+    if ($db_rs->first()){
+        $trait_cvterm = $schema->resultset("Cv::Cvterm")
+        ->find({
+             'dbxref.db_id'     => $db_rs->first()->db_id(),
+             'dbxref.accession' => $accession
+              },
+              {
+              'join' => 'dbxref'
+              }
+        );
+    }
     return $trait_cvterm;
 }
 
