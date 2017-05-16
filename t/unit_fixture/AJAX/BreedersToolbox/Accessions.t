@@ -67,8 +67,12 @@ my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_acces
 my $stock = CXGN::Chado::Stock->new($schema,$stock_id);
 $stock->remove_synonym('test_accessiony');
 
-#Remove added stock so tests downstream do not fail
+#Remove added stocks so tests downstream do not fail
 my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_accessionz'})->stock_id();
+my $stock = CXGN::Chado::Stock->new($schema,$stock_id);
+$stock->set_is_obsolete(1) ;
+$stock->store();
+my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'new_accession1'})->stock_id();
 my $stock = CXGN::Chado::Stock->new($schema,$stock_id);
 $stock->set_is_obsolete(1) ;
 $stock->store();
