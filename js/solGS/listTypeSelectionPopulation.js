@@ -461,17 +461,17 @@ function displayPredictedListTypeSelectionPops(args, output) {
                        
     if ( predictedListTypeSelectionPops == false) {  
                                   
-	var predictedListTypeSelectionTable ='<table id="uploaded_selection_pops_table" style="width:100%;text-align:left"><tr>'
+	var predictedListTypeSelectionTable ='<table id="uploaded_selection_pops_table" style="width:100%;text-align:left"><thead><tr>'
             + '<th>List-based selection population</th>'
             + '<th>View GEBVs</th>'
-            +'</tr>'
+            + '</tr></thead><tbody>'
             + '<tr id="list_prediction_output_' + listId +  '">'
             + '<td>'
             + '<b>' + listName + '</b>'
             + '</td>'
             + '<td><data>'+ hiddenInput + '</data>'               
             + output
-            + '</td></tr></table>';
+            + '</td></tr></tbody></table>';
 	
 	jQuery("#uploaded_selection_populations").append(predictedListTypeSelectionTable).show();
 
