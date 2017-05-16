@@ -67,7 +67,8 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
                name => $name,
                id => $id,
                choices => \@root_nodes,
-               #size => '20',
+               multiple => 1,
+               size => '10',
                default => 'Pick an Ontology'
             );
             #put html in hash
@@ -81,14 +82,13 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
            my $name = $name."_select";
            my $default = 0;
            if ($default) { unshift @components, [ '', $default ]; }
-           my $multiple =  'true';
 
            my $html = simple_selectbox_html(
               name => $name,
-              multiple => $multiple,
+              multiple => 1,
               id => $id,
               choices => \@components,
-              #size => '20'
+              size => '10'
            );
            #put html in hash
            $html_hash{$cv_type} = $html;
