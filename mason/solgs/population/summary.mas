@@ -45,10 +45,12 @@ if ($model_link) {
   $project_link = $project_name;
 }
 
-my @data_c1 = (['Name', $project_link],  ['Description', $project_desc], ['Owner', $owner]);
+my @data_c1 = (['Name', $project_name],  ['Description', $project_desc], ['Owner', $owner]);
 my @data_c2 = (['No. of lines', $stocks_no],  ['No. of markers', $markers_no], ['Genotyping version', $protocol]);
 
 push @data_c2,  ['No. of traits', $traits_no] if $traits_no > 1;
+push @data_c2,  ['Training model', $model_link] if $model_link;
+push @data_c2,  ['Training population', $pop_link] if $pop_link;
 
 </%perl>
 
