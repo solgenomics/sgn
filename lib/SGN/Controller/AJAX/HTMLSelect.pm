@@ -347,11 +347,13 @@ sub get_phenotyped_trait_components_select : Path('/ajax/html/select/phenotyped_
 
     my @trial_ids = split ',', $trial_ids;
 
-    my @traits;
+    my @trait_components;
     foreach (@trial_ids){
         my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
-        push @traits, @{$trial->get_trait_components_assayed($data_level)};
+        push @trait_components, @{$trial->get_trait_components_assayed($data_level)};
     }
+    my %unique_trait_components = map {$_=>1} @trait_components;
+    my @unique_components = keys %unique_trait_components;
 
     my $id = $c->req->param("id") || "html_trait_component_select";
     my $name = $c->req->param("name") || "html_trait_component_select";
@@ -360,7 +362,7 @@ sub get_phenotyped_trait_components_select : Path('/ajax/html/select/phenotyped_
       multiple => 1,
       name => $name,
       id => $id,
-      choices => \@traits,
+      choices => \@unique_components,
     );
     $c->stash->{rest} = { select => $html };
 }
