@@ -67,7 +67,6 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
                name => $name,
                id => $id,
                choices => \@root_nodes,
-               multiple => 1,
                size => '10',
                default => 'Pick an Ontology'
             );

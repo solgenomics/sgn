@@ -447,7 +447,7 @@ sub get_trait_components_select : Path('/ajax/html/select/trait_components') Arg
   my $dbh = $c->dbc->dbh();
   my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
   my @components = $onto->get_terms($cv_id);
-
+  #print STDERR Dumper \@components;
   if ($default) { unshift @components, [ '', $default ]; }
 
   my $html = simple_selectbox_html(

@@ -194,7 +194,7 @@ jQuery(document).on('change','#object_root_select, #attribute_root_select, #meth
 var cv_id = jQuery(this).val();
 var name = jQuery(this).attr('name');
 name = name.replace('_root_select', '');
-get_select_box('trait_components', name +'_select_div', { 'id' : name +'_select', 'name': name +'_select', 'multiple': 'true', 'cv_id': cv_id });
+get_select_box('trait_components', name +'_select_div', { 'id' : name +'_select', 'name': name +'_select', 'multiple': 'true', 'cv_id': cv_id, 'size':'10' });
 });
 
 jQuery(document).on('change','#object_select, #attribute_select, #method_select, #unit_select, #trait_select, #tod_select, #toy_select, #gen_select', function() { // retrieve matching traits each time component selection changes
