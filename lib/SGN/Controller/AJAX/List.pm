@@ -419,7 +419,7 @@ sub add_cross_progeny : Path('/list/add_cross_progeny') Args(0) {
             return;
         }
         if (scalar(@{$r->{duplicates}}) > 0){
-            push $response{'duplicates'}, $r->{duplicates};
+            $response{'duplicates'} = $r->{duplicates};
         }
         $response{'count'} += $r->{count};
     }
