@@ -249,31 +249,41 @@ jQuery(document).ready(function () {
 	    }
 	});
 
-	jQuery.ajax( {
-			 url: '/ajax/breeders/trial/'+trial_id+'/coords',
 
-				 success: function(response) {
+  jQuery('#edit_field_map_link').click(function () {
 
-				 var trial_plot_name_html = "<select class='form-control' id='trial_plot_1_name_table'>";
-				 var trial_plot_number_html = "<select class='form-control' id='trial_plot_2_name_table'>";
-				 //var trial_plot_accession_html = "<select class='form-control' id='trial_plot_accession_table'>";
+  	jQuery.ajax( {
+  			 url: '/ajax/breeders/trial/'+trial_id+'/coords',
 
-				  for (n=0; n<response.plot_name.length; n++){
-			 			for (i=0; i<response.plot_name[n].length; i++) {
-			 		    trial_plot_name_html = trial_plot_name_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + "Plot:" + response.plot_name[n][i] + "," + " Number:" + response.plot_number[n][i] + "," +" Accession:"+ response.acc[n][i] +"</option>";
-							trial_plot_number_html = trial_plot_number_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + "Plot:" + response.plot_name[n][i] + "," + " Number:" + response.plot_number[n][i] + "," +" Accession:"+ response.acc[n][i] + "</option>";
-				 		}
-					}
-					trial_plot_name_html = trial_plot_name_html + "</select>";
-					jQuery('#plot_name_in_trial').empty();
-					jQuery('#plot_name_in_trial').html(trial_plot_name_html);
+  				 success: function(response) {
 
-					trial_plot_number_html = trial_plot_number_html + "</select>";
-					jQuery('#sub_plot_accession_in_trial').empty();
-					jQuery('#sub_plot_accession_in_trial').html(trial_plot_number_html);
+  				 var trial_plot_name_html = "<select class='form-control' id='trial_plot_1_name_table'>";
+  				 var trial_plot_number_html = "<select class='form-control' id='trial_plot_2_name_table'>";
+  				 //var trial_plot_accession_html = "<select class='form-control' id='trial_plot_accession_table'>";
 
-			 }
-	});
+  				  for (n=0; n<response.plot_name.length; n++){
+  			 			for (i=0; i<response.plot_name[n].length; i++) {
+  			 		    trial_plot_name_html = trial_plot_name_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + "Plot:" + response.plot_name[n][i] + "," + " Number:" + response.plot_number[n][i] + "," +" Accession:"+ response.acc[n][i] +"</option>";
+  							trial_plot_number_html = trial_plot_number_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + "Plot:" + response.plot_name[n][i] + "," + " Number:" + response.plot_number[n][i] + "," +" Accession:"+ response.acc[n][i] + "</option>";
+  				 		}
+  					}
+  					trial_plot_name_html = trial_plot_name_html + "</select>";
+  					jQuery('#plot_name_in_trial').empty();
+  					jQuery('#plot_name_in_trial').html(trial_plot_name_html);
+
+  					trial_plot_number_html = trial_plot_number_html + "</select>";
+  					jQuery('#sub_plot_accession_in_trial').empty();
+  					jQuery('#sub_plot_accession_in_trial').html(trial_plot_number_html);
+
+  			 }
+  	});
+
+    open_edit_field_map_dialog();
+  });
+
+  function open_edit_field_map_dialog() {
+    jQuery('#edit_field_map_dialog').modal('show');
+  }
 
   jQuery('#replace_accession_submit').click(function() {
     replace_accession_in_trial()

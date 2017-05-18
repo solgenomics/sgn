@@ -26,6 +26,7 @@ use File::Slurp;
 use File::Spec::Functions;
 use File::Copy;
 use Data::Dumper;
+use CXGN::Phenotypes::ParseUpload;
 use CXGN::Phenotypes::StorePhenotypes;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -44,7 +45,7 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id) = _prep_upload($c, $file_type);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id) = _prep_upload($c, $file_type, $schema);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -90,7 +91,7 @@ sub upload_phenotype_store_POST : Args(1) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id) = _prep_upload($c, $file_type);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $image_zip, $user_id) = _prep_upload($c, $file_type, $schema);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -149,7 +150,7 @@ sub upload_phenotype_store_POST : Args(1) {
 }
 
 sub _prep_upload {
-	my ($c, $file_type) = @_;
+    my ($c, $file_type, $schema) = @_;
 	my @success_status;
 	my @error_status;
 
@@ -263,7 +264,7 @@ sub _prep_upload {
     }
 
     ## Validate and parse uploaded file
-    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level);
+    my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
         return (\@success_status, \@error_status);
@@ -284,7 +285,7 @@ sub _prep_upload {
     $phenotype_metadata{'operator'} = $operator;
     $phenotype_metadata{'date'} = $timestamp;
 
-    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included);
+    my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
         return (\@success_status, \@error_status);
