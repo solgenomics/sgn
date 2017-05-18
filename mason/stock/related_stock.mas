@@ -1,0 +1,76 @@
+
+<%args>
+$stock_id
+</%args>
+
+<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
+
+<&| /page/info_section.mas, title => 'Related stocks in trials', collapsible=>1, collapsed=>0 &>
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<table id = "trial_related_stock" class="display">
+<thead>
+ <tr>
+  <th>Name</th>
+  <th>Type</th>
+</tr>
+</thead>
+</table>
+
+</&>
+
+<&| /page/info_section.mas, title => 'Progenies', collapsible=>1, collapsed=>0 &>
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<table id = "progenies" class="table table-hover table-stripted">
+<thead>
+ <tr>
+  <th>As female or male parent</th>
+  <th>Progeny name</th>
+</tr>
+</thead>
+</table>
+
+</&>
+
+<&| /page/info_section.mas, title => 'Member of', collapsible=>1, collapsed=>0 &>
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<table id = "member_of" class="table table-hover table-stripted">
+<thead>
+ <tr>
+  <th>Name</th>
+  <th>Type</th>
+</tr>
+</thead>
+</table>
+
+</&>
+
+<script>
+
+jQuery(document).ready(function(){
+
+ jQuery('#trial_related_stock').DataTable({
+  'ajax':'/stock/'+ <% $stock_id %> + '/datatables/trial_related_stock',
+ });
+
+
+ jQuery('#progenies').DataTable({
+  'ajax':'/stock/'+ <% $stock_id %> + '/datatables/progenies',
+ });
+
+
+ jQuery('#member_of').DataTable({
+  'ajax':'/stock/'+ <% $stock_id %> + '/datatables/member_of',
+ });
+
+
+ });
+
+
+
+ </script>
