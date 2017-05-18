@@ -136,13 +136,13 @@ sub create_hash_lookups {
     my $previous_phenotype_rs = $schema->resultset('Phenotype::Phenotype')->search({'me.cvalue_id'=>{-in=>\@cvterm_ids}}, {'join'=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>{'nd_experiment_stocks'=>'stock'}}}, 'select' => ['me.value', 'me.cvalue_id', 'stock.stock_id'], 'as' => ['value', 'cvterm_id', 'stock_id']});
     while (my $previous_phenotype_cvterm = $previous_phenotype_rs->next() ) {
         my $cvterm_id = $previous_phenotype_cvterm->get_column('cvterm_id');
-        my $stock_id = $previous_phenotype_cvterm->get_column('stock_id') || ' ';
-        my $previous_value = $previous_phenotype_cvterm->get_column('value') || ' ';
-
-        $check_unique_trait_stock{$cvterm_id, $stock_id} = $previous_value;
-        $check_unique_value_trait_stock{$previous_value, $cvterm_id, $stock_id} = 1;
+        my $stock_id = $previous_phenotype_cvterm->get_column('stock_id');
+        if ($stock_id){
+            my $previous_value = $previous_phenotype_cvterm->get_column('value') || ' ';
+            $check_unique_trait_stock{$cvterm_id, $stock_id} = $previous_value;
+            $check_unique_value_trait_stock{$previous_value, $cvterm_id, $stock_id} = 1;
+        }
     }
-
     $self->unique_value_trait_stock(\%check_unique_value_trait_stock);
     $self->unique_trait_stock(\%check_unique_trait_stock);
 
@@ -163,6 +163,7 @@ sub verify {
     my $trait_validator = CXGN::List::Validate->new();
     my @plots_missing = @{$plot_validator->validate($schema,'plots_or_plants',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
+    my @trait_list = @{$self->trait_list};
     my $error_message;
     my $warning_message;
 
@@ -217,7 +218,6 @@ sub verify {
         }
     }
 
-    #print STDERR Dumper \@trait_list;
     my %check_file_stock_trait_duplicates;
 
     foreach my $plot_name (@plot_list) {
@@ -226,7 +226,7 @@ sub verify {
             #print STDERR Dumper $value_array;
             my $trait_value = $value_array->[0];
             my $timestamp = $value_array->[1];
-
+            #print STDERR "$plot_name, $trait_name, $trait_value\n";
             if ($trait_value) {
                 my $trait_cvterm = $trait_objs{$trait_name};
                 my $trait_cvterm_id = $trait_cvterm->cvterm_id();
@@ -259,6 +259,7 @@ sub verify {
                     }
                 }
 
+                #print STDERR "$trait_value, $trait_cvterm_id, $stock_id\n";
                 #check if the plot_name, trait_name combination already exists in database.
                 if (exists($check_unique_value_trait_stock{$trait_value, $trait_cvterm_id, $stock_id})) {
                     $warning_message = $warning_message."<small>$plot_name already has the same value as in your file ($trait_value) stored for the trait $trait_name.</small><hr>";
@@ -460,13 +461,20 @@ sub delete_previous_phenotypes {
     my $trait_cvterm_id = shift;
     my $stock_id = shift;
 
-    my $q = "DELETE FROM phenotype WHERE phenotype_id IN (
-         SELECT phenotype_id FROM phenotype
-         JOIN nd_experiment_phenotype using(phenotype_id)
-         JOIN nd_experiment_stock using(nd_experiment_id)
-         JOIN stock using(stock_id)
-         WHERE stock.stock_id=?
-         AND phenotype.cvalue_id=? );";
+    my $q = "
+        DROP TABLE IF EXISTS temp_pheno_duplicate_deletion;
+        CREATE TEMP TABLE temp_pheno_duplicate_deletion AS
+        (SELECT phenotype_id, nd_experiment_id
+        FROM phenotype
+        JOIN nd_experiment_phenotype using(phenotype_id)
+        JOIN nd_experiment_stock using(nd_experiment_id)
+        JOIN stock using(stock_id)
+        WHERE stock.stock_id=?
+        AND phenotype.cvalue_id=?);
+        DELETE FROM phenotype WHERE phenotype_id IN (SELECT phenotype_id FROM temp_pheno_duplicate_deletion);
+        DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN (SELECT nd_experiment_id FROM temp_pheno_duplicate_deletion);
+        DELETE FROM nd_experiment WHERE nd_experiment_id IN (SELECT nd_experiment_id FROM temp_pheno_duplicate_deletion);
+        ";
 
     my $h = $self->bcs_schema->storage->dbh()->prepare($q);
     $h->execute($stock_id, $trait_cvterm_id);
