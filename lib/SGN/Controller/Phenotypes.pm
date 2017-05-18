@@ -70,7 +70,7 @@ sub delete_uploaded_phenotype_files : Path('/breeders/phenotyping/delete/') Args
      my $h = $dbh->prepare("
         DROP TABLE IF EXISTS temp;
         CREATE TEMP TABLE temp AS
-        SELECT nd_experiment_id, nd_experiment_md_files_id, phenotype_id FROM metadata.md_files LEFT JOIN phenome.nd_experiment_md_files USING(file_id) JOIN nd_experiment_phenotype USING (nd_experiment_id) WHERE file_id=?;
+        SELECT nd_experiment_id, nd_experiment_md_files_id, phenotype_id FROM metadata.md_files JOIN phenome.nd_experiment_md_files USING(file_id) JOIN nd_experiment_phenotype USING (nd_experiment_id) WHERE file_id=?;
         DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_md_files_id IN (SELECT nd_experiment_md_files_id FROM temp);
         DELETE FROM nd_experiment where nd_experiment_id IN (SELECT nd_experiment_id FROM temp);
         DELETE FROM phenotype where phenotype_id IN (SELECT phenotype_id FROM temp);

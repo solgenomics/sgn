@@ -332,6 +332,7 @@ sub store {
     my $archived_file_type = $phenotype_metadata->{'archived_file_type'};
     my $operator = $phenotype_metadata->{'operator'};
     my $upload_date = $phenotype_metadata->{'date'};
+    my $success_message;
 
     my $phenotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -359,6 +360,7 @@ sub store {
 
     ## Use txn_do with the following coderef so that if any part fails, the entire transaction fails.
     my $coderef = sub {
+        my @overwritten_values;
 
         foreach my $plot_name (@plot_list) {
 
@@ -384,7 +386,7 @@ sub store {
                     #Remove previous phenotype values for a given stock and trait, if $overwrite values is checked
                     if ($overwrite_values) {
                         if (exists($check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id})) {
-                            $self->delete_previous_phenotypes($trait_cvterm->cvterm_id(), $stock_id);
+                            push @overwritten_values, $self->delete_previous_phenotypes($trait_cvterm->cvterm_id(), $stock_id);
                         }
                         $check_unique_trait_stock{$trait_cvterm->cvterm_id(), $stock_id} = 1;
                     }
@@ -434,6 +436,17 @@ sub store {
                 }
             }
         }
+
+        $success_message = 'All values in your file are now saved in the database!';
+        #print STDERR Dumper \@overwritten_values;
+        my %files_with_overwritten_values = map {$_->[0] => 1} @overwritten_values;
+        my $obsoleted_files = $self->check_overwritten_files_status(keys %files_with_overwritten_values);
+        if (scalar (@$obsoleted_files) > 0){
+            $success_message .= ' The following previously uploaded files are now obsolete because all values from them were overwritten by your upload: ';
+            foreach (@$obsoleted_files){
+                $success_message .= " ".$_->[1];
+            }
+        }
     };
 
     try {
@@ -445,14 +458,14 @@ sub store {
     if ($transaction_error) {
         $error_message = $transaction_error;
         print STDERR "Transaction error storing phenotypes: $transaction_error\n";
-        return $error_message;
+        return ($error_message, $success_message);
     }
 
     if ($archived_file) {
         $self->save_archived_file_metadata($archived_file, $archived_file_type, \%experiment_ids);
     }
 
-    return $error_message;
+    return ($error_message, $success_message);
 }
 
 
@@ -464,10 +477,11 @@ sub delete_previous_phenotypes {
     my $q = "
         DROP TABLE IF EXISTS temp_pheno_duplicate_deletion;
         CREATE TEMP TABLE temp_pheno_duplicate_deletion AS
-        (SELECT phenotype_id, nd_experiment_id
+        (SELECT phenotype_id, nd_experiment_id, file_id
         FROM phenotype
         JOIN nd_experiment_phenotype using(phenotype_id)
         JOIN nd_experiment_stock using(nd_experiment_id)
+        JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
         JOIN stock using(stock_id)
         WHERE stock.stock_id=?
         AND phenotype.cvalue_id=?);
@@ -475,9 +489,46 @@ sub delete_previous_phenotypes {
         DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id IN (SELECT nd_experiment_id FROM temp_pheno_duplicate_deletion);
         DELETE FROM nd_experiment WHERE nd_experiment_id IN (SELECT nd_experiment_id FROM temp_pheno_duplicate_deletion);
         ";
+    my $q2 = "SELECT phenotype_id, nd_experiment_id, file_id FROM temp_pheno_duplicate_deletion;";
 
     my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    my $h2 = $self->bcs_schema->storage->dbh()->prepare($q2);
     $h->execute($stock_id, $trait_cvterm_id);
+    $h2->execute();
+
+    my @deleted_phenotypes;
+    while (my ($phenotype_id, $nd_experiment_id, $file_id) = $h2->fetchrow_array()) {
+        push @deleted_phenotypes, [$file_id, $phenotype_id, $nd_experiment_id];
+    }
+    return @deleted_phenotypes;
+}
+
+sub check_overwritten_files_status {
+    my $self = shift;
+    my @file_ids = shift;
+    #print STDERR Dumper \@file_ids;
+
+    my $q = "SELECT count(nd_experiment_md_files_id) FROM metadata.md_files JOIN phenome.nd_experiment_md_files using(file_id) WHERE file_id=?;";
+    my $q2 = "UPDATE metadata.md_metadata SET obsolete=1 where metadata_id IN (SELECT metadata_id FROM metadata.md_files where file_id=?);";
+    my $q3 = "SELECT basename FROM metadata.md_files where file_id=?;";
+    my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+    my $h2 = $self->bcs_schema->storage->dbh()->prepare($q2);
+    my $h3 = $self->bcs_schema->storage->dbh()->prepare($q3);
+    my @obsoleted_files;
+    foreach (@file_ids){
+        $h->execute($_);
+        my $count = $h->fetchrow;
+        print STDERR "COUNT $count \n";
+        if ($count == 0){
+            $h2->execute($_);
+            $h3->execute($_);
+            my $basename = $h3->fetchrow;
+            push @obsoleted_files, [$_, $basename];
+            print STDERR "MADE file_id $_ OBSOLETE\n";
+        }
+    }
+    #print STDERR Dumper \@obsoleted_files;
+    return \@obsoleted_files;
 }
 
 sub save_archived_file_metadata {
