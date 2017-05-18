@@ -104,7 +104,7 @@ sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_compo
 
   my $self = shift;
   my $c = shift;
-
+  my @allowed_composed_cvs = split ',', $c->config->{composable_cvs};
   my @object_ids = $c->req->param("object_ids[]");
   my @attribute_ids = $c->req->param("attribute_ids[]");
   my @method_ids = $c->req->param("method_ids[]");
@@ -118,7 +118,7 @@ sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_compo
 
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-  my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, {
+  my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, \@allowed_composed_cvs, {
       object_ids => \@object_ids,
       attribute_ids => \@attribute_ids,
       method_ids => \@method_ids,

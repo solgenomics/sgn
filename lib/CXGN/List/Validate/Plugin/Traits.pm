@@ -50,12 +50,12 @@ sub validate {
             );
 
             if ($rs->count == 0) {
-                push @missing, $_;
+                push @missing, $term;
             } else {
-            #        my $rs_var = $rs->search_related('cvterm_relationship_subjects', {'type.name' => 'VARIABLE_OF'}, { 'join' => 'type'});
-            #        if ($rs_var->count == 0) {
-            #            push @missing, $_;
-            #        }
+#                my $rs_var = $rs->search_related('cvterm_relationship_subjects', {'type.name' => 'VARIABLE_OF'}, { 'join' => 'type'});
+#                if ($rs_var->count == 0) {
+#                    push @missing, $term;
+#                }
             }
 
             if ($db->name eq 'COMP'){
@@ -96,6 +96,7 @@ sub validate {
         }
 
     }
+    print STDERR Dumper \@missing;
     return { missing => \@missing };
 }
 

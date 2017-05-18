@@ -10,13 +10,14 @@ function create_multi_selects(cv_names) {
         switch (name) {
             case "time":
                 jQuery("#tod_div,#toy_div,#gen_div").show();
-                get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': 'time of day|TIME:0000001', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
-                get_select_box('ontology_children', 'toy_select_div', { 'selectbox_id' : 'toy_select', 'selectbox_name': 'toy_select', 'multiple': 'true', 'parent_node_cvterm': 'time of year|TIME:0000005', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': 'cass time of day|CASSTIME:0000001', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                get_select_box('ontology_children', 'toy_select_div', { 'selectbox_id' : 'toy_select', 'selectbox_name': 'toy_select', 'multiple': 'true', 'parent_node_cvterm': 'cass number of weeks|CASSTIME:0000005', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
                 get_select_box('ontology_children', 'gen_select_div', { 'selectbox_id' : 'gen_select', 'selectbox_name': 'gen_select', 'multiple': 'true', 'parent_node_cvterm': 'generation|TIME:0000072', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
                 break;
             case "tod":
                 jQuery("#tod_div").show();
-                get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': 'time of day|TIME:0000001', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                console.log('Here');
+                get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': 'cass time of day|CASSTIME:0000001', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
                 break;
             case "toy":
                 jQuery("#toy_div").show();

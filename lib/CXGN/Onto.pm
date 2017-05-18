@@ -174,12 +174,14 @@ sub compose_trait {
 
     #print STDERR "Contains relationship cvterm_id = " . $contains_relationship->cvterm_id();
 
+    my $variable_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'VARIABLE_OF' });
+
     my @component_ids = split ',', $ids;
 
     my $isa_rel = $schema->resultset('Cv::CvtermRelationship')->create(
       { subject_id => $new_term->cvterm_id(),
         object_id  => $parent_term->cvterm_id(),
-        type_id    => $isa_relationship->cvterm_id()
+        type_id    => $variable_relationship->cvterm_id()
     });
 
     foreach my $component_id (@component_ids) {

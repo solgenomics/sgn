@@ -125,25 +125,46 @@ sub get_trait_from_exact_components {
 sub get_traits_from_component_categories {
     my $self= shift;
     my $schema = shift;
+    my $allowed_composed_cvs = shift;
     my $cvterm_id_hash = shift;
     my %id_hash = %$cvterm_id_hash;
     my @id_strings;
+
+    my $object_order = List::MoreUtils::first_index {$_ eq 'object'} @$allowed_composed_cvs;
+    my $attribute_order = List::MoreUtils::first_index {$_ eq 'attribute'} @$allowed_composed_cvs;
+    my $method_order = List::MoreUtils::first_index {$_ eq 'method'} @$allowed_composed_cvs;
+    my $unit_order = List::MoreUtils::first_index {$_ eq 'unit'} @$allowed_composed_cvs;
+    my $trait_order = List::MoreUtils::first_index {$_ eq 'trait'} @$allowed_composed_cvs;
+    my $time_order = List::MoreUtils::first_index {$_ eq 'time'} @$allowed_composed_cvs;
+    my $tod_order = List::MoreUtils::first_index {$_ eq 'tod'} @$allowed_composed_cvs;
+    my $toy_order = List::MoreUtils::first_index {$_ eq 'toy'} @$allowed_composed_cvs;
+    my $gen_order = List::MoreUtils::first_index {$_ eq 'gen'} @$allowed_composed_cvs;
+    $object_order++;
+    $attribute_order++;
+    $method_order++;
+    $unit_order++;
+    $trait_order++;
+    $time_order++;
+    $tod_order++;
+    $toy_order++;
+    $gen_order++;
+    print STDERR "ALLOWED CV ORDER: object $object_order attribute $attribute_order method $method_order unit $unit_order trait $trait_order time $time_order\n";
 
     delete @id_hash{ grep { scalar @{$id_hash{$_}} < 1 } keys %id_hash }; #remove cvtypes with no ids
     my @keys = sort keys %id_hash;
 
     product { push @id_strings, join(',', map { "'$_[$_]'" } 0 .. $#keys); } @id_hash{@keys};
-    #print STDERR "id strings are: ".Dumper(@id_strings)."\n";
+    print STDERR "id strings are: ".Dumper(@id_strings)."\n";
 
     my $select = "SELECT string_agg(ordered_components.name::text, '|'), array_agg(ordered_components.cvterm_id)";
     my $from = " FROM (SELECT cvterm.name, cvterm.cvterm_id, cv.cv_id FROM cvterm JOIN cv USING(cv_id) JOIN cvprop ON(cv.cv_id = cvprop.cv_id) JOIN cvterm type ON(cvprop.type_id = type.cvterm_id)";
     my $where = " WHERE cvterm.cvterm_id IN (";
-    my $order = ") ORDER BY ( case when type.name = 'object_ontology' then 1
-                                    when type.name = 'attribute_ontology' then 2
-                                    when type.name = 'method_ontology' then 3
-                                    when type.name = 'unit_ontology' then 4
-                                    when type.name = 'trait_ontology' then 5
-                                    when type.name = 'time_ontology' then 6
+    my $order = ") ORDER BY ( case when type.name = 'object_ontology' then $object_order
+                                    when type.name = 'attribute_ontology' then $attribute_order
+                                    when type.name = 'method_ontology' then $method_order
+                                    when type.name = 'unit_ontology' then $unit_order
+                                    when type.name = 'trait_ontology' then $trait_order
+                                    when type.name = 'time_ontology' then $time_order
                                   end
                                 )
                               ) ordered_components";

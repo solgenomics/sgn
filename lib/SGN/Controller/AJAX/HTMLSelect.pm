@@ -472,6 +472,7 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
     my $rel_cvterm = $c->request->param("rel_cvterm");
     my $rel_cv = $c->request->param("rel_cv");
     my $size = $c->req->param('size') || '5';
+    print STDERR "Parent Node $parent_node_cvterm\n";
 
     my $select_name = $c->request->param("selectbox_name");
     my $select_id = $c->request->param("selectbox_id");
@@ -502,7 +503,7 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
     if ($empty) {
         unshift @ontology_children, [ 0, "None" ];
     }
-    #print STDERR Dumper \@ontology_children;
+    print STDERR Dumper \@ontology_children;
     my $html = simple_selectbox_html(
         name => $select_name,
         id => $select_id,
