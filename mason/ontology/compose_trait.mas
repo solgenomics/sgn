@@ -249,29 +249,29 @@ jQuery('#compose_trait').on('click', function () {
     disable_ui();
     //console.log("just disabled ui");
 var new_traits = jQuery("#new_traits").val();
-var new_trait_names = [];
+var new_trait_names = {};
 jQuery("#new_traits option:selected").each(function () {
    if (jQuery(this).length) {
-    new_trait_names.push(jQuery(this).text());
+    new_trait_names[jQuery(this).text()] = jQuery(this).val();
    }
 });
-//console.log("new trait names = "+new_trait_names);
+//console.log(new_trait_names);
 var successes = [];
 var errors = [];
 var names = [];
-for (var i = 0; i < new_traits.length; i++) {
-  var component_ids = new_traits[i];
     jQuery.ajax( {
-      url: '/ajax/onto/compose',
+      url: '/ajax/onto/store_composed_term',
       timeout: 60000,
       async: false,
       method: 'POST',
-      data: {'ids': component_ids},
+      data: {'new_trait_names': JSON.stringify(new_trait_names)},
       success: function(response) {
       if (response.success) {
         successes.push("<li class='list-group-item list-group-item-success'>"+response.success+"</li>");
-        //console.log("Name is "+response.name);
-        names.push(response.name+"\n");
+        //console.log("Names are "+response.names);
+        for(var i=0; i<response.names.length; i++){
+            names.push(response.names[i]+"\n");
+        }
         return;
       }
       else {
@@ -284,7 +284,6 @@ for (var i = 0; i < new_traits.length; i++) {
         return;
       }
     });
-}
 // display results
 var results_html = '';
 if (successes.length > 0) {
