@@ -40,7 +40,7 @@ jQuery(document).ready( function() {
 		jQuery("#list_type_training_pop_load").click(function() {
 		    
 		    if (listDetail.type.match(/plots/)) {
-			askJobQueueing(listId);
+			askTrainingJobQueueing(listId);
 		    } else {
 			var trialsList = listDetail.list;
 			var trialsNames = listDetail.elementsNames;
@@ -53,7 +53,7 @@ jQuery(document).ready( function() {
 });
 
 
-function getListElementsNames (list) {
+function getTrainingListElementsNames (list) {
    
     var names = [];
     for (var i = 0; i < list.length; i++) {
@@ -81,7 +81,7 @@ function getListTypeTrainingPopDetail(listId) {
 	listName      = list.listNameById(listId);
 	listElements  = listData.elements;
 
-	listElementsNames = getListElementsNames(listElements);
+	listElementsNames = getTrainingListElementsNames(listElements);
     }
   
     return {'name'          : listName,
@@ -109,10 +109,10 @@ function loadTrialListTypeTrainingPop (trialsNames) {
 
 }
 
-function askJobQueueing (listId) {
+function askTrainingJobQueueing (listId) {
  
-    var args = createReqArgs(listId);
-    var modelId = args.population_id;
+    var args = createTrainingReqArgs(listId);
+    var modelId = args.training_pop_id;
       
     var hostName = window.location.protocol + '//' + window.location.host;    
     var page     = hostName + '/solgs/population/' + modelId;
@@ -122,7 +122,7 @@ function askJobQueueing (listId) {
 }
 
 
-function createReqArgs (listId) {
+function createTrainingReqArgs (listId) {
 
     var genoList  = getListTypeTrainingPopDetail(listId);
     var listName  = genoList.name;
@@ -132,13 +132,13 @@ function createReqArgs (listId) {
     var popType = 'uploaded_reference';
 
     var args = {
-	'list_name'      : listName,
-	'list'           : list,
-	'list_id'        : listId,
-	'analysis_type'  : 'population download',
-	'data_set_type'  : 'single population',
-        'population_id'  : popId,
-	'population_type': popType,
+	'list_name'       : listName,
+	'list'            : list,
+	'list_id'         : listId,
+	'analysis_type'   : 'population download',
+	'data_set_type'   : 'single population',
+        'training_pop_id' : popId,
+	'population_type' : popType,
     };  
 
     return args;
@@ -148,9 +148,9 @@ function createReqArgs (listId) {
 
 function loadPlotListTypeTrainingPop(listId) {     
   
-    var args  = createReqArgs(listId);
+    var args  = createTrainingReqArgs(listId);
     var len   = args.list.length;
-    var popId = args.population_id;
+    var popId = args.training_pop_id;
 
     if (window.Prototype) {
 	delete Array.prototype.toJSON;
