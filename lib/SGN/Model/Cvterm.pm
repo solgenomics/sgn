@@ -25,7 +25,6 @@ package SGN::Model::Cvterm;
 
 use CXGN::Chado::Cvterm;
 use Data::Dumper;
-use Set::Product qw(product);
 
 sub get_cvterm_object {
     my $self = shift;
@@ -122,64 +121,68 @@ sub get_trait_from_exact_components {
     return $trait_cvterm_ids[0];
 }
 
+sub get_cvterm_from_cvterm_id {
+    my $schema = shift;
+    my $cvterm_id = shift;
+    my $format = shift;
+    if ($format eq 'concise'){
+        $q = "SELECT name FROM cvterm WHERE cvterm_id=?;";
+    }
+    if ($format eq 'extended'){
+        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) WHERE cvterm_id=?;";
+    }
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($cvterm_id);
+    $name = $h->fetchrow();
+    return $name;
+}
+
+sub _concatenate_cvterm_array {
+    my $schema = shift;
+    my $delimiter = shift;
+    my $format = shift;
+    my $first = shift;
+    my $second = shift;
+    my %first_hash = %$first;
+    foreach my $f (keys %first_hash){
+        my $ids = $first_hash{$f};
+        foreach my $s (@$second){
+            my $name = get_cvterm_from_cvterm_id($schema, $s, $format);
+            my $concatenated_cvterm = $f.$delimiter.$name;
+            push @$ids, $s;
+            delete $first_hash{$f};
+            $first_hash{$concatenated_cvterm} = $ids;
+        }
+    }
+    return \%first_hash;
+}
 sub get_traits_from_component_categories {
     my $self= shift;
     my $schema = shift;
     my $allowed_composed_cvs = shift;
+    my $composable_cvterm_delimiter = shift;
+    my $composable_cvterm_format = shift;
     my $cvterm_id_hash = shift;
     my %id_hash = %$cvterm_id_hash;
+    delete @id_hash{ grep { scalar @{$id_hash{$_}} < 1 } keys %id_hash }; #remove cvtypes with no ids
     my @id_strings;
 
-    my $object_order = List::MoreUtils::first_index {$_ eq 'object'} @$allowed_composed_cvs;
-    my $attribute_order = List::MoreUtils::first_index {$_ eq 'attribute'} @$allowed_composed_cvs;
-    my $method_order = List::MoreUtils::first_index {$_ eq 'method'} @$allowed_composed_cvs;
-    my $unit_order = List::MoreUtils::first_index {$_ eq 'unit'} @$allowed_composed_cvs;
-    my $trait_order = List::MoreUtils::first_index {$_ eq 'trait'} @$allowed_composed_cvs;
-    my $time_order = List::MoreUtils::first_index {$_ eq 'time'} @$allowed_composed_cvs;
-    my $tod_order = List::MoreUtils::first_index {$_ eq 'tod'} @$allowed_composed_cvs;
-    my $toy_order = List::MoreUtils::first_index {$_ eq 'toy'} @$allowed_composed_cvs;
-    my $gen_order = List::MoreUtils::first_index {$_ eq 'gen'} @$allowed_composed_cvs;
-    $object_order++;
-    $attribute_order++;
-    $method_order++;
-    $unit_order++;
-    $trait_order++;
-    $time_order++;
-    $tod_order++;
-    $toy_order++;
-    $gen_order++;
-    print STDERR "ALLOWED CV ORDER: object $object_order attribute $attribute_order method $method_order unit $unit_order trait $trait_order time $time_order\n";
-
-    delete @id_hash{ grep { scalar @{$id_hash{$_}} < 1 } keys %id_hash }; #remove cvtypes with no ids
-    my @keys = sort keys %id_hash;
-
-    product { push @id_strings, join(',', map { "'$_[$_]'" } 0 .. $#keys); } @id_hash{@keys};
-    print STDERR "id strings are: ".Dumper(@id_strings)."\n";
-
-    my $select = "SELECT string_agg(ordered_components.name::text, '|'), array_agg(ordered_components.cvterm_id)";
-    my $from = " FROM (SELECT cvterm.name, cvterm.cvterm_id, cv.cv_id FROM cvterm JOIN cv USING(cv_id) JOIN cvprop ON(cv.cv_id = cvprop.cv_id) JOIN cvterm type ON(cvprop.type_id = type.cvterm_id)";
-    my $where = " WHERE cvterm.cvterm_id IN (";
-    my $order = ") ORDER BY ( case when type.name = 'object_ontology' then $object_order
-                                    when type.name = 'attribute_ontology' then $attribute_order
-                                    when type.name = 'method_ontology' then $method_order
-                                    when type.name = 'unit_ontology' then $unit_order
-                                    when type.name = 'trait_ontology' then $trait_order
-                                    when type.name = 'time_ontology' then $time_order
-                                  end
-                                )
-                              ) ordered_components";
-
-    my %possible_traits;
-    foreach my $id_string (@id_strings) {
-      #print STDERR "This id string is ".$id_string."\n";
-      my $new_trait_q = $select . $from . $where . $id_string . $order;
-      #print STDERR "QUERY is $new_trait_q\n";
-      my $h = $schema->storage->dbh->prepare($new_trait_q);
-      $h->execute();
-      while(my ($name, @ids) = $h->fetchrow_array()){
-          $possible_traits{$name} = \@ids;
-      }
+    my @ordered_id_groups;
+    foreach my $cv_name (@$allowed_composed_cvs){
+        push @ordered_id_groups, $id_hash{$cv_name};
     }
+
+    my $id_array_count = scalar(@ordered_id_groups);
+    my $concatenated_cvterms;
+    foreach (@{$ordered_id_groups[0]}){
+        my $name = get_cvterm_from_cvterm_id($schema, $_, $composable_cvterm_format);
+        $concatenated_cvterms->{$name} = [$_];
+    }
+    for my $n (0 .. $id_array_count-2){
+        $concatenated_cvterms = _concatenate_cvterm_array($schema, $composable_cvterm_delimiter, $composable_cvterm_format, $concatenated_cvterms, $ordered_id_groups[$n+1]);
+    }
+    my %possible_traits = %$concatenated_cvterms;
+
     #print STDERR "possible traits are: ".Dumper(%possible_traits)."\n";
 
     my $contains_cvterm_id = $self->get_cvterm_row($schema, 'contains', 'relationship')->cvterm_id();
@@ -205,7 +208,9 @@ sub get_traits_from_component_categories {
     my @traits;
     while(my ($id, $name) = $h->fetchrow_array()){
         push @traits, [ $id, $name ];
-        $name =~ s/\|[^\|]+$//; # remove dbname and accession number before using as hash key
+        if ($composable_cvterm_format eq 'concise'){
+            $name =~ s/\|[^\|]+$//; # remove dbname and accession number before using as hash key
+        }
         delete($possible_traits{$name});
     }
 

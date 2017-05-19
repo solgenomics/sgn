@@ -163,7 +163,7 @@ sub verify {
     my $trait_validator = CXGN::List::Validate->new();
     my @plots_missing = @{$plot_validator->validate($schema,'plots_or_plants',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
-    my @trait_list = @{$self->trait_list};
+    @trait_list = @{$self->trait_list};
     my $error_message;
     my $warning_message;
 

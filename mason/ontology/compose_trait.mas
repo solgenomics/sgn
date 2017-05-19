@@ -6,7 +6,10 @@ $method_select => undef
 $unit_select => undef
 $trait_select => undef
 $composable_cvs => undef
-$allowed_combinations => undef
+$composable_cvs_allowed_combinations => undef
+$composable_tod_root_cvterm => undef
+$composable_toy_root_cvterm => undef
+$composable_gen_root_cvterm => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => ['CXGN.BreederSearch', 'CXGN.ComposeTrait'] &>
@@ -302,5 +305,38 @@ addToListMenu('results_to_list_menu', 'new_trait_names', {
 enable_ui();
 jQuery('#traits_saved_dialog').modal("show");
 });
+
+function create_multi_selects(cv_names) {
+    jQuery('#compose_trait').prop('disabled', true);
+    var names = cv_names.split(',');
+
+    for(i = 0; i < names.length; i++){
+        var cv_name = names[i];
+        var name = cv_name.trim();
+
+        switch (name) {
+            case "time":
+                jQuery("#tod_div,#toy_div,#gen_div").show();
+                get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_tod_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                get_select_box('ontology_children', 'toy_select_div', { 'selectbox_id' : 'toy_select', 'selectbox_name': 'toy_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_toy_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                get_select_box('ontology_children', 'gen_select_div', { 'selectbox_id' : 'gen_select', 'selectbox_name': 'gen_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_gen_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                break;
+            case "tod":
+                jQuery("#tod_div").show();
+                get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_tod_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                break;
+            case "toy":
+                jQuery("#toy_div").show();
+                get_select_box('ontology_children', 'toy_select_div', { 'selectbox_id' : 'toy_select', 'selectbox_name': 'toy_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_toy_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                break;
+            case "gen":
+                jQuery("#gen_div").show();
+                get_select_box('ontology_children', 'gen_select_div', { 'selectbox_id' : 'gen_select', 'selectbox_name': 'gen_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_gen_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                break;
+            default:
+                if (window.console) console.log("Did not recognize "+name+" category");
+        }
+    }
+}
 
 </script>
