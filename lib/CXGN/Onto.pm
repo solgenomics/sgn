@@ -90,6 +90,12 @@ sub store_composed_term {
             die "Should not save postcomposed term with less than 2 components\n";
         }
 
+        my $cvterm_name_check = $schema->resultset('Cv::Cvterm')->find({ name=>$name });
+        if ($cvterm_name_check){
+            print STDERR "Cvterm with name $name already exists... skipping new addition\n";
+            next;
+        }
+
         my $existing_trait_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@component_ids);
         if ($existing_trait_id) {
             die "This trait already exists.\n";

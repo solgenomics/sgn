@@ -472,6 +472,7 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
     my $rel_cvterm = $c->request->param("rel_cvterm");
     my $rel_cv = $c->request->param("rel_cv");
     my $size = $c->req->param('size') || '5';
+    my $value_format = $c->req->param('value_format') || 'ids';
     print STDERR "Parent Node $parent_node_cvterm\n";
 
     my $select_name = $c->request->param("selectbox_name");
@@ -496,14 +497,19 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
         my $accession = $dbxref_info->first()->accession();
         my $db_info = $dbxref_info->search_related('db');
         my $db_name = $db_info->first()->name();
-        push @ontology_children, [$cvterm_id, $child->name."|".$db_name.":".$accession];
+        if ($value_format eq 'ids'){
+            push @ontology_children, [$cvterm_id, $child->name."|".$db_name.":".$accession];
+        }
+        if ($value_format eq 'names'){
+            push @ontology_children, [$child->name."|".$db_name.":".$accession, $child->name."|".$db_name.":".$accession];
+        }
     }
 
     @ontology_children = sort { $a->[1] cmp $b->[1] } @ontology_children;
     if ($empty) {
         unshift @ontology_children, [ 0, "None" ];
     }
-    print STDERR Dumper \@ontology_children;
+    #print STDERR Dumper \@ontology_children;
     my $html = simple_selectbox_html(
         name => $select_name,
         id => $select_id,
