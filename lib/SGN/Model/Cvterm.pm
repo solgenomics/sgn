@@ -121,7 +121,7 @@ sub get_trait_from_exact_components {
     return $trait_cvterm_ids[0];
 }
 
-sub get_cvterm_from_cvterm_id {
+sub get_trait_from_cvterm_id {
     my $schema = shift;
     my $cvterm_id = shift;
     my $format = shift;
@@ -147,7 +147,7 @@ sub _concatenate_cvterm_array {
     foreach my $f (keys %first_hash){
         my $ids = $first_hash{$f};
         foreach my $s (@$second){
-            my $name = get_cvterm_from_cvterm_id($schema, $s, $format);
+            my $name = get_trait_from_cvterm_id($schema, $s, $format);
             my $concatenated_cvterm = $f.$delimiter.$name;
             push @$ids, $s;
             delete $first_hash{$f};
@@ -175,7 +175,7 @@ sub get_traits_from_component_categories {
     my $id_array_count = scalar(@ordered_id_groups);
     my $concatenated_cvterms;
     foreach (@{$ordered_id_groups[0]}){
-        my $name = get_cvterm_from_cvterm_id($schema, $_, $composable_cvterm_format);
+        my $name = get_trait_from_cvterm_id($schema, $_, $composable_cvterm_format);
         $concatenated_cvterms->{$name} = [$_];
     }
     for my $n (0 .. $id_array_count-2){

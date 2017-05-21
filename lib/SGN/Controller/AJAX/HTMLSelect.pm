@@ -340,6 +340,7 @@ sub get_phenotyped_trait_components_select : Path('/ajax/html/select/phenotyped_
     #my $stock_type = $c->req->param('stock_type') . 's' || 'none';
     my $data_level = $c->req->param('data_level') || 'all';
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $composable_cvterm_format = $c->config->{composable_cvterm_format};
 
     if ($data_level eq 'all') {
         $data_level = '';
@@ -350,10 +351,15 @@ sub get_phenotyped_trait_components_select : Path('/ajax/html/select/phenotyped_
     my @trait_components;
     foreach (@trial_ids){
         my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
-        push @trait_components, @{$trial->get_trait_components_assayed($data_level)};
+        push @trait_components, @{$trial->get_trait_components_assayed($data_level, $composable_cvterm_format)};
     }
-    my %unique_trait_components = map {$_=>1} @trait_components;
-    my @unique_components = keys %unique_trait_components;
+    #print STDERR Dumper \@trait_components;
+    my %unique_trait_components = map {$_->[0] => $_->[1]} @trait_components;
+    my @unique_components;
+    foreach my $id (keys %unique_trait_components){
+        push @unique_components, [$id, $unique_trait_components{$id}];
+    }
+    #print STDERR Dumper \@unique_components;
 
     my $id = $c->req->param("id") || "html_trait_component_select";
     my $name = $c->req->param("name") || "html_trait_component_select";
