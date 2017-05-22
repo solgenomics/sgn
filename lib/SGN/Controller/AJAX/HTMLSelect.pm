@@ -373,7 +373,7 @@ sub get_phenotyped_trait_components_select : Path('/ajax/html/select/phenotyped_
     $c->stash->{rest} = { select => $html };
 }
 
-sub get_phenotyped_trait_components_select : Path('/ajax/html/select/composable_cvs_allowed_combinations') Args(0) {
+sub get_composable_cvs_allowed_combinations_select : Path('/ajax/html/select/composable_cvs_allowed_combinations') Args(0) {
     my $self = shift;
     my $c = shift;
     my $id = $c->req->param("id") || "html_composable_cvs_combinations_select";
