@@ -18,6 +18,20 @@ $composable_gen_root_cvterm => undef
 </br>
 
 <div class="panel panel-default">
+    <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse0">
+        <div class="panel-title"><a href="#form" class="accordion-toggle">Trait Combinations</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
+    </div>
+    <div id="collapse0" class="panel-collapse collapse in">
+        <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
+            <div class="col-sm-12 col-md-12 col-lg-12">
+                <div id="cv_combination_allowed_select_div">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-default">
   <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse1">
     <div class="panel-title"><a href="#form" class="accordion-toggle">Base Trait</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
   </div>
@@ -185,9 +199,6 @@ if (trait_html) {
     jQuery("#trait_div").show();
 }
 
-console.log("composable cvs are "+'<% $composable_cvs %>');
-create_multi_selects('<% $composable_cvs %>');
-
 addToListMenu('existing_traits_to_list', 'existing_traits', {
   selectText: true,
   listType: 'traits'
@@ -305,15 +316,45 @@ enable_ui();
 jQuery('#traits_saved_dialog').modal("show");
 });
 
-function create_multi_selects(cv_names) {
+function create_multi_selects(allowed_names) {
     jQuery('#compose_trait').prop('disabled', true);
-    var names = cv_names.split(',');
-
-    for(i = 0; i < names.length; i++){
-        var cv_name = names[i];
+    jQuery('#tod_div').hide();
+    jQuery('#toy_div').hide();
+    jQuery('#gen_div').hide();
+    jQuery('#object_div').hide();
+    jQuery('#trait_div').hide();
+    jQuery('#attribute_div').hide();
+    jQuery('#unit_div').hide();
+    jQuery('#method_div').hide();
+    jQuery('#tod_select').val([]);
+    jQuery('#toy_select').val([]);
+    jQuery('#gen_select').val([]);
+    jQuery('#object_select').val([]);
+    jQuery('#trait_select').val([]);
+    jQuery('#attribute_select').val([]);
+    jQuery('#unit_select').val([]);
+    jQuery('#method_select').val([]);
+    console.log(allowed_names);
+    for(i = 0; i < allowed_names.length; i++){
+        var cv_name = allowed_names[i];
         var name = cv_name.trim();
 
         switch (name) {
+            case "object":
+                jQuery('#object_div').show();
+                break;
+            case "trait":
+                jQuery('#trait_div').show();
+                break;
+            case "attribute":
+                jQuery('#attribute_div').show();
+                break;
+            case "unit":
+                jQuery('#unit_div').show();
+                break;
+            case "method":
+                jQuery('#method_div').show();
+                break;
             case "time":
                 jQuery("#tod_div,#toy_div,#gen_div").show();
                 get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_tod_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
@@ -337,5 +378,18 @@ function create_multi_selects(cv_names) {
         }
     }
 }
+
+jQuery(document).ready(function() {
+    get_select_box('composable_cvs_allowed_combinations', 'cv_combination_allowed_select_div', { 'id' : 'cv_combination_allowed_select', 'name' : 'cv_combination_allowed_select' });
+    jQuery(document).on('change', '#cv_combination_allowed_select', function(){
+        var names = jQuery('#cv_combination_allowed_select').val();
+        var allowed_names = names.split('+');
+        create_multi_selects(allowed_names);
+    });
+    var allowed_combinations = '<% $composable_cvs_allowed_combinations %>';
+    var allowed_combo = allowed_combinations.split(',');
+    var allowed_combo_first = allowed_combo[0].split('|');
+    create_multi_selects(allowed_combo_first[1].split('+'));
+});
 
 </script>

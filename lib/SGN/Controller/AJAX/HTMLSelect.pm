@@ -373,6 +373,26 @@ sub get_phenotyped_trait_components_select : Path('/ajax/html/select/phenotyped_
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_phenotyped_trait_components_select : Path('/ajax/html/select/composable_cvs_allowed_combinations') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $id = $c->req->param("id") || "html_composable_cvs_combinations_select";
+    my $name = $c->req->param("name") || "html_composable_cvs_combinations_select";
+    my $composable_cvs_allowed_combinations = $c->config->{composable_cvs_allowed_combinations};
+    my @combinations = split ',', $composable_cvs_allowed_combinations;
+    my @select;
+    foreach (@combinations){
+        my @parts = split /\|/, $_; #/#
+        push @select, [$parts[1], $parts[0]];
+    }
+    my $html = simple_selectbox_html(
+      name => $name,
+      id => $id,
+      choices => \@select,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 sub get_crosses_select : Path('/ajax/html/select/crosses') Args(0) {
     my $self = shift;
     my $c = shift;
