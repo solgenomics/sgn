@@ -263,7 +263,7 @@ var new_traits = jQuery("#new_traits").val();
 var new_trait_names = {};
 jQuery("#new_traits option:selected").each(function () {
    if (jQuery(this).length) {
-    new_trait_names[jQuery(this).text()] = jQuery(this).val();
+        new_trait_names[jQuery.trim(jQuery(this).text())] = jQuery(this).val();
    }
 });
 //console.log(new_trait_names);
@@ -278,6 +278,7 @@ var names = [];
       data: {'new_trait_names': JSON.stringify(new_trait_names)},
       success: function(response) {
       if (response.success) {
+        //console.log(response);
         successes.push("<li class='list-group-item list-group-item-success'>"+response.success+"</li>");
         //console.log("Names are "+response.names);
         for(var i=0; i<response.names.length; i++){
