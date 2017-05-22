@@ -143,15 +143,21 @@ sub _concatenate_cvterm_array {
     my $format = shift;
     my $first = shift;
     my $second = shift;
+    #print STDERR "_concatenate_cvterm_array\n";
+    #print STDERR Dumper $first;
+    #print STDERR Dumper $second;
     my %first_hash = %$first;
     foreach my $f (keys %first_hash){
         my $ids = $first_hash{$f};
         foreach my $s (@$second){
+            my @component_ids = @$ids;
+            #print STDERR "_iterate\n";
             my $name = get_trait_from_cvterm_id($schema, $s, $format);
             my $concatenated_cvterm = $f.$delimiter.$name;
-            push @$ids, $s;
+            push @component_ids, $s;
             delete $first_hash{$f};
-            $first_hash{$concatenated_cvterm} = $ids;
+            $first_hash{$concatenated_cvterm} = \@component_ids;
+            #print STDERR Dumper \%first_hash;
         }
     }
     return \%first_hash;
@@ -165,7 +171,6 @@ sub get_traits_from_component_categories {
     my $cvterm_id_hash = shift;
     my %id_hash = %$cvterm_id_hash;
     delete @id_hash{ grep { scalar @{$id_hash{$_}} < 1 } keys %id_hash }; #remove cvtypes with no ids
-    my @id_strings;
 
     my @ordered_id_groups;
     foreach my $cv_name (@$allowed_composed_cvs){
@@ -181,48 +186,30 @@ sub get_traits_from_component_categories {
     for my $n (0 .. $id_array_count-2){
         $concatenated_cvterms = _concatenate_cvterm_array($schema, $composable_cvterm_delimiter, $composable_cvterm_format, $concatenated_cvterms, $ordered_id_groups[$n+1]);
     }
-    my %possible_traits = %$concatenated_cvterms;
 
-    #print STDERR "possible traits are: ".Dumper(%possible_traits)."\n";
+    #print STDERR "possible traits are: ".Dumper($concatenated_cvterms)."\n";
 
-    my $contains_cvterm_id = $self->get_cvterm_row($schema, 'contains', 'relationship')->cvterm_id();
-
-    my @intersect_selects;
-    while(my($key, $value) = each %id_hash){
-        if (scalar @$value > 0) {
-          my @quoted_ids= map {"'$_'"} @$value;
-          my $id_string = join ",", @quoted_ids;
-          push @intersect_selects, "SELECT cvterm_id,
-                                    (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS name
-                                      FROM cvterm_relationship JOIN cvterm ON(object_id = cvterm_id)
-                                      JOIN dbxref USING(dbxref_id)
-                                      JOIN db ON(dbxref.db_id = db.db_id)
-                                      WHERE type_id = $contains_cvterm_id AND subject_id IN ($id_string)";
-        }
-    }
-
-    my $intersect_sql = join ' INTERSECT ', @intersect_selects;
-    $h = $schema->storage->dbh->prepare($intersect_sql);
-    $h->execute();
-
-    my @traits;
-    while(my ($id, $name) = $h->fetchrow_array()){
-        push @traits, [ $id, $name ];
-        if ($composable_cvterm_format eq 'concise'){
-            $name =~ s/\|[^\|]+$//; # remove dbname and accession number before using as hash key
-        }
-        delete($possible_traits{$name});
-    }
-
+    my @existing_traits;
     my @new_traits;
-    while(my($key, $value) = each %possible_traits){
-        push @new_traits, [ $value, $key];
+    foreach my $key (sort keys %$concatenated_cvterms){
+        my $existing_cvterm_name = $schema->resultset('Cv::Cvterm')->find({ name=>$key });
+        if ($existing_cvterm_name){
+            push @existing_traits, [$existing_cvterm_name->cvterm_id(), $key];
+            next;
+        }
+        my $existing_cvterm_id = $self->get_trait_from_exact_components($schema, $concatenated_cvterms->{$key});
+        if ($existing_cvterm_id){
+            my $existing_name = get_trait_from_cvterm_id($schema, $existing_cvterm_id, $composable_cvterm_format);
+            push @existing_traits, [$existing_cvterm_id, $existing_name];
+            next;
+        }
+        push @new_traits, [ $concatenated_cvterms->{$key}, $key ];
     }
 
-    print STDERR "existing traits are: ".Dumper(@traits)." and new traits are".Dumper(@new_traits)."\n";
+    #print STDERR "existing traits are: ".Dumper(/@existing_traits)." and new traits are".Dumper(/@new_traits)."\n";
 
     return {
-      existing_traits => \@traits,
+      existing_traits => \@existing_traits,
       new_traits => \@new_traits
     };
   }

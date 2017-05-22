@@ -82,7 +82,7 @@ sub store_composed_term {
     my $dbh = $schema->storage->dbh;
 
     my @new_terms;
-    foreach my $name (keys %$new_trait_names){
+    foreach my $name (sort keys %$new_trait_names){
         my $ids = $new_trait_names->{$name};
         my @component_ids = split ',', $ids;
 
@@ -98,7 +98,8 @@ sub store_composed_term {
 
         my $existing_trait_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@component_ids);
         if ($existing_trait_id) {
-            die "This trait already exists.\n";
+            print STDERR "This trait already exists $name with the following component_ids".Dumper(\@component_ids)."\n";
+            next;
         }
 
         my $db = $schema->resultset("General::Db")->find_or_create({ name => 'COMP' });
