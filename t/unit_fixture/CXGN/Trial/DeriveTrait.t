@@ -141,7 +141,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     metadata_hash=>\%phenotype_metadata
 );
 
-my $stored_phenotype_error_msg = $store_phenotypes->store();
+my ($stored_phenotype_error_msg, $stored_phenotype_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $fix->bcs_schema(),
@@ -193,7 +193,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     metadata_hash=>\%phenotype_metadata
 );
 
-my $store_error = $store_phenotypes->store();
+my ($store_error, $store_success) = $store_phenotypes->store();
 ok(!$store_error, "check that store pheno spreadsheet works");
 
 my $trait_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($fix->bcs_schema, 'dry matter content|CO:0000092')->cvterm_id();
