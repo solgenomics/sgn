@@ -31,6 +31,8 @@ use CXGN::BreederSearch;
 use Scalar::Util 'reftype';
 use CXGN::BreedersToolbox::AccessionsFuzzySearch;
 
+use Bio::Chado::Schema;
+
 use Scalar::Util qw(looks_like_number);
 use DateTime;
 use SGN::Model::Cvterm;
@@ -1461,5 +1463,72 @@ sub stock_lookup_POST {
     }
     $c->stash->{rest} = { $lookup_from_field => $value_to_lookup, $lookup_field => $value };
 }
+
+sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/trial_related_stock') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    #my $stock_type = $self->get_type->name();
+    #my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($Schema, 'accession', 'stock_type')->cvterm_id();
+    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    #my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+    my $dbh = $schema->storage->dbh();
+
+
+    #my $q;
+    #if(stock_type eq 'accession'){
+    my  $q = "SELECT stock2.stock_id, stock2.uniquename, cvterm.name FROM stock AS stock1 JOIN stock_relationship ON (stock1.stock_id = stock_relationship.object_id)
+            AND stock_relationship.type_id = ? JOIN cvterm ON (stock_relationship.type_id = cvterm.cvterm_id) INNER JOIN stock AS stock2
+            ON (stock_relationship.subject_id = stock2.stock_id) WHERE stock1.stock_id = ?";
+
+
+    my $h = $dbh->prepare($q);
+    $h->execute($plot_of_type_id, $stock_id);
+
+    my@trial_related_stock =();
+    while(my($plot_stock_id, $plot_stock_name, $cvterm_name) = $h->fetchrow_array()){
+
+    push @trial_related_stock,[$plot_stock_name, $cvterm_name];
+    }
+
+    $c->stash->{rest}={data=>\@trial_related_stock};
+  }
+
+  sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') Args(0){
+      my $self = shift;
+      my $c = shift;
+      my $stock_id = $c->stash->{stock_row}->stock_id();
+
+      my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+      my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+      my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+      my $dbh = $schema->storage->dbh();
+
+      my $q = "SELECT cvterm.name, stock.stock_id, stock.uniquename FROM stock_relationship INNER JOIN stock ON (stock_relationship.object_id = stock.stock_id)
+               INNER JOIN cvterm ON (stock_relationship.type_id =cvterm.cvterm_id) WHERE stock_relationship.subject_id = ? AND(stock_relationship.type_id =?
+               OR stock_relationship.type_id = ?) ORDER BY cvterm.name, stock.uniquename";
+
+      my $h = $dbh->prepare($q);
+      $h->execute($stock_id, $female_parent_type_id, $male_parent_type_id);
+
+      my@progenies =();
+      while(my($cvterm_name, $stock_id, $stock_name) = $h->fetchrow_array()){
+        push @progenies, [$cvterm_name, $stock_name];
+      }
+
+      $c->stash->{rest}={data=>\@progenies};
+
+    }
+
+
+
+
+
+
+
+
+
 
 1;
