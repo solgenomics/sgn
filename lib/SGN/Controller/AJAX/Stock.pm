@@ -1479,15 +1479,14 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
 
     #my $q;
     #if(stock_type eq 'accession'){
-    my  $q = "SELECT stock2.stock_id, stock2.uniquename, cvterm.name FROM stock AS stock1 JOIN stock_relationship ON (stock1.stock_id = stock_relationship.object_id)
-            AND stock_relationship.type_id = ? JOIN cvterm ON (stock_relationship.type_id = cvterm.cvterm_id) INNER JOIN stock AS stock2
-            ON (stock_relationship.subject_id = stock2.stock_id) WHERE stock1.stock_id = ?";
-
+    my  $q = "SELECT stock.stock_id, stock.uniquename, cvterm.name FROM stock_relationship INNER JOIN cvterm
+              ON (stock_relationship.type_id = cvterm.cvterm_id) INNER JOIN stock ON (stock_relationship.subject_id = stock.stock_id)
+              WHERE stock_relationship.object_id = ? AND stock_relationship.type_id = ?";
 
     my $h = $dbh->prepare($q);
-    $h->execute($plot_of_type_id, $stock_id);
+    $h->execute($stock_id, $plot_of_type_id);
 
-    my@trial_related_stock =();
+    my @trial_related_stock =();
     while(my($plot_stock_id, $plot_stock_name, $cvterm_name) = $h->fetchrow_array()){
 
     push @trial_related_stock,[$plot_stock_name, $cvterm_name];
