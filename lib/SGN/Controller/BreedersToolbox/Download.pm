@@ -252,22 +252,26 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
             push @trait_list_int, $cvterm_id;
         }
     }
-    if ($trait_component_list[0] =~ m/^\d+$/) {
-        my $trait_cvterm_ids = SGN::Model::Cvterm->get_traits_from_components($schema, \@trait_component_list);
-        foreach (@$trait_cvterm_ids) {
-          push @trait_list_int, $_;
-        }
-    } else {
-        my @trait_component_ids;
-        foreach (@trait_component_list) {
-            my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $_)->cvterm_id();
-            push @trait_component_ids, $cvterm_id;
-        }
-        my $trait_cvterm_ids = SGN::Model::Cvterm->get_traits_from_components($schema, \@trait_component_ids);
-        foreach (@$trait_cvterm_ids) {
-          push @trait_list_int, $_;
+
+    if (scalar(@trait_component_list)>0){
+        if ($trait_component_list[0] =~ m/^\d+$/) {
+            my $trait_cvterm_ids = SGN::Model::Cvterm->get_traits_from_components($schema, \@trait_component_list);
+            foreach (@$trait_cvterm_ids) {
+              push @trait_list_int, $_;
+            }
+        } else {
+            my @trait_component_ids;
+            foreach (@trait_component_list) {
+                my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $_)->cvterm_id();
+                push @trait_component_ids, $cvterm_id;
+            }
+            my $trait_cvterm_ids = SGN::Model::Cvterm->get_traits_from_components($schema, \@trait_component_ids);
+            foreach (@$trait_cvterm_ids) {
+              push @trait_list_int, $_;
+            }
         }
     }
+
     my @plot_list_int;
     foreach (@plot_list) {
         if ($_ =~ m/^\d+$/) {

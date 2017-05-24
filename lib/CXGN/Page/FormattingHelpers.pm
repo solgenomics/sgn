@@ -503,6 +503,10 @@ sub simple_selectbox_html {
     $retstring .= qq!>!;
     $retstring =~ s/ +/ /;    #collapse spaces
     my $in_group = 0;
+    if ($params{default}){
+        my $default = $params{default};
+        $retstring .= qq{<option title="$default" value="$default" disabled>$default</option>};
+    }
     foreach ( @{ $params{choices} } ) {
         no warnings 'uninitialized';
         if ( !ref && s/^__// ) {

@@ -17,9 +17,12 @@ Isaak Y Tecle (iyt2@cornell.edu)
 $project_id
 $project_name
 $project_desc
+$model_link => ''
+$pop_link => ''
 $stocks_no
 $markers_no
 $traits_no
+$trait_name => ''
 $protocol
 $uploaded_reference => ''
 $owner => ''
@@ -33,13 +36,21 @@ if (!$owner) {$owner = 'NextGen Cassava Project'; }
 $traits_no = 1 if !$traits_no;
 
 my $project_link; 
-if (!$uploaded_reference && !$combined_populations) {
-  $project_link = qq | <a href="/solgs/population/$project_id">$project_name</a> |;
-} elsif ($uploaded_reference) {
-  $project_link = qq | <a href="/solgs/population/$project_id/uploaded">$project_name</a> |;
-} else {
+ 
+if ($model_link) {
+  $project_link = $model_link;
+}elsif ($pop_link) {
+  $project_link = $pop_link;
+}else {
   $project_link = $project_name;
 }
+
+my @data_c1 = (['Name', $project_name],  ['Description', $project_desc], ['Owner', $owner]);
+my @data_c2 = (['No. of lines', $stocks_no],  ['No. of markers', $markers_no], ['Genotyping version', $protocol]);
+
+push @data_c2,  ['No. of traits', $traits_no] if $traits_no > 1;
+push @data_c2,  ['Training model', $model_link] if $model_link;
+push @data_c2,  ['Training population', $pop_link] if $pop_link;
 
 </%perl>
 
@@ -47,10 +58,7 @@ if (!$uploaded_reference && !$combined_populations) {
   <tr>
     <td>
       <& /page/columnar_table.mas,
-         data         => [['Name', $project_link],
-                          ['Description', $project_desc],
-                          ['Owner', $owner],
-                         ],
+         data         => \@data_c1,
          __alt_freq   => 0,
          __align      => "l",
        
@@ -58,11 +66,7 @@ if (!$uploaded_reference && !$combined_populations) {
     </td>    
     <td>
       <& /page/columnar_table.mas,        
-         data       => [['No. of lines', $stocks_no],
-                        ['No. of traits', $traits_no],
-                        ['No. of markers', $markers_no],
-			['Genotyping version', $protocol],
-                       ],
+         data       =>\@data_c2,
         __alt_freq  => 1,
         __align     => "l",
      
