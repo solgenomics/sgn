@@ -19,13 +19,13 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <& /util/import_javascript.mas, classes => ["solGS.listTypeSelectionPopulation"] &>
   
   <div class="list_upload" id="list_label">
-    <label for="prediction_genotypes_list">List-based selection population </label>
+    <label for="list_type_selection_pops">Select a list-based selection population </label>
   </div> 
   
-  <div class="list_upload" id="prediction_genotypes_list">      
+  <div class="list_upload" id="list_type_selection_pops_list">      
   </div>
   
-  <div class="list_upload" id="prediction_genotypes_list_upload">
+  <div class="list_upload" id="list_type_selection_pop_load">
     <input type="button" value="Go" />
   </div>
    
