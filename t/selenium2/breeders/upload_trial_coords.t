@@ -28,16 +28,16 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->find_element_ok("upload_trial_coords_ok_button", "id", "submit upload trial coords file ")->click();
 
-    sleep(10); 
+    sleep(5); 
 
     $t->find_element_ok("dismiss_trial_coord_upload_dialog", "id", "close success msg")->click();
 
-    sleep(20);    
+    sleep(5);    
 
     
     $t->find_element_ok("physical_layout_onswitch", "id", "view field map ")->click();
 
-    sleep(20);
+    sleep(5);
 
     
     }

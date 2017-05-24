@@ -32,6 +32,7 @@ Class function (without instantiation):
 package CXGN::List;
 
 use Moose;
+use Data::Dumper;
 
 has 'dbh' => ( isa => 'DBI::db',
 	       is => 'rw',
@@ -275,7 +276,7 @@ after 'description' => sub {
     my $description = shift;
     
     if (!$description) { 
-	print STDERR "NO desc provided... skipping!\n";
+	#print STDERR "NO desc provided... skipping!\n";
 	return; 
     }
 
@@ -295,7 +296,11 @@ after 'description' => sub {
 sub add_element {
     my $self = shift;
     my $element = shift;
-    
+    #remove trailing spaces
+    $element =~ s/^\s+|\s+$//g;
+    if (!$element) { 
+	return "Empty list elements are not allowed"; 
+    }
     if ($self->exists_element($element)) { 
 	return "The element $element already exists";
     }
@@ -352,7 +357,54 @@ sub remove_element_by_id {
     }
     
     return 0;
-}   
+}
+
+sub update_element_by_id {
+	my $self = shift;
+	my $element_id = shift;
+	my $content = shift;
+	my $h = $self->dbh()->prepare("UPDATE sgn_people.list_item SET content=? where list_id=? and list_item_id=?");
+
+	eval { 
+		$h->execute($content, $self->list_id(), $element_id);
+	};
+	if ($@) {
+		return "An error occurred while attempting to update item $element_id";
+	}
+
+	return;
+}
+
+sub replace_by_name {
+	my $self = shift;
+	my $item_name = shift;
+	my $new_name = shift;
+	my $h = $self->dbh()->prepare("UPDATE sgn_people.list_item SET content=? where list_id=? and content=?");
+
+	eval {
+		$h->execute($new_name, $self->list_id(), $item_name);
+	};
+	if ($@) {
+		return "An error occurred while attempting to update item $item_name";
+	}
+
+	return;
+}
+
+sub remove_by_name {
+	my $self = shift;
+	my $item_name = shift;
+	my $h = $self->dbh()->prepare("DELETE FROM sgn_people.list_item WHERE list_id=? and content=?");
+
+	eval {
+		$h->execute($self->list_id(), $item_name);
+	};
+	if ($@) {
+		return "An error occurred while attempting to remove item $item_name";
+	}
+
+	return;
+}
 
 sub list_size { 
     my $self = shift;
@@ -409,9 +461,15 @@ sub copy_public {
     $h->execute($user_id, $self->list_id());
     my $list_id = $h->fetchrow_array();
 
-    $h = $self->dbh->prepare("INSERT INTO sgn_people.list_item (content, list_id) SELECT content, ? FROM sgn_people.list_item as old WHERE old.list_id=?");
-    $h->execute($list_id, $self->list_id());
-    
+	$h = $self->dbh->prepare("SELECT content FROM sgn_people.list_item WHERE list_id=?");
+	$h->execute($self->list_id());
+	my @elements;
+	while (my $el = $h->fetchrow_array) {
+		push @elements, $el;
+	}
+
+	$self->add_bulk(\@elements, $list_id);
+
     return $list_id;
 }    
 
@@ -457,6 +515,76 @@ sub retrieve_elements_with_ids {
 	push @list, [ $id, $content ];
     }
     return \@list;
+}
+
+sub add_bulk {
+	my $self = shift;
+	my $elements = shift;
+	my $list_id = shift // $self->list_id();
+	my %elements_in_list;
+	my @elements_added;
+	my @duplicates;
+	s/^\s+|\s+$//g for @$elements;
+	#print STDERR Dumper $elements;
+
+	my $q = "SELECT content FROM sgn_people.list join sgn_people.list_item using(list_id) where list.list_id =?";
+	my $h = $self->dbh()->prepare($q);
+	$h->execute($list_id);
+	while (my $list_content = $h->fetchrow_array()) {
+		$elements_in_list{$list_content} = 1;
+	}
+
+	$q = "SELECT list_item_id FROM sgn_people.list_item ORDER BY list_item_id DESC LIMIT 1";
+	$h = $self->dbh()->prepare($q);
+	$h->execute();
+	my $list_item_id = $h->fetchrow_array() + 1;
+
+	my $iq = "INSERT INTO sgn_people.list_item (list_item_id, list_id, content) VALUES";
+
+	my $count = 0;
+	eval {
+		$self->dbh()->begin_work;
+
+		my @values;
+		foreach (@$elements) {
+			if ($_ && !exists $elements_in_list{$_}){
+				push @values, [$list_item_id, $list_id, $_];
+				$elements_in_list{$_} = 1;
+				push @elements_added, $_;
+				$list_item_id++;
+				$count++;
+			} else {
+				push @duplicates, $_;
+			}
+		}
+
+		my $step = 1;
+		my $num_values = scalar(@values);
+		foreach (@values) {
+			if ($step < $num_values) {
+				$iq = $iq." (".$_->[0].",".$_->[1].",'".$_->[2]."'),";
+			} else {
+				$iq = $iq." (".$_->[0].",".$_->[1].",'".$_->[2]."');";
+			}
+			$step++;
+		}
+		#print STDERR Dumper $iq;
+		if ($count>0){
+			$self->dbh()->do($iq);
+		}
+		$self->dbh()->commit;
+	};
+	if ($@) {
+		$self->dbh()->rollback;
+		return {error => "An error occurred in bulk addition to list. ($@)"};
+	}
+
+	$elements = $self->elements();
+	push @$elements, \@elements_added;
+	$self->elements($elements);
+
+	my %response = (count => $count, duplicates => \@duplicates);
+	return \%response;
 }
 
 

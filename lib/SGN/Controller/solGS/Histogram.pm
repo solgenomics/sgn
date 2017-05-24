@@ -20,7 +20,7 @@ sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
     my $pop_id   = $c->req->param('population_id');
     my $trait_id = $c->req->param('trait_id');
     my $referer  = $c->req->referer;
-   
+  
     if ($referer =~ /combined/) 
     {    
 	$c->stash->{data_set_type} = 'combined populations';
@@ -29,12 +29,12 @@ sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
 
     $c->stash->{pop_id} = $pop_id;
 
-    $c->controller('solGS::solGS')->get_trait_name($c, $trait_id);
+    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
     my $trait_abbr = $c->stash->{trait_abbr};
     
-    my $trait_pheno_file = $c->controller('solGS::solGS')->trait_phenodata_file($c);
- 
-    $c->stash->{histogram_trait_file} = $trait_pheno_file;
+    $c->controller('solGS::solGS')->trait_phenodata_file($c);    
+    my $trait_pheno_file = $c->stash->{trait_phenodata_file}; 
+    $c->stash->{histogram_trait_file} = $c->stash->{trait_phenodata_file};
 
     if (!$trait_pheno_file || -z $trait_pheno_file)
     {
@@ -97,8 +97,10 @@ sub create_histogram_dir {
 sub create_trait_phenodata {
     my ($self, $c) = @_;
     
-    my $pop_id = $c->stash->{pop_id};
-   
+    my $combo_id = $c->stash->{combo_pops_id};
+
+    my $pop_id = $c->stash->{pop_id} ? $c->stash->{pop_id} : $c->stash->{combo_pops_id};
+
     $self->create_histogram_dir($c);
     my $histogram_dir = $c->stash->{histogram_dir};
 
@@ -124,7 +126,7 @@ sub create_trait_phenodata {
         } qw / in out /;
     
 	{
-	    my $histogram_commands_file = $c->path_to('/R/histogram.r');
+	    my $histogram_commands_file = $c->path_to('/R/solGS/histogram.r');
 	    copy( $histogram_commands_file, $histogram_commands_temp )
             or die "could not copy '$histogram_commands_file' to '$histogram_commands_temp'";
 	}

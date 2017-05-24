@@ -53,6 +53,8 @@ sub browse_organisms {
     my ($dbh, $type, $common_name) = @_;   
     my $organisms;
   
+    $common_name =~ s/^\s+|\s+$//g;
+
     if ($type eq 'browse') 
     {
 	if ($common_name) 

@@ -35,7 +35,7 @@ my $name = $gene_feature->name;
 like( $mech->findvalue( '/html/body//span[@class="sequence"]'), qr/>$name\s*/, "Found >$name seq header");
 
 ok($mech->exists(
-        sprintf '/html/body//div[@class="info_table_fieldval"]/a[@href="/chado/cvterm?cvterm_id=%s"]',
+        sprintf '/html/body//div[@class="info_table_fieldval"]/a[@href="/cvterm/%s/view"]',
             $gene_cvterm->cvterm_id
     ),'the proper cvterm id link exists');
 

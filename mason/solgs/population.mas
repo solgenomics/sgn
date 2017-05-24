@@ -2,7 +2,7 @@
 
 $pop_id
 $show_data => 1;
-$traits_form
+$traits_form => ''
 $all_traits_file
 $no_traits_selected
 $project_name
@@ -96,3 +96,6 @@ $acronym
 
 </&>
 %}
+
+
+ <input type="hidden" id="population_id" value="<% $pop_id %>" />

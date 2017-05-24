@@ -1,3 +1,8 @@
+#DEPRECATED
+#####################
+#This page now points to the url /solpeople/profile/<sp_person_id> in the controller SGN::Controller::People
+#####################
+
 use strict;
 
 use CXGN::DB::Connection;
@@ -10,7 +15,7 @@ use CXGN::Phenome::Locus;
 use CXGN::Cview::MapFactory;
 use CXGN::Page::FormattingHelpers qw/info_section_html page_title_html
   info_table_html simple_selectbox_html
-  html_optional_show/;
+  html_optional_show columnar_table_html/;
 
 our $c;
 use CatalystX::GlobalContext qw($c);
@@ -160,6 +165,30 @@ if (@pops) {
     my $pop_list = my_populations(@pops);
     print info_section_html( title => 'Populations', contents => $pop_list );
 }
+
+#### solGS submitted jobs list ##########
+my $solgs_jobs = SGN::Controller::solGS::AnalysisProfile->solgs_analysis_status_log($c);
+
+my $solgs_jobs_table;
+
+if(@$solgs_jobs) {
+    $solgs_jobs_table =  columnar_table_html(
+	headings   => [ 'Analysis name', 'Submitted on', 'Status', 'Result page'],
+	data       => $solgs_jobs,
+	__alt_freq => 2,
+	__align    => 'llll',
+	);
+} else {
+    $solgs_jobs_table = 'You have no submitted jobs.'
+}
+
+print info_section_html( 
+    title    => 'solGS submitted analysis jobs', 
+    contents => $solgs_jobs_table 
+    );
+
+#######
+
 
 if ( $sp->get_user_type() eq 'curator' ) {
     print info_section_html( title => 'Curator Tools', contents => <<EOHTML);
@@ -345,16 +374,17 @@ EOHTML
 
 sub my_populations {
     my @pops = @_;
-    my $pop_list;
+    my $pops_list;
 
-    foreach my $pops (@pops) {
-        my $pop_name  = $pops->get_name();
-        my $pop_id    = $pops->get_population_id();
-        my $is_public = $pops->get_privacy_status();
+    foreach my $pop (@pops) {
+        my $pop_name  = $pop->get_name();
+        my $pop_id    = $pop->get_population_id();
+        my $is_public = $pop->get_privacy_status();
         if ($is_public)    { $is_public = 'is publicly available'; }
         if ( !$is_public ) { $is_public = 'is not publicly available yet'; }
-        $pop_list .=
-qq |<a href="/phenome/population.pl?population_id=$pop_id">$pop_name</a> <i>($is_public)</i><br/>|;
+        $pops_list .=
+qq |<a href="/qtl/population/$pop_id">$pop_name</a> <i>($is_public)</i><br/>|;
     }
-    return $pop_list;
+
+    return $pops_list;
 }

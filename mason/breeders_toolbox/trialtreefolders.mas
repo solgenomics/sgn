@@ -1,0 +1,144 @@
+
+<%args>
+@locations => ()
+$breeding_programs
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'jstree.dist.jstree', 'CXGN.Trial', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.TrialTreeFolders','CXGN.BreedersToolbox.AddMultipleTrial' ] &>
+
+<link rel="stylesheet" href="/static/documents/inc/jstree_theme/jstree-bstheme-min.css" />
+
+<& /breeders_toolbox/folder/folder_set.mas &>
+<& /breeders_toolbox/folder/folder_new.mas &>
+<& /breeders_toolbox/folder/folder_move.mas &>
+<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Trial', folder_tree_identifier => 'trial_list', folder_tree_refresh_name => 'refresh_jstree_html' &>
+
+<& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/trial/trial_create_multiloc_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
+
+<& /breeders_toolbox/trial/download_trials_phenotypes_dialog.mas &>
+
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>Information</th>
+      <th>Breeding Programs -- Folders -- Trials&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_jstree_html_trialtree_button" name="refresh_jstree_html">Refresh</button></th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td>
+        <h4>Search</h4>
+        <input type="text" class="form-control input-sm" id="trial_tree_search" placeholder="Search" />
+        <hr>
+      <h4>Download Trial Phenotypes</h4>
+      <h5><i>Select multiple trials by holding 'Ctrl'.</i></h5>
+      <button class="btn btn-primary" id="trials_download_phenotypes_button" disabled="disabled" title="First Select Trial(s) to Download">Download Phenotypes</button>
+      <hr>
+      <h5><i>Double click<br />trial (&nbsp;<span class="glyphicon glyphicon-leaf text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
+      <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
+      <hr>
+      <h4>Folders</h4>
+      <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
+      <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move trial to folder</button><br/><br/>
+      <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
+      
+      <div id="folder_edit_options" style="display:none">
+          <hr>
+          <h5><i>Select multiple folders by holding 'Ctrl'.</i></h5>
+          <button class="btn btn-primary" id="edit_folders_button" title="First Select Folder(s) to Edit">Edit Folder(s)</button>
+          <br/>
+      </div>
+
+      <!--<button id="delete" disabled="disabled" >Delete</button -->
+      <br />
+    </td>
+    <td>
+        <div id="trial_list" >[loading...]</div>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+
+<script>
+
+  jQuery.noConflict();
+
+  jQuery(document).ready(function($) {
+
+    jQuery.ajax( {
+      url: '/ajax/breeders/get_trials_with_folders_cached',
+      success: function(response) {
+        var html = '<ul>'+response.html+'</ul>';
+
+        jQuery('#trial_list').html(html);
+        //console.log(html);
+        jQuery('#trial_list').jstree( {
+            "core": { 'themes': { 'name': 'proton', 'responsive': true}},
+            "valid_children" : [ "folder", "trial", "breeding_program" ],
+            "types" : {
+                "breeding_program" : {
+                    "icon": 'glyphicon glyphicon-briefcase text-info',
+                },
+                "folder" : {
+                    "icon": 'glyphicon glyphicon-folder-open text-danger',
+                },
+                "trial" : {
+                    "icon": 'glyphicon glyphicon-leaf text-success',
+                }
+            },
+            "search" : {
+                 "case_insensitive" : true,
+             },
+          "plugins" : ["html_data","types","search"],
+
+        });
+
+      },
+      error: function(response) {
+        alert("An error occurred while loading the trial data.");
+      }
+  });
+
+    jQuery("#trial_tree_search").keyup(function() {
+        var v = jQuery("#trial_tree_search").val();
+        jQuery("#trial_list").jstree(true).search(v);
+    });
+
+
+
+  jQuery('#trial_list').on("changed.jstree", function (e, data) {
+    //console.log(data);
+       if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'trial') {
+         jQuery('#trials_download_phenotypes_button').removeAttr('disabled');
+         jQuery("#folder_edit_options").hide();
+       }
+       else if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'folder') {
+         jQuery('#trials_download_phenotypes_button').attr('disabled', 'disabled');
+         jQuery("#folder_edit_options").show();
+       }
+       else {
+         jQuery('#trials_download_phenotypes_button').attr('disabled', 'disabled');
+         jQuery("#folder_edit_options").hide();
+       }
+    });
+
+
+    $("#trial_list").delegate("li", "dblclick", function(event){
+      var node = $("#trial_list").jstree("get_node", this);
+      //console.log(node);
+      if (node.id.substr(0,1) !== 'j') {
+        if (node.type == 'folder') {
+            window.open('/folder/'+node.id);
+            event.stopPropagation();
+        } else if (node.type == 'trial') {
+            window.open('/breeders_toolbox/trial/'+node.id);
+            event.stopPropagation();
+        }
+      }
+    });
+  });
+
+</script>

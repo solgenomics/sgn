@@ -6,7 +6,7 @@ use lib 't/lib';
 use Test::More;
 use SGN::Test::Fixture;
 use CXGN::BreederSearch;
-
+use Data::Dumper;
 
 my $f = SGN::Test::Fixture->new();
 
@@ -19,12 +19,24 @@ my $dataref = {};
 my $queryref = {};
 
 my $results = $bs->metadata_query($criteria_list, $dataref, $queryref);
-
+#print STDERR Dumper $results;
 is_deeply($results, {
                'results' => [
                               [
                                 '2014',
                                 '2014'
+                              ],
+                              [
+                                '2015',
+                                '2015'
+                              ],
+                              [
+                                '2016',
+                                '2016'
+                              ],
+                              [
+                                '2017',
+                                '2017'
                               ]
                             ]
              }, 'wizard one category query');
@@ -141,7 +153,7 @@ is_deeply($results, {
                'results' => [
                               [
                                 70741,
-                                'dry matter content|CO:0000092'
+                                'dry matter content percentage|CO:0000092'
                               ],
                               [
                                 70666,
@@ -149,7 +161,7 @@ is_deeply($results, {
                               ],
                               [
                                 70773,
-                                'fresh shoot weight|CO:0000016'
+                                'fresh shoot weight measurement in kg|CO:0000016'
                               ]
                             ]
              }, "wizard intersect query");
@@ -173,7 +185,7 @@ $queryref = {
              };
 $results = $bs ->metadata_query($criteria_list, $dataref, $queryref);
 is_deeply($results, {
-               'error' => '0 matches. No results to display'
+               'results' => []
              }, "wizard 0 results error query");
 
 done_testing();

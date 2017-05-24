@@ -1,0 +1,143 @@
+
+<%args>
+$trial_id => undef
+$trial_name => undef
+</%args>
+
+
+<div class="modal fade" id="create_spreadsheet_dialog" name="create_spreadsheet_dialog" tabindex="-1" role="dialog" aria-labelledby="createSpreadsheetDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="createSpreadsheetDialog">Download Phenotype Spreadsheet for <% $trial_name %></h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <form class="form-horizontal" role="form" method="post" >
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Trial: </label>
+                    <div class="col-sm-9" >
+                        <div id="select_trial_for_create_spreadsheet">
+% if ($trial_id) {
+                            <input type="text" class="form-control" value="<% $trial_name %>" disabled/>
+                            <input type="hidden" id="html_select_trial_for_create_spreadsheet" name="html_select_trial_for_create_spreadsheet" value="<% $trial_id %>" />
+% } else {
+                        [Loading...]
+% }
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Trait List: </label>
+                    <div class="col-sm-9" >
+                        <div id ="trait_list_spreadsheet">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Data Level: </label>
+                    <div class="col-sm-9" >
+                        <select class="form-control" id="create_spreadsheet_data_level">
+                            <option value="plots">Plots</option>
+                            <option value="plants">Plants</option>
+                        </select>
+                    </div>
+                </div>
+
+            <div id="create_spreadsheet_plant_options" style="display:none">
+                <hr>
+                <div class="form-group">
+                    <label class="col-sm-5 control-label "><small>Sample Number: </small></label>
+                    <div class="col-sm-7" >
+                        <input type="text" class="form-control" id="create_spreadsheet_sample_number" placeholder="All Plants"/>
+                    </div>
+                </div>
+            </div>
+
+        </form><br/>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="create_phenotyping_cancel_button" id="create_phenotyping_cancel_button" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="create_phenotyping_ok_button" id="create_phenotyping_ok_button" title="Submit">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+
+    if(jQuery("#html_select_trial_for_create_spreadsheet").length == 0) {
+        get_select_box('trials', 'select_trial_for_create_spreadsheet', { 'name' : 'html_select_trial_for_create_spreadsheet', 'id' : 'html_select_trial_for_create_spreadsheet' });
+    }
+
+    jQuery("[name='create_spreadsheet_link']").click( function () {
+        jQuery('#create_spreadsheet_dialog').modal("show");
+        var list = new CXGN.List();
+        jQuery("#trait_list_spreadsheet").html(list.listSelect("trait_list_spreadsheet", [ 'traits' ]));
+    });
+
+
+    jQuery('#create_spreadsheet_data_level').change(function() {
+        if ( jQuery('#create_spreadsheet_data_level').val() == 'plants' ) {
+            jQuery('#create_spreadsheet_plant_options').show();
+        } else {
+            jQuery("#create_spreadsheet_sample_number").val('');
+        }
+    });
+
+    jQuery('#create_phenotyping_ok_button').on('click', function () {
+        create_phenotype_spreadsheet();
+    });
+
+});
+
+
+function create_phenotype_spreadsheet() {
+    var list = new CXGN.List();
+    var trait_list_id = jQuery('#trait_list_spreadsheet_list_select').val();
+    var trait_list;
+    if (! trait_list_id == "") {
+        trait_list = JSON.stringify(list.getList(trait_list_id));
+    }
+    new jQuery.ajax({
+        type: 'POST',
+        url: '/ajax/phenotype/create_spreadsheet',
+        dataType: "json",
+        data: {
+            'trial_id': parseInt(jQuery("#html_select_trial_for_create_spreadsheet").val()),
+            'trait_list': trait_list,
+            'data_level': jQuery("#create_spreadsheet_data_level").val(),
+            'sample_number': jQuery("#create_spreadsheet_sample_number").val(),
+        },
+        beforeSend: function() {
+            jQuery('#working_modal').modal("show");
+        },
+        success: function (response) {
+            jQuery('#working_modal').modal("hide");
+            if (response.error) {
+                alert(response.error);
+                jQuery('#create_spreadsheet_dialog').modal("hide");
+            } else {
+                //alert(response.filename);
+                jQuery('#create_spreadsheet_dialog').modal("hide");
+                jQuery('#working_modal').modal("hide");
+                window.location.href = "/download/"+response.filename;
+            }
+        },
+        error: function () {
+            jQuery('#working_modal').modal("hide");
+            alert('An error occurred creating a phenotype file.');
+            jQuery('#create_spreadsheet_dialog').modal("hide");
+        }
+    });
+}
+
+
+</script>

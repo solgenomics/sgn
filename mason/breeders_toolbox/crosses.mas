@@ -7,9 +7,16 @@ $user_id => undef
 @roles => ()
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form',,'CXGN.BreedersToolbox.Crosses' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.Crosses', 'jstree.dist.jstree', 'CXGN.TrialTreeFolders'] &>
 
-<table class="table table-bordered table-striped table-hover table-condensed">
+<link rel="stylesheet" href="/static/documents/inc/jstree_theme/jstree-bstheme-min.css" />
+
+<!--
+<center>
+<h3>Crosses</h3>
+</center>
+
+<table class="table table-bordered table-striped table-hover table-condensed" id="crosses_datatable">
   <thead>
     <tr>
       <th>Cross Name</th>
@@ -17,16 +24,63 @@ $user_id => undef
   </thead>
   <tbody>
   <%perl>
-    if (!@cross_populations) { 
+    if (!@cross_populations) {
       print "<tr><td>No crosses available for your account.</td></tr>";
     }
 
-    foreach my $cross_pop (@cross_populations) { 
+    foreach my $cross_pop (@cross_populations) {
       print "<tr><td><a href=\"/cross/".$cross_pop->[1]."\">".$cross_pop->[0]."</a></td></tr>";
     }
   </%perl>
   </tbody>
 </table>
+-->
+
+<& /breeders_toolbox/folder/folder_set.mas, project_type=>'Cross' &>
+<& /breeders_toolbox/folder/folder_new.mas &>
+<& /breeders_toolbox/folder/folder_move.mas &>
+<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Cross', folder_tree_identifier => 'crosses_list', folder_tree_refresh_name => 'refresh_crosses_jstree_html' &>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Information</th>
+            <th>Breeding Programs -- Folders -- Crosses&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_crosses_jstree_html_trialtree_button" name="refresh_crosses_jstree_html">Refresh</button></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <h4>Search</h4>
+                <input type="text" class="form-control input-sm" id="cross_tree_search" placeholder="Search" />
+                <hr>
+
+                <h5><i>Double click<br />cross (&nbsp;<span class="glyphicon glyphicon-grain text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
+                <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
+                <hr>
+
+                <h4>Folders</h4>
+                <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
+                <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move cross to folder</button><br/><br/>
+                <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
+
+                <div id="folder_edit_options" style="display:none">
+                    <hr>
+                    <h5><i>Select multiple folders by holding 'Ctrl'.</i></h5>
+                    <button class="btn btn-primary" id="edit_folders_button" title="First Select Folder(s) to Edit">Edit Folder(s)</button>
+                    <br/>
+                </div>
+
+                <!--<button id="delete" disabled="disabled" >Delete</button -->
+                <br />
+            </td>
+            <td>
+                <div id="crosses_list" >[loading...]</div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
 
 <style>
   .ui-autocomplete {
@@ -46,17 +100,49 @@ $user_id => undef
 
 <!-- Modal Dialogs Below Here -->
 
-<div class="modal fade" id="create_cross" name="create_cross" tabindex="-1" role="dialog" aria-labelledby="addCrossDialog">
+<div class="modal fade" id="create_cross" name="create_cross" tabindex="-1" role="dialog" aria-labelledby="createNewCrossesDialog">
   <div class="modal-dialog" role="document">
-    <div class="modal-content">
+    <div class="modal-content ui-front">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addCrossDialog">Add New Cross</h4>
+        <h4 class="modal-title" id="createNewCrosses">Create New Crosses</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
+        <&| /page/explanation.mas, title=>'Cross Type information' &>
+      <p>
+        <b>Cross type information</b>
+        <br>
+        <a id="cross_type_info">Descriptions of cross types</a>
+      </p>
+      </&>
 	  <form class="form-horizontal" role="form" name="create_cross_form" id="create_cross_form">
-	    <div class="form-group">
+    <h3>Required:</h3>
+    <div class="form-group">
+            <label class="col-sm-2 control-label">Breeding Program: </label>
+            <div class="col-sm-10">
+        <select class="form-control" id="program" name="program">
+    <%perl>
+        foreach my $program (@programs) {
+          print "<option value=".'"'.@$program[0].'"'.">".@$program[1]."</option>";
+        }
+          </%perl>
+        </select>
+            </div>
+    </div>
+    <div class="form-group">
+            <label class="col-sm-2 control-label">Location: </label>
+            <div class="col-sm-10">
+        <select class="form-control" id="location" name="location">
+    <%perl>
+        foreach my $location (@locations) {
+            print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
+        }
+        </%perl>
+        </select>
+            </div>
+    </div>
+	  <div class="form-group">
       	      <label class="col-sm-2 control-label">Cross Name: </label>
       	      <div class="col-sm-10">
 	        <input class="form-control" type="text" id="cross_name" name="cross_name"/>
@@ -66,53 +152,141 @@ $user_id => undef
       	      <label class="col-sm-2 control-label">Cross Type: </label>
       	      <div class="col-sm-10">
 	        <select class="form-control" id="cross_type">
-	  	  <option value = "biparental" title="An individual plant pollinated by another individual plant">biparental</option>
-	  	  <option value = "self" title="A self pollinated individual plant">self</option>
-	  	  <option value = "open" title="An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members)">open pollinated</option>
-	  	  <option value = "bulk" title="A group of plants (usually a related family) pollinated by an individual plant">bulk</option>
-	  	  <option value = "bulk_self" title="A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen)">bulk selfed</option>
-	  	  <option value = "bulk_open" title="A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members)">bulk and open pollinated</option>
-	  	  <option value = "doubled_haploid" title="Plants derived from doubling the chromosome number of haploid tissue">doubled haplotype</option>
+        <option value="">Select a cross type</option>
+	  	  <option value="biparental">biparental</option>
+	  	  <option value="self">self</option>
+	  	  <option value="open">open pollinated</option>
+	  	  <option value="bulk">bulk</option>
+	  	  <option value="bulk_self">bulk selfed</option>
+	  	  <option value="bulk_open">bulk and open pollinated</option>
+	  	  <option value="doubled_haploid">doubled haploid</option>
+        <option value="polycross">polycross</option>
+        <option value="reciprocal">reciprocal</option>
+        <option value="multicross">multicross</option>
 		</select>
               </div>
 	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Maternal Parent: </label>
+	    <div class="form-group" id="get_maternal_parent" style="display: none">
+      	      <label class="col-sm-2 control-label">Female Parent: </label>
       	      <div class="col-sm-10">
 	        <input class="form-control" id="maternal_parent" type="text" name="maternal" />
               </div>
 	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Paternal Parent: </label>
+	    <div class="form-group" id="get_paternal_parent" style="display: none">
+      	      <label class="col-sm-2 control-label">Male Parent: </label>
       	      <div class="col-sm-10">
 	        <input class="form-control" id="paternal_parent" type="text" name="paternal" />
               </div>
 	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Breeding Program: </label>
-      	      <div class="col-sm-10">
-	        <select class="form-control" id="program" name="program">
-	  	<%perl>
-	    	  foreach my $program (@programs) {
-	    	    print "<option value=".'"'.@$program[1].'"'.">".@$program[1]."</option>";
-	    	  }
-          	</%perl>
-       		</select>
+      <div class="form-group" id="get_selfed_parent" style="display: none">
+              <label class="col-sm-2 control-label">Selfed Parent: </label>
+              <div class="col-sm-10">
+          <input class="form-control" id="selfed_parent" type="text" name="selfed" />
               </div>
-	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Location: </label>
-      	      <div class="col-sm-10">
-	        <select class="form-control" id="location" name="location">
-	  	<%perl>
-	    	  foreach my $location (@locations) {
-	      	    print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
-	    	  }
-         	</%perl>
-      		</select>
+      </div>
+      <div class="form-group" id="get_open_maternal_parent" style="display: none">
+              <label class="col-sm-2 control-label">Female Parent: </label>
+              <div class="col-sm-10">
+          <input class="form-control" id="open_maternal_parent" type="text" name="open maternal" />
               </div>
-	    </div>
+      </div>
+      <div class="form-group" id="get_open_paternal_population" style="display: none">
+              <div class="col-sm-2"><center><label class="control-label">Male Population: </label><i>(optional)</i></center></div>
+              <div class="col-sm-10">
+          <input class="form-control" id="open_paternal_population" type="text" name="open paternal" />
+              </div>
+      </div>
+      <div class="form-group" id="get_bulk_maternal_population" style="display: none">
+              <label class="col-sm-2 control-label">Female Population: </label>
+              <div class="col-sm-10">
+          <input class="form-control" id="bulk_maternal_population" type="text" name="bulk maternal" />
+              </div>
+      </div>
+      <div class="form-group" id="get_bulk_paternal_parent" style="display: none">
+              <label class="col-sm-2 control-label">Male Parent: </label>
+              <div class="col-sm-10">
+          <input class="form-control" id="bulk_paternal_parent" type="text" name="bulk paternal" />
+              </div>
+      </div>
+      <div class="form-group" id="get_bulk_selfed_population" style="display: none">
+              <label class="col-sm-2 control-label">Selfed Population: </label>
+              <div class="col-sm-10">
+          <input class="form-control" id="bulk_selfed_population" type="text" name="bulk selfed" />
+              </div>
+      </div>
+      <div class="form-group" id="get_bulk_open_maternal_population" style="display: none">
+              <label class="col-sm-2 control-label">Female Population: </label>
+              <div class="col-sm-10">
+          <input class="form-control" id="bulk_open_maternal_population" type="text" name="bulk open maternal" />
+              </div>
+      </div>
+      <div class="form-group" id="get_bulk_open_paternal_population" style="display: none">
+              <div class="col-sm-2"><center><label class="control-label">Male Population: </label><i>(optional)</i></center></div>
+              <div class="col-sm-10">
+          <input class="form-control" id="bulk_open_paternal_population" type="text" name="bulk open paternal" />
+              </div>
+      </div>
+      <div class="form-group" id="get_doubled_haploid_parent" style="display: none">
+              <label class="col-sm-2 control-label">Doubled Haploid Parent: </label>
+              <div class="col-sm-10">
+          <input class="form-control" id="doubled_haploid_parent" type="text" name="doubled haploid" />
+              </div>
+      </div>
+      <div class="form-group" id="polycross_accessions" style="display: none">
+            <label class="col-sm-2 control-label">Accessions to use in Polycross: </label>
+            <div class="col-sm-10">
+            <div id="polycross_accession_list"></div>
+            </div>
+      </div>
+      <div class="form-group" id="reciprocal_accessions" style="display: none">
+            <label class="col-sm-2 control-label">Accessions to use in Reciprocal cross: </label>
+            <div class="col-sm-10">
+            <div id="reciprocal_accession_list"></div>
+            </div>
+      </div>
+      <div class="form-group" id="maternal_accessions" style="display: none">
+            <label class="col-sm-2 control-label">Multicross Female Parents: </label>
+            <div class="col-sm-10">
+            <div id="maternal_accession_list"></div>
+            </div>
+      </div>
+      <div class="form-group" id="paternal_accessions" style="display: none">
+            <label class="col-sm-2 control-label">Multicross Male Parents: </label>
+            <div class="col-sm-10">
+            <div id="paternal_accession_list"></div>
+            </div>
+      </div>
+      <br>
+      <h3>Optional:</h3>
 	    <table>
+      <tr>
+        <td>
+        <div class="form-group">
+                  <label class="col-sm-9 control-label">Specify a Folder: </label>
+                  <div class="col-sm-3">
+              <input id= "use_folders_checkbox" type="checkbox" />
+                  </div>
+        </div>
+      </td>
+      </tr>
+      <tr id="folder_section" style="display: none">
+      <td><p>Put cross/crosses together in a new folder:</p><p>Or add to an existing folder:</p></td>
+      <td><div class="form-group">
+            <label class="col-sm-2 control-label">Folder Name: </label>
+            <div class="col-sm-10">
+        <input class="form-control" type="text" id="add_cross_folder_name" name="add_cross_folder_name"/>
+            </div>
+            </div>
+            <div class="form-group">
+            <label class="col-sm-2 control-label">Folder: </label>
+            <div class="col-sm-10" >
+              <div id="add_cross_folder_select_div">
+                [Loading...]
+              </div>
+            </div>
+            </div>
+            </td>
+            </tr>
 	      <tr>
 	        <td>
 	    	  <div class="form-group">
@@ -121,12 +295,24 @@ $user_id => undef
 	              <input id= "flower_number_checkbox" type="checkbox" />
               	    </div>
 	    	  </div>
-	    	</td>
+          <div class="form-group">
+                    <label class="col-sm-9 control-label">Specify Number of Fruits: </label>
+                    <div class="col-sm-3">
+                <input id= "fruit_number_checkbox" type="checkbox" />
+                    </div>
+          </div>
+        </td>
 	    	<td>
 	    	  <div class="form-group" id="get_flower_number" style="display: none">
       	      	    <label class="col-sm-6 control-label">Number of Flowers: </label>
       	      	    <div class="col-sm-6">
 	              <input class="form-control" type="text" id="flower_number" />
+              	    </div>
+	    	  </div>
+          <div class="form-group" id="get_fruit_number" style="display: none">
+      	      	    <label class="col-sm-6 control-label">Number of Fruits: </label>
+      	      	    <div class="col-sm-6">
+	              <input class="form-control" type="text" id="fruit_number" />
               	    </div>
 	    	  </div>
 	    	</td>
@@ -192,12 +378,12 @@ $user_id => undef
 	    	</td>
 	      </tr>
 	    </table>
-	  </form>      
+	  </form>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="create_cross_submit" id="create_cross_submit">Add Cross</button>
+        <button type="button" class="btn btn-primary" name="create_cross_submit" id="create_cross_submit">Create</button>
       </div>
     </div>
   </div>
@@ -229,7 +415,7 @@ $user_id => undef
 	        <select class="form-control" id="cross_upload_breeding_program" name="cross_upload_breeding_program">
       		<%perl>
         	  foreach my $program (@programs) {
-        	    print "<option value=".@$program[1].">".@$program[1]."</option>";
+        	    print "<option value=".@$program[0].">".@$program[1]."</option>";
         	  }
       		</%perl>
     		</select>
@@ -240,31 +426,48 @@ $user_id => undef
       	      <div class="col-sm-10">
 	        <select class="form-control" id="cross_upload_location" name="cross_upload_location">
       		<%perl>
-		  foreach my $location (@locations) { 
-		    print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; 
+		  foreach my $location (@locations) {
+		    print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
 		  }
       		</%perl>
     		</select>
               </div>
 	    </div>
+      <div class="form-group">
+      	      <label class="col-sm-2 control-label">Upload File: </label>
+      	      <div class="col-sm-10">
+	        <input type="file" name="crosses_upload_file" id="crosses_upload_file" encoding="multipart/form-data" />
+              </div>
+	    </div>
 	    <hr>
-	    <h4>Progeny Naming: </h4>
+      <h3>Additional options:</h3>
+      <p>Group Crosses together in a new folder:</p>
+      <div class="form-group">
+            <label class="col-sm-2 control-label">Folder Name: </label>
+            <div class="col-sm-10">
+        <input class="form-control" type="text" id="upload_folder_name" name="upload_folder_name"/>
+            </div>
+      </div>
+      <p>Or add crosses to an existing folder:</p>
+      <div class="form-group">
+          <label class="col-sm-2 control-label">Folder: </label>
+          <div class="col-sm-10" >
+            <div id="cross_folder_select_div">
+              [Loading...]
+            </div>
+          </div>
+      </div>
+	    <p>Progeny naming: <i>If generating progeny, use cross name and:</i></p>
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">Prefix: </label>
       	      <div class="col-sm-10">
-	        <input class="form-control" id="upload_prefix" name="upload_prefix" value="P" /> 
+	        <input class="form-control" id="upload_prefix" name="upload_prefix" value="P" />
               </div>
 	    </div>
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">Suffix: </label>
       	      <div class="col-sm-10">
 	        <input class="form-control" id="upload_suffix" name="upload_suffix" />
-              </div>
-	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Upload File: </label>
-      	      <div class="col-sm-10">
-	        <input type="file" name="crosses_upload_file" id="crosses_upload_file" encoding="multipart/form-data" />
               </div>
 	    </div>
     	  </form>
@@ -277,52 +480,6 @@ $user_id => undef
     </div>
   </div>
 </div>
-
-<!--
-<div id="upload_crosses_dialog"  class="ui-widget" title="Upload a list of crosses" >
-
-  <&| /page/explanation.mas, title=>'Template information' &>
-    <p>
-      <b>File format information</b>
-      <br>
-      <a id="cross_upload_spreadsheet_format_info">Spreadsheet format</a>
-      <br>
-      <a id="cross_upload_barcode_format_info" style = "display: none">Barcode format (Not currently supported)</a>
-    </p>
-  </&>
-
-  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
-
-    <label for="cross_upload_breeding_program" style="display: inline-block; width: 100px;">Breeding Program:</label>
-    <select id="cross_upload_breeding_program" name="cross_upload_breeding_program">
-      <%perl>
-        foreach my $program (@programs) {
-        print "<option value=".@$program[1].">".@$program[1]."</option>";
-        }
-      </%perl>
-    </select>
-    <br>
-
-    <label for="cross_upload_location" style="display: inline-block; width: 100px;">Location:</label>
-    <select id="cross_upload_location" name="cross_upload_location">
-      <%perl>foreach my $location (@locations) { print "
-        <option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>"; }
-      </%perl>
-    </select>
-    <br><br>
-    Progeny naming:
-    <br>
-    Prefix <input id="upload_prefix" name="upload_prefix" value="P" size="5" /> 
-    Suffix <input id="upload_suffix" name="upload_suffix" size="5" />
-    <br><br>
-
-    <label for="crosses_upload_file">Upload file:</label>
-    <input type="file" name="crosses_upload_file" id="crosses_upload_file" encoding="multipart/form-data" />
-
-  </form>
-
-</div>
--->
 
 <div class="modal fade" id="upload_cross_error_display" name="upload_cross_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesErrorDialog">
   <div class="modal-dialog modal-lg" role="document">
@@ -345,14 +502,6 @@ $user_id => undef
   </div>
 </div>
 
-<!--
-<div id="upload_cross_error_display" class="ui-widget">
-  <table>
-    <tbody></tbody>
-  </table>
-</div>
--->
-
 <div class="modal fade" id="cross_upload_spreadsheet_info_dialog" name="cross_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesInfoDialog">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
@@ -373,132 +522,25 @@ $user_id => undef
   </div>
 </div>
 
-<!--
-<div id="cross_upload_spreadsheet_info_dialog" title="Format for uploading crosses in a spreadsheet">
-  <&| /breeders_toolbox/spreadsheet_upload_format_info.mas &>
-  </&>
-</div>
--->
-
-<!--
-<div id="create_cross" title="Add cross" >
-  <table cellspacing="0" cellpadding="1" >
-
-    <tr><td>Cross name</td><td><input type="text" id="cross_name" name="cross_name" size="30"/></td></tr>
-    <tr><td>Cross type</td><td>
-	<select id="cross_type">
-	  <option value = "biparental" title="An individual plant pollinated by another individual plant">biparental</option>
-	  <option value = "self" title="A self pollinated individual plant">self</option>
-	  <option value = "open" title="An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members)">open pollinated</option>
-	  <option value = "bulk" title="A group of plants (usually a related family) pollinated by an individual plant">bulk</option>
-	  <option value = "bulk_self" title="A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen)">bulk selfed</option>
-	  <option value = "bulk_open" title="A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (pollen may be from a group with known or unknown members)">bulk and open pollinated</option>
-	  <option value = "doubled_haploid" title="Plants derived from doubling the chromosome number of haploid tissue">doubled haplotype</option>
-	</select>
-      </td>
-    </tr>
-    <tr id="get_maternal_parent" ><td>Maternal parent</td><td><input id="maternal_parent" type="text" name="maternal" size="30"/></td></tr>
-    <tr id="get_paternal_parent" ><td>Paternal parent</td><td><input id="paternal_parent" type="text" name="paternal" size="30"/></td></tr>
-    <tr id="get_selfed_parent" style = "display: none"><td>Selfed parent</td><td><input id="selfed_parent" type="text" name="selfed_parent" size="30"/></td></tr>
-    <tr id="get_bulked_selfed_population" style = "display: none"><td>Bulked selfed <em>population</em></td><td><input id="bulked_selfed_population" type="text" name="bulked_selfed_population" size="30"/></td></tr>
-    <tr id="get_doubled_haploid_parent" style = "display: none"><td>Doubled haploid parent</td><td><input id="doubled_haploid_parent" type="text" name="doubled_haploid_parent" size="30"/></td></tr>
-    <tr id="get_bulk_maternal_population" style = "display: none"><td>Bulked maternal <em>population</em></td><td><input id="bulked_maternal_population" type="text" name="bulked_maternal_population" size="30"/></td></tr>
-    <tr id="get_bulk_paternal_parent" style = "display: none"><td>Bulked paternal parent</td><td><input id="bulked_paternal_parent" type="text" name="bulked_paternal_parent" size="30"/></td></tr>
-    <tr id="get_bulk_open_maternal_population" style = "display: none"><td>Bulked maternal <em>population</em></td><td><input id="bulked_open_maternal_population" type="text" name="bulked_open_maternal_population" size="30"/></td></tr>
-
-    <tr id="select_bulk_open_paternal_population" style = "display: none">
-      <td>Specify paternal population<input id="specify_bulk_open_paternal_population_checkbox" type="checkbox"/></td>
-      <td id="get_bulk_open_paternal_population" style = "display: none">
-	<input id="bulked_open_paternal_population" type="text" name="bulked_open_paternal_population" size="30"/>
-      </td>
-    </tr>
-
-    <tr id="get_open_pollinated_maternal_parent" style = "display: none"><td>Open pollinated maternal parent</td><td><input id="open_pollinated_maternal_parent" type="text" name="open_pollinated_maternal_parent" size="30"/></td></tr>
-
-    <tr id="get_open_pollinated_population" style = "display: none">
-      <td>Specify paternal population<input id="specify_paternal_population_checkbox" type="checkbox"/></td>
-      <td id="get_paternal_population" style = "display: none">
-	<input id="paternal_population" type="text" name="paternal_population" size="30"/>
-      </td>
-    </tr>
-
-    <tr>
-      <td>
-	<br>
-    </td>
-    </tr>
-
-    <tr>
-      <td>Breeding Program</td>
-      <td>
-	<select id="program" name="program">
-	  <%perl>
-	    foreach my $program (@programs) {
-	    print "<option value=".'"'.@$program[1].'"'.">".@$program[1]."</option>";
-	    }
-          </%perl>
-       </select>
-     </td>
-    </tr>
-
-    <tr>
-      <td>Location
-      </td>
-      <td>
-	<select id="location" name="location">
-	  <%perl>
-	    foreach my $location (@locations) {
-	      print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
-	    }
-         </%perl>
-      </select>
-    </td>
-  </tr>
-
-  <tr>
-    <td>
-      <br>
-    </td>
-  </tr>
-
-  <tr>
-    <td>Specify number of flowers<input id= "flower_number_checkbox" type="checkbox" /></td>
-    <td id="get_flower_number" style="display: none">How many flowers?<input type="text" id="flower_number" size="4" /></td>
-  </tr>
-
-  <tr>
-    <td>Specify number of seeds<input id= "seed_number_checkbox" type="checkbox" /></td>
-    <td id="get_seed_number" style="display: none">How many seeds?<input type="text" id="seed_number" size="4" /></td>
-  </tr>
-
-  <tr>
-    <td title="You may choose to create accessions for the progeny of the cross at this time.">Create accessions for progeny<input id="create_progeny_checkbox" type="checkbox"/></td>
-    <td id="create_progeny_number" style = "display: none"> How many progeny?<input type="text" id="progeny_number" size="4" /></td>
-  </tr>
-
-  <tr id="use_prefix_suffix" style = "display: none">
-    <td>Use prefix and/or suffix<input id="use_prefix_suffix_checkbox" type="checkbox" checked/></td>
-    <td id="get_prefix_suffix" style = "display: none">Prefix <input id="prefix" name="prefix" value="P" size="5" /> Suffix <input id="suffix" name="suffix" size="5" /></td>
-  </tr>
-
-  <div style="display: none">
-    <tr><td style="display: none">Data access restrictions<input disabled id="data_access_checkbox" type="checkbox" style="display: none"/> </td>
+<div class="modal fade" id="cross_type_dialog" name="cross_type_dialog" tabindex="-1" role="dialog" aria-labelledby="crossTypeDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="crossTypeDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <&| /breeders_toolbox/cross_type_info.mas &>
+  	  </&>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
   </div>
-
-  <td id="show_visible_to_role_selection" style="display: none">
-    <select id="visible_to_role">
-      <option value = "" >none</option>
-      <%perl>
-      foreach my $role (@roles) {
-        print "<option value=".$role.">".$role."</option>";
-      }
-     </%perl>
-    </select>
-  </td>
-
-</table>
 </div>
--->
 
 <div class="modal fade" id="cross_saved_dialog_message" name="cross_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="crossSavedDialog">
   <div class="modal-dialog" role="document">
@@ -509,56 +551,96 @@ $user_id => undef
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-	  <p>
+	    <p>
     	  <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    	  The cross was saved successfully
+    	  The cross or crosses were saved successfully.
   	  </p>
         </div>
       </div>
       <div class="modal-footer">
+        <button class="btn btn-sm btn-info" id="refresh_crosstree_button" name="refresh_crosstree_button">Close and Refresh tree</button>
         <button id="dismiss_cross_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
 </div>
 
-<!--
-<div id="cross_saved_dialog_message" title="Cross saved">
-  <p>
-    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    The cross was saved successfully
-  </p>
-</div>
--->
+<script>
 
-<div class="modal fade" id="cross_upload_success_dialog_message" name="cross_upload_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="uploadCrossSavedDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadCrossSavedDialog">Success</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <p>
-    	  <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    	  The crosses from your file were saved successfully.
-  	  </p>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" id="cross_upload_success_dismiss" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
+jQuery.noConflict();
 
-<!--
-<div id="cross_upload_success_dialog_message" title="Cross file uploaded">
-  <p>
-    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    The cross file was uploaded successfully
-  </p>
-</div>
--->
+jQuery(document).ready(function($) {
 
+    jQuery('#crosses_datatable').DataTable({
+        destroy: true,
+        scrollY:        '30vh',
+            scrollCollapse: true,
+            paging:         false,
+    });
+
+    jQuery.ajax( {
+      url: '/ajax/breeders/get_crosses_with_folders_cached',
+      success: function(response) {
+        var html = '<ul>'+response.html+'</ul>';
+
+        jQuery('#crosses_list').html(html);
+        //console.log(html);
+        jQuery('#crosses_list').jstree( {
+            "core": { 'themes': { 'name': 'proton', 'responsive': true}},
+            "valid_children" : [ "folder", "trial", "breeding_program" ],
+            "types" : {
+                "breeding_program" : {
+                    "icon": 'glyphicon glyphicon-briefcase text-info',
+                },
+                "folder" : {
+                    "icon": 'glyphicon glyphicon-folder-open text-danger',
+                },
+                "cross" : {
+                    "icon": 'glyphicon glyphicon-grain text-success',
+                }
+            },
+            "search" : {
+                 "case_insensitive" : true,
+             },
+          "plugins" : ["html_data","types","search"],
+
+        });
+
+      },
+      error: function(response) {
+        alert("An error occurred while loading the trial data.");
+      }
+  });
+
+    jQuery("#cross_tree_search").keyup(function() {
+        var v = jQuery("#cross_tree_search").val();
+        jQuery("#crosses_list").jstree(true).search(v);
+    });
+
+    jQuery('#crosses_list').on("changed.jstree", function (e, data) {
+        //console.log(data);
+        if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'folder') {
+            jQuery("#folder_edit_options").show();
+        }
+        else {
+            jQuery("#folder_edit_options").hide();
+        }
+    });
+
+    jQuery("#crosses_list").delegate("li", "dblclick", function(event){
+        var node = $("#crosses_list").jstree("get_node", this);
+        //console.log(node);
+        if (node.id.substr(0,1) !== 'j') {
+            if (node.type == 'folder') {
+                window.open('/folder/'+node.id);
+                event.stopPropagation();
+            } else if (node.type == 'cross') {
+                window.open('/cross/'+node.id);
+                event.stopPropagation();
+            }
+        }
+    });
+
+});
+
+</script>

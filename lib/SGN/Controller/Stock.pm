@@ -48,18 +48,20 @@ has 'default_page_size' => (
 
 sub stock_search :Path('/search/stocks') Args(0) {
     my ($self, $c ) = @_;
+    my @editable_stock_props = split ',',$c->get_conf('editable_stock_props');
     $c->stash(
 	template => '/search/stocks.mas',
-       
-        stock_types => stock_types($self->schema), 
+
+        stock_types => stock_types($self->schema),
 	organisms   => stock_organisms($self->schema) ,
-	sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
-        trait_autocomplete_uri     => $c->uri_for('/ajax/stock/trait_autocomplete'),
-        onto_autocomplete_uri      => $c->uri_for('/ajax/cvterm/autocomplete'),
+	sp_person_autocomplete_uri => '/ajax/people/autocomplete',
+        trait_autocomplete_uri     => '/ajax/stock/trait_autocomplete',
+        onto_autocomplete_uri      => '/ajax/cvterm/autocomplete',
 	trait_db_name              => $c->get_conf('trait_ontology_db_name'),
 	breeding_programs          => breeding_programs($self->schema),
+    editable_stock_props => \@editable_stock_props
 	);
-	
+
 }
 
 
@@ -75,8 +77,8 @@ sub search :Path('/stock/search') Args(0) {
     my ( $self, $c ) = @_;
     $c->stash(
 	template => '/search/stocks.mas',
-	
-        stock_types => stock_types($self->schema), 
+
+        stock_types => stock_types($self->schema),
 	organisms   => stock_organisms($self->schema) ,
 	sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
         trait_autocomplete_uri     => $c->uri_for('/ajax/stock/trait_autocomplete'),
@@ -151,6 +153,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 
     my $logged_user = $c->user;
     my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
+    my $user_role = 1 if $logged_user;
     my $curator   = $logged_user->check_roles('curator') if $logged_user;
     my $submitter = $logged_user->check_roles('submitter') if $logged_user;
     my $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
@@ -240,6 +243,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         stockref => {
             action    => $action,
             stock_id  => $stock_id ,
+            user      => $user_role,
             curator   => $curator,
             submitter => $submitter,
             sequencer => $sequencer,
@@ -293,17 +297,17 @@ sub download_phenotypes : Chained('get_stock') PathPart('phenotypes') Args(0) {
         #my $key = "stock_" . $stock_id . "_phenotype_data";
         #my $phen_file = $file_cache->get($key);
         #my $filename = $tmp_dir . "/stock_" . $stock_id . "_phenotypes.csv";
-	
-	my $results = [];# listref for recursive subject stock_phenotypes resultsets     
+
+	my $results = [];# listref for recursive subject stock_phenotypes resultsets
 	#recursively get the stock_id and the ids of its subjects from stock_relationship
 	my $stock_rs = $self->schema->resultset("Stock::Stock")->search( { stock_id => $stock_id } );
 	$results =  $self->schema->resultset("Stock::Stock")->recursive_phenotypes_rs($stock_rs, $results);
 	my $report = Bio::Chado::NaturalDiversity::Reports->new;
 	my $d = $report->phenotypes_by_trait($results);
-	
+
 	my @info  = split(/\n/ , $d);
 	my @data;
-	foreach (@info) { 
+	foreach (@info) {
 	    push @data, [ split(/\t/) ] ;
 	}
         $c->stash->{'csv'}={ data => \@data};
@@ -376,29 +380,29 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     }
 }
 
-sub chr_sort { 
+sub chr_sort {
     my @a = split "\t", $a;
     my @b = split "\t", $b;
-    
+
     my $a_chr;
     my $a_coord;
     my $b_chr;
     my $b_coord;
-    
+
     if ($a[1] =~ /^[A-Za-z]+(\d+)[_-](\d+)$/) {
 	$a_chr = $1;
 	$a_coord = $2;
     }
-    
-    if ($b[1] =~ /[A-Za-z]+(\d+)[_-](\d+)/) { 
+
+    if ($b[1] =~ /[A-Za-z]+(\d+)[_-](\d+)/) {
 	$b_chr = $1;
 	$b_coord = $2;
     }
-    
-    if ($a_chr eq $b_chr) { 
+
+    if ($a_chr eq $b_chr) {
 	return $a_coord <=> $b_coord;
     }
-    else { 
+    else {
 	return $a_chr <=> $b_chr;
     }
 }
@@ -460,7 +464,7 @@ sub get_stock_has_descendants : Private {
 sub get_stock_extended_info : Private {
     my ( $self, $c ) = @_;
     $c->forward('get_stock_cvterms');
-    
+
     $c->forward('get_stock_allele_ids');
     $c->forward('get_stock_owner_ids');
     $c->forward('get_stock_has_pedigree');
@@ -516,7 +520,7 @@ sub _make_stock_search_rs {
         $name =~ s/(^\s+|\s+)$//g;
         $name =~ s/\s+/ /g;
 
-        $rs = $rs->search({ 'me.is_obsolete' => 'false', 
+        $rs = $rs->search({ 'me.is_obsolete' => 'false',
             -or => [
                  'lower(me.name)' => { like => '%'.lc( $name ).'%' } ,
                  'lower(me.uniquename)' => { like => '%'.lc( $name ).'%' },
@@ -778,13 +782,13 @@ sub _stock_project_genotypes {
                                                 );
     my %genotypes;
     my $project_desc;
-    
+
     while (my $exp = $experiments->next) {
         # there should be one project linked to the experiment ?
         my @gen = map $_->genotype, $exp->nd_experiment_genotypes;
         $project_desc = $project_descriptions{ $exp->nd_experiment_id };
 	#or die "no project found for exp ".$exp->nd_experiment_id;
-	
+
     #my @values;
 	#foreach my $genotype (@gen) {
 	    #my $genotype_id = $genotype->genotype_id;
@@ -851,21 +855,14 @@ sub _stock_pubs {
     return $pubs;
 }
 
-# get all images. Optional: include those of subject stocks
+# get all images. Includes those of subject stocks
 sub _stock_images {
-    my ($self, $stock, $r) = @_;
-    my $query = "select distinct image_id FROM phenome.stock_image WHERE stock_id = ?";
-    $query .=  " OR stock_id IN (SELECT subject_id FROM stock_relationship WHERE object_id = ? )" if $r;
-    my $ids = $r ?
-        $stock->get_schema->storage->dbh->selectcol_arrayref
+    my ($self, $stock) = @_;
+    my $query = "select distinct image_id FROM phenome.stock_image WHERE stock_id = ? OR stock_id IN (SELECT subject_id FROM stock_relationship WHERE object_id = ? )";
+    my $ids = $stock->get_schema->storage->dbh->selectcol_arrayref
         ( $query,
           undef,
           $stock->get_stock_id,
-          $stock->get_stock_id,
-        ) :
-        $stock->get_schema->storage->dbh->selectcol_arrayref
-        ( $query,
-          undef,
           $stock->get_stock_id,
         );
     return $ids;
@@ -896,7 +893,7 @@ sub _stock_has_pedigree {
   my ($self, $stock) = @_;
   my $bcs_stock = $stock->get_object_row;
   my $cvterm_female_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'female_parent', 'stock_relationship');
-  
+
   my $cvterm_male_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'male_parent', 'stock_relationship');
 
   my $stock_relationships = $bcs_stock->search_related("stock_relationship_objects",undef,{ prefetch => ['type','subject'] });
@@ -918,16 +915,17 @@ sub _stock_has_descendants {
 
   my $descendant_relationships = $bcs_stock->search_related("stock_relationship_subjects",undef,{ prefetch => ['type','object'] });
   if ($descendant_relationships) {
-    while (my $descendant_relationship = $descendant_relationships->next) {
-      my $descendant_stock_id = $descendant_relationship->object_id();
-      #if ($descendant_stock_id && (($descendant_relationship->type_id() == $cvterm_female_parent->cvterm_id()) || ($descendant_relationship->type_id() == $cvterm_male_parent->cvterm_id()))) {
-      if ($descendant_stock_id) {
-	return 1;
+      return $descendant_relationships->count();
+ # while (my $descendant_relationship = $descendant_relationships->next) {
+ #      my $descendant_stock_id = $descendant_relationship->object_id();
+ #      #if ($descendant_stock_id && (($descendant_relationship->type_id() == $cvterm_female_parent->cvterm_id()) || ($descendant_relationship->type_id() == $cvterm_male_parent->cvterm_id()))) {
+ #      if ($descendant_stock_id) {
+ # 	return 1;
       } else {
 	return 0;
       }
-    }
-  }
+   # }
+  #}
 }
 
 sub _validate_pair {

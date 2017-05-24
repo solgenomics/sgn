@@ -1,0 +1,34 @@
+<br />
+<& /page/page_title.mas, title=>"<i>Petunia inflata</i> draft genome sequence v1.0.1" &>
+
+<p>
+  A draft sequence of the <i>Petunia inflata</i> genome, one of the ancestors of Petunia hybrida, is publicly available (Bombarely et al, 2016).
+  The <i>P. inflata S6</i> genome sequence, was performed using a short read de novo assembly (Illumina; coverage 135X)<br>
+</p>
+
+
+<p>
+  The <i>Petunia inflata</i> genome data are accessible on SGN through BLAST, JBrowse and the SGN VIGS Tool, and they can be downloaded from the SGN ftp site.
+</p>
+
+<br>
+
+<center>
+    <a class="btn btn-primary" href="/tools/blast/?db_id=276" target="_blank" style="color:white">BLAST</a>&nbsp;&nbsp;
+    <a class="btn btn-primary" href="ftp://ftp.solgenomics.net/genomes/Petunia_inflata/" target="_blank" style="color:white">FTP Site</a>&nbsp;&nbsp;
+    <a class="btn btn-primary" href="http://solgenomics.net/jbrowse_solgenomics/?data=data%2Fjson%2FPeinf101&loc=Peinf101Scf00001" target="_blank" style="color:white">JBrowse</a>&nbsp;&nbsp;
+    <a class="btn btn-primary" href="http://vigs.solgenomics.net" target="_blank" style="color:white">VIGS Tool</a>
+</center>
+
+<br>
+<br>
+<h4>References</h4>
+<ul style="list-style-type:disc">
+  <li>
+    Bombarely, A., Moser, M, ... Sims, T.L. and Kuhlemeier, C. (2016)<br>
+    Insight into the evolution of the Solanaceae from the parental genomes of Petunia hybrida<br>
+   <a href="https://www.nature.com/articles/nplants201674">Nature Plants 2, Article number: 16074 (2016)</a><br>
+  </li>
+</ul>
+<br>
+<br>

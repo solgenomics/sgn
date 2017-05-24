@@ -41,12 +41,13 @@ sub _validate_with_plugin {
 	$user_ids{$fields[$user_id_col]}++;
     }
     
-    my $errors =[]; 
+    my %errors;
+    my @error_messages;
     if (!$blank_well) { 
-	push @$errors, "No blank well found in spreadsheet";
+        push @error_messages, "No blank well found in spreadsheet";
     }
     if (keys(%trial_names)>1) {
-	push @$errors, "All trial names in the trial column must be identical";
+	push @error_messages, "All trial names in the trial column must be identical";
     }
     
     my @distinct_users = keys(%user_ids);
@@ -60,10 +61,11 @@ sub _validate_with_plugin {
     if (@distinct_project_names > 1) { 
 	print STDERR "Ignoring multiple project_names, working with $project_name\n";
     }
-    
-    $self->_set_parse_errors($errors);    
-    
-    if (@$errors!=0) { 
+
+    $errors{'error_messages'} = \@error_messages;
+    $self->_set_parse_errors(\%errors);
+
+    if (@error_messages!=0) {
 	return 0;
     }
 

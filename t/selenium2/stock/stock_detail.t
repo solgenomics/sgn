@@ -162,8 +162,8 @@ $t->while_logged_in_as("submitter", sub {
     sleep(1);
     $t->driver->accept_alert();
     sleep(1);
-    #$t->driver->accept_alert();
-    #sleep(1);
+    $t->driver->accept_alert();
+    sleep(1);
 
     
 

@@ -1,0 +1,61 @@
+<%args>
+</%args>
+
+<div id="brapi_auth_home_div">
+
+    <div class="row">
+    <div class="col-sm-6">
+    <h4>Login</h4>
+    <input name="brapi_auth_login_username" id="brapi_auth_login_username" class="form-control" type="text" placeholder="Your Username" />
+    <input name="brapi_auth_login_password" id="brapi_auth_login_password" class="form-control" type="password" placeholder="Password" />
+    <button class="btn btn-primary" name="brapi_auth_login_submit" id="brapi_auth_login_submit">Login</button>
+    </div>
+    <div class="col-sm-6">
+    <h4>Logout</h4>
+    <button class="btn btn-danger" name="brapi_auth_logout_submit" id="brapi_auth_logout_submit">Logout</button>
+    </div>
+    </div>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery("#brapi_auth_login_submit").click(function() {
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/token',
+          'method': 'POST',
+          'data': { 
+            'grant_type' : 'password',
+            'username' :  jQuery("#brapi_auth_login_username").val(),
+            'password' : jQuery("#brapi_auth_login_password").val()
+          },
+          'success': function(response) {
+            console.log(response);
+            //jQuery("#brapi_auth_home_div").empty().html("Successfully logged in!"+response);
+            alert('Successfully logged in!'+response.userDisplayName + response.expires_in);
+            //location.reload();
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+    });
+    
+    jQuery("#brapi_auth_logout_submit").click(function() {
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/token',
+          'method': 'DELETE',
+          'success': function(response) {
+            console.log(response);
+            alert('Successfully logged out!');
+            //location.reload();
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+    });
+});
+
+</script>

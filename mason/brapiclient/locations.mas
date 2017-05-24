@@ -1,0 +1,38 @@
+<%args>
+</%args>
+
+<div id="brapi_home_locations_div">
+
+    <h4>Locations</h4>
+    <button class="btn btn-primary" name="brapi_home_locations_submit" id="brapi_home_locations_submit">Get Locations</button>
+    <br/><br/>
+    <div id="brapi_locations_data_result_div">
+    </div>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery("#brapi_home_locations_submit").click(function() {
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/locations',
+          'method': 'GET',
+          'beforeSend': function() {
+            jQuery('#working_modal').modal('show');
+          },
+          'success': function(response) {
+            jQuery('#working_modal').modal('hide');
+            console.log(response);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_locations_data_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/locations', undefined);
+
+          },
+          error: function(response) {
+            jQuery('#working_modal').modal('hide');
+            alert('An error occurred');
+          }
+        });
+    });
+});
+
+</script>

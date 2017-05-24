@@ -126,72 +126,71 @@ my $lists = CXGN::List::available_lists($t->dbh(), 41);
 
 #print STDERR Dumper($lists);
 @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
-
+#print STDERR Dumper \@lists_sorted;
 is_deeply(\@lists_sorted, [
           [
-            '3',
+            3,
             'test_stocks',
             undef,
-            '5',
-            '76451',
+            5,
+            76451,
             'accessions',
-	    '0'
+            0
           ],
           [
-            '5',
+            5,
             'accessions_for_solgs_tests',
             undef,
-            '374',
-            '76451',
+            374,
+            76451,
             'accessions',
-	    '0'
+            0
           ],
           [
-            '6',
+            6,
             'accessions_for_trial2',
             undef,
-            '307',
-            '76451',
+            307,
+            76451,
             'accessions',
-	    '0'
+            0
           ],
           [
-            '7',
+            7,
             'selection_acc',
             undef,
-            '20',
+            20,
             undef,
             undef,
-	    '0'
+            0
           ],
           [
-            '8',
+            12,
             'new_test_name',
             'new description',
-            '1',
-            '76451',
+            1,
+            76451,
             'accessions',
-	    '0'
+            0
           ],
-	  [
-            '809',
+          [
+            809,
             'janedoe_1_public',
             undef,
-            '2',
+            2,
             undef,
             undef,
-	    '1'
+            1
           ],
-	  [
-            '811',
+          [
+            811,
             'janedoe_1_private',
             undef,
-            '2',
+            2,
             undef,
             undef,
-	    '0'
-          ],
-
+            0
+          ]
         ],
         "check available lists after additions");
 
@@ -204,66 +203,96 @@ my $lists = CXGN::List::available_lists($t->dbh(), 41);
 #print STDERR Dumper($lists);
 
 @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
+#print STDERR Dumper \@lists_sorted;
 
 is_deeply(\@lists_sorted, [
-	      [
-	       '3',
-	       'test_stocks',
-	       undef,
-	       '5',
-	       '76451',
-	       'accessions',
-	       '0'
-	      ],
-	      [
-	       '6',
-	       'accessions_for_trial2',
-	       undef,
-	       '307',
-	       '76451',
-	       'accessions',
-	       '0'
-	      ],
-	      [
-	       '7',
-	       'selection_acc',
-	       undef,
-	       '20',
-	       undef,
-	       undef,
-	       '0'
-	      ],
-	      [
-	       '8',
-	       'new_test_name',
-	       'new description',
-	       '1',
-	       '76451',
-	       'accessions',
-	       '0'
-	      ],
-	      [
-            '809',
+          [
+            3,
+            'test_stocks',
+            undef,
+            5,
+            76451,
+            'accessions',
+            0
+          ],
+          [
+            6,
+            'accessions_for_trial2',
+            undef,
+            307,
+            76451,
+            'accessions',
+            0
+          ],
+          [
+            7,
+            'selection_acc',
+            undef,
+            20,
+            undef,
+            undef,
+            0
+          ],
+          [
+            12,
+            'new_test_name',
+            'new description',
+            1,
+            76451,
+            'accessions',
+            0
+          ],
+          [
+            809,
             'janedoe_1_public',
             undef,
-            '2',
+            2,
             undef,
             undef,
-	    '1'
+            1
           ],
-	  [
-            '811',
+          [
+            811,
             'janedoe_1_private',
             undef,
-            '2',
+            2,
             undef,
             undef,
-	    '0'
-          ],
-
-	  ]
+            0
+          ]
+        ]
 	  , "check available lists after deletion");
 
+
+
+my $list = CXGN::List->new( { dbh => $t->dbh(), list_id => $list_id });
+my $items = $list->retrieve_elements_with_ids($list_id);
+$error = $list->update_element_by_id($items->[0]->[0], 'updated name');
+ok(!$error, 'test update item');
+$items = $list->retrieve_elements_with_ids($list_id);
+#print STDERR Dumper $items;
+is_deeply($items, [
+          [
+            725,
+            'updated name'
+          ]
+        ], 'check updated list item');
+
+my $space1 = $list->add_element(" bla1");
+ok($list->exists_element("bla1"), 'remove leading space element check');
+ok(!$list->exists_element(" bla1"), 'leading space removed from element');
+
+
+my $space2 = $list->add_element("bla2 ");
+ok($list->exists_element("bla2"), 'remove trailing space element check');
+ok(!$list->exists_element("bla2 "), 'trailing space removed from element');
+
+my $space3 = $list->add_element(" bla3 ");
+ok($list->exists_element("bla3"), 'remove trailing and leading spaces element check');
+ok(!$list->exists_element(" bla3 "), 'trailing and leading spaces removed from element');
+
+my $space4 = $list->add_element("    ");
+ok($space4 eq "Empty list elements are not allowed", 'element with only spaces cannot be added'); 
 
 
 done_testing();

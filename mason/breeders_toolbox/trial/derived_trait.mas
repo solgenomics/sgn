@@ -1,0 +1,235 @@
+<%args>
+$trial_id
+</%args>
+
+
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.iframe-post-form' ] &>
+
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="well">
+                <h4>Derive Trait Phenotypes</h4>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <a id="compute_derived_trait_link"><button class="button" type="button" id="derived_button" value="Create_Trait" >Derive Trait</button></a>
+                    </div>
+                    <div class="col-sm-8">
+                        <p><b>P <sub>Calculated</sub></b> = <i>f</i> ( <b>P <sub>Trait1</sub></b> , <b>P <sub>Trait2</sub></b> )</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="well">
+                <h4>Calculate Plot Phenotypes from Plant Phenotypes</h4>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <a id="generate_plot_pheno_link"><button class="button" type="button" >Calculate</button></a>
+                    </div>
+                    <div class="col-sm-8">
+                        <p><b>P <sub>Plot</sub></b> = <i>average</i> ( <b>P <sub>Plants</sub></b> )</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<div id="compute_derived_trait_dialog" title="Compute Derived Traits" style="display:none;">
+  	<div id="trait_list_dc" name="trait_list">
+    		<label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;">Please select trait to compute: <br />
+  			<select id="derived_trait_select"></select>
+    		</label> 
+    			
+  	</div>
+</div>
+
+<div id="derived_trait_saved_dialog_message" title="Computation of Derived Traits" style="display:none;">
+  	<p>
+    		<span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+    		The trait was created and saved successfully
+  	</p>
+</div>
+
+<div class="modal fade" id="generate_plot_pheno_modal" name="generate_plot_pheno_modal" tabindex="-1" role="dialog" aria-labelledby="generatePlotPhenoDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="generatePlotPhenoDialog">Generate Plot Phenotypes from Plant Phenotypes</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-9">
+
+                    <form class="form-horizontal" role="form" method="post" id="generate_plot_pheno_dialog_form" name="generate_plot_pheno_dialog_form">
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Trait: </label>
+                            <div class="col-sm-9" >
+                                <div id="generate_plot_pheno_trait_select_dropdown">
+                                    [No Plants Phenotyped]
+                                    <!--ajax populated -->
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Method: </label>
+                            <div class="col-sm-9" >
+                                <select id="generate_plot_pheno_method_select" class="form-control">
+                                    <option value="arithmetic_mean">Arithmetic Mean</option>
+                                    <option value="mode">Mode</option>
+                                    <option value="maximum">Maximum</option>
+                                    <option value="minimum">Minimum</option>
+                                    <option value="median">Median</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Rounding: </label>
+                            <div class="col-sm-9" >
+                                <select id="generate_plot_pheno_rounding_select" class="form-control">
+                                    <option value="no_rounding">No rounding</option>
+                                    <option value="round">Round to nearest integer</option>
+                                    <option value="round_up">Always round up to nearest integer</option>
+                                    <option value="round_down">Always round down to nearest integer</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Overwrite Previous Plot Values for this Trait: </label>
+                            <div class="col-sm-9" >
+                                <input type='checkbox' id="generate_plot_pheno_overwrite" name="generate_plot_pheno_overwrite"/>
+                            </div>
+                        </div>
+
+                    </form><br/>
+                </div>
+                <div class="col-sm-3">
+                    <div id="generate_plot_pheno_trait_select_definition">
+                        <!--ajax populated -->
+                    </div>
+                </div>
+            </div>
+            <div id="generate_plot_pheno_preview">
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="generate_plot_pheno_calc_submit" id="generate_plot_pheno_calc_submit" title="Calculate">View Calculation (Does Not Save)</button>
+        <button disabled type="button" class="btn btn-primary" name="generate_plot_pheno_save" id="generate_plot_pheno_save" title="">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#generate_plot_pheno_link').click( function() {
+        jQuery('#generate_plot_pheno_modal').modal('show');
+    });
+
+    jQuery('#compute_derived_traits_onswitch').click( function() {
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type=plant',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                //console.log(response);
+                jQuery("#working_modal").modal("hide");
+                if (response.traits_assayed[0][0]) {
+                    var traits_assayed_html = "<select class='form-control' id='generate_plot_pheno_trait_select' onchange='generate_plot_pheno_trait_change(this.value)'>";
+                    traits_assayed_html = traits_assayed_html + '<option value="all">All</option>';
+                    for (i=0; i<response.traits_assayed[0].length; i++) {
+                        traits_assayed_html = traits_assayed_html + "<option value="+ encodeURI(response.traits_assayed[0][i][1]) + " >" + response.traits_assayed[0][i][1] + "</option>";
+                    }
+                    traits_assayed_html = traits_assayed_html +"</select>";
+
+                    jQuery("#generate_plot_pheno_trait_select_dropdown").html(traits_assayed_html);
+
+                    jQuery('#generate_plot_pheno_trait_select_definition').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+"/view'>Definition</a>");
+                }
+            }
+        });
+    });
+    
+    var generated_phenotypes_data;
+    var generated_plots_data;
+    var generated_traits_data;
+    jQuery('#generate_plot_pheno_calc_submit').click( function() {
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/generate_plot_phenotypes',
+            type: 'POST',
+            data: {
+                'trial_id':<% $trial_id %>,
+                'trait_name':jQuery('#generate_plot_pheno_trait_select').val(),
+                'method':jQuery('#generate_plot_pheno_method_select').val(),
+                'rounding':jQuery('#generate_plot_pheno_rounding_select').val()
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                //console.log(response);
+                var html = '<hr><h5>Trait: '+response.trait_name+'</h5><h5>Method: '+response.method+'</h5><h5>Rounding: '+response.rounding+'</h5><table class="table table-hover"><thead><tr><th>Plot</th><th>Plant Values</th><th>Calculation Output</th><th>Value to Store</th><th>Notes</th></tr></thead><tbody>';
+                for (var k=0; k<response.info.length; k++) {
+                    for (var i=0; i<response.info[k].length; i++) {
+                        html = html + '<tr><td>'+response.info[k][i].plot_name+'</td><td>'+response.info[k][i].plant_values+'</td><td>'+response.info[k][i].output+'</td><td>'+response.info[k][i].value_to_store+'</td>';
+                        if (response.info[k][i].flag_notes) {
+                            html = html + '<td><font color="red">'+response.info[k][i].notes+'</font></td>';
+                        } else {
+                            html = html + '<td>'+response.info[k][i].notes+'</td>';
+                        }
+                        html = html + '</tr>';
+                    }
+                    //Empty Rows in between
+                    html = html + '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
+                    html = html + '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
+                }
+                html = html +'</tbody></table>';
+                jQuery('#generate_plot_pheno_preview').empty().html(html);
+                jQuery("#working_modal").modal("hide");
+                generated_phenotypes_data = response.store_data;
+                generated_plots_data = response.store_plots;
+                generated_traits_data = response.store_traits;
+                jQuery('#generate_plot_pheno_save').attr('disabled', false);
+            }
+        });
+    });
+
+
+    jQuery('#generate_plot_pheno_save').click( function() {
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/store_generated_plot_phenotypes',
+            type: 'POST',
+            data: {
+                'overwrite_values':jQuery('#generate_plot_pheno_overwrite').val(),
+                'store_data':generated_phenotypes_data,
+                'store_plots':generated_plots_data,
+                'store_traits':generated_traits_data
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                //console.log(response);
+                jQuery("#working_modal").modal("hide");
+                //alert('Successfully saved!');
+            }
+        });
+    });
+
+
+});
+
+function generate_plot_pheno_trait_change(trait_id) {
+    jQuery('#generate_plot_pheno_trait_select_definition').html("<a href='/cvterm/"+trait_id+"/view'>Definition</a>");
+}
+
+</script>

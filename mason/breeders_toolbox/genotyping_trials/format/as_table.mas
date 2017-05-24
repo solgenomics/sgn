@@ -1,6 +1,7 @@
 
 <%args>
-$breeding_program
+$breeding_program_name
+$breeding_program_id
 $trial_name
 $trial_id
 </%args>
@@ -8,7 +9,7 @@ $trial_id
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui' ] &>
 
 <h1>CASSAVABASE GENOTYPING TRIAL</h1>
-<h1>Breeding program: <% $breeding_program->[0]->[1] %></h1>
+<h1>Breeding program: <% $breeding_program_name %></h1>
 <h2>Trial name: <a href='/breeders/trial/<% $trial_id %>'><% $trial_name %></a></h2>
 <br/>
 
@@ -56,7 +57,8 @@ jQuery(document).ready(function () {
 			       } else {
 			           bgcolor="#FFFFFF";
 			       }
-			       cell = "<br/>" + response.design[well].accession_name + "<br/><br/>";
+			       //cell = "<br/>" + response.design[well].accession_name + "<br/><br/>";
+			       cell = "<br/><a href='/stock/" + response.design[well].accession_id +"/view'>" + response.design[well].accession_name + "</a>  <br/><br/>";
 			   }
 			}
 			trial_plate_view_html = trial_plate_view_html + "<td bgcolor=" + bgcolor + ">" + cell + "</td>";

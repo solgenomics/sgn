@@ -19,37 +19,43 @@ jQuery(document).ready(function(){
 	url = '/solgs/search/trials/';
     }
 
-    searchTrials(url);               
+    searchAllTrials(url);               
 });
 
 
-function searchTrials(url) {
-   
+function searchAllTrials(url, result) {
+    
+    jQuery("#all_trials_search_message").html('Searching for GS trials..').show();
+    
     jQuery.ajax({
         type: 'POST',
         dataType: "json",
         url: url,
+        data: {'show_result': result},
+        cache: true,
         success: function(res) { 
- 
-            var trialsList = listTrials(res.trials);
+
+            jQuery("#all_trials_search_message").hide();
+  
+            listAllTrials(res.trials)
             var pagination = res.pagination;
-            jQuery("#homepage_message").hide();
-            jQuery("#homepage_trials_list").html(trialsList + pagination).show();           
+       
+            jQuery("#all_trials_search_message").hide(); 
+	   jQuery("#all_trials_div").append(pagination);
         },
         error: function() {               
-            jQuery("#homepage_message").html('Error occured fetching the first set of GS trials.').show();
-          
+            jQuery("#all_trials_search_message").html('Error occured fetching the first set of GS trials.').show();          
         }
 
     });
     
   
-    jQuery("#homepage_trials_list").on('click', "div.paginate_nav a", function(e) { 
+    jQuery("#all_trials_div").on('click', "div.paginate_nav a", function(e) { 
         var page = jQuery(this).attr('href');
        
-        jQuery("#homepage_trials_list").empty();
+        jQuery("#all_trials_div").empty();
     
-        jQuery("#homepage_message").html('Searching for more GS trials..').show(); 
+        jQuery("#all_trials_search_message").html('Searching for more GS trials..').show(); 
  
         if (page) {
             jQuery.ajax({ 
@@ -57,15 +63,13 @@ function searchTrials(url) {
                 dataType: "json",
                 url: page,
                 success: function(res) {                                                                                 
-                    var trialsList = listTrials(res.trials);
+		    listAllTrials(res.trials)
                     var pagination = res.pagination;
-                    jQuery("#homepage_trials_list").empty();
-                    jQuery("#homepage_message").hide(); 
-                    jQuery("#homepage_trials_list").html(trialsList + pagination).show();
-                  
+                    jQuery("#all_trials_search_message").hide(); 
+		    jQuery("#all_trials_div").append(pagination);
                 },               
                 error: function() {
-                    jQuery("#homepage_message").html('Error occured fetching the next set of GS trials.').show();
+                    jQuery("#all_trials_search_message").html('Error occured fetching the next set of GS trials.').show();
                 }                    
             });                
         }
@@ -76,39 +80,192 @@ function searchTrials(url) {
 }
 
 
-function listTrials (trials)  {
+function listAllTrials (trials)  {
+   
+    if (trials) {
+	var tableId = 'all_trials_table';
+	var divId   = 'all_trials_div';
+
+	var tableDetails = {
+	    'divId'  : divId, 
+	    'tableId': tableId, 
+	    'data'   : trials
+	};
+
+	jQuery('#searched_trials_div').empty();
+	jQuery('#all_trials_div').empty();
+
+	displayTrainingPopulations(tableDetails);
+
+    } else {
+	jQuery("#all_trials_search_message").html('No trials to show.').show();	
+    }
+
+}
+
+
+function checkTrainingPopulation (popId) {
+
+    jQuery.ajax({
+        type: 'POST',
+        dataType: 'json',
+        url: '/solgs/check/training/population/' + popId,
+        success: function(response) {
+            if (response.is_training_population) {
+		jQuery("#searched_trials_message").hide();
+		jQuery("#searched_trials_div").show();
+		
+		var divId   = 'searched_trials_div';
+		var tableId = 'searched_trials_table'; 
+		var data    = response.training_pop_data;
+		
+		var tableDetails = {
+		    'divId'  : divId, 
+		    'tableId': tableId, 
+		    'data'   : data
+		};
+		
+		displayTrainingPopulations(tableDetails);					
+            } else {
+		jQuery("#searched_trials_message").html('<p> Population ' + popId + ' can not be used as a training population.');
+		jQuery("#search_all_training_pops").show();
+		
+		jQuery("#searched_trials_message")
+			.delay(4000)
+			.fadeOut('slow', function () {
+			    searchAllTrials('/solgs/search/trials');   
+			});
+	    }
+	}
+    });
     
-    jQuery(function() { 
-        jQuery("#color_tip")
-            .css({display: "inline-block", width: "5em"})
-            .tooltip();
+}
+
+
+jQuery(document).ready( function () {
+    
+    jQuery('#population_search_entry').keyup(function(e) {
+     	
+	if(e.keycode == 13) {	    
+     	    jQuery('#search_training_pop').click();
+    	}
     });
 
-    var table = '<table class="table" style="width:100%;text-align:left">';
-    table    += '<tr>';
-    table    += '<th></th><th>Trial</th><th>Description</th><th>Location</th>'
-              + '<th>Year</th><th id="color_tip" title="You can combine trials sharing the same color.">'
-              + 'Tip(?)</th>';
-    table    += '</tr>';
-   
+    jQuery('#search_training_pop').on('click', function () {
+	
+	jQuery("#searched_trials_message").hide();
+
+	var entry = jQuery('#population_search_entry').val();
+
+	if (entry) {
+	    checkPopulationExists(entry);
+	}
+    });
+          
+});
+
+
+jQuery(document).ready( function () {
     
-    for (var i=0; i < trials.length; i++) {
-      
-        if (trials[i]) {
-            table += '<tr>';
-            table += '<td>' + trials[i][0] + '</td>' 
-                + '<td>' + trials[i][1] + '</td>'
-                + '<td>' + trials[i][2] + '</td>'
-                + '<td>' + trials[i][3] + '</td>'
-                + '<td>' + trials[i][4] + '</td>'
-                + '<td>' + trials[i][5] + '</td>';
-            table += '</tr>';
-        }
-    }
+    jQuery('#search_all_training_pops').on('click', function () {
+	
+	jQuery("#searched_trials_div").empty();
+	jQuery("#all_trials_div").empty();
+	var url = '/solgs/search/trials';
+        var result = 'all';
+	searchAllTrials(url, result);
+    });
+          
+});
+
+
+jQuery(document).ready( function () {
+    jQuery("#color_tip").tooltip();
+});
+
+
+function checkPopulationExists (name) {
     
-    table += '</table>';
+    jQuery("#searched_trials_message")
+	.html("Checking if trial or training population " + name + " exists...please wait...")
+	.show();
+    
+	jQuery("#all_trials_div").empty();
+
+	jQuery.ajax({
+            type: 'POST',
+            dataType: 'json',
+	    data: {'name': name},
+            url: '/solgs/check/population/exists/',
+            success: function(res) {
+            
+		if (res.population_id) {
+		    checkTrainingPopulation(res.population_id);
+		    
+		    jQuery('#searched_trials_message').html(
+			'<p>Checking if the trial or population can be used <br />' 
+			    + 'as a training population...please wait...</p>');	
+		} else { 		
+		    jQuery('#searched_trials_message')
+			.html('<p>' + name + ' is not in the database.</p>');
+		    
+		    jQuery("#searched_trials_message")
+			.delay(4000)
+			.fadeOut('slow', function () {
+			    searchAllTrials('/solgs/search/trials');   
+			});		   		    
+		}
+	    }
+	});
+    
+}
+
+
+function createTrialsTable (tableId) {
+    
+    var table = '<table id="' + tableId +  '" class="table" style="width:100%;text-align:left">';
+    table    += '<thead><tr>';
+    table    += '<th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th>'; 
+    table    += '<th id="color_tip" title="You can combine Trials with matching color."><span class="glyphicon glyphicon-question-sign"></span></th>';
+    table    += '</tr></thead>';
+    table    += '</table>';
 
     return table;
 
 }
 
+
+function displayTrainingPopulations (tableDetails) {
+  
+    var divId   = tableDetails.divId;
+    var tableId = tableDetails.tableId;
+    var data    = tableDetails.data;
+
+    if (data) {
+
+	var tableRows = jQuery('#' + tableId + ' tr').length;
+	
+	if (tableRows > 1) {
+	    jQuery('#' + tableId).dataTable().fnAddData(data);	
+	} else {
+	    
+	    var table = createTrialsTable(tableId);
+	   
+	    jQuery('#' + divId).html(table).show();
+	   
+	    jQuery('#' + tableId).dataTable({
+                    'order'       : [[1, "desc"], [4, "desc"]],
+		    'searching'   : true,
+		    'ordering'    : true,
+		    'processing'  : true,
+		    'paging'      : true,
+		    'lengthChange': false,
+                    'oLanguage'   : {
+		                     "sSearch": "Filter result by: "
+		                    },
+		    'data'        : data,
+	    }).draw();
+	}
+    }
+   
+}

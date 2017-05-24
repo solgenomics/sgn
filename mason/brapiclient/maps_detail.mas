@@ -1,0 +1,54 @@
+<%args>
+</%args>
+
+<div id="brapi_home_maps_detail_div">
+
+    <h4>Genome Map Details</h4>
+    <input name="brapi_home_mapsdbid" id="brapi_home_mapsdbid" class="form-control" type="text" placeholder="MapsDbId e.g. 1" value="1"/>
+    <input name="brapi_home_maps_linkagegroupids" id="brapi_home_maps_linkagegroupids" class="form-control" type="text" placeholder="LinkageGroupIds e.g. S5,S13" value="S5,S13"/>
+    <input name="brapi_home_maps_min" id="brapi_home_maps_min" class="form-control" type="text" placeholder="Minimum Position e.g. 10000" value="10000"/>
+    <input name="brapi_home_maps_max" id="brapi_home_maps_max" class="form-control" type="text" placeholder="Maximum Position e.g. 200000" value="200000"/>
+    <button class="btn btn-primary" name="brapi_home_mapsdbid_submit" id="brapi_home_mapsdbid_submit">Get Map Details</button>
+    <br/><br/>
+    <div id="brapi_maps_detail_result_div">
+    </div>
+    <div id="brapi_maps_info_result_div">
+    </div>
+    <div id="brapi_maps_positions_result_div">
+    </div>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery("#brapi_home_mapsdbid_submit").click(function() {
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/maps/'+jQuery('#brapi_home_mapsdbid').val(),
+          'method': 'GET',
+          'success': function(response) {
+            console.log(response);
+            brapi_create_table(response.result, 'brapi_maps_detail_result_div', undefined);
+            brapi_create_paginated_table(response.result.linkageGroups, response.metadata.pagination, 'brapi_maps_info_result_div', '/brapi/v1/maps/'+jQuery('#brapi_home_mapsdbid').val(), undefined);
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/maps/'+jQuery('#brapi_home_mapsdbid').val()+'/positions?linkageGroupIdList='+jQuery('#brapi_home_maps_linkagegroupids').val()+'&min='+jQuery('#brapi_home_maps_min').val()+'&max='+jQuery('#brapi_home_maps_max').val(),
+          'method': 'GET',
+          'success': function(response) {
+            console.log(response);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_maps_positions_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/maps/'+jQuery('#brapi_home_mapsdbid').val()+'/positions', undefined);
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+
+    });
+});
+
+</script>

@@ -5,8 +5,9 @@
 </%init>
 
 
-<!-- LOAD WORKING MODAL AND LIST MODAL AT END SO THAT THEY ALWAYS APPEAR ON TOP -->
+<!-- LOAD WORKING MODAL, LIST MODAL, AND CALENDAR MODAL AT END SO THAT THEY ALWAYS APPEAR ON TOP -->
 <& /site/list.mas &>
+<& /calendar/events_by_user_role.mas &>
 
 <!--
 <div id="working" style="text-align : center;">
@@ -40,7 +41,7 @@
 <!-- END CONTENT WRAPPER -->
 
       </div>
-      <div class="col-sm-1 col-md-1 col-lg-2">
+      <div class="col-md-1 col-lg-1 col-xl-2">
       </div>
     </div>
   </div>
@@ -53,22 +54,22 @@
   <br/>
   <div class="container-fluid">
     <div class="row">
-      <div class="col-xs-1 col-sm-1 col-md-1 col-lg-2">
+      <div class="col-md-1 col-lg-1 col-xl-2">
       </div>
-      <div class="col-xs-10 col-sm-10 col-md-10 col-lg-8">
+      <div class="col-xs-12 col-sm-12 col-md-10 col-lg-10 col-xl-8">
         <div class="container-fluid">
     	  <div class="row">
 
       	    <div class="col-sm-9 col-md-9 col-lg-9">
 
-	      <div class="panel panel-success" style="margin-bottom:11px; padding-bottom:5px;">
+	      <div class="panel panel-success" style="margin-bottom:11px; padding-bottom:5px; overflow:scroll;">
 	        <div class="panel-heading"></div>
 
-		  <table class="center table hidden-xs" style="margin-bottom:-4px">
+		  <table class="center table hidden-xs" style="margin-bottom:-4px;">
 	    	  <tbody>
             	    <tr>
               	      <td>
-                	<a href="http://bti.cornell.edu/" class="footer"><img width="100" alt="Boyce Thompson Institute" src="/documents/img/bti_logo2.gif" title="Boyce Thompson Institute" border="0" style="padding-bottom:2px"/></a>
+                	<a href="http://bti.cornell.edu/" class="footer"><img width="160" alt="Boyce Thompson Institute" src="/documents/img/bti_logo_2016.png" title="Boyce Thompson Institute" border="0" style="padding-bottom:2px"/></a>
               	      </td>
               	      <td>
             		<a href="http://www.nsf.gov/" class="footer"><img width="77" alt="National Science Foundation" src="/documents/img/nsf_logo2.png" title="National Science Foundation" border="0"/></a>
@@ -85,7 +86,7 @@
 
 	        <ul class="visible-xs-block list-inline center nav-justified">
             	  <li>
-              	  <a href="http://bti.cornell.edu/" class="footer"><img width="100" alt="Boyce Thompson Institute" src="/documents/img/bti_logo2.gif" title="Boyce Thompson Institute" border="0" style="padding-top:5px"/></a>
+              	  <a href="http://bti.cornell.edu/" class="footer"><img width="160" alt="Boyce Thompson Institute" src="/documents/img/bti_logo_2016.png" title="Boyce Thompson Institute" border="0" style="padding-top:5px"/></a>
             	  </li>
             	  <li>
               	  <a href="http://www.nsf.gov/" class="footer"><img width="77" alt="National Science Foundation" src="/documents/img/nsf_logo2.png" title="National Science Foundation" border="0" style="padding-top:5px"/></a>
@@ -143,7 +144,7 @@
 	</div>
       </div>
 
-      <div class="col-xs-1 col-sm-1 col-md-1 col-lg-2">
+      <div class="col-md-1 col-lg-1 col-xl-2">
       </div>
     </div>
   </div>

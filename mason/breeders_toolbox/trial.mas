@@ -3,7 +3,7 @@
 
 =head1 NAME
 
-/breeders/trial.mas - a mason component to display a trial detail page
+/breeders_toolbox/trial.mas - a mason component to display a trial detail page
 
 =head1 AUTHOR
 
@@ -15,9 +15,11 @@ Jeremy D. Edwards
 
 <%args>
 $trial_id
-$breeding_program
 $trial_name
-$location_data => undef
+$breeding_program_id
+$breeding_program_name
+$location_id
+$location_name
 $year => undef
 $trial_type => undef
 $planting_date => undef
@@ -25,12 +27,23 @@ $harvest_date => undef
 $trial_description => undef
 $design_layout_view => undef
 $user_can_modify => undef
+$has_plant_entries => undef
+$hidap_enabled => undef
+$folder_name => undef
+$folder_id => undef
+$plants_per_plot => undef
+$has_expression_atlas => undef
+$expression_atlas_url => undef
+$site_project_name => undef
+$trial_phenotype_files => undef
+$sgn_session_id => undef
+$user_name => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
 
 <%perl>
-
+  use Data::Dumper;
 my $start_time = time();
 my $description_empty = 1;
 if ($trial_description) {
@@ -43,36 +56,21 @@ my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Dow
 
 my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link">change</a>] } if $user_can_modify;
 
-print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
+#print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
+
+#print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
+
 </%perl>
 
 <br/>
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
-<&| /page/info_section.mas, title=>"Trial details",  collapsible => 1, &>
+<&| /page/info_section.mas, title=>"Trial details",  collapsible => 1, subtitle => '[<a id="edit_trial_details">Edit Trial Details</a>]'&>
 
 
-
-<table class="table" >
-
-<tr>
-<td><b>Breeding Program </b></td>
-<td>
-<span id="breeding_programs">
-% if ($breeding_program) {
-% foreach (@$breeding_program) {
-%  print "$_->[1] ($_->[2]) <br/>";
-% }
-% } else {
-% print "No Breeding Program";
-% }
-</span>
-</td>
-<td>
- <% $change_breeding_program_link %>
-</td>
-</tr>
+<div class="panel panel-default">
+<table class="table table-hover" >
 
 <tr>
 <td><b>Trial Name</b></td>
@@ -85,24 +83,32 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % }
 </div>
 </td>
+</tr>
+
+<tr>
+<td><b>Breeding Program </b></td>
 <td>
-  [<a id="edit_trial_name">change</a>]
+<span id="breeding_program">
+% if ($breeding_program_name) {
+%  print "$breeding_program_name";
+% }
+% else {
+%  print "No Breeding Program";
+% }
+</span>
 </td>
 </tr>
 
 <tr>
-<td><b>Trial Type</b></td>
+<td><b>Trial Location</b></td>
 <td>
-<div id="trial_type">
-% if ($trial_type) {
-%  print "@$trial_type[1]<br/>";
+<div id="trial_location">
+% if ($location_name) {
+%  print "$location_name";
 % } else {
-% print "[Type not set]";
+%  print "[No Location]";
 % }
 </div>
-</td>
-<td>
-  [<a id="edit_trial_type" >change</a>]
 </td>
 </tr>
 
@@ -117,24 +123,18 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % }
 </div>
 </td>
-<td>
-  [<a id="change_year_link">change</a>]
-</td>
 </tr>
 
 <tr>
-<td><b>Trial Location</b></td>
+<td><b>Trial Type</b></td>
 <td>
-<div id="trial_location">
-% if ($location_data) {
-%  print "$location_data->[1]";
+<div id="trial_type">
+% if ($trial_type) {
+%  print "$trial_type";
 % } else {
-%  print "[No Location]";
+% print "[Type not set]";
 % }
 </div>
-</td>
-<td>
-  [<a id="change_trial_location_link">change</a>]
 </td>
 </tr>
 
@@ -143,14 +143,11 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <td>
 <div id="planting_date">
 % if ($planting_date) {
-%  print "$planting_date";
+  <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $planting_date %>" ><% $planting_date %></a>
 % } else {
 %  print "[No Planting Date]";
 % }
 </div>
-</td>
-<td>
-    [<a id="change_planting_date_link">change</a>]
 </td>
 </tr>
 
@@ -159,14 +156,11 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 <td>
 <div id="harvest_date">
 % if ($harvest_date) {
-%  print "$harvest_date";
+  <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $harvest_date %>" ><% $harvest_date %></a>
 % } else {
 %  print "[No Harvest Date]";
 % }
 </div>
-</td>
-<td>
-    [<a id="change_harvest_date_link">change</a>]
 </td>
 </tr>
 
@@ -180,51 +174,46 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 % }
 </div>
 </td>
-<td>
-  [<a id="edit_trial_description">edit</a>]
-</td>
 </tr>
 </table>
+</div>
+
+% my $folder_collapsed = 1;
+% if ($folder_id) {
+% $folder_collapsed = 0;
+% }
+
+<div class="well well-sm">
+
+<&| /page/info_section.mas, title=>"Folder", collaspible=>1, collapsed=>$folder_collapsed,
+  subtitle => '[<a id="new_folder_dialog_link">New Folder</a>] | [<a id="open_folder_dialog_link">Change</a>]' &>
+
+  <& /breeders_toolbox/folder/folder_set.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
+  <& /breeders_toolbox/folder/folder_new.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name &>
+
+  <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
 
 </&>
 
-<div id="edit_trial_description_dialog">
-   Please enter the description for this trial:<br/>
-   <textarea id="trial_description_input" cols="50" rows="10"></textarea>
-</div>
+</div><!--closes well-->
 
-<div id="edit_trial_name_dialog">
-  Please enter the name for this trial:<br />
-  <textarea id="trial_name_input" cols="20" rows="1"></textarea>
-</div>
+</&>
 
-<div id="edit_trial_type_dialog">
-  Please choose the type of this trial:<br />
-  <select id="trial_type_select"></select>
-</div>
+<& /breeders_toolbox/trial/edit_trial_details_dialog.mas, trial_name => $trial_name, breeding_program => $breeding_program_id, location => $location_id, year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description &>
 
-<div id="change_trial_location_dialog">
-  Please choose the location fro this trial:<br />
-  <div id="trial_location_select_div" /></div>
-</div>
+% if ($hidap_enabled) {
 
-<div id="change_planting_date_dialog">
-  Please enter a planting date:<br />
-  <input id="planting_date_picker"></input>
-</select>
-    
-</div>
+ <& /hidap/hidap_trial_link.mas, trial_id => $trial_id &>
 
-<div id="change_harvest_date_dialog">
-  Please enter a harvest date [MM/DD/YYYY]:<br />
-  <input id="harvest_date_picker"></input>
-</div>
+% }
 
+<& /breeders_toolbox/trial/edit_fieldMap.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<&| /page/info_section.mas, id => "physical_layout", title=>"Physical Trial Layout", collapsible=>1, collapsed => 1, subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>] [<a id="edit_field_map_link">Edit Field Map</a>] [<button type="button" class="btn btn-link" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>]' &>
 
-<&| /page/info_section.mas, id => "physical_layout", title=>"Physical Trial Layout", collapsible=>1, collapsed => 1, subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>]' &>
 
   <& /breeders_toolbox/trial/trial_coords.mas, trial_id => $trial_id &>
- 
+
+
 </&>
 
 <& /breeders_toolbox/trial/trial_coords_spreadsheet_upload_format_info.mas &>
@@ -256,7 +245,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
     </form>
 
-</div> 
+</div>
 
 <!--<style>
   div.left {
@@ -269,11 +258,15 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
   /* prevent horizontal scrollbar */
   overflow-x: hidden;
 }
-  
+
 </style> -->
 
 
-<&| /page/info_section.mas, title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"Download layout [<a id=\"download_layout_xls_link\" href=\"/breeders/trial/$trial_id/download/layout?format=xls\">xls</a>] [<a id=\"download_layout_csv_link\" href=\"/breeders/trial/$trial_id/download/layout?format=csv\">csv</a>]"  &>
+<& /breeders_toolbox/trial/download_layout_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+
+<&| /page/info_section.mas, id => "trial_design_section", title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"[<a id='trial_download_layout_button'>Download Layout</a>]"  &>
+
+<div class="well well-sm">
 
 <& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
 
@@ -295,24 +288,55 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </&>
 
+<&| /page/info_section.mas, id => "trial_plants", title=>"Plant Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
+
+<div id="plant_entries_section">
+
+% if (!$has_plant_entries) {
+   <button class="btn btn-default" id="create_plant_entries_button">Add plant entries</button>
+   <& /breeders_toolbox/trial/add_plants_per_plot.mas, trial_id => $trial_id, trial_name => $trial_name &>
+
+% } else {
+
+<& /breeders_toolbox/trial/trial_plants.mas, trial_id => $trial_id &>
+
+% }
+
+</div><!--closes plant_entries_section -->
+
 </&>
 
-<br />
+</div><!-- closes well -->
 
-%# <&| /page/info_section.mas, title=>"Traits assayed", subtitle=>"Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/$trial/download/phenotype?format=xls\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=csv\">csv</a>] " &>
-%# foreach my $trait (@phenotype_data) {
-%# my $trait_id = $trait->[1];
-%# my $trait_name = ucfirst($trait->[0]);
-%# print "$trait_name" . ' [ ' . "<a href=\"/breeders_toolbox/trial/$trial_id/trait/$trait_id\">view statistics</a>" . ' ] ' . "<br />";
-%# }
+</&>
 
-%# </&>
+<& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $trial_id, dialog_name => $trial_name, dialog_type => 'Trial' &>
 
-<&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle => "Download trial data [<a id=\"download_phenotypes_xls_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=xls\">xls</a>] [<a id=\"download_phenotypes_csv_link\" href=\"/breeders/trial/$trial_id/download/phenotype?format=csv\">csv</a>] " &>
+<&| /page/info_section.mas,
+   title       => 'Weather at Trial Location',
+   collapsible => 1,
+&>
+
+	<& /breeders_toolbox/trial/weather.mas, location => $location_name &>
+
+</&>
+
+<&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='trial_download_phenotypes_button'>Download Trial Data</a>]" &>
+
+% if ($has_expression_atlas) {
+    <& /breeders_toolbox/trial/export_trial_to_expression_atlas.mas, trial_id => $trial_id, trial_name=>$trial_name, expression_atlas_url=>$expression_atlas_url, site_project_name=>$site_project_name, sgn_session_id=>$sgn_session_id, user_name=>$user_name &>
+% }
 
 <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
 
 </&>
+
+<&| /page/info_section.mas, id=> "compute_derived_traits", title=>'Compute Trait Phenotypes', collapsible=>1, collapsed=>1, &>
+
+	<& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
+
+</&>
+
 
 
 <&| /page/info_section.mas,
@@ -320,39 +344,69 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
    collapsible => 1,
 &>
 
-	<& /breeders_toolbox/trial_jbrowse_instance.mas, trial_id => $trial_id &>
+	<& /breeders_toolbox/trial/jbrowse_instance.mas, trial_id => $trial_id &>
 
 </&>
 
 <&| /page/info_section.mas, title=>"Files", collapsible=>1, collapsed=>0 &>
-  <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_spreadsheet_link">Create Spreadsheet</a>]' &>
-    </&>
-    <&| /page/info_section.mas, title=>"Android Field Book Layout", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_fieldbook_link">Create Field Book</a>]' &>
-    </&>
-    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=> '[<a id="create_DataCollector_link">Create DataCollector Spreadsheet</a>]' &>
-    </&>
-  </&>
-  <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
-    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link">Upload</a>]'&>
-    </&>
-    <&| /page/info_section.mas, title=>"Android Field Book Exported", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_fieldbook_phenotypes_link">Upload</a>]'&>
-    </&>
-    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_datacollector_phenotypes_link">Upload</a>]'&>
-    </&>
-  </&>
-</&>
 
-<& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>  
-<& /fieldbook/upload_phenotype_fieldbook.mas &>  
-<& /breeders_toolbox/upload_phenotype_datacollector.mas &>  
+<div class="well well-sm">
+
+  <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a name="create_spreadsheet_link">Create Spreadsheet</a>]' &>
+    </&>
+    <&| /page/info_section.mas, title=>"Android Field Book Layout", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a name="create_fieldbook_link">Create Field Book</a>]' &>
+    </&>
+    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=> '[<a id="create_DataCollector_link">Create DataCollector Spreadsheet</a>]' &>
+    </&>
+  </&><!-- closes create new phenotyping file section -->
+  <&| /page/info_section.mas, title=>"Upload Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+    <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link">Upload</a>]'&>
+    </&>
+    <&| /page/info_section.mas, title=>"Android Field Book Exported", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_fieldbook_phenotypes_link">Upload</a>]'&>
+    </&>
+    <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_datacollector_phenotypes_link">Upload</a>]'&>
+    </&>
+  </&><!-- closes upload new phenotype file section -->
+  <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+
+  <table class="table table-bordered files_datatables" alt="">
+  <thead>
+    <tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>File Type</th><th>Options</th></tr>
+  </thead>
+  <tbody>
+% foreach my $f (@$trial_phenotype_files) {
+    <tr>
+      <td><% $f->[4] %></td>
+      <td><% $f->[1] %></td>
+      <td><a href="/solpeople/profile/<% $f->[2] %>"><% $f->[3] %></a></td>
+      <td><% $f->[6] %></td>
+      <td><a href="/breeders/phenotyping/view/<% $f->[0] %>">View</a> | <a href="/breeders/phenotyping/download/<% $f->[0] %>">Download</a></td>
+    </tr>
+% }
+  </tbody>
+  </table>
+
+  </&><!-- closes uploaded file section -->
+
+</div><!-- closes well -->
+
+</&><!-- closes entire phenotyping file section -->
+
+<& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
+<& /fieldbook/upload_phenotype_fieldbook.mas &>
+<& /breeders_toolbox/upload_phenotype_datacollector.mas &>
+
+<& /breeders_toolbox/trial/create_datacollector_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /fieldbook/create_fieldbook_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /breeders_toolbox/trial/create_spreadsheet_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 
 % my $data_agreement_link = "Add/edit data agreement";
 % if ($user_can_modify) { $data_agreement_link = '[<a id="add_data_agreement">Add/edit data agreement</a>]'; }
 <&| /page/info_section.mas, title=>"Data Agreement", is_subsection => 0, collapsible=>1, collapsed=>0,  subtitle=> $data_agreement_link  &>
-  
+
 <& /breeders_toolbox/data_agreement.mas, trial_id => $trial_id &>
-  
+
 </&>
 
 <&| /page/info_section.mas, title=>'Delete trial data', subtitle=>'<font color="red" role="">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
@@ -360,7 +414,7 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 </&>
 
-% print STDERR "Check 9 (mason) : ".(time() - $start_time)."\n";
+% #print STDERR "Check 9 (mason) : ".(time() - $start_time)."\n";
 
 <!-- Phenotypic correlation analysis -->
 <& /solgs/population/correlation.mas,
@@ -372,57 +426,12 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
    trial_id => $trial_id
  &>
 
-% print STDERR "Check 10 (mason) : ".(time() - $start_time)."\n";
+% #print STDERR "Check 10 (mason) : ".(time() - $start_time)."\n";
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 % print $trial_id;
 </div>
 
-<div id="tablet_field_layout_saved_dialog_message" title="Field book layout file" style="display:none;">
-  <p>
-    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    The field book layout file was saved successfully
-  </p>
-  <p>
-    <a id="tablet_layout_download_link">Download File</a>
-  </p>
-</div>
-
-<div id="create_spreadsheet_dialog" title="Create Phenotyping Spreadsheet" style="display:none;">
-  <div id="trait_list" name="trait_list">
-    <label id="trait_list_label" for="trait_list_list_select" style="display: inline-block; width: 200px;">List of traits:
-    </label>
-  </div>
-</div>
-
-<div id="create_DataCollector_dialog" title="Create Data Collector Spreadsheet" style="display:none;">
-  <div id="trait_list_dc" name="trait_list">
-    <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 200px;">List of traits:
-    </label>
-  </div>
-</div>
-
-<div id="data_collector_saved_dialog_message" title="Data collector spreadsheet" style="display:none;">
-  <p>
-    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-    The data collector spreadsheet file was saved successfully
-  </p>
-  <p>
-    <a id="data_collector_download_link">Download File</a>
-  </p>
-</div>
-
-<div id="change_breeding_program_dialog">
-  Please select a breeding program for this trial:<br />
-  <div id="change_breeding_program_select_div">
-  </div>
-</div>
-
-<div id="change_trial_year_dialog">
-  Please select a year for this trial:<br />
-  <div id="change_year_select_div">
-  </div>
-</div>
 
 <div id="trial_design_view_layout" title="Trial design layout">
 % print $design_layout_view;
@@ -430,22 +439,22 @@ print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
 
 
 <script defer="defer">
-  
+
 jQuery(document).ready(function () {
 
   trial_detail_page_setup_dialogs();
 
   jQuery('#delete_breeding_program_trial_association_link').click(
-     function() { 
+     function() {
         var trial_id = get_trial_id();
 
 	var yes = confirm("Do you really want to remove this trial from the breeding program?");
-	if (yes) { 
-            jQuery.ajax( { 
-		url: '/breeders/program/remove/<% $breeding_program->[0]->[0] %>/'+trial_id,
+	if (yes) {
+            jQuery.ajax( {
+		url: '/breeders/program/remove/<% $breeding_program_id %>/'+trial_id,
 		data: { },
 		async: false,
-		success: function(response) { 
+		success: function(response) {
 		}
 	    });
 	}

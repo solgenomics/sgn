@@ -1,0 +1,47 @@
+
+<%args>
+$roles => undef
+$is_curator => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => [ ] &>
+
+<& /page/page_title.mas, title=>"Manage User Roles" &>
+
+<hr>
+% if ($is_curator) {
+	<h3>Curators can <button class="btn btn-default" id="add_person_role_button">Give User a Role</button> </h3>
+% }
+<hr>
+
+<table id="manage_user_roles_table" class="table table-bordered">
+<thead>
+% if ($is_curator){
+<tr><th>Role</th><th>Username</th></tr>
+% } else {
+<tr><th>Breeding Program</th><th>Username</th></tr>
+% }
+</thead>
+<tbody>
+% foreach (@$roles) {
+% if ($is_curator){
+	<tr><td><% $_->[2] %></td><td><a href="/solpeople/personal-info.pl?sp_person_id=<% $_->[1] %>"><% $_->[0] %></a></td></tr>
+% } else {
+% if ($_->[2] ne 'curator' && $_->[2] ne 'user' && $_->[2] ne 'submitter' && $_->[2] ne 'sequencer'){
+	<tr><td><% $_->[2] %></td><td><a href="/solpeople/personal-info.pl?sp_person_id=<% $_->[1] %>"><% $_->[0] %></a></td></tr>
+% }
+% }
+% }
+</tbody>
+</table>
+
+<& /people/add_person_role.mas &>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery('#manage_user_roles_table').DataTable();
+} );
+
+</script>
+

@@ -21,6 +21,8 @@ use Moose;
 use List::MoreUtils qw /any /;
 use Try::Tiny;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html commify_number /;
+use CXGN::Chado::Cvterm;
+use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -157,20 +159,40 @@ sub evidence_description_GET :Args(0) {
     $c->stash->{rest} = $hashref;
 }
 
-sub recursive_stocks : Local : ActionClass('REST') { }
+sub get_synonyms : Path('/ajax/cvterm/get_synonyms') Args(0) {
 
-sub recursive_stocks_GET :Args(0) {
+  my $self = shift;
+  my $c = shift;
+  my @trait_ids = $c->req->param('trait_ids[]');
+  print STDERR "Trait ids = @trait_ids\n";
+  my $dbh = $c->dbc->dbh();
+  my $synonyms = {};
+
+  foreach my $trait_id (@trait_ids) {
+    my $cvterm = CXGN::Chado::Cvterm->new( $dbh, $trait_id );
+    my $found_cvterm_id = $cvterm->get_cvterm_id;
+    $synonyms->{$trait_id} = $cvterm->get_uppercase_synonym();
+  }
+
+  $c->stash->{rest} = { synonyms => $synonyms };
+
+}
+
+sub get_annotated_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/annotated_stocks') Args(0) {
     my ($self, $c) = @_;
-    my $cvterm_id = $c->request->param("cvterm_id");
+    my $cvterm = $c->stash->{cvterm};
+    my $cvterm_id = $cvterm->get_cvterm_id;
     my $q = <<'';
 SELECT DISTINCT
-        stock_id
-      , stock.name
-      , stock.description
+    type.name,
+    stock_id,
+    stock.uniquename,
+    stock.description
 FROM cvtermpath
 JOIN cvterm on (cvtermpath.object_id = cvterm.cvterm_id OR cvtermpath.subject_id = cvterm.cvterm_id )
 JOIN stock_cvterm on (stock_cvterm.cvterm_id = cvterm.cvterm_id)
 JOIN stock USING (stock_id)
+JOIN cvterm as type on type.cvterm_id = stock.type_id
 WHERE cvtermpath.object_id = ?
   AND stock.is_obsolete = ?
   AND pathdistance > 0
@@ -180,36 +202,30 @@ WHERE cvtermpath.object_id = ?
               AND p.stock_cvterm_id = stock_cvterm.stock_cvterm_id
               AND value = '1'
           )
-ORDER BY stock.name
+ORDER BY stock.uniquename
 
     my $sth = $c->dbc->dbh->prepare($q);
     my $rows = $c->stash->{rest}{count} = 0 + $sth->execute($cvterm_id, 'false');
-    if( $rows > 500 ) {
-        $c->stash->{rest}{html} = commify_number($rows)." annotated stocks found, too many to display.";
-    } else {
-        my @stock_data;
-        while ( my ($stock_id , $stock_name, $description) = $sth->fetchrow_array ) {
+
+    my @stock_data;
+        while ( my ($type, $stock_id , $stock_name, $description) = $sth->fetchrow_array ) {
             my $stock_link = qq|<a href="/stock/$stock_id/view">$stock_name</a> |;
             push @stock_data, [
-                $stock_link,
+                $type,
+		$stock_link,
                 $description,
                 ];
         }
-        $c->stash->{rest}{html} =
-            @stock_data
-                ? columnar_table_html(
-                    headings  =>  [ "Stock name", "Description" ],
-                    data      => \@stock_data,
-                    )
-                : undef;
-    }
+    $c->stash->{rest} = { data => \@stock_data, };
 }
 
-sub recursive_loci : Local : ActionClass('REST') { }
 
-sub recursive_loci_GET :Args(0) {
+
+sub get_annotated_loci :Chained('/cvterm/get_cvterm') :PathPart('datatables/annotated_loci') Args(0) {
     my ($self, $c) = @_;
-    my $cvterm_id = $c->request->param("cvterm_id");
+    my $cvterm = $c->stash->{cvterm};
+    my $cvterm_id = $cvterm->get_cvterm_id;
+
     my $q = "SELECT DISTINCT locus_id, locus_name, locus_symbol, common_name  FROM cvtermpath
              JOIN cvterm ON (cvtermpath.object_id = cvterm.cvterm_id OR cvtermpath.subject_id = cvterm.cvterm_id)
              JOIN phenome.locus_dbxref USING (dbxref_id )
@@ -218,10 +234,10 @@ sub recursive_loci_GET :Args(0) {
              WHERE (cvtermpath.object_id = ?) AND locus_dbxref.obsolete = 'f' AND locus.obsolete = 'f' AND pathdistance > 0";
 
     my $sth = $c->dbc->dbh->prepare($q);
-    $c->stash->{rest}{count} = 0+$sth->execute($cvterm_id); #< execute can return 0E0, i.e. zero but true.
+    $sth->execute($cvterm_id);
     my @data;
     while ( my ($locus_id, $locus_name, $locus_symbol, $common_name) = $sth->fetchrow_array ) {
-        my $link = qq|<a href="/phenome/locus_display.pl?locus_id=$locus_id">$locus_symbol</a> |;
+        my $link = qq|<a href="/locus/$locus_id/view">$locus_symbol</a> |;
         push @data,
         [
          (
@@ -231,85 +247,71 @@ sub recursive_loci_GET :Args(0) {
          )
         ];
     }
-    $c->stash->{rest}{html} = @data ?
-        columnar_table_html(
-            headings     =>  [ "Organism", "Symbol", "Name" ],
-            data         => \@data,
-        )  : undef ;
+    $c->stash->{rest} = { data => \@data, };
 }
 
 
-sub phenotyped_stocks : Local : ActionClass('REST') { }
 
-sub phenotyped_stocks_GET :Args(0) {
+sub get_phenotyped_stocks :Chained('/cvterm/get_cvterm') :PathPart('datatables/phenotyped_stocks') Args(0) {
     my ($self, $c) = @_;
-    my $cvterm_id = $c->request->param("cvterm_id");
-    my $q = "SELECT DISTINCT object_id, type.name, stock.name, stock.description
-             FROM public.stock_relationship
-             JOIN stock ON stock_id = object_id
+    my $cvterm =  $c->stash->{cvterm};
+    my $cvterm_id  = $cvterm->get_cvterm_id;
 
-             JOIN cvterm as type ON cvterm_id = stock.type_id
-             JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = stock_relationship.subject_id)
-             JOIN nd_experiment_phenotype USING (nd_experiment_id)
-             JOIN phenotype USING (phenotype_id)
-             JOIN cvterm on cvterm.cvterm_id = observable_id
-             WHERE observable_id = ? AND type.name ilike ?";
+    my $q = "SELECT DISTINCT stock_id,  stock.uniquename, stock.description, type.name
+             FROM cvtermpath
+              JOIN cvterm ON (cvtermpath.object_id = cvterm.cvterm_id
+                            OR cvtermpath.subject_id = cvterm.cvterm_id )
+               JOIN phenotype on cvterm.cvterm_id = phenotype.observable_id
+               JOIN nd_experiment_phenotype USING (phenotype_id)
+               JOIN nd_experiment_stock USING (nd_experiment_id)
+               JOIN stock USING (stock_id)
+               JOIN cvterm as type on type.cvterm_id = stock.type_id
+
+             WHERE pathdistance > 0
+             AND cvtermpath.object_id = ? ORDER BY stock_id " ;
+
 
     my $sth = $c->dbc->dbh->prepare($q);
-    $c->stash->{rest}{count} = 0 + $sth->execute($cvterm_id , '%population%');
+    $sth->execute($cvterm_id) ;
+    #$c->stash->{rest}{count} = 0 + $sth->execute($cvterm_id);
     my @data;
-    while ( my ($stock_id, $type, $stock_name, $description) = $sth->fetchrow_array ) {
+    while ( my ($stock_id, $stock_name, $description, $type) = $sth->fetchrow_array ) {
         my $link = qq|<a href="/stock/$stock_id/view">$stock_name</a> |;
-        push @data,
-        [
-         (
-          $link,
-          $description,
-         )
+        push @data, [
+	    $type,
+	    $link,
+	    $description,
         ];
     }
-    $c->stash->{rest}{html} = @data ?
-        columnar_table_html(
-            headings     =>  [ "Stock name", "Description" ],
-            data         => \@data,
-        )  : undef ;
+    $c->stash->{rest} = { data => \@data, };
 }
 
-
-sub trials : Local : ActionClass('REST') { }
-
-sub trials_GET :Args(0) {
+sub get_direct_trials :Chained('/cvterm/get_cvterm') :PathPart('datatables/direct_trials') Args(0) {
     my ($self, $c) = @_;
-    my $cvterm_id = $c->request->param("cvterm_id");
+    my $cvterm = $c->stash->{cvterm};
+    my $cvterm_id = $cvterm->get_cvterm_id;
     my $q = "SELECT DISTINCT project_id, project.name, project.description
              FROM public.project
-              JOIN nd_experiment_project USING (project_id)  
+              JOIN nd_experiment_project USING (project_id)
               JOIN nd_experiment_stock USING (nd_experiment_id)
               JOIN nd_experiment_phenotype USING (nd_experiment_id)
-              JOIN phenotype USING (phenotype_id) 
+              JOIN phenotype USING (phenotype_id)
               JOIN cvterm on cvterm.cvterm_id = phenotype.observable_id
-             WHERE observable_id = ? 
+             WHERE observable_id = ?
     ";
- 
 
     my $sth = $c->dbc->dbh->prepare($q);
-    $c->stash->{rest}{count} = 0 + $sth->execute($cvterm_id );
+    my $count = 0 + $sth->execute($cvterm_id );
     my @data;
     while ( my ($project_id, $project_name, $description) = $sth->fetchrow_array ) {
         my $link = qq|<a href="/breeders/trial/$project_id">$project_name</a> |;
         push @data,
         [
-         (
-          $link,
-          $description,
-         )
-        ];
+	 $link,
+	 $description,
+          ];
     }
-    $c->stash->{rest}{html} = @data ?
-        columnar_table_html(
-            headings     =>  [ "trial name", "Description" ],
-            data         => \@data,
-        )  : undef ;
+    $c->stash->{rest} = { data => \@data, count => $count };
 }
 
 1;

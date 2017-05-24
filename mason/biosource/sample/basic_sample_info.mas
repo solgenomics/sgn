@@ -113,7 +113,7 @@ my $sample_name = $sample->get_sample_name();
 
 		 my $onto_accession = $dbxref_rel_data{'db.name'} . ":" . $dbxref_rel_data{'dbxref.accession'};
 		 my $onto_descr = $dbxref_rel_data{'cvterm.name'};
-		 my $onto_link = '/chado/cvterm?action=view&cvterm_id='.$dbxref_rel_data{'cvterm.cvterm_id'};
+		 my $onto_link = '/cvterm/'.$dbxref_rel_data{'cvterm.cvterm_id'}.'/view';
 		 my $onto_line = "<a href=$onto_link>$onto_accession</a> ($onto_descr)<br>";
 		 push @onto_html, $onto_line;
 	     }

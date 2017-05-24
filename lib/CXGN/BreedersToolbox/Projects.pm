@@ -4,6 +4,7 @@ package CXGN::BreedersToolbox::Projects;
 use Moose;
 use Data::Dumper;
 use SGN::Model::Cvterm;
+use CXGN::People::Roles;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -11,13 +12,13 @@ has 'schema' => (
 		);
 
 
-sub trial_exists { 
+sub trial_exists {
     my $self = shift;
     my $trial_id = shift;
-    
+
     my $rs = $self->schema->resultset('Project::Project')->search( { project_id => $trial_id });
-    
-    if ($rs->count() == 0) { 
+
+    if ($rs->count() == 0) {
 	return 0;
     }
     return 1;
@@ -32,7 +33,7 @@ sub get_breeding_programs {
     my $rs = $self->schema->resultset('Project::Project')->search( { 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
 
     my @projects;
-    while (my $row = $rs->next()) { 
+    while (my $row = $rs->next()) {
 	push @projects, [ $row->project_id, $row->name, $row->description ];
     }
 
@@ -47,17 +48,17 @@ sub get_breeding_programs_by_trial {
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
 
     my $trial_rs= $self->schema->resultset('Project::ProjectRelationship')->search( { 'subject_project_id' => $trial_id } );
-    
+
     my $trial_row = $trial_rs -> first();
     my $rs;
     my @projects;
 
-    if ($trial_row) { 
+    if ($trial_row) {
 	$rs = $self->schema->resultset('Project::Project')->search( { 'me.project_id' => $trial_row->object_project_id(), 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops' }  );
-		
-	while (my $row = $rs->next()) { 
+
+	while (my $row = $rs->next()) {
 	    push @projects, [ $row->project_id, $row->name, $row->description ];
-	}	
+	}
     }
     return  \@projects;
 }
@@ -74,6 +75,7 @@ sub get_breeding_program_by_name {
   if (!$rs) {
     return;
   }
+  print STDERR "**Projects.pm: found program_name $program_name id = " . $rs->project_id . "\n\n";
 
   return $rs;
 
@@ -87,7 +89,7 @@ sub _get_all_trials_by_breeding_program {
 
     my $trials = [];
     my $h;
-    if ($breeding_project_id) { 
+    if ($breeding_project_id) {
 	# need to convert to dbix class.... good luck!
 	#my $q = "SELECT trial.project_id, trial.name, trial.description FROM project LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) WHERE (project.project_id=? AND (projectprop.type_id IS NULL OR projectprop.type_id != ?))";
 	my $q = "SELECT trial.project_id, trial.name, trial.description, projectprop.type_id, projectprop.value FROM project LEFT join project_relationship ON (project.project_id=object_project_id) LEFT JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) WHERE (project.project_id = ?)";
@@ -97,7 +99,7 @@ sub _get_all_trials_by_breeding_program {
 	$h->execute($breeding_project_id);
 
     }
-    else { 
+    else {
 	# get trials that are not associated with any project
 	my $q = "SELECT project.project_id, project.name, project.description , projectprop.type_id, projectprop.value FROM project JOIN projectprop USING(project_id) LEFT JOIN project_relationship ON (subject_project_id=project.project_id) WHERE project_relationship_id IS NULL and projectprop.type_id != ?";
 	$h = $dbh->prepare($q);
@@ -110,11 +112,13 @@ sub _get_all_trials_by_breeding_program {
 sub get_trials_by_breeding_program {
     my $self = shift;
     my $breeding_project_id = shift;
-    my $trials;
+    my $field_trials;
+    my $cross_trials;
+    my $genotyping_trials;
     my $h = $self->_get_all_trials_by_breeding_program($breeding_project_id);
     my $cross_cvterm_id = $self->get_cross_cvterm_id();
     my $project_year_cvterm_id = $self->get_project_year_cvterm_id();
-   
+
     my %projects_that_are_crosses;
     my %project_year;
     my %project_name;
@@ -122,7 +126,7 @@ sub get_trials_by_breeding_program {
     my %projects_that_are_genotyping_trials;
 
     while (my ($id, $name, $desc, $prop, $propvalue) = $h->fetchrow_array()) {
-	print STDERR "PROP: $prop, $propvalue \n";
+	#print STDERR "PROP: $prop, $propvalue \n";
 	#push @$trials, [ $id, $name, $desc ];
       if ($name) {
 	$project_name{$id} = $name;
@@ -133,13 +137,18 @@ sub get_trials_by_breeding_program {
       if ($prop) {
 	if ($prop == $cross_cvterm_id) {
 	  $projects_that_are_crosses{$id} = 1;
+	  $project_year{$id} = '';
+	  #print STDERR Dumper "Cross Trial: ".$name;
 	}
 	if ($prop == $project_year_cvterm_id) {
 	  $project_year{$id} = $propvalue;
 	}
-	if ($propvalue eq "genotyping_plate") { 
-	    print STDERR "$id IS GENOTYPING TRIAL\n";
+	if ($propvalue) {
+	if ($propvalue eq "genotyping_plate") {
+	    #print STDERR "$id IS GENOTYPING TRIAL\n";
 	    $projects_that_are_genotyping_trials{$id} =1;
+		#print STDERR Dumper "Genotyping Trial: ".$name;
+	}
 	}
       }
 
@@ -148,13 +157,17 @@ sub get_trials_by_breeding_program {
     my @sorted_by_year_keys = sort { $project_year{$a} cmp $project_year{$b} } keys(%project_year);
 
     foreach my $id_key (@sorted_by_year_keys) {
-	if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key}) {
-	    print STDERR "$id_key RETAINED.\n";
-	    push @$trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
-	}
+		if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key}) {
+			#print STDERR "$id_key RETAINED.\n";
+			push @$field_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+		} elsif ($projects_that_are_crosses{$id_key} == 1) {
+			push @$cross_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+		} elsif ($projects_that_are_genotyping_trials{$id_key} == 1) {
+			push @$genotyping_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+		}
     }
-    
-    return $trials;
+
+    return ($field_trials, $cross_trials, $genotyping_trials);
 }
 
 sub get_genotyping_trials_by_breeding_program {
@@ -164,7 +177,7 @@ sub get_genotyping_trials_by_breeding_program {
     my $h = $self->_get_all_trials_by_breeding_program($breeding_project_id);
     my $cross_cvterm_id = $self->get_cross_cvterm_id();
     my $project_year_cvterm_id = $self->get_project_year_cvterm_id();
-   
+
     my %projects_that_are_crosses;
     my %projects_that_are_genotyping_trials;
     my %project_year;
@@ -185,12 +198,12 @@ sub get_genotyping_trials_by_breeding_program {
 	    if ($prop == $project_year_cvterm_id) {
 		$project_year{$id} = $propvalue;
 	    }
-	    
+
 	    if ($propvalue eq "genotyping_plate") {
 		$projects_that_are_genotyping_trials{$id} = 1;
 	    }
 	}
-	
+
     }
 
     my @sorted_by_year_keys = sort { $project_year{$a} cmp $project_year{$b} } keys(%project_year);
@@ -207,22 +220,21 @@ sub get_genotyping_trials_by_breeding_program {
 
 }
 
-
-sub get_locations_by_breeding_program { 
+sub get_locations_by_breeding_program {
     my $self = shift;
     my $breeding_program_id = shift;
 
     my $h;
 
     my $type_id = $self->schema->resultset('Cv::Cvterm')->search( { 'name'=>'plot' })->first->cvterm_id;
-    
+
     my $project_location_type_id = $self ->schema->resultset('Cv::Cvterm')->search( { 'name' => 'project location' })->first->cvterm_id();
 
     if ($breeding_program_id) {
 	#my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description, count(distinct(stock.stock_id)) FROM project JOIN project_relationship on (project_id=object_project_id) JOIN project as trial ON (subject_project_id=trial.project_id) JOIN nd_experiment_project ON (trial.project_id=nd_experiment_project.project_id) JOIN nd_experiment USING (nd_experiment_id) JOIN nd_experiment_stock ON (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id) JOIN stock ON (nd_experiment_stock.stock_id=stock.stock_id) JOIN nd_geolocation USING (nd_geolocation_id) WHERE project.project_id=? and stock.type_id=? GROUP BY nd_geolocation.nd_geolocation_id, nd_experiment.nd_geolocation_id, nd_geolocation.description";
 
 	my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description, count(distinct(trial.project_id)) FROM project JOIN project_relationship on (project_id=object_project_id) JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) LEFT JOIN nd_geolocation ON (projectprop.value::INT = nd_geolocation.nd_geolocation_id) WHERE project.project_id =? AND projectprop.type_id=$project_location_type_id  GROUP BY nd_geolocation.nd_geolocation_id,  nd_geolocation.description";
-	
+
 
 	$h = $self->schema()->storage()->dbh()->prepare($q);
 	$h->execute($breeding_program_id);
@@ -242,71 +254,69 @@ sub get_locations_by_breeding_program {
     return \@locations;
 }
 
-sub get_all_locations { 
+sub get_all_locations {
     my $self = shift;
     my $c = shift;
 
     my $rs = $self->schema() -> resultset("NaturalDiversity::NdGeolocation")->search( {}, { order_by => 'description' } );
-    
+
     my @locations = ();
-    foreach my $loc ($rs->all()) { 
+    foreach my $loc ($rs->all()) {
         push @locations, [ $loc->nd_geolocation_id(), $loc->description() ];
     }
     return \@locations;
 
 }
 
-
-sub get_locations { 
+sub get_locations {
     my $self = shift;
 
     my @rows = $self->schema()->resultset('NaturalDiversity::NdGeolocation')->all();
-    
+
     my $type_id = $self->schema()->resultset('Cv::Cvterm')->search( { 'name'=>'plot' })->first->cvterm_id;
 
-    
+
     my @locations = ();
-    foreach my $row (@rows) { 	    
+    foreach my $row (@rows) {
 	my $plot_count = "SELECT count(*) from stock join cvterm on(type_id=cvterm_id) join nd_experiment_stock using(stock_id) join nd_experiment using(nd_experiment_id)   where cvterm.name='plot' and nd_geolocation_id=?"; # and sp_person_id=?";
 	my $sh = $self->schema()->storage()->dbh->prepare($plot_count);
 	$sh->execute($row->nd_geolocation_id); #, $c->user->get_object->get_sp_person_id);
-	
+
 	my ($count) = $sh->fetchrow_array();
-	
-	#if ($count > 0) { 
-	
-		push @locations,  [ $row->nd_geolocation_id, 
+
+	#if ($count > 0) {
+
+		push @locations,  [ $row->nd_geolocation_id,
 				    $row->description,
 				    $row->latitude,
 				    $row->longitude,
 				    $row->altitude,
 				    $count, # number of experiments TBD
-				    
+
 		];
     }
     return \@locations;
 
 }
 
-sub get_all_years { 
+sub get_all_years {
     my $self = shift;
     my $year_cv_id = $self->get_project_year_cvterm_id();
     my $rs = $self->schema()->resultset("Project::Projectprop")->search( { type_id=>$year_cv_id }, { distinct => 1, +select => 'value', order_by => { -desc => 'value' }} );
     my @years;
-    
-    foreach my $y ($rs->all()) { 
+
+    foreach my $y ($rs->all()) {
 	push @years, $y->value();
     }
     return @years;
 
-    
+
 }
 
 sub get_accessions_by_breeding_program {
 
 
 }
-
 
 sub new_breeding_program {
     my $self= shift;
@@ -323,7 +333,14 @@ sub new_breeding_program {
 	return "A breeding program with name '$name' already exists.";
     }
 
-    eval { 
+    eval {
+
+		my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
+		my $error = $role->add_sp_role($name);
+		if ($error){
+			die $error;
+		}
+
 	my $row = $self->schema()->resultset("Project::Project")->create(
 	    {
 		name => $name,
@@ -347,7 +364,6 @@ sub new_breeding_program {
 
 }
 
-
 sub delete_breeding_program {
     my $self = shift;
     my $project_id = shift;
@@ -355,10 +371,10 @@ sub delete_breeding_program {
     my $type_id = $self->get_breeding_program_cvterm_id();
 
     # check if this project entry is of type 'breeding program'
-    my $prop = $self->schema->resultset("Project::Projectprop")->search(
+    my $prop = $self->schema->resultset("Project::Projectprop")->search({
 	type_id => $type_id,
 	project_id => $project_id,
-	);
+	});
 
     if ($prop->count() == 0) {
 	return 0; # wrong type, return 0.
@@ -366,14 +382,14 @@ sub delete_breeding_program {
 
     $prop->delete();
 
-    my $rs = $self->schema->resultset("Project::Project")->search(
+    my $rs = $self->schema->resultset("Project::Project")->search({
 	project_id => $project_id,
-	);
+	});
 
     if ($rs->count() > 0) {
-	my $pprs = $self->schema->resultset("Project::ProjectRelationship")->search(
+	my $pprs = $self->schema->resultset("Project::ProjectRelationship")->search({
 	    object_project_id => $project_id,
-	    );
+	});
 
 	if ($pprs->count()>0) {
 	    $pprs->delete();
@@ -391,82 +407,17 @@ sub get_breeding_program_with_trial {
     my $rs = $self->schema->resultset("Project::ProjectRelationship")->search( { subject_project_id => $trial_id });
 
     my $breeding_projects = [];
-    if (my $row = $rs->next()) { 
+    if (my $row = $rs->next()) {
 	my $prs = $self->schema->resultset("Project::Project")->search( { project_id => $row->object_project_id() } );
-	while (my $b = $prs->next()) { 
+	while (my $b = $prs->next()) {
 	    push @$breeding_projects, [ $b->project_id(), $b->name(), $b->description() ];
 	}
     }
-    
-    
-    
+
+
+
     return $breeding_projects;
 }
-
-sub associate_breeding_program_with_trial {
-    my $self = shift;
-    my $breeding_project_id = shift;
-    my $trial_id = shift;
-
-    my $breeding_trial_cvterm_id = $self->get_breeding_trial_cvterm_id();
-
-    # to do: check if the two provided IDs are of the proper type
-
-    eval {
-	my $breeding_trial_assoc = $self->schema->resultset("Project::ProjectRelationship")->find (
-	    {
-		subject_project_id => $trial_id,
-		type_id => $breeding_trial_cvterm_id,
-	    }
-	    );
-
-	if ($breeding_trial_assoc) { 
-
-	    $breeding_trial_assoc->object_project_id($breeding_project_id);
-	    $breeding_trial_assoc->update();
-	}
-	else {     
-	    $breeding_trial_assoc = $self->schema->resultset("Project::ProjectRelationship")->create({ 
-		object_project_id => $breeding_project_id,
-		subject_project_id => $trial_id,
-		type_id => $breeding_trial_cvterm_id,
-												     });	
-	    $breeding_trial_assoc->insert(); 
-	}	
-    };
-    if ($@) {
-	print STDERR "ERROR: $@\n";
-	return { error => "An error occurred while storing the breeding program - trial relationship." };
-    }
-    return {};
-}
-
-sub remove_breeding_program_from_trial { 
-    my $self = shift;
-    my $breeding_program_id = shift;
-    my $trial_id = shift;
-
-    my $breeding_trial_cvterm_id = $self->get_breeding_trial_cvterm_id();
-
-    eval {
-	my $breeding_trial_assoc_rs = $self->schema->resultset("Project::ProjectRelationship")->search(
-	    {
-		object_project_id => $breeding_program_id,
-		subject_project_id => $trial_id,
-		type_id => $breeding_trial_cvterm_id,
-	    }
-	    );
-	if (my $row = $breeding_trial_assoc_rs->first()) {
-	    $row->delete();
-	}
-    };
-
-    if ($@) { 
-	return { error => "An error occurred while deleting a breeding program - trial association. $@" };
-    }
-    return {};
-}
-
 
 sub get_breeding_program_cvterm_id {
     my $self = shift;
@@ -521,12 +472,12 @@ sub get_project_year_cvterm_id {
 sub get_gt_protocols {
     my $self = shift;
     my $rs = $self->schema->resultset("NaturalDiversity::NdProtocol")->search( { } );
-    print STDERR "NdProtocol resultset rows:\n";
+    #print STDERR "NdProtocol resultset rows:\n";
     my @protocols;
     while (my $row = $rs->next()) {
-	print STDERR "Name: " . $row->name() . "\n";
-	print STDERR "Name: " . $row->nd_protocol_id() . "\n";
-	print STDERR $row;
+	#print STDERR "Name: " . $row->name() . "\n";
+	#print STDERR "Name: " . $row->nd_protocol_id() . "\n";
+	#print STDERR $row;
 	push @protocols, [ $row->nd_protocol_id(), $row->name()];
     }
     return \@protocols;

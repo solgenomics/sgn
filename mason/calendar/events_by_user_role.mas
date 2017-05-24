@@ -13,8 +13,34 @@
 .datepicker{z-index:1151 !important;}
 </style>
 
-<div id='calendar' style="width:100%"></div>
-<br/><br/>
+<div class="modal fade" id="calendar_modal" name="calendar_modal"  tabindex="-1" role="dialog" aria-labelledby="calendarDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="calendarDialog">Your Calendar</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div id='calendar' style="background:#f9f9f9; padding:2px; width:100%">
+            </div>
+            <br/><br/>
+
+            <div class="well well-sm">
+                <center>
+                    <p><b>Having trouble viewing events on the calendar?</b> <br/>Are you associated with the breeding program you are interested in viewing?</p>
+                    <a class="btn btn-primary" id="calendar_bp_user_roles_show" href="/breeders/manage_roles/">Calendar Permissions</a>
+                </center>
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 
 <div class="modal fade" id="day_dialog" name="day_dialog"  tabindex="-1" role="dialog" aria-labelledby="addEventDialog">
@@ -226,295 +252,354 @@
 
 <script>
 
-$(document).ready(function() {
+jQuery(document).ready(function() {
 
-    $('.datepicker').datepicker({
+    jQuery("button[name='personal_calendar_link']").click(function(){
+        jQuery("#calendar_modal").modal("show");
+    });
+
+    //If a date is given in the url, using the query parameter currentDate=<timestamp>
+    var captured = /currentDate=([^&]+)/.exec(window.location.href);
+    var result = captured ? captured[1] : Date.now();
+    var valid = (new Date(result)).getTime() > 0;
+    if (valid && captured) {
+      jQuery('#calendar').fullCalendar('gotoDate', result);
+      jQuery("#calendar_modal").modal("show");
+    }
+
+    jQuery('#calendar_modal').on('shown.bs.modal', function () {
+        jQuery("#calendar").fullCalendar('render');
+    });
+
+    jQuery('.datepicker').datepicker({
         format: 'yyyy-mm-dd',
     });
 
     var fcSources = {
-         month_view: {
-	     url: '/ajax/calendar/populate/personal/month',
-	     error: function() {window.location.replace('/solpeople/login.pl');},
-	     className: 'bg-info',
-	     textColor: '#000',
-	     borderColor: '#FFF',
-	 },
-	 gcal_cassbase: {
-	     googleCalendarId: 'mtm2tg9p10nvqttdjas4v0n0sg@group.calendar.google.com',
-	     className: 'bg-success',
-	     textColor: '#000',
-	     borderColor: '#FFF',
-         },
-	 gcal_holidays: {
-	     googleCalendarId: 'en.usa#holiday@group.v.calendar.google.com',
-	     className: 'bg-danger',
-	     textColor: '#000',
-	     borderColor: '#FFF',
-	 }
+        //month_view: {
+        //    url: '/ajax/calendar/populate/personal/month',
+        //    error: function() {window.location.replace('/solpeople/login.pl');},
+        //    className: 'bg-info',
+        //    textColor: '#000',
+        //    borderColor: '#FFF',
+        //},
+        agendaWeek_view: {
+            url: '/ajax/calendar/populate/personal/agendaWeek',
+            error: function() {window.location.replace('/solpeople/login.pl');},
+            className: 'bg-info',
+            textColor: '#000',
+            borderColor: '#FFF',
+        },
+        //gcal_cassbase: {
+        //    googleCalendarId: 'mtm2tg9p10nvqttdjas4v0n0sg@group.calendar.google.com',
+        //    className: 'bg-success',
+        //    textColor: '#000',
+        //    borderColor: '#FFF',
+        //},
+        //gcal_holidays: {
+        //    googleCalendarId: 'en.usa#holiday@group.v.calendar.google.com',
+        //    className: 'bg-danger',
+        //    textColor: '#000',
+        //    borderColor: '#FFF',
+        //}
     };
 
     var lastView;
-    $('#calendar').fullCalendar({
-	editable: true,
-	eventLimit: true,
-	lazyFetching: true,
-	header: {
-   	   left:   'title',
-           right:  'prevYear,prev,today,next,nextYear'
-	},
-	googleCalendarApiKey: 'AIzaSyDHH6NGHEYJcYRcxr5mHBWKcqNlKyu-L-Q',
-        eventSources: [fcSources.month_view, fcSources.gcal_cassbase, fcSources.gcal_holidays],
-	eventRender: function(event, element, view) {
-	  if (!event.url) {
-    	    element.find('.fc-title').html(event.title + ": " + event.property ); 
-	  }
-	},
-	dayClick: function(date, jsEvent, view) {
-	   $.ajax({
-	      url: "/ajax/calendar/dayclick/personal",
-    	      type: "GET",
-	      dataType: "json",
-    	      success: function(data) {
-		  $("input#event_start").val(date.format());
-		  var options = $("#event_project_select");
-		  options.empty();
-     		  $.each(data.project_list, function () {
-         	      options.append($("<option />").val(this.project_id).text(this.project_name));
-     		  });
-		  var options = $("#event_type_select");
-		  options.empty();
-     		  $.each(data.projectprop_list, function () {
-         	      options.append($("<option />").val(this.cvterm_id).text(this.cvterm_name));
-     		  });
-		  return;
-              },
-    	      error: function() {
-		  alert("Error preparing Day dialog!");
-    	      }
-           });
-	   $('#day_dialog').modal('show');
-	   // $(this).css('background-color', '#A9F5F2');
+    jQuery('#calendar').fullCalendar({
+        editable: true,
+        eventLimit: true,
+        lazyFetching: false,
+        header: {
+            left:   'title',
+            center: 'month,agendaWeek',
+            right:  'prevYear,prev,today,next,nextYear'
         },
-	eventClick: function(event) {
-	   if (event.url) {
-             window.open(event.url);
-	     return false;
-       	   } else {
-	     $("#event_info_title").html("<a href='" + event.project_url + "'>" + event.title + "</a>");
-	     $("#event_info_start_display").html(event.start_display);
-	     $("#event_info_end_display").html(event.end_display);
-	     $("input#event_info_start").val(event.start_drag);
-	     $("input#event_info_end").val(event.end_drag);
-	     $("input#event_info_cvterm_id").val(event.cvterm_id);
-	     $("#event_info_property").html("<a href='" + event.cvterm_url + "'>" + event.property + "</a>");
-	     $("#event_info_description").html(event.event_description);
-	     $("input#event_info_url_raw").val(event.event_url);
-	     $("#event_info_url").html("<a href='" + event.event_url + "'>" + event.event_url + "</a>");
-	     $("input#event_project_title").val(event.title);
-	     $("input#event_project_id").val(event.project_id);
-	     $("input#event_projectprop_id").val(event.projectprop_id);
-	     $('#event_dialog').modal('show');
-	     return false;
-	   }
+        views: {
+            month: {
+                titleFormat: 'MMM YYYY'
+            },
+            agendaWeek: {
+                titleFormat: 'MMM D YYYY'
+            }
         },
-	eventMouseover: function(event, jsEvent) {
-	   if (event.url) {
-	     $(this).popover({html:true, title:event.title, placement:'right', container:'body', content: 'Location: ' + event.location + '<br/>Description: ' + event.description,}).popover('show');
-	     return false;
-       	   } else {
-	     $(this).popover({html:true, title:event.title, placement:'right', container:'body', content: 'Start: ' + event.start_display + '<br/>End: ' + event.end_display + '<br/>Type: ' + event.property + '<br/>Description: ' + event.event_description + '<br/>URL: ' + event.event_url,}).popover('show');
-	     return false;
-	   }
+        eventSources: [fcSources.month_view, fcSources.agendaWeek_view, fcSources.gcal_cassbase, fcSources.gcal_holidays],
+        defaultView: 'month',
+        googleCalendarApiKey: 'AIzaSyDHH6NGHEYJcYRcxr5mHBWKcqNlKyu-L-Q',
+        eventRender: function(event, element, view) {
+            if (!event.url) {
+                element.find('.fc-title').html(event.title + ": " + event.property ); 
+            }
         },
-	eventMouseout: function(event) {
-           $(this).popover("hide");
-	   return false;
-	},
-	eventDrop: function(event, delta, revertFunc, jsEvent, ui, view) {
-	   if (!confirm("Are you sure about this change?")) {
-            revertFunc();
-	    return;
-           }
-	   $.ajax({
-	      url: "/ajax/calendar/drag_or_resize",
-    	      type: "POST",
-	      dataType: "json",
-    	      data: ({
-      	          id: event.id,
-		  start_drag: event.start_drag,
-		  end_drag: event.end_drag,
-		  description: event.event_description,
-		  url: event.event_url,
-		  projectprop_id: event.projectprop_id,
-		  delta: delta.asSeconds(),
-		  view: view.name,
-		  allday: +event.allDay,
-		  drag: 1,
-    	      }),
-    	      success: function(data) {
-	      	  event.start = data.start;
-	      	  event.start_drag = data.start_drag;
-		  event.start_display = data.start_display;
-		  event.end = data.end;
-		  event.end_drag = data.end_drag;
-		  event.end_display = data.end_display;
-	      	  $('#calendar').fullCalendar('updateEvent', event);
-		  return;
-              },
-    	      error: function() {
-      	          revertFunc();
-		  alert("Error! Did Not Update Event! E.001");
-    	      }
-           });
-	},
-	eventResize: function(event, delta, revertFunc, jsEvent, ui, view) {
-           if (!confirm("Are you sure about this change?")) {
-            revertFunc();
-	    return;
-           }
-	   $.ajax({
-	      url: "/ajax/calendar/drag_or_resize",
-    	      type: "POST",
-	      dataType: "json",
-    	      data: ({
-      	          id: event.id,
-		  start_drag: event.start_drag,
-		  end_drag: event.end_drag,
-		  description: event.event_description,
-		  url: event.event_url,
-		  projectprop_id: event.projectprop_id,
-		  delta: delta.asSeconds(),
-		  view: view.name,
-		  allday: +event.allDay,
-		  drag: 0,
-    	      }),
-    	      success: function(data) {
-	      	  event.start = data.start;
-	      	  event.start_drag = data.start_drag;
-		  event.start_display = data.start_display;
-		  event.end = data.end;
-		  event.end_drag = data.end_drag;
-		  event.end_display = data.end_display;
-	      	  $('#calendar').fullCalendar('updateEvent', event);
-		  return;
-              },
-    	      error: function() {
-      	          revertFunc();
-		  alert("Error! Did Not Update Event! E.001");
-    	      }
-           });
+        dayClick: function(date, jsEvent, view) {
+            jQuery.ajax({
+                url: "/ajax/calendar/dayclick/personal",
+                type: "GET",
+                dataType: "json",
+                success: function(data) {
+                    jQuery("input#event_start").val(date.format());
+                    var options = jQuery("#event_project_select");
+                    options.empty();
+                    jQuery.each(data.project_list, function () {
+                        options.append(jQuery("<option />").val(this.project_id).text(this.project_name));
+                    });
+                    var options = jQuery("#event_type_select");
+                    options.empty();
+                    jQuery.each(data.projectprop_list, function () {
+                        options.append(jQuery("<option />").val(this.cvterm_id).text(this.cvterm_name));
+                    });
+                    return;
+                },
+                error: function() {
+                    alert("Error preparing Day dialog!");
+                }
+            });
+            jQuery('#day_dialog').modal('show');
+            // jQuery(this).css('background-color', '#A9F5F2');
+        },
+        eventClick: function(event) {
+            if (event.url) {
+                window.open(event.url);
+                return false;
+            } else {
+                jQuery("#event_info_title").html("<a href='" + event.project_url + "'>" + event.title + "</a>");
+                jQuery("#event_info_start_display").html(event.start_display);
+                jQuery("#event_info_end_display").html(event.end_display);
+                jQuery("input#event_info_start").val(event.start_drag);
+                jQuery("input#event_info_end").val(event.end_drag);
+                jQuery("input#event_info_cvterm_id").val(event.cvterm_id);
+                jQuery("#event_info_property").html("<a href='" + event.cvterm_url + "'>" + event.property + "</a>");
+                jQuery("#event_info_description").html(event.event_description);
+                jQuery("input#event_info_url_raw").val(event.event_url);
+                jQuery("#event_info_url").html("<a href='" + event.event_url + "'>" + event.event_url + "</a>");
+                jQuery("input#event_project_title").val(event.title);
+                jQuery("input#event_project_id").val(event.project_id);
+                jQuery("input#event_projectprop_id").val(event.projectprop_id);
+                jQuery('#event_dialog').modal('show');
+                return false;
+            }
+        },
+        eventMouseover: function(event, jsEvent) {
+            if (event.url) {
+                jQuery(this).popover({html:true, title:event.title, placement:'right', container:'body', content: 'Location: ' + event.location + '<br/>Description: ' + event.description,}).popover('show');
+                return false;
+            } else {
+                jQuery(this).popover({html:true, title:event.title, placement:'right', container:'body', content: 'Start: ' + event.start_display + '<br/>End: ' + event.end_display + '<br/>Type: ' + event.property + '<br/>Description: ' + event.event_description + '<br/>URL: ' + event.event_url,}).popover('show');
+                return false;
+              }
+        },
+        eventMouseout: function(event) {
+            jQuery(this).popover("hide");
+            return false;
+        },
+        eventDrop: function(event, delta, revertFunc, jsEvent, ui, view) {
+            if (!confirm("Are you sure about this change?")) {
+                revertFunc();
+                return;
+            }
+            jQuery.ajax({
+                url: "/ajax/calendar/drag_or_resize",
+                type: "POST",
+                dataType: "json",
+                data: ({
+                    id: event.id,
+                    start_drag: event.start_drag,
+                    end_drag: event.end_drag,
+                    description: event.event_description,
+                    url: event.event_url,
+                    projectprop_id: event.projectprop_id,
+                    delta: delta.asSeconds(),
+                    view: view.name,
+                    allday: +event.allDay,
+                    drag: 1,
+                }),
+                success: function(data) {
+                    if (data.status ==3) {
+                        alert("You do not have the permissions to edit this event.");
+                    } else if (data.error ==1) {
+                        alert("The was a problem editing this event.");
+                    } else if (data.success == 1) {
+                        event.start = data.start;
+                        event.start_drag = data.start_drag;
+                        event.start_display = data.start_display;
+                        event.end = data.end;
+                        event.end_drag = data.end_drag;
+                        event.end_display = data.end_display;
+                    }
+                    jQuery('#calendar').fullCalendar('updateEvent', event);
+                    return;
+                },
+                error: function() {
+                    revertFunc();
+                    alert("Error! Did Not Update Event! E.001");
+                }
+            });
+        },
+        eventResize: function(event, delta, revertFunc, jsEvent, ui, view) {
+            if (!confirm("Are you sure about this change?")) {
+                revertFunc();
+                return;
+            }
+            jQuery.ajax({
+                url: "/ajax/calendar/drag_or_resize",
+                type: "POST",
+                dataType: "json",
+                data: ({
+                    id: event.id,
+                    start_drag: event.start_drag,
+                    end_drag: event.end_drag,
+                    description: event.event_description,
+                    url: event.event_url,
+                    projectprop_id: event.projectprop_id,
+                    delta: delta.asSeconds(),
+                    view: view.name,
+                    allday: +event.allDay,
+                    drag: 0,
+                }),
+                success: function(data) {
+                    if (data.status ==3) {
+                        alert("You do not have the permissions to edit this event.");
+                    } else if (data.error ==1) {
+                        alert("The was a problem editing this event.");
+                    } else if (data.success == 1) {
+                        event.start = data.start;
+                        event.start_drag = data.start_drag;
+                        event.start_display = data.start_display;
+                        event.end = data.end;
+                        event.end_drag = data.end_drag;
+                        event.end_display = data.end_display;
+                    }
+                    jQuery('#calendar').fullCalendar('updateEvent', event);
+                    return;
+                },
+                error: function() {
+                    revertFunc();
+                    alert("Error! Did Not Update Event! E.001");
+                }
+            });
         },
     });
 
-    $('button#add_event_submit').click( function(event) {
-    	event.preventDefault();
-        $.ajax({
-	    url: "/ajax/calendar/add_event",
-    	    type: "POST",
-	    dataType: "json",
-	    data: $('form#day_dialog_add_event_form').serialize(),
-    	    success: function(data) {
-	    	if(data.status == 1){
-       		    alert("Event Successfully Added!");
-		    $('#day_dialog').modal('hide');
-		    $('#calendar').fullCalendar('refetchEvents');
-    		}else if(data.status == 2){
-		    alert("Error! Event Not Added! E.002");
-		}
+    jQuery('button#add_event_submit').click( function(event) {
+        event.preventDefault();
+        jQuery.ajax({
+            url: "/ajax/calendar/add_event",
+            type: "POST",
+            dataType: "json",
+            data: jQuery('form#day_dialog_add_event_form').serialize(),
+            success: function(data) {
+                if(data.status == 1){
+                    alert("Event Successfully Added!");
+                    jQuery('#day_dialog').modal('hide');
+                    jQuery('#calendar').fullCalendar('refetchEvents');
+                }else if(data.status == 2){
+                    alert("Error! Event Not Added! E.002");
+                }else if(data.status == 3){
+                    alert("You do not have the permissions to add an event.");
+                }
             },
-    	    error: function() {
-	    	alert("Error! Event Not Added! E.001");
-    	    }
+            error: function() {
+                alert("Error! Event Not Added! E.001");
+            }
         });
     });
 
-    $('button#delete_event_submit').click( function(event) {
-    	event.preventDefault();
-	$('button#export_event_display').popover('hide');
-    	if (!confirm("Are you sure you want to delete this event?")) {
-	    return;
-           }
-        $.ajax({
-	    url: "/ajax/calendar/delete_event",
-    	    type: "POST",
-	    dataType: "json",
-	    data: $('form#event_dialog_delete_event_form').serialize(),
-    	    success: function(data) {
-	    	$('#event_dialog').modal('hide');
-	    	$('#calendar').fullCalendar( 'refetchEvents' );
+    jQuery('button#delete_event_submit').click( function(event) {
+        event.preventDefault();
+        jQuery('button#export_event_display').popover('hide');
+        if (!confirm("Are you sure you want to delete this event?")) {
+            return;
+        }
+        jQuery.ajax({
+            url: "/ajax/calendar/delete_event",
+            type: "POST",
+            dataType: "json",
+            data: jQuery('form#event_dialog_delete_event_form').serialize(),
+            success: function(data) {
+                jQuery('#event_dialog').modal('hide');
+                jQuery('#calendar').fullCalendar( 'refetchEvents' );
+                if (data.status==3){
+                    alert("You do not have the permissions to delete an event.");
+                } else if (data.status==0){
+                    alert("The event was not deleted!");
+                }
             },
-    	    error: function() {
-	    	alert("Did Not Delete Event! E.001");
-    	    }
+            error: function() {
+                alert("Did Not Delete Event! E.001");
+            }
         });
     });
     
-    $('button#event_edit_display').click( function(event) {
+    jQuery('button#event_edit_display').click( function(event) {
         event.preventDefault();
-	$.ajax({
-	   url: "/ajax/calendar/dayclick/personal",
-    	   type: "GET",
-	   dataType: "json",
-    	   success: function(data) {
-	      var options = $("#edit_event_project_select");
-	      options.empty();
-     	      $.each(data.project_list, function () {
-                 options.append($("<option />").val(this.project_id).text(this.project_name));
-     	      });
-	      options.val($("input#event_project_id").val());
-	      var options = $("#edit_event_type_select");
-	      options.empty();
-     	      $.each(data.projectprop_list, function () {
-                 options.append($("<option />").val(this.cvterm_id).text(this.cvterm_name));
-     	      });
-	      options.val($("input#event_info_cvterm_id").val());
-	      return;
-           },
-    	   error: function() {
-	      alert("Error Preparing Edit Event Dialog!");
-    	   }
-        });
-	$("#edit_event_projectprop_id").val($("#event_projectprop_id").val());
-	$("#edit_event_start").val($("#event_info_start").val());
-	$("#edit_event_end").val($("#event_info_end").val());
-	$("#edit_event_description").val($("#event_info_description").html());
-	$("#edit_event_url").val($("#event_info_url_raw").val());
-	$("#edit_event_dialog").modal("show");
-    });
-
-    $('button#edit_event_submit').click( function(event) {
-    	event.preventDefault();
-    	if (!confirm("Are you sure you want to save this edit?")) {
-	    return;
-           }
-        $.ajax({
-	    url: "/ajax/calendar/edit_event",
-    	    type: "POST",
-	    dataType: "json",
-	    data: $('form#edit_event_form').serialize(),
-    	    success: function(data) {
-	        if (data.status == 1) {
-	    	   $('#event_dialog').modal('hide');
-		   $('#edit_event_dialog').modal('hide');
-	    	   $('#calendar').fullCalendar( 'refetchEvents' );
-		} else if (data.status == 0) {
-		   alert("Event Already Existed! Your Edit Was Not Saved!");
-		}
+        jQuery.ajax({
+            url: "/ajax/calendar/dayclick/personal",
+            type: "GET",
+            dataType: "json",
+            success: function(data) {
+                var options = jQuery("#edit_event_project_select");
+                options.empty();
+         	      jQuery.each(data.project_list, function () {
+                    options.append(jQuery("<option />").val(this.project_id).text(this.project_name));
+         	      });
+                options.val(jQuery("input#event_project_id").val());
+                var options = jQuery("#edit_event_type_select");
+                options.empty();
+         	      jQuery.each(data.projectprop_list, function () {
+                    options.append(jQuery("<option />").val(this.cvterm_id).text(this.cvterm_name));
+         	      });
+                options.val(jQuery("input#event_info_cvterm_id").val());
+                return;
             },
-    	    error: function() {
-	    	alert("Did Not Save Edit! E.001");
-    	    }
+            error: function() {
+                alert("Error Preparing Edit Event Dialog!");
+            }
+        });
+
+      	jQuery("#edit_event_projectprop_id").val(jQuery("#event_projectprop_id").val());
+      	jQuery("#edit_event_start").val(jQuery("#event_info_start").val());
+      	jQuery("#edit_event_end").val(jQuery("#event_info_end").val());
+      	jQuery("#edit_event_description").val(jQuery("#event_info_description").html());
+      	jQuery("#edit_event_url").val(jQuery("#event_info_url_raw").val());
+      	jQuery("#edit_event_dialog").modal("show");
+    });
+
+    jQuery('button#edit_event_submit').click( function(event) {
+        event.preventDefault();
+        if (!confirm("Are you sure you want to save this edit?")) {
+            return;
+        }
+        jQuery.ajax({
+            url: "/ajax/calendar/edit_event",
+            type: "POST",
+            dataType: "json",
+            data: jQuery('form#edit_event_form').serialize(),
+            success: function(data) {
+                if (data.status == 1) {
+                    jQuery('#event_dialog').modal('hide');
+                    jQuery('#edit_event_dialog').modal('hide');
+                    jQuery('#calendar').fullCalendar( 'refetchEvents' );
+                } else if (data.status == 0) {
+                    alert("Event Already Existed! Your Edit Was Not Saved!");
+                } else if (data.status == 3) {
+                    alert("You do not have the permissions to edit thie event.");
+                }
+            },
+            error: function() {
+                alert("Did Not Save Edit! E.001");
+            }
         });
     });
 
-    $('button#export_event_display').click( function() {
-    	$(this).popover({html:true, title:"Export Event", placement:'right', container:'body', content: "Google Calendar: <a href='http://www.google.com/calendar' target='_blank' >Export</a>"}).popover('toggle');
+    jQuery('button#export_event_display').click( function() {
+    	jQuery(this).popover({html:true, title:"Export Event", placement:'right', container:'body', content: "Google Calendar: <a href='http://www.google.com/calendar' target='_blank' >Export</a>"}).popover('toggle');
     });
 
-    $('#event_dialog').on('hide.bs.modal', function (e) {
-       $('button#export_event_display').popover('hide');
+    jQuery('#event_dialog').on('hide.bs.modal', function (e) {
+       jQuery('button#export_event_display').popover('hide');
     });
 
 });
+
+
+
 </script>

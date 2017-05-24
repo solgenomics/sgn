@@ -1,0 +1,78 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'brapi.Table' ] &>
+
+<h4>Germplasm Search</h4>
+
+<div id="brapi_germplasm_search_home_div" class="well">
+
+<input name="brapi_germplasm_search_germplasmName" id="brapi_germplasm_search_germplasmname" class="form-control" type="text" placeholder="GermplasmName" />
+<input name="brapi_germplasm_search_accessionNumber" id="brapi_germplasm_search_accessionNumber" class="form-control" type="text" placeholder="AccessionNumber" />
+<input name="brapi_germplasm_search_germplasmGenus" id="brapi_germplasm_search_germplasmGenus" class="form-control" type="text" placeholder="GermplasmGenus" />
+<input name="brapi_germplasm_search_germplasmSpecies" id="brapi_germplasm_search_germplasmSpecies" class="form-control" type="text" placeholder="GermplasmSpecies" />
+<input name="brapi_germplasm_search_germplasmDbId" id="brapi_germplasm_search_germplasmDbId" class="form-control" type="text" placeholder="GermplasmDbId" />
+<input name="brapi_germplasm_search_germplasmPUI" id="brapi_germplasm_search_germplasmPUI" class="form-control" type="text" placeholder="GermplasmPUI" />
+<select name="brapi_germplasm_search_matchMethod" id="brapi_germplasm_search_matchMethod" class="form-control" />
+    <option value="exact">Exact</option>
+    <option value="wildcard">Wildcard. Wildcard allows % or * for multiple characters and ? for single characters.</option>
+</select>
+<button class="btn btn-primary" name="brapi_germplasm_search_submit" id="brapi_germplasm_search_submit">Search</button>
+
+<br/><br/>
+
+<div id="brapi_germplasm_search_result_div">
+</div>
+
+<div id="brapi_germplasm_search_result_names" style="display:none">
+</div>
+
+<&| /page/info_section.mas, title=>"Add germplasm-search germplasmNames that you see above to a list", collapsible=>1, collapsed=>1 &>
+<div id="germplasm_search_paste_to_list">
+LOAD...
+</div>
+</&>
+
+</div>
+
+<script>
+
+if (isLoggedIn()) {
+    addToListMenu('germplasm_search_paste_to_list', 'brapi_germplasm_search_result_names', { listType: 'accessions' } );
+} else {
+    jQuery('#germplasm_search_paste_to_list').html("&nbsp;Please log in to use lists.");
+}
+
+jQuery(document).ready(function() {
+    jQuery("#brapi_germplasm_search_submit").click(function() {
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm-search',
+          'method': 'POST',
+          'data': { 
+            'germplasmName' :  jQuery("#brapi_germplasm_search_germplasmname").val(),
+            'accessionNumber' : jQuery("#brapi_germplasm_search_accessionNumber").val(),
+            'germplasmGenus' : jQuery("#brapi_germplasm_search_germplasmGenus").val(),
+            'germplasmSubTaxa' : jQuery("#brapi_germplasm_search_germplasmSubTaxa").val(),
+            'germplasmSpecies' : jQuery("#brapi_germplasm_search_germplasmSpecies").val(),
+            'germplasmDbId' : jQuery("#brapi_germplasm_search_germplasmDbId").val(),
+            'germplasmPUI' : jQuery("#brapi_germplasm_search_germplasmPUI").val(),
+            'matchMethod' : jQuery("#brapi_germplasm_search_matchMethod").val(),
+          },
+          'success': function(response) {
+            //console.log(response);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_germplasm_search_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm-search', { "germplasmName": ["germplasmDbId", "stock"] });
+            var html ='';
+            for (var i=0; i<response.result.data.length; i++){
+                html = html + response.result.data[i].germplasmName+'\n';
+            }
+            jQuery('#brapi_germplasm_search_result_names').html(html);
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+    });
+});
+
+
+</script>
