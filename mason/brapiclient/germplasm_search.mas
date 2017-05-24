@@ -45,29 +45,100 @@ if (isLoggedIn()) {
 
 jQuery(document).ready(function() {
     jQuery("#brapi_germplasm_search_submit").click(function() {
+        var germplasmNames = jQuery("#brapi_germplasm_search_germplasmname").val();
+        if (germplasmNames){
+            germplasmNames = germplasmNames.split(',');
+        } else {
+            germplasmNames = [];
+        }
+        var accessionNumbers = jQuery("#brapi_germplasm_search_accessionNumber").val();
+        if (accessionNumbers){
+            accessionNumbers = accessionNumbers.split(',');
+        } else {
+            accessionNumbers = [];
+        }
+        var genusNames = jQuery("#brapi_germplasm_search_germplasmGenus").val();
+        if (genusNames){
+            genusNames = genusNames.split(',');
+        } else {
+            genusNames = [];
+        }
+        var subtaxaNames = jQuery("#brapi_germplasm_search_germplasmSubTaxa").val();
+        if (subtaxaNames){
+            subtaxaNames = subtaxaNames.split(',');
+        } else {
+            subtaxaNames = [];
+        }
+        var speciesNames = jQuery("#brapi_germplasm_search_germplasmSpecies").val();
+        if (speciesNames){
+            speciesNames = speciesNames.split(',');
+        } else {
+            speciesNames = [];
+        }
+        var germplasmDbIds = jQuery("#brapi_germplasm_search_germplasmDbId").val();
+        if (germplasmDbIds){
+            germplasmDbIds = germplasmDbIds.split(',');
+        } else {
+            germplasmDbIds = [];
+        }
+        var germplasmPUIs = jQuery("#brapi_germplasm_search_germplasmPUI").val();
+        if (germplasmPUIs){
+            germplasmPUIs = germplasmPUIs.split(',');
+        } else {
+            germplasmPUIs = [];
+        }
+        var search_query_data = { 
+          'germplasmName' :  germplasmNames,
+          'accessionNumber' : accessionNumbers,
+          'germplasmGenus' : genusNames,
+          'germplasmSubTaxa' : subtaxaNames,
+          'germplasmSpecies' : speciesNames,
+          'germplasmDbId' : germplasmDbIds,
+          'germplasmPUI' : germplasmPUIs,
+          'matchMethod' : jQuery("#brapi_germplasm_search_matchMethod").val(),
+        };
         jQuery.ajax( {
           'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm-search',
           'method': 'POST',
-          'data': { 
-            'germplasmName' :  jQuery("#brapi_germplasm_search_germplasmname").val(),
-            'accessionNumber' : jQuery("#brapi_germplasm_search_accessionNumber").val(),
-            'germplasmGenus' : jQuery("#brapi_germplasm_search_germplasmGenus").val(),
-            'germplasmSubTaxa' : jQuery("#brapi_germplasm_search_germplasmSubTaxa").val(),
-            'germplasmSpecies' : jQuery("#brapi_germplasm_search_germplasmSpecies").val(),
-            'germplasmDbId' : jQuery("#brapi_germplasm_search_germplasmDbId").val(),
-            'germplasmPUI' : jQuery("#brapi_germplasm_search_germplasmPUI").val(),
-            'matchMethod' : jQuery("#brapi_germplasm_search_matchMethod").val(),
+          'beforeSend': function(){
+            jQuery('#working_modal').modal('show');
           },
+          'data': search_query_data,
           'success': function(response) {
             //console.log(response);
-            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_germplasm_search_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm-search', { "germplasmName": ["germplasmDbId", "stock"] });
-            var html ='';
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_germplasm_search_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm-search', { "germplasmName": ["germplasmDbId", "stock"] }, search_query_data, ['germplasmName','commonCropName','genus','species','accessionNumber','germplasmPUI']);
+            //var html ='';
+            var accessionNames = []
             for (var i=0; i<response.result.data.length; i++){
-                html = html + response.result.data[i].germplasmName+'\n';
+            //    html = html + response.result.data[i].germplasmName+'\n';
+                accessionNames.push(response.result.data[i].germplasmName);
             }
-            jQuery('#brapi_germplasm_search_result_names').html(html);
+            //jQuery('#brapi_germplasm_search_result_names').html(html);
+
+            jQuery.ajax({
+                'url': '/ajax/accession_list/verify',
+                'method': 'POST',
+                'data': {
+                    'accession_list' : JSON.stringify(accessionNames),
+                    'do_fuzzy_search' : 'true'
+                },
+                'success': function(response){
+                    //console.log(response);
+                    var found_html = 'The following ';
+                    for (var i=0; i<response.found.length; i++){
+                    
+                    }
+                    jQuery('#working_modal').modal('hide');
+                    
+                },
+                'error': function(response){
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred in fuzzy search!');
+                }
+            })
           },
           error: function(response) {
+            jQuery('#working_modal').modal('hide');
             alert('An error occurred');
           }
         });

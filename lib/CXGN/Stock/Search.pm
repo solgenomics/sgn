@@ -485,7 +485,7 @@ sub search {
 				germplasmPUI=>$stockprop_hash->{'PUI'} ? join ',', @{$stockprop_hash->{'PUI'}} : undef,
 				pedigree=>$self->germplasm_pedigree_string($stock_id),
 				germplasmSeedSource=>$stockprop_hash->{'seed source'} ? join ',', @{$stockprop_hash->{'seed source'}} : undef,
-				synonyms=> $stockprop_hash->{'stock_synonym'} ? join ',', @{$stockprop_hash->{'stock_synonym'}} : undef,
+				synonyms=> $stockprop_hash->{'stock_synonym'} ? $stockprop_hash->{'stock_synonym'} : [],
 				instituteCode=>$stockprop_hash->{'institute code'} ? join ',', @{$stockprop_hash->{'institute code'}} : undef,
 				instituteName=>$stockprop_hash->{'institute name'} ? join ',', @{$stockprop_hash->{'institute name'}} : undef,
 				biologicalStatusOfAccessionCode=>$stockprop_hash->{'biological status of accession code'} ? join ',', @{$stockprop_hash->{'biological status of accession code'}} : undef,

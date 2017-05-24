@@ -77,12 +77,13 @@ function brapi_create_table(data, div_id, link) {
 //  as well as optionally, a link js object, which will be used to construct links in the table. e.g. { "name": ["mapId", "/maps/protocols/"] }
 
 
-function brapi_create_paginated_table(data, pagination, div_id, return_url, link) {
+function brapi_create_paginated_table(data, pagination, div_id, return_url, link, search_query_data, display_columns) {
     console.log(data);
     console.log(pagination);
-    console.log(div_id);
-    console.log(return_url);
-    console.log(link);
+    //console.log(div_id);
+    //console.log(return_url);
+    //console.log(link);
+    //console.log(display_columns);
     var current_page = pagination.currentPage;
     var next_page = current_page + 1;
     var previous_page = current_page - 1;
@@ -99,6 +100,8 @@ function brapi_create_paginated_table(data, pagination, div_id, return_url, link
     var html = html+"<input id='table_page_size_input' type='hidden' value='"+page_size+"'/>";
     var html = html+"<input id='table_next_page_input' type='hidden' value='"+next_page+"'/>";
     var html = html+"<input id='table_previous_page_input' type='hidden' value='"+previous_page+"'/>";
+    var html = html+"<input id='table_search_query_params' type='hidden' value='"+JSON.stringify(search_query_data)+"'/>";
+    var html = html+"<input id='table_display_columns_params' type='hidden' value='"+JSON.stringify(display_columns)+"'/>";
     if (data.length == 0) {
         html = html+"<center><h3>No data available!</h3></center>";
     } else {
@@ -107,12 +110,14 @@ function brapi_create_paginated_table(data, pagination, div_id, return_url, link
         for(var h in data[0]) {
             if (data[0].hasOwnProperty(h)) {
                 //console.log(h);
-                if (checkDefined(link) == 0) {
-                    header.push(h);
-                } else {
-                    for(var link_header in link) {
-                        if(h != link[link_header][0]) {
-                            header.push(h);
+                if (jQuery.inArray(h, display_columns) != -1){
+                    if (checkDefined(link) == 0) {
+                        header.push(h);
+                    } else {
+                        for(var link_header in link) {
+                            if(h != link[link_header][0]) {
+                                header.push(h);
+                            }
                         }
                     }
                 }
@@ -150,7 +155,7 @@ function brapi_create_paginated_table(data, pagination, div_id, return_url, link
         html = html+"<div class='col-sm-6'><div class='row'><div class='col-sm-7'><div class='btn-group' role='group'>";
         
         if (total_pages > 1) {
-            if (current_page > 1) {
+            if (current_page > 0) {
                 html = html+"<button id='table_previous_page_button' class='btn btn-sm btn-default glyphicon glyphicon-arrow-left'></button><button class='btn btn-sm btn-default' style='margin-top:1px'>Page "+current_page+" of "+total_pages+"</button><button id='table_next_page_button' class='btn btn-sm btn-default glyphicon glyphicon-arrow-right'></button>";
             } else {
                 html = html+"<button class='disabled btn btn-sm btn-default glyphicon glyphicon-arrow-left'></button><button class='btn btn-sm btn-default' style='margin-top:1px'>Page "+current_page+" of "+total_pages+"</button><button id='table_next_page_button' class='btn btn-sm btn-default glyphicon glyphicon-arrow-right'></button>";
@@ -177,49 +182,21 @@ function checkDefined(o) {
     }
 }
 
-jQuery(document).ready(function () {
-    
-    jQuery(document).on( 'click', "#table_next_page_button", function() {
+function brapi_recreate_paginated_table(search_query_data, display_columns){
+    var delay = (function(){
+        var timer = 0;
+        return function(callback, ms){
+            clearTimeout (timer);
+            timer = setTimeout(callback, ms);
+        };
+    })();
+
+    delay(function() {
         jQuery.ajax( {
             url: jQuery("#table_return_url_input").val(),
             dataType: 'json',
-            method: 'POST',
-            data: {
-                'currentPage':jQuery("#table_next_page_input").val(),
-                'pageSize':jQuery("#table_page_size_input").val(),
-            },
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            success: function(response) {
-                jQuery("#working_modal").modal("hide");
-                console.log(response);
-                var div_id = jQuery("#table_div_id_input").val();
-                var return_url = jQuery("#table_return_url_input").val();
-                if (checkDefined(jQuery("#table_links_input").val()) == 1) {
-                    var links = jQuery.parseJSON( jQuery("#table_links_input").val() );
-                } else {
-                    var links = jQuery("#table_links_input").val();
-                }
-                jQuery("#"+jQuery("#table_div_id_input").val()).empty();
-                brapi_create_paginated_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
-            },
-            error: function(response) {
-                jQuery("#working_modal").modal("hide");
-                alert('An error occurred constructing table after moving to the next page.');
-            }
-        });
-    });
-    
-    jQuery(document).on( 'click', "#table_previous_page_button", function() {
-        jQuery.ajax( {
-            url: jQuery("#table_return_url_input").val(),
-            dataType: 'json',
-            method: 'POST',
-            data: {
-                'currentPage':jQuery("#table_previous_page_input").val(),
-                'pageSize':jQuery("#table_page_size_input").val(),
-            },
+            data: search_query_data,
+            method:'POST',
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
@@ -234,79 +211,48 @@ jQuery(document).ready(function () {
                     var links = jQuery("#table_links_input").val();
                 }
                 jQuery("#"+jQuery("#table_div_id_input").val()).empty();
-                brapi_create_paginated_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
+                console.log(search_query_data);
+                brapi_create_paginated_table(response.result.data, response.metadata.pagination, div_id, return_url, links, search_query_data, display_columns);
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
                 alert('An error occurred constructing table after moving to the previous page.');
             }
         });
+    }, 200);
+}
+
+jQuery(document).ready(function () {
+    
+    jQuery(document).on( 'click', "#table_next_page_button", function() {
+        var search_query_data = JSON.parse(jQuery('#table_search_query_params').val());
+        var display_columns = JSON.parse(jQuery('#table_display_columns_params').val());
+        search_query_data['page'] = jQuery("#table_next_page_input").val();
+        search_query_data['pageSize'] = jQuery("#table_page_size_input").val();
+        brapi_recreate_paginated_table(search_query_data, display_columns);
+    });
+    
+    jQuery(document).on( 'click', "#table_previous_page_button", function() {
+        var search_query_data = JSON.parse(jQuery('#table_search_query_params').val());
+        var display_columns = JSON.parse(jQuery('#table_display_columns_params').val());
+        search_query_data['page'] = jQuery("#table_previous_page_input").val();
+        search_query_data['pageSize'] = jQuery("#table_page_size_input").val();
+        brapi_recreate_paginated_table(search_query_data, display_columns);
     });
     
     jQuery(document).on( 'keyup', "#table_change_page_size_input", function() {
-        delay(function() {
-            jQuery.ajax( {
-                url: jQuery("#table_return_url_input").val()+"?currentPage="+jQuery("#table_previous_page_input").val()+"&pageSize="+jQuery("#table_change_page_size_input").val(),
-                dataType: 'json',
-                beforeSend: function() {
-                    jQuery("#working_modal").modal("show");
-                },
-                success: function(response) {
-                    jQuery("#working_modal").modal("hide");
-                    //console.log(response);
-                    var div_id = jQuery("#table_div_id_input").val();
-                    var return_url = jQuery("#table_return_url_input").val();
-                    if (checkDefined(jQuery("#table_links_input").val()) == 1) {
-                        var links = jQuery.parseJSON( jQuery("#table_links_input").val() );
-                    } else {
-                        var links = jQuery("#table_links_input").val();
-                    }
-                    jQuery("#"+jQuery("#table_div_id_input").val()).empty();
-                    brapi_create_paginated_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
-                },
-                error: function(response) {
-                    jQuery("#working_modal").modal("hide");
-                    alert('An error occurred constructing table after moving to the previous page.');
-                }
-            });
-        }, 800);
+        var search_query_data = JSON.parse(jQuery('#table_search_query_params').val());
+        var display_columns = JSON.parse(jQuery('#table_display_columns_params').val());
+        search_query_data['page'] = 0;
+        search_query_data['pageSize'] = jQuery("#table_change_page_size_input").val();
+        brapi_recreate_paginated_table(search_query_data, display_columns);
     });
     
     jQuery(document).on( 'keyup', "#table_change_current_page_input", function() {
-        delay(function() {
-            jQuery.ajax( {
-                url: jQuery("#table_return_url_input").val()+"?currentPage="+jQuery("#table_change_current_page_input").val()+"&pageSize="+jQuery("#table_page_size_input").val(),
-                dataType: 'json',
-                beforeSend: function() {
-                    jQuery("#working_modal").modal("show");
-                },
-                success: function(response) {
-                    jQuery("#working_modal").modal("hide");
-                    //console.log(response);
-                    var div_id = jQuery("#table_div_id_input").val();
-                    var return_url = jQuery("#table_return_url_input").val();
-                    if (checkDefined(jQuery("#table_links_input").val()) == 1) {
-                        var links = jQuery.parseJSON( jQuery("#table_links_input").val() );
-                    } else {
-                        var links = jQuery("#table_links_input").val();
-                    }
-                    jQuery("#"+jQuery("#table_div_id_input").val()).empty();
-                    brapi_create_paginated_table(response.result.data, response.metadata.pagination, div_id, return_url, links);
-                },
-                error: function(response) {
-                    jQuery("#working_modal").modal("hide");
-                    alert('An error occurred constructing table after moving to the previous page.');
-                }
-            });
-        }, 800);
+        var search_query_data = JSON.parse(jQuery('#table_search_query_params').val());
+        var display_columns = JSON.parse(jQuery('#table_display_columns_params').val());
+        search_query_data['page'] = jQuery("#table_change_current_page_input").val();
+        brapi_recreate_paginated_table(search_query_data, display_columns);
     });
-    
-    var delay = (function(){
-        var timer = 0;
-        return function(callback, ms){
-            clearTimeout (timer);
-            timer = setTimeout(callback, ms);
-        };
-    })();
-    
+
 });

@@ -41,7 +41,7 @@ has 'bcs_schema' => (
 	is => 'rw',
 );
 
-my $DEFAULT_PAGE_SIZE=20;
+my $DEFAULT_PAGE_SIZE=10;
 
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $self = shift;
@@ -510,16 +510,17 @@ sub germplasm_search_process {
 	my $c = shift;
 	#my $auth = _authenticate_user($c);
 	my $clean_inputs = $c->stash->{clean_inputs};
+    print STDERR Dumper $clean_inputs;
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
 	my $brapi_package_result = $brapi_module->germplasm_search({
-		germplasmName => $clean_inputs->{germplasmName},
-		accessionNumber => $clean_inputs->{accessionNumber},
-		germplasmGenus => $clean_inputs->{germplasmGenus},
-		germplasmSubTaxa => $clean_inputs->{germplasmSubTaxa},
-		germplasmSpecies => $clean_inputs->{germplasmSpecies},
-		germplasmDbId => $clean_inputs->{germplasmDbId},
-		germplasmPUI => $clean_inputs->{germplasmPUI},
+		germplasmName => $clean_inputs->{'germplasmName[]'},
+		accessionNumber => $clean_inputs->{'accessionNumber[]'},
+		germplasmGenus => $clean_inputs->{'germplasmGenus[]'},
+		germplasmSubTaxa => $clean_inputs->{'germplasmSubTaxa[]'},
+		germplasmSpecies => $clean_inputs->{'germplasmSpecies[]'},
+		germplasmDbId => $clean_inputs->{'germplasmDbId[]'},
+		germplasmPUI => $clean_inputs->{'germplasmPUI[]'},
 		matchMethod => $clean_inputs->{matchMethod},
 	});
 	_standard_response_construction($c, $brapi_package_result);
