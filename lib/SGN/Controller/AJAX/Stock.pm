@@ -1493,39 +1493,58 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
     }
 
     $c->stash->{rest}={data=>\@trial_related_stock};
-  }
+}
 
-  sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') Args(0){
-      my $self = shift;
-      my $c = shift;
-      my $stock_id = $c->stash->{stock_row}->stock_id();
+sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
 
-      my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
-      my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
-      my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
-      my $dbh = $schema->storage->dbh();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $dbh = $schema->storage->dbh();
 
-      my $q = "SELECT cvterm.name, stock.stock_id, stock.uniquename FROM stock_relationship INNER JOIN stock ON (stock_relationship.object_id = stock.stock_id)
+    my $q = "SELECT cvterm.name, stock.stock_id, stock.uniquename FROM stock_relationship INNER JOIN stock ON (stock_relationship.object_id = stock.stock_id)
                INNER JOIN cvterm ON (stock_relationship.type_id =cvterm.cvterm_id) WHERE stock_relationship.subject_id = ? AND(stock_relationship.type_id =?
                OR stock_relationship.type_id = ?) ORDER BY cvterm.name, stock.uniquename";
 
-      my $h = $dbh->prepare($q);
-      $h->execute($stock_id, $female_parent_type_id, $male_parent_type_id);
+    my $h = $dbh->prepare($q);
+    $h->execute($stock_id, $female_parent_type_id, $male_parent_type_id);
 
-      my@progenies =();
-      while(my($cvterm_name, $stock_id, $stock_name) = $h->fetchrow_array()){
-        push @progenies, [$cvterm_name, $stock_name];
-      }
-
-      $c->stash->{rest}={data=>\@progenies};
-
+    my@progenies =();
+    while(my($cvterm_name, $stock_id, $stock_name) = $h->fetchrow_array()){
+      push @progenies, [$cvterm_name, $stock_name];
     }
 
+    $c->stash->{rest}={data=>\@progenies};
 
+}
 
+sub get_group:Chained('/stock/get_stock') PathPart('datatables/group') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
 
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
+    my $dbh = $schema->storage->dbh();
 
+    my $q = "SELECT stock.stock_id, stock.uniquename, cvterm.name FROM stock_relationship INNER JOIN stock
+            ON (stock_relationship.object_id = stock.stock_id) INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
+            WHERE stock_relationship.subject_id = ? and stock_relationship.type_id = ?";
 
+    my $h = $dbh->prepare($q);
+    $h->execute($stock_id, $member_of_type_id);
+
+    my @group =();
+    while(my($stock_id, $stock_name, $cvterm_name) = $h->fetchrow_array()){
+    push @group, [$stock_name, $cvterm_name];
+    }
+
+    $c->stash->{rest}={data=>\@group};
+
+}
 
 
 
