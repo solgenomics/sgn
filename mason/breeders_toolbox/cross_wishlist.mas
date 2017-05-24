@@ -30,6 +30,8 @@
                                     </div>
                                 </div>
                             </form>
+                            <br/>
+                            <div id="cross_wishlist_cross_grid_div"></div>
                         </div>
 
                         <div id="not_with_lists" class="tab-pane fade">
@@ -70,15 +72,48 @@
 
 <script>
 
+var lo = new CXGN.List();
+
+function draw_cross_grid(female_accessions, male_accessions){
+    var cross_grid_html = '<h3>Set Cross Priorities: 1 is highest and 10 is lowest</h3><h4>Female Accessions Are in First Column and Male Accessions Are in Header</h4><table class="table table-bordered"><thead><tr><th>Female Accessions</th>';
+    for(var i=0; i<male_accessions.length; i++){
+        cross_grid_html = cross_grid_html + '<th>' + male_accessions[i] + '</th>';
+    }
+    cross_grid_html = cross_grid_html + '</tr></thead><tbody>';
+    for(var i=0; i<female_accessions.length; i++){
+        cross_grid_html = cross_grid_html + '<tr><td>' + female_accessions[i] + '</td>';
+        for(var j=0; j<male_accessions.length; j++){
+            cross_grid_html = cross_grid_html + '<td><input type="text" class="form-control"/></td>';
+        }
+        cross_grid_html = cross_grid_html + '</tr>';
+    }
+    cross_grid_html = cross_grid_html + '</tbody></table>';
+    jQuery('#cross_wishlist_cross_grid_div').html(cross_grid_html);
+}
+
 jQuery(document).ready(function($) {
 
     jQuery("#create_cross_wishlist").click(function() {
         jQuery("#create_cross_wishlist_dialog").modal("show");
-        var list = new CXGN.List();
-        jQuery("#female_accession_list_div").html(list.listSelect('female_accession_list_div', ["accessions"] ));
-        jQuery("#male_accession_list_div").html(list.listSelect('male_accession_list_div', ["accessions"] ));
+        jQuery("#female_accession_list_div").html(lo.listSelect('female_accession_list_div', ["accessions"] ));
+        jQuery("#male_accession_list_div").html(lo.listSelect('male_accession_list_div', ["accessions"] ));
+        var female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());
+        var male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
+        console.log(female_accessions);
+        console.log(male_accessions);
+        draw_cross_grid(female_accessions, male_accessions);
     });
 
+    jQuery(document).on('change', '#female_accession_list_div_list_select', function(){
+        var female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());
+        var male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
+        draw_cross_grid(female_accessions, male_accessions);
+    });
+    jQuery(document).on('change', '#male_accession_list_div_list_select', function(){
+        var female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());
+        var male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
+        draw_cross_grid(female_accessions, male_accessions);
+    });
 
     get_select_box('trials', 'cross_wishlist_trial_select_div', { 'name' : 'cross_wishlist_trial_id', 'id' : 'cross_wishlist_trial_id', 'size' : 7 });
 
