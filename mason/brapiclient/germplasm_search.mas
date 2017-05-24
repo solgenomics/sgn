@@ -23,27 +23,18 @@
 
 <div id="brapi_germplasm_search_result_div">
 </div>
-
-<div id="brapi_germplasm_search_result_names" style="display:none">
+<div id="brapi_germplasm_search_result_div_collection">
 </div>
 
-<&| /page/info_section.mas, title=>"Add germplasm-search germplasmNames that you see above to a list", collapsible=>1, collapsed=>1 &>
-<div id="germplasm_search_paste_to_list">
-LOAD...
-</div>
-</&>
 
 </div>
 
 <script>
 
-if (isLoggedIn()) {
-    addToListMenu('germplasm_search_paste_to_list', 'brapi_germplasm_search_result_names', { listType: 'accessions' } );
-} else {
-    jQuery('#germplasm_search_paste_to_list').html("&nbsp;Please log in to use lists.");
-}
-
 jQuery(document).ready(function() {
+    var return_url;
+    var selected_results = [];
+
     jQuery("#brapi_germplasm_search_submit").click(function() {
         var germplasmNames = jQuery("#brapi_germplasm_search_germplasmname").val();
         if (germplasmNames){
@@ -97,6 +88,7 @@ jQuery(document).ready(function() {
           'germplasmPUI' : germplasmPUIs,
           'matchMethod' : jQuery("#brapi_germplasm_search_matchMethod").val(),
         };
+        return_url = jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm-search';
         jQuery.ajax( {
           'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm-search',
           'method': 'POST',
@@ -106,36 +98,8 @@ jQuery(document).ready(function() {
           'data': search_query_data,
           'success': function(response) {
             //console.log(response);
-            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_germplasm_search_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm-search', { "germplasmName": ["germplasmDbId", "stock"] }, search_query_data, ['germplasmName','commonCropName','genus','species','accessionNumber','germplasmPUI']);
-            //var html ='';
-            var accessionNames = []
-            for (var i=0; i<response.result.data.length; i++){
-            //    html = html + response.result.data[i].germplasmName+'\n';
-                accessionNames.push(response.result.data[i].germplasmName);
-            }
-            //jQuery('#brapi_germplasm_search_result_names').html(html);
-
-            jQuery.ajax({
-                'url': '/ajax/accession_list/verify',
-                'method': 'POST',
-                'data': {
-                    'accession_list' : JSON.stringify(accessionNames),
-                    'do_fuzzy_search' : 'true'
-                },
-                'success': function(response){
-                    //console.log(response);
-                    var found_html = 'The following ';
-                    for (var i=0; i<response.found.length; i++){
-                    
-                    }
-                    jQuery('#working_modal').modal('hide');
-                    
-                },
-                'error': function(response){
-                    jQuery('#working_modal').modal('hide');
-                    alert('An error occurred in fuzzy search!');
-                }
-            })
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_germplasm_search_result_div', return_url, { "germplasmName": ["germplasmDbId", "stock"] }, search_query_data, ['germplasmName','commonCropName','genus','species','accessionNumber','germplasmPUI'], 'germplasmName');
+            jQuery('#working_modal').modal('hide');
           },
           error: function(response) {
             jQuery('#working_modal').modal('hide');
@@ -143,6 +107,54 @@ jQuery(document).ready(function() {
           }
         });
     });
+
+    jQuery(document).on('change', 'input[type=checkbox]', function(){
+        jQuery.each(jQuery('input[name="brapi_table_select_'+return_url+'"]:checked'), function(){
+            if (jQuery.inArray(jQuery(this).val(), selected_results) == -1){
+                selected_results.push(jQuery(this).val());
+            }
+        });
+        console.log(selected_results);
+
+        jQuery.ajax({
+            'url': '/ajax/accession_list/verify',
+            'method': 'POST',
+            'beforeSend': function(){
+                jQuery('#working_modal').modal('show');
+            },
+            'data': {
+                'accession_list' : JSON.stringify(selected_results),
+                'do_fuzzy_search' : 'true'
+            },
+            'success': function(response){
+                console.log(response);
+                var html = '<h3>How Selected GermplasmNames Compare to This Database:</h3>';
+                html = html + '<table class="table table-bordered"><thead><tr><th>GermplasmName</th><th>Status</th><th>Possible Matches</th></tr></thead><tbody>';
+                for (var i=0; i<response.found.length; i++){
+                    html = html + '<tr><td>' + response.found[i].unique_name + '</td><td class="bg-success">Exact GermplasmName Found in This Database</td><td>Exact Match</td></tr>';
+                }
+                for (var i=0; i<response.fuzzy.length; i++){
+                    html = html + '<tr><td>' + response.fuzzy[i].name + '</td><td class="bg-info">Possible GermplasmName Matches Found in This Database</td>';
+                    html = html + '<td><select class="form-control">'
+                    for (var j=0; j<response.fuzzy[i].matches.length; j++){
+                        html = html + '<option value="'+response.fuzzy[i].matches[j].name+'">'+response.fuzzy[i].matches[j].name+'</option>'
+                    }
+                    html = html + '</select></td></tr>';
+                }
+                for (var i=0; i<response.absent.length; i++){
+                    html = html + '<tr><td>' + response.absent[i] + '</td><td class="bg-warning">GermplasmName Not Found in This Database</td><td>No Match</td></tr>';
+                }
+                html = html + '</tbody></table>';
+                jQuery('#working_modal').modal('hide');
+                jQuery('#brapi_germplasm_search_result_div_collection').html(html);
+            },
+            'error': function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred in fuzzy search!');
+            }
+        })
+    });
+
 });
 
 
