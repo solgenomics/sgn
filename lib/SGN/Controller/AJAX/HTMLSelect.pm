@@ -275,7 +275,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $c = shift;
     my $trial_ids = $c->req->param('trial_ids') || 'all';
     my $stock_id = $c->req->param('stock_id') || 'all';
-    my $stock_type = $c->req->param('stock_type') . 's' || 'none';
+    my $stock_type = $c->req->param('stock_type') ? $c->req->param('stock_type') . 's' : 'none';
     my $data_level = $c->req->param('data_level') || 'all';
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
@@ -335,7 +335,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
 sub get_phenotyped_trait_components_select : Path('/ajax/html/select/phenotyped_trait_components') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $trial_id = $c->req->param('trial_id') || 'all';
+    my $trial_ids = $c->req->param('trial_ids');
     #my $stock_id = $c->req->param('stock_id') || 'all';
     #my $stock_type = $c->req->param('stock_type') . 's' || 'none';
     my $data_level = $c->req->param('data_level') || 'all';
@@ -345,9 +345,15 @@ sub get_phenotyped_trait_components_select : Path('/ajax/html/select/phenotyped_
         $data_level = '';
     }
 
-    my @traits;
-    my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$trial_id});
-    my @traits = @{$trial->get_trait_components_assayed($data_level)};
+    my @trial_ids = split ',', $trial_ids;
+
+    my @trait_components;
+    foreach (@trial_ids){
+        my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
+        push @trait_components, @{$trial->get_trait_components_assayed($data_level)};
+    }
+    my %unique_trait_components = map {$_=>1} @trait_components;
+    my @unique_components = keys %unique_trait_components;
 
     my $id = $c->req->param("id") || "html_trait_component_select";
     my $name = $c->req->param("name") || "html_trait_component_select";
@@ -356,7 +362,7 @@ sub get_phenotyped_trait_components_select : Path('/ajax/html/select/phenotyped_
       multiple => 1,
       name => $name,
       id => $id,
-      choices => \@traits,
+      choices => \@unique_components,
     );
     $c->stash->{rest} = { select => $html };
 }
@@ -439,18 +445,20 @@ sub get_trait_components_select : Path('/ajax/html/select/trait_components') Arg
   my $name = $c->req->param("name") || "component_select";
   my $default = $c->req->param("default") || 0;
   my $multiple =  $c->req->param("multiple") || 0;
+  my $size = $c->req->param('size') || '5';
 
   my $dbh = $c->dbc->dbh();
   my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
   my @components = $onto->get_terms($cv_id);
-
+  #print STDERR Dumper \@components;
   if ($default) { unshift @components, [ '', $default ]; }
 
   my $html = simple_selectbox_html(
     name => $name,
     multiple => $multiple,
     id => $id,
-    choices => \@components
+    choices => \@components,
+    size => $size
   );
 
   $c->stash->{rest} = { select => $html };
@@ -463,6 +471,7 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
     my $parent_node_cvterm = $c->request->param("parent_node_cvterm");
     my $rel_cvterm = $c->request->param("rel_cvterm");
     my $rel_cv = $c->request->param("rel_cv");
+    my $size = $c->req->param('size') || '5';
 
     my $select_name = $c->request->param("selectbox_name");
     my $select_id = $c->request->param("selectbox_id");
@@ -471,7 +480,11 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
     my $multiple =  $c->req->param("multiple") || 0;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $parent_node_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $parent_node_cvterm)->cvterm_id();
+    my $parent_node_cvterm_row = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $parent_node_cvterm);
+    my $parent_node_cvterm_id;
+    if ($parent_node_cvterm_row){
+        $parent_node_cvterm_id = $parent_node_cvterm_row->cvterm_id();
+    }
     my $rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $rel_cvterm, $rel_cv)->cvterm_id();
 
     my $ontology_children_ref = $schema->resultset("Cv::CvtermRelationship")->search({type_id => $rel_cvterm_id, object_id => $parent_node_cvterm_id})->search_related('subject');
@@ -489,7 +502,7 @@ sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(
     if ($empty) {
         unshift @ontology_children, [ 0, "None" ];
     }
-
+    #print STDERR Dumper \@ontology_children;
     my $html = simple_selectbox_html(
         name => $select_name,
         id => $select_id,
