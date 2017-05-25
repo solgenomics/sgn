@@ -39,7 +39,7 @@ $stock_id
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
-<table id = "member_of" class="table table-hover table-stripted">
+<table id = "group" class="table table-hover table-stripted">
 <thead>
  <tr>
   <th>Name</th>
@@ -64,8 +64,8 @@ jQuery(document).ready(function(){
  });
 
 
- jQuery('#member_of').DataTable({
-  'ajax':'/stock/'+ <% $stock_id %> + '/datatables/member_of',
+ jQuery('#group').DataTable({
+  'ajax':'/stock/'+ <% $stock_id %> + '/datatables/group',
  });
 
 
