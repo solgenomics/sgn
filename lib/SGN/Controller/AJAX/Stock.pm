@@ -1470,26 +1470,22 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
     my $stock_id = $c->stash->{stock_row}->stock_id();
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
-    #my $stock_type = $self->get_type->name();
-    #my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($Schema, 'accession', 'stock_type')->cvterm_id();
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-    #my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
     my $dbh = $schema->storage->dbh();
 
+    my $q = "SELECT stock.stock_id, stock.uniquename, cvterm.name FROM stock_relationship INNER JOIN cvterm
+            ON (stock_relationship.type_id = cvterm.cvterm_id) INNER JOIN stock ON (stock_relationship.subject_id = stock.stock_id)
+            WHERE stock_relationship.object_id = ? AND stock_relationship.type_id = ?";
 
-    #my $q;
-    #if(stock_type eq 'accession'){
-    my  $q = "SELECT stock.stock_id, stock.uniquename, cvterm.name FROM stock_relationship INNER JOIN cvterm
-              ON (stock_relationship.type_id = cvterm.cvterm_id) INNER JOIN stock ON (stock_relationship.subject_id = stock.stock_id)
-              WHERE stock_relationship.object_id = ? AND stock_relationship.type_id = ?";
+
 
     my $h = $dbh->prepare($q);
     $h->execute($stock_id, $plot_of_type_id);
 
     my @trial_related_stock =();
-    while(my($plot_stock_id, $plot_stock_name, $cvterm_name) = $h->fetchrow_array()){
+    while(my($stock_id, $stock_name, $cvterm_name) = $h->fetchrow_array()){
 
-    push @trial_related_stock,[$plot_stock_name, $cvterm_name];
+    push @trial_related_stock,[qq{<a href = "/stock/$stock_id/view">$stock_name</a}, $cvterm_name];
     }
 
     $c->stash->{rest}={data=>\@trial_related_stock};
@@ -1514,7 +1510,7 @@ sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') A
 
     my@progenies =();
     while(my($cvterm_name, $stock_id, $stock_name) = $h->fetchrow_array()){
-      push @progenies, [$cvterm_name, $stock_name];
+      push @progenies, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a}];
     }
 
     $c->stash->{rest}={data=>\@progenies};
@@ -1539,7 +1535,7 @@ sub get_group:Chained('/stock/get_stock') PathPart('datatables/group') Args(0){
 
     my @group =();
     while(my($stock_id, $stock_name, $cvterm_name) = $h->fetchrow_array()){
-    push @group, [$stock_name, $cvterm_name];
+    push @group, [qq{<a href = "/stock/$stock_id/view">$stock_name</a}, $cvterm_name];
     }
 
     $c->stash->{rest}={data=>\@group};
