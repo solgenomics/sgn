@@ -40,6 +40,8 @@ use Carp;
 use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
 use CXGN::Cross;
+use JSON;
+use Tie::UrlEncoder; our(%urlencode);
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -766,9 +768,20 @@ sub create_cross_wishlist : Path('/ajax/cross/create_cross_wishlist') : ActionCl
 
 sub create_cross_wishlist_POST : Args(0) {
     my ($self, $c) = @_;
-    my $data = $c->req->params;
-    print STDERR Dumper $data;
-    $c->stash->{rest} = { success => 1 };
+    my $data = decode_json $c->req->param('crosses');
+    #print STDERR Dumper $data;
+    my $dir = $c->tempfiles_subdir('/download');
+    my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
+    my $tempfile = $c->config->{basepath}."/".$rel_file.".tsv";
+    my @header = ('Female Accession', 'Male Accession', 'Priority');
+    open(my $F, ">", $tempfile) || die "Can't open file ".$tempfile;
+        print $F join "\t", @header;
+        print $F "\n";
+        foreach (@$data){
+            print $F $_->{female_id}."\t".$_->{male_id}."\t".$_->{priority}."\n";
+        }
+    close($F);
+    $c->stash->{rest} = { filename => $urlencode{$rel_file.".tsv"} };
 }
 
 ###
