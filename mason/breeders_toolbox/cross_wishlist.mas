@@ -213,6 +213,12 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
+                if (response.success){
+                    alert(response.success);
+                }
+                if (response.error){
+                    alert(response.error);
+                }
                 window.location.href = "/download/"+response.filename;
             },
             error: function(response) {
