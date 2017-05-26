@@ -143,6 +143,7 @@ sub parse {
     my $timestamp_included = shift;
     my $data_level = shift;
     my $schema = shift;
+    my $composable_cvterm_format = shift // 'extended';
     my %parse_result;
     my @file_lines;
     my $delimiter = ',';
@@ -209,12 +210,17 @@ sub parse {
                 if ($num_predef_col > 0) {
                     my @component_cvterm_ids;
                     for my $predef_col ($num_fixed_col .. $num_col_before_traits-1) {
-                        my $component_term = $worksheet->get_cell($row, $predef_col)->value();
-                        #print STDERR $component_term."\n";
-                        my $component_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $component_term)->cvterm_id();
-                        push @component_cvterm_ids, $component_cvterm_id;
+                        if ($worksheet->get_cell($row,$predef_col)){
+                            my $component_term = $worksheet->get_cell($row, $predef_col)->value();
+                            #print STDERR $component_term."\n";
+                            my $component_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $component_term)->cvterm_id();
+                            push @component_cvterm_ids, $component_cvterm_id;
+                        }
                     }
-                    $trait_name = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@component_cvterm_ids)->name();
+                    my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
+                    push @component_cvterm_ids, $trait_cvterm_id;
+                    my $trait_name_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@component_cvterm_ids);
+                    $trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $trait_name_cvterm_id, $composable_cvterm_format);
                 }
 
                 $traits_seen{$trait_name} = 1;

@@ -6,13 +6,30 @@ $method_select => undef
 $unit_select => undef
 $trait_select => undef
 $composable_cvs => undef
-$allowed_combinations => undef
+$composable_cvs_allowed_combinations => undef
+$composable_tod_root_cvterm => undef
+$composable_toy_root_cvterm => undef
+$composable_gen_root_cvterm => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => ['CXGN.BreederSearch', 'CXGN.ComposeTrait'] &>
 
 <& /page/page_title.mas, title=>"Compose a new trait" &>
 </br>
+
+<div class="panel panel-default">
+    <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse0">
+        <div class="panel-title"><a href="#form" class="accordion-toggle">Trait Combinations</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
+    </div>
+    <div id="collapse0" class="panel-collapse collapse in">
+        <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
+            <div class="col-sm-12 col-md-12 col-lg-12">
+                <div id="cv_combination_allowed_select_div">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="panel panel-default">
   <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse1">
@@ -182,9 +199,6 @@ if (trait_html) {
     jQuery("#trait_div").show();
 }
 
-console.log("composable cvs are "+'<% $composable_cvs %>');
-create_multi_selects('<% $composable_cvs %>');
-
 addToListMenu('existing_traits_to_list', 'existing_traits', {
   selectText: true,
   listType: 'traits'
@@ -194,20 +208,20 @@ jQuery(document).on('change','#object_root_select, #attribute_root_select, #meth
 var cv_id = jQuery(this).val();
 var name = jQuery(this).attr('name');
 name = name.replace('_root_select', '');
-get_select_box('trait_components', name +'_select_div', { 'id' : name +'_select', 'name': name +'_select', 'multiple': 'true', 'cv_id': cv_id });
+get_select_box('trait_components', name +'_select_div', { 'id' : name +'_select', 'name': name +'_select', 'multiple': 'true', 'cv_id': cv_id, 'size':'10' });
 });
 
 jQuery(document).on('change','#object_select, #attribute_select, #method_select, #unit_select, #trait_select, #tod_select, #toy_select, #gen_select', function() { // retrieve matching traits each time component selection changes
   if (jQuery(this).attr('name') == 'trait_select') {
     //console.log("trait select changed");
-    clearAllOptions(document.getElementById('object_select'));
-    clearAllOptions(document.getElementById('attribute_select'));
-    clearAllOptions(document.getElementById('method_select'));
-    clearAllOptions(document.getElementById('unit_select'));
+    //clearAllOptions(document.getElementById('object_select'));
+    //clearAllOptions(document.getElementById('attribute_select'));
+    //clearAllOptions(document.getElementById('method_select'));
+    //clearAllOptions(document.getElementById('unit_select'));
   }
   else if ((jQuery(this).attr('name') == 'object_select') || (jQuery(this).attr('name') == 'attribute_select') || (jQuery(this).attr('name') == 'method_select') || (jQuery(this).attr('name') == 'unit_select')) {
     //console.log("component select changed");
-    clearAllOptions(document.getElementById('trait_select'));
+    //clearAllOptions(document.getElementById('trait_select'));
   }
   display_matching_traits();
 });
@@ -246,29 +260,30 @@ jQuery('#compose_trait').on('click', function () {
     disable_ui();
     //console.log("just disabled ui");
 var new_traits = jQuery("#new_traits").val();
-var new_trait_names = [];
+var new_trait_names = {};
 jQuery("#new_traits option:selected").each(function () {
    if (jQuery(this).length) {
-    new_trait_names.push(jQuery(this).text());
+        new_trait_names[jQuery.trim(jQuery(this).text())] = jQuery(this).val();
    }
 });
-//console.log("new trait names = "+new_trait_names);
+//console.log(new_trait_names);
 var successes = [];
 var errors = [];
 var names = [];
-for (var i = 0; i < new_traits.length; i++) {
-  var component_ids = new_traits[i];
     jQuery.ajax( {
-      url: '/ajax/onto/compose',
+      url: '/ajax/onto/store_composed_term',
       timeout: 60000,
       async: false,
       method: 'POST',
-      data: {'ids': component_ids},
+      data: {'new_trait_names': JSON.stringify(new_trait_names)},
       success: function(response) {
       if (response.success) {
+        //console.log(response);
         successes.push("<li class='list-group-item list-group-item-success'>"+response.success+"</li>");
-        //console.log("Name is "+response.name);
-        names.push(response.name+"\n");
+        //console.log("Names are "+response.names);
+        for(var i=0; i<response.names.length; i++){
+            names.push(response.names[i]+"\n");
+        }
         return;
       }
       else {
@@ -281,7 +296,6 @@ for (var i = 0; i < new_traits.length; i++) {
         return;
       }
     });
-}
 // display results
 var results_html = '';
 if (successes.length > 0) {
@@ -301,6 +315,82 @@ addToListMenu('results_to_list_menu', 'new_trait_names', {
 });
 enable_ui();
 jQuery('#traits_saved_dialog').modal("show");
+});
+
+function create_multi_selects(allowed_names) {
+    jQuery('#compose_trait').prop('disabled', true);
+    jQuery('#tod_div').hide();
+    jQuery('#toy_div').hide();
+    jQuery('#gen_div').hide();
+    jQuery('#object_div').hide();
+    jQuery('#trait_div').hide();
+    jQuery('#attribute_div').hide();
+    jQuery('#unit_div').hide();
+    jQuery('#method_div').hide();
+    jQuery('#tod_select').val([]);
+    jQuery('#toy_select').val([]);
+    jQuery('#gen_select').val([]);
+    jQuery('#object_select').val([]);
+    jQuery('#trait_select').val([]);
+    jQuery('#attribute_select').val([]);
+    jQuery('#unit_select').val([]);
+    jQuery('#method_select').val([]);
+    console.log(allowed_names);
+    for(i = 0; i < allowed_names.length; i++){
+        var cv_name = allowed_names[i];
+        var name = cv_name.trim();
+
+        switch (name) {
+            case "object":
+                jQuery('#object_div').show();
+                break;
+            case "trait":
+                jQuery('#trait_div').show();
+                break;
+            case "attribute":
+                jQuery('#attribute_div').show();
+                break;
+            case "unit":
+                jQuery('#unit_div').show();
+                break;
+            case "method":
+                jQuery('#method_div').show();
+                break;
+            case "time":
+                jQuery("#tod_div,#toy_div,#gen_div").show();
+                get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_tod_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                get_select_box('ontology_children', 'toy_select_div', { 'selectbox_id' : 'toy_select', 'selectbox_name': 'toy_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_toy_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                get_select_box('ontology_children', 'gen_select_div', { 'selectbox_id' : 'gen_select', 'selectbox_name': 'gen_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_gen_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                break;
+            case "tod":
+                jQuery("#tod_div").show();
+                get_select_box('ontology_children', 'tod_select_div', { 'selectbox_id' : 'tod_select', 'selectbox_name': 'tod_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_tod_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                break;
+            case "toy":
+                jQuery("#toy_div").show();
+                get_select_box('ontology_children', 'toy_select_div', { 'selectbox_id' : 'toy_select', 'selectbox_name': 'toy_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_toy_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                break;
+            case "gen":
+                jQuery("#gen_div").show();
+                get_select_box('ontology_children', 'gen_select_div', { 'selectbox_id' : 'gen_select', 'selectbox_name': 'gen_select', 'multiple': 'true', 'parent_node_cvterm': '<% $composable_gen_root_cvterm %>', 'rel_cvterm': 'is_a', 'rel_cv': 'relationship' });
+                break;
+            default:
+                if (window.console) console.log("Did not recognize "+name+" category");
+        }
+    }
+}
+
+jQuery(document).ready(function() {
+    get_select_box('composable_cvs_allowed_combinations', 'cv_combination_allowed_select_div', { 'id' : 'cv_combination_allowed_select', 'name' : 'cv_combination_allowed_select' });
+    jQuery(document).on('change', '#cv_combination_allowed_select', function(){
+        var names = jQuery('#cv_combination_allowed_select').val();
+        var allowed_names = names.split('+');
+        create_multi_selects(allowed_names);
+    });
+    var allowed_combinations = '<% $composable_cvs_allowed_combinations %>';
+    var allowed_combo = allowed_combinations.split(',');
+    var allowed_combo_first = allowed_combo[0].split('|');
+    create_multi_selects(allowed_combo_first[1].split('+'));
 });
 
 </script>

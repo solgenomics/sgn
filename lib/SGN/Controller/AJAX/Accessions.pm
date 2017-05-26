@@ -187,7 +187,7 @@ sub verify_fuzzy_options_POST : Args(0) {
         }
     }
 
-    my @names_to_add = keys %names_to_add;
+    my @names_to_add = sort keys %names_to_add;
     my $rest = {
         success => "1",
         names_to_add => \@names_to_add
@@ -216,7 +216,7 @@ sub add_accession_list_POST : Args(0) {
   my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
   if (!$c->user()) {
-    $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
+    $c->stash->{rest} = {error => "You need to be logged in to submit accessions." };
     return;
   }
 
@@ -224,7 +224,7 @@ sub add_accession_list_POST : Args(0) {
   $owner_name = $c->user()->get_object()->get_username();
 
   if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to submit accessions." };
     return;
   }
 
@@ -250,12 +250,14 @@ sub fuzzy_response_download : Path('/ajax/accession_list/fuzzy_download') : Acti
 
 sub fuzzy_response_download_POST : Args(0) {
     my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $fuzzy_json = $c->req->param('fuzzy_response');
     my $fuzzy_response = decode_json $fuzzy_json;
     #print STDERR Dumper $fuzzy_response;
 
+    my $synonym_hash_lookup = CXGN::Stock::StockLookup->new({schema => $schema})->get_synonym_hash_lookup();
     my @data_out;
-    push @data_out, ['In Your List', 'Database Accession Match', 'Database Synonym Match', 'Distance'];
+    push @data_out, ['In Your List', 'Database Accession Match', 'Database Synonym Match', 'Database Saved Synonyms of Accession Match', 'Distance'];
     foreach (@$fuzzy_response){
         my $matches = $_->{matches};
         my $name = $_->{name};
@@ -267,7 +269,9 @@ sub fuzzy_response_download_POST : Args(0) {
                 $match_name = $m->{synonym_of};
                 $synonym_of = $m->{name};
             }
-            push @data_out, [$name, $match_name, $synonym_of, $distance];
+            my $synonyms = $synonym_hash_lookup->{$match_name};
+            my $synonyms_string = $synonyms ? join ',', @$synonyms : '';
+            push @data_out, [$name, $match_name, $synonym_of, $synonyms_string, $distance];
         }
     }
     my $string ='';
