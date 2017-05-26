@@ -420,7 +420,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 ok(!$verified_error);
-my $stored_phenotype_error_msg = $store_phenotypes->store();
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -548,7 +548,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 #print STDERR Dumper $verified_error;
 ok(!$verified_error);
-$stored_phenotype_error_msg = $store_phenotypes->store();
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
 my $traits_assayed  = $tn->get_traits_assayed();
@@ -875,7 +875,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 my $validate_phenotype_error_msg = $store_phenotypes->verify();
 #print STDERR Dumper $validate_phenotype_error_msg;
 
-$stored_phenotype_error_msg = $store_phenotypes->store();
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store fieldbook works");
 my $image = SGN::Image->new( $f->dbh, undef, $f );
 my $image_error = $image->upload_fieldbook_zipfile('t/data/fieldbook/photos.zip', $user_id);
@@ -1309,7 +1309,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 #print STDERR Dumper $verified_error;
 ok(!$verified_error);
-$stored_phenotype_error_msg = $store_phenotypes->store();
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store fieldbook works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -1980,7 +1980,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 ok(!$verified_error);
-$stored_phenotype_error_msg = $store_phenotypes->store();
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store large pheno spreadsheet works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -2545,7 +2545,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 ok(!$verified_error);
-$stored_phenotype_error_msg = $store_phenotypes->store();
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store large pheno spreadsheet works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -2893,7 +2893,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 ok(!$verified_error);
-$stored_phenotype_error_msg = $store_phenotypes->store();
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store fieldbook plants works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),

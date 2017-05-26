@@ -284,7 +284,7 @@ project.project_id=? ) );");
         metadata_hash=>\%phenotype_metadata,
     );
 
-    my $store_error = $store_phenotypes->store();
+    my ($store_error, $store_success) = $store_phenotypes->store();
     if ($store_error) {
         $c->stash->{rest} = {error => $store_error};
     }
@@ -400,7 +400,7 @@ sub store_generated_plot_phenotypes : Path('/ajax/breeders/trial/store_generated
             overwrite_values=>$overwrite,
             metadata_hash=>\%phenotype_metadata,
         );
-        my $store_error = $store_phenotypes->store();
+        my ($store_error, $store_success) = $store_phenotypes->store();
         if ($store_error) {
             $c->stash->{rest} = {error => $store_error};
         }

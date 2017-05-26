@@ -178,4 +178,11 @@ protocol_property	published date	From BrAPI	03/27/2017	nm529	00076
 protocol_property	protocol type	From BrAPI	03/27/2017	nm529	00076	
 protocol_property	protocol unit	From BrAPI	03/27/2017	nm529	00076	
 protocol_property	protocol comment	From BrAPI	03/27/2017	nm529	00076	
+composable_cvs	trait_ontology		05/01/2017		00073	
+composable_cvs	composed_trait_ontology		05/01/2017		00073	
+composable_cvs	object_ontology		05/01/2017		00073	
+composable_cvs	attribute_ontology		05/01/2017		00073	
+composable_cvs	method_ontology		05/01/2017		00073	
+composable_cvs	unit_ontology		05/01/2017		00073	
+composable_cvs	time_ontology		05/01/2017		00073	
 project_design? 						suggested to move the trial design names from projectprop.value to projectprop.type_id
