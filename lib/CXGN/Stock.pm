@@ -145,7 +145,7 @@ sub store {
         $self->type_id($type_id);
     }
 
-    if (!$stock) {
+    if (!$stock) { #Trying to create a new stock
         if (!$exists) {
 
             my $new_row = $self->schema()->resultset("Stock::Stock")->create({
@@ -163,6 +163,7 @@ sub store {
             $self->stock($new_row);
 
             if ($self->organization_name){
+                print STDERR Dumper $self->organization_name();
                 $self->_store_organization();
             }
             if ($self->population_name){

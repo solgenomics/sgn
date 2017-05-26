@@ -74,7 +74,7 @@ $seedlots => []
 
     jQuery.ajax( { 
       url: '/ajax/breeders/seedlot-create',
-      data : { 'seedlot_name' : name, 'seedlot_location': location, 'seedlot_accession_id': accession_id, 'seedlot_organization': organization, 'population_name': population_name },
+      data : { 'seedlot_name' : name, 'seedlot_location': location, 'seedlot_accession_id': accession_id, 'seedlot_organization': organization, 'seedlot_population_name': population_name },
       success: function(response) { 
         if (response.success == 1) { 
            alert("The seedlot has been created.");

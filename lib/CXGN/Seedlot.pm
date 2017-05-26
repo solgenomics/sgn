@@ -138,20 +138,22 @@ sub BUILDARGS {
 sub BUILD {
     my $self = shift;
 
-    if ($self->seedlot_id()) { 
-	$self->name($self->uniquename());
-	$self->location_code($self->description());
-	$self->seedlot_id($self->stock_id());
-	$self->_retrieve_accessions();
-	$self->_retrieve_organizations();
-	$self->_retrieve_population();
+    if ($self->seedlot_id()) {
+         print STDERR Dumper $self->seedlot_id;
+	#$self->name($self->uniquename());
+	#$self->location_code($self->description());
+	#$self->seedlot_id($self->stock_id());
+	#$self->_retrieve_accessions();
+	#$self->_retrieve_organizations();
+	#$self->_retrieve_population();
 	#$self->cross($self->_retrieve_cross());
 
-	my $transactions = CXGN::Seedlot::Transaction->get_transactions_by_seedlot_id(
-	    $self->schema(), $self->seedlot_id());
-	print STDERR Dumper($transactions);
-	$self->transactions($transactions);
+	#my $transactions = CXGN::Seedlot::Transaction->get_transactions_by_seedlot_id(
+	#    $self->schema(), $self->seedlot_id());
+	#print STDERR Dumper($transactions);
+	#$self->transactions($transactions);
     }
+    print STDERR Dumper $self->seedlot_id;
 }
 
 
@@ -175,7 +177,7 @@ sub _remove_cross {
     
 }
 
-sub _store_accession_relationships {
+sub _store_seedlot_relationships {
     my $self = shift;
 
     foreach my $a (@{$self->accession_stock_ids()}) { 
@@ -192,7 +194,7 @@ sub _store_accession_relationships {
         my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
 
         foreach my $a (@{$self->accession_stock_ids()}) { 
-            my $already_exists = $self->schema()->resultset("Stock::StockRelationship")->find( { object_id => $self->seedlot_id(), type_id => $type_id });
+            my $already_exists = $self->schema()->resultset("Stock::StockRelationship")->find({ object_id => $self->seedlot_id(), type_id => $type_id, subject_id=>$a });
 
             if ($already_exists) { 
                 print STDERR "Accession with id $a is already associated with seedlot id ".$self->seedlot_id()."\n";
@@ -296,7 +298,7 @@ sub store {
     print STDERR "Saving seedlot returned ID $id.\n";
     $self->seedlot_id($id);
 
-    $self->_store_accession_relationships();
+    $self->_store_seedlot_relationships();
 
     foreach my $t (@{$self->transactions()}) { 
 	

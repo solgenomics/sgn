@@ -14,11 +14,11 @@ $population_name
 <& /page/page_title.mas, title => 'Seedlot '.$uniquename &>
 
 <table class="table table-bordered table-hover">
-<tr><td><b>Name</b></td><td><% $uniquename %></td></tr>
+<tr><td><b>Name</b></td><td><% $seedlot_id %> <% $uniquename %></td></tr>
 <tr><td><b>Organization</b></td><td><% $organization_name %></td></tr>
 <tr><td><b>Location Code</b><td><% $location_code %></td></tr>
 <tr><td><b>Accession</b></td><td><% $accessions %></td></tr>
-<tr><td><b>Population</b></td><td><% %></td></tr>
+<tr><td><b>Population</b></td><td><% $population_name %></td></tr>
 <tr><td><b>Current count</b></td><td><% $current_count %></td></tr>
 </table>
 
@@ -45,7 +45,7 @@ $population_name
   jQuery(document).ready(function () {
   
     jQuery('#trial_summary_data').DataTable( { 
-      'ajax': '/ajax/breeders/seedlot/<% $seedlot_id %>',
+      'ajax': '/ajax/breeders/seedlot/<% $seedlot_id %>/transactions',
     });
   });
 </script>
