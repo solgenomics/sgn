@@ -20,7 +20,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
     image_zipfile_path=>$image_zip
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
-my $stored_phenotype_error = $store_phenotypes->store();
+my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->store();
 
 =head1 DESCRIPTION
 

@@ -368,7 +368,7 @@ sub update_plot_phenotype_POST : Args(0) {
     $c->detach;
   }
 
-  my $store_error = $store_phenotypes->store();
+  my ($store_error, $store_success) = $store_phenotypes->store();
   if ($store_error) {
       $c->stash->{rest} = {error => $store_error};
       $c->detach;

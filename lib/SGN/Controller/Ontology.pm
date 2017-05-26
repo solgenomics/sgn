@@ -101,7 +101,10 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
     $c->stash->{trait_select} = $html_hash{'trait_ontology'};
 
     $c->stash->{composable_cvs} = $c->config->{composable_cvs};
-    $c->stash->{allowed_combinations} = $c->config->{allowed_combinations};
+    $c->stash->{composable_cvs_allowed_combinations} = $c->config->{composable_cvs_allowed_combinations};
+    $c->stash->{composable_tod_root_cvterm} = $c->config->{composable_tod_root_cvterm};
+    $c->stash->{composable_toy_root_cvterm} = $c->config->{composable_toy_root_cvterm};
+    $c->stash->{composable_gen_root_cvterm} = $c->config->{composable_gen_root_cvterm};
 
     $c->stash->{user} = $c->user();
     $c->stash->{template} = '/ontology/compose_trait.mas';
