@@ -15,11 +15,11 @@ has 'transaction_id' => ( isa => 'Int',
 			  predicate => 'has_transaction_id',
     );
 
-has 'seedlot_id' =>  ( isa => 'Int',
+has 'from_stock' =>  ( isa => 'ArrayRef',
 		       is => 'rw',
     );
 
-has 'source_id' => (isa => 'Int',
+has 'to_stock' => (isa => 'ArrayRef',
 				is => 'rw',
     );
 
@@ -50,10 +50,10 @@ sub BUILD {
     
     if ($self->transaction_id()) { 
 	my $row = $self->schema()->resultset("Stock::StockRelationship")
-	    ->find( { stock_relationship_id => $self->transaction_id() } );
+	    ->find( { stock_relationship_id => $self->transaction_id() }, { join => ['subject', 'object'], '+select' => ['subject.uniquename', 'object.uniquename'], '+as' => ['subject_uniquename', 'object_uniquename'] } );
 
-	$self->seedlot_id($row->subject_id());
-	$self->source_id($row->object_id());
+	$self->from_stock([$row->object_id(), $row->get_column('object_uniquename')]);
+	$self->to_stock([$row->subject_id(), $row->get_column('subject_uniquename')]);
 	my $data = JSON::Any->decode($row->value());
 	$self->amount($data->{amount});
 	$self->timestamp($data->{timestamp});
@@ -68,7 +68,7 @@ sub get_transactions_by_seedlot_id {
     my $schema = shift;
     my $seedlot_id = shift;
 
-    print STDERR "Get transactions by seedlot...\n";
+    print STDERR "Get transactions by seedlot...$seedlot_id\n";
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seed transaction", "stock_relationship")->cvterm_id();
     my $rs = $schema->resultset("Stock::StockRelationship")->search({ subject_id => $seedlot_id , type_id => $type_id });
     print STDERR "Found ".$rs->count()." transactions...\n";    
@@ -93,41 +93,36 @@ sub get_transactions_by_seedlot_id {
 }
 
 sub store { 
-    my $self = shift;
-    
+    my $self = shift;    
     my $transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seed transaction", "stock_relationship")->cvterm_id();
 
-    if (!$self->has_transaction_id()) { 
-	
-	my $row = $self->schema()->resultset("Stock::StockRelationship")
-	    ->find( 
-	    {
-		object_id => $self->source_id(),
-		subject_id => $self->seedlot_id(),
-		type_id => $transaction_type_id,
-	    });
+    if (!$self->has_transaction_id()) {
+        my $row = $self->schema()->resultset("Stock::StockRelationship")
+            ->find({
+                object_id => $self->from_stock()->[0],
+                subject_id => $self->to_stock()->[0],
+                type_id => $transaction_type_id,
+            });
 
-	my $new_rank = 0;
-	if ($row) { 
-	    $new_rank = $row->rank()+1;
-	}
-	
-	$row = $self->schema()->resultset("Stock::StockRelationship")
-	    ->create( 
-	    { 
-		object_id => $self->source_id() ,
-		subject_id => $self->seedlot_id(),
-		type_id => $transaction_type_id,
-		rank => $new_rank,
-		value => JSON::Any->encode( 
-		    { 
-			amount => $self->amount(),
-			timestamp => $self->timestamp(),
-			operator => $self->operator(),
-            description => $self->description()
-		    }),
-	    });
-	return $row->stock_relationship_id();
+        my $new_rank = 0;
+        if ($row) { 
+            $new_rank = $row->rank()+1;
+        }
+
+        $row = $self->schema()->resultset("Stock::StockRelationship")
+            ->create({
+                object_id => $self->from_stock()->[0],
+                subject_id => $self->to_stock()->[0],
+                type_id => $transaction_type_id,
+                rank => $new_rank,
+                value => JSON::Any->encode({
+                    amount => $self->amount(),
+                    timestamp => $self->timestamp(),
+                    operator => $self->operator(),
+                    description => $self->description()
+                }),
+            });
+        return $row->stock_relationship_id();
     }
     
     else { 

@@ -24,7 +24,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), "seedlot", "stock_property");
     my @seedlots;
     foreach my $sl (@$list) { 
-	my $sl_obj = CXGN::Seedlot->new(schema => $c->dbic_schema("Bio::Chado::Schema"), $sl->[0]);
+	my $sl_obj = CXGN::Seedlot->new(schema => $c->dbic_schema("Bio::Chado::Schema"), seedlot_id=>$sl->[0]);
 	push @seedlots, [ '<a href="/breeders/seedlot/'.$sl->[0].'">'.$sl->[1].'</a>', $sl->[2], $sl_obj->current_count() ];
     }
 
@@ -63,29 +63,45 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
 sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $self = shift;
     my $c = shift;
-
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $uniquename = $c->req->param("seedlot_name");
     my $location_code = $c->req->param("seedlot_location");
-    my $accession_id = $c->req->param("seedlot_accession_id");
+    my $accession_uniquename = $c->req->param("seedlot_accession_uniquename");
+    my $accession_id = $schema->resultset('Stock::Stock')->find({uniquename=>$accession_uniquename})->stock_id();
     my $population_name = $c->req->param("seedlot_population_name");
     my $organization = $c->req->param("seedlot_organization");
+    my $amount = $c->req->param("seedlot_amount");
+    my $timestamp = $c->req->param("seedlot_timestamp");
+    my $description = $c->req->param("seedlot_description");
 
+    my $operator;
+    if ($c->user) {
+        $operator = $c->user->get_object->get_username;
+    }
 
     print STDERR "Creating new Seedlot $uniquename\n";
     my $seedlot_id;
 
     eval { 
-        my $sl = CXGN::Seedlot->new(schema => $c->dbic_schema("Bio::Chado::Schema"));
+        my $sl = CXGN::Seedlot->new(schema => $schema);
         $sl->uniquename($uniquename);
         $sl->location_code($location_code);
         $sl->accession_stock_ids([$accession_id]);
         $sl->organization_name($organization);
         $sl->population_name($population_name);
-
         #TO DO
         #$sl->cross_id($cross_id);
-
         $seedlot_id = $sl->store();
+
+        my $transaction = CXGN::Seedlot::Transaction->new(schema => $schema);
+        $transaction->factor(1);
+        $transaction->from_stock([$accession_id, $accession_uniquename]);
+        $transaction->to_stock([$seedlot_id, $uniquename]);
+        $transaction->amount($amount);
+        $transaction->timestamp($timestamp);
+        $transaction->description($description);
+        $transaction->operator($operator);
+        $transaction->store();
     };
 
     if ($@) { 
@@ -102,10 +118,17 @@ sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions')
     my $c = shift;
     
     my $transactions = $c->stash->{seedlot}->transactions();
-    print STDERR Dumper $transactions;
+    #print STDERR Dumper $transactions;
     my @transactions;
-    foreach my $t (@$transactions) { 
-	push @transactions, [ $t->transaction_id(), $t->seedlot_id, $t->source_id, $t->amount() ];
+    foreach my $t (@$transactions) {
+        my $value_field = '';
+        if ($t->factor == 1){
+            $value_field = '<span style="color:green">+'.$t->factor()*$t->amount().'</span>';
+        }
+        if ($t->factor == -1){
+            $value_field = '<span style="color:red">'.$t->factor()*$t->amount().'</span>';
+        }
+        push @transactions, [ $t->transaction_id(), $t->timestamp(), '<a href="/stock/'.$t->from_stock()->[0].'/view" >'.$t->from_stock()->[1].'</a>', '<a href="/stock/'.$t->to_stock()->[0].'/view" >'.$t->to_stock()->[1].'</a>', $value_field, $t->operator, $t->description() ];
     }
 
     $c->stash->{rest} = { data => \@transactions };
@@ -116,16 +139,32 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     my $self = shift;
     my $c = shift;
 
-    my $source_id = $c->req->param("source_id");
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to add a seedlot transaction!'};
+        $c->detach();
+    }
+
+    my $stock_uniquename = $c->req->param("stock_uniquename");
+    my $stock_id = $c->stash->{schema}->resultset('Stock::Stock')->find({uniquename=>$stock_uniquename})->stock_id();
     my $amount = $c->req->param("amount");
     my $timestamp = $c->req->param("timestamp");
     my $description = $c->req->param("description");
+    my $factor = $c->req->param("factor");
     my $transaction = CXGN::Seedlot::Transaction->new(schema => $c->stash->{schema});
-    $transaction->source_id($source_id);
-    $transaction->seedlot_id($c->stash->{seedlot_id});
+    $transaction->factor($factor);
+    if ($factor == 1){
+        $transaction->from_stock([$stock_id, $stock_uniquename]);
+        $transaction->to_stock([$c->stash->{seedlot_id}, $c->stash->{uniquename}]);
+    } elsif ($factor == -1){
+        $transaction->to_stock([$stock_id, $stock_uniquename]);
+        $transaction->from_stock([$c->stash->{seedlot_id}, $c->stash->{uniquename}]);
+    } else {
+        die "factor not specified!\n";
+    }
     $transaction->amount($amount);
     $transaction->timestamp($timestamp);
     $transaction->description($description);
+    $transaction->operator($c->user->get_object->get_username);
 
     my $transaction_id = $transaction->store();
     

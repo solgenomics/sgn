@@ -11,6 +11,7 @@ sub seedlots :Path('/breeders/seedlots') :Args(0) {
     my $self = shift;
     my $c = shift;
 
+    $c->stash->{timestamp} = localtime();
     $c->stash->{template} = '/breeders_toolbox/seedlots.mas';
 
 }
@@ -36,6 +37,8 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     $c->stash->{organization_name} = $sl->organization_name();
     $c->stash->{population_name} = $sl->population_name();
     $c->stash->{accessions} = $accessions_html;
+    $c->stash->{current_count} = $sl->current_count();
+    $c->stash->{timestamp} = localtime();
     $c->stash->{template} = '/breeders_toolbox/seedlot_details.mas';
 }
 

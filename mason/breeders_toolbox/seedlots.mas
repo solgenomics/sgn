@@ -1,6 +1,6 @@
 
 <%args>
-$seedlots => []
+$timestamp
 </%args>
 
 <& /page/page_title.mas, title=>"Available Seedlots" &>
@@ -32,7 +32,6 @@ $seedlots => []
 </script>
 
 <button class="btn btn-primary" id="add_seedlot_button">Add new seedlot</button>
-<button class="btn btn-primary" id="add_seedlot_transaction_button">Add new seedlot transaction</button>
 
 <div class="modal fade" id="add_seedlot_dialog" name="add_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_dialog">
   <div class="modal-dialog" role="document">
@@ -43,14 +42,57 @@ $seedlots => []
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-	  <table cellspacing="10">
-	  <tr><td>Name</td><td> <input class="form-control" id="seedlot_name"></td></tr>
-	  <tr><td>Location</td><td><input class="form-control" id="seedlot_location"></td></tr>
-	  <tr><td>Accession</td><td><input class="form-control" id="seedlot_accession_id"></td></tr>
-	  <tr><td>Population</td><td><input class="form-control" id="seedlot_population_name"></td></tr>
-	  <tr><td>Organization</td><td><input class="form-control" id="seedlot_organization"></td></tr>
-	  </table>
-	  
+            <form class="form-horizontal" role="form" method="post" id="create_new_seedlot_form" name="create_new_seedlot_form">
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Name: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_name">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Location: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_location">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Accession Uniquename: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_accession_uniquename">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Population: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_population_name">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Organization: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_organization">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Amount (number of seeds): </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_amount">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Timestamp: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_timestamp" value="<% $timestamp %>">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Description: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_description">
+                    </div>
+                </div>
+            </form>
         </div>
       </div>
       <div class="modal-footer">
@@ -60,22 +102,28 @@ $seedlots => []
   </div>
 </div>
 
-
 <script>
   jQuery('#add_seedlot_button').click( function() { jQuery('#add_seedlot_dialog').modal('show') });
 
   jQuery('#create_new_seedlot_button').click( function() { 
     var name = jQuery('#seedlot_name').val();
     var location = jQuery('#seedlot_location').val();
-    var accession_id = jQuery('#seedlot_accession_id').val();
+    var accession_uniquename = jQuery('#seedlot_accession_uniquename').val();
     var population_name = jQuery('#seedlot_population_name').val();
     var organization = jQuery('#seedlot_organization').val();
+    var amount = jQuery('#seedlot_amount').val();
+    var timestamp = jQuery('#seedlot_timestamp').val();
+    var description = jQuery('#seedlot_description').val();
 
     if (name == '') { alert("Please provide a name"); }
+    else if (location == '') { alert("Please provide a location"); }
+    else if (amount == '') { alert("Please provide an amount"); }
+    else if (accession_uniquename == '') { alert("Please provide an accession name"); }
+    else {
 
     jQuery.ajax( { 
       url: '/ajax/breeders/seedlot-create',
-      data : { 'seedlot_name' : name, 'seedlot_location': location, 'seedlot_accession_id': accession_id, 'seedlot_organization': organization, 'seedlot_population_name': population_name },
+      data : { 'seedlot_name' : name, 'seedlot_location': location, 'seedlot_accession_uniquename': accession_uniquename, 'seedlot_organization': organization, 'seedlot_population_name': population_name, 'seedlot_amount':amount, 'seedlot_timestamp':timestamp, 'seedlot_description':description },
       success: function(response) { 
         if (response.success == 1) { 
            alert("The seedlot has been created.");
@@ -85,7 +133,8 @@ $seedlots => []
         }
       }
      });
+
+    }
   });
-    
-  
+
 </script>
