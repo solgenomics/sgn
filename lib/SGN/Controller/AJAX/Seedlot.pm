@@ -63,6 +63,10 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
 sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $self = shift;
     my $c = shift;
+    if (!$c->user){
+        $c->stash->{rest} = {error=>'You must be logged in to add a seedlot transaction!'};
+        $c->detach();
+    }
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $uniquename = $c->req->param("seedlot_name");
     my $location_code = $c->req->param("seedlot_location");

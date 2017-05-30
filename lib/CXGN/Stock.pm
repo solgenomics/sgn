@@ -639,7 +639,7 @@ sub _retrieve_population {
         die "More than one population saved for this stock!\n";
     }
     elsif ($rs->count == 0) {
-        die "No population saved for this stock!\n";
+        print STDERR "No population saved for this stock!\n";
     }
 }
 

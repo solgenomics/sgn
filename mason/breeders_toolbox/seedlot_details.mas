@@ -45,7 +45,7 @@ $timestamp
 <button class="btn btn-primary" id="add_seedlot_transaction_button">Add new seedlot transaction</button>
 
 <div class="modal fade" id="add_seedlot_transaction_dialog" name="add_seedlot_transaction_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_transaction_dialog">
-  <div class="modal-dialog" role="document">
+  <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -59,40 +59,40 @@ $timestamp
                     <label class="col-sm-3 control-label">To or From Seedlot?: </label>
                     <div class="col-sm-9" >
                         <select class="form-control" id="seedlot_transaction_factor">
-                            <option value="1">Added to Seedlot</option>
-                            <option value="-1">Taken from Seedlot</option>
+                            <option value="1">Added to this Seedlot (<% $uniquename %>)</option>
+                            <option value="-1">Taken from this Seedlot (<% $uniquename %>)</option>
                         </select>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Transaction to Stock Uniquename: </label>
+                    <label class="col-sm-3 control-label">Taken From/ Added To Stock Uniquename:</label>
                     <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_transaction_uniquename">
+                        <input class="form-control" id="seedlot_transaction_uniquename" placeholder="Required">
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Amount: </label>
                     <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_transaction_amount">
+                        <input class="form-control" id="seedlot_transaction_amount" placeholder="Required">
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Timestamp: </label>
                     <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_transaction_timestamp" value="<% $timestamp %>">
+                        <input class="form-control" id="seedlot_transaction_timestamp" value="<% $timestamp %>" placeholder="<% $timestamp %>">
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Description: </label>
                     <div class="col-sm-9" >
-                        <input class="form-control" id="seedlot_transaction_description">
+                        <input class="form-control" id="seedlot_transaction_description" placeholder="Required">
                     </div>
                 </div>
             </form>
         </div>
       </div>
       <div class="modal-footer">
-        <button id="create_new_seedlot_transaction_button" type="button" class="btn btn-default" data-dismiss="modal">OK</button>
+        <button id="create_new_seedlot_transaction_button" type="button" class="btn btn-default" >OK</button>
       </div>
     </div>
   </div>
