@@ -177,9 +177,9 @@ if ($verified_warning && !$opt_o) {
 
 print STDERR "Done validating. Now storing\n";
 
-my $stored_phenotype_error = $store_phenotypes->store();
+my ($stored_phenotype_error, $stored_Phenotype_success) = $store_phenotypes->store();
 if ($stored_phenotype_error) {
     die $stored_phenotype_error."\n";
 }
-
+print STDERR $stored_Phenotype_success."\n";
 print STDERR "Script Complete.\n";
