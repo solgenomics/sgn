@@ -27,7 +27,7 @@ $timestamp
 <h3>Transactions</h3>
 </center>
 
-<table id="trial_summary_data" class="table table-hover table-bordered">
+<table id="available_seedlot_transactions_table" class="table table-hover table-bordered">
 <thead>
   <tr>
     <th>Transaction Id</th>
@@ -105,7 +105,7 @@ $timestamp
   
     jQuery('#add_seedlot_transaction_button').click( function() { jQuery('#add_seedlot_transaction_dialog').modal('show') });
 
-    jQuery('#trial_summary_data').DataTable( { 
+    var seedlot_transactions_table = jQuery('#available_seedlot_transactions_table').DataTable( { 
       'ajax': '/ajax/breeders/seedlot/<% $seedlot_id %>/transactions',
     });
 
@@ -129,6 +129,8 @@ $timestamp
         success: function(response) { 
           if (response.success == 1) { 
              alert("The seedlot transaction has been created.");
+             jQuery('#add_seedlot_transaction_dialog').modal('hide');
+             seedlot_transactions_table.ajax.reload();
           }
           if (response.error) { 
              alert(response.error);

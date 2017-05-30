@@ -6,9 +6,9 @@ $timestamp
 <& /page/page_title.mas, title=>"Available Seedlots" &>
 
   
-  <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery.dataTables-bootstrap-min', 'jquery', 'jquery.dataTables' ] &>
+  <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
 
-<table id="trial_summary_data" class="display">
+<table id="available_seedlots_table" class="display">
 <thead>
   <tr>
     <th>Seedlot</th>
@@ -19,17 +19,6 @@ $timestamp
 
 </table>
 
-<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
-
-<script>
-  jQuery(document).ready(function () {
-  
-    jQuery('#trial_summary_data').DataTable( { 
-      'ajax': '/ajax/breeders/seedlots',
-    });
-  });
-
-</script>
 
 <button class="btn btn-primary" id="add_seedlot_button">Add new seedlot</button>
 
@@ -105,6 +94,10 @@ $timestamp
 <script>
 jQuery(document).ready(function(){
 
+    var seedlots_table = jQuery('#available_seedlots_table').DataTable( { 
+      'ajax': '/ajax/breeders/seedlots',
+    });
+
   jQuery('#add_seedlot_button').click( function() { jQuery('#add_seedlot_dialog').modal('show') });
 
   jQuery('#create_new_seedlot_button').click( function() {
@@ -129,6 +122,8 @@ jQuery(document).ready(function(){
       success: function(response) { 
         if (response.success == 1) { 
            alert("The seedlot has been created.");
+           jQuery('#add_seedlot_dialog').modal('hide');
+           seedlots_table.ajax.reload();
         }
         if (response.error) {
            alert(response.error);
