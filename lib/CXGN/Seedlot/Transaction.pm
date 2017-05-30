@@ -32,7 +32,7 @@ has 'operator' => ( isa => 'Maybe[Str]',
 				is => 'rw',
     );
 
-has 'date' => ( isa => 'Maybe[Str]',
+has 'timestamp' => ( isa => 'Maybe[Str]',
 		is => 'rw',
     );
 
@@ -41,6 +41,9 @@ has 'factor' => ( isa => 'Int',
 		  default => 1,
     );
 
+has 'description' => ( isa => 'Maybe[Str]',
+        is => 'rw',
+    );
 
 sub BUILD { 
     my $self = shift;
@@ -53,8 +56,9 @@ sub BUILD {
 	$self->source_id($row->object_id());
 	my $data = JSON::Any->decode($row->value());
 	$self->amount($data->{amount});
-	$self->date($data->{date});
+	$self->timestamp($data->{timestamp});
 	$self->operator($data->{operator});
+	$self->description($data->{description});
     }
 }
 
@@ -118,8 +122,9 @@ sub store {
 		value => JSON::Any->encode( 
 		    { 
 			amount => $self->amount(),
-			date => $self->date(),
+			timestamp => $self->timestamp(),
 			operator => $self->operator(),
+            description => $self->description()
 		    }),
 	    });
 	return $row->stock_relationship_id();

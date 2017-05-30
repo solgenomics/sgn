@@ -140,18 +140,17 @@ sub BUILD {
 
     if ($self->seedlot_id()) {
          print STDERR Dumper $self->seedlot_id;
-	#$self->name($self->uniquename());
-	#$self->location_code($self->description());
-	#$self->seedlot_id($self->stock_id());
-	#$self->_retrieve_accessions();
-	#$self->_retrieve_organizations();
-	#$self->_retrieve_population();
-	#$self->cross($self->_retrieve_cross());
+         $self->name($self->uniquename());
+        $self->location_code($self->description());
+        $self->seedlot_id($self->stock_id());
+        $self->_retrieve_accessions();
+        $self->_retrieve_organizations();
+        $self->_retrieve_population();
+        #$self->cross($self->_retrieve_cross());
 
-	#my $transactions = CXGN::Seedlot::Transaction->get_transactions_by_seedlot_id(
-	#    $self->schema(), $self->seedlot_id());
-	#print STDERR Dumper($transactions);
-	#$self->transactions($transactions);
+        my $transactions = CXGN::Seedlot::Transaction->get_transactions_by_seedlot_id($self->schema(), $self->seedlot_id());
+        #print STDERR Dumper($transactions);
+        $self->transactions($transactions);
     }
     print STDERR Dumper $self->seedlot_id;
 }

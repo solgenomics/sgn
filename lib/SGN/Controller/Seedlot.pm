@@ -29,7 +29,7 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     foreach (@$accessions){
         $accessions_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> ';
     }
-    $c->stash->{seedlot_id} = $sl->seedlot_id();
+    $c->stash->{seedlot_id} = $seedlot_id;
     $c->stash->{uniquename} = $sl->uniquename();
     $c->stash->{location_code} = $sl->location_code();
     $c->stash->{current_count} = $sl->current_count();

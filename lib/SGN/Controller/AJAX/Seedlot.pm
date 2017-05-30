@@ -102,13 +102,13 @@ sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions')
     my $c = shift;
     
     my $transactions = $c->stash->{seedlot}->transactions();
-    
+    print STDERR Dumper $transactions;
     my @transactions;
     foreach my $t (@$transactions) { 
 	push @transactions, [ $t->transaction_id(), $t->seedlot_id, $t->source_id, $t->amount() ];
     }
 
-    $c->stash->{rest} = { result => \@transactions };
+    $c->stash->{rest} = { data => \@transactions };
     
 }
 
@@ -118,10 +118,14 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
 
     my $source_id = $c->req->param("source_id");
     my $amount = $c->req->param("amount");
+    my $timestamp = $c->req->param("timestamp");
+    my $description = $c->req->param("description");
     my $transaction = CXGN::Seedlot::Transaction->new(schema => $c->stash->{schema});
     $transaction->source_id($source_id);
     $transaction->seedlot_id($c->stash->{seedlot_id});
     $transaction->amount($amount);
+    $transaction->timestamp($timestamp);
+    $transaction->description($description);
 
     my $transaction_id = $transaction->store();
     
