@@ -1,4 +1,4 @@
-package SGN::Controller::AJAX::motifs_finder;
+package SGN::Controller::motifs_finder;
 
 use Moose;
 use namespace::autoclean;
