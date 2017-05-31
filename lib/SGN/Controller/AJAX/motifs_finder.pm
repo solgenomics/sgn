@@ -47,6 +47,7 @@ sub name_var :Path('/test/') :Args(0) {
     my $rev_complement = $c->req->param("rev_complement");
     my $weblogo_output = $c->config->{tmp_weblogo_path};
     my $basePath = $c->config->{basepath};
+    my $cluster_shared_bindir = $c->config->{cluster_shared_bindir};
 
 	#print "NO OF SEED: $no_of_seeds\n";
 	#print "FRAGMENTATION: $fragmentation\n";
@@ -90,7 +91,7 @@ sub name_var :Path('/test/') :Args(0) {
 
         	print $out_fh join("\n",@seq);
 
-            my $cluster_shared_bindir = $c->config->{cluster_shared_bindir};
+
             # to run Gibbs motifs sampler
             #my $err = system("/home/vagrant/programs/motif_sampler/Gibbs.linux ".$filename."_input.txt $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
           	my $err = system("$cluster_shared_bindir/Gibbs.linux ".$filename."_input.txt $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
