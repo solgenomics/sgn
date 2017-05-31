@@ -257,7 +257,7 @@ sub fuzzy_response_download_POST : Args(0) {
 
     my $synonym_hash_lookup = CXGN::Stock::StockLookup->new({schema => $schema})->get_synonym_hash_lookup();
     my @data_out;
-    push @data_out, ['In Your List', 'Database Accession Match', 'Database Synonym Match', 'Database Saved Synonyms of Accession Match', 'Distance'];
+    push @data_out, ['In Your List', 'Database Accession Match', 'Database Synonym Match', 'Database Saved Synonyms', 'Distance'];
     foreach (@$fuzzy_response){
         my $matches = $_->{matches};
         my $name = $_->{name};
@@ -276,7 +276,7 @@ sub fuzzy_response_download_POST : Args(0) {
     }
     my $string ='';
     foreach (@data_out){
-        $string .= join "\t", @$_;
+        $string .= join("," , map {qq('$_')} @$_);
         $string .= "\n";
     }
     $c->res->content_type("text/plain");
