@@ -276,7 +276,7 @@ sub fuzzy_response_download_POST : Args(0) {
     }
     my $string ='';
     foreach (@data_out){
-        $string .= join("," , map {qq('$_')} @$_);
+        $string .= join("," , map {qq("$_")} @$_);
         $string .= "\n";
     }
     $c->res->content_type("text/plain");
