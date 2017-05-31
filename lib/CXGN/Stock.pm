@@ -29,6 +29,7 @@ use SGN::Model::Cvterm;
 use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 use base qw / CXGN::DB::Object / ;
+use CXGN::Stock::StockLookup;
 
 has 'schema' => (
     isa => 'Bio::Chado::Schema',

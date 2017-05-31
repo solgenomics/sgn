@@ -33,7 +33,6 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     $c->stash->{seedlot_id} = $seedlot_id;
     $c->stash->{uniquename} = $sl->uniquename();
     $c->stash->{location_code} = $sl->location_code();
-    $c->stash->{current_count} = $sl->current_count();
     $c->stash->{organization_name} = $sl->organization_name();
     $c->stash->{population_name} = $sl->population_name();
     $c->stash->{accessions} = $accessions_html;

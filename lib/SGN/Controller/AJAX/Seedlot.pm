@@ -19,13 +19,18 @@ __PACKAGE__->config(
 sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) { 
     my $self = shift;
     my $c = shift;
-    
+
     my $list = CXGN::Seedlot->list_seedlots($c->dbic_schema("Bio::Chado::Schema"));
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), "seedlot", "stock_property");
     my @seedlots;
     foreach my $sl (@$list) { 
 	my $sl_obj = CXGN::Seedlot->new(schema => $c->dbic_schema("Bio::Chado::Schema"), seedlot_id=>$sl->[0]);
-	push @seedlots, [ '<a href="/breeders/seedlot/'.$sl->[0].'">'.$sl->[1].'</a>', $sl->[2], $sl_obj->current_count() ];
+    my $accessions = $sl_obj->accessions();
+    my $accessions_html = '';
+    foreach (@$accessions){
+        $accessions_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> ';
+    }
+	push @seedlots, [ '<a href="/breeders/seedlot/'.$sl->[0].'">'.$sl->[1].'</a>', $accessions_html, $sl->[2], $sl_obj->current_count() ];
     }
 
     #print STDERR Dumper(\@seedlots);

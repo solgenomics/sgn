@@ -12,8 +12,9 @@ $timestamp
 <thead>
   <tr>
     <th>Seedlot</th>
+    <th>Accession</th>
     <th>Seedlot Location</th>
-    <th>Content</th>
+    <th>Current Count</th>
   </tr>
 </thead>
 

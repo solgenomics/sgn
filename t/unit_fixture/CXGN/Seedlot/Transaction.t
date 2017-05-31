@@ -9,56 +9,94 @@ use CXGN::Seedlot;
 use CXGN::Seedlot::Transaction;
 
 my $f = SGN::Test::Fixture->new();
+my $schema = $f->bcs_schema;
 
 print STDERR "Creating stock... ";
-my $stock = CXGN::Stock->new( schema => $f->bcs_schema() );
+my $stock = CXGN::Stock->new( schema => $schema );
 print STDERR "Done.\n";
 print STDERR "Creating dest_seedlot...\n";
 
 my $dest_seedlot = CXGN::Seedlot->new(
-    schema => $f->bcs_schema(),
+    schema => $schema,
     );
 
 print STDERR "Adding a name. etc...\n";
+my $test_accession_stock_id1 = $schema->resultset('Stock::Stock')->find({uniquename=>'test_accession1'})->stock_id;
 $dest_seedlot->uniquename("test seedlot");
 $dest_seedlot->location_code("XYZ-123");
+$dest_seedlot->accession_stock_ids([$test_accession_stock_id1]);
+$dest_seedlot->organization_name('bti');
+$dest_seedlot->population_name('test seedlot pop');
 my $dest_seedlot_id = $dest_seedlot->store();
 
-print "SEEDLOT ID: $dest_seedlot_id, STOCK_ID ".$dest_seedlot->stock_id()."\n";
+print STDERR "SEEDLOT ID: $dest_seedlot_id, STOCK_ID ".$dest_seedlot->stock_id()."\n";
 
 print STDERR "Creating source_seedlot...\n";
 my $source_seedlot = CXGN::Seedlot->new(
-    schema => $f->bcs_schema(),
+    schema => $schema,
     );
 
 $source_seedlot->uniquename("test seedlot 2");
 $source_seedlot->location_code("ABC-987");
+$source_seedlot->accession_stock_ids([$test_accession_stock_id1]);
+$source_seedlot->organization_name('bti');
+$source_seedlot->population_name('test seedlot pop');
 my $source_seedlot_id = $source_seedlot->store();
 
 print STDERR "Creating transaction 1...\n";
 my $trans = CXGN::Seedlot::Transaction->new(
-    schema => $f->bcs_schema(),
+    schema => $schema,
     );
-
-$trans->source_id($source_seedlot_id);
-$trans->seedlot_id($dest_seedlot_id);
+$trans->from_stock([$source_seedlot_id, $source_seedlot->uniquename]);
+$trans->to_stock([$dest_seedlot_id, $dest_seedlot->uniquename]);
 $trans->amount(5);
+$trans->timestamp(localtime);
+$trans->description('Moving 5 seed from seedlot 2 to seedlot 1');
+$trans->operator('janedoe');
 
 my $trans_id = $trans->store();
 
-my $saved_trans = CXGN::Seedlot::Transaction->new(schema=>$f->bcs_schema(), transaction_id => $trans_id);
-
-is($saved_trans->source_id(), $trans->source_id(), "saved seed source");
+my $saved_trans = CXGN::Seedlot::Transaction->new(schema=>$schema, transaction_id => $trans_id);
+is_deeply($saved_trans->from_stock(), $trans->from_stock(), "saved seed source");
+is_deeply($saved_trans->to_stock(), $trans->to_stock(), "saved seed dest");
 is($saved_trans->amount(), $trans->amount(), "saved amount");
+is($saved_trans->timestamp(), $trans->timestamp(), "saved timestamp");
+is($saved_trans->description(), $trans->description(), "saved description");
+is($saved_trans->operator(), $trans->operator(), "saved operator");
+
+#checking seedlots after transaction
+my $source_seedlot_after_trans1 = CXGN::Seedlot->new(
+    schema => $schema,
+    seedlot_id => $source_seedlot_id
+    );
+is($source_seedlot_after_trans1->current_count, -5, "check current count is correct");
+is($source_seedlot_after_trans1->uniquename, $source_seedlot->uniquename, "check uniquename is saved");
+is($source_seedlot_after_trans1->location_code, $source_seedlot->location_code, "check location is saved");
+is($source_seedlot_after_trans1->organization_name, $source_seedlot->organization_name, "check organization is saved");
+is($source_seedlot_after_trans1->population_name, $source_seedlot->population_name, "check population is saved");
+is_deeply($source_seedlot_after_trans1->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
+
+my $dest_seedlot_after_trans1 = CXGN::Seedlot->new(
+    schema => $schema,
+    seedlot_id => $dest_seedlot_id
+    );
+is($dest_seedlot_after_trans1->current_count, 5, "check current count is correct");
+is($dest_seedlot_after_trans1->uniquename, $dest_seedlot->uniquename, "check uniquename is saved");
+is($dest_seedlot_after_trans1->location_code, $dest_seedlot->location_code, "check location is saved");
+is($dest_seedlot_after_trans1->organization_name, $dest_seedlot->organization_name, "check organization is saved");
+is($dest_seedlot_after_trans1->population_name, $dest_seedlot->population_name, "check population is saved");
+is_deeply($dest_seedlot_after_trans1->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
 
 print STDERR "Creating transaction 2...\n";
 my $trans2 = CXGN::Seedlot::Transaction->new(
     schema => $f->bcs_schema(),
     );
-
-$trans2->source_id($source_seedlot_id);
-$trans2->seedlot_id($dest_seedlot_id);
+$trans2->from_stock([$source_seedlot_id, $source_seedlot->uniquename]);
+$trans2->to_stock([$dest_seedlot_id, $dest_seedlot->uniquename]);
 $trans2->amount(7);
+$trans2->timestamp(localtime);
+$trans2->description('Moving 7 seed from seedlot 2 to seedlot 1');
+$trans2->operator('janedoe');
 
 $trans2->store();
 
@@ -66,26 +104,134 @@ print STDERR "Creating transaction 3...\n";
 my $trans3 = CXGN::Seedlot::Transaction->new(
     schema => $f->bcs_schema(),
     );
-
-$trans3->source_id($dest_seedlot_id);
-$trans3->seedlot_id($source_seedlot_id);
+$trans3->to_stock([$source_seedlot_id, $source_seedlot->uniquename]);
+$trans3->from_stock([$dest_seedlot_id, $dest_seedlot->uniquename]);
+$trans3->timestamp(localtime);
+$trans3->description('Moving 3 seed from seedlot 1 to seedlot 2');
+$trans3->operator('janedoe');
 $trans3->amount(3);
 
 $trans3->store();
 
-my $seedlot = CXGN::Seedlot->new( schema => $f->bcs_schema(), seedlot_id=> $dest_seedlot_id);
-is($seedlot->seedlot_id(), $dest_seedlot_id, "saved seedlot source_id");
+#checking seedlots after transaction
+my $source_seedlot_after_trans3 = CXGN::Seedlot->new(
+    schema => $schema,
+    seedlot_id => $source_seedlot_id
+    );
+is($source_seedlot_after_trans3->current_count, -9, "check current count is correct");
+is($source_seedlot_after_trans3->uniquename, $source_seedlot->uniquename, "check uniquename is saved");
+is($source_seedlot_after_trans3->location_code, $source_seedlot->location_code, "check location is saved");
+is($source_seedlot_after_trans3->organization_name, $source_seedlot->organization_name, "check organization is saved");
+is($source_seedlot_after_trans3->population_name, $source_seedlot->population_name, "check population is saved");
+is_deeply($source_seedlot_after_trans3->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
+my @transactions;
+foreach my $t (@{$source_seedlot_after_trans3->transactions()}) {
+    push @transactions, [ $t->transaction_id(), $t->from_stock(), $t->to_stock(), $t->factor()*$t->amount(), $t->operator, $t->description ];
+}
+#print STDERR Dumper \@transactions;
+is_deeply(\@transactions, [
+          [
+            40054,
+            [
+              41303,
+              'test seedlot'
+            ],
+            [
+              41305,
+              'test seedlot 2'
+            ],
+            3,
+            'janedoe',
+            'Moving 3 seed from seedlot 1 to seedlot 2'
+          ],
+          [
+            40053,
+            [
+              41305,
+              'test seedlot 2'
+            ],
+            [
+              41303,
+              'test seedlot'
+            ],
+            -7,
+            'janedoe',
+            'Moving 7 seed from seedlot 2 to seedlot 1'
+          ],
+          [
+            40052,
+            [
+              41305,
+              'test seedlot 2'
+            ],
+            [
+              41303,
+              'test seedlot'
+            ],
+            -5,
+            'janedoe',
+            'Moving 5 seed from seedlot 2 to seedlot 1'
+          ]
+        ], "check source seedlot transactions");
 
-print STDERR "TYPE_ID: ".$seedlot->type_id()."\n";
-
-my $transactions = $seedlot->transactions();
-
-print STDERR scalar(@$transactions)." transactions\n";
-
-print STDERR "Amount: ".$transactions->[0]->amount()."\n";
-
-print STDERR "Factor: ".$transactions->[0]->factor()."\n";
-
-print STDERR "Current count: ".$seedlot->current_count()."\n";
+my $dest_seedlot_after_trans3 = CXGN::Seedlot->new(
+    schema => $schema,
+    seedlot_id => $dest_seedlot_id
+    );
+is($dest_seedlot_after_trans3->current_count, 9, "check current count is correct");
+is($dest_seedlot_after_trans3->uniquename, $dest_seedlot->uniquename, "check uniquename is saved");
+is($dest_seedlot_after_trans3->location_code, $dest_seedlot->location_code, "check location is saved");
+is($dest_seedlot_after_trans3->organization_name, $dest_seedlot->organization_name, "check organization is saved");
+is($dest_seedlot_after_trans3->population_name, $dest_seedlot->population_name, "check population is saved");
+is_deeply($dest_seedlot_after_trans3->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
+my @transactions2;
+foreach my $t (@{$dest_seedlot_after_trans3->transactions()}) {
+    push @transactions2, [ $t->transaction_id(), $t->from_stock(), $t->to_stock(), $t->factor()*$t->amount(), $t->operator, $t->description ];
+}
+#print STDERR Dumper \@transactions2;
+is_deeply(\@transactions2, [
+          [
+            40053,
+            [
+              41305,
+              'test seedlot 2'
+            ],
+            [
+              41303,
+              'test seedlot'
+            ],
+            7,
+            'janedoe',
+            'Moving 7 seed from seedlot 2 to seedlot 1'
+          ],
+          [
+            40052,
+            [
+              41305,
+              'test seedlot 2'
+            ],
+            [
+              41303,
+              'test seedlot'
+            ],
+            5,
+            'janedoe',
+            'Moving 5 seed from seedlot 2 to seedlot 1'
+          ],
+          [
+            40054,
+            [
+              41303,
+              'test seedlot'
+            ],
+            [
+              41305,
+              'test seedlot 2'
+            ],
+            -3,
+            'janedoe',
+            'Moving 3 seed from seedlot 1 to seedlot 2'
+          ]
+        ], 'check transactions of dest_seedlot');
 
 done_testing();
