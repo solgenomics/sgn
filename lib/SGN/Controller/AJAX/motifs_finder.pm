@@ -46,6 +46,7 @@ sub name_var :Path('/test/') :Args(0) {
     my $fragmentation = $c->req->param("fragmentation");
     my $rev_complement = $c->req->param("rev_complement");
     my $weblogo_output = $c->config->{tmp_weblogo_path};
+    my $basePath = $c->config->{basepath};
 
 	#print "NO OF SEED: $no_of_seeds\n";
 	#print "FRAGMENTATION: $fragmentation\n";
@@ -58,8 +59,9 @@ sub name_var :Path('/test/') :Args(0) {
 
 	# to generate temporary file name for the analysis
 	#my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/motifs_finder/root/static/tempfile_motif/');
-    my ($fh, $filename) =tempfile("XXXXX", DIR => '/static/documents/tempfiles/tempfile_motif/');
-
+    #my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/sgn/static/documents/tempfiles/');
+    my $dir = $c->tempfiles_subdir('motif_tempfile');
+    my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
 	#if (not (defined($seq_file)) && ($sequence !~ /^>/))  {
 	if ($sequence !~ /^>/ && $seq_file eq '')  {
 		push ( @errors , "Please, paste sequences or attach sequence file.<br/>Ensure your sequence conform with 'usage help' description.\n");
@@ -88,17 +90,17 @@ sub name_var :Path('/test/') :Args(0) {
 
         	print $out_fh join("\n",@seq);
 
-
+            my $cluster_shared_bindir = $c->config->{cluster_shared_bindir};
             # to run Gibbs motifs sampler
             #my $err = system("/home/vagrant/programs/motif_sampler/Gibbs.linux ".$filename."_input.txt $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
-          	my $err = system("/home/vagrant/cxgn/sgn/bin/Gibbs.linux ".$filename."_input.txt $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
+          	my $err = system("$cluster_shared_bindir/Gibbs.linux ".$filename."_input.txt $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
            	print STDOUT "print $err\n";
 
 	    }
 	       elsif ($seq_file) {
 
 			#my $err = system("/home/vagrant/programs/motif_sampler/Gibbs.linux $seq_file $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
-      my $err = system("/home/vagrant/cxgn/sgn/bin/Gibbs.linux $seq_file $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
+      my $err = system("$cluster_shared_bindir/Gibbs.linux $seq_file $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
       print STDOUT "print $err\n";
 
 	}
@@ -199,8 +201,10 @@ sub name_var :Path('/test/') :Args(0) {
 		        elsif ($line =~ m/^\s+\*+/ ) {
 				$logo = 0;
                 #my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/motifs_finder/root/static/tempfile_motif/');
-		     	my ($fh, $filename) =tempfile("XXXXX", DIR => '/static/documents/tempfiles/tempfile_motif/');
+		     	#my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/sgn/static/documents/tempfiles/');
+                my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
 			}
+
 
 
 
@@ -220,7 +224,8 @@ sub name_var :Path('/test/') :Args(0) {
 
 			elsif ($line =~ m/^site\s+/ ) {
 				$freq_tab = 0;
-				my ($fh, $filename) =tempfile("XXXXX", DIR => '/static/documents/tempfiles/tempfile_motif/');
+				#my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/sgn/static/documents/tempfiles/');
+                my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
 			}
 
 
@@ -241,7 +246,8 @@ sub name_var :Path('/test/') :Args(0) {
 
 			elsif ($line =~ m/^Background\sprobability\smodel/ ) {
 				$prob_tab = 0;
-				my ($fh, $filename) =tempfile("XXXXX", DIR => '/static/documents/tempfiles/tempfile_motif/');
+				#my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/sgn/static/documents/tempfiles/');
+                my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
 			}
 
 
@@ -262,7 +268,8 @@ sub name_var :Path('/test/') :Args(0) {
 
 			elsif ($line =~ m/^\s+\d\.\d+\s\d\.\d+\s/ ) {
 				$BGPM_tab = 0;
-				my ($fh, $filename) =tempfile("XXXXX", DIR => '/static/documents/tempfiles/tempfile_motif/');
+				#my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/sgn/static/documents/tempfiles/');
+                my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
 			}
 
 			if ($sum_indv_tab == 1 ) {
@@ -282,7 +289,8 @@ sub name_var :Path('/test/') :Args(0) {
 
 			elsif ($line =~ m/^Log\sFragmentation\sportion\sof\sMAP\sfor\smotif\s/ ) {
 				$sum_indv_tab = 0;
-				my ($fh, $filename) =tempfile("XXXXX", DIR => '/static/documents/tempfiles/tempfile_motif/');
+				#my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/sgn/static/documents/tempfiles/');
+                my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
 			}
 
 	}
@@ -362,11 +370,11 @@ sub name_var :Path('/test/') :Args(0) {
 	my $cmd;
 
 	foreach $filename (@motif_element){
-		$cmd = "./bin/seqlogo -F PNG -d 0.5 -T 1 -b -e -B 2 -h 5 -w 18 -y bits -a -M -n -Y -c -f $filename -o ".$filename."_weblogo";
+		$cmd = "$cluster_shared_bindir/weblogo/seqlogo -F PNG -d 0.5 -T 1 -b -e -B 2 -h 5 -w 18 -y bits -a -M -n -Y -c -f $filename -o ".$filename."_weblogo";
 		push (@logo_image, basename($filename."_weblogo.png"));
 		my $error = system($cmd);
 
-	}
+	} print STDERR Dumper(\@logo_image);
 
 	$c->stash->{sum} = join("<br/>", @sum);
 	$c->stash->{sum_indv_tab} = \@value_sum_indv_tab;
@@ -383,7 +391,7 @@ sub name_var :Path('/test/') :Args(0) {
 	$c->stash->{logowidth} = \@motif_width;
 
 
-    	$c->stash->{template} = '/output.mas';
+    	$c->stash->{template} = 'tools/motifs_finder/motif_output.mas';
 
 }
 
