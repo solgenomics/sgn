@@ -201,19 +201,24 @@ sub verify {
     if ($archived_image_zipfile_with_path) {
 
         my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$archived_image_zipfile_with_path);
-        my ($file_names_stripped, $file_names_full) = $archived_zip->file_names();
-
-        foreach (@$file_names_full) {
-            $image_plot_full_names{$_} = 1;
-        }
-        my %plot_name_check;
-        foreach (@plot_list) {
-            $plot_name_check{$_} = 1;
-        }
-        foreach my $img_name (@$file_names_stripped) {
-            $img_name = substr($img_name, 0, -20);
-            if (!exists($plot_name_check{$img_name})) {
-                $error_message = $error_message."<small>Image ".$img_name." in images zip file does not reference a plot or plant_name!</small><hr>";
+        my @archived_zipfile_return = $archived_zip->file_names();
+        if (!@archived_zipfile_return){
+            $error_message = $error_message."<small>Image zipfile could not be read. Is it .zip format?</small><hr>";
+        } else {
+            my $file_names_stripped = $archived_zipfile_return[0];
+            my $file_names_full = $archived_zipfile_return[1];
+            foreach (@$file_names_full) {
+                $image_plot_full_names{$_} = 1;
+            }
+            my %plot_name_check;
+            foreach (@plot_list) {
+                $plot_name_check{$_} = 1;
+            }
+            foreach my $img_name (@$file_names_stripped) {
+                $img_name = substr($img_name, 0, -20);
+                if (!exists($plot_name_check{$img_name})) {
+                    $error_message = $error_message."<small>Image ".$img_name." in images zip file does not reference a plot or plant_name!</small><hr>";
+                }
             }
         }
     }
@@ -232,7 +237,7 @@ sub verify {
                 my $trait_cvterm_id = $trait_cvterm->cvterm_id();
                 my $stock_id = $schema->resultset('Stock::Stock')->find({'uniquename' => $plot_name})->stock_id();
 
-                if ($trait_value eq '.' || ($trait_value =~ m/[^a-zA-Z0-9.]/ && $trait_value ne '.')){
+                if ($trait_value eq '.' || ($trait_value =~ m/[^a-zA-Z0-9.\-\/\_]/ && $trait_value ne '.')){
                     $error_message = $error_message."<small>Trait values must be alphanumeric with no spaces: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
                 }
 
