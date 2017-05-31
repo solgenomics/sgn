@@ -277,39 +277,20 @@ foreach (@$new_traits2){
 }
 my $results2 = $onto->store_composed_term(\%new_composed_terms2);
 #print STDERR Dumper $results2;
-is_deeply($results2, [
-          [
-            77560,
-            'anthocyanin pigmentation visual rating 0-3||month 10||end of day||cass lower leaf|COMP:0000014'
-          ],
-          [
-            77561,
-            'anthocyanin pigmentation visual rating 0-3||month 10||end of day||cass sink leaf|COMP:0000015'
-          ],
-          [
-            77562,
-            'anthocyanin pigmentation visual rating 0-3||month 1||end of day||cass lower leaf|COMP:0000016'
-          ],
-          [
-            77563,
-            'anthocyanin pigmentation visual rating 0-3||month 1||end of day||cass sink leaf|COMP:0000017'
-          ],
-          [
-            77564,
-            'ease of harvest assessment 1-3||month 10||end of day||cass lower leaf|COMP:0000018'
-          ],
-          [
-            77565,
-            'ease of harvest assessment 1-3||month 10||end of day||cass sink leaf|COMP:0000019'
-          ],
-          [
-            77566,
-            'ease of harvest assessment 1-3||month 1||end of day||cass lower leaf|COMP:0000020'
-          ],
-          [
-            77567,
-            'ease of harvest assessment 1-3||month 1||end of day||cass sink leaf|COMP:0000021'
-          ]
+my @results2_names;
+foreach (@$results2){
+    ok($_->[0], 'check that cvterm_id saved');
+    push @results2_names, $_->[1];
+}
+is_deeply(\@results2_names, [
+            'anthocyanin pigmentation visual rating 0-3||month 10||end of day||cass lower leaf|COMP:0000014',
+            'anthocyanin pigmentation visual rating 0-3||month 10||end of day||cass sink leaf|COMP:0000015',
+            'anthocyanin pigmentation visual rating 0-3||month 1||end of day||cass lower leaf|COMP:0000016',
+            'anthocyanin pigmentation visual rating 0-3||month 1||end of day||cass sink leaf|COMP:0000017',
+            'ease of harvest assessment 1-3||month 10||end of day||cass lower leaf|COMP:0000018',
+            'ease of harvest assessment 1-3||month 10||end of day||cass sink leaf|COMP:0000019',
+            'ease of harvest assessment 1-3||month 1||end of day||cass lower leaf|COMP:0000020',
+            'ease of harvest assessment 1-3||month 1||end of day||cass sink leaf|COMP:0000021',
         ], 'check store composed terms 2');
 
 my $new_traits3 = $traits3->{new_traits};
@@ -319,39 +300,20 @@ foreach (@$new_traits3){
 }
 my $results3 = $onto->store_composed_term(\%new_composed_terms3);
 #print STDERR Dumper $results3;
-is_deeply($results3, [
-          [
-            77568,
-            'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000022'
-          ],
-          [
-            77569,
-            'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000023'
-          ],
-          [
-            77570,
-            'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000024'
-          ],
-          [
-            77571,
-            'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000025'
-          ],
-          [
-            77572,
-            'ease of harvest assessment 1-3|CO:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000026'
-          ],
-          [
-            77573,
-            'ease of harvest assessment 1-3|CO:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000027'
-          ],
-          [
-            77574,
-            'ease of harvest assessment 1-3|CO:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000028'
-          ],
-          [
-            77575,
-            'ease of harvest assessment 1-3|CO:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000029'
-          ]
+my @results3_names;
+foreach (@$results3){
+    ok($_->[0], 'check that cvterm_id saved');
+    push @results3_names, $_->[1];
+}
+is_deeply(\@results3_names, [
+            'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000022',
+            'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000023',
+            'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000024',
+            'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000025',
+            'ease of harvest assessment 1-3|CO:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000026',
+            'ease of harvest assessment 1-3|CO:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000027',
+            'ease of harvest assessment 1-3|CO:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000028',
+            'ease of harvest assessment 1-3|CO:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000029',
         ], 'test save composed terms 3');
 
 my $traits3_duplicate = SGN::Model::Cvterm->get_traits_from_component_categories($t->bcs_schema(), \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, {
@@ -365,43 +327,24 @@ my $traits3_duplicate = SGN::Model::Cvterm->get_traits_from_component_categories
   gen => [],
 });
 #print STDERR Dumper $traits3_duplicate;
-is_deeply($traits3_duplicate, {
-          'new_traits' => [],
-          'existing_traits' => [
-                                 [
-                                   77568,
-                                   'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010'
-                                 ],
-                                 [
-                                   77569,
-                                   'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009'
-                                 ],
-                                 [
-                                   77570,
-                                   'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010'
-                                 ],
-                                 [
-                                   77571,
-                                   'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009'
-                                 ],
-                                 [
-                                   77572,
-                                   'ease of harvest assessment 1-3|CO:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010'
-                                 ],
-                                 [
-                                   77573,
-                                   'ease of harvest assessment 1-3|CO:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009'
-                                 ],
-                                 [
-                                   77574,
-                                   'ease of harvest assessment 1-3|CO:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010'
-                                 ],
-                                 [
-                                   77575,
-                                   'ease of harvest assessment 1-3|CO:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009'
-                                 ]
-                               ]
-        }, 'check that duplicate traits are separated from new_traits');
+my $new_traits = $traits3_duplicate->{new_traits};
+my $existing_traits = $traits3_duplicate->{existing_traits};
+my @check_names;
+foreach (@$existing_traits){
+    ok($_->[0], 'check that cvterm_id saved');
+    push @check_names, $_->[1];
+}
+is_deeply($new_traits, [], 'check that duplicate traits are not added');
+is_deeply(\@check_names, [
+       'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010',
+       'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009',
+       'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010',
+       'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009',
+       'ease of harvest assessment 1-3|CO:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010',
+       'ease of harvest assessment 1-3|CO:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009',
+       'ease of harvest assessment 1-3|CO:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010',
+       'ease of harvest assessment 1-3|CO:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009',
+   ], 'check that duplicate traits are separated from new_traits');
 
 
 done_testing();

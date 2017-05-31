@@ -126,48 +126,29 @@ is($source_seedlot_after_trans3->population_name, $source_seedlot->population_na
 is_deeply($source_seedlot_after_trans3->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
 my @transactions;
 foreach my $t (@{$source_seedlot_after_trans3->transactions()}) {
-    push @transactions, [ $t->transaction_id(), $t->from_stock(), $t->to_stock(), $t->factor()*$t->amount(), $t->operator, $t->description ];
+    ok($t->timestamp, "check timestamps saved");
+    ok($t->transaction_id, "check transcation ids");
+    push @transactions, [ $t->from_stock()->[1], $t->to_stock()->[1], $t->factor()*$t->amount(), $t->operator, $t->description ];
 }
-#print STDERR Dumper \@transactions;
+print STDERR Dumper \@transactions;
 is_deeply(\@transactions, [
           [
-            40054,
-            [
-              41303,
-              'test seedlot'
-            ],
-            [
-              41305,
-              'test seedlot 2'
-            ],
+            'test seedlot',
+            'test seedlot 2',
             3,
             'janedoe',
             'Moving 3 seed from seedlot 1 to seedlot 2'
           ],
           [
-            40053,
-            [
-              41305,
-              'test seedlot 2'
-            ],
-            [
-              41303,
-              'test seedlot'
-            ],
+            'test seedlot 2',
+            'test seedlot',
             -7,
             'janedoe',
             'Moving 7 seed from seedlot 2 to seedlot 1'
           ],
           [
-            40052,
-            [
-              41305,
-              'test seedlot 2'
-            ],
-            [
-              41303,
-              'test seedlot'
-            ],
+            'test seedlot 2',
+            'test seedlot',
             -5,
             'janedoe',
             'Moving 5 seed from seedlot 2 to seedlot 1'
@@ -186,48 +167,29 @@ is($dest_seedlot_after_trans3->population_name, $dest_seedlot->population_name, 
 is_deeply($dest_seedlot_after_trans3->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
 my @transactions2;
 foreach my $t (@{$dest_seedlot_after_trans3->transactions()}) {
-    push @transactions2, [ $t->transaction_id(), $t->from_stock(), $t->to_stock(), $t->factor()*$t->amount(), $t->operator, $t->description ];
+    ok($t->timestamp, "check timestamps saved");
+    ok($t->transaction_id, "check transcation ids");
+    push @transactions2, [ $t->from_stock()->[1], $t->to_stock()->[1], $t->factor()*$t->amount(), $t->operator, $t->description ];
 }
-#print STDERR Dumper \@transactions2;
+print STDERR Dumper \@transactions2;
 is_deeply(\@transactions2, [
           [
-            40053,
-            [
-              41305,
-              'test seedlot 2'
-            ],
-            [
-              41303,
-              'test seedlot'
-            ],
+            'test seedlot 2',
+            'test seedlot',
             7,
             'janedoe',
             'Moving 7 seed from seedlot 2 to seedlot 1'
           ],
           [
-            40052,
-            [
-              41305,
-              'test seedlot 2'
-            ],
-            [
-              41303,
-              'test seedlot'
-            ],
+            'test seedlot 2',
+            'test seedlot',
             5,
             'janedoe',
             'Moving 5 seed from seedlot 2 to seedlot 1'
           ],
           [
-            40054,
-            [
-              41303,
-              'test seedlot'
-            ],
-            [
-              41305,
-              'test seedlot 2'
-            ],
+            'test seedlot',
+            'test seedlot 2',
             -3,
             'janedoe',
             'Moving 3 seed from seedlot 1 to seedlot 2'
