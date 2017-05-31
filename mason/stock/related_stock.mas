@@ -9,7 +9,7 @@ $stock_id
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
-<table id = "trial_related_stock" class="display">
+<table id = "trial_related_stock" class="table table-hover table-stripted">
 <thead>
  <tr>
   <th>Name</th>
@@ -54,23 +54,24 @@ $stock_id
 
 jQuery(document).ready(function(){
 
- jQuery('#trial_related_stock').DataTable({
-  'ajax':'/stock/'+ <% $stock_id %> + '/datatables/trial_related_stock',
- });
+    jQuery('#trial_related_stock').DataTable({
+        'ajax':'/stock/'+ <% $stock_id %> + '/datatables/trial_related_stock',
+    });
 
 
- jQuery('#progenies').DataTable({
-  'ajax':'/stock/'+ <% $stock_id %> + '/datatables/progenies',
- });
+    jQuery('#progenies').DataTable({
+        'ordering': false,
+        'ajax':'/stock/'+ <% $stock_id %> + '/datatables/progenies',
+
+    });
 
 
- jQuery('#group').DataTable({
-  'ajax':'/stock/'+ <% $stock_id %> + '/datatables/group',
- });
+     jQuery('#group').DataTable({
+         'ajax':'/stock/'+ <% $stock_id %> + '/datatables/group',
 
+    });
 
- });
-
+});
 
 
  </script>
