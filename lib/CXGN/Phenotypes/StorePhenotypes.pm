@@ -153,6 +153,9 @@ sub verify {
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
     my %plot_trait_value = %{$self->values_hash};
+    print STDERR Dumper \@plot_list;
+    print STDERR Dumper \@trait_list;
+    print STDERR Dumper \%plot_trait_value;
     my %phenotype_metadata = %{$self->metadata_hash};
     my $timestamp_included = $self->has_timestamps;
     my $archived_image_zipfile_with_path = $self->image_zipfile_path;
