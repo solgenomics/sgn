@@ -235,18 +235,12 @@ sub parse {
                                     if (!$timestamp) {
                                         $timestamp = '';
                                     }
-                                    if (!defined($trait_value)) {
-                                        $trait_value = '';
-                                    }
                                     #print STDERR $trait_value." : ".$timestamp."\n";
 
-                                    if ( $trait_value ne '' && defined($timestamp) ) {
+                                    if ( defined($trait_value) && defined($timestamp) ) {
                                         if ($trait_value ne '.'){
                                             $data{$plot_name}->{$trait_name} = [$trait_value, $timestamp];
                                         }
-                                    } else {
-                                        $parse_result{'error'} = "Value or timestamp missing.";
-                                        return \%parse_result;
                                     }
                                 }
                             }
