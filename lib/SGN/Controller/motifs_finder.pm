@@ -31,10 +31,8 @@ sub index :Path('/tools/motifs_finder/') :Args(0) {
    $c->stash->{template} = '/tools/motifs_finder/index.mas';
 }
 
-
 sub name_var :Path('/test/') :Args(0) {
     my ($self, $c) = @_;
-
 
      # get variables from catalyst object
     my $params = $c->req->body_params();
@@ -99,17 +97,13 @@ sub name_var :Path('/test/') :Args(0) {
            	print STDOUT "print $err\n";
 
 	    }
-	       elsif ($seq_file) {
-
+	    elsif ($seq_file) {
 			#my $err = system("/home/vagrant/programs/motif_sampler/Gibbs.linux $seq_file $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
-      my $err = system("$cluster_shared_bindir/Gibbs.linux $seq_file $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
-      print STDOUT "print $err\n";
-
-	}
+            my $err = system("$cluster_shared_bindir/Gibbs.linux $seq_file $widths_of_motifs $numbers_of_sites -W 0.8 -w 0.1 -p 50 -j 5 -i 500 $fragmentation $rev_complement -Z -S $no_of_seeds -C 0.5 -y -nopt -o ".$filename."_output -n");
+            print STDOUT "print $err\n";
+	       }
 
 	open (my $output_fh, "<", $filename."_output") || die ("\nERROR: the file ".$filename."_output could not be found\n"); # open sampler output file and write into a FH
-
-
 
       # Creating motifs fasta file for weblogo use and other files that are made into tables in the output.mas
 
@@ -162,7 +156,6 @@ sub name_var :Path('/test/') :Args(0) {
 
 		}
 
-
 	if ($sum == 1) {
 		$switch_sum++;
 		push @sum, $line;
@@ -177,16 +170,13 @@ sub name_var :Path('/test/') :Args(0) {
 	if ($motif == 1){
 		$switch++;
 
-
 			if ($logo == 1 && $line !~ m/^\s+\*+/ ) {
 				$switch_logo++;
 				my @a = split(/\s+/,$line);
 				print  $wl_out_fh ">seq_$switch_logo\n$a[5]\n";
 				@aa = split(/\s+/,$line);
 				print $motif_tab_fh "$line\n";
-
 			}
-
 		        if ($line =~ m/^Num\sMotifs/ ) {
 			     $logo = 1;
 			     open ($wl_out_fh, ">", $logo_file) || die ("\nERROR: the file $logo_file could not be found\n");
@@ -199,7 +189,6 @@ sub name_var :Path('/test/') :Args(0) {
 			     push @motif_table_file, $motif_tab;
 
 			}
-
 		        elsif ($line =~ m/^\s+\*+/ ) {
 				$logo = 0;
                 #my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/motifs_finder/root/static/tempfile_motif/');
@@ -207,13 +196,9 @@ sub name_var :Path('/test/') :Args(0) {
                 #my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
 			}
 
-
-
-
 			if ($freq_tab == 1) {
 				$freq_tab_switch++;
 				print $freq_tab_fh "$line\n";
-
 			}
 
 			if ($line =~ m/^Motif\smodel/ ) {
