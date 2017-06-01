@@ -153,9 +153,6 @@ sub verify {
     my @plot_list = @{$self->stock_list};
     my @trait_list = @{$self->trait_list};
     my %plot_trait_value = %{$self->values_hash};
-    print STDERR Dumper \@plot_list;
-    print STDERR Dumper \@trait_list;
-    print STDERR Dumper \%plot_trait_value;
     my %phenotype_metadata = %{$self->metadata_hash};
     my $timestamp_included = $self->has_timestamps;
     my $archived_image_zipfile_with_path = $self->image_zipfile_path;
@@ -173,8 +170,7 @@ sub verify {
     if (scalar(@plots_missing) > 0 || scalar(@traits_missing) > 0) {
         print STDERR "Plots or traits not valid\n";
         print STDERR "Invalid plots: ".join(", ", map { "'$_'" } @plots_missing)."\n" if (@plots_missing);
-        print STDERR "Invalid traits: \n";
-        print STDERR Dumper \@traits_missing;
+        print STDERR "Invalid traits: ".join(", ", map { "'$_'" } @traits_missing)."\n" if (@traits_missing);
         $error_message = "Invalid plots: <br/>".join(", <br/>", map { "'$_'" } @plots_missing) if (@plots_missing);
         $error_message = "Invalid traits: <br/>".join(", <br/>", map { "'$_'" } @traits_missing) if (@traits_missing);
         return ($warning_message, $error_message);
