@@ -454,6 +454,23 @@ sub get_list_elements_names {
 }
 
 
+sub get_list_elements_ids {
+    my ($self, $c) = @_;
+
+    my $list = $c->stash->{list};
+ 
+    my @ids = ();  
+   
+    foreach my $id_names (@$list)
+    {
+        push @ids, $id_names->[0];
+    }
+
+    $c->stash->{list_elements_ids} = \@ids;
+
+}
+
+
 sub map_genotypes_plots {
     my ($self, $c) = @_;
   
@@ -549,8 +566,8 @@ sub genotypes_list_genotype_file {
 
     $self->get_list_elements_names($c);
     my $plots_names = $c->stash->{list_elements_names};
-
     $c->stash->{plots_names} = $plots_names;
+
     $self->map_genotypes_plots($c);	
     my $genotypes = $c->stash->{genotypes_list}; 
 
@@ -611,12 +628,13 @@ sub plots_list_phenotype_data {
     my ($self, $args) = @_;
    
     my $model_id    = $args->{model_id};
-    my $plots       = $args->{plots_list};
+    my $plots_names = $args->{plots_names};
+    my $plots_ids   = $args->{plots_ids};
     my $traits_file = $args->{traits_file};
     my $tmp_dir     = $args->{list_data_dir};
    
     my $model = SGN::Model::solGS::solGS->new({schema => SGN::Context->dbic_schema("Bio::Chado::Schema")});
-    my $pheno_data = $model->plots_list_phenotype_data($plots);
+    my $pheno_data = $model->plots_list_phenotype_data($plots_names);
 
     $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $traits_file);
     
@@ -637,16 +655,20 @@ sub plots_list_phenotype_file {
 
     $self->get_list_elements_names($c);
     my $plots_names = $c->stash->{list_elements_names};
-  
+
+    $self->get_list_elements_ids($c);
+    my $plots_ids = $c->stash->{list_elements_ids};
+
     $c->stash->{pop_id} = $model_id;
     $c->controller("solGS::solGS")->traits_list_file($c);    
     my $traits_file =  $c->stash->{traits_list_file};
-    
+  
     my $data_dir = $c->stash->{solgs_prediction_upload_dir};
 
     my $args = {
 	'model_id'      => $model_id,
-	'plots_list'    => $plots_names,	        
+	'plots_names'   => $plots_names,
+	'plots_ids'     => $plots_ids,
 	'traits_file'   => $traits_file,
 	'list_data_dir' => $data_dir,
     };
@@ -694,9 +716,6 @@ sub plots_list_phenotype_file {
     }; 
 
 }
-
-
-
 
 
 sub begin : Private {

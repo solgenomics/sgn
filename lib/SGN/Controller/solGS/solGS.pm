@@ -4634,16 +4634,24 @@ sub format_phenotype_dataset_headers {
     my ($self, $raw_headers, $traits_file) = @_;
 
     $raw_headers =~ s/\|\w+:\d+//g;
-    $raw_headers =~ s/\n//g;  
-
+    $raw_headers =~ s/\n//g; 
+    
+    my $traits = $raw_headers;
+  
     my $meta_headers=  $self->filter_phenotype_header();
-    $raw_headers =~ s/($meta_headers\t)//g;
-   
-    write_file($traits_file, $raw_headers) if $traits_file;   
-    my  @filtered_traits = split(/\t/, $raw_headers);
+    my @mh = split("\t", $meta_headers);
+    foreach my $mh (@mh) {
+       $traits =~ s/($mh)//g;
+    }
 
+    $traits =~ s/^\s+|\s+$//g;
+
+    write_file($traits_file, $traits) if $traits_file;   
+    my  @filtered_traits = split(/\t/, $traits);
+
+    $raw_headers =~ s/$traits//g;
     my $acronymized_traits = $self->acronymize_traits(\@filtered_traits);
-    my $formatted_headers = $acronymized_traits->{formatted_headers}; 
+    my $formatted_headers = $raw_headers . $acronymized_traits->{acronymized_traits}; 
    
     return $formatted_headers;
     
@@ -4653,7 +4661,7 @@ sub format_phenotype_dataset_headers {
 sub acronymize_traits {
     my ($self, $traits) = @_;
   
-    my $formatted_traits;
+    my $acronymized_traits;
     my $acronym_table = {};
    
     my $cnt = 0;
@@ -4664,19 +4672,16 @@ sub acronymize_traits {
 
 	$abbr = $abbr . '.2' if $cnt > 1 && $acronym_table->{$abbr};  
 
-        $formatted_traits .= $abbr;
-	$formatted_traits .= "\t" unless $cnt == scalar(@$traits);
+        $acronymized_traits .= $abbr;
+	$acronymized_traits .= "\t" unless $cnt == scalar(@$traits);
 	
         $acronym_table->{$abbr} = $trait_name if $abbr;
 	my $tr_h = $acronym_table->{$abbr};
     }
  
-    my $meta_headers = $self->filter_phenotype_header();
-    my $formatted_headers = $meta_headers ."\t". $formatted_traits;
- 
     my $acronymized_traits = {
-	'formatted_headers' => $formatted_headers,
-	'acronym_table'     => $acronym_table
+	'acronymized_traits' => $acronymized_traits,
+	'acronym_table'      => $acronym_table
     };
 
     return $acronymized_traits;

@@ -38,6 +38,7 @@ use Math::Round::Var;
 use CXGN::Genotype::Search;
 use CXGN::Trial;
 use CXGN::Dataset;
+use CXGN::Phenotypes::PhenotypeMatrix;
 
 extends 'Catalyst::Model';
 
@@ -1415,7 +1416,7 @@ sub plots_list_phenotype_data {
     if (@$plots_names) 
     {
 	my $stock_pheno_data_rs = $self->plots_list_phenotype_data_rs($plots_names);  
-	my $data                = $self->structure_phenotype_data($stock_pheno_data_rs);
+	my $data                = $self->structure_plots_list_phenotype_data($stock_pheno_data_rs);
 
 	return \$data;
     }
@@ -1425,6 +1426,24 @@ sub plots_list_phenotype_data {
     }
    
 }
+
+# sub plots_list_phenotype_data {
+#     my ($self, $plots_ids) = @_;
+
+#     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+# 	bcs_schema  =>$self->schema,
+# 	data_level  => 'plot',
+# 	search_type =>'Native',
+# 	plot_list   => $plots_ids,
+# 	);
+
+#     my @data = $phenotypes_search->get_phenotype_matrix();
+
+#     my $clean_data = $self->structure_phenotype_data(\@data);
+   
+#     return \$clean_data;
+
+# }
 
 
 sub project_traits {
@@ -1620,7 +1639,7 @@ sub project_phenotype_data_rs {
               
 sub plots_list_phenotype_data_rs {
     my ($self, $plots) = @_;
-  
+   
     my $rs = $self->schema->resultset("Stock::Stock")->search(
         {
             'observable.name' => { '!=', undef } ,
@@ -1637,14 +1656,17 @@ sub plots_list_phenotype_data_rs {
                   }
                 } ,
                 ],
-            select   => [ qw/ me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id project.project_id project.description / ],
-            as       => [ qw/ stock_id uniquename value observable observable_id project_id project_description / ],
+            select   => [ qw/ me.stock_id me.uniquename phenotype.value observable.name observable.cvterm_id project.project_id project.name / ],
+            as       => [ qw/ germplasmDbId germplasmName value observable observable_id studyDbId studyName / ],
           
             order_by => [  'observable.name' ],
         }  );
           
     return $rs;
+
 }
+
+
 
 
 sub stock_phenotype_data_rs {
@@ -1685,17 +1707,35 @@ sub stock_phenotype_data_rs {
 }
 
 
+# sub phenotype_data {
+#      my ($self, $pop_id ) = @_; 
+    
+#      my $data;
+#      if ($pop_id) 
+#      {
+# 	 my  $phenotypes = $self->project_phenotype_data_rs($pop_id);
+# 	 $data           = $self->structure_phenotype_data($phenotypes);                   
+#      }
+    
+#      return  \$data; 
+# }
+
 sub phenotype_data {
-     my ($self, $pop_id ) = @_; 
+    my ($self, $project_id) = @_;
+ 
+    my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+	bcs_schema=>$self->schema,
+	search_type=>'Native',
+	trial_list=>[$project_id],
+	data_level=>'plot',
+	);
+       
+    my @data = $phenotypes_search->get_phenotype_matrix();
+
+    my $clean_data = $self->structure_phenotype_data(\@data);
     
-     my $data;
-     if ($pop_id) 
-     {
-	 my  $phenotypes = $self->project_phenotype_data_rs($pop_id);
-	 $data           = $self->structure_phenotype_data($phenotypes);                   
-     }
-    
-     return  \$data; 
+    return \$clean_data;
+
 }
 
 
@@ -1714,6 +1754,24 @@ sub project_trait_phenotype_data {
 
 
 sub structure_phenotype_data {
+    my ($self, $data) = @_;
+
+    my $round = Math::Round::Var->new(0.001);
+
+    my $formatted_data;
+
+    for (my $i =0; $i < @$data; $i++) 
+    {
+	my $row = $data->[$i];
+	$row = join("\t", @$row);
+	$formatted_data .=  $row . "\n";
+    }
+    
+    return $formatted_data;
+}
+
+
+sub structure_plots_list_phenotype_data {
     my $self = shift;
     my $phenotypes = shift;
     
@@ -1726,6 +1784,7 @@ sub structure_phenotype_data {
     no warnings 'uninitialized';
 
     my $trial_id;
+    my $project;
 
     my $round = Math::Round::Var->new(0.001);
 
@@ -1737,14 +1796,16 @@ sub structure_phenotype_data {
         if ($cvterm_name eq $observable) { $replicate ++ ; } else { $replicate = 1 ; }
         $cvterm_name = $observable;
            
-        my $project = $r->get_column('project_description') ;
-	$trial_id   = $r->get_column('project_id') if $replicate == 1;
-	
-	my $hash_key = $r->get_column('uniquename');
+        $project = $r->get_column('studyName');
+
+	$trial_id   = $r->get_column('studyDbId') if $replicate == 1;
+
+	my $hash_key = $r->get_column('germplasmName');
 
         $phen_hashref->{$hash_key}{$observable} = $r->get_column('value');
-        $phen_hashref->{$hash_key}{stock_id} = $r->get_column('stock_id');
-        $phen_hashref->{$hash_key}{stock_name} = $r->get_column('uniquename');
+        $phen_hashref->{$hash_key}{germplasmDbId} = $r->get_column('germplasmDbId');
+        $phen_hashref->{$hash_key}{germplasmName} = $r->get_column('germplasmName');
+	$phen_hashref->{$hash_key}{studyName} = $r->get_column('studyName');
         $cvterms{$observable} =  'NA';
              
     }
@@ -1753,7 +1814,7 @@ sub structure_phenotype_data {
 
     if (keys %cvterms) 
     {
-	$d = "uniquename\tobject_name\tobject_id\tstock_id\tstock_name\tdesign\tblock\treplicate";
+	$d = "germplasmName\tgermplasmDbId\tstudyName\tstudyYear\tlocationName\tstudyDesign\tblockNumber\treplicate";
 
 	foreach my $term_name (sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms )  
 	{
@@ -1766,7 +1827,7 @@ sub structure_phenotype_data {
 
 	foreach my $key ( sort keys %$phen_hashref ) 
 	{        
-	    my $subject_id       = $phen_hashref->{$key}{stock_id};
+	    my $subject_id       = $phen_hashref->{$key}{germplasmDbId};
 	    my $stock_object_row = $self->map_subject_to_object($subject_id)->single;
 
 	    my ($object_name, $object_id);
@@ -1778,12 +1839,14 @@ sub structure_phenotype_data {
 		push @project_genotypes, $object_name;
 	    }
 
-	    $d .= $key . "\t" .$object_name . "\t" . $object_id . "\t" . $phen_hashref->{$key}{stock_id} . 
-              "\t" . $phen_hashref->{$key}{stock_name};
+	    $d .= $object_name . "\t" . $object_id . "\t" . $phen_hashref->{$key}{studyName};
 
-	    my $block     = 'NA';
-	    my $replicate = 'NA';
-	    my $design    = 'NA';
+	    my $location_name = 'NA';
+	    my $study_year    = 'NA';
+	    my $design        = 'NA';
+	    my $block         = 'NA';
+	    my $replicate     = 'NA';
+	    my $design        = 'NA';
 	 
 	    my $design_rs = $self->experimental_design($trial_id);
 
@@ -1804,7 +1867,7 @@ sub structure_phenotype_data {
 		$replicate = $replicate_rs->first->value();
 	    }
 
-	    $d .= "\t". $design . "\t" . $block .  "\t" . $replicate;
+	    $d .= "\t". $study_year .  "\t" . $location_name ."\t". $design .  "\t" . $replicate ."\t" . $block;
 
 	    foreach my $term_name ( sort { $cvterms{$a} cmp $cvterms{$b} } keys %cvterms ) 
 	    {    
@@ -1829,6 +1892,8 @@ sub structure_phenotype_data {
  
     return $d;
 }
+
+
 
 
 =head2 phenotypes_by_trait
