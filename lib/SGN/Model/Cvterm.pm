@@ -194,8 +194,8 @@ sub get_traits_from_component_categories {
     foreach my $key (sort keys %$concatenated_cvterms){
         my $existing_cvterm_name = $schema->resultset('Cv::Cvterm')->find({ name=>$key });
         if ($existing_cvterm_name){
-            push @existing_traits, [$existing_cvterm_name->cvterm_id(), $key];
-            next;
+            #push @existing_traits, [$existing_cvterm_name->cvterm_id(), $key];
+            #next;
         }
         my $existing_cvterm_id = $self->get_trait_from_exact_components($schema, $concatenated_cvterms->{$key});
         if ($existing_cvterm_id){
