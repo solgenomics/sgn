@@ -60,9 +60,9 @@ sub name_var :Path('/test/') :Args(0) {
 
 	# to generate temporary file name for the analysis
 	#my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/motifs_finder/root/static/tempfile_motif/');
-    #my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/sgn/static/documents/tempfiles/');
-    my $dir = $c->tempfiles_subdir('motif_tempfile');
-    my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
+    my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/");
+    #my $dir = $c->tempfiles_subdir('motif_tempfile');
+    #my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
     print STDERR Dumper($filename);
 	#if (not (defined($seq_file)) && ($sequence !~ /^>/))  {
 	if ($sequence !~ /^>/ && $seq_file eq '')  {
@@ -203,8 +203,8 @@ sub name_var :Path('/test/') :Args(0) {
 		        elsif ($line =~ m/^\s+\*+/ ) {
 				$logo = 0;
                 #my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/motifs_finder/root/static/tempfile_motif/');
-		     	#my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/sgn/static/documents/tempfiles/');
-                my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
+		     	my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/");
+                #my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
 			}
 
 
@@ -226,8 +226,8 @@ sub name_var :Path('/test/') :Args(0) {
 
 			elsif ($line =~ m/^site\s+/ ) {
 				$freq_tab = 0;
-				#my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/sgn/static/documents/tempfiles/');
-                my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
+				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/");
+                #my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
 			}
 
 
@@ -248,8 +248,8 @@ sub name_var :Path('/test/') :Args(0) {
 
 			elsif ($line =~ m/^Background\sprobability\smodel/ ) {
 				$prob_tab = 0;
-				#my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/sgn/static/documents/tempfiles/');
-                my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
+				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/");
+                #my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
 			}
 
 
@@ -270,8 +270,8 @@ sub name_var :Path('/test/') :Args(0) {
 
 			elsif ($line =~ m/^\s+\d\.\d+\s\d\.\d+\s/ ) {
 				$BGPM_tab = 0;
-				#my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/sgn/static/documents/tempfiles/');
-                my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
+				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/");
+                #my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
 			}
 
 			if ($sum_indv_tab == 1 ) {
@@ -291,8 +291,8 @@ sub name_var :Path('/test/') :Args(0) {
 
 			elsif ($line =~ m/^Log\sFragmentation\sportion\sof\sMAP\sfor\smotif\s/ ) {
 				$sum_indv_tab = 0;
-				#my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/sgn/static/documents/tempfiles/');
-                my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
+				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/");
+                #my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
 			}
 
 	}
