@@ -170,7 +170,8 @@ sub verify {
     if (scalar(@plots_missing) > 0 || scalar(@traits_missing) > 0) {
         print STDERR "Plots or traits not valid\n";
         print STDERR "Invalid plots: ".join(", ", map { "'$_'" } @plots_missing)."\n" if (@plots_missing);
-        print STDERR "Invalid traits: ".join(", ", map { "'$_'" } @traits_missing)."\n" if (@traits_missing);
+        print STDERR "Invalid traits: \n";
+        print STDERR Dumper \@traits_missing;
         $error_message = "Invalid plots: <br/>".join(", <br/>", map { "'$_'" } @plots_missing) if (@plots_missing);
         $error_message = "Invalid traits: <br/>".join(", <br/>", map { "'$_'" } @traits_missing) if (@traits_missing);
         return ($warning_message, $error_message);
