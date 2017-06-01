@@ -92,13 +92,12 @@ sub store_composed_term {
 
         my $cvterm_name_check = $schema->resultset('Cv::Cvterm')->find({ name=>$name });
         if ($cvterm_name_check){
-            print STDERR "Cvterm with name $name already exists... skipping new addition\n";
-            next;
+            print STDERR "Cvterm with name $name already exists... so components must be new\n";
         }
 
         my $existing_trait_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@component_ids);
         if ($existing_trait_id) {
-            print STDERR "This trait already exists $name with the following component_ids".Dumper(\@component_ids)."\n";
+            print STDERR "Skipping: This trait already exists $name with the following component_ids".Dumper(\@component_ids)."\n";
             next;
         }
 
@@ -122,7 +121,7 @@ sub store_composed_term {
 
     #print STDERR "Parent cvterm_id = " . $parent_term->cvterm_id();
 
-    my $new_term= $schema->resultset("Cv::Cvterm")->create(
+    my $new_term= $schema->resultset("Cv::Cvterm")->find_or_create(
       { cv_id  =>$cv->cv_id(),
         name   => $name,
         dbxref_id  => $new_term_dbxref-> dbxref_id()
