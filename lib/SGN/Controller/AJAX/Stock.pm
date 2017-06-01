@@ -1476,38 +1476,17 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
     my $q = "SELECT stock.stock_id, stock.uniquename, cvterm.name FROM stock_relationship
             INNER JOIN stock ON (stock_relationship.subject_id = stock.stock_id)
             INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
-            WHERE stock_relationship.object_id = ? AND stock_relationship.type_id = ?";
+            WHERE stock_relationship.object_id = ? AND stock_relationship.type_id = ?
 
-    my $h = $dbh->prepare($q);
-    $h->execute($stock_id, $plot_of_type_id);
+            UNION ALL
 
-    my @trial_related_stock =();
-    while(my($stock_id, $stock_name, $cvterm_name) = $h->fetchrow_array()){
-
-    push @trial_related_stock,[qq{<a href = "/stock/$stock_id/view">$stock_name</a}, $cvterm_name];
-    }
-
-    $c->stash->{rest}={data=>\@trial_related_stock};
-}
-
-sub get_accession_of_this_plot:Chained('/stock/get_stock') PathPart('datatables/accession_of_this_plot') Args(0){
-    my $self = shift;
-    my $c = shift;
-    my $stock_id = $c->stash->{stock_row}->stock_id();
-
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
-    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-    my $dbh = $schema->storage->dbh();
-
-    my $q = "SELECT stock.stock_id, stock.uniquename, cvterm.name FROM stock_relationship
+            SELECT stock.stock_id, stock.uniquename, cvterm.name FROM stock_relationship
             INNER JOIN stock ON (stock_relationship.object_id = stock.stock_id)
             INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
             WHERE stock_relationship.subject_id = ? AND stock_relationship.type_id = ?";
 
-
-
     my $h = $dbh->prepare($q);
-    $h->execute($stock_id, $plot_of_type_id);
+    $h->execute($stock_id, $plot_of_type_id, $stock_id, $plot_of_type_id);
 
     my @trial_related_stock =();
     while(my($stock_id, $stock_name, $cvterm_name) = $h->fetchrow_array()){
@@ -1517,7 +1496,6 @@ sub get_accession_of_this_plot:Chained('/stock/get_stock') PathPart('datatables/
 
     $c->stash->{rest}={data=>\@trial_related_stock};
 }
-
 
 sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') Args(0){
     my $self = shift;
