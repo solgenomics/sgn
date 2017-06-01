@@ -63,6 +63,7 @@ sub name_var :Path('/test/') :Args(0) {
     #my ($fh, $filename) =tempfile("XXXXX", DIR => '/home/vagrant/cxgn/sgn/static/documents/tempfiles/');
     my $dir = $c->tempfiles_subdir('motif_tempfile');
     my ($fh, $filename) = $c->tempfile( TEMPLATE => 'motif_tempfile/motif'.'XXXXX');
+    print STDERR Dumper($filename);
 	#if (not (defined($seq_file)) && ($sequence !~ /^>/))  {
 	if ($sequence !~ /^>/ && $seq_file eq '')  {
 		push ( @errors , "Please, paste sequences or attach sequence file.<br/>Ensure your sequence conform with 'usage help' description.\n");
