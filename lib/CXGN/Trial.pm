@@ -1766,7 +1766,7 @@ sub get_plots {
 
 =head2 get_plots_per_accession
 
- Usage:        $plants = $t->get_plots_per_accession();
+ Usage:        $plots = $t->get_plots_per_accession();
  Desc:         retrieves that plots that are part of the design for this trial grouping them by accession.
  Ret:          a hash ref containing { $accession_stock_id1 => [ [ plot_name1, plot_stock_id1 ], [ plot_name2, plot_stock_id2 ] ], ... }
  Args:
