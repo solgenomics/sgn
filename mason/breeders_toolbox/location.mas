@@ -26,11 +26,12 @@ foreach my $prog (sort keys %$locations) {
         <th>Longitude</th>
         <th>Altitude(m)</th>
         <th>Trial Count</th>
-        <th>Edit/Remove</th>
+        <th>Edit</th>
+        <th>Remove</th>
       </thead>
       <tbody>";
 
-  #print "<thead><tr class=\"success\"><td colspan=\"5\"><h4>$prog</h4></td></tr>
+  #print "<thead><tr class=\"success\"><td colspan=\"6\"><h4>$prog</h4></td></tr>
   #	 <tr><th>Location</th><th>Latitude</th><th>Longitude</th><th>Altitude</th><th>Trials Conducted</th></tr>
   #	 </thead>
 	# <tbody>";
@@ -38,14 +39,16 @@ foreach my $prog (sort keys %$locations) {
   foreach my $loc (@{$locations->{$prog}}) {
 
     my $delete_link = "";
+    my $edit_link = "";
     if (!$loc->[2] && $user_id) {
       $delete_link = "&nbsp;&nbsp;&nbsp;<a href=\"javascript:delete_location($loc->[0])\"><font style=\"color: red; font-weight: bold\">X</a>";
+      $edit_link = "&nbsp;&nbsp;&nbsp;<a href=\"javascript:edit_location($loc->[0])\"><font style=\"color: blue; font-weight: bold\">Edit</a>";
     }
 
-    print "<tr><td>".$loc->[1]."</td><td>".$loc->[2]."</td><td>".$loc->[3]."</td><td>".$loc->[4]."</td><td>(<a href=\"/search/trials?nd_geolocation=$loc->[1]\">".($loc->[5] || "0")." trials</a>)</td><td>$delete_link</td></tr>";
+    print "<tr><td>".$loc->[1]."</td><td>".$loc->[2]."</td><td>".$loc->[3]."</td><td>".$loc->[4]."</td><td>(<a href=\"/search/trials?nd_geolocation=$loc->[1]\">".($loc->[5] || "0")." trials</a>)</td><td>$edit_link</td><td>$delete_link</td></tr>";
    }
 
-   #print "</tbody><thead><tr style=\"height:30px\"><td colspan=\"5\"></td></tr></thead>";
+   #print "</tbody><thead><tr style=\"height:30px\"><td colspan=\"6\"></td></tr></thead>";
    print "</tbody></table>";
 }
 
@@ -99,38 +102,54 @@ print "</div>";
   </div>
 </div>
 
-<!--
-<div id="add_location_dialog"  class="ui-widget" >
-
-Name <input id="location_description" size="20" /><br /><br />
-Latitude <input id="latitude" name="latitude" size="4" />
-&nbsp;&nbsp;Longitude <input id="longitude" name="longitude" size="4" />
-&nbsp;&nbsp;Altitude (m)<input id="altitude" name="altitude" size="4" />
-
+<div class="modal fade" id="edit_location_dialog" name="edit_location_dialog" tabindex="-1" role="dialog" aria-labelledby="editLocationDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="editLocationDialog">Edit Location</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <form class="form-horizontal" role="form" name="edit_location_form" id="edit_location_form">
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Name: </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="change_location_description" id="change_location_description" type="text" />
+              </div>
+	    </div>
+      <div class="form-group">
+              <label class="col-sm-2 control-label">Latitude: </label>
+              <div class="col-sm-10">
+    <input class="form-control" name="change_latitude" id="change_latitude" type="text" size="4"/>
+              </div>
+      </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Longitude: </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="change_longitude" id="change_longitude" type="text" size="4"/>
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Altitude (m): </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="change_altitude" id="change_altitude" type="text" size="4"/>
+              </div>
+	    </div>
+	  </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="new_location_submit" id="new_location_submit">Save Changes</button>
+      </div>
+    </div>
+  </div>
 </div>
--->
 
 <script defer="defer">
 
 jQuery(document).ready(function() {
-
-  //jQuery('#add_location_dialog').dialog( {
-  //   autoOpen: false,
-  //   buttons:  { "Cancel" : { text: "Cancel",
-  //                            id: "cancel_new_location_button",
-  //                            click: function() { jQuery('#add_location_dialog').dialog("close"); }
-  //                          },
-  //                   "Add": { text: "Add",
-  //                            id: "add_new_location_button",
-  //                            click: function() { save_location_info(); }
-  //                           }
-  //             },
-  //   modal: true,
-  //   width: 500,
-  //   height: 200,
-  //   title: "Add new location"
-  //
- // });
 
   $('#add_location_link').click( function() {
       $('#add_location_dialog').modal("show");
@@ -161,31 +180,6 @@ jQuery(document).ready(function() {
       });
   });
 
-
-  //function save_location_info() {
-  //   var desc = jQuery('#location_description').val();
-  //   var longitude = jQuery('#longitude').val();
-  //   var latitude = jQuery('#latitude').val();
-  //   var altitude = jQuery('#altitude').val();
-  //
-  //   if (desc == '') { alert('Description is required.');  return; }
-  //
-  //   new jQuery.ajax( {
-  //     type: 'POST',
-  //     url: '/ajax/breeders/location/insert',
-  //     data: { 'description': desc,  'longitude':longitude, 'latitude':latitude, 'altitude': altitude },
-  //     success: function(response) {
-  //                if (response.error) { alert(response.error); }
-  //                else {
-  //                   alert('The new location was saved.');
-  //                   jQuery('#add_location_dialog').dialog("close");
- //                    location.reload();
-  //                }
-  //              },
-   //    error: function() { alert('An error occurred. Please try again later.'); }
-  //   });
- // }
-
 });
 
 
@@ -210,6 +204,15 @@ jQuery(document).ready(function() {
              }
       });
    }
+
+   function edit_location(loc) {
+        //console.log(JSON.stringify(loc));
+        //$('#change_location_description').val(loc[1]);
+        //$('#change_latitude').val(loc[2]);
+        //$('#change_longitude').val(loc[3]);
+        //$('#change_altitude').val(loc[4]);
+        $('#edit_location_dialog').modal("show");
+    }
 
 
 </script>
