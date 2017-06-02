@@ -49,7 +49,7 @@ sub get_stock {
   my $self = shift;
   my $stock_rs = $self->_get_stock_resultset();
   my $stock;
-  if ($stock_rs->count == 1) {
+  if ($stock_rs->count > 0) {
     $stock = $stock_rs->first;
   } else {
     return;
