@@ -153,7 +153,7 @@ function brapi_create_paginated_table(data, pagination, div_id, return_url, link
         html = html+"</tbody></table>";
         
         html = html+"<div class='well well-sm'><div class='row'>";
-        html = html+"<div class='col-sm-6'><div class='row'><div class='col-sm-7'><div class='btn-group' role='group'>";
+        html = html+"<div class='col-sm-7'><div class='row'><div class='col-sm-2'><button class='btn btn-primary' id='brapi_table_select_submit_"+div_id+"' >Select</button></div><div class='col-sm-7 col-md-5'><div class='btn-group' role='group'>";
         
         if (total_pages > 1) {
             if (current_page > 0) {
@@ -164,8 +164,8 @@ function brapi_create_paginated_table(data, pagination, div_id, return_url, link
         } else {
             html = html+"<button class='disabled btn btn-sm btn-default glyphicon glyphicon-arrow-left'></button><button class='btn btn-sm btn-default' style='margin-top:1px'>Page "+current_page+" of "+total_pages+"</button><button id='table_next_page_button' class='disabled btn btn-sm btn-default glyphicon glyphicon-arrow-right'></button>";
         }
-        html = html+"</div></div><div class='col-sm-5'><div class='input-group input-group-sm'><span class='input-group-addon' id='basic-addon1'>Page:</span><input type='text' id='table_change_current_page_input' class='form-control' placeholder='"+current_page+"' aria-describedby='basic-addon1'></div></div></div></div>";
-        html = html+"<div class='col-sm-6'><div class='row'><div class='col-sm-7'><div class='input-group input-group-sm'><span class='input-group-addon' id='basic-addon2'>Page Size:</span><input type='text' id='table_change_page_size_input' class='form-control' placeholder='"+page_size+"' aria-describedby='basic-addon2'></div></div><div class='col-sm-5'><button class='btn btn-sm btn-default'>Total: "+total_count+"</button></div></div></div></div>";
+        html = html+"</div></div><div class='col-sm-3 col-md-5'><div class='input-group input-group-sm'><span class='input-group-addon' id='basic-addon1'>Page:</span><input type='text' id='table_change_current_page_input' class='form-control' placeholder='"+current_page+"' aria-describedby='basic-addon1'></div></div></div></div>";
+        html = html+"<div class='col-sm-5'><div class='row'><div class='col-sm-7'><div class='input-group input-group-sm'><span class='input-group-addon' id='basic-addon2'>Page Size:</span><input type='text' id='table_change_page_size_input' class='form-control' placeholder='"+page_size+"' aria-describedby='basic-addon2'></div></div><div class='col-sm-5'><button class='btn btn-sm btn-default'>Total: "+total_count+"</button></div></div></div></div>";
         html = html+"</div>";
     }
     jQuery("#"+div_id).html(html);

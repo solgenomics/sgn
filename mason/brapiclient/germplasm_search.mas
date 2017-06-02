@@ -108,7 +108,7 @@ jQuery(document).ready(function() {
         });
     });
 
-    jQuery(document).on('change', 'input[type=checkbox]', function(){
+    jQuery(document).on('click', '#brapi_table_select_submit_brapi_germplasm_search_result_div', function(){
         jQuery.each(jQuery('input[name="brapi_table_select_'+return_url+'"]:checked'), function(){
             if (jQuery.inArray(jQuery(this).val(), selected_results) == -1){
                 selected_results.push(jQuery(this).val());
@@ -129,12 +129,12 @@ jQuery(document).ready(function() {
             'success': function(response){
                 console.log(response);
                 var html = '<h3>How Selected GermplasmNames Compare to This Database:</h3>';
-                html = html + '<table class="table table-bordered"><thead><tr><th>GermplasmName</th><th>Status</th><th>Possible Matches</th></tr></thead><tbody>';
+                html = html + '<table class="table table-bordered"><thead><tr><th>Select</th><th>GermplasmName</th><th>Status</th><th>Possible Matches</th></tr></thead><tbody>';
                 for (var i=0; i<response.found.length; i++){
-                    html = html + '<tr><td>' + response.found[i].unique_name + '</td><td class="bg-success">Exact GermplasmName Found in This Database</td><td>Exact Match</td></tr>';
+                    html = html + '<tr><td><input type="checkbox" name="brapi_germplasm_search_collection_select" disabled/></td><td>' + response.found[i].unique_name + '</td><td class="bg-success">Exact GermplasmName Found in This Database</td><td>Exact Match</td></tr>';
                 }
                 for (var i=0; i<response.fuzzy.length; i++){
-                    html = html + '<tr><td>' + response.fuzzy[i].name + '</td><td class="bg-info">Possible GermplasmName Matches Found in This Database</td>';
+                    html = html + '<tr><td><input type="checkbox" name="brapi_germplasm_search_collection_select" value="' + response.fuzzy[i].name + '"/></td><td>' + response.fuzzy[i].name + '</td><td class="bg-info">Possible GermplasmName Matches Found in This Database</td>';
                     html = html + '<td><select class="form-control">'
                     for (var j=0; j<response.fuzzy[i].matches.length; j++){
                         html = html + '<option value="'+response.fuzzy[i].matches[j].name+'">'+response.fuzzy[i].matches[j].name+'</option>'
@@ -142,9 +142,9 @@ jQuery(document).ready(function() {
                     html = html + '</select></td></tr>';
                 }
                 for (var i=0; i<response.absent.length; i++){
-                    html = html + '<tr><td>' + response.absent[i] + '</td><td class="bg-warning">GermplasmName Not Found in This Database</td><td>No Match</td></tr>';
+                    html = html + '<tr><td><input type="checkbox" name="brapi_germplasm_search_collection_select" value="' + response.absent[i] + '"/></td><td>' + response.absent[i] + '</td><td class="bg-warning">GermplasmName Not Found in This Database</td><td>No Match</td></tr>';
                 }
-                html = html + '</tbody></table>';
+                html = html + '</tbody></table><button class="btn btn-primary" name="brapi_germplasm_search_submit_final" id="brapi_germplasm_search_submit_final">Save in Database</button>';
                 jQuery('#working_modal').modal('hide');
                 jQuery('#brapi_germplasm_search_result_div_collection').html(html);
             },
@@ -155,7 +155,56 @@ jQuery(document).ready(function() {
         })
     });
 
+    jQuery(document).on('click', '#brapi_germplasm_search_submit_final', function(){
+        //jQuery('#working_modal').modal('show');
+        var selected_to_save = [];
+        jQuery.each(jQuery('input[name="brapi_germplasm_search_collection_select"]:checked'), function(){
+            if (jQuery.inArray(jQuery(this).val(), selected_to_save) == -1){
+                selected_to_save.push(jQuery(this).val());
+            }
+        });
+        console.log(selected_to_save);
+        var to_save = [];
+        var num_requests = selected_to_save.length;
+        var request = 1;
+        for (var i=0; i<num_requests; i++){
+            jQuery.ajax({
+                'method':'GET',
+                'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm-search?matchMethod=exact&germplasmName='+selected_to_save[i],
+                'success': function(response){
+                    //console.log(response);
+                    to_save.push(response.result.data[0]);
+                    if (request == num_requests){
+                        perform_save(to_save);
+                    }
+                    request++;
+                },
+                'error': function(response){
+                    alert('An error occurred getting details to save!');
+                }
+            });
+        }
+
+    });
+
 });
 
-
+function perform_save(to_save){
+    console.log(to_save);
+    jQuery.ajax({
+        'url': '/ajax/accession_list/add',
+        'method': 'POST',
+        'data': {
+            'full_info' : JSON.stringify(to_save),
+        },
+        'success': function(response){
+            console.log(response);
+            //jQuery('#working_modal').modal('show');
+        },
+        'error': function(response){
+            alert('An error occurred in fuzzy search!');
+            //jQuery('#working_modal').modal('show');
+        }
+    })
+}
 </script>

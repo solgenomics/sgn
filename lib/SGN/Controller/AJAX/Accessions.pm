@@ -206,6 +206,7 @@ sub add_accession_list_POST : Args(0) {
   my $species_name = $c->req->param('species_name');
   my $population_name = $c->req->param('population_name');
   my $organization_name = $c->req->param('organization_name');
+  my $full_info = decode_json $c->req->param('full_info');
   my @accession_list;
   my $stock_add;
   my $validated;
