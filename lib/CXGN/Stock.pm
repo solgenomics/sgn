@@ -56,6 +56,11 @@ has 'species' => (
     is => 'rw',
 );
 
+has 'genus' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
 has 'type' => (
     isa => 'Str',
     is => 'rw',
@@ -98,6 +103,87 @@ has 'population_name' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
+
+has 'accessionNumber' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'germplasmPUI' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'pedigree' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'germplasmSeedSource' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'synonyms' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'commonCropName' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'instituteCode' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'instituteName' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'biologicalStatusOfAccessionCode' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'countryOfOriginCode' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'typeOfGermplasmStorageCode' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'speciesAuthority' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'subtaxa' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'subtaxaAuthority' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'donors' => (
+    isa => 'Maybe[ArrayRef]',
+    is => 'rw',
+);
+
+has 'acquisitionDate' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
 
 sub BUILD {
     my $self = shift;

@@ -206,7 +206,7 @@ sub add_accession_list_POST : Args(0) {
   my $species_name = $c->req->param('species_name');
   my $population_name = $c->req->param('population_name');
   my $organization_name = $c->req->param('organization_name');
-  my $full_info = decode_json $c->req->param('full_info');
+  my $full_info = $c->req->param('full_info') ? decode_json $c->req->param('full_info') : '';
   my @accession_list;
   my $stock_add;
   my $validated;
@@ -229,6 +229,38 @@ sub add_accession_list_POST : Args(0) {
     return;
   }
 
+  if ($full_info){
+      foreach (@$full_info){
+          my $stock = CXGN::Stock->new({
+              schema=>$schema,
+              type=>'accession',
+              species=>$_->{species},
+              genus=>$_->{genus},
+              name=>$_->{germplasmName},
+              uniquename=>$_->{defaultDisplayName},
+              organization_name=>$_->{organizationName},
+              population_name=>$_->{populationName},
+              description=>$_->{description},
+              accessionNumber=>$_->{accessionNumber},
+              germplasmPUI=>$_->{germplasmPUI},
+              pedigree=>$_->{pedigree},
+              germplasmSeedSource=>$_->{germplasmSeedSource},
+              synonyms=>$_->{synonyms},
+              commonCropName=>$_->{commonCropName},
+              instituteCode=>$_->{instituteCode},
+              instituteName=>$_->{instituteName},
+              biologicalStatusOfAccessionCode=>$_->{biologicalStatusOfAccessionCode},
+              countryOfOriginCode=>$_->{countryOfOriginCode},
+              typeOfGermplasmStorageCode=>$_->{typeOfGermplasmStorageCode},
+              speciesAuthority=>$_->{speciesAuthority},
+              subtaxa=>$_->{subtaxa},
+              subtaxaAuthority=>$_->{subtaxaAuthority},
+              donors=>$_->{donors},
+              acquisitionDate=>$_->{acquisitionDate}
+          });
+      }
+  }
+
   @accession_list = @{_parse_list_from_json($accession_list_json)};
   if ($population_name eq '') {
       $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@accession_list, species => $species_name, owner_name => $owner_name,phenome_schema => $phenome_schema, dbh => $dbh, organization_name => $organization_name} );
@@ -238,10 +270,12 @@ sub add_accession_list_POST : Args(0) {
   $validated = $stock_add->validate_stocks();
   if (!$validated) {
     $c->stash->{rest} = {error =>  "Stocks already exist in the database" };
+    return;
   }
   $added = $stock_add->add_accessions();
   if (!$added) {
     $c->stash->{rest} = {error =>  "Could not add stocks to the database" };
+    return;
   }
   $c->stash->{rest} = {success => "1"};
   return;
