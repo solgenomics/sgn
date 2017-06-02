@@ -30,9 +30,12 @@ sub search : Path('/ajax/search/traits') Args(0) {
     my $data = $trait_search->search();
     my @result;
     foreach (@$data){
+	my $db_name = $_->{db_name};
+	my $accession = $_->{accession};
+	my $trait_accession = $db_name .":". $accession ;
 	push @result,
 	[
-	 $_->{trait_id},
+	 $trait_accession,
 	 "<a href=\"/cvterm/$_->{trait_id}/view\">$_->{trait_name}</a>",
 	 $_->{trait_definition},
 	];

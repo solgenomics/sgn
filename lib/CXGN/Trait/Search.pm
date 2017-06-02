@@ -134,8 +134,6 @@ sub search {
 		    'is_obsolete' => 0,
 		    'is_relationshiptype' => 0,
 		} ,
-		select => [ 'me.cvterm_id', 'me.name' , 'me.definition', ],
-		as     => ['cvterm_id', 'name' , 'definition']
 	    }
 	    );
     } else { 
@@ -147,8 +145,6 @@ sub search {
 		    'is_obsolete' => 0,
 		    'is_relationshiptype' => 0,
 		},
-		select => [ 'cvterms.cvterm_id', 'cvterms.name' , 'cvterms.definition', ],
-		as     => ['cvterm_id', 'name' , 'definition']
 	    }
 	    );
     }
@@ -162,7 +158,8 @@ sub search {
 
         $traits{$trait_name}->{trait_id} = $trait_id;
         $traits{$trait_name}->{trait_definition} = $t->definition();
-
+	$traits{$trait_name}->{db_name} = $t->dbxref->db->name();
+	$traits{$trait_name}->{accession} = $t->dbxref->accession();
     }
     
     foreach my $t ( sort( keys(%traits) ) ) {
@@ -186,6 +183,8 @@ sub search {
             trait_id => $traits{$t}->{trait_id},
             trait_name => $t,
 	    trait_definition => $traits{$t}->{trait_definition},
+	    db_name => $traits{$t}->{db_name},
+	    accession=> $traits{$t}->{accession},
 	};
     }
 
