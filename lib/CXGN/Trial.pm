@@ -1291,6 +1291,39 @@ sub get_traits_assayed {
     return \@traits_assayed;
 }
 
+=head2 function get_trait_components_assayed()
+
+ Usage:
+ Desc:         returns the cvterm_id and name for trait components assayed
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_trait_components_assayed {
+    my $self = shift;
+    my $stock_type = shift;
+    my $composable_cvterm_format = shift;
+    my $dbh = $self->bcs_schema->storage()->dbh();
+    my $traits_assayed = $self->get_traits_assayed($stock_type);
+
+    my %unique_components;
+    my @trait_components_assayed;
+    foreach (@$traits_assayed){
+        my $trait_components = SGN::Model::Cvterm->get_components_from_trait($self->bcs_schema, $_->[0]);
+        foreach (@$trait_components){
+            if (!exists($unique_components{$_})){
+                my $component_cvterm = SGN::Model::Cvterm::get_trait_from_cvterm_id($self->bcs_schema, $_, $composable_cvterm_format);
+                push @trait_components_assayed, [$_, $component_cvterm];
+                $unique_components{$_}++;
+            }
+        }
+    }
+    return \@trait_components_assayed;
+}
+
 =head2 function get_experiment_count()
 
  Usage:

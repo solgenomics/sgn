@@ -232,7 +232,6 @@ sub list {
 
 ### OBJECT METHODS
 
-
 # return a resultset with children of the folder
 #
 sub _get_children {
@@ -267,6 +266,50 @@ sub _get_children {
 	return \@child_folders;
 }
 
+# return a resultset with children of the folder quickly
+#
+sub fast_children {
+
+	my $self = shift;
+    my $schema = shift;
+    my $parent_type = shift;
+    my (@folder_contents, %children);
+
+    #print STDERR "Running get children for project ".$self->{'name'}." at time ".localtime()."\n";
+
+    if ($parent_type eq 'breeding_program') {
+        my $rs = $schema->resultset("Project::Project")->search_related(
+            'project_relationship_subject_projects',
+            {   'type.name' => 'trial_folder'
+            },
+            {   join => 'type'
+            });
+        @folder_contents = map { $_->subject_project_id() } $rs->all();
+    }
+
+	my $rs = $schema->resultset("Project::Project")->search_related(
+        'project_relationship_subject_projects',
+        {   object_project_id => $self->{'id'},
+            subject_project_id => { 'not in' => \@folder_contents }
+        },
+        {   join      => { subject_project => { projectprops => 'type' } },
+            '+select' => ['subject_project.name', 'projectprops.value', 'type.name'],
+            '+as'     => ['project_name', 'project_value', 'project_type']
+        }
+     );
+
+    while (my $row = $rs->next) {
+        my $name = $row->get_column('project_name');
+        $children{$name}{'name'} = $name;
+        $children{$name}{'id'} = $row->subject_project_id();
+        $children{$name}{$row->get_column('project_value')} = 1;
+        $children{$name}{$row->get_column('project_type')} = 1;
+    }
+
+    #print STDERR "Finished running get children for project ".$self->{'name'}." at time ".localtime()."\n";  #Children are: ".Dumper(%children);
+	return %children
+}
+
 sub set_folder_content_type {
 	my $self = shift;
 	my $type = shift; #folder_for_trials or folder_for_crosses
@@ -291,6 +334,8 @@ sub set_folder_content_type {
 		}
 	}
 }
+
+
 
 sub associate_parent {
     my $self = shift;
@@ -438,47 +483,53 @@ sub remove_child {
 }
 
 sub get_jstree_html {
+    shift;
 	my $self = shift;
+    my $schema = shift;
 	my $parent_type = shift;
 	my $project_type_of_interest = shift // 'trial';
+    #print STDERR "Running get js tree html on project ".$self->{'name'}." at time ".localtime()."\n";
+    my ($folder_type_of_interest, $local_type_of_interest, $html);
 
-	my $html = "";
+    if ($project_type_of_interest eq 'trial') {
+        $local_type_of_interest = 'design'; # there is no 'trial' project prop, so using this as a proxy
+        $folder_type_of_interest = 'folder_for_trials';
+    }
+    elsif ($project_type_of_interest eq 'cross') {
+        $local_type_of_interest = 'cross';
+        $folder_type_of_interest = 'folder_for_crosses';
+    }
+    elsif ($project_type_of_interest eq 'genotyping_trial') {
+        $local_type_of_interest = 'genotyping_plate'; # in order to match projectprop value
+        $folder_type_of_interest = 'folder_for_trials';
+    }
 
-	$html .= $self->_jstree_li_html($parent_type, $self->folder_id(), $self->name());
+	$html .= _jstree_li_html($schema, $parent_type, $self->{'id'}, $self->{'name'});
 	$html .= "<ul>";
-	my $children = $self->children();
 
-	if (@$children > 0) {
-		foreach my $child (@$children) {
+	my %children = fast_children($self, $schema, $parent_type);
+	if (%children) {
+        foreach my $child (sort keys %children) {
+            #print STDERR "Working on child ".$children{$child}->{'name'}."\n";
 
-			my $folder_content_check;
-			if ($project_type_of_interest eq 'trial'){
-				$folder_content_check = $child->folder_for_trials;
-			}
-			if ($project_type_of_interest eq 'cross'){
-				$folder_content_check = $child->folder_for_crosses;
-			}
-			if (!$child->folder_for_trials && !$child->folder_for_crosses){
-				$folder_content_check = 1;
-			}
-
-			if ($child->is_folder() && $folder_content_check) {
-				$html .= $child->get_jstree_html('folder', $project_type_of_interest);
-			}
-			else {
-				#Only display $project of interest types.
-				if ($child->folder_type eq $project_type_of_interest) {
-					$html .= $self->_jstree_li_html($child->folder_type(), $child->folder_id(), $child->name())."</li>";
-				}
+			if ($children{$child}->{$folder_type_of_interest}) {
+                $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
+            }
+            elsif (!$children{$child}->{'folder_for_crosses'} && !$children{$child}->{'folder_for_trials'} && $children{$child}->{'trial_folder'}) {
+                $html .= get_jstree_html('shift', $children{$child}, $schema, 'folder', $project_type_of_interest);
+            }
+            elsif ($children{$child}->{$local_type_of_interest}) { #Only display $project of interest types.
+				$html .= _jstree_li_html($schema, $project_type_of_interest, $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
 			}
 		}
 	}
 	$html .= '</ul></li>';
+    #print STDERR "Finished, returning with html at time ".localtime()."\n";
 	return $html;
 }
 
 sub _jstree_li_html {
-    my $self = shift;
+    my $schema = shift;
     my $type = shift;
     my $id = shift;
     my $name = shift;
@@ -489,16 +540,7 @@ sub _jstree_li_html {
     } elsif ($type eq 'folder') {
     	$url = "/folder/".$id;
     } elsif ($type eq 'cross') {
-		print STDERR "$id : $name \n";
-		my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'cross', 'stock_type')->cvterm_id();
-		my $cross_stock = $self->bcs_schema->resultset("Project::Project")->search({ 'me.project_id' => $id })->search_related('nd_experiment_projects')->search_related('nd_experiment')->search_related('nd_experiment_stocks')->search_related('stock', {'stock.type_id'=>$cross_type_id})->first();
-		if ($cross_stock) {
-			$id = $cross_stock->stock_id();
-    		$url = "/cross/".$id;
-			return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\"><a href=\"$url\">".$name.'</a>';
-		} else {
-			return;
-		}
+    	$url = "/cross/".$id;
     }
 
     return "<li data-jstree='{\"type\":\"$type\"}' id=\"$id\"><a href=\"$url\">".$name.'</a>';

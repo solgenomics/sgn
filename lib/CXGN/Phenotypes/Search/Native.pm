@@ -242,7 +242,7 @@ sub search {
       push @where_clause, "(plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id)"; #plots AND plants
     }
 
-    my $where_clause = "WHERE " . (join (" AND " , @where_clause));
+    my $where_clause = " WHERE " . (join (" AND " , @where_clause));
 
     my $offset_clause = '';
     my $limit_clause = '';

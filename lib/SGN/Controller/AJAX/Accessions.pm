@@ -161,28 +161,33 @@ sub verify_fuzzy_options_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $accession_list_id = $c->req->param('accession_list_id');
     my $fuzzy_option_hash = decode_json($c->req->param('fuzzy_option_data'));
+    my $names_to_add = decode_json($c->req->param('names_to_add'));
     #print STDERR Dumper $fuzzy_option_hash;
     my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $accession_list_id } );
 
-    my @names_to_add;
+    my %names_to_add = map {$_ => 1} @$names_to_add;
     foreach my $form_name (keys %$fuzzy_option_hash){
         my $item_name = $fuzzy_option_hash->{$form_name}->{'fuzzy_name'};
         my $select_name = $fuzzy_option_hash->{$form_name}->{'fuzzy_select'};
         my $fuzzy_option = $fuzzy_option_hash->{$form_name}->{'fuzzy_option'};
         if ($fuzzy_option eq 'replace'){
             $list->replace_by_name($item_name, $select_name);
+            delete $names_to_add{$item_name};
         } elsif ($fuzzy_option eq 'keep'){
-            push @names_to_add, $item_name;
+            $names_to_add{$item_name} = 1;
         } elsif ($fuzzy_option eq 'remove'){
             $list->remove_by_name($item_name);
+            delete $names_to_add{$item_name};
         } elsif ($fuzzy_option eq 'synonymize'){
             my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$select_name})->stock_id();
             my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
             $stock->add_synonym($item_name);
             #$list->replace_by_name($item_name, $select_name);
+            delete $names_to_add{$item_name};
         }
     }
 
+    my @names_to_add = sort keys %names_to_add;
     my $rest = {
         success => "1",
         names_to_add => \@names_to_add
@@ -211,7 +216,7 @@ sub add_accession_list_POST : Args(0) {
   my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
   if (!$c->user()) {
-    $c->stash->{rest} = {error => "You need to be logged in to create a field book" };
+    $c->stash->{rest} = {error => "You need to be logged in to submit accessions." };
     return;
   }
 
@@ -219,7 +224,7 @@ sub add_accession_list_POST : Args(0) {
   $owner_name = $c->user()->get_object()->get_username();
 
   if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to create a field book." };
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to submit accessions." };
     return;
   }
 
@@ -243,14 +248,16 @@ sub add_accession_list_POST : Args(0) {
 
 sub fuzzy_response_download : Path('/ajax/accession_list/fuzzy_download') : ActionClass('REST') { }
 
-sub fuzzy_response_download_GET : Args(0) {
+sub fuzzy_response_download_POST : Args(0) {
     my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $fuzzy_json = $c->req->param('fuzzy_response');
     my $fuzzy_response = decode_json $fuzzy_json;
     #print STDERR Dumper $fuzzy_response;
 
+    my $synonym_hash_lookup = CXGN::Stock::StockLookup->new({schema => $schema})->get_synonym_hash_lookup();
     my @data_out;
-    push @data_out, ['In Your List', 'Database Accession Match', 'Database Synonym Match', 'Distance'];
+    push @data_out, ['In Your List', 'Database Accession Match', 'Database Synonym Match', 'Database Saved Synonyms', 'Distance'];
     foreach (@$fuzzy_response){
         my $matches = $_->{matches};
         my $name = $_->{name};
@@ -262,12 +269,14 @@ sub fuzzy_response_download_GET : Args(0) {
                 $match_name = $m->{synonym_of};
                 $synonym_of = $m->{name};
             }
-            push @data_out, [$name, $match_name, $synonym_of, $distance];
+            my $synonyms = $synonym_hash_lookup->{$match_name};
+            my $synonyms_string = $synonyms ? join ',', @$synonyms : '';
+            push @data_out, [$name, $match_name, $synonym_of, $synonyms_string, $distance];
         }
     }
     my $string ='';
     foreach (@data_out){
-        $string .= join "\t", @$_;
+        $string .= join("," , map {qq("$_")} @$_);
         $string .= "\n";
     }
     $c->res->content_type("text/plain");
