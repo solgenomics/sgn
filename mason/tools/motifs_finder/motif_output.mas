@@ -33,52 +33,31 @@ $sum => ""
 			print "</div>";
 		}
 
-
 	</%perl>
 
 	<hr style="\&quot;color:" #006699;="" margin:="" 50px="" 20px;="" \"="">
 	<h ><b>Motif Finder Result Summary</h></b><br/><br/><%  $sum %> <br/><br/><br/>
 
-
 </center>
 
-	<style>
+<style>
 
-		p.f1 {
-		font: 15px courier, sans-serif;
-		}
+	p.f1 {
+	font: 15px courier, sans-serif;
+	}
 
-	</style>
+</style>
 
-	<!--	<pre class="f1">Motif Finder Output:<br/><%  $res %>
-		Motif Finder Summary:<br/><%  $sum %>
-		</pre>	-->
+<center>
+	<form action="/result" >
 
+		<input name="file_name" value="<% $outfile %>" style="display:none;">
+		<input name="output_file" value="<% $res %>" style="display:none;">
+		<button class="btn btn-primary"  id="button"  value="Download Result">Download Result</button>
+	</form>
 
- 	<center>
-
-
-		<form action="/result" >
-
-			<input name="file_name" value="<% $outfile %>" style="display:none;">
-			<input name="output_file" value="<% $res %>" style="display:none;">
-			<button class="btn btn-primary"  id="button"  value="Download Result">Download Result</button>
-		</form>
-
-<!--	<input type="button" onclick="check(); return false;" value="Click me!" />
-
-	<script>
-		function check() {
-       			var content = "<% $res %>";
-			alert("result: <%$outfile%>");
-        		alert(content);
-    		}
-	</script>  -->
-
-
-	<center>
  		<p><br/>
 		<a href="#top"  >Back to top</a> &nbsp &nbsp <!--<a href="javascript:javascript:history.go(-1)">Back to previous page</a> --> &nbsp &nbsp
-		<a id="back_to_input" href="/motifs_finder">Go back to input page</a>
+		<a id="back_to_input" href="/tools/motifs_finder">Go back to input page</a>
 		</p>
- 	</center>
+</center>
