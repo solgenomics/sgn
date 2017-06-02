@@ -233,7 +233,7 @@ sub get_locations_by_breeding_program {
     if ($breeding_program_id) {
 	#my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description, count(distinct(stock.stock_id)) FROM project JOIN project_relationship on (project_id=object_project_id) JOIN project as trial ON (subject_project_id=trial.project_id) JOIN nd_experiment_project ON (trial.project_id=nd_experiment_project.project_id) JOIN nd_experiment USING (nd_experiment_id) JOIN nd_experiment_stock ON (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id) JOIN stock ON (nd_experiment_stock.stock_id=stock.stock_id) JOIN nd_geolocation USING (nd_geolocation_id) WHERE project.project_id=? and stock.type_id=? GROUP BY nd_geolocation.nd_geolocation_id, nd_experiment.nd_geolocation_id, nd_geolocation.description";
 
-	my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description, count(distinct(trial.project_id)) FROM project JOIN project_relationship on (project_id=object_project_id) JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) LEFT JOIN nd_geolocation ON (projectprop.value::INT = nd_geolocation.nd_geolocation_id) WHERE project.project_id =? AND projectprop.type_id=$project_location_type_id  GROUP BY nd_geolocation.nd_geolocation_id,  nd_geolocation.description";
+	my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description, longitude, latitude, altitude, count(distinct(trial.project_id)) FROM project JOIN project_relationship on (project_id=object_project_id) JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) LEFT JOIN nd_geolocation ON (projectprop.value::INT = nd_geolocation.nd_geolocation_id) WHERE project.project_id =? AND projectprop.type_id=$project_location_type_id  GROUP BY nd_geolocation.nd_geolocation_id,  nd_geolocation.description";
 
 
 	$h = $self->schema()->storage()->dbh()->prepare($q);
@@ -241,15 +241,15 @@ sub get_locations_by_breeding_program {
 
     }
     else {
-	my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description FROM nd_geolocation LEFT JOIN nd_experiment USING(nd_geolocation_id) where nd_experiment_id IS NULL";
+	my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description, longitude, latitude, altitude FROM nd_geolocation LEFT JOIN nd_experiment USING(nd_geolocation_id) where nd_experiment_id IS NULL";
 
 	$h = $self->schema()->storage()->dbh()->prepare($q);
 	$h->execute();
     }
 
     my @locations;
-    while (my ($id, $name, $plot_count) = $h->fetchrow_array()) {
-	push @locations, [ $id, $name, $plot_count ];
+    while (my ($id, $name, $longitude, $latitude, $altitude, $plot_count) = $h->fetchrow_array()) {
+	push @locations, [ $id, $name, $longitude, $latitude, $altitude, $plot_count ];
     }
     return \@locations;
 }

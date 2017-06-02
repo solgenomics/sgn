@@ -12,14 +12,28 @@ $locations => ()
     print "<tr><td>No locations have been added yet.</td></tr>";
   }
 
-print "<table class=\"table table-striped table-hover table-condensed\">";
+#print "<table class=\"table table-striped table-hover table-condensed\">";
+
+
+print "<div class=\"col-sm-12 col-md-12 col-lg-12 table-responsive\" id=\"location_table_div\">";
 
 foreach my $prog (sort keys %$locations) {
+    print "<label><a href=\"/breeders/manage_programs/\">$prog</a> locations:</label>
+    <table class=\"table table-bordered table-striped table-highlight\">
+      <thead>
+        <th>Location name</th>
+        <th>Latitude</th>
+        <th>Longitude</th>
+        <th>Altitude(m)</th>
+        <th>Trial Count</th>
+        <th>Edit/Remove</th>
+      </thead>
+      <tbody>";
 
-  print "<thead><tr class=\"success\"><td colspan=\"2\"><h4>$prog</h4></td></tr>
-  	 <tr><th>Location</th><th>Count</th></tr>
-  	 </thead>
-	 <tbody>";
+  #print "<thead><tr class=\"success\"><td colspan=\"5\"><h4>$prog</h4></td></tr>
+  #	 <tr><th>Location</th><th>Latitude</th><th>Longitude</th><th>Altitude</th><th>Trials Conducted</th></tr>
+  #	 </thead>
+	# <tbody>";
 
   foreach my $loc (@{$locations->{$prog}}) {
 
@@ -28,13 +42,15 @@ foreach my $prog (sort keys %$locations) {
       $delete_link = "&nbsp;&nbsp;&nbsp;<a href=\"javascript:delete_location($loc->[0])\"><font style=\"color: red; font-weight: bold\">X</a>";
     }
 
-    print "<tr><td>".$loc->[1]."</td><td>(<a href=\"/search/trials?nd_geolocation=$loc->[1]\">".$loc->[2]." trials</a>) $delete_link</td></tr>";
+    print "<tr><td>".$loc->[1]."</td><td>".$loc->[2]."</td><td>".$loc->[3]."</td><td>".$loc->[4]."</td><td>(<a href=\"/search/trials?nd_geolocation=$loc->[1]\">".($loc->[5] || "0")." trials</a>)</td><td>$delete_link</td></tr>";
    }
 
-   print "</tbody><thead><tr style=\"height:30px\"><td colspan=\"2\"></td></tr></thead>";
+   #print "</tbody><thead><tr style=\"height:30px\"><td colspan=\"5\"></td></tr></thead>";
+   print "</tbody></table>";
 }
 
-print "</table>";
+#print "</table>";
+print "</div>";
 
 </%perl>
 
