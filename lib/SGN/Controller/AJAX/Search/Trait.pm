@@ -33,7 +33,7 @@ sub search : Path('/ajax/search/traits') Args(0) {
 	push @result,
 	[
 	 $_->{trait_id},
-	 "<a href=\"/cvterm/$_->{trait_id}\">$_->{trait_name}</a>",
+	 "<a href=\"/cvterm/$_->{trait_id}/view\">$_->{trait_name}</a>",
 	 $_->{trait_definition},
 	];
     }
