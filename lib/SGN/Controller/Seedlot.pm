@@ -5,7 +5,7 @@ use Moose;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
-use CXGN::Seedlot;
+use CXGN::Stock::Seedlot;
 
 sub seedlots :Path('/breeders/seedlots') :Args(0) { 
     my $self = shift;
@@ -21,7 +21,7 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     my $c = shift;
     my $seedlot_id = shift;
 
-    my $sl = CXGN::Seedlot->new(
+    my $sl = CXGN::Stock::Seedlot->new(
         schema => $c->dbic_schema("Bio::Chado::Schema"),
         seedlot_id => $seedlot_id
     );

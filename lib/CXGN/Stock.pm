@@ -232,6 +232,16 @@ sub store {
         $self->type_id($type_id);
     }
 
+    if (!$self->organism_id){
+        my %organism_search;
+        if ($self->genus){
+            $organism_search{genus} = $self->genus;
+        }
+        if ($self->species){
+            $organism_search{species} = $self->genus;
+        }
+    }
+
     if (!$stock) { #Trying to create a new stock
         if (!$exists) {
 
