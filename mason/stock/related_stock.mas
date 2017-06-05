@@ -59,11 +59,6 @@ jQuery(document).ready(function(){
     });
 
 
-    jQuery('#related_plants').DataTable({
-        'ajax':'/stock/'+ <% $stock_id %> + '/datatables/related_plants',
-    });
-
-
     jQuery('#progenies').DataTable({
         'ordering': false,
         'ajax':'/stock/'+ <% $stock_id %> + '/datatables/progenies',
