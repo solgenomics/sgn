@@ -46,6 +46,11 @@ has 'stock_id' => (
     is => 'rw',
 );
 
+has 'organism' => (
+    isa => 'Bio::Chado::Schema::Result::Organism::Organism',
+    is => 'rw',
+);
+
 has 'organism_id' => (
     isa => 'Maybe[Int]',
     is => 'rw',
@@ -57,6 +62,21 @@ has 'species' => (
 );
 
 has 'genus' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'organism_common_name' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'organism_abbreviation' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'organism_comment' => (
     isa => 'Maybe[Str]',
     is => 'rw',
 );
@@ -83,7 +103,7 @@ has 'uniquename' => (
 );
 
 has 'description' => (
-    isa => 'Str',
+    isa => 'Maybe[Str]',
     is => 'rw',
     default => '',
 );
@@ -109,17 +129,26 @@ sub BUILD {
     my $self = shift;
 
     print STDERR "RUNNING BUILD FOR STOCK.PM...\n";
-    my $stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() });
+    my $stock = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
     if (defined $stock) {
         $self->stock($stock);
-        $self->stock_id($stock->stock_id());
-        $self->name($stock->name());
-        $self->uniquename($stock->uniquename());
+        $self->stock_id($stock->stock_id);
+        $self->name($stock->name);
+        $self->uniquename($stock->uniquename);
         $self->description($stock->description() || '');
-        $self->type_id($stock->type_id());
+        $self->type_id($stock->type_id);
         $self->type($self->schema()->resultset("Cv::Cvterm")->find({ cvterm_id=>$self->type_id() })->name());
-        $self->is_obsolete($stock->is_obsolete());
-        $self->organism_id($stock->organism_id());
+        $self->is_obsolete($stock->is_obsolete);
+        my $organism = $self->schema()->resultset("Organism::Organism")->find({ organism_id=>$stock->organism_id });
+        if (defined $organism){
+            $self->organism($organism);
+            $self->organism_id($organism->organism_id);
+            $self->organism_abbreviation($organism->abbreviation);
+            $self->genus($organism->genus);
+            $self->species($organism->species);
+            $self->organism_common_name($organism->common_name);
+            $self->organism_comment($organism->comment);
+        }
     }
 
     return $self;
@@ -140,6 +169,7 @@ sub BUILD {
 
 sub store {
     my $self = shift;
+    my %return;
 
     my $stock = $self->stock;
     my $schema = $self->schema();
@@ -153,12 +183,25 @@ sub store {
     }
 
     if (!$self->organism_id){
-        my %organism_search;
-        if ($self->genus){
-            $organism_search{genus} = $self->genus;
-        }
         if ($self->species){
-            $organism_search{species} = $self->genus;
+
+            my $organism_rs = $self->schema->resultset("Organism::Organism")->search({ species=>$self->species });
+            if ($organism_rs->count > 1){
+                return $return{error} = "More than one organism returned for species: ".$self->species;
+            }
+            if ($organism_rs->count == 0){
+                return $return{error} = "NO ORGANISM FOUND OF SPECIES: ".$self->species;
+            }
+            if ($organism_rs->count == 1){
+                my $organism = $organism_rs->first();
+                $self->organism($organism);
+                $self->organism_id($organism->organism_id);
+                $self->organism_abbreviation($organism->abbreviation);
+                $self->genus($organism->genus);
+                $self->species($organism->species);
+                $self->organism_common_name($organism->common_name);
+                $self->organism_comment($organism->comment);
+            }
         }
     }
 
@@ -180,11 +223,9 @@ sub store {
             $self->stock($new_row);
 
             if ($self->organization_name){
-                print STDERR Dumper $self->organization_name();
-                $self->_store_organization();
+                $self->_store_stockprop('organization', $self->organization_name());
             }
             if ($self->population_name){
-                print STDERR Dumper $self->population_name;
                 $self->_store_population_relationship();
             }
 
@@ -579,32 +620,35 @@ sub get_parents {
     return $root;
 }
 
-sub _store_organization { 
+sub _store_stockprop { 
     my $self = shift;
-    my $org_stockprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'organization', 'stock_property')->name();
-    my $organization = $self->stock->create_stockprops({ $org_stockprop => $self->organization_name});
+    my $type = shift;
+    my $value = shift;
+    my $stockprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->name();
+    my $stored_stockprop = $self->stock->create_stockprops({ $stockprop => $value});
 }
 
-sub _retrieve_organizations {
+sub _retrieve_stockprop {
     my $self = shift;
+    my $type = shift;
 
-    my $organization_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'organization', 'stock_property')->cvterm_id();
-    my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id(), type_id => $organization_type_id });
+    my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+    my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id(), type_id => $stockprop_type_id });
 
-    my @organizations;
+    my @results;
     while (my $r = $rs->next()){
-        push @organizations, $r->value;
+        push @results, $r->value;
     }
-    my $orgs = join ',', @organizations;
-    $self->organization_name($orgs);
-    return $orgs;
+    my $res = join ',', @results;
+    return $res;
 }
 
-sub _remove_organization {
+sub _remove_stockprop {
     my $self = shift;
-    my $organization = shift;
-    my $organization_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'organization', 'stock_property')->cvterm_id();
-    my $rs = $self->schema()->resultset("Stock::Stockprop")->search( { type_id=>$organization_type_id, stock_id => $self->stock_id(), value=>$organization } );
+    my $type = shift;
+    my $value = shift;
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+    my $rs = $self->schema()->resultset("Stock::Stockprop")->search( { type_id=>$type_id, stock_id => $self->stock_id(), value=>$value } );
 
     if ($rs->count() == 1) {
         $rs->first->delete();
@@ -614,7 +658,7 @@ sub _remove_organization {
         return 0;
     }
     else {
-        print STDERR "Error removing breeding program from stock ".$self->stock_id().". Please check this manually.\n";
+        print STDERR "Error removing stockprop from stock ".$self->stock_id().". Please check this manually.\n";
         return 0;
     }
 

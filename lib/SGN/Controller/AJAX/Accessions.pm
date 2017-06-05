@@ -21,7 +21,9 @@ use JSON -support_by_pp;
 use List::MoreUtils qw /any /;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::BreedersToolbox::AccessionsFuzzySearch;
+use CXGN::BreedersToolbox::OrganismFuzzySearch;
 use CXGN::Stock::AddStocks;
+use CXGN::Stock::Accession;
 use CXGN::Chado::Stock;
 use CXGN::List;
 use Data::Dumper;
@@ -47,15 +49,17 @@ sub verify_accession_list_POST : Args(0) {
   my ($self, $c) = @_;
 
   my $accession_list_json = $c->req->param('accession_list');
+  my $organism_list_json = $c->req->param('organism_list');
   my @accession_list = @{_parse_list_from_json($accession_list_json)};
+  my @organism_list = $organism_list_json ? @{_parse_list_from_json($organism_list_json)} : [];
 
   my $do_fuzzy_search = $c->req->param('do_fuzzy_search');
 
   if ($do_fuzzy_search) {
-      $self->do_fuzzy_search($c, \@accession_list);
+      $self->do_fuzzy_search($c, \@accession_list, \@organism_list);
   }
   else {
-      $self->do_exact_search($c, \@accession_list);
+      $self->do_exact_search($c, \@accession_list, \@organism_list);
   }
 
 }
@@ -64,15 +68,20 @@ sub do_fuzzy_search {
     my $self = shift;
     my $c = shift;
     my $accession_list = shift;
+    my $organism_list = shift;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
-    my $fuzzy_search_result;
+    my $fuzzy_organism_search = CXGN::BreedersToolbox::OrganismFuzzySearch->new({schema => $schema});
     my $max_distance = 0.2;
     my @accession_list = @$accession_list;
+    my @organism_list = @$organism_list;
     my $found_accessions;
     my $fuzzy_accessions;
     my $absent_accessions;
+    my $found_organisms;
+    my $fuzzy_organisms;
+    my $absent_organisms;
 
     if (!$c->user()) {
 	$c->stash->{rest} = {error => "You need to be logged in to add accessions." };
@@ -82,15 +91,24 @@ sub do_fuzzy_search {
 	$c->stash->{rest} = {error =>  "You have insufficient privileges to add accessions." };
 	return;
     }
-    #remove all trailing and ending spaces from accessions 
+    #remove all trailing and ending spaces from accessions and organisms
     s/^\s+|\s+$//g for @accession_list;
+    s/^\s+|\s+$//g for @organism_list;
    
-    $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
-    #print STDERR "\n\nResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
+    my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
+    print STDERR "\n\nAccessionFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
 
     $found_accessions = $fuzzy_search_result->{'found'};
     $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
     $absent_accessions = $fuzzy_search_result->{'absent'};
+
+    if (scalar @organism_list > 0){
+        my $fuzzy_organism_result = $fuzzy_organism_search->get_matches(\@organism_list, $max_distance);
+        $found_organisms = $fuzzy_organism_result->{'found'};
+        $fuzzy_organisms = $fuzzy_organism_result->{'fuzzy'};
+        $absent_organisms = $fuzzy_organism_result->{'absent'};
+        print STDERR "\n\nOrganismFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_organism_result)."\n\n";
+    }
 
     if (scalar(@$fuzzy_accessions)>0){
         my %synonym_hash;
@@ -115,10 +133,13 @@ sub do_fuzzy_search {
     #print STDERR Dumper $fuzzy_accessions;
 
     $c->stash->{rest} = {
-	success => "1",
-	absent => $absent_accessions,
-	fuzzy => $fuzzy_accessions,
-	found => $found_accessions
+        success => "1",
+        absent => $absent_accessions,
+        fuzzy => $fuzzy_accessions,
+        found => $found_accessions,
+        absent_organisms => $absent_organisms,
+        fuzzy_organisms => $fuzzy_organisms,
+        found_organisms => $found_organisms
     };
     return;
 }
@@ -207,10 +228,11 @@ sub add_accession_list_POST : Args(0) {
   my $population_name = $c->req->param('population_name');
   my $organization_name = $c->req->param('organization_name');
   my $full_info = $c->req->param('full_info') ? decode_json $c->req->param('full_info') : '';
+  my $allowed_organisms = $c->req->param('allowed_organisms') ? decode_json $c->req->param('allowed_organisms') : [];
+  my %allowed_organisms = map {$_=>1} @$allowed_organisms;
   my @accession_list;
   my $stock_add;
   my $validated;
-  my $added;
   my $dbh = $c->dbc->dbh;
   my $user_id;
   my $owner_name;
@@ -228,39 +250,45 @@ sub add_accession_list_POST : Args(0) {
     $c->stash->{rest} = {error =>  "You have insufficient privileges to submit accessions." };
     return;
   }
-
+  my $added_stocks;
   if ($full_info){
+      my @added_fullinfo_stocks;
       foreach (@$full_info){
-          my $stock = CXGN::Stock->new({
-              schema=>$schema,
-              type=>'accession',
-              species=>$_->{species},
-              genus=>$_->{genus},
-              name=>$_->{germplasmName},
-              uniquename=>$_->{defaultDisplayName},
-              organization_name=>$_->{organizationName},
-              population_name=>$_->{populationName},
-              description=>$_->{description},
-              accessionNumber=>$_->{accessionNumber},
-              germplasmPUI=>$_->{germplasmPUI},
-              pedigree=>$_->{pedigree},
-              germplasmSeedSource=>$_->{germplasmSeedSource},
-              synonyms=>$_->{synonyms},
-              commonCropName=>$_->{commonCropName},
-              instituteCode=>$_->{instituteCode},
-              instituteName=>$_->{instituteName},
-              biologicalStatusOfAccessionCode=>$_->{biologicalStatusOfAccessionCode},
-              countryOfOriginCode=>$_->{countryOfOriginCode},
-              typeOfGermplasmStorageCode=>$_->{typeOfGermplasmStorageCode},
-              speciesAuthority=>$_->{speciesAuthority},
-              subtaxa=>$_->{subtaxa},
-              subtaxaAuthority=>$_->{subtaxaAuthority},
-              donors=>$_->{donors},
-              acquisitionDate=>$_->{acquisitionDate}
-          });
+          if (exists($allowed_organisms{$_->{species}})){
+              my $stock = CXGN::Stock::Accession->new({
+                  schema=>$schema,
+                  type=>'accession',
+                  species=>$_->{species},
+                  #genus=>$_->{genus},
+                  name=>$_->{defaultDisplayName},
+                  uniquename=>$_->{germplasmName},
+                  organization_name=>$_->{organizationName},
+                  population_name=>$_->{populationName},
+                  description=>$_->{description},
+                  accessionNumber=>$_->{accessionNumber},
+                  germplasmPUI=>$_->{germplasmPUI},
+                  pedigree=>$_->{pedigree},
+                  germplasmSeedSource=>$_->{germplasmSeedSource},
+                  synonyms=>$_->{synonyms},
+                  #commonCropName=>$_->{commonCropName},
+                  instituteCode=>$_->{instituteCode},
+                  instituteName=>$_->{instituteName},
+                  biologicalStatusOfAccessionCode=>$_->{biologicalStatusOfAccessionCode},
+                  countryOfOriginCode=>$_->{countryOfOriginCode},
+                  typeOfGermplasmStorageCode=>$_->{typeOfGermplasmStorageCode},
+                  #speciesAuthority=>$_->{speciesAuthority},
+                  #subtaxa=>$_->{subtaxa},
+                  #subtaxaAuthority=>$_->{subtaxaAuthority},
+                  donors=>$_->{donors},
+                  acquisitionDate=>$_->{acquisitionDate}
+              });
+              my $added_stock_id = $stock->store();
+              push @added_fullinfo_stocks, [$added_stock_id, $_->{germplasmName}];
+          }
       }
+      $added_stocks = \@added_fullinfo_stocks;
   }
-
+  else {
   @accession_list = @{_parse_list_from_json($accession_list_json)};
   if ($population_name eq '') {
       $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@accession_list, species => $species_name, owner_name => $owner_name,phenome_schema => $phenome_schema, dbh => $dbh, organization_name => $organization_name} );
@@ -272,12 +300,17 @@ sub add_accession_list_POST : Args(0) {
     $c->stash->{rest} = {error =>  "Stocks already exist in the database" };
     return;
   }
-  $added = $stock_add->add_accessions();
-  if (!$added) {
+  $added_stocks = $stock_add->add_accessions();
+  if (!$added_stocks) {
     $c->stash->{rest} = {error =>  "Could not add stocks to the database" };
     return;
   }
-  $c->stash->{rest} = {success => "1"};
+  }
+
+  $c->stash->{rest} = {
+      success => "1",
+      added => $added_stocks
+  };
   return;
 }
 

@@ -75,8 +75,12 @@ function brapi_create_table(data, div_id, link) {
 //  as well as the id for the div that you want the table to appear on the web page, e.g. "brapi_map_list_table"
 //  as well as a return url for processing changing currentPage and pageSize
 //  as well as optionally, a link js object, which will be used to construct links in the table. e.g. { "name": ["mapId", "/maps/protocols/"] }
+//  as well as the search query data so that the query can be run on next page, prev page, etc
+//  as well as a list of column names you want to display_columns
+//  as well as the column name that should be the value of the select BreedersToolbox
+//  as well as a list of column names that can be added as data-attributes to the select box
 
-function brapi_create_paginated_table(data, pagination, div_id, return_url, link, search_query_data, display_columns, select_column) {
+function brapi_create_paginated_table(data, pagination, div_id, return_url, link, search_query_data, display_columns, select_column, select_data) {
     console.log(data);
     console.log(pagination);
     //console.log(div_id);
@@ -103,6 +107,7 @@ function brapi_create_paginated_table(data, pagination, div_id, return_url, link
     var html = html+"<input id='table_checkbox_select_column' type='hidden' value='"+select_column+"'/>";
     var html = html+"<input id='table_search_query_params' type='hidden' value='"+JSON.stringify(search_query_data)+"'/>";
     var html = html+"<input id='table_display_columns_params' type='hidden' value='"+JSON.stringify(display_columns)+"'/>";
+    var html = html+"<input id='table_display_select_data_param' type='hidden' value='"+JSON.stringify(select_data)+"'/>";
     if (data.length == 0) {
         html = html+"<center><h3>No data available!</h3></center>";
     } else {
@@ -130,7 +135,11 @@ function brapi_create_paginated_table(data, pagination, div_id, return_url, link
         }
         html = html+"</tr></thead><tbody>";
         for(var row=0; row<data.length; row++) {
-            html = html+"<tr><td><input type='checkbox' name='brapi_table_select_"+return_url+"' value='"+data[row][select_column]+"'/></td>";
+            html = html+"<tr><td><input type='checkbox' name='brapi_table_select_"+return_url+"' value='"+data[row][select_column]+"'";
+            for (var s_data=0; s_data<select_data.length; s_data++){
+                html = html + " data-"+select_data[s_data]+"='"+data[row][select_data[s_data]]+"'";
+            }
+            html = html + "/></td>";
             for(var col=0; col<header.length; col++){
                 if (checkDefined(link) == 0) {
                     html = html+"<td>"+data[row][header[col]]+"</td>";
@@ -183,7 +192,7 @@ function checkDefined(o) {
     }
 }
 
-function brapi_recreate_paginated_table(search_query_data, display_columns, select_column){
+function brapi_recreate_paginated_table(search_query_data, display_columns, select_column, select_data){
     var delay = (function(){
         var timer = 0;
         return function(callback, ms){
@@ -213,7 +222,7 @@ function brapi_recreate_paginated_table(search_query_data, display_columns, sele
                 }
                 jQuery("#"+jQuery("#table_div_id_input").val()).empty();
                 console.log(search_query_data);
-                brapi_create_paginated_table(response.result.data, response.metadata.pagination, div_id, return_url, links, search_query_data, display_columns, select_column);
+                brapi_create_paginated_table(response.result.data, response.metadata.pagination, div_id, return_url, links, search_query_data, display_columns, select_column, select_data);
             },
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
@@ -228,36 +237,40 @@ jQuery(document).ready(function () {
     jQuery(document).on( 'click', "#table_next_page_button", function() {
         var search_query_data = JSON.parse(jQuery('#table_search_query_params').val());
         var display_columns = JSON.parse(jQuery('#table_display_columns_params').val());
+        var select_data = JSON.parse(jQuery('#table_display_select_data_param').val());
         var select_column = jQuery('#table_checkbox_select_column').val();
         search_query_data['page'] = jQuery("#table_next_page_input").val();
         search_query_data['pageSize'] = jQuery("#table_page_size_input").val();
-        brapi_recreate_paginated_table(search_query_data, display_columns, select_column);
+        brapi_recreate_paginated_table(search_query_data, display_columns, select_column, select_data);
     });
     
     jQuery(document).on( 'click', "#table_previous_page_button", function() {
         var search_query_data = JSON.parse(jQuery('#table_search_query_params').val());
         var display_columns = JSON.parse(jQuery('#table_display_columns_params').val());
+        var select_data = JSON.parse(jQuery('#table_display_select_data_param').val());
         var select_column = jQuery('#table_checkbox_select_column').val();
         search_query_data['page'] = jQuery("#table_previous_page_input").val();
         search_query_data['pageSize'] = jQuery("#table_page_size_input").val();
-        brapi_recreate_paginated_table(search_query_data, display_columns, select_column);
+        brapi_recreate_paginated_table(search_query_data, display_columns, select_column, select_data);
     });
     
     jQuery(document).on( 'keyup', "#table_change_page_size_input", function() {
         var search_query_data = JSON.parse(jQuery('#table_search_query_params').val());
         var display_columns = JSON.parse(jQuery('#table_display_columns_params').val());
+        var select_data = JSON.parse(jQuery('#table_display_select_data_param').val());
         var select_column = jQuery('#table_checkbox_select_column').val();
         search_query_data['page'] = 0;
         search_query_data['pageSize'] = jQuery("#table_change_page_size_input").val();
-        brapi_recreate_paginated_table(search_query_data, display_columns, select_column);
+        brapi_recreate_paginated_table(search_query_data, display_columns, select_column, select_data);
     });
     
     jQuery(document).on( 'keyup', "#table_change_current_page_input", function() {
         var search_query_data = JSON.parse(jQuery('#table_search_query_params').val());
         var display_columns = JSON.parse(jQuery('#table_display_columns_params').val());
+        var select_data = JSON.parse(jQuery('#table_display_select_data_param').val());
         var select_column = jQuery('#table_checkbox_select_column').val();
         search_query_data['page'] = jQuery("#table_change_current_page_input").val();
-        brapi_recreate_paginated_table(search_query_data, display_columns, select_column);
+        brapi_recreate_paginated_table(search_query_data, display_columns, select_column, select_data);
     });
 
 });

@@ -51,12 +51,7 @@ has 'germplasmSeedSource' => (
 );
 
 has 'synonyms' => (
-    isa => 'Maybe[Str]',
-    is => 'rw',
-);
-
-has 'commonCropName' => (
-    isa => 'Maybe[Str]',
+    isa => 'Maybe[ArrayRef[Str]]',
     is => 'rw',
 );
 
@@ -85,23 +80,8 @@ has 'typeOfGermplasmStorageCode' => (
     is => 'rw',
 );
 
-has 'speciesAuthority' => (
-    isa => 'Maybe[Str]',
-    is => 'rw',
-);
-
-has 'subtaxa' => (
-    isa => 'Maybe[Str]',
-    is => 'rw',
-);
-
-has 'subtaxaAuthority' => (
-    isa => 'Maybe[Str]',
-    is => 'rw',
-);
-
 has 'donors' => (
-    isa => 'Maybe[ArrayRef]',
+    isa => 'Maybe[ArrayRef[HashRef]]',
     is => 'rw',
 );
 
@@ -119,43 +99,6 @@ sub BUILD {
 }
 
 
-sub _store_accession_relationships {
-    my $self = shift;
-
-    foreach my $a (@{$self->accession_stock_ids()}) { 
-        my $organism_id = $self->schema->resultset('Stock::Stock')->find({stock_id => $a})->organism_id();
-        if ($self->organism_id){
-            if ($self->organism_id != $organism_id){
-                die "Accessions must all be the same organism, so that a population can group the seed lots.\n";
-            }
-        }
-        $self->organism_id($organism_id);
-    }
-
-    eval { 
-        my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
-
-        foreach my $a (@{$self->accession_stock_ids()}) { 
-            my $already_exists = $self->schema()->resultset("Stock::StockRelationship")->find({ object_id => $self->seedlot_id(), type_id => $type_id, subject_id=>$a });
-
-            if ($already_exists) { 
-                print STDERR "Accession with id $a is already associated with seedlot id ".$self->seedlot_id()."\n";
-                next; 
-            }
-            my $row = $self->schema()->resultset("Stock::StockRelationship")->create({
-                object_id => $self->seedlot_id(),
-                subject_id => $a,
-                type_id => $type_id,
-            });
-        }
-    };
-
-    if ($@) { 
-	die $@;
-    }    
-}
-
-
 =head2 store()
 
  Usage:        my $stock_id = $accession->store();
@@ -167,29 +110,60 @@ sub _store_accession_relationships {
 
 =cut
 
-sub store { 
+sub store {
     my $self = shift;
 
     print STDERR "storing: UNIQUENAME=".$self->uniquename()."\n";
-    $self->description($self->location_code());
-    $self->name($self->uniquename());
 
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'seedlot', 'stock_type')->cvterm_id();
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'accession', 'stock_type')->cvterm_id();
     $self->type_id($type_id);
 
     my $id = $self->SUPER::store();
 
-    print STDERR "Saving seedlot returned ID $id.\n";
-    $self->seedlot_id($id);
+    if ($self->accessionNumber){
+        $self->_store_stockprop('accession number', $self->accessionNumber);
+    }
+    if ($self->germplasmPUI){
+        $self->_store_stockprop('PUI', $self->germplasmPUI);
+    }
+    if ($self->germplasmSeedSource){
+        $self->_store_stockprop('seed source', $self->germplasmSeedSource);
+    }
+    if ($self->synonyms){
+        foreach (@{$self->synonyms}){
+            $self->_store_stockprop('stock_synonym', $_);
+        }
+    }
+    if ($self->instituteCode){
+        $self->_store_stockprop('institute code', $self->instituteCode);
+    }
+    if ($self->instituteName){
+        $self->_store_stockprop('institute name', $self->instituteName);
+    }
+    if ($self->biologicalStatusOfAccessionCode){
+        $self->_store_stockprop('biological status of accession code', $self->biologicalStatusOfAccessionCode);
+    }
+    if ($self->countryOfOriginCode){
+        $self->_store_stockprop('country of origin', $self->countryOfOriginCode);
+    }
+    if ($self->typeOfGermplasmStorageCode){
+        $self->_store_stockprop('type of germplasm storage code', $self->typeOfGermplasmStorageCode);
+    }
+    if ($self->acquisitionDate){
+        $self->_store_stockprop('acquisition date', $self->acquisitionDate);
+    }
+    if ($self->donors){
+        foreach (@{$self->donors}){
+            $self->_store_stockprop('donor', $_->{donorGermplasmName});
+            $self->_store_stockprop('donor institute', $_->{donorInstituteCode});
+            $self->_store_stockprop('donor PUI', $_->{germplasmPUI});
+        }
+    }
 
-    $self->_store_seedlot_relationships();
+    print STDERR "Saving returned ID $id.\n";
+    $self->stock_id($id);
 
-    foreach my $t (@{$self->transactions()}) { 
-	
-	print STDERR Dumper($self->transactions());
-	$t->store();
-    }    
-    return $self->seedlot_id();
+    return $self->stock_id();
 }
 
 1;

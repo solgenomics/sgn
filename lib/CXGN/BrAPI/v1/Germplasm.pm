@@ -106,8 +106,8 @@ sub germplasm_search {
 	foreach (@$result){
 		push @data, {
 			germplasmDbId=>$_->{stock_id},
-			defaultDisplayName=>$_->{uniquename},
-			germplasmName=>$_->{stock_name},
+			defaultDisplayName=>$_->{stock_name},
+			germplasmName=>$_->{uniquename},
 			accessionNumber=>$_->{accessionNumber},
 			germplasmPUI=>$_->{germplasmPUI},
 			pedigree=>$_->{pedigree},
