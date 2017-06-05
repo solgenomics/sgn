@@ -5,7 +5,7 @@ $stock_id
 
 <& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
 
-<&| /page/info_section.mas, title => 'Related stocks in trials', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => 'Related stocks in trials', collapsible=>1, collapsed=>1 &>
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
@@ -20,7 +20,7 @@ $stock_id
 
 </&>
 
-<&| /page/info_section.mas, title => 'Progenies', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => 'Progenies', collapsible=>1, collapsed=>1 &>
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
@@ -35,7 +35,7 @@ $stock_id
 
 </&>
 
-<&| /page/info_section.mas, title => 'Member of', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => 'Member of', collapsible=>1, collapsed=>1 &>
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
@@ -59,10 +59,14 @@ jQuery(document).ready(function(){
     });
 
 
+    jQuery('#related_plants').DataTable({
+        'ajax':'/stock/'+ <% $stock_id %> + '/datatables/related_plants',
+    });
+
+
     jQuery('#progenies').DataTable({
         'ordering': false,
         'ajax':'/stock/'+ <% $stock_id %> + '/datatables/progenies',
-
     });
 
 
