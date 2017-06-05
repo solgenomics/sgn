@@ -38,7 +38,7 @@ jQuery(document).ready(function () {
    });
  
    jQuery('#trait_search_results').on( 'draw.dt', function () {
-     var name_links = trial_table.column( 0, {page:'current'} ).data();
+     var name_links = trait_table.column( 0, {page:'current'} ).data();
      var names = [];
 
      for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
