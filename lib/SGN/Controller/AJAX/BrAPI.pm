@@ -502,6 +502,15 @@ sub germplasm_list_GET {
 sub germplasm_list_POST {
 	my $self = shift;
 	my $c = shift;
+    my $clean_inputs = $c->stash->{clean_inputs};
+    $clean_inputs->{'germplasmName'} = $clean_inputs->{'germplasmName[]'} ? $clean_inputs->{'germplasmName[]'} : $clean_inputs->{'germplasmName'};
+    $clean_inputs->{'accessionNumber'} = $clean_inputs->{'accessionNumber[]'} ? $clean_inputs->{'accessionNumber[]'} : $clean_inputs->{'accessionNumber'};
+    $clean_inputs->{'germplasmGenus'} = $clean_inputs->{'germplasmGenus[]'} ? $clean_inputs->{'germplasmGenus[]'} : $clean_inputs->{'germplasmGenus'};
+    $clean_inputs->{'germplasmSubTaxa'} = $clean_inputs->{'germplasmSubTaxa[]'} ? $clean_inputs->{'germplasmSubTaxa[]'} : $clean_inputs->{'germplasmSubTaxa'};
+    $clean_inputs->{'germplasmSpecies'} = $clean_inputs->{'germplasmSpecies[]'} ? $clean_inputs->{'germplasmSpecies[]'} : $clean_inputs->{'germplasmSpecies'};
+    $clean_inputs->{'germplasmDbId'} = $clean_inputs->{'germplasmDbId[]'} ? $clean_inputs->{'germplasmDbId[]'} : $clean_inputs->{'germplasmDbId'};
+    $clean_inputs->{'germplasmPUI'} = $clean_inputs->{'germplasmPUI[]'} ? $clean_inputs->{'germplasmPUI[]'} : $clean_inputs->{'germplasmPUI'};
+    $c->stash->{clean_inputs} = $clean_inputs;
 	germplasm_search_process($self, $c);
 }
 
@@ -514,13 +523,13 @@ sub germplasm_search_process {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
 	my $brapi_package_result = $brapi_module->germplasm_search({
-		germplasmName => $clean_inputs->{'germplasmName[]'},
-		accessionNumber => $clean_inputs->{'accessionNumber[]'},
-		germplasmGenus => $clean_inputs->{'germplasmGenus[]'},
-		germplasmSubTaxa => $clean_inputs->{'germplasmSubTaxa[]'},
-		germplasmSpecies => $clean_inputs->{'germplasmSpecies[]'},
-		germplasmDbId => $clean_inputs->{'germplasmDbId[]'},
-		germplasmPUI => $clean_inputs->{'germplasmPUI[]'},
+		germplasmName => $clean_inputs->{'germplasmName'},
+		accessionNumber => $clean_inputs->{'accessionNumber'},
+		germplasmGenus => $clean_inputs->{'germplasmGenus'},
+		germplasmSubTaxa => $clean_inputs->{'germplasmSubTaxa'},
+		germplasmSpecies => $clean_inputs->{'germplasmSpecies'},
+		germplasmDbId => $clean_inputs->{'germplasmDbId'},
+		germplasmPUI => $clean_inputs->{'germplasmPUI'},
 		matchMethod => $clean_inputs->{matchMethod},
 	});
 	_standard_response_construction($c, $brapi_package_result);

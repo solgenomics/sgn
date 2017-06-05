@@ -60,7 +60,7 @@ $mech->post_ok('http://localhost:3010/ajax/accession_list/add', [ "accession_lis
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
-is_deeply($response, {'success' => '1'});
+is_deeply($response, {'added' => [[41304,'new_accession1'],[41305,'test_accessionz']],'success' => '1'});
 
 #Remove added synonym so tests downstream do not fail.
 my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_accession1'})->stock_id();
