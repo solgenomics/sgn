@@ -37,15 +37,20 @@ foreach my $prog (sort keys %$locations) {
 	# <tbody>";
 
   foreach my $loc (@{$locations->{$prog}}) {
+    my $id = $loc->[0];
+    my $name = $loc->[1];
+    my $lat = $loc->[2] || '';
+    my $long = $loc->[3] || '';
+    my $alt = $loc->[4] || '';
+    my $count = $loc->[5] || 0;
+    my ($edit_link, $delete_link);
 
-    my $delete_link = "";
-    my $edit_link = "";
-    if (!$loc->[2] && $user_id) {
-      $delete_link = "&nbsp;&nbsp;&nbsp;<a href=\"javascript:delete_location($loc->[0])\"><font style=\"color: red; font-weight: bold\">X</a>";
-      $edit_link = "&nbsp;&nbsp;&nbsp;<a href=\"javascript:edit_location($loc->[0])\"><font style=\"color: blue; font-weight: bold\">Edit</a>";
+    if ($user_id && $count < 1) {
+      $delete_link = "&nbsp;&nbsp;&nbsp;<a href=\"javascript:delete_location($id)\"><font style=\"color: red; font-weight: bold\">X</a>";
+      $edit_link = "&nbsp;&nbsp;&nbsp;<a href=\"javascript:edit_location($id)\"><font style=\"color: blue; font-weight: bold\">Edit</a>";
     }
 
-    print "<tr><td>".$loc->[1]."</td><td>".$loc->[2]."</td><td>".$loc->[3]."</td><td>".$loc->[4]."</td><td>(<a href=\"/search/trials?nd_geolocation=$loc->[1]\">".($loc->[5] || "0")." trials</a>)</td><td>$edit_link</td><td>$delete_link</td></tr>";
+    print "<tr><td id=\"".$id."\">".$name."</td><td id=\"".$id."_lat\">".$lat."</td><td id=\"".$id."_long\">".$long."</td><td id=\"".$id."_alt\">".$alt."</td><td>(<a href=\"/search/trials?nd_geolocation=$name\">".$count." trials</a>)</td><td>$edit_link</td><td>$delete_link</td></tr>";
    }
 
    #print "</tbody><thead><tr style=\"height:30px\"><td colspan=\"6\"></td></tr></thead>";
@@ -141,7 +146,7 @@ print "</div>";
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="new_location_submit" id="new_location_submit">Save Changes</button>
+        <button type="button" class="btn btn-primary" name="edit_location_submit" id="edit_location_submit">Save Changes</button>
       </div>
     </div>
   </div>
@@ -205,12 +210,13 @@ jQuery(document).ready(function() {
       });
    }
 
-   function edit_location(loc) {
-        //console.log(JSON.stringify(loc));
-        //$('#change_location_description').val(loc[1]);
-        //$('#change_latitude').val(loc[2]);
-        //$('#change_longitude').val(loc[3]);
-        //$('#change_altitude').val(loc[4]);
+   function edit_location(id) {
+        console.log("Id for location to edit is "+id);
+        //var name = $('#'+id).text();
+        $('#change_location_description').val($('#'+id).text());
+        $('#change_latitude').val($('#'+id+'_lat').text());
+        $('#change_longitude').val($('#'+id+'_long').text());
+        $('#change_altitude').val($('#'+id+'_alt').text());
         $('#edit_location_dialog').modal("show");
     }
 
