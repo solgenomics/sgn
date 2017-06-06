@@ -188,19 +188,19 @@ jQuery(document).ready(function() {
 });
 
 
-  function delete_location(location_id) {
-
-    var yes = confirm('Are you sure you want to delete location with id '+location_id+'? ');
+  function delete_location(id) {
+    var name = $('#'+id).text();
+    var yes = confirm('Are you sure you want to delete location '+name+'? ');
 
     if (! yes) { return; }
 
     new jQuery.ajax( {
       type: 'POST',
-      url: '/ajax/breeders/location/delete/'+location_id,
+      url: '/ajax/breeders/location/delete/'+id,
       success: function(response) {
                   if (response.error) { alert(response.error); }
                   else {
-                    alert("The location was deleted.");
+                    alert(response.success);
 		    location.reload();
                   }
                },

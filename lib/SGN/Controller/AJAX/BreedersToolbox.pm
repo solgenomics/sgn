@@ -109,26 +109,21 @@ sub delete_location :Path('/ajax/breeders/location/delete') Args(1) {
 	$c->stash->{rest} = { error => "You need to be logged in to delete a location." };
 	return;
     }
-    # require curator or submitter roles
-    if (! ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))) {
+
+    if (! ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))) { # require curator or submitter roles
 	$c->stash->{rest} = { error => "You don't have the privileges to delete a location." };
 	return;
     }
-    my $del = CXGN::BreedersToolbox::Delete->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema") } );
-    if ($del->can_delete_location($location_id)) {
-	my $success = $del->delete_location($location_id);
 
-	if ($success) {
-	    $c->stash->{rest} = { success => 1 };
+    my $loc = CXGN::Location->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema") } );
+    my $delete = $loc->delete_location($location_id);
+
+	if ($delete->{'success'}) {
+	    $c->stash->{rest} = { success => $delete->{'success'} };
 	}
 	else {
-	    $c->stash->{rest} = { error => "Could not delete location $location_id" };
+	    $c->stash->{rest} = { error => $delete->{'error'} };
 	}
-    }
-    else {
-	$c->stash->{rest} = { error => "This location cannot be deleted because it has associated data." }
-    }
-
 }
 
 sub get_breeding_programs : Path('/ajax/breeders/all_programs') Args(0) {

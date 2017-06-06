@@ -5,7 +5,7 @@ CXGN::Location - helper class for locations
 
 =head1 SYNOPSYS
 
- my $location = CXGN::Location->new( { bcs_schema => $schema, name => "Geneva Experiment Station" });
+ my $location = CXGN::Location->new( { bcs_schema => $schema } );
  $location->set_altitude(280);
  etc.
 
@@ -33,13 +33,11 @@ has 'bcs_schema' => (
 has 'nd_geolocation_id' => (
 	isa => "Int",
 	is => 'rw',
-    #required => 1,
 );
 
 has 'name' => (
     isa => 'Str',
 	is => 'rw',
-    #required => 1,
 );
 
 has 'abbreviation' => (
@@ -72,40 +70,42 @@ has 'altitude' => (
 	is => 'rw',
 );
 
-#sub BUILD {
-#    my $self = shift;
-#
-#    my $row = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $self->nd_geolocation_id() });
-#
-#    if ($row){
-#	    print STDERR "Found row for location ".$self->nd_geolocation_id()." ".$self->name()."\n";
-#        $self->name($row->description());
-#        #$self->abbreviation($row->value());
-#        #$self->country($row->name());
-#        #$self->type($row->name());
-#        $self->latitude($row->latitude());
-#        $self->longitude($row->longitude());
-#        $self->altitude($row->altitude());
-#
-#    }
-##	    die "The location ".$self->nd_geolocation_id()." does not exist";
-#    }
-#}
+sub get_location {
+    my $self = shift;
+    my $id = shift;
+
+    my $row = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $id });
+
+    if ($row){
+        $self->name($row->description());
+	    print STDERR "Found location ".$self->description()." with id ".$self->nd_geolocation_id()."\n";
+        #$self->abbreviation($row->value());
+        #$self->country($row->description());
+        #$self->type($row->description());
+        $self->latitude($row->latitude());
+        $self->longitude($row->longitude());
+        $self->altitude($row->altitude());
+        return $self;
+    }
+    else {
+	    die "No locations were found with id ".$self->nd_geolocation_id()."\n";
+    }
+}
 
 sub add_location {
 	my $self = shift;
     my $params = shift;
     my $schema = $self->bcs_schema();
 
-    my $name = $params->{description};
+    my $description = $params->{description};
     my $longitude   = $params->{longitude};
     my $latitude    = $params->{latitude};
     my $altitude    = $params->{altitude};
 
-    my $exists = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
+    my $exists = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $description } )->count();
 
     if ($exists > 0) {
-	    return { error => "The location - $name - already exists. Please choose another name." };
+	    return { error => "The location - $description - already exists. Please choose another name." };
     }
 
     if ( ($latitude && $latitude !~ /^-?[0-9.]+$/) || ($latitude && $latitude < -90) || ($latitude && $latitude > 90)) {
@@ -124,7 +124,7 @@ sub add_location {
 	try {
         $new_row = $schema->resultset('NaturalDiversity::NdGeolocation')
           ->new({
-    	     description => $name,
+    	     description => $description,
     	    });
 
         if ($longitude) { $new_row->longitude($longitude); }
@@ -138,12 +138,32 @@ sub add_location {
     };
 
     if ($error) {
-        print STDERR "Error creating location $name: $error\n";
+        print STDERR "Error creating location $description: $error\n";
         return { error => $error };
     } else {
-        print STDERR "Location $name added successfully\n";
-        return { success => "Location $name added successfully\n" };
+        print STDERR "Location $description added successfully\n";
+        return { success => "Location $description added successfully\n" };
     }
+}
+
+sub delete_location {
+    my $self = shift;
+    my $id = shift;
+
+    my $rs = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->search({ nd_geolocation_id=> $id });
+    my $name = $rs->first()->description();
+    my @experiments = $rs->first()->nd_experiments;
+    #print STDERR "Associated experiments: ".Dumper(@experiments)."\n";
+
+    if (@experiments) {
+        my $error = "Location $name cannot be deleted because there are ".scalar @experiments." measurements associated with it from at least one trial.\n";
+	    print STDERR $error;
+	    return { error => $error };
+	}
+	else {
+	    $rs->first->delete();
+	    return { success => "Location $name was successfully deleted.\n" };
+	}
 }
 
 =head2 accessors get_name(), set_name()
