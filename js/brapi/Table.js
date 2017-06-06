@@ -147,9 +147,9 @@ function brapi_create_paginated_table(data, pagination, div_id, return_url, link
                     for(var link_header in link) {
                         if (header[col] == link_header) {
                             if (link[link_header][1] == 'stock') {
-                                html = html+"<td><a href='/"+link[link_header][1]+"/"+data[row][link[link_header][0]]+"/view'>"+data[row][link_header]+"</a></td>";
+                                html = html+"<td><a href='"+link[link_header][1]+"/"+data[row][link[link_header][0]]+"/view'>"+data[row][link_header]+"</a></td>";
                             } else {
-                                html = html+"<td><a href='/"+link[link_header][1]+"/"+data[row][link[link_header][0]]+"'>"+data[row][link_header]+"</a></td>";
+                                html = html+"<td><a href='"+link[link_header][1]+"/"+data[row][link[link_header][0]]+"'>"+data[row][link_header]+"</a></td>";
                             }
                         } else {
                             html = html+"<td>"+data[row][header[col]]+"</td>";
