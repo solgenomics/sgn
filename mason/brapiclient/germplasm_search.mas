@@ -3,6 +3,18 @@
 
 <& /util/import_javascript.mas, classes => [ 'brapi.Table' ] &>
 
+<h4>Database Select</h4>
+<select name="brapi_home_url_select" id="brapi_home_url_select" class="form-control" />
+    <option value="">local</option>
+    <option value="https://cassbase.org">cassbase.org</option>
+    <option value="https://cassavabase.org">cassavabase.org</option>
+    <option value="https://musabase.org">musabase.org</option>
+    <option value="https://sweetpotatobase.org">sweetpotatobase.org</option>
+    <option value="https://yambase.org">yambase.org</option>
+    <option value="https://fernbase.org">fernbase.org</option>
+    <option value="https://solgenomics.net">solgenomics.net</option>
+</select>
+
 <h4>Germplasm Search</h4>
 
 <div id="brapi_germplasm_search_home_div" class="well">
@@ -17,6 +29,7 @@
     <option value="exact">Exact</option>
     <option value="wildcard">Wildcard. Wildcard allows % or * for multiple characters and ? for single characters.</option>
 </select>
+<br/>
 <button class="btn btn-primary" name="brapi_germplasm_search_submit" id="brapi_germplasm_search_submit">Search</button>
 
 <br/><br/>
@@ -207,7 +220,7 @@ jQuery(document).ready(function() {
     });
 
     jQuery(document).on('click', '#brapi_germplasm_search_submit_final', function(){
-        //jQuery('#working_modal').modal('show');
+        jQuery('#working_modal').modal('show');
         var selected_to_save = [];
         jQuery.each(jQuery('input[name="brapi_germplasm_search_collection_select"]:checked'), function(){
             if (jQuery.inArray(jQuery(this).val(), selected_to_save) == -1){
@@ -257,22 +270,22 @@ function perform_save(to_save){
             console.log(response);
             if(response.error){
                 alert(response.error);
-                //jQuery('#working_modal').modal('hide');
+                jQuery('#working_modal').modal('hide');
                 return false;
             }
             if(response.success){
                 var html = 'The following stocks were added!<br/>';
                 for (var i=0; i<response.added.length; i++){
-                    html = html + '<a href="/stock/'+response.added[i][0]+'/view">'+response.added[i][1]+'</a>';
+                    html = html + '<a href="/stock/'+response.added[i][0]+'/view">'+response.added[i][1]+'</a><br/>';
                 }
                 jQuery('#brapi_germplasm_saved_message').html(html);
                 jQuery('#brapi_germplasm_saved_message_modal').modal('show');
             }
-            //jQuery('#working_modal').modal('hide');
+            jQuery('#working_modal').modal('hide');
         },
         'error': function(response){
             alert('An error occurred in fuzzy search!');
-            //jQuery('#working_modal').modal('hide');
+            jQuery('#working_modal').modal('hide');
         }
     })
 }
