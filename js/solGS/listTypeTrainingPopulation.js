@@ -101,7 +101,7 @@ function getListTypeTrainingPopDetail(listId) {
     return {'name'          : listName,
             'list'          : listElements,	    
 	    'type'          : listType,
-	    'elementsIds'   : lisstElementsIds,
+	    'elementsIds'   : listElementsIds,
 	    'elementsNames' : listElementsNames,
            };
 }
