@@ -245,7 +245,8 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 		organization_list=>$params->{organization_list},
 		limit=>$params->{limit}->[0],
 		offset=>$params->{offset}->[0],
-		minimal_info=>1
+		minimal_info=>1,
+        display_pedigree=>0
 	});
 	my ($result, $records_total) = $stock_search->search();
 	#print STDERR Dumper $result;

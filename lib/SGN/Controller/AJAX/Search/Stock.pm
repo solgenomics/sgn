@@ -61,7 +61,8 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         property_term=>$params->{property_term},
         property_value=>$params->{property_value},
 		limit=>$limit,
-		offset=>$offset
+		offset=>$offset,
+        display_pedigree=>0
 	});
 	my ($result, $records_total) = $stock_search->search();
 

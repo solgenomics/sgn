@@ -96,6 +96,7 @@ sub _clean_inputs {
 		}
 		@$ret_val = grep {$_ ne undef} @$ret_val;
 		@$ret_val = grep {$_ ne ''} @$ret_val;
+        $_ =~ s/\[\]$//; #ajax POST with arrays adds [] to the end of the name e.g. germplasmName[]. since all inputs are arrays now we can remove the [].
 		$params->{$_} = $ret_val;
 	}
 	return $params;
@@ -502,15 +503,6 @@ sub germplasm_list_GET {
 sub germplasm_list_POST {
 	my $self = shift;
 	my $c = shift;
-    my $clean_inputs = $c->stash->{clean_inputs};
-    $clean_inputs->{'germplasmName'} = $clean_inputs->{'germplasmName[]'} ? $clean_inputs->{'germplasmName[]'} : $clean_inputs->{'germplasmName'};
-    $clean_inputs->{'accessionNumber'} = $clean_inputs->{'accessionNumber[]'} ? $clean_inputs->{'accessionNumber[]'} : $clean_inputs->{'accessionNumber'};
-    $clean_inputs->{'germplasmGenus'} = $clean_inputs->{'germplasmGenus[]'} ? $clean_inputs->{'germplasmGenus[]'} : $clean_inputs->{'germplasmGenus'};
-    $clean_inputs->{'germplasmSubTaxa'} = $clean_inputs->{'germplasmSubTaxa[]'} ? $clean_inputs->{'germplasmSubTaxa[]'} : $clean_inputs->{'germplasmSubTaxa'};
-    $clean_inputs->{'germplasmSpecies'} = $clean_inputs->{'germplasmSpecies[]'} ? $clean_inputs->{'germplasmSpecies[]'} : $clean_inputs->{'germplasmSpecies'};
-    $clean_inputs->{'germplasmDbId'} = $clean_inputs->{'germplasmDbId[]'} ? $clean_inputs->{'germplasmDbId[]'} : $clean_inputs->{'germplasmDbId'};
-    $clean_inputs->{'germplasmPUI'} = $clean_inputs->{'germplasmPUI[]'} ? $clean_inputs->{'germplasmPUI[]'} : $clean_inputs->{'germplasmPUI'};
-    $c->stash->{clean_inputs} = $clean_inputs;
 	germplasm_search_process($self, $c);
 }
 

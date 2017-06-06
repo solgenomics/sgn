@@ -98,7 +98,8 @@ sub germplasm_search {
 		stock_id_list=>\@germplasm_ids,
 		stock_type_id=>$accession_type_cvterm_id,
 		limit=>$limit,
-		offset=>$offset
+		offset=>$offset,
+        display_pedigree=>1
 	});
 	my ($result, $total_count) = $stock_search->search();
 
@@ -153,6 +154,7 @@ sub germplasm_detail {
 		match_type=>'exactly',
 		stock_id_list=>[$stock_id],
 		stock_type_id=>$accession_cvterm_id,
+        display_pedigree=>1
 	});
 	my ($result, $total_count) = $stock_search->search();
 
