@@ -135,15 +135,14 @@ if (length(refererQtl) == 0  ) {
   formattedPhenoData <- ddply(phenoData,
                               "ID",
                               colwise(mean, na.rm=TRUE)
-                              )
-
-  row.names(formattedPhenoData) <- formattedPhenoData[, 1]
-  formattedPhenoData[, 1] <- NULL
-
-  formattedPhenoData <- round(formattedPhenoData, digits = 2)
+                              )  
 }
  
-formattedPhenoData <- data.frame(formattedPhenoData)
+formattedPhenoData            <- data.frame(formattedPhenoData)
+row.names(formattedPhenoData) <- formattedPhenoData[, 1]
+formattedPhenoData[, 1]       <- NULL
+formattedPhenoData            <- round(formattedPhenoData, 2)
+
 
 coefpvalues <- rcor.test(formattedPhenoData,
                          method="pearson",
