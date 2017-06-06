@@ -80,7 +80,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	$c->stash->{clean_inputs} = _clean_inputs($c->req->params);
 }
 
-#useful because javascript can pass 'undef' as an empty value
+#useful because javascript can pass 'undef' as an empty value, and also standardizes all inputs as arrayrefs
 sub _clean_inputs {
 	no warnings 'uninitialized';
 	my $params = shift;
