@@ -140,6 +140,8 @@ sub BUILD {
         $self->type_id($stock->type_id);
         $self->type($self->schema()->resultset("Cv::Cvterm")->find({ cvterm_id=>$self->type_id() })->name());
         $self->is_obsolete($stock->is_obsolete);
+        $self->organization_name($self->_retrieve_stockprop('organization'));
+        $self->_retrieve_population();
     }
 
     return $self;
@@ -624,7 +626,7 @@ sub _retrieve_stockprop {
     my $type = shift;
 
     my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
-    my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id(), type_id => $stockprop_type_id });
+    my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id(), type_id => $stockprop_type_id }, { order_by => {-asc => 'stockprop_id'} });
 
     my @results;
     while (my $r = $rs->next()){
@@ -968,6 +970,8 @@ sub merge {
 COUNTS
 
 }
+
+__PACKAGE__->meta->make_immutable;
 
 ##########
 1;########

@@ -147,8 +147,6 @@ sub BUILD {
         $self->location_code($self->description());
         $self->seedlot_id($self->stock_id());
         $self->_retrieve_accessions();
-        $self->organization_name($self->_retrieve_stockprop('organization'));
-        $self->_retrieve_population();
         #$self->cross($self->_retrieve_cross());
     }
     print STDERR Dumper $self->seedlot_id;

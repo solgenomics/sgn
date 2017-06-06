@@ -474,7 +474,7 @@ sub search {
 			my $donor_institutes = $stockprop_hash->{'donor institute'} ? $stockprop_hash->{'donor institute'} : [];
 			my $donor_puis = $stockprop_hash->{'donor PUI'} ? $stockprop_hash->{'donor PUI'} : [];
             if (scalar(@$donor_accessions)>0 && scalar(@$donor_institutes)>0 && scalar(@$donor_puis)>0 && scalar(@$donor_accessions) == scalar(@$donor_institutes) && scalar(@$donor_accessions) == scalar(@$donor_puis)){
-                for (0 .. scalar(@$donor_accessions)){
+                for (0 .. scalar(@$donor_accessions)-1){
                     push @donor_array, { 'donorGermplasmName'=>$donor_accessions->[$_], 'donorAccessionNumber'=>$donor_accessions->[$_], 'donorInstituteCode'=>$donor_institutes->[$_], 'germplasmPUI'=>$donor_puis->[$_] };
                 }
             }

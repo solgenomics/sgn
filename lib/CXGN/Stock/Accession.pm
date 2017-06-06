@@ -29,6 +29,11 @@ use Data::Dumper;
 use CXGN::BreedersToolbox::Projects;
 use SGN::Model::Cvterm;
 
+has 'owner_sp_person' => (
+    isa => 'ArrayRef',
+    is => 'rw',
+);
+
 has 'main_production_site_url' => (
     isa => 'Str',
     is => 'rw',
@@ -99,6 +104,27 @@ sub BUILD {
     my $self = shift;
 
     if ($self->stock_id()) {
+        $self->accessionNumber($self->_retrieve_stockprop('accession number'));
+        $self->germplasmPUI($self->_retrieve_stockprop('PUI'));
+        $self->germplasmSeedSource($self->_retrieve_stockprop('seed source'));
+        my @synonyms = $self->_retrieve_stockprop('stock_synonym') ? split ',', $self->_retrieve_stockprop('stock_synonym') : [];
+        my @donor_accessions = $self->_retrieve_stockprop('donor') ? split ',', $self->_retrieve_stockprop('donor') : [];
+        my @donor_institutes = $self->_retrieve_stockprop('donor institute') ? split ',', $self->_retrieve_stockprop('donor institute') : [];
+        my @donor_puis = $self->_retrieve_stockprop('donor PUI') ? split ',', $self->_retrieve_stockprop('donor PUI') : [];
+        $self->synonyms(\@synonyms);
+        $self->instituteCode($self->_retrieve_stockprop('institute code'));
+        $self->instituteName($self->_retrieve_stockprop('institute name'));
+        $self->biologicalStatusOfAccessionCode($self->_retrieve_stockprop('biological status of accession code'));
+        $self->countryOfOriginCode($self->_retrieve_stockprop('country of origin'));
+        $self->typeOfGermplasmStorageCode($self->_retrieve_stockprop('type of germplasm storage code'));
+        $self->acquisitionDate($self->_retrieve_stockprop('acquisition date'));
+        my @donor_array;
+        if (scalar(@donor_accessions)>0 && scalar(@donor_institutes)>0 && scalar(@donor_puis)>0 && scalar(@donor_accessions) == scalar(@donor_institutes) && scalar(@donor_accessions) == scalar(@donor_puis)){
+            for (0 .. scalar(@donor_accessions)-1){
+                push @donor_array, { 'donorGermplasmName'=>$donor_accessions[$_], 'donorAccessionNumber'=>$donor_accessions[$_], 'donorInstituteCode'=>$donor_institutes[$_], 'germplasmPUI'=>$donor_puis[$_] };
+            }
+        }
+        $self->donors(\@donor_array);
     }
 }
 
@@ -174,7 +200,8 @@ sub store {
     return $self->stock_id();
 }
 
-1;
-
 no Moose;
 __PACKAGE__->meta->make_immutable;
+
+1;
+
