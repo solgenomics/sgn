@@ -13,6 +13,7 @@ use CXGN::BreedersToolbox::Delete;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
 use CXGN::Stock::StockLookup;
+use CXGN::Location;
 use Try::Tiny;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -75,53 +76,28 @@ sub get_all_locations :Path("/ajax/breeders/location/all") Args(0) {
 sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
     my $self = shift;
     my $c = shift;
-
     my $params = $c->request->parameters();
 
-    my $description = $params->{description};
-    my $longitude   = $params->{longitude};
-    my $latitude    = $params->{latitude};
-    my $altitude    = $params->{altitude};
-
-    if (! $c->user()) { # redirect
-	$c->stash->{rest} = { error => 'You must be logged in to add a location.' };
-	return;
+    if (! $c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in to add a location.' };
+        return;
     }
 
     if (! $c->user->check_roles("submitter") && !$c->user->check_roles("curator")) {
-	$c->stash->{rest} = { error => 'You do not have the necessary privileges to add locations.' };
-	return;
-    }
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-
-    my $exists = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $description } )->count();
-
-    if ($exists > 0) {
-	$c->stash->{rest} = { error => "The location - $description - already exists. Please choose another name." };
-	return;
+        $c->stash->{rest} = { error => 'You do not have the necessary privileges to add locations.' };
+        return;
     }
 
-    if ( ($longitude && $longitude !~ /^-?[0-9.]+$/) || ($latitude && $latitude !~ /^-?[0-9.]+$/) || ($altitude && $altitude !~ /^[0-9.]+$/) ) {
-	$c->stash->{rest} = { error => "Longitude, latitude and altitude must be numbers." };
-	return;
+    my $l = CXGN::Location->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema") });
+    my $add = $l->add_location($params);
+
+    if ($add->{'error'}) {
+        $c->stash->{rest} = { error => $add->{'error'} };
+    }
+    else {
+        $c->stash->{rest} = { success => $add->{'success'} };
     }
 
-    my $new_row;
-    $new_row = $schema->resultset('NaturalDiversity::NdGeolocation')
-      ->new({
-	     description => $description,
-	    });
-    if ($longitude) {
-      $new_row->longitude($longitude);
-    }
-    if ($latitude) {
-      $new_row->latitude($latitude);
-    }
-    if ($altitude) {
-      $new_row->altitude($altitude);
-    }
-    $new_row->insert();
-    $c->stash->{rest} = { success => 1, error => '' };
 }
 
 sub delete_location :Path('/ajax/breeders/location/delete') Args(1) {

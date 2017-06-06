@@ -542,8 +542,7 @@ sub substitute_accession : Chained('trial') PathPart('substitute_accession') Arg
   }
 
   my @controls;
-  my @ids, $plot_1_id;
-	@ids, $plot_2_id;
+  my @ids;
 
   my $fieldmap = CXGN::Trial::FieldMap->new({
     bcs_schema => $schema,
