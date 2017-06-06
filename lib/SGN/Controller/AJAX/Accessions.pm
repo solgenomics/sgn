@@ -22,11 +22,11 @@ use List::MoreUtils qw /any /;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::BreedersToolbox::AccessionsFuzzySearch;
 use CXGN::BreedersToolbox::OrganismFuzzySearch;
-use CXGN::Stock::AddStocks;
 use CXGN::Stock::Accession;
 use CXGN::Chado::Stock;
 use CXGN::List;
 use Data::Dumper;
+use Try::Tiny;
 #use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -221,97 +221,97 @@ sub verify_fuzzy_options_POST : Args(0) {
 sub add_accession_list : Path('/ajax/accession_list/add') : ActionClass('REST') { }
 
 sub add_accession_list_POST : Args(0) {
-  my ($self, $c) = @_;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  my $accession_list_json = $c->req->param('accession_list');
-  my $species_name = $c->req->param('species_name');
-  my $population_name = $c->req->param('population_name');
-  my $organization_name = $c->req->param('organization_name');
-  my $full_info = $c->req->param('full_info') ? decode_json $c->req->param('full_info') : '';
-  my $allowed_organisms = $c->req->param('allowed_organisms') ? decode_json $c->req->param('allowed_organisms') : [];
-  my %allowed_organisms = map {$_=>1} @$allowed_organisms;
-  my @accession_list;
-  my $stock_add;
-  my $validated;
-  my $dbh = $c->dbc->dbh;
-  my $user_id;
-  my $owner_name;
-  my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $full_info = $c->req->param('full_info') ? decode_json $c->req->param('full_info') : '';
+    my $allowed_organisms = $c->req->param('allowed_organisms') ? decode_json $c->req->param('allowed_organisms') : [];
+    my %allowed_organisms = map {$_=>1} @$allowed_organisms;
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-  if (!$c->user()) {
-    $c->stash->{rest} = {error => "You need to be logged in to submit accessions." };
-    return;
-  }
+    if (!$c->user()) {
+        $c->stash->{rest} = {error => "You need to be logged in to submit accessions." };
+        return;
+    }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
 
-  $user_id = $c->user()->get_object()->get_sp_person_id();
-  $owner_name = $c->user()->get_object()->get_username();
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+        $c->stash->{rest} = {error =>  "You have insufficient privileges to submit accessions." };
+        return;
+    }
 
-  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to submit accessions." };
-    return;
-  }
-  my $added_stocks;
-  if ($full_info){
-      my @added_fullinfo_stocks;
-      foreach (@$full_info){
-          if (exists($allowed_organisms{$_->{species}})){
-              my $stock = CXGN::Stock::Accession->new({
-                  schema=>$schema,
-                  type=>'accession',
-                  species=>$_->{species},
-                  #genus=>$_->{genus},
-                  name=>$_->{defaultDisplayName},
-                  uniquename=>$_->{germplasmName},
-                  organization_name=>$_->{organizationName},
-                  population_name=>$_->{populationName},
-                  description=>$_->{description},
-                  accessionNumber=>$_->{accessionNumber},
-                  germplasmPUI=>$_->{germplasmPUI},
-                  pedigree=>$_->{pedigree},
-                  germplasmSeedSource=>$_->{germplasmSeedSource},
-                  synonyms=>$_->{synonyms},
-                  #commonCropName=>$_->{commonCropName},
-                  instituteCode=>$_->{instituteCode},
-                  instituteName=>$_->{instituteName},
-                  biologicalStatusOfAccessionCode=>$_->{biologicalStatusOfAccessionCode},
-                  countryOfOriginCode=>$_->{countryOfOriginCode},
-                  typeOfGermplasmStorageCode=>$_->{typeOfGermplasmStorageCode},
-                  #speciesAuthority=>$_->{speciesAuthority},
-                  #subtaxa=>$_->{subtaxa},
-                  #subtaxaAuthority=>$_->{subtaxaAuthority},
-                  donors=>$_->{donors},
-                  acquisitionDate=>$_->{acquisitionDate}
-              });
-              my $added_stock_id = $stock->store();
-              push @added_fullinfo_stocks, [$added_stock_id, $_->{germplasmName}];
-          }
-      }
-      $added_stocks = \@added_fullinfo_stocks;
-  }
-  else {
-  @accession_list = @{_parse_list_from_json($accession_list_json)};
-  if ($population_name eq '') {
-      $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@accession_list, species => $species_name, owner_name => $owner_name,phenome_schema => $phenome_schema, dbh => $dbh, organization_name => $organization_name} );
-  } else {
-      $stock_add = CXGN::Stock::AddStocks->new({ schema => $schema, stocks => \@accession_list, species => $species_name, owner_name => $owner_name,phenome_schema => $phenome_schema, dbh => $dbh, population_name => $population_name, organization_name => $organization_name} );
-  }
-  $validated = $stock_add->validate_stocks();
-  if (!$validated) {
-    $c->stash->{rest} = {error =>  "Stocks already exist in the database" };
-    return;
-  }
-  $added_stocks = $stock_add->add_accessions();
-  if (!$added_stocks) {
-    $c->stash->{rest} = {error =>  "Could not add stocks to the database" };
-    return;
-  }
-  }
+    my $main_production_site_url = $c->config->{main_production_site_url};
+    my @added_fullinfo_stocks;
+    my @added_stocks;
+    my $coderef_bcs = sub {
+        foreach (@$full_info){
+            if (exists($allowed_organisms{$_->{species}})){
+                my $stock = CXGN::Stock::Accession->new({
+                    schema=>$schema,
+                    main_production_site_url=>$main_production_site_url,
+                    type=>'accession',
+                    species=>$_->{species},
+                    #genus=>$_->{genus},
+                    name=>$_->{defaultDisplayName},
+                    uniquename=>$_->{germplasmName},
+                    organization_name=>$_->{organizationName},
+                    population_name=>$_->{populationName},
+                    description=>$_->{description},
+                    accessionNumber=>$_->{accessionNumber},
+                    germplasmPUI=>$_->{germplasmPUI},
+                    pedigree=>$_->{pedigree},
+                    germplasmSeedSource=>$_->{germplasmSeedSource},
+                    synonyms=>$_->{synonyms},
+                    #commonCropName=>$_->{commonCropName},
+                    instituteCode=>$_->{instituteCode},
+                    instituteName=>$_->{instituteName},
+                    biologicalStatusOfAccessionCode=>$_->{biologicalStatusOfAccessionCode},
+                    countryOfOriginCode=>$_->{countryOfOriginCode},
+                    typeOfGermplasmStorageCode=>$_->{typeOfGermplasmStorageCode},
+                    #speciesAuthority=>$_->{speciesAuthority},
+                    #subtaxa=>$_->{subtaxa},
+                    #subtaxaAuthority=>$_->{subtaxaAuthority},
+                    donors=>$_->{donors},
+                    acquisitionDate=>$_->{acquisitionDate}
+                });
+                my $added_stock_id = $stock->store();
+                push @added_stocks, $added_stock_id;
+                push @added_fullinfo_stocks, [$added_stock_id, $_->{germplasmName}];
+            }
+        }
+    };
 
-  $c->stash->{rest} = {
-      success => "1",
-      added => $added_stocks
-  };
-  return;
+    my $coderef_phenome = sub {
+        foreach my $stock_id (@added_stocks) {
+            $phenome_schema->resultset("StockOwner")->find_or_create({
+                stock_id     => $stock_id,
+                sp_person_id =>  $user_id,
+            });
+        }
+    };
+
+    my $transaction_error;
+    my $transaction_error_phenome;
+    try {
+        $schema->txn_do($coderef_bcs);
+    } catch {
+        $transaction_error =  $_;
+    };
+    try {
+        $phenome_schema->txn_do($coderef_phenome);
+    } catch {
+        $transaction_error_phenome =  $_;
+    };
+    if ($transaction_error || $transaction_error_phenome) {
+        $c->stash->{rest} = {error =>  "Transaction error storing stocks: $transaction_error $transaction_error_phenome" };
+        print STDERR "Transaction error storing stocks: $transaction_error $transaction_error_phenome\n";
+        return;
+    }
+    print STDERR Dumper \@added_fullinfo_stocks;
+    $c->stash->{rest} = {
+        success => "1",
+        added => \@added_fullinfo_stocks
+    };
+    return;
 }
 
 sub fuzzy_response_download : Path('/ajax/accession_list/fuzzy_download') : ActionClass('REST') { }

@@ -34,6 +34,7 @@ use CXGN::Stock::StockLookup;
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
     is => 'rw',
+    required => 1
 );
 
 has 'stock' => (
@@ -139,16 +140,6 @@ sub BUILD {
         $self->type_id($stock->type_id);
         $self->type($self->schema()->resultset("Cv::Cvterm")->find({ cvterm_id=>$self->type_id() })->name());
         $self->is_obsolete($stock->is_obsolete);
-        my $organism = $self->schema()->resultset("Organism::Organism")->find({ organism_id=>$stock->organism_id });
-        if (defined $organism){
-            $self->organism($organism);
-            $self->organism_id($organism->organism_id);
-            $self->organism_abbreviation($organism->abbreviation);
-            $self->genus($organism->genus);
-            $self->species($organism->species);
-            $self->organism_common_name($organism->common_name);
-            $self->organism_comment($organism->comment);
-        }
     }
 
     return $self;

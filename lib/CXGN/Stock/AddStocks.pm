@@ -2,6 +2,10 @@ package CXGN::Stock::AddStocks;
 
 =head1 NAME
 
+########## DEPRECATED ####################
+# Please use CXGN::Stock::Accession->store. This new object inherits store procedure from CXGN::Stock, and adds complete passport info in store.
+##########################################
+
 CXGN::Stock::AddStocks - a module to add a list of stocks.
 
 =head1 USAGE
