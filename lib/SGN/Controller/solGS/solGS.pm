@@ -695,7 +695,7 @@ sub project_description {
         while (my $row = $pr_rs->next)
         {
             $c->stash(project_id   => $row->id,
-                      project_name => $row->name,
+                      project_name => $row->name, 
                       project_desc => $row->description
                 );
         }
@@ -4642,10 +4642,10 @@ sub format_phenotype_dataset_headers {
 sub acronymize_traits {
     my ($self, $traits) = @_;
   
-    my $acronymized_traits;
-    my $acronym_table = {};
-   
+    my $acronym_table = {};  
     my $cnt = 0;
+    my $acronymized_traits;
+
     foreach my $trait_name (@$traits)
     {
 	$cnt++;
@@ -4660,12 +4660,12 @@ sub acronymize_traits {
 	my $tr_h = $acronym_table->{$abbr};
     }
  
-    my $acronymized_traits = {
+    my $acronym_data = {
 	'acronymized_traits' => $acronymized_traits,
 	'acronym_table'      => $acronym_table
     };
 
-    return $acronymized_traits;
+    return $acronym_data;
 }
 
 
