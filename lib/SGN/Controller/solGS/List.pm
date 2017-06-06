@@ -383,33 +383,11 @@ sub predict_list_selection_pop_single_pop_model {
    
     if (!-s $prediction_pop_gebvs_file)
     {
-	my ($pheno_file, $geno_file);
+	$c->controller('solGS::solGS')->phenotype_file_name($c, $training_pop_id);
+	$c->stash->{phenotype_file} =$c->stash->{phenotype_file_name};
 
-	if ($training_pop_id =~ /uploaded/) 
-	{
-	    my $dir     = $c->stash->{solgs_prediction_upload_dir};
-	    my $user_id = $c->user->id;
-	    
-	    my $exp     = "phenotype_data_${training_pop_id}"; 
-	    $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
-	    
-	    $exp       = "genotype_data_${training_pop_id}"; 
-	    $geno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);    
-
-	}
-	else 
-	{
-	    my $dir = $c->stash->{solgs_cache_dir};
-	    
-	    my $exp     = "phenotype_data_${training_pop_id}"; 
-	    $pheno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
-	    
-	    $exp = "genotype_data_${training_pop_id}"; 
-	    $geno_file = $c->controller("solGS::solGS")->grep_file($dir, $exp);
-	}
-	
-	$c->stash->{phenotype_file} = $pheno_file;
-	$c->stash->{genotype_file}  = $geno_file;
+	$c->controller('solGS::solGS')->genotype_file_name($c, $training_pop_id);
+	$c->stash->{genotype_file} =$c->stash->{genotype_file_name};
 
 	$self->user_prediction_population_file($c, $selection_pop_id); 
 
