@@ -256,7 +256,7 @@ sub substitute_accession_precheck {
 			push @plots, $plot;
 		}
 	}
-	
+
 	if (scalar(@plots) != 0)  {
 	 $error = "Controlled (check) plots can not be substituted..";
 	}
@@ -304,20 +304,25 @@ sub replace_plot_accession_fieldMap {
 	my $new_accession = $self->new_accession;
 	my $old_accession = $self->old_accession;
 	my $old_plot_id = $self->old_plot_id;
+	my @plot_ids;
 
 	print "New Accession: $new_accession, Old Accession: $old_accession, Old Plot Id: $old_plot_id\n";
 
 	my $new_accession_id = $schema->resultset("Stock::Stock")->search({uniquename => $new_accession})->first->stock_id();
 	my $old_accession_id = $schema->resultset("Stock::Stock")->search({uniquename => $old_accession})->first->stock_id();
-  print "NEWID.....: $new_accession_id and OLDID......: $old_accession_id\n";
-
+  	print "NEWID.....: $new_accession_id and OLDID......: $old_accession_id\n";
+=forcomment
 	my $h_old_plot_id = $dbh->prepare("select object_id from stock_relationship where subject_id=?;");
 	$h_old_plot_id->execute($old_plot_id);
 	while (my $old_plot_objectID = $h_old_plot_id->fetchrow_array()) {
-
-		my $h_replace = $dbh->prepare("update stock_relationship set object_id =? where object_id=? and subject_id=?;");
-		$h_replace->execute($new_accession_id,$old_plot_objectID,$old_plot_id);
+		print "OLD-PLOT-1: $old_plot_objectID\n";
+		push @plot_ids, $old_plot_objectID;
+		#my $h_replace = $dbh->prepare("update stock_relationship set object_id =? where object_id=? and subject_id=?;");
+		#$h_replace->execute($new_accession_id,$old_plot_objectID,$old_plot_id);
 	}
+=cut
+		my $h_replace = $dbh->prepare("update stock_relationship set object_id =? where object_id=? and subject_id=?;");
+		$h_replace->execute($new_accession_id,$old_accession_id,$old_plot_id);
 
 	return $error;
 
