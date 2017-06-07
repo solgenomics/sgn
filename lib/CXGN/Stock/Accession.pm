@@ -191,7 +191,7 @@ sub store {
         }
     }
     if($self->pedigree){
-        
+        print STDERR "CXGN::Stock::Accession->store does not store pedigree info yet!\n";
     }
 
     print STDERR "Saving returned ID $id.\n";

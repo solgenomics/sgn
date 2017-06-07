@@ -21,9 +21,9 @@ my $stock1_desc = 'stock1testdesc';
 my $species = 'Manihot esculenta';
 my $stock1_accession_number = 'stock1testacc';
 my $stock1_pui = "$main_production_site_url/stock/123";
-my $stock1_pedigree = "test_accession1/test_accession2";
+#my $stock1_pedigree = "test_accession1/test_accession2";
 my $stock1_source = "stock1testsource";
-my $stock1_synonyms = ["stock1testsyn", "stock2testsyn2"];
+my $stock1_synonyms = ["stock1testsyn", "stock1testsyn2"];
 my $stock1_inst = "stock1testinst";
 my $stock1_inst_name = "stock1testinstname";
 my $stock1_bio = "stock1testbio";
@@ -85,5 +85,73 @@ is($s->typeOfGermplasmStorageCode, $stock1_storage);
 is($s->acquisitionDate, $stock1_date);
 print STDERR Dumper $s->donors;
 is_deeply($s->donors, $stock1donors);
+
+my $stock2_uniquename = 'stock2testuniquename';
+my $stock2_name = 'stock2testname';
+my $stock2_org_name = 'stock2testorg';
+my $stock2_pop_name = 'stock2testpop';
+my $stock2_desc = 'stock2testdesc';
+my $stock2_accession_number = 'stock2testacc';
+#my $stock2_pedigree = "test_accession1/test_accession2";
+my $stock2_source = "stock2testsource";
+my $stock2_synonyms = ["stock2testsyn", "stock2testsyn2"];
+my $stock2_inst = "stock2testinst";
+my $stock2_inst_name = "stock2testinstname";
+my $stock2_bio = "stock2testbio";
+my $stock2_country = "stock2testcountry";
+my $stock2_storage = "stock2teststorage";
+my $stock2_date = "stock2testdate";
+my $stock2donors = [
+    { 'donorGermplasmName'=>'stock2_donor1', 'donorAccessionNumber' => 'stock2_donor1', 'donorInstituteCode'=>'stock2_donorinst1', 'germplasmPUI'=>'stock2_donorpui1' },
+    { 'donorGermplasmName'=>'stock2_donor2', 'donorAccessionNumber' => 'stock2_donor2', 'donorInstituteCode'=>'stock2_donorinst2', 'germplasmPUI'=>'stock2_donorpui2' }
+];
+
+my $stock2 = CXGN::Stock::Accession->new({
+    schema=>$schema,
+    main_production_site_url=>$main_production_site_url,
+    type=>'accession',
+    species=>$species,
+    #genus=>$_->{genus},
+    name=>$stock2_name,
+    uniquename=>$stock2_uniquename,
+    organization_name=>$stock2_org_name,
+    population_name=>$stock2_pop_name,
+    description=>$stock2_desc,
+    accessionNumber=>$stock2_accession_number,
+    #pedigree=>$stock2_pedigree,
+    germplasmSeedSource=>$stock2_source,
+    synonyms=>$stock2_synonyms,
+    #commonCropName=>$_->{commonCropName},
+    instituteCode=>$stock2_inst,
+    instituteName=>$stock2_inst_name,
+    biologicalStatusOfAccessionCode=>$stock2_bio,
+    countryOfOriginCode=>$stock2_country,
+    typeOfGermplasmStorageCode=>$stock2_storage,
+    #speciesAuthority=>$_->{speciesAuthority},
+    #subtaxa=>$_->{subtaxa},
+    #subtaxaAuthority=>$_->{subtaxaAuthority},
+    donors=>$stock2donors,
+    acquisitionDate=>$stock2_date
+});
+my $stock_id2 = $stock2->store();
+
+my $s = CXGN::Stock::Accession->new(schema=>$schema, stock_id=>$stock_id2);
+is($s->uniquename, $stock2_uniquename);
+is($s->name, $stock2_name);
+is($s->organization_name, $stock2_org_name);
+is($s->population_name, $stock2_pop_name);
+is($s->description, $stock2_desc);
+is($s->type, 'accession');
+is($s->accessionNumber, $stock2_accession_number);
+ok($s->germplasmPUI);
+is($s->germplasmSeedSource, $stock2_source);
+is_deeply($s->synonyms, $stock2_synonyms);
+is($s->instituteCode, $stock2_inst);
+is($s->instituteName, $stock2_inst_name);
+is($s->biologicalStatusOfAccessionCode, $stock2_bio);
+is($s->countryOfOriginCode, $stock2_country);
+is($s->typeOfGermplasmStorageCode, $stock2_storage);
+is($s->acquisitionDate, $stock2_date);
+is_deeply($s->donors, $stock2donors);
 
 done_testing();
