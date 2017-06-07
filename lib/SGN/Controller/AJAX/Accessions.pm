@@ -96,7 +96,7 @@ sub do_fuzzy_search {
     s/^\s+|\s+$//g for @organism_list;
    
     my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
-    print STDERR "\n\nAccessionFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
+    #print STDERR "\n\nAccessionFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
 
     $found_accessions = $fuzzy_search_result->{'found'};
     $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
@@ -107,7 +107,7 @@ sub do_fuzzy_search {
         $found_organisms = $fuzzy_organism_result->{'found'};
         $fuzzy_organisms = $fuzzy_organism_result->{'fuzzy'};
         $absent_organisms = $fuzzy_organism_result->{'absent'};
-        print STDERR "\n\nOrganismFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_organism_result)."\n\n";
+        #print STDERR "\n\nOrganismFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_organism_result)."\n\n";
     }
 
     if (scalar(@$fuzzy_accessions)>0){
@@ -239,6 +239,7 @@ sub add_accession_list_POST : Args(0) {
         return;
     }
 
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $main_production_site_url = $c->config->{main_production_site_url};
     my @added_fullinfo_stocks;
     my @added_stocks;
@@ -247,8 +248,10 @@ sub add_accession_list_POST : Args(0) {
             if (exists($allowed_organisms{$_->{species}})){
                 my $stock = CXGN::Stock::Accession->new({
                     schema=>$schema,
+                    check_name_exists=>0,
                     main_production_site_url=>$main_production_site_url,
                     type=>'accession',
+                    type_id=>$type_id,
                     species=>$_->{species},
                     #genus=>$_->{genus},
                     name=>$_->{defaultDisplayName},

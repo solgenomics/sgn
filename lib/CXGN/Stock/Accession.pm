@@ -145,9 +145,6 @@ sub store {
 
     print STDERR "storing: UNIQUENAME=".$self->uniquename()."\n";
 
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'accession', 'stock_type')->cvterm_id();
-    $self->type_id($type_id);
-
     my $id = $self->SUPER::store();
 
     if ($self->accessionNumber){
@@ -192,6 +189,9 @@ sub store {
             $self->_store_stockprop('donor institute', $_->{donorInstituteCode});
             $self->_store_stockprop('donor PUI', $_->{germplasmPUI});
         }
+    }
+    if($self->pedigree){
+        
     }
 
     print STDERR "Saving returned ID $id.\n";

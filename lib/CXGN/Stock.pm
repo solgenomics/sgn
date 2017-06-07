@@ -37,6 +37,12 @@ has 'schema' => (
     required => 1
 );
 
+has 'check_name_exists' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => 1
+);
+
 has 'stock' => (
     isa => 'Bio::Chado::Schema::Result::Stock::Stock',
     is => 'rw',
@@ -130,7 +136,10 @@ sub BUILD {
     my $self = shift;
 
     print STDERR "RUNNING BUILD FOR STOCK.PM...\n";
-    my $stock = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
+    my $stock;
+    if ($self->stock_id){
+        $stock = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
+    }
     if (defined $stock) {
         $self->stock($stock);
         $self->stock_id($stock->stock_id);
@@ -168,7 +177,10 @@ sub store {
     my $schema = $self->schema();
 
     #no stock id . Check first if the name  exists in te database
-    my $exists= $self->exists_in_database();
+    my $exists;
+    if ($self->check_name_exists){
+        $exists= $self->exists_in_database();
+    }
 
     if (!$self->type_id) { 
         my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), $self->type(), 'stock_type')->cvterm_id();
