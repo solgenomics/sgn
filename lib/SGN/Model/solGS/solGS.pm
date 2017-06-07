@@ -850,7 +850,7 @@ sub create_genotype_data_table {
 
     my $geno_row  = @$dataref[0]->{genotype_hash};
     my $markers   = $self->_get_dataset_markers($geno_row);
-    my $headers   = $self->_create_dataset_headers($markers);
+    my $headers   = $self->_create_genotype_dataset_headers($markers);
    
     my $geno_data .= "\t" . $headers . "\n";    
    
@@ -1134,18 +1134,16 @@ sub extract_project_markers {
 sub _get_dataset_markers {
     my ($self, $geno_hash) = @_;
  
-    print STDERR "\n calling get dataset markers\n";
-    #my $genotype_hash = JSON::Any->decode($geno_hash);
-    my @markers       = keys %$geno_hash;
+    my @markers  = keys %$geno_hash;
 
     return \@markers;
   
 } 
 
-sub _create_dataset_headers {
+
+sub _create_genotype_dataset_headers {
     my ($self, $markers) = @_; 
 
-    print STDERR "\n calling create dataset headers\n";
     my $headers;
     foreach my $marker (@$markers) 
     {
