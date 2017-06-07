@@ -30,6 +30,7 @@ use CXGN::Phenome::DumpGenotypes;
 use CXGN::BreederSearch;
 use Scalar::Util 'reftype';
 use CXGN::BreedersToolbox::AccessionsFuzzySearch;
+use CXGN::Stock::RelatedStocks;
 
 use Bio::Chado::Schema;
 
@@ -1470,34 +1471,16 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
     my $stock_id = $c->stash->{stock_row}->stock_id();
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
-    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-    my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
-    my $dbh = $schema->storage->dbh();
 
-    my $q = "SELECT stock.stock_id, stock.uniquename, cvterm.name FROM stock_relationship
-            INNER JOIN stock ON (stock_relationship.subject_id = stock.stock_id)
-            INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
-            WHERE stock_relationship.object_id = ? AND (stock_relationship.type_id = ?
-            OR stock_relationship.type_id = ?)
-
-            UNION ALL
-
-            SELECT stock.stock_id, stock.uniquename, cvterm.name FROM stock_relationship
-            INNER JOIN stock ON (stock_relationship.object_id = stock.stock_id)
-            INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
-            WHERE stock_relationship.subject_id = ? AND (stock_relationship.type_id = ?
-            OR stock_relationship.type_id = ?) ";
-
-    my $h = $dbh->prepare($q);
-    $h->execute($stock_id, $plot_of_type_id, $plant_of_type_id, $stock_id, $plot_of_type_id, $plant_of_type_id);
-
-    my @trial_related_stock =();
-    while(my($stock_id, $stock_name, $cvterm_name) = $h->fetchrow_array()){
-
-    push @trial_related_stock,[qq{<a href = "/stock/$stock_id/view">$stock_name</a}, $cvterm_name];
+    my $trial_related_stock = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $trial_related_stock->get_trial_related_stock();
+    my @stocks;
+    foreach my $r (@$result){
+      my ($stock_id, $stock_name, $cvterm_name) = @$r;
+      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a}, $cvterm_name];
     }
 
-    $c->stash->{rest}={data=>\@trial_related_stock};
+    $c->stash->{rest}={data=>\@stocks};
 }
 
 sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') Args(0){
@@ -1506,27 +1489,15 @@ sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') A
     my $stock_id = $c->stash->{stock_row}->stock_id();
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
-    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
-    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
-    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-    my $dbh = $schema->storage->dbh();
-
-    my $q = "SELECT cvterm.name, stock.stock_id, stock.uniquename FROM stock_relationship
-             INNER JOIN stock ON (stock_relationship.object_id = stock.stock_id)
-             INNER JOIN cvterm ON (stock_relationship.type_id =cvterm.cvterm_id)
-             WHERE stock_relationship.subject_id = ? AND(stock_relationship.type_id =?
-             OR stock_relationship.type_id = ?) AND stock.type_id = ? ORDER BY cvterm.name DESC, stock.uniquename ASC";
-
-    my $h = $dbh->prepare($q);
-    $h->execute($stock_id, $female_parent_type_id, $male_parent_type_id, $accession_type_id);
-
-    my@progenies =();
-    while(my($cvterm_name, $stock_id, $stock_name) = $h->fetchrow_array()){
-      push @progenies, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a}];
+    my $progenies = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $progenies->get_progenies();
+    my @stocks;
+    foreach my $r (@$result){
+      my ($cvterm_name, $stock_id, $stock_name) = @$r;
+      push @stocks, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a}];
     }
 
-    $c->stash->{rest}={data=>\@progenies};
-
+    $c->stash->{rest}={data=>\@stocks};
 }
 
 sub get_group:Chained('/stock/get_stock') PathPart('datatables/group') Args(0){
@@ -1535,19 +1506,15 @@ sub get_group:Chained('/stock/get_stock') PathPart('datatables/group') Args(0){
     my $stock_id = $c->stash->{stock_row}->stock_id();
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
-    my $member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
-    my $dbh = $schema->storage->dbh();
 
-    my $q = "SELECT stock.stock_id, stock.uniquename, cvterm.name FROM stock_relationship INNER JOIN stock
-            ON (stock_relationship.object_id = stock.stock_id) INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
-            WHERE stock_relationship.subject_id = ? and stock_relationship.type_id = ?";
+    my $related_groups = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $related_groups->get_group();
+    my @group;
+    foreach my $r (@$result){
 
-    my $h = $dbh->prepare($q);
-    $h->execute($stock_id, $member_of_type_id);
+      my ($stock_id, $stock_name, $cvterm_name) = @$r;
 
-    my @group =();
-    while(my($stock_id, $stock_name, $cvterm_name) = $h->fetchrow_array()){
-    push @group, [qq{<a href = "/stock/$stock_id/view">$stock_name</a}, $cvterm_name];
+      push @group, [qq{<a href = "/stock/$stock_id/view">$stock_name</a}, $cvterm_name];
     }
 
     $c->stash->{rest}={data=>\@group};
