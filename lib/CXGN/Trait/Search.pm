@@ -45,7 +45,7 @@ has 'is_variable' => (
     default => 1
 );
 
-has 'cv_name' => (
+has 'trait_cv_name' => (
     isa => 'Str|Undef',
     is => 'rw',
 );
@@ -87,9 +87,8 @@ sub search {
     my $schema = $self->bcs_schema();
 
     my $is_variable = $self->is_variable();
-    my $trait_cv_name = $self->cv_name() || 'cassava_trait';
-    print STDERR "**TRAIT CV NAME =  $trait_cv_name \n\n IS VARIABLE= $is_variable \n\n" ; 
-   
+    my $trait_cv_name = $self->trait_cv_name() ;#|| 'cassava_trait';
+      
 
     my $trait_cv = $schema->resultset("Cv::Cv")->search(
 	{ name => $trait_cv_name } )->single;

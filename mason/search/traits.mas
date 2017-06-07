@@ -1,6 +1,6 @@
 
 <%args>
-$cv_name => 'cassava_trait' 
+$trait_cv_name
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
@@ -34,7 +34,7 @@ $cv_name => 'cassava_trait'
 jQuery(document).ready(function () {
 
    var trait_table = jQuery('#trait_search_results').DataTable( {
-       'ajax': '/ajax/search/traits?cv_name=<% $cv_name %>'
+       'ajax': '/ajax/search/traits?trait_cv_name=<% $trait_cv_name %>'
    });
  
    jQuery('#trait_search_results').on( 'draw.dt', function () {

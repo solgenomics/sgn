@@ -18,7 +18,7 @@ __PACKAGE__->config(
 sub search : Path('/ajax/search/traits') Args(0) {
     my $self = shift;
     my $c    = shift;
-
+    my $trait_cv_name = $c->req->param('trait_cv_name');
     
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -26,6 +26,7 @@ sub search : Path('/ajax/search/traits') Args(0) {
     my $trait_search = CXGN::Trait::Search->new
 	({
 	    bcs_schema=>$schema,
+	    trait_cv_name => $trait_cv_name,
 	 });
     my $data = $trait_search->search();
     my @result;
