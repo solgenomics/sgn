@@ -1305,6 +1305,7 @@ sub get_traits_assayed {
 sub get_trait_components_assayed {
     my $self = shift;
     my $stock_type = shift;
+    my $composable_cvterm_format = shift;
     my $dbh = $self->bcs_schema->storage()->dbh();
     my $traits_assayed = $self->get_traits_assayed($stock_type);
 
@@ -1314,8 +1315,8 @@ sub get_trait_components_assayed {
         my $trait_components = SGN::Model::Cvterm->get_components_from_trait($self->bcs_schema, $_->[0]);
         foreach (@$trait_components){
             if (!exists($unique_components{$_})){
-                my $component_cvterm = $self->bcs_schema->resultset("Cv::Cvterm")->find({cvterm_id=>$_});
-                push @trait_components_assayed, [$component_cvterm->cvterm_id(), $component_cvterm->name()];
+                my $component_cvterm = SGN::Model::Cvterm::get_trait_from_cvterm_id($self->bcs_schema, $_, $composable_cvterm_format);
+                push @trait_components_assayed, [$_, $component_cvterm];
                 $unique_components{$_}++;
             }
         }

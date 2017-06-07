@@ -494,8 +494,9 @@ sub simple_selectbox_html {
     }
     $params{params} ||= '';
     $params{name}   ||= '';
+    my $data_related = $params{data_related} ? "data-related=".$params{data_related} : '';
     my $size = $params{size};
-    $retstring = qq!<select class="form-control" $id $params{multiple} $params{params} name="$params{name}"!;
+    $retstring = qq!<select class="form-control" $id $data_related $params{multiple} $params{params} name="$params{name}"!;
     if ($size) {
         $retstring .= qq!size="$params{size}"!;
     }

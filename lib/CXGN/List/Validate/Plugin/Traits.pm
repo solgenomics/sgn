@@ -25,8 +25,8 @@ sub validate {
         my $full_accession = substr $term, rindex( $term, $delim ) + length($delim);
         my $full_accession_length = length($full_accession) + length($delim);
         $term = substr($term, 0, -$full_accession_length);
-        print STDERR $full_accession."\n";
-        print STDERR $term."\n";
+        #print STDERR $full_accession."\n";
+        #print STDERR $term."\n";
         my ($db_name, $accession) = split ":", $full_accession;
 
         if ($accession) {
@@ -50,12 +50,12 @@ sub validate {
             );
 
             if ($rs->count == 0) {
-                push @missing, $_;
+                push @missing, $term;
             } else {
-            #        my $rs_var = $rs->search_related('cvterm_relationship_subjects', {'type.name' => 'VARIABLE_OF'}, { 'join' => 'type'});
-            #        if ($rs_var->count == 0) {
-            #            push @missing, $_;
-            #        }
+                my $rs_var = $rs->search_related('cvterm_relationship_subjects', {'type.name' => 'VARIABLE_OF'}, { 'join' => 'type'});
+                if ($rs_var->count == 0) {
+                    push @missing, $term;
+                }
             }
 
             if ($db->name eq 'COMP'){
@@ -81,10 +81,10 @@ sub validate {
                 my $component_rs = $cvterm_rs->first->search_related('cvterm_relationship_objects', {'me.type_id' => $contains_cvterm_id});
                 while(my $r = $component_rs->next){
                     my $component_cvterm = $r->subject();
-                    print STDERR $component_cvterm->name."\n";
+                    #print STDERR $component_cvterm->name."\n";
                     my $component_cvprops_rs = $schema->resultset('Cv::Cvprop')->search({cv_id=>$component_cvterm->cv_id});
                     while(my $cvprop = $component_cvprops_rs->next){
-                        print STDERR $cvprop->type_id."\n";
+                        #print STDERR $cvprop->type_id."\n";
                         if (!exists($cvtypes{$cvprop->type_id})){
                             print STDERR "Component not part of allowed cv ontologies\n";
                             push @missing, $term;
@@ -96,6 +96,7 @@ sub validate {
         }
 
     }
+    #print STDERR Dumper \@missing;
     return { missing => \@missing };
 }
 

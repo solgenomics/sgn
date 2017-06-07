@@ -71,7 +71,7 @@ SELECT
      FULL OUTER JOIN nd_geolocation ON nd_experiment.nd_geolocation_id = nd_geolocation.nd_geolocation_id
      LEFT JOIN nd_experiment_project ON nd_experiment_stock.nd_experiment_id = nd_experiment_project.nd_experiment_id
      FULL OUTER JOIN project trial ON nd_experiment_project.project_id = trial.project_id
-     LEFT JOIN project_relationship ON trial.project_id = project_relationship.subject_project_id
+     LEFT JOIN project_relationship ON trial.project_id = project_relationship.subject_project_id AND project_relationship.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'breeding_program_trial_relationship' )
      FULL OUTER JOIN project breeding_program ON project_relationship.object_project_id = breeding_program.project_id
      LEFT JOIN projectprop ON trial.project_id = projectprop.project_id AND projectprop.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'project year' )
      LEFT JOIN nd_experiment_phenotype ON(nd_experiment_stock.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id)
@@ -114,7 +114,7 @@ UPDATE matviews set mv_dependents = '{"accessionsXbreeding_programs","accessions
 
 -- REDEFINE TRAIT VIEW, getting all proximal terms from cvs that have a term associated with at least one phenotype measurement
 
-DROP MATERIALIZED VIEW IF EXISTS public.trials;
+DROP MATERIALIZED VIEW IF EXISTS public.trials CASCADE;
 CREATE MATERIALIZED VIEW public.trials AS
 SELECT trial.project_id AS trial_id,
     trial.name AS trial_name
@@ -128,7 +128,7 @@ WITH DATA;
 CREATE UNIQUE INDEX trials_idx ON public.trials(trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW trials OWNER TO web_usr;
 
-DROP MATERIALIZED VIEW IF EXISTS public.trait_components;
+DROP MATERIALIZED VIEW IF EXISTS public.trait_components CASCADE;
 CREATE MATERIALIZED VIEW public.trait_components AS
 SELECT cvterm.cvterm_id AS trait_component_id,
 (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_component_name
@@ -146,7 +146,7 @@ SELECT cvterm.cvterm_id AS trait_component_id,
     ALTER MATERIALIZED VIEW trait_components OWNER TO web_usr;
     INSERT INTO matviews (mv_name, currently_refreshing, last_refresh) VALUES ('trait_components', FALSE, CURRENT_TIMESTAMP);
 
-DROP MATERIALIZED VIEW IF EXISTS public.traits;
+DROP MATERIALIZED VIEW IF EXISTS public.traits CASCADE;
 CREATE MATERIALIZED VIEW public.traits AS
   SELECT cvterm.cvterm_id AS trait_id,
   (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
