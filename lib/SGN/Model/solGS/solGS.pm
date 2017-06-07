@@ -764,8 +764,6 @@ sub genotype_data {
     my $cnt_clones_diff_markers;
     my @stocks;
  
-    print STDERR "\n  Calling protocol: -- project id: $project_id\n"; 
-
     if ($project_id) 
     {    
         if ($prediction_id && $project_id == $prediction_id) 
@@ -1071,46 +1069,6 @@ sub get_stocks_rs {
 }
 
 
-# sub stock_genotypes_rs {
-#     my ($self, $stock_rs) = @_;
-
-#     my @genotypes_ids;
-    
-#     while (my $row = $stock_rs->next)
-#     {
-# 	push @genotypes_ids, $row->get_column('stock_id');
-#     }
-    
-#     my $nd_exp_rs = $self->genotypes_nd_experiment_ids_rs(\@genotypes_ids);
-#     my @nd_exp_ids;
-    
-#     while (my $row = $nd_exp_rs->next)
-#     {
-# 	push @nd_exp_ids, $row->get_column('nd_experiment_id');
-#     }
-    
-#     my $genotype_rs = $stock_rs
-#         ->search_related('nd_experiment_stocks')
-#         ->search_related('nd_experiment')
-#         ->search_related('nd_experiment_genotypes')
-#         ->search_related('genotype')
-#         ->search_related('genotypeprops')
-#         ->search_related('type',
-#                          {'type.name' =>{'ilike'=> 'snp genotyping'},
-# 			  'nd_experiment_genotypes.nd_experiment_id' => {-in => \@nd_exp_ids}
-# 			 }, 
-#                          { 
-#                              select => [ qw / me.project_id me.name object.stock_id object.uniquename  
-#                                                  genotypeprops.genotypeprop_id genotypeprops.value/ ], 
-#                              as     => [ qw / project_id project_name stock_id stock_name genotypeprop_id value / ] 
-#                          }
-#         );
-
-#     return $genotype_rs;
-
-# }
-
-
 sub genotyping_trials_rs {
     my $self = shift;
      
@@ -1146,27 +1104,6 @@ sub genotyping_trials_rs {
 
 sub prediction_genotypes_rs {
     my ($self, $pr_id) = @_;
-
-
-    # # my $pr_genotypes_rs = $self->project_genotypes_rs($pr_id);
-
-    # # my @accessions_list;
-    
-    # # while (my $row = $pr_genotypes_rs->next)
-    # # {
-    # # 	push @accessions_list, $row->get_column('uniquename');
-    # # }
- 
-    # my $trial = CXGN::Trial->new({'bcs_schema' =>$self->schema, 'trial_id' =>$pr_id});    
-    # my $trial_accessions = $trial->get_accessions();
-    
-    # my @accessions;
-
-    # foreach my $st  (@$trial_accessions){
-    # 	push @accessions, $st->{uniquename};
-    # }
-
-    # my $genotype_rs = $self->accessions_list_genotypes_rs(\@accessions);
     
     my $genotypes_rs = $self->project_genotype_data_rs($pr_id);
    
@@ -1223,8 +1160,6 @@ sub _create_dataset_headers {
 sub _create_genotype_row {
     my ($self, $genotype_hash) = @_; 
 
-    print STDERR "\n calling create genotype row\n";
-    #my $values       = JSON::Any->decode($genotype_hash);
     my @markers      = keys %$genotype_hash;
     my $marker_count = scalar(@markers);
  
@@ -1233,17 +1168,14 @@ sub _create_genotype_row {
     my $geno_values;
     foreach my $marker (@markers) 
     {   
-	print STDERR "\nmarker: $marker\n";
 	no warnings 'uninitialized';
 
         my $genotype =  $genotype_hash->{$marker};
-	 $genotype =  $genotype_hash->{$marker};
-		print STDERR "\nmarker: $marker - $genotype\n";
+	$genotype =  $genotype_hash->{$marker};
+
         $geno_values .= $genotype =~ /\d+/g ? $round->round($genotype) : $genotype;       
         $geno_values .= "\t" unless $marker eq $markers[-1];
     }
-
-    #$geno_values .= "\n";  
 
     return $geno_values;
 
@@ -1427,6 +1359,7 @@ sub plots_list_phenotype_data {
    
 }
 
+
 # sub plots_list_phenotype_data {
 #     my ($self, $plots_ids) = @_;
 
@@ -1438,7 +1371,6 @@ sub plots_list_phenotype_data {
 # 	);
 
 #     my @data = $phenotypes_search->get_phenotype_matrix();
-
 #     my $clean_data = $self->structure_phenotype_data(\@data);
    
 #     return \$clean_data;
@@ -1846,8 +1778,7 @@ sub structure_plots_list_phenotype_data {
 	    my $design        = 'NA';
 	    my $block         = 'NA';
 	    my $replicate     = 'NA';
-	    my $design        = 'NA';
-	 
+		 
 	    my $design_rs = $self->experimental_design($trial_id);
 
 	    if ($design_rs->next)       
