@@ -401,7 +401,7 @@ sub matviews_status {
     return { refreshing => "<p id='wizard_status'>Wizard update in progress . . . </p>"};
   }
   else {
-    print STDERR "materialized fullview last updated $timestamp\n";
+    print STDERR "materialized views last updated $timestamp\n";
     return { timestamp => "<p id='wizard_status'>Wizard last updated: $timestamp</p>" };
   }
 }
