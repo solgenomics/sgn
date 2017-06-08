@@ -683,6 +683,7 @@ sub get_markers_count {
 sub project_description {
     my ($self, $c, $pr_id) = @_;
 
+    $c->stash->{pop_id} = $pr_id;
     $c->stash->{uploaded_reference} = 1 if ($pr_id =~ /uploaded/);
 
     my $protocol = $c->config->{default_genotyping_protocol};
@@ -694,7 +695,7 @@ sub project_description {
         while (my $row = $pr_rs->next)
         {
             $c->stash(project_id   => $row->id,
-                      project_name => $row->name,
+                      project_name => $row->name, 
                       project_desc => $row->description
                 );
         }
@@ -726,31 +727,24 @@ sub project_description {
 	@geno_lines = read_file($geno_file);
 	$markers_no = scalar(split ('\t', $geno_lines[0])) - 1;	
     }
-
+   
     $self->trait_phenodata_file($c);
     my $trait_pheno_file  = $c->stash->{trait_phenodata_file};
     my @trait_pheno_lines = read_file($trait_pheno_file) if $trait_pheno_file;
  
     my $stocks_no = @trait_pheno_lines ? scalar(@trait_pheno_lines) - 1 : scalar(@geno_lines) - 1;
     
-    $self->phenotype_file($c);
-    my $pheno_file = $c->stash->{phenotype_file};
-    my @phe_lines  = read_file($pheno_file);   
-    my $traits     = $phe_lines[0];
-
-    $self->filter_phenotype_header($c);
-    my $filter_header = $c->stash->{filter_phenotype_header};
-   
-    $traits       =~ s/($filter_header\t)//g;
-
-    my @traits    =  split (/\t/, $traits);    
-    my $traits_no = scalar(@traits);
-   
+    $self->traits_acronym_file($c);
+    my $traits_file = $c->stash->{traits_acronym_file};
+    my @lines = read_file($traits_file);
+    my $traits_no = scalar(@lines) - 1;
+       
     $c->stash(markers_no => $markers_no,
               traits_no  => $traits_no,
               stocks_no  => $stocks_no,
 	      protocol   => $protocol,
         );
+
 }
 
 
@@ -867,7 +861,15 @@ sub trait :Path('/solgs/trait') Args(3) {
                 $c->stash->{template} = "/generic_message.mas";   
             } 
             else 
-	    {            
+	    {    
+		$self->traits_acronym_file($c);
+		my $acronym_file = $c->stash->{traits_acronym_file};
+	
+		if (!-e $acronym_file || !-s $acronym_file) 
+		{
+		    $self->get_all_traits($c);
+		}
+
 		$self->project_description($c, $pop_id); 
 
 		$self->trait_phenotype_stat($c);  
@@ -4172,8 +4174,9 @@ sub analyzed_traits {
 sub filter_phenotype_header {
     my ($self, $c) = @_;
        
-    my $meta_headers = "uniquename\tobject_name\tobject_id\tstock_id\tstock_name\tdesign\tblock\treplicate";
+    my @headers = ( 'studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber' );
 
+    my $meta_headers = join("\t", @headers);
     if ($c) 
     {
 	$c->stash->{filter_phenotype_header} = $meta_headers;
@@ -4601,13 +4604,9 @@ sub format_phenotype_dataset {
 sub format_phenotype_dataset_rows {
     my ($self, $data_rows) = @_;
     
-    foreach (@$data_rows)
-    {
-        $_ =~ s/\s+plot//g;
-        $_ .= "\n";
-    }
-    
-    return $data_rows;
+    my $data = join("\n", @$data_rows);
+
+    return $data;
     
 }
 
@@ -4615,18 +4614,25 @@ sub format_phenotype_dataset_rows {
 sub format_phenotype_dataset_headers {
     my ($self, $raw_headers, $traits_file) = @_;
 
-    $raw_headers =~ s/SP:\d+\|//g;  
-    $raw_headers =~ s/\w+:\w+\|//g;  
-    $raw_headers =~ s/\n//g;  
-
+    $raw_headers =~ s/\|\w+:\d+//g;
+    $raw_headers =~ s/\n//g; 
+    
+    my $traits = $raw_headers;
+  
     my $meta_headers=  $self->filter_phenotype_header();
-    $raw_headers =~ s/($meta_headers\t)//g;
-   
-    write_file($traits_file, $raw_headers) if $traits_file;   
-    my  @filtered_traits = split(/\t/, $raw_headers);
+    my @mh = split("\t", $meta_headers);
+    foreach my $mh (@mh) {
+       $traits =~ s/($mh)//g;
+    }
 
+    $traits =~ s/^\s+|\s+$//g;
+
+    write_file($traits_file, $traits) if $traits_file;   
+    my  @filtered_traits = split(/\t/, $traits);
+
+    $raw_headers =~ s/$traits//g;
     my $acronymized_traits = $self->acronymize_traits(\@filtered_traits);
-    my $formatted_headers = $acronymized_traits->{formatted_headers}; 
+    my $formatted_headers = $raw_headers . $acronymized_traits->{acronymized_traits}; 
    
     return $formatted_headers;
     
@@ -4636,10 +4642,10 @@ sub format_phenotype_dataset_headers {
 sub acronymize_traits {
     my ($self, $traits) = @_;
   
-    my $formatted_traits;
-    my $acronym_table = {};
-   
+    my $acronym_table = {};  
     my $cnt = 0;
+    my $acronymized_traits;
+
     foreach my $trait_name (@$traits)
     {
 	$cnt++;
@@ -4647,22 +4653,19 @@ sub acronymize_traits {
 
 	$abbr = $abbr . '.2' if $cnt > 1 && $acronym_table->{$abbr};  
 
-        $formatted_traits .= $abbr;
-	$formatted_traits .= "\t" unless $cnt == scalar(@$traits);
+        $acronymized_traits .= $abbr;
+	$acronymized_traits .= "\t" unless $cnt == scalar(@$traits);
 	
         $acronym_table->{$abbr} = $trait_name if $abbr;
 	my $tr_h = $acronym_table->{$abbr};
     }
  
-    my $meta_headers = $self->filter_phenotype_header();
-    my $formatted_headers = $meta_headers ."\t". $formatted_traits;
- 
-    my $acronymized_traits = {
-	'formatted_headers' => $formatted_headers,
-	'acronym_table'     => $acronym_table
+    my $acronym_data = {
+	'acronymized_traits' => $acronymized_traits,
+	'acronym_table'      => $acronym_table
     };
 
-    return $acronymized_traits;
+    return $acronym_data;
 }
 
 

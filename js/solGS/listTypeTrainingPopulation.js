@@ -65,6 +65,18 @@ function getTrainingListElementsNames (list) {
 }
 
 
+function getTrainingListElementsIds (list) {
+   
+    var ids = [];
+    for (var i = 0; i < list.length; i++) {
+	ids.push(list[i][0]);
+    }
+
+    return ids;
+
+}
+
+
 function getListTypeTrainingPopDetail(listId) {   
     
     var list = new CXGN.List();
@@ -74,6 +86,7 @@ function getListTypeTrainingPopDetail(listId) {
     var listName;
     var listElements;
     var listElementsNames;
+    var listElementsIds;
 
     if (listId) {
         listData      = list.getListData(listId);
@@ -82,11 +95,13 @@ function getListTypeTrainingPopDetail(listId) {
 	listElements  = listData.elements;
 
 	listElementsNames = getTrainingListElementsNames(listElements);
+	listElementsIds   = getTrainingListElementsIds(listElements);
     }
   
     return {'name'          : listName,
-            'list'          : listElements,
+            'list'          : listElements,	    
 	    'type'          : listType,
+	    'elementsIds'   : listElementsIds,
 	    'elementsNames' : listElementsNames,
            };
 }
