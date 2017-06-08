@@ -5,8 +5,8 @@ use Test::More;
 use Data::Dumper;
 use lib 't/lib';
 use SGN::Test::Fixture;
-use CXGN::Seedlot;
-use CXGN::Seedlot::Transaction;
+use CXGN::Stock::Seedlot;
+use CXGN::Stock::Seedlot::Transaction;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
@@ -16,7 +16,7 @@ my $stock = CXGN::Stock->new( schema => $schema );
 print STDERR "Done.\n";
 print STDERR "Creating dest_seedlot...\n";
 
-my $dest_seedlot = CXGN::Seedlot->new(
+my $dest_seedlot = CXGN::Stock::Seedlot->new(
     schema => $schema,
     );
 
@@ -32,7 +32,7 @@ my $dest_seedlot_id = $dest_seedlot->store();
 print STDERR "SEEDLOT ID: $dest_seedlot_id, STOCK_ID ".$dest_seedlot->stock_id()."\n";
 
 print STDERR "Creating source_seedlot...\n";
-my $source_seedlot = CXGN::Seedlot->new(
+my $source_seedlot = CXGN::Stock::Seedlot->new(
     schema => $schema,
     );
 
@@ -44,7 +44,7 @@ $source_seedlot->population_name('test seedlot pop');
 my $source_seedlot_id = $source_seedlot->store();
 
 print STDERR "Creating transaction 1...\n";
-my $trans = CXGN::Seedlot::Transaction->new(
+my $trans = CXGN::Stock::Seedlot::Transaction->new(
     schema => $schema,
     );
 $trans->from_stock([$source_seedlot_id, $source_seedlot->uniquename]);
@@ -56,7 +56,7 @@ $trans->operator('janedoe');
 
 my $trans_id = $trans->store();
 
-my $saved_trans = CXGN::Seedlot::Transaction->new(schema=>$schema, transaction_id => $trans_id);
+my $saved_trans = CXGN::Stock::Seedlot::Transaction->new(schema=>$schema, transaction_id => $trans_id);
 is_deeply($saved_trans->from_stock(), $trans->from_stock(), "saved seed source");
 is_deeply($saved_trans->to_stock(), $trans->to_stock(), "saved seed dest");
 is($saved_trans->amount(), $trans->amount(), "saved amount");
@@ -65,7 +65,7 @@ is($saved_trans->description(), $trans->description(), "saved description");
 is($saved_trans->operator(), $trans->operator(), "saved operator");
 
 #checking seedlots after transaction
-my $source_seedlot_after_trans1 = CXGN::Seedlot->new(
+my $source_seedlot_after_trans1 = CXGN::Stock::Seedlot->new(
     schema => $schema,
     seedlot_id => $source_seedlot_id
     );
@@ -76,7 +76,7 @@ is($source_seedlot_after_trans1->organization_name, $source_seedlot->organizatio
 is($source_seedlot_after_trans1->population_name, $source_seedlot->population_name, "check population is saved");
 is_deeply($source_seedlot_after_trans1->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
 
-my $dest_seedlot_after_trans1 = CXGN::Seedlot->new(
+my $dest_seedlot_after_trans1 = CXGN::Stock::Seedlot->new(
     schema => $schema,
     seedlot_id => $dest_seedlot_id
     );
@@ -88,7 +88,7 @@ is($dest_seedlot_after_trans1->population_name, $dest_seedlot->population_name, 
 is_deeply($dest_seedlot_after_trans1->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
 
 print STDERR "Creating transaction 2...\n";
-my $trans2 = CXGN::Seedlot::Transaction->new(
+my $trans2 = CXGN::Stock::Seedlot::Transaction->new(
     schema => $f->bcs_schema(),
     );
 $trans2->from_stock([$source_seedlot_id, $source_seedlot->uniquename]);
@@ -101,7 +101,7 @@ $trans2->operator('janedoe');
 $trans2->store();
 
 print STDERR "Creating transaction 3...\n";
-my $trans3 = CXGN::Seedlot::Transaction->new(
+my $trans3 = CXGN::Stock::Seedlot::Transaction->new(
     schema => $f->bcs_schema(),
     );
 $trans3->to_stock([$source_seedlot_id, $source_seedlot->uniquename]);
@@ -114,7 +114,7 @@ $trans3->amount(3);
 $trans3->store();
 
 #checking seedlots after transaction
-my $source_seedlot_after_trans3 = CXGN::Seedlot->new(
+my $source_seedlot_after_trans3 = CXGN::Stock::Seedlot->new(
     schema => $schema,
     seedlot_id => $source_seedlot_id
     );
@@ -155,7 +155,7 @@ is_deeply(\@transactions, [
           ]
         ], "check source seedlot transactions");
 
-my $dest_seedlot_after_trans3 = CXGN::Seedlot->new(
+my $dest_seedlot_after_trans3 = CXGN::Stock::Seedlot->new(
     schema => $schema,
     seedlot_id => $dest_seedlot_id
     );

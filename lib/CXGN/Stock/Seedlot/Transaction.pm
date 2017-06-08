@@ -1,5 +1,5 @@
 
-package CXGN::Seedlot::Transaction;
+package CXGN::Stock::Seedlot::Transaction;
 
 use Moose;
 use JSON::Any;
@@ -75,7 +75,7 @@ sub get_transactions_by_seedlot_id {
     my @transactions;
     while (my $row = $rs->next()) { 
 
-	my $t_obj = CXGN::Seedlot::Transaction->new( schema => $schema, transaction_id => $row->stock_relationship_id() );
+	my $t_obj = CXGN::Stock::Seedlot::Transaction->new( schema => $schema, transaction_id => $row->stock_relationship_id() );
 
 	push @transactions, $t_obj;
     }
@@ -83,7 +83,7 @@ sub get_transactions_by_seedlot_id {
     $rs = $schema->resultset("Stock::StockRelationship")->search({ object_id => $seedlot_id, type_id => $type_id });
 
     while (my $row = $rs->next()) { 
-	my $t_obj = CXGN::Seedlot::Transaction->new( schema => $schema, transaction_id => $row->stock_relationship_id() );
+	my $t_obj = CXGN::Stock::Seedlot::Transaction->new( schema => $schema, transaction_id => $row->stock_relationship_id() );
 	print STDERR "Found negative transaction...\n";
 	$t_obj->factor(-1);
 	push @transactions, $t_obj;

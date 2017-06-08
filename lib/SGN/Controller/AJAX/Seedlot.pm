@@ -6,7 +6,8 @@ use Moose;
 BEGIN { extends 'Catalyst::Controller::REST' };
 
 use Data::Dumper;
-use CXGN::Seedlot;
+use CXGN::Stock::Seedlot;
+use CXGN::Stock::Seedlot::Transaction;
 use SGN::Model::Cvterm;
 
 __PACKAGE__->config(
@@ -20,11 +21,11 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $list = CXGN::Seedlot->list_seedlots($c->dbic_schema("Bio::Chado::Schema"));
+    my $list = CXGN::Stock::Seedlot->list_seedlots($c->dbic_schema("Bio::Chado::Schema"));
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), "seedlot", "stock_property");
     my @seedlots;
     foreach my $sl (@$list) { 
-	my $sl_obj = CXGN::Seedlot->new(schema => $c->dbic_schema("Bio::Chado::Schema"), seedlot_id=>$sl->[0]);
+	my $sl_obj = CXGN::Stock::Seedlot->new(schema => $c->dbic_schema("Bio::Chado::Schema"), seedlot_id=>$sl->[0]);
     my $accessions = $sl_obj->accessions();
     my $accessions_html = '';
     foreach (@$accessions){
@@ -47,7 +48,7 @@ sub seedlot_base : Chained('/') PathPart('ajax/breeders/seedlot') CaptureArgs(1)
 
     $c->stash->{schema} = $c->dbic_schema("Bio::Chado::Schema");
     $c->stash->{seedlot_id} = $seedlot_id;
-    $c->stash->{seedlot} = CXGN::Seedlot->new( 
+    $c->stash->{seedlot} = CXGN::Stock::Seedlot->new( 
 	schema => $c->stash->{schema},
 	seedlot_id => $c->stash->{seedlot_id},
 	);
@@ -92,7 +93,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $seedlot_id;
 
     eval { 
-        my $sl = CXGN::Seedlot->new(schema => $schema);
+        my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
         $sl->uniquename($uniquename);
         $sl->location_code($location_code);
         $sl->accession_stock_ids([$accession_id]);
@@ -102,7 +103,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         #$sl->cross_id($cross_id);
         $seedlot_id = $sl->store();
 
-        my $transaction = CXGN::Seedlot::Transaction->new(schema => $schema);
+        my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
         $transaction->factor(1);
         $transaction->from_stock([$accession_id, $accession_uniquename]);
         $transaction->to_stock([$seedlot_id, $uniquename]);
@@ -159,7 +160,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     my $timestamp = $c->req->param("timestamp");
     my $description = $c->req->param("description");
     my $factor = $c->req->param("factor");
-    my $transaction = CXGN::Seedlot::Transaction->new(schema => $c->stash->{schema});
+    my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $c->stash->{schema});
     $transaction->factor($factor);
     if ($factor == 1){
         $transaction->from_stock([$stock_id, $stock_uniquename]);
