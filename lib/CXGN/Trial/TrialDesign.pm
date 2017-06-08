@@ -437,16 +437,18 @@ sub _get_rcbd_design {
   $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
   if ($self->has_randomization_seed()){
     $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
-    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,serie=1,kinds=randomization_method, seed=randomization_seed)');
+    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,serie=2,kinds=randomization_method, seed=randomization_seed)');
   }
   else {
-    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,serie=1,kinds=randomization_method)');
+    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,serie=2,kinds=randomization_method)');
   }
   $r_block->add_command('rcbd<-rcbd$book'); #added for agricolae 1.1-8 changes in output
   $r_block->add_command('rcbd<-as.matrix(rcbd)');
   $r_block->run_block();
   $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','rcbd');
+  #print STDERR Dumper $result_matrix;
   @plot_numbers = $result_matrix->get_column("plots");
+  #print STDERR Dumper \@plot_numbers;
   @block_numbers = $result_matrix->get_column("block");
   @stock_names = $result_matrix->get_column("trt");
   @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
@@ -494,8 +496,10 @@ sub _get_rcbd_design {
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'rep_number'} = $block_numbers[$i];
+    $plot_info{'plot_num_per_block'} = $plot_numbers[$i];
     $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
-    if ($fieldmap_row_numbers[$i]){
+    #$plot_info_per_block{}
+      if ($fieldmap_row_numbers[$i]){
       $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
       $plot_info{'col_number'} = $col_number_fieldmaps[$i];
     }
@@ -1700,10 +1704,15 @@ sub _build_plot_names {
 
     foreach my $key (keys %design) {
 	$trial_name ||="";
+  my $block_number = $design{$key}->{block_number};
 	my $stock_name = $design{$key}->{stock_name};
 	my $rep_number = $design{$key}->{rep_number};
+  $design{$key}->{plot_number} = $key;
+
 	if ($self->get_design_type() eq "RCBD") { # as requested by IITA (Prasad)
-	    $design{$key}->{plot_name} = $prefix.$trial_name."_rep".$rep_number."_".$stock_name."_".$suffix.$key;
+      my $plot_num_per_block = $design{$key}->{plot_num_per_block};
+      $design{$key}->{plot_number} = $design{$key}->{plot_num_per_block};
+	    $design{$key}->{plot_name} = $prefix.$trial_name."_rep_".$rep_number."_".$stock_name."_".$block_number."_".$plot_num_per_block."".$suffix;
 	}
 	elsif ($self->get_design_type() eq "Augmented") {
 	    $design{$key}->{plot_name} = $prefix.$trial_name."_plotno".$key."_".$stock_name."_".$suffix;
@@ -1712,7 +1721,6 @@ sub _build_plot_names {
 	    $design{$key}->{plot_name} = $prefix.$trial_name."_".$key.$suffix;
 	}
 
-	$design{$key}->{plot_number} = $key;
     }
 
     #print STDERR Dumper(\%design);

@@ -40,6 +40,9 @@ use Carp;
 use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
 use CXGN::Cross;
+use JSON;
+use Tie::UrlEncoder; our(%urlencode);
+use LWP::UserAgent;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -760,6 +763,55 @@ return 0;
   }
 return 1;
 
+}
+
+sub create_cross_wishlist : Path('/ajax/cross/create_cross_wishlist') : ActionClass('REST') { }
+
+sub create_cross_wishlist_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $data = decode_json $c->req->param('crosses');
+    #print STDERR Dumper $data;
+    my $dir = $c->tempfiles_subdir('download');
+    my ($file_path, $uri) = $c->tempfile( TEMPLATE => 'download/cross_wishlist_downloadXXXXX');
+    my @header = ('Female Accession', 'Male Accession', 'Priority');
+    open(my $F, ">", $file_path) || die "Can't open file ".$file_path;
+        print $F join "\t", @header;
+        print $F "\n";
+        foreach (@$data){
+            print $F $_->{female_id}."\t".$_->{male_id}."\t".$_->{priority}."\n";
+        }
+    close($F);
+    #print STDERR Dumper $file_path;
+    #print STDERR Dumper $uri;
+    my $urlencoded_filename = $urlencode{$uri};
+    #print STDERR Dumper $urlencoded_filename;
+
+    my $universal_uri = $c->config->{main_production_site_url}.$uri;
+    my $ua = LWP::UserAgent->new;
+    $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{ona_username}, $c->config->{ona_password} );
+    my $server_endpoint = "https://api.ona.io/api/v1/metadata";
+    my $req = HTTP::Request->new(POST => $server_endpoint);
+    $req->header('content-type' => 'application/json');
+
+    my $post_data = { "xform"=>"bananacross", "data_type"=>"media", "data_value"=>"$urlencoded_filename", "data_file"=>"$universal_uri" };
+    $req->content( encode_json $post_data);
+
+    my $resp = $ua->request($req);
+    if ($resp->is_success) {
+        my $message = $resp->decoded_content;
+        my $message_hash = decode_json $message;
+        print STDERR Dumper $message_hash;
+        if ($message_hash->{id}){
+            $c->stash->{rest}->{success} = 'The cross wishlist is now ready to be used on the ODK tablet application.';
+        } else {
+            $c->stash->{rest}->{error} = 'The cross wishlist was not posted to ONA. Please try again.';
+        }
+    } else {
+        print STDERR Dumper $resp;
+        $c->stash->{rest}->{error} = "There was an error submitting cross wishlist to ONA. Please try again.";
+    }
+
+    $c->stash->{rest}->{filename} = $urlencoded_filename;
 }
 
 ###

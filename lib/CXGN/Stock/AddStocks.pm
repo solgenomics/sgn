@@ -2,6 +2,10 @@ package CXGN::Stock::AddStocks;
 
 =head1 NAME
 
+########## DEPRECATED ####################
+# Please use CXGN::Stock::Accession->store. This new object inherits store procedure from CXGN::Stock, and adds complete passport info in store.
+##########################################
+
 CXGN::Stock::AddStocks - a module to add a list of stocks.
 
 =head1 USAGE
@@ -80,6 +84,7 @@ sub _add_stocks {
   my $stocks_rs = $self->get_stocks();
   my @stocks = @$stocks_rs;
   my @added_stock_ids;
+  my @added_stocks;
   my $phenome_schema = $self->get_phenome_schema();
 
   my $organism = $schema->resultset("Organism::Organism")
@@ -138,6 +143,7 @@ sub _add_stocks {
 		  my $organization = $stock->create_stockprops({ $org_stockprop => $self->get_organization_name});
 	  }
       push (@added_stock_ids,  $stock->stock_id());
+      push @added_stocks, [$stock->stock_id, $stock_name];
     }
   };
 
@@ -161,7 +167,7 @@ sub _add_stocks {
 		       });
   }
 
-  return 1;
+  return \@added_stocks;
 }
 
 sub validate_stocks {

@@ -420,7 +420,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 ok(!$verified_error);
-my $stored_phenotype_error_msg = $store_phenotypes->store();
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -548,7 +548,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 #print STDERR Dumper $verified_error;
 ok(!$verified_error);
-$stored_phenotype_error_msg = $store_phenotypes->store();
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works");
 
 my $traits_assayed  = $tn->get_traits_assayed();
@@ -875,7 +875,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 my $validate_phenotype_error_msg = $store_phenotypes->verify();
 #print STDERR Dumper $validate_phenotype_error_msg;
 
-$stored_phenotype_error_msg = $store_phenotypes->store();
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store fieldbook works");
 my $image = SGN::Image->new( $f->dbh, undef, $f );
 my $image_error = $image->upload_fieldbook_zipfile('t/data/fieldbook/photos.zip', $user_id);
@@ -1309,7 +1309,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 #print STDERR Dumper $verified_error;
 ok(!$verified_error);
-$stored_phenotype_error_msg = $store_phenotypes->store();
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store fieldbook works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -1416,545 +1416,537 @@ ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 #print STDERR Dumper $parsed_file;
 
 is_deeply($parsed_file, {
-	'data' => {
-	                      'test_trial213' => {
-	                                           'fresh root weight|CO:0000012' => [
-	                                                                               '15',
-	                                                                               ''
-	                                                                             ],
-	                                           'flower|CO:0000111' => [
-	                                                                    '1',
-	                                                                    ''
-	                                                                  ],
-	                                           'fresh shoot weight|CO:0000016' => [
-	                                                                                '32',
-	                                                                                ''
-	                                                                              ],
-	                                           'sprouting|CO:0000008' => [
-	                                                                       '8',
-	                                                                       ''
-	                                                                     ],
-	                                           'harvest index|CO:0000015' => [
-	                                                                           '12.8',
-	                                                                           ''
-	                                                                         ],
-	                                           'dry matter content|CO:0000092' => [
-	                                                                                '35',
-	                                                                                ''
-	                                                                              ],
-	                                           'root number|CO:0000011' => [
-	                                                                         '8',
-	                                                                         ''
-	                                                                       ],
-	                                           'top yield|CO:0000017' => [
-	                                                                       '4.4',
-	                                                                       ''
-	                                                                     ]
-	                                         },
-	                      'test_trial27' => {
-	                                          'fresh root weight|CO:0000012' => [
-	                                                                              '15',
-	                                                                              ''
-	                                                                            ],
-	                                          'harvest index|CO:0000015' => [
-	                                                                          '6.8',
-	                                                                          ''
-	                                                                        ],
-	                                          'sprouting|CO:0000008' => [
-	                                                                      '34',
-	                                                                      ''
-	                                                                    ],
-	                                          'fresh shoot weight|CO:0000016' => [
-	                                                                               '26',
-	                                                                               ''
-	                                                                             ],
-	                                          'flower|CO:0000111' => [
-	                                                                   '1',
-	                                                                   ''
-	                                                                 ],
-	                                          'root number|CO:0000011' => [
-	                                                                        '8',
-	                                                                        ''
-	                                                                      ],
-	                                          'top yield|CO:0000017' => [
-	                                                                      '9',
-	                                                                      ''
-	                                                                    ],
-	                                          'dry matter content|CO:0000092' => [
-	                                                                               '38',
-	                                                                               ''
-	                                                                             ]
-	                                        },
-	                      'test_trial212' => {
-	                                           'fresh shoot weight|CO:0000016' => [
-	                                                                                '31',
-	                                                                                ''
-	                                                                              ],
-	                                           'flower|CO:0000111' => [
-	                                                                    '0',
-	                                                                    ''
-	                                                                  ],
-	                                           'sprouting|CO:0000008' => [
-	                                                                       '56',
-	                                                                       ''
-	                                                                     ],
-	                                           'harvest index|CO:0000015' => [
-	                                                                           '11.8',
-	                                                                           ''
-	                                                                         ],
-	                                           'dry matter content|CO:0000092' => [
-	                                                                                '39',
-	                                                                                ''
-	                                                                              ],
-	                                           'root number|CO:0000011' => [
-	                                                                         '6',
-	                                                                         ''
-	                                                                       ],
-	                                           'top yield|CO:0000017' => [
-	                                                                       '7',
-	                                                                       ''
-	                                                                     ],
-	                                           'fresh root weight|CO:0000012' => [
-	                                                                               '15',
-	                                                                               ''
-	                                                                             ]
-	                                         },
-	                      'test_trial29' => {
-	                                          'dry matter content|CO:0000092' => [
-	                                                                               '35',
-	                                                                               ''
-	                                                                             ],
-	                                          'top yield|CO:0000017' => [
-	                                                                      '3',
-	                                                                      ''
-	                                                                    ],
-	                                          'root number|CO:0000011' => [
-	                                                                        '6',
-	                                                                        ''
-	                                                                      ],
-	                                          'fresh shoot weight|CO:0000016' => [
-	                                                                               '28',
-	                                                                               ''
-	                                                                             ],
-	                                          'flower|CO:0000111' => [
-	                                                                   '1',
-	                                                                   ''
-	                                                                 ],
-	                                          'harvest index|CO:0000015' => [
-	                                                                          '8.8',
-	                                                                          ''
-	                                                                        ],
-	                                          'sprouting|CO:0000008' => [
-	                                                                      '76',
-	                                                                      ''
-	                                                                    ],
-	                                          'fresh root weight|CO:0000012' => [
-	                                                                              '15',
-	                                                                              ''
-	                                                                            ]
-	                                        },
-	                      'test_trial25' => {
-	                                          'fresh root weight|CO:0000012' => [
-	                                                                              '15',
-	                                                                              ''
-	                                                                            ],
-	                                          'root number|CO:0000011' => [
-	                                                                        '6',
-	                                                                        ''
-	                                                                      ],
-	                                          'top yield|CO:0000017' => [
-	                                                                      '2',
-	                                                                      ''
-	                                                                    ],
-	                                          'dry matter content|CO:0000092' => [
-	                                                                               '35',
-	                                                                               ''
-	                                                                             ],
-	                                          'sprouting|CO:0000008' => [
-	                                                                      '56',
-	                                                                      ''
-	                                                                    ],
-	                                          'harvest index|CO:0000015' => [
-	                                                                          '',
-	                                                                          ''
-	                                                                        ],
-	                                          'fresh shoot weight|CO:0000016' => [
-	                                                                               '24',
-	                                                                               ''
-	                                                                             ],
-	                                          'flower|CO:0000111' => [
-	                                                                   '1',
-	                                                                   ''
-	                                                                 ]
-	                                        },
-	                      'test_trial23' => {
-	                                          'fresh root weight|CO:0000012' => [
-	                                                                              '15',
-	                                                                              ''
-	                                                                            ],
-	                                          'harvest index|CO:0000015' => [
-	                                                                          '2.8',
-	                                                                          ''
-	                                                                        ],
-	                                          'sprouting|CO:0000008' => [
-	                                                                      '23',
-	                                                                      ''
-	                                                                    ],
-	                                          'flower|CO:0000111' => [
-	                                                                   '1',
-	                                                                   ''
-	                                                                 ],
-	                                          'fresh shoot weight|CO:0000016' => [
-	                                                                               '22',
-	                                                                               ''
-	                                                                             ],
-	                                          'top yield|CO:0000017' => [
-	                                                                      '5',
-	                                                                      ''
-	                                                                    ],
-	                                          'root number|CO:0000011' => [
-	                                                                        '4',
-	                                                                        ''
-	                                                                      ],
-	                                          'dry matter content|CO:0000092' => [
-	                                                                               '38',
-	                                                                               ''
-	                                                                             ]
-	                                        },
-	                      'test_trial24' => {
-	                                          'flower|CO:0000111' => [
-	                                                                   '1',
-	                                                                   ''
-	                                                                 ],
-	                                          'fresh shoot weight|CO:0000016' => [
-	                                                                               '23',
-	                                                                               ''
-	                                                                             ],
-	                                          'sprouting|CO:0000008' => [
-	                                                                      '78',
-	                                                                      ''
-	                                                                    ],
-	                                          'harvest index|CO:0000015' => [
-	                                                                          '3.8',
-	                                                                          ''
-	                                                                        ],
-	                                          'dry matter content|CO:0000092' => [
-	                                                                               '39',
-	                                                                               ''
-	                                                                             ],
-	                                          'top yield|CO:0000017' => [
-	                                                                      '7',
-	                                                                      ''
-	                                                                    ],
-	                                          'root number|CO:0000011' => [
-	                                                                        '11',
-	                                                                        ''
-	                                                                      ],
-	                                          'fresh root weight|CO:0000012' => [
-	                                                                              '15',
-	                                                                              ''
-	                                                                            ]
-	                                        },
-	                      'test_trial210' => {
-	                                           'dry matter content|CO:0000092' => [
-	                                                                                '30',
-	                                                                                ''
-	                                                                              ],
-	                                           'root number|CO:0000011' => [
-	                                                                         '',
-	                                                                         ''
-	                                                                       ],
-	                                           'top yield|CO:0000017' => [
-	                                                                       '2',
-	                                                                       ''
-	                                                                     ],
-	                                           'fresh shoot weight|CO:0000016' => [
-	                                                                                '29',
-	                                                                                ''
-	                                                                              ],
-	                                           'flower|CO:0000111' => [
-	                                                                    '0',
-	                                                                    ''
-	                                                                  ],
-	                                           'sprouting|CO:0000008' => [
-	                                                                       '45',
-	                                                                       ''
-	                                                                     ],
-	                                           'harvest index|CO:0000015' => [
-	                                                                           '9.8',
-	                                                                           ''
-	                                                                         ],
-	                                           'fresh root weight|CO:0000012' => [
-	                                                                               '15',
-	                                                                               ''
-	                                                                             ]
-	                                         },
-	                      'test_trial215' => {
-	                                           'dry matter content|CO:0000092' => [
-	                                                                                '38',
-	                                                                                ''
-	                                                                              ],
-	                                           'root number|CO:0000011' => [
-	                                                                         '5',
-	                                                                         ''
-	                                                                       ],
-	                                           'top yield|CO:0000017' => [
-	                                                                       '7',
-	                                                                       ''
-	                                                                     ],
-	                                           'fresh shoot weight|CO:0000016' => [
-	                                                                                '34',
-	                                                                                ''
-	                                                                              ],
-	                                           'flower|CO:0000111' => [
-	                                                                    '1',
-	                                                                    ''
-	                                                                  ],
-	                                           'harvest index|CO:0000015' => [
-	                                                                           '14.8',
-	                                                                           ''
-	                                                                         ],
-	                                           'sprouting|CO:0000008' => [
-	                                                                       '25',
-	                                                                       ''
-	                                                                     ],
-	                                           'fresh root weight|CO:0000012' => [
-	                                                                               '15',
-	                                                                               ''
-	                                                                             ]
-	                                         },
-	                      'test_trial214' => {
-	                                           'fresh root weight|CO:0000012' => [
-	                                                                               '15',
-	                                                                               ''
-	                                                                             ],
-	                                           'harvest index|CO:0000015' => [
-	                                                                           '13.8',
-	                                                                           ''
-	                                                                         ],
-	                                           'sprouting|CO:0000008' => [
-	                                                                       '87',
-	                                                                       ''
-	                                                                     ],
-	                                           'fresh shoot weight|CO:0000016' => [
-	                                                                                '33',
-	                                                                                ''
-	                                                                              ],
-	                                           'flower|CO:0000111' => [
-	                                                                    '1',
-	                                                                    ''
-	                                                                  ],
-	                                           'top yield|CO:0000017' => [
-	                                                                       '7.5',
-	                                                                       ''
-	                                                                     ],
-	                                           'root number|CO:0000011' => [
-	                                                                         '4',
-	                                                                         ''
-	                                                                       ],
-	                                           'dry matter content|CO:0000092' => [
-	                                                                                '30',
-	                                                                                ''
-	                                                                              ]
-	                                         },
-	                      'test_trial28' => {
-	                                          'fresh root weight|CO:0000012' => [
-	                                                                              '15',
-	                                                                              ''
-	                                                                            ],
-	                                          'dry matter content|CO:0000092' => [
-	                                                                               '39',
-	                                                                               ''
-	                                                                             ],
-	                                          'top yield|CO:0000017' => [
-	                                                                      '6',
-	                                                                      ''
-	                                                                    ],
-	                                          'root number|CO:0000011' => [
-	                                                                        '9',
-	                                                                        ''
-	                                                                      ],
-	                                          'flower|CO:0000111' => [
-	                                                                   '0',
-	                                                                   ''
-	                                                                 ],
-	                                          'fresh shoot weight|CO:0000016' => [
-	                                                                               '27',
-	                                                                               ''
-	                                                                             ],
-	                                          'sprouting|CO:0000008' => [
-	                                                                      '23',
-	                                                                      ''
-	                                                                    ],
-	                                          'harvest index|CO:0000015' => [
-	                                                                          '7.8',
-	                                                                          ''
-	                                                                        ]
-	                                        },
-	                      'test_trial26' => {
-	                                          'fresh root weight|CO:0000012' => [
-	                                                                              '15',
-	                                                                              ''
-	                                                                            ],
-	                                          'fresh shoot weight|CO:0000016' => [
-	                                                                               '25',
-	                                                                               ''
-	                                                                             ],
-	                                          'flower|CO:0000111' => [
-	                                                                   '1',
-	                                                                   ''
-	                                                                 ],
-	                                          'harvest index|CO:0000015' => [
-	                                                                          '5.8',
-	                                                                          ''
-	                                                                        ],
-	                                          'sprouting|CO:0000008' => [
-	                                                                      '45',
-	                                                                      ''
-	                                                                    ],
-	                                          'dry matter content|CO:0000092' => [
-	                                                                               '30',
-	                                                                               ''
-	                                                                             ],
-	                                          'root number|CO:0000011' => [
-	                                                                        '4',
-	                                                                        ''
-	                                                                      ],
-	                                          'top yield|CO:0000017' => [
-	                                                                      '4',
-	                                                                      ''
-	                                                                    ]
-	                                        },
-	                      'test_trial21' => {
-	                                          'fresh root weight|CO:0000012' => [
-	                                                                              '15',
-	                                                                              ''
-	                                                                            ],
-	                                          'harvest index|CO:0000015' => [
-	                                                                          '0.8',
-	                                                                          ''
-	                                                                        ],
-	                                          'sprouting|CO:0000008' => [
-	                                                                      '45',
-	                                                                      ''
-	                                                                    ],
-	                                          'flower|CO:0000111' => [
-	                                                                   '0',
-	                                                                   ''
-	                                                                 ],
-	                                          'fresh shoot weight|CO:0000016' => [
-	                                                                               '20',
-	                                                                               ''
-	                                                                             ],
-	                                          'root number|CO:0000011' => [
-	                                                                        '3',
-	                                                                        ''
-	                                                                      ],
-	                                          'top yield|CO:0000017' => [
-	                                                                      '2',
-	                                                                      ''
-	                                                                    ],
-	                                          'dry matter content|CO:0000092' => [
-	                                                                               '35',
-	                                                                               ''
-	                                                                             ]
-	                                        },
-	                      'test_trial211' => {
-	                                           'fresh root weight|CO:0000012' => [
-	                                                                               '15',
-	                                                                               ''
-	                                                                             ],
-	                                           'dry matter content|CO:0000092' => [
-	                                                                                '38',
-	                                                                                ''
-	                                                                              ],
-	                                           'top yield|CO:0000017' => [
-	                                                                       '4',
-	                                                                       ''
-	                                                                     ],
-	                                           'root number|CO:0000011' => [
-	                                                                         '4',
-	                                                                         ''
-	                                                                       ],
-	                                           'flower|CO:0000111' => [
-	                                                                    '0',
-	                                                                    ''
-	                                                                  ],
-	                                           'fresh shoot weight|CO:0000016' => [
-	                                                                                '30',
-	                                                                                ''
-	                                                                              ],
-	                                           'sprouting|CO:0000008' => [
-	                                                                       '2',
-	                                                                       ''
-	                                                                     ],
-	                                           'harvest index|CO:0000015' => [
-	                                                                           '10.8',
-	                                                                           ''
-	                                                                         ]
-	                                         },
-	                      'test_trial22' => {
-	                                          'fresh shoot weight|CO:0000016' => [
-	                                                                               '21',
-	                                                                               ''
-	                                                                             ],
-	                                          'flower|CO:0000111' => [
-	                                                                   '1',
-	                                                                   ''
-	                                                                 ],
-	                                          'harvest index|CO:0000015' => [
-	                                                                          '1.8',
-	                                                                          ''
-	                                                                        ],
-	                                          'sprouting|CO:0000008' => [
-	                                                                      '43',
-	                                                                      ''
-	                                                                    ],
-	                                          'dry matter content|CO:0000092' => [
-	                                                                               '30',
-	                                                                               ''
-	                                                                             ],
-	                                          'root number|CO:0000011' => [
-	                                                                        '7',
-	                                                                        ''
-	                                                                      ],
-	                                          'top yield|CO:0000017' => [
-	                                                                      '3',
-	                                                                      ''
-	                                                                    ],
-	                                          'fresh root weight|CO:0000012' => [
-	                                                                              '15',
-	                                                                              ''
-	                                                                            ]
-	                                        }
-	                    },
-	          'plots' => [
-	                       'test_trial21',
-	                       'test_trial210',
-	                       'test_trial211',
-	                       'test_trial212',
-	                       'test_trial213',
-	                       'test_trial214',
-	                       'test_trial215',
-	                       'test_trial22',
-	                       'test_trial23',
-	                       'test_trial24',
-	                       'test_trial25',
-	                       'test_trial26',
-	                       'test_trial27',
-	                       'test_trial28',
-	                       'test_trial29'
-	                     ],
-	          'traits' => [
-	                        'dry matter content|CO:0000092',
-	                        'flower|CO:0000111',
-	                        'fresh root weight|CO:0000012',
-	                        'fresh shoot weight|CO:0000016',
-	                        'harvest index|CO:0000015',
-	                        'root number|CO:0000011',
-	                        'sprouting|CO:0000008',
-	                        'top yield|CO:0000017'
-	                      ]
+          'data' => {
+                      'test_trial21' => {
+                                          'harvest index|CO:0000015' => [
+                                                                          '0.8',
+                                                                          ''
+                                                                        ],
+                                          'top yield|CO:0000017' => [
+                                                                      '2',
+                                                                      ''
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '35',
+                                                                               ''
+                                                                             ],
+                                          'sprouting|CO:0000008' => [
+                                                                      '45',
+                                                                      ''
+                                                                    ],
+                                          'flower|CO:0000111' => [
+                                                                   '0',
+                                                                   ''
+                                                                 ],
+                                          'root number|CO:0000011' => [
+                                                                        '3',
+                                                                        ''
+                                                                      ],
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '20',
+                                                                               ''
+                                                                             ],
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              ''
+                                                                            ]
+                                        },
+                      'test_trial214' => {
+                                           'root number|CO:0000011' => [
+                                                                         '4',
+                                                                         ''
+                                                                       ],
+                                           'fresh shoot weight|CO:0000016' => [
+                                                                                '33',
+                                                                                ''
+                                                                              ],
+                                           'fresh root weight|CO:0000012' => [
+                                                                               '15',
+                                                                               ''
+                                                                             ],
+                                           'harvest index|CO:0000015' => [
+                                                                           '13.8',
+                                                                           ''
+                                                                         ],
+                                           'top yield|CO:0000017' => [
+                                                                       '7.5',
+                                                                       ''
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '30',
+                                                                                ''
+                                                                              ],
+                                           'sprouting|CO:0000008' => [
+                                                                       '87',
+                                                                       ''
+                                                                     ],
+                                           'flower|CO:0000111' => [
+                                                                    '1',
+                                                                    ''
+                                                                  ]
+                                         },
+                      'test_trial23' => {
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '22',
+                                                                               ''
+                                                                             ],
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              ''
+                                                                            ],
+                                          'root number|CO:0000011' => [
+                                                                        '4',
+                                                                        ''
+                                                                      ],
+                                          'flower|CO:0000111' => [
+                                                                   '1',
+                                                                   ''
+                                                                 ],
+                                          'sprouting|CO:0000008' => [
+                                                                      '23',
+                                                                      ''
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '38',
+                                                                               ''
+                                                                             ],
+                                          'top yield|CO:0000017' => [
+                                                                      '5',
+                                                                      ''
+                                                                    ],
+                                          'harvest index|CO:0000015' => [
+                                                                          '2.8',
+                                                                          ''
+                                                                        ]
+                                        },
+                      'test_trial27' => {
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '26',
+                                                                               ''
+                                                                             ],
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              ''
+                                                                            ],
+                                          'root number|CO:0000011' => [
+                                                                        '8',
+                                                                        ''
+                                                                      ],
+                                          'flower|CO:0000111' => [
+                                                                   '1',
+                                                                   ''
+                                                                 ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '38',
+                                                                               ''
+                                                                             ],
+                                          'top yield|CO:0000017' => [
+                                                                      '9',
+                                                                      ''
+                                                                    ],
+                                          'harvest index|CO:0000015' => [
+                                                                          '6.8',
+                                                                          ''
+                                                                        ],
+                                          'sprouting|CO:0000008' => [
+                                                                      '34',
+                                                                      ''
+                                                                    ]
+                                        },
+                      'test_trial22' => {
+                                          'flower|CO:0000111' => [
+                                                                   '1',
+                                                                   ''
+                                                                 ],
+                                          'sprouting|CO:0000008' => [
+                                                                      '43',
+                                                                      ''
+                                                                    ],
+                                          'top yield|CO:0000017' => [
+                                                                      '3',
+                                                                      ''
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '30',
+                                                                               ''
+                                                                             ],
+                                          'harvest index|CO:0000015' => [
+                                                                          '1.8',
+                                                                          ''
+                                                                        ],
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              ''
+                                                                            ],
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '21',
+                                                                               ''
+                                                                             ],
+                                          'root number|CO:0000011' => [
+                                                                        '7',
+                                                                        ''
+                                                                      ]
+                                        },
+                      'test_trial26' => {
+                                          'flower|CO:0000111' => [
+                                                                   '1',
+                                                                   ''
+                                                                 ],
+                                          'sprouting|CO:0000008' => [
+                                                                      '45',
+                                                                      ''
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '30',
+                                                                               ''
+                                                                             ],
+                                          'top yield|CO:0000017' => [
+                                                                      '4',
+                                                                      ''
+                                                                    ],
+                                          'harvest index|CO:0000015' => [
+                                                                          '5.8',
+                                                                          ''
+                                                                        ],
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              ''
+                                                                            ],
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '25',
+                                                                               ''
+                                                                             ],
+                                          'root number|CO:0000011' => [
+                                                                        '4',
+                                                                        ''
+                                                                      ]
+                                        },
+                      'test_trial211' => {
+                                           'root number|CO:0000011' => [
+                                                                         '4',
+                                                                         ''
+                                                                       ],
+                                           'fresh shoot weight|CO:0000016' => [
+                                                                                '30',
+                                                                                ''
+                                                                              ],
+                                           'fresh root weight|CO:0000012' => [
+                                                                               '15',
+                                                                               ''
+                                                                             ],
+                                           'sprouting|CO:0000008' => [
+                                                                       '2',
+                                                                       ''
+                                                                     ],
+                                           'top yield|CO:0000017' => [
+                                                                       '4',
+                                                                       ''
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '38',
+                                                                                ''
+                                                                              ],
+                                           'harvest index|CO:0000015' => [
+                                                                           '10.8',
+                                                                           ''
+                                                                         ],
+                                           'flower|CO:0000111' => [
+                                                                    '0',
+                                                                    ''
+                                                                  ]
+                                         },
+                      'test_trial29' => {
+                                          'sprouting|CO:0000008' => [
+                                                                      '76',
+                                                                      ''
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '35',
+                                                                               ''
+                                                                             ],
+                                          'top yield|CO:0000017' => [
+                                                                      '3',
+                                                                      ''
+                                                                    ],
+                                          'harvest index|CO:0000015' => [
+                                                                          '8.8',
+                                                                          ''
+                                                                        ],
+                                          'flower|CO:0000111' => [
+                                                                   '1',
+                                                                   ''
+                                                                 ],
+                                          'root number|CO:0000011' => [
+                                                                        '6',
+                                                                        ''
+                                                                      ],
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '28',
+                                                                               ''
+                                                                             ],
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              ''
+                                                                            ]
+                                        },
+                      'test_trial28' => {
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              ''
+                                                                            ],
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '27',
+                                                                               ''
+                                                                             ],
+                                          'root number|CO:0000011' => [
+                                                                        '9',
+                                                                        ''
+                                                                      ],
+                                          'flower|CO:0000111' => [
+                                                                   '0',
+                                                                   ''
+                                                                 ],
+                                          'sprouting|CO:0000008' => [
+                                                                      '23',
+                                                                      ''
+                                                                    ],
+                                          'top yield|CO:0000017' => [
+                                                                      '6',
+                                                                      ''
+                                                                    ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '39',
+                                                                               ''
+                                                                             ],
+                                          'harvest index|CO:0000015' => [
+                                                                          '7.8',
+                                                                          ''
+                                                                        ]
+                                        },
+                      'test_trial215' => {
+                                           'fresh shoot weight|CO:0000016' => [
+                                                                                '34',
+                                                                                ''
+                                                                              ],
+                                           'fresh root weight|CO:0000012' => [
+                                                                               '15',
+                                                                               ''
+                                                                             ],
+                                           'root number|CO:0000011' => [
+                                                                         '5',
+                                                                         ''
+                                                                       ],
+                                           'flower|CO:0000111' => [
+                                                                    '1',
+                                                                    ''
+                                                                  ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '38',
+                                                                                ''
+                                                                              ],
+                                           'top yield|CO:0000017' => [
+                                                                       '7',
+                                                                       ''
+                                                                     ],
+                                           'harvest index|CO:0000015' => [
+                                                                           '14.8',
+                                                                           ''
+                                                                         ],
+                                           'sprouting|CO:0000008' => [
+                                                                       '25',
+                                                                       ''
+                                                                     ]
+                                         },
+                      'test_trial210' => {
+                                           'fresh root weight|CO:0000012' => [
+                                                                               '15',
+                                                                               ''
+                                                                             ],
+                                           'fresh shoot weight|CO:0000016' => [
+                                                                                '29',
+                                                                                ''
+                                                                              ],
+                                           'flower|CO:0000111' => [
+                                                                    '0',
+                                                                    ''
+                                                                  ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '30',
+                                                                                ''
+                                                                              ],
+                                           'top yield|CO:0000017' => [
+                                                                       '2',
+                                                                       ''
+                                                                     ],
+                                           'harvest index|CO:0000015' => [
+                                                                           '9.8',
+                                                                           ''
+                                                                         ],
+                                           'sprouting|CO:0000008' => [
+                                                                       '45',
+                                                                       ''
+                                                                     ]
+                                         },
+                      'test_trial24' => {
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '23',
+                                                                               ''
+                                                                             ],
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              ''
+                                                                            ],
+                                          'root number|CO:0000011' => [
+                                                                        '11',
+                                                                        ''
+                                                                      ],
+                                          'flower|CO:0000111' => [
+                                                                   '1',
+                                                                   ''
+                                                                 ],
+                                          'top yield|CO:0000017' => [
+                                                                      '7',
+                                                                      ''
+                                                                    ],
+                                          'harvest index|CO:0000015' => [
+                                                                          '3.8',
+                                                                          ''
+                                                                        ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '39',
+                                                                               ''
+                                                                             ],
+                                          'sprouting|CO:0000008' => [
+                                                                      '78',
+                                                                      ''
+                                                                    ]
+                                        },
+                      'test_trial25' => {
+                                          'fresh root weight|CO:0000012' => [
+                                                                              '15',
+                                                                              ''
+                                                                            ],
+                                          'fresh shoot weight|CO:0000016' => [
+                                                                               '24',
+                                                                               ''
+                                                                             ],
+                                          'flower|CO:0000111' => [
+                                                                   '1',
+                                                                   ''
+                                                                 ],
+                                          'dry matter content|CO:0000092' => [
+                                                                               '35',
+                                                                               ''
+                                                                             ],
+                                          'top yield|CO:0000017' => [
+                                                                      '2',
+                                                                      ''
+                                                                    ],
+                                          'sprouting|CO:0000008' => [
+                                                                      '56',
+                                                                      ''
+                                                                    ],
+                                          'root number|CO:0000011' => [
+                                                                        '6',
+                                                                        ''
+                                                                      ]
+                                        },
+                      'test_trial213' => {
+                                           'flower|CO:0000111' => [
+                                                                    '1',
+                                                                    ''
+                                                                  ],
+                                           'sprouting|CO:0000008' => [
+                                                                       '8',
+                                                                       ''
+                                                                     ],
+                                           'top yield|CO:0000017' => [
+                                                                       '4.4',
+                                                                       ''
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '35',
+                                                                                ''
+                                                                              ],
+                                           'harvest index|CO:0000015' => [
+                                                                           '12.8',
+                                                                           ''
+                                                                         ],
+                                           'fresh shoot weight|CO:0000016' => [
+                                                                                '32',
+                                                                                ''
+                                                                              ],
+                                           'fresh root weight|CO:0000012' => [
+                                                                               '15',
+                                                                               ''
+                                                                             ],
+                                           'root number|CO:0000011' => [
+                                                                         '8',
+                                                                         ''
+                                                                       ]
+                                         },
+                      'test_trial212' => {
+                                           'sprouting|CO:0000008' => [
+                                                                       '56',
+                                                                       ''
+                                                                     ],
+                                           'dry matter content|CO:0000092' => [
+                                                                                '39',
+                                                                                ''
+                                                                              ],
+                                           'top yield|CO:0000017' => [
+                                                                       '7',
+                                                                       ''
+                                                                     ],
+                                           'harvest index|CO:0000015' => [
+                                                                           '11.8',
+                                                                           ''
+                                                                         ],
+                                           'flower|CO:0000111' => [
+                                                                    '0',
+                                                                    ''
+                                                                  ],
+                                           'root number|CO:0000011' => [
+                                                                         '6',
+                                                                         ''
+                                                                       ],
+                                           'fresh shoot weight|CO:0000016' => [
+                                                                                '31',
+                                                                                ''
+                                                                              ],
+                                           'fresh root weight|CO:0000012' => [
+                                                                               '15',
+                                                                               ''
+                                                                             ]
+                                         }
+                    },
+          'plots' => [
+                       'test_trial21',
+                       'test_trial210',
+                       'test_trial211',
+                       'test_trial212',
+                       'test_trial213',
+                       'test_trial214',
+                       'test_trial215',
+                       'test_trial22',
+                       'test_trial23',
+                       'test_trial24',
+                       'test_trial25',
+                       'test_trial26',
+                       'test_trial27',
+                       'test_trial28',
+                       'test_trial29'
+                     ],
+          'traits' => [
+                        'dry matter content|CO:0000092',
+                        'flower|CO:0000111',
+                        'fresh root weight|CO:0000012',
+                        'fresh shoot weight|CO:0000016',
+                        'harvest index|CO:0000015',
+                        'root number|CO:0000011',
+                        'sprouting|CO:0000008',
+                        'top yield|CO:0000017'
+                      ]
         }, "Check parse large phenotyping spreadsheet" );
 
 
@@ -1980,7 +1972,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 ok(!$verified_error);
-$stored_phenotype_error_msg = $store_phenotypes->store();
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store large pheno spreadsheet works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -2183,6 +2175,10 @@ ok($parsed_file, "Check if parse parse phenotype plant spreadsheet works");
 #print STDERR Dumper $parsed_file;
 
 is_deeply($parsed_file, {
+          'traits' => [
+                        'dry matter content percentage|CO:0000092',
+                        'fresh root weight|CO:0000012'
+                      ],
           'plots' => [
                        'test_trial210_plant_1',
                        'test_trial210_plant_2',
@@ -2216,23 +2212,93 @@ is_deeply($parsed_file, {
                        'test_trial29_plant_2'
                      ],
           'data' => {
-                      'test_trial27_plant_2' => {
+                      'test_trial215_plant_2' => {
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '49',
+                                                                                       ''
+                                                                                     ],
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '39',
+                                                                                                   ''
+                                                                                                 ]
+                                                 },
+                      'test_trial211_plant_1' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '30',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '40',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial212_plant_2' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '33',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '43',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial23_plant_1' => {
                                                   'dry matter content percentage|CO:0000092' => [
-                                                                                                  '23',
+                                                                                                  '14',
                                                                                                   ''
                                                                                                 ],
                                                   'fresh root weight|CO:0000012' => [
-                                                                                      '33',
+                                                                                      '24',
                                                                                       ''
                                                                                     ]
                                                 },
-                      'test_trial29_plant_1' => {
+                      'test_trial27_plant_1' => {
                                                   'fresh root weight|CO:0000012' => [
-                                                                                      '36',
+                                                                                      '32',
                                                                                       ''
                                                                                     ],
                                                   'dry matter content percentage|CO:0000092' => [
-                                                                                                  '26',
+                                                                                                  '22',
+                                                                                                  ''
+                                                                                                ]
+                                                },
+                      'test_trial21_plant_1' => {
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '20',
+                                                                                      ''
+                                                                                    ],
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '10',
+                                                                                                  ''
+                                                                                                ]
+                                                },
+                      'test_trial28_plant_2' => {
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '35',
+                                                                                      ''
+                                                                                    ],
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '25',
+                                                                                                  ''
+                                                                                                ]
+                                                },
+                      'test_trial26_plant_2' => {
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '0',
+                                                                                      ''
+                                                                                    ],
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '21',
+                                                                                                  ''
+                                                                                                ]
+                                                },
+                      'test_trial26_plant_1' => {
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '30',
+                                                                                      ''
+                                                                                    ],
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '20',
                                                                                                   ''
                                                                                                 ]
                                                 },
@@ -2243,6 +2309,78 @@ is_deeply($parsed_file, {
                                                                                                 ],
                                                   'fresh root weight|CO:0000012' => [
                                                                                       '37',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial210_plant_1' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '28',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '38',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial21_plant_2' => {
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '21',
+                                                                                      ''
+                                                                                    ],
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '11',
+                                                                                                  ''
+                                                                                                ]
+                                                },
+                      'test_trial22_plant_2' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '13',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '23',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial210_plant_2' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '29',
+                                                                                                   ''
+                                                                                                 ]
+                                                 },
+                      'test_trial23_plant_2' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '15',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '25',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial213_plant_1' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '34',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '44',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial22_plant_1' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '12',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '22',
+                                                                                      ''
+                                                                                    ]
+                                                },
+                      'test_trial25_plant_2' => {
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '29',
                                                                                       ''
                                                                                     ]
                                                 },
@@ -2257,244 +2395,64 @@ is_deeply($parsed_file, {
                                                                                      ]
                                                  },
                       'test_trial25_plant_1' => {
-                                                  'dry matter content percentage|CO:0000092' => [
-                                                                                                  '18',
-                                                                                                  ''
-                                                                                                ],
                                                   'fresh root weight|CO:0000012' => [
                                                                                       '28',
                                                                                       ''
-                                                                                    ]
-                                                },
-                      'test_trial22_plant_2' => {
-                                                  'fresh root weight|CO:0000012' => [
-                                                                                      '23',
-                                                                                      ''
                                                                                     ],
                                                   'dry matter content percentage|CO:0000092' => [
-                                                                                                  '13',
+                                                                                                  '18',
                                                                                                   ''
                                                                                                 ]
-                                                },
-                      'test_trial213_plant_1' => {
-                                                   'dry matter content percentage|CO:0000092' => [
-                                                                                                   '34',
-                                                                                                   ''
-                                                                                                 ],
-                                                   'fresh root weight|CO:0000012' => [
-                                                                                       '44',
-                                                                                       ''
-                                                                                     ]
-                                                 },
-                      'test_trial211_plant_2' => {
-                                                   'dry matter content percentage|CO:0000092' => [
-                                                                                                   '31',
-                                                                                                   ''
-                                                                                                 ],
-                                                   'fresh root weight|CO:0000012' => [
-                                                                                       '41',
-                                                                                       ''
-                                                                                     ]
-                                                 },
-                      'test_trial27_plant_1' => {
-                                                  'dry matter content percentage|CO:0000092' => [
-                                                                                                  '22',
-                                                                                                  ''
-                                                                                                ],
-                                                  'fresh root weight|CO:0000012' => [
-                                                                                      '32',
-                                                                                      ''
-                                                                                    ]
-                                                },
-                      'test_trial28_plant_2' => {
-                                                  'fresh root weight|CO:0000012' => [
-                                                                                      '35',
-                                                                                      ''
-                                                                                    ],
-                                                  'dry matter content percentage|CO:0000092' => [
-                                                                                                  '25',
-                                                                                                  ''
-                                                                                                ]
-                                                },
-                      'test_trial25_plant_2' => {
-                                                  'dry matter content percentage|CO:0000092' => [
-                                                                                                  '',
-                                                                                                  ''
-                                                                                                ],
-                                                  'fresh root weight|CO:0000012' => [
-                                                                                      '29',
-                                                                                      ''
-                                                                                    ]
-                                                },
-                      'test_trial210_plant_1' => {
-                                                   'dry matter content percentage|CO:0000092' => [
-                                                                                                   '28',
-                                                                                                   ''
-                                                                                                 ],
-                                                   'fresh root weight|CO:0000012' => [
-                                                                                       '38',
-                                                                                       ''
-                                                                                     ]
-                                                 },
-                      'test_trial212_plant_2' => {
-                                                   'dry matter content percentage|CO:0000092' => [
-                                                                                                   '33',
-                                                                                                   ''
-                                                                                                 ],
-                                                   'fresh root weight|CO:0000012' => [
-                                                                                       '43',
-                                                                                       ''
-                                                                                     ]
-                                                 },
-                      'test_trial21_plant_1' => {
-                                                  'dry matter content percentage|CO:0000092' => [
-                                                                                                  '10',
-                                                                                                  ''
-                                                                                                ],
-                                                  'fresh root weight|CO:0000012' => [
-                                                                                      '20',
-                                                                                      ''
-                                                                                    ]
                                                 },
                       'test_trial24_plant_1' => {
-                                                  'dry matter content percentage|CO:0000092' => [
-                                                                                                  '16',
-                                                                                                  ''
-                                                                                                ],
                                                   'fresh root weight|CO:0000012' => [
                                                                                       '26',
                                                                                       ''
-                                                                                    ]
-                                                },
-                      'test_trial210_plant_2' => {
-                                                   'dry matter content percentage|CO:0000092' => [
-                                                                                                   '29',
-                                                                                                   ''
-                                                                                                 ],
-                                                   'fresh root weight|CO:0000012' => [
-                                                                                       '',
-                                                                                       ''
-                                                                                     ]
-                                                 },
-                      'test_trial23_plant_2' => {
-                                                  'dry matter content percentage|CO:0000092' => [
-                                                                                                  '15',
-                                                                                                  ''
-                                                                                                ],
-                                                  'fresh root weight|CO:0000012' => [
-                                                                                      '25',
-                                                                                      ''
-                                                                                    ]
-                                                },
-                      'test_trial214_plant_1' => {
-                                                   'fresh root weight|CO:0000012' => [
-                                                                                       '46',
-                                                                                       ''
-                                                                                     ],
-                                                   'dry matter content percentage|CO:0000092' => [
-                                                                                                   '36',
-                                                                                                   ''
-                                                                                                 ]
-                                                 },
-                      'test_trial215_plant_2' => {
-                                                   'fresh root weight|CO:0000012' => [
-                                                                                       '49',
-                                                                                       ''
-                                                                                     ],
-                                                   'dry matter content percentage|CO:0000092' => [
-                                                                                                   '39',
-                                                                                                   ''
-                                                                                                 ]
-                                                 },
-                      'test_trial211_plant_1' => {
-                                                   'fresh root weight|CO:0000012' => [
-                                                                                       '40',
-                                                                                       ''
-                                                                                     ],
-                                                   'dry matter content percentage|CO:0000092' => [
-                                                                                                   '30',
-                                                                                                   ''
-                                                                                                 ]
-                                                 },
-                      'test_trial23_plant_1' => {
-                                                  'dry matter content percentage|CO:0000092' => [
-                                                                                                  '14',
-                                                                                                  ''
-                                                                                                ],
-                                                  'fresh root weight|CO:0000012' => [
-                                                                                      '24',
-                                                                                      ''
-                                                                                    ]
-                                                },
-                      'test_trial28_plant_1' => {
-                                                  'dry matter content percentage|CO:0000092' => [
-                                                                                                  '0',
-                                                                                                  ''
-                                                                                                ],
-                                                  'fresh root weight|CO:0000012' => [
-                                                                                      '34',
-                                                                                      ''
-                                                                                    ]
-                                                },
-                      'test_trial26_plant_2' => {
-                                                  'dry matter content percentage|CO:0000092' => [
-                                                                                                  '21',
-                                                                                                  ''
-                                                                                                ],
-                                                  'fresh root weight|CO:0000012' => [
-                                                                                      '0',
-                                                                                      ''
-                                                                                    ]
-                                                },
-                      'test_trial213_plant_2' => {
-                                                   'dry matter content percentage|CO:0000092' => [
-                                                                                                   '35',
-                                                                                                   ''
-                                                                                                 ],
-                                                   'fresh root weight|CO:0000012' => [
-                                                                                       '45',
-                                                                                       ''
-                                                                                     ]
-                                                 },
-                      'test_trial22_plant_1' => {
-                                                  'fresh root weight|CO:0000012' => [
-                                                                                      '22',
-                                                                                      ''
                                                                                     ],
                                                   'dry matter content percentage|CO:0000092' => [
-                                                                                                  '12',
+                                                                                                  '16',
                                                                                                   ''
                                                                                                 ]
                                                 },
-                      'test_trial215_plant_1' => {
+                      'test_trial27_plant_2' => {
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '33',
+                                                                                      ''
+                                                                                    ],
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '23',
+                                                                                                  ''
+                                                                                                ]
+                                                },
+                      'test_trial214_plant_1' => {
                                                    'dry matter content percentage|CO:0000092' => [
-                                                                                                   '38',
+                                                                                                   '36',
                                                                                                    ''
                                                                                                  ],
                                                    'fresh root weight|CO:0000012' => [
-                                                                                       '48',
+                                                                                       '46',
                                                                                        ''
                                                                                      ]
                                                  },
-                      'test_trial26_plant_1' => {
-                                                  'dry matter content percentage|CO:0000092' => [
-                                                                                                  '20',
-                                                                                                  ''
-                                                                                                ],
-                                                  'fresh root weight|CO:0000012' => [
-                                                                                      '30',
-                                                                                      ''
-                                                                                    ]
-                                                },
-                      'test_trial214_plant_2' => {
-                                                   'dry matter content percentage|CO:0000092' => [
-                                                                                                   '37',
-                                                                                                   ''
-                                                                                                 ],
+                      'test_trial213_plant_2' => {
                                                    'fresh root weight|CO:0000012' => [
-                                                                                       '47',
+                                                                                       '45',
                                                                                        ''
-                                                                                     ]
+                                                                                     ],
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '35',
+                                                                                                   ''
+                                                                                                 ]
+                                                 },
+                      'test_trial211_plant_2' => {
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '41',
+                                                                                       ''
+                                                                                     ],
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '31',
+                                                                                                   ''
+                                                                                                 ]
                                                  },
                       'test_trial24_plant_2' => {
                                                   'dry matter content percentage|CO:0000092' => [
@@ -2506,21 +2464,47 @@ is_deeply($parsed_file, {
                                                                                       ''
                                                                                     ]
                                                 },
-                      'test_trial21_plant_2' => {
+                      'test_trial29_plant_1' => {
                                                   'fresh root weight|CO:0000012' => [
-                                                                                      '21',
+                                                                                      '36',
                                                                                       ''
                                                                                     ],
                                                   'dry matter content percentage|CO:0000092' => [
-                                                                                                  '11',
+                                                                                                  '26',
                                                                                                   ''
                                                                                                 ]
+                                                },
+                      'test_trial214_plant_2' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '37',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '47',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial215_plant_1' => {
+                                                   'dry matter content percentage|CO:0000092' => [
+                                                                                                   '38',
+                                                                                                   ''
+                                                                                                 ],
+                                                   'fresh root weight|CO:0000012' => [
+                                                                                       '48',
+                                                                                       ''
+                                                                                     ]
+                                                 },
+                      'test_trial28_plant_1' => {
+                                                  'dry matter content percentage|CO:0000092' => [
+                                                                                                  '0',
+                                                                                                  ''
+                                                                                                ],
+                                                  'fresh root weight|CO:0000012' => [
+                                                                                      '34',
+                                                                                      ''
+                                                                                    ]
                                                 }
-                    },
-          'traits' => [
-                        'dry matter content percentage|CO:0000092',
-                        'fresh root weight|CO:0000012'
-                      ]
+                    }
         }, "check plant spreadsheet file was parsed");
 
 $phenotype_metadata{'archived_file'} = $filename;
@@ -2545,7 +2529,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 ok(!$verified_error);
-$stored_phenotype_error_msg = $store_phenotypes->store();
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store large pheno spreadsheet works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -2893,7 +2877,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
 );
 my ($verified_warning, $verified_error) = $store_phenotypes->verify();
 ok(!$verified_error);
-$stored_phenotype_error_msg = $store_phenotypes->store();
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store fieldbook plants works");
 
 $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),

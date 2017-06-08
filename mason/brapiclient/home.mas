@@ -1,7 +1,17 @@
 <%args>
 </%args>
 
-<h3>BrAPI</h3>
+<& /page/page_title.mas, title=>"BrAPI" &>
+
+<div class="well">
+<h1>Modules</h1>
+<hr>
+<ul>
+    <li><a href="/brapihome/germplasm">Germplasm Search and Exchange</a></li>
+</ul>
+</div>
+
+<&| /page/info_section.mas, title=>'Calls Testing', collapsible=>1, collapsed=>1 &>
 
 <div id="brapi_home_url_select_div">
 
@@ -127,3 +137,5 @@
 <hr>
 <& /brapiclient/maps_detail.mas &>
 <br/>
+
+</&>
