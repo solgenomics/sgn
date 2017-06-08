@@ -40,29 +40,75 @@ $sgn_session_id => undef
 $user_name => undef
 </%args>
 
+<style>
+
+.affix {
+    top:100px;
+    right:0;
+    position:fixed;
+}
+
+</style>
+
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
 
 <%perl>
   use Data::Dumper;
 my $start_time = time();
-my $description_empty = 1;
-if ($trial_description) {
-  if ($trial_description ne "") {
-    $description_empty = 0;
-  }
-}
-
-my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Download Field Book</a>]';
-
-my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link">change</a>] } if $user_can_modify;
 
 #print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
-
-#print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
 
 </%perl>
 
 <br/>
+
+<div data-spy="affix" data-offset-top="50">
+    <div class="panel panel-info">
+        <div class="panel-heading">Completion</div>
+        <div class="panel-body">
+%  if ($trial_name) {
+            <p class="text-success"><small>Trial Name&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>Trial Name&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($breeding_program_name) {
+            <p class="text-success"><small>Breeding Program&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>Breeding Program&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($location_name) {
+            <p class="text-success"><small>Location&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>Location&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($year) {
+            <p class="text-success"><small>Year&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>Year&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($trial_type) {
+            <p class="text-success"><small>Trial Type&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>Trial Type&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($planting_date) {
+            <p class="text-success"><small>Planting Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>Planting Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($harvest_date) {
+            <p class="text-success"><small>Harvest Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>Harvest Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($trial_description) {
+            <p class="text-success"><small>Description&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>Description&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+        </div>
+    </div>
+</div>
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
