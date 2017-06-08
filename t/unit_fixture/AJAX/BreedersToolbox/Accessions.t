@@ -56,11 +56,22 @@ print STDERR Dumper $response;
 
 is_deeply($response, {'success' => '1'});
 
-$mech->post_ok('http://localhost:3010/ajax/accession_list/add', [ "accession_list"=> $json->encode($final_response->{'names_to_add'}), "species_name"=>"Manihot esculenta", "population_name"=>"population_ajax_test_1", "organization_name"=>"test" ]);
+my @full_info;
+foreach (@{$final_response->{'names_to_add'}}){
+    push @full_info, {
+        'species'=>'Manihot esculenta',
+        'defaultDisplayName'=>$_,
+        'germplasmName'=>$_,
+        'organizationName'=>'test',
+        'populationName'=>'population_ajax_test_1',
+    }
+}
+
+$mech->post_ok('http://localhost:3010/ajax/accession_list/add', [ 'full_info'=>$json->encode(\@full_info), 'allowed_organisms'=>$json->encode(['Manihot esculenta']) ]);
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
-is_deeply($response, {'success' => '1'});
+is_deeply($response, {'added' => [[41303,'new_accession1'],[41305,'test_accessionz']],'success' => '1'});
 
 #Remove added synonym so tests downstream do not fail.
 my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_accession1'})->stock_id();

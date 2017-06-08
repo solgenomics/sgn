@@ -76,18 +76,24 @@ jQuery(document).ready(function ($) {
     });
 
     function add_accessions(accessionsToAdd, speciesName, populationName, organizationName  ) {
-        var accessionsAsJSON = JSON.stringify(accessionsToAdd);
+        var full_info = []
+        for(var i=0; i<accessionsToAdd.length; i++){
+            full_info.push({
+                'species':speciesName,
+                'defaultDisplayName':accessionsToAdd[i],
+                'germplasmName':accessionsToAdd[i],
+                'organizationName':organizationName,
+                'populationName':populationName,
+            });
+        }
         $.ajax({
             type: 'POST',
             url: '/ajax/accession_list/add',
-            async: false,
             dataType: "json",
             timeout: 36000000,
             data: {
-                'accession_list': accessionsAsJSON,
-                'species_name': speciesName,
-                'population_name': populationName,
-                'organization_name': organizationName
+                'full_info': JSON.stringify(full_info),
+                'allowed_organisms': JSON.stringify([speciesName]),
             },
             beforeSend: function(){
                 disable_ui();
@@ -97,7 +103,12 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    alert("All accessions in your list are now saved in the database. 1");
+                    var html = 'The following stocks were added!<br/>';
+                    for (var i=0; i<response.added.length; i++){
+                        html = html + '<a href="/stock/'+response.added[i][0]+'/view">'+response.added[i][1]+'</a><br/>';
+                    }
+                    jQuery('#add_accessions_saved_message').html(html);
+                    jQuery('#add_accessions_saved_message_modal').modal('show');
                 }
             },
             error: function () {
@@ -153,7 +164,7 @@ jQuery(document).ready(function ($) {
         }
         add_accessions(accessionsToAdd, speciesName, populationName, organizationName);
         $('#review_absent_dialog').modal("hide");
-        window.location.href='/breeders/accessions';
+        //window.location.href='/breeders/accessions';
     });
 
     $('#new_accessions_submit').click(function () {

@@ -1,17 +1,17 @@
 
 =head1 NAME
 
-CXGN::Seedlot - a class to represent seedlots in the database
+CXGN::Stock::Seedlot - a class to represent seedlots in the database
 
 =head1 DESCRIPTION
 
-CXGN::Seedlot inherits from CXGN::Stock. The required fields are:
+CXGN::Stock::Seedlot inherits from CXGN::Stock. The required fields are:
 
 uniquename
 
 location_code
 
-Seed transactions can be added using CXGN::Seedlot::Transaction.
+Seed transactions can be added using CXGN::Stock::Seedlot::Transaction.
 
 =head1 AUTHOR
 
@@ -21,14 +21,14 @@ Lukas Mueller <lam87@cornell.edu>
 
 =cut
 
-package CXGN::Seedlot;
+package CXGN::Stock::Seedlot;
 
 use Moose;
 
 extends 'CXGN::Stock';
 
 use Data::Dumper;
-use CXGN::Seedlot::Transaction;
+use CXGN::Stock::Seedlot::Transaction;
 use CXGN::BreedersToolbox::Projects;
 use SGN::Model::Cvterm;
 
@@ -85,7 +85,7 @@ has 'accession_stock_ids' => (
 
 =head2 Accessor transactions()
 
-a ArrayRef of CXGN::Seedlot::Transaction objects
+a ArrayRef of CXGN::Stock::Seedlot::Transaction objects
 
 =cut
 
@@ -104,7 +104,7 @@ after 'stock_id' => sub {
 # class method
 =head2 Class method: list_seedlots()
 
- Usage:        my $seedlots = CXGN::Seedlot->list_seedlots($schema);
+ Usage:        my $seedlots = CXGN::Stock::Seedlot->list_seedlots($schema);
  Desc:         Class method that returns information on all seedlots 
                available in the system
  Ret:          ArrayRef of [ seedlot_id, seedlot name, location_code] 
@@ -140,15 +140,13 @@ sub BUILD {
 
     if ($self->seedlot_id()) {
         print STDERR Dumper $self->seedlot_id;
-        my $transactions = CXGN::Seedlot::Transaction->get_transactions_by_seedlot_id($self->schema(), $self->seedlot_id());
+        my $transactions = CXGN::Stock::Seedlot::Transaction->get_transactions_by_seedlot_id($self->schema(), $self->seedlot_id());
         #print STDERR Dumper($transactions);
         $self->transactions($transactions);
         $self->name($self->uniquename());
         $self->location_code($self->description());
         $self->seedlot_id($self->stock_id());
         $self->_retrieve_accessions();
-        $self->_retrieve_organizations();
-        $self->_retrieve_population();
         #$self->cross($self->_retrieve_cross());
     }
     print STDERR Dumper $self->seedlot_id;

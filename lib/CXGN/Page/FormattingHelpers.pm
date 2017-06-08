@@ -422,9 +422,9 @@ sub modesel {
         "\n",
         (
             map { "  $_  " } (
-                join( $spacer, ( map { $_->{contents}[0] } @buttons ) ),
-                join( $spacer, ( map { $_->{contents}[1] } @buttons ) ),
-                join( $spacer, ( map { $_->{contents}[2] } @buttons ) ),
+                join( $spacer, ( map { $_->{contents}[0] ? $_->{contents}[0] : '' } @buttons ) ),
+                join( $spacer, ( map { $_->{contents}[1] ? $_->{contents}[1] : '' } @buttons ) ),
+                join( $spacer, ( map { $_->{contents}[2] ? $_->{contents}[2] : '' } @buttons ) ),
             )
         )
     );
