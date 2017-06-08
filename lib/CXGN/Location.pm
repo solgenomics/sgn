@@ -70,42 +70,41 @@ has 'altitude' => (
 	is => 'rw',
 );
 
-sub get_location {
+sub BUILD {
     my $self = shift;
-    my $id = shift;
 
-    my $row = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $id });
+    print STDERR "RUNNING BUILD FOR LOCATION.PM...\n";
+    my $location;
+    if ($self->nd_geolocation_id){
+        $location = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $self->nd_geolocation_id });
+    }
+    if (defined $location) {
+        #$self->location($location);
+        $self->nd_geolocation_id($location->nd_geolocation_id);
+        $self->name($location->description);
+        $self->latitude($location->latitude);
+        $self->longitude($location->longitude);
+        $self->altitude($location->altitude);
+        #$self->abbreviation($location->value());
+        #$self->country($location->description());
+        #$self->type($location->description());
+    }
 
-    if ($row){
-        $self->name($row->description());
-	    print STDERR "Found location ".$self->description()." with id ".$self->nd_geolocation_id()."\n";
-        #$self->abbreviation($row->value());
-        #$self->country($row->description());
-        #$self->type($row->description());
-        $self->latitude($row->latitude());
-        $self->longitude($row->longitude());
-        $self->altitude($row->altitude());
-        return $self;
-    }
-    else {
-	    die "No locations were found with id ".$self->nd_geolocation_id()."\n";
-    }
+    return $self;
 }
 
 sub add_location {
 	my $self = shift;
-    my $params = shift;
     my $schema = $self->bcs_schema();
+    my $name = $self->name();
+    my $latitude = $self->latitude();
+    my $longitude = $self->longitude();
+    my $altitude = $self->altitude();
 
-    my $description = $params->{description};
-    my $longitude   = $params->{longitude};
-    my $latitude    = $params->{latitude};
-    my $altitude    = $params->{altitude};
-
-    my $exists = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $description } )->count();
+    my $exists = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
 
     if ($exists > 0) {
-	    return { error => "The location - $description - already exists. Please choose another name." };
+	    return { error => "The location - $name - already exists. Please choose another name." };
     }
 
     if ( ($latitude && $latitude !~ /^-?[0-9.]+$/) || ($latitude && $latitude < -90) || ($latitude && $latitude > 90)) {
@@ -124,7 +123,7 @@ sub add_location {
 	try {
         $new_row = $schema->resultset('NaturalDiversity::NdGeolocation')
           ->new({
-    	     description => $description,
+    	     description => $name,
     	    });
 
         if ($longitude) { $new_row->longitude($longitude); }
@@ -138,19 +137,18 @@ sub add_location {
     };
 
     if ($error) {
-        print STDERR "Error creating location $description: $error\n";
+        print STDERR "Error creating location $name: $error\n";
         return { error => $error };
     } else {
-        print STDERR "Location $description added successfully\n";
-        return { success => "Location $description added successfully\n" };
+        print STDERR "Location $name added successfully\n";
+        return { success => "Location $name added successfully\n" };
     }
 }
 
 sub delete_location {
     my $self = shift;
-    my $id = shift;
 
-    my $rs = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->search({ nd_geolocation_id=> $id });
+    my $rs = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->search({ nd_geolocation_id=> $self->nd_geolocation_id() });
     my $name = $rs->first()->description();
     my @experiments = $rs->first()->nd_experiments;
     #print STDERR "Associated experiments: ".Dumper(@experiments)."\n";

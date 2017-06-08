@@ -77,6 +77,10 @@ sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
     my $self = shift;
     my $c = shift;
     my $params = $c->request->parameters();
+    my $description = $params->{description};
+    my $latitude    = $params->{latitude};
+    my $longitude   = $params->{longitude};
+    my $altitude    = $params->{altitude};
 
     if (! $c->user()) {
         $c->stash->{rest} = { error => 'You must be logged in to add a location.' };
@@ -88,8 +92,15 @@ sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
         return;
     }
 
-    my $l = CXGN::Location->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema") });
-    my $add = $l->add_location($params);
+    my $new_location = CXGN::Location->new( {
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+        name => $description,
+        latitude => $latitude,
+        longitude => $longitude,
+        altitude => $altitude
+    });
+
+    my $add = $new_location->add_location();
 
     if ($add->{'error'}) {
         $c->stash->{rest} = { error => $add->{'error'} };
@@ -115,8 +126,12 @@ sub delete_location :Path('/ajax/breeders/location/delete') Args(1) {
 	return;
     }
 
-    my $loc = CXGN::Location->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema") } );
-    my $delete = $loc->delete_location($location_id);
+    my $location_to_delete = CXGN::Location->new( {
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+        nd_geolocation_id => $location_id
+    } );
+
+    my $delete = $location_to_delete->delete_location();
 
 	if ($delete->{'success'}) {
 	    $c->stash->{rest} = { success => $delete->{'success'} };
