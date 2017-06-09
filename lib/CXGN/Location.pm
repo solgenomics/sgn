@@ -30,6 +30,16 @@ has 'bcs_schema' => (
     required => 1,
 );
 
+has 'location' => (
+    isa => 'Bio::Chado::Schema::Result::NaturalDiversity::NdGeolocation',
+    is => 'rw',
+);
+
+has 'is_new' => (
+    isa => 'Bool',
+    is => 'rw',
+);
+
 has 'nd_geolocation_id' => (
 	isa => "Int",
 	is => 'rw',
@@ -45,12 +55,17 @@ has 'abbreviation' => (
 	is => 'rw',
 );
 
-has 'country' => (
+has 'country_name' => (
     isa => 'Maybe[Str]',
 	is => 'rw',
 );
 
-has 'type' => (
+has 'country_code' => (
+    isa => 'Maybe[Str]',
+	is => 'rw',
+);
+
+has 'location_type' => (
     isa => 'Maybe[Str]',
 	is => 'rw',
 );
@@ -79,23 +94,26 @@ sub BUILD {
         $location = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $self->nd_geolocation_id });
     }
     if (defined $location) {
-        #$self->location($location);
+        $self->location($location);
         $self->nd_geolocation_id($location->nd_geolocation_id);
         $self->name($location->description);
         $self->latitude($location->latitude);
         $self->longitude($location->longitude);
         $self->altitude($location->altitude);
-        #$self->abbreviation($location->value());
-        #$self->country($location->description());
-        #$self->type($location->description());
+        $self->abbreviation($self->_get_ndgeolocationprop('abbreviation'));
+        $self->country_name($self->_get_ndgeolocationprop('country_name'));
+        $self->country_code($self->_get_ndgeolocationprop('country_code'));
+        $self->location_type($self->_get_ndgeolocationprop('location_type'));
     }
 
     return $self;
 }
 
-sub add_location {
+sub store_location {
 	my $self = shift;
     my $schema = $self->bcs_schema();
+    my $is_new = $self->is_new();
+
     my $name = $self->name();
     my $latitude = $self->latitude();
     my $longitude = $self->longitude();
@@ -103,9 +121,27 @@ sub add_location {
 
     my $exists = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
 
-    if ($exists > 0) {
-	    return { error => "The location - $name - already exists. Please choose another name." };
+    if ($is_new && $exists > 0) { # can't add a new location with name that already exists
+	    return { error => "The location - $name - already exists. Please choose another name, or use the exisiting location" };
     }
+    elsif (!$is_new && $exists > 0) { # editing location
+        print STDERR "Editing existing location $name\n";
+        my $row = $schema->resultset("NaturalDiversity::NdGeolocation")->find({ stock_id => $self->stock_id() });
+        $row->name($self->name());
+
+    }
+    elsif ($is_new && !$exists) { # adding new location
+
+    }
+    elsif (!$is_new && !$exists) { # can't edit a location that doesn't exist!
+
+    }
+
+
+
+
+
+
 
     if ( ($latitude && $latitude !~ /^-?[0-9.]+$/) || ($latitude && $latitude < -90) || ($latitude && $latitude > 90)) {
 	    return { error => "Latitude (in degrees) must be a number between 90 and -90." };
@@ -129,8 +165,24 @@ sub add_location {
         if ($longitude) { $new_row->longitude($longitude); }
         if ($latitude) { $new_row->latitude($latitude); }
         if ($altitude) { $new_row->altitude($altitude); }
-
         $new_row->insert();
+
+        #$self->ndgeolocation_id($new_row->ndgeolocation_id());
+        $self->location($new_row);
+
+        if ($self->abbreviation){
+            $self->_store_ndgeolocationprop('abbreviation', $self->abbreviation());
+        }
+        if ($self->country_name){
+            $self->_store_ndgeolocationprop('country_name', $self->country_name());
+        }
+        if ($self->country_code){
+            $self->_store_ndgeolocationprop('country_code', $self->country_code());
+        }
+        if ($self->location_type){
+            $self->_store_ndgeolocationprop('location_type', $self->location_type());
+        }
+
     }
     catch {
         $error =  $_;
@@ -162,6 +214,50 @@ sub delete_location {
 	    $rs->first->delete();
 	    return { success => "Location $name was successfully deleted.\n" };
 	}
+}
+
+sub _get_ndgeolocationprop {
+    my $self = shift;
+    my $type = shift;
+
+    my $ndgeolocationprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'geolocations_property')->cvterm_id();
+    my $rs = $self->schema()->resultset("NaturalDiversity::NdGeolocationprop")->search({ nd_geolocation_id=> $self->nd_geolocation_id(), type_id => $ndgeolocationprop_type_id }, { order_by => {-asc => 'nd_geolocationprop_id'} });
+
+    my @results;
+    while (my $r = $rs->next()){
+        push @results, $r->value;
+    }
+    my $res = join ',', @results;
+    return $res;
+}
+
+sub _store_ndgeolocationprop {
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    my $ndgeolocationprop = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'geolocations_property')->name();
+    my $stored_ndgeolocationprop = $self->location->create_geolocationprops({ $ndgeolocationprop => $value});
+}
+
+sub _remove_ndgeolocationprop {
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'geolocations_property')->cvterm_id();
+    my $rs = $self->schema()->resultset("NaturalDiversity::NdGeolocationprop")->search( { type_id=>$type_id, nd_geolocation_id=> $self->nd_geolocation_id(), value=>$value } );
+
+    if ($rs->count() == 1) {
+        $rs->first->delete();
+        return 1;
+    }
+    elsif ($rs->count() == 0) {
+        return 0;
+    }
+    else {
+        print STDERR "Error removing ndgeolocationprop from location ".$self->ndgeolocation_id().". Please check this manually.\n";
+        return 0;
+    }
+
 }
 
 =head2 accessors get_name(), set_name()

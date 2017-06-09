@@ -73,40 +73,42 @@ sub get_all_locations :Path("/ajax/breeders/location/all") Args(0) {
 
 }
 
-sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
+sub store_location :Path("/ajax/breeders/location/store") Args(0) {
     my $self = shift;
     my $c = shift;
     my $params = $c->request->parameters();
+    my $is_new = $params->{is_new};
     my $description = $params->{description};
     my $latitude    = $params->{latitude};
     my $longitude   = $params->{longitude};
     my $altitude    = $params->{altitude};
 
     if (! $c->user()) {
-        $c->stash->{rest} = { error => 'You must be logged in to add a location.' };
+        $c->stash->{rest} = { error => 'You must be logged in to add or edit a location.' };
         return;
     }
 
     if (! $c->user->check_roles("submitter") && !$c->user->check_roles("curator")) {
-        $c->stash->{rest} = { error => 'You do not have the necessary privileges to add locations.' };
+        $c->stash->{rest} = { error => 'You do not have the necessary privileges to add or edit locations.' };
         return;
     }
 
-    my $new_location = CXGN::Location->new( {
+    my $location = CXGN::Location->new( {
         bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+        is_new => $is_new,
         name => $description,
         latitude => $latitude,
         longitude => $longitude,
         altitude => $altitude
     });
 
-    my $add = $new_location->add_location();
+    my $store = $location->store_location();
 
-    if ($add->{'error'}) {
-        $c->stash->{rest} = { error => $add->{'error'} };
+    if ($store->{'error'}) {
+        $c->stash->{rest} = { error => $store->{'error'} };
     }
     else {
-        $c->stash->{rest} = { success => $add->{'success'} };
+        $c->stash->{rest} = { success => $store->{'success'} };
     }
 
 }
@@ -114,7 +116,7 @@ sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
 sub delete_location :Path('/ajax/breeders/location/delete') Args(1) {
     my $self = shift;
     my $c = shift;
-    my $location_id = shift;
+    my $location_id = $c->req->param("location_id");
 
     if (!$c->user) {  # require login
 	$c->stash->{rest} = { error => "You need to be logged in to delete a location." };
