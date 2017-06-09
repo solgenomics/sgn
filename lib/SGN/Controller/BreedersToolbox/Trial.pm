@@ -108,6 +108,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     }
 
     my $design_type = $trial->get_design_type();
+    $c->stash->{design_name} = $design_type;
 
     if ($design_type eq "genotyping_plate") {
 	if ($format eq "as_table") {

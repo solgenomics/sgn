@@ -25,7 +25,6 @@ $trial_type => undef
 $planting_date => undef
 $harvest_date => undef
 $trial_description => undef
-$design_layout_view => undef
 $user_can_modify => undef
 $has_plant_entries => undef
 $hidap_enabled => undef
@@ -38,14 +37,21 @@ $site_project_name => undef
 $trial_phenotype_files => undef
 $sgn_session_id => undef
 $user_name => undef
+$design_name => undef
+$has_layout => undef
+$has_physical_map => undef
+$has_phenotypes => undef
+$phenotypes_fully_uploaded => undef
 </%args>
 
 <style>
 
-.affix {
-    top:100px;
-    right:0;
-    position:fixed;
+@media (min-width: 1200px) {
+    .affix {
+        top:100px;
+        right:0;
+        position:fixed;
+    }
 }
 
 </style>
@@ -62,53 +68,6 @@ my $start_time = time();
 
 <br/>
 
-<div data-spy="affix" data-offset-top="50">
-    <div class="panel panel-info">
-        <div class="panel-heading">Completion</div>
-        <div class="panel-body">
-%  if ($trial_name) {
-            <p class="text-success"><small>Trial Name&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger"><small>Trial Name&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($breeding_program_name) {
-            <p class="text-success"><small>Breeding Program&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger"><small>Breeding Program&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($location_name) {
-            <p class="text-success"><small>Location&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger"><small>Location&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($year) {
-            <p class="text-success"><small>Year&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger"><small>Year&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($trial_type) {
-            <p class="text-success"><small>Trial Type&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger"><small>Trial Type&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($planting_date) {
-            <p class="text-success"><small>Planting Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger"><small>Planting Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($harvest_date) {
-            <p class="text-success"><small>Harvest Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger"><small>Harvest Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-%  if ($trial_description) {
-            <p class="text-success"><small>Description&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
-%  } else {
-            <p class="text-danger"><small>Description&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
-%  }
-        </div>
-    </div>
-</div>
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
@@ -478,11 +437,98 @@ my $start_time = time();
 % print $trial_id;
 </div>
 
+<div data-spy="affix" data-offset-top="0" style="max-height: 100%; overflow-y: auto;">
+    <div class="panel panel-info">
+        <div class="panel-heading">Completion</div>
+        <div class="panel-body">
 
-<div id="trial_design_view_layout" title="Trial design layout">
-% print $design_layout_view;
+<&| /page/info_section.mas, title=>"Trial Info", collapsible=>1, collapsed=>0 &>
+%  if ($trial_name) {
+            <p class="text-success"><small>Trial Name&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>Trial Name&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($breeding_program_name) {
+            <p class="text-success"><small>Breeding Program&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>Breeding Program&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($location_name) {
+            <p class="text-success"><small>Location&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>Location&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($year) {
+            <p class="text-success"><small>Year&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>Year&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($trial_type) {
+            <p class="text-success"><small>Trial Type&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>Trial Type&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($planting_date) {
+            <p class="text-success"><small>Planting Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>Planting Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($harvest_date) {
+            <p class="text-success"><small>Harvest Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>Harvest Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($trial_description) {
+            <p class="text-success"><small>Description&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>Description&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($folder_id) {
+            <p class="text-success"><small>In Folder&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-info"><small>Not In Folder&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>
+%  }
+</&>
+
+<&| /page/info_section.mas, title=>"Field Design", collapsible=>1, collapsed=>1 &>
+%  if ($design_name) {
+            <p class="text-success"><small>Has Field Design&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>No Field Design&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($has_layout) {
+            <p class="text-success"><small>Has Field Layout&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger"><small>No Field Layout&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($has_physical_map) {
+            <p class="text-success"><small>Has Physial Map&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-info"><small>No Physical Map&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>
+%  }
+%  if ($has_plant_entries) {
+            <p class="text-success"><small>Has Plots<br/>And Plants&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-info"><small>Has Plots<br/>No Plants&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>
+%  }
+</&>
+
+<&| /page/info_section.mas, title=>"Phenotyping", collapsible=>1, collapsed=>1 &>
+%  if ($has_phenotypes) {
+            <p class="text-success"><small>Has Phenotypes&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-info"><small>No Phenotypes&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>
+%  }
+%  if ($phenotypes_fully_uploaded) {
+            <p class="text-success"><small>Phenotyping<br/>Complete&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-info"><small>Phenotyping<br/>Incomplete&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>
+%  }
+</&>
+
+        </div>
+    </div>
 </div>
-
 
 <script defer="defer">
 
