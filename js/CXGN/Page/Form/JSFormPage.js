@@ -246,7 +246,11 @@ CXGN.Page.Form.JSFormPage.prototype = {
 	}
 
 	if (action == 'view' &&  ((this.getUserType() == 'curator') || (this.getIsOwner() == 1))) {
-	    buttonHTML = this.getNewButton() + this.getEditButton() + this.getDeleteButton();
+        if (this.getJsObjectName() == 'stockForm') {
+            buttonHTML = this.getGhostedNewButton() + this.getEditButton() + this.getDeleteButton();
+        } else {
+            buttonHTML = this.getNewButton() + this.getEditButton() + this.getDeleteButton();
+        }
 	}
 
 	if (action == 'delete') {

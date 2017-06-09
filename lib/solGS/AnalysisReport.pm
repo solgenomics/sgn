@@ -268,7 +268,8 @@ sub check_selection_prediction {
 	    { 
 		if ($output_details->{$k}->{trait_id})
 		{
-		    $gebv_file = $output_details->{$k}->{gebv_file}; 
+		    my $trait = $output_details->{$k}->{trait_id};
+		    $gebv_file = $output_details->{$k}->{gebv_file};
 		}
 
 		if ($gebv_file) 
@@ -680,20 +681,21 @@ sub selection_prediction_message {
     		{
     		    my $trait_name          = uc($output_details->{$k}->{trait_name});
     		    my $training_pop_page   = $output_details->{$k}->{training_pop_page};
-    		    my $model_page          = $output_details->{$k}->{model_page};
+    		    my $prediction_pop_page = $output_details->{$k}->{prediction_pop_page};
     		    my $prediction_pop_name = $output_details->{$k}->{prediction_pop_name};
-		    
+		    $prediction_pop_name =~ s/^\s+|\s+$//g;
+
     		    if ($output_details->{$k}->{success})		
-    		    {		
+    		    {	
+			
     			$cnt++;	
     			if($cnt == 1) 
     			{
     			    $message .= "The prediction of selection population $prediction_pop_name is done."
-    				. "\nYou can view the prediction output by clicking the trait name "
-    				. "\nat the bottom of the model page(s):\n\n";
+    				. "\nYou can view the prediction output here:\n\n"
     			}
-       
-    			$message .= "$model_page\n\n";
+		
+    			$message .= "$prediction_pop_page\n\n";
     		    }
     		    else 
     		    {  

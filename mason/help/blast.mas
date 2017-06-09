@@ -1,17 +1,17 @@
 
 <& /page/page_title.mas, title => "BLAST Help" &>
 
-<p>The SGN BLAST is based on NCBI BLAST and accessible on <a href="/tools/blast">/tools/blast</a>. </p>
+<p>BLAST on this site is based on NCBI BLAST and is accessible on <a href="/tools/blast">/tools/blast</a>. </p>
 
-<p>The BLAST databases are organized in different categories, which can be selected using the categories pull-down menu. Each category contains a number of BLAST databases.</p>
+<p>To make finding the right BLAST database faster, the databases are organized into different categories, which can be selected using the "Categories" pull-down menu. Each category contains a number of BLAST databases which can be selected in the "Database" pull down menu.</p>
 
 <p>Select the category, then the database.</p>
 
-<p>Enter the sequence in the Query textarea and choose the appropriate format from the format selector (for example, nucleotide fasta). Choose the appropriate blast program (for example, blastn for running a nucleotide query against a nucleotide database).</p>
+<p>Enter the sequence in the Query textarea and choose the appropriate format from the format selector (for example, nucleotide fasta). Choose the appropriate blast program (for example, blastn for running a nucleotide query against a nucleotide database). The default is autodetect, which should detect the format you entered and convert it to the correct sequence format to run blast automatically.</p>
 
 <p>If you would like to filter the query for low-complexity sequence, leave the Filter checkbox selected. This is the recommended setting.</p>
 
-<p>Select an appropriate e-value threshold. The default of 1e-10 should work for common applications.</p>
+<p>Select an appropriate e-value threshold. The default of 1e-10 should work for most common applications.</p>
 
 <h4>Output options</h4>
 
@@ -19,6 +19,9 @@
 
 <h4>Results</h4>
 
-<p>The Results section will show the ouput (depending on your chosen Output options) when a BLAST analysis has been run. When the analysis is finished, the Input parameters sections will be closed and the Results section opened. To re-run a query, simply click on the + sign in the Input parameter section header to view that section again and adjust the parameters.</p>
+<p>The Results section will show the ouput (depending on your chosen Output options) when a BLAST analysis has been run. When the analysis is finished, the Input parameters sections will be collapsed and the Results section opened. To re-run a query, simply click on the + sign in the Input parameter section header to view that section again and adjust the parameters.</p>
 
 <p>The raw BLAST report can be downloaded using the download link in the Results section header.</p>
+
+<h4>Extract sequences from BLAST databases</h4>
+You can extract sequences from the BLAST databases using identifiers or key words in the annotation of the sequences. Click on the "Extract sequences from BLAST databases" section and enter the search string. It will search in the database selected above.

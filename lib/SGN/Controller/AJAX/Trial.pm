@@ -138,7 +138,7 @@ sub generate_experimental_design_POST : Args(0) {
   my $use_same_layout = $c->req->param('use_same_layout');
   my $number_of_checks = scalar(@control_names_crbd);
   #my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
-  if ($design_type eq "RCBD" || $design_type eq "Alpha" || $design_type eq "CRD") {
+  if ($design_type eq "RCBD" || $design_type eq "Alpha" || $design_type eq "CRD" || $design_type eq "Lattice") {
     if (@control_names_crbd) {
         @stock_names = (@stock_names, @control_names_crbd);
     }

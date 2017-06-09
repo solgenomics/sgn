@@ -26,6 +26,7 @@ use CXGN::BreedersToolbox::Projects;
 use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
 use Scalar::Util qw | looks_like_number |;
 use CXGN::Trial;
+use CXGN::Onto;
 use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Stock;
@@ -214,6 +215,7 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 	my $self = shift;
 	my $c = shift;
 	my $params = _clean_inputs($c->req->params);
+    my $names_as_select = $params->{names_as_select}->[0] || 0;
 
 	my $stock_search = CXGN::Stock::Search->new({
 		bcs_schema=>$c->dbic_schema("Bio::Chado::Schema", "sgn_chado"),
@@ -243,7 +245,8 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 		organization_list=>$params->{organization_list},
 		limit=>$params->{limit}->[0],
 		offset=>$params->{offset}->[0],
-		minimal_info=>1
+		minimal_info=>1,
+        display_pedigree=>0
 	});
 	my ($result, $records_total) = $stock_search->search();
 	#print STDERR Dumper $result;
@@ -251,9 +254,14 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 	my $name = $c->req->param("name") || "html_trial_select";
 	my $size = $c->req->param("size");
 	my $empty = $c->req->param("empty") || "";
+	my $data_related = $c->req->param("data-related") || "";
 	my @stocks;
 	foreach my $r (@$result) {
-		push @stocks, [ $r->{stock_id}, $r->{uniquename} ];
+        if ($names_as_select) {
+	        push @stocks, [ $r->{uniquename}, $r->{uniquename} ];
+        } else {
+            push @stocks, [ $r->{stock_id}, $r->{uniquename} ];
+        }
 	}
 	@stocks = sort { $a->[1] cmp $b->[1] } @stocks;
 
@@ -265,6 +273,7 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 		id => $id,
 		size => $size,
 		choices => \@stocks,
+        data_related => $data_related
 	);
 	$c->stash->{rest} = { select => $html };
 }
@@ -274,7 +283,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $c = shift;
     my $trial_ids = $c->req->param('trial_ids') || 'all';
     my $stock_id = $c->req->param('stock_id') || 'all';
-    my $stock_type = $c->req->param('stock_type') . 's' || 'none';
+    my $stock_type = $c->req->param('stock_type') ? $c->req->param('stock_type') . 's' : 'none';
     my $data_level = $c->req->param('data_level') || 'all';
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
@@ -327,6 +336,67 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
       id => $id,
       choices => \@traits,
 	  size => $size
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_phenotyped_trait_components_select : Path('/ajax/html/select/phenotyped_trait_components') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_ids = $c->req->param('trial_ids');
+    #my $stock_id = $c->req->param('stock_id') || 'all';
+    #my $stock_type = $c->req->param('stock_type') . 's' || 'none';
+    my $data_level = $c->req->param('data_level') || 'all';
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $composable_cvterm_format = $c->config->{composable_cvterm_format};
+
+    if ($data_level eq 'all') {
+        $data_level = '';
+    }
+
+    my @trial_ids = split ',', $trial_ids;
+
+    my @trait_components;
+    foreach (@trial_ids){
+        my $trial = CXGN::Trial->new({bcs_schema=>$schema, trial_id=>$_});
+        push @trait_components, @{$trial->get_trait_components_assayed($data_level, $composable_cvterm_format)};
+    }
+    #print STDERR Dumper \@trait_components;
+    my %unique_trait_components = map {$_->[0] => $_->[1]} @trait_components;
+    my @unique_components;
+    foreach my $id (keys %unique_trait_components){
+        push @unique_components, [$id, $unique_trait_components{$id}];
+    }
+    #print STDERR Dumper \@unique_components;
+
+    my $id = $c->req->param("id") || "html_trait_component_select";
+    my $name = $c->req->param("name") || "html_trait_component_select";
+
+    my $html = simple_selectbox_html(
+      multiple => 1,
+      name => $name,
+      id => $id,
+      choices => \@unique_components,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_composable_cvs_allowed_combinations_select : Path('/ajax/html/select/composable_cvs_allowed_combinations') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $id = $c->req->param("id") || "html_composable_cvs_combinations_select";
+    my $name = $c->req->param("name") || "html_composable_cvs_combinations_select";
+    my $composable_cvs_allowed_combinations = $c->config->{composable_cvs_allowed_combinations};
+    my @combinations = split ',', $composable_cvs_allowed_combinations;
+    my @select;
+    foreach (@combinations){
+        my @parts = split /\|/, $_; #/#
+        push @select, [$parts[1], $parts[0]];
+    }
+    my $html = simple_selectbox_html(
+      name => $name,
+      id => $id,
+      choices => \@select,
     );
     $c->stash->{rest} = { select => $html };
 }
@@ -398,40 +468,86 @@ sub get_genotyping_protocols_select : Path('/ajax/html/select/genotyping_protoco
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_trait_components_select : Path('/ajax/html/select/trait_components') Args(0) {
+
+  my $self = shift;
+  my $c = shift;
+
+  my $cv_id = $c->req->param('cv_id');
+  #print STDERR "cv_id = $cv_id\n";
+  my $id = $c->req->param("id") || "component_select";
+  my $name = $c->req->param("name") || "component_select";
+  my $default = $c->req->param("default") || 0;
+  my $multiple =  $c->req->param("multiple") || 0;
+  my $size = $c->req->param('size') || '5';
+
+  my $dbh = $c->dbc->dbh();
+  my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+  my @components = $onto->get_terms($cv_id);
+  #print STDERR Dumper \@components;
+  if ($default) { unshift @components, [ '', $default ]; }
+
+  my $html = simple_selectbox_html(
+    name => $name,
+    multiple => $multiple,
+    id => $id,
+    choices => \@components,
+    size => $size
+  );
+
+  $c->stash->{rest} = { select => $html };
+
+}
+
 
 sub ontology_children_select : Path('/ajax/html/select/ontology_children') Args(0) {
     my ($self, $c) = @_;
     my $parent_node_cvterm = $c->request->param("parent_node_cvterm");
     my $rel_cvterm = $c->request->param("rel_cvterm");
     my $rel_cv = $c->request->param("rel_cv");
+    my $size = $c->req->param('size') || '5';
+    my $value_format = $c->req->param('value_format') || 'ids';
+    print STDERR "Parent Node $parent_node_cvterm\n";
 
     my $select_name = $c->request->param("selectbox_name");
     my $select_id = $c->request->param("selectbox_id");
 
     my $empty = $c->request->param("empty") || '';
+    my $multiple =  $c->req->param("multiple") || 0;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $parent_node_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $parent_node_cvterm)->cvterm_id();
+    my $parent_node_cvterm_row = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $parent_node_cvterm);
+    my $parent_node_cvterm_id;
+    if ($parent_node_cvterm_row){
+        $parent_node_cvterm_id = $parent_node_cvterm_row->cvterm_id();
+    }
     my $rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $rel_cvterm, $rel_cv)->cvterm_id();
 
     my $ontology_children_ref = $schema->resultset("Cv::CvtermRelationship")->search({type_id => $rel_cvterm_id, object_id => $parent_node_cvterm_id})->search_related('subject');
     my @ontology_children;
     while (my $child = $ontology_children_ref->next() ) {
+        my $cvterm_id = $child->cvterm_id();
         my $dbxref_info = $child->search_related('dbxref');
         my $accession = $dbxref_info->first()->accession();
         my $db_info = $dbxref_info->search_related('db');
         my $db_name = $db_info->first()->name();
-        push @ontology_children, [$child->name."|".$db_name.":".$accession, $child->name."|".$db_name.":".$accession];
+        if ($value_format eq 'ids'){
+            push @ontology_children, [$cvterm_id, $child->name."|".$db_name.":".$accession];
+        }
+        if ($value_format eq 'names'){
+            push @ontology_children, [$child->name."|".$db_name.":".$accession, $child->name."|".$db_name.":".$accession];
+        }
     }
 
     @ontology_children = sort { $a->[1] cmp $b->[1] } @ontology_children;
     if ($empty) {
         unshift @ontology_children, [ 0, "None" ];
     }
-
+    #print STDERR Dumper \@ontology_children;
     my $html = simple_selectbox_html(
         name => $select_name,
         id => $select_id,
+        multiple => $multiple,
         choices => \@ontology_children,
     );
     $c->stash->{rest} = { select => $html };

@@ -58,8 +58,11 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 		location_name_list=>$params->{location} ? [$params->{location}] : undef,
 		year_list=>$params->{year} ? [$params->{year}] : undef,
 		organization_list=>$params->{organization} ? [$params->{organization}] : undef,
+        property_term=>$params->{property_term},
+        property_value=>$params->{property_value},
 		limit=>$limit,
-		offset=>$offset
+		offset=>$offset,
+        display_pedigree=>0
 	});
 	my ($result, $records_total) = $stock_search->search();
 
@@ -72,7 +75,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 		my $uniquename = $_->{uniquename};
 		my $type = $_->{stock_type};
 		my $organism = $_->{species};
-		my $synonym_string = $_->{synonyms};
+		my $synonym_string = join ',', @{$_->{synonyms}};
 		my $organization_string = $_->{organizations};
 		my @owners = @{$_->{owners}};
 		my @owners_html;

@@ -32,9 +32,12 @@ my $stock_search = CXGN::Stock::Search->new({
 	location_name_list=>\@location_name_list,
 	year_list=>\@year_list,
 	organization_list=>\@organization_list,
+    property_term=>$property_term,
+    $property_value=>$property_value,
 	limit=>$limit,
 	offset=>$offset,
 	minimal_info=>o  #for only returning stock_id and uniquenames
+    display_pedigree=>1 #to calculate and display pedigree
 });
 my ($result, $records_total) = $stock_search->search();
 
@@ -182,6 +185,16 @@ has 'organization_list' => (
     is => 'rw',
 );
 
+has 'property_term' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+);
+
+has 'property_value' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+);
+
 has 'limit' => (
     isa => 'Int|Undef',
     is => 'rw',
@@ -193,6 +206,12 @@ has 'offset' => (
 );
 
 has 'minimal_info' => (
+    isa => 'Bool',
+    is => 'rw',
+	default => 0
+);
+
+has 'display_pedigree' => (
     isa => 'Bool',
     is => 'rw',
 	default => 0
@@ -225,6 +244,8 @@ sub search {
 	my @species_array = $self->species_list ? @{$self->species_list} : ();
 	my @stock_ids_array = $self->stock_id_list ? @{$self->stock_id_list} : ();
 	my @pui_array = $self->pui_list ? @{$self->pui_list} : ();
+    my $property_term = $self->property_term;
+    my $property_value = $self->property_value;
 	my $limit = $self->limit;
 	my $offset = $self->offset;
 
@@ -341,7 +362,6 @@ sub search {
 
 	foreach (@trial_id_array){
 		if ($_){
-			print STDERR $_."\n";
 			push @{$and_conditions->{ 'project.project_id' }}, $_ ;
 		}
 	}
@@ -402,6 +422,12 @@ sub search {
 		}
 	}
 
+    if ($property_term && $property_value){
+        my $property_term_id = SGN::Model::Cvterm->get_cvterm_row($schema, $property_term, 'stock_property')->cvterm_id();
+        $and_conditions->{ 'stockprops.type_id'} = $property_term_id;
+        push @{$and_conditions->{ 'lower(stockprops.value)' }}, { -like  => lc($property_value) } ;
+    }
+
 	#$schema->storage->debug(1);
 	my $rs = $schema->resultset("Stock::Stock")->search(
 	{
@@ -447,9 +473,11 @@ sub search {
 			my $donor_accessions = $stockprop_hash->{'donor'} ? $stockprop_hash->{'donor'} : [];
 			my $donor_institutes = $stockprop_hash->{'donor institute'} ? $stockprop_hash->{'donor institute'} : [];
 			my $donor_puis = $stockprop_hash->{'donor PUI'} ? $stockprop_hash->{'donor PUI'} : [];
-			for (0 .. scalar(@$donor_accessions)){
-				push @donor_array, { 'donorGermplasmName'=>$donor_accessions->[$_], 'donorAccessionNumber'=>$donor_accessions->[$_], 'donorInstituteCode'=>$donor_institutes->[$_], 'germplasmPUI'=>$donor_puis->[$_] };
-			}
+            if (scalar(@$donor_accessions)>0 && scalar(@$donor_institutes)>0 && scalar(@$donor_puis)>0 && scalar(@$donor_accessions) == scalar(@$donor_institutes) && scalar(@$donor_accessions) == scalar(@$donor_puis)){
+                for (0 .. scalar(@$donor_accessions)-1){
+                    push @donor_array, { 'donorGermplasmName'=>$donor_accessions->[$_], 'donorAccessionNumber'=>$donor_accessions->[$_], 'donorInstituteCode'=>$donor_institutes->[$_], 'germplasmPUI'=>$donor_puis->[$_] };
+                }
+            }
 			push @result, {
 				stock_id => $stock_id,
 				uniquename => $uniquename,
@@ -464,9 +492,9 @@ sub search {
 				organizations =>$stockprop_hash->{'organization'} ? join ',', @{$stockprop_hash->{'organization'}} : undef,
 				accessionNumber=>$stockprop_hash->{'accession number'} ? join ',', @{$stockprop_hash->{'accession number'}} : undef,
 				germplasmPUI=>$stockprop_hash->{'PUI'} ? join ',', @{$stockprop_hash->{'PUI'}} : undef,
-				pedigree=>$self->germplasm_pedigree_string($stock_id),
+				pedigree=>$self->display_pedigree ? $self->germplasm_pedigree_string($stock_id) : 'DISABLED',
 				germplasmSeedSource=>$stockprop_hash->{'seed source'} ? join ',', @{$stockprop_hash->{'seed source'}} : undef,
-				synonyms=> $stockprop_hash->{'stock_synonym'} ? join ',', @{$stockprop_hash->{'stock_synonym'}} : undef,
+				synonyms=> $stockprop_hash->{'stock_synonym'} ? $stockprop_hash->{'stock_synonym'} : [],
 				instituteCode=>$stockprop_hash->{'institute code'} ? join ',', @{$stockprop_hash->{'institute code'}} : undef,
 				instituteName=>$stockprop_hash->{'institute name'} ? join ',', @{$stockprop_hash->{'institute name'}} : undef,
 				biologicalStatusOfAccessionCode=>$stockprop_hash->{'biological status of accession code'} ? join ',', @{$stockprop_hash->{'biological status of accession code'}} : undef,
