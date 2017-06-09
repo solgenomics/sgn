@@ -143,6 +143,8 @@ function pcaResult () {
    
     if (!listId && popId.match(/uploaded_/)) {	
 	listId = popId.replace("uploaded_", "");
+    } else if (listId) {
+	popId = 'uploaded_' + listId;
     }
 
     var listName;
