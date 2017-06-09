@@ -192,25 +192,33 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $group_by_additional = '';
     my $stock_type_id;
     my $rel_type_id;
+    my $total_complete_number;
     if ($display eq 'plots') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+        my $plots = $c->stash->{trial}->get_plots();
+        $total_complete_number = scalar (@$plots);
     }
     if ($display eq 'plants') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+        my $plants = $c->stash->{trial}->get_plants();
+        $total_complete_number = scalar (@$plants);
     }
+    my $stocks_per_accession;
     if ($display eq 'plots_accession') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
         $select_clause_additional = ', accession.uniquename, accession.stock_id';
         $group_by_additional = ', accession.stock_id, accession.uniquename';
+        $stocks_per_accession = $c->stash->{trial}->get_plots_per_accession();
     }
     if ($display eq 'plants_accession') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
         $select_clause_additional = ', accession.uniquename, accession.stock_id';
         $group_by_additional = ', accession.stock_id, accession.uniquename';
+        $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
     }
     my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
@@ -257,9 +265,15 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
         my @return_array;
         if ($stock_name && $stock_id) {
+            $total_complete_number = scalar (@{$stocks_per_accession->{$stock_id}});
             push @return_array, qq{<a href="/stock/$stock_id/view">$stock_name</a>};
         }
-        push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
+        my $percent_missing = '';
+        if ($total_complete_number){
+            $percent_missing = 100 - sprintf("%.2f", ($count/$total_complete_number)*100)."%";
+        }
+
+        push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, $percent_missing, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
         push @phenotype_data, \@return_array;
     }
 
