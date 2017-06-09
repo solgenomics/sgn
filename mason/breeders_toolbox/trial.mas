@@ -38,6 +38,7 @@ $site_project_name => undef
 $trial_phenotype_files => undef
 $sgn_session_id => undef
 $user_name => undef
+$identifier_prefix => 'SGN'
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
@@ -196,6 +197,12 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 </&>
 
 </div><!--closes well-->
+
+</&>
+
+<&| /page/info_section.mas, title=>"Trial barcode",  collapsible => 1, subtitle => '[<a id="direct_phenotyping_link">Direct Phenotyping</a>]'&>
+
+   <center><& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", text=> "$identifier_prefix trial $trial_id ($trial_name)", format=>"code128"  &></center><br />
 
 </&>
 
