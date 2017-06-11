@@ -29,6 +29,12 @@ sub phenotype : Path('/brapihome/phenotype') Args(0) {
     $c->stash->{template} = 'brapiclient/phenotypes_search.mas';
 }
 
+sub genotype : Path('/brapihome/genotype') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = 'brapiclient/markerprofile_allelematrix.mas';
+}
+
 sub index : Path('/brapiclient/comparegenotypes') Args(0) { 
     my $self = shift;
     my $c = shift;
