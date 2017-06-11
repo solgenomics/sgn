@@ -3,6 +3,8 @@
 
 <& /util/import_javascript.mas, classes => [ 'brapi.Table' ] &>
 
+<& /page/page_title.mas, title=>"Germplasm Search and Exchange" &>
+
 <h4>Database Select</h4>
 <select name="brapi_home_url_select" id="brapi_home_url_select" class="form-control" />
     <option value="">local</option>
@@ -19,7 +21,7 @@
 
 <div id="brapi_germplasm_search_home_div" class="well">
 
-<input name="brapi_germplasm_search_germplasmName" id="brapi_germplasm_search_germplasmname" class="form-control" type="text" placeholder="GermplasmName" />
+<input name="brapi_germplasm_search_germplasmName" id="brapi_germplasm_search_germplasmname" class="form-control" type="text" placeholder="GermplasmName(s) e.g. TMEB419,TMEB529" />
 <input name="brapi_germplasm_search_accessionNumber" id="brapi_germplasm_search_accessionNumber" class="form-control" type="text" placeholder="AccessionNumber" />
 <input name="brapi_germplasm_search_germplasmGenus" id="brapi_germplasm_search_germplasmGenus" class="form-control" type="text" placeholder="GermplasmGenus" />
 <input name="brapi_germplasm_search_germplasmSpecies" id="brapi_germplasm_search_germplasmSpecies" class="form-control" type="text" placeholder="GermplasmSpecies" />

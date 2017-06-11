@@ -3,11 +3,25 @@
 
 <& /page/page_title.mas, title=>"BrAPI" &>
 
-<div class="well">
 <h1>Modules</h1>
-<hr>
+<div class="well">
 <ul>
     <li><a href="/brapihome/germplasm">Germplasm Search and Exchange</a></li>
+</ul>
+</div>
+<div class="well">
+<ul>
+    <li><a href="/brapihome/phenotyping_handhelds">Phenotyping Handhelds</a></li>
+</ul>
+</div>
+<div class="well">
+<ul>
+    <li><a href="/brapihome/phenotype">Phenotype Retrieval</a></li>
+</ul>
+</div>
+<div class="well">
+<ul>
+    <li><a href="/brapihome/genotype">Genotype Retrieval</a></li>
 </ul>
 </div>
 
