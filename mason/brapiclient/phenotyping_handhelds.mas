@@ -42,13 +42,23 @@
 
     <h3>Get Observation Variables</h3>
 
-    <h3>Get Observation Variables</h3>
-
     <div id="brapi_phenotyping_handhelds_traits_div">
     </div>
 
     <div id="brapi_phenotyping_handhelds_traits_results_div">
     </div>
+
+</div>
+
+<div id="brapi_phenotyping_handhelds_upload_div" class="well">
+
+    <h3>Upload Phenotypes Using POST brapi/v1/studies/studyId/observationunits?observationLevel=observationLevel</h3>
+
+    <h4>Not yet implemented</h4>
+
+    <h3>Upload Phenotypes Using POST brapi/v1/studies/studyId/table</h3>
+
+    <h4>Not yet implemented</h4>
 
 </div>
 
@@ -79,8 +89,9 @@ jQuery(document).ready(function() {
         var url = jQuery('#brapi_phenotyping_handhelds_url_select').val();
 
         for (var i=0; i<selected_results.length; i++){
+            var return_url = url+'/brapi/v1/studies/'+selected_results[i]+'/layout?format='+format;
             jQuery.ajax( {
-                'url': url+'/brapi/v1/studies/'+selected_results[i]+'/layout?format='+format,
+                'url': return_url,
                 'beforeSend': function(){
                     jQuery('#working_modal').modal('show');
                 },
@@ -93,7 +104,7 @@ jQuery(document).ready(function() {
                         }
                         jQuery('#brapi_phenotyping_handhelds_layout_results_div').html(html);
                     } else {
-                        brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_phenotyping_handhelds_layout_results_div', studies_return_url, undefined, {}, ['observationUnitName','replicate','germplasmName','blockNumber', 'X', 'Y', 'entryType', 'additionalInfo'], 'observationUnitName', []);
+                        brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_phenotyping_handhelds_layout_results_div', return_url, undefined, {}, ['observationUnitName','replicate','germplasmName','blockNumber', 'X', 'Y', 'entryType', 'additionalInfo'], 'observationUnitName', []);
                     }
                     jQuery('#working_modal').modal('hide');
                 },
