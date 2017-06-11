@@ -3,6 +3,8 @@
 
 <& /util/import_javascript.mas, classes => [ 'brapi.Table' ] &>
 
+<& /page/page_title.mas, title=>"Germplasm Search and Exchange" &>
+
 <h4>Database Select</h4>
 <select name="brapi_home_url_select" id="brapi_home_url_select" class="form-control" />
     <option value="">local</option>

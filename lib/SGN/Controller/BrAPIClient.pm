@@ -17,6 +17,12 @@ sub germplasm : Path('/brapihome/germplasm') Args(0) {
     $c->stash->{template} = 'brapiclient/germplasm_search.mas';
 }
 
+sub phenotyping_handhelds : Path('/brapihome/phenotyping_handhelds') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = 'brapiclient/phenotyping_handhelds.mas';
+}
+
 sub index : Path('/brapiclient/comparegenotypes') Args(0) { 
     my $self = shift;
     my $c = shift;
