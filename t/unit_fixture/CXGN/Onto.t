@@ -336,15 +336,15 @@ foreach (@$existing_traits){
 }
 is_deeply($new_traits, [], 'check that duplicate traits are not added');
 is_deeply(\@check_names, [
-       'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010',
-       'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009',
-       'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010',
-       'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009',
-       'ease of harvest assessment 1-3|CO:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010',
-       'ease of harvest assessment 1-3|CO:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009',
-       'ease of harvest assessment 1-3|CO:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010',
-       'ease of harvest assessment 1-3|CO:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009',
-   ], 'check that duplicate traits are separated from new_traits');
+            'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000022',
+            'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000023',
+            'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000024',
+            'anthocyanin pigmentation visual rating 0-3|CO:0000103||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000025',
+            'ease of harvest assessment 1-3|CO:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000026',
+            'ease of harvest assessment 1-3|CO:0000225||month 10|TIME:0000069||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000027',
+            'ease of harvest assessment 1-3|CO:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem bark|CASSTISS:0000010|COMP:0000028',
+            'ease of harvest assessment 1-3|CO:0000225||month 1|TIME:0000060||end of day|TIME:0000003||cass lower stem whole|CASSTISS:0000009|COMP:0000029',
+        ], 'check that duplicate traits are separated from new_traits');
 
 
 done_testing();
