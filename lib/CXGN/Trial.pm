@@ -1689,6 +1689,36 @@ sub get_plants {
 	return \@plants;
 }
 
+=head2 get_plants_per_accession
+
+ Usage:        $plants = $t->get_plants_per_accession();
+ Desc:         retrieves that plants that are part of the design for this trial grouping them by accession.
+ Ret:          a hash ref containing { $accession_stock_id1 => [ [ plant_name1, plant_stock_id1 ], [ plant_name2, plant_stock_id2 ] ], ... }
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_plants_per_accession {
+    my $self = shift;
+    my %return;
+
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant', 'stock_type' )->cvterm_id();
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
+
+    my $trial_plant_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$plant_cvterm_id, 'object.type_id'=>$accession_cvterm_id}, {join=>{'stock_relationship_subjects'=>'object'}, '+select'=>['stock_relationship_subjects.object_id'], '+as'=>['accession_stock_id']});
+
+    my %unique_plants;
+    while(my $rs = $trial_plant_rs->next()) {
+        $unique_plants{$rs->uniquename} = [$rs->stock_id, $rs->get_column('accession_stock_id')];
+    }
+    while (my ($key, $value) = each %unique_plants) {
+        push @{$return{$value->[1]}}, [$value->[0], $key];
+    }
+    #print STDERR Dumper \%return;
+    return \%return;
+}
 
 =head2 get_plots
 
@@ -1709,12 +1739,7 @@ sub get_plots {
 	# note: this function also retrieves stocks of type tissue_sample (for genotyping trials).
 	my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type' )->cvterm_id();
 	my $tissue_sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type');
-	my $tissue_sample_cvterm_id;
-	if ($tissue_sample_cvterm) {
-	    $tissue_sample_cvterm_id = $tissue_sample_cvterm->cvterm_id();
-	}
-	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
-	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
+	my $tissue_sample_cvterm_id = $tissue_sample_cvterm ? $tissue_sample_cvterm->cvterm_id() : '';
 
 	my @type_ids;
 	push @type_ids, $plot_cvterm_id if $plot_cvterm_id;
@@ -1737,6 +1762,45 @@ sub get_plots {
 
 	return \@plots;
 
+}
+
+=head2 get_plots_per_accession
+
+ Usage:        $plots = $t->get_plots_per_accession();
+ Desc:         retrieves that plots that are part of the design for this trial grouping them by accession.
+ Ret:          a hash ref containing { $accession_stock_id1 => [ [ plot_name1, plot_stock_id1 ], [ plot_name2, plot_stock_id2 ] ], ... }
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_plots_per_accession {
+    my $self = shift;
+    my %return;
+
+    # note: this function also retrieves stocks of type tissue_sample (for genotyping trials).
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type' )->cvterm_id();
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
+    my $tissue_sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type');
+    my $tissue_sample_cvterm_id = $tissue_sample_cvterm ? $tissue_sample_cvterm->cvterm_id() : '';
+
+    my @type_ids;
+    push @type_ids, $plot_cvterm_id if $plot_cvterm_id;
+    push @type_ids, $tissue_sample_cvterm_id if $tissue_sample_cvterm_id;
+
+    print STDERR "TYPE IDS: ".join(", ", @type_ids);
+    my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=> { in => [@type_ids] }, 'object.type_id'=>$accession_cvterm_id }, {join=>{'stock_relationship_subjects'=>'object'}, '+select'=>['stock_relationship_subjects.object_id'], '+as'=>['accession_stock_id']});
+
+    my %unique_plots;
+    while(my $rs = $trial_plot_rs->next()) {
+        $unique_plots{$rs->uniquename} = [$rs->stock_id, $rs->get_column('accession_stock_id')];
+    }
+    while (my ($key, $value) = each %unique_plots) {
+        push @{$return{$value->[1]}}, [$value->[0], $key];
+    }
+    #print STDERR Dumper \%return;
+    return \%return;
 }
 
 =head2 get_controls

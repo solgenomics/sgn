@@ -15,6 +15,7 @@ library(plyr)
 library(rjson)
 library(lme4)
 library(data.table)
+library(phenoAnalysis)
 #library(rbenchmark)
 
 
@@ -48,7 +49,6 @@ correCoefficientsJsonFile <- grep("corre_coefficients_json",
                                   value=TRUE
                                   )
 
-
 formattedPhenoFile <- grep("formatted_phenotype_data",
                            allargs,
                            ignore.case = TRUE,
@@ -60,30 +60,21 @@ formattedPhenoFile <- grep("formatted_phenotype_data",
 formattedPhenoData <- c()
 phenoData          <- c()
 
-if (file.info(formattedPhenoFile)$size > 0 ) {
 
-  formattedPhenoData <- as.data.frame(fread(formattedPhenoFile,
-                                   na.strings = c("NA", " ", "--", "-", "."),
+
+if ( length(refererQtl) != 0 ) {
+    
+  phenoData <- as.data.frame(fread(phenoDataFile,
+                                   sep=",",
+                                   na.strings=c("NA", "-", " ", ".", "..")
                                    ))
-  
-  row.names(formattedPhenoData) <- formattedPhenoData[, 1]
-  formattedPhenoData[, 1]       <- NULL
-  
+ 
 } else {
 
-  if ( length(refererQtl) != 0 ) {
-    
-    phenoData <- as.data.frame(fread(phenoDataFile,
-                                     sep=",",
-                                     na.strings=c("NA", "-", " ", ".", "..")
-                                     ))
-  } else {
-
-    phenoData <- as.data.frame(fread(phenoDataFile,
-                                     na.strings = c("NA", " ", "--", "-", ".", "..")
-                                     ))    
-  } 
-}
+  phenoData <- as.data.frame(fread(phenoDataFile,
+                                   na.strings = c("NA", " ", "--", "-", ".", "..")
+                                   ))
+} 
 
 allTraitNames <- c()
 nonTraitNames <- c()
@@ -94,13 +85,14 @@ if (length(refererQtl) != 0) {
   nonTraitNames <- c("ID")
   allTraitNames <- allNames[! allNames %in% nonTraitNames]
 
-} else if (file.info(formattedPhenoFile)$size == 0 && length(refererQtl) == 0) {
+} else {
 
-  dropColumns <- c("uniquename", "stock_name")
-  phenoData   <- phenoData[,!(names(phenoData) %in% dropColumns)]
+  allNames <- names(phenoData)
 
-  allNames      <- names(phenoData)
-  nonTraitNames <- c("object_name", "object_id", "stock_id", "design", "block", "replicate")
+  nonTraitNames <- c('studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName')
+  nonTraitNames <- c(nonTraitNames, 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel')
+  nonTraitNames <- c(nonTraitNames, 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber')
+  
   allTraitNames <- allNames[! allNames %in% nonTraitNames]
  
 }
@@ -119,174 +111,38 @@ if (!is.null(phenoData) && length(refererQtl) == 0) {
   }
 }
 
-phenoData     <- phenoData[, colSums(is.na(phenoData)) < nrow(phenoData)]
-allTraitNames <- names(phenoData)[! names(phenoData) %in% nonTraitNames]
+#phenoData     <- phenoData[, colSums(is.na(phenoData)) < nrow(phenoData)]
+#allTraitNames <- names(phenoData)[! names(phenoData) %in% nonTraitNames]
 
 ###############################
 if (length(refererQtl) == 0  ) {
-  if (file.info(formattedPhenoFile)$size == 0) {
-    
-    cnt   <- 0
+  cnt   <- 0
  
-    for (i in allTraitNames) {
+  for (trait in allTraitNames) {
 
-      cnt   <- cnt + 1
-      trait <- i
-  
-      experimentalDesign <- c()
-      
-      if ('design' %in% colnames(phenoData)) {
+    cnt   <- cnt + 1
+    adjMeans <- getAdjMeans(phenoData, trait)
 
-        experimentalDesign <- phenoData[2, 'design']
-  
-        if (is.na(experimentalDesign)) {
-          experimentalDesign <- c('No Design')
-        }
-    
-      } else {   
-        experimentalDesign <- c('No Design')
-      }
-
-      if ((experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD')  &&  length(unique(phenoData$block)) > 1) {
-
-      message("GS experimental design: ", experimentalDesign)
-
-      augData <- subset(phenoData,
-                        select = c("object_name", "object_id",  "block",  trait)
-                        )
-
-      colnames(augData)[1] <- "genotypes"
-      colnames(augData)[4] <- "trait"
-
-      model <- try(lmer(trait ~ 0 + genotypes + (1|block),
-                        augData,
-                        na.action = na.omit
-                        ))
-      genoEffects <- c()
-
-      if (class(model) != "try-error") {
-        genoEffects <- data.frame(fixef(model))
-        
-        colnames(genoEffects) <- trait
-
-        nn <- gsub('genotypes', '', rownames(genoEffects))  
-        rownames(genoEffects) <- nn
-      
-        genoEffects <- round(genoEffects, digits = 2)
-      }
-  
-      if (cnt == 1 ) {
-        formattedPhenoData <- data.frame(genoEffects)
-      } else {
-        formattedPhenoData <-  merge(formattedPhenoData, genoEffects, by=0, all=TRUE)
-        row.names(formattedPhenoData) <- formattedPhenoData[, 1]
-        formattedPhenoData[, 1] <- NULL
-      }
-      
-    } else if ((experimentalDesign == 'CRD')  &&  length(unique(phenoData$replicate)) > 1) {
-
-      message("GS experimental design: ", experimentalDesign)
-
-      crdData <- subset(phenoData,
-                        select = c("object_name", "object_id",  "replicate",  trait)
-                        )
-
-      colnames(crdData)[1] <- "genotypes"
-      colnames(crdData)[4] <- "trait"
-
-      model <- try(lmer(trait ~ 0 + genotypes + (1|replicate),
-                        crdData,
-                        na.action = na.omit
-                        ))
-      genoEffects <- c()
-
-      if (class(model) != "try-error") {
-        genoEffects <- data.frame(fixef(model))
-        
-        colnames(genoEffects) <- trait
-
-        nn <- gsub('genotypes', '', rownames(genoEffects))  
-        rownames(genoEffects) <- nn
-      
-        genoEffects <- round(genoEffects, digits = 2)
-      }
-  
-      if (cnt == 1 ) {
-        formattedPhenoData <- data.frame(genoEffects)
-      } else {
-        formattedPhenoData <-  merge(formattedPhenoData, genoEffects, by=0, all=TRUE)
-        row.names(formattedPhenoData) <- formattedPhenoData[, 1]
-        formattedPhenoData[, 1] <- NULL
-      }
-    } else if (experimentalDesign == 'Alpha') {
-      trait <- i
-      
-      message("Experimental desgin: ", experimentalDesign)
-      
-      alphaData <- subset(phenoData,
-                            select = c("object_name", "object_id","block", "replicate", trait)
-                            )
-      
-      colnames(alphaData)[1] <- "genotypes"
-      colnames(alphaData)[5] <- "trait"
-         
-      model <- try(lmer(trait ~ 0 + genotypes + (1|replicate/block),
-                        alphaData,
-                        na.action = na.omit
-                        ))
-        
-      if (class(model) != "try-error") {
-        genoEffects <- data.frame(fixef(model))
-      
-        colnames(genoEffects) <- trait
-
-        nn <- gsub('genotypes', '', rownames(genoEffects))     
-        rownames(genoEffects) <- nn
-      
-        genoEffects <- round(genoEffects, digits = 2)
-        
-      }
-         
-      if(cnt == 1 ) {
-        formattedPhenoData <- genoEffects
-      } else {
-        formattedPhenoData <-  merge(formattedPhenoData, genoEffects, by=0, all=TRUE)
-        row.names(formattedPhenoData) <- formattedPhenoData[, 1]
-        formattedPhenoData[, 1] <- NULL
-      }
-
+    if (cnt == 1 ) {
+      formattedPhenoData <- adjMeans
     } else {
-      message("GS experimental design: ", experimentalDesign)
-                                 
-      dropColumns <- c("object_id", "stock_id", "design",  "block", "replicate")
-   
-      formattedPhenoData <- phenoData[, !(names(phenoData) %in% dropColumns)]
-     
-      formattedPhenoData <- ddply(formattedPhenoData,
-                                  "object_name",
-                                  colwise(mean, na.rm=TRUE)
-                                  )
-    
-      row.names(formattedPhenoData) <- formattedPhenoData[, 1]
-      formattedPhenoData[, 1] <- NULL
-  
-    } 
+      formattedPhenoData <-  merge(formattedPhenoData, adjMeans,  all=TRUE)
     }
   }
+
 } else {
   message("qtl stuff")
   formattedPhenoData <- ddply(phenoData,
                               "ID",
                               colwise(mean, na.rm=TRUE)
-                              )
-
-  row.names(formattedPhenoData) <- formattedPhenoData[, 1]
-  formattedPhenoData[, 1] <- NULL
-
-  formattedPhenoData <- round(formattedPhenoData, digits = 2)
+                              )  
 }
+ 
+formattedPhenoData            <- data.frame(formattedPhenoData)
+row.names(formattedPhenoData) <- formattedPhenoData[, 1]
+formattedPhenoData[, 1]       <- NULL
+formattedPhenoData            <- round(formattedPhenoData, 2)
 
-formattedPhenoData <- data.frame(formattedPhenoData)
 
 coefpvalues <- rcor.test(formattedPhenoData,
                          method="pearson",

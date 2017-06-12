@@ -1,4 +1,4 @@
-#test all functions in CXGN::Seedlot
+#test all functions in CXGN::Stock::Seedlot
 
 use strict;
 
@@ -7,7 +7,7 @@ use lib 't/lib';
 use Test::More;
 use Data::Dumper;
 use SGN::Test::Fixture;
-use CXGN::Seedlot;
+use CXGN::Stock::Seedlot;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema();
@@ -19,7 +19,7 @@ my $seedlot_accession_id = [$schema->resultset('Stock::Stock')->find({uniquename
 my $seedlot_organization = 'bti';
 my $seedlot_population_name = 'seedlot1_pop';
 
-my $sl = CXGN::Seedlot->new(schema=>$schema);
+my $sl = CXGN::Stock::Seedlot->new(schema=>$schema);
 $sl->uniquename($seedlot_uniquename);
 $sl->location_code($seedlot_location);
 $sl->accession_stock_ids($seedlot_accession_id);
@@ -29,7 +29,7 @@ $sl->population_name($seedlot_population_name);
 #$sl->cross_id($cross_id);
 my $seedlot_id = $sl->store();
 
-my $s = CXGN::Seedlot->new(schema=>$schema, seedlot_id=>$seedlot_id);
+my $s = CXGN::Stock::Seedlot->new(schema=>$schema, seedlot_id=>$seedlot_id);
 is($s->uniquename, $seedlot_uniquename);
 is($s->location_code, $seedlot_location);
 is($s->organization_name, $seedlot_organization);

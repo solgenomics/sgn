@@ -1,6 +1,6 @@
  #SNOPSIS
 
- #runs population structure analysis using singular values decomposition (SVD)
+ #runs population structure analysis using PCA from SNPRelate, a bioconductor R package
 
  #AUTHOR
  # Isaak Y Tecle (iyt2@cornell.edu)
@@ -9,9 +9,11 @@
 options(echo = FALSE)
 
 library(randomForest)
-library(irlba)
 library(data.table)
 library(genoDataFilter)
+library(SNPRelate)
+library(parallel)
+#library(tidyr)
 
 allArgs <- commandArgs()
 
@@ -32,6 +34,8 @@ genoDataFile <- grep("genotype_data",
                    fixed = FALSE,
                    value = TRUE
                    )
+
+#genoDataFile2 <- c('/export/prod/tmp/localhost/GBSApeKIgenotypingv4/solgs/cache/genotype_data_443.txt')
 
 scoresFile <- grep("pca_scores",
                         outFiles,
@@ -84,18 +88,12 @@ message("filtered genotype file: ", filteredGenoFile)
 
 if (is.null(filteredGenoFile) == TRUE) {
   ##genoDataFilter::filterGenoData
-  genoData <- filterGenoData(genodata)
+  genoData <- filterGenoData(genoData)
 } else {
   genoData           <- as.data.frame(genoData)
   rownames(genoData) <- genoData[, 1]
   genoData[, 1]      <- NULL
 }
-
-#change genotype coding to [-1, 0, 1], to use the A.mat ) if  [0, 1, 2]
-#genoTrCode <- grep("2", genoData[1, ], fixed=TRUE, value=TRUE)
-#if(length(genoTrCode) != 0) {
-# genoData <- genoData - 1
-#}
 
 message("No. of geno missing values, ", sum(is.na(genoData)) )
 genoDataMissing <- c()
@@ -104,33 +102,52 @@ if (sum(is.na(genoData)) > 0) {
   genoData <- na.roughfix(genoData)
 }
 
+nCores <- detectCores()
+message('no cores: ', nCores)
+if (nCores > 1) {
+  nCores <- (nCores %/% 2)
+} else {
+  nCores <- 1
+}
 
-######
-genotypes <- rownames(genoData)
-svdOut    <- irlba(scale(genoData, TRUE, FALSE), nu=10, nv=10)
-scores    <- round(svdOut$u %*% diag(svdOut$d), digits=2)
-loadings  <- round(svdOut$v, digits=5)
-totalVar  <- sum(svdOut$d)
-variances <- unlist(
-               lapply(svdOut$d,
-                      function(x)
-                      round((x / totalVar)*100, digits=2)
-                      )
-               )
+gdsFile <- basename(genoDataFile)
+gdsFile <- gsub('.txt', '.gds', gdsFile)
+
+snpgdsCreateGeno(gdsFile, data.matrix(genoData), snpfirstdim=FALSE)
+
+genoDataGdsFile <- snpgdsOpen(gdsFile)
+
+pcaOut <- snpgdsPCA(genoDataGdsFile, remove.monosnp=FALSE, eigen.cnt=10, num.thread=nCores)
+
+variances <- round(pcaOut$varprop*100, 2)
+variances <- as.numeric(grep(pattern="\\d+", variances, value=TRUE))
+
+loadingsOut <- snpgdsPCASNPLoading(pcaOut, genoDataGdsFile, num.thread=nCores)
+
+loadings <- round(loadingsOut$snploading, 5)
+scores   <- data.frame(round(pcaOut$eigenvec, 5))
+                     
+snpgdsClose(genoDataGdsFile)
 
 variances <- data.frame(variances)
 scores    <- data.frame(scores)
 loadings  <- data.frame(loadings)
 
-rownames(scores) <- genotypes
-
-headers <- c()
+pcs <- c()
 
 for (i in 1:10) {
-  headers[i] <- paste("PC", i, sep='')
+  pcs[i] <- paste("PC", i, sep='')
 }
 
-colnames(scores) <- c(headers)
+
+genotypes          <- rownames(genoData)
+markers            <- names(genoData)
+rownames(loadings) <- pcs
+colnames(loadings) <- markers
+colnames(scores)   <- pcs
+rownames(scores)   <- genotypes
+
+scores   <- scores[order(row.names(scores)), ]
 
 fwrite(scores,
        file      = scoresFile,
@@ -154,14 +171,15 @@ fwrite(variances,
        )
 
 
-if (!is.null(genoDataMissing)) {
-fwrite(genoData,
-       file      = genoDataFile,
-       sep       = "\t",
-       row.names = TRUE,
-       quote     = FALSE,
-       )
+## if (!is.null(genoDataMissing)) {
+## fwrite(genoData,
+##        file      = genoDataFile,
+##        sep       = "\t",
+##        row.names = TRUE,
+##        quote     = FALSE,
+##        )
 
-}
+## }
+
 
 q(save = "no", runLast = FALSE)

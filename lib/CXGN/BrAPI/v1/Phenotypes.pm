@@ -139,6 +139,7 @@ sub search {
 		if ($count >= $offset && $count <= ($offset+$limit)){
 			push @data_window, $obs_units{$obs_unit_id};
 		}
+        $count++;
 	}
 	my %result = (data=>\@data_window);
 	my @data_files;
