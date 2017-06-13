@@ -11,8 +11,8 @@ sub get_barcode_file {
   my $text = shift;
 
   my $qrcode = Imager::QRCode->new(
-        size          => 5,
-        margin        => 5,
+        size          => 3,
+        margin        => 2,
         version       => 1,
         level         => 'M',
         casesensitive => 1,
