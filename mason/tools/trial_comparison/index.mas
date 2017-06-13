@@ -8,14 +8,102 @@
 
 </%args>
 
+<style type="text/css">
+body{ width:100%;}
+
+.graph-grid-canv {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 600px;
+    min-height: 100px;
+    margin: auto;
+    position:relative;
+}
+
+.grid-row{
+    clear: both;
+}
+
+.grid-loc {
+    position:static;
+    height: auto;
+    float: left;
+    box-sizing: border-box;
+    margin-right: 1%;
+    margin-bottom: 1%;
+    border-style: solid;
+    border-color: #eee;
+    border-width: 1px;
+}
+
+.grid-loc:last-of-type {
+    margin-right: 0;
+}
+
+.graph-img {
+    border-width: 1px;
+    background: white;
+    border-color: #999;
+}
+.graph-img:hover {
+    border-width: 1px;
+    border-color: #49f;
+    border-width: 1px;
+}
+
+.popped-out{
+    position:absolute;
+}
+
+.top-label{
+    position:static;
+    height: auto;
+    float: left;
+    margin-right: 1%;
+    margin-bottom: 1%;
+    margin-top: 1%;
+}
+.top-label:first-of-type{
+    margin-left: 5%;
+}
+.top-label:last-of-type{
+    margin-right: 0;
+}
+
+.left-label{
+    position:static;
+    height: auto;
+    float: left;
+    margin-left: 1%;
+    margin-right: 1%;
+    margin-bottom: 1%;
+}
+
+.graph-axis{
+    fill: #3e3e3e;
+}
+
+.graph-axis path,
+.graph-axis line{
+  fill: none;
+  stroke: #3e3e3e;
+  stroke-width: 2;
+}
+
+.accession-point{
+    stroke: #27c;
+    fill: none;
+    stroke-width: 3px;
+}
+
+.graph-fit-line{
+    stroke: #f94;
+    stroke-width: 4px;
+}
+</style>
 <& '/page/page_title.mas', title => "Compare trials" &>
 
-<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'CXGN.List', 'CXGN.Login' ] &>
-<!-- table>
-<tr><th>Trial 1</th><th>Trial 2</th><th>Trait</th></tr>
-<tr><td width="200"><input id="trial_1" /></td><td width="200"><input id="trial_2" /></td><td width="200"><select id="trait_select"><option disabled="1">select trials first</option></select></td></tr>
-<tr><td><button id="submit_trial_comparison">Submit</button></td></tr>
-</table -->
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'CXGN.List', 'CXGN.Login', 'd3.d3Min.js' ] &>
 
   <center>
   <table width="400">
@@ -29,22 +117,21 @@
 
 <div id="result_div">
   <img id="result_image" />
+  <div class="graph-grid-canv"></div>
 </div>
 
 </center>
 
 <script>
 
-jQuery('#trial_1').autocomplete( 
+$('#trial_1').autocomplete( 
    { source: '/ajax/trials/trial_autocomplete' });
 
-jQuery('#trial_2').autocomplete(
+$('#trial_2').autocomplete(
    { source: '/ajax/trials/trial_autocomplete' });
 
-jQuery('#trait_select').focus( function() {   
-   var trial_1 = jQuery('#trial_1').val();
-   var trial_2 = jQuery('#trial_2').val();
-   var trial_list_id = jQuery('#trial_list_select_list_select').val();
+$('#trait_select').focus( function() {   
+   var trial_list_id = $('#trial_list_select_list_select').val();
    var list = new CXGN.List;
    var item_data = list.getListData(trial_list_id);
    var items = item_data.elements;
@@ -53,19 +140,19 @@ jQuery('#trait_select').focus( function() {
       params += 'trial_name='+items[n][1]+'&';
    }
 
-   jQuery.ajax( { 
+   $.ajax( { 
       url: '/ajax/trial/common_traits?'+params,
       success: function(response) { 
-         if (response.error) { jQuery('#trait_select').val('error'); }
+         if (response.error) { $('#trait_select').val('error'); }
          else {
             var option_html = '';
             for (var i =0 ; i < response.options.length; i++) {
 	       option_html += '<option value="'+response.options[i][0]+'">'+(response.options[i][1])+'</option>';
             }
-            jQuery('#trait_select').html(option_html);
-            jQuery('#total_accession_count').html(response.total_accession_count);
-	    jQuery('#common_accession_count').html(response.common_accession_count);
-	    jQuery('#common_trait_count').html(response.common_trait_count);
+            $('#trait_select').html(option_html);
+            $('#total_accession_count').html(response.total_accession_count);
+	    $('#common_accession_count').html(response.common_accession_count);
+	    $('#common_trait_count').html(response.common_trait_count);
          }
       },
       error: function(response) { 
@@ -76,48 +163,402 @@ jQuery('#trait_select').focus( function() {
 
 });
 
-jQuery('#submit_trial_comparison').click( function() { 
-   jQuery.ajax( { 
-    url: '/ajax/trial/compare',
-    data: { 'trial_1' : jQuery('#trial_1').val(), 'trial_2': jQuery('#trial_2').val(), 'cvterm_id' : jQuery('#trait_select').val() },
-    success: function(response) { 
-       if (response.error) { 
-	  alert(response.error);
-       }
-       else { 
-	  if (response.png) { 
-	     jQuery('#result_image').attr("src", response.png);
-          }
-       }
-    }
-
-   });
-});
-
 if (isLoggedIn()) { 
   lo = new CXGN.List();
   var select_html = lo.listSelect('trial_list_select', ['trials'], 'select');
-  jQuery('#trial_list_select_div').html(select_html);
+  $('#trial_list_select_div').html(select_html);
 }
 else { 
-  jQuery('#trial_list_select_div').html("[Log in to use lists]");
+  $('#trial_list_select_div').html("[Log in to use lists]");
 }
 
-jQuery('#submit_trial_list').click( function() { 
-   var list_id = jQuery('#trial_list_select_list_select').val();
-   jQuery.ajax( { 
-     url: '/ajax/trial/compare_list',
-     data: { 'cvterm_id' : jQuery('#trait_select').val(), 'list_id': list_id },
+//begin new stuff
+
+$('#submit_trial_list').click( function() { 
+   var list_id = $('#trial_list_select_list_select').val();
+   $.ajax( { 
+     url: '/ajax/trial/compare_list_data',
+     data: { 'cvterm_id' : $('#trait_select').val(), 'list_id': list_id },
      success: function(response) { 
         if (response.error) { 
            alert(response.error);
         }
         else { 
-           jQuery('#result_image').attr("src", response.png);
+            createGraphs(response.csv,response)
         }
      }
    });
 });
+
+
+function createGraphs(raw_csv,response){
+    var size = 650;
+    var variable_name = $('#trait_select option:selected').text();
+    if (response.cvterm_id=="TEST_TEST"){
+      variable_name = "Variable";
+    }
+    //parse the data
+    console.log(raw_csv);
+    var data = d3.csv.parse(raw_csv,
+        function(d) {
+            var dp = {
+                study: d.studyDbId,
+                studyName: d.studyName,
+                accession: d.germplasmDbId,
+                accessionName:d.germplasmName,
+                value: ((d[variable_name]==="") ? null : +d[variable_name])
+            };
+            return dp;
+        }, 
+        function(error, rows) {
+            console.log(rows);
+    });
+
+    console.log(data);
+
+    //nest it by study
+    var studies = d3.nest().key(function(d) {return d.study;}).entries(data);
+    var num_studies = studies.length;
+
+    //generate all the grid SVGs and pairs of studies
+    var canv = d3.select('.graph-grid-canv');
+    var grid_size = 96/(num_studies-1) - (1+1/(num_studies));
+    var pairwise_data = [];
+    for (var i = 0; i<num_studies-1; i++){
+        var row = canv.append("div").classed("grid-row", true);
+        for (var j = 1; j<num_studies; j++){
+            if (i<j){
+                pairwise_data.push({"a":studies[i],"b":studies[j]});
+                row.append("svg")
+                    .classed("grid-loc", true)
+                    .classed("graph-img", true)
+                    .attr("viewBox","0 0 "+size+" "+size)
+                    .style("width",grid_size+"%");
+            } else {
+                row.append("svg")
+                    .classed("grid-loc", true)
+                    .attr("viewBox","0 0 "+size+" "+size)
+                    .style("width",grid_size+"%");
+            }
+        }
+    }
+    canv.append("div").classed("grid-row", true);
+
+    //set up layout
+    var graphSVGs = d3.selectAll(".graph-img");
+    var graphs = graphSVGs.append("g");
+    graphs.append("rect")
+        .attr("x","0")
+        .attr("y","0")
+        .attr("width",size)
+        .attr("height",size)
+        .attr("fill","white");
+    if (num_studies>2){
+        //set up transition on click
+        graphs.on('click', function(d,i){
+            var graph = d3.select(this.parentNode);
+            var duration = 250;
+            if (graph.classed("popped-out") && !graph.attr("inTrans")){
+                var placeholder = canv.selectAll(".grid-row").select(".placeholder");
+                var graphPos = placeholder.node().getBoundingClientRect();
+                var canvPos = canv.node().getBoundingClientRect();
+                var graphWidth = graphPos.right-graphPos.left;
+                var canvWidth = (canvPos.right-canvPos.left);
+                graph.attr("inTrans",true)
+                     .style("width",canvWidth*0.99+"px");
+                graph.transition()
+                     .style("top",(graphPos.top-canvPos.top)+"px")
+                     .style("left",(graphPos.left-canvPos.left)+"px")
+                     .style("width",graphWidth+"px")
+                     .duration(duration);
+                setTimeout(function(){ 
+                    graph.attr("inTrans",null);
+                    placeholder.remove();
+                    graph.classed("popped-out",false)
+                         .style("width",grid_size+"%"); }, duration+30);
+            } else if (!graph.attr("inTrans")) {
+                var graphPos = graph.node().getBoundingClientRect();
+                var canvPos = canv.node().getBoundingClientRect();
+                var graphWidth = graphPos.right-graphPos.left;
+                var canvWidth = (canvPos.right-canvPos.left);
+                graph.style("top",(graphPos.top-canvPos.top)+"px")
+                     .style("left",(graphPos.left-canvPos.left)+"px")
+                     .style("width",graphWidth+"px");
+                graph.classed("popped-out",true)
+                     .transition()
+                     .style("width",canvWidth*0.99+"px")
+                     .style("top",canvWidth*0.005+"px")
+                     .style("left",canvWidth*0.005+"px")
+                     .duration(duration);
+                var pn = canv.selectAll(".grid-row").select(".popped-out").select(function(d){return this.parentNode;})
+                    .insert('svg',".popped-out + *")
+                    .classed("grid-loc", true)
+                    .classed("placeholder", true)
+                    .attr("viewBox","0 0 "+size+" "+size)
+                    .style("width",grid_size+"%");
+                setTimeout(function(){ 
+                    graph.style("width","99%")
+                         .style("top","0.5%")
+                         .style("left","0.5%"); }, duration+30);
+            }
+        });
+    }
+
+    //assign grid locations study pairs
+    graphs.data(pairwise_data);
+
+    //draw graphs
+    graphs.each(function(study_pair){
+        var axis_offset = 70;
+        var current_graph = d3.select(this);
+        var Xscale = d3.scale.linear().range([0, size-axis_offset*2]);
+        var Yscale = d3.scale.linear().range([size-axis_offset*2, 0]);
+        var color = d3.scale.category10();
+        var Xaxis = d3.svg.axis().scale(Xscale).orient("bottom").ticks(10);
+        var Yaxis = d3.svg.axis().scale(Yscale).orient("left").ticks(10);
+        var xBounds = d3.extent(study_pair.a.values, function(d) { return d.value; });
+        var yBounds = d3.extent(study_pair.b.values, function(d) { return d.value; });
+        Xscale.domain(xBounds).nice();
+        Yscale.domain(yBounds).nice();
+
+        //axes!
+        current_graph.append("g")
+          .classed("graph-axis",true)
+          .attr("transform", "translate("+axis_offset+"," + (size-axis_offset) + ")")
+          .call(Xaxis)
+          .append("text")
+          .attr("class", "label")
+          .attr("x", size/2-axis_offset)
+          .attr("y", 50)
+          .style("font-size","18px")
+          .style("text-anchor", "middle")
+          .text(study_pair.a.values[0].studyName+" "+variable_name);
+        current_graph.append("g")
+          .classed("graph-axis",true)
+          .attr("transform", "translate("+axis_offset+","+axis_offset+")")
+          .call(Yaxis)
+          .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("class", "label")
+          .attr("x", -size/2+axis_offset)
+          .attr("y", -40)
+          .style("font-size","18px")
+          .style("text-anchor", "middle")
+          .text(study_pair.b.values[0].studyName+" "+variable_name);
+
+        //add data!
+        var accessions = d3.nest().key(function(d) {return d.accession;})
+                           .entries(study_pair.a.values.concat(study_pair.b.values))
+                           .filter(function(d) {
+                              var uniqueStudies = {}
+                              for (var i = d.values.length - 1; i >= 0; i--) {
+                                uniqueStudies[d.values[i].study]=1;
+                              }
+                              return Object.keys(uniqueStudies).length>1;
+                           })
+                           .map(function(d) {
+                              var firstStudy = d.values[0].study;
+                              var x = d.values[0].value
+                              var name = d.values[0].accessionName
+                              for (var i = d.values.length - 1; i >= 0; i--) {
+                                if (d.values[i].study!=firstStudy){
+                                  y = d.values[i].value
+                                  break;
+                                }
+                              }
+                              return {
+                               key:d.key,
+                               name:name,
+                               x:x,
+                               y:y
+                             }
+                           });             
+        var plotpoints = current_graph.selectAll(".accession-point")
+          .data(accessions)
+          .enter().append("g").classed(".accession-point",true)
+        plotpoints.append("circle")
+          .attr("r", 4)
+          .attr("cx", function(d) { return Xscale(d.x)+axis_offset; })
+          .attr("cy", function(d) { return Yscale(d.y)+axis_offset; })
+          .style("fill","#49f");
+        plotpoints.append("circle")
+          .attr("r", 15)
+          .attr("cx", function(d) { return Xscale(d.x)+axis_offset; })
+          .attr("cy", function(d) { return Yscale(d.y)+axis_offset; })
+          .style("opacity","0");
+        var best_fit = lineOfBestFit(accessions);
+        console.log(best_fit);
+
+        //add line of best fit and rsquared
+        var x1 = 0;
+        var y1 = best_fit.yIntercept;
+        if (y1<0){
+          y1 = 0
+          x1 = best_fit.xIntercept;
+        }
+        var x2 = xBounds[1];
+        var y2 = best_fit.slope*x2+best_fit.yIntercept;
+        if (y2>yBounds[1]){
+          y2 = yBounds[1];
+          x2 = (y2-best_fit.yIntercept)/best_fit.slope;
+        }
+        current_graph.insert('line',".accession-point:first-of-type")
+          .classed('graph-fit-line',true)
+          .attr({
+            x1: Xscale(x1)+axis_offset+1,
+            y1: Yscale(y1)+axis_offset+1,
+            x2: Xscale(x2)+axis_offset-1,
+            y2: Yscale(y2)+axis_offset-1
+          });
+        current_graph.append('text')
+          .attr('x',size- axis_offset )
+          .attr('y',30)
+          .style("text-anchor","end")
+          .style("font-size","18px")
+          .text("r^2 = "+best_fit.rsquared.toFixed(3));
+        current_graph.append('text')
+          .attr('x',size- axis_offset )
+          .attr('y',50)
+          .style("text-anchor","end")
+          .style("font-size","18px")
+          .text("y = "+best_fit.slope.toFixed(3)+"x + "+best_fit.yIntercept.toFixed(3));
+
+        //tooltip
+        var tooltip = current_graph.append('g')
+          .classed(".d3-tool-tip",true)
+        tooltip.append('rect').classed(".d3-tool-tip-rect",true)
+          .attr({
+            x:-15,
+            y:-38,
+            width: 100,
+            height: 30,
+            fill: "rgba(0,0,0,0.8)"
+          });
+        tooltip.append('text').classed(".d3-tool-tip-text",true)
+          .attr({
+            x:10-15,
+            y:20-38,
+            fill:"#fff",
+            "font-size":14
+          })
+          .text("");
+        var trianglePoints = "-5 -8.5, 0 0, 5 -8.5"
+        tooltip.append('polyline')
+          .attr('points', trianglePoints)
+          .style('fill', 'rgba(0,0,0,0.8)');
+        tooltip.setTip = function (visible,text,x,y){
+          if (!visible){
+            this.hoverlock = false;
+            var this_tooltip = this;
+            setTimeout(function(){
+              if (!this_tooltip.hoverlock){
+                this_tooltip.attr("transform", "translate("+0+"," +0+")")
+                  .transition().style("opacity",0);
+              } 
+            },100);
+          } else{
+            this.hoverlock = true;
+            var width = this.attr("transform", "translate("+x+"," +y+")")
+              .select("text")
+              .text(text).node().getComputedTextLength();
+            this.select("rect").attr("width",width+20);
+            this.transition().style("opacity",1);
+          }
+        }
+        tooltip.hoverlock = false;
+        tooltip.on("mouseover",function(d){
+          tooltip.hoverlock = true;
+        });
+        tooltip.on("mouseout",function(d){
+          tooltip.hoverlock = false;
+          tooltip.setTip(false);
+        });
+        tooltip.on("click",function(d){d3.event.stopPropagation();});
+        tooltip.setTip(false);
+
+        plotpoints.on("mouseover",function(d){
+          if (d3.select(this.parentNode.parentNode).classed("popped-out")){
+            tooltip.setTip(true,d.name,Xscale(d.x)+axis_offset,Yscale(d.y)+axis_offset);
+          }
+        });
+        plotpoints.on("mouseout",function(d){
+          tooltip.setTip(false)
+        });
+    });
+
+    //draw graph-grid label axes!
+    var label_width = grid_size;
+    var label_height = 3;
+    var tops = d3.select('.graph-grid-canv').insert('div',":first-child")
+                 .classed("grid-row",true)
+                 .classed("label-row",true)
+                 .selectAll(".top-label")
+                 .data(studies.slice(0,studies.length-1)).enter()
+                 .append('svg').classed("top-label",true)
+                 .attr("viewBox","0 0 "+label_width*10+" "+label_height*10)
+                 .style("width",grid_size+"%")
+                 .append('g')
+                 .append("text")
+                 .attr("class", "label")
+                 .attr("x", label_width*10/2)
+                 .attr("y", label_height*10/2+6)
+                 .style("font-size","26px")
+                 .style("text-anchor", "middle")
+                 .text(function(d){return d.values[0].studyName;});
+    var lefts = d3.select('.graph-grid-canv').selectAll(".grid-row:not(.label-row)")
+                 .insert('svg',":first-child")
+                 .data(studies.slice(1,studies.length))
+                 .classed("left-label",true)
+                 .attr("viewBox","0 0 "+label_height*10+" "+label_width*10)
+                 .style("width","3%")//.style("background","lightblue")
+                 .append('g')
+                 .attr("transform", "rotate(-90)")
+                 .append("text")
+                 .attr("class", "label")
+                 .attr("x", -label_width*10/2)
+                 .attr("y", label_height*10/2+6)
+                 .style("font-size","26px")
+                 .style("text-anchor", "middle")
+                 .text(function(d){return d.values[0].studyName;});
+
+}
+
+function lineOfBestFit(points){
+  var xbar = 0;
+  var ybar = 0;
+  for (var i in points){
+    xbar+=points[i].x;
+    ybar+=points[i].y;
+  }
+  xbar = xbar/points.length;
+  ybar = ybar/points.length;
+  var sum1 = 0;
+  var sum2 = 0;
+  for (var i in points){
+    sum1+=(points[i].x-xbar)*(points[i].y-ybar);
+    sum2+=(points[i].x-xbar)*(points[i].x-xbar);
+  }
+  var slope = sum1/sum2;
+  var yIntercept = ybar-slope*xbar;
+
+  var SSE = 0;
+  var SSTO = 0;
+  for (var i in points){
+    SSE+=Math.pow(points[i].y-(slope*points[i].x+yIntercept),2);
+    SSTO+=Math.pow(points[i].y-ybar,2);
+  }
+  console.log(SSE+" "+SSTO);
+
+  return {
+    slope:slope,
+    yIntercept:yIntercept,
+    xIntercept:(-yIntercept)/slope,
+    rsquared: 1-(SSE/SSTO)
+  };
+}
+
+//end new stuff
+
 
 
 			
