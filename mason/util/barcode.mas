@@ -45,10 +45,13 @@ if ($format eq "code128") {
   $link = "/barcode/code128png/$encoded_id/$encoded_text";
 }
 if ($format eq "trial_qrcode"){
-  $link = "/barcode/trial/$trial_id";
+  $link = "/barcode/trial/$trial_id/$format";
   $barcode_name = $trial_name." ".$identifier;
 }
-
+if ($format eq "stock_qrcode") {
+  $link = "/barcode/trial/$encoded_text/$format";
+  $barcode_name = $text;
+}
 if ($format eq "qrcode") {
   $link = "/barcode/trial/$trial_id";
   #my $info = "http://solgenomics.net/stock/$identifier/view";
