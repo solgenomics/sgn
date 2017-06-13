@@ -109,4 +109,35 @@ sub get_group_and_member {
 }
 
 
+sub get_stock_for_tissue {
+    my $self = shift;
+    my $ stock_id = $self->stock_id;
+    my $ schema = $self->dbic_schema();
+    my $tissue_sample_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+    my $q = "SELECT stock.stock_id, stock.uniquename, cvterm.name FROM stock_relationship INNER JOIN stock
+             ON (stock_relationship.object_id = stock.stock_id) INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
+             WHERE stock_relationship.subject_id = ? and stock_relationship.type_id = ?
+
+             UNION ALL
+
+             SELECT stock.stock_id, stock.uniquename, cvterm.name FROM stock_relationship INNER JOIN stock
+             ON (stock_relationship.subject_id = stock.stock_id) INNER JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
+             WHERE stock_relationship.object_id = ? and stock_relationship.type_id = ?
+
+             ";
+
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($stock_id, $tissue_sample_of_type_id, $stock_id, $tissue_sample_of_type_id);
+
+    my @tissue_stocks =();
+        while(my($stock_id, $stock_name, $cvterm_name) = $h->fetchrow_array()){
+        push @tissue_stocks, [$stock_id, $stock_name, $cvterm_name]
+        }
+
+        return\@tissue_stocks;
+
+}
+
+
+
 1;

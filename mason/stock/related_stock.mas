@@ -50,6 +50,20 @@ $stock_id
 
 </&>
 
+<&| /page/info_section.mas, title => 'Related stocks for tissue sample', collapsible=>1, collapsed=>1 &>
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<table id = "tissue_sample" class="table table-hover table-stripted">
+<thead>
+ <tr>
+  <th>Name</th>
+  <th>Type</th>
+</tr>
+</thead>
+</table>
+
+</&>
 <script>
 
 jQuery(document).ready(function(){
@@ -66,9 +80,15 @@ jQuery(document).ready(function(){
 
 
      jQuery('#group').DataTable({
-         'ajax':'/stock/'+ <% $stock_id %> + '/datatables/get_group_and_member',
+         'ajax':'/stock/'+ <% $stock_id %> + '/datatables/group_and_member',
 
     });
+
+
+    jQuery('#tissue_sample').DataTable({
+        'ajax':'/stock/'+ <% $stock_id %> + '/datatables/stock_for_tissue',
+
+   });
 
 });
 

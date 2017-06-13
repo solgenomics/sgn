@@ -1500,7 +1500,7 @@ sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') A
     $c->stash->{rest}={data=>\@stocks};
 }
 
-sub get_group_and_member:Chained('/stock/get_stock') PathPart('datatables/get_group_and_member') Args(0){
+sub get_group_and_member:Chained('/stock/get_stock') PathPart('datatables/group_and_member') Args(0){
     my $self = shift;
     my $c = shift;
     my $stock_id = $c->stash->{stock_row}->stock_id();
@@ -1520,6 +1520,28 @@ sub get_group_and_member:Chained('/stock/get_stock') PathPart('datatables/get_gr
     $c->stash->{rest}={data=>\@group};
 
 }
+
+sub get_stock_for_tissue:Chained('/stock/get_stock') PathPart('datatables/stock_for_tissue') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+
+    my $tissue_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $tissue_stocks->get_stock_for_tissue();
+    my @stocks;
+    foreach my $r (@$result){
+
+      my ($stock_id, $stock_name, $cvterm_name) = @$r;
+
+      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a}, $cvterm_name];
+    }
+
+    $c->stash->{rest}={data=>\@stocks};
+
+}
+
 
 
 
