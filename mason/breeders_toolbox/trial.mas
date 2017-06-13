@@ -202,7 +202,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 <&| /page/info_section.mas, title=>"Trial barcode",  collapsible => 1, subtitle => '[<a id="direct_phenotyping_link">Direct Phenotyping</a>]'&>
 
-   <center><& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", text=> "$identifier_prefix trial $trial_id ($trial_name)", format=>"code128"  &></center><br />
+     <center><& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &></center><br />
 
 </&>
 
