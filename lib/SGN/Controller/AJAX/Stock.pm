@@ -1500,7 +1500,7 @@ sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') A
     $c->stash->{rest}={data=>\@stocks};
 }
 
-sub get_group:Chained('/stock/get_stock') PathPart('datatables/group') Args(0){
+sub get_group_and_member:Chained('/stock/get_stock') PathPart('datatables/get_group_and_member') Args(0){
     my $self = shift;
     my $c = shift;
     my $stock_id = $c->stash->{stock_row}->stock_id();
@@ -1508,7 +1508,7 @@ sub get_group:Chained('/stock/get_stock') PathPart('datatables/group') Args(0){
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
 
     my $related_groups = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
-    my $result = $related_groups->get_group();
+    my $result = $related_groups->get_group_and_member();
     my @group;
     foreach my $r (@$result){
 

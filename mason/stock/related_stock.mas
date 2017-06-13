@@ -35,7 +35,7 @@ $stock_id
 
 </&>
 
-<&| /page/info_section.mas, title => 'Member of', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, title => 'Groups / members', collapsible=>1, collapsed=>1 &>
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
@@ -66,7 +66,7 @@ jQuery(document).ready(function(){
 
 
      jQuery('#group').DataTable({
-         'ajax':'/stock/'+ <% $stock_id %> + '/datatables/group',
+         'ajax':'/stock/'+ <% $stock_id %> + '/datatables/get_group_and_member',
 
     });
 
