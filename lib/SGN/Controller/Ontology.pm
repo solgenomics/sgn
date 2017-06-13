@@ -6,6 +6,7 @@ use CXGN::People::Roles;
 use URI::FromHash 'uri';
 use CXGN::Page::FormattingHelpers qw | simple_selectbox_html |;
 use CXGN::Onto;
+use Data::Dumper;
 
 use Moose;
 
@@ -57,17 +58,17 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
 
 
         my @root_nodes = $onto->get_root_nodes($cv_type);
-        #print STDERR "root nodes are: @root_nodes\n";
+        #print STDERR Dumper \@root_nodes;
         if (scalar @root_nodes > 1) {
             #create simple selectbox of root_nodes
             my $id = $name."_root_select";
             my $name = $name."_root_select";
-            my $default = 'Pick an ontology';
-            if ($default) { unshift @root_nodes, [ '', $default ]; }
             my $html = simple_selectbox_html(
                name => $name,
                id => $id,
-               choices => \@root_nodes
+               choices => \@root_nodes,
+               size => '10',
+               default => 'Pick an Ontology'
             );
             #put html in hash
             $html_hash{$cv_type} = $html;
@@ -80,13 +81,13 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
            my $name = $name."_select";
            my $default = 0;
            if ($default) { unshift @components, [ '', $default ]; }
-           my $multiple =  'true';
 
            my $html = simple_selectbox_html(
               name => $name,
-              multiple => $multiple,
+              multiple => 1,
               id => $id,
-              choices => \@components
+              choices => \@components,
+              size => '10'
            );
            #put html in hash
            $html_hash{$cv_type} = $html;
@@ -100,7 +101,10 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
     $c->stash->{trait_select} = $html_hash{'trait_ontology'};
 
     $c->stash->{composable_cvs} = $c->config->{composable_cvs};
-    $c->stash->{allowed_combinations} = $c->config->{allowed_combinations};
+    $c->stash->{composable_cvs_allowed_combinations} = $c->config->{composable_cvs_allowed_combinations};
+    $c->stash->{composable_tod_root_cvterm} = $c->config->{composable_tod_root_cvterm};
+    $c->stash->{composable_toy_root_cvterm} = $c->config->{composable_toy_root_cvterm};
+    $c->stash->{composable_gen_root_cvterm} = $c->config->{composable_gen_root_cvterm};
 
     $c->stash->{user} = $c->user();
     $c->stash->{template} = '/ontology/compose_trait.mas';

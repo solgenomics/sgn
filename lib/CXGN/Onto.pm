@@ -74,71 +74,35 @@ sub get_root_nodes {
 }
 
 
-sub compose_trait {
-      my $self = shift;
-      my $ids = shift;
+sub store_composed_term {
+    my $self = shift;
+    my $new_trait_names = shift;
 
-      my @ids = split(',', $ids);
-      print STDERR "Ids for composing in CXGN:Onto = $ids\n";
-      if (scalar @ids < 2) {
-        die "Can't create a new trait from fewer than 2 components.\n";
-      }
+    my $schema = $self->schema();
+    my $dbh = $schema->storage->dbh;
 
-      my $schema = $self->schema();
-      my $dbh = $schema->storage->dbh;
+    my @new_terms;
+    foreach my $name (sort keys %$new_trait_names){
+        my $ids = $new_trait_names->{$name};
+        my @component_ids = split ',', $ids;
 
-      my $existing_trait_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@ids);
-      if ($existing_trait_id) {
-        die "This trait already exists.\n";
-      }
+        if (scalar(@component_ids)<2){
+            die "Should not save postcomposed term with less than 2 components\n";
+        }
 
-      my $db = $schema->resultset("General::Db")->find_or_create(
-          { name => 'COMP' });
+        my $existing_trait_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@component_ids);
+        if ($existing_trait_id) {
+            print STDERR "Skipping: This trait already exists $name with the following component_ids".Dumper(\@component_ids)."\n";
+            next;
+        }
 
-      my $cv= $schema->resultset('Cv::Cv')->find_or_create( { name => 'composed_trait' });
+        my $db = $schema->resultset("General::Db")->find_or_create({ name => 'COMP' });
+        my $cv= $schema->resultset('Cv::Cv')->find_or_create( { name => 'composed_trait' });
 
-      my $accession_query = "SELECT nextval('composed_trait_ids')";
-      my $h = $dbh->prepare($accession_query);
-      $h->execute();
-      my $accession = $h->fetchrow_array();
-
-      # check for minimum of OBJ, ATTR, METH, UNIT OR TRAIT + TIME
-
-      #print STDERR "New trait accession = $accession and name = $name\n";
-
-      my $compose_query = " SELECT string_agg(ordered_components.name::text, '|'),
-                                  string_agg(ordered_components.synonym::text, '_')
-                                  FROM (
-                                    SELECT cvterm.name,
-                                    CASE WHEN synonym IS NULL THEN cvterm.name
-                                      WHEN substring(synonym from '\"(.+)\"') IS NULL THEN synonym
-                                      ELSE substring(synonym from '\"(.+)\"')
-                                    END AS synonym,
-                                          cv.cv_id
-                                    FROM cvterm
-                                    LEFT JOIN cvtermsynonym syn ON (cvterm.cvterm_id = syn.cvterm_id AND syn.type_id = (SELECT cvterm_id from cvterm where name = 'EXACT'))
-                                    JOIN cv USING(cv_id)
-                                    JOIN cvprop ON(cv.cv_id = cvprop.cv_id)
-                                    JOIN cvterm type ON(cvprop.type_id = type.cvterm_id)
-                                    WHERE cvterm.cvterm_id IN (@{[join',', ('?') x @ids]})
-                                    ORDER BY (
-                                      case when type.name = 'object_ontology' then 1
-                                          when type.name = 'attribute_ontology' then 2
-                                          when type.name = 'method_ontology' then 3
-                                          when type.name = 'unit_ontology' then 4
-                                          when type.name = 'trait_ontology' then 5
-                                          when type.name = 'time_ontology' then 6
-                                      end
-                                    )
-                                  ) ordered_components";
-
-      print STDERR "Compose query = $compose_query\n";
-
-      $h = $dbh->prepare($compose_query);
-      $h->execute(@ids);
-      my ($name, $synonym) = $h->fetchrow_array();
-
-      print STDERR "New trait name = $name and synonym = $synonym\n";
+        my $accession_query = "SELECT nextval('composed_trait_ids')";
+        my $h = $dbh->prepare($accession_query);
+        $h->execute();
+        my $accession = $h->fetchrow_array();
 
       my $new_term_dbxref =  $schema->resultset("General::Dbxref")->create(
       {   db_id     => $db->get_column('db_id'),
@@ -152,55 +116,49 @@ sub compose_trait {
 
     #print STDERR "Parent cvterm_id = " . $parent_term->cvterm_id();
 
-    my $new_term= $schema->resultset("Cv::Cvterm")->create(
-      { cv_id  =>$cv->cv_id(),
-        name   => $name,
-        dbxref_id  => $new_term_dbxref-> dbxref_id()
-      });
+    my $new_term = $schema->resultset('Cv::Cvterm')->find({ name=>$name });
+    if ($new_term){
+        print STDERR "Cvterm with name $name already exists... so components must be new\n";
+    } else {
+        $new_term= $schema->resultset("Cv::Cvterm")->create({
+            cv_id  =>$cv->cv_id(),
+            name   => $name,
+            dbxref_id  => $new_term_dbxref-> dbxref_id()
+        });
+    }
 
-      $new_term->add_synonym($synonym, { synonym_type => 'EXACT' , autocreate => 1});  #adds synonym with type
 
     #print STDERR "New term cvterm_id = " . $new_term->cvterm_id();
 
-    my $isa_relationship = $schema->resultset("Cv::Cvterm")->find(
-    	  { name => 'is_a',
-      });
+        my $contains_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'contains' });
+        my $variable_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'VARIABLE_OF' });
 
-    #print STDERR "Is a relationship cvterm_id = " . $isa_relationship->cvterm_id();
+        my $variable_rel = $schema->resultset('Cv::CvtermRelationship')->create({
+            subject_id => $new_term->cvterm_id(),
+            object_id  => $parent_term->cvterm_id(),
+            type_id    => $variable_relationship->cvterm_id()
+        });
 
-    my $contains_relationship = $schema->resultset("Cv::Cvterm")->find(
-        { name => 'contains',
-      });
+        foreach my $component_id (@component_ids) {
+            my $contains_rel = $schema->resultset('Cv::CvtermRelationship')->create({
+                subject_id => $component_id,
+                object_id  => $new_term->cvterm_id(),
+                type_id    => $contains_relationship->cvterm_id()
+            });
+        }
 
-    #print STDERR "Contains relationship cvterm_id = " . $contains_relationship->cvterm_id();
-
-    my @component_ids = split ',', $ids;
-
-    my $isa_rel = $schema->resultset('Cv::CvtermRelationship')->create(
-      { subject_id => $new_term->cvterm_id(),
-        object_id  => $parent_term->cvterm_id(),
-        type_id    => $isa_relationship->cvterm_id()
-    });
-
-    foreach my $component_id (@component_ids) {
-      my $contains_rel = $schema->resultset('Cv::CvtermRelationship')->create(
-        { subject_id => $component_id,
-          object_id  => $new_term->cvterm_id(),
-          type_id    => $contains_relationship->cvterm_id()
-      });
+        push @new_terms, [$new_term->cvterm_id, $new_term->name().'|COMP:'.sprintf("%07d",$accession)];
     }
 
     my $refresh1 = "REFRESH MATERIALIZED VIEW traits";
-    $h = $dbh->prepare($refresh1);
+    my $h = $dbh->prepare($refresh1);
     $h->execute();
 
     my $refresh2 = "REFRESH MATERIALIZED VIEW trait_componentsXtraits";
     $h = $dbh->prepare($refresh2);
     $h->execute();
 
-    return { cvterm_id => $new_term->cvterm_id(),
-            name => $new_term->name().'|COMP:'.sprintf("%07d",$accession)
-        };
+    return \@new_terms;
 }
 
 

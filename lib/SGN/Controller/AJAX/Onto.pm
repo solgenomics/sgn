@@ -30,6 +30,8 @@ use Moose;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Cvterm;
 use CXGN::Onto;
+use Data::Dumper;
+use JSON;
 
 use namespace::autoclean;
 
@@ -47,7 +49,7 @@ Creates a new term in the designated composed trait cv and links it to component
 
 =cut
 
-sub compose_trait: Path('/ajax/onto/compose') Args(0) {
+sub compose_trait: Path('/ajax/onto/store_composed_term') Args(0) {
 
   my $self = shift;
   my $c = shift;
@@ -55,19 +57,25 @@ sub compose_trait: Path('/ajax/onto/compose') Args(0) {
   #my @ids = $c->req->param("ids[]");
   #print STDERR "Ids array for composing in AJAX Onto = @ids\n";
 
-  my $ids = $c->req->param("ids");
-  print STDERR "Ids string for composing in AJAX Onto = $ids\n";
-  my $composed_trait;
+  my $new_trait_names = decode_json $c->req->param("new_trait_names");
+  #print STDERR Dumper $new_trait_names;
+  my $new_terms;
   eval {
       my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
-      $composed_trait = $onto->compose_trait($ids);
+      $new_terms = $onto->store_composed_term($new_trait_names);
   };
   if ($@) {
       $c->stash->{rest} = { error => "An error occurred saving the new trait details: $@" };
   }
   else {
-      $c->stash->{rest} = { success => 'Saved new trait <a href="/cvterm/'.$composed_trait->{cvterm_id}.'/view">'.$composed_trait->{name}.'</a>.',
-                            name => $composed_trait->{name} };
+      my $message = '';
+      my @names;
+      foreach (@$new_terms){
+          $message .= 'Saved new trait <a href="/cvterm/'.$_->[0].'/view">'.$_->[1].'</a><br>';
+          push @names, $_->[1];
+      }
+      $c->stash->{rest} = { success => $message,
+                            names => \@names };
   }
 
 }
@@ -104,7 +112,9 @@ sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_compo
 
   my $self = shift;
   my $c = shift;
-
+  my @allowed_composed_cvs = split ',', $c->config->{composable_cvs};
+  my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
+  my $composable_cvterm_format = $c->config->{composable_cvterm_format};
   my @object_ids = $c->req->param("object_ids[]");
   my @attribute_ids = $c->req->param("attribute_ids[]");
   my @method_ids = $c->req->param("method_ids[]");
@@ -115,18 +125,17 @@ sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_compo
   my @gen_ids = $c->req->param("gen_ids[]");
 
   print STDERR "Obj ids are @object_ids\n Attr ids are @attribute_ids\n Method ids are @method_ids\n unit ids are @unit_ids\n trait ids are @trait_ids\n tod ids are @tod_ids\n toy ids are @toy_ids\n gen ids are @gen_ids\n";
-
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-  my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, {
-      object_ids => \@object_ids,
-      attribute_ids => \@attribute_ids,
-      method_ids => \@method_ids,
-      unit_ids => \@unit_ids,
-      trait_ids => \@trait_ids,
-      tod_ids => \@tod_ids,
-      toy_ids => \@toy_ids,
-      gen_ids => \@gen_ids,
+  my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, {
+      object => \@object_ids,
+      attribute => \@attribute_ids,
+      method => \@method_ids,
+      unit => \@unit_ids,
+      trait => \@trait_ids,
+      tod => \@tod_ids,
+      toy => \@toy_ids,
+      gen => \@gen_ids,
   });
 
   if (!$traits) {

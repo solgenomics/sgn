@@ -1,0 +1,150 @@
+
+<%args>
+$seedlot_id
+$uniquename
+$location_code => ''
+$current_count => 0
+$accessions
+$organization_name
+$population_name
+$timestamp
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
+
+<& /page/page_title.mas, title => 'Seedlot '.$uniquename &>
+
+<table class="table table-bordered table-hover">
+<tr><td><b>Name</b></td><td><a href="/stock/<% $seedlot_id %>/view"><% $uniquename %></a></td></tr>
+<tr><td><b>Organization</b></td><td><% $organization_name %></td></tr>
+<tr><td><b>Location Code</b><td><% $location_code %></td></tr>
+<tr><td><b>Accession</b></td><td><% $accessions %></td></tr>
+<tr><td><b>Population</b></td><td><% $population_name %></td></tr>
+<tr><td><b>Current count</b></td><td><% $current_count %></td></tr>
+</table>
+
+<center>
+<h3>Transactions</h3>
+</center>
+
+<table id="available_seedlot_transactions_table" class="table table-hover table-bordered">
+<thead>
+  <tr>
+    <th>Transaction Id</th>
+    <th>Transaction Date</th>
+    <th>From</th>
+    <th>To</th>
+    <th>Transaction Count</th>
+    <th>Operator</th>
+    <th>Description</th>
+  </tr>
+</thead>
+
+</table>
+
+<button class="btn btn-primary" id="add_seedlot_transaction_button">Add new seedlot transaction</button>
+
+<div class="modal fade" id="add_seedlot_transaction_dialog" name="add_seedlot_transaction_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_transaction_dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="seedlot_transaction_dialog">Add New Seedlot Transaction</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <form class="form-horizontal" role="form" method="post" id="create_new_seedlot_transaction_form" name="create_new_seedlot_transaction_form">
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">To or From Seedlot?: </label>
+                    <div class="col-sm-9" >
+                        <select class="form-control" id="seedlot_transaction_factor">
+                            <option value="1">Added to this Seedlot (<% $uniquename %>)</option>
+                            <option value="-1">Taken from this Seedlot (<% $uniquename %>)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Taken From/ Added To Stock Uniquename:</label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_transaction_uniquename" placeholder="Required">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Amount: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_transaction_amount" placeholder="Required">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Timestamp: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_transaction_timestamp" value="<% $timestamp %>" placeholder="<% $timestamp %>">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Description: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_transaction_description" placeholder="Required">
+                    </div>
+                </div>
+            </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="create_new_seedlot_transaction_button" type="button" class="btn btn-default" >OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+  jQuery(document).ready(function () {
+  
+    jQuery('#add_seedlot_transaction_button').click( function() { jQuery('#add_seedlot_transaction_dialog').modal('show') });
+
+    var seedlot_transactions_table = jQuery('#available_seedlot_transactions_table').DataTable( { 
+      'ajax': '/ajax/breeders/seedlot/<% $seedlot_id %>/transactions',
+    });
+
+    jQuery('#create_new_seedlot_transaction_button').click( function() { 
+      var factor = jQuery('#seedlot_transaction_factor').val();
+      var uniquename = jQuery('#seedlot_transaction_uniquename').val();
+      var amount = jQuery('#seedlot_transaction_amount').val();
+      var timestamp = jQuery('#seedlot_transaction_timestamp').val();
+      var description = jQuery('#seedlot_transaction_description').val();
+
+      if (factor == '') { alert("Please provide a factor"); }
+      else if (uniquename == '') { alert("Please provide a stock uniquename"); }
+      else if (amount == '') { alert("Please provide an amount"); }
+      else if (timestamp == '') { alert("Please provide a timestamp"); }
+      else if (description == '') { alert("Please provide a description"); }
+      else {
+
+      jQuery.ajax( { 
+        url: '/ajax/breeders/seedlot/<% $seedlot_id %>/transaction/add',
+        data : { 'factor' : factor, 'stock_uniquename': uniquename, 'seedlot_id': <% $seedlot_id %>, 'amount': amount, 'timestamp': timestamp, 'description': description },
+        success: function(response) { 
+          if (response.success == 1) { 
+             alert("The seedlot transaction has been created.");
+             jQuery('#add_seedlot_transaction_dialog').modal('hide');
+             seedlot_transactions_table.ajax.reload();
+          }
+          if (response.error) { 
+             alert(response.error);
+          }
+        },
+        error: function(response) {
+          alert('An error occurred creating seedlot transaction');
+        }
+       });
+
+      }
+    });
+
+  });
+</script>
+
+
