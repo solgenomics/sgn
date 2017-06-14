@@ -2,6 +2,17 @@
 
 use strict;
 use warnings;
+use Getopt::Std;
+
+
+my $opt_D;
+
+getopts('D:');
+
+open(my $GENOS, "<", $opt_D) || die "Can't open  dosage file $opt_D";
+
+
+
 
 sub compare_parental_genotypes {
     my $self = shift;
