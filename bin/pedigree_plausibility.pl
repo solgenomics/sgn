@@ -1,3 +1,8 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
 sub compare_parental_genotypes {
     my $self = shift;
     my $female_parent_genotype = shift;
