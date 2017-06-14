@@ -2,6 +2,7 @@
 <%args>
 $accessions
 $preferred_species => ""
+$list_id => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees' ] &>
@@ -35,9 +36,13 @@ $preferred_species => ""
 
 <& /breeders_toolbox/accessions/pedigree_spreadsheet_upload_format_info.mas &>
 
+<form id="add_accession_fuzzy_match_download" method="post" action="/ajax/accession_list/fuzzy_download" target="TheWindow">
+    <input type="hidden" name="fuzzy_response" value="" />
+</form>
+
 <!-- Modal Dialogs Below Here -->
 
-<div class="modal fade" id="add_accessions_dialog" name="add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsDialog">
+<div class="modal fade" id="add_accessions_dialog" name="add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsDialog" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -78,7 +83,7 @@ $preferred_species => ""
   </div>
 </div>
 
-<div class="modal fade" id="review_absent_dialog" name="review_absent_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewAbsentDialog">
+<div class="modal fade" id="review_absent_dialog" name="review_absent_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewAbsentDialog" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog" role="document">
     <div class="modal-content ui-front">
       <div class="modal-header">
@@ -93,6 +98,9 @@ $preferred_species => ""
     	  <label for="population_name_input">Population name for added accessions (optional)</label>
   	  <input class="form-control" type="text" id="population_name_input"></input>
   	  <br><br>
+          <label for="organization_name_input">Organization name for added accessions (optional)</label>
+      <input class="form-control" type="text" id="organization_name_input"></input>
+      <br><br>
   	  <b>The following accessions will be added to the database:</b>
   	  <div id="count_of_absent_accessions"></div>
   	  <br>
@@ -107,7 +115,7 @@ $preferred_species => ""
   </div>
 </div>
 
-<div class="modal fade" id="review_fuzzy_matches_dialog" name="review_fuzzy_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFuzzyDialog">
+<div class="modal fade" id="review_fuzzy_matches_dialog" name="review_fuzzy_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFuzzyDialog" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -122,13 +130,14 @@ $preferred_species => ""
         </div>
       </div>
       <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="review_fuzzy_matches_download" id="review_fuzzy_matches_download">Download Fuzzy Matches</button>
         <button type="button" class="btn btn-primary" name="review_fuzzy_matches_continue" id="review_fuzzy_matches_continue" data-dismiss="modal">Make Changes and Continue</button>
       </div>
     </div>
   </div>
 </div>
 
-<div class="modal fade" id="review_found_matches_dialog" name="review_found_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFoundDialog">
+<div class="modal fade" id="review_found_matches_dialog" name="review_found_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFoundDialog" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -289,6 +298,25 @@ $preferred_species => ""
 </div>
 -->
 
+<div class="modal fade" id="add_accessions_saved_message_modal" name="add_accessions_saved_message_modal" tabindex="-1" role="dialog" aria-labelledby="addAccessionsSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addAccessionsSavedDialog">Accessions Saved</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="add_accessions_saved_message"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_add_accessions_saved_message_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
   div.left {
     float: left;
@@ -308,3 +336,15 @@ $preferred_species => ""
   height: 100px;
 }
 </style>
+
+<script>
+
+jQuery(document).ready(function (){
+
+%  if ($list_id){
+    verify_accession_list(<% $list_id %>);
+%  }
+
+});
+
+</script>

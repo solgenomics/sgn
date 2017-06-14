@@ -2,6 +2,10 @@ package CXGN::Stock::AddStocks;
 
 =head1 NAME
 
+########## DEPRECATED ####################
+# Please use CXGN::Stock::Accession->store. This new object inherits store procedure from CXGN::Stock, and adds complete passport info in store.
+##########################################
+
 CXGN::Stock::AddStocks - a module to add a list of stocks.
 
 =head1 USAGE
@@ -39,6 +43,7 @@ has 'schema' => (
 has 'stocks' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_stocks');
 has 'species' => (isa => 'Str', is => 'rw', predicate => 'has_species');
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name',required => 1,);
+has 'organization_name' => (isa => 'Str', is => 'rw', predicate => 'has_organization_name',required => 0);
 has 'population_name' => (isa => 'Str', is => 'rw', predicate => 'has_population_name');
 has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 has 'phenome_schema' => (
@@ -79,6 +84,7 @@ sub _add_stocks {
   my $stocks_rs = $self->get_stocks();
   my @stocks = @$stocks_rs;
   my @added_stock_ids;
+  my @added_stocks;
   my $phenome_schema = $self->get_phenome_schema();
 
   my $organism = $schema->resultset("Organism::Organism")
@@ -132,8 +138,12 @@ sub _add_stocks {
 	      subject_id => $stock->stock_id(),
 					 } );
       }
-
+	  if ($self->has_organization_name && $self->get_organization_name){
+		  my $org_stockprop = SGN::Model::Cvterm->get_cvterm_row($schema, 'organization', 'stock_property')->name();
+		  my $organization = $stock->create_stockprops({ $org_stockprop => $self->get_organization_name});
+	  }
       push (@added_stock_ids,  $stock->stock_id());
+      push @added_stocks, [$stock->stock_id, $stock_name];
     }
   };
 
@@ -157,7 +167,7 @@ sub _add_stocks {
 		       });
   }
 
-  return 1;
+  return \@added_stocks;
 }
 
 sub validate_stocks {

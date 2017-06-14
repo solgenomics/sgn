@@ -62,7 +62,7 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
 	  <th>Selection population</th>
 	  <th>Description</th>
 	  <th>Year</th>
-	  <th>Predict GEBVs</th>
+	  <th>View GEBVs</th>
 	</tr>
       </thead>
   </table>

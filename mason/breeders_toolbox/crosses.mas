@@ -36,6 +36,7 @@ $user_id => undef
 </table>
 -->
 
+<& /breeders_toolbox/cross_wishlist.mas &>
 <& /breeders_toolbox/folder/folder_set.mas, project_type=>'Cross' &>
 <& /breeders_toolbox/folder/folder_new.mas &>
 <& /breeders_toolbox/folder/folder_move.mas &>

@@ -246,31 +246,41 @@ sub set_location {
 
 sub get_all_locations {
     my $schema = shift;
+	my $location_id = shift;
     my @locations;
 
-    my $loc = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { }, {order_by => { -asc => 'nd_geolocation_id' }} );
+	my %search_params;
+	if ($location_id){
+		$search_params{'nd_geolocation_id'} = $location_id;
+	}
+
+    my $loc = $schema->resultset('NaturalDiversity::NdGeolocation')->search( \%search_params, {order_by => { -asc => 'nd_geolocation_id' }} );
     while (my $s = $loc->next()) {
         my $loc_props = $schema->resultset('NaturalDiversity::NdGeolocationprop')->search( { nd_geolocation_id => $s->nd_geolocation_id() }, {join=>'type', '+select'=>['me.value', 'type.name'], '+as'=>['value', 'cvterm_name'] } );
-        my @attributes;
 
-        my %attr = ('geodetic datum' => $s->geodetic_datum() );
-        push @attributes, \%attr;
+		my %attr;
+        $attr{'geodetic datum'} = $s->geodetic_datum();
 
         my $country = '';
         my $country_code = '';
+        my $location_type = '';
+        my $abbreviation = '';
 
         while (my $sp = $loc_props->next()) {
-            if ($sp->get_column('cvterm_name') eq 'Country') {
+            if ($sp->get_column('cvterm_name') eq 'country_name') {
                 $country = $sp->get_column('value');
-            } elsif ($sp->get_column('cvterm_name') eq 'Country Code') {
+            } elsif ($sp->get_column('cvterm_name') eq 'country_code') {
                 $country_code = $sp->get_column('value');
+            } elsif ($sp->get_column('cvterm_name') eq 'location_type') {
+                $location_type = $sp->get_column('value');
+            } elsif ($sp->get_column('cvterm_name') eq 'abbreviation') {
+                $abbreviation = $sp->get_column('value');
             } else {
-                my %attr = ( $sp->get_column('cvterm_name') => $sp->get_column('value') );
-                push @attributes, \%attr;
+                $attr{$sp->get_column('cvterm_name')} = $sp->get_column('value') ;
             }
         }
 
-        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \@attributes],
+        push @locations, [$s->nd_geolocation_id(), $s->description(), $s->latitude(), $s->longitude(), $s->altitude(), $country, $country_code, \%attr, $location_type, $abbreviation],
     }
 
     return \@locations;
@@ -487,10 +497,10 @@ sub get_all_project_types {
     ##my $class = shift;
     my $schema = shift;
     my $project_type_cv_id = $schema->resultset('Cv::Cv')->find( { name => 'project_type' } )->cv_id();
-    my $rs = $schema->resultset('Cv::Cvterm')->search( { cv_id=> $project_type_cv_id });
+    my $rs = $schema->resultset('Cv::Cvterm')->search( { cv_id=> $project_type_cv_id }, {order_by=>'me.cvterm_id'} );
     my @cvterm_ids;
     if ($rs->count() > 0) {
-	@cvterm_ids = map { [ $_->cvterm_id(), $_->name() ] } ($rs->all());
+	@cvterm_ids = map { [ $_->cvterm_id(), $_->name(), $_->definition ] } ($rs->all());
     }
     return @cvterm_ids;
 }
@@ -1191,9 +1201,13 @@ sub get_stock_phenotypes_for_traits {
     my @data;
 	#$self->bcs_schema->storage->debug(1);
     my $dbh = $self->bcs_schema->storage()->dbh();
-	my $sql_trait_ids = join ("," , @$trait_ids);
-	my $where_clause = "WHERE project_id=? and a.cvterm_id IN ($sql_trait_ids) and b.cvterm_id = ? and phenotype.value~? ";
+	my $where_clause = "WHERE project_id=? and b.cvterm_id = ? and phenotype.value~? ";
 	my $phenotyping_experiment_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+
+	if (scalar(@$trait_ids)>0){
+		my $sql_trait_ids = join ("," , @$trait_ids);
+		$where_clause .= "and a.cvterm_id IN ($sql_trait_ids) ";
+	}
 
 	my $relationship_join = '';
 	if ($subject_or_object eq 'object') {
@@ -1275,6 +1289,39 @@ sub get_traits_assayed {
 	push @traits_assayed, [$trait_id, $trait_name];
     }
     return \@traits_assayed;
+}
+
+=head2 function get_trait_components_assayed()
+
+ Usage:
+ Desc:         returns the cvterm_id and name for trait components assayed
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_trait_components_assayed {
+    my $self = shift;
+    my $stock_type = shift;
+    my $composable_cvterm_format = shift;
+    my $dbh = $self->bcs_schema->storage()->dbh();
+    my $traits_assayed = $self->get_traits_assayed($stock_type);
+
+    my %unique_components;
+    my @trait_components_assayed;
+    foreach (@$traits_assayed){
+        my $trait_components = SGN::Model::Cvterm->get_components_from_trait($self->bcs_schema, $_->[0]);
+        foreach (@$trait_components){
+            if (!exists($unique_components{$_})){
+                my $component_cvterm = SGN::Model::Cvterm::get_trait_from_cvterm_id($self->bcs_schema, $_, $composable_cvterm_format);
+                push @trait_components_assayed, [$_, $component_cvterm];
+                $unique_components{$_}++;
+            }
+        }
+    }
+    return \@trait_components_assayed;
 }
 
 =head2 function get_experiment_count()
@@ -1642,6 +1689,36 @@ sub get_plants {
 	return \@plants;
 }
 
+=head2 get_plants_per_accession
+
+ Usage:        $plants = $t->get_plants_per_accession();
+ Desc:         retrieves that plants that are part of the design for this trial grouping them by accession.
+ Ret:          a hash ref containing { $accession_stock_id1 => [ [ plant_name1, plant_stock_id1 ], [ plant_name2, plant_stock_id2 ] ], ... }
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_plants_per_accession {
+    my $self = shift;
+    my %return;
+
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant', 'stock_type' )->cvterm_id();
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
+
+    my $trial_plant_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$plant_cvterm_id, 'object.type_id'=>$accession_cvterm_id}, {join=>{'stock_relationship_subjects'=>'object'}, '+select'=>['stock_relationship_subjects.object_id'], '+as'=>['accession_stock_id']});
+
+    my %unique_plants;
+    while(my $rs = $trial_plant_rs->next()) {
+        $unique_plants{$rs->uniquename} = [$rs->stock_id, $rs->get_column('accession_stock_id')];
+    }
+    while (my ($key, $value) = each %unique_plants) {
+        push @{$return{$value->[1]}}, [$value->[0], $key];
+    }
+    #print STDERR Dumper \%return;
+    return \%return;
+}
 
 =head2 get_plots
 
@@ -1662,12 +1739,7 @@ sub get_plots {
 	# note: this function also retrieves stocks of type tissue_sample (for genotyping trials).
 	my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type' )->cvterm_id();
 	my $tissue_sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type');
-	my $tissue_sample_cvterm_id;
-	if ($tissue_sample_cvterm) {
-	    $tissue_sample_cvterm_id = $tissue_sample_cvterm->cvterm_id();
-	}
-	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
-	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
+	my $tissue_sample_cvterm_id = $tissue_sample_cvterm ? $tissue_sample_cvterm->cvterm_id() : '';
 
 	my @type_ids;
 	push @type_ids, $plot_cvterm_id if $plot_cvterm_id;
@@ -1690,6 +1762,45 @@ sub get_plots {
 
 	return \@plots;
 
+}
+
+=head2 get_plots_per_accession
+
+ Usage:        $plots = $t->get_plots_per_accession();
+ Desc:         retrieves that plots that are part of the design for this trial grouping them by accession.
+ Ret:          a hash ref containing { $accession_stock_id1 => [ [ plot_name1, plot_stock_id1 ], [ plot_name2, plot_stock_id2 ] ], ... }
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_plots_per_accession {
+    my $self = shift;
+    my %return;
+
+    # note: this function also retrieves stocks of type tissue_sample (for genotyping trials).
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type' )->cvterm_id();
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type' )->cvterm_id();
+    my $tissue_sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type');
+    my $tissue_sample_cvterm_id = $tissue_sample_cvterm ? $tissue_sample_cvterm->cvterm_id() : '';
+
+    my @type_ids;
+    push @type_ids, $plot_cvterm_id if $plot_cvterm_id;
+    push @type_ids, $tissue_sample_cvterm_id if $tissue_sample_cvterm_id;
+
+    print STDERR "TYPE IDS: ".join(", ", @type_ids);
+    my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=> { in => [@type_ids] }, 'object.type_id'=>$accession_cvterm_id }, {join=>{'stock_relationship_subjects'=>'object'}, '+select'=>['stock_relationship_subjects.object_id'], '+as'=>['accession_stock_id']});
+
+    my %unique_plots;
+    while(my $rs = $trial_plot_rs->next()) {
+        $unique_plots{$rs->uniquename} = [$rs->stock_id, $rs->get_column('accession_stock_id')];
+    }
+    while (my ($key, $value) = each %unique_plots) {
+        push @{$return{$value->[1]}}, [$value->[0], $key];
+    }
+    #print STDERR Dumper \%return;
+    return \%return;
 }
 
 =head2 get_controls
@@ -1771,6 +1882,48 @@ sub get_controls_by_plot {
 	}
 
 	return \@controls;
+}
+
+=head2 get_trial_contacts
+
+ Usage:        my $contacts = $t->get_trial_contacts();
+ Desc:         Returns an arrayref of hashrefs that contain all sp_person info fpr sp_person_ids saved as projectprops to this trial
+ Ret:          an arrayref containing
+               { sp_person_id => 1, salutation => 'Mr.', first_name => 'joe', last_name => 'doe', email => 'j@d.com' }
+ Args:         none
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_trial_contacts {
+	my $self = shift;
+	my @contacts;
+
+	my $sp_person_id_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'sp_person_id','local')->cvterm_id;
+	my $prop_rs = $self->bcs_schema->resultset('Project::Projectprop')->search(
+		{ 'project_id' => $self->get_trial_id, 'type_id'=>$sp_person_id_cvterm_id }
+	);
+
+	while(my $prop = $prop_rs->next()) {
+		my $q = "SELECT sp_person_id, username, salutation, first_name, last_name, contact_email, user_type, phone_number FROM sgn_people.sp_person WHERE sp_person_id=?;";
+		my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
+		$h->execute($prop->value);
+		while (my ($sp_person_id, $username, $salutation, $first_name, $last_name, $email, $user_type, $phone) = $h->fetchrow_array()){
+			push @contacts, {
+				sp_person_id => $sp_person_id,
+				salutation => $salutation,
+				first_name => $first_name,
+				last_name => $last_name,
+				username => $username,
+				email => $email,
+				type => $user_type,
+				phone_number => $phone
+			};
+		}
+	}
+
+	return \@contacts;
 }
 
 

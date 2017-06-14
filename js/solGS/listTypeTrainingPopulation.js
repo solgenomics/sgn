@@ -40,7 +40,7 @@ jQuery(document).ready( function() {
 		jQuery("#list_type_training_pop_load").click(function() {
 		    
 		    if (listDetail.type.match(/plots/)) {
-			askJobQueueing(listId);
+			askTrainingJobQueueing(listId);
 		    } else {
 			var trialsList = listDetail.list;
 			var trialsNames = listDetail.elementsNames;
@@ -53,7 +53,7 @@ jQuery(document).ready( function() {
 });
 
 
-function getListElementsNames (list) {
+function getTrainingListElementsNames (list) {
    
     var names = [];
     for (var i = 0; i < list.length; i++) {
@@ -61,6 +61,18 @@ function getListElementsNames (list) {
     }
 
     return names;
+
+}
+
+
+function getTrainingListElementsIds (list) {
+   
+    var ids = [];
+    for (var i = 0; i < list.length; i++) {
+	ids.push(list[i][0]);
+    }
+
+    return ids;
 
 }
 
@@ -74,6 +86,7 @@ function getListTypeTrainingPopDetail(listId) {
     var listName;
     var listElements;
     var listElementsNames;
+    var listElementsIds;
 
     if (listId) {
         listData      = list.getListData(listId);
@@ -81,12 +94,14 @@ function getListTypeTrainingPopDetail(listId) {
 	listName      = list.listNameById(listId);
 	listElements  = listData.elements;
 
-	listElementsNames = getListElementsNames(listElements);
+	listElementsNames = getTrainingListElementsNames(listElements);
+	listElementsIds   = getTrainingListElementsIds(listElements);
     }
   
     return {'name'          : listName,
-            'list'          : listElements,
+            'list'          : listElements,	    
 	    'type'          : listType,
+	    'elementsIds'   : listElementsIds,
 	    'elementsNames' : listElementsNames,
            };
 }
@@ -109,35 +124,36 @@ function loadTrialListTypeTrainingPop (trialsNames) {
 
 }
 
-function askJobQueueing (listId) {
+function askTrainingJobQueueing (listId) {
  
-    var args = createReqArgs(listId);
-    var modelId = args.population_id;
-    
-    var page = '/solgs/population/' + modelId;
+    var args = createTrainingReqArgs(listId);
+    var modelId = args.training_pop_id;
+      
+    var hostName = window.location.protocol + '//' + window.location.host;    
+    var page     = hostName + '/solgs/population/' + modelId;
 
     solGS.waitPage(page, args);
 
 }
 
 
-function createReqArgs (listId) {
-    
+function createTrainingReqArgs (listId) {
+
     var genoList  = getListTypeTrainingPopDetail(listId);
     var listName  = genoList.name;
     var list      = genoList.list;
     var popId     = getModelId(listId);
-
+ 
     var popType = 'uploaded_reference';
 
     var args = {
-	'list_name'      : listName,
-	'list'           : list,
-	'list_id'        : listId,
-	'analysis_type'  : 'population download',
-	'data_set_type'  : 'single population',
-        'population_id'  : popId,
-	'population_type': popType,
+	'list_name'       : listName,
+	'list'            : list,
+	'list_id'         : listId,
+	'analysis_type'   : 'population download',
+	'data_set_type'   : 'single population',
+        'training_pop_id' : popId,
+	'population_type' : popType,
     };  
 
     return args;
@@ -147,9 +163,9 @@ function createReqArgs (listId) {
 
 function loadPlotListTypeTrainingPop(listId) {     
   
-    var args  = createReqArgs(listId);
+    var args  = createTrainingReqArgs(listId);
     var len   = args.list.length;
-    var popId = args.population_id;
+    var popId = args.training_pop_id;
 
     if (window.Prototype) {
 	delete Array.prototype.toJSON;

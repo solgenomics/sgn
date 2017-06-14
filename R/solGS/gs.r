@@ -14,6 +14,8 @@ library(lme4)
 library(randomForest)
 library(data.table)
 library(parallel)
+library(genoDataFilter)
+library(phenoAnalysis)
 
 allArgs <- commandArgs()
 
@@ -136,167 +138,14 @@ if (datasetInfo == 'combined populations') {
     colnames(phenoTrait)[1] <- 'genotypes'
    
   } else {
-    dropColumns <- c("uniquename", "stock_name")
-    phenoData   <- phenoData[, !(names(phenoData) %in% dropColumns)]
-    
-    phenoTrait <- subset(phenoData, select = c("object_name", "object_id", "design", "block", "replicate", trait))
-   
-    experimentalDesign <- phenoTrait[2, 'design']
-  
-    if (class(phenoTrait[, trait]) != 'numeric') {
-      phenoTrait[, trait] <- as.numeric(as.character(phenoTrait[, trait]))
-    }
-      
-    if (is.na(experimentalDesign) == TRUE) {experimentalDesign <- c('No Design')}
-   
-    if ((experimentalDesign == 'Augmented' || experimentalDesign == 'RCBD')  &&  length(unique(phenoTrait$block)) > 1) {
-
-      message("GS experimental design: ", experimentalDesign)
-
-      augData <- subset(phenoTrait, select = c("object_name", "object_id",  "block",  trait))
-
-      colnames(augData)[1] <- "genotypes"
-      colnames(augData)[4] <- "trait"
-
-      model <- try(lmer(trait ~ 0 + genotypes + (1|block),
-                        augData,
-                        na.action = na.omit))
-
-      if (class(model) != "try-error") {
-        phenoTrait <- data.frame(fixef(model))
-        
-        colnames(phenoTrait) <- trait
-
-        nn <- gsub('genotypes', '', rownames(phenoTrait))  
-        rownames(phenoTrait) <- nn
-      
-        phenoTrait           <- round(phenoTrait, 2)       
-        phenoTrait$genotypes <- rownames(phenoTrait)
-        phenoTrait           <- phenoTrait[, c(2,1)]
-      }            
-    } else if ((experimentalDesign == 'CRD')  &&  length(unique(phenoTrait$replicate)) > 1) {
-
-      message("GS experimental design: ", experimentalDesign)
-
-      crdData <- subset(phenoTrait, select = c("object_name", "object_id",  "replicate",  trait))
-
-      colnames(crdData)[1] <- "genotypes"
-      colnames(crdData)[4] <- "trait"
-
-      model <- try(lmer(trait ~ 0 + genotypes + (1|replicate),
-                        crdData,
-                        na.action = na.omit))
-
-      if (class(model) != "try-error") {
-        phenoTrait <- data.frame(fixef(model))
-        
-        colnames(phenoTrait) <- trait
-
-        nn <- gsub('genotypes', '', rownames(phenoTrait))  
-        rownames(phenoTrait) <- nn
-      
-        phenoTrait           <- round(phenoTrait, 2)       
-        phenoTrait$genotypes <- rownames(phenoTrait)
-        phenoTrait           <- phenoTrait[, c(2,1)]
-      }
-    } else if (experimentalDesign == 'Alpha') {
-   
-      message("Experimental desgin: ", experimentalDesign)
-      
-      alphaData <- subset(phenoData,
-                            select = c("object_name", "object_id","block", "replicate", trait)
-                            )
-      
-      colnames(alphaData)[1] <- "genotypes"
-      colnames(alphaData)[5] <- "trait"
-         
-      model <- try(lmer(trait ~ 0 + genotypes + (1|replicate/block),
-                        alphaData,
-                        na.action = na.omit))
-        
-      if (class(model) != "try-error") {
-        phenoTrait <- data.frame(fixef(model))
-      
-        colnames(phenoTrait) <- trait
-
-        nn <- gsub('genotypes', '', rownames(phenoTrait))     
-        rownames(phenoTrait) <- nn
-      
-        phenoTrait           <- round(phenoTrait, 2)
-        phenoTrait$genotypes <- rownames(phenoTrait)
-        phenoTrait           <- phenoTrait[, c(2,1)]     
-      }     
-    } else {
-
-      phenoTrait <- subset(phenoData,
-                           select = c("object_name", "object_id",  trait))
-       
-      if (sum(is.na(phenoTrait)) > 0) {
-        message("No. of pheno missing values: ", sum(is.na(phenoTrait)))      
-        phenoTrait <- na.omit(phenoTrait)
-      }
-
-        #calculate mean of reps/plots of the same accession and
-        #create new df with the accession means    
-     
-      phenoTrait   <- phenoTrait[order(row.names(phenoTrait)), ]
-      phenoTrait   <- data.frame(phenoTrait)
-      message('phenotyped lines before averaging: ', length(row.names(phenoTrait)))
-   
-      phenoTrait<-ddply(phenoTrait, "object_name", colwise(mean))
-      message('phenotyped lines after averaging: ', length(row.names(phenoTrait)))
-        
-      phenoTrait <- subset(phenoTrait, select = c("object_name", trait))
-      
-      colnames(phenoTrait)[1] <- 'genotypes'
-    }
+    phenoTrait <- getAdjMeans(phenoData, trait)
   }
 }
 
-phenoTrait <- as.data.frame(phenoTrait)
-
-### MAF calculation ###
-calculateMAF <- function(x) {
-  a0 <-  length(x[x==0])
-  a1 <-  length(x[x==1])
-  a2 <-  length(x[x==2])
-  aT <- a0 + a1 + a2
-
-  p <- ((2*a0)+a1)/(2*aT)
-  q <- 1- p
-
-  maf <- min(p, q)
-  
-  return (maf)
-
-}
-
-
 if (is.null(filteredGenoData)) {
-
-  #remove markers with > 60% missing marker data
-  message('no of markers before filtering out: ', ncol(genoData))
-  genoData[, which(colSums(is.na(genoData)) >= nrow(genoData) * 0.6) := NULL]
-  message('no of markers after filtering out 60% missing: ', ncol(genoData))
-
-  #remove indls with > 80% missing marker data
-  genoData[, noMissing := apply(.SD, 1, function(x) sum(is.na(x)))]
-  genoData <- genoData[noMissing <= ncol(genoData) * 0.8]
-  genoData[, noMissing := NULL]
-  message('no of indls after filtering out ones with 80% missing: ', nrow(genoData))
-
-  #remove monomorphic markers
-  message('marker no before monomorphic markers cleaning ', ncol(genoData))
-  genoData[, which(apply(genoData, 2,  function(x) length(unique(x))) < 2) := NULL ]
-  message('marker no after monomorphic markers cleaning ', ncol(genoData))
-
-  #remove markers with MAF < 5%
-  genoData[, which(apply(genoData, 2,  calculateMAF) < 0.05) := NULL ]
-  message('marker no after MAF cleaning ', ncol(genoData))
-
-  genoData           <- as.data.frame(genoData)
-  rownames(genoData) <- genoData[, 1]
-  genoData[, 1]      <- NULL
+  
+  #genoDataFilter::filterGenoData
+  genoData <- filterGenoData(genoData)
   filteredGenoData   <- genoData 
 } else {
   genoData           <- as.data.frame(filteredGenoData)
@@ -345,27 +194,9 @@ if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size !=
 } else if (length(predictionFile) != 0) {
     
   predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
-  message('selection population: no of markers before filtering out: ', ncol(predictionData))
-    
-  predictionData[, which(colSums(is.na(predictionData)) >= nrow(predictionData) * 0.6) := NULL]
-
-  #remove indls with > 80% missing marker data
-  predictionData[, noMissing := apply(.SD, 1, function(x) sum(is.na(x)))]
-  predictionData <- predictionData[noMissing <= ncol(predictionData) * 0.8]
-  predictionData[, noMissing := NULL]
-
-  #remove monomorphic markers
-  message('marker no before monomorphic markers cleaning ', ncol(predictionData))
-  predictionData[, which(apply(predictionData, 2,  function(x) length(unique(x))) < 2) := NULL ]
-  message('marker no after monomorphic markers cleaning ', ncol(predictionData))
-
-  predictionData[, which(apply(predictionData, 2,  calculateMAF) < 0.05) := NULL ]
-  message('selection pop marker no after MAF cleaning ', ncol(predictionData))
-
-  predictionData           <- as.data.frame(predictionData)
-  rownames(predictionData) <- predictionData[, 1]
-  predictionData[, 1]      <- NULL
-  filteredPredGenoData     <- predictionData
+ 
+  predictionData <- filterGenoData(predictionData)
+  filteredPredGenoData <- predictionData
 }
 
 

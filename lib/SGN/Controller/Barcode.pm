@@ -12,6 +12,7 @@ use Tie::UrlEncoder;
 use PDF::LabelPage;
 use Math::Base36 ':all';
 use CXGN::QRcode;
+use Data::Dumper;
 
 our %urlencode;
 
@@ -144,6 +145,31 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
 
     return $barcode_file;
   }
+
+  sub trial_qrcode_jpg : Path('/barcode/trial') Args(2){
+     my $self = shift;
+     my $c = shift;
+     my $trial_id = shift;
+     my $format = shift;
+     my $base_url = $c->config->{main_production_site_url};
+     my $text = "$base_url/breeders/direct_phenotyping?trial_id=$trial_id";
+     if ($format eq "stock_qrcode"){
+        $text =  $trial_id;
+     }
+
+
+      $c->tempfiles_subdir('barcode');
+      my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+
+       my $barcode_generator = CXGN::QRcode->new();
+       my $barcode_file = $barcode_generator->get_barcode_file(
+             $file_location,
+             $text,
+        );
+
+       $c->res->headers->content_type('image/jpg');
+       $c->res->body($barcode_file);
+   }
 
 =head2 barcode
 

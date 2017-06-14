@@ -3,81 +3,292 @@
 
 <& /util/import_javascript.mas, classes => [ 'brapi.Table' ] &>
 
+<& /page/page_title.mas, title=>"Germplasm Search and Exchange" &>
+
+<h4>Database Select</h4>
+<select name="brapi_home_url_select" id="brapi_home_url_select" class="form-control" />
+    <option value="">local</option>
+    <option value="https://cassbase.org">cassbase.org</option>
+    <option value="https://cassavabase.org">cassavabase.org</option>
+    <option value="https://musabase.org">musabase.org</option>
+    <option value="https://sweetpotatobase.org">sweetpotatobase.org</option>
+    <option value="https://yambase.org">yambase.org</option>
+    <option value="https://fernbase.org">fernbase.org</option>
+    <option value="https://solgenomics.net">solgenomics.net</option>
+</select>
+
 <h4>Germplasm Search</h4>
 
 <div id="brapi_germplasm_search_home_div" class="well">
 
-<input name="brapi_germplasm_search_germplasmName" id="brapi_germplasm_search_germplasmname" class="form-control" type="text" placeholder="GermplasmName" />
+<input name="brapi_germplasm_search_germplasmName" id="brapi_germplasm_search_germplasmname" class="form-control" type="text" placeholder="GermplasmName(s) e.g. TMEB419,TMEB529" />
 <input name="brapi_germplasm_search_accessionNumber" id="brapi_germplasm_search_accessionNumber" class="form-control" type="text" placeholder="AccessionNumber" />
-<!--
 <input name="brapi_germplasm_search_germplasmGenus" id="brapi_germplasm_search_germplasmGenus" class="form-control" type="text" placeholder="GermplasmGenus" />
-<input name="brapi_germplasm_search_germplasmSubTaxa" id="brapi_germplasm_search_germplasmSubTaxa" class="form-control" type="text" placeholder="GermplasmSubTaxa" />
 <input name="brapi_germplasm_search_germplasmSpecies" id="brapi_germplasm_search_germplasmSpecies" class="form-control" type="text" placeholder="GermplasmSpecies" />
--->
 <input name="brapi_germplasm_search_germplasmDbId" id="brapi_germplasm_search_germplasmDbId" class="form-control" type="text" placeholder="GermplasmDbId" />
-<!--
 <input name="brapi_germplasm_search_germplasmPUI" id="brapi_germplasm_search_germplasmPUI" class="form-control" type="text" placeholder="GermplasmPUI" />
--->
 <select name="brapi_germplasm_search_matchMethod" id="brapi_germplasm_search_matchMethod" class="form-control" />
     <option value="exact">Exact</option>
     <option value="wildcard">Wildcard. Wildcard allows % or * for multiple characters and ? for single characters.</option>
 </select>
+<br/>
 <button class="btn btn-primary" name="brapi_germplasm_search_submit" id="brapi_germplasm_search_submit">Search</button>
 
 <br/><br/>
 
 <div id="brapi_germplasm_search_result_div">
 </div>
-
-<div id="brapi_germplasm_search_result_names" style="display:none">
+<div id="brapi_germplasm_search_result_div_collection">
 </div>
 
-<&| /page/info_section.mas, title=>"Add germplasm-search germplasmNames that you see above to a list", collapsible=>1, collapsed=>1 &>
-<div id="germplasm_search_paste_to_list">
-LOAD...
+<div class="modal fade" id="brapi_germplasm_saved_message_modal" name="brapi_germplasm_saved_message_modal" tabindex="-1" role="dialog" aria-labelledby="brapiGermplasmSearchSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="brapiGermplasmSearchSavedDialog">BrAPI Germplasm Exchange</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="brapi_germplasm_saved_message"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_brapi_germplasm_saved_message_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
 </div>
-</&>
 
 </div>
 
 <script>
 
-if (isLoggedIn()) {
-    addToListMenu('germplasm_search_paste_to_list', 'brapi_germplasm_search_result_names', { listType: 'accessions' } );
-} else {
-    jQuery('#germplasm_search_paste_to_list').html("&nbsp;Please log in to use lists.");
-}
+var allowed_organism_results = [];
 
 jQuery(document).ready(function() {
+    var return_url;
+    var selected_results = [];
+    var selected_organism_results = [];
+
     jQuery("#brapi_germplasm_search_submit").click(function() {
+        var germplasmNames = jQuery("#brapi_germplasm_search_germplasmname").val();
+        if (germplasmNames){
+            germplasmNames = germplasmNames.split(',');
+        } else {
+            germplasmNames = [];
+        }
+        var accessionNumbers = jQuery("#brapi_germplasm_search_accessionNumber").val();
+        if (accessionNumbers){
+            accessionNumbers = accessionNumbers.split(',');
+        } else {
+            accessionNumbers = [];
+        }
+        var genusNames = jQuery("#brapi_germplasm_search_germplasmGenus").val();
+        if (genusNames){
+            genusNames = genusNames.split(',');
+        } else {
+            genusNames = [];
+        }
+        var subtaxaNames = jQuery("#brapi_germplasm_search_germplasmSubTaxa").val();
+        if (subtaxaNames){
+            subtaxaNames = subtaxaNames.split(',');
+        } else {
+            subtaxaNames = [];
+        }
+        var speciesNames = jQuery("#brapi_germplasm_search_germplasmSpecies").val();
+        if (speciesNames){
+            speciesNames = speciesNames.split(',');
+        } else {
+            speciesNames = [];
+        }
+        var germplasmDbIds = jQuery("#brapi_germplasm_search_germplasmDbId").val();
+        if (germplasmDbIds){
+            germplasmDbIds = germplasmDbIds.split(',');
+        } else {
+            germplasmDbIds = [];
+        }
+        var germplasmPUIs = jQuery("#brapi_germplasm_search_germplasmPUI").val();
+        if (germplasmPUIs){
+            germplasmPUIs = germplasmPUIs.split(',');
+        } else {
+            germplasmPUIs = [];
+        }
+        var search_query_data = { 
+          'germplasmName' :  germplasmNames,
+          'accessionNumber' : accessionNumbers,
+          'germplasmGenus' : genusNames,
+          'germplasmSubTaxa' : subtaxaNames,
+          'germplasmSpecies' : speciesNames,
+          'germplasmDbId' : germplasmDbIds,
+          'germplasmPUI' : germplasmPUIs,
+          'matchMethod' : jQuery("#brapi_germplasm_search_matchMethod").val(),
+        };
+        return_url = jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm-search';
         jQuery.ajax( {
           'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm-search',
           'method': 'POST',
-          'data': { 
-            'germplasmName' :  jQuery("#brapi_germplasm_search_germplasmname").val(),
-            'accessionNumber' : jQuery("#brapi_germplasm_search_accessionNumber").val(),
-            'germplasmGenus' : jQuery("#brapi_germplasm_search_germplasmGenus").val(),
-            'germplasmSubTaxa' : jQuery("#brapi_germplasm_search_germplasmSubTaxa").val(),
-            'germplasmSpecies' : jQuery("#brapi_germplasm_search_germplasmSpecies").val(),
-            'germplasmDbId' : jQuery("#brapi_germplasm_search_germplasmDbId").val(),
-            'germplasmPUI' : jQuery("#brapi_germplasm_search_germplasmPUI").val(),
-            'matchMethod' : jQuery("#brapi_germplasm_search_matchMethod").val(),
+          'beforeSend': function(){
+            jQuery('#working_modal').modal('show');
           },
+          'data': search_query_data,
           'success': function(response) {
             //console.log(response);
-            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_germplasm_search_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm-search', { "germplasmName": ["germplasmDbId", "stock"] });
-            var html ='';
-            for (var i=0; i<response.result.data.length; i++){
-                html = html + response.result.data[i].germplasmName+'\n';
-            }
-            jQuery('#brapi_germplasm_search_result_names').html(html);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_germplasm_search_result_div', return_url, { "germplasmName": ["germplasmPUI", ""] }, search_query_data, ['germplasmName','commonCropName','genus','species','accessionNumber','germplasmPUI','synonyms'], 'germplasmName', ['species']);
+            jQuery('#working_modal').modal('hide');
           },
           error: function(response) {
+            jQuery('#working_modal').modal('hide');
             alert('An error occurred');
           }
         });
     });
+
+    jQuery(document).on('click', '#brapi_table_select_submit_brapi_germplasm_search_result_div', function(){
+        jQuery.each(jQuery('input[name="brapi_table_select_'+return_url+'"]:checked'), function(){
+            if (jQuery.inArray(jQuery(this).val(), selected_results) == -1){
+                selected_results.push(jQuery(this).val());
+            }
+            if (jQuery.inArray(jQuery(this).data("species"), selected_organism_results) == -1){
+                selected_organism_results.push(jQuery(this).data("species"));
+            }
+        });
+        console.log(selected_results);
+        console.log(selected_organism_results);
+
+        jQuery.ajax({
+            'url': '/ajax/accession_list/verify',
+            'method': 'POST',
+            'beforeSend': function(){
+                jQuery('#working_modal').modal('show');
+            },
+            'data': {
+                'accession_list' : JSON.stringify(selected_results),
+                'organism_list' : JSON.stringify(selected_organism_results),
+                'do_fuzzy_search' : 'true'
+            },
+            'success': function(response){
+                if(response.error){
+                    alert(response.error);
+                    jQuery('#working_modal').modal('hide');
+                    return false;
+                }
+                console.log(response);
+
+                var html = '<h3>How Selected Organisms Compare to This Database:</h3>';
+                html = html + '<table class="table table-bordered"><thead><tr><th>Species</th><th>Status</th><th>Possible Matches</th></tr></thead><tbody>';
+                for (var i=0; i<response.found_organisms.length; i++){
+                    html = html + '<tr><td>' + response.found_organisms[i].unique_name + '</td><td class="bg-success">Exact Species Found in This Database</td><td>Exact Match</td></tr>';
+                    allowed_organism_results.push(response.found_organisms[i].unique_name);
+                }
+                for (var i=0; i<response.fuzzy_organisms.length; i++){
+                    html = html + '<tr><td>' + response.fuzzy_organisms[i].name + '</td><td class="bg-danger">Possible Species Matches Found in This Database, but Not Exact Match. Please Contact Us to Add Your Organism, or change Your Species to Match Our Species Name!</td>';
+                    html = html + '<td><select class="form-control">'
+                    for (var j=0; j<response.fuzzy_organisms[i].matches.length; j++){
+                        html = html + '<option value="'+response.fuzzy_organisms[i].matches[j].name+'">'+response.fuzzy_organisms[i].matches[j].name+'</option>'
+                    }
+                    html = html + '</select></td></tr>';
+                }
+                for (var i=0; i<response.absent_organisms.length; i++){
+                    html = html + '<tr><td>' + response.absent_organisms[i] + '</td><td class="bg-danger">Please Contact Us to Add Your Organism, or change Your Species to Match Our Species Name!</td><td>No Match</td></tr>';
+                }
+                html = html + '</tbody></table>';
+
+                html = html + '<h3>How Selected GermplasmNames Compare to This Database:</h3>';
+                html = html + '<table class="table table-bordered"><thead><tr><th>Select</th><th>GermplasmName</th><th>Status</th><th>Possible Matches</th></tr></thead><tbody>';
+                for (var i=0; i<response.found.length; i++){
+                    html = html + '<tr><td><input type="checkbox" name="brapi_germplasm_search_collection_select" disabled/></td><td>' + response.found[i].unique_name + '</td><td class="bg-success">Exact GermplasmName Found in This Database</td><td>Exact Match</td></tr>';
+                }
+                for (var i=0; i<response.fuzzy.length; i++){
+                    html = html + '<tr><td><input type="checkbox" name="brapi_germplasm_search_collection_select" value="' + response.fuzzy[i].name + '"/></td><td>' + response.fuzzy[i].name + '</td><td class="bg-info">Possible GermplasmName Matches Found in This Database</td>';
+                    html = html + '<td><select class="form-control">'
+                    for (var j=0; j<response.fuzzy[i].matches.length; j++){
+                        html = html + '<option value="'+response.fuzzy[i].matches[j].name+'">'+response.fuzzy[i].matches[j].name+'</option>'
+                    }
+                    html = html + '</select></td></tr>';
+                }
+                for (var i=0; i<response.absent.length; i++){
+                    html = html + '<tr><td><input type="checkbox" name="brapi_germplasm_search_collection_select" value="' + response.absent[i] + '"/></td><td>' + response.absent[i] + '</td><td class="bg-warning">GermplasmName Not Found in This Database</td><td>No Match</td></tr>';
+                }
+                html = html + '</tbody></table><button class="btn btn-primary" name="brapi_germplasm_search_submit_final" id="brapi_germplasm_search_submit_final">Save in Database</button>';
+                jQuery('#working_modal').modal('hide');
+                jQuery('#brapi_germplasm_search_result_div_collection').html(html);
+            },
+            'error': function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred in fuzzy search!');
+            }
+        })
+    });
+
+    jQuery(document).on('click', '#brapi_germplasm_search_submit_final', function(){
+        jQuery('#working_modal').modal('show');
+        var selected_to_save = [];
+        jQuery.each(jQuery('input[name="brapi_germplasm_search_collection_select"]:checked'), function(){
+            if (jQuery.inArray(jQuery(this).val(), selected_to_save) == -1){
+                selected_to_save.push(jQuery(this).val());
+            }
+        });
+        console.log(selected_to_save);
+        var to_save = [];
+        var num_requests = selected_to_save.length;
+        var request = 1;
+        for (var i=0; i<num_requests; i++){
+            jQuery.ajax({
+                'method':'GET',
+                'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm-search?matchMethod=exact&germplasmName='+selected_to_save[i],
+                'success': function(response){
+                    //console.log(response);
+                    if (jQuery.inArray(response.result.data[0].species, allowed_organism_results) == -1){
+                        alert('Will Skip '+response.result.data[0].germplasmName+' because the species '+response.result.data[0].species+' is not in this database!');
+                    } else {
+                        to_save.push(response.result.data[0]);
+                    }
+                    if (request == num_requests){
+                        perform_save(to_save);
+                    }
+                    request++;
+                },
+                'error': function(response){
+                    alert('An error occurred getting details to save!');
+                }
+            });
+        }
+
+    });
+
 });
 
-
+function perform_save(to_save){
+    console.log(to_save);
+    jQuery.ajax({
+        'url': '/ajax/accession_list/add',
+        'method': 'POST',
+        'data': {
+            'full_info' : JSON.stringify(to_save),
+            'allowed_organisms' : JSON.stringify(allowed_organism_results)
+        },
+        'success': function(response){
+            console.log(response);
+            if(response.error){
+                alert(response.error);
+                jQuery('#working_modal').modal('hide');
+                return false;
+            }
+            if(response.success){
+                var html = 'The following stocks were added!<br/>';
+                for (var i=0; i<response.added.length; i++){
+                    html = html + '<a href="/stock/'+response.added[i][0]+'/view">'+response.added[i][1]+'</a><br/>';
+                }
+                jQuery('#brapi_germplasm_saved_message').html(html);
+                jQuery('#brapi_germplasm_saved_message_modal').modal('show');
+            }
+            jQuery('#working_modal').modal('hide');
+        },
+        'error': function(response){
+            alert('An error occurred in fuzzy search!');
+            jQuery('#working_modal').modal('hide');
+        }
+    })
+}
 </script>
