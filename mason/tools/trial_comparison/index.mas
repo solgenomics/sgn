@@ -100,96 +100,134 @@ body{ width:100%;}
     stroke: #f94;
     stroke-width: 4px;
 }
+.d3-tool-tip-text *:visited{
+  color: #fff;
+}
 </style>
+
 <& '/page/page_title.mas', title => "Compare trials" &>
 
 <& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'CXGN.List', 'CXGN.Login', 'd3.d3Min.js' ] &>
 
+<div class="row">
   <center>
-  <table width="400">
-  <tr><td>Choose a trial list:</td></tr>
-  <tr><td><div id="trial_list_select_div" width="200"></td></tr>
-  <tr><td>Trials contain a total of <span id="total_accession_count">?</span> accessions, with <span id="common_accession_count">?</span> common accessions, phenotyped for <span id="common_trait_count">?</span> common traits</td></tr>
-  <tr><td><b>Choose trait:</b></td></tr>
-  <tr><td><select class="form-control" id="trait_select"><option disabled="1">select trials first</option></select></td></tr>
-  <tr><td><button id="submit_trial_list">Compare</button></td></tr>
-  </table>
-
-<div id="result_div">
-  <img id="result_image" />
-  <div class="graph-grid-canv"></div>
+    <form class = "col-md-offset-3 col-md-6">
+      <div class="form-group">
+        <label for="trials_list_select">Choose a list of trials:</label>
+        <div id="trials_list_select_container">
+          <select disabled class="form-control input-sm" id="trials_list_select">
+            <option selected="selected">Loading...</option>
+          </select>
+        </div>
+        <small hidden="true" id = "trials_list_info" class="form-text text-muted">
+          Trials contain a total of <span id="total_accession_count">?</span> accessions, with <span id="common_accession_count">?</span> common accessions, phenotyped for <span id="common_trait_count">?</span> common traits.
+        </small>
+      </div>
+      <div class="form-group">
+        <label for="formGroupExampleInput2">Choose a trait to compare:</label>
+        <select disabled class="form-control input-sm" id="trait_select">
+          <option selected="selected" value=""> </option>
+        </select>
+      </div>
+      <span disabled id="submit_trial_list" class="btn btn-primary">Compare</span>
+    </form>
+  </center>
 </div>
 
-</center>
+<div id="result_div" class="row">
+  <center>
+    <div hidden="true" class="graph-grid-canv"></div>
+  </center>
+</div>
 
 <script>
 
-$('#trial_1').autocomplete( 
-   { source: '/ajax/trials/trial_autocomplete' });
-
-$('#trial_2').autocomplete(
-   { source: '/ajax/trials/trial_autocomplete' });
-
-$('#trait_select').focus( function() {   
-   var trial_list_id = $('#trial_list_select_list_select').val();
-   var list = new CXGN.List;
-   var item_data = list.getListData(trial_list_id);
-   var items = item_data.elements;
-   var params = "";
-   for (n=0; n<items.length; n++) { 
-      params += 'trial_name='+items[n][1]+'&';
-   }
-
-   $.ajax( { 
-      url: '/ajax/trial/common_traits?'+params,
-      success: function(response) { 
-         if (response.error) { $('#trait_select').val('error'); }
-         else {
-            var option_html = '';
-            for (var i =0 ; i < response.options.length; i++) {
-	       option_html += '<option value="'+response.options[i][0]+'">'+(response.options[i][1])+'</option>';
-            }
-            $('#trait_select').html(option_html);
-            $('#total_accession_count').html(response.total_accession_count);
-	    $('#common_accession_count').html(response.common_accession_count);
-	    $('#common_trait_count').html(response.common_trait_count);
-         }
-      },
-      error: function(response) { 
-	//alert("An error occurred, the service may temporarily be unavailable");
+$(document).ready(function(){
+  if (isLoggedIn()) { 
+    var list = new CXGN.List();
+    var select_html = list.listSelect('trials', ['trials'], ' ');
+    $('#trials_list_select_container').html(select_html);
+    $('#trials_list_select').change(function(){
+      var trial_list_id = $('#trials_list_select').val();
+      if (trial_list_id === "") {
+        $("#trials_list_info").hide(400);
+        $('#trait_select').attr("disabled",true).html('<option selected="selected" value=""> </option>');
+        toggleSubmitButton(false);
+        return;
+      } else {
+        $("#trials_list_info").show(400);
       }
-    
-   });
+      var item_data = list.getListData(trial_list_id);
+      var items = item_data.elements;
+      var params = "";
+      for (n=0; n<items.length; n++) { 
+        params += 'trial_name='+items[n][1]+'&';
+      }
+      $.ajax({ 
+        url: '/ajax/trial/common_traits?'+params,
+        success: function(response) { 
+          if (response.error) { 
+            $('#trait_select').val('error'); 
+          }
+          else {
+            var option_html = '<option selected="selected" value=""> </option>';
+            for (var i =0 ; i < response.options.length; i++) {
+              option_html += '<option value="'+response.options[i][0]+'">'+(response.options[i][1])+'</option>';
+            }
+            $('#trait_select').attr("disabled",false).html(option_html);
+            $('#total_accession_count').html(response.total_accession_count);
+            $('#common_accession_count').html(response.common_accession_count);
+            $('#common_trait_count').html(response.common_trait_count);
+           }
+        },
+        error: function(response) { 
+          //alert("An error occurred, the service may temporarily be unavailable");
+        }
 
+      });
+    })
+  }
+  else { 
+    $('#trials_list_select').html('<option selected="selected">You must be logged in to use lists.</option>');
+  }
+})
+
+$('#trait_select').change(function(event) {
+  if ($('#trait_select').val() == ""){
+    toggleSubmitButton(false);
+  } else {
+    toggleSubmitButton(true);
+  }
 });
 
-if (isLoggedIn()) { 
-  lo = new CXGN.List();
-  var select_html = lo.listSelect('trial_list_select', ['trials'], 'select');
-  $('#trial_list_select_div').html(select_html);
+
+
+function toggleSubmitButton(state){
+  if (state) {
+    $('#submit_trial_list').on("click",fetchAndBuildGraphs);
+    $('#submit_trial_list').attr("disabled",false);
+  } else {
+    $('#submit_trial_list').off("click");
+    $('#submit_trial_list').attr("disabled",true);
+  }
 }
-else { 
-  $('#trial_list_select_div').html("[Log in to use lists]");
+
+function fetchAndBuildGraphs() { 
+  var list_id = $('#trials_list_select').val();
+  $(".graph-grid-canv").show(400);
+  $.ajax( { 
+   url: '/ajax/trial/compare_list_data',
+   data: { 'cvterm_id' : $('#trait_select').val(), 'list_id': list_id },
+   success: function(response) { 
+      if (response.error) { 
+         alert(response.error);
+      }
+      else { 
+          createGraphs(response.csv,response)
+      }
+    }
+  });
 }
-
-//begin new stuff
-
-$('#submit_trial_list').click( function() { 
-   var list_id = $('#trial_list_select_list_select').val();
-   $.ajax( { 
-     url: '/ajax/trial/compare_list_data',
-     data: { 'cvterm_id' : $('#trait_select').val(), 'list_id': list_id },
-     success: function(response) { 
-        if (response.error) { 
-           alert(response.error);
-        }
-        else { 
-            createGraphs(response.csv,response)
-        }
-     }
-   });
-});
-
 
 function createGraphs(raw_csv,response){
     var size = 650;
@@ -222,6 +260,7 @@ function createGraphs(raw_csv,response){
 
     //generate all the grid SVGs and pairs of studies
     var canv = d3.select('.graph-grid-canv');
+    canv.html("");
     var grid_size = 96/(num_studies-1) - (1+1/(num_studies));
     var pairwise_data = [];
     for (var i = 0; i<num_studies-1; i++){
@@ -302,6 +341,10 @@ function createGraphs(raw_csv,response){
                          .style("left","0.5%"); }, duration+30);
             }
         });
+    } else{
+      graphs.each(function(d){
+        d3.select(this.parentNode).classed("popped-out",true).style("position","static");
+      });
     }
 
     //assign grid locations study pairs
@@ -460,7 +503,8 @@ function createGraphs(raw_csv,response){
             this.hoverlock = true;
             var width = this.attr("transform", "translate("+x+"," +y+")")
               .select("text")
-              .text(text).node().getComputedTextLength();
+              .html(text).node().getComputedTextLength();
+            this.select("text").selectAll("*").attr("fill","#fff");
             this.select("rect").attr("width",width+20);
             this.transition().style("opacity",1);
           }
@@ -478,7 +522,7 @@ function createGraphs(raw_csv,response){
 
         plotpoints.on("mouseover",function(d){
           if (d3.select(this.parentNode.parentNode).classed("popped-out")){
-            tooltip.setTip(true,d.name,Xscale(d.x)+axis_offset,Yscale(d.y)+axis_offset);
+            tooltip.setTip(true,"<a target='_blank' href='/stock/"+d.key+"/view'>"+d.name+"</a>",Xscale(d.x)+axis_offset,Yscale(d.y)+axis_offset);
           }
         });
         plotpoints.on("mouseout",function(d){
@@ -556,10 +600,5 @@ function lineOfBestFit(points){
     rsquared: 1-(SSE/SSTO)
   };
 }
-
-//end new stuff
-
-
-
 			
 </script>
