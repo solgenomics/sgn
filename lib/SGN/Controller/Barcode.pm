@@ -110,7 +110,15 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
    my $stock_id = shift;
    my $stock_name = shift;
    my $field_info = shift;
-   my $text = "stock name: ".$stock_name. "\n stock id: ". $stock_id. "\n".$field_info;
+   my $fieldbook_enabled = shift;
+   my $text;
+   if ($fieldbook_enabled eq "enable_fieldbook_2d_barcode"){
+       $text = $stock_name;
+   }
+   else {
+       $text = "stock name: ".$stock_name. "\n stock id: ". $stock_id. "\n".$field_info;
+   }
+
 
    $c->tempfiles_subdir('barcode');
    my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
