@@ -200,9 +200,10 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 </&>
 
-<&| /page/info_section.mas, title=>"Trial barcode",  collapsible => 1, subtitle => '[<a id="generate_barcode_link">Generate Barcode</a>]|[<a id="direct_phenotyping_link">Direct Phenotyping</a>]'&>
+<&| /page/info_section.mas, title=>"Trial barcode",  collapsible => 1, subtitle => '[<a id="generate_trial_barcode_link">Generate Barcode</a>]|[<a id="direct_phenotyping_link">Direct Phenotyping</a>]'&>
 
      <center><& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &></center><br />
+     <& /breeders_toolbox/trial/generate_trial_barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name" &>
 
 </&>
 
