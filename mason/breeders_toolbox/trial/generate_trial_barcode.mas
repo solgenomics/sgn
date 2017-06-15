@@ -33,6 +33,14 @@ $identifier => ''
 
                     <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/stock/download/pdf" >
                      <div class="form-group form-group-sm">
+
+                     <div class="form-group form-group-sm" style="display: none">
+                       <label class="col-sm-4 control-label">Enter a List of Stock Names: </label>
+                       <div class="col-sm-8">
+                         <textarea class="form-control" id="stock_names" name="stock_names" ></textarea>
+                       </div>
+                     </div>
+
                         <div class="form-group form-group-sm">
                           <label class="col-sm-4 control-label">Barcode Type: </label>
                           <div class="col-sm-8">
