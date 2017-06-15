@@ -252,22 +252,26 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
             push @trait_list_int, $cvterm_id;
         }
     }
-    if ($trait_component_list[0] =~ m/^\d+$/) {
-        my $trait_cvterm_ids = SGN::Model::Cvterm->get_traits_from_components($schema, \@trait_component_list);
-        foreach (@$trait_cvterm_ids) {
-          push @trait_list_int, $_;
-        }
-    } else {
-        my @trait_component_ids;
-        foreach (@trait_component_list) {
-            my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $_)->cvterm_id();
-            push @trait_component_ids, $cvterm_id;
-        }
-        my $trait_cvterm_ids = SGN::Model::Cvterm->get_traits_from_components($schema, \@trait_component_ids);
-        foreach (@$trait_cvterm_ids) {
-          push @trait_list_int, $_;
+
+    if (scalar(@trait_component_list)>0){
+        if ($trait_component_list[0] =~ m/^\d+$/) {
+            my $trait_cvterm_ids = SGN::Model::Cvterm->get_traits_from_components($schema, \@trait_component_list);
+            foreach (@$trait_cvterm_ids) {
+              push @trait_list_int, $_;
+            }
+        } else {
+            my @trait_component_ids;
+            foreach (@trait_component_list) {
+                my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $_)->cvterm_id();
+                push @trait_component_ids, $cvterm_id;
+            }
+            my $trait_cvterm_ids = SGN::Model::Cvterm->get_traits_from_components($schema, \@trait_component_ids);
+            foreach (@$trait_cvterm_ids) {
+              push @trait_list_int, $_;
+            }
         }
     }
+
     my @plot_list_int;
     foreach (@plot_list) {
         if ($_ =~ m/^\d+$/) {
@@ -428,7 +432,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $datalevel         = $c->req->param("phenotype_datalevel");
     my $timestamp_included = $c->req->param("timestamp") || 0;
     my $cookie_value      = $c->req->param("download_token_value");
-    my $search_type        = $c->req->param("search_type") || 'fast';
+    my $search_type        = $c->req->param("search_type") || 'complete';
 
     my $accession_data;
     if ($accession_list_id) {
@@ -494,10 +498,10 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
     if ($format eq "html") { #dump html in browser
         $output = "";
-        my @header = split /\t/, $data[0];
+        my @header = @{$data[0]};
         my $num_col = scalar(@header);
         for (my $line =0; $line< @data; $line++) {
-            my @columns = split /\t/, $data[$line];
+            my @columns = @{$data[$line]};
             my $step = 1;
             for(my $i=0; $i<$num_col; $i++) {
                 if ($columns[$i]) {
@@ -528,10 +532,10 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
             #build csv with column names
             open(CSV, ">", $tempfile) || die "Can't open file $tempfile\n";
-                my @header = split /\t/, $data[0];
+                my @header = @{$data[0]};
                 my $num_col = scalar(@header);
                 for (my $line =0; $line< @data; $line++) {
-                    my @columns = split /\t/, $data[$line];
+                    my @columns = @{$data[$line]};
                     my $step = 1;
                     for(my $i=0; $i<$num_col; $i++) {
                         if ($columns[$i]) {
@@ -553,7 +557,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
             my $ws = $ss->add_worksheet();
 
             for (my $line =0; $line< @data; $line++) {
-                my @columns = split /\t/, $data[$line];
+                my @columns = @{$data[$line]};
                 for(my $col = 0; $col<@columns; $col++) {
                     $ws->write($line, $col, $columns[$col]);
                 }

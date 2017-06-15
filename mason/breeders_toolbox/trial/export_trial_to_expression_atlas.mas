@@ -10,7 +10,7 @@ $user_name
 <div class="well">
     <h3>Export to Expression Atlas</h3>
     <button class="btn btn-primary" id="export_trial_to_expression_atlas" name="export_trial_to_expression_atlas">Export</button>
-    <a href="<% $expression_atlas_url %>" target="_blank" class="btn btn-primary" >Go To Expression Atlas</a>
+    <a href="<% $expression_atlas_url %>/expression_viewer/input" target="_blank" class="btn btn-primary" >Go To Expression Atlas</a>
 </div>
 
 
@@ -120,6 +120,10 @@ jQuery(document).ready(function() {
 
     jQuery("#export_trial_to_expression_atlas").click( function () {
         jQuery('#export_to_expression_atlas_dialog').modal('show');
+    });
+
+    jQuery(document).on('change', '#expression_atlas_trial_id', function() {
+        expression_atlas_change_trials();
     });
 
     jQuery("#expression_atlas_export_ok_button").click( function () {

@@ -52,7 +52,7 @@ function checkPcaResult () {
         dataType: 'json',
         url: '/pca/check/result/' + popId,
         success: function(response) {
-            if (response.result === 'yes') {
+            if (response.result) {
 		pcaResult();					
             } else { 
 		jQuery("#run_pca").show();	
@@ -140,8 +140,8 @@ function pcaResult () {
 
     var popId  = getPopulationId();
     var listId = getListId();
-
-    if ( popId && popId.match(/uploaded_/)) {	
+   
+    if (!listId && popId.match(/uploaded_/)) {	
 	listId = popId.replace("uploaded_", "");
     }
 
@@ -149,19 +149,16 @@ function pcaResult () {
     var listType;
     
     if (listId) {
-    var genoList = getPcaGenotypesListData(listId);
+	var genoList = getPcaGenotypesListData(listId);
 	listName = genoList.name;
 	listType = genoList.listType;
     }
     
-    if ( popId == null) {
-	popId = listId;
-    }
-
     if (listId || popId) {
 	jQuery("#pca_message").html("Running PCA... please wait...");
+	jQuery("#run_pca").hide();
     }  
-   
+  
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -193,11 +190,13 @@ function pcaResult () {
 		jQuery("#run_pca").hide();
 
             } else {                
-		jQuery("#pca_message").html(response.status); 
+		jQuery("#pca_message").html(response.status);
+		jQuery("#run_pca").show();
             }
 	},
         error: function(response) {                    
             jQuery("#pca_message").html('Error occured running population structure analysis (PCA).');
+	    jQuery("#run_pca").show();
         }  
     });
   

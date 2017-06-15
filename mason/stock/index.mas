@@ -232,19 +232,19 @@ function jqueryStuff() {
    <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 , subtitle=>$subtitle &>
       <& /stock/stockprops.mas,
        stock_id    => $stock_id,
-	props      => $stockprops ,
-	div_name   =>'synonyms',
-	subset     =>$resources,
-	editable   => [ 'stock_synonym' ],
-	edit_privs => $edit_privs   &>
+       props      => $stockprops ,
+       div_name   =>'synonyms',
+       subset     =>$resources,
+       editable   => [ 'stock_synonym' ],
+       edit_privs => $edit_privs   &>
 </&>
 %  $div_name = join("_", @editable_stock_props);
 % my $props_subtitle = $edit_privs ? "[<a id=\"stock_add_props\" href=\"javascript:stockprops_addPropDialog()\">Add...</a>]" : "[Add]";
 
     <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
       <& /stock/stockprops.mas,
-	 stock_id  =>$stock_id,
-	props      => $stockprops,
+       stock_id  =>$stock_id,
+       props      => $stockprops,
         div_name   => 'stockprops',
 	edit_privs => $edit_privs,
 	subset     => \@editable_stock_props,
@@ -473,12 +473,12 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
       url: "<% $test_url %>",
       success: function(response) {
         if ( response.indexOf("Accession_<%$stock_id%>") > -1 ) {  // if dataset is found, create and display link
-		      jQuery('#jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the tracks for this accession in JBrowse</a>');
-	      }
+	         jQuery('#jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the tracks for this accession in JBrowse</a>');
+		       }
         else { // if not found, display message that dataset doesn't exist
-		      jQuery('#jbrowse_check').html(" <i>This accession does not have any data in Jbrowse.</i>");
-     		}
-	    },
+	           jQuery('#jbrowse_check').html(" <i>This accession does not have any data in Jbrowse.</i>");
+     		   				   }
+						       },
       error: function() {
         jQuery('#jbrowse_check').html(" <i>Jbrowse has not been set up for this database.</i>");
       }

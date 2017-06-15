@@ -13,6 +13,7 @@ experiment_type	field_layout				00052
 experiment_type	genotyping_experiment				00052	
 experiment_type	genotyping_layout				00052	
 experiment_type	phenotyping_experiment				00052	
+experiment_type	seedlot_experiment				00077	
 genotype_property	igd number					
 genotype_property	infinium array					sgn database
 genotype_property	snp genotyping					
@@ -151,6 +152,8 @@ stock_relationship	offspring_of				00052
 stock_relationship	plant_of				00052	
 stock_relationship	plot_of				00052	
 stock_relationship	tissue_sample_of				00052	
+stock_relationship	collection_of				00077	
+stock_relationship	seed transaction				00077	
 stock_type	accession				00052	
 stock_type	backcross population				00052	
 stock_type	cross				00052	
@@ -162,6 +165,7 @@ stock_type	population				00052
 stock_type	tissue_sample				00052	
 stock_type	training population				00052	
 stock_type	vector_construct				00052	
+stock_type	seedlot				00077	
 trait_property	trait_categories					
 trait_property	trait_default_value					
 trait_property	trait_details					
@@ -178,4 +182,11 @@ protocol_property	published date	From BrAPI	03/27/2017	nm529	00076
 protocol_property	protocol type	From BrAPI	03/27/2017	nm529	00076	
 protocol_property	protocol unit	From BrAPI	03/27/2017	nm529	00076	
 protocol_property	protocol comment	From BrAPI	03/27/2017	nm529	00076	
+composable_cvs	trait_ontology		05/01/2017		00073	
+composable_cvs	composed_trait_ontology		05/01/2017		00073	
+composable_cvs	object_ontology		05/01/2017		00073	
+composable_cvs	attribute_ontology		05/01/2017		00073	
+composable_cvs	method_ontology		05/01/2017		00073	
+composable_cvs	unit_ontology		05/01/2017		00073	
+composable_cvs	time_ontology		05/01/2017		00073	
 project_design? 						suggested to move the trial design names from projectprop.value to projectprop.type_id

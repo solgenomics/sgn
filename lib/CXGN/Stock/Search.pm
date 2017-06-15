@@ -37,6 +37,7 @@ my $stock_search = CXGN::Stock::Search->new({
 	limit=>$limit,
 	offset=>$offset,
 	minimal_info=>o  #for only returning stock_id and uniquenames
+    display_pedigree=>1 #to calculate and display pedigree
 });
 my ($result, $records_total) = $stock_search->search();
 
@@ -205,6 +206,12 @@ has 'offset' => (
 );
 
 has 'minimal_info' => (
+    isa => 'Bool',
+    is => 'rw',
+	default => 0
+);
+
+has 'display_pedigree' => (
     isa => 'Bool',
     is => 'rw',
 	default => 0
@@ -466,9 +473,11 @@ sub search {
 			my $donor_accessions = $stockprop_hash->{'donor'} ? $stockprop_hash->{'donor'} : [];
 			my $donor_institutes = $stockprop_hash->{'donor institute'} ? $stockprop_hash->{'donor institute'} : [];
 			my $donor_puis = $stockprop_hash->{'donor PUI'} ? $stockprop_hash->{'donor PUI'} : [];
-			for (0 .. scalar(@$donor_accessions)){
-				push @donor_array, { 'donorGermplasmName'=>$donor_accessions->[$_], 'donorAccessionNumber'=>$donor_accessions->[$_], 'donorInstituteCode'=>$donor_institutes->[$_], 'germplasmPUI'=>$donor_puis->[$_] };
-			}
+            if (scalar(@$donor_accessions)>0 && scalar(@$donor_institutes)>0 && scalar(@$donor_puis)>0 && scalar(@$donor_accessions) == scalar(@$donor_institutes) && scalar(@$donor_accessions) == scalar(@$donor_puis)){
+                for (0 .. scalar(@$donor_accessions)-1){
+                    push @donor_array, { 'donorGermplasmName'=>$donor_accessions->[$_], 'donorAccessionNumber'=>$donor_accessions->[$_], 'donorInstituteCode'=>$donor_institutes->[$_], 'germplasmPUI'=>$donor_puis->[$_] };
+                }
+            }
 			push @result, {
 				stock_id => $stock_id,
 				uniquename => $uniquename,
@@ -483,9 +492,9 @@ sub search {
 				organizations =>$stockprop_hash->{'organization'} ? join ',', @{$stockprop_hash->{'organization'}} : undef,
 				accessionNumber=>$stockprop_hash->{'accession number'} ? join ',', @{$stockprop_hash->{'accession number'}} : undef,
 				germplasmPUI=>$stockprop_hash->{'PUI'} ? join ',', @{$stockprop_hash->{'PUI'}} : undef,
-				pedigree=>$self->germplasm_pedigree_string($stock_id),
+				pedigree=>$self->display_pedigree ? $self->germplasm_pedigree_string($stock_id) : 'DISABLED',
 				germplasmSeedSource=>$stockprop_hash->{'seed source'} ? join ',', @{$stockprop_hash->{'seed source'}} : undef,
-				synonyms=> $stockprop_hash->{'stock_synonym'} ? join ',', @{$stockprop_hash->{'stock_synonym'}} : undef,
+				synonyms=> $stockprop_hash->{'stock_synonym'} ? $stockprop_hash->{'stock_synonym'} : [],
 				instituteCode=>$stockprop_hash->{'institute code'} ? join ',', @{$stockprop_hash->{'institute code'}} : undef,
 				instituteName=>$stockprop_hash->{'institute name'} ? join ',', @{$stockprop_hash->{'institute name'}} : undef,
 				biologicalStatusOfAccessionCode=>$stockprop_hash->{'biological status of accession code'} ? join ',', @{$stockprop_hash->{'biological status of accession code'}} : undef,
