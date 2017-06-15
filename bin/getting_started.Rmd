@@ -1,0 +1,129 @@
+---
+title: "Pedigree Verification"
+author: "Bryan"
+date: "June 13, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Packages
+
+First lets install and load a couple of packages that we'll need. *pedigreemm* for calculating additive relationships and *proxy* for calculating genetic distances.
+
+```{r}
+install.packages("pedigreemm")
+install.packages("proxy")
+library(pedigreemm)
+library(proxy)
+```
+
+To read a bit about each of these packages and learn about their functions:
+
+```{r}
+help(package="pedigreemm")
+help(package="proxy")
+
+```
+
+## Load pedigrees from Potato Paper
+
+Ok, time to work with real data. Download the csv files from the potato paper (https://link.springer.com/article/10.1007%2Fs12230-016-9556-y). They are included at the very end of the paper in the supplementary material section.
+
+```{r}
+#Potato pedigrees and Additive Relationships
+
+# set working directory and read in pedigree csv file
+setwd("/home/bryan/Downloads")
+potato_ped <- read.csv("12230_2016_9556_MOESM1_ESM.csv", header = TRUE, check.names = FALSE)
+
+# use editPed to order the pedigree by generation and make sure there is a row for each unique accession name, including parents
+potatoP2= editPed(dam=potato_ped$Mother, sire=potato_ped$Father, label=potato_ped$Name)
+head(potatoP2)
+
+# read records corrected by editPed into a formal pedigree object
+potatoP3= pedigree(potatoP2$sire, potatoP2$dam, potatoP2$label)
+head(potatoP3)
+
+# calculate matrix of additive relationship scores based on pedigree
+potatoAmat <- getA(potatoP3)
+head(potatoAmat)
+```
+
+## Load marker/dosage matrix from Potato Paper
+
+```{r}
+#Potato Markers and Genetic Distances
+
+# read in marker/dosage csv file
+potato_markers <- read.csv("12230_2016_9556_MOESM2_ESM.csv", header = TRUE, check.names = FALSE)
+
+# transpose markers so accessions are rows and markers are columns
+tpotato_markers <- t(potato_markers)
+
+# column names that should form the header are now in first row. So replace the header with the first row
+colnames(tpotato_markers) <- as.character(unlist(tpotato_markers[1,]))
+tpotato_markers = tpotato_markers[-1, ]
+
+# set class as numeric so all matrix values will work in calculations, including NAs
+class(tpotato_markers) <- "numeric"
+
+# calculate Euclidean distances
+potato_marker_distances <- dist(tpotato_markers, method = "Euclidean")
+
+# look at the structure of the result object - its not a matrix anymore, its a 'dist'! 
+str(potato_marker_distances) 
+
+# convert distances to a matrix so they are easier to manipulate
+dist_matrix = as.matrix(potato_marker_distances)
+
+# check dimensions of our matrices
+dim(potatoAmat)
+dim(dist_matrix)
+
+# We have too many genotypes, so make a list of all the accessions in the pedigree matrix, and use it to subset the genetic distance matrix
+include_list <- labels(potatoAmat[,"W8848-3"]) #
+subset_matrix <- dist_matrix[rownames(dist_matrix) %in% include_list, colnames(dist_matrix) %in% include_list] 
+dim(subset_matrix) # now it should match
+
+```
+
+## Recreate Potato Paper Graph with ggplot2
+
+```{r}
+# install and load ggplot2 (Grammar of Graphics package)
+install.packages("ggplot2")
+library(ggplot2)
+help(ggplot)
+
+# get values for W8848-3, excluding self comparisons, from matrices
+x <- potatoAmat[!rownames(potatoAmat) %in% "W8848-3","W8848-3"]
+y <- subset_matrix["W8848-3",!colnames(subset_matrix) %in% "W8848-3"]
+
+# ensure both vectors are in same order by sorting with accession names
+xord <- order(names(x))
+x <- x[xord]
+yord <- order(names(y))
+y <- y[yord]
+
+# create plot!
+ggplot()+ggtitle("W8848–3 Plot recreated")+labs(x="Additive relationship",y="Marker-based distance")+geom_text(aes(x=x,y=y,label=names(x)))
+
+```
+
+
+## Now apply the same techniques to the data from Cassavabase!
+
+```{r}
+
+setwd("/home/bryan/Desktop") # set the working directory to where you mounted/copied/downloaded your files
+
+ped <- read.table("Pedigrees.txt", sep="\t", header = TRUE)
+markers <- read.table("genotypes.txt", header = TRUE)
+
+
+```
+
+
