@@ -587,6 +587,7 @@ my $c = shift;
 my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedigree_stock_id, $accession_name);
 my $female_parent = '';
 my $male_parent = '';
+my $cross_type = '';
 
     $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
     $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
@@ -604,7 +605,7 @@ my $male_parent = '';
 
     open my $TEMP, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
 
-	print $TEMP "Accession\tFemale_Parent\tMale_Parent";
+	print $TEMP "Accession\tFemale_Parent\tMale_Parent\tCross_Type";
  	print $TEMP "\n";
        my $check_pedigree = "FALSE";
        my $len;
@@ -615,7 +616,7 @@ my $male_parent = '';
 
 	$accession_name = $accession_list[$i];
 	my $pedigree_stock_id = $accession_ids[$i];
-	my @pedigree_parents = CXGN::Chado::Stock->new ($schema, $pedigree_stock_id)->get_direct_parents();
+	my @pedigree_parents = CXGN::Stock->new ( schema => $schema, stock_id => $pedigree_stock_id)->get_direct_parents();
 	$len = scalar(@pedigree_parents);
 	if($len > 0)
 	{
@@ -625,11 +626,12 @@ my $male_parent = '';
         my $type = @$parent[2];
         if ($type eq 'female') {
             $female_parent = @$parent[1];
+            $cross_type = @$parent[3];
         } elsif ($type eq 'male') {
             $male_parent = @$parent[1];
         }
     }
-    print $TEMP "$accession_name\t$female_parent\t$male_parent\n";
+    print $TEMP "$accession_name\t$female_parent\t$male_parent\t$cross_type\n";
 
   	}
 
