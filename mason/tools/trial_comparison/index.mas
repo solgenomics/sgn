@@ -126,14 +126,18 @@ function fetchAndBuildGraphs() {
          alert(response.error);
       }
       else { 
-          createGraphs(response)
+          d3.select('.tc-canv').html("");
+          console.log(response);
+          createGraphs(response);
+          createHistogram(response);
       }
     }
   });
 }
 
-function createGraphs(response){
-    var size = 650;
+var view_size = 650;
+
+function createHistogram(response){
     var variable_name = $('#trait_select option:selected').text();
     if (response.cvterm_id=="TEST_TEST"){
       variable_name = "Variable";
@@ -161,23 +165,57 @@ function createGraphs(response){
 
     //generate all the grid SVGs and pairs of studies
     var canv = d3.select('.tc-canv');
-    canv.html("");
+
+    var hist = canv.append('svg').attr({
+      width:"100%",
+      "viewBox": "0 0 "+view_size+" "+view_size
+    }).classed(".tc-histogram",true);
+}
+
+function createGraphs(response){
+    var variable_name = $('#trait_select option:selected').text();
+    if (response.cvterm_id=="TEST_TEST"){
+      variable_name = "Variable";
+    }
+    //parse the data
+    var data = d3.csv.parse(response.csv,
+        function(d) {
+            var dp = {
+                study: d.studyDbId,
+                studyName: d.studyName,
+                accession: d.germplasmDbId,
+                accessionName:d.germplasmName,
+                value: ((d[variable_name]==="") ? null : +d[variable_name])
+            };
+            return dp;
+        }, 
+        function(error, rows) {
+            console.log(rows);
+            console.log(error);
+    });
+
+    //nest it by study
+    var studies = d3.nest().key(function(d) {return d.study;}).entries(data);
+    var num_studies = studies.length;
+
+    //generate all the grid SVGs and pairs of studies
+    var canv = d3.select('.tc-canv');
     var grid_size = 96/(num_studies-1) - (1+1/(num_studies));
     var pairwise_data = [];
     for (var i = 0; i<num_studies-1; i++){
         var row = canv.append("div").classed("tc-grid-row", true);
         for (var j = 1; j<num_studies; j++){
             if (i<j){
-                pairwise_data.push({"a":studies[i],"b":studies[j]});
+                pairwise_data.push({"a":studies[j],"b":studies[i]});
                 row.append("svg")
                     .classed("tc-grid-box", true)
                     .classed("tc-graph", true)
-                    .attr("viewBox","0 0 "+size+" "+size)
+                    .attr("viewBox","0 0 "+view_size+" "+view_size)
                     .style("width",grid_size+"%");
             } else {
                 row.append("svg")
                     .classed("tc-grid-box", true)
-                    .attr("viewBox","0 0 "+size+" "+size)
+                    .attr("viewBox","0 0 "+view_size+" "+view_size)
                     .style("width",grid_size+"%");
             }
         }
@@ -191,8 +229,8 @@ function createGraphs(response){
         .classed("tc-background",true)
         .attr("x","0")
         .attr("y","0")
-        .attr("width",size)
-        .attr("height",size);
+        .attr("width",view_size)
+        .attr("height",view_size);
     if (num_studies>2){
         //set up transition on click
         graphs.on('click', function(d,i){
@@ -234,7 +272,7 @@ function createGraphs(response){
                     .insert('svg',".tc-expanded + *")
                     .classed("tc-grid-box", true)
                     .classed("placeholder", true)
-                    .attr("viewBox","0 0 "+size+" "+size)
+                    .attr("viewBox","0 0 "+view_size+" "+view_size)
                     .style("width",grid_size+"%");
                 setTimeout(function(){ 
                     graph.style("width","99%")
@@ -255,42 +293,37 @@ function createGraphs(response){
     graphs.each(function(study_pair){
         var axis_offset = 70;
         var current_graph = d3.select(this);
-        var Xscale = d3.scale.linear().range([0, size-axis_offset*2]);
-        var Yscale = d3.scale.linear().range([size-axis_offset*2, 0]);
+        var Xscale = d3.scale.linear().range([0, view_size-axis_offset*2]);
+        var Yscale = d3.scale.linear().range([view_size-axis_offset*2, 0]);
         var color = d3.scale.category10();
         var Xaxis = d3.svg.axis().scale(Xscale).orient("bottom").ticks(10);
         var Yaxis = d3.svg.axis().scale(Yscale).orient("left").ticks(10);
-        var xBounds = d3.extent(study_pair.a.values, function(d) { return d.value; });
-        var yBounds = d3.extent(study_pair.b.values, function(d) { return d.value; });
+        var xBounds = d3.extent(study_pair.a.values.concat(study_pair.b.values), function(d) { return d.value; });
+        var yBounds = xBounds;
         Xscale.domain(xBounds).nice();
         Yscale.domain(yBounds).nice();
+        console.log(Xscale.domain());
 
         //axes!
         current_graph.append("g")
           .classed("tc-graph-axis",true)
-          .attr("transform", "translate("+axis_offset+"," + (size-axis_offset) + ")")
+          .attr("transform", "translate("+axis_offset+"," + (view_size-axis_offset) + ")")
           .call(Xaxis)
           .append("text")
-          .attr("class", "label")
-          .attr("x", size/2-axis_offset)
+          .attr("x", view_size/2-axis_offset)
           .attr("y", 50)
-          .style("font-size","18px")
-          .style("text-anchor", "middle")
-          .text(study_pair.a.values[0].studyName+" "+variable_name);
+          .text(study_pair.a.values[0].studyName+": "+variable_name);
         current_graph.append("g")
           .classed("tc-graph-axis",true)
           .attr("transform", "translate("+axis_offset+","+axis_offset+")")
           .call(Yaxis)
           .append("text")
           .attr("transform", "rotate(-90)")
-          .attr("class", "label")
-          .attr("x", -size/2+axis_offset)
+          .attr("x", -view_size/2+axis_offset)
           .attr("y", -40)
-          .style("font-size","18px")
-          .style("text-anchor", "middle")
-          .text(study_pair.b.values[0].studyName+" "+variable_name);
+          .text(study_pair.b.values[0].studyName+": "+variable_name);
 
-        //add data!
+        //parse/filter data!
         var accessions = d3.nest().key(function(d) {return d.accession;})
                            .entries(study_pair.a.values.concat(study_pair.b.values))
                            .filter(function(d) {
@@ -316,37 +349,41 @@ function createGraphs(response){
                                x:x,
                                y:y
                              }
-                           });             
+                           });     
+        //create plot points using data        
         var plotpoints = current_graph.selectAll(".tc-scatter-point")
           .data(accessions)
-          .enter().append("g").classed(".tc-scatter-point",true)
+          .enter().append("g").classed("tc-scatter-point",true)
         plotpoints.append("circle")
           .attr("r", 4)
           .attr("cx", function(d) { return Xscale(d.x)+axis_offset; })
-          .attr("cy", function(d) { return Yscale(d.y)+axis_offset; })
-          .style("fill","#49f");
+          .attr("cy", function(d) { return Yscale(d.y)+axis_offset; });
         plotpoints.append("circle")
           .attr("r", 15)
           .attr("cx", function(d) { return Xscale(d.x)+axis_offset; })
           .attr("cy", function(d) { return Yscale(d.y)+axis_offset; })
           .style("opacity","0");
+
+        //add line of best fit and rsquared
+        
         var best_fit = lineOfBestFit(accessions);
         console.log(best_fit);
 
-        //add line of best fit and rsquared
-        var x1 = 0;
-        var y1 = best_fit.yIntercept;
-        if (y1<0){
-          y1 = 0
-          x1 = best_fit.xIntercept;
+        var x1 = Xscale.domain()[0];
+        var y1 = best_fit.slope*x1+best_fit.yIntercept;
+        if (y1<Yscale.domain()[0]){
+          y1 = Yscale.domain()[0];
+          x1 = (y1-best_fit.yIntercept)/best_fit.slope;
         }
-        var x2 = xBounds[1];
+
+        var x2 = Xscale.domain()[1];
         var y2 = best_fit.slope*x2+best_fit.yIntercept;
-        if (y2>yBounds[1]){
-          y2 = yBounds[1];
+        if (y2>Yscale.domain()[1]){
+          y2 = Yscale.domain()[1];
           x2 = (y2-best_fit.yIntercept)/best_fit.slope;
         }
-        current_graph.insert('line',".tc-scatter-point:first-of-type")
+
+        current_graph.insert('line',".tc-scatter-point")
           .classed('tc-fit-line',true)
           .attr({
             x1: Xscale(x1)+axis_offset+1,
@@ -355,41 +392,37 @@ function createGraphs(response){
             y2: Yscale(y2)+axis_offset-1
           });
         current_graph.append('text')
-          .attr('x',size- axis_offset )
+          .classed("tc-info-text",true)
+          .attr('x',view_size- axis_offset )
           .attr('y',30)
-          .style("text-anchor","end")
-          .style("font-size","18px")
           .text("r^2 = "+best_fit.rsquared.toFixed(3));
         current_graph.append('text')
-          .attr('x',size- axis_offset )
+          .classed("tc-info-text",true)
+          .attr('x',view_size- axis_offset )
           .attr('y',50)
-          .style("text-anchor","end")
-          .style("font-size","18px")
           .text("y = "+best_fit.slope.toFixed(3)+"x + "+best_fit.yIntercept.toFixed(3));
 
         //tooltip
         var tooltip = current_graph.append('g')
-          .classed(".d3-tool-tip",true)
-        tooltip.append('rect').classed(".d3-tool-tip-rect",true)
+          .classed("tc-tool-tip",true)
+        tooltip.append('rect').classed("tc-tool-tip-rect",true)
           .attr({
             x:-15,
             y:-38,
             width: 100,
-            height: 30,
-            fill: "rgba(0,0,0,0.8)"
+            height: 30
           });
-        tooltip.append('text').classed(".tc-tool-tip-text",true)
+        tooltip.append('text').classed("tc-tool-tip-text",true)
           .attr({
             x:10-15,
-            y:20-38,
-            fill:"#fff",
-            "font-size":14
+            y:20-38
           })
           .text("");
         var trianglePoints = "-5 -8.5, 0 0, 5 -8.5"
         tooltip.append('polyline')
           .attr('points', trianglePoints)
-          .style('fill', 'rgba(0,0,0,0.8)');
+          .classed("tc-tool-tip-point",true);
+
         tooltip.setTip = function (visible,text,x,y){
           if (!visible){
             this.hoverlock = false;
@@ -438,32 +471,28 @@ function createGraphs(response){
                  .classed("tc-grid-row",true)
                  .classed("label-row",true)
                  .selectAll(".tc-top-label")
-                 .data(studies.slice(0,studies.length-1)).enter()
+                 .data(studies.slice(1,studies.length)).enter()
                  .append('svg').classed("tc-top-label",true)
                  .attr("viewBox","0 0 "+label_width*10+" "+label_height*10)
                  .style("width",grid_size+"%")
                  .append('g')
                  .append("text")
-                 .attr("class", "label")
+                 .classed("tc-label-text",true)
                  .attr("x", label_width*10/2)
                  .attr("y", label_height*10/2+6)
-                 .style("font-size","26px")
-                 .style("text-anchor", "middle")
                  .text(function(d){return d.values[0].studyName;});
     var lefts = d3.select('.tc-canv').selectAll(".tc-grid-row:not(.label-row)")
                  .insert('svg',":first-child")
-                 .data(studies.slice(1,studies.length))
+                 .data(studies.slice(0,studies.length-1))
                  .classed("tc-left-label",true)
                  .attr("viewBox","0 0 "+label_height*10+" "+label_width*10)
                  .style("width","3%")//.style("background","lightblue")
                  .append('g')
                  .attr("transform", "rotate(-90)")
                  .append("text")
-                 .attr("class", "label")
+                 .classed("tc-label-text",true)
                  .attr("x", -label_width*10/2)
                  .attr("y", label_height*10/2+6)
-                 .style("font-size","26px")
-                 .style("text-anchor", "middle")
                  .text(function(d){return d.values[0].studyName;});
 
 }
@@ -492,7 +521,6 @@ function lineOfBestFit(points){
     SSE+=Math.pow(points[i].y-(slope*points[i].x+yIntercept),2);
     SSTO+=Math.pow(points[i].y-ybar,2);
   }
-  console.log(SSE+" "+SSTO);
 
   return {
     slope:slope,

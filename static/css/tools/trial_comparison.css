@@ -70,6 +70,24 @@
     margin-bottom: 1%;
 }
 
+.tc-label-text {
+    font-size: 26px;
+    text-anchor: middle;
+}
+
+.tc-scatter-point circle{
+    fill: #49f;
+}
+
+.tc-histogram{
+    fill: #000;
+}
+
+.tc-fit-line{
+    stroke: #f94;
+    stroke-width: 4px;
+}
+
 .tc-graph-axis{
     fill: #3e3e3e;
 }
@@ -81,16 +99,27 @@
   stroke-width: 2;
 }
 
-.tc-scatter-point{
-    stroke: #27c;
-    fill: none;
-    stroke-width: 3px;
+.tc-graph-axis text{
+    font-size: 18px;
+    text-anchor: middle;
 }
 
-.tc-fit-line{
-    stroke: #f94;
-    stroke-width: 4px;
+.tc-info-text{
+    text-anchor: end;
+    font-size: 18px;
+}
+
+.tc-tool-tip-rect{
+    fill: rgba(0,0,0,0.8);
+}
+.tc-tool-tip-text{
+    fill: #fff;
+    font-size: 14px;
 }
 .tc-tool-tip-text *:visited{
   color: #fff;
+}
+
+.tc-tool-tip-point {
+    fill: rgba(0,0,0,0.8);
 }
