@@ -6,7 +6,7 @@ $identifier => ''
 </%args>
 
 
- <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js', 'CXGN.BreedersToolbox.GenerateTrialBarcode'] &>
+ <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js'] &>
 
 <div class="modal fade" id="generate_trial_barcode_dialog" name="generate_trial_barcode_dialog" tabindex="-1" role="dialog" aria-labelledby="generateTrialBarcodeDialog">
     <div class="modal-dialog modal-lg" role="document">

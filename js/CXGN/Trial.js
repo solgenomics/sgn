@@ -753,4 +753,23 @@ jQuery(document).ready(function ($) {
       jQuery('#edit_field_map_dialog').modal('hide');
       open_subtitute_plot_accession_dialog();
     });
+
+    jQuery('#generate_trial_barcode_link').click(function () {
+        $('#generate_trial_barcode_button_dialog').modal("show");
+    });
+
+    jQuery('#trial_plot_barcode').click(function () {
+        $('#generate_trial_barcode_button_dialog').modal("hide");
+        $('#generate_trial_barcode_dialog').modal("show");
+    });
+
+    jQuery('#trial_accession_barcode').click(function () {
+        $('#generate_trial_barcode_button_dialog').modal("hide");
+        $('#generate_trial_barcode_dialog').modal("show");
+    });
+
+    jQuery('#trial_plant_barcode').click(function () {
+        $('#generate_trial_barcode_button_dialog').modal("hide");
+        $('#generate_trial_barcode_dialog').modal("show");
+    });
 });
