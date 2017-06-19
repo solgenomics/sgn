@@ -629,7 +629,7 @@ my $male_parent = '';
             $male_parent = @$parent[1];
         }
     }
-    print $TEMP "$accession_name \t  $female_parent \t $male_parent\n";
+    print $TEMP "$accession_name\t$female_parent\t$male_parent\n";
 
   	}
 
