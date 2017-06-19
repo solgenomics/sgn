@@ -211,7 +211,10 @@ jQuery(document).ready(function () {
                 url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plants',
 
                 success: function(response){
-                
+
+                if (response.plants == '') {
+                    alert("Trial has no plant entries.");
+                }
                 var trial_plants_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
                 for (i=0; i<response.plants[0].length; i++) {
                     trial_plants_html = trial_plants_html + response.plants[0][i][1] + "\n";
