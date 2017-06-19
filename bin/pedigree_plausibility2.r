@@ -1,14 +1,16 @@
-genotype_data <- read.table ("/home/klz26/host/test/red_genos.txt", header = TRUE, check.names = FALSE, stringsAsFactors = FALSE)
-pedigree_data <- read.table ("/home/klz26/host/test/Pedigrees.txt", header = TRUE, sep = "\t", check.names = FALSE, stringsAsFactors = FALSE)
+genotype_data <- read.table ("/home/klz26/host/test/267genotypes-p3.txt", header = TRUE, check.names = FALSE, stringsAsFactors = FALSE)
+pedigree_data <- read.table ("/home/klz26/host/test/ped.txt", header = TRUE, sep = "\t", check.names = FALSE, stringsAsFactors = FALSE)
 
 colnames(pedigree_data)[1] <- "Name"
 colnames(pedigree_data)[2] <- "Mother"
 colnames(pedigree_data)[3] <- "Father"
+colnames(genotype_data) <- gsub('\\|[^|]+$', '', colnames(genotype_data))
 pedigree_data["Pedigree Conflict"] <- NA
 
 length_g <- length(genotype_data[,1])
 length_p <- length(pedigree_data[,1])
 implausibility_count <- 0
+potential_conflicts <-0
 
 for (x in 1:length_p)
 {
@@ -20,6 +22,7 @@ for (x in 1:length_p)
 
   if (test_father_name == "NULL" || test_child_name == "NULL" || test_mother_name == "NULL"){
   print ("Genotypes not all present, skipping analysis")
+  break
   }
 
   for (q in 1:length_g)
@@ -30,7 +33,7 @@ for (x in 1:length_p)
     
     genotype_data[q, test_mother_name]
     mother_score <- .Last.value
-    mother_score <- round(father_score, digits = 0)
+    mother_score <- round(mother_score, digits = 0)
     
     genotype_data[q, test_father_name]
     father_score <- .Last.value
@@ -40,17 +43,17 @@ for (x in 1:length_p)
     SNP <- row_vector <- as.vector(genotype_data[q,1])
     if (child_score > parent_score) {
         implausibility_count <- implausibility_count + 1
-        print (SNP + "of line" + test_child_name + "shows a potential pedigree conflict")
+        cat (SNP, "of line", test_child_name, "shows a potential pedigree conflict")
       } else if (mother_score == 2 & father_score == 2 & child_score != 2) {
        implausibility_count <- implausibility_count + 1
-       print (SNP + "of line" + test_child_name + "shows a potential pedigree conflict")
+       cat (SNP, "of line", test_child_name, "shows a potential pedigree conflict")
       } else if (mother_score == 2 || father_score == 2 & child_score == 0) {
        implausibility_count <- implausibility_count + 1
-       print (SNP + "of line" + test_child_name + "shows a potential pedigree conflict")
+       cat (SNP, "of line", test_child_name, "shows a potential pedigree conflict")
       } else if ((xor(mother_score == 2, father_score == 2)) & (xor(mother_score == 0, 
        father_score == 0)) & child_score == 2) {
        implausibility_count <- implausibility_count + 1
-       print (SNP + "of line" + test_child_name + "shows a potential pedigree conflict")
+       cat (SNP, "of line", test_child_name, "shows a potential pedigree conflict")
       }
     dosage_score <- implausibility_count / length_g
     dosage_score <- round(dosage_score, digits = 1)
@@ -63,7 +66,7 @@ for (x in 1:length_p)
   }
 }
 if (potential_conflicts == 1) {
-  print (potential_conflicts + "line shows a potential pedigree conflict")
+  cat (potential_conflicts ,"line shows a potential pedigree conflict")
 } else {
-  print (potential_conflicts + "lines show potential pedigree conflicts")
+  cat (potential_conflicts, "lines show potential pedigree conflicts")
 }
