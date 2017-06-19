@@ -1615,7 +1615,7 @@ sub studies_layout_GET {
 
 =cut
 
-sub studies_observations : Chained('studies_single') PathPart('observationUnits') Args(0) : ActionClass('REST') { }
+sub studies_observations : Chained('studies_single') PathPart('observationunits') Args(0) : ActionClass('REST') { }
 
 sub studies_observations_POST {
 	my $self = shift;

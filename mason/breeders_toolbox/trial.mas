@@ -42,6 +42,7 @@ $has_layout => undef
 $has_physical_map => undef
 $has_phenotypes => undef
 $phenotypes_fully_uploaded => undef
+$identifier_prefix => 'SGN'
 </%args>
 
 <style>
@@ -201,6 +202,12 @@ my $start_time = time();
 </&>
 
 </div><!--closes well-->
+
+</&>
+
+<&| /page/info_section.mas, title=>"Trial barcode",  collapsible => 1, subtitle => '[<a id="direct_phenotyping_link">Direct Phenotyping</a>]'&>
+
+     <center><& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &></center><br />
 
 </&>
 
