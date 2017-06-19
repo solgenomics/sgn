@@ -37,29 +37,33 @@ for (x in 1:length_p)
     father_score <- round(father_score, digits = 0)
 
     parent_score <- mother_score + father_score
-
+    SNP <- row_vector <- as.vector(genotype_data[q,1])
     if (child_score > parent_score) {
         implausibility_count <- implausibility_count + 1
-        print ("line" + test_child_name + "shows a pedigree conflict")
+        print (SNP + "of line" + test_child_name + "shows a potential pedigree conflict")
       } else if (mother_score == 2 & father_score == 2 & child_score != 2) {
        implausibility_count <- implausibility_count + 1
-       print ("line" + test_child_name + "shows a pedigree conflict")
+       print (SNP + "of line" + test_child_name + "shows a potential pedigree conflict")
       } else if (mother_score == 2 || father_score == 2 & child_score == 0) {
        implausibility_count <- implausibility_count + 1
-       print ("line" + test_child_name + "shows a pedigree conflict")
+       print (SNP + "of line" + test_child_name + "shows a potential pedigree conflict")
       } else if ((xor(mother_score == 2, father_score == 2)) & (xor(mother_score == 0, 
        father_score == 0)) & child_score == 2) {
        implausibility_count <- implausibility_count + 1
-       print ("line" + test_child_name + "shows a pedigree conflict")
+       print (SNP + "of line" + test_child_name + "shows a potential pedigree conflict")
       }
     dosage_score <- implausibility_count / length_g
     dosage_score <- round(dosage_score, digits = 1)
+    if (dosage_score > 5) {
+      potential_conflicts <- potential_conflicts + 1
+    }
+    dosage_score<- sprintf("%.1f%%", dosage_score)
     pedigree_data [x, 4] <- dosage_score
     implausibility_count <- 0
   }
 }
-if (implausibility_count == 1) {
-  print (implausibility_count + "line shows a pedigree conflict")
+if (potential_conflicts == 1) {
+  print (potential_conflicts + "line shows a potential pedigree conflict")
 } else {
-  print (implausibility_count + "lines show pedigree conflicts")
+  print (potential_conflicts + "lines show potential pedigree conflicts")
 }
