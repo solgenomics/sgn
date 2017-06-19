@@ -20,6 +20,17 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function ($) {
     $('#generate_trial_barcode_link').click(function () {
-  $('#generate_trial_barcode_dialog').modal("show");
+        $('#generate_trial_barcode_button_dialog').modal("show");
     });
+
+    $('#trial_plot_barcode').click(function () {
+        $('#generate_trial_barcode_button_dialog').modal("hide");
+        $('#generate_trial_barcode_dialog').modal("show");
+    });
+
+    $('#trial_accession_barcode').click(function () {
+        $('#generate_trial_barcode_button_dialog').modal("hide");
+        $('#generate_trial_barcode_dialog').modal("show");
+    });
+
 });
