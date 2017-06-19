@@ -95,13 +95,16 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $nursery = $c->req->param("nursery");
     my $added_text = $c->req->param("text_margin");
     my $barcode_type = $c->req->param("select_barcode_type");
+    my $fieldbook_barcode = $c->req->param("enable_fieldbook_2d_barcode");
 
     # convert mm into pixels
     #
-    my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } ($top_margin_mm,
-											$left_margin_mm,
-											$bottom_margin_mm,
-											$right_margin_mm);
+    my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } (
+            $top_margin_mm,
+    		$left_margin_mm,
+    		$bottom_margin_mm,
+    		$right_margin_mm
+        );
 
     # read file if upload
     #
@@ -242,17 +245,17 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
         if (defined $row){
           print "ACCESSION IS NOT EMPTY........ $row\n";
-           $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]." ".$found[$i]->[3]." ".$added_text ]);
+           $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]." ".$found[$i]->[3]." ".$added_text, $fieldbook_barcode ]);
         }
         elsif ($female_parent =~ m/^\d+/ || $female_parent =~ m/^\w+/){
           if ($found[$i]->[4] =~ m/^\//) {
             print "I SEE SLASH: $found[$i]->[4]\n";
             ($found[$i]->[4] = $found[$i]->[4]) =~ s/\///;
           }
-          $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]." ".$added_text]);
+          $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]." ".$added_text, $fieldbook_barcode]);
         }
         else {
-         $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [  $found[$i]->[0], $found[$i]->[1], $added_text ]);
+         $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [  $found[$i]->[0], $found[$i]->[1], $added_text, $fieldbook_barcode ]);
         }
 
       }
