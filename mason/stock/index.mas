@@ -336,14 +336,11 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 
 % }
 
-% if ($type) {
+
 <&| /page/info_section.mas, title=>"Related stocks" , collapsible=>1, collapsed=>0 &>
-  <& /stock/related_stocks.mas, stock => $stock_row &>
+  <& /stock/related_stock.mas, stock_id => $stock_id &>
 
 </&>
-
-% }
-
 
 <&| /page/info_section.mas, title=>"Images (" .  scalar(@$image_ids)  . ")", subtitle => "$add_image_link", collapsible=>1, collapsed=>1 &>
   <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh &>
