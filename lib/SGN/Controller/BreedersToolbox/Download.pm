@@ -584,7 +584,9 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 my $self = shift;
 my $c = shift;
-my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedigree_stock_id, $accession_name, $female_parent, $male_parent);
+my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedigree_stock_id, $accession_name);
+my $female_parent = '';
+my $male_parent = '';
 
     $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
     $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
@@ -619,12 +621,15 @@ my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedig
 	{
       		$check_pedigree = "TRUE";
 	}
-
-
-
-	    $female_parent = $pedigree_parents[0][1] || '';
-	    $male_parent = $pedigree_parents[1][1] || '';
-	  print $TEMP "$accession_name \t  $female_parent \t $male_parent\n";
+    foreach my $parent (@pedigree_parents) {
+        my $type = @$parent[2];
+        if ($type eq 'female') {
+            $female_parent = @$parent[1];
+        } elsif ($type eq 'male') {
+            $male_parent = @$parent[1];
+        }
+    }
+    print $TEMP "$accession_name \t  $female_parent \t $male_parent\n";
 
   	}
 
