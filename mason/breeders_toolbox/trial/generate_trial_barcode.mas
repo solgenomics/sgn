@@ -139,6 +139,7 @@ $identifier => ''
                     <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
                 <p>
                     <button type="button" class="btn btn-primary" name="trial_plot_barcode" id="trial_plot_barcode">Plots Barcode</button>
+                    <button type="button" class="btn btn-primary" name="trial_plant_barcode" id="trial_plant_barcode">Plants Barcode</button>
                     <button type="button" class="btn btn-primary" name="trial_accession_barcode" id="trial_accession_barcode">Accessions Barcode</button>
 
 
@@ -190,8 +191,7 @@ jQuery(document).ready(function () {
 
                 success: function(response){
 
-                    var trial_plots_html = '<textarea class="form-control" id="stock_names" name="stock_names" >'
-                    console.log(response.plots[0]);
+                    var trial_plots_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
                     for (i=0; i<response.plots[0].length; i++) {
             		    trial_plots_html = trial_plots_html + response.plots[0][i][1] + "\n";
             		}
@@ -200,9 +200,32 @@ jQuery(document).ready(function () {
             		jQuery('#trial_accessions').html(trial_plots_html);
             	    },
             	    error: function(response){
-            		      alert("Error retrieving accessions.");
+            		      alert("Error retrieving plots.");
                 }
             });
+        });
+
+        jQuery('#trial_plant_barcode').click(function() {
+
+            jQuery.ajax ( {
+                url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plants',
+
+                success: function(response){
+                
+                var trial_plants_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
+                for (i=0; i<response.plants[0].length; i++) {
+                    trial_plants_html = trial_plants_html + response.plants[0][i][1] + "\n";
+                }
+                trial_plants_html = trial_plants_html + "</textarea>";
+                jQuery('#trial_accessions').empty();
+                jQuery('#trial_accessions').html(trial_plants_html);
+                },
+                error: function(response){
+                    alert("Error retrieving plants.");
+                }
+
+            });
+
         });
 
     });
