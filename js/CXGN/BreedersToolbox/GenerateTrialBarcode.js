@@ -33,4 +33,11 @@ jQuery(document).ready(function ($) {
         $('#generate_trial_barcode_dialog').modal("show");
     });
 
+    $('#trial_plant_barcode').click(function () {
+        $('#generate_trial_barcode_button_dialog').modal("hide");
+        $('#generate_trial_barcode_dialog').modal("show");
+    });
+
+
+
 });
