@@ -22,7 +22,9 @@ $identifier => ''
                         Generate barcode for plots and accessions.
                     </p>
                         <center>
+                        <div class="well">
                         <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+                        </div>
                     <p>
 
                     <div class="well well-sm">
@@ -129,7 +131,9 @@ $identifier => ''
                     Generate barcode for plots and accessions.
                 </p>
                     <center>
+                    <div class="well">
                     <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+                    </div>
                 <p>
                     <button type="button" class="btn btn-primary" name="trial_plot_barcode" id="trial_plot_barcode">Plots Barcode</button>
                     <button type="button" class="btn btn-primary" name="trial_plant_barcode" id="trial_plant_barcode">Plants Barcode</button>
