@@ -1,0 +1,94 @@
+body{ width:100%;}
+
+.graph-grid-canv {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 600px;
+    min-height: 100px;
+    margin: auto;
+    position:relative;
+}
+
+.grid-row{
+    clear: both;
+}
+
+.grid-loc {
+    position:static;
+    height: auto;
+    float: left;
+    box-sizing: border-box;
+    margin-right: 1%;
+    margin-bottom: 1%;
+    border-style: solid;
+    border-color: #eee;
+    border-width: 1px;
+}
+
+.grid-loc:last-of-type {
+    margin-right: 0;
+}
+
+.graph-img {
+    border-width: 1px;
+    background: white;
+    border-color: #999;
+}
+.graph-img:hover {
+    border-width: 1px;
+    border-color: #49f;
+    border-width: 1px;
+}
+
+.popped-out{
+    position:absolute;
+}
+
+.top-label{
+    position:static;
+    height: auto;
+    float: left;
+    margin-right: 1%;
+    margin-bottom: 1%;
+    margin-top: 1%;
+}
+.top-label:first-of-type{
+    margin-left: 5%;
+}
+.top-label:last-of-type{
+    margin-right: 0;
+}
+
+.left-label{
+    position:static;
+    height: auto;
+    float: left;
+    margin-left: 1%;
+    margin-right: 1%;
+    margin-bottom: 1%;
+}
+
+.graph-axis{
+    fill: #3e3e3e;
+}
+
+.graph-axis path,
+.graph-axis line{
+  fill: none;
+  stroke: #3e3e3e;
+  stroke-width: 2;
+}
+
+.accession-point{
+    stroke: #27c;
+    fill: none;
+    stroke-width: 3px;
+}
+
+.graph-fit-line{
+    stroke: #f94;
+    stroke-width: 4px;
+}
+.d3-tool-tip-text *:visited{
+  color: #fff;
+}
