@@ -8,103 +8,6 @@
 
 </%args>
 
-<style type="text/css">
-body{ width:100%;}
-
-.graph-grid-canv {
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 600px;
-    min-height: 100px;
-    margin: auto;
-    position:relative;
-}
-
-.grid-row{
-    clear: both;
-}
-
-.grid-loc {
-    position:static;
-    height: auto;
-    float: left;
-    box-sizing: border-box;
-    margin-right: 1%;
-    margin-bottom: 1%;
-    border-style: solid;
-    border-color: #eee;
-    border-width: 1px;
-}
-
-.grid-loc:last-of-type {
-    margin-right: 0;
-}
-
-.graph-img {
-    border-width: 1px;
-    background: white;
-    border-color: #999;
-}
-.graph-img:hover {
-    border-width: 1px;
-    border-color: #49f;
-    border-width: 1px;
-}
-
-.popped-out{
-    position:absolute;
-}
-
-.top-label{
-    position:static;
-    height: auto;
-    float: left;
-    margin-right: 1%;
-    margin-bottom: 1%;
-    margin-top: 1%;
-}
-.top-label:first-of-type{
-    margin-left: 5%;
-}
-.top-label:last-of-type{
-    margin-right: 0;
-}
-
-.left-label{
-    position:static;
-    height: auto;
-    float: left;
-    margin-left: 1%;
-    margin-right: 1%;
-    margin-bottom: 1%;
-}
-
-.graph-axis{
-    fill: #3e3e3e;
-}
-
-.graph-axis path,
-.graph-axis line{
-  fill: none;
-  stroke: #3e3e3e;
-  stroke-width: 2;
-}
-
-.accession-point{
-    stroke: #27c;
-    fill: none;
-    stroke-width: 3px;
-}
-
-.graph-fit-line{
-    stroke: #f94;
-    stroke-width: 4px;
-}
-.d3-tool-tip-text *:visited{
-  color: #fff;
-}
-</style>
-
 <& '/page/page_title.mas', title => "Compare trials" &>
 
 <& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'CXGN.List', 'CXGN.Login', 'd3.d3Min.js' ] &>
@@ -136,7 +39,7 @@ body{ width:100%;}
 
 <div id="result_div" class="row">
   <center>
-    <div hidden="true" class="graph-grid-canv"></div>
+    <div hidden="true" class="tc-canv"></div>
   </center>
 </div>
 
@@ -214,7 +117,7 @@ function toggleSubmitButton(state){
 
 function fetchAndBuildGraphs() { 
   var list_id = $('#trials_list_select').val();
-  $(".graph-grid-canv").show(400);
+  $(".tc-canv").show();
   $.ajax( { 
    url: '/ajax/trial/compare_list_data',
    data: { 'cvterm_id' : $('#trait_select').val(), 'list_id': list_id },
@@ -223,21 +126,20 @@ function fetchAndBuildGraphs() {
          alert(response.error);
       }
       else { 
-          createGraphs(response.csv,response)
+          createGraphs(response)
       }
     }
   });
 }
 
-function createGraphs(raw_csv,response){
+function createGraphs(response){
     var size = 650;
     var variable_name = $('#trait_select option:selected').text();
     if (response.cvterm_id=="TEST_TEST"){
       variable_name = "Variable";
     }
     //parse the data
-    console.log(raw_csv);
-    var data = d3.csv.parse(raw_csv,
+    var data = d3.csv.parse(response.csv,
         function(d) {
             var dp = {
                 study: d.studyDbId,
@@ -250,55 +152,54 @@ function createGraphs(raw_csv,response){
         }, 
         function(error, rows) {
             console.log(rows);
+            console.log(error);
     });
-
-    console.log(data);
 
     //nest it by study
     var studies = d3.nest().key(function(d) {return d.study;}).entries(data);
     var num_studies = studies.length;
 
     //generate all the grid SVGs and pairs of studies
-    var canv = d3.select('.graph-grid-canv');
+    var canv = d3.select('.tc-canv');
     canv.html("");
     var grid_size = 96/(num_studies-1) - (1+1/(num_studies));
     var pairwise_data = [];
     for (var i = 0; i<num_studies-1; i++){
-        var row = canv.append("div").classed("grid-row", true);
+        var row = canv.append("div").classed("tc-grid-row", true);
         for (var j = 1; j<num_studies; j++){
             if (i<j){
                 pairwise_data.push({"a":studies[i],"b":studies[j]});
                 row.append("svg")
-                    .classed("grid-loc", true)
-                    .classed("graph-img", true)
+                    .classed("tc-grid-box", true)
+                    .classed("tc-graph", true)
                     .attr("viewBox","0 0 "+size+" "+size)
                     .style("width",grid_size+"%");
             } else {
                 row.append("svg")
-                    .classed("grid-loc", true)
+                    .classed("tc-grid-box", true)
                     .attr("viewBox","0 0 "+size+" "+size)
                     .style("width",grid_size+"%");
             }
         }
     }
-    canv.append("div").classed("grid-row", true);
+    canv.append("div").classed("tc-grid-row", true);
 
     //set up layout
-    var graphSVGs = d3.selectAll(".graph-img");
+    var graphSVGs = d3.selectAll(".tc-graph");
     var graphs = graphSVGs.append("g");
     graphs.append("rect")
+        .classed("tc-background",true)
         .attr("x","0")
         .attr("y","0")
         .attr("width",size)
-        .attr("height",size)
-        .attr("fill","white");
+        .attr("height",size);
     if (num_studies>2){
         //set up transition on click
         graphs.on('click', function(d,i){
             var graph = d3.select(this.parentNode);
             var duration = 250;
-            if (graph.classed("popped-out") && !graph.attr("inTrans")){
-                var placeholder = canv.selectAll(".grid-row").select(".placeholder");
+            if (graph.classed("tc-expanded") && !graph.attr("inTrans")){
+                var placeholder = canv.selectAll(".tc-grid-row").select(".placeholder");
                 var graphPos = placeholder.node().getBoundingClientRect();
                 var canvPos = canv.node().getBoundingClientRect();
                 var graphWidth = graphPos.right-graphPos.left;
@@ -313,7 +214,7 @@ function createGraphs(raw_csv,response){
                 setTimeout(function(){ 
                     graph.attr("inTrans",null);
                     placeholder.remove();
-                    graph.classed("popped-out",false)
+                    graph.classed("tc-expanded",false)
                          .style("width",grid_size+"%"); }, duration+30);
             } else if (!graph.attr("inTrans")) {
                 var graphPos = graph.node().getBoundingClientRect();
@@ -323,15 +224,15 @@ function createGraphs(raw_csv,response){
                 graph.style("top",(graphPos.top-canvPos.top)+"px")
                      .style("left",(graphPos.left-canvPos.left)+"px")
                      .style("width",graphWidth+"px");
-                graph.classed("popped-out",true)
+                graph.classed("tc-expanded",true)
                      .transition()
                      .style("width",canvWidth*0.99+"px")
                      .style("top",canvWidth*0.005+"px")
                      .style("left",canvWidth*0.005+"px")
                      .duration(duration);
-                var pn = canv.selectAll(".grid-row").select(".popped-out").select(function(d){return this.parentNode;})
-                    .insert('svg',".popped-out + *")
-                    .classed("grid-loc", true)
+                var pn = canv.selectAll(".tc-grid-row").select(".tc-expanded").select(function(d){return this.parentNode;})
+                    .insert('svg',".tc-expanded + *")
+                    .classed("tc-grid-box", true)
                     .classed("placeholder", true)
                     .attr("viewBox","0 0 "+size+" "+size)
                     .style("width",grid_size+"%");
@@ -343,7 +244,7 @@ function createGraphs(raw_csv,response){
         });
     } else{
       graphs.each(function(d){
-        d3.select(this.parentNode).classed("popped-out",true).style("position","static");
+        d3.select(this.parentNode).classed("tc-expanded",true).style("position","static");
       });
     }
 
@@ -366,7 +267,7 @@ function createGraphs(raw_csv,response){
 
         //axes!
         current_graph.append("g")
-          .classed("graph-axis",true)
+          .classed("tc-graph-axis",true)
           .attr("transform", "translate("+axis_offset+"," + (size-axis_offset) + ")")
           .call(Xaxis)
           .append("text")
@@ -377,7 +278,7 @@ function createGraphs(raw_csv,response){
           .style("text-anchor", "middle")
           .text(study_pair.a.values[0].studyName+" "+variable_name);
         current_graph.append("g")
-          .classed("graph-axis",true)
+          .classed("tc-graph-axis",true)
           .attr("transform", "translate("+axis_offset+","+axis_offset+")")
           .call(Yaxis)
           .append("text")
@@ -416,9 +317,9 @@ function createGraphs(raw_csv,response){
                                y:y
                              }
                            });             
-        var plotpoints = current_graph.selectAll(".accession-point")
+        var plotpoints = current_graph.selectAll(".tc-scatter-point")
           .data(accessions)
-          .enter().append("g").classed(".accession-point",true)
+          .enter().append("g").classed(".tc-scatter-point",true)
         plotpoints.append("circle")
           .attr("r", 4)
           .attr("cx", function(d) { return Xscale(d.x)+axis_offset; })
@@ -445,8 +346,8 @@ function createGraphs(raw_csv,response){
           y2 = yBounds[1];
           x2 = (y2-best_fit.yIntercept)/best_fit.slope;
         }
-        current_graph.insert('line',".accession-point:first-of-type")
-          .classed('graph-fit-line',true)
+        current_graph.insert('line',".tc-scatter-point:first-of-type")
+          .classed('tc-fit-line',true)
           .attr({
             x1: Xscale(x1)+axis_offset+1,
             y1: Yscale(y1)+axis_offset+1,
@@ -477,7 +378,7 @@ function createGraphs(raw_csv,response){
             height: 30,
             fill: "rgba(0,0,0,0.8)"
           });
-        tooltip.append('text').classed(".d3-tool-tip-text",true)
+        tooltip.append('text').classed(".tc-tool-tip-text",true)
           .attr({
             x:10-15,
             y:20-38,
@@ -521,7 +422,7 @@ function createGraphs(raw_csv,response){
         tooltip.setTip(false);
 
         plotpoints.on("mouseover",function(d){
-          if (d3.select(this.parentNode.parentNode).classed("popped-out")){
+          if (d3.select(this.parentNode.parentNode).classed("tc-expanded")){
             tooltip.setTip(true,"<a target='_blank' href='/stock/"+d.key+"/view'>"+d.name+"</a>",Xscale(d.x)+axis_offset,Yscale(d.y)+axis_offset);
           }
         });
@@ -533,12 +434,12 @@ function createGraphs(raw_csv,response){
     //draw graph-grid label axes!
     var label_width = grid_size;
     var label_height = 3;
-    var tops = d3.select('.graph-grid-canv').insert('div',":first-child")
-                 .classed("grid-row",true)
+    var tops = d3.select('.tc-canv').insert('div',":first-child")
+                 .classed("tc-grid-row",true)
                  .classed("label-row",true)
-                 .selectAll(".top-label")
+                 .selectAll(".tc-top-label")
                  .data(studies.slice(0,studies.length-1)).enter()
-                 .append('svg').classed("top-label",true)
+                 .append('svg').classed("tc-top-label",true)
                  .attr("viewBox","0 0 "+label_width*10+" "+label_height*10)
                  .style("width",grid_size+"%")
                  .append('g')
@@ -549,10 +450,10 @@ function createGraphs(raw_csv,response){
                  .style("font-size","26px")
                  .style("text-anchor", "middle")
                  .text(function(d){return d.values[0].studyName;});
-    var lefts = d3.select('.graph-grid-canv').selectAll(".grid-row:not(.label-row)")
+    var lefts = d3.select('.tc-canv').selectAll(".tc-grid-row:not(.label-row)")
                  .insert('svg',":first-child")
                  .data(studies.slice(1,studies.length))
-                 .classed("left-label",true)
+                 .classed("tc-left-label",true)
                  .attr("viewBox","0 0 "+label_height*10+" "+label_width*10)
                  .style("width","3%")//.style("background","lightblue")
                  .append('g')

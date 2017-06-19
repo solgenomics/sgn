@@ -1,6 +1,4 @@
-body{ width:100%;}
-
-.graph-grid-canv {
+.tc-canv {
     box-sizing: border-box;
     width: 100%;
     max-width: 600px;
@@ -9,11 +7,11 @@ body{ width:100%;}
     position:relative;
 }
 
-.grid-row{
+.tc-grid-row {
     clear: both;
 }
 
-.grid-loc {
+.tc-grid-box {
     position:static;
     height: auto;
     float: left;
@@ -25,26 +23,30 @@ body{ width:100%;}
     border-width: 1px;
 }
 
-.grid-loc:last-of-type {
+.tc-grid-box:last-of-type {
     margin-right: 0;
 }
 
-.graph-img {
+.tc-background{
+    fill: white;
+}
+
+.tc-graph {
     border-width: 1px;
     background: white;
     border-color: #999;
 }
-.graph-img:hover {
+.tc-graph:hover {
     border-width: 1px;
     border-color: #49f;
     border-width: 1px;
 }
 
-.popped-out{
+.tc-expanded{
     position:absolute;
 }
 
-.top-label{
+.tc-top-label{
     position:static;
     height: auto;
     float: left;
@@ -52,14 +54,14 @@ body{ width:100%;}
     margin-bottom: 1%;
     margin-top: 1%;
 }
-.top-label:first-of-type{
+.tc-top-label:first-of-type{
     margin-left: 5%;
 }
-.top-label:last-of-type{
+.tc-top-label:last-of-type{
     margin-right: 0;
 }
 
-.left-label{
+.tc-left-label{
     position:static;
     height: auto;
     float: left;
@@ -68,27 +70,27 @@ body{ width:100%;}
     margin-bottom: 1%;
 }
 
-.graph-axis{
+.tc-graph-axis{
     fill: #3e3e3e;
 }
 
-.graph-axis path,
-.graph-axis line{
+.tc-graph-axis path,
+.tc-graph-axis line{
   fill: none;
   stroke: #3e3e3e;
   stroke-width: 2;
 }
 
-.accession-point{
+.tc-scatter-point{
     stroke: #27c;
     fill: none;
     stroke-width: 3px;
 }
 
-.graph-fit-line{
+.tc-fit-line{
     stroke: #f94;
     stroke-width: 4px;
 }
-.d3-tool-tip-text *:visited{
+.tc-tool-tip-text *:visited{
   color: #fff;
 }
