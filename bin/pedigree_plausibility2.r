@@ -9,22 +9,21 @@ pedigree_data["Pedigree Conflict"] <- NA
 
 length_g <- length(genotype_data[,1])
 length_p <- length(pedigree_data[,1])
-implausibility_count <- 0
 potential_conflicts <-0
 
 for (x in 1:length_p)
 {
+  implausibility_count <- 0
   row_vector <- as.vector(pedigree_data[x,])
 
   test_child_name <- pedigree_data[x,1]
   test_mother_name <- pedigree_data[x,2]
   test_father_name <- pedigree_data[x,3]
-
-  if (test_father_name == "NULL" || test_child_name == "NULL" || test_mother_name == "NULL"){
-  print ("Genotypes not all present, skipping analysis")
-  break
-  }
-
+  
+  #if (test_father_name == "NULL" || test_child_name == "NULL" || test_mother_name == "NULL"){
+  #print ("Genotypes not all present, skipping analysis")
+  #break
+  #}
   for (q in 1:length_g)
   {
     genotype_data[q, test_child_name]
@@ -40,7 +39,7 @@ for (x in 1:length_p)
     father_score <- round(father_score, digits = 0)
 
     parent_score <- mother_score + father_score
-    SNP <- row_vector <- as.vector(genotype_data[q,1])
+    SNP <- as.vector(genotype_data[q,1])
     if (child_score > parent_score) {
         implausibility_count <- implausibility_count + 1
         cat (SNP, "of line", test_child_name, "shows a potential pedigree conflict")
@@ -55,16 +54,16 @@ for (x in 1:length_p)
        implausibility_count <- implausibility_count + 1
        cat (SNP, "of line", test_child_name, "shows a potential pedigree conflict")
       }
-    dosage_score <- implausibility_count / length_g
-    dosage_score <- round(dosage_score, digits = 1)
-    if (dosage_score > 5) {
-      potential_conflicts <- potential_conflicts + 1
-    }
-    dosage_score<- sprintf("%.1f%%", dosage_score)
-    pedigree_data [x, 4] <- dosage_score
-    implausibility_count <- 0
   }
+  dosage_score <- implausibility_count / length_g
+  #dosage_score <- round(dosage_score, digits = 1)
+  if (dosage_score > 5) {
+    potential_conflicts <- potential_conflicts + 1
+  }
+  dosage_score<- sprintf("%.1f%%", dosage_score)
+  pedigree_data [x, 4] <- dosage_score
 }
+
 if (potential_conflicts == 1) {
   cat (potential_conflicts ,"line shows a potential pedigree conflict")
 } else {
