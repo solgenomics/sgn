@@ -20,6 +20,8 @@ for (x in 1:length_p)
   test_mother_name <- pedigree_data[x,2]
   test_father_name <- pedigree_data[x,3]
   
+  cat("Analyzing pedigree number", x, "...\n")
+  
   if (test_father_name == "NULL" || test_child_name == "NULL" || test_mother_name == "NULL"){
   print ("Genotype information not all present, skipping analysis")
   break
@@ -39,43 +41,32 @@ for (x in 1:length_p)
     parent_score <- mother_score + father_score
     SNP <- as.vector(genotype_data[q,1])
     
-    if (q == 10)
-    {cat(q, mother_score, father_score, child_score, test_mother_name, test_child_name, test_father_name)}  
-    if (q == 1000)
-    {cat(q, mother_score, father_score, child_score, test_mother_name, test_child_name, test_father_name)}    
-    if (q == 10000)
-    {cat(q, mother_score, father_score, child_score, test_mother_name, test_child_name, test_father_name)}    
-    
     if (child_score > parent_score) {
         implausibility_count <- implausibility_count + 1
-        #cat ("Case 1: the child score of", child_score, "is greater than the parent score of", parent_score, ".\n")
-        cat (SNP, "of line", test_child_name, "shows a potential pedigree conflict. \n")
-      } else if ((mother_score == 2 && father_score == 2) && child_score != 2) {
+    } else if ((mother_score == 2 && father_score == 2) && child_score != 2) {
        implausibility_count <- implausibility_count + 1
-       #cat ("Case 2: father score and mother score equal 2 and child score equals", child_score, ".\n")
-       cat (SNP, "of line", test_child_name, "shows a potential pedigree conflict \n")
-      } else if ((mother_score == 2 || father_score == 2) && child_score == 0) {
+    } else if ((mother_score == 2 || father_score == 2) && child_score == 0) {
        implausibility_count <- implausibility_count + 1
-       cat("Case 3: child score equals 0, mother score equals", mother_score, "and father score equals", father_score, ".\n")
-       cat (SNP, "of line", test_child_name, "shows a potential pedigree conflict. \n")
-      } else if ((xor(mother_score == 2, father_score == 2)) && (xor(mother_score == 0, 
+    } else if ((xor(mother_score == 2, father_score == 2)) && (xor(mother_score == 0, 
        father_score == 0)) && child_score == 2) {
        implausibility_count <- implausibility_count + 1
-       cat("Case 4: child score equals 2,", "mother score equals", mother_score, ", and father score equals", father_score, ".\n")
-       cat (SNP, "of line", test_child_name, "shows a potential pedigree conflict. \n")
-      }
+    }
   }
   dosage_score <- implausibility_count / length_g
   #dosage_score <- round(dosage_score, digits = 1)
-  if (dosage_score > .05) {
+  
+  #if (dosage_score > .05) {
     potential_conflicts <- potential_conflicts + 1
-  }
-  #dosage_score<- sprintf("%.1f%%", dosage_score)
+  ##}
+  #dosage_score<- sprintf("%.1f%%", dosage_score * 100)
   pedigree_data [x, 4] <- dosage_score
+  write.table(pedigree_data, file = "/home/klz26/host/test/sink.txt")
 }
 
-if (potential_conflicts == 1) {
-  cat (potential_conflicts ,"line shows a potential pedigree conflict")
-} else {
-  cat (potential_conflicts, "lines show potential pedigree conflicts")
-}
+#if (potential_conflicts == 1) {
+#   cat (potential_conflicts ,"line shows a potential pedigree conflict")
+#}  else {
+#   cat (potential_conflicts, "lines show potential pedigree conflicts")
+#}
+
+hist(pedigree_data$'Pedigree Conflict', breaks = 20, col = '#663300')
