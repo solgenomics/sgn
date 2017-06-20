@@ -214,6 +214,7 @@ function jqueryStuff() {
   &>
 
   </div>
+  <br /><br />
   <div class="col-sm-6">
 <& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"stock_qrcode"  &><br /><br />
 %#<& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"code128"  &><br /><br />
