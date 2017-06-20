@@ -1,14 +1,35 @@
-.tc-canv {
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 600px;
-    min-height: 100px;
+.tc-form {
+    max-width: 400px;
     margin: auto;
+}
+
+.tc-grid {
+    box-sizing: border-box;
+    margin: auto;
+    float: left;
     position:relative;
+}
+
+.tc-histogram{
+    box-sizing: border-box;
+    margin: auto;
+    float: left;
+    padding: 0;
+    position:relative;
+}
+
+.tc-legend-deselected circle{
+    fill: white;
+    stroke: black;
 }
 
 .tc-grid-row {
     clear: both;
+}
+
+.tc-legend-entry:hover circle{
+    stroke: #49f;
+    stroke-width: 2;
 }
 
 .tc-grid-box {
@@ -36,14 +57,15 @@
     background: white;
     border-color: #999;
 }
+.tc-expanded{
+    position:absolute;
+    border-color: white;
+}
+
 .tc-graph:hover {
     border-width: 1px;
     border-color: #49f;
     border-width: 1px;
-}
-
-.tc-expanded{
-    position:absolute;
 }
 
 .tc-top-label{
@@ -77,10 +99,6 @@
 
 .tc-scatter-point circle{
     fill: #49f;
-}
-
-.tc-histogram{
-    fill: #000;
 }
 
 .tc-fit-line{
