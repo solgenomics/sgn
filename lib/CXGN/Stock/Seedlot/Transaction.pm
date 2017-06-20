@@ -50,10 +50,10 @@ sub BUILD {
     
     if ($self->transaction_id()) { 
 	my $row = $self->schema()->resultset("Stock::StockRelationship")
-	    ->find( { stock_relationship_id => $self->transaction_id() }, { join => ['subject', 'object'], '+select' => ['subject.uniquename', 'object.uniquename'], '+as' => ['subject_uniquename', 'object_uniquename'] } );
+	    ->find( { stock_relationship_id => $self->transaction_id() }, { join => ['subject', 'object'], '+select' => ['subject.uniquename', 'subject.type_id', 'object.uniquename', 'object.type_id'], '+as' => ['subject_uniquename', 'subject_type_id', 'object_uniquename', 'object_type_id'] } );
 
-	$self->from_stock([$row->object_id(), $row->get_column('object_uniquename')]);
-	$self->to_stock([$row->subject_id(), $row->get_column('subject_uniquename')]);
+	$self->from_stock([$row->object_id(), $row->get_column('object_uniquename'), $row->get_column('object_type_id')]);
+	$self->to_stock([$row->subject_id(), $row->get_column('subject_uniquename'), $row->get_column('subject_type_id')]);
 	my $data = JSON::Any->decode($row->value());
 	$self->amount($data->{amount});
 	$self->timestamp($data->{timestamp});

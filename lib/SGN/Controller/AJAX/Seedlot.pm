@@ -128,8 +128,9 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
 sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions') Args(0) { 
     my $self = shift;
     my $c = shift;
-    
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $transactions = $c->stash->{seedlot}->transactions();
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
     #print STDERR Dumper $transactions;
     my @transactions;
     foreach my $t (@$transactions) {
@@ -140,7 +141,19 @@ sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions')
         if ($t->factor == -1){
             $value_field = '<span style="color:red">'.$t->factor()*$t->amount().'</span>';
         }
-        push @transactions, [ $t->transaction_id(), $t->timestamp(), '<a href="/stock/'.$t->from_stock()->[0].'/view" >'.$t->from_stock()->[1].'</a>', '<a href="/stock/'.$t->to_stock()->[0].'/view" >'.$t->to_stock()->[1].'</a>', $value_field, $t->operator, $t->description() ];
+        my $from_url;
+        my $to_url;
+        if ($t->from_stock()->[2] == $type_id){
+            $from_url = '<a href="/breeders/seedlot/'.$t->from_stock()->[0].'" >'.$t->from_stock()->[1].'</a>';
+        } else {
+            $from_url = '<a href="/stock/'.$t->from_stock()->[0].'/view" >'.$t->from_stock()->[1].'</a>';
+        }
+        if ($t->to_stock()->[2] == $type_id){
+            $to_url = '<a href="/breeders/seedlot/'.$t->to_stock()->[0].'" >'.$t->to_stock()->[1].'</a>';
+        } else {
+            $to_url = '<a href="/stock/'.$t->to_stock()->[0].'/view" >'.$t->to_stock()->[1].'</a>';
+        }
+        push @transactions, [ $t->transaction_id(), $t->timestamp(), $from_url, $to_url, $value_field, $t->operator, $t->description() ];
     }
 
     $c->stash->{rest} = { data => \@transactions };
