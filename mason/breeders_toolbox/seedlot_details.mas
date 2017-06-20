@@ -8,6 +8,7 @@ $accessions
 $organization_name
 $population_name
 $timestamp
+$breeding_program_name
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
@@ -15,6 +16,7 @@ $timestamp
 <& /page/page_title.mas, title => 'Seedlot '.$uniquename &>
 
 <table class="table table-bordered table-hover">
+<tr><td><b>Breeding Program</b></td><td><% $breeding_program_name %></td></tr>
 <tr><td><b>Name</b></td><td><a href="/stock/<% $seedlot_id %>/view"><% $uniquename %></a></td></tr>
 <tr><td><b>Organization</b></td><td><% $organization_name %></td></tr>
 <tr><td><b>Location Code</b><td><% $location_code %></td></tr>

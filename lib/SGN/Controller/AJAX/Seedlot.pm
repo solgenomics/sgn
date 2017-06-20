@@ -31,7 +31,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     foreach (@$accessions){
         $accessions_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> ';
     }
-	push @seedlots, [ '<a href="/breeders/seedlot/'.$sl->[0].'">'.$sl->[1].'</a>', $accessions_html, $sl->[2], $sl_obj->current_count() ];
+	push @seedlots, [ $sl_obj->breeding_program_name, '<a href="/breeders/seedlot/'.$sl->[0].'">'.$sl->[1].'</a>', $accessions_html, $sl_obj->location_code, $sl_obj->current_count() ];
     }
 
     #print STDERR Dumper(\@seedlots);
@@ -83,6 +83,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $amount = $c->req->param("seedlot_amount");
     my $timestamp = $c->req->param("seedlot_timestamp");
     my $description = $c->req->param("seedlot_description");
+    my $breeding_program_id = $c->req->param("seedlot_breeding_program_id");
 
     my $operator;
     if ($c->user) {
@@ -99,6 +100,7 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $sl->accession_stock_ids([$accession_id]);
         $sl->organization_name($organization);
         $sl->population_name($population_name);
+        $sl->breeding_program_id($breeding_program_id);
         #TO DO
         #$sl->cross_id($cross_id);
         $seedlot_id = $sl->store();
