@@ -42,7 +42,7 @@ $timestamp
 
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Name: </label>
-                    <div class="col-sm-9 ui-front" >
+                    <div class="col-sm-9" >
                         <input class="form-control" id="seedlot_name" placeholder="Required">
                     </div>
                 </div>
@@ -107,12 +107,12 @@ $timestamp
 <script>
 jQuery(document).ready(function(){
 
-jQuery("#seedlot_location").autocomplete({
-   source: '/ajax/stock/geolocation_autocomplete',
-});
-jQuery("#seedlot_accession_uniquename").autocomplete({
-   source: '/ajax/stock/accession_autocomplete',
-});
+    jQuery("#seedlot_location").autocomplete({
+       source: '/ajax/stock/geolocation_autocomplete',
+    });
+    jQuery("#seedlot_accession_uniquename").autocomplete({
+       source: '/ajax/stock/accession_autocomplete',
+    });
 
     var seedlots_table = jQuery('#available_seedlots_table').DataTable( { 
       'ajax': '/ajax/breeders/seedlots',
