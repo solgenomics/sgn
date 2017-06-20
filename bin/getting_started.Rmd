@@ -118,10 +118,87 @@ ggplot()+ggtitle("W8848–3 Plot recreated")+labs(x="Additive relationship",y="M
 
 ```{r}
 
-setwd("/home/bryan/Desktop") # set the working directory to where you mounted/copied/downloaded your files
+#Cassava pedigrees and Additive Relationships
 
-ped <- read.table("Pedigrees.txt", sep="\t", header = TRUE)
-markers <- read.table("genotypes.txt", header = TRUE)
+ped <- read.table ("~/sgn/bin/ped.txt", header = FALSE, sep = "\t", check.names = FALSE, stringsAsFactors = FALSE)
+colnames(ped)[1] <- "Name"
+colnames(ped)[2] <- "Mother"
+colnames(ped)[3] <- "Father"
+
+# use editPed to order the pedigree by generation and make sure there is a row for each unique accession name, including parents
+P2= editPed(dam=ped$Mother, sire=ped$Father, label=ped$Name)
+head(P2)
+
+# read records corrected by editPed into a formal pedigree object
+P3= pedigree(P2$sire, P2$dam, P2$label)
+head(P3)
+
+# calculate matrix of additive relationship scores based on pedigree
+Amat <- getA(P3)
+Amat
+
+#Cassava Markers and Genetic Distances
+
+markers <- read.table ("~/sgn/bin/267genotypes-p3.txt", header = TRUE, check.names = FALSE, stringsAsFactors = FALSE)
+colnames(markers) <- gsub('\\|[^|]+$', '', colnames(markers))
+
+# column names that should form the header are now in first row. So replace the header with the first row
+rownames(markers) <- as.character(unlist(markers[,1]))
+markers = markers[,-1]
+
+# set class as numeric so all matrix values will work in calculations, including NAs
+# class(markers) <- "numeric"
+
+# calculate Euclidean distances
+marker_distances <- dist(markers, method = "Euclidean", by_rows = FALSE)
+
+# look at the structure of the result object - its not a matrix anymore, its a 'dist'! 
+str(marker_distances) 
+
+# convert distances to a matrix so they are easier to manipulate
+dist_matrix = as.matrix(marker_distances)
+
+# check dimensions of our matrices
+dim(Amat)
+dim(dist_matrix)
+
+# We have too many genotypes, so make a list of all the accessions in the pedigree matrix, and use it to subset the genetic distance matrix
+include_list <- labels(Amat[,"COB1103"])
+include_list
+subset_matrix <- dist_matrix[rownames(dist_matrix) %in% include_list, colnames(dist_matrix) %in% include_list] 
+dim(subset_matrix) # should be same now
+
+## QC graphs with ggplot2
+
+library(ggplot2)
+help(geom_text)
+
+# get values for COB1103 excluding self comparisons, from matrices
+x <- Amat[!rownames(Amat) %in% "COB1103","COB1103"]
+y <- subset_matrix["COB1103",!colnames(subset_matrix) %in% "COB1103"]
+
+# ensure both vectors are in same order by sorting with accession names
+xord <- order(names(x))
+x <- x[xord]
+yord <- order(names(y))
+y <- y[yord]
+
+# create plot!
+ggplot()+ggtitle("COB1103 Relationships")+labs(x="Additive relationship",y="Marker-based distance")+geom_text(aes(x=x,y=y,label=names(x)))
+
+# get values for COB477 excluding self comparisons, from matrices
+x <- Amat[!rownames(Amat) %in% "COB477","COB477"]
+y <- subset_matrix["COB477",!colnames(subset_matrix) %in% "COB477"]
+
+# ensure both vectors are in same order by sorting with accession names
+xord <- order(names(x))
+x <- x[xord]
+yord <- order(names(y))
+y <- y[yord]
+
+# create plot!
+ggplot()+ggtitle("COB477 Relationships")+labs(x="Additive relationship",y="Marker-based distance")+geom_text(aes(x=x,y=y,label=names(x)),size=2.5)+expand_limits(x=c(-0.03,0.53))
+
 
 
 ```
