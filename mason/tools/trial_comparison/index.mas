@@ -107,16 +107,19 @@ $('#trait_select').change(function(event) {
 
 
 function toggleSubmitButton(state){
+  $('#submit_trial_list').off("click");
   if (state) {
     $('#submit_trial_list').on("click",fetchAndBuildGraphs);
     $('#submit_trial_list').attr("disabled",false);
   } else {
-    $('#submit_trial_list').off("click");
     $('#submit_trial_list').attr("disabled",true);
+    $(".tc-grid").hide();
+    $(".tc-histogram").hide();
   }
 }
 
 function fetchAndBuildGraphs() { 
+  console.log("hello")
   var list_id = $('#trials_list_select').val();
   $(".tc-grid").show();
   $(".tc-histogram").show();
@@ -230,6 +233,23 @@ function createHistogram(response){
           "fill":color(i),
           "opacity":0.4,
         });
+
+      var outline_points = [{x:axis_offset,y:view_size-axis_offset}]
+      for (var k in d.bins){
+        //outline_points.push({x:Xscale(d.bins[k].x)+axis_offset,y:Yscale(d.bins[k].length)+axis_offset})
+        outline_points.push({x:Xscale(d.bins[k].x+(d.bins[k].dx/2))+axis_offset,y:Yscale(d.bins[k].length)+axis_offset})
+      }
+      outline_points.push({x:view_size-axis_offset,y:view_size-axis_offset})
+      var lineFunction = d3.svg.line()
+        .x(function(d) { return d.x; })
+        .y(function(d) { return d.y; })
+        .interpolate("basis");
+      var hpath = g.append('path')
+        .attr("d",lineFunction(outline_points))
+        .attr("stroke", color(i))
+        .attr("stroke-width", 2)
+        .attr("fill", "none");
+
       var legend_entry = legend.append("g")
         .classed("tc-legend-entry",true)
         .attr("transform", function(d) { return "translate(0,"+20*i+")";})
@@ -256,6 +276,20 @@ function createHistogram(response){
             g.attr("hidden",true)
             d3.select(this).classed("tc-legend-deselected",true);
           }
+        //   legend_state = [];
+        //   d3.selectAll(".tc-top-label,.tc-left-label")
+        //     .classed("tc-hist-highlight",false)
+        //     .filter(function(gd,gi) {
+        //       var aSelected = false;
+        //       var bSelected = false;
+        //       d3.selectAll(".tc-legend-entry:not(.tc-legend-deselected)")
+        //         .each(function(legend_d){
+        //           aSelected = aSelected || legend_d.values[0].study == gd.key;
+        //           bSelected = bSelected || legend_d.values[0].study == gd.key;
+        //         });
+        //       return aSelected && bSelected;
+        //     })
+        //     .classed("tc-hist-highlight",true);
         });
     });
 
@@ -341,7 +375,7 @@ function createGraphs(response){
     canv.append("div").classed("tc-grid-row", true);
 
     //set up layout
-    var graphSVGs = d3.selectAll(".tc-graph");
+    var graphSVGs = d3.selectAll(".tc-graph").data(pairwise_data);
     var graphs = graphSVGs.append("g");
     graphs.append("rect")
         .classed("tc-background",true)
@@ -374,7 +408,6 @@ function createGraphs(response){
                     graph.classed("tc-expanded",false)
                          .style("width",grid_size+"%"); }, duration+30);
 
-                console.log(legend_state)
                 d3.selectAll(".tc-legend-entry")
                   .classed("tc-legend-deselected",true)
                   .filter(function(legend_d,legend_i){
@@ -420,7 +453,6 @@ function createGraphs(response){
                     return (legend_d.values[0].study == d["a"].key || legend_d.values[0].study == d["b"].key)
                   })
                   .classed("tc-legend-deselected",false);
-                console.log(legend_state)
 
                 d3.selectAll(".tc-hist-group")
                   .attr("hidden",true)
@@ -436,18 +468,16 @@ function createGraphs(response){
             }
         });
     } else{
-      graphs.each(function(d){
-        d3.select(this.parentNode).classed("tc-expanded",true)
-          .style({
-            "width":"100%",
-            "top":0,
-            "left":0
-          });
+      graphs
+        .each(function(d){
+          d3.select(this.parentNode).classed("tc-expanded",true)
+            .style({
+              "width":"100%",
+              "top":0,
+              "left":0
+            });
       });
     }
-
-    //assign grid locations study pairs
-    graphs.data(pairwise_data);
 
     //draw graphs
     graphs.each(function(study_pair){

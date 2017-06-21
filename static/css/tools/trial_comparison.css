@@ -62,6 +62,10 @@
     border-color: white;
 }
 
+.tc-hist-highlight {
+    background: #eee;
+}
+
 .tc-graph:hover {
     border-width: 1px;
     border-color: #49f;
