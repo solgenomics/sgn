@@ -47,7 +47,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(5);
     $d->find_element_ok('run_pheno_correlation', 'id', 'run pheno correlation')->click();
-    sleep(30);
+    sleep(40);
     $d->find_element_ok('Download correlation', 'partial_link_text', 'create training pop')->click();
     sleep(5);
     $d->driver->go_back();

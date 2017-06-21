@@ -145,7 +145,7 @@ if (datasetInfo == 'combined populations') {
 if (is.null(filteredGenoData)) {
   
   #genoDataFilter::filterGenoData
-  genoData <- filterGenoData(genoData)
+  genoData <- filterGenoData(genoData, maf=0)
   filteredGenoData   <- genoData 
 } else {
   genoData           <- as.data.frame(filteredGenoData)
@@ -195,7 +195,7 @@ if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size !=
     
   predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
  
-  predictionData <- filterGenoData(predictionData)
+  predictionData <- filterGenoData(predictionData, maf=0)
   filteredPredGenoData <- predictionData
 }
 
