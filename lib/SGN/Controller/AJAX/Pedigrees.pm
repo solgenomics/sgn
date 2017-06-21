@@ -8,6 +8,7 @@ use Data::Dumper;
 use Bio::GeneticRelationships::Individual;
 use Bio::GeneticRelationships::Pedigree;
 use CXGN::Pedigree::AddPedigrees;
+use CXGN::List::Validate;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -98,7 +99,7 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
 	chomp;
 	$_ =~ s/\r//g;
 	my @acc = split /\t/;
-	for(my $i=0; $i<3; $i++) { 
+	for(my $i=0; $i<3; $i++) {
 	    if ($acc[$i] =~ /\,/) { 
 		my @a = split /\s*\,\s*/, $acc[$i];  # a comma separated list for an open pollination can be given
 		foreach (@a) { $stocks{$_}++ if $_ };
@@ -113,8 +114,12 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
 	}
     }    
     my @unique_stocks = keys(%stocks);
-    %errors = $self->check_stocks($c, \@unique_stocks);
-    
+    my $accession_validator = CXGN::List::Validate->new();
+    my @accessions_missing = @{$accession_validator->validate($schema,'accessions',\@unique_stocks)->{'missing'}};
+    if (scalar(@accessions_missing)>0){
+        $errors{"The following accessions are not in the database: ".(join ",", @accessions_missing)} = 1;
+    }
+
     if (%errors) { 
 	$c->stash->{rest} = { error => "There were problems loading the pedigree for the following accessions: ".(join ",", keys(%errors)).". Please fix these errors and try again. (errors: ".(join ", ", values(%errors)).")" };
 	return;
@@ -154,19 +159,32 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
 	elsif ($female && !$male) { 
 	    if ($cross_type ne 'open') { 
 		print STDERR "No male parent specified and cross_type is not open... setting to unknown\n";
-		$cross_type = 'unknown';
+            $c->stash->{rest} = { error => "For $progeny No male parent specified and cross_type is not open..." };
+            $c->detach();
 	    }
 	}
 	
-	if($cross_type eq "self") { 
-	    $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-	    $male_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-	}
-	elsif($cross_type eq "biparental") { 
+    if($cross_type eq "self") { 
+        if (!$female){
+            $c->stash->{rest} = { error => "For $progeny Cross Type is self, but no female parent given" };
+            $c->detach();
+        }
+        $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+        $male_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+    }
+    elsif($cross_type eq "biparental") {
+        if (!$female || !$male){
+            $c->stash->{rest} = { error => "For $progeny Cross Type is biparental, but no female or male parent given" };
+            $c->detach();
+        }
 	    $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
 	    $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
 	}
 	elsif($cross_type eq "open") { 
+        if (!$female){
+            $c->stash->{rest} = { error => "For $progeny Cross Type is open, but no female parent given" };
+            $c->detach();
+        }
 	     $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
 
 	     $male_parent = undef;
@@ -221,47 +239,21 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
 	my $p = Bio::GeneticRelationships::Pedigree->new($opts);
 	push @pedigrees, $p;
     }
-    
-    my $add = CXGN::Pedigree::AddPedigrees->new( { schema=>$c->dbic_schema("Bio::Chado::Schema"), pedigrees=>\@pedigrees });
+
+    my $add = CXGN::Pedigree::AddPedigrees->new( { schema=>$schema, pedigrees=>\@pedigrees, validate_accessions=>0 });
     eval { 
-	my $ok = $add->validate_pedigrees();
-	$add->add_pedigrees();
+        my $ok = $add->add_pedigrees();
+        if (!$ok){
+            die "The pedigrees were not stored";
+        }
     };
     if ($@) { 
-	$c->stash->{rest} = { error => "An error occurred while storing the provided pedigree. Please check your file and try again ($@)\n" };
+        $c->stash->{rest} = { error => "An error occurred while storing the provided pedigree. Please check your file and try again ($@)" };
+        $c->detach();
     }
     
     $c->stash->{rest} = { success => 1 };
 }
-
-sub check_stocks { 
-    my $self = shift;
-    my $c = shift;
-    my $stock_names = shift;
-    
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    
-    my %errors;
-    my $error_alert = "";
-    
-    foreach my $stock_name (@$stock_names) {	
-	my $stock;
-	my $number_of_stocks_found;
-	my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
-	$stock_lookup->set_stock_name($stock_name);
-	$stock = $stock_lookup->get_stock();
-	$number_of_stocks_found = $stock_lookup->get_matching_stock_count();
-	if ($number_of_stocks_found > 1) {
-	    $errors{$stock_name} = "Multiple stocks found matching $stock_name\n";
-	}
-	if (!$number_of_stocks_found) {
-	    $errors{$stock_name} = "No stocks found matching $stock_name\n";
-	}
-    }
-    
-    return %errors;
-}
-
 
 
 1; 
