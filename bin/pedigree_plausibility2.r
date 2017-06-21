@@ -53,20 +53,11 @@ for (x in 1:length_p)
     }
   }
   dosage_score <- implausibility_count / length_g
-  #dosage_score <- round(dosage_score, digits = 1)
-  
-  #if (dosage_score > .05) {
-    potential_conflicts <- potential_conflicts + 1
-  ##}
-  #dosage_score<- sprintf("%.1f%%", dosage_score * 100)
+  dosage_score<- sprintf("%.1f%%", dosage_score * 100)
   pedigree_data [x, 4] <- dosage_score
-  write.table(pedigree_data, file = "/home/klz26/host/test/sink.txt")
 }
 
-#if (potential_conflicts == 1) {
-#   cat (potential_conflicts ,"line shows a potential pedigree conflict")
-#}  else {
-#   cat (potential_conflicts, "lines show potential pedigree conflicts")
-#}
+#hist(pedigree_data$'Pedigree Conflict', main = "Distribution of Pedigree Conflict Scores", breaks = 20, 
+#     xlab = "Pedigree  Conflict Scores", col = '#663300')
 
-hist(pedigree_data$'Pedigree Conflict', breaks = 20, col = '#663300')
+#pedigree_data$`Pedigree Conflict` <- sprintf("%.1f%%", pedigree_data$`Pedigree Conflict` * 100)
