@@ -557,20 +557,17 @@ sub get_direct_parents {
     }
 
     my $stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
-    print STDERR "Retrieved child ".$stock->uniquename()."\n";
 
     my $female_rs = $stock->search_related('stock_relationship_objects', { 'type_id' =>$female_parent_id});
-    print STDERR "Found ".$female_rs->count()." rows when searching for female parent.\n";
+    #print STDERR "Found ".$female_rs->count()." rows when searching for female parent.\n";
     if ($female_rs->first()) {
-        #print STDERR "Found female parent ".$female_parent->get_column('uniquename')."\n";
         my $female_stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $female_rs->first->subject_id() } );
         push @parents, [ $female_rs->first->subject_id(), $female_stock->uniquename(), 'female', $female_rs->first->value() ];
     }
 
     my $male_rs = $stock->search_related('stock_relationship_objects', { 'me.type_id' =>$male_parent_id});
-    print STDERR "Found ".$male_rs->count()." rows when searching for male parent\n";
+    #print STDERR "Found ".$male_rs->count()." rows when searching for male parent\n";
     if ($male_rs->first()) {
-
         my $male_stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $male_rs->first->subject_id() } );
         push @parents, [ $male_rs->first->subject_id(), $male_stock->uniquename(), 'male'];
     }
