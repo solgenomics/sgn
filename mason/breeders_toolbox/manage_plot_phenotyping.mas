@@ -43,9 +43,7 @@ $type_name => "plot"
       <div id="show_trait_textbox" style="display: none">
           <div class="form-group form-group-sm" >
             <label class="col-sm-4 control-label">Enter a List of Trait Names: </label>
-            <div class="col-sm-8">
-              <textarea class="form-control" id="trait_names" name="trait_names" onclick="this.focus();this.select()" ></textarea>
-              <!--<select class="form-control" id="trait_names" name="trait_names" ></select>-->
+            <div class="col-sm-8" id="show_trait_selectbox">
             </div>
           </div>
       </div>
@@ -58,7 +56,7 @@ $type_name => "plot"
             <div id="list_menu_traits"></div>
     <script defer="defer">
       jQuery(document).ready(function() {
-          pasteTraitListMenu('trait_names', 'list_menu_traits', 'Paste Trait List');
+          pasteTraitListMenu('show_trait_selectbox', 'list_menu_traits', 'Paste Trait List');
 
           function pasteTraitListMenu (div_name, menu_div, button_name) {
               var list = new CXGN.List();
@@ -68,20 +66,7 @@ $type_name => "plot"
               jQuery('#'+menu_div).html(html);
           }
 
-          function pasteTraitList(div_name) {
-              var lo = new CXGN.List();
-              var list_id = jQuery('#'+div_name+'_list_select').val();
-          	console.log(list_id);
-              var list = lo.getList(list_id);
-          	console.log(list);
-              // textify list
-              var list_text = '';
-              for (var n=0; n<list.length; n++) {
-                list_text = list_text + list[n]+"\r\n";
-              }
-          	console.log(list_text);
-              jQuery('#'+div_name).val(list_text);
-            }
+
 
       });
     </script>
@@ -151,6 +136,7 @@ $type_name => "plot"
   $("#use_trait_list").click(function () {
     if ($('#use_trait_list').is(':checked')) {
       $('#all_traits').hide();
+      jQuery('#select_traits_for_trait_file').empty();
       $('#show_trait_textbox').show();
       $('#show_trait_list_box').show();
     }
@@ -158,6 +144,11 @@ $type_name => "plot"
         $('#all_traits').show();
         $('#show_trait_textbox').hide();
         $('#show_trait_list_box').hide();
+        get_select_box('traits', 'select_traits_for_trait_file', {
+            'name': 'html_select_traits_for_trait_file',
+            'id': 'html_select_traits_for_trait_file',
+            'empty': 1
+        });
     }
   });
 
@@ -170,6 +161,11 @@ $type_name => "plot"
     jQuery('input[name=select_pheno_value]').change(function() {
       var plot_name = jQuery("#plot_name").val();
       var trait = jQuery("#select_traits_for_trait_file").val();
+      alert("FROM ALL TRAIT" + trait);
+      if (trait == ''){
+        trait = jQuery("#select_traits_for_trait_file_2").val();
+        alert(trait);
+      }
       var trait_value = jQuery("#select_pheno_value").val();
 
       new jQuery.ajax ( {
