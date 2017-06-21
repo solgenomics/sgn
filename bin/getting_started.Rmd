@@ -13,20 +13,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 First lets install and load a couple of packages that we'll need. *pedigreemm* for calculating additive relationships and *proxy* for calculating genetic distances.
 
-```{r}
-install.packages("pedigreemm")
-install.packages("proxy")
+
 library(pedigreemm)
 library(proxy)
-```
 
-To read a bit about each of these packages and learn about their functions:
-
-```{r}
-help(package="pedigreemm")
-help(package="proxy")
-
-```
 
 ## Load pedigrees from Potato Paper
 
