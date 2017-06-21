@@ -54,6 +54,13 @@ has 'schema' => (
 
 has 'pedigrees' => (isa =>'ArrayRef[Bio::GeneticRelationships::Pedigree]', is => 'rw', predicate => 'has_pedigrees');
 
+has 'validate_accessions' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => 1,
+    predicate => 'has_validate_accessions'
+);
+
 sub add_pedigrees {
   my $self = shift;
   my $schema = $self->get_schema();
@@ -70,13 +77,13 @@ sub add_pedigrees {
   }
 
   @pedigrees = @{$self->get_pedigrees()};
-  
+  #print STDERR Dumper \@pedigrees;
+
   my @added_stock_ids;
   my $transaction_error = "";
 
   my $coderef = sub {
-      
-      print STDERR "Getting cvterms...\n";
+      #print STDERR "Getting cvterms...\n";
       # get cvterms for parents and offspring
       my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'female_parent', 'stock_relationship');
 
@@ -84,24 +91,18 @@ sub add_pedigrees {
       
       ####These are probably not necessary:
       #######################
-########################
-###################
-      my $progeny_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'offspring_of', 'stock_relationship');
+      #my $progeny_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'offspring_of', 'stock_relationship');
       
       # get cvterm for cross_relationship
-      my $cross_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'cross_relationship', 'stock_relationship');
+      #my $cross_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'cross_relationship', 'stock_relationship');
       
       # get cvterm for cross_type
-      my $cross_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'cross_type', 'nd_experiment_property');
+      #my $cross_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'cross_type', 'nd_experiment_property');
       ##########################
-############################
-########################
-###################
-      
  
       foreach my $pedigree (@pedigrees) {
 	  
-	  print STDERR Dumper($pedigree);
+	  #print STDERR Dumper($pedigree);
 	  my $cross_stock;
 	  my $organism_id;
 	  my $female_parent_name;
@@ -115,7 +116,7 @@ sub add_pedigrees {
 	      $female_parent_name = $pedigree->get_female_parent()->get_name();
 	      $female_parent = $self->_get_accession($female_parent_name);
 	  }
-	  
+
 	  if ($pedigree->has_male_parent()) {
 	      $male_parent_name = $pedigree->get_male_parent()->get_name();
 	      $male_parent = $self->_get_accession($male_parent_name);
@@ -160,7 +161,7 @@ sub add_pedigrees {
   
   # try to add all crosses in a transaction
   try {
-      print STDERR "Performing database operations... ";
+      print STDERR "Performing database operations... \n";
       $self->get_schema()->txn_do($coderef);
       print STDERR "Done.\n";
   } catch {
@@ -168,8 +169,8 @@ sub add_pedigrees {
   };
   
   if ($transaction_error) {
-      die "Transaction error creating a cross: $transaction_error\n";
-      return 0;
+      print STDERR "Transaction error creating a cross: $transaction_error\n";
+      return;
   }
   
   return 1;
@@ -219,26 +220,40 @@ sub _validate_pedigree {
   if ($cross_type eq "biparental") {
       $female_parent_name = $pedigree->get_female_parent()->get_name();
       if ($pedigree->has_male_parent()) { $male_parent_name = $pedigree->get_male_parent()->get_name(); }
-      $female_parent = $self->_get_accession($female_parent_name);
-      $male_parent = $self->_get_accession($male_parent_name);
-      
-      if (!$female_parent || !$male_parent) {
-	  print STDERR "Parent $female_parent_name or $male_parent in pedigree is not a stock\n";
-	  return;
+      if($self->get_validate_accessions){
+          $female_parent = $self->_get_accession($female_parent_name);
+          $male_parent = $self->_get_accession($male_parent_name);
+
+          if (!$female_parent || !$male_parent) {
+              print STDERR "Parent $female_parent_name or $male_parent_name in pedigree is not a stock\n";
+              return;
+          }
+      }
+      if (!$female_parent_name || !$male_parent_name) {
+          print STDERR "Cross Type is biparental, but either female or male parent not given\n";
+          return;
       }
   } elsif ($cross_type eq "self") {
       $female_parent_name = $pedigree->get_female_parent()->get_name();
-      $female_parent = $self->_get_accession($female_parent_name);
-      
-      if (!$female_parent) {
-	  print STDERR "Female parent $female_parent_name is not a stock or not provided. Skipping...\n";
-	  return;
+      if($self->get_validate_accessions){
+          $female_parent = $self->_get_accession($female_parent_name);
+
+          if (!$female_parent) {
+              print STDERR "Female parent $female_parent_name is not a stock or not provided. Skipping...\n";
+              return;
+          }
       }
-      
+      if (!$female_parent_name) {
+          print STDERR "Female parent not provided. Skipping...\n";
+          return;
+      }
   }
   elsif ($cross_type eq "open" || $cross_type eq "unknown") { 
       $female_parent_name = $pedigree->get_female_parent()->get_name();
-      
+      if (!$female_parent_name) {
+          print STDERR "Female parent not provided. Skipping...\n";
+          return;
+      }
   }
   else {
       print STDERR "Cross type not detected... Skipping\n";
@@ -252,23 +267,15 @@ sub _get_accession {
     my $self = shift;
     my $accession_name = shift;
     my $schema = $self->get_schema();
-    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
-    my $stock;
-    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
-    my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type');
-    $stock_lookup->set_stock_name($accession_name);
-    $stock = $stock_lookup->get_stock_exact();
-    
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $population_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
+    my $stock = $schema->resultset('Stock::Stock')->search( { 'is_obsolete' => { '!=' => 't' }, 'lower(uniquename)' => lc($accession_name), 'type_id' => [$accession_cvterm, $population_cvterm] } )->first();
+
     if (!$stock) {
-	print STDERR "Name in pedigree ($accession_name) is not a stock\n";
-	return;
+        print STDERR "Name in pedigree ($accession_name) is not a stock or population\n";
+        return;
     }
-    
-    if ( ($stock->type_id() != $accession_cvterm->cvterm_id()) && ($stock->type_id() != $population_cvterm->cvterm_id())) {
-	print STDERR "Name in pedigree  ($accession_name) is not a stock of type accession or population\n";
-	return;
-    }
-    
+
     return $stock;
 }
 
