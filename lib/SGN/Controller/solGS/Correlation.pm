@@ -26,11 +26,11 @@ sub check_pheno_corr_result :Path('/phenotype/correlation/check/result/') Args(1
     $self->pheno_correlation_output_files($c);
     my $corre_output_file = $c->stash->{corre_coefficients_json_file};
    
-    my $ret->{result} ='No';
+    my $ret->{result} = undef;
    
     if (-s $corre_output_file && $pop_id =~ /\d+/) 
     {
-	$ret->{result} = 'yes';                
+	$ret->{result} = 1;                
     }    
 
     $ret = to_json($ret);
@@ -75,17 +75,13 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
         $phenotype_file =  $c->stash->{phenotype_file};
     }
 
-    my $ret->{status} = 'failed';
+    my $ret->{result} = undef;
 
     if (-s $phenotype_file)
     {
-        $ret->{status} = 'success';             
+        $ret->{result} = 1;             
     } 
-    else 
-    {
-	$ret->{status} = 'This population set has no phenotype data.';
-    }
-
+   
     $ret = to_json($ret);
        
     $c->res->content_type('application/json');
@@ -112,11 +108,11 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     $self->combine_gebvs_of_traits($c);   
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
    
-    my $ret->{status} = 'failed';
+    my $ret->{result} = undef;
 
     if ( -s $combined_gebvs_file )
     {
-        $ret->{status} = 'success'; 
+        $ret->{result} = 1; 
         $ret->{gebvs_file} = $combined_gebvs_file;
     }
 
