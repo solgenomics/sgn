@@ -1344,8 +1344,7 @@ is_a: CHEBI:00000
 id: CHEBI:25979
 name: phenylacetonitrile
 subset: 3_STAR
-def: "A nitrile that is acetonitrile where one of the methyl hydrogens is substituted by a phenyl group."
- []
+def: "A nitrile that is acetonitrile where one of the methyl hydrogens is substituted by a phenyl group." []
 synonym: "2-phenylacetonitrile" RELATED [UM-BBD]
 synonym: "Benzyl cyanide" RELATED [KEGG_COMPOUND]
 synonym: "phenylacetonitrile" EXACT [UniProt]
