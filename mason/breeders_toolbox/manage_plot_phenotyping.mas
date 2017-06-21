@@ -31,6 +31,15 @@ $type_name => "plot"
         </div>
       </div>
 
+      <div class="form-group form-group-sm">
+      <label class="col-sm-4 control-label">Or Use Trait List: </label>
+      <div class="col-sm-8">
+        <input type="checkbox"  id="use_trait_list" />
+      </div>
+    </div>
+
+      <br />
+
       <div id="show_trait_textbox" style="display: none">
           <div class="form-group form-group-sm" >
             <label class="col-sm-4 control-label">Enter a List of Trait Names: </label>
@@ -42,41 +51,37 @@ $type_name => "plot"
       </div>
       <br /><br />
 
-      <div class="form-group form-group-sm">
-      <label class="col-sm-4 control-label">Or Use Trait List: </label>
-      <div class="col-sm-8">
-        <input type="checkbox"  id="use_trait_list" />
-      </div>
-    </div>
-
-      <br />
-
-      <!--<div class="form-group form-group-sm">
-        <label class="col-sm-4 control-label">Or Paste From a List: </label>
-        <div class="col-sm-8">
-          <div id="list_traits"></div>
-        </div>
-      </div> -->
-
       <div id="show_trait_list_box" style="display: none">
       <div class="form-group form-group-sm">
         <label class="col-sm-4 control-label">Or Paste From a List: </label>
         <div class="col-sm-8">
-          <div id="list_menu_traits"></div>
+            <div id="list_menu_traits"></div>
     <script defer="defer">
       jQuery(document).ready(function() {
-          pasteTraitList('trait_names', 'list_menu_traits', 'Paste Trait List');
+          pasteTraitListMenu('trait_names', 'list_menu_traits', 'Paste Trait List');
 
-          function pasteTraitList (div_name, menu_div, button_name) {
-              var lo = new CXGN.List();
-
+          function pasteTraitListMenu (div_name, menu_div, button_name) {
+              var list = new CXGN.List();
               var html='';
-
-              html = lo.listSelect(div_name, ['traits']);
-              html = html + '<button class="btn btn-info btn-sm" type="button" id="paste_button_id" value="'+button_name+'" onclick="javascript:pasteList(\''+div_name+'\')" >'+button_name+'</button>';
-
+              html = list.listSelect(div_name, ['traits']);
+              html = html + '<button class="btn btn-info btn-sm" type="button" id="paste_button_id" value="'+button_name+'" onclick="javascript:pasteTraitList(\''+div_name+'\')" >'+button_name+'</button>';
               jQuery('#'+menu_div).html(html);
           }
+
+          function pasteTraitList(div_name) {
+              var lo = new CXGN.List();
+              var list_id = jQuery('#'+div_name+'_list_select').val();
+          	console.log(list_id);
+              var list = lo.getList(list_id);
+          	console.log(list);
+              // textify list
+              var list_text = '';
+              for (var n=0; n<list.length; n++) {
+                list_text = list_text + list[n]+"\r\n";
+              }
+          	console.log(list_text);
+              jQuery('#'+div_name).val(list_text);
+            }
 
       });
     </script>
@@ -140,8 +145,8 @@ $type_name => "plot"
 <script>
   jQuery(document).ready(function($) {
 
-  var list = new CXGN.List();
-  jQuery("#list_traits").html(list.listSelect("list_traits", [ 'traits' ]));
+  //var list = new CXGN.List();
+  //jQuery("#list_traits").html(list.listSelect("list_traits", [ 'traits' ]));
 
   $("#use_trait_list").click(function () {
     if ($('#use_trait_list').is(':checked')) {
