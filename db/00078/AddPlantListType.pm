@@ -21,7 +21,7 @@ This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
 
- Bryan Ellerbrock <bje24@cornell.edu>
+ Lukas Mueller <lam87@cornell.edu>
 
 =head1 COPYRIGHT & LICENSE
 
@@ -42,7 +42,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch will create new cvterms 'dataset', 'crosses', 'populations', and 'numeric' in the 'list_type' cv.
+This patch will create the cvterm 'plant'.
 
 
 sub patch {
