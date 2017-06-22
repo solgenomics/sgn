@@ -58,22 +58,62 @@ var barcode_types = [
 var drag_behaviour = d3.behavior.drag().on(
   "drag", function(){
     var o = d3.select(this)
-    var ox = parseFloat(o.attr("t-x"));
-    var oy = parseFloat(o.attr("t-y"));
-    var newX = ox+d3.event.dx;
-    var newY = oy+d3.event.dy;
-    o.attr({
-      "transform": "translate("+newX+","+newY+")",
-      "t-x": newX,
-      "t-y": newY
-    });
+      .call(doTransform,function(state,selection){
+        state.translate[0]+=d3.event.dx;
+        state.translate[1]+=d3.event.dy;
+      });
 });
 function draggable(d,i){
+  var bb = this.node().getBBox();
   this.attr({
-      "t-x": 0,
-      "t-y": 0
+      "s-x": bb.x,
+      "s-y": bb.y
+    })
+    .call(doTransform,function(state,selection){
+      state.translate = [-bb.x,-bb.y]
     })
     .call(drag_behaviour);
+}
+
+var sel_selected = null;
+function selectable(d,i){
+  this.on("click", function(){
+    d3.select(".selection-outline").remove();
+    var o = d3.select(this);
+    var bb = this.getBBox();
+    o.append("rect")
+      .classed("selection-outline",true)
+      .attr({
+        x:bb.x,
+        y:bb.y,
+        width:bb.width,
+        height:bb.height,
+        fill:"none",
+        stroke: "red",
+        "stroke-dasharray": ("10,3"),
+        "stroke-width":1
+      })
+  })
+}
+
+function doTransform(selection,transformFunc){
+  var currString = selection.attr("transform") || "";
+  var seperated = currString.split(/[\(\)]+/);
+  seperated  = seperated.slice(0, seperated.length-1);
+  var state = {};
+  for (var i = 0; i < seperated.length; i+=2) {
+    var key = seperated[i].trim();
+    state[key] = seperated[i+1].trim().split(",");
+    for (var j = 0; j < state[key].length; j++) {
+      state[key][j] = parseFloat(state[key][j]);
+    }
+  }
+  transformFunc(state,selection);
+  out_string = "";
+  for (var key in state){
+    out_string+=key+"("+state[key].join(", ")+") ";
+  }
+  selection.attr("transform",out_string);
 }
 
 function outlineable(d,i){
@@ -153,12 +193,7 @@ $(document).ready(function($) {
   //set up barcode and barcode select
   var barcode_select = d3.select("#d3-barcode-select");
   var barcode_g = svg.append("g")
-    .classed("barcode",true)
-    .classed("draggable",true)
-    .classed("outlineable",true)
-    .call(outlineable)
-    .call(draggable)
-    .on("mouseup", snapToGrid);
+    .classed("barcode",true);
   barcode_select.selectAll("option")
     .data(barcode_types)
     .enter().append("option")
@@ -179,18 +214,20 @@ $(document).ready(function($) {
           fill:"#333"
         })
     }
-
   });
+  barcode_g
+    .classed("draggable",true)
+    .classed("selectable",true)
+    .classed("outlineable",true)
+    .call(draggable)
+    .call(outlineable)
+    .call(selectable)
+    .on("mouseup", dragSnap);
 
   //set up text boxes
   d3.select("#d3-new-textbox").on("click",function(){
     var newTB = svg.append("g")
-      .classed("text-box",true)
-      .classed("draggable",true)
-      .classed("outlineable",true)
-      .call(draggable)
-      .call(outlineable)
-      .on("mouseup", snapToGrid);
+      .classed("text-box",true);
     var fontSize = parseInt(d3.select("#d3-font-size-input").node().value);
     var newText = newTB.append("text")
       .attr({
@@ -199,8 +236,12 @@ $(document).ready(function($) {
         "dominant-baseline": "mathematical",
       })
       .text(d3.select("#d3-text-content").node().value);
+    newTB.classed("draggable",true)
+      .classed("outlineable",true)
+      .call(draggable)
+      .call(outlineable)
+      .on("mouseup", dragSnap);
   })
-
 });
 
 function updateGrid(){
@@ -234,24 +275,24 @@ function updateGrid(){
   }
 }
 
-function snapToGrid(){
+function dragSnap(){
   if (d3.select("#d3-snapping-check").property("checked")){
     var grid_size = parseInt(d3.select("#d3-grid-slider").node().value);
-    var o = d3.select(this);
-    var ox = parseFloat(o.attr("t-x"));
-    var oy = parseFloat(o.attr("t-y"));
-    var bb = this.getBBox()
-    var left_snap = Math.round(ox/grid_size)*grid_size
-    var right_snap = Math.round((ox+bb.width)/grid_size)*grid_size-bb.width
-    var top_snap = Math.round(oy/grid_size)*grid_size
-    var bottom_snap = Math.round((oy+bb.height)/grid_size)*grid_size-bb.height
-    var newX = (Math.abs(left_snap-ox) < Math.abs(right_snap-ox)) ? left_snap : right_snap;
-    var newY = (Math.abs(top_snap-oy) < Math.abs(bottom_snap-oy)) ? top_snap : bottom_snap;
-    o.attr({
-      "transform": "translate("+newX+","+newY+")",
-      "t-x": newX,
-      "t-y": newY
-    });
+    var o = d3.select(this)
+      .call(doTransform,function(state,selection){
+        var start_x_offset = parseFloat(selection.attr("s-x")) || 0;
+        var start_y_offset = parseFloat(selection.attr("s-y")) || 0;
+        var ox = state.translate[0]+start_x_offset;
+        var oy = state.translate[1]+start_y_offset;
+        var bb = selection.node().getBBox()
+        var left_snap = Math.round(ox/grid_size)*grid_size
+        var right_snap = Math.round((ox+bb.width)/grid_size)*grid_size-bb.width
+        var top_snap = Math.round(oy/grid_size)*grid_size
+        var bottom_snap = Math.round((oy+bb.height)/grid_size)*grid_size-bb.height
+        var newX = (Math.abs(left_snap-ox) < Math.abs(right_snap-ox)) ? left_snap : right_snap;
+        var newY = (Math.abs(top_snap-oy) < Math.abs(bottom_snap-oy)) ? top_snap : bottom_snap;
+        state.translate = [newX-start_x_offset,newY-start_y_offset];
+      });
   }
 }
 
