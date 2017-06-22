@@ -124,7 +124,7 @@ function fetchAndBuildGraphs() {
   $(".tc-grid").show();
   $(".tc-histogram").show();
   $.ajax( { 
-   url: '/ajax/trial/compare_list_data_test',
+   url: '/ajax/trial/compare_list_data',
    data: { 'cvterm_id' : $('#trait_select').val(), 'list_id': list_id },
    success: function(response) { 
       if (response.error) { 

@@ -3,6 +3,10 @@
     margin: auto;
 }
 
+#result_div{
+    margin-top: 1em;
+}
+
 .tc-grid {
     box-sizing: border-box;
     margin: auto;
