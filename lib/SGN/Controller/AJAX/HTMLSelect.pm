@@ -252,6 +252,7 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 	#print STDERR Dumper $result;
 	my $id = $c->req->param("id") || "html_trial_select";
 	my $name = $c->req->param("name") || "html_trial_select";
+	my $multiple = defined($c->req->param("multiple")) ? $c->req->param("multiple") : 1;
 	my $size = $c->req->param("size");
 	my $empty = $c->req->param("empty") || "";
 	my $data_related = $c->req->param("data-related") || "";
@@ -268,7 +269,7 @@ sub get_stocks_select : Path('/ajax/html/select/stocks') Args(0) {
 	if ($empty) { unshift @stocks, [ "", "Please select a stock" ]; }
 
 	my $html = simple_selectbox_html(
-		multiple => 1,
+		multiple => $multiple,
 		name => $name,
 		id => $id,
 		size => $size,

@@ -45,13 +45,19 @@ has 'seedlot_id' => ( isa => 'Maybe[Int]',
 =head2 Accessor location_code()
 
 A string specifiying where the seedlot is stored. On the backend,
-this is stored int he description field.
+this is stored the nd_geolocation description field.
 
 =cut
 
-has 'location_code' => ( isa => 'Str',
-		    is => 'rw',
-    );
+has 'location_code' => (
+    isa => 'Str',
+    is => 'rw',
+);
+
+has 'nd_geolocation_id' => (
+    isa => 'Int',
+    is => 'rw',
+);
 
 =head2 Accessor cross()
 
@@ -93,6 +99,23 @@ has 'transactions' =>     ( isa => 'ArrayRef',
 			    is => 'rw',
 			    default => sub { [] },
     );
+
+=head2 Accessor breeding_program
+
+The breeding program this seedlot is from. Useful for tracking movement of seedlots across breeding programs
+Use breeding_program_id as setter (to save and update seedlots).
+
+=cut
+
+has 'breeding_program_name' => (
+    isa => 'Str',
+    is => 'rw',
+);
+
+has 'breeding_program_id' => (
+    isa => 'Int',
+    is => 'rw',
+);
 
 
 after 'stock_id' => sub { 
@@ -137,16 +160,16 @@ sub BUILDARGS {
 
 sub BUILD {
     my $self = shift;
-
-    if ($self->seedlot_id()) {
-        print STDERR Dumper $self->seedlot_id;
+    if ($self->stock_id()) {
+        $self->seedlot_id($self->stock_id);
         my $transactions = CXGN::Stock::Seedlot::Transaction->get_transactions_by_seedlot_id($self->schema(), $self->seedlot_id());
         #print STDERR Dumper($transactions);
         $self->transactions($transactions);
         $self->name($self->uniquename());
-        $self->location_code($self->description());
+        $self->_retrieve_location();
         $self->seedlot_id($self->stock_id());
         $self->_retrieve_accessions();
+        $self->_retrieve_breeding_program();
         #$self->cross($self->_retrieve_cross());
     }
     print STDERR Dumper $self->seedlot_id;
@@ -173,6 +196,40 @@ sub _remove_cross {
     
 }
 
+sub _store_seedlot_location {
+    my $self = shift;
+    my $nd_geolocation = $self->schema()->resultset("NaturalDiversity::NdGeolocation")->find_or_create({
+        description => $self->location_code
+    });
+    $self->nd_geolocation_id($nd_geolocation->nd_geolocation_id);
+}
+
+sub _retrieve_location {
+    my $self = shift;
+    my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
+    my $nd_geolocation_rs = $self->schema()->resultset('Stock::Stock')->search({'me.stock_id'=>$self->seedlot_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id})->search_related('nd_geolocation');
+    if ($nd_geolocation_rs->count != 1){
+        die "Seedlot does not have 1 nd_geolocation associated!\n";
+    }
+    my $nd_geolocation_id = $nd_geolocation_rs->first()->nd_geolocation_id();
+    my $location_code = $nd_geolocation_rs->first()->description();
+    $self->nd_geolocation_id($nd_geolocation_id);
+    $self->location_code($location_code);
+}
+
+sub _retrieve_breeding_program {
+    my $self = shift;
+    my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
+    my $project_rs = $self->schema()->resultset('Stock::Stock')->search({'me.stock_id'=>$self->seedlot_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id})->search_related('nd_experiment_projects')->search_related('project');
+    if ($project_rs->count != 1){
+        die "Seedlot does not have 1 breeding program project associated!\n";
+    }
+    my $breeding_program_id = $project_rs->first()->project_id();
+    my $breeding_program_name = $project_rs->first()->name();
+    $self->breeding_program_id($breeding_program_id);
+    $self->breeding_program_name($breeding_program_name);
+}
+
 sub _store_seedlot_relationships {
     my $self = shift;
 
@@ -187,8 +244,8 @@ sub _store_seedlot_relationships {
     }
 
     eval { 
+        #Save seedlot to accession relationship as collection_of
         my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
-
         foreach my $a (@{$self->accession_stock_ids()}) { 
             my $already_exists = $self->schema()->resultset("Stock::StockRelationship")->find({ object_id => $self->seedlot_id(), type_id => $type_id, subject_id=>$a });
 
@@ -202,6 +259,15 @@ sub _store_seedlot_relationships {
                 type_id => $type_id,
             });
         }
+
+        #Create nd_experiment of type seedlot_experiment and link the breeding program and seedlot
+        my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
+        my $experiment = $self->schema->resultset('NaturalDiversity::NdExperiment')->create({
+            nd_geolocation_id => $self->nd_geolocation_id,
+            type_id => $experiment_type_id
+        });
+        $experiment->create_related('nd_experiment_stocks', { stock_id => $self->seedlot_id(), type_id => $experiment_type_id  });
+        $experiment->create_related('nd_experiment_projects', { project_id => $self->breeding_program_id });
     };
 
     if ($@) { 
@@ -283,7 +349,6 @@ sub store {
     my $self = shift;
 
     print STDERR "storing: UNIQUENAME=".$self->uniquename()."\n";
-    $self->description($self->location_code());
     $self->name($self->uniquename());
 
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'seedlot', 'stock_type')->cvterm_id();
@@ -294,6 +359,7 @@ sub store {
     print STDERR "Saving seedlot returned ID $id.\n";
     $self->seedlot_id($id);
 
+    $self->_store_seedlot_location();
     $self->_store_seedlot_relationships();
 
     foreach my $t (@{$self->transactions()}) { 
