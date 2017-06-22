@@ -95,7 +95,7 @@ has 'trial_year' => (isa => 'Str', is => 'rw', predicate => 'has_trial_year', re
 has 'trial_description' => (isa => 'Str', is => 'rw', predicate => 'has_trial_description', required => 1,);
 has 'trial_location' => (isa => 'Str', is => 'rw', predicate => 'has_trial_location', required => 1,);
 has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', required => 1);
-has 'design' => (isa => 'HashRef[HashRef[Str|ArrayRef]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
+has 'design' => (isa => 'HashRef[HashRef[Str|ArrayRef|Int]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 1);
 has 'trial_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_type', required => 0);
 

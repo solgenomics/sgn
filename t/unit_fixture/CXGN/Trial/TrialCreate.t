@@ -4,6 +4,7 @@ use strict;
 use Test::More;
 use lib 't/lib';
 use SGN::Test::Fixture;
+use JSON::Any;
 use Data::Dumper;
 
 my $fix = SGN::Test::Fixture->new();
@@ -170,27 +171,92 @@ foreach my $acc (@$accession_names) {
 }
 
 
+# layout for genotyping experiment
+# use data structure returned by brapi call for GDF:
+# plates:[ { 'project_id' : 'project x', 
+#            'plate_name' : 'required',
+#            'plate_format': 'Plate_96' | 'tubes',
+#            'sample_type' : 'DNA' | 'RNA' | 'Tissue'
+#            'samples':[
+# {
+#    		'name': 'sample_name1', 
+#     		'well': 'optional'
+#               'concentration:
+#'              'volume': 
+#               'taxomony_id' : 
+#               'tissue_type' : 
+#               }
+# ] 
 
-#make design for genotyping
-my %geno_design;
+my $plates = [ { 'project_id' => 'test',
+		 'plate_name' => 'test_plate',
+		 'plate_format' => 'Plate_96',
+		 'sample_type' => 'DNA',
+		 'samples' => 
+		     [ 
+		       {
+			   'name' => 'test_accession1',
+			   'well' => 'A1',
+			   'concentration' => 1,
+			   'volume' => 2,
+			   'taxonomy_id' => 4226,
+			   'tissue_type' => 'leaf',
+		       },
+		       {
+			   'name' => 'test_accession2',
+			   'well' => 'A2',
+			   'concentration' => 1,
+			   'volume' =>  2,
+			   'taxonomy_id' => 4226,
+			   'tissue_type' => 'leaf',
+		       },
+		       {
+			   'name' => 'test_accession3',
+			   'well' => 'A3',
+			   'concentration' => 1,
+			   'volume' => 2,
+			   'taxonomy_id' => 4226,
+			   'tissue_type' =>  'leaf',
+		       },
+		       {
+			   'name' => 'test_accession4',
+			   'well' => 'B1',
+			   'concentration' => 1,
+			   'volume' => 2,
+			   'taxonomy_id' => 4226,
+			   'tissue_type' => 'leaf',
+		       },
+		       {
+			   'name' => 'BLANK',
+			   'well' => 'B2',
+			   'concentration' => 0,
+			   'volume' => 0,
+			   'taxonomy_id' => 0,
+			   'tissue_type' => 'unknown',
+			       }
+		     ],
+	       },
+    ];
+	       
+my @stock_list = map { $_->{name} } @{$plates->[0]->{samples}};
 
-  for (my $i = 0; $i < scalar(@genotyping_stock_names); $i++) {
-    my %plot_info;
-    
-    #a
-    $plot_info{'stock_name'} = @genotyping_stock_names[$i];
-    #$plot_info{'block_number'} = $block_numbers[$i];
-    #$plot_info{'plot_name'} = $converted_plot_numbers[$i];
-    $plot_info{'plot_name'} = @genotyping_stock_names[$i]."_test_trial_name_".$i;
-    $geno_design{$i+1} = \%plot_info;
-  }
+my $design = CXGN::Trial::TrialDesign->new( { schema => $chado_schema } );
+#$design->trial_name($plates->[0]->{plate_name});
+#$design->stock_list(@stock_list);
+#$design->number_of_rows = 8;
+#$design->number_of_columns = 12;
+
+$design->set_plate(JSON::Any->encode($plates->[0]));
+$design->set_design_type("genotyping_plate");
+$design->calculate_design();
+my $geno_design = $design->get_design();
 
 ok(my $genotyping_trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
     dbh => $dbh,
     is_genotyping => 1,
     user_name => "johndoe", #not implemented
-    design => \%geno_design,	
+    design => $geno_design,	
     program => "test",
     trial_year => "2015",
     trial_description => "test description",

@@ -127,7 +127,7 @@ jQuery(document).ready(function ($) {
     });
 
 
-    function submit_genotype_trial(gdf_username, gdf_password, gdf_host) {
+    function submit_genotype_trial(gdf_username, gdf_password, host) {
 	var plate_data = new Object();
 	plate_data.breeding_program = $('#breeding_program_select').val();
 	plate_data.year = $('#year_select').val();
@@ -217,18 +217,21 @@ jQuery(document).ready(function ($) {
     
     function submit_plate_to_gdf(auth_data, plate_data) { 
 	
-	var formatted_elements;
-	alert("submitting plate...");
+	var formatted_elements = new Array(); 
+
 	for(var i=0; i< plate_data.elements.length; i++) { 
 	    formatted_elements.push( { name: plate_data.elements[i] });
 	}
 	
-	alert("Now submitting the plate...");
+	alert("Creating genotyping experiment entry...");
+
+	store_plate(auth_data, plate_data);
+	alert("Now submitting the plate..."+JSON.stringify(formatted_elements)+" to "+auth_data.host);
 	$.ajax( { 
-	    url: gdf_host+'/brapi/v2/plate',
+	    url: auth_data.host+'/brapi/v2/plate-register',
 	    method: 'POST',
 	    data: { 
-		token: access_token,
+		token: auth_data.access_token,
 		plates: [ 
 		    { 
 			project_id: plate_data.breeding_program,
@@ -246,7 +249,7 @@ jQuery(document).ready(function ($) {
 		    alert(response.metadata.status);
 		}
 		else { 
-		    store_plate(auth_data, plate_data);
+		    //store_plate(auth_data, plate_data);
 		    alert("Successfully submitted the plate to GDF.");
 		}
 	    }
@@ -288,8 +291,9 @@ jQuery(document).ready(function ($) {
 		    breeding_program: plate_data.breeding_program, 
 		    year: plate_data.year, 
 		    description: plate_data.description, 
-		    name : plate_data.name,
+		    
 		    list_id : plate_data.list_id,
+		    plate_json: { trial_name : plate_data.name }
 		  },
 	    success : function(response) { 
 		if (response.error) { 
