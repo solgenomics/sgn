@@ -776,8 +776,12 @@ sub create_cross_wishlist_POST : Args(0) {
     my $trial_id = $c->req->param('trial_id');
 
     my %selected_cross_hash;
+    my %selected_females;
+    my %selected_males;
     foreach (@$data){
         push @{$selected_cross_hash{$_->{female_id}}->{$_->{priority}}}, $_->{male_id};
+        $selected_females{$_->{female_id}}++;
+        $selected_males{$_->{male_id}}++;
     }
     #print STDERR Dumper \%selected_cross_hash;
 
@@ -797,12 +801,95 @@ sub create_cross_wishlist_POST : Args(0) {
     #print STDERR Dumper $design_layout;
 
     my %accession_plot_hash;
+    my %block_plot_hash;
+    print STDERR "NUM PLOTS:".scalar(keys %$design_layout);
+    while ( my ($key,$value) = each %$design_layout){
+        push @{$accession_plot_hash{$value->{accession_name}}}, $value;
+        $block_plot_hash{$value->{block_number}}->{$value->{plot_number}} = $value;
+    }
+    #print STDERR Dumper \%accession_plot_hash;
+    #print STDERR Dumper \%block_plot_hash;
+
+    my $num_seen = 0;
+    my $cross_wishlist_plot_select_html = '<h3>Selected Female Plots are in <span class="bg-primary">Blue</span> and Selected Male Plots are in <span class="bg-success">Green</span>. Select All Males <input type="checkbox" id="cross_wishlist_plot_select_all_male" />   Select All Females <input type="checkbox" id="cross_wishlist_plot_select_all_female" /></h3><table class="table table-bordered table-hover"><thead>';
+    $cross_wishlist_plot_select_html .= "</thead><tbody>";
+    foreach my $block_number (sort { $a <=> $b } keys %block_plot_hash){
+        $cross_wishlist_plot_select_html .= "<tr><td><b>Block $block_number</b></td>";
+        my $plot_number_obj = $block_plot_hash{$block_number};
+        my @plot_numbers = sort { $a <=> $b } keys %$plot_number_obj;
+        for (0 .. scalar(@plot_numbers)-1){
+            my $plot_number = $plot_numbers[$_];
+            my $value = $plot_number_obj->{$plot_number};
+            my $accession_name = $value->{accession_name};
+            if (exists($selected_females{$accession_name}) && exists($selected_males{$accession_name})){
+                $cross_wishlist_plot_select_html .= '<td><span class="bg-primary" title="Female. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.'">'.$accession_name.'</span><input type="checkbox" value="'.$value->{plot_number}.'" name="cross_wishlist_plot_select_female_input" /><br/><span class="bg-success" title="Male. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.'">'.$accession_name.'</span><input type="checkbox" value="'.$value->{plot_number}.'" name="cross_wishlist_plot_select_male_input" /></td>';
+                $num_seen++;
+            }
+            elsif (exists($selected_females{$accession_name})){
+                $cross_wishlist_plot_select_html .= '<td class="bg-primary" title="Female. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.'">'.$accession_name.'<input type="checkbox" value="'.$value->{plot_number}.'" name="cross_wishlist_plot_select_female_input" /></td>';
+                $num_seen++;
+            }
+            elsif (exists($selected_males{$accession_name})){
+                $cross_wishlist_plot_select_html .= '<td class="bg-success" title="Male. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.'">'.$accession_name.'<input type="checkbox" value="'.$value->{plot_number}.'" name="cross_wishlist_plot_select_male_input" /></td>';
+                $num_seen++;
+            }
+            else {
+                $cross_wishlist_plot_select_html .= '<td title="Not Chosen. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.'">'.$accession_name.'</td>';
+                $num_seen++;
+            }
+        }
+        $cross_wishlist_plot_select_html .= '</tr>'
+    }
+    $cross_wishlist_plot_select_html .= '</tbody></table>';
+    print STDERR "NUM PLOTS SEEN: $num_seen\n";
+
+    $c->stash->{rest}->{data} = $cross_wishlist_plot_select_html;
+}
+
+sub create_cross_wishlist_submit : Path('/ajax/cross/create_cross_wishlist_submit') : ActionClass('REST') { }
+
+sub create_cross_wishlist_submit_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    print STDERR Dumper $c->req->params();
+    my $data = decode_json $c->req->param('crosses');
+    my $trial_id = $c->req->param('trial_id');
+    my $selected_female_plot_ids = decode_json $c->req->param('female_plot_ids');
+    my $selected_male_plot_ids = decode_json $c->req->param('male_plot_ids');
+    my %allowed_female_plot_ids = map {$_=>1} @$selected_female_plot_ids;
+    my %allowed_male_plot_ids = map {$_=>1} @$selected_male_plot_ids;
+
+    my %selected_cross_hash;
+    my %selected_females;
+    my %selected_males;
+    foreach (@$data){
+        push @{$selected_cross_hash{$_->{female_id}}->{$_->{priority}}}, $_->{male_id};
+    }
+    #print STDERR Dumper \%selected_cross_hash;
+
+    my %ordered_data;
+    foreach my $female_id (keys %selected_cross_hash){
+        foreach my $priority (sort keys %{$selected_cross_hash{$female_id}}){
+            my $males = $selected_cross_hash{$female_id}->{$priority};
+            foreach my $male_id (@$males){
+                push @{$ordered_data{$female_id}}, $male_id;
+            }
+        }
+    }
+    print STDERR Dumper \%ordered_data;
+
+    my $trial = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id });
+    my $design_layout = $trial->get_design();
+    #print STDERR Dumper $design_layout;
+
+    my %accession_plot_hash;
+    print STDERR "NUM PLOTS:".scalar(keys %$design_layout);
     while ( my ($key,$value) = each %$design_layout){
         push @{$accession_plot_hash{$value->{accession_name}}}, $value;
     }
-    #print STDERR Dumper \%accession_plot_hash;
+    print STDERR Dumper \%accession_plot_hash;
 
-    my $header = '"FemalePlotID","FemalePlotName","FemaleAccessionName","FemaleAccessionId","FemaleBlockNumber","FemaleRepNumber","NumberMales"';
+    my $header = '"FemalePlotID","FemalePlotName","FemaleAccessionName","FemaleAccessionId","FemalePlotNumber","FemaleBlockNumber","FemaleRepNumber","NumberMales"';
     my @lines;
     my $max_male_num = 0;
     foreach my $female_id (keys %ordered_data){
@@ -812,29 +899,33 @@ sub create_cross_wishlist_POST : Args(0) {
         #print STDERR Dumper $female_plots;
         #print STDERR Dumper $male_ids;
         foreach my $female (@$female_plots){
-            my $num_males = 0;
-            my $line = '"'.$female->{plot_id}.'","'.$female->{plot_name}.'","'.$female->{accession_name}.'","'.$female->{accession_id}.'","'.$female->{block_number}.'","'.$female->{rep_number}.'","';
-            my @male_segments;
-            foreach my $male_id (@$male_ids){
-                my $male_plots = $accession_plot_hash{$male_id};
-                foreach my $male (@$male_plots){
-                    push @male_segments, ',"'.$male->{plot_id}.'","'.$male->{plot_name}.'","'.$male->{accession_name}.'","'.$male->{accession_id}.'","'.$male->{block_number}.'","'.$male->{rep_number}.'"';
-                    $num_males++;
+            if (exists($allowed_female_plot_ids{$female->{plot_id}})){
+                my $num_males = 0;
+                my $line = '"'.$female->{plot_id}.'","'.$female->{plot_name}.'","'.$female->{accession_name}.'","'.$female->{accession_id}.'","'.$female->{plot_number}.'","'.$female->{block_number}.'","'.$female->{rep_number}.'","';
+                my @male_segments;
+                foreach my $male_id (@$male_ids){
+                    my $male_plots = $accession_plot_hash{$male_id};
+                    foreach my $male (@$male_plots){
+                        if (exists($allowed_male_plot_ids{$male->{plot_id}})){
+                            push @male_segments, ',"'.$male->{plot_id}.'","'.$male->{plot_name}.'","'.$male->{accession_name}.'","'.$male->{accession_id}.'","'.$male->{plot_number}.'","'.$male->{block_number}.'","'.$male->{rep_number}.'"';
+                            $num_males++;
+                        }
+                    }
                 }
-            }
-            $line .= $num_males.'"';
-            foreach (@male_segments){
-                $line .= $_;
-            }
-            $line .= "\n";
-            push @lines, $line;
-            if ($num_males > $max_male_num){
-                $max_male_num = $num_males;
+                $line .= $num_males.'"';
+                foreach (@male_segments){
+                    $line .= $_;
+                }
+                $line .= "\n";
+                push @lines, $line;
+                if ($num_males > $max_male_num){
+                    $max_male_num = $num_males;
+                }
             }
         }
     }
     for (1 .. $max_male_num){
-        $header .= ',"MalePlotID'.$_.'","MalePlotName'.$_.'","MaleAccessionName'.$_.'","MaleAccessionID'.$_.'","MaleBlockNumber'.$_.'","MaleRepNumber'.$_.'"';
+        $header .= ',"MalePlotID'.$_.'","MalePlotName'.$_.'","MaleAccessionName'.$_.'","MaleAccessionID'.$_.'","MalePlotNumber'.$_.'","MaleBlockNumber'.$_.'","MaleRepNumber'.$_.'"';
     }
 
     my %priority_order_hash;
@@ -861,7 +952,7 @@ sub create_cross_wishlist_POST : Args(0) {
     my $urlencoded_filename1 = $urlencode{$uri1};
     #print STDERR Dumper $urlencoded_filename1;
 
-    $c->stash->{rest}->{filename} = $urlencoded_filename1;
+    #$c->stash->{rest}->{filename} = $urlencoded_filename1;
 
     my ($file_path2, $uri2) = $c->tempfile( TEMPLATE => 'download/cross_wishlist_downloadXXXXX');
     open(my $F, ">", $file_path2) || die "Can't open file ".$file_path2;
@@ -876,7 +967,7 @@ sub create_cross_wishlist_POST : Args(0) {
     my $urlencoded_filename2 = $urlencode{$uri2};
     #print STDERR Dumper $urlencoded_filename2;
 
-    #$c->stash->{rest}->{filename} = $urlencoded_filename2;
+    $c->stash->{rest}->{filename} = $urlencoded_filename2;
 
     my $universal_uri = $c->config->{main_production_site_url}.$uri2;
     my $ua = LWP::UserAgent->new;
