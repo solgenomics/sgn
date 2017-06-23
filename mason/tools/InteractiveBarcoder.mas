@@ -8,44 +8,80 @@
 
 </%args>
 
-<& '/page/page_title.mas', title => "Barcoder" &>
+<& '/page/page_title.mas', title => "Interactive Barcoder" &>
 
 <& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js' ] &>
 
 
 <div class="row">
+  <div class="col-md-9">
+    <div class="well" style="padding:0;">
+      <div class="d3-draw-area"></div>
+    </div>
+  </div>
   <div class="col-md-3">
-    <div>
+    <div class="well">
       <label>Grid</label>
       <div class="form-group">
         <input id="d3-grid-slider" class="input-sm" type="range"> 
         <span><input id="d3-snapping-check" type="checkbox" checked> Snap&nbsp;&nbsp;&nbsp;</span><input id="d3-grid-number" class="input-sm" type="number">
       </div>
-      <br>
-      <label>Barcode</label>
-      <select id="d3-barcode-select" class="input-sm form-group"></select>
-      <br>
-      <label>Text</label>
-      <div class="form-group">
-        <input id="d3-font-size-input" class="input-sm" type="number" min="5" max="72" suffix="px">
-        <input id="d3-text-content" class="input-sm" type="text">
-        <button id="d3-new-textbox" class="btn form-group"> New </button>
-      </div>
     </div>
-    <div class="panel">
-      <div class="panel-body">
-        List of placeholders: <br>
-        %trial  <br>
-        %program <br>
-        %plot <br>
-      </div>
+    <div class="well">
+      <center>
+        <label>Barcode</label>
+        <br>
+        <select id="d3-barcode-select" class="input-sm form-group"></select>
+      </center>
     </div>
-    <button id="d3-save-button" class="btn btn-primary form-group"> Save </button>
-    <a id="link"> link </a>
+    <div class="well">
+      <center>
+        <button id="d3-new-textbox" class="btn btn-primary" data-toggle="modal" data-target="#newTextModal">Add Text</button>
+      </center>
+    </div>
+    <div class="well">
+      <button id="d3-save-button" class="btn btn-primary">Save</button>
+      <a id="link" target="_blank" class="btn"> Download </a>
+    </div>
   </div>
-  <div class="d3-draw-area"></div>
 </div>
 
+<!-- Modal -->
+<div class="modal fade" id="newTextModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+        <input id="d3-text-content" class="input" type="text">
+        <select id="d3-font-size-input" class="input" min="5" max="72">
+          <option value="7.5">7.5pt</option>
+          <option value="8">8pt</option>
+          <option value="9">9pt</option>
+          <option value="10">10pt</option>
+          <option value="10.5">10.5pt</option>
+          <option value="11">11pt</option>
+          <option value="12">12pt</option>
+          <option value="14">14pt</option>
+          <option value="16">16pt</option>
+          <option value="18">18pt</option>
+          <option value="20">20pt</option>
+          <option value="22">22pt</option>
+          <option value="24">24pt</option>
+          <option value="26">26pt</option>
+          <option value="28">28pt</option>
+          <option value="36">36pt</option>
+          <option value="48">48pt</option>
+          <option value="72">72pt</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Add Text</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="savingplace"></div>
 
 <script>
 var barcode_types = [
@@ -75,84 +111,140 @@ function draggable(d,i){
     .call(drag_behaviour);
 }
 
-var sel_selected = null;
-function selectable(d,i){
+resizer_behaviour = d3.behavior.drag().on(
+  "drag", function(d,i){
+    var target = d;
+    var bb = getTransGroupBounds(target.node())
+    var mx = d3.event.x;
+    var my = d3.event.y;
+    if (d3.select("#d3-snapping-check").property("checked")){
+      var grid_size = parseInt(d3.select("#d3-grid-slider").node().value);
+      mx = Math.round(mx/grid_size)*grid_size
+      my = Math.round(my/grid_size)*grid_size
+    }
+    var xexpand = (mx - bb.x)/bb.width
+    var yexpand = (my - bb.y)/bb.height
+    expand = Math.max(xexpand,yexpand)
+    if (!isNaN(expand)){
+      target.call(doTransform,function(state,selection){
+          var expX = state.scale[0]*expand;
+          var expY = state.scale[1]*expand;
+          var mi = Math.min(expX*bb.width,expY*bb.height);
+          if (mi<=3) {
+            expX = state.scale[0];
+            expY = state.scale[1];
+          }
+          state.scale[0] = expX;
+          state.scale[1] = expY;
+      });
+    }
+    var newbb = getTransGroupBounds(target.node())
+    d3.select(this.parentNode).select(".selection-tool-outline")
+      .attr({
+        x:newbb.x,
+        y:newbb.y,
+        width:newbb.width,
+        height:newbb.height,
+      })
+    d3.select(this.parentNode).select(".selection-tool-resizer")
+      .attr({
+        x:newbb.x+newbb.width-3,
+        y:newbb.y+newbb.height-3,
+      })
+    d3.select(this.parentNode).select(".selection-tool-remover")
+      .attr({
+        x:newbb.x-3,
+        y:newbb.y-3,
+      })
+});
+function selectable(selection,resizeable){
+  this.on("mousedown",function(){
+    d3.select(".selection-tools").remove();
+  })
   this.on("click", function(){
-    d3.select(".selection-outline").remove();
-    var o = d3.select(this);
-    var bb = this.getBBox();
-    o.append("rect")
-      .classed("selection-outline",true)
+    var o = d3.select(".d3-draw-svg");
+    var bb = getTransGroupBounds(this);
+    var target = d3.select(this);
+    var tools = o.append('g')
+      .classed("selection-tools",true)
+      .datum(target);
+    tools.append("rect")
+      .classed("selection-tool-outline",true)
       .attr({
         x:bb.x,
         y:bb.y,
         width:bb.width,
         height:bb.height,
         fill:"none",
-        stroke: "red",
-        "stroke-dasharray": ("10,3"),
+        stroke: "black",
+        "stroke-dasharray": ("3,3"),
         "stroke-width":1
       })
+    tools.append("rect")
+      .classed("selection-tool-remover",true)
+      .attr({
+        x:bb.x-3,
+        y:bb.y-3,
+        width:6,
+        height:6,
+        fill: "red",
+        stroke: "none"
+      })
+      .on("click",function(){
+        target.remove();
+        clearSelection();
+      })
+    if (resizeable){
+      tools.append("rect")
+        .classed("selection-tool-resizer",true)
+        .attr({
+          x:bb.x+bb.width-3,
+          y:bb.y+bb.height-3,
+          width:6,
+          height:6,
+          fill: "green",
+          stroke: "none"
+        }).call(resizer_behaviour);
+    }
   })
 }
+function clearSelection(){
+  d3.select(".selection-tools").remove();
+}
+
 
 function doTransform(selection,transformFunc){
-  var currString = selection.attr("transform") || "";
-  var seperated = currString.split(/[\(\)]+/);
-  seperated  = seperated.slice(0, seperated.length-1);
-  var state = {};
-  for (var i = 0; i < seperated.length; i+=2) {
-    var key = seperated[i].trim();
-    state[key] = seperated[i+1].trim().split(",");
-    for (var j = 0; j < state[key].length; j++) {
-      state[key][j] = parseFloat(state[key][j]);
-    }
-  }
+  var state = d3.transform(selection.attr("transform"));
   transformFunc(state,selection);
-  out_string = "";
-  for (var key in state){
-    out_string+=key+"("+state[key].join(", ")+") ";
-  }
-  selection.attr("transform",out_string);
+  selection.attr("transform",state.toString());
 }
 
-function outlineable(d,i){
-  this.on("mouseover", function(){
-    var o = d3.select(this);
-    var bb = this.getBBox();
-    o.append("rect")
-      .classed("d3-outline",true)
-      .attr({
-        x:bb.x,
-        y:bb.y,
-        width:bb.width,
-        height:bb.height,
-        fill:"none",
-        stroke: "red",
-        "stroke-width":1
-      })
-  }).on("mouseout",function(){
-    d3.select(this)
-      .selectAll(".d3-outline")
-      .remove()
-  })
+function getTransGroupBounds(node){
+  var bb = node.getBBox()
+  var state = d3.transform(d3.select(node).attr("transform"));
+  bb.x = bb.x*state.scale[0]
+  bb.y = bb.y*state.scale[1]
+  bb.width = bb.width*state.scale[0]
+  bb.height = bb.height*state.scale[1]
+  bb.x += state.translate[0]
+  bb.y += state.translate[1]
+  return bb
 }
 
 $(document).ready(function($) {
   //begin settings
-  var draw_height = 144;
-  var draw_width = 288;
+  var draw_height = 200;
+  var draw_width = 400;
   //end settings
   
   //create svg canvas
   var svg = d3.select(".d3-draw-area")
     .append('svg')
+    .classed("label-template",true)
     .attr({
-      id: "svg-object-1",
-      width: 600,
-      height: draw_height/draw_width*600,
+      width: "100%",
       viewBox: "0 0 "+draw_width+" "+draw_height
-  });
+    }).classed("d3-draw-svg",true);
 
   //set up background
   svg.append('rect')
@@ -164,6 +256,7 @@ $(document).ready(function($) {
       height:draw_height,
       fill:"#eee"
     })
+    .on("click",clearSelection);
   
   //set up grid and grid slider/input
   var grid = svg.append("g").classed("d3-bg-grid",true);
@@ -202,9 +295,20 @@ $(document).ready(function($) {
   barcode_select.insert("option","*")
     .attr({"selected":true,"value":-1});
   barcode_select.on("input",function(){
+    clearSelection();
     var val = d3.select(this).node().value;
     if (val>=0){
       barcode_g.html("")
+      .append('g')
+      .classed("draggable",true)
+      .classed("selectable",true)
+      .call(draggable)
+      .call(selectable,true)
+      .call(doTransform,function(state,selection){
+        state.translate[0] += (draw_width/2)-(barcode_types[val].width/2)
+        state.translate[1] += (draw_height/2)-(barcode_types[val].height/2)
+      })
+      .on("mouseup", dragSnap)
       .append('rect')
         .attr({
           x:0,
@@ -215,37 +319,30 @@ $(document).ready(function($) {
         })
     }
   });
-  barcode_g
-    .classed("draggable",true)
-    .classed("selectable",true)
-    .classed("outlineable",true)
-    .call(draggable)
-    .call(outlineable)
-    .call(selectable)
-    .on("mouseup", dragSnap);
+    
 
   //set up text boxes
   d3.select("#d3-new-textbox").on("click",function(){
-    var newTB = svg.append("g")
-      .classed("text-box",true);
-    var fontSize = parseInt(d3.select("#d3-font-size-input").node().value);
-    var newText = newTB.append("text")
-      .attr({
-        y:fontSize,
-        "font-size":fontSize,
-        "dominant-baseline": "mathematical",
-      })
-      .text(d3.select("#d3-text-content").node().value);
-    newTB.classed("draggable",true)
-      .classed("outlineable",true)
-      .call(draggable)
-      .call(outlineable)
-      .on("mouseup", dragSnap);
+    // var newTB = svg.append("g")
+    //   .classed("text-box",true);
+    // var fontSize = parseInt(d3.select("#d3-font-size-input").node().value);
+    // var newText = newTB
+    //   .append("text")
+    //   .attr({
+    //     //y:fontSize,
+    //     "font-size":fontSize,
+    //     "dominant-baseline": "mathematical",
+    //   })
+    //   .text(d3.select("#d3-text-content").node().value);
+    // newTB.classed("draggable",true)
+    //   .classed("selectable",true)
+    //   .call(draggable)
+    //   .call(selectable,false)
+    //   .on("mouseup", dragSnap);
   })
 });
 
 function updateGrid(){
-  console.log(true);
   var grid = d3.select(".d3-bg-grid").html("");
   var grid_size = parseInt(d3.select("#d3-grid-slider").node().value);
   var bg = d3.select(".d3-bg");
@@ -260,7 +357,7 @@ function updateGrid(){
         y2: y,
         stroke: "rgba(0,0,0,0.2)",
         "stroke-width": 1
-      });
+      }).on("click",clearSelection);
   }
   for (var x = grid_size; x < width; x+=grid_size) {
     grid.append('line')
@@ -271,7 +368,7 @@ function updateGrid(){
         y2: height,
         stroke: "rgba(0,0,0,0.2)",
         "stroke-width": 1
-      });
+      }).on("click",clearSelection);
   }
 }
 
@@ -280,26 +377,25 @@ function dragSnap(){
     var grid_size = parseInt(d3.select("#d3-grid-slider").node().value);
     var o = d3.select(this)
       .call(doTransform,function(state,selection){
-        var start_x_offset = parseFloat(selection.attr("s-x")) || 0;
-        var start_y_offset = parseFloat(selection.attr("s-y")) || 0;
-        var ox = state.translate[0]+start_x_offset;
-        var oy = state.translate[1]+start_y_offset;
-        var bb = selection.node().getBBox()
-        var left_snap = Math.round(ox/grid_size)*grid_size
-        var right_snap = Math.round((ox+bb.width)/grid_size)*grid_size-bb.width
-        var top_snap = Math.round(oy/grid_size)*grid_size
-        var bottom_snap = Math.round((oy+bb.height)/grid_size)*grid_size-bb.height
-        var newX = (Math.abs(left_snap-ox) < Math.abs(right_snap-ox)) ? left_snap : right_snap;
-        var newY = (Math.abs(top_snap-oy) < Math.abs(bottom_snap-oy)) ? top_snap : bottom_snap;
-        state.translate = [newX-start_x_offset,newY-start_y_offset];
+        var bb = getTransGroupBounds(selection.node());
+        var left_snap_d = (Math.round(bb.x/grid_size))*grid_size-bb.x
+        var right_snap_d = (Math.round((bb.x+bb.width)/grid_size)*grid_size-bb.width)-bb.x
+        var top_snap_d = (Math.round(bb.y/grid_size))*grid_size-bb.y
+        var bottom_snap_d = (Math.round((bb.y+bb.height)/grid_size)*grid_size-bb.height)-bb.y
+        state.translate[0] += Math.abs(left_snap_d) < Math.abs(right_snap_d) ? left_snap_d: right_snap_d
+        state.translate[1] += Math.abs(top_snap_d) < Math.abs(bottom_snap_d) ? top_snap_d: bottom_snap_d
       });
   }
 }
 
 $("#d3-save-button").on("click",function(event) {
-  //get svg element.
-  
-  var svg = document.getElementById("svg-object-1");
+  clearSelection();
+  $(".label-template").clone().appendTo("#savingplace");
+  var img = d3.select("#savingplace .label-template")
+    .attr("id","d3-to-save")
+  img.select(".d3-bg").remove();
+  img.select(".d3-bg-grid").remove();
+  var svg = document.getElementById("d3-to-save");
 
   //get svg source.
   var serializer = new XMLSerializer();
@@ -323,5 +419,6 @@ $("#d3-save-button").on("click",function(event) {
   //set url value to a element's href attribute.
   document.getElementById("link").href = url;
   //you can download svg file by right click menu.
+  img.remove();
 });
 </script>
