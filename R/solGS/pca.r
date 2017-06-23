@@ -88,7 +88,7 @@ message("filtered genotype file: ", filteredGenoFile)
 
 if (is.null(filteredGenoFile) == TRUE) {
   ##genoDataFilter::filterGenoData
-  genoData <- filterGenoData(genoData)
+  genoData <- filterGenoData(genoData, maf=0)
 } else {
   genoData           <- as.data.frame(genoData)
   rownames(genoData) <- genoData[, 1]
