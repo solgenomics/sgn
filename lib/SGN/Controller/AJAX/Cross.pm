@@ -36,6 +36,7 @@ use CXGN::Pedigree::AddCrossInfo;
 use CXGN::Pedigree::AddPopulations;
 use CXGN::Pedigree::ParseUpload;
 use CXGN::Trial::Folder;
+use CXGN::Trial::TrialLayout;
 use Carp;
 use File::Path qw(make_path);
 use File::Spec::Functions qw / catfile catdir/;
@@ -769,31 +770,122 @@ sub create_cross_wishlist : Path('/ajax/cross/create_cross_wishlist') : ActionCl
 
 sub create_cross_wishlist_POST : Args(0) {
     my ($self, $c) = @_;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    #print STDERR Dumper $c->req->params();
     my $data = decode_json $c->req->param('crosses');
-    #print STDERR Dumper $data;
+    my $trial_id = $c->req->param('trial_id');
+
+    my %selected_cross_hash;
+    foreach (@$data){
+        push @{$selected_cross_hash{$_->{female_id}}->{$_->{priority}}}, $_->{male_id};
+    }
+    #print STDERR Dumper \%selected_cross_hash;
+
+    my %ordered_data;
+    foreach my $female_id (keys %selected_cross_hash){
+        foreach my $priority (sort keys %{$selected_cross_hash{$female_id}}){
+            my $males = $selected_cross_hash{$female_id}->{$priority};
+            foreach my $male_id (@$males){
+                push @{$ordered_data{$female_id}}, $male_id;
+            }
+        }
+    }
+    #print STDERR Dumper \%ordered_data;
+
+    my $trial = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id });
+    my $design_layout = $trial->get_design();
+    #print STDERR Dumper $design_layout;
+
+    my %accession_plot_hash;
+    while ( my ($key,$value) = each %$design_layout){
+        push @{$accession_plot_hash{$value->{accession_name}}}, $value;
+    }
+    #print STDERR Dumper \%accession_plot_hash;
+
+    my $header = '"FemalePlotID","FemalePlotName","FemaleAccessionName","FemaleAccessionId","FemaleBlockNumber","FemaleRepNumber","NumberMales"';
+    my @lines;
+    my $max_male_num = 0;
+    foreach my $female_id (keys %ordered_data){
+        my $male_ids = $ordered_data{$female_id};
+        my $female_plots = $accession_plot_hash{$female_id};
+
+        #print STDERR Dumper $female_plots;
+        #print STDERR Dumper $male_ids;
+        foreach my $female (@$female_plots){
+            my $num_males = 0;
+            my $line = '"'.$female->{plot_id}.'","'.$female->{plot_name}.'","'.$female->{accession_name}.'","'.$female->{accession_id}.'","'.$female->{block_number}.'","'.$female->{rep_number}.'","';
+            my @male_segments;
+            foreach my $male_id (@$male_ids){
+                my $male_plots = $accession_plot_hash{$male_id};
+                foreach my $male (@$male_plots){
+                    push @male_segments, ',"'.$male->{plot_id}.'","'.$male->{plot_name}.'","'.$male->{accession_name}.'","'.$male->{accession_id}.'","'.$male->{block_number}.'","'.$male->{rep_number}.'"';
+                    $num_males++;
+                }
+            }
+            $line .= $num_males.'"';
+            foreach (@male_segments){
+                $line .= $_;
+            }
+            $line .= "\n";
+            push @lines, $line;
+            if ($num_males > $max_male_num){
+                $max_male_num = $num_males;
+            }
+        }
+    }
+    for (1 .. $max_male_num){
+        $header .= ',"MalePlotID'.$_.'","MalePlotName'.$_.'","MaleAccessionName'.$_.'","MaleAccessionID'.$_.'","MaleBlockNumber'.$_.'","MaleRepNumber'.$_.'"';
+    }
+
+    my %priority_order_hash;
+    foreach (@$data){
+        push @{$priority_order_hash{$_->{priority}}}, [$_->{female_id}, $_->{male_id}];
+    }
+    #print STDERR Dumper \%priority_order_hash;
+
     my $dir = $c->tempfiles_subdir('download');
-    my ($file_path, $uri) = $c->tempfile( TEMPLATE => 'download/cross_wishlist_downloadXXXXX');
-    my @header = ('Female Accession', 'Male Accession', 'Priority');
-    open(my $F, ">", $file_path) || die "Can't open file ".$file_path;
-        print $F join "\t", @header;
+    my ($file_path1, $uri1) = $c->tempfile( TEMPLATE => 'download/cross_wishlist_downloadXXXXX');
+    my @header1 = ('Female Accession', 'Male Accession', 'Priority');
+    open(my $F1, ">", $file_path1) || die "Can't open file ".$file_path1;
+        print $F1 join "\t", @header1;
+        print $F1 "\n";
+        foreach my $p (keys %priority_order_hash){
+            my $entries = $priority_order_hash{$p};
+            foreach (@$entries){
+                print $F1 $_->[0]."\t".$_->[1]."\t".$p."\n";
+            }
+        }
+    close($F1);
+    #print STDERR Dumper $file_path1;
+    #print STDERR Dumper $uri1;
+    my $urlencoded_filename1 = $urlencode{$uri1};
+    #print STDERR Dumper $urlencoded_filename1;
+
+    $c->stash->{rest}->{filename} = $urlencoded_filename1;
+
+    my ($file_path2, $uri2) = $c->tempfile( TEMPLATE => 'download/cross_wishlist_downloadXXXXX');
+    open(my $F, ">", $file_path2) || die "Can't open file ".$file_path2;
+        print $F $header;
         print $F "\n";
-        foreach (@$data){
-            print $F $_->{female_id}."\t".$_->{male_id}."\t".$_->{priority}."\n";
+        foreach (@lines){
+            print $F $_;
         }
     close($F);
-    #print STDERR Dumper $file_path;
-    #print STDERR Dumper $uri;
-    my $urlencoded_filename = $urlencode{$uri};
-    #print STDERR Dumper $urlencoded_filename;
+    #print STDERR Dumper $file_path2;
+    #print STDERR Dumper $uri2;
+    my $urlencoded_filename2 = $urlencode{$uri2};
+    #print STDERR Dumper $urlencoded_filename2;
 
-    my $universal_uri = $c->config->{main_production_site_url}.$uri;
+    #$c->stash->{rest}->{filename} = $urlencoded_filename2;
+
+    my $universal_uri = $c->config->{main_production_site_url}.$uri2;
     my $ua = LWP::UserAgent->new;
     $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{ona_username}, $c->config->{ona_password} );
     my $server_endpoint = "https://api.ona.io/api/v1/metadata";
     my $req = HTTP::Request->new(POST => $server_endpoint);
     $req->header('content-type' => 'application/json');
 
-    my $post_data = { "xform"=>"bananacross", "data_type"=>"media", "data_value"=>"$urlencoded_filename", "data_file"=>"$universal_uri" };
+    my $post_data = { "xform"=>"bananacross", "data_type"=>"media", "data_value"=>"$urlencoded_filename2", "data_file"=>"$universal_uri" };
     $req->content( encode_json $post_data);
 
     my $resp = $ua->request($req);
@@ -811,7 +903,6 @@ sub create_cross_wishlist_POST : Args(0) {
         $c->stash->{rest}->{error} = "There was an error submitting cross wishlist to ONA. Please try again.";
     }
 
-    $c->stash->{rest}->{filename} = $urlencoded_filename;
 }
 
 ###

@@ -451,8 +451,11 @@ sub search {
 		$rs = $rs->slice($offset, $limit);
 	}
 
-	my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
-	my $owners_hash = $stock_lookup->get_owner_hash_lookup();
+    my $owners_hash;
+    if (!$self->minimal_info){
+        my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
+        $owners_hash = $stock_lookup->get_owner_hash_lookup();
+    }
 
 	my @result;
 	while (my $a = $rs->next()) {
