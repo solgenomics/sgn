@@ -811,7 +811,7 @@ sub create_cross_wishlist_POST : Args(0) {
     #print STDERR Dumper \%block_plot_hash;
 
     my $num_seen = 0;
-    my $cross_wishlist_plot_select_html = '<h3>Selected Female Plots are in <span class="bg-primary">Blue</span> and Selected Male Plots are in <span class="bg-success">Green</span>. Select All Males <input type="checkbox" id="cross_wishlist_plot_select_all_male" />   Select All Females <input type="checkbox" id="cross_wishlist_plot_select_all_female" /></h3><table class="table table-bordered table-hover"><thead>';
+    my $cross_wishlist_plot_select_html = '<h3>Female Plots are in <span class="bg-primary">Blue</span> and Male Plots are in <span class="bg-success">Green</span>. Select All Males <input type="checkbox" id="cross_wishlist_plot_select_all_male" />   Select All Females <input type="checkbox" id="cross_wishlist_plot_select_all_female" /></h3><table class="table table-bordered table-hover"><thead>';
     $cross_wishlist_plot_select_html .= "</thead><tbody>";
     foreach my $block_number (sort { $a <=> $b } keys %block_plot_hash){
         $cross_wishlist_plot_select_html .= "<tr><td><b>Block $block_number</b></td>";
@@ -822,15 +822,27 @@ sub create_cross_wishlist_POST : Args(0) {
             my $value = $plot_number_obj->{$plot_number};
             my $accession_name = $value->{accession_name};
             if (exists($selected_females{$accession_name}) && exists($selected_males{$accession_name})){
-                $cross_wishlist_plot_select_html .= '<td><span class="bg-primary" title="Female. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.'">'.$accession_name.'</span><input type="checkbox" value="'.$value->{plot_number}.'" name="cross_wishlist_plot_select_female_input" /><br/><span class="bg-success" title="Male. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.'">'.$accession_name.'</span><input type="checkbox" value="'.$value->{plot_number}.'" name="cross_wishlist_plot_select_male_input" /></td>';
+                $cross_wishlist_plot_select_html .= '<td><span class="bg-primary" title="Female. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.' Males to Cross:';
+                my $count = 1;
+                foreach (@{$ordered_data{$value->{accession_name}}}){
+                    $cross_wishlist_plot_select_html .= ' Male'.$count.': '.$_;
+                    $count ++;
+                }
+                $cross_wishlist_plot_select_html .= '">'.$accession_name.'</span><input type="checkbox" value="'.$value->{plot_id}.'" name="cross_wishlist_plot_select_female_input" /><br/><span class="bg-success" title="Male. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.'">'.$accession_name.'</span><input type="checkbox" value="'.$value->{plot_id}.'" name="cross_wishlist_plot_select_male_input" /></td>';
                 $num_seen++;
             }
             elsif (exists($selected_females{$accession_name})){
-                $cross_wishlist_plot_select_html .= '<td class="bg-primary" title="Female. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.'">'.$accession_name.'<input type="checkbox" value="'.$value->{plot_number}.'" name="cross_wishlist_plot_select_female_input" /></td>';
+                $cross_wishlist_plot_select_html .= '<td class="bg-primary" title="Female. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.' Males to Cross:';
+                my $count = 1;
+                foreach (@{$ordered_data{$value->{accession_name}}}){
+                    $cross_wishlist_plot_select_html .= ' Male'.$count.': '.$_;
+                    $count ++;
+                }
+                $cross_wishlist_plot_select_html .= '">'.$accession_name.'<input type="checkbox" value="'.$value->{plot_id}.'" name="cross_wishlist_plot_select_female_input" /></td>';
                 $num_seen++;
             }
             elsif (exists($selected_males{$accession_name})){
-                $cross_wishlist_plot_select_html .= '<td class="bg-success" title="Male. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.'">'.$accession_name.'<input type="checkbox" value="'.$value->{plot_number}.'" name="cross_wishlist_plot_select_male_input" /></td>';
+                $cross_wishlist_plot_select_html .= '<td class="bg-success" title="Male. Plot Name: '.$value->{plot_name}.' Plot Number: '.$value->{plot_number}.'">'.$accession_name.'<input type="checkbox" value="'.$value->{plot_id}.'" name="cross_wishlist_plot_select_male_input" /></td>';
                 $num_seen++;
             }
             else {
@@ -851,13 +863,16 @@ sub create_cross_wishlist_submit : Path('/ajax/cross/create_cross_wishlist_submi
 sub create_cross_wishlist_submit_POST : Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    print STDERR Dumper $c->req->params();
+    #print STDERR Dumper $c->req->params();
     my $data = decode_json $c->req->param('crosses');
     my $trial_id = $c->req->param('trial_id');
     my $selected_female_plot_ids = decode_json $c->req->param('female_plot_ids');
     my $selected_male_plot_ids = decode_json $c->req->param('male_plot_ids');
     my %allowed_female_plot_ids = map {$_=>1} @$selected_female_plot_ids;
     my %allowed_male_plot_ids = map {$_=>1} @$selected_male_plot_ids;
+
+    #print STDERR Dumper \%allowed_male_plot_ids;
+    #print STDERR Dumper \%allowed_female_plot_ids;
 
     my %selected_cross_hash;
     my %selected_females;
@@ -876,18 +891,17 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             }
         }
     }
-    print STDERR Dumper \%ordered_data;
+    #print STDERR Dumper \%ordered_data;
 
     my $trial = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id });
     my $design_layout = $trial->get_design();
     #print STDERR Dumper $design_layout;
 
     my %accession_plot_hash;
-    print STDERR "NUM PLOTS:".scalar(keys %$design_layout);
     while ( my ($key,$value) = each %$design_layout){
         push @{$accession_plot_hash{$value->{accession_name}}}, $value;
     }
-    print STDERR Dumper \%accession_plot_hash;
+    #print STDERR Dumper \%accession_plot_hash;
 
     my $header = '"FemalePlotID","FemalePlotName","FemaleAccessionName","FemaleAccessionId","FemalePlotNumber","FemaleBlockNumber","FemaleRepNumber","NumberMales"';
     my @lines;
