@@ -84,6 +84,7 @@ sub create_build_script {
 
 sub check_R {
     my ( $self, @args ) = @_;
+   
     if( $HAVE_CAPTURE ) {
         my $ret;
         my $out = Capture::Tiny::capture_merged {
@@ -117,10 +118,10 @@ sub _R_installdeps {
 
     my $package_vec = 'c('.join( ',', map qq|"$_"|, @missing_packages ).')';
     my $cran_mirror = $ENV{CRAN_MIRROR} || "http://lib.stat.cmu.edu/R/CRAN";
-
+ 
     my $tf = File::Temp->new;
     $tf->print( <<EOR );
-userdir <- unlist(strsplit(Sys.getenv("R_LIBS_USER"), .Platform\$path.sep))[1L]
+userdir <- unlist(strsplit(Sys.getenv("R_LIBS_SITE"), .Platform\$path.sep))[1L]
 if (!file.exists(userdir) && !dir.create(userdir, recursive = TRUE, showWarnings = TRUE))
    stop("unable to create ", sQuote(userdir))
 .libPaths(c(userdir, .libPaths()))
@@ -154,16 +155,17 @@ sub _handle_errors {
 sub _run_R_check {
     my $self = shift;
 
-    print "\nChecking R prerequisites...\n";
+    print STDERR "\n_run_R_check: Checking R prerequisites...\n";
 
     # check the R version ourself, since R CMD check apparently does
     # not do it.
     $self->_check_R_version
         or return 0;
 
-    my $no_manual = $self->_R_version_current ge version->new('3.2.0') ? '--no-manual' : '';
+    my $no_manual = $self->_R_version_current ge version->new('3.2.5') ? '--no-manual' : '';
 
     my $ret = system "R CMD check $no_manual --no-codoc --no-vignettes -o _build R_files";
+
     if ( $ret || $? ) {
         _handle_errors($?);
         warn "\nR PREREQUISITE CHECK FAILED.\n\n";
@@ -188,7 +190,7 @@ sub _check_R_version {
         return 1;
     } else {
         warn "R VERSION CHECK FAILED, we have ".$self->_R_version_current.", but we require $cmp $v.\n";
-        warn "To install R : sudo aptitude install r-base-core\n\n";
+        warn "To install R : sudo apt-get install r-base r-base-dev\n\n";
         return 0;
     }
 }
