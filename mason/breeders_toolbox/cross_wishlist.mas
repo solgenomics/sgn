@@ -85,6 +85,7 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="createCrossWishlistSelectDialog">Select Plots for Cross Wishlist</h4>
+                <h4>Female Plots are in <span class="bg-primary">Blue</span> and Male Plots are in <span class="bg-success">Green</span>.</h4>
             </div>
 
             <div class="modal-body">
@@ -262,22 +263,26 @@ jQuery(document).ready(function($) {
     });
     
     jQuery('#cross_wishlist_select_submits').click(function(){
-        var selected_female_plot_ids = jQuery('input[name="cross_wishlist_plot_select_female_input"]:checked').map(function() {
-            return this.value;
-        }).get();
-        console.log(selected_female_plot_ids);
-        var selected_male_plot_ids = jQuery('input[name="cross_wishlist_plot_select_male_input"]:checked').map(function() {
-            return this.value;
-        }).get();
-        console.log(selected_male_plot_ids);
+        var selected_plot_ids = [];
+        jQuery('input[name="cross_wishlist_plot_select_female_input"]').each(function() {
+            if (this.checked){
+                selected_plot_ids.push({ 'cross_female_accession_name' : jQuery(this).data('female_accession_name'), 'female_plot_id' : jQuery(this).val() });
+            }
+        });
+        jQuery('input[name="cross_wishlist_plot_select_male_input"]').each(function() {
+            if (this.checked){
+                selected_plot_ids.push({ 'cross_female_accession_name' : jQuery(this).data('female_accession_name'), 'male_plot_id' : jQuery(this).val() });
+            }
+        });
+
+        console.log(selected_plot_ids);
 
         jQuery.ajax({
             url: '/ajax/cross/create_cross_wishlist_submit',
             method: 'POST',
             data: {
                 'crosses': JSON.stringify(cross_data),
-                'female_plot_ids': JSON.stringify(selected_female_plot_ids),
-                'male_plot_ids': JSON.stringify(selected_male_plot_ids),
+                'selected_plot_ids': JSON.stringify(selected_plot_ids),
                 'trial_id': trial_id
             },
             dataType:'json',
