@@ -274,8 +274,7 @@ jQuery(document).ready(function($) {
                 selected_plot_ids.push({ 'cross_female_accession_name' : jQuery(this).data('female_accession_name'), 'male_plot_id' : jQuery(this).val() });
             }
         });
-
-        console.log(selected_plot_ids);
+        //console.log(selected_plot_ids);
 
         jQuery.ajax({
             url: '/ajax/cross/create_cross_wishlist_submit',

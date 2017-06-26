@@ -964,6 +964,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
 
     my $dir = $c->tempfiles_subdir('download');
     my ($file_path1, $uri1) = $c->tempfile( TEMPLATE => 'download/cross_wishlist_downloadXXXXX');
+    $file_path1 .= '.tsv';
+    $uri1 .= '.tsv';
     my @header1 = ('Female Accession', 'Male Accession', 'Priority');
     open(my $F1, ">", $file_path1) || die "Can't open file ".$file_path1;
         print $F1 join "\t", @header1;
@@ -979,10 +981,11 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     #print STDERR Dumper $uri1;
     my $urlencoded_filename1 = $urlencode{$uri1};
     #print STDERR Dumper $urlencoded_filename1;
-
     #$c->stash->{rest}->{filename} = $urlencoded_filename1;
 
-    my ($file_path2, $uri2) = $c->tempfile( TEMPLATE => 'download/cross_wishlist_downloadXXXXX');
+    my ($file_path2, $uri2) = $c->tempfile( TEMPLATE => "download/cross_wishlist_XXXXX");
+    $file_path2 .= '.csv';
+    $uri2 .= '.csv';
     open(my $F, ">", $file_path2) || die "Can't open file ".$file_path2;
         print $F $header;
         print $F "\n";
@@ -994,7 +997,6 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     #print STDERR Dumper $uri2;
     my $urlencoded_filename2 = $urlencode{$uri2};
     #print STDERR Dumper $urlencoded_filename2;
-
     $c->stash->{rest}->{filename} = $urlencoded_filename2;
 
     my $universal_uri = $c->config->{main_production_site_url}.$uri2;
@@ -1002,9 +1004,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{ona_username}, $c->config->{ona_password} );
     my $server_endpoint = "https://api.ona.io/api/v1/metadata";
     my $req = HTTP::Request->new(POST => $server_endpoint);
-    $req->header('content-type' => 'application/json');
 
-    my $post_data = { "xform"=>"bananacross", "data_type"=>"media", "data_value"=>"$urlencoded_filename2", "data_file"=>"$universal_uri" };
+    my $post_data = { "xform_id"=>"20170622", "data_type"=>"csv", "data_value"=>"$file_path2", "data_file"=>"$file_path2" };
     $req->content( encode_json $post_data);
 
     my $resp = $ua->request($req);
