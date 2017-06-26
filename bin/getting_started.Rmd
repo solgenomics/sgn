@@ -74,8 +74,8 @@ dim(potatoAmat)
 dim(dist_matrix)
 
 # We have too many genotypes, so make a list of all the accessions in the pedigree matrix, and use it to subset the genetic distance matrix
-include_list <- labels(potatoAmat[,"W8848-3"]) #
-subset_matrix <- dist_matrix[rownames(dist_matrix) %in% include_list, colnames(dist_matrix) %in% include_list] 
+include_list <- labels(potatoAmat[,"W8848-3"]) 
+subset_matrix <- geno[rownames(geno) %in% include_list, colnames(geno) %in% include_list] 
 dim(subset_matrix) # now it should match
 
 ```
