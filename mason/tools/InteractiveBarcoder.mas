@@ -18,48 +18,18 @@
     <div class="well" style="padding:0;">
       <div class="d3-draw-area"></div>
     </div>
-  </div>
-  <div class="col-md-3">
-    <div class="well">
-      <label>Grid</label>
-      <div class="form-group">
-        <input id="d3-grid-slider" class="input-sm" type="range"> 
-        <span><input id="d3-snapping-check" type="checkbox" checked> Snap&nbsp;&nbsp;&nbsp;</span><input id="d3-grid-number" class="input-sm" type="number">
-      </div>
-    </div>
     <div class="well">
       <center>
-        <label>Barcode</label>
+        <label>Add Text</label>
         <br>
-        <select id="d3-barcode-select" class="input-sm form-group"></select>
-      </center>
-    </div>
-    <div class="well">
-      <center>
-        <button id="d3-new-textbox" class="btn btn-primary" data-toggle="modal" data-target="#newTextModal">Add Text</button>
-      </center>
-    </div>
-    <div class="well">
-      <button id="d3-save-button" class="btn btn-primary">Save</button>
-      <a id="link" target="_blank" class="btn"> Download </a>
-    </div>
-  </div>
-</div>
-
-<!-- Modal -->
-<div class="modal fade" id="newTextModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-body">
-        <input id="d3-text-content" class="input" type="text">
-        <select id="d3-font-size-input" class="input" min="5" max="72">
+        <select id="d3-font-size-input" class="form-control input" min="5" max="72" style="width:15%;float:left;">
           <option value="7.5">7.5pt</option>
           <option value="8">8pt</option>
           <option value="9">9pt</option>
           <option value="10">10pt</option>
           <option value="10.5">10.5pt</option>
           <option value="11">11pt</option>
-          <option value="12">12pt</option>
+          <option value="12" selected>12pt</option>
           <option value="14">14pt</option>
           <option value="16">16pt</option>
           <option value="18">18pt</option>
@@ -72,10 +42,58 @@
           <option value="48">48pt</option>
           <option value="72">72pt</option>
         </select>
+        <button class="btn btn-primary d3-add-text" value="plot_id" >Plot</button>
+        <button class="btn btn-primary d3-add-text" value="replicate" >Replicate</button>
+        <button class="btn btn-primary d3-add-text" value="block" >Block</button>
+        <button class="btn btn-primary d3-add-text" value="accession" >Accession</button>
+        <button class="btn btn-primary" data-toggle="modal" data-target="#customTextModal">Custom</button>
+      </center>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="well">
+      <center>
+        <label>Barcode</label>
+        <br>
+        <select id="d3-barcode-select" class="input-sm form-control form-group"></select>
+      </center>
+    </div>
+    <div class="well">
+      <label>Grid</label>
+      <div class="form-group">
+        <input id="d3-grid-number" class="form-control input-sm" type="number">
+        <input id="d3-grid-slider" class="form-control input-sm" type="range"> 
+        <input id="d3-snapping-check" type="checkbox" checked>  Snap
+      </div>
+    </div>
+    <div class="well">
+      <button id="d3-save-button" class="btn btn-primary">Save</button>
+      <a id="link" target="_blank" class="btn button btn-primary"> Download </a>
+    </div>
+    <!-- <div class="well">
+      <label>Layout</label>
+      <div class="form-group">
+        <input id="d3-width-number" class="form-control input-sm" type="number">
+        <input id="d3-width-slider" class="form-control input-sm" type="range">
+        <input id="d3-height-number" class="form-control input-sm" type="number">
+        <input id="d3-height-slider" class="form-control input-sm" type="range">
+      </div>
+    </div> -->
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="customTextModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-body">
+        <div type="text" style="overflow-x: scroll; padding:0px; width:100%; float:right; min-height:34px; height:auto; white-space: nowrap;">
+            <span id="d3-text-content" class="form-control d3-text-container" contenteditable="true" style="min-width:100%; padding-left:12px; white-space:pre; padding-bottom:6px; padding-top:6px; width:auto; display: inline-block;" >Suppose I want the <span class="btn btn-primary btn-sm d3-text-placeholder" value="plot" contenteditable="false" style="height: 2em; margin-top:-0.15em;display: inline-block; padding:0.2em 0.4em;">plot-number</span> in my text.</span>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" data-dismiss="modal">Add Text</button>
+        <button id="d3-custom-text" type="button" class="btn btn-primary" data-dismiss="modal">Add Text</button>
       </div>
     </div>
   </div>
@@ -178,15 +196,15 @@ function selectable(selection,resizeable){
         fill:"none",
         stroke: "black",
         "stroke-dasharray": ("3,3"),
-        "stroke-width":1
+        "stroke-width":"1"
       })
     tools.append("rect")
       .classed("selection-tool-remover",true)
       .attr({
-        x:bb.x-3,
-        y:bb.y-3,
-        width:6,
-        height:6,
+        x:bb.x-4,
+        y:bb.y-4,
+        width:8,
+        height:8,
         fill: "red",
         stroke: "none"
       })
@@ -198,10 +216,10 @@ function selectable(selection,resizeable){
       tools.append("rect")
         .classed("selection-tool-resizer",true)
         .attr({
-          x:bb.x+bb.width-3,
-          y:bb.y+bb.height-3,
-          width:6,
-          height:6,
+          x:bb.x+bb.width-4,
+          y:bb.y+bb.height-4,
+          width:8,
+          height:8,
           fill: "green",
           stroke: "none"
         }).call(resizer_behaviour);
@@ -321,26 +339,44 @@ $(document).ready(function($) {
   });
     
 
-  //set up text boxes
-  d3.select("#d3-new-textbox").on("click",function(){
-    // var newTB = svg.append("g")
-    //   .classed("text-box",true);
-    // var fontSize = parseInt(d3.select("#d3-font-size-input").node().value);
-    // var newText = newTB
-    //   .append("text")
-    //   .attr({
-    //     //y:fontSize,
-    //     "font-size":fontSize,
-    //     "dominant-baseline": "mathematical",
-    //   })
-    //   .text(d3.select("#d3-text-content").node().value);
-    // newTB.classed("draggable",true)
-    //   .classed("selectable",true)
-    //   .call(draggable)
-    //   .call(selectable,false)
-    //   .on("mouseup", dragSnap);
+  //set up text options
+  d3.selectAll(".d3-add-text").on("click",function(){
+    var th = d3.select(this);
+    var text = th.text()+": <"+"%"+th.attr("value")+"%"+">";
+    addText(text);
+  })
+
+  d3.select("#d3-custom-text").on("click",function(){
+    var text_content = d3.select("#d3-text-content")
+    text_content.selectAll(".d3-text-placeholder").each(function(d,i){
+      var th = d3.select(this)
+      th.html("").text("<"+"%"+th.attr("value")+"%"+">")
+    });
+    var text = text_content.text();
+    text_content.html("");
+    addText(text)
   })
 });
+
+function addText(text){
+  svg = d3.select(".d3-draw-svg");
+  var newTB = svg.append("g")
+    .classed("text-box",true);
+  var fontSize = parseInt(d3.select("#d3-font-size-input").node().value);
+  var newText = newTB
+    .append("text")
+    .attr({
+      //y:fontSize,
+      "font-size":fontSize,
+      "dominant-baseline": "mathematical",
+    })
+    .text(text);
+  newTB.classed("draggable",true)
+    .classed("selectable",true)
+    .call(draggable)
+    .call(selectable,false)
+    .on("mouseup", dragSnap);
+}
 
 function updateGrid(){
   var grid = d3.select(".d3-bg-grid").html("");
