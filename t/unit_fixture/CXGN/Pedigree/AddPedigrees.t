@@ -74,7 +74,7 @@ $open_pedigree->set_female_parent($female_parent3);
 $open_pedigree->set_male_parent($open_parent);
 my $add_open_pedigree = CXGN::Pedigree::AddPedigrees->new(schema=>$schema, pedigrees => [ $open_pedigree ]);
 $add_open_pedigree->validate_pedigrees();
-$add_open_pedigree->add_pedigrees();
+ok($add_open_pedigree->add_pedigrees());
 print STDERR "result: $add_open_pedigree\n";
 
 done_testing();
