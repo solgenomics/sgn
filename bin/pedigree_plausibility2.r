@@ -1,18 +1,17 @@
 library(pedigreemm)
 library(proxy)
+library(doParallel)
+library(foreach)
+install.packages("doMC")
+library(doMC)
+cores <- (detectCores() -1)
+cores
+cl <- makeCluster(cores)
+registerDoMC(3)
+getDoParWorkers()
 
-myarg <- (commandArgs(TRUE))
-geno_in <-myarg[1:1]
-ped_in <-myarg[2:2]
-f_out <- myarg[3:3]
-cat(myarg,"\n")
-m=length(myarg)
-cat(m,"\n")
-
-genotype_data <- geno_in
-pedigree_data <- ped_in
-#genotype_data <- read.table ("/home/klz26/host/test/267genotypes-p3.txt", header = TRUE, check.names = FALSE, stringsAsFactors = FALSE, na.strings = "na")
-#pedigree_data <- read.table ("/home/klz26/host/test/ped.txt", header = FALSE, sep = "\t", check.names = FALSE, stringsAsFactors = FALSE)
+genotype_data <- read.table ("/home/klz26/host/test/267genotypes-p3.txt", header = TRUE, check.names = FALSE, stringsAsFactors = FALSE, na.strings = "na")
+pedigree_data <- read.table ("/home/klz26/host/test/ped.txt", header = FALSE, sep = "\t", check.names = FALSE, stringsAsFactors = FALSE)
 
 colnames(pedigree_data)[1] <- "Name"
 colnames(pedigree_data)[2] <- "Mother"
@@ -32,12 +31,6 @@ geno.bad <- 0
 exclude_list <- 0
 rownames(genotype_data) <- as.character(unlist(genotype_data[,1]))
 genotype_data = genotype_data[,-1]
-
-f_out <- myarg[5:5]
-f_in<-myarg[4:4]
-cat(myarg,"\n")
-m=length(myarg)
-cat(m,"\n")
 
 filter.fun <- function(geno,IM,MM,H){
   #Remove individuals with more than a % missing data
@@ -66,24 +59,22 @@ geno.bad <- filter.fun(genotype_data[2:359792,],0.1,0.1,0.2)
 exclude_list <- geno.bad
 subset_matrix <- genotype_data[!(rownames(genotype_data) %in% rownames(exclude_list)),] 
 
-for (z in 1:length_p)
+results <- foreach (z = 1:length_p, .combine = rbind) %dopar%
 {
-  
   implausibility_count <- 0
   bad_data <- 0
   row_vector <- as.vector(pedigree_data[z,])
-  
 
   test_child_name <- pedigree_data[z,1]
   test_mother_name <- pedigree_data[z,2]
   test_father_name <- pedigree_data[z,3]
-  
+
   cat("Analyzing pedigree number", z, "...\n")
   
-  if (test_father_name == "NULL" || test_child_name == "NULL" || test_mother_name == "NULL"){
-    print ("Genotype information not all present, skipping analysis")
-    break
-  }
+  #if (test_father_name == "NULL" || test_child_name == "NULL" || test_mother_name == "NULL"){
+  #  print ("Genotype information not all present, skipping analysis")
+  #  break
+  #}
   
   for (q in 1:length_g)
   {
@@ -125,13 +116,21 @@ for (z in 1:length_p)
   }
   dosage_score <- implausibility_count / length_g
   #dosage_score<- sprintf("%.1f%%", dosage_score * 100)
-  pedigree_data [z, 4] <- dosage_score
-  pedigree_data [z, 5] <- bad_data
+  #pedigree_data [z, 4] <- dosage_score
+  #pedigree_data [z, 5] <- bad_data
   informative <- length_g - bad_data
-  pedigree_data [z,6] <- informative
-  cat(pedigree_data$Name,pedigree_data$Mother,pedigree_data$Father,pedigree_data$`Pedigree Conflict`, pedigree_data$`Markers Skipped`,
-      pedigree_data$`Informative Markers`,file=f_out,sep=" ",append=TRUE);
-}  
+  #pedigree_data [z,6] <- informative
+  #cat(pedigree_data$Name,pedigree_data$Mother,pedigree_data$Father,pedigree_data$`Pedigree Conflict`, pedigree_data$`Markers Skipped`,
+      #pedigree_data$`Informative Markers`,file=f_out,sep=" ",append=TRUE);
+  return_vector <- pedigree_data [z,] 
+  return_vector [6] <- informative
+  return_vector [5] <- bad_data
+  return_vector[4] <- dosage_score
+  return_vector
+}
+
+
+
 pedigree_data$`Percent Removed` <- (pedigree_data$`Markers Skipped` / length_g ) * 100
 
 hist(pedigree_data$'Pedigree Conflict', main = "Distribution of Pedigree Conflict Scores", breaks = 20, 
