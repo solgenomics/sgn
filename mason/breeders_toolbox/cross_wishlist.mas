@@ -1,6 +1,15 @@
 
+<style>
+@media (min-width: 768px) {
+  .modal-xl {
+    width: 90%;
+   max-width:1200px;
+  }
+}
+</style>
+
 <div class="modal fade" id="create_cross_wishlist_dialog" name="create_cross_wishlist_dialog" tabindex="-1" role="dialog" aria-labelledby="createCrossWishlistDialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -49,7 +58,7 @@
                                     <label class="col-sm-3 control-label">Female Accession Name(s):</label>
                                     <div class="col-sm-9" >
                                         <div id="cross_wishlist_female_accession_select_div">
-                                            <p>First Select One or More Trials</p>
+                                            <p>First Select A Trial</p>
                                         </div>
                                     </div>
                                 </div>
@@ -63,7 +72,30 @@
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-primary" id="cross_wishlist_submit" name="cross_wishlist_submits">Create Cross Wishlist</button>
+                <button class="btn btn-primary" id="cross_wishlist_submit" name="cross_wishlist_submits">Next</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="create_cross_wishlist_select_dialog" name="create_cross_wishlist_select_dialog" tabindex="-1" role="dialog" aria-labelledby="createCrossWishlistSelectDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="createCrossWishlistSelectDialog">Select Plots for Cross Wishlist</h4>
+                <h4>Female Plots are in <span class="bg-primary">Blue</span> and Male Plots are in <span class="bg-success">Green</span>.</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="cross_wishlist_cross_select_div"></div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="cross_wishlist_select_submits" name="cross_wishlist_select_submits">Create Cross Wishlist</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
@@ -115,7 +147,7 @@ jQuery(document).ready(function($) {
         draw_cross_grid(female_accessions, male_accessions);
     });
 
-    get_select_box('trials', 'cross_wishlist_trial_select_div', { 'name' : 'cross_wishlist_trial_id', 'id' : 'cross_wishlist_trial_id', 'size' : 7 });
+    get_select_box('trials', 'cross_wishlist_trial_select_div', { 'name' : 'cross_wishlist_trial_id', 'id' : 'cross_wishlist_trial_id', 'empty':1 });
 
     jQuery(document).on('change', "#cross_wishlist_trial_id", function() {
         cross_wishlist_change_trials();
@@ -177,13 +209,14 @@ jQuery(document).ready(function($) {
         html = html + '</tbody></table>';
         jQuery(select_id).html(html);
     };
-
+    
+    var trial_id;
+    var cross_data = [];
     jQuery('#cross_wishlist_submit').click(function(e){
         e.preventDefault();
         var active_tab = jQuery('ul#cross_wishlist_tab_select li.active').attr('id');
         //console.log(active_tab);
 
-        var cross_data = [];
         if (active_tab == 'cross_wishlist_no_list_tab'){
             jQuery('input[name="cross_wishlist_final_priority"]').each(function() {
                 value = this.value;
@@ -191,6 +224,7 @@ jQuery(document).ready(function($) {
                 var female_id = jQuery(this).attr('female_id');
                 cross_data.push({ 'female_id':female_id, 'male_id':male_id, 'priority':value });
             });
+            trial_id = jQuery('#cross_wishlist_trial_id').val();
         }
         if (active_tab == 'cross_wishlist_list_tab'){
             jQuery('input[name="cross_wishlist_cross_grid_inputs"]').each(function() {
@@ -206,24 +240,62 @@ jQuery(document).ready(function($) {
         jQuery.ajax({
             url: '/ajax/cross/create_cross_wishlist',
             method: 'POST',
-            data: {'crosses': JSON.stringify(cross_data)},
+            data: {
+                'crosses': JSON.stringify(cross_data),
+                'trial_id': trial_id
+            },
             dataType:'json',
             beforeSend: function() {
                 jQuery('#working_modal').modal('show');
             },
             success: function(response) {
+                console.log(response);
                 jQuery('#working_modal').modal('hide');
-                if (response.success){
-                    alert(response.success);
-                }
-                if (response.error){
-                    alert(response.error);
-                }
+                jQuery('#cross_wishlist_cross_select_div').html(response.data);
+                jQuery('#create_cross_wishlist_select_dialog').modal('show');
+                //window.location.href = "/download/"+response.filename;
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal('hide');
+                alert("An error occurred submitting plots for cross wishlist");
+            }
+        });
+    });
+    
+    jQuery('#cross_wishlist_select_submits').click(function(){
+        var selected_plot_ids = [];
+        jQuery('input[name="cross_wishlist_plot_select_female_input"]').each(function() {
+            if (this.checked){
+                selected_plot_ids.push({ 'cross_female_accession_name' : jQuery(this).data('female_accession_name'), 'female_plot_id' : jQuery(this).val() });
+            }
+        });
+        jQuery('input[name="cross_wishlist_plot_select_male_input"]').each(function() {
+            if (this.checked){
+                selected_plot_ids.push({ 'cross_female_accession_name' : jQuery(this).data('female_accession_name'), 'male_plot_id' : jQuery(this).val() });
+            }
+        });
+        //console.log(selected_plot_ids);
+
+        jQuery.ajax({
+            url: '/ajax/cross/create_cross_wishlist_submit',
+            method: 'POST',
+            data: {
+                'crosses': JSON.stringify(cross_data),
+                'selected_plot_ids': JSON.stringify(selected_plot_ids),
+                'trial_id': trial_id
+            },
+            dataType:'json',
+            beforeSend: function() {
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                //console.log(response);
+                jQuery('#working_modal').modal('hide');
                 window.location.href = "/download/"+response.filename;
             },
             error: function(response) {
                 jQuery('#working_modal').modal('hide');
-                alert("An error occurred submitting cross wishlist");
+                alert("An error occurred creating cross wishlist");
             }
         });
     });

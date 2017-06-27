@@ -112,7 +112,7 @@ jQuery(document).ready(function() {
     jQuery("#export_trial_to_expression_atlas").click( function () {
         jQuery('#export_to_expression_atlas_dialog').modal('show');
         if(jQuery("#expression_atlas_trial_id").length == 0) {
-            get_select_box('trials', 'expression_atlas_trial_select_div', { 'name' : 'expression_atlas_trial_id', 'id' : 'expression_atlas_trial_id', 'size' : 7 });
+            get_select_box('trials', 'expression_atlas_trial_select_div', { 'name' : 'expression_atlas_trial_id', 'id' : 'expression_atlas_trial_id', 'size' : 7, 'multiple':1 });
         } else {
             expression_atlas_change_trials();
         }
