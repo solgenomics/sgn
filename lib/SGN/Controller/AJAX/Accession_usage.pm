@@ -53,10 +53,9 @@ sub accession_usage_female: Path('/ajax/accession_usage_female') :Args(0){
     my $female_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
   #  my $cross_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id()
     my $accession_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
-    my $member_of_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
     my $dbh = $schema->storage->dbh();
 
-#    my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, COUNT (DISTINCT cross_id.stock_id) AS cross_number
+#   my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, COUNT (DISTINCT cross_id.stock_id) AS cross_number
 #            FROM stock as female_parent JOIN stock_relationship ON (female_parent.stock_id=stock_relationship.subject_id) AND stock_relationship.type_id=?
 #            JOIN stock AS cross_id ON (cross_id.stock_id=stock_relationship.object_id) AND cross_id.type_id=?
 #            GROUP BY female_parent.stock_id ORDER BY cross_number DESC";
@@ -64,18 +63,11 @@ sub accession_usage_female: Path('/ajax/accession_usage_female') :Args(0){
     my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, COUNT (DISTINCT stock_relationship.object_id) AS num_of_progenies
             FROM stock_relationship INNER JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
             INNER JOIN stock AS female_parent ON (stock_relationship.subject_id = female_parent.stock_id)
-            WHERE stock_relationship.type_id = ? AND check_type.type_id = ? GROUP BY female_parent.stock_id
-
-            UNION
-
-            SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, COUNT (DISTINCT progeny.subject_id) AS num_of_progenies
-            FROM stock_relationship AS female INNER JOIN stock_relationship AS progeny ON (female.object_id = progeny.object_id)
-            INNER JOIN stock AS female_parent ON (female.subject_id = female_parent.stock_id)
-            WHERE female.type_id = ? AND progeny.type_id = ?
+            WHERE stock_relationship.type_id = ? AND check_type.type_id = ?
             GROUP BY female_parent.stock_id ORDER BY num_of_progenies DESC";
 
     my $h = $dbh->prepare($q);
-    $h->execute($female_parent_typeid, $accession_typeid, $female_parent_typeid, $member_of_typeid);
+    $h->execute($female_parent_typeid, $accession_typeid);
 
     my@female_parents =();
     while (my ($female_parent_id, $female_parent_name, $num_of_progenies) = $h->fetchrow_array()){
@@ -95,7 +87,6 @@ sub accession_usage_male: Path('/ajax/accession_usage_male') :Args(0){
     my $male_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
     #my $cross_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
     my $accession_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
-    my $member_of_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "member_of", "stock_relationship")->cvterm_id();
     my $dbh = $schema->storage->dbh();
 
     #my $q = "SELECT DISTINCT male_parent.stock_id, male_parent.uniquename, COUNT (DISTINCT cross_id.stock_id) AS cross_number
@@ -106,18 +97,11 @@ sub accession_usage_male: Path('/ajax/accession_usage_male') :Args(0){
     my $q = "SELECT DISTINCT male_parent.stock_id, male_parent.uniquename, COUNT (DISTINCT stock_relationship.object_id) AS num_of_progenies
             FROM stock_relationship INNER JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
             INNER JOIN stock AS male_parent ON (stock_relationship.subject_id = male_parent.stock_id)
-            WHERE stock_relationship.type_id = ? AND check_type.type_id = ? GROUP BY male_parent.stock_id
-
-            UNION
-
-            SELECT DISTINCT male_parent.stock_id, male_parent.uniquename, COUNT (DISTINCT progeny.subject_id) AS num_of_progenies
-            FROM stock_relationship AS male INNER JOIN stock_relationship AS progeny ON (male.object_id = progeny.object_id)
-            INNER JOIN stock AS male_parent ON (male.subject_id = male_parent.stock_id)
-            WHERE male.type_id = ? AND progeny.type_id = ?
+            WHERE stock_relationship.type_id = ? AND check_type.type_id = ?
             GROUP BY male_parent.stock_id ORDER BY num_of_progenies DESC";
 
     my $h = $dbh->prepare($q);
-    $h->execute($male_parent_typeid, $accession_typeid, $male_parent_typeid, $member_of_typeid);
+    $h->execute($male_parent_typeid, $accession_typeid);
 
     my@male_parents =();
     while (my ($male_parent_id, $male_parent_name, $num_of_progenies) = $h->fetchrow_array()){
