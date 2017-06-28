@@ -66,7 +66,7 @@ geno.bad <- filter.fun(genotype_data[2:359792,],0.1,0.1,0.2)
 exclude_list <- geno.bad
 subset_matrix <- genotype_data[!(rownames(genotype_data) %in% rownames(exclude_list)),] 
 
-foreach (z = 1:10, .combine = rbind) %dopar%
+results <- foreach (z = 1:10, .combine = rbind) %dopar%
 {
   implausibility_count <- 0
   bad_data <- 0
