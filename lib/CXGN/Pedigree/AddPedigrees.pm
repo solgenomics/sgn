@@ -276,6 +276,7 @@ sub _validate_pedigree {
     elsif ($cross_type eq "open") {
         if ($pedigree->get_male_parent){
             if ($pedigree->get_male_parent()->get_name()){
+                $male_parent_name = $pedigree->get_male_parent()->get_name();
                 $male_parent = $self->_get_accession($male_parent_name);
                 if (!$male_parent) {
                     $return{bad_accession} = "Male parent not found for $progeny_name.";
