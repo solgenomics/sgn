@@ -1,15 +1,22 @@
 #R --vanilla '--args 267genotypes-p3.txt ped.txt sink.txt' <pedigreeplausibilitycommandline.R
 #ssh klz26@login.sgn.cornell.edu
-#rail -f -n 100 log.txt
+#tail -f -n 100 log.txt
+#read first line keep track of location ones keep is at, split new line you import and keep ones that split to indices
+#.split (?)
 
 library(pedigreemm)
 library(proxy)
 library(doParallel)
 library(foreach)
+library(dplyr)
 
 cores <- (detectCores() -1)
 cl <- makeCluster(cores)
 registerDoParallel(cl)
+
+child_col <- as.vector(subset_matrix %>% select(matches(test_child_name)))
+father_col <- as.vector(subset_matrix %>% select(matches(test_father_name)))
+mother_col <- as.vector(subset_matrix %>% select(matches(test_mother_name)))
 
 myarg <- (commandArgs(TRUE))
 geno_in <-(myarg[1:1])
@@ -81,14 +88,17 @@ foreach (z = 1:length_p, .combine = rbind) %dopar%
   
   for (q in 1:length_g)
   {
-    child_score <- subset_matrix[q, test_child_name]
+    child_col <- as.vector(subset_matrix %>% select(matches(test_child_name)))
+    mother_col <- as.vector(subset_matrix %>% select(matches(test_mother_name)))
+    father_col <- as.vector(subset_matrix %>% select(matches(test_father_name)))
     
-    mother_score <- subset_matrix[q, test_mother_name]
-    
-    father_score <- subset_matrix[q, test_father_name]
-    
+    child_score <- child_col[q, ]
+    mother_score <- mother_col[q, ]
+    father_score <- father_col[q, ]
     parent_score <- mother_score + father_score
-    SNP <- as.vector(subset_matrix[q,1])
+    
+    SNP <- rownames(child_col)
+    
     if ((is.na(child_score)) || (is.na(mother_score)) || (is.na(father_score))){
       bad_data <- bad_data + 1
       next  
