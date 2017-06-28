@@ -120,7 +120,7 @@ sub search {
     
     if ($is_variable) { 
 	# pre-fetch some information; more efficient
-	my $variable_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'VARIABLE_OF', "cassava_trait")->cvterm_id();
+	my $variable_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'VARIABLE_OF', $trait_cv_name)->cvterm_id();
     
  
 
