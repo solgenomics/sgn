@@ -22,8 +22,9 @@
   	  <body>
 	    <tr>
     	      <td>progeny name</td>
-    	      <td>female parent accession</td>
-    	      <td>male parent accession(s) (if more than one, separate using commas)</td>
+    	      <td>female parent accession (can be uniquename or synonym)</td>
+    	      <!--<td>male parent accession(s) (if more than one, separate using commas)</td>-->
+              <td>male parent accession (can be uniquename or synonym) or population</td>
 	      <td>
 		type (biparental, open, self)
 		</td>
