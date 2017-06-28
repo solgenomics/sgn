@@ -5,7 +5,6 @@ library(foreach)
 install.packages("doMC")
 library(doMC)
 cores <- (detectCores() -1)
-cores
 cl <- makeCluster(cores)
 registerDoMC(3)
 getDoParWorkers()
