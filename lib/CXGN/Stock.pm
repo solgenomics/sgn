@@ -675,7 +675,7 @@ sub _remove_stockprop {
 
 }
 
-sub _store_population_relationships {
+sub _store_population_relationship {
     my $self = shift;
     my $schema = $self->schema;
     my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population','stock_type')->cvterm_id();
