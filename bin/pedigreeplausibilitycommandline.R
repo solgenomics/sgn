@@ -6,7 +6,6 @@
 
 library(pedigreemm)
 library(proxy)
-library(doParallel)
 library(foreach)
 library(dplyr)
 library(doMC)
