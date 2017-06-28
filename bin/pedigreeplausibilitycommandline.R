@@ -2,7 +2,7 @@
 #ssh klz26@login.sgn.cornell.edu
 #tail -f -n 100 log.txt
 #read first line keep track of location ones keep is at, split new line you import and keep ones that split to indices
-#.split (?)
+#perl -p -i -e 's/\|[0-9]+//g' 267genotypes-p3.txt
 
 library(pedigreemm)
 library(proxy)
@@ -14,15 +14,11 @@ cores <- (detectCores() -1)
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
-child_col <- as.vector(subset_matrix %>% select(matches(test_child_name)))
-father_col <- as.vector(subset_matrix %>% select(matches(test_father_name)))
-mother_col <- as.vector(subset_matrix %>% select(matches(test_mother_name)))
-
 myarg <- (commandArgs(TRUE))
 geno_in <-(myarg[1:1])
 genotype_data <- read.table(geno_in, header = TRUE, check.names = FALSE, stringsAsFactors = FALSE, na.strings = "na")
 ped_in <- (myarg[2:2])
-pedigree_data <- read.table (ped_in, header = FALSE, sep = "\t", check.names = FALSE, stringsAsFactors = FALSE)
+pedigree_data <- read.table (ped_in, headcer = FALSE, sep = "\t", check.names = FALSE, stringsAsFactors = FALSE)
 
 f_out <- (myarg[3:3])
 cat(myarg,"\n")
@@ -32,7 +28,7 @@ cat(m,"\n")
 colnames(pedigree_data)[1] <- "Name"
 colnames(pedigree_data)[2] <- "Mother"
 colnames(pedigree_data)[3] <- "Father"
-colnames(genotype_data) <- gsub('\\|[^|]+$', '', colnames(genotype_data))
+#colnames(genotype_data) <- gsub('\\|[^|]+$', '', colnames(genotype_data))
 pedigree_data["Pedigree Conflict"] <- NA
 pedigree_data["Markers Skipped"] <- NA
 pedigree_data["Informative Markers"] <- NA
@@ -88,6 +84,12 @@ foreach (z = 1:length_p, .combine = rbind) %dopar%
   
   for (q in 1:length_g)
   {
+    #child_loc <- match(test_child_name, scan("/home/klz26/host/test/267genotypes-p3.txt", what=character(0), nlines=1))
+    #mother_loc <- match(test_mother_name, scan("/home/klz26/host/test/267genotypes-p3.txt", what=character(0), nlines =1))
+    #father_loc <- match(test_father_name, scan("/home/klz26/host/test/267genotypes-p3.txt", what=character(0), nlines =1))
+    
+    #con <- pipe( paste( "cut -d, -f",paste(col.pos,collapse=','), " yourFrame.csv",sep='')) 
+    
     child_col <- as.vector(subset_matrix %>% select(matches(test_child_name)))
     mother_col <- as.vector(subset_matrix %>% select(matches(test_mother_name)))
     father_col <- as.vector(subset_matrix %>% select(matches(test_father_name)))
