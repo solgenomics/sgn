@@ -12,7 +12,7 @@ library(doMC)
 
 cores <- (detectCores() -1)
 cl <- makeCluster(cores)
-registerDoMC(60)
+registerDoMC(10)
 getDoParWorkers()
 
 myarg <- (commandArgs(TRUE))
@@ -66,7 +66,7 @@ geno.bad <- filter.fun(genotype_data[2:359792,],0.1,0.1,0.2)
 exclude_list <- geno.bad
 subset_matrix <- genotype_data[!(rownames(genotype_data) %in% rownames(exclude_list)),] 
 
-foreach (z = 1:length_p, .combine = rbind) %dopar%
+foreach (z = 1:10, .combine = rbind) %dopar%
 {
   implausibility_count <- 0
   bad_data <- 0
@@ -132,11 +132,11 @@ foreach (z = 1:length_p, .combine = rbind) %dopar%
   #pedigree_data [z, 5] <- bad_data
   informative <- length_g - bad_data
   #pedigree_data [z,6] <- informative
-  cat(pedigree_data$Name,pedigree_data$Mother,pedigree_data$Father,pedigree_data$`Pedigree Conflict`, pedigree_data$`Markers Skipped`,
-      pedigree_data$`Informative Markers`,file=f_out,sep=" ",append=TRUE);
+  
   return_vector <- pedigree_data [z,] 
   return_vector [6] <- informative
   return_vector [5] <- bad_data
   return_vector[4] <- dosage_score
+  cat(return_vector ,file=f_out,sep=" ",append=TRUE);
   return_vector
 }  
