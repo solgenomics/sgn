@@ -182,7 +182,7 @@ sub store {
         $exists= $self->exists_in_database();
     }
 
-    if (!$self->type_id) { 
+    if (!$self->type_id) {
         my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), $self->type(), 'stock_type')->cvterm_id();
         $self->type_id($type_id);
     }
@@ -291,13 +291,13 @@ sub exists_in_database {
 	if ( ($s->stock_id == $stock_id) ) {
 	    return 0;
 	    #trying to update the uniquename
-	} 
+	}
 	elsif ( $s->stock_id != $stock_id ) {
 	    return " Can't update an existing stock $stock_id uniquename:$uniquename.";
-	    # if the new name we're trying to update/insert does not exist 
+	    # if the new name we're trying to update/insert does not exist
 	    # in the stock table..
 	    #
-	} 
+	}
 	elsif ($stock && !$s->stock_id) {
 	    return 0;
 	}
@@ -319,7 +319,7 @@ sub exists_in_database {
 sub get_organism {
     my $self = shift;
     my $bcs_stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() });
-    if ($bcs_stock) { 
+    if ($bcs_stock) {
         return $bcs_stock->organism;
     }
     return undef;
@@ -343,8 +343,8 @@ sub get_species {
     if ($organism) {
         return $organism->species;
     }
-    else { 
-	return undef; 
+    else {
+	return undef;
     }
 }
 
@@ -546,8 +546,8 @@ sub get_direct_parents {
 
     print STDERR "get_direct_parents with $stock_id...\n";
 
-    my $female_parent_id;
-    my $male_parent_id;
+    my ($female_parent_id, $male_parent_id, @parents);
+
     eval {
 	$female_parent_id = $self->schema()->resultset("Cv::Cvterm")->find( { name => 'female_parent' })->cvterm_id();
 	$male_parent_id = $self->schema()->resultset("Cv::Cvterm")->find( { name => 'male_parent' }) ->cvterm_id();
@@ -556,19 +556,20 @@ sub get_direct_parents {
 	die "Cvterm for female_parent and/or male_parent seem to be missing in the database\n";
     }
 
-    my $rs = $self->schema()->resultset("Stock::StockRelationship")->search( { object_id => $stock_id, type_id => { -in => [ $female_parent_id, $male_parent_id ] } });
-    my @parents;
-    while (my $row = $rs->next()) {
-	print STDERR "Found parent...\n";
-	my $prs = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $row->subject_id() });
-	my $parent_type = "";
-	if ($row->type_id() == $female_parent_id) {
-	    $parent_type = "female";
-	}
-	if ($row->type_id() == $male_parent_id) {
-	    $parent_type = "male";
-	}
-	push @parents, [ $prs->stock_id(), $prs->uniquename(), $parent_type ];
+    my $stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
+
+    my $female_rs = $stock->search_related('stock_relationship_objects', { 'type_id' =>$female_parent_id});
+    #print STDERR "Found ".$female_rs->count()." rows when searching for female parent.\n";
+    if ($female_rs->first()) {
+        my $female_stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $female_rs->first->subject_id() } );
+        push @parents, [ $female_rs->first->subject_id(), $female_stock->uniquename(), 'female', $female_rs->first->value() ];
+    }
+
+    my $male_rs = $stock->search_related('stock_relationship_objects', { 'me.type_id' =>$male_parent_id});
+    #print STDERR "Found ".$male_rs->count()." rows when searching for male parent\n";
+    if ($male_rs->first()) {
+        my $male_stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $male_rs->first->subject_id() } );
+        push @parents, [ $male_rs->first->subject_id(), $male_stock->uniquename(), 'male'];
     }
 
     return @parents;
@@ -625,7 +626,7 @@ sub get_parents {
     return $root;
 }
 
-sub _store_stockprop { 
+sub _store_stockprop {
     my $self = shift;
     my $type = shift;
     my $value = shift;
