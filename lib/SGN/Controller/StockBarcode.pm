@@ -7,7 +7,7 @@ use PDF::Create;
 use Bio::Chado::Schema::Result::Stock::Stock;
 use CXGN::Stock::StockBarcode;
 use Data::Dumper;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 
 BEGIN { extends "Catalyst::Controller"; }
 
@@ -168,7 +168,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
       }
 
       if ($nursery){
-        @parents_info = CXGN::Chado::Stock->new ($schema, $stock_id)->get_direct_parents();
+        @parents_info = CXGN::Stock->new ( schema => $schema, stock_id => $stock_id)->get_direct_parents();
         $male_parent = $parents_info[0][1] || '';
         $female_parent = $parents_info[1][1] || '';
       }
@@ -409,7 +409,7 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
     if ($accession_name){
       my $stock = $schema->resultset("Stock::Stock")->find( { name=>$accession_name });
       my $accession_id = $stock->stock_id();
-      @parents_info = CXGN::Chado::Stock->new ($schema, $accession_id)->get_direct_parents();
+      @parents_info = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id)->get_direct_parents();
       $male_parent = $parents_info[0][1] || '';
       $female_parent = $parents_info[1][1] || '';
     }

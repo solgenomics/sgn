@@ -24,7 +24,7 @@ use Data::Dumper;
 use Try::Tiny;
 use CXGN::Phenome::Schema;
 use CXGN::Phenome::Allele;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use CXGN::Phenome::DumpGenotypes;
 use CXGN::BreederSearch;
@@ -240,7 +240,7 @@ sub associate_locus_GET :Args(0) {
         # rightly) be counted as a server error
         if ($stock && $allele_id) {
             try {
-                my $cxgn_stock = CXGN::Chado::Stock->new($schema, $stock_id);
+                my $cxgn_stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
                 $cxgn_stock->associate_allele($allele_id, $c->user->get_object->get_sp_person_id);
 
                 $c->stash->{rest} = ['success'];
@@ -1314,7 +1314,7 @@ sub get_shared_trials_GET :Args(1) {
 
     foreach my $stock_id (@stock_ids) {
 	     my $trials_string ='';
-       my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+       my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
        my $uniquename = $stock->get_uniquename;
        $dataref = {
              'trials' => {
@@ -1436,7 +1436,7 @@ sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigree') Args(0
     my $c = shift;
     my $level = $c->req->param("level");
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $s = CXGN::Chado::Stock->new($schema, $c->stash->{stock}->get_stock_id());
+    my $s = CXGN::Stock->new(schema => $schema, stock_id => $c->stash->{stock}->get_stock_id());
     my $pedigree_root = $s->get_parents($level);
     my $pedigree_string = $pedigree_root->get_pedigree_string($level);
 
@@ -1477,7 +1477,7 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
     my @stocks;
     foreach my $r (@$result){
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
-      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a}, $cvterm_name];
+      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -1494,7 +1494,7 @@ sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') A
     my @stocks;
     foreach my $r (@$result){
       my ($cvterm_name, $stock_id, $stock_name) = @$r;
-      push @stocks, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a}];
+      push @stocks, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}];
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -1514,7 +1514,7 @@ sub get_group_and_member:Chained('/stock/get_stock') PathPart('datatables/group_
 
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
 
-      push @group, [qq{<a href = "/stock/$stock_id/view">$stock_name</a}, $cvterm_name];
+      push @group, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
     }
 
     $c->stash->{rest}={data=>\@group};
@@ -1535,7 +1535,7 @@ sub get_stock_for_tissue:Chained('/stock/get_stock') PathPart('datatables/stock_
 
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
 
-      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a}, $cvterm_name];
+      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
     }
 
     $c->stash->{rest}={data=>\@stocks};
