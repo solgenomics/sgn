@@ -540,90 +540,93 @@ sub get_trials {
     return @trials;
 }
 
-sub get_direct_parents {
-    my $self = shift;
+sub get_ancestors {
+
+	my $self = shift;
     my $stock_id = shift || $self->stock_id();
+    my ($female_parent_id, $male_parent_id, %ancestors);
 
-    print STDERR "get_direct_parents with $stock_id...\n";
-
-    my ($female_parent_id, $male_parent_id, @parents);
+    print STDERR "Running get ancestors on accession ".$stock_id." at time ".localtime()."\n";
 
     eval {
-	$female_parent_id = $self->schema()->resultset("Cv::Cvterm")->find( { name => 'female_parent' })->cvterm_id();
-	$male_parent_id = $self->schema()->resultset("Cv::Cvterm")->find( { name => 'male_parent' }) ->cvterm_id();
+    $female_parent_id = $self->schema()->resultset("Cv::Cvterm")->find( { name => 'female_parent' })->cvterm_id();
+    $male_parent_id = $self->schema()->resultset("Cv::Cvterm")->find( { name => 'male_parent' }) ->cvterm_id();
     };
     if ($@) {
-	die "Cvterm for female_parent and/or male_parent seem to be missing in the database\n";
+    die "Cvterm for female_parent and/or male_parent seem to be missing in the database\n";
     }
 
-    my $stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
-
-    my $female_rs = $stock->search_related('stock_relationship_objects', { 'type_id' =>$female_parent_id});
-    #print STDERR "Found ".$female_rs->count()." rows when searching for female parent.\n";
-    if ($female_rs->first()) {
-        my $female_stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $female_rs->first->subject_id() } );
-        push @parents, [ $female_rs->first->subject_id(), $female_stock->uniquename(), 'female', $female_rs->first->value() ];
-    }
-
-    my $male_rs = $stock->search_related('stock_relationship_objects', { 'me.type_id' =>$male_parent_id});
-    #print STDERR "Found ".$male_rs->count()." rows when searching for male parent\n";
-    if ($male_rs->first()) {
-        my $male_stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $male_rs->first->subject_id() } );
-        push @parents, [ $male_rs->first->subject_id(), $male_stock->uniquename(), 'male'];
-    }
-
-    return @parents;
-}
-
-sub get_recursive_parents {
-    my $self = shift;
-    my $individual = shift;
-    my $max_level = shift || 1;
-    my $current_level = shift;
-
-    if (!defined($individual)) { return; }
-
-    if ($current_level > $max_level) {
-	print STDERR "Reached level $current_level of $max_level... we are done!\n";
-	return;
-    }
-
-    $current_level++;
-    my @parents = $self->get_direct_parents($individual->get_id());
-
-    my $pedigree = Bio::GeneticRelationships::Pedigree->new( { name => $individual->get_name()."_pedigree", cross_type=>"unknown"} );
-
-    foreach my $p (@parents) {
-	my ($parent_id, $parent_name, $relationship) = @$p;
-
-	my ($female_parent, $male_parent, $attributes);
-	my $parent = Bio::GeneticRelationships::Individual->new( { name => $parent_name, id=> $parent_id });
-	if ($relationship eq "female") {
-	    $pedigree->set_female_parent($parent);
+	my $parents = $self->get_parents(stock_id => $stock_id, female_parent_id => $female_parent_id, male_parent_id => $male_parent_id);
+	if ($parents) {
+        if ( $parents->{'female_parent_id'} ) {
+            my $female_parent_id = $parents->{'female_parent_id'};
+            $ancestors{$parents->{'female_parent'}} = $self->get_parents( stock_id => $parents->{'female_parent_id'}, female_parent_id => $female_parent_id, male_parent_id => $male_parent_id);
+        }
+        if ( $parents->{'male_parent_id'} ) {
+            my $male_parent_id = $parents->{'male_parent_id'};
+            $ancestors{$parents->{'male_parent'}} = $self->get_parents( stock_id => $parents->{'male_parent_id'}, female_parent_id => $female_parent_id, male_parent_id => $male_parent_id);
+        }
 	}
-
-	if ($relationship eq "male") {
-	    print STDERR "Adding male parent...\n";
-	    $pedigree->set_male_parent($parent);
-	}
-	$self->get_recursive_parents($parent, $max_level, $current_level);
-    }
-    $individual->set_pedigree($pedigree);
+    print STDERR "Finished, returning with ancestors ".Dumper(%ancestors)." at time ".localtime()."\n";
+	return \%ancestors;
 }
 
 sub get_parents {
+
+	my $self = shift;
+    my $stock_id = $self->stock_id();
+    my $female_parent_id = $self->male_parent_id();
+    my $male_parent_id = $self->female_parent_id();
+    my @direct_descendant_ids = $self->direct_descendant_ids || [];
+    my %parent_hash;
+
+    print STDERR "Running get parents for accession ".$stock_id." at time ".localtime()."\n";
+
+	my $rs = $self->schema()->resultset("Stock::Stock")->search_related(
+        'stock_relationship_subject_ids',
+        {   object_id => $stock_id,
+            subject_project_id => { 'not in' => \@direct_descendant_ids },
+            type_id => { 'in' => "$female_parent_id, $male_parent_id" }
+        },
+        {   join      => { 'subject' },
+            join      => { 'type' },
+            '+select' => ['subject.uniquename', 'subject.stock_id', 'type.name'],
+            '+as'     => ['parent_uniquename', 'parent_stock_id', 'parent_type']
+        }
+     );
+
+    while (my $row = $rs->next) {
+        my $parent_type = $row->get_column('parent_type');
+        my $parent_type_id = $parent_type."_id";
+        $parent_hash{$parent_type} = $row->get_column('parent_uniquename');
+        $parent_hash{$parent_type_id} = $row->get_column('parent_stock_id');
+        if ($parent_type eq 'female_parent') {
+            $parent_hash{'cross_type'} = $row->get_column('value');
+        }
+    }
+
+    print STDERR "Finished running get parents for accession ".$stock_id." at time ".localtime().". Parents are: ".Dumper(%parent_hash)."\n";
+	return \%parent_hash;
+}
+
+sub get_direct_parents {
     my $self = shift;
-    my $max_level = shift || 1;
+    my $stock_id = shift || $self->stock_id();
+    my ($female_parent_id, $male_parent_id);
 
-    my $root = Bio::GeneticRelationships::Individual->new(
-	{
-	    name => $self->uniquename(),
-	    id => $self->stock_id(),
-	});
+    eval {
+    $female_parent_id = $self->schema()->resultset("Cv::Cvterm")->find( { name => 'female_parent' })->cvterm_id();
+    $male_parent_id = $self->schema()->resultset("Cv::Cvterm")->find( { name => 'male_parent' }) ->cvterm_id();
+    };
+    if ($@) {
+    die "Cvterm for female_parent and/or male_parent seem to be missing in the database\n";
+    }
 
-    $self->get_recursive_parents($root, $max_level, 0);
+    print STDERR "Running get parents on accession ".$stock_id." at time ".localtime()."\n";
 
-    return $root;
+	my $direct_parents = $self->get_parents(stock_id => $stock_id, female_parent_id => $female_parent_id, male_parent_id => $male_parent_id);
+	return $direct_parents;
+
 }
 
 sub _store_stockprop {
