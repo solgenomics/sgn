@@ -19,7 +19,7 @@
       <div class="d3-draw-area"></div>
     </div>
     <div class="well">
-      <center>
+      <center class="add-text-container">
         <label>Add Text</label>
         <br>
         <select id="d3-font-size-input" class="form-control input" min="5" max="72" style="width:15%;float:left;">
@@ -42,11 +42,7 @@
           <option value="48">48pt</option>
           <option value="72">72pt</option>
         </select>
-        <button class="btn btn-primary d3-add-text" value="plot_id" >Plot</button>
-        <button class="btn btn-primary d3-add-text" value="replicate" >Replicate</button>
-        <button class="btn btn-primary d3-add-text" value="block" >Block</button>
-        <button class="btn btn-primary d3-add-text" value="accession" >Accession</button>
-        <button class="btn btn-primary" data-toggle="modal" data-target="#customTextModal">Custom</button>
+        <button class="btn btn-primary d3-add-custom-text" data-toggle="modal" data-target="#customTextModal">Custom</button>
       </center>
     </div>
   </div>
@@ -59,7 +55,7 @@
       </center>
     </div>
     <div class="well">
-      <label>Grid</label>
+      <label>Grid (pt)</label>
       <div class="form-group">
         <input id="d3-grid-number" class="form-control input-sm" type="number">
         <input id="d3-grid-slider" class="form-control input-sm" type="range"> 
@@ -70,15 +66,6 @@
       <button id="d3-save-button" class="btn btn-primary">Save</button>
       <a id="link" target="_blank" class="btn button btn-primary"> Download </a>
     </div>
-    <!-- <div class="well">
-      <label>Layout</label>
-      <div class="form-group">
-        <input id="d3-width-number" class="form-control input-sm" type="number">
-        <input id="d3-width-slider" class="form-control input-sm" type="range">
-        <input id="d3-height-number" class="form-control input-sm" type="number">
-        <input id="d3-height-slider" class="form-control input-sm" type="range">
-      </div>
-    </div> -->
   </div>
 </div>
 
@@ -88,7 +75,11 @@
     <div class="modal-content">
       <div class="modal-body">
         <div type="text" style="overflow-x: scroll; padding:0px; width:100%; float:right; min-height:34px; height:auto; white-space: nowrap;">
-            <span id="d3-text-content" class="form-control d3-text-container" contenteditable="true" style="min-width:100%; padding-left:12px; white-space:pre; padding-bottom:6px; padding-top:6px; width:auto; display: inline-block;" >Suppose I want the <span class="btn btn-primary btn-sm d3-text-placeholder" value="plot" contenteditable="false" style="height: 2em; margin-top:-0.15em;display: inline-block; padding:0.2em 0.4em;">plot-number</span> in my text.</span>
+            <span id="d3-text-content" class="form-control d3-text-container" contenteditable="true" style="min-width:100%; padding-left:12px; white-space:pre; padding-bottom:6px; padding-top:6px; width:auto; display: inline-block;" ></span>
+        </div>
+        <label>Content Variables:</label><br>
+        <div class="content-variable-container">
+          <span class="btn btn-primary btn-sm d3-text-placeholder" value="plot" contenteditable="false" style="height: 2em; margin-top:-0.15em;display: inline-block; padding:0.2em 0.4em;">plot-number</span>
         </div>
       </div>
       <div class="modal-footer">
@@ -107,6 +98,12 @@ var barcode_types = [
   {name:"barc_type B",width:1*72,height:72},
   {name:"barc_type C",width:1*72,height:0.25*72}
 ];
+var text_placeholders = [
+{key:"plot_id",   name:"Plot"},
+{key:"replicate", name:"Replicate"},
+{key:"block",     name:"Block"},
+{key:"accession", name:"Accession"}
+]
 
 //set up drag behaviour
 var drag_behaviour = d3.behavior.drag().on(
@@ -136,9 +133,8 @@ resizer_behaviour = d3.behavior.drag().on(
     var mx = d3.event.x;
     var my = d3.event.y;
     if (d3.select("#d3-snapping-check").property("checked")){
-      var grid_size = parseInt(d3.select("#d3-grid-slider").node().value);
-      mx = Math.round(mx/grid_size)*grid_size
-      my = Math.round(my/grid_size)*grid_size
+      mx = Math.round(mx/doSnap.size)*doSnap.size
+      my = Math.round(my/doSnap.size)*doSnap.size
     }
     var xexpand = (mx - bb.x)/bb.width
     var yexpand = (my - bb.y)/bb.height
@@ -209,12 +205,14 @@ function selectable(selection,resizeable){
         stroke: "none"
       })
       .on("click",function(){
+        d3.event.stopPropagation();
         target.remove();
         clearSelection();
       })
     if (resizeable){
       tools.append("rect")
         .classed("selection-tool-resizer",true)
+        .on("click",function(){d3.event.stopPropagation();})
         .attr({
           x:bb.x+bb.width-4,
           y:bb.y+bb.height-4,
@@ -250,10 +248,15 @@ function getTransGroupBounds(node){
 }
 
 $(document).ready(function($) {
-  //begin settings
-  var draw_height = 200;
-  var draw_width = 400;
-  //end settings
+  var input_width = 400; //label width (pts)
+  var input_height = 220; //label height (pts)
+
+  var width = 400; //fixed svg width;
+  var height = width/input_width*input_height; //scaled height.
+
+  //scales to allow for conversion between "real" pts and SVG pts
+  var _x = d3.scale.linear().domain([0,width]).range([0,input_width]);
+  var _y = d3.scale.linear().domain([0,height]).range([0,input_height]);
   
   //create svg canvas
   var svg = d3.select(".d3-draw-area")
@@ -261,7 +264,7 @@ $(document).ready(function($) {
     .classed("label-template",true)
     .attr({
       width: "100%",
-      viewBox: "0 0 "+draw_width+" "+draw_height
+      viewBox: "0 0 "+width+" "+height
     }).classed("d3-draw-svg",true);
 
   //set up background
@@ -270,36 +273,40 @@ $(document).ready(function($) {
     .attr({
       x:0,
       y:0,
-      width:draw_width,
-      height:draw_height,
+      width:width,
+      height:height,
       fill:"#eee"
     })
     .on("click",clearSelection);
   
   //set up grid and grid slider/input
   var grid = svg.append("g").classed("d3-bg-grid",true);
+  grid.append('g').classed("d3-bg-grid-vert",true);
+  grid.append('g').classed("d3-bg-grid-horz",true);
   var grid_slider = d3.select("#d3-grid-slider");
   var grid_number = d3.select("#d3-grid-number");
-  grid_slider.attr({
-    min:10,
-    max: 0.5*(draw_height<draw_width ? draw_height : draw_width),
+  var grid_max = 0.5*(height<width ? height : width)
+  var grid_range_attrs = {
+    min: 5,
+    max: Math.round(_x(grid_max)),
     step: 1
-  });
-  grid_number.attr({
-    min:10,
-    max: 0.5*(draw_height<draw_width ? draw_height : draw_width),
-    step: 1
-  });
-  grid_number.property("value",18);
-  grid_slider.property("value",18);
+  }
+  grid_slider.attr(grid_range_attrs);
+  grid_number.attr(grid_range_attrs);
+  grid_number.property("value",12);
+  grid_slider.property("value",12);
   grid_slider.on("input",function(){
     grid_number.property("value",this.value)
-    updateGrid();});
-  grid_number.on("input",function(){
-    grid_slider.node().value=this.value;
-    updateGrid();});
-  var grid_size = parseInt(grid_slider.node().value);
-  updateGrid();
+    updateGrid(_x.invert(this.value),width,height);
+  });
+  grid_number.on("change",function(){
+    var value = Math.max(grid_range_attrs.min,Math.min(grid_range_attrs.max,this.value));
+    grid_slider.node().value=value;
+    this.value = value;
+    grid_number.property("value",this.value)
+    updateGrid(_x.invert(this.value),width,height);
+  });
+  updateGrid(_x.invert(12),width,height);
 
   //set up barcode and barcode select
   var barcode_select = d3.select("#d3-barcode-select");
@@ -316,57 +323,101 @@ $(document).ready(function($) {
     clearSelection();
     var val = d3.select(this).node().value;
     if (val>=0){
-      barcode_g.html("")
-      .append('g')
+      var cur_barcode = barcode_g.html("").append('g')
+      cur_barcode
       .classed("draggable",true)
       .classed("selectable",true)
       .call(draggable)
       .call(selectable,true)
       .call(doTransform,function(state,selection){
-        state.translate[0] += (draw_width/2)-(barcode_types[val].width/2)
-        state.translate[1] += (draw_height/2)-(barcode_types[val].height/2)
+        state.translate[0] += (width/2)-(barcode_types[val].width/2)
+        state.translate[1] += (height/2)-(barcode_types[val].height/2)
       })
       .on("mouseup", dragSnap)
       .append('rect')
-        .attr({
-          x:0,
-          y:0,
-          width:barcode_types[val].width,
-          height:barcode_types[val].height,
-          fill:"#333"
-        })
+      .attr({
+        x:0,
+        y:0,
+        width:_x.invert(barcode_types[val].width),
+        height:_y.invert(barcode_types[val].height),
+        fill:"#333"
+      });
+      cur_barcode.call(doTransform,doSnap);
     }
   });
-    
+
+  var text_adders = d3.select(".add-text-container")
+    .selectAll(".d3-add-text")
+    .data(text_placeholders, function (d,i) { return i+"noverplap" })
+    .enter().insert("button",".d3-add-custom-text")
+    .classed({
+      "btn":true,
+      "btn-primary":true,
+      "d3-add-text":true
+    })
+    .attr("key",function(d){return d.key;})
+    .style("margin-left","1em")
+    .text(function(d){return d.name;});
 
   //set up text options
-  d3.selectAll(".d3-add-text").on("click",function(){
+  text_adders.on("click",function(){
     var th = d3.select(this);
-    var text = th.text()+": <"+"%"+th.attr("value")+"%"+">";
-    addText(text);
+    var text = th.text()+": <"+"%"+th.attr("key")+"%"+">";
+    var fontSize = _x.invert(d3.select("#d3-font-size-input").node().value);
+    addText(text,fontSize);
   })
 
-  d3.select("#d3-custom-text").on("click",function(){
+  d3.select(".d3-add-custom-text")
+    .style("margin-left","1em");
+  d3.select("#d3-custom-text")
+    .on("click",function(){
     var text_content = d3.select("#d3-text-content")
     text_content.selectAll(".d3-text-placeholder").each(function(d,i){
       var th = d3.select(this)
-      th.html("").text("<"+"%"+th.attr("value")+"%"+">")
+      th.html("").text("<"+"%"+th.attr("key")+"%"+">")
     });
     var text = text_content.text();
     text_content.html("");
-    addText(text)
+    var fontSize = _x.invert(d3.select("#d3-font-size-input").node().value);
+    addText(text,fontSize)
   })
+
+  var var_adders = d3.select(".content-variable-container")
+    .selectAll(".d3-text-variable")
+    .data(text_placeholders, function (d,i) { return i+"noverlap1";})
+    .enter()
+    .append("span").classed("d3-text-variable",true)
+    .style("margin-left","1em")
+    .on("click",function(d,i){
+      var current_content = d3.select("#d3-text-content").html()
+      d3.select("#d3-text-content").html(current_content+d3.select(this).html())
+      $("#d3-text-content").focus().blur()
+    })
+    .append("button")
+    .classed({
+      "btn":true,
+      "btn-primary":true,
+      "btn-sm":true,
+      "d3-text-placeholder":true
+    })
+    .attr("contenteditable",false)
+    .style({
+      height: "2em",
+      "margin-top":"-0.15em",
+      display: "inline-block",
+      padding:"0.2em 0.4em"
+    })
+    .attr("key",function(d){return d.key;})
+    .text(function(d){return d.name;})
 });
 
-function addText(text){
+function addText(text,fontSize){
   svg = d3.select(".d3-draw-svg");
   var newTB = svg.append("g")
     .classed("text-box",true);
-  var fontSize = parseInt(d3.select("#d3-font-size-input").node().value);
   var newText = newTB
     .append("text")
     .attr({
-      //y:fontSize,
       "font-size":fontSize,
       "dominant-baseline": "mathematical",
     })
@@ -378,50 +429,62 @@ function addText(text){
     .on("mouseup", dragSnap);
 }
 
-function updateGrid(){
-  var grid = d3.select(".d3-bg-grid").html("");
-  var grid_size = parseInt(d3.select("#d3-grid-slider").node().value);
-  var bg = d3.select(".d3-bg");
-  var height = parseInt(bg.attr("height"));
-  var width = parseInt(bg.attr("width"));
-  for (var y = grid_size; y < height; y+=grid_size) {
-    grid.append('line')
-      .attr({
-        x1: 0,
-        x2: width,
-        y1: y,
-        y2: y,
-        stroke: "rgba(0,0,0,0.2)",
-        "stroke-width": 1
-      }).on("click",clearSelection);
-  }
-  for (var x = grid_size; x < width; x+=grid_size) {
-    grid.append('line')
-      .attr({
-        x1: x,
-        x2: x,
-        y1: 0,
-        y2: height,
-        stroke: "rgba(0,0,0,0.2)",
-        "stroke-width": 1
-      }).on("click",clearSelection);
+function dragSnap(){
+  if (d3.select("#d3-snapping-check").property("checked")){
+    d3.select(this).call(doTransform,doSnap);
   }
 }
 
-function dragSnap(){
-  if (d3.select("#d3-snapping-check").property("checked")){
-    var grid_size = parseInt(d3.select("#d3-grid-slider").node().value);
-    var o = d3.select(this)
-      .call(doTransform,function(state,selection){
-        var bb = getTransGroupBounds(selection.node());
-        var left_snap_d = (Math.round(bb.x/grid_size))*grid_size-bb.x
-        var right_snap_d = (Math.round((bb.x+bb.width)/grid_size)*grid_size-bb.width)-bb.x
-        var top_snap_d = (Math.round(bb.y/grid_size))*grid_size-bb.y
-        var bottom_snap_d = (Math.round((bb.y+bb.height)/grid_size)*grid_size-bb.height)-bb.y
-        state.translate[0] += Math.abs(left_snap_d) < Math.abs(right_snap_d) ? left_snap_d: right_snap_d
-        state.translate[1] += Math.abs(top_snap_d) < Math.abs(bottom_snap_d) ? top_snap_d: bottom_snap_d
-      });
+function doSnap(state,selection){
+  var bb = getTransGroupBounds(selection.node());
+  var left_snap_d = (Math.round(bb.x/doSnap.size))*doSnap.size-bb.x
+  var right_snap_d = (Math.round((bb.x+bb.width)/doSnap.size)*doSnap.size-bb.width)-bb.x
+  var top_snap_d = (Math.round(bb.y/doSnap.size))*doSnap.size-bb.y
+  var bottom_snap_d = (Math.round((bb.y+bb.height)/doSnap.size)*doSnap.size-bb.height)-bb.y
+  state.translate[0] += Math.abs(left_snap_d) < Math.abs(right_snap_d) ? left_snap_d: right_snap_d
+  state.translate[1] += Math.abs(top_snap_d) < Math.abs(bottom_snap_d) ? top_snap_d: bottom_snap_d
+}
+doSnap.size = 12;
+
+function updateGrid(size,width,height){
+  //set snapping distance
+  doSnap.size = size;
+  //make x-lines
+  var x_lines = [];
+  for (var x = size; x < width; x+=size) {
+    x_lines.push(x);
   }
+  var vert = d3.select(".d3-bg-grid-vert").selectAll("line")
+    .data(x_lines);
+  vert.exit().remove()
+  vert.enter().append('line')
+  vert.attr({
+    y1: 0,
+    y2: height,
+    stroke: "rgba(0,0,0,0.2)",
+    "stroke-width": 1
+  })
+  .attr("x1",function(d){return d})
+  .attr("x2",function(d){return d})
+  .on("click",clearSelection);
+  //make y-lines
+  var y_lines = [];
+  for (var y = size; y < height; y+=size) {
+    y_lines.push(y);
+  }
+  var horz = d3.select(".d3-bg-grid-horz").selectAll("line")
+    .data(y_lines);
+  horz.exit().remove()
+  horz.enter().append('line')
+  horz.attr({
+    x1: 0,
+    x2: width,
+    stroke: "rgba(0,0,0,0.2)",
+    "stroke-width": 1
+  })
+  .attr("y1",function(d){return d})
+  .attr("y2",function(d){return d})
+  .on("click",clearSelection);
 }
 
 $("#d3-save-button").on("click",function(event) {
