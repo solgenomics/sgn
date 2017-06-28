@@ -45,9 +45,9 @@ eval {
   print STDERR "Refreshing materialized views . . ." . localtime() . "\n";
 
   if ($opt_c) {
-    $refresh = 'refresh materialized view traits; SELECT refresh_materialized_views_concurrently()';
+    $refresh = 'SELECT refresh_materialized_views_concurrently()';
   } else {
-    $refresh = 'refresh materialized view traits; SELECT refresh_materialized_views()';
+    $refresh = 'SELECT refresh_materialized_views()';
   }
 
   $h = $dbh->prepare($refresh);

@@ -25,7 +25,6 @@ package SGN::Model::Cvterm;
 
 use CXGN::Chado::Cvterm;
 use Data::Dumper;
-use Set::Product qw(product);
 
 sub get_cvterm_object {
     my $self = shift;
@@ -84,15 +83,18 @@ sub get_cvterm_row_from_trait_name {
     $db_name  =~ s/^\s+//;
 
     my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
-    my $trait_cvterm = $schema->resultset("Cv::Cvterm")
-	->find({
-	     'dbxref.db_id'     => $db_rs->first()->db_id(),
-	     'dbxref.accession' => $accession
-	      },
-	      {
-	      'join' => 'dbxref'
-	      }
-	);
+    my $trait_cvterm;
+    if ($db_rs->first()){
+        $trait_cvterm = $schema->resultset("Cv::Cvterm")
+        ->find({
+             'dbxref.db_id'     => $db_rs->first()->db_id(),
+             'dbxref.accession' => $accession
+              },
+              {
+              'join' => 'dbxref'
+              }
+        );
+    }
     return $trait_cvterm;
 }
 
@@ -119,81 +121,95 @@ sub get_trait_from_exact_components {
     return $trait_cvterm_ids[0];
 }
 
+sub get_trait_from_cvterm_id {
+    my $schema = shift;
+    my $cvterm_id = shift;
+    my $format = shift;
+    if ($format eq 'concise'){
+        $q = "SELECT name FROM cvterm WHERE cvterm_id=?;";
+    }
+    if ($format eq 'extended'){
+        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) WHERE cvterm_id=?;";
+    }
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($cvterm_id);
+    $name = $h->fetchrow();
+    return $name;
+}
+
+sub _concatenate_cvterm_array {
+    my $schema = shift;
+    my $delimiter = shift;
+    my $format = shift;
+    my $first = shift;
+    my $second = shift;
+    #print STDERR "_concatenate_cvterm_array\n";
+    #print STDERR Dumper $first;
+    #print STDERR Dumper $second;
+    my %first_hash = %$first;
+    foreach my $f (keys %first_hash){
+        my $ids = $first_hash{$f};
+        foreach my $s (@$second){
+            my @component_ids = @$ids;
+            #print STDERR "_iterate\n";
+            my $name = get_trait_from_cvterm_id($schema, $s, $format);
+            my $concatenated_cvterm = $f.$delimiter.$name;
+            push @component_ids, $s;
+            delete $first_hash{$f};
+            $first_hash{$concatenated_cvterm} = \@component_ids;
+            #print STDERR Dumper \%first_hash;
+        }
+    }
+    return \%first_hash;
+}
 sub get_traits_from_component_categories {
     my $self= shift;
     my $schema = shift;
+    my $allowed_composed_cvs = shift;
+    my $composable_cvterm_delimiter = shift;
+    my $composable_cvterm_format = shift;
     my $cvterm_id_hash = shift;
     my %id_hash = %$cvterm_id_hash;
-    my @id_strings;
-
     delete @id_hash{ grep { scalar @{$id_hash{$_}} < 1 } keys %id_hash }; #remove cvtypes with no ids
-    my @keys = sort keys %id_hash;
 
-    product { push @id_strings, join(',', map { "'$_[$_]'" } 0 .. $#keys); } @id_hash{@keys};
-    #print STDERR "id strings are: ".Dumper(@id_strings)."\n";
-
-    my $select = "SELECT string_agg(ordered_components.name::text, '|'), array_agg(ordered_components.cvterm_id)";
-    my $from = " FROM (SELECT cvterm.name, cvterm.cvterm_id, cv.cv_id FROM cvterm JOIN cv USING(cv_id) JOIN cvprop ON(cv.cv_id = cvprop.cv_id) JOIN cvterm type ON(cvprop.type_id = type.cvterm_id)";
-    my $where = " WHERE cvterm.cvterm_id IN (";
-    my $order = ") ORDER BY ( case when type.name = 'object_ontology' then 1
-                                    when type.name = 'attribute_ontology' then 2
-                                    when type.name = 'method_ontology' then 3
-                                    when type.name = 'unit_ontology' then 4
-                                    when type.name = 'trait_ontology' then 5
-                                    when type.name = 'time_ontology' then 6
-                                  end
-                                )
-                              ) ordered_components";
-
-    my %possible_traits;
-    foreach my $id_string (@id_strings) {
-      #print STDERR "This id string is ".$id_string."\n";
-      my $new_trait_q = $select . $from . $where . $id_string . $order;
-      #print STDERR "QUERY is $new_trait_q\n";
-      my $h = $schema->storage->dbh->prepare($new_trait_q);
-      $h->execute();
-      while(my ($name, @ids) = $h->fetchrow_array()){
-          $possible_traits{$name} = \@ids;
-      }
-    }
-    #print STDERR "possible traits are: ".Dumper(%possible_traits)."\n";
-
-    my $contains_cvterm_id = $self->get_cvterm_row($schema, 'contains', 'relationship')->cvterm_id();
-
-    my @intersect_selects;
-    while(my($key, $value) = each %id_hash){
-        if (scalar @$value > 0) {
-          my @quoted_ids= map {"'$_'"} @$value;
-          my $id_string = join ",", @quoted_ids;
-          push @intersect_selects, "SELECT cvterm_id,
-                                    (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS name
-                                      FROM cvterm_relationship JOIN cvterm ON(object_id = cvterm_id)
-                                      JOIN dbxref USING(dbxref_id)
-                                      JOIN db ON(dbxref.db_id = db.db_id)
-                                      WHERE type_id = $contains_cvterm_id AND subject_id IN ($id_string)";
-        }
+    my @ordered_id_groups;
+    foreach my $cv_name (@$allowed_composed_cvs){
+        push @ordered_id_groups, $id_hash{$cv_name};
     }
 
-    my $intersect_sql = join ' INTERSECT ', @intersect_selects;
-    $h = $schema->storage->dbh->prepare($intersect_sql);
-    $h->execute();
-
-    my @traits;
-    while(my ($id, $name) = $h->fetchrow_array()){
-        push @traits, [ $id, $name ];
-        $name =~ s/\|[^\|]+$//; # remove dbname and accession number before using as hash key
-        delete($possible_traits{$name});
+    my $id_array_count = scalar(@ordered_id_groups);
+    my $concatenated_cvterms;
+    foreach (@{$ordered_id_groups[0]}){
+        my $name = get_trait_from_cvterm_id($schema, $_, $composable_cvterm_format);
+        $concatenated_cvterms->{$name} = [$_];
+    }
+    for my $n (0 .. $id_array_count-2){
+        $concatenated_cvterms = _concatenate_cvterm_array($schema, $composable_cvterm_delimiter, $composable_cvterm_format, $concatenated_cvterms, $ordered_id_groups[$n+1]);
     }
 
+    #print STDERR "possible traits are: ".Dumper($concatenated_cvterms)."\n";
+
+    my @existing_traits;
     my @new_traits;
-    while(my($key, $value) = each %possible_traits){
-        push @new_traits, [ $value, $key];
+    foreach my $key (sort keys %$concatenated_cvterms){
+        #my $existing_cvterm_name = $schema->resultset('Cv::Cvterm')->find({ name=>$key });
+        #if ($existing_cvterm_name){
+            #push @existing_traits, [$existing_cvterm_name->cvterm_id(), $key];
+            #next;
+        #}
+        my $existing_cvterm_id = $self->get_trait_from_exact_components($schema, $concatenated_cvterms->{$key});
+        if ($existing_cvterm_id){
+            my $existing_name = get_trait_from_cvterm_id($schema, $existing_cvterm_id, $composable_cvterm_format);
+            push @existing_traits, [$existing_cvterm_id, $existing_name];
+            next;
+        }
+        push @new_traits, [ $concatenated_cvterms->{$key}, $key ];
     }
 
-    print STDERR "existing traits are: ".Dumper(@traits)." and new traits are".Dumper(@new_traits)."\n";
+    #print STDERR "existing traits are: ".Dumper(/@existing_traits)." and new traits are".Dumper(/@new_traits)."\n";
 
     return {
-      existing_traits => \@traits,
+      existing_traits => \@existing_traits,
       new_traits => \@new_traits
     };
   }
