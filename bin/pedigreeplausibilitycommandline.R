@@ -122,6 +122,6 @@ results <- foreach (z = 1:length_p, .combine = rbind) %dopar%
   if (q <- 1){
     cat (colnames(return_vector), file = f_out)
   }  
-  write.table(return_vector ,file=f_out,sep=" ",append=TRUE, col.names = FALSE);
+  write.table(return_vector ,file=f_out,sep=" ",append=FALSE, col.names = FALSE);
   return_vector
 }  
