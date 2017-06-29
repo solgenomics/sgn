@@ -42,7 +42,7 @@ sub stock_pedigree :  Path('/pedigree/svg')  Args(1) {
   $c->stash->{stock} = $stock;
   my $stock_row = $self->schema->resultset('Stock::Stock')
     ->find({ stock_id => $stock_id });
-  my $stock_pedigree = $self->_get_pedigree($stock_row, []);
+  my $stock_pedigree = $self->_get_pedigree($stock_row);
   print STDERR "STOCK PEDIGREE: ". Data::Dumper::Dumper($stock_pedigree);
   my $stock_pedigree_svg = $self->_view_pedigree($stock_pedigree);
   print STDERR "SVG: $stock_pedigree_svg\n\n";
