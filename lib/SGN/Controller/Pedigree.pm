@@ -42,7 +42,7 @@ sub stock_pedigree :  Path('/pedigree/svg')  Args(1) {
   $c->stash->{stock} = $stock;
   my $stock_row = $self->schema->resultset('Stock::Stock')
     ->find({ stock_id => $stock_id });
-  my $stock_pedigree = $self->_get_pedigree($stock_row);
+  my $stock_pedigree = $self->_get_pedigree($stock_row, []);
   print STDERR "STOCK PEDIGREE: ". Data::Dumper::Dumper($stock_pedigree);
   my $stock_pedigree_svg = $self->_view_pedigree($stock_pedigree);
   print STDERR "SVG: $stock_pedigree_svg\n\n";
@@ -152,7 +152,9 @@ sub _stockprops {
 }
 
 sub _get_pedigree {
-  my ($self,$bcs_stock) = @_;
+  my ($self,$bcs_stock, $direct_descendant_ids) = @_;
+  push @$direct_descendant_ids, $bcs_stock->stock_id(); #excluded in parent retrieval to prevent loops
+  #print STDERR "Stock ".$bcs_stock->uniquename()." decendants are: ".Dumper($direct_descendant_ids)."\n";
   my %pedigree;
   $pedigree{'id'} = $bcs_stock->stock_id();
   $pedigree{'name'} = $bcs_stock->uniquename();
@@ -166,31 +168,35 @@ sub _get_pedigree {
 
   #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
   my $stock_relationships = $bcs_stock->search_related("stock_relationship_objects",undef,{ prefetch => ['type','subject'] });
-  my $female_parent_relationship = $stock_relationships->find({type_id => $cvterm_female_parent->cvterm_id()});
+  my $female_parent_relationship = $stock_relationships->find({type_id => $cvterm_female_parent->cvterm_id(), subject_id => {'not_in' => $direct_descendant_ids}});
   if ($female_parent_relationship) {
     my $female_parent_stock_id = $female_parent_relationship->subject_id();
     if ($female_parent_stock_id) {
       my $female_parent_stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $female_parent_stock_id});
       if ($female_parent_stock) {
-	$pedigree{'female_parent'} = _get_pedigree($self,$female_parent_stock);
+          $pedigree{'cross_type'} = $female_parent_relationship->value();
+	$pedigree{'female_parent'} = _get_pedigree($self,$female_parent_stock,$direct_descendant_ids);
       }
     }
   }
-  my $male_parent_relationship = $stock_relationships->find({type_id => $cvterm_male_parent->cvterm_id()});
+  my $male_parent_relationship = $stock_relationships->find({type_id => $cvterm_male_parent->cvterm_id(), subject_id => {'not_in' => $direct_descendant_ids}});
   if ($male_parent_relationship) {
     my $male_parent_stock_id = $male_parent_relationship->subject_id();
     if ($male_parent_stock_id) {
       my $male_parent_stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $male_parent_stock_id});
       if ($male_parent_stock) {
-	$pedigree{'male_parent'} = _get_pedigree($self,$male_parent_stock);
+	$pedigree{'male_parent'} = _get_pedigree($self,$male_parent_stock,$direct_descendant_ids);
       }
     }
   }
+  pop @$direct_descendant_ids; # falling back a level while recursing pedigree tree
   return \%pedigree;
 }
 
 sub _get_descendants {
-  my ($self,$bcs_stock) = @_;
+  my ($self,$bcs_stock,$direct_ancestor_ids) = @_;
+  push @$direct_ancestor_ids, $bcs_stock->stock_id(); #excluded in child retrieval to prevent loops
+  #print STDERR "Stock ".$bcs_stock->uniquename()." ancestors are: ".Dumper($direct_ancestor_ids)."\n";
   my %descendants;
   my %progeny;
   $descendants{'id'} = $bcs_stock->stock_id();
@@ -198,22 +204,23 @@ sub _get_descendants {
   $descendants{'link'} = "/stock/$descendants{'id'}/view";
   #get cvterms for parent relationships
   my $cvterm_female_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'female_parent','stock_relationship');
- 
+
  my $cvterm_male_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'male_parent', 'stock_relationship');
 
   #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
-  my $descendant_relationships = $bcs_stock->search_related("stock_relationship_subjects",undef,{ prefetch => ['type','object'] });
+  my $descendant_relationships = $bcs_stock->search_related("stock_relationship_subjects",{ object_id => {'not_in' => $direct_ancestor_ids}},{ prefetch => ['type','object'] });
   if ($descendant_relationships) {
     while (my $descendant_relationship = $descendant_relationships->next) {
       my $descendant_stock_id = $descendant_relationship->object_id();
       if ($descendant_stock_id && (($descendant_relationship->type_id() == $cvterm_female_parent->cvterm_id()) || ($descendant_relationship->type_id() == $cvterm_male_parent->cvterm_id()))) {
   	my $descendant_stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $descendant_stock_id});
   	if ($descendant_stock) {
-  	  $progeny{$descendant_stock_id} = _get_descendants($self,$descendant_stock);
+  	  $progeny{$descendant_stock_id} = _get_descendants($self,$descendant_stock,$direct_ancestor_ids);
   	}
       }
     }
     $descendants{'descendants'} = \%progeny;
+    pop @$direct_ancestor_ids; # falling back a level while recursing descendant tree
     return \%descendants;
   }
 }
