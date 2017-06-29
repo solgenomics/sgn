@@ -1436,11 +1436,13 @@ sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigree') Args(0
     my $c = shift;
     my $level = $c->req->param("level");
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $s = CXGN::Stock->new(schema => $schema, stock_id => $c->stash->{stock}->get_stock_id());
-    my $pedigree_root = $s->get_parents($level);
-    my $pedigree_string = $pedigree_root->get_pedigree_string($level);
+    my $parents = CXGN::Stock->new(schema => $schema, stock_id => $c->stash->{stock}->get_stock_id())->get_direct_parents();
+    print STDERR "Parents are: ".Dumper($parents)."\n";
 
-    $c->stash->{rest} = { pedigree_string => $pedigree_string };
+    #my $pedigree_root = $s->get_parents($level);
+    #my $pedigree_string = $pedigree_root->get_pedigree_string($level);
+
+    $c->stash->{rest} = { pedigree_string => $parents };
 }
 
 sub stock_lookup : Path('/stock_lookup/') Args(2) ActionClass('REST') { }

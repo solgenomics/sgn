@@ -610,28 +610,43 @@ my $cross_type = '';
        my $check_pedigree = "FALSE";
        my $len;
 
+       my %data = (
+           a => {
+               ab => 1,
+               ac => 2,
+               ad => {
+                   ada => 3,
+                   adb => 4,
+                   adc => {
+                       adca => 5,
+                       adcb => 6,
+                   },
+               },
+           },
+           b => 7,
+           c => {
+               ca => 8,
+               cb => {
+                   cba => 9,
+                   cbb => 10,
+               },
+           },
+       );
 
 	for (my $i=0 ; $i<scalar(@accession_ids); $i++)
 	{
 
 	$accession_name = $accession_list[$i];
 	my $pedigree_stock_id = $accession_ids[$i];
-	my @pedigree_parents = CXGN::Stock->new ( schema => $schema, stock_id => $pedigree_stock_id)->get_direct_parents();
-	$len = scalar(@pedigree_parents);
-	if($len > 0)
-	{
-      		$check_pedigree = "TRUE";
-	}
-    foreach my $parent (@pedigree_parents) {
-        my $type = @$parent[2];
-        if ($type eq 'female') {
-            $female_parent = @$parent[1];
-            $cross_type = @$parent[3];
-        } elsif ($type eq 'male') {
-            $male_parent = @$parent[1];
-        }
-    }
-    print $TEMP "$accession_name\t$female_parent\t$male_parent\t$cross_type\n";
+
+	my $full_pedigree = CXGN::Stock->new ( schema => $schema, stock_id => $pedigree_stock_id)->get_full_pedigree();
+
+    foreach my $parent (sort keys %$full_pedigree) {
+
+    hash_walk(\%data, [], \&print_keys_and_value);
+    hash_walk($full_pedigree, [], \&print_keys_and_value);
+
+    #print $TEMP "$accession_name\t$female_parent\t$male_parent\t$cross_type\n";
 
   	}
 
@@ -653,6 +668,34 @@ print $TEMP "No pedigrees found in the Database for the accessions searched. \n"
 
 }
 
+}
+
+sub hash_walk {
+    my ($hash, $key_list, $callback) = @_;
+    while (my ($k, $v) = each %$hash) {
+        # Keep track of the hierarchy of keys, in case
+        # our callback needs it.
+        push @$key_list, $k;
+
+        if (ref($v) eq 'HASH') {
+            # Recurse.
+            hash_walk($v, $key_list, $callback);
+        }
+        else {
+            # Otherwise, invoke our callback, passing it
+            # the current key and value, along with the
+            # full parentage of that key.
+            $callback->($k, $v, $key_list);
+        }
+
+        pop @$key_list;
+    }
+}
+
+sub print_keys_and_value {
+    my ($k, $v, $key_list) = @_;
+    printf "k = %-8s  v = %-4s  key_list = [%s]\n", $k, $v, "@$key_list";
+}
 
 # pedigree download -- end
 

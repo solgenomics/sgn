@@ -131,6 +131,11 @@ has 'population_name' => (
     is => 'rw',
 );
 
+has 'type_id' => (
+    isa => 'Int',
+    is => 'rw',
+);
+
 
 sub BUILD {
     my $self = shift;
@@ -540,56 +545,51 @@ sub get_trials {
     return @trials;
 }
 
-sub get_ancestors {
-
-	my $self = shift;
-    my $stock_id = shift || $self->stock_id();
-    my ($female_parent_id, $male_parent_id, %ancestors);
-
-    print STDERR "Running get ancestors on accession ".$stock_id." at time ".localtime()."\n";
-
-    eval {
-    $female_parent_id = $self->schema()->resultset("Cv::Cvterm")->find( { name => 'female_parent' })->cvterm_id();
-    $male_parent_id = $self->schema()->resultset("Cv::Cvterm")->find( { name => 'male_parent' }) ->cvterm_id();
-    };
-    if ($@) {
-    die "Cvterm for female_parent and/or male_parent seem to be missing in the database\n";
-    }
-
-	my $parents = $self->get_parents(stock_id => $stock_id, female_parent_id => $female_parent_id, male_parent_id => $male_parent_id);
-	if ($parents) {
-        if ( $parents->{'female_parent_id'} ) {
-            my $female_parent_id = $parents->{'female_parent_id'};
-            $ancestors{$parents->{'female_parent'}} = $self->get_parents( stock_id => $parents->{'female_parent_id'}, female_parent_id => $female_parent_id, male_parent_id => $male_parent_id);
-        }
-        if ( $parents->{'male_parent_id'} ) {
-            my $male_parent_id = $parents->{'male_parent_id'};
-            $ancestors{$parents->{'male_parent'}} = $self->get_parents( stock_id => $parents->{'male_parent_id'}, female_parent_id => $female_parent_id, male_parent_id => $male_parent_id);
-        }
-	}
-    print STDERR "Finished, returning with ancestors ".Dumper(%ancestors)." at time ".localtime()."\n";
-	return \%ancestors;
-}
-
-sub get_parents {
+sub get_full_pedigree {
 
 	my $self = shift;
     my $stock_id = $self->stock_id();
-    my $female_parent_id = $self->male_parent_id();
-    my $male_parent_id = $self->female_parent_id();
-    my @direct_descendant_ids = $self->direct_descendant_ids || [];
+    my $mother_type_id = shift || $self->schema()->resultset("Cv::Cvterm")->find( { name => 'female_parent' })->cvterm_id();
+    my $father_type_id = shift || $self->schema()->resultset("Cv::Cvterm")->find( { name => 'male_parent' })->cvterm_id();
+    my $pedigree_hashref = shift || {};
+
+    print STDERR "Running get full pedigree on accession ".$stock_id." at time ".localtime()."\n";
+
+	my $parents = $self->_get_parents($stock_id, $mother_type_id, $father_type_id);
+	if ($parents) {
+        if ( $parents->{'female_parent_id'} ) {
+            my $mother_stock_id = $parents->{'female_parent_id'};
+            $pedigree_hashref->{$parents->{'female_parent'}} = $self->get_ancestors( stock_id => $mother_stock_id, $mother_type_id, $father_type_id, $pedigree_hashref);
+        }
+        if ( $parents->{'male_parent_id'} ) {
+            my $father_stock_id = $parents->{'male_parent_id'};
+            $pedigree_hashref->{$parents->{'male_parent'}} = $self->get_ancestors( stock_id => $father_stock_id, $mother_type_id, $father_type_id, $pedigree_hashref);
+        }
+	}
+    print STDERR "Finished, returning with full pedigree hashref ".Dumper($pedigree_hashref)." at time ".localtime()."\n";
+	return $pedigree_hashref;
+}
+
+sub _get_parents {
+
+	my $self = shift;
+    my $stock_id = shift;
+    my $mother_type_id = shift;
+    my $father_type_id = shift;
+    #my @direct_descendant_ids = $self->direct_descendant_ids || [];
     my %parent_hash;
+    my $parent_rel_type_ids = [$mother_type_id,$father_type_id];
+    #push @parent_rel_type_ids, $mother_type_id;
+    #push @parent_rel_type_ids, $father_type_id;
 
-    print STDERR "Running get parents for accession ".$stock_id." at time ".localtime()."\n";
+    print STDERR "Running get parents for accession ".$stock_id.". My parent type_ids are $parent_rel_type_ids at time ".localtime()."\n";
 
-	my $rs = $self->schema()->resultset("Stock::Stock")->search_related(
-        'stock_relationship_subject_ids',
-        {   object_id => $stock_id,
-            subject_project_id => { 'not in' => \@direct_descendant_ids },
-            type_id => { 'in' => "$female_parent_id, $male_parent_id" }
+	my $rs = $self->schema()->resultset("Stock::Stock")->search(
+        {   'me.stock_id' => $stock_id,
+            #subject_id => { 'not in' => \@direct_descendant_ids },
+            'type.cvterm_id' => { 'in' => $parent_rel_type_ids }
         },
-        {   join      => { 'subject' },
-            join      => { 'type' },
+        {   join      => {'stock_relationship_subjects' => ['subject', 'type'] },
             '+select' => ['subject.uniquename', 'subject.stock_id', 'type.name'],
             '+as'     => ['parent_uniquename', 'parent_stock_id', 'parent_type']
         }
@@ -622,9 +622,9 @@ sub get_direct_parents {
     die "Cvterm for female_parent and/or male_parent seem to be missing in the database\n";
     }
 
-    print STDERR "Running get parents on accession ".$stock_id." at time ".localtime()."\n";
+    print STDERR "Running get parents on accession ".$stock_id." with female parent type_id $female_parent_id and male parent type_id $male_parent_id at time ".localtime()."\n";
 
-	my $direct_parents = $self->get_parents(stock_id => $stock_id, female_parent_id => $female_parent_id, male_parent_id => $male_parent_id);
+	my $direct_parents = $self->_get_parents($stock_id, $female_parent_id, $male_parent_id);
 	return $direct_parents;
 
 }
