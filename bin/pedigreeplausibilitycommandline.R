@@ -119,7 +119,7 @@ results <- foreach (z = 1:length_p, .combine = rbind) %dopar%
   return_vector [6] <- informative
   return_vector [5] <- bad_data
   return_vector[4] <- dosage_score
-  if (q -> 1){
+  if (q <- 1){
     cat (colnames(return_vector), file = f_out)
   }  
   write.table(return_vector ,file=f_out,sep=" ",append=TRUE, col.names = FALSE);
