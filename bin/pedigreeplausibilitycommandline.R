@@ -3,6 +3,7 @@
 #tail -f -n 100 log.txt
 #read first line keep track of location ones keep is at, split new line you import and keep ones that split to indices
 #perl -p -i -e 's/\|[0-9]+//g' 267genotypes-p3.txt
+#PA}h'V2(3e3e
 
 library(pedigreemm)
 library(proxy)
@@ -10,9 +11,10 @@ library(foreach)
 library(dplyr)
 library(doMC)
 
-cores <- (detectCores() / 2)
+cores<-60
+#cores <- (detectCores() / 2)
 cl <- makeCluster(cores)
-registerDoMC(2)
+registerDoMC(60)
 getDoParWorkers()
 
 myarg <- (commandArgs(TRUE))
@@ -63,7 +65,7 @@ geno.bad <- filter.fun(genotype_data[2:359792,],0.1,0.1,0.2)
 exclude_list <- geno.bad
 subset_matrix <- genotype_data[!(rownames(genotype_data) %in% rownames(exclude_list)),] 
 
-results <- foreach (z = 1:4, .combine = rbind) %dopar%
+results <- foreach (z = 1:length_p, .combine = rbind) %dopar%
 {
   implausibility_count <- 0
   bad_data <- 0
