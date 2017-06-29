@@ -120,6 +120,5 @@ results <- foreach (z = 1:length_p, .combine = rbind) %dopar%
   return_vector [5] <- bad_data
   return_vector[4] <- dosage_score
   write.table(return_vector ,file=f_out,sep=" ",append=TRUE);
-  print(return_vector)
   return_vector
 }  
