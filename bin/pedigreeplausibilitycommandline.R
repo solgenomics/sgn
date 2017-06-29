@@ -94,7 +94,7 @@ results <- foreach (z = 1:length_p, .combine = rbind) %dopar%
     }
     
     if ((child_score != 0 && child_score != 2) || (mother_score != 0 && mother_score != 2) ||
-      (father_score != 0 && father_score != 2)){
+        (father_score != 0 && father_score != 2)){
       bad_data <- bad_data +1
       next
     }
@@ -109,7 +109,7 @@ results <- foreach (z = 1:length_p, .combine = rbind) %dopar%
     } else if ((mother_score == 2 || father_score == 2) && child_score == 0) {
       implausibility_count <- implausibility_count + 1
     } else if ((xor(mother_score == 2, father_score == 2)) && (xor(mother_score == 0, 
-      father_score == 0)) && child_score == 2){
+                                                                   father_score == 0)) && child_score == 2){
       implausibility_count <- implausibility_count + 1
     }
   }
@@ -119,6 +119,9 @@ results <- foreach (z = 1:length_p, .combine = rbind) %dopar%
   return_vector [6] <- informative
   return_vector [5] <- bad_data
   return_vector[4] <- dosage_score
-  write.table(return_vector ,file=f_out,sep=" ",append=TRUE);
+  if (q -> 1){
+    cat (colnames(return_vector), file = f_out)
+  }  
+  write.table(return_vector ,file=f_out,sep=" ",append=TRUE, col.names = FALSE);
   return_vector
 }  
