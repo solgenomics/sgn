@@ -45,11 +45,9 @@
      </div>
     </div>
    </div>
-  </div>
-</div>
  <div class="col-sm-1">
+ </div>
  </&>
-  </div>
 
 
 <&| /page/info_section.mas, title => 'Search Results' , collapsible=>1, collapsed=>0 &>
@@ -115,7 +113,6 @@
     </div>
    </div>
   </div>
-</div>
  <div class="col-sm-1">
  </&>
   </div>
@@ -138,6 +135,8 @@
 </table>
 </&>
 </div>
+</div>
+
 
 
 
