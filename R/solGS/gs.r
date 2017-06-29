@@ -16,6 +16,9 @@ library(data.table)
 library(parallel)
 library(genoDataFilter)
 library(phenoAnalysis)
+library(caret)
+library(dplyr)
+
 
 allArgs <- commandArgs()
 
@@ -145,7 +148,7 @@ if (datasetInfo == 'combined populations') {
 if (is.null(filteredGenoData)) {
   
   #genoDataFilter::filterGenoData
-  genoData <- filterGenoData(genoData)
+  genoData <- filterGenoData(genoData, maf=0)
   filteredGenoData   <- genoData 
 } else {
   genoData           <- as.data.frame(filteredGenoData)
@@ -195,7 +198,7 @@ if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size !=
     
   predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
  
-  predictionData <- filterGenoData(predictionData)
+  predictionData <- filterGenoData(predictionData, maf=0)
   filteredPredGenoData <- predictionData
 }
 
@@ -381,76 +384,75 @@ if (length(predictionData) == 0) {
 #cross-validation
 
   if (is.null(predictionFile)) {
-    genoNum <- nrow(phenoTraitMarker)
+    genoNum <- nrow(phenoTrait)
     if (genoNum < 20 ) {
       warning(genoNum, " is too small number of genotypes.")
     }
-  
-    reps <- round_any(genoNum, 10, f = ceiling) %/% 10
 
-    genotypeGroups <-c()
+    set.seed(4567)
+   
+    k <- 10
+    times <- 2
+    cvFolds <- createMultiFolds(phenoTrait[, 2], k=k, times=times)
 
-    if (genoNum %% 10 == 0) {
-      genotypeGroups <- rep(1:10, reps)
-    } else {
-      genotypeGroups <- rep(1:10, reps) [- (genoNum %% 10) ]
-    }
-
-    set.seed(4567)                                   
-    genotypeGroups <- genotypeGroups[ order (runif(genoNum)) ]
-
-    for (i in 1:10) {
-      tr <- paste("trPop", i, sep = ".")
-      sl <- paste("slPop", i, sep = ".")
- 
-      trG <- which(genotypeGroups != i)
-      slG <- which(genotypeGroups == i)
-  
-      assign(tr, trG)
-      assign(sl, slG)
-
-      kblup <- paste("rKblup", i, sep = ".")
-
-      result <- kin.blup(data  = phenoTrait[trG,],
-                         geno  = 'genotypes',
-                         pheno = trait,
-                         K     = relationshipMatrixFiltered,
-                         n.core = nCores,
-                         )
-  
-      assign(kblup, result)
-      #calculate cross-validation accuracy
-      valBlups   <- result$g
-      valBlups   <- data.frame(valBlups) 
-      slGDf      <- data.frame(phenoTraitMarker[slG, ])  
-      valBlups   <- valBlups[(rownames(valBlups) %in% rownames(data.frame(phenoTraitMarker[slG, ]))), ]
-      valBlups   <- data.frame(valBlups) 
-      valCorData <- merge(slGDf, valBlups, by=0, all=FALSE)
-
-      rownames(valCorData) <- valCorData[, 1]
-      valCorData[, 1]      <- NULL
-
-      accuracy   <- try(cor(valCorData))
-      validation <- paste("validation", i, sep = ".")
-
-      cvTest <- paste("Validation test", i, sep = " ")
-
-      if ( class(accuracy) != "try-error")
-        {
-          accuracy <- round(accuracy[1,2], digits = 3)
-          accuracy <- data.matrix(accuracy)
-    
-          colnames(accuracy) <- c("correlation")
-          rownames(accuracy) <- cvTest
-
-          assign(validation, accuracy)
+    for ( r in 1:times) {
+      re <- paste0('Rep', r)
+         
+      for (i in 1:k) {
+        fo <- ifelse(i < 10, 'Fold0', 'Fold')
+       
+        trFoRe <- paste0(fo, i, '.', re)
+        trG <- cvFolds[[trFoRe]]
+        slG <- as.numeric(rownames(phenoTrait[-trG,]))
       
-          if (!is.na(accuracy[1,1])) {
-            validationAll <- rbind(validationAll, accuracy)
-          }    
-        }
-    }
+        kblup <- paste("rKblup", i, sep = ".")
 
+        result <- kin.blup(data  = phenoTrait[trG,],
+                           geno  = 'genotypes',
+                           pheno = trait,
+                           K     = relationshipMatrixFiltered,
+                           n.core = nCores,
+                           )
+        
+        assign(kblup, result)
+ 
+        #calculate cross-validation accuracy
+        valBlups   <- result$g
+        valBlups   <- data.frame(valBlups)
+
+        slG <- slG[which(slG <= nrow(phenoTrait))]   
+        slGDf <- phenoTrait[slG,]
+        rownames(slGDf) <- slGDf[, 1]     
+        slGDf[, 1] <- NULL
+      
+        valBlups   <- valBlups[(rownames(valBlups) %in% rownames(slGDf)), ]  
+        valCorData <- merge(slGDf, valBlups, by=0) 
+        rownames(valCorData) <- valCorData[, 1]
+        valCorData[, 1]      <- NULL
+     
+        accuracy   <- try(cor(valCorData))
+   
+        validation <- paste("validation", trFoRe, sep = ".")
+
+        cvTest <- paste("CV", trFoRe, sep = " ")
+
+        if ( class(accuracy) != "try-error")
+          {
+            accuracy <- round(accuracy[1,2], digits = 3)
+            accuracy <- data.matrix(accuracy)
+    
+            colnames(accuracy) <- c("correlation")
+            rownames(accuracy) <- cvTest
+
+            assign(validation, accuracy)
+      
+            if (!is.na(accuracy[1,1])) {
+              validationAll <- rbind(validationAll, accuracy)
+            }    
+          }
+      }
+    }
+    
     validationAll <- data.matrix(validationAll[order(-validationAll[, 1]), ])
      
     if (!is.null(validationAll)) {
@@ -461,8 +463,9 @@ if (length(predictionData) == 0) {
       validationAll <- rbind(validationAll, validationMean)
       colnames(validationAll) <- c("Correlation")
     }
-  
+ 
     validationAll <- data.frame(validationAll)
+    
   }
 }
 

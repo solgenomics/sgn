@@ -54,7 +54,9 @@ $acronym
 </&>
 
 % if ($show_data) 
-%{
+% {
+% if ($markers_no > 1)
+% {
  
 
 <&| /page/info_section.mas, 
@@ -82,6 +84,22 @@ $acronym
    acronym => $acronym,
 &>
 
+%} 
+% else
+% {
+
+<&| /page/info_section.mas, 
+      collapsible => 1, 
+      collapsed   => 0, 
+      title       => "Genotype Data"
+&>
+
+  <div id="traits_list_message"  style="font-weight:bold;text-align:center;text-transform:uppercase;color:#A7C942">
+    <p>There is no genotype data for this population.</p>
+  </div>
+
+</&>
+%}
 %}
 % else
 %{

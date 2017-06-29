@@ -584,7 +584,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 my $self = shift;
 my $c = shift;
-my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedigree_stock_id, $accession_name, $female_parent, $male_parent);
+my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedigree_stock_id, $accession_name);
 
     $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
     $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
@@ -602,7 +602,7 @@ my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedig
 
     open my $TEMP, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
 
-	print $TEMP "Accession\tFemale_Parent\tMale_Parent";
+	print $TEMP "Accession\tFemale_Parent\tMale_Parent\tCross_Type";
  	print $TEMP "\n";
        my $check_pedigree = "FALSE";
        my $len;
@@ -612,19 +612,24 @@ my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedig
 	{
 
 	$accession_name = $accession_list[$i];
+    my ($female_parent, $male_parent, $cross_type) = '';
 	my $pedigree_stock_id = $accession_ids[$i];
-	my @pedigree_parents = CXGN::Chado::Stock->new ($schema, $pedigree_stock_id)->get_direct_parents();
+	my @pedigree_parents = CXGN::Stock->new ( schema => $schema, stock_id => $pedigree_stock_id)->get_direct_parents();
 	$len = scalar(@pedigree_parents);
 	if($len > 0)
 	{
       		$check_pedigree = "TRUE";
 	}
-
-
-
-	    $female_parent = $pedigree_parents[0][1] || '';
-	    $male_parent = $pedigree_parents[1][1] || '';
-	  print $TEMP "$accession_name \t  $female_parent \t $male_parent\n";
+    foreach my $parent (@pedigree_parents) {
+        my $type = @$parent[2];
+        if ($type eq 'female') {
+            $female_parent = @$parent[1];
+            $cross_type = @$parent[3];
+        } elsif ($type eq 'male') {
+            $male_parent = @$parent[1];
+        }
+    }
+    print $TEMP "$accession_name\t$female_parent\t$male_parent\t$cross_type\n";
 
   	}
 
@@ -729,7 +734,9 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   print STDERR "Decoding genotype data ...".localtime()."\n";
 
   for (my $i=0; $i < scalar(@$genotypes) ; $i++) {       # loop through resultset, printing accession uniquenames as column headers and storing decoded gt strings in array of hashes
-    print $TEMP $genotypes->[$i]->{genotypeUniquename} . "\t";
+
+    my ($name,$batch_id) = split(/\|/, $genotypes->[$i]->{genotypeUniquename});
+    print $TEMP $genotypes->[$i]->{germplasmName} . "|" . $batch_id . "\t";
     push(@accession_genotypes, $genotypes->[$i]->{genotype_hash});
   }
   @unsorted_markers = keys   %{ $accession_genotypes[0] };

@@ -5,12 +5,18 @@ $timestamp
 
 <& /page/page_title.mas, title=>"Available Seedlots" &>
 
+<style>
+.ui-autocomplete {
+    z-index: 5000;
+}
+</style>
   
   <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
 
 <table id="available_seedlots_table" class="display">
 <thead>
   <tr>
+    <th>Breeding Program</th>
     <th>Seedlot</th>
     <th>Accession</th>
     <th>Seedlot Location</th>
@@ -38,6 +44,12 @@ $timestamp
                     <label class="col-sm-3 control-label">Name: </label>
                     <div class="col-sm-9" >
                         <input class="form-control" id="seedlot_name" placeholder="Required">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Breeding Program: </label>
+                    <div class="col-sm-9" >
+                        <div id="seedlot_breeding_program_div"></div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -95,11 +107,21 @@ $timestamp
 <script>
 jQuery(document).ready(function(){
 
+    jQuery("#seedlot_location").autocomplete({
+       source: '/ajax/stock/geolocation_autocomplete',
+    });
+    jQuery("#seedlot_accession_uniquename").autocomplete({
+       source: '/ajax/stock/accession_autocomplete',
+    });
+
     var seedlots_table = jQuery('#available_seedlots_table').DataTable( { 
       'ajax': '/ajax/breeders/seedlots',
     });
 
-  jQuery('#add_seedlot_button').click( function() { jQuery('#add_seedlot_dialog').modal('show') });
+    jQuery('#add_seedlot_button').click( function() {
+        jQuery('#add_seedlot_dialog').modal('show');
+        get_select_box('breeding_programs', 'seedlot_breeding_program_div', { 'name' : 'seedlot_breeding_program_id', 'id' : 'seedlot_breeding_program_id' });
+    });
 
   jQuery('#create_new_seedlot_button').click( function() {
     var name = jQuery('#seedlot_name').val();
@@ -110,16 +132,18 @@ jQuery(document).ready(function(){
     var amount = jQuery('#seedlot_amount').val();
     var timestamp = jQuery('#seedlot_timestamp').val();
     var description = jQuery('#seedlot_description').val();
+    var breeding_program_id = jQuery('#seedlot_breeding_program_id').val();
 
     if (name == '') { alert("Please provide a name"); return; }
     else if (location == '') { alert("Please provide a location"); return; }
     else if (amount == '') { alert("Please provide an amount"); return; }
+    else if (breeding_program_id == '') { alert("Please select a breeding program"); return; }
     else if (accession_uniquename == '') { alert("Please provide an accession name"); return; }
     else {
 
     jQuery.ajax( { 
       url: '/ajax/breeders/seedlot-create',
-      data : { 'seedlot_name' : name, 'seedlot_location': location, 'seedlot_accession_uniquename': accession_uniquename, 'seedlot_organization': organization, 'seedlot_population_name': population_name, 'seedlot_amount':amount, 'seedlot_timestamp':timestamp, 'seedlot_description':description },
+      data : { 'seedlot_name' : name, 'seedlot_location': location, 'seedlot_accession_uniquename': accession_uniquename, 'seedlot_organization': organization, 'seedlot_population_name': population_name, 'seedlot_amount':amount, 'seedlot_timestamp':timestamp, 'seedlot_description':description, 'seedlot_breeding_program_id':breeding_program_id },
       success: function(response) { 
         if (response.success == 1) { 
            alert("The seedlot has been created.");

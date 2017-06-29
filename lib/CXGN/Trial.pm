@@ -696,6 +696,47 @@ sub remove_planting_date {
 		}
 }
 
+=head2 accessors get_phenotypes_fully_uploaded(), set_phenotypes_fully_uploaded()
+
+ Usage: When a trial's phenotypes have been fully upload, the user can set a projectprop called 'phenotypes_fully_uploaded' with a value of 1
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_phenotypes_fully_uploaded {
+    my $self = shift;
+
+    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotypes_fully_uploaded', 'project_property')->cvterm_id;
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find({
+        project_id => $self->get_trial_id(),
+        type_id => $cvterm_id,
+    });
+
+    if ($row) {
+        return $row->value;
+    } else {
+        return;
+    }
+}
+
+sub set_phenotypes_fully_uploaded {
+    my $self = shift;
+    my $value = shift;
+
+    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotypes_fully_uploaded', 'project_property')->cvterm_id;
+
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find_or_create({
+        project_id => $self->get_trial_id(),
+        type_id => $cvterm_id,
+    });
+    $row->value($value);
+    $row->update();
+}
+
 
 =head2 function delete_phenotype_data()
 
@@ -1165,7 +1206,7 @@ sub get_phenotypes_for_trait {
 		$join_string = 'JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id)';
 		$where_string = "stock.type_id=$stock_type_id and";
 	}
-	my $q = "SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) $join_string WHERE $where_string project_id=? and cvterm.cvterm_id = ? and phenotype.value~?;";
+	my $q = "SELECT phenotype.value::real FROM cvterm JOIN phenotype ON (cvterm_id=cvalue_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) $join_string WHERE $where_string project_id=? and cvterm.cvterm_id = ? and phenotype.value~? ORDER BY phenotype_id ASC;";
 	$h = $dbh->prepare($q);
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
@@ -1673,7 +1714,7 @@ sub get_plants {
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 
-	my $trial_plant_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$plant_cvterm_id});
+	my $trial_plant_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=>$plant_cvterm_id}, {order_by=>{'-asc'=>'uniquename'}});
 
 	# removed "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id]
 
@@ -1746,7 +1787,7 @@ sub get_plots {
 	push @type_ids, $tissue_sample_cvterm_id if $tissue_sample_cvterm_id;
 
 	print STDERR "TYPE IDS: ".join(", ", @type_ids);
-	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=> { in => [@type_ids] }});
+	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=> { in => [@type_ids]}});
 
 	# removed "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id]
 
@@ -1754,7 +1795,7 @@ sub get_plots {
 	while(my $rs = $trial_plot_rs->next()) {
 		$unique_plots{$rs->uniquename} = $rs->stock_id;
 	}
-	foreach (keys %unique_plots) {
+	foreach (sort keys %unique_plots) {
 		#push @plots, {plot_name=> $_, plot_id=>$unique_plots{$_} } ;
 		my $combine = [$unique_plots{$_}, $_ ];
 		push @plots, $combine;

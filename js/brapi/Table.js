@@ -88,8 +88,8 @@ function brapi_create_paginated_table(data, pagination, div_id, return_url, link
     //console.log(link);
     //console.log(display_columns);
     var current_page = pagination.currentPage;
-    var next_page = current_page + 1;
-    var previous_page = current_page - 1;
+    var next_page = Number(current_page) + 1;
+    var previous_page = Number(current_page) - 1;
     var page_size = pagination.pageSize;
     var total_count = pagination.totalCount;
     var total_pages = pagination.totalPages;
@@ -111,7 +111,7 @@ function brapi_create_paginated_table(data, pagination, div_id, return_url, link
     if (data.length == 0) {
         html = html+"<center><h3>No data available!</h3></center>";
     } else {
-        html = html+"<h3>Germplasm Search Results From "+url+"</h3><table class='table table-hover table-bordered'><thead><tr><th>Select</th>";
+        html = html+"<h3>Results From "+url+"</h3><table class='table table-hover table-bordered'><thead><tr><th>Select</th>";
         var header = [];
         for(var h in data[0]) {
             if (data[0].hasOwnProperty(h)) {
@@ -142,7 +142,11 @@ function brapi_create_paginated_table(data, pagination, div_id, return_url, link
             html = html + "/></td>";
             for(var col=0; col<header.length; col++){
                 if (checkDefined(link) == 0) {
-                    html = html+"<td>"+data[row][header[col]]+"</td>";
+                    var v = data[row][header[col]];
+                    if (typeof v === 'object'){
+                        v = JSON.stringify(v);
+                    }
+                    html = html+"<td>"+v+"</td>";
                 } else {
                     for(var link_header in link) {
                         if (header[col] == link_header) {
@@ -152,7 +156,11 @@ function brapi_create_paginated_table(data, pagination, div_id, return_url, link
                                 html = html+"<td><a href='"+data[row][link[link_header][0]]+"'>"+data[row][link_header]+"</a></td>";
                             }
                         } else {
-                            html = html+"<td>"+data[row][header[col]]+"</td>";
+                            var v = data[row][header[col]];
+                            if (typeof v === 'object'){
+                                v = JSON.stringify(v);
+                            }
+                            html = html+"<td>"+v+"</td>";
                         }
                     }
                 }
