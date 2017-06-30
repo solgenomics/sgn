@@ -81,13 +81,22 @@ has 'order_by' => (
     is => 'rw'
 );
 
+has 'limit' => (
+    isa => 'Int|Undef',
+    is => 'rw',
+);
+
+has 'offset' => (
+    isa => 'Int|Undef',
+    is => 'rw',
+);
 
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema();
 
     my $is_variable = $self->is_variable();
-    my $trait_cv_name = $self->trait_cv_name() ;#|| 'cassava_trait';
+    my $trait_cv_name = $self->trait_cv_name() ;
       
 
     my $trait_cv = $schema->resultset("Cv::Cv")->search(
@@ -114,7 +123,7 @@ sub search {
     }
     my $trait_name_is_exact = $self->trait_name_is_exact;
     my $sort_by = $self->sort_by;
-    my $order_by = $self->order_by;
+    my $order_by = $self->order_by || 'me.name';
 
     my $trait_rs;
     
@@ -133,6 +142,7 @@ sub search {
 		    'is_obsolete' => 0,
 		    'is_relationshiptype' => 0,
 		} ,
+        order_by => { '-asc' => $order_by }
 	    }
 	    );
     } else { 
@@ -144,11 +154,19 @@ sub search {
 		    'is_obsolete' => 0,
 		    'is_relationshiptype' => 0,
 		},
+        order_by => { '-asc' => $order_by }
 	    }
 	    );
     }
     my @result;
     my %traits = ();
+
+    my $limit = $self->limit;
+    my $offset = $self->offset;
+    my $records_total = $trait_rs->count();
+    if (defined($limit) && defined($offset)){
+        $trait_rs = $trait_rs->slice($offset, $limit);
+    }
 
     while ( my $t = $trait_rs->next() ) {
         my $trait_id = $t->cvterm_id();

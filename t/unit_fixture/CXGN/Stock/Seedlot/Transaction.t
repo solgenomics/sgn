@@ -80,7 +80,7 @@ is($source_seedlot_after_trans1->current_count, -5, "check current count is corr
 is($source_seedlot_after_trans1->uniquename, $source_seedlot->uniquename, "check uniquename is saved");
 is($source_seedlot_after_trans1->location_code, $source_seedlot->location_code, "check location is saved");
 is($source_seedlot_after_trans1->organization_name, $source_seedlot->organization_name, "check organization is saved");
-is($source_seedlot_after_trans1->population_name, $source_seedlot->population_name, "check population is saved");
+is($source_seedlot_after_trans1->populations->[0], $source_seedlot->population_name, "check population is saved");
 is_deeply($source_seedlot_after_trans1->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
 is($source_seedlot_after_trans1->breeding_program_name, $seedlot_breeding_program_name);
 is($source_seedlot_after_trans1->breeding_program_id, $source_seedlot->breeding_program_id);
@@ -93,7 +93,7 @@ is($dest_seedlot_after_trans1->current_count, 5, "check current count is correct
 is($dest_seedlot_after_trans1->uniquename, $dest_seedlot->uniquename, "check uniquename is saved");
 is($dest_seedlot_after_trans1->location_code, $dest_seedlot->location_code, "check location is saved");
 is($dest_seedlot_after_trans1->organization_name, $dest_seedlot->organization_name, "check organization is saved");
-is($dest_seedlot_after_trans1->population_name, $dest_seedlot->population_name, "check population is saved");
+is($dest_seedlot_after_trans1->populations->[0], $dest_seedlot->population_name, "check population is saved");
 is_deeply($dest_seedlot_after_trans1->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
 is($dest_seedlot_after_trans1->breeding_program_name, $seedlot_breeding_program_name);
 is($dest_seedlot_after_trans1->breeding_program_id, $dest_seedlot->breeding_program_id);
@@ -133,7 +133,7 @@ is($source_seedlot_after_trans3->current_count, -9, "check current count is corr
 is($source_seedlot_after_trans3->uniquename, $source_seedlot->uniquename, "check uniquename is saved");
 is($source_seedlot_after_trans3->location_code, $source_seedlot->location_code, "check location is saved");
 is($source_seedlot_after_trans3->organization_name, $source_seedlot->organization_name, "check organization is saved");
-is($source_seedlot_after_trans3->population_name, $source_seedlot->population_name, "check population is saved");
+is($source_seedlot_after_trans3->populations->[0], $source_seedlot->population_name, "check population is saved");
 is_deeply($source_seedlot_after_trans3->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
 is($source_seedlot_after_trans3->breeding_program_name, $seedlot_breeding_program_name);
 is($source_seedlot_after_trans3->breeding_program_id, $source_seedlot->breeding_program_id);
@@ -177,7 +177,7 @@ is($dest_seedlot_after_trans3->current_count, 9, "check current count is correct
 is($dest_seedlot_after_trans3->uniquename, $dest_seedlot->uniquename, "check uniquename is saved");
 is($dest_seedlot_after_trans3->location_code, $dest_seedlot->location_code, "check location is saved");
 is($dest_seedlot_after_trans3->organization_name, $dest_seedlot->organization_name, "check organization is saved");
-is($dest_seedlot_after_trans3->population_name, $dest_seedlot->population_name, "check population is saved");
+is($dest_seedlot_after_trans3->populations->[0], $dest_seedlot->population_name, "check population is saved");
 is_deeply($dest_seedlot_after_trans3->accessions, [[$test_accession_stock_id1, 'test_accession1']], "check accession is saved");
 is($dest_seedlot_after_trans3->breeding_program_name, $seedlot_breeding_program_name);
 is($dest_seedlot_after_trans3->breeding_program_id, $dest_seedlot->breeding_program_id);

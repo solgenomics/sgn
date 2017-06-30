@@ -18,8 +18,9 @@ __PACKAGE__->config(
 sub search : Path('/ajax/search/traits') Args(0) {
     my $self = shift;
     my $c    = shift;
-    my $trait_cv_name = $c->req->param('trait_cv_name');
-    
+    my $trait_cv_name = $c->req->param('trait_cv_name') || $c->config->{trait_cv_name};
+    my $limit = $c->req->param('limit');
+    my $offset = $c->req->param('offset');
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
@@ -27,6 +28,8 @@ sub search : Path('/ajax/search/traits') Args(0) {
 	({
 	    bcs_schema=>$schema,
 	    trait_cv_name => $trait_cv_name,
+        limit => $limit,
+        offset => $offset
 	 });
     my $data = $trait_search->search();
     my @result;
