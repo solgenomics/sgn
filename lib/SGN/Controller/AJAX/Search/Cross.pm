@@ -108,6 +108,43 @@ sub search_all_crosses : Path('/ajax/search/all_crosses') Args(0) {
   }
 
 
+  sub search_pedigree_male_parents :Path('/ajax/search/pedigree_male_parents') :Args(0){
+      my $self = shift;
+      my $c = shift;
+      my $pedigree_female_parent= $c->req->param("pedigree_female_parent");
+       print STDERR "Pedigree female parent =" . Dumper($pedigree_female_parent) . "\n";
+
+
+      my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+      my $male_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+      my $female_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+      my $accession_typeid = $c->model("Cvterm")->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+
+      my $dbh = $schema->storage->dbh();
+
+      my $q = "SELECT DISTINCT female_parent.stock_id, male_parent.stock_id, male_parent.uniquename FROM stock as female_parent
+      INNER JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id=stock_relationship1.subject_id)
+      AND stock_relationship1.type_id= ? INNER JOIN stock AS check_type ON (stock_relationship1.object_id=check_type.stock_id)
+      AND check_type.type_id = ?
+      INNER JOIN stock_relationship AS stock_relationship2 ON (stock_relationship1.object_id=stock_relationship2.object_id) AND stock_relationship2.type_id = ?
+      INNER JOIN stock AS male_parent ON (male_parent.stock_id=stock_relationship2.subject_id)
+      WHERE female_parent.uniquename= ? ORDER BY male_parent.uniquename ASC";
+
+
+      my $h = $dbh->prepare($q);
+      $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $pedigree_female_parent);
+
+      my @male_parents=();
+      while(my ($female_parent_id, $male_parent_id, $male_parent_name) = $h->fetchrow_array()){
+
+        push @male_parents, [$male_parent_name];
+      }
+
+      $c->stash->{rest} = {data=>\@male_parents};
+
+  }
+
+
 
 
 
