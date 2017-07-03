@@ -237,7 +237,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
          if (defined $row){
            print "ACCESSION IS NOT EMPTY........ $row\n";
             #$tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[2]." ".$found[$i]->[3],  'large',  20  ]);
-            $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $plot_text,  'large',  20  ]);
+            $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $plot_text,  'large',  20, $labels_per_row ]);
          }
          elsif ($female_parent =~ m/^\d+/ || $female_parent =~ m/^\w+/){
            if ($found[$i]->[4] =~ m/^\//) {
@@ -247,12 +247,13 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
            $pedigree_string = $found[$i]->[4];
            #$tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[1]." ".$found[$i]->[4],  'large',  20  ]);
            print "PEDIGREE STRINGS: $pedigree_string\n";
-           $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $found[$i]->[4],  'large',  20  ]);
+           #$tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $found[$i]->[4],  'large',  20  ]);
+           $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $found[$i]->[4],  'large',  20, $labels_per_row  ]);
          }
          else {
         # #####
       	  #$tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[0], $found[$i]->[1], 'large',  20  ]);
-          $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[1], $added_text, 'large',  20  ]);
+          $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[1], $added_text, 'large',  20, $labels_per_row  ]);
          }
 
       }
