@@ -243,7 +243,7 @@ sub _traverse_pedigree {
   my $male_parent_name;
   my $female_parent_id;
   my $male_parent_id;
-  if ($pedigree{'female_parent'}) {
+  if (keys %{$pedigree{'female_parent'}}) {
     my %female_parent =  %{$pedigree{'female_parent'}};
     $female_parent_id = $female_parent{'id'};
     if ($female_parent{'name'}) {
@@ -264,7 +264,7 @@ sub _traverse_pedigree {
     $node_links{$female_parent_id} = $female_parent_link;
     $joins{$female_parent_id} = $current_node_id;
   }
-  if ($pedigree{'male_parent'}) {
+  if (keys %{$pedigree{'male_parent'}}) {
     my %male_parent =  %{$pedigree{'male_parent'}};
     $male_parent_id = $male_parent{'id'};
     if ($male_parent{'name'}) {
@@ -553,26 +553,23 @@ sub _view_descendants {
 
 sub _get_pedigree_rows {
     my ($self, $pedigree_hashref, $pedigree_rows) = @_;
-    my %pedigree_hash = %{$pedigree_hashref};
-    print STDERR "Working on pedigree hashref ".Dumper(%pedigree_hash)."\n";
-    my $Name = $pedigree_hash{'name'};
-    my $Female_Parent = $pedigree_hash{'female_parent'}->{'name'};
-    my $Male_Parent = $pedigree_hash{'male_parent'}->{'name'};
-    my $Cross_Type = $pedigree_hash{'cross_type'};
-    print STDERR "Pedigree row: $Name\t$Female_Parent\t$Male_Parent\t$Cross_Type\n";
+    #print STDERR "Working on pedigree hashref ".Dumper(%pedigree_hash)."\n";
+    my $Name = $pedigree_hashref->{'name'} || '';
+    my $Female_Parent = $pedigree_hashref->{'female_parent'}->{'name'} || '';
+    my $Male_Parent = $pedigree_hashref->{'male_parent'}->{'name'} || '';
+    my $Cross_Type = $pedigree_hashref->{'cross_type'} || '';
+    #print STDERR "Pedigree row: $Name\t$Female_Parent\t$Male_Parent\t$Cross_Type\n";
     push @$pedigree_rows, "$Name\t$Female_Parent\t$Male_Parent\t$Cross_Type\n";
-    foreach my $key (sort keys %pedigree_hash) {
-        print STDERR "Key = $key, Value is ".$pedigree_hash{$key}."\n";
-        if ($pedigree_hash{'female_parent'}) { # need different way to test if undef
-            print STDERR "Female parent ".Dumper($pedigree_hash{'female_parent'})." is defined\n";
-            $self->_get_pedigree_rows($pedigree_hash{'female_parent'}, $pedigree_rows);
-        }
-        if ($pedigree_hash{'male_parent'}) {
-            print STDERR "Male parent ".Dumper($pedigree_hash{'male_parent'})." is defined\n";
-            $self->_get_pedigree_rows($pedigree_hash{'male_parent'}, $pedigree_rows);
-        }
+
+    if (keys %{ $pedigree_hashref->{'female_parent'} }) {
+        print STDERR "Keys for female parent ".Dumper($pedigree_hashref->{'female_parent'})." evaluated as true\n";
+        $self->_get_pedigree_rows($pedigree_hashref->{'female_parent'}, $pedigree_rows);
     }
-    #hash_walk($pedigree_hashref, [], \&construct_pedigree_rows);
+    if (keys %{ $pedigree_hashref->{'male_parent'} }) {
+        print STDERR "Keys for male parent ".Dumper($pedigree_hashref->{'male_parent'})." evaluated as true\n";
+        $self->_get_pedigree_rows($pedigree_hashref->{'male_parent'}, $pedigree_rows);
+    }
+
     return $pedigree_rows;
 }
 
