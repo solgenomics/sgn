@@ -131,9 +131,9 @@ has 'population_name' => (
     is => 'rw',
 );
 
-has 'type_id' => (
-    isa => 'Int',
-    is => 'rw',
+has 'populations' => (
+    isa => 'Maybe[ArrayRef[Str]]',
+    is => 'rw'
 );
 
 
@@ -155,7 +155,7 @@ sub BUILD {
         $self->type($self->schema()->resultset("Cv::Cvterm")->find({ cvterm_id=>$self->type_id() })->name());
         $self->is_obsolete($stock->is_obsolete);
         $self->organization_name($self->_retrieve_stockprop('organization'));
-        $self->_retrieve_population();
+        $self->_retrieve_populations();
     }
 
     return $self;
@@ -692,7 +692,7 @@ sub _store_population_relationship {
     });
 }
 
-sub _retrieve_population {
+sub _retrieve_populations {
     my $self = shift;
     my $schema = $self->schema;
     my $population_member_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of','stock_relationship')->cvterm_id();
@@ -701,15 +701,17 @@ sub _retrieve_population {
         type_id => $population_member_cvterm_id,
         subject_id => $self->stock_id(),
     });
-    if ($rs->count == 1) {
-        my $population = $rs->first->object;
-        $self->population_name($population->uniquename);
-    }
-    elsif ($rs->count > 1) {
-        die "More than one population saved for this stock!\n";
-    }
-    elsif ($rs->count == 0) {
+    if ($rs->count == 0) {
         print STDERR "No population saved for this stock!\n";
+    }
+    else {
+        my @population_names;
+        while (my $row = $rs->next) {
+            my $population = $row->object;
+            push @population_names, $population->uniquename();
+        }
+        $self->populations(\@population_names);
+        print STDERR "This stock is a member of the following populations: ".Dumper($self->populations())."\n";
     }
 }
 
