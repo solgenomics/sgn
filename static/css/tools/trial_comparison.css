@@ -36,116 +36,31 @@
     stroke-width: 2;
 }
 
-.tc-grid-box {
-    position:static;
-    height: auto;
-    float: left;
-    box-sizing: border-box;
-    margin-right: 1%;
-    margin-bottom: 1%;
-    border-style: solid;
-    border-color: #eee;
-    border-width: 1px;
-}
-
-.tc-grid-box:last-of-type {
-    margin-right: 0;
-}
-
 .tc-background{
     fill: white;
+    stroke: #aaa;
 }
-
-.tc-graph {
-    border-width: 1px;
-    background: white;
-    border-color: #999;
+.tc-ph-bg{
+    fill: #eee;
+    stroke: #aaa;
 }
-.tc-expanded{
-    position:absolute;
-    border-color: white;
+.tc-grid-box:hover .tc-background{
+    stroke: #49f;
 }
-
-.tc-hist-highlight {
-    background: #eee;
-}
-
-.tc-graph:hover {
-    border-width: 1px;
-    border-color: #49f;
-    border-width: 1px;
-}
-
-.tc-top-label{
-    position:static;
-    height: auto;
-    float: left;
-    margin-right: 1%;
-    margin-bottom: 1%;
-    margin-top: 1%;
-}
-.tc-top-label:first-of-type{
-    margin-left: 5%;
-}
-.tc-top-label:last-of-type{
-    margin-right: 0;
-}
-
-.tc-left-label{
-    position:static;
-    height: auto;
-    float: left;
-    margin-left: 1%;
-    margin-right: 1%;
-    margin-bottom: 1%;
-}
-
-.tc-label-text {
-    font-size: 26px;
-    text-anchor: middle;
-}
-
-.tc-scatter-point circle{
+.tc-scatter-point{
     fill: #49f;
 }
-
 .tc-fit-line{
     stroke: #f94;
-    stroke-width: 4px;
 }
-
-.tc-graph-axis{
-    fill: #3e3e3e;
-}
-
-.tc-graph-axis path,
-.tc-graph-axis line{
-  fill: none;
-  stroke: #3e3e3e;
-  stroke-width: 2;
-}
-
-.tc-graph-axis text{
-    font-size: 18px;
-    text-anchor: middle;
-}
-
 .tc-info-text{
     text-anchor: end;
-    font-size: 18px;
+    font-size: 12px;
 }
-
-.tc-tool-tip-rect{
-    fill: rgba(0,0,0,0.8);
+.tc-graph-axis{
+    font-size: 12px;
 }
 .tc-tool-tip-text{
-    fill: #fff;
-    font-size: 14px;
-}
-.tc-tool-tip-text *:visited{
-  color: #fff;
-}
-
-.tc-tool-tip-point {
-    fill: rgba(0,0,0,0.8);
+    fill: white;
+    font-size: 40pt;
 }

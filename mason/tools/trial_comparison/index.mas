@@ -10,7 +10,7 @@
 
 <& '/page/page_title.mas', title => "Compare trials" &>
 
-<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'CXGN.List', 'CXGN.Login', 'd3.d3Min.js' ] &>
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'CXGN.List', 'CXGN.Login', 'd3.d3v4Min' ] &>
 
 <div class="row">
   <center class = "col-md-offset-2 col-md-8">
@@ -39,7 +39,8 @@
 
 <div id="result_div" class="row">
   <div class="tc-main">
-    <div hidden="true" class="tc-grid col-lg-6 col-sm-12"></div>
+    <div hidden="true" class="tc-grid col-lg-6 col-sm-12">
+    </div>
     <div hidden="true" class="tc-histogram col-lg-6 col-sm-12"></div>
   </div>
 </div>
@@ -71,7 +72,7 @@ $(document).ready(function(){
         url: '/ajax/trial/common_traits?'+params,
         success: function(response) { 
           if (response.error) { 
-            $('#trait_select').val('error'); 
+            $('#trait_select').val('ERROR'); 
           }
           else {
             var option_html = '<option selected="selected" value=""> </option>';
@@ -119,12 +120,11 @@ function toggleSubmitButton(state){
 }
 
 function fetchAndBuildGraphs() { 
-  console.log("hello")
   var list_id = $('#trials_list_select').val();
   $(".tc-grid").show();
   $(".tc-histogram").show();
   $.ajax( { 
-   url: '/ajax/trial/compare_list_data',
+   url: '/ajax/trial/compare_list_data_test',
    data: { 'cvterm_id' : $('#trait_select').val(), 'list_id': list_id },
    success: function(response) { 
       if (response.error) { 
@@ -133,15 +133,755 @@ function fetchAndBuildGraphs() {
       else { 
           d3.select('.tc-grid').html("");
           d3.select('.tc-histogram').html("");
-          createHistogram(response);
-          createGraphs(response);
+          createVisualizations(response);
+          //createHistogram(response);
+          //createGraphs(response);
       }
     }
   });
 }
 
+function setupVisualizations(){
+  d3.select('.tc-histogram')
+    .append('svg').attr({
+      width:"100%",
+      "margin": "auto",
+      "viewBox": "0 0 "+view_size+" "+view_size
+    }).classed(".tc-histogram-svg",true);
+}
+
+function  createVisualizations(response){
+  //We need to know the variable name to parse the data
+  var variable_name = $('#trait_select option:selected').text();
+  if (response.cvterm_id=="TEST_TEST"){
+    variable_name = "Variable";
+  }
+
+  //parse the csv and filter out unwanted data.
+  var all_data = d3.csvParse(response.csv, function(d){
+    return {
+      study: d.studyDbId,
+      studyName: d.studyName,
+      accession: d.germplasmDbId,
+      accessionName:d.germplasmName,
+      variableName:variable_name,
+      value: (parseFloat(d[variable_name])===NaN ? null : parseFloat(d[variable_name]))
+    }
+  }).filter(function(d){return d.value!==null});
+
+  //nest by study
+  var studies = d3.nest().key(function(d){
+    return d.study
+  }).sortKeys().entries(all_data);
+
+  //pair studies for scatter grid
+  var paired_studies = d3.cross(
+    studies.slice(0,studies.length-1),
+    studies.slice(1,studies.length),
+    function(a,b){
+      return a.key<b.key ? {a:a,b:b} : null;
+  });
+  updateScatter(studies,paired_studies);
+}
+
+function updateScatter(studies,paired_studies){
+  var ttime = 200;
+  var scatter_size = 400;
+  var axis_offset = 40;
+  var gutter_ratio = 0.01;
+  //update grid dimensions
+  var columns = studies.length-1
+  var size = scatter_size*columns/(1-gutter_ratio*(columns+1));
+  var gutter_size = gutter_ratio*size;
+
+  var canv = d3.select(".tc-grid")
+    .selectAll(".tc-grid-svg")
+    .data([paired_studies]);
+  canv = canv.enter().append('svg')
+    .classed("tc-grid-svg",true)
+    //.attr("shape-rendering","geometricPrecision")
+    .attr("viewBox","0 0 "+size+" "+size)
+    .merge(canv);
+  canv.transition(ttime)
+    .attr("viewBox","0 0 "+size+" "+size);
+  var grid_gs = canv.selectAll(".tc-grid-box")
+    .data(function(d){return d;});
+  grid_gs.exit().transition(ttime).remove();
+  grid_gs = grid_gs.enter()
+    .append("g")
+    .classed("tc-grid-box",true)
+    .attr("transform",function(d,i){
+      var row = Math.floor(i/columns);
+      var col = i%columns;
+      var y = gutter_size+row*(scatter_size+gutter_size);
+      var x = gutter_size+col*(scatter_size+gutter_size);
+      return "translate(" + x + "," + y + ")";
+    })
+    .attr("orig-translate",function(d){return d3.select(this).attr("transform");});
+  scatters = grid_gs.filter(function(d){return d!=undefined;});
+  grid_placeholders = grid_gs.filter(function(d){return d==undefined;});
+  grid_placeholders.append("rect")
+    .classed("tc-ph-bg",true)
+    .attr("x",0).attr("y",0)
+    .attr("width",scatter_size)
+    .attr("height",scatter_size);
+  scatters.append("rect")
+    .classed("tc-background",true)
+    .classed("tc-var-stroke",true)
+    .attr("stroke-width",1/scatter_size*size)
+    .attr("x",0).attr("y",0)
+    .attr("width",scatter_size)
+    .attr("height",scatter_size);
+  scatters.on("click",function(d,i){
+    this_g = d3.select(this);
+    if (!this_g.classed("tc-changing")){
+      this_g.classed("tc-changing",true);
+      if (this_g.classed("tc-expanded")){
+        this_g
+          .classed("tc-expanded",false)
+          .transition(ttime)
+          .attr("transform","scale(1,1)"+this_g.attr("orig-translate"))
+        this_g.selectAll(".tc-var-stroke")
+          .transition(ttime)
+          .attr("stroke-width",function(d){return +d3.select(this).attr("orig-stroke");});
+          
+      } else {
+        var scale = (size-gutter_size*2)/(scatter_size)
+        this_g
+          .raise()
+          .classed("tc-expanded",true)
+          .transition(ttime)
+          .attr("transform","translate("+gutter_size+","+gutter_size+")scale("+scale+","+scale+")")
+        this_g.selectAll(".tc-var-stroke")
+          .attr("orig-stroke",function(d){return parseFloat(d3.select(this).attr("stroke-width"));})
+          .transition(ttime)
+          .attr("stroke-width",function(d){return parseFloat(d3.select(this).attr("stroke-width"))/size*scatter_size;});
+      }
+      setTimeout(function(){
+          this_g.classed("tc-changing",false);
+      },ttime);
+    }
+  });
+  var tooltip = tooltipSetup(canv);
+  scatters.each(function(d,i){
+    var study_pair = d;
+    var current_graph = d3.select(this);
+
+    var Xscale = d3.scaleLinear().range([0, scatter_size-axis_offset*2]);
+    var Yscale = d3.scaleLinear().range([scatter_size-axis_offset*2, 0]);
+    var Xaxis = d3.axisBottom(Xscale).ticks(8);
+    var Yaxis = d3.axisLeft(Yscale).ticks(8);
+    var xBounds = d3.extent(study_pair.a.values.concat(study_pair.b.values), function(d) { return d.value; });
+    var yBounds = xBounds;
+    Xscale.domain(xBounds).nice();
+    Yscale.domain(yBounds).nice();
+
+    //axes!
+    current_graph.append("g")
+      .classed("tc-graph-axis",true)
+      .attr("transform", "translate("+axis_offset+"," + (scatter_size-axis_offset) + ")")
+      .call(Xaxis)
+      .append("text")
+      .attr("x", scatter_size/2-axis_offset)
+      .attr("y", 50)
+      .text(study_pair.a.values[0].studyName+": "+study_pair.a.values[0].variableName);
+    current_graph.append("g")
+      .classed("tc-graph-axis",true)
+      .attr("transform", "translate("+axis_offset+","+axis_offset+")")
+      .call(Yaxis)
+      .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -scatter_size/2+axis_offset)
+      .attr("y", -40)
+      .text(study_pair.b.values[0].studyName+": "+study_pair.a.values[0].variableName);
+
+    //parse/filter data!
+    var studyids = {"a":study_pair.a.key,"b":study_pair.b.key}
+    var accessions = d3.nest().key(function(d) {return d.accession;})
+      .entries(study_pair.a.values.concat(study_pair.b.values))
+      .filter(function(d) {
+        var found_a = false;
+        var found_b = false;
+        for (var j = 0; j < d.values.length; j++) {
+            found_a = (found_a || ((d.values[j].value !== null) && (d.values[j].study == studyids["a"])));
+            found_b = (found_b || ((d.values[j].value !== null) && (d.values[j].study == studyids["b"])));
+        }
+        return (found_a && found_b);
+      }).map(function(d) {
+        var name = d.values[0].accessionName
+        var x = null;
+        var y = null;
+        for (var j in d.values){
+          if (d.values[j].value !== null){
+            if (d.values[j].study == studyids["a"]){
+              x = d.values[j].value;
+            } else {
+              y = d.values[j].value;
+            }
+          }
+        }
+        return {
+         key:d.key,
+         name:name,
+         x:x,
+         y:y,
+         orig:d
+       }
+      });  
+
+    getx = (d) => Xscale(d.x)+axis_offset;
+    gety = (d) => Yscale(d.y)+axis_offset;
+    //create plot points using data        
+    var plotpoints = current_graph.selectAll(".tc-scatter-point")
+      .data(accessions)
+      .enter().append("g").classed("tc-scatter-point",true)
+    plotpoints.append("circle")
+      .attr("r", 3)
+      .attr("cx", getx)
+      .attr("cy", gety);
+    plotpoints.append("circle")
+      .attr("r", 15)
+      .attr("cx", getx)
+      .attr("cy", gety)
+      .style("opacity","0");
+
+    plotpoints.datum(function(d){
+      d.scatter_point = this;
+      return d;
+    })
+
+    //create the tooltip voronoi diagram
+    var xr = Xscale.range();
+    var yr = Yscale.range();
+    var voronoi =  d3.voronoi()
+      .x(getx).y(gety)(accessions);
+    current_graph.on("mousemove",function(d,i){
+      if (d3.select(this).classed("tc-expanded")){
+        var mpos = d3.mouse(this);
+        var near_point = voronoi.find(mpos[0],mpos[1],30);
+        if (near_point && (tooltip.hidden || tooltip.current!=near_point)){
+          tooltip.current = near_point;
+          var point_d = near_point.data;
+          tooltip.setTip(true,"<a target='_blank' href='/stock/"+point_d.key+"/view'>"+point_d.name+"</a>",point_d.scatter_point);
+        } else if(!near_point && !tooltip.hidden){
+          tooltip.setTip(false);
+        }
+      } else {
+        //tooltip.current = this;
+        //tooltip.setTip(true,"Oh!",this);
+      }
+    });
+  //     plotpoints.on("mouseover",function(d){
+  //   if (d3.select(this.parentNode).classed("tc-expanded")){
+  //     tooltip.setTip(true,"<a target='_blank' href='/stock/"+d.key+"/view'>"+d.name+"</a>",this);
+  //   }
+  // });
+
+
+    //add line of best fit and rsquared
+    
+    var best_fit = lineOfBestFit(accessions);
+
+    var x1 = Xscale.domain()[0];
+    var y1 = best_fit.slope*x1+best_fit.yIntercept;
+    if (y1<Yscale.domain()[0]){
+      y1 = Yscale.domain()[0];
+      x1 = (y1-best_fit.yIntercept)/best_fit.slope;
+    }
+
+    var x2 = Xscale.domain()[1];
+    var y2 = best_fit.slope*x2+best_fit.yIntercept;
+    if (y2>Yscale.domain()[1]){
+      y2 = Yscale.domain()[1];
+      x2 = (y2-best_fit.yIntercept)/best_fit.slope;
+    }
+
+    current_graph.insert('line',".tc-scatter-point")
+      .classed('tc-fit-line',true)
+      .classed("tc-var-stroke",true)
+      .attr("stroke-width",1/scatter_size*size)
+      .attr("x1",Xscale(x1)+axis_offset+1)
+      .attr("y1",Yscale(y1)+axis_offset+1)
+      .attr("x2",Xscale(x2)+axis_offset-1)
+      .attr("y2",Yscale(y2)+axis_offset-1);
+    current_graph.append('text')
+      .classed("tc-info-text",true)
+      .attr('x',scatter_size- axis_offset )
+      .attr('y',30)
+      .text("r^2 = "+best_fit.rsquared.toFixed(3));
+    current_graph.append('text')
+      .classed("tc-info-text",true)
+      .attr('x',scatter_size- axis_offset )
+      .attr('y',50)
+      .text("y = "+best_fit.slope.toFixed(3)+"x + "+best_fit.yIntercept.toFixed(3));
+  });
+}
+
+function tooltipSetup(canv){
+  var ttime = 100;
+  var tooltip = canv.select(".tc-tool-tip");
+  if (!tooltip.empty()){
+    return tooltip.datum();
+  } else {
+    tooltip = canv.insert('g')
+      .classed("tc-tool-tip",true)
+      .datum({
+        hoverlock: false,
+        hidden: true,
+        current: null,
+        setTip: function (visible,text,target,offsetX,offsetY){
+          if (!visible){
+            tooltip.datum().hoverlock = false;
+            tooltip.datum().hidden = true;
+            setTimeout(function(){
+              if (!tooltip.datum().hoverlock){
+                tooltip.attr("transform", "translate("+0+"," +0+")")
+                  .transition(ttime).style("opacity",0);
+              } 
+            },100);
+          } else {
+            bbox = getGlobalBBox(target);
+            tooltip.datum().hoverlock = true;
+            var width = tooltip.select("text")
+              .html(text).node().getComputedTextLength();
+            tooltip.select("text").selectAll("*").attr("fill","#fff");
+            tooltip.select("rect").attr("width",width+48);
+            tooltip.raise();
+            if (!tooltip.datum().hidden){
+              tooltip.style("opacity",1)
+                .transition(ttime/2)
+                .ease(d3.easeCubicInOut)
+                .attr("transform", "translate("+(bbox.x+bbox.width/2)+"," +(bbox.y+bbox.height/2)+")");
+            } else {
+              tooltip.attr("transform", "translate("+(bbox.x+bbox.width/2)+"," +(bbox.y+bbox.height/2)+")")
+                .transition(ttime)
+                .style("opacity",1);
+            }
+            tooltip.datum().hidden = false;
+          }
+        }
+      });;
+    tooltip.append('rect').classed("tc-tool-tip-rect",true)
+      .attr("x", -24-12)
+      .attr("y", -42-70)
+      .attr("width", 24*2)
+      .attr("height", 70);
+    tooltip.append('text').classed("tc-tool-tip-text",true)
+      .attr("x", 0-12)
+      .attr("y", -42-16.5)
+      .text("");
+    var trianglePoints = "-24 -42.5, 0 0, 24 -42.5"
+    tooltip.append('polyline')
+      .attr('points', trianglePoints)
+      .classed("tc-tool-tip-point",true);
+    tooltip.on("mouseover",function(d){
+      d.hoverlock = true;
+    });
+    tooltip.on("mouseout",function(d){
+      d.hoverlock = false;
+      d.setTip(false);
+    });
+    tooltip.on("click",function(d){d3.event.stopPropagation();});
+    tooltip.datum().setTip(false);
+    return tooltip.datum();
+  }
+}
+
+function getGlobalBBox(node){
+  var p = node
+  while (p.nodeName!="svg" && p.nodeName!="SVG"){
+    p = p.parentNode
+  }
+  var pm = p.getCTM();
+  var ctm = node.getCTM();
+  var m = pm.inverse().multiply(ctm);
+  var bbox = node.getBBox();
+  var v1 = [bbox.x,bbox.y,1];
+  var v2 = [bbox.x+bbox.width,bbox.y+bbox.height,1];
+  var tv1 = [
+    (v1[0]*m.a+v1[1]*m.c+v1[2]*m.e),
+    (v1[0]*m.b+v1[1]*m.d+v1[2]*m.f),
+    (1)
+  ];
+  var tv2 = [
+    (v2[0]*m.a+v2[1]*m.c+v2[2]*m.e),
+    (v2[0]*m.b+v2[1]*m.d+v2[2]*m.f),
+    (1)
+  ];
+  gbbox = {
+    x:tv1[0],
+    y:tv1[1],
+    width:tv2[0]-tv1[0],
+    height:tv2[1]-tv1[1],
+  }
+  return gbbox;
+}
+
+////
 var view_size = 650;
 var axis_offset = 70;
+
+function createGraphs(response){
+    // var variable_name = $('#trait_select option:selected').text();
+    // if (response.cvterm_id=="TEST_TEST"){
+    //   variable_name = "Variable";
+    // }
+    // //parse the data
+    // var data = d3.csv.parse(response.csv,
+    //     function(d) {
+    //         var dp = {
+    //             study: d.studyDbId,
+    //             studyName: d.studyName,
+    //             accession: d.germplasmDbId,
+    //             accessionName:d.germplasmName,
+    //             value: ((d[variable_name]==="") ? null : +d[variable_name])
+    //         };
+    //         return dp;
+    //     }, 
+    //     function(error, rows) {
+    //         console.log(rows);
+    //         console.log(error);
+    // });
+
+    // //nest it by study
+    // var studies = d3.nest().key(function(d) {return d.study;}).entries(data);
+    // var num_studies = studies.length;
+
+    // //generate all the grid SVGs and pairs of studies
+    // var canv = d3.select('.tc-grid');
+    // var grid_size = 96/(num_studies-1) - (1+1/(num_studies));
+    // var pairwise_data = [];
+    // for (var i = 0; i<num_studies-1; i++){
+    //     var row = canv.append("div").classed("tc-grid-row", true);
+    //     for (var j = 1; j<num_studies; j++){
+    //         if (i<j){
+    //             pairwise_data.push({"a":studies[j],"b":studies[i]});
+    //             row.append("svg")
+    //                 .classed("tc-grid-box", true)
+    //                 .classed("tc-graph", true)
+    //                 .attr("viewBox","0 0 "+view_size+" "+view_size)
+    //                 .style("width",grid_size+"%");
+    //         } else {
+    //             row.append("svg")
+    //                 .classed("tc-grid-box", true)
+    //                 .attr("viewBox","0 0 "+view_size+" "+view_size)
+    //                 .style("width",grid_size+"%");
+    //         }
+    //     }
+    // }
+    // canv.append("div").classed("tc-grid-row", true);
+
+    //set up layout
+    // var graphSVGs = d3.selectAll(".tc-graph").data(pairwise_data);
+    // var graphs = graphSVGs.append("g");
+    // graphs.append("rect")
+    //     .classed("tc-background",true)
+    //     .attr("x","0")
+    //     .attr("y","0")
+    //     .attr("width",view_size)
+    //     .attr("height",view_size);
+    // if (num_studies>2){
+    //     //set up transition on click
+    //     var legend_state = [];
+    //     graphs.on('click', function(d,i){
+    //         var graph = d3.select(this.parentNode);
+    //         var duration = 250;
+    //         if (graph.classed("tc-expanded") && !graph.attr("inTrans")){
+    //             var placeholder = canv.selectAll(".tc-grid-row").select(".placeholder");
+    //             var graphPos = placeholder.node().getBoundingClientRect();
+    //             var canvPos = canv.node().getBoundingClientRect();
+    //             var graphWidth = graphPos.right-graphPos.left;
+    //             var canvWidth = (canvPos.right-canvPos.left);
+    //             graph.attr("inTrans",true)
+    //                  .style("width",canvWidth*0.99+"px");
+    //             graph.transition()
+    //                  .style("top",(graphPos.top-canvPos.top)+"px")
+    //                  .style("left",(graphPos.left-canvPos.left)+"px")
+    //                  .style("width",graphWidth+"px")
+    //                  .duration(duration);
+    //             setTimeout(function(){ 
+    //                 graph.attr("inTrans",null);
+    //                 placeholder.remove();
+    //                 graph.classed("tc-expanded",false)
+    //                      .style("width",grid_size+"%"); }, duration+30);
+
+    //             d3.selectAll(".tc-legend-entry")
+    //               .classed("tc-legend-deselected",true)
+    //               .filter(function(legend_d,legend_i){
+    //                 return legend_state[legend_i];
+    //               })
+    //               .classed("tc-legend-deselected",false);
+
+    //             d3.selectAll(".tc-hist-group")
+    //               .attr("hidden",true)
+    //               .filter(function(legend_d,legend_i){
+    //                 return legend_state[legend_i];
+    //               })
+    //               .attr("hidden",null);
+
+    //         } else if (!graph.attr("inTrans")) {
+    //             var graphPos = graph.node().getBoundingClientRect();
+    //             var canvPos = canv.node().getBoundingClientRect();
+    //             var graphWidth = graphPos.right-graphPos.left;
+    //             var canvWidth = (canvPos.right-canvPos.left);
+    //             graph.style("top",(graphPos.top-canvPos.top)+"px")
+    //                  .style("left",(graphPos.left-canvPos.left)+"px")
+    //                  .style("width",graphWidth+"px");
+    //             graph.classed("tc-expanded",true)
+    //                  .transition()
+    //                  .style("width",canvWidth*0.99+"px")
+    //                  .style("top",canvWidth*0.005+"px")
+    //                  .style("left",canvWidth*0.005+"px")
+    //                  .duration(duration);
+    //             var pn = canv.selectAll(".tc-grid-row").select(".tc-expanded").select(function(d){return this.parentNode;})
+    //                 .insert('svg',".tc-expanded + *")
+    //                 .classed("tc-grid-box", true)
+    //                 .classed("placeholder", true)
+    //                 .attr("viewBox","0 0 "+view_size+" "+view_size)
+    //                 .style("width",grid_size+"%");
+
+    //             legend_state = [];
+    //             d3.selectAll(".tc-legend-entry")
+    //               .each(function(legend_d){
+    //                 legend_state.push(!d3.select(this).classed("tc-legend-deselected"));
+    //               })
+    //               .classed("tc-legend-deselected",true)
+    //               .filter(function(legend_d){
+    //                 return (legend_d.values[0].study == d["a"].key || legend_d.values[0].study == d["b"].key)
+    //               })
+    //               .classed("tc-legend-deselected",false);
+
+    //             d3.selectAll(".tc-hist-group")
+    //               .attr("hidden",true)
+    //               .filter(function(legend_d){
+    //                 return (legend_d.values[0].study == d["a"].key || legend_d.values[0].study == d["b"].key)
+    //               })
+    //               .attr("hidden",null);
+
+    //             setTimeout(function(){ 
+    //                 graph.style("width","99%")
+    //                      .style("top","0.5%")
+    //                      .style("left","0.5%"); }, duration+30);
+    //         }
+    //     });
+    // } else{
+    //   graphs
+    //     .each(function(d){
+    //       d3.select(this.parentNode).classed("tc-expanded",true)
+    //         .style({
+    //           "width":"100%",
+    //           "top":0,
+    //           "left":0
+    //         });
+    //   });
+    // }
+
+    //draw graphs
+    graphs.each(function(study_pair){
+        var current_graph = d3.select(this);
+        var Xscale = d3.scale.linear().range([0, view_size-axis_offset*2]);
+        var Yscale = d3.scale.linear().range([view_size-axis_offset*2, 0]);
+        var Xaxis = d3.svg.axis().scale(Xscale).orient("bottom").ticks(10);
+        var Yaxis = d3.svg.axis().scale(Yscale).orient("left").ticks(10);
+        var xBounds = d3.extent(study_pair.a.values.concat(study_pair.b.values), function(d) { return d.value; });
+        var yBounds = xBounds;
+        Xscale.domain(xBounds).nice();
+        Yscale.domain(yBounds).nice();
+
+        //axes!
+        current_graph.append("g")
+          .classed("tc-graph-axis",true)
+          .attr("transform", "translate("+axis_offset+"," + (view_size-axis_offset) + ")")
+          .call(Xaxis)
+          .append("text")
+          .attr("x", view_size/2-axis_offset)
+          .attr("y", 50)
+          .text(study_pair.a.values[0].studyName+": "+variable_name);
+        current_graph.append("g")
+          .classed("tc-graph-axis",true)
+          .attr("transform", "translate("+axis_offset+","+axis_offset+")")
+          .call(Yaxis)
+          .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("x", -view_size/2+axis_offset)
+          .attr("y", -40)
+          .text(study_pair.b.values[0].studyName+": "+variable_name);
+
+        //parse/filter data!
+        var studyids = {"a":study_pair.a.key,"b":study_pair.b.key}
+        var accessions = d3.nest().key(function(d) {return d.accession;})
+                           .entries(study_pair.a.values.concat(study_pair.b.values))
+                           .filter(function(d) {
+                              var found_a = false;
+                              var found_b = false;
+                              for (var j = 0; j < d.values.length; j++) {
+                                  found_a = (found_a || ((d.values[j].value !== null) && (d.values[j].study == studyids["a"])));
+                                  found_b = (found_b || ((d.values[j].value !== null) && (d.values[j].study == studyids["b"])));
+                              }
+                              return (found_a && found_b);
+                           }).map(function(d) {
+                              var name = d.values[0].accessionName
+                              var x = "well i never";
+                              var y = "well i never";
+                              for (var j in d.values){
+                                if (d.values[j].value !== null){
+                                  if (d.values[j].study == studyids["a"]){
+                                    x = d.values[j].value;
+                                  } else {
+                                    y = d.values[j].value;
+                                  }
+                                }
+                              }
+                              return {
+                               key:d.key,
+                               name:name,
+                               x:x,
+                               y:y,
+                               orig:d
+                             }
+                           });  
+        console.log(accessions);
+        //create plot points using data        
+        var plotpoints = current_graph.selectAll(".tc-scatter-point")
+          .data(accessions)
+          .enter().append("g").classed("tc-scatter-point",true)
+        plotpoints.append("circle")
+          .attr("r", 4)
+          .attr("cx", function(d) { return Xscale(d.x)+axis_offset; })
+          .attr("cy", function(d) { return Yscale(d.y)+axis_offset; });
+
+        //add line of best fit and rsquared
+        
+        var best_fit = lineOfBestFit(accessions);
+        console.log(best_fit);
+
+        var x1 = Xscale.domain()[0];
+        var y1 = best_fit.slope*x1+best_fit.yIntercept;
+        if (y1<Yscale.domain()[0]){
+          y1 = Yscale.domain()[0];
+          x1 = (y1-best_fit.yIntercept)/best_fit.slope;
+        }
+
+        var x2 = Xscale.domain()[1];
+        var y2 = best_fit.slope*x2+best_fit.yIntercept;
+        if (y2>Yscale.domain()[1]){
+          y2 = Yscale.domain()[1];
+          x2 = (y2-best_fit.yIntercept)/best_fit.slope;
+        }
+
+        current_graph.insert('line',".tc-scatter-point")
+          .classed('tc-fit-line',true)
+          .attr({
+            x1: Xscale(x1)+axis_offset+1,
+            y1: Yscale(y1)+axis_offset+1,
+            x2: Xscale(x2)+axis_offset-1,
+            y2: Yscale(y2)+axis_offset-1
+          });
+        current_graph.append('text')
+          .classed("tc-info-text",true)
+          .attr('x',view_size- axis_offset )
+          .attr('y',30)
+          .text("r^2 = "+best_fit.rsquared.toFixed(3));
+        current_graph.append('text')
+          .classed("tc-info-text",true)
+          .attr('x',view_size- axis_offset )
+          .attr('y',50)
+          .text("y = "+best_fit.slope.toFixed(3)+"x + "+best_fit.yIntercept.toFixed(3));
+
+        //tooltip
+        var tooltip = current_graph.append('g')
+          .classed("tc-tool-tip",true)
+        tooltip.append('rect').classed("tc-tool-tip-rect",true)
+          .attr({
+            x:-15,
+            y:-38,
+            width: 100,
+            height: 30
+          });
+        tooltip.append('text').classed("tc-tool-tip-text",true)
+          .attr({
+            x:10-15,
+            y:20-38
+          })
+          .text("");
+        var trianglePoints = "-5 -8.5, 0 0, 5 -8.5"
+        tooltip.append('polyline')
+          .attr('points', trianglePoints)
+          .classed("tc-tool-tip-point",true);
+
+        tooltip.setTip = function (visible,text,x,y){
+          if (!visible){
+            this.hoverlock = false;
+            var this_tooltip = this;
+            setTimeout(function(){
+              if (!this_tooltip.hoverlock){
+                this_tooltip.attr("transform", "translate("+0+"," +0+")")
+                  .transition().style("opacity",0);
+              } 
+            },100);
+          } else{
+            this.hoverlock = true;
+            var width = this.attr("transform", "translate("+x+"," +y+")")
+              .select("text")
+              .html(text).node().getComputedTextLength();
+            this.select("text").selectAll("*").attr("fill","#fff");
+            this.select("rect").attr("width",width+20);
+            this.transition().style("opacity",1);
+          }
+        }
+        tooltip.hoverlock = false;
+        tooltip.on("mouseover",function(d){
+          tooltip.hoverlock = true;
+        });
+        tooltip.on("mouseout",function(d){
+          tooltip.hoverlock = false;
+          tooltip.setTip(false);
+        });
+        tooltip.on("click",function(d){d3.event.stopPropagation();});
+        tooltip.setTip(false);
+
+        plotpoints.on("mouseover",function(d){
+          if (d3.select(this.parentNode.parentNode).classed("tc-expanded")){
+            tooltip.setTip(true,"<a target='_blank' href='/stock/"+d.key+"/view'>"+d.name+"</a>",Xscale(d.x)+axis_offset,Yscale(d.y)+axis_offset);
+          }
+        });
+        plotpoints.on("mouseout",function(d){
+          tooltip.setTip(false)
+        });
+    });
+
+    //draw graph-grid label axes!
+    var label_width = grid_size;
+    var label_height = 3;
+    var tops = d3.select('.tc-grid').insert('div',":first-child")
+                 .classed("tc-grid-row",true)
+                 .classed("label-row",true)
+                 .selectAll(".tc-top-label")
+                 .data(studies.slice(1,studies.length)).enter()
+                 .append('svg').classed("tc-top-label",true)
+                 .attr("viewBox","0 0 "+label_width*10+" "+label_height*10)
+                 .style("width",grid_size+"%")
+                 .append('g')
+                 .append("text")
+                 .classed("tc-label-text",true)
+                 .attr("x", label_width*10/2)
+                 .attr("y", label_height*10/2+6)
+                 .text(function(d){return d.values[0].studyName;});
+    var lefts = d3.select('.tc-grid').selectAll(".tc-grid-row:not(.label-row)")
+                 .insert('svg',":first-child")
+                 .data(studies.slice(0,studies.length-1))
+                 .classed("tc-left-label",true)
+                 .attr("viewBox","0 0 "+label_height*10+" "+label_width*10)
+                 .style("width","3%")//.style("background","lightblue")
+                 .append('g')
+                 .attr("transform", "rotate(-90)")
+                 .append("text")
+                 .classed("tc-label-text",true)
+                 .attr("x", -label_width*10/2)
+                 .attr("y", label_height*10/2+6)
+                 .text(function(d){return d.values[0].studyName;});
+
+}
 
 function createHistogram(response){
     var variable_name = $('#trait_select option:selected').text();
@@ -324,372 +1064,7 @@ function createHistogram(response){
       .call(Yaxis);
 }
 
-function createGraphs(response){
-    var variable_name = $('#trait_select option:selected').text();
-    if (response.cvterm_id=="TEST_TEST"){
-      variable_name = "Variable";
-    }
-    //parse the data
-    var data = d3.csv.parse(response.csv,
-        function(d) {
-            var dp = {
-                study: d.studyDbId,
-                studyName: d.studyName,
-                accession: d.germplasmDbId,
-                accessionName:d.germplasmName,
-                value: ((d[variable_name]==="") ? null : +d[variable_name])
-            };
-            return dp;
-        }, 
-        function(error, rows) {
-            console.log(rows);
-            console.log(error);
-    });
 
-    //nest it by study
-    var studies = d3.nest().key(function(d) {return d.study;}).entries(data);
-    var num_studies = studies.length;
-
-    //generate all the grid SVGs and pairs of studies
-    var canv = d3.select('.tc-grid');
-    var grid_size = 96/(num_studies-1) - (1+1/(num_studies));
-    var pairwise_data = [];
-    for (var i = 0; i<num_studies-1; i++){
-        var row = canv.append("div").classed("tc-grid-row", true);
-        for (var j = 1; j<num_studies; j++){
-            if (i<j){
-                pairwise_data.push({"a":studies[j],"b":studies[i]});
-                row.append("svg")
-                    .classed("tc-grid-box", true)
-                    .classed("tc-graph", true)
-                    .attr("viewBox","0 0 "+view_size+" "+view_size)
-                    .style("width",grid_size+"%");
-            } else {
-                row.append("svg")
-                    .classed("tc-grid-box", true)
-                    .attr("viewBox","0 0 "+view_size+" "+view_size)
-                    .style("width",grid_size+"%");
-            }
-        }
-    }
-    canv.append("div").classed("tc-grid-row", true);
-
-    //set up layout
-    var graphSVGs = d3.selectAll(".tc-graph").data(pairwise_data);
-    var graphs = graphSVGs.append("g");
-    graphs.append("rect")
-        .classed("tc-background",true)
-        .attr("x","0")
-        .attr("y","0")
-        .attr("width",view_size)
-        .attr("height",view_size);
-    if (num_studies>2){
-        //set up transition on click
-        var legend_state = [];
-        graphs.on('click', function(d,i){
-            var graph = d3.select(this.parentNode);
-            var duration = 250;
-            if (graph.classed("tc-expanded") && !graph.attr("inTrans")){
-                var placeholder = canv.selectAll(".tc-grid-row").select(".placeholder");
-                var graphPos = placeholder.node().getBoundingClientRect();
-                var canvPos = canv.node().getBoundingClientRect();
-                var graphWidth = graphPos.right-graphPos.left;
-                var canvWidth = (canvPos.right-canvPos.left);
-                graph.attr("inTrans",true)
-                     .style("width",canvWidth*0.99+"px");
-                graph.transition()
-                     .style("top",(graphPos.top-canvPos.top)+"px")
-                     .style("left",(graphPos.left-canvPos.left)+"px")
-                     .style("width",graphWidth+"px")
-                     .duration(duration);
-                setTimeout(function(){ 
-                    graph.attr("inTrans",null);
-                    placeholder.remove();
-                    graph.classed("tc-expanded",false)
-                         .style("width",grid_size+"%"); }, duration+30);
-
-                d3.selectAll(".tc-legend-entry")
-                  .classed("tc-legend-deselected",true)
-                  .filter(function(legend_d,legend_i){
-                    return legend_state[legend_i];
-                  })
-                  .classed("tc-legend-deselected",false);
-
-                d3.selectAll(".tc-hist-group")
-                  .attr("hidden",true)
-                  .filter(function(legend_d,legend_i){
-                    return legend_state[legend_i];
-                  })
-                  .attr("hidden",null);
-
-            } else if (!graph.attr("inTrans")) {
-                var graphPos = graph.node().getBoundingClientRect();
-                var canvPos = canv.node().getBoundingClientRect();
-                var graphWidth = graphPos.right-graphPos.left;
-                var canvWidth = (canvPos.right-canvPos.left);
-                graph.style("top",(graphPos.top-canvPos.top)+"px")
-                     .style("left",(graphPos.left-canvPos.left)+"px")
-                     .style("width",graphWidth+"px");
-                graph.classed("tc-expanded",true)
-                     .transition()
-                     .style("width",canvWidth*0.99+"px")
-                     .style("top",canvWidth*0.005+"px")
-                     .style("left",canvWidth*0.005+"px")
-                     .duration(duration);
-                var pn = canv.selectAll(".tc-grid-row").select(".tc-expanded").select(function(d){return this.parentNode;})
-                    .insert('svg',".tc-expanded + *")
-                    .classed("tc-grid-box", true)
-                    .classed("placeholder", true)
-                    .attr("viewBox","0 0 "+view_size+" "+view_size)
-                    .style("width",grid_size+"%");
-
-                legend_state = [];
-                d3.selectAll(".tc-legend-entry")
-                  .each(function(legend_d){
-                    legend_state.push(!d3.select(this).classed("tc-legend-deselected"));
-                  })
-                  .classed("tc-legend-deselected",true)
-                  .filter(function(legend_d){
-                    return (legend_d.values[0].study == d["a"].key || legend_d.values[0].study == d["b"].key)
-                  })
-                  .classed("tc-legend-deselected",false);
-
-                d3.selectAll(".tc-hist-group")
-                  .attr("hidden",true)
-                  .filter(function(legend_d){
-                    return (legend_d.values[0].study == d["a"].key || legend_d.values[0].study == d["b"].key)
-                  })
-                  .attr("hidden",null);
-
-                setTimeout(function(){ 
-                    graph.style("width","99%")
-                         .style("top","0.5%")
-                         .style("left","0.5%"); }, duration+30);
-            }
-        });
-    } else{
-      graphs
-        .each(function(d){
-          d3.select(this.parentNode).classed("tc-expanded",true)
-            .style({
-              "width":"100%",
-              "top":0,
-              "left":0
-            });
-      });
-    }
-
-    //draw graphs
-    graphs.each(function(study_pair){
-        var current_graph = d3.select(this);
-        var Xscale = d3.scale.linear().range([0, view_size-axis_offset*2]);
-        var Yscale = d3.scale.linear().range([view_size-axis_offset*2, 0]);
-        var Xaxis = d3.svg.axis().scale(Xscale).orient("bottom").ticks(10);
-        var Yaxis = d3.svg.axis().scale(Yscale).orient("left").ticks(10);
-        var xBounds = d3.extent(study_pair.a.values.concat(study_pair.b.values), function(d) { return d.value; });
-        var yBounds = xBounds;
-        Xscale.domain(xBounds).nice();
-        Yscale.domain(yBounds).nice();
-
-        //axes!
-        current_graph.append("g")
-          .classed("tc-graph-axis",true)
-          .attr("transform", "translate("+axis_offset+"," + (view_size-axis_offset) + ")")
-          .call(Xaxis)
-          .append("text")
-          .attr("x", view_size/2-axis_offset)
-          .attr("y", 50)
-          .text(study_pair.a.values[0].studyName+": "+variable_name);
-        current_graph.append("g")
-          .classed("tc-graph-axis",true)
-          .attr("transform", "translate("+axis_offset+","+axis_offset+")")
-          .call(Yaxis)
-          .append("text")
-          .attr("transform", "rotate(-90)")
-          .attr("x", -view_size/2+axis_offset)
-          .attr("y", -40)
-          .text(study_pair.b.values[0].studyName+": "+variable_name);
-
-        //parse/filter data!
-        var studyids = {"a":study_pair.a.key,"b":study_pair.b.key}
-        var accessions = d3.nest().key(function(d) {return d.accession;})
-                           .entries(study_pair.a.values.concat(study_pair.b.values))
-                           .filter(function(d) {
-                              var found_a = false;
-                              var found_b = false;
-                              for (var j = 0; j < d.values.length; j++) {
-                                  found_a = (found_a || ((d.values[j].value !== null) && (d.values[j].study == studyids["a"])));
-                                  found_b = (found_b || ((d.values[j].value !== null) && (d.values[j].study == studyids["b"])));
-                              }
-                              return (found_a && found_b);
-                           }).map(function(d) {
-                              var name = d.values[0].accessionName
-                              var x = "well i never";
-                              var y = "well i never";
-                              for (var j in d.values){
-                                if (d.values[j].value !== null){
-                                  if (d.values[j].study == studyids["a"]){
-                                    x = d.values[j].value;
-                                  } else {
-                                    y = d.values[j].value;
-                                  }
-                                }
-                              }
-                              return {
-                               key:d.key,
-                               name:name,
-                               x:x,
-                               y:y,
-                               orig:d
-                             }
-                           });  
-        console.log(accessions);
-        //create plot points using data        
-        var plotpoints = current_graph.selectAll(".tc-scatter-point")
-          .data(accessions)
-          .enter().append("g").classed("tc-scatter-point",true)
-        plotpoints.append("circle")
-          .attr("r", 4)
-          .attr("cx", function(d) { return Xscale(d.x)+axis_offset; })
-          .attr("cy", function(d) { return Yscale(d.y)+axis_offset; });
-        plotpoints.append("circle")
-          .attr("r", 15)
-          .attr("cx", function(d) { return Xscale(d.x)+axis_offset; })
-          .attr("cy", function(d) { return Yscale(d.y)+axis_offset; })
-          .style("opacity","0");
-
-        //add line of best fit and rsquared
-        
-        var best_fit = lineOfBestFit(accessions);
-        console.log(best_fit);
-
-        var x1 = Xscale.domain()[0];
-        var y1 = best_fit.slope*x1+best_fit.yIntercept;
-        if (y1<Yscale.domain()[0]){
-          y1 = Yscale.domain()[0];
-          x1 = (y1-best_fit.yIntercept)/best_fit.slope;
-        }
-
-        var x2 = Xscale.domain()[1];
-        var y2 = best_fit.slope*x2+best_fit.yIntercept;
-        if (y2>Yscale.domain()[1]){
-          y2 = Yscale.domain()[1];
-          x2 = (y2-best_fit.yIntercept)/best_fit.slope;
-        }
-
-        current_graph.insert('line',".tc-scatter-point")
-          .classed('tc-fit-line',true)
-          .attr({
-            x1: Xscale(x1)+axis_offset+1,
-            y1: Yscale(y1)+axis_offset+1,
-            x2: Xscale(x2)+axis_offset-1,
-            y2: Yscale(y2)+axis_offset-1
-          });
-        current_graph.append('text')
-          .classed("tc-info-text",true)
-          .attr('x',view_size- axis_offset )
-          .attr('y',30)
-          .text("r^2 = "+best_fit.rsquared.toFixed(3));
-        current_graph.append('text')
-          .classed("tc-info-text",true)
-          .attr('x',view_size- axis_offset )
-          .attr('y',50)
-          .text("y = "+best_fit.slope.toFixed(3)+"x + "+best_fit.yIntercept.toFixed(3));
-
-        //tooltip
-        var tooltip = current_graph.append('g')
-          .classed("tc-tool-tip",true)
-        tooltip.append('rect').classed("tc-tool-tip-rect",true)
-          .attr({
-            x:-15,
-            y:-38,
-            width: 100,
-            height: 30
-          });
-        tooltip.append('text').classed("tc-tool-tip-text",true)
-          .attr({
-            x:10-15,
-            y:20-38
-          })
-          .text("");
-        var trianglePoints = "-5 -8.5, 0 0, 5 -8.5"
-        tooltip.append('polyline')
-          .attr('points', trianglePoints)
-          .classed("tc-tool-tip-point",true);
-
-        tooltip.setTip = function (visible,text,x,y){
-          if (!visible){
-            this.hoverlock = false;
-            var this_tooltip = this;
-            setTimeout(function(){
-              if (!this_tooltip.hoverlock){
-                this_tooltip.attr("transform", "translate("+0+"," +0+")")
-                  .transition().style("opacity",0);
-              } 
-            },100);
-          } else{
-            this.hoverlock = true;
-            var width = this.attr("transform", "translate("+x+"," +y+")")
-              .select("text")
-              .html(text).node().getComputedTextLength();
-            this.select("text").selectAll("*").attr("fill","#fff");
-            this.select("rect").attr("width",width+20);
-            this.transition().style("opacity",1);
-          }
-        }
-        tooltip.hoverlock = false;
-        tooltip.on("mouseover",function(d){
-          tooltip.hoverlock = true;
-        });
-        tooltip.on("mouseout",function(d){
-          tooltip.hoverlock = false;
-          tooltip.setTip(false);
-        });
-        tooltip.on("click",function(d){d3.event.stopPropagation();});
-        tooltip.setTip(false);
-
-        plotpoints.on("mouseover",function(d){
-          if (d3.select(this.parentNode.parentNode).classed("tc-expanded")){
-            tooltip.setTip(true,"<a target='_blank' href='/stock/"+d.key+"/view'>"+d.name+"</a>",Xscale(d.x)+axis_offset,Yscale(d.y)+axis_offset);
-          }
-        });
-        plotpoints.on("mouseout",function(d){
-          tooltip.setTip(false)
-        });
-    });
-
-    //draw graph-grid label axes!
-    var label_width = grid_size;
-    var label_height = 3;
-    var tops = d3.select('.tc-grid').insert('div',":first-child")
-                 .classed("tc-grid-row",true)
-                 .classed("label-row",true)
-                 .selectAll(".tc-top-label")
-                 .data(studies.slice(1,studies.length)).enter()
-                 .append('svg').classed("tc-top-label",true)
-                 .attr("viewBox","0 0 "+label_width*10+" "+label_height*10)
-                 .style("width",grid_size+"%")
-                 .append('g')
-                 .append("text")
-                 .classed("tc-label-text",true)
-                 .attr("x", label_width*10/2)
-                 .attr("y", label_height*10/2+6)
-                 .text(function(d){return d.values[0].studyName;});
-    var lefts = d3.select('.tc-grid').selectAll(".tc-grid-row:not(.label-row)")
-                 .insert('svg',":first-child")
-                 .data(studies.slice(0,studies.length-1))
-                 .classed("tc-left-label",true)
-                 .attr("viewBox","0 0 "+label_height*10+" "+label_width*10)
-                 .style("width","3%")//.style("background","lightblue")
-                 .append('g')
-                 .attr("transform", "rotate(-90)")
-                 .append("text")
-                 .classed("tc-label-text",true)
-                 .attr("x", -label_width*10/2)
-                 .attr("y", label_height*10/2+6)
-                 .text(function(d){return d.values[0].studyName;});
-
-}
 
 function lineOfBestFit(points){
   var xbar = 0;
