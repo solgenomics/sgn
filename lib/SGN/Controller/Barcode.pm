@@ -207,14 +207,6 @@ sub barcode {
     my $size = shift;
     my $top = shift;
     my $show_text = shift;
-    # my $show_text;
-    #
-    # if ($labels_per_row == '1') {
-    #     $show_text = 0;
-    # }
-    # else {
-    #     $show_text = 1;
-    # }
 
     my $scale = 2;
     if ($size eq "small") { $scale = 1; }
