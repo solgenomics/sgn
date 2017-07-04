@@ -49,7 +49,7 @@ is_deeply($response, {'data'=> [
 ['female_parent', '<a href = "/stock/38877/view">test5P005</a>']
 ]}, 'progenies');
 
-$mech->get_ok('http://localhost:3010/stock/38846/datatables/group');
+$mech->get_ok('http://localhost:3010/stock/38846/datatables/group_and_member');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 

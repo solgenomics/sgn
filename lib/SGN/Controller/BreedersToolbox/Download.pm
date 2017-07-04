@@ -585,9 +585,6 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 my $self = shift;
 my $c = shift;
 my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedigree_stock_id, $accession_name);
-my $female_parent = '';
-my $male_parent = '';
-my $cross_type = '';
 
     $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
     $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
@@ -615,6 +612,7 @@ my $cross_type = '';
 	{
 
 	$accession_name = $accession_list[$i];
+    my ($female_parent, $male_parent, $cross_type) = '';
 	my $pedigree_stock_id = $accession_ids[$i];
 	my @pedigree_parents = CXGN::Stock->new ( schema => $schema, stock_id => $pedigree_stock_id)->get_direct_parents();
 	$len = scalar(@pedigree_parents);

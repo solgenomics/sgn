@@ -314,7 +314,13 @@ my $location_number = scalar(@locations);
     $c->stash->{rest} = {error => "Could not generate design" };
     return;
   }
-  $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type);
+  my $design_level;
+  if ($design_type eq 'greenhouse'){
+      $design_level = 'plants';
+  } else {
+      $design_level = 'plots';
+  }
+  $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_level);
   $design_info_view_html = design_info_view(\%design, \%design_info);
   my $design_json = encode_json(\%design);
   push @design_array,  $design_json;
