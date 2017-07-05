@@ -44,6 +44,10 @@ sub stock_pedigree :  Path('/pedigree/svg')  Args(1) {
     ->find({ stock_id => $stock_id });
   my $stock_pedigree = $self->_get_pedigree($stock_row);
   print STDERR "STOCK PEDIGREE: ". Data::Dumper::Dumper($stock_pedigree);
+  my $pedigree_rows = $self->_get_pedigree_rows($stock_pedigree);
+  print STDERR "PEDIGREE ROWS: ". Data::Dumper::Dumper($pedigree_rows);
+  my $pedigree_string = $self->_pedigree_string(2, $stock_pedigree);
+  print STDERR "PEDIGREE STRING: ". Data::Dumper::Dumper($pedigree_string);
   my $stock_pedigree_svg = $self->_view_pedigree($stock_pedigree);
   print STDERR "SVG: $stock_pedigree_svg\n\n";
   my $is_owner = $self->_check_role($c);
@@ -152,7 +156,9 @@ sub _stockprops {
 }
 
 sub _get_pedigree {
-  my ($self,$bcs_stock) = @_;
+  my ($self,$bcs_stock, $direct_descendant_ids) = @_;
+  push @$direct_descendant_ids, $bcs_stock->stock_id(); #excluded in parent retrieval to prevent loops
+  #print STDERR "Stock ".$bcs_stock->uniquename()." decendants are: ".Dumper($direct_descendant_ids)."\n";
   my %pedigree;
   $pedigree{'id'} = $bcs_stock->stock_id();
   $pedigree{'name'} = $bcs_stock->uniquename();
@@ -166,31 +172,35 @@ sub _get_pedigree {
 
   #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
   my $stock_relationships = $bcs_stock->search_related("stock_relationship_objects",undef,{ prefetch => ['type','subject'] });
-  my $female_parent_relationship = $stock_relationships->find({type_id => $cvterm_female_parent->cvterm_id()});
+  my $female_parent_relationship = $stock_relationships->find({type_id => $cvterm_female_parent->cvterm_id(), subject_id => {'not_in' => $direct_descendant_ids}});
   if ($female_parent_relationship) {
     my $female_parent_stock_id = $female_parent_relationship->subject_id();
     if ($female_parent_stock_id) {
       my $female_parent_stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $female_parent_stock_id});
       if ($female_parent_stock) {
-	$pedigree{'female_parent'} = _get_pedigree($self,$female_parent_stock);
+          $pedigree{'cross_type'} = $female_parent_relationship->value();
+	$pedigree{'female_parent'} = _get_pedigree($self,$female_parent_stock,$direct_descendant_ids);
       }
     }
   }
-  my $male_parent_relationship = $stock_relationships->find({type_id => $cvterm_male_parent->cvterm_id()});
+  my $male_parent_relationship = $stock_relationships->find({type_id => $cvterm_male_parent->cvterm_id(), subject_id => {'not_in' => $direct_descendant_ids}});
   if ($male_parent_relationship) {
     my $male_parent_stock_id = $male_parent_relationship->subject_id();
     if ($male_parent_stock_id) {
       my $male_parent_stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $male_parent_stock_id});
       if ($male_parent_stock) {
-	$pedigree{'male_parent'} = _get_pedigree($self,$male_parent_stock);
+	$pedigree{'male_parent'} = _get_pedigree($self,$male_parent_stock,$direct_descendant_ids);
       }
     }
   }
+  pop @$direct_descendant_ids; # falling back a level while recursing pedigree tree
   return \%pedigree;
 }
 
 sub _get_descendants {
-  my ($self,$bcs_stock) = @_;
+  my ($self,$bcs_stock,$direct_ancestor_ids) = @_;
+  push @$direct_ancestor_ids, $bcs_stock->stock_id(); #excluded in child retrieval to prevent loops
+  #print STDERR "Stock ".$bcs_stock->uniquename()." ancestors are: ".Dumper($direct_ancestor_ids)."\n";
   my %descendants;
   my %progeny;
   $descendants{'id'} = $bcs_stock->stock_id();
@@ -198,22 +208,23 @@ sub _get_descendants {
   $descendants{'link'} = "/stock/$descendants{'id'}/view";
   #get cvterms for parent relationships
   my $cvterm_female_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'female_parent','stock_relationship');
- 
+
  my $cvterm_male_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'male_parent', 'stock_relationship');
 
   #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
-  my $descendant_relationships = $bcs_stock->search_related("stock_relationship_subjects",undef,{ prefetch => ['type','object'] });
+  my $descendant_relationships = $bcs_stock->search_related("stock_relationship_subjects",{ object_id => {'not_in' => $direct_ancestor_ids}},{ prefetch => ['type','object'] });
   if ($descendant_relationships) {
     while (my $descendant_relationship = $descendant_relationships->next) {
       my $descendant_stock_id = $descendant_relationship->object_id();
       if ($descendant_stock_id && (($descendant_relationship->type_id() == $cvterm_female_parent->cvterm_id()) || ($descendant_relationship->type_id() == $cvterm_male_parent->cvterm_id()))) {
   	my $descendant_stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $descendant_stock_id});
   	if ($descendant_stock) {
-  	  $progeny{$descendant_stock_id} = _get_descendants($self,$descendant_stock);
+  	  $progeny{$descendant_stock_id} = _get_descendants($self,$descendant_stock,$direct_ancestor_ids);
   	}
       }
     }
     $descendants{'descendants'} = \%progeny;
+    pop @$direct_ancestor_ids; # falling back a level while recursing descendant tree
     return \%descendants;
   }
 }
@@ -234,7 +245,7 @@ sub _traverse_pedigree {
   my $male_parent_name;
   my $female_parent_id;
   my $male_parent_id;
-  if ($pedigree{'female_parent'}) {
+  if (keys %{$pedigree{'female_parent'}}) {
     my %female_parent =  %{$pedigree{'female_parent'}};
     $female_parent_id = $female_parent{'id'};
     if ($female_parent{'name'}) {
@@ -255,7 +266,7 @@ sub _traverse_pedigree {
     $node_links{$female_parent_id} = $female_parent_link;
     $joins{$female_parent_id} = $current_node_id;
   }
-  if ($pedigree{'male_parent'}) {
+  if (keys %{$pedigree{'male_parent'}}) {
     my %male_parent =  %{$pedigree{'male_parent'}};
     $male_parent_id = $male_parent{'id'};
     if ($male_parent{'name'}) {
@@ -540,6 +551,60 @@ sub _view_descendants {
   } else {
     return undef;
   }
+}
+
+sub _get_pedigree_rows {
+    my $self = shift;
+    my $pedigree_hashref = shift;
+    my $pedigree_rows = shift || [];
+    #print STDERR "Working on pedigree hashref ".Dumper($pedigree_hashref)."\n";
+
+    my $Name = $pedigree_hashref->{'name'} || '';
+    my $Female_Parent = $pedigree_hashref->{'female_parent'}->{'name'} || '';
+    my $Male_Parent = $pedigree_hashref->{'male_parent'}->{'name'} || '';
+    my $Cross_Type = $pedigree_hashref->{'cross_type'} || '';
+    #print STDERR "Pedigree row: $Name\t$Female_Parent\t$Male_Parent\t$Cross_Type\n";
+    push @$pedigree_rows, "$Name\t$Female_Parent\t$Male_Parent\t$Cross_Type\n";
+
+    if (keys %{ $pedigree_hashref->{'female_parent'} }) {
+        print STDERR "Keys for female parent ".Dumper($pedigree_hashref->{'female_parent'})." evaluated as true\n";
+        $self->_get_pedigree_rows($pedigree_hashref->{'female_parent'}, $pedigree_rows);
+    }
+    if (keys %{ $pedigree_hashref->{'male_parent'} }) {
+        print STDERR "Keys for male parent ".Dumper($pedigree_hashref->{'male_parent'})." evaluated as true\n";
+        $self->_get_pedigree_rows($pedigree_hashref->{'male_parent'}, $pedigree_rows);
+    }
+
+    return $pedigree_rows;
+}
+
+sub _pedigree_string_ {
+    my $self = shift;
+    my $pedigree_hashref = shift;
+    my $gen = shift || '';
+    my $current_depth = shift || 1;
+    my $pedigree_string = shift || '';
+    #print STDERR "Working on pedigree hashref ".Dumper($pedigree_hashref)."\n";
+
+    my $Name = $pedigree_hashref->{'name'} || '';
+    my $Female_Parent = $pedigree_hashref->{'female_parent'}->{'name'} || '';
+    my $Male_Parent = $pedigree_hashref->{'male_parent'}->{'name'} || '';
+    my $Cross_Type = $pedigree_hashref->{'cross_type'} || '';
+    #print STDERR "Pedigree row: $Name\t$Female_Parent\t$Male_Parent\t$Cross_Type\n";
+    if ($gen eq $current_depth) { $pedigree_string .= "$Female_Parent\\$Male_Parent" };
+
+    if (keys %{ $pedigree_hashref->{'female_parent'} }) {
+        print STDERR "Keys for female parent ".Dumper($pedigree_hashref->{'female_parent'})." evaluated as true\n";
+        $current_depth++;
+        $self->_pedigree_string($pedigree_hashref->{'female_parent'}, $gen, $current_depth, $pedigree_string);
+    }
+    if (keys %{ $pedigree_hashref->{'male_parent'} }) {
+        print STDERR "Keys for male parent ".Dumper($pedigree_hashref->{'male_parent'})." evaluated as true\n";
+        $current_depth++;
+        $self->_pedigree_string($pedigree_hashref->{'female_parent'}, $gen, $current_depth, $pedigree_string);
+    }
+
+    return $pedigree_string;
 }
 
 1;
