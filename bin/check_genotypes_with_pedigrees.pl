@@ -12,7 +12,7 @@ use CXGN::Genotype::Search;
 our ($opt_H, $opt_D, $opt_p, $opt_o); # host, database, genotyping protocol_id
 getopts('H:D:p:o:');
 
-if (!$opt_p) { 
+if (!$opt_p) {
     print STDERR "Need -p with genotyping protocol id.\n";
     exit();
 }
@@ -29,10 +29,10 @@ my $dbh = CXGN::DB::InsertDBH->new( {
 my $OUT;
 my $is_stdin =0;
 
-if ($opt_o) { 
+if ($opt_o) {
     open($OUT, '>', $opt_o);
 }
-else { 
+else {
     $OUT =  *STDIN;
     $is_stdin = 1;
 }
@@ -45,29 +45,29 @@ my $stock_rs = $schema->resultset("Stock::Stock")->search( { type_id => $accessi
 
 my @scores;
 
-while (my $row = $stock_rs->next()) { 
+while (my $row = $stock_rs->next()) {
     my $stock = CXGN::Chado::Stock->new($schema, $row->stock_id());
     my @parents = $stock->get_direct_parents();
-    
-    if (@parents == 2) { 
-	
-	my $gts = CXGN::Genotype::Search->new( { 
+
+    if (@parents == 2) {
+
+	my $gts = CXGN::Genotype::Search->new( {
 	    bcs_schema => $schema,
 	    accession_list => [ $row->stock_id ],
 	    protocol_id => $protocol_id,
 							    });
-	
+
 	my (@self_gts) = $gts->get_genotype_info_as_genotype_objects();
 
-	$gts = CXGN::Genotype::Search->new( { 
+	$gts = CXGN::Genotype::Search->new( {
 	    bcs_schema => $schema,
 	    accession_list => [ $parents[0]->[0]],
 	    protocol_id => $protocol_id,
 							    });
-	
+
 	my (@mom_gts) = $gts->get_genotype_info_as_genotype_objects();
 
-	$gts = CXGN::Genotype::Search->new( { 
+	$gts = CXGN::Genotype::Search->new( {
 	    bcs_schema => $schema,
 	    accession_list => [ $parents[1]->[0]],
 	    protocol_id => $protocol_id,
@@ -75,27 +75,27 @@ while (my $row = $stock_rs->next()) {
 
 	my (@dad_gts) = $gts->get_genotype_info_as_genotype_objects();
 
-	if (! (@self_gts)) { 
-	    print STDERR "Genotype of accession ".$row->uniquename()." not availalbe. Skipping...\n"; 
+	if (! (@self_gts)) {
+	    print STDERR "Genotype of accession ".$row->uniquename()." not availalbe. Skipping...\n";
 	    next;
 	}
-	if (!@mom_gts) { 
+	if (!@mom_gts) {
 	    print STDERR "Genotype of female parent missing. Skipping.\n";
 	    next;
 	}
-	if (! @dad_gts) { 
+	if (! @dad_gts) {
 	    print STDERR "Genotype of male parent missing. Skipping.\n";
 	    next;
 	}
 
-	foreach my $s (@self_gts) { 
-	    foreach my $m (@mom_gts) { 
-		foreach my $d (@dad_gts) { 
-		    my ($concordant, $discordant, $non_informative) = 
+	foreach my $s (@self_gts) {
+	    foreach my $m (@mom_gts) {
+		foreach my $d (@dad_gts) {
+		    my ($concordant, $discordant, $non_informative) =
 			$s->compare_parental_genotypes($m, $d);
 		    my $score = $concordant / ($concordant + $discordant);
 		    push @scores, $score;
-		    
+
 		    print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
 		    print $OUT "\t$score\n";
 		}
