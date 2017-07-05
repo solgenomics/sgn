@@ -381,7 +381,8 @@ function updateScatter(studies,paired_studies){
         }
       } else {
         var label = d.a.values[0].studyName+" vs. "+d.b.values[0].studyName
-        onclick = function(){
+        var label_onclick = function(){
+          console.log("oops");
           cg.on("click").call(cg.node(),d,i)
         }
         tooltip.setTip(true,label,this,onclick);
@@ -560,6 +561,7 @@ function tooltipSetup(canv,view_width){
     });
     tooltip.on("click",function(d){
       if (d.onclick){
+        console.log("why")
         d.onclick();
       }
       d3.event.stopPropagation();
