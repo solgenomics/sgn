@@ -46,6 +46,8 @@ sub stock_pedigree :  Path('/pedigree/svg')  Args(1) {
   print STDERR "STOCK PEDIGREE: ". Data::Dumper::Dumper($stock_pedigree);
   my $pedigree_rows = $self->_get_pedigree_rows($stock_pedigree);
   print STDERR "PEDIGREE ROWS: ". Data::Dumper::Dumper($pedigree_rows);
+  my $pedigree_string = $self->_get_pedigree_string($stock_pedigree,'parent');
+  print STDERR "PEDIGREE String: $pedigree_string\n";
   my $stock_pedigree_svg = $self->_view_pedigree($stock_pedigree);
   print STDERR "SVG: $stock_pedigree_svg\n\n";
   my $is_owner = $self->_check_role($c);
@@ -560,6 +562,8 @@ sub _get_pedigree_rows {
     my $Cross_Type = $pedigree_hashref->{'cross_type'} || '';
     #print STDERR "Pedigree row: $Name\t$Female_Parent\t$Male_Parent\t$Cross_Type\n";
     push @$pedigree_rows, "$Name\t$Female_Parent\t$Male_Parent\t$Cross_Type\n";
+    #my @pedigree_rows = @$pedigree_rows;
+    print STDERR "Pedigree rows currently contains: " . join( ", ", @$pedigree_rows ) . "\n";
 
     if (keys %{ $pedigree_hashref->{'female_parent'} }) {
         print STDERR "Keys for female parent ".Dumper($pedigree_hashref->{'female_parent'})." evaluated as true\n";
@@ -571,6 +575,35 @@ sub _get_pedigree_rows {
     }
 
     return $pedigree_rows;
+}
+
+sub _get_pedigree_string {
+    my ($self, $pedigree_hashref, $level) = @_;
+
+    print STDERR "Getting string of level $level from pedigree hashref ".Dumper($pedigree_hashref)."\n";
+    if ($level eq "parents") {
+        return $self->_get_parent_string($pedigree_hashref);
+    }
+    elsif ($level eq "grandparents") {
+        my $maternal_parent_string = $self->_get_parent_string($pedigree_hashref->{'female_parent'});
+        my $paternal_parent_string = $self->_get_parent_string($pedigree_hashref->{'male_parent'});
+        return $maternal_parent_string."\\\\".$paternal_parent_string;
+    }
+    elsif ($level eq "great-grandparents") {
+        my $mm_parent_string = $self->_get_parent_string($pedigree_hashref->{'female_parent'}->{'female_parent'});
+        my $mf_parent_string = $self->_get_parent_string($pedigree_hashref->{'female_parent'}->{'male_parent'});
+        my $pm_parent_string = $self->_get_parent_string($pedigree_hashref->{'male_parent'}->{'female_parent'});
+        my $pf_parent_string = $self->_get_parent_string($pedigree_hashref->{'male_parent'}->{'male_parent'});
+        return $mm_parent_string."\\\\".$mf_parent_string."\\\\\\".$pm_parent_string."\\\\".$pf_parent_string;
+    }
+}
+
+sub _get_parent_string {
+    my ($self, $pedigree_hashref) = @_;
+    my $mother = $pedigree_hashref->{'female_parent'}->{'name'} || 'NA';
+    my $father = $pedigree_hashref->{'male_parent'}->{'name'} || 'NA';
+    print STDERR "Built parent string $mother\\$father\n";
+    return "$mother\\$father";
 }
 
 1;
