@@ -368,7 +368,8 @@ function updateScatter(studies,paired_studies){
     var voronoi =  d3.voronoi()
       .x(getx).y(gety)(accessions);
     current_graph.on("mousemove",function(d,i){
-      if (d3.select(this).classed("tc-expanded")){
+      var cg = d3.select(this);
+      if (cg.classed("tc-expanded")){
         var mpos = d3.mouse(this);
         var near_point = voronoi.find(mpos[0],mpos[1],30);
         if (near_point && (tooltip.hidden || tooltip.current!=near_point)){
@@ -380,7 +381,10 @@ function updateScatter(studies,paired_studies){
         }
       } else {
         var label = d.a.values[0].studyName+" vs. "+d.b.values[0].studyName
-        tooltip.setTip(true,label,this);
+        onclick = function(){
+          cg.on("click").call(cg.node(),d,i)
+        }
+        tooltip.setTip(true,label,this,onclick);
       }
     }).on("mouseout",function(d,i){
       tooltip.setTip(false);
