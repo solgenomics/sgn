@@ -3,6 +3,8 @@
 # \c fixture
 # select * from stock join cvterm on (type_id = cvterm_id) where cvterm.name = 'accession';
 # ssh production@cassava-devel.sgn.cornell.edu pw #cp_/root/*_?
+# perl bin/pedigreeplausibility.pl -H db5.sgn.cornell.edu -D cxgn_cassava -p 1 -o sink.txt -f bin/ped.txt
+# postgres pw Eo0vair1
 
 use strict;
 use warnings;
@@ -51,7 +53,6 @@ my $is_stdin =0;
 if ($opt_o) {
     open($OUT, '>', $opt_o);
     print $OUT "123";
-    close $OUT;
 }
 else {
     $OUT =  *STDIN;
