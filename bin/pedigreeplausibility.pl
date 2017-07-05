@@ -3,12 +3,13 @@
 # \c fixture
 # select * from stock join cvterm on (type_id = cvterm_id) where cvterm.name = 'accession';
 # ssh production@cassava-devel.sgn.cornell.edu pw #cp_/root/*_?
-# perl bin/pedigreeplausibility.pl -H db5.sgn.cornell.edu -D cxgn_cassava -p 1 -o sink.txt -f bin/ped.txt
+# perl bin/pedigreeplausibility.pl -H db5.sgn.cornell.edu -D cxgn_cassava -p 3 -o sink.txt -f bin/ped.txt
 # postgres pw Eo0vair1
 
 use strict;
 use warnings;
 
+use Data::Dumper;
 use Getopt::Std;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
@@ -112,7 +113,7 @@ while (my $row = $stock_rs->next()) {
 	}
 ##check length
 ##index of array for
-
+  Dumper(@parents)
 	foreach my $s (@self_gts) {
 	    foreach my $m (@mom_gts) {
 		foreach my $d (@dad_gts) {
