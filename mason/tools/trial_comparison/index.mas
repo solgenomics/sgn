@@ -53,13 +53,15 @@ $(document).ready(function(){
     var select_html = list.listSelect('trials', ['trials'], ' ');
     $('#trials_list_select_container').html(select_html);
     $('#trials_list_select').change(function(){
+      $(".tc-grid").hide();
+      $(".tc-histogram").hide();
       var trial_list_id = $('#trials_list_select').val();
       if (trial_list_id === "") {
-        $("#trials_list_info").hide(400);
+        $("#trials_list_info").hide();
         $('#trait_select').attr("disabled",true).html('<option selected="selected" value=""> </option>');
         return;
       } else {
-        $("#trials_list_info").show(400);
+        $("#trials_list_info").show();
       }
       var item_data = list.getListData(trial_list_id);
       var items = item_data.elements;
@@ -100,23 +102,25 @@ $('#trait_select').change(fetchAndBuildGraphs);
 
 function fetchAndBuildGraphs() { 
   var list_id = $('#trials_list_select').val();
-  $(".tc-grid").hide();
-  $(".tc-histogram").hide();
-  $("#loading-spinner").show();
-  $.ajax( { 
-   url: '/ajax/trial/compare_list_data_test',
-   data: { 'cvterm_id' : $('#trait_select').val(), 'list_id': list_id },
-   success: function(response) { 
-      if (response.error) { 
-         alert(response.error);
+  if ($('#trait_select').val()!=""){  
+    $(".tc-grid").hide();
+    $(".tc-histogram").hide();
+    $("#loading-spinner").show();
+    $.ajax( { 
+     url: '/ajax/trial/compare_list_data',
+     data: { 'cvterm_id' : $('#trait_select').val(), 'list_id': list_id },
+     success: function(response) { 
+        if (response.error) { 
+           alert(response.error);
+        }
+        else { 
+            d3.select('.tc-grid').html("");
+            d3.select('.tc-histogram').html("");
+            createVisualizations(response);
+        }
       }
-      else { 
-          d3.select('.tc-grid').html("");
-          d3.select('.tc-histogram').html("");
-          createVisualizations(response);
-      }
-    }
-  });
+    });
+  }
 }
 
 function  createVisualizations(response){
