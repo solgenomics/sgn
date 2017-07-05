@@ -20,7 +20,6 @@
     <li><a href="http://tea.solgenomics.net/">Tomato Expression Atlas (TEA)</a></li>    
     <li><a href="http://ted.bti.cornell.edu/">Tomato Expression Database (TED)</a></li>
 
-
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Systems Biology</li>
     <li><a href="/tools/solcyc/">SolCyc Biochemical Pathways</a></li>
