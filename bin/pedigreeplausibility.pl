@@ -27,9 +27,9 @@ if (!$opt_p) {
 
 my $protocol_id = $opt_p;
 
-my %pedigreehash;
 my $filename = $opt_f;
 
+my %pedigreehash;
 my $childname;
 my @pedigreearray;
 
@@ -58,11 +58,11 @@ if ($opt_o) {
 else {
     $OUT =  *STDIN;
     $is_stdin = 1;
-    my $accession_cvterm_id = $schema->resultset("Cv::Cvterm")->find({ name=> "accession" })->cvterm_id();
 }
 
 my $schema = Bio::Chado::Schema->connect(sub { $dbh });
 
+my $accession_cvterm_id = $schema->resultset("Cv::Cvterm")->find({ name=> "accession" })->cvterm_id();
 
 my $stock_rs = $schema->resultset("Stock::Stock")->search( { type_id => $accession_cvterm_id });
 
@@ -113,7 +113,7 @@ while (my $row = $stock_rs->next()) {
 	}
 ##check length
 ##index of array for
-  print STDERR Dumper(@parents);
+
 	foreach my $s (@self_gts) {
 	    foreach my $m (@mom_gts) {
 		foreach my $d (@dad_gts) {
