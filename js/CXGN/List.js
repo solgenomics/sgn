@@ -1266,6 +1266,22 @@ function deleteSelectedListGroup(list_ids) {
     }
 }
 
+function pasteTraitList(div_name) {
+    var lo = new CXGN.List();
+    var list_id = jQuery('#'+div_name+'_list_select').val();
+  console.log(list_id);
+    var list = lo.getList(list_id);
+  console.log(list);
+
+    var list_text = '<select class="form-control" id="select_traits_for_trait_file_2"  >';
+    for (var n=0; n<list.length; n++) {
+      list_text = list_text + '<option value="' + list[n] + '">' + list[n] + '</option>\n';
+    }
+    list_text = list_text + '</select>';
+  console.log(list_text);
+    jQuery('#'+div_name).html(list_text);
+  }
+
 function makePublicSelectedListGroup(list_ids) {
     var arrayLength = list_ids.length;
     if (confirm('Make selected lists public?')) {
