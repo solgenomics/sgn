@@ -113,9 +113,9 @@ while (my $row = $stock_rs->next()) {
   print $OUT "at mom genos".@mom_gts;
   print $OUT "at dad genos".@dad_gts;
   print $OUT "at child genos".@self_gts;
-  print $OUT "d child genos".$self_gts;
-  print $OUT "d father genos".$dad_gts;
-  print $OUT "d mother genos".$mom_gts;
+  #print $OUT "d child genos".$self_gts;
+  #print $OUT "d father genos".$dad_gts;
+  #print $OUT "d mother genos".$mom_gts;
 }
 ##check length
 ##index of array for
