@@ -113,7 +113,7 @@ while (my $row = $stock_rs->next()) {
 	}
 ##check length
 ##index of array for
-  Dumper(@parents);
+  print STDERR Dumper(@parents);
 	foreach my $s (@self_gts) {
 	    foreach my $m (@mom_gts) {
 		foreach my $d (@dad_gts) {
