@@ -153,12 +153,12 @@ sub search_all_progenies : Path('/ajax/search/all_progenies') Args(0) {
     my $dbh = $schema->storage->dbh();
 
     my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, male_parent.stock_id, male_parent.uniquename, progeny.stock_id, progeny.uniquename, stock_relationship1.value
-    FROM stock_relationship as stock_relationship1 INNER JOIN stock AS female_parent ON (stock_relationship1.subject_id = female_parent.stock_id)
-    INNER JOIN stock AS progeny ON (stock_relationship1.object_id = progeny.stock_id)
-    LEFT JOIN stock_relationship AS stock_relationship2 ON (progeny.stock_id = stock_relationship2.object_id)
-    INNER JOIN stock AS male_parent ON (stock_relationship2.subject_id = male_parent.stock_id)
-    WHERE female_parent.uniquename = ? AND stock_relationship1.type_id = ? AND stock_relationship2.type_id = ? AND progeny.type_id = ?
-    ORDER BY male_parent.uniquename";
+      FROM stock_relationship as stock_relationship1 INNER JOIN stock AS female_parent ON (stock_relationship1.subject_id = female_parent.stock_id)
+      INNER JOIN stock AS progeny ON (stock_relationship1.object_id = progeny.stock_id)
+      LEFT JOIN stock_relationship AS stock_relationship2 ON (progeny.stock_id = stock_relationship2.object_id)
+      INNER JOIN stock AS male_parent ON (stock_relationship2.subject_id = male_parent.stock_id)
+      WHERE female_parent.uniquename = ? AND stock_relationship1.type_id = ? AND stock_relationship2.type_id = ? AND progeny.type_id = ?
+      ORDER BY male_parent.uniquename";
 
     my$h = $dbh->prepare($q);
     $h->execute($pedigree_female_parent, $female_parent_typeid, $male_parent_typeid, $accession_typeid);
@@ -177,6 +177,40 @@ sub search_all_progenies : Path('/ajax/search/all_progenies') Args(0) {
     }
 
 
+sub search_pedigree_info : Path('/ajax/search/pedigree_info') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $pedigree_female_parent = $c->req->param("pedigree_female_parent");
+    my $pedigree_male_parent = $c->req->param("pedigree_male_parent");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $female_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $male_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $accession_typeid = $c->model("Cvterm")->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $dbh = $schema->storage->dbh();
+
+    my $q = "SELECT DISTINCT female_parent.stock_id, female_parent.uniquename, male_parent.stock_id, male_parent.uniquename, progeny.stock_id, progeny.uniquename, stock_relationship1.value
+        FROM stock_relationship as stock_relationship1 INNER JOIN stock AS female_parent ON (stock_relationship1.subject_id = female_parent.stock_id)
+        INNER JOIN stock AS progeny ON (stock_relationship1.object_id = progeny.stock_id)
+        LEFT JOIN stock_relationship AS stock_relationship2 ON (progeny.stock_id = stock_relationship2.object_id)
+        INNER JOIN stock AS male_parent ON (stock_relationship2.subject_id = male_parent.stock_id)
+        WHERE female_parent.uniquename = ? AND male_parent.uniquename = ? AND stock_relationship1.type_id = ? AND stock_relationship2.type_id = ? AND progeny.type_id = ?";
+
+        my$h = $dbh->prepare($q);
+        $h->execute($pedigree_female_parent, $pedigree_male_parent, $female_parent_typeid, $male_parent_typeid, $accession_typeid);
+
+        my@pedigree_info=();
+        while (my($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $progeny_id, $progeny_name, $cross_type) = $h->fetchrow_array()){
+
+        push @pedigree_info, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
+          qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>},
+          qq{<a href="/stock/$progeny_id">$progeny_name</a}, $cross_type];
+          print STDERR "Pedigree_info =" . Dumper(@pedigree_info) . "\n";
+        }
+
+        $c->stash->{rest}={ data=> \@pedigree_info};
+
+        }
 
 
 
