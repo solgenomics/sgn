@@ -52,7 +52,7 @@ my $OUT;
 my $is_stdin =0;
 
 if ($opt_o) {
-    open($OUT, '>', $opt_o);
+    open($OUT, '>>', $opt_o);
     print $OUT "123";
 }
 else {
@@ -111,9 +111,9 @@ while (my $row = $stock_rs->next()) {
 	    print STDERR "Genotype of male parent missing. Skipping.\n";
 	    next;
 	}
+  print $OUT @mom_gts.@dad_gts.@self_gts;
 ##check length
 ##index of array for
-
 	foreach my $s (@self_gts) {
 	    foreach my $m (@mom_gts) {
 		foreach my $d (@dad_gts) {

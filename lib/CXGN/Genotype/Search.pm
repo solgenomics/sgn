@@ -144,7 +144,7 @@ sub get_genotype_info {
             };
         }
     }
-    print STDERR Dumper \@data;
+    #print STDERR Dumper \@data;
 
     my $total_count = $rs->count();
 
