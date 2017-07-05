@@ -7,7 +7,7 @@ use PDF::Create;
 use Bio::Chado::Schema::Result::Stock::Stock;
 use CXGN::Stock::StockBarcode;
 use Data::Dumper;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 
 BEGIN { extends "Catalyst::Controller"; }
 
@@ -95,13 +95,20 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $nursery = $c->req->param("nursery");
     my $added_text = $c->req->param("text_margin");
     my $barcode_type = $c->req->param("select_barcode_type");
+    my $fieldbook_barcode = $c->req->param("enable_fieldbook_2d_barcode");
+    my $label_text_4;
+    my $type_id;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type' )->cvterm_id();
 
     # convert mm into pixels
     #
-    my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } ($top_margin_mm,
-											$left_margin_mm,
-											$bottom_margin_mm,
-											$right_margin_mm);
+    my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } (
+            $top_margin_mm,
+    		$left_margin_mm,
+    		$bottom_margin_mm,
+    		$right_margin_mm
+        );
 
     # read file if upload
     #
@@ -115,8 +122,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     my @not_found;
     my @found;
-
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
 
     my ($row, $stockprop_name, $value, $fdata, $accession_name, $female_parent, $male_parent, @parents_info, $parents);
 
@@ -136,36 +141,32 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     	}
 
     	my $stock_id = $stock->stock_id();
+        $type_id = $stock->type_id();
 
       if ($plot){
+          my $dbh = $c->dbc->dbh();
+          my $h = $dbh->prepare("select name, value from cvterm inner join stockprop on cvterm.cvterm_id = stockprop.type_id where stockprop.stock_id=?;");
 
-      my $dbh = $c->dbc->dbh();
-      my $h = $dbh->prepare("select name, value from cvterm inner join stockprop on cvterm.cvterm_id = stockprop.type_id where stockprop.stock_id=?;");
+          $h->execute($stock_id);
 
-      $h->execute($stock_id);
+          my %stockprop_hash;
+           while (($stockprop_name, $value) = $h->fetchrow_array) {
+             $stockprop_hash{$stock_id}->{$stockprop_name} = $value;
 
-      my %stockprop_hash;
-       while (($stockprop_name, $value) = $h->fetchrow_array) {
-         $stockprop_hash{$stock_id}->{$stockprop_name} = $value;
+          }
+          $row = $stockprop_hash{$stock_id}->{'replicate'};
+          $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."block:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
 
-      }
-      $row = $stockprop_hash{$stock_id}->{'replicate'};
-      $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."block:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
+          my $h_acc = $dbh->prepare("select stock.uniquename AS acesssion_name FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
 
-      my $h_acc = $dbh->prepare("select stock.uniquename AS acesssion_name FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
-
-      $h_acc->execute($stock_id);
-      while (my($accession) = $h_acc->fetchrow_array) {
-        $accession_name = $accession;
-        }
-
-      }
-      else{
-
+          $h_acc->execute($stock_id);
+          while (my($accession) = $h_acc->fetchrow_array) {
+            $accession_name = $accession;
+            }
       }
 
       if ($nursery){
-        @parents_info = CXGN::Chado::Stock->new ($schema, $stock_id)->get_direct_parents();
+        @parents_info = CXGN::Stock->new ( schema => $schema, stock_id => $stock_id)->get_direct_parents();
         $male_parent = $parents_info[0][1] || '';
         $female_parent = $parents_info[1][1] || '';
       }
@@ -175,7 +176,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
       print "MY parents: $parents\n";
 
       push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents];
-    	print "STOCK FOUND: $stock_id, $name, $accession_name.\n";
+      print "STOCK FOUND: $stock_id, $name, $accession_name.\n";
 
     }
 
@@ -191,7 +192,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     if (!$page_format) { $page_format = "Letter"; }
     if (!$labels_per_page) { $labels_per_page = 8; }
-    if ($barcode_type eq "2D" && $labels_per_page > 7) { $labels_per_page = 7; }
+    #if ($barcode_type eq "2D" && $labels_per_page > 7) { $labels_per_page = 7; }
 
     print STDERR "PAGE FORMAT IS: $page_format. LABELS PER PAGE: $labels_per_page\n";
 
@@ -199,7 +200,21 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     my ($page_width, $page_height) = @{$pdf->get_page_size($page_format)}[2,3];
 
-    my $label_height = int( ($page_height - $top_margin - $bottom_margin) / $labels_per_page);
+    ## for 10 labels per page
+    my $label_height;
+    if ($labels_per_page == '10'){
+        $label_height = int( (($page_height - $top_margin - $bottom_margin) / $labels_per_page) + 0.5 );
+    }
+    ## for 20 labels per page
+    elsif ($labels_per_page == '20'){
+        $label_height = int( (($page_height - $top_margin - $bottom_margin) / $labels_per_page) - 0.05 );
+    }
+    else {
+        ## for 20 labels per page
+        $label_height = int( ($page_height - $top_margin - $bottom_margin) / $labels_per_page);
+    }
+
+    print "MY LABEL HEIGHT: $label_height\n";
 
     my @pages;
     foreach my $page (1..$self->label_to_page($labels_per_page, scalar(@found))) {
@@ -242,24 +257,25 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
         if (defined $row){
           print "ACCESSION IS NOT EMPTY........ $row\n";
-           $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]." ".$found[$i]->[3]." ".$added_text ]);
+           $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]." ".$found[$i]->[3]." ".$added_text, $fieldbook_barcode ]);
         }
         elsif ($female_parent =~ m/^\d+/ || $female_parent =~ m/^\w+/){
           if ($found[$i]->[4] =~ m/^\//) {
             print "I SEE SLASH: $found[$i]->[4]\n";
             ($found[$i]->[4] = $found[$i]->[4]) =~ s/\///;
           }
-          $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]." ".$added_text]);
+           $label_text_4 = "Pedigree: ".$found[$i]->[4];
+          $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]." ".$added_text, $fieldbook_barcode]);
         }
         else {
-         $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [  $found[$i]->[0], $found[$i]->[1], $added_text ]);
+         $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [  $found[$i]->[0], $found[$i]->[1], $added_text, $fieldbook_barcode ]);
         }
 
       }
 
       print STDERR "$tempfile\n";
       my $image = $pdf->image($tempfile);
-    	print STDERR "IMAGE: ".Data::Dumper::Dumper($image);
+      #print STDERR "IMAGE: ".Data::Dumper::Dumper($image);
 
     	# note: pdf coord system zero is lower left corner
     	#
@@ -277,6 +293,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     	$pages[$page_nr-1]->line($page_width -100, $label_boundary, $page_width, $label_boundary);
 
+        #print "My X Position: $left_margin and Y Position: $ypos and Xscale $scalex and Yscale $scaley\n";
       # my $lebel_number = scalar($#{$found[$i]});
 
       if ($barcode_type eq "2D") {
@@ -289,22 +306,47 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           my $label_size =  11;
           $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
 
-          if (length($label_text) <= 15){
-              $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
+          if ($labels_per_row == '1' ){
+              my $label_count_15_xter_plot_name =  1-1;
+              my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 80.63;
+              my $yposition_2 = $ypos - 20;
+              my $yposition_3 = $ypos - 30;
+
+              $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
+              if ($found[$i]->[4] =~ m/^\//){
+                  $label_text_4 = "Pedigree: No pedigree available for ".$found[$i]->[2];
+              }
+              if ($plot_cvterm_id == $type_id){
+                  $label_text_4 = $found[$i]->[3];
+              }
+              my $parents = $found[$i]->[4];
+              if (!$parents){
+                  $label_text_4 = '';
+              }
+              $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
+          }
+          elsif ($labels_per_row > '1'){
+              if (length($label_text) <= 15){
+                  $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
+              }
           }
         }
 
-        my $label_text = $found[$i]->[1];
-        if (length($label_text) > 15) {
-          print "My label Count: $label_count\n";
-          my $label_count_15_xter_plot_name =  1-1;
-          my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 20;
-          my $yposition = $ypos -7;
-          print "My X Position: $xposition and Y Position: $ypos\n";
-          my $label_size =  11;
-          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
+        if ($labels_per_row > '1'){
+            my $label_text = $found[$i]->[1];
+            if (length($label_text) > 15) {
+              print "My label Count: $label_count\n";
+              my $label_count_15_xter_plot_name =  1-1;
+              my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 20;
+              my $yposition = $ypos -7;
+              print "My X Position: $xposition and Y Position: $ypos\n";
+              my $label_size =  11;
+              $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
+            }
         }
+
     }
+
     elsif ($barcode_type eq "1D") {
     	foreach my $label_count (1..$labels_per_row) {
     	  $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
@@ -406,7 +448,7 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
     if ($accession_name){
       my $stock = $schema->resultset("Stock::Stock")->find( { name=>$accession_name });
       my $accession_id = $stock->stock_id();
-      @parents_info = CXGN::Chado::Stock->new ($schema, $accession_id)->get_direct_parents();
+      @parents_info = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id)->get_direct_parents();
       $male_parent = $parents_info[0][1] || '';
       $female_parent = $parents_info[1][1] || '';
     }
@@ -501,10 +543,9 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
         $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_3);
         if ($found[$i]->[4] =~ m/^\//){
           $label_text_4 = "Pedigree: No pedigree available for ".$found[$i]->[2];
-          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_4);
         }
+        $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_4);
         $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $added_text);
-
 }
 
   $pdf->close();

@@ -30,7 +30,7 @@ $combo_pops_id => ''
 
 <%perl>
 
-#my $submit_new = qq | <a href="/submit/intro">Submit GS population</a> |;
+my $pop_link = qq | <a href="/solgs/population/$pop_id">$project_name</a> |;
 
 </%perl>
 
@@ -55,6 +55,7 @@ $combo_pops_id => ''
 
  <& summary.mas,
     project_id   => $pop_id,
+    pop_link     => $pop_link,
     project_name => $project_name,
     project_desc => $project_desc,
     stocks_no    => $stocks_no,

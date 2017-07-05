@@ -76,10 +76,10 @@ sub index :Path('/tools/blast/') :Args(0) {
 
   # # remove the Basic option from the list (it will still be the default if nothing is selected)
   # #
-  # for (my $i=0; $i<@parse_options; $i++) { 
-  # 	if ($parse_options[$i]->[0] eq 'Basic') { 
-  # 	    delete($parse_options[$i]);
-  # 	}
+  # for (my $i=0; $i<@parse_options; $i++) {
+  #   if ($parse_options[$i]->[0] eq 'Basic') {
+  #       delete($parse_options[$i]);
+  #   }
   # }
 
   #print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);

@@ -1,34 +1,27 @@
-<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown" href="/genomes/">Genomes</a>
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown">Genomes</a>
 <!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Genomes<span class="caret"></span></a> -->
   <ul class="dropdown-menu">
     <li class="dropdown-header">Completed Genomes</li>
     <li><a href="/organism/Solanum_lycopersicum/genome">Tomato</a></li>
-    <li><a target="_blank" href="http://tomato-webapollo.sgn.cornell.edu/WebApollo">Tomato - WebApollo</a></li>
+    <li><a target="_blank" href="http://apollo.sgn.cornell.edu/apollo/8738/jbrowse/index.html?loc=SL3.0ch01&tracks=ITAG3.2%20gene%20models%2CXY%20plot-All%20merged%20reads">Tomato - Apollo genome annotation editor</a></li>
     <li><a href="/organism/Solanum_tuberosum/genome">Potato</a></li>
     <li><a href="/organism/Capsicum_annuum/genome">Pepper</a></li>
     <li><a href="/organism/Solanum_pennellii/genome"><i>Solanum pennellii</i></a></li>
     
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Draft Genomes</li>
+    <li><a href="/organism/Nicotiana_attenuata/genome"><i>Nicotiana attenuata</i></a></li>
     <li><a href="/organism/Nicotiana_benthamiana/genome"><i>Nicotiana benthamiana</i></a></li>
     <li><a href="/organism/Nicotiana_tabacum/genome"><i>Nicotiana tabacum</i></a></li>
-    <li><a href="/organism/Solanum_pimpinellifolium/genome"><i>Solanum pimpinellifolium</i></a></li>
     <li><a href="/organism/Petunia_axillaris/genome"><i>Petunia axillaris</i></a></li>
     <li><a href="/organism/Petunia_inflata/genome"><i>Petunia inflata</i></a></li>
+    <li><a href="/organism/Solanum_pimpinellifolium/genome"><i>Solanum pimpinellifolium</i></a></li>
     
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Resequencing projects</li>
     <li><a href="/organism/Solanum_lycopersicum/inbred_genomes"><i>Solanum lycopersicum</i> inbreds</a></li>
     <li><a href="/organism/Solanum_lycopersicum/tomato_150">150 Tomato Genome Resequencing Project</a></li>
     <li><a href="/organism/Solanum_lycopersicum/tomato_360">BGI Tomato 360 genomes</a></li>
-    
-    <li role="separator" class="divider"></li>
-    <li class="dropdown-header">Projects</li>
-    <li><a href="/solanaceae-project/index.pl">Solanaceae project (SOL)</a></li>
-    <li><a href="/organism/sol100/view">SOL-100 Project</a></li>
-    <li><a href="/organism/Solanum_lycopersicum/genome">International Tomato Sequencing Project</a></li>
-    <li><a href="/about/us_tomato_sequencing.pl">U.S. tomato sequencing project</a></li>
-    <li><a href="http://bti.cornell.edu/research/projects/nicotiana-benthamiana"><i>Nicotiana benthamiana</i> BTI site</a></li>
     
   </ul>
 </li>

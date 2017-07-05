@@ -1,5 +1,5 @@
 
-###NOTE: This is deprecated and has been moved to CXGN::Trial::Download.
+###NOTE: This controller points to CXGN::Trial::Download for the phenotype download.
 
 package SGN::Controller::BreedersToolbox::Download;
 
@@ -29,8 +29,9 @@ use SGN::Model::Cvterm;
 use CXGN::Trial::TrialLookup;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
-use CXGN::Phenotypes::SearchFactory;
+use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Genotype::Search;
+use CXGN::Login;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -190,17 +191,27 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $sgn_session_id = $c->req->param("sgn_session_id");
 
     my $user = $c->user();
-    if (!$user) {
+    if (!$user && !$sgn_session_id) {
         $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
         return;
+    } elsif (!$user && $sgn_session_id) {
+        my $login = CXGN::Login->new($schema->storage->dbh);
+        my $logged_in = $login->query_from_cookie($sgn_session_id);
+        if (!$logged_in){
+            $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+            return;
+        }
     }
 
+    my $has_header = defined($c->req->param('has_header')) ? $c->req->param('has_header') : 1;
     my $format = $c->req->param("format") && $c->req->param("format") ne 'null' ? $c->req->param("format") : "xls";
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
     my $trait_list = $c->req->param("trait_list");
+    my $trait_component_list = $c->req->param("trait_component_list");
     my $year_list = $c->req->param("year_list");
     my $location_list = $c->req->param("location_list");
     my $trial_list = $c->req->param("trial_list");
@@ -214,6 +225,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 
     my @trait_list;
     if ($trait_list && $trait_list ne 'null') { print STDERR "trait_list: ".Dumper $trait_list."\n"; @trait_list = @{_parse_list_from_json($trait_list)}; }
+    my @trait_component_list;
+    if ($trait_component_list && $trait_component_list ne 'null') { print STDERR "trait_component_list: ".Dumper $trait_component_list."\n"; @trait_component_list = @{_parse_list_from_json($trait_component_list)}; }
     my @trait_contains_list;
     if ($trait_contains && $trait_contains ne 'null') { print STDERR "trait_contains: ".Dumper $trait_contains."\n"; @trait_contains_list = @{_parse_list_from_json($trait_contains)}; }
     my @year_list;
@@ -239,6 +252,26 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
             push @trait_list_int, $cvterm_id;
         }
     }
+
+    if (scalar(@trait_component_list)>0){
+        if ($trait_component_list[0] =~ m/^\d+$/) {
+            my $trait_cvterm_ids = SGN::Model::Cvterm->get_traits_from_components($schema, \@trait_component_list);
+            foreach (@$trait_cvterm_ids) {
+              push @trait_list_int, $_;
+            }
+        } else {
+            my @trait_component_ids;
+            foreach (@trait_component_list) {
+                my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $_)->cvterm_id();
+                push @trait_component_ids, $cvterm_id;
+            }
+            my $trait_cvterm_ids = SGN::Model::Cvterm->get_traits_from_components($schema, \@trait_component_ids);
+            foreach (@$trait_cvterm_ids) {
+              push @trait_list_int, $_;
+            }
+        }
+    }
+
     my @plot_list_int;
     foreach (@plot_list) {
         if ($_ =~ m/^\d+$/) {
@@ -323,7 +356,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         trait_contains => \@trait_contains_list,
         phenotype_min_value => $phenotype_min_value,
         phenotype_max_value => $phenotype_max_value,
-        search_type=>$search_type
+        search_type=>$search_type,
+        has_header=>$has_header
     });
 
     my $error = $download->download();
@@ -398,7 +432,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $datalevel         = $c->req->param("phenotype_datalevel");
     my $timestamp_included = $c->req->param("timestamp") || 0;
     my $cookie_value      = $c->req->param("download_token_value");
-    my $search_type        = $c->req->param("search_type") || 'fast';
+    my $search_type        = $c->req->param("search_type") || 'complete';
 
     my $accession_data;
     if ($accession_list_id) {
@@ -451,25 +485,23 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     if ($search_type eq 'fast'){
         $factory_type = 'MaterializedView';
     }
-    my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
-        $factory_type,    #can be either 'MaterializedView', or 'Native'
-        {
-            bcs_schema=>$schema,
-            trait_list=>$trait_id_data->{transform},
-            trial_list=>$trial_id_data->{transform},
-            accession_list=>$accession_id_data->{transform},
-            include_timestamp=>$timestamp_included,
-            data_level=>$datalevel,
-        }
-    );
-    my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
+	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+		bcs_schema=>$schema,
+		search_type=>$factory_type,
+		trait_list=>$trait_id_data->{transform},
+		trial_list=>$trial_id_data->{transform},
+		accession_list=>$accession_id_data->{transform},
+		include_timestamp=>$timestamp_included,
+		data_level=>$datalevel,
+	);
+	my @data = $phenotypes_search->get_phenotype_matrix();
 
     if ($format eq "html") { #dump html in browser
         $output = "";
-        my @header = split /\t/, $data[0];
+        my @header = @{$data[0]};
         my $num_col = scalar(@header);
         for (my $line =0; $line< @data; $line++) {
-            my @columns = split /\t/, $data[$line];
+            my @columns = @{$data[$line]};
             my $step = 1;
             for(my $i=0; $i<$num_col; $i++) {
                 if ($columns[$i]) {
@@ -500,10 +532,10 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
             #build csv with column names
             open(CSV, ">", $tempfile) || die "Can't open file $tempfile\n";
-                my @header = split /\t/, $data[0];
+                my @header = @{$data[0]};
                 my $num_col = scalar(@header);
                 for (my $line =0; $line< @data; $line++) {
-                    my @columns = split /\t/, $data[$line];
+                    my @columns = @{$data[$line]};
                     my $step = 1;
                     for(my $i=0; $i<$num_col; $i++) {
                         if ($columns[$i]) {
@@ -525,7 +557,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
             my $ws = $ss->add_worksheet();
 
             for (my $line =0; $line< @data; $line++) {
-                my @columns = split /\t/, $data[$line];
+                my @columns = @{$data[$line]};
                 for(my $col = 0; $col<@columns; $col++) {
                     $ws->write($line, $col, $columns[$col]);
                 }
@@ -552,7 +584,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 my $self = shift;
 my $c = shift;
-my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedigree_stock_id, $accession_name, $female_parent, $male_parent);
+my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedigree_stock_id, $accession_name);
 
     $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
     $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
@@ -570,7 +602,7 @@ my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedig
 
     open my $TEMP, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
 
-	print $TEMP "Accession\tFemale_Parent\tMale_Parent";
+	print $TEMP "Accession\tFemale_Parent\tMale_Parent\tCross_Type";
  	print $TEMP "\n";
        my $check_pedigree = "FALSE";
        my $len;
@@ -580,19 +612,24 @@ my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedig
 	{
 
 	$accession_name = $accession_list[$i];
+    my ($female_parent, $male_parent, $cross_type) = '';
 	my $pedigree_stock_id = $accession_ids[$i];
-	my @pedigree_parents = CXGN::Chado::Stock->new ($schema, $pedigree_stock_id)->get_direct_parents();
+	my @pedigree_parents = CXGN::Stock->new ( schema => $schema, stock_id => $pedigree_stock_id)->get_direct_parents();
 	$len = scalar(@pedigree_parents);
 	if($len > 0)
 	{
       		$check_pedigree = "TRUE";
 	}
-
-
-
-	    $female_parent = $pedigree_parents[0][1] || '';
-	    $male_parent = $pedigree_parents[1][1] || '';
-	  print $TEMP "$accession_name \t  $female_parent \t $male_parent\n";
+    foreach my $parent (@pedigree_parents) {
+        my $type = @$parent[2];
+        if ($type eq 'female') {
+            $female_parent = @$parent[1];
+            $cross_type = @$parent[3];
+        } elsif ($type eq 'male') {
+            $male_parent = @$parent[1];
+        }
+    }
+    print $TEMP "$accession_name\t$female_parent\t$male_parent\t$cross_type\n";
 
   	}
 
@@ -697,7 +734,9 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   print STDERR "Decoding genotype data ...".localtime()."\n";
 
   for (my $i=0; $i < scalar(@$genotypes) ; $i++) {       # loop through resultset, printing accession uniquenames as column headers and storing decoded gt strings in array of hashes
-    print $TEMP $genotypes->[$i]->{genotypeUniquename} . "\t";
+
+    my ($name,$batch_id) = split(/\|/, $genotypes->[$i]->{genotypeUniquename});
+    print $TEMP $genotypes->[$i]->{germplasmName} . "|" . $batch_id . "\t";
     push(@accession_genotypes, $genotypes->[$i]->{genotype_hash});
   }
   @unsorted_markers = keys   %{ $accession_genotypes[0] };
