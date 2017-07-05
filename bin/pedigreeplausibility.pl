@@ -84,7 +84,7 @@ while (my $row = $stock_rs->next()) {
 
   my @self_gts = $gts->get_genotype_info_as_genotype_objects();
 	$gts = CXGN::Genotype::Search->new( {
-    print(@self_gts);
+    print@self_gts;
 	    bcs_schema => $schema,
 	    accession_list => [ $parents[0]->[0]],
 	    protocol_id => $protocol_id,
