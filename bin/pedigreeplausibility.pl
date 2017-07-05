@@ -1,4 +1,9 @@
-# -H localhost -D fixture -p 1 -o sink.txt
+# perl bin/pedigreeplausibility.pl -H localhost -D fixture -p 1 -o sink.txt -f bin/ped.txt
+# psql -U postgres
+# \c fixture
+# select * from stock join cvterm on (type_id = cvterm_id) where cvterm.name = 'accession';
+# ssh production@cassava-devel.sgn.cornell.edu pw #cp_/root/*_?
+
 use strict;
 use warnings;
 
@@ -9,8 +14,8 @@ use CXGN::Chado::Stock;
 use CXGN::Genotype;
 use CXGN::Genotype::Search;
 
-our ($opt_H, $opt_D, $opt_p, $opt_o); # host, database, genotyping protocol_id
-getopts('H:D:p:o:');
+our ($opt_H, $opt_D, $opt_p, $opt_o, $opt_f); # host, database, genotyping protocol_id, out, in
+getopts('H:D:p:o:f:');
 
 if (!$opt_p) {
     print STDERR "Need -p with genotyping protocol id.\n";
@@ -18,6 +23,20 @@ if (!$opt_p) {
 }
 
 my $protocol_id = $opt_p;
+
+my $filename = $opt_f;
+
+my %pedigreehash;
+my $childname;
+my @pedigreearray;
+
+open(IN, $filename) or die "Could not open file $filename $!";
+
+while (my $row = <IN>){
+@pedigreearray = split(/\s/ ,$row);
+$childname = $pedigreearray[0];
+$pedigreehash{$childname} = "1";
+}
 
 my $dbh = CXGN::DB::InsertDBH->new( {
     dbhost => $opt_H,
@@ -31,6 +50,8 @@ my $is_stdin =0;
 
 if ($opt_o) {
     open($OUT, '>', $opt_o);
+    print $OUT "123";
+    close $OUT;
 }
 else {
     $OUT =  *STDIN;
@@ -46,12 +67,14 @@ my $stock_rs = $schema->resultset("Stock::Stock")->search( { type_id => $accessi
 my @scores;
 
 while (my $row = $stock_rs->next()) {
+    print STDERR "working on accession ".$row->uniquename()."\n";
+    unless($pedigreehash{$row->uniquename()}){next;}
     my $stock = CXGN::Chado::Stock->new($schema, $row->stock_id());
     my @parents = $stock->get_direct_parents();
 
     if (@parents == 2) {
 
-	my $gts = CXGN::Genotype::Search->new( {
+	  my $gts = CXGN::Genotype::Search->new( {
 	    bcs_schema => $schema,
 	    accession_list => [ $row->stock_id ],
 	    protocol_id => $protocol_id,
@@ -75,7 +98,7 @@ while (my $row = $stock_rs->next()) {
 	my (@dad_gts) = $gts->get_genotype_info_as_genotype_objects();
 
 	if (! (@self_gts)) {
-	    print STDERR "Genotype of accession ".$row->uniquename()." not availalbe. Skipping...\n";
+	    print STDERR "Genotype of accession ".$row->uniquename()." not available. Skipping...\n";
 	    next;
 	}
 	if (!@mom_gts) {
