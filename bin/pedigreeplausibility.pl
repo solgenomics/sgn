@@ -115,6 +115,7 @@ while (my $row = $stock_rs->next()) {
   #print $OUT "d mother genos".$mom_gts;}
 ##check length
 ##index of array for
+}
 	foreach my $s (@self_gts) {
 	    foreach my $m (@mom_gts) {
 		foreach my $d (@dad_gts) {
