@@ -177,7 +177,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
       push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents];
       print "STOCK FOUND: $stock_id, $name, $accession_name.\n";
-
     }
 
     my $dir = $c->tempfiles_subdir('pdfs');
@@ -232,12 +231,12 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     	#
       #####
       my $tempfile;
-      my $plot_text = "plot_accession: ".$found[$i]->[2]." ".$found[$i]->[3];
+      my $plot_text = "accession: ".$found[$i]->[2]." ".$found[$i]->[3];
       if ($barcode_type eq "1D"){
          if (defined $row){
            print "ACCESSION IS NOT EMPTY........ $row\n";
             #$tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[2]." ".$found[$i]->[3],  'large',  20  ]);
-            $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $plot_text,  'large',  20, $labels_per_row ]);
+            $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $plot_text,  'large',  20 ]);
          }
          elsif ($female_parent =~ m/^\d+/ || $female_parent =~ m/^\w+/){
            if ($found[$i]->[4] =~ m/^\//) {
@@ -246,14 +245,11 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
            }
            $pedigree_string = $found[$i]->[4];
            #$tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[1]." ".$found[$i]->[4],  'large',  20  ]);
-           print "PEDIGREE STRINGS: $pedigree_string\n";
-           #$tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $found[$i]->[4],  'large',  20  ]);
-           $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $found[$i]->[4],  'large',  20, $labels_per_row  ]);
+           $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $found[$i]->[4],  'large',  20  ]);
          }
          else {
-        # #####
-      	  #$tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[0], $found[$i]->[1], 'large',  20  ]);
-          $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[1], $added_text, 'large',  20, $labels_per_row  ]);
+        #
+      	  $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[0], $found[$i]->[1], 'large',  20  ]);
          }
 
       }
@@ -268,7 +264,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             print "I SEE SLASH: $found[$i]->[4]\n";
             ($found[$i]->[4] = $found[$i]->[4]) =~ s/\///;
           }
-           $label_text_4 = "Pedigree: ".$found[$i]->[4];
+           $label_text_4 = "Pedigree:".$found[$i]->[4];
           $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]." ".$added_text, $fieldbook_barcode]);
         }
         else {
@@ -304,7 +300,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
         foreach my $label_count (1..$labels_per_row) {
           my $xposition = $left_margin + ($label_count -1) * $final_barcode_width + 20;
           my $yposition = $ypos -7;
-          print "My X Position: $xposition and Y Position: $ypos\n";
           my $label_text = $found[$i]->[1];
           my $label_size =  7;
           $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
@@ -320,7 +315,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                   $label_text_4 = "Pedigree: No pedigree available for ".$found[$i]->[2];
               }
               if ($plot_cvterm_id == $type_id){
-                  $label_text_4 = $found[$i]->[3];
+                  $label_text_4 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
               }
                my $parents = $found[$i]->[4];
                if (!$parents){
@@ -338,43 +333,22 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
         if ($labels_per_row > '1'){
             my $label_text = $found[$i]->[1];
             if (length($label_text) > 15) {
-              print "My label Count: $label_count\n";
               my $label_count_15_xter_plot_name =  1-1;
               my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 20;
               my $yposition = $ypos -7;
-              print "My X Position: $xposition and Y Position: $ypos\n";
               my $label_size =  11;
               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
             }
         }
-
     }
 
     elsif ($barcode_type eq "1D") {
+
     	foreach my $label_count (1..$labels_per_row) {
+
             $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
-            if ($labels_per_row == '1' ){
-                my $label_text = $found[$i]->[1];
-                my $label_size =  7;
-                my $label_count_15_xter_plot_name =  1-1;
-                my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 170.63;
-                my $yposition_2 = $ypos - 20;
-                my $yposition_3 = $ypos - 30;
-
-                $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
-                if ($found[$i]->[4] =~ m/^\//){
-                    $label_text_4 = "Pedigree: No pedigree available for ".$found[$i]->[2];
-                } else { $label_text_4 = $pedigree_string;}
-                if ($plot_cvterm_id == $type_id){
-                    $label_text_4 = $plot_text;
-                }
-
-                $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
-            }
-    	  #$pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
     	}
     }
-
 }
 
     $pdf->close();
