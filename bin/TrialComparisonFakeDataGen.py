@@ -4,7 +4,7 @@
 
 import csv, time,random, sys
 cols = ['studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'Variable']
-study_count = 5
+study_count = 3
 accession_count = 50
 value_range = (0,100)
 value_wobble = 30
@@ -20,8 +20,8 @@ def make_row(study,accession,base_value):
     germplasmName = "AN"+str(accession)
     germplasmSynonyms = ''
     observationLevel = "plot"
-    observationUnitDbId = "MoonPot"+str(accession)
-    observationUnitName = "MoonPot"+str(accession)
+    observationUnitDbId = "MoonPlanter"+str(accession)
+    observationUnitName = "MoonPlanter"+str(accession)
     replicate = "1"
     blockNumber = "1"
     plotNumber = str(accession)
@@ -38,9 +38,3 @@ for accession in range(accession_count):
         row_list.append(make_row(study,accession,base_value))
 row_list.sort()
 writer.writerows(row_list)
-
-# with open("scheme.csv") as scheme:
-#     csv = csv.reader(scheme)
-#     for row in csv:
-#         print row
-#         time.sleep(1)

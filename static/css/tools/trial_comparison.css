@@ -7,36 +7,19 @@
     margin-top: 1em;
 }
 
-.tc-grid {
+.tc-grid, .tc-histogram{
     box-sizing: border-box;
     margin: auto;
     float: left;
     position:relative;
 }
 
-.tc-histogram{
-    box-sizing: border-box;
-    margin: auto;
-    float: left;
-    padding: 0;
-    position:relative;
-}
-
-.tc-legend-deselected circle{
-    fill: white;
-    stroke: black;
-}
-
-.tc-grid-row {
-    clear: both;
-}
-
-.tc-legend-entry:hover circle{
+.tc-legend-entry:hover .tc-legend-circle{
     stroke: #49f;
     stroke-width: 2;
 }
 
-.tc-background{
+.tc-background {
     fill: white;
     stroke: #aaa;
 }
@@ -44,7 +27,7 @@
     fill: #eee;
     stroke: #aaa;
 }
-.tc-grid-box:hover .tc-background{
+.tc-grid-box:not(.only-box):hover .tc-background{
     stroke: #49f;
 }
 .tc-scatter-point{
@@ -57,10 +40,24 @@
     text-anchor: end;
     font-size: 12px;
 }
-.tc-graph-axis{
+.tc-graph-axis text{
     font-size: 12px;
+    fill: #333;
+}
+.tc-axis-label{
+    text-anchor: middle;
+    alignment-baseline: middle;
 }
 .tc-tool-tip-text{
     fill: white;
     font-size: 40pt;
+}
+.tc-label rect{
+    fill: #eee;
+    stroke: #aaa;
+}
+
+.tc-label text{
+    text-anchor: middle;
+    alignment-baseline: middle;
 }

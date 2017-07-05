@@ -32,7 +32,7 @@
           <option selected="selected" value=""> </option>
         </select>
       </div>
-      <span disabled id="submit_trial_list" class="btn btn-primary">Compare</span>
+      <img hidden id="loading-spinner" src="/img/wheel.gif" alt="loading">
     </form>
   </center>
 </div>
@@ -57,7 +57,6 @@ $(document).ready(function(){
       if (trial_list_id === "") {
         $("#trials_list_info").hide(400);
         $('#trait_select').attr("disabled",true).html('<option selected="selected" value=""> </option>');
-        toggleSubmitButton(false);
         return;
       } else {
         $("#trials_list_info").show(400);
@@ -97,32 +96,13 @@ $(document).ready(function(){
   }
 })
 
-$('#trait_select').change(function(event) {
-  if ($('#trait_select').val() == ""){
-    toggleSubmitButton(false);
-  } else {
-    toggleSubmitButton(true);
-  }
-});
-
-
-
-function toggleSubmitButton(state){
-  $('#submit_trial_list').off("click");
-  if (state) {
-    $('#submit_trial_list').on("click",fetchAndBuildGraphs);
-    $('#submit_trial_list').attr("disabled",false);
-  } else {
-    $('#submit_trial_list').attr("disabled",true);
-    $(".tc-grid").hide();
-    $(".tc-histogram").hide();
-  }
-}
+$('#trait_select').change(fetchAndBuildGraphs);
 
 function fetchAndBuildGraphs() { 
   var list_id = $('#trials_list_select').val();
-  $(".tc-grid").show();
-  $(".tc-histogram").show();
+  $(".tc-grid").hide();
+  $(".tc-histogram").hide();
+  $("#loading-spinner").show();
   $.ajax( { 
    url: '/ajax/trial/compare_list_data_test',
    data: { 'cvterm_id' : $('#trait_select').val(), 'list_id': list_id },
@@ -134,20 +114,9 @@ function fetchAndBuildGraphs() {
           d3.select('.tc-grid').html("");
           d3.select('.tc-histogram').html("");
           createVisualizations(response);
-          //createHistogram(response);
-          //createGraphs(response);
       }
     }
   });
-}
-
-function setupVisualizations(){
-  d3.select('.tc-histogram')
-    .append('svg').attr({
-      width:"100%",
-      "margin": "auto",
-      "viewBox": "0 0 "+view_size+" "+view_size
-    }).classed(".tc-histogram-svg",true);
 }
 
 function  createVisualizations(response){
@@ -169,41 +138,60 @@ function  createVisualizations(response){
     }
   }).filter(function(d){return d.value!==null});
 
+  $(".tc-grid").show();
+  $(".tc-histogram").show();
+  $("#loading-spinner").hide();
+
   //nest by study
   var studies = d3.nest().key(function(d){
     return d.study
   }).sortKeys().entries(all_data);
+  updateHistogram(studies,all_data);
 
   //pair studies for scatter grid
   var paired_studies = d3.cross(
     studies.slice(0,studies.length-1),
     studies.slice(1,studies.length),
     function(a,b){
-      return a.key<b.key ? {a:a,b:b} : null;
+      return a.key<b.key ? {a:b,b:a} : null;
   });
   updateScatter(studies,paired_studies);
+  var scatter = d3.selectAll(".tc-grid-box");
+  if(scatter.size()==1){
+    console.log(scatter.on("click"));
+    scatter.on("click").call(scatter.node(),scatter.datum());
+    scatter.classed("only-box",true).on("click",null);
+  }
 }
 
 function updateScatter(studies,paired_studies){
   var ttime = 200;
   var scatter_size = 400;
-  var axis_offset = 40;
+  var axis_offset = 50;
   var gutter_ratio = 0.01;
+  var label_ratio = 0.2; //ratio of scatter_size
+  var max_label_ratio = 0.05; //ratio of grid size
   //update grid dimensions
   var columns = studies.length-1
   var size = scatter_size*columns/(1-gutter_ratio*(columns+1));
+  if (label_ratio*scatter_size > max_label_ratio*size){
+    label_ratio = max_label_ratio*size/scatter_size;
+  }
   var gutter_size = gutter_ratio*size;
+  var label_size = label_ratio*scatter_size;
+  var label_o = -label_size-gutter_size
+  size = size+label_size+gutter_size;
 
   var canv = d3.select(".tc-grid")
     .selectAll(".tc-grid-svg")
     .data([paired_studies]);
   canv = canv.enter().append('svg')
     .classed("tc-grid-svg",true)
-    //.attr("shape-rendering","geometricPrecision")
-    .attr("viewBox","0 0 "+size+" "+size)
+    .attr("shape-rendering","geometricPrecision")
+    .attr("viewBox",(label_o)+" "+(label_o)+" "+(size)+" "+(size))
     .merge(canv);
   canv.transition(ttime)
-    .attr("viewBox","0 0 "+size+" "+size);
+    .attr("viewBox",(label_o)+" "+(label_o)+" "+(size)+" "+(size));
   var grid_gs = canv.selectAll(".tc-grid-box")
     .data(function(d){return d;});
   grid_gs.exit().transition(ttime).remove();
@@ -237,6 +225,14 @@ function updateScatter(studies,paired_studies){
     if (!this_g.classed("tc-changing")){
       this_g.classed("tc-changing",true);
       if (this_g.classed("tc-expanded")){
+        d3.selectAll(".tc-legend-entry")
+        .each(function(d,i){
+            d.toggleHLeg(true);
+          })
+        .filter(".orig-leg-hidden")
+        .each(function(d,i){
+            d.toggleHLeg(false);
+        });
         this_g
           .classed("tc-expanded",false)
           .transition(ttime)
@@ -246,12 +242,21 @@ function updateScatter(studies,paired_studies){
           .attr("stroke-width",function(d){return +d3.select(this).attr("orig-stroke");});
           
       } else {
+        var legents = d3.selectAll(".tc-legend-entry");
+        legents.classed("orig-leg-hidden",false)
+          .filter(".leg-hidden")
+          .classed("orig-leg-hidden",true);
+        legents.each(function(d,i){
+            d.toggleHLeg(false);
+          });
+        d.a.toggleHLeg(true);
+        d.b.toggleHLeg(true);
         var scale = (size-gutter_size*2)/(scatter_size)
         this_g
           .raise()
           .classed("tc-expanded",true)
           .transition(ttime)
-          .attr("transform","translate("+gutter_size+","+gutter_size+")scale("+scale+","+scale+")")
+          .attr("transform","translate("+(label_o+gutter_size)+","+(label_o+gutter_size)+")scale("+scale+","+scale+")")
         this_g.selectAll(".tc-var-stroke")
           .attr("orig-stroke",function(d){return parseFloat(d3.select(this).attr("stroke-width"));})
           .transition(ttime)
@@ -261,8 +266,10 @@ function updateScatter(studies,paired_studies){
           this_g.classed("tc-changing",false);
       },ttime);
     }
+    clearTimeout(tooltip.hover_timeout)
+    tooltip._setTip(false);
   });
-  var tooltip = tooltipSetup(canv);
+  var tooltip = tooltipSetup(canv,size);
   scatters.each(function(d,i){
     var study_pair = d;
     var current_graph = d3.select(this);
@@ -282,17 +289,19 @@ function updateScatter(studies,paired_studies){
       .attr("transform", "translate("+axis_offset+"," + (scatter_size-axis_offset) + ")")
       .call(Xaxis)
       .append("text")
-      .attr("x", scatter_size/2-axis_offset)
-      .attr("y", 50)
+      .classed("tc-axis-label",true)
+      .attr("x", (scatter_size-2*axis_offset)/2)
+      .attr("y", 35)
       .text(study_pair.a.values[0].studyName+": "+study_pair.a.values[0].variableName);
     current_graph.append("g")
       .classed("tc-graph-axis",true)
       .attr("transform", "translate("+axis_offset+","+axis_offset+")")
       .call(Yaxis)
       .append("text")
+      .classed("tc-axis-label",true)
       .attr("transform", "rotate(-90)")
-      .attr("x", -scatter_size/2+axis_offset)
-      .attr("y", -40)
+      .attr("x", -(scatter_size-2*axis_offset)/2)
+      .attr("y", -35)
       .text(study_pair.b.values[0].studyName+": "+study_pair.a.values[0].variableName);
 
     //parse/filter data!
@@ -327,6 +336,8 @@ function updateScatter(studies,paired_studies){
          y:y,
          orig:d
        }
+      }).filter(function(d,i) {
+        return !(isNaN(d.x)||isNaN(d.y));
       });  
 
     getx = (d) => Xscale(d.x)+axis_offset;
@@ -334,7 +345,8 @@ function updateScatter(studies,paired_studies){
     //create plot points using data        
     var plotpoints = current_graph.selectAll(".tc-scatter-point")
       .data(accessions)
-      .enter().append("g").classed("tc-scatter-point",true)
+      .enter()
+      .append("g").classed("tc-scatter-point",true)
     plotpoints.append("circle")
       .attr("r", 3)
       .attr("cx", getx)
@@ -367,15 +379,12 @@ function updateScatter(studies,paired_studies){
           tooltip.setTip(false);
         }
       } else {
-        //tooltip.current = this;
-        //tooltip.setTip(true,"Oh!",this);
+        var label = d.a.values[0].studyName+" vs. "+d.b.values[0].studyName
+        tooltip.setTip(true,label,this);
       }
+    }).on("mouseout",function(d,i){
+      tooltip.setTip(false);
     });
-  //     plotpoints.on("mouseover",function(d){
-  //   if (d3.select(this.parentNode).classed("tc-expanded")){
-  //     tooltip.setTip(true,"<a target='_blank' href='/stock/"+d.key+"/view'>"+d.name+"</a>",this);
-  //   }
-  // });
 
 
     //add line of best fit and rsquared
@@ -415,10 +424,62 @@ function updateScatter(studies,paired_studies){
       .attr('y',50)
       .text("y = "+best_fit.slope.toFixed(3)+"x + "+best_fit.yIntercept.toFixed(3));
   });
+  var top_labels = canv.selectAll(".tc-top-label")
+    .data(studies.slice(1,studies.length),function(d,i){return "top-label-"+i;});
+  var left_labels = canv.selectAll(".tc-left-label")
+    .data(studies.slice(0,studies.length-1),function(d,i){return "left-label-"+i;});
+  top_labels.exit().transition(ttime).remove();
+  left_labels.exit().transition(ttime).remove();
+  new_top_labels = top_labels.enter()
+    .append("g")
+    .classed("tc-top-label",true)
+    .classed("tc-label",true)
+    .attr("transform",function(d,i){
+      var row = Math.floor(i/columns);
+      var col = i%columns;
+      var y = label_o+gutter_size;
+      var x = gutter_size+col*(scatter_size+gutter_size);
+      return "translate(" + x + "," + y + ")";
+    });
+  new_left_labels = left_labels.enter()
+    .append("g")
+    .classed("tc-left-label",true)
+    .classed("tc-label",true)
+    .attr("transform",function(d,i){
+      var row = Math.floor(i/columns);
+      var col = i%columns;
+      var y = label_o+gutter_size;
+      var x = -(gutter_size+col*(scatter_size+gutter_size))-scatter_size;
+      return "rotate(-90) translate(" + x + "," + y + ")";
+    });
+  new_top_labels.append("rect");
+  new_top_labels.append("text");
+  new_left_labels.append("rect");
+  new_left_labels.append("text");
+  canv.selectAll(".tc-label")
+    .each(function(d,i){
+      var cur_label = d3.select(this);
+      cur_label.select("rect")
+        .attr("x",0)
+        .attr("y",0)
+        .transition()
+        .attr("width",scatter_size)
+        .attr("height",scatter_size*label_ratio);
+      cur_label.select("text")
+        .attr("x",scatter_size/2)
+        .attr("y",scatter_size*label_ratio/2)
+        .attr("font-size","10pt")
+        .attr("dy","0.1em")
+        .text(d.values[0].studyName);
+      var bbox = cur_label.node().getBBox();
+      var scale = d3.max([bbox.width/(scatter_size-gutter_size/2),bbox.height/(scatter_size*label_ratio-gutter_size/2)]);
+      cur_label.select("text").attr("font-size",parseFloat(cur_label.select("text").attr("font-size"))/scale+"pt");
+    });
 }
 
-function tooltipSetup(canv){
+function tooltipSetup(canv,view_width){
   var ttime = 100;
+  var scale = view_width/1800;
   var tooltip = canv.select(".tc-tool-tip");
   if (!tooltip.empty()){
     return tooltip.datum();
@@ -427,50 +488,62 @@ function tooltipSetup(canv){
       .classed("tc-tool-tip",true)
       .datum({
         hoverlock: false,
+        hover_timeout:null,
+        onclick:null,
         hidden: true,
         current: null,
-        setTip: function (visible,text,target,offsetX,offsetY){
+        _setTip: function (visible,content,target,onclick){
           if (!visible){
-            tooltip.datum().hoverlock = false;
+            clearTimeout(tooltip.datum().hover_timeout);
             tooltip.datum().hidden = true;
-            setTimeout(function(){
-              if (!tooltip.datum().hoverlock){
-                tooltip.attr("transform", "translate("+0+"," +0+")")
-                  .transition(ttime).style("opacity",0);
-              } 
-            },100);
+            if (!tooltip.datum().hoverlock){
+              tooltip.style("opacity",0);
+              tooltip.datum().onclick = onclick;
+            } 
           } else {
+            tooltip.datum().onclick = onclick;
             bbox = getGlobalBBox(target);
-            tooltip.datum().hoverlock = true;
             var width = tooltip.select("text")
-              .html(text).node().getComputedTextLength();
+              .html(content).node().getComputedTextLength();
             tooltip.select("text").selectAll("*").attr("fill","#fff");
-            tooltip.select("rect").attr("width",width+48);
+            var ttwidth = width+48;
+            var ttx = -width/2-24;
             tooltip.raise();
             if (!tooltip.datum().hidden){
-              tooltip.style("opacity",1)
+              tooltip.style("opacity",0.8)
                 .transition(ttime/2)
                 .ease(d3.easeCubicInOut)
-                .attr("transform", "translate("+(bbox.x+bbox.width/2)+"," +(bbox.y+bbox.height/2)+")");
+                .attr("transform", "translate("+(bbox.x+bbox.width/2)+"," +(bbox.y+bbox.height/2)+") scale("+scale+")");
+              tooltip.select("rect").transition(ttime/2)
+                .attr("width",ttwidth).attr("x",-width/2-24);
             } else {
-              tooltip.attr("transform", "translate("+(bbox.x+bbox.width/2)+"," +(bbox.y+bbox.height/2)+")")
+              tooltip.attr("transform", "translate("+(bbox.x+bbox.width/2)+"," +(bbox.y+bbox.height/2)+") scale("+scale+")")
                 .transition(ttime)
-                .style("opacity",1);
+                .style("opacity",0.8);
+              tooltip.select("rect")
+                .attr("width",ttwidth).attr("x",-width/2-24);
             }
             tooltip.datum().hidden = false;
           }
+        },
+        setTip: function(visible,text,target,onclick){
+          clearTimeout(tooltip.datum().hover_timeout);
+          tooltip.datum().hover_timeout = setTimeout(function(){
+            tooltip.datum()._setTip(visible,text,target,onclick);
+          },250);
         }
-      });;
+      });
     tooltip.append('rect').classed("tc-tool-tip-rect",true)
       .attr("x", -24-12)
       .attr("y", -42-70)
       .attr("width", 24*2)
       .attr("height", 70);
     tooltip.append('text').classed("tc-tool-tip-text",true)
-      .attr("x", 0-12)
+      .attr("text-anchor","middle")
+      .attr("x", 0)
       .attr("y", -42-16.5)
       .text("");
-    var trianglePoints = "-24 -42.5, 0 0, 24 -42.5"
+    var trianglePoints = "-24 -43.5, 0 0, 24 -43.5"
     tooltip.append('polyline')
       .attr('points', trianglePoints)
       .classed("tc-tool-tip-point",true);
@@ -481,17 +554,25 @@ function tooltipSetup(canv){
       d.hoverlock = false;
       d.setTip(false);
     });
-    tooltip.on("click",function(d){d3.event.stopPropagation();});
-    tooltip.datum().setTip(false);
+    tooltip.on("click",function(d){
+      if (d.onclick){
+        d.onclick();
+      }
+      d3.event.stopPropagation();
+    });
+    tooltip.style("opacity","0")
+      .attr("transform","scale("+scale+")");
+    tooltip.datum()._setTip(false);
     return tooltip.datum();
   }
 }
 
-function getGlobalBBox(node){
+function getGlobalBBox(node,container){
   var p = node
   while (p.nodeName!="svg" && p.nodeName!="SVG"){
     p = p.parentNode
   }
+  var p = container || p;
   var pm = p.getCTM();
   var ctm = node.getCTM();
   var m = pm.inverse().multiply(ctm);
@@ -517,553 +598,186 @@ function getGlobalBBox(node){
   return gbbox;
 }
 
-////
-var view_size = 650;
-var axis_offset = 70;
+function updateHistogram(studies,all_data){
+  var num_studies = studies.length;
+  size = 400;
+  axis_offset = 50;
+  ttime = 200;
 
-function createGraphs(response){
-    // var variable_name = $('#trait_select option:selected').text();
-    // if (response.cvterm_id=="TEST_TEST"){
-    //   variable_name = "Variable";
-    // }
-    // //parse the data
-    // var data = d3.csv.parse(response.csv,
-    //     function(d) {
-    //         var dp = {
-    //             study: d.studyDbId,
-    //             studyName: d.studyName,
-    //             accession: d.germplasmDbId,
-    //             accessionName:d.germplasmName,
-    //             value: ((d[variable_name]==="") ? null : +d[variable_name])
-    //         };
-    //         return dp;
-    //     }, 
-    //     function(error, rows) {
-    //         console.log(rows);
-    //         console.log(error);
-    // });
+  //generate all the grid SVGs and pairs of studies
 
-    // //nest it by study
-    // var studies = d3.nest().key(function(d) {return d.study;}).entries(data);
-    // var num_studies = studies.length;
+  var hist = d3.select(".tc-histogram")
+    .selectAll(".tc-histogram-svg")
+    .data([studies]);
+  hist = hist.enter().append('svg')
+    .attr("shape-rendering","geometricPrecision")
+    .classed("tc-histogram-svg",true)
+    .attr("viewBox","0 0 "+(size)+" "+(size))
+    .merge(hist);
+  hist.transition(ttime)
+    .attr("viewBox","0 0 "+(size)+" "+(size));
 
-    // //generate all the grid SVGs and pairs of studies
-    // var canv = d3.select('.tc-grid');
-    // var grid_size = 96/(num_studies-1) - (1+1/(num_studies));
-    // var pairwise_data = [];
-    // for (var i = 0; i<num_studies-1; i++){
-    //     var row = canv.append("div").classed("tc-grid-row", true);
-    //     for (var j = 1; j<num_studies; j++){
-    //         if (i<j){
-    //             pairwise_data.push({"a":studies[j],"b":studies[i]});
-    //             row.append("svg")
-    //                 .classed("tc-grid-box", true)
-    //                 .classed("tc-graph", true)
-    //                 .attr("viewBox","0 0 "+view_size+" "+view_size)
-    //                 .style("width",grid_size+"%");
-    //         } else {
-    //             row.append("svg")
-    //                 .classed("tc-grid-box", true)
-    //                 .attr("viewBox","0 0 "+view_size+" "+view_size)
-    //                 .style("width",grid_size+"%");
-    //         }
-    //     }
-    // }
-    // canv.append("div").classed("tc-grid-row", true);
+  hist.append('rect')
+    .classed("tc-background",true)
+    .attr("x",400*0.01)
+    .attr("y",400*0.01)
+    .attr("width",400*0.98)
+    .attr("height",400*0.98)
 
-    //set up layout
-    // var graphSVGs = d3.selectAll(".tc-graph").data(pairwise_data);
-    // var graphs = graphSVGs.append("g");
-    // graphs.append("rect")
-    //     .classed("tc-background",true)
-    //     .attr("x","0")
-    //     .attr("y","0")
-    //     .attr("width",view_size)
-    //     .attr("height",view_size);
-    // if (num_studies>2){
-    //     //set up transition on click
-    //     var legend_state = [];
-    //     graphs.on('click', function(d,i){
-    //         var graph = d3.select(this.parentNode);
-    //         var duration = 250;
-    //         if (graph.classed("tc-expanded") && !graph.attr("inTrans")){
-    //             var placeholder = canv.selectAll(".tc-grid-row").select(".placeholder");
-    //             var graphPos = placeholder.node().getBoundingClientRect();
-    //             var canvPos = canv.node().getBoundingClientRect();
-    //             var graphWidth = graphPos.right-graphPos.left;
-    //             var canvWidth = (canvPos.right-canvPos.left);
-    //             graph.attr("inTrans",true)
-    //                  .style("width",canvWidth*0.99+"px");
-    //             graph.transition()
-    //                  .style("top",(graphPos.top-canvPos.top)+"px")
-    //                  .style("left",(graphPos.left-canvPos.left)+"px")
-    //                  .style("width",graphWidth+"px")
-    //                  .duration(duration);
-    //             setTimeout(function(){ 
-    //                 graph.attr("inTrans",null);
-    //                 placeholder.remove();
-    //                 graph.classed("tc-expanded",false)
-    //                      .style("width",grid_size+"%"); }, duration+30);
 
-    //             d3.selectAll(".tc-legend-entry")
-    //               .classed("tc-legend-deselected",true)
-    //               .filter(function(legend_d,legend_i){
-    //                 return legend_state[legend_i];
-    //               })
-    //               .classed("tc-legend-deselected",false);
+  var Xscale = d3.scaleLinear().range([0, 400-axis_offset*2]);
+  var Yscale = d3.scaleLinear().range([400-axis_offset*2, 0]);
 
-    //             d3.selectAll(".tc-hist-group")
-    //               .attr("hidden",true)
-    //               .filter(function(legend_d,legend_i){
-    //                 return legend_state[legend_i];
-    //               })
-    //               .attr("hidden",null);
+  var color = d3.scaleOrdinal(d3.schemeCategory10);
 
-    //         } else if (!graph.attr("inTrans")) {
-    //             var graphPos = graph.node().getBoundingClientRect();
-    //             var canvPos = canv.node().getBoundingClientRect();
-    //             var graphWidth = graphPos.right-graphPos.left;
-    //             var canvWidth = (canvPos.right-canvPos.left);
-    //             graph.style("top",(graphPos.top-canvPos.top)+"px")
-    //                  .style("left",(graphPos.left-canvPos.left)+"px")
-    //                  .style("width",graphWidth+"px");
-    //             graph.classed("tc-expanded",true)
-    //                  .transition()
-    //                  .style("width",canvWidth*0.99+"px")
-    //                  .style("top",canvWidth*0.005+"px")
-    //                  .style("left",canvWidth*0.005+"px")
-    //                  .duration(duration);
-    //             var pn = canv.selectAll(".tc-grid-row").select(".tc-expanded").select(function(d){return this.parentNode;})
-    //                 .insert('svg',".tc-expanded + *")
-    //                 .classed("tc-grid-box", true)
-    //                 .classed("placeholder", true)
-    //                 .attr("viewBox","0 0 "+view_size+" "+view_size)
-    //                 .style("width",grid_size+"%");
+  var bounds = d3.extent(all_data, function(d) { return d.value; });
+  Xscale.domain(bounds).nice(8);
 
-    //             legend_state = [];
-    //             d3.selectAll(".tc-legend-entry")
-    //               .each(function(legend_d){
-    //                 legend_state.push(!d3.select(this).classed("tc-legend-deselected"));
-    //               })
-    //               .classed("tc-legend-deselected",true)
-    //               .filter(function(legend_d){
-    //                 return (legend_d.values[0].study == d["a"].key || legend_d.values[0].study == d["b"].key)
-    //               })
-    //               .classed("tc-legend-deselected",false);
+  var thresholds = Xscale.ticks(8);
+  var Xaxis = d3.axisBottom(Xscale).tickValues(thresholds);
 
-    //             d3.selectAll(".tc-hist-group")
-    //               .attr("hidden",true)
-    //               .filter(function(legend_d){
-    //                 return (legend_d.values[0].study == d["a"].key || legend_d.values[0].study == d["b"].key)
-    //               })
-    //               .attr("hidden",null);
+  var binner = d3.histogram()
+    .value(function(d){
+      return d.value;
+    })
+    .domain(Xscale.domain())
+    .thresholds(thresholds);
 
-    //             setTimeout(function(){ 
-    //                 graph.style("width","99%")
-    //                      .style("top","0.5%")
-    //                      .style("left","0.5%"); }, duration+30);
-    //         }
-    //     });
-    // } else{
-    //   graphs
-    //     .each(function(d){
-    //       d3.select(this.parentNode).classed("tc-expanded",true)
-    //         .style({
-    //           "width":"100%",
-    //           "top":0,
-    //           "left":0
-    //         });
-    //   });
-    // }
-
-    //draw graphs
-    graphs.each(function(study_pair){
-        var current_graph = d3.select(this);
-        var Xscale = d3.scale.linear().range([0, view_size-axis_offset*2]);
-        var Yscale = d3.scale.linear().range([view_size-axis_offset*2, 0]);
-        var Xaxis = d3.svg.axis().scale(Xscale).orient("bottom").ticks(10);
-        var Yaxis = d3.svg.axis().scale(Yscale).orient("left").ticks(10);
-        var xBounds = d3.extent(study_pair.a.values.concat(study_pair.b.values), function(d) { return d.value; });
-        var yBounds = xBounds;
-        Xscale.domain(xBounds).nice();
-        Yscale.domain(yBounds).nice();
-
-        //axes!
-        current_graph.append("g")
-          .classed("tc-graph-axis",true)
-          .attr("transform", "translate("+axis_offset+"," + (view_size-axis_offset) + ")")
-          .call(Xaxis)
-          .append("text")
-          .attr("x", view_size/2-axis_offset)
-          .attr("y", 50)
-          .text(study_pair.a.values[0].studyName+": "+variable_name);
-        current_graph.append("g")
-          .classed("tc-graph-axis",true)
-          .attr("transform", "translate("+axis_offset+","+axis_offset+")")
-          .call(Yaxis)
-          .append("text")
-          .attr("transform", "rotate(-90)")
-          .attr("x", -view_size/2+axis_offset)
-          .attr("y", -40)
-          .text(study_pair.b.values[0].studyName+": "+variable_name);
-
-        //parse/filter data!
-        var studyids = {"a":study_pair.a.key,"b":study_pair.b.key}
-        var accessions = d3.nest().key(function(d) {return d.accession;})
-                           .entries(study_pair.a.values.concat(study_pair.b.values))
-                           .filter(function(d) {
-                              var found_a = false;
-                              var found_b = false;
-                              for (var j = 0; j < d.values.length; j++) {
-                                  found_a = (found_a || ((d.values[j].value !== null) && (d.values[j].study == studyids["a"])));
-                                  found_b = (found_b || ((d.values[j].value !== null) && (d.values[j].study == studyids["b"])));
-                              }
-                              return (found_a && found_b);
-                           }).map(function(d) {
-                              var name = d.values[0].accessionName
-                              var x = "well i never";
-                              var y = "well i never";
-                              for (var j in d.values){
-                                if (d.values[j].value !== null){
-                                  if (d.values[j].study == studyids["a"]){
-                                    x = d.values[j].value;
-                                  } else {
-                                    y = d.values[j].value;
-                                  }
-                                }
-                              }
-                              return {
-                               key:d.key,
-                               name:name,
-                               x:x,
-                               y:y,
-                               orig:d
-                             }
-                           });  
-        console.log(accessions);
-        //create plot points using data        
-        var plotpoints = current_graph.selectAll(".tc-scatter-point")
-          .data(accessions)
-          .enter().append("g").classed("tc-scatter-point",true)
-        plotpoints.append("circle")
-          .attr("r", 4)
-          .attr("cx", function(d) { return Xscale(d.x)+axis_offset; })
-          .attr("cy", function(d) { return Yscale(d.y)+axis_offset; });
-
-        //add line of best fit and rsquared
-        
-        var best_fit = lineOfBestFit(accessions);
-        console.log(best_fit);
-
-        var x1 = Xscale.domain()[0];
-        var y1 = best_fit.slope*x1+best_fit.yIntercept;
-        if (y1<Yscale.domain()[0]){
-          y1 = Yscale.domain()[0];
-          x1 = (y1-best_fit.yIntercept)/best_fit.slope;
-        }
-
-        var x2 = Xscale.domain()[1];
-        var y2 = best_fit.slope*x2+best_fit.yIntercept;
-        if (y2>Yscale.domain()[1]){
-          y2 = Yscale.domain()[1];
-          x2 = (y2-best_fit.yIntercept)/best_fit.slope;
-        }
-
-        current_graph.insert('line',".tc-scatter-point")
-          .classed('tc-fit-line',true)
-          .attr({
-            x1: Xscale(x1)+axis_offset+1,
-            y1: Yscale(y1)+axis_offset+1,
-            x2: Xscale(x2)+axis_offset-1,
-            y2: Yscale(y2)+axis_offset-1
-          });
-        current_graph.append('text')
-          .classed("tc-info-text",true)
-          .attr('x',view_size- axis_offset )
-          .attr('y',30)
-          .text("r^2 = "+best_fit.rsquared.toFixed(3));
-        current_graph.append('text')
-          .classed("tc-info-text",true)
-          .attr('x',view_size- axis_offset )
-          .attr('y',50)
-          .text("y = "+best_fit.slope.toFixed(3)+"x + "+best_fit.yIntercept.toFixed(3));
-
-        //tooltip
-        var tooltip = current_graph.append('g')
-          .classed("tc-tool-tip",true)
-        tooltip.append('rect').classed("tc-tool-tip-rect",true)
-          .attr({
-            x:-15,
-            y:-38,
-            width: 100,
-            height: 30
-          });
-        tooltip.append('text').classed("tc-tool-tip-text",true)
-          .attr({
-            x:10-15,
-            y:20-38
-          })
-          .text("");
-        var trianglePoints = "-5 -8.5, 0 0, 5 -8.5"
-        tooltip.append('polyline')
-          .attr('points', trianglePoints)
-          .classed("tc-tool-tip-point",true);
-
-        tooltip.setTip = function (visible,text,x,y){
-          if (!visible){
-            this.hoverlock = false;
-            var this_tooltip = this;
-            setTimeout(function(){
-              if (!this_tooltip.hoverlock){
-                this_tooltip.attr("transform", "translate("+0+"," +0+")")
-                  .transition().style("opacity",0);
-              } 
-            },100);
-          } else{
-            this.hoverlock = true;
-            var width = this.attr("transform", "translate("+x+"," +y+")")
-              .select("text")
-              .html(text).node().getComputedTextLength();
-            this.select("text").selectAll("*").attr("fill","#fff");
-            this.select("rect").attr("width",width+20);
-            this.transition().style("opacity",1);
-          }
-        }
-        tooltip.hoverlock = false;
-        tooltip.on("mouseover",function(d){
-          tooltip.hoverlock = true;
-        });
-        tooltip.on("mouseout",function(d){
-          tooltip.hoverlock = false;
-          tooltip.setTip(false);
-        });
-        tooltip.on("click",function(d){d3.event.stopPropagation();});
-        tooltip.setTip(false);
-
-        plotpoints.on("mouseover",function(d){
-          if (d3.select(this.parentNode.parentNode).classed("tc-expanded")){
-            tooltip.setTip(true,"<a target='_blank' href='/stock/"+d.key+"/view'>"+d.name+"</a>",Xscale(d.x)+axis_offset,Yscale(d.y)+axis_offset);
-          }
-        });
-        plotpoints.on("mouseout",function(d){
-          tooltip.setTip(false)
-        });
-    });
-
-    //draw graph-grid label axes!
-    var label_width = grid_size;
-    var label_height = 3;
-    var tops = d3.select('.tc-grid').insert('div',":first-child")
-                 .classed("tc-grid-row",true)
-                 .classed("label-row",true)
-                 .selectAll(".tc-top-label")
-                 .data(studies.slice(1,studies.length)).enter()
-                 .append('svg').classed("tc-top-label",true)
-                 .attr("viewBox","0 0 "+label_width*10+" "+label_height*10)
-                 .style("width",grid_size+"%")
-                 .append('g')
-                 .append("text")
-                 .classed("tc-label-text",true)
-                 .attr("x", label_width*10/2)
-                 .attr("y", label_height*10/2+6)
-                 .text(function(d){return d.values[0].studyName;});
-    var lefts = d3.select('.tc-grid').selectAll(".tc-grid-row:not(.label-row)")
-                 .insert('svg',":first-child")
-                 .data(studies.slice(0,studies.length-1))
-                 .classed("tc-left-label",true)
-                 .attr("viewBox","0 0 "+label_height*10+" "+label_width*10)
-                 .style("width","3%")//.style("background","lightblue")
-                 .append('g')
-                 .attr("transform", "rotate(-90)")
-                 .append("text")
-                 .classed("tc-label-text",true)
-                 .attr("x", -label_width*10/2)
-                 .attr("y", label_height*10/2+6)
-                 .text(function(d){return d.values[0].studyName;});
-
-}
-
-function createHistogram(response){
-    var variable_name = $('#trait_select option:selected').text();
-    if (response.cvterm_id=="TEST_TEST"){
-      variable_name = "Variable";
-    }
-    //parse the data
-    var data = d3.csv.parse(response.csv,
-        function(d) {
-            var dp = {
-                study: d.studyDbId,
-                studyName: d.studyName,
-                accession: d.germplasmDbId,
-                accessionName:d.germplasmName,
-                value: ((d[variable_name]==="") ? null : +d[variable_name])
-            };
-            return dp;
-        }, 
-        function(error, rows) {
-            console.log(rows);
-            console.log(error);
-    });
-
-    //nest it by study
-    var studies = d3.nest().key(function(d) {return d.study;}).entries(data);
-    var num_studies = studies.length;
-
-    //generate all the grid SVGs and pairs of studies
-    var tc_main = d3.select('.tc-histogram');
-
-    var hist = tc_main.append('svg').attr({
-      width:"100%",
-      "margin": "auto",
-      "viewBox": "0 0 "+view_size+" "+view_size
-    }).classed(".tc-histogram",true);
-
-    var Xscale = d3.scale.linear().range([0, view_size-axis_offset*2]);
-    var Yscale = d3.scale.linear().range([view_size-axis_offset*2, 0]);
-
-    var color = d3.scale.category10();
-
-    var Xaxis = d3.svg.axis().scale(Xscale).orient("bottom").ticks(10);
-    var Yaxis = d3.svg.axis().scale(Yscale).orient("left").ticks(10);
-
-    var bounds = d3.extent(data, function(d) { return d.value; });
-    Xscale.domain(bounds).nice();
-
-    var binner = d3.layout.histogram()
-      .bins(Xscale.ticks(10)).value(function(d){
-        return d.value;
+  var studygroups = hist.selectAll(".tc-hist-group")
+    .data(studies).enter()
+    .append('g')
+    .classed("tc-hist-group",true)
+    .each(function(d){
+      d.bins = binner(d.values);
+      d.max_bin = d3.max(d.bins,function(d){
+        return d.length;
       });
-
-    var studygroups = hist.selectAll(".tc-hist-group")
-      .data(studies).enter()
-      .append('g')
-      .classed("tc-hist-group",true)
-      .each(function(d){
-        d.bins = binner(d.values);
-        d.max_bin = d3.max(d.bins,function(d){
-          return d.length;
-        });
-      });
-
-    var max_bin = d3.max(studies, function(d) { 
-      return d.max_bin
-    });
-    Yscale.domain([0,max_bin]).nice();
-
-    //legend
-    var legend = hist.append("g")
-
-    studygroups.each(function(d,i){
-      var g = d3.select(this);
-      var bar = g.selectAll(".tc-bar")
-        .data(d.bins)
-        .enter().append("g")
-        .attr("class", "tc-bar")
-        .attr("transform", function(d) { return "translate("+axis_offset+","+axis_offset+")";});
-      bar.append("rect")
-        .attr("x", function(d){
-          return Xscale(d.x)+1
-        })
-        .attr("y", function(d){
-          return Yscale(d.length)
-        })
-        .attr("width", function(d){return Xscale(d.x+d.dx)-Xscale(d.x)-2;})
-        .attr("height", function(d) { return Yscale.range()[0]-Yscale(d.length)})
-        .attr({
-          "fill":color(i),
-          "opacity":0.4,
-        });
-
-      var outline_points = [{x:axis_offset,y:view_size-axis_offset}]
-      for (var k in d.bins){
-        //outline_points.push({x:Xscale(d.bins[k].x)+axis_offset,y:Yscale(d.bins[k].length)+axis_offset})
-        outline_points.push({x:Xscale(d.bins[k].x+(d.bins[k].dx/2))+axis_offset,y:Yscale(d.bins[k].length)+axis_offset})
-      }
-      outline_points.push({x:view_size-axis_offset,y:view_size-axis_offset})
-      var lineFunction = d3.svg.line()
-        .x(function(d) { return d.x; })
-        .y(function(d) { return d.y; })
-        .interpolate("basis");
-      var hpath = g.append('path')
-        .attr("d",lineFunction(outline_points))
-        .attr("stroke", color(i))
-        .attr("stroke-width", 2)
-        .attr("fill", "none");
-
-      var legend_entry = legend.append("g")
-        .classed("tc-legend-entry",true)
-        .attr("transform", function(d) { return "translate(0,"+20*i+")";})
-        .datum(d);
-      legend_entry.append('circle')
-        .attr({
-          cx: 0,
-          cy: 0,
-          r:  8,
-          fill: color(i),
-          opacity: 0.6
-        });
-        legend_entry.append('text')
-          .attr({
-            x:12,
-            y:6,
-            "font-size":18
-          }).text(d.values[0].studyName);
-        legend_entry.on("click",function(d){
-          if (g.attr("hidden")){
-            g.attr("hidden",null)
-            d3.select(this).classed("tc-legend-deselected",false);
-          } else {
-            g.attr("hidden",true)
-            d3.select(this).classed("tc-legend-deselected",true);
-          }
-        //   legend_state = [];
-        //   d3.selectAll(".tc-top-label,.tc-left-label")
-        //     .classed("tc-hist-highlight",false)
-        //     .filter(function(gd,gi) {
-        //       var aSelected = false;
-        //       var bSelected = false;
-        //       d3.selectAll(".tc-legend-entry:not(.tc-legend-deselected)")
-        //         .each(function(legend_d){
-        //           aSelected = aSelected || legend_d.values[0].study == gd.key;
-        //           bSelected = bSelected || legend_d.values[0].study == gd.key;
-        //         });
-        //       return aSelected && bSelected;
-        //     })
-        //     .classed("tc-hist-highlight",true);
-        });
     });
 
-    var bb = legend.node().getBBox();
-    legend.attr("transform", function(d) { 
-      var nx = (view_size-axis_offset-bb.width);
-      var ny = (axis_offset-bb.y);
-      return "translate("+nx+","+ny+")";
-    });
-    legend.insert("rect","*")
-      .attr({
-        x:bb.x-10,
-        y:bb.y-10,
-        width:bb.width+25,
-        height:bb.height+20,
-        fill:"rgba(255,255,255,0.5)",
-        stroke: "rgba(125,125,125,0.5)"
+  var max_bin = d3.max(studies, function(d) { 
+    return d.max_bin
+  });
+  Yscale.domain([0,max_bin]).nice();
+  var Yaxis = d3.axisLeft(Yscale).ticks(8);
+
+  //legend
+  var legend = hist.append("g")
+
+  studygroups.each(function(d,i){
+    var g = d3.select(this);
+    var bar = g.selectAll(".tc-bar")
+      .data(d.bins)
+      .enter().append("g")
+      .attr("class", "tc-bar")
+      .attr("transform", function(d) { return "translate("+axis_offset+","+axis_offset+")";});
+    bar.filter(function(d,i) {
+        return d.x1>d.x0;
       })
+      .append("rect")
+      .attr("x", function(d){
+        return Xscale(d.x0)+1
+      })
+      .attr("y", function(d){
+        return Yscale(d.length)
+      })
+      .attr("width", function(d){return Xscale(d.x1)-Xscale(d.x0)-2;})
+      .attr("height", function(d) { return Yscale.range()[0]-Yscale(d.length)})
+      .attr("fill",color(i))
+      .attr("opacity",0.4);
 
-    //axes!
-    hist.append("g")
-      .classed("tc-graph-axis",true)
-      .attr("transform", "translate("+axis_offset+"," + (view_size-axis_offset) + ")")
-      .call(Xaxis)
-      .append("text")
-      .attr("x", view_size/2-axis_offset)
-      .attr("y", 50)
-      .text(variable_name);
-    hist.append("g")
-      .classed("tc-graph-axis",true)
-      .attr("transform", "translate("+axis_offset+","+axis_offset+")")
-      .call(Yaxis);
+    var outline_points = [{x:axis_offset,y:400-axis_offset}]
+    for (var k in d.bins){
+      outline_points.push({x:Xscale((d.bins[k].x0+d.bins[k].x1)/2)+axis_offset,y:Yscale(d.bins[k].length)+axis_offset})
+    }
+    outline_points.push({x:400-axis_offset,y:400-axis_offset})
+    var lineFunction = d3.line()
+      .x(function(d) { return d.x; })
+      .y(function(d) { return d.y; })
+      .curve(d3.curveBasis);
+    var hpath = g.append('path')
+      .attr("d",lineFunction(outline_points))
+      .attr("stroke", color(i))
+      .attr("stroke-width", 2)
+      .attr("fill", "none");
+
+    var legend_entry = legend.append("g")
+      .classed("tc-legend-entry",true)
+      .attr("transform", function(d) { return "translate(0,"+16*i+")";})
+      .datum(d);
+    legend_entry.append('circle')
+        .classed("tc-legend-circle",true)
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .attr("r",  6)
+        .attr("fill", color(i))
+        .attr("opacity", 0.6)
+    legend_entry.append('circle')
+        .classed("tc-select-indicator",true)
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .attr("r",  3)
+        .attr("stroke", "white")
+        .attr("stroke-width", "0.5")
+        .attr("fill", color(i));
+    legend_entry.append('text')
+      .attr("x",10)
+      .attr("y",4.5)
+      .attr("font-size",12)
+      .text(d.values[0].studyName);
+    d.toggleHLeg = function(show){
+      show = show===undefined ? legend_entry.classed("leg-hidden") : show;
+      if (show){
+        legend_entry.classed("leg-hidden",null)
+        g.transition(ttime)
+          .style("opacity",1)
+        legend_entry.select(".tc-select-indicator")
+          .transition(ttime)
+          .attr("fill", color(i));
+      } else {
+        legend_entry.classed("leg-hidden",true)
+        g.transition(ttime)
+          .style("opacity",0)
+        legend_entry.select(".tc-select-indicator")
+          .transition(ttime)
+          .attr("fill", "white");
+      }
+    };
+    legend_entry.on("click",function(d){
+      d.toggleHLeg();
+    });
+  });
+
+  var bb = legend.node().getBBox();
+  legend.attr("transform", function(d) { 
+    var nx = (400-axis_offset-bb.width);
+    var ny = (axis_offset-bb.y);
+    return "translate("+nx+","+ny+")";
+  });
+  legend.insert("rect","*")
+    .attr({
+      x:bb.x-10,
+      y:bb.y-10,
+      width:bb.width+25,
+      height:bb.height+20,
+      fill:"rgba(255,255,255,0.5)",
+      stroke: "rgba(125,125,125,0.5)"
+    })
+
+  //axes!
+  hist.append("g")
+    .classed("tc-graph-axis",true)
+    .attr("transform", "translate("+axis_offset+"," + (size-axis_offset) + ")")
+    .call(Xaxis)
+    .append("text")
+    .classed("tc-axis-label",true)
+    .attr("x", (size-axis_offset*2)/2)
+    .attr("y", 35)
+    .text(all_data[0].variableName);
+  hist.append("g")
+    .classed("tc-graph-axis",true)
+    .attr("transform", "translate("+axis_offset+","+axis_offset+")")
+    .call(Yaxis);
 }
-
 
 
 function lineOfBestFit(points){
