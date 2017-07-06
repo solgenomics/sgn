@@ -2,6 +2,7 @@
 package CXGN::Genotype;
 
 use Moose;
+use Data::Dumper;
 
 use JSON::Any;
 use Math::Round qw | :all |;
@@ -223,7 +224,7 @@ sub compare_parental_genotypes {
 	$matrix[ 2 ][ 1 ][ 2 ] =1;
 	$matrix[ 2 ][ 2 ][ 2 ] =1;
 
-	print "self markers".$self_markers;
+	print "self markers". Dumper $self_markers;
 
 	print STDERR "checking $mom_markers->{$m} and $dad_markers->{$m} against $self_markers->{$m}\n";
 
