@@ -114,7 +114,7 @@ while (my $row = $stock_rs->next()) {
 ##check length
 ##index of array for
 }
-	my $s = $self_gts[0];
+	my $s = $self_gts[0]
     #if (@mom_gts) { print $OUT  Dumper @mom_gts;}
     my $m =(@mom_gts)[0];
 		my $d = (@dad_gts)[0];
@@ -125,6 +125,9 @@ while (my $row = $stock_rs->next()) {
 
 		    print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
 		    print $OUT "\t$score\n";
+
+    }
+}
 
 $dbh->disconnect();
 
