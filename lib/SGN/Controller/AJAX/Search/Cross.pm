@@ -14,7 +14,7 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
 
-sub search_male_parents :Path('/ajax/search/male_parents') :Args(0){
+sub search_cross_male_parents :Path('/ajax/search/cross_male_parents') :Args(0){
     my $self = shift;
     my $c = shift;
     my $female_parent= $c->req->param("female_parent");
@@ -24,19 +24,20 @@ sub search_male_parents :Path('/ajax/search/male_parents') :Args(0){
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $male_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
     my $female_parent_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
-
+    my $cross_typeid = $c->model("Cvterm")->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $dbh = $schema->storage->dbh();
 
     my $q = "SELECT DISTINCT female_parent.stock_id, male_parent.stock_id, male_parent.uniquename FROM stock as female_parent
     INNER JOIN stock_relationship AS stock_relationship1 ON (female_parent.stock_id=stock_relationship1.subject_id)
-    AND stock_relationship1.type_id= ? INNER JOIN stock_relationship AS stock_relationship2
-    ON (stock_relationship1.object_id=stock_relationship2.object_id) INNER JOIN stock AS male_parent
-    ON (male_parent.stock_id=stock_relationship2.subject_id) AND stock_relationship2.type_id= ?
-    WHERE female_parent.uniquename= ? ORDER BY male_parent.uniquename ASC";
+    INNER JOIN stock AS check_type ON (stock_relationship1.object_id=check_type.stock_id)
+    LEFT JOIN stock_relationship AS stock_relationship2 ON (stock_relationship1.object_id = stock_relationship2.object_id)
+    INNER JOIN stock AS male_parent ON (male_parent.stock_id=stock_relationship2.subject_id)
+    WHERE female_parent.uniquename = ? AND stock_relationship1.type_id = ? AND check_type.type_id = ? AND stock_relationship2.type_id = ?
+    ORDER BY male_parent.uniquename ASC";
 
 
     my $h = $dbh->prepare($q);
-    $h->execute($female_parent_typeid, $male_parent_typeid, $female_parent);
+    $h->execute($female_parent, $female_parent_typeid, $cross_typeid, $male_parent_typeid );
 
     my @male_parents=();
     while(my ($female_parent_id, $male_parent_id, $male_parent_name) = $h->fetchrow_array()){
