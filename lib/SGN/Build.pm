@@ -110,28 +110,30 @@ sub _R_installdeps {
         return;
     }
 
-    my @missing_packages = @{ $self->{R}{missing_packages} || [] };
-    unless( @missing_packages ) {
-        print "No missing R packages detected, cannot installdeps for R.\n";
-        return;
-    }
+    # my @missing_packages = @{ $self->{R}{missing_packages} || [] };
+    # unless( @missing_packages ) {
+    #     print "No missing R packages detected, cannot installdeps for R.\n";
+    #     return;
+    # }
 
-    my $package_vec = 'c('.join( ',', map qq|"$_"|, @missing_packages ).')';
-    my $cran_mirror = $ENV{CRAN_MIRROR} || "http://lib.stat.cmu.edu/R/CRAN";
+  #   my $package_vec = 'c('.join( ',', map qq|"$_"|, @missing_packages ).')';
+#     my $cran_mirror = $ENV{CRAN_MIRROR} || "http://lib.stat.cmu.edu/R/CRAN";
  
-    my $tf = File::Temp->new;
-    $tf->print( <<EOR );
-userdir <- unlist(strsplit(Sys.getenv("R_LIBS_SITE"), .Platform\$path.sep))[1L]
-if (!file.exists(userdir) && !dir.create(userdir, recursive = TRUE, showWarnings = TRUE))
-   stop("unable to create ", sQuote(userdir))
-.libPaths(c(userdir, .libPaths()))
-install.packages( $package_vec, contriburl = contrib.url("$cran_mirror") )
-EOR
-     $tf->close;
+#     my $tf = File::Temp->new;
+#     $tf->print( <<EOR );
+# userdir <- unlist(strsplit(Sys.getenv("R_LIBS_SITE"), .Platform\$path.sep))[1L]
+# if (!file.exists(userdir) && !dir.create(userdir, recursive = TRUE, showWarnings = TRUE))
+#    stop("unable to create ", sQuote(userdir))
+# .libPaths(c(userdir, .libPaths()))
+# install.packages( $package_vec, contriburl = contrib.url("$cran_mirror") )
+# EOR
+#      $tf->close;
 
-    # use system so the user will be able to use the R graphical
-    # mirror chooser, and other things
-    system 'R', '--slave', -f => "$tf", '--no-save', '--no-restore';
+#     # use system so the user will be able to use the R graphical
+#     # mirror chooser, and other things
+#     system 'R', '--slave', -f => "$tf", '--no-save', '--no-restore';
+    system 'Rscript R/sgnPackages.r';
+
     if( $? ) {
         _handle_errors($?);
         warn "Failed to automatically install R dependencies\n";
@@ -197,7 +199,7 @@ sub _check_R_version {
 
 # parse and return the R DESCRIPTION file
 sub _R_desc {
-    return Parse::Deb::Control->new([qw[ R_files DESCRIPTION ]]);
+    return Parse::Deb::Control->new([qw[ R_files cran ]]);
 }
 
 # parse and return the version of R we require as string list like
