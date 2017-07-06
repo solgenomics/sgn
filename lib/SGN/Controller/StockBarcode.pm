@@ -123,7 +123,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my @not_found;
     my @found;
 
-    my ($row, $stockprop_name, $value, $fdata, $accession_name, $female_parent, $male_parent, @parents_info, $parents, $pedigree_string);
+    my ($row, $stockprop_name, $value, $fdata, $accession_name, $female_parent, $male_parent, @parents_info, $parents_plot, $parents_accession, $parents, $pedigree_string);
 
     foreach my $name (@names) {
 
@@ -163,17 +163,47 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           while (my($accession) = $h_acc->fetchrow_array) {
             $accession_name = $accession;
             }
+
+            if ($accession_name){
+              my $stock = $schema->resultset("Stock::Stock")->find( { name=>$accession_name });
+              my $accession_id = $stock->stock_id();
+              @parents_info = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id)->get_direct_parents();
+              $male_parent = $parents_info[0][1] || '';
+              $female_parent = $parents_info[1][1] || '';
+            }
+
+            if (!$female_parent){
+                $parents_plot = '';
+            }
+            else{
+                $parents_plot = $female_parent."/".$male_parent;
+            }
+          #  push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents];
+            #push @found, [ $stock_id, $name, $accession_name, $fdata, $parents];
       }
 
       if ($nursery){
         @parents_info = CXGN::Stock->new ( schema => $schema, stock_id => $stock_id)->get_direct_parents();
         $male_parent = $parents_info[0][1] || '';
         $female_parent = $parents_info[1][1] || '';
+
+        if (!$female_parent){
+            $parents_accession = '';
+        }
+        else{
+            $parents_accession = $female_parent."/".$male_parent;
+        }
+        #$parents = $female_parent."/".$male_parent;
       }
 
-      print "MY male $male_parent and female $female_parent\n";
-      $parents = $female_parent."/".$male_parent;
-      print "MY parents: $parents\n";
+      if ($plot_cvterm_id == $type_id) {
+          $parents = $parents_plot;
+      }else{
+          $parents = $parents_accession;
+      }
+      #print "MY male $male_parent and female $female_parent\n";
+
+      #print "MY parents: $parents\n";
 
       push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents];
       print "STOCK FOUND: $stock_id, $name, $accession_name.\n";
@@ -309,6 +339,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
               my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 80.63;
               my $yposition_2 = $ypos - 20;
               my $yposition_3 = $ypos - 30;
+              my $yposition_4 = $ypos - 40;
+              my $plot_pedigree_text;
 
               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
               if ($found[$i]->[4] =~ m/^\//){
@@ -316,12 +348,15 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
               }
               if ($plot_cvterm_id == $type_id){
                   $label_text_4 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
+                  $plot_pedigree_text = "pedigree:".$found[$i]->[4];
               }
                my $parents = $found[$i]->[4];
                if (!$parents){
                    $label_text_4 = '';
+                   $plot_pedigree_text = "Pedigree: No pedigree available for ".$found[$i]->[2];
                }
               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
+              $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $plot_pedigree_text);
           }
           elsif ($labels_per_row > '1'){
               if (length($label_text) <= 15){
