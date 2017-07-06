@@ -80,7 +80,7 @@ while (my $row = $stock_rs->next()) {
 	    accession_list => [ $parents[0]->[0]],
 	    protocol_id => $protocol_id,
 							    });
-  my @mom_gts;                
+  my @mom_gts;
 	@mom_gts = $gts->get_genotype_info_as_genotype_objects();
   #if (@mom_gts) { print $OUT  Dumper @mom_gts;}
 
@@ -114,12 +114,10 @@ while (my $row = $stock_rs->next()) {
 ##check length
 ##index of array for
 }
-	foreach my $s (@self_gts) {
-    if (@mom_gts) { print $OUT  Dumper @mom_gts;}
-
-	    foreach my $m (@mom_gts) {
-
-		foreach my $d (@dad_gts) {
+	my $s = $self_gts[0];
+    #if (@mom_gts) { print $OUT  Dumper @mom_gts;}
+    my $m =(@mom_gts)[0];
+		my $d = (@dad_gts)[0];
 		    my ($concordant, $discordant, $non_informative) =
 			$s->compare_parental_genotypes($m, $d);
 		    my $score = $concordant / ($concordant + $discordant);
@@ -127,11 +125,6 @@ while (my $row = $stock_rs->next()) {
 
 		    print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
 		    print $OUT "\t$score\n";
-		}
-	    }
-	}
-    }
-}
 
 $dbh->disconnect();
 
