@@ -83,7 +83,7 @@ while (my $row = $stock_rs->next()) {
 
 	my @mom_gts = $gts->get_genotype_info_as_genotype_objects();
 
-  print $OUT  Dumper @mom_gts;
+  if (@mom_ts) { print $OUT  Dumper @mom_gts;}
 
 	$gts = CXGN::Genotype::Search->new( {
 	    bcs_schema => $schema,
