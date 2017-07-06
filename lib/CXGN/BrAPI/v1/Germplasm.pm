@@ -208,8 +208,7 @@ sub germplasm_pedigree {
 	if ($s) {
 		$total_count = 1;
 		my @direct_parents = $s->get_direct_parents();
-		my $pedigree_root = $s->get_parents('1');
-		my $pedigree_string = $pedigree_root ? $pedigree_root->get_pedigree_string('1') : '';
+		my $pedigree_string = $s->get_pedigree_string('Parents') : '';
 		%result = (
 			germplasmDbId=>$stock_id,
 			pedigree=>$pedigree_string,
