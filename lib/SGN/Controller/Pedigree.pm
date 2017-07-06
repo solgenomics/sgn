@@ -17,7 +17,7 @@ package SGN::Controller::Pedigree;
 
 use Moose;
 #use GraphViz2;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use Bio::Chado::NaturalDiversity::Reports;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
 use SVG;
@@ -38,19 +38,14 @@ sub _build_schema {
 
 sub stock_pedigree :  Path('/pedigree/svg')  Args(1) {
   my ($self, $c, $stock_id) = @_;
-  my $stock = CXGN::Chado::Stock->new($self->schema, $stock_id);
+
+  my $stock = CXGN::Stock->new( schema => $self->schema, stock_id => $stock_id);
   $c->stash->{stock} = $stock;
-  my $stock_row = $self->schema->resultset('Stock::Stock')
-    ->find({ stock_id => $stock_id });
-  my $stock_pedigree = $self->_get_pedigree($stock_row);
-  print STDERR "STOCK PEDIGREE: ". Data::Dumper::Dumper($stock_pedigree);
-  my $pedigree_rows = $self->_get_pedigree_rows($stock_pedigree);
-  print STDERR "PEDIGREE ROWS: ". Data::Dumper::Dumper($pedigree_rows);
-  my $pedigree_string = $self->_get_pedigree_string($stock_pedigree,'parent');
-  print STDERR "PEDIGREE String: $pedigree_string\n";
-  my $stock_pedigree_svg = $self->_view_pedigree($stock_pedigree);
+  my $stock_ancestor_hash = $stock->get_ancestor_hash();
+
+  #print STDERR "STOCK ANCESTORS: ". Dumper($stock_ancestor_hash);
+  my $stock_pedigree_svg = $self->_view_pedigree($stock_ancestor_hash);
   print STDERR "SVG: $stock_pedigree_svg\n\n";
-  my $is_owner = $self->_check_role($c);
   $c->response->content_type('image/svg+xml');
   if ($stock_pedigree_svg) {
     $c->response->body($stock_pedigree_svg);
@@ -63,13 +58,12 @@ sub stock_pedigree :  Path('/pedigree/svg')  Args(1) {
 
 sub stock_descendants :  Path('/descendants/svg')  Args(1) {
   my ($self, $c, $stock_id) = @_;
-  my $stock = CXGN::Chado::Stock->new($self->schema, $stock_id);
+  my $stock = CXGN::Stock->new( schema=> $self->schema, stock_id => $stock_id);
   $c->stash->{stock} = $stock;
-  my $stock_row = $self->schema->resultset('Stock::Stock')
-    ->find({ stock_id => $stock_id });
-  my $stock_descedants = $self->_get_descendants($stock_row);
-  my $stock_descendants_svg = $self->_view_descendants($stock_descedants);
-  my $is_owner = $self->_check_role($c);
+
+  my $stock_descendant_hash = $stock->get_descendant_hash();
+  #print STDERR "STOCK DESCENDANTS: ". Dumper($stock_descendant_hash);
+  my $stock_descendants_svg = $self->_view_descendants($stock_descendant_hash);
   $c->response->content_type('image/svg+xml');
   if ($stock_descendants_svg) {
     $c->response->body($stock_descendants_svg);
@@ -77,155 +71,6 @@ sub stock_descendants :  Path('/descendants/svg')  Args(1) {
     my $blank_svg = SVG->new(width=>1,height=>1);
     my $blank_svg_xml = $blank_svg->xmlify();
     $c->response->body($blank_svg_xml);
-  }
-}
-
-sub _check_role  {
-  my ( $self, $c) = @_;
-  my $logged_user = $c->user;
-  my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
-  my $curator   = $logged_user->check_roles('curator') if $logged_user;
-  my $submitter = $logged_user->check_roles('submitter') if $logged_user;
-  my $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
-  my $dbh = $c->dbc->dbh;
-  ##################
-  ###Check if a stock page can be printed###
-  my $stock = $c->stash->{stock};
-  my $stock_id = $stock ? $stock->get_stock_id : undef ;
-  my $stock_type = $stock->get_object_row ? $stock->get_object_row->type->name : undef ;
-  my $type = 1 if $stock_type && !$stock_type=~ m/population/;
-  # print message if stock_id is not valid
-  unless ( ( $stock_id =~ m /^\d+$/ )  ) {
-    $c->throw_404( "No stock/accession exists for that identifier." );
-  }
-  unless ( $stock->get_object_row || !$stock_id ) {
-    $c->throw_404( "No stock/accession exists for that identifier." );
-  }
-  my $props = $self->_stockprops($stock);
-  # print message if the stock is visible only to certain user roles
-  my @logged_user_roles = $logged_user->roles if $logged_user;
-  my @prop_roles = @{ $props->{visible_to_role} } if  ref($props->{visible_to_role} );
-  my $lc = List::Compare->new( {
-				lists    => [\@logged_user_roles, \@prop_roles],
-				unsorted => 1,
-			       } );
-  my @intersection = $lc->get_intersection;
-  if ( !$curator && @prop_roles  && !@intersection) { # if there is no match between user roles and stock visible_to_role props
-    $c->throw(is_client_error => 0,
-	      title             => 'Restricted page',
-	      message           => "Stock $stock_id is not visible to your user!",
-	      developer_message => 'only logged in users of certain roles can see this stock' . join(',' , @prop_roles),
-	      notify            => 0, #< does not send an error email
-	     );
-  }
-  # print message if the stock is obsolete
-  my $obsolete = $stock->get_is_obsolete();
-  if ( $obsolete  && !$curator ) {
-    $c->throw(is_client_error => 0,
-	      title             => 'Obsolete stock',
-	      message           => "Stock $stock_id is obsolete!",
-	      developer_message => 'only curators can see obsolete stock',
-	      notify            => 0, #< does not send an error email
-	     );
-  }
-  # print message if stock_id does not exist
-  if ( !$stock ) {
-    $c->throw_404('No stock exists for this identifier');
-  }
-  ####################
-  my $is_owner;
-  my $owner_ids = $c->stash->{owner_ids} || [] ;
-  if ( $stock && ($curator || $person_id && ( grep /^$person_id$/, @$owner_ids ) ) ) {
-    $is_owner = 1;
-  }
-  return $is_owner;
-}
-
-sub _stockprops {
-  my ($self,$stock) = @_;
-
-  my $bcs_stock = $stock->get_object_row();
-  my $properties ;
-  if ($bcs_stock) {
-    my $stockprops = $bcs_stock->search_related("stockprops");
-    while ( my $prop =  $stockprops->next ) {
-      push @{ $properties->{$prop->type->name} } ,   $prop->value ;
-    }
-  }
-  return $properties;
-}
-
-sub _get_pedigree {
-  my ($self,$bcs_stock, $direct_descendant_ids) = @_;
-  push @$direct_descendant_ids, $bcs_stock->stock_id(); #excluded in parent retrieval to prevent loops
-  #print STDERR "Stock ".$bcs_stock->uniquename()." decendants are: ".Dumper($direct_descendant_ids)."\n";
-  my %pedigree;
-  $pedigree{'id'} = $bcs_stock->stock_id();
-  $pedigree{'name'} = $bcs_stock->uniquename();
-  $pedigree{'female_parent'} = undef;
-  $pedigree{'male_parent'} = undef;
-  $pedigree{'link'} = "/stock/$pedigree{'id'}/view";
-  #get cvterms for parent relationships
-  my $cvterm_female_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'female_parent', 'stock_relationship');
-
-  my $cvterm_male_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'male_parent', 'stock_relationship');
-
-  #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
-  my $stock_relationships = $bcs_stock->search_related("stock_relationship_objects",undef,{ prefetch => ['type','subject'] });
-  my $female_parent_relationship = $stock_relationships->find({type_id => $cvterm_female_parent->cvterm_id(), subject_id => {'not_in' => $direct_descendant_ids}});
-  if ($female_parent_relationship) {
-    my $female_parent_stock_id = $female_parent_relationship->subject_id();
-    if ($female_parent_stock_id) {
-      my $female_parent_stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $female_parent_stock_id});
-      if ($female_parent_stock) {
-          $pedigree{'cross_type'} = $female_parent_relationship->value();
-	$pedigree{'female_parent'} = _get_pedigree($self,$female_parent_stock,$direct_descendant_ids);
-      }
-    }
-  }
-  my $male_parent_relationship = $stock_relationships->find({type_id => $cvterm_male_parent->cvterm_id(), subject_id => {'not_in' => $direct_descendant_ids}});
-  if ($male_parent_relationship) {
-    my $male_parent_stock_id = $male_parent_relationship->subject_id();
-    if ($male_parent_stock_id) {
-      my $male_parent_stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $male_parent_stock_id});
-      if ($male_parent_stock) {
-	$pedigree{'male_parent'} = _get_pedigree($self,$male_parent_stock,$direct_descendant_ids);
-      }
-    }
-  }
-  pop @$direct_descendant_ids; # falling back a level while recursing pedigree tree
-  return \%pedigree;
-}
-
-sub _get_descendants {
-  my ($self,$bcs_stock,$direct_ancestor_ids) = @_;
-  push @$direct_ancestor_ids, $bcs_stock->stock_id(); #excluded in child retrieval to prevent loops
-  #print STDERR "Stock ".$bcs_stock->uniquename()." ancestors are: ".Dumper($direct_ancestor_ids)."\n";
-  my %descendants;
-  my %progeny;
-  $descendants{'id'} = $bcs_stock->stock_id();
-  $descendants{'name'} = $bcs_stock->uniquename();
-  $descendants{'link'} = "/stock/$descendants{'id'}/view";
-  #get cvterms for parent relationships
-  my $cvterm_female_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'female_parent','stock_relationship');
-
- my $cvterm_male_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'male_parent', 'stock_relationship');
-
-  #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
-  my $descendant_relationships = $bcs_stock->search_related("stock_relationship_subjects",{ object_id => {'not_in' => $direct_ancestor_ids}},{ prefetch => ['type','object'] });
-  if ($descendant_relationships) {
-    while (my $descendant_relationship = $descendant_relationships->next) {
-      my $descendant_stock_id = $descendant_relationship->object_id();
-      if ($descendant_stock_id && (($descendant_relationship->type_id() == $cvterm_female_parent->cvterm_id()) || ($descendant_relationship->type_id() == $cvterm_male_parent->cvterm_id()))) {
-  	my $descendant_stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $descendant_stock_id});
-  	if ($descendant_stock) {
-  	  $progeny{$descendant_stock_id} = _get_descendants($self,$descendant_stock,$direct_ancestor_ids);
-  	}
-      }
-    }
-    $descendants{'descendants'} = \%progeny;
-    pop @$direct_ancestor_ids; # falling back a level while recursing descendant tree
-    return \%descendants;
   }
 }
 
@@ -551,59 +396,6 @@ sub _view_descendants {
   } else {
     return undef;
   }
-}
-
-sub _get_pedigree_rows {
-    my ($self, $pedigree_hashref, $pedigree_rows) = @_;
-    #print STDERR "Working on pedigree hashref ".Dumper(%pedigree_hash)."\n";
-    my $Name = $pedigree_hashref->{'name'} || '';
-    my $Female_Parent = $pedigree_hashref->{'female_parent'}->{'name'} || '';
-    my $Male_Parent = $pedigree_hashref->{'male_parent'}->{'name'} || '';
-    my $Cross_Type = $pedigree_hashref->{'cross_type'} || '';
-    #print STDERR "Pedigree row: $Name\t$Female_Parent\t$Male_Parent\t$Cross_Type\n";
-    push @$pedigree_rows, "$Name\t$Female_Parent\t$Male_Parent\t$Cross_Type\n";
-    #my @pedigree_rows = @$pedigree_rows;
-    print STDERR "Pedigree rows currently contains: " . join( ", ", @$pedigree_rows ) . "\n";
-
-    if (keys %{ $pedigree_hashref->{'female_parent'} }) {
-        print STDERR "Keys for female parent ".Dumper($pedigree_hashref->{'female_parent'})." evaluated as true\n";
-        $self->_get_pedigree_rows($pedigree_hashref->{'female_parent'}, $pedigree_rows);
-    }
-    if (keys %{ $pedigree_hashref->{'male_parent'} }) {
-        print STDERR "Keys for male parent ".Dumper($pedigree_hashref->{'male_parent'})." evaluated as true\n";
-        $self->_get_pedigree_rows($pedigree_hashref->{'male_parent'}, $pedigree_rows);
-    }
-
-    return $pedigree_rows;
-}
-
-sub _get_pedigree_string {
-    my ($self, $pedigree_hashref, $level) = @_;
-
-    print STDERR "Getting string of level $level from pedigree hashref ".Dumper($pedigree_hashref)."\n";
-    if ($level eq "parents") {
-        return $self->_get_parent_string($pedigree_hashref);
-    }
-    elsif ($level eq "grandparents") {
-        my $maternal_parent_string = $self->_get_parent_string($pedigree_hashref->{'female_parent'});
-        my $paternal_parent_string = $self->_get_parent_string($pedigree_hashref->{'male_parent'});
-        return $maternal_parent_string."\\\\".$paternal_parent_string;
-    }
-    elsif ($level eq "great-grandparents") {
-        my $mm_parent_string = $self->_get_parent_string($pedigree_hashref->{'female_parent'}->{'female_parent'});
-        my $mf_parent_string = $self->_get_parent_string($pedigree_hashref->{'female_parent'}->{'male_parent'});
-        my $pm_parent_string = $self->_get_parent_string($pedigree_hashref->{'male_parent'}->{'female_parent'});
-        my $pf_parent_string = $self->_get_parent_string($pedigree_hashref->{'male_parent'}->{'male_parent'});
-        return $mm_parent_string."\\\\".$mf_parent_string."\\\\\\".$pm_parent_string."\\\\".$pf_parent_string;
-    }
-}
-
-sub _get_parent_string {
-    my ($self, $pedigree_hashref) = @_;
-    my $mother = $pedigree_hashref->{'female_parent'}->{'name'} || 'NA';
-    my $father = $pedigree_hashref->{'male_parent'}->{'name'} || 'NA';
-    print STDERR "Built parent string $mother\\$father\n";
-    return "$mother\\$father";
 }
 
 1;
