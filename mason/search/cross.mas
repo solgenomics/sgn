@@ -5,9 +5,9 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<& /page/page_title.mas, title=>'Search Pedigrees and Crosses' &>
+<& /page/page_title.mas, title=>'Search Progenies and Crosses' &>
 
-<&| /page/info_section.mas, title => 'Search Pedigrees'&>
+<&| /page/info_section.mas, title => 'Search Progenies'&>
 
 <div class="row" id="pedigree_search_form" >
   <div class="col-sm-1">
@@ -66,6 +66,7 @@
 
 </table>
 </&>
+</div>
 </div>
 
 <br/>
@@ -191,7 +192,7 @@ jQuery(document).ready(function(){
     'processing' : true,
     'serverSide' : false,
     'destroy'    : true,
-    'ajax':{'url':'/ajax/search/pedigree_info',
+    'ajax':{'url':'/ajax/search/progenies',
       data:{'pedigree_female_parent':$('#pedigree_female_parent').val(),
            'pedigree_male_parent':$('#pedigree_male_parent').val()},
            }
