@@ -80,17 +80,17 @@ while (my $row = $stock_rs->next()) {
 	    accession_list => [ $parents[0]->[0]],
 	    protocol_id => $protocol_id,
 							    });
-  my @mom_gts = [];
 
 	@mom_gts = $gts->get_genotype_info_as_genotype_objects();
-
-  if (@mom_gts) { print $OUT  Dumper @mom_gts;}
+  my @mom_gts;
+  #if (@mom_gts) { print $OUT  Dumper @mom_gts;}
 
 	$gts = CXGN::Genotype::Search->new( {
 	    bcs_schema => $schema,
 	    accession_list => [ $parents[1]->[0]],
 	    protocol_id => $protocol_id,
 							    });
+
 
 	my (@dad_gts) = $gts->get_genotype_info_as_genotype_objects();
 
@@ -116,7 +116,10 @@ while (my $row = $stock_rs->next()) {
 ##index of array for
 }
 	foreach my $s (@self_gts) {
+    if (@mom_gts) { print $OUT  Dumper @mom_gts;}
+
 	    foreach my $m (@mom_gts) {
+
 		foreach my $d (@dad_gts) {
 		    my ($concordant, $discordant, $non_informative) =
 			$s->compare_parental_genotypes($m, $d);
