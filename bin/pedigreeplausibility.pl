@@ -80,8 +80,9 @@ while (my $row = $stock_rs->next()) {
 	    accession_list => [ $parents[0]->[0]],
 	    protocol_id => $protocol_id,
 							    });
+  my @mom_gts = [];
 
-	my @mom_gts = $gts->get_genotype_info_as_genotype_objects();
+	@mom_gts = $gts->get_genotype_info_as_genotype_objects();
 
   if (@mom_gts) { print $OUT  Dumper @mom_gts;}
 
