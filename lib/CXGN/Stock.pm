@@ -563,7 +563,7 @@ sub get_ancestor_hash {
   push @$direct_descendant_ids, $stock_id; #excluded in parent retrieval to prevent loops
 
   my $stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $stock_id});
-  #print STDERR "Stock ".$bcs_stock->uniquename()." decendants are: ".Dumper($direct_descendant_ids)."\n";
+  #print STDERR "Stock ".$stock->uniquename()." decendants are: ".Dumper($direct_descendant_ids)."\n";
   my %pedigree;
   $pedigree{'id'} = $stock_id;
   $pedigree{'name'} = $stock->uniquename();

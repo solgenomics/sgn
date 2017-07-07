@@ -628,33 +628,6 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     $c->res->body($output);
 }
 
-sub hash_walk {
-    my ($hash, $key_list, $callback) = @_;
-    while (my ($k, $v) = each %$hash) {
-        # Keep track of the hierarchy of keys, in case
-        # our callback needs it.
-        push @$key_list, $k;
-
-        if (ref($v) eq 'HASH') {
-            # Recurse.
-            hash_walk($v, $key_list, $callback);
-        }
-        else {
-            # Otherwise, invoke our callback, passing it
-            # the current key and value, along with the
-            # full parentage of that key.
-            $callback->($k, $v, $key_list);
-        }
-
-        pop @$key_list;
-    }
-}
-
-sub print_keys_and_value {
-    my ($k, $v, $key_list) = @_;
-    printf "k = %-8s  v = %-4s  key_list = [%s]\n", $k, $v, "@$key_list";
-}
-
 # pedigree download -- end
 
 #=pod
