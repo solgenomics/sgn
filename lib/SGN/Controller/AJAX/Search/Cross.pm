@@ -154,7 +154,7 @@ sub search_all_progenies : Path('/ajax/search/all_progenies') Args(0) {
     my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $progeny_id, $progeny_name, $cross_type) = @$r;
     push @all_progenies, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
       qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>},
-      qq{<a href="/stock/$progeny_id">$progeny_name</a}, $cross_type];
+      qq{<a href="/stock/$progeny_id/view">$progeny_name</a>}, $cross_type];
       print STDERR Dumper @all_progenies;
     }
 
@@ -179,7 +179,7 @@ sub search_progenies : Path('/ajax/search/progenies') Args(0) {
     my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $progeny_id, $progeny_name, $cross_type) = @$r;
     push @progenies, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
       qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>},
-      qq{<a href="/stock/$progeny_id">$progeny_name</a}, $cross_type];
+      qq{<a href="/stock/$progeny_id/view">$progeny_name</a>}, $cross_type];
       print STDERR Dumper @progenies;
     }
 
