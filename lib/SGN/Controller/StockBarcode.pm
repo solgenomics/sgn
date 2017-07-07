@@ -100,6 +100,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $type_id;
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type' )->cvterm_id();
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type' )->cvterm_id();
 
     # convert mm into pixels
     #
@@ -123,7 +124,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my @not_found;
     my @found;
 
-    my ($row, $stockprop_name, $value, $fdata, $accession_name, $female_parent, $male_parent, @parents_info, $parents_plot, $parents_accession, $parents, $pedigree_string);
+    my ($row, $stockprop_name, $value, $fdata, $accession_name, $female_parent, $male_parent, @parents_info, $parents_plot, $label_text_5, $parents_accession, $parents, $pedigree_string);
 
     foreach my $name (@names) {
 
@@ -172,11 +173,11 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
               $female_parent = $parents_info[1][1] || '';
             }
 
-            if (!$female_parent){
-                $parents_plot = '';
+            if (defined $female_parent){
+                $parents_plot = $female_parent."/".$male_parent;
             }
             else{
-                $parents_plot = $female_parent."/".$male_parent;
+                $parents_plot = '';
             }
           #  push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents];
             #push @found, [ $stock_id, $name, $accession_name, $fdata, $parents];
@@ -187,11 +188,11 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
         $male_parent = $parents_info[0][1] || '';
         $female_parent = $parents_info[1][1] || '';
 
-        if (!$female_parent){
-            $parents_accession = '';
+        if ( defined $female_parent){
+            $parents_accession = $female_parent."/".$male_parent;
         }
         else{
-            $parents_accession = $female_parent."/".$male_parent;
+            $parents_accession = '';
         }
         #$parents = $female_parent."/".$male_parent;
       }
@@ -285,17 +286,21 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
       }
       elsif ($barcode_type eq "2D") {
 
-        if (defined $row){
-          print "ACCESSION IS NOT EMPTY........ $row\n";
-           $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]." ".$found[$i]->[3]." ".$added_text, $fieldbook_barcode ]);
+        ##if (defined $row){}
+        if ($plot_cvterm_id == $type_id){
+          #print "ACCESSION IS NOT EMPTY........ $row\n";
+           $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]."\n".$found[$i]->[3]."\n".$added_text."\n".$found[$i]->[4], $fieldbook_barcode ]);
         }
-        elsif ($female_parent =~ m/^\d+/ || $female_parent =~ m/^\w+/){
-          if ($found[$i]->[4] =~ m/^\//) {
-            print "I SEE SLASH: $found[$i]->[4]\n";
-            ($found[$i]->[4] = $found[$i]->[4]) =~ s/\///;
-          }
-           $label_text_4 = "Pedigree:".$found[$i]->[4];
-          $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]." ".$added_text, $fieldbook_barcode]);
+        # elsif ($female_parent =~ m/^\d+/ || $female_parent =~ m/^\w+/){
+        #   if ($found[$i]->[4] =~ m/^\//) {
+        #     print "I SEE SLASH: $found[$i]->[4]\n";
+        #     ($found[$i]->[4] = $found[$i]->[4]) =~ s/\///;
+        #   }
+        #    $label_text_4 = "Pedigree:".$found[$i]->[4];
+        #   $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]." ".$added_text, $fieldbook_barcode]);
+        # }
+        elsif ($accession_cvterm_id == $type_id){
+            $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]." ".$added_text, $fieldbook_barcode]);
         }
         else {
          $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [  $found[$i]->[0], $found[$i]->[1], $added_text, $fieldbook_barcode ]);
@@ -343,20 +348,27 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
               my $plot_pedigree_text;
 
               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
-              if ($found[$i]->[4] =~ m/^\//){
-                  $label_text_4 = "Pedigree: No pedigree available for ".$found[$i]->[2];
+              if ($found[$i]->[4] == '' ){
+              #if ($found[$i]->[4] =~ m/^\//){}
+                  if ($plot_cvterm_id == $type_id){
+                      $label_text_4 = "No pedigree for ".$found[$i]->[2];
+                  }else{
+                      $label_text_4 = "No pedigree for ".$found[$i]->[1];
+                  }
+              }
+              else{
+                  $label_text_4 = "pedigree:".$found[$i]->[4];
               }
               if ($plot_cvterm_id == $type_id){
-                  $label_text_4 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
-                  $plot_pedigree_text = "pedigree:".$found[$i]->[4];
+                  $label_text_5 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
               }
-               my $parents = $found[$i]->[4];
-               if (!$parents){
-                   $label_text_4 = '';
-                   $plot_pedigree_text = "Pedigree: No pedigree available for ".$found[$i]->[2];
-               }
+            #    my $parents = $found[$i]->[4];
+            #    if (!$parents){
+            #        $label_text_4 = '';
+            #        $plot_pedigree_text = "No pedigree for ".$found[$i]->[2];
+            #    }
               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
-              $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $plot_pedigree_text);
+              $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_5);
           }
           elsif ($labels_per_row > '1'){
               if (length($label_text) <= 15){
