@@ -149,7 +149,7 @@
 jQuery(document).ready(function () {
 
   jQuery("#pedigree_female_parent").autocomplete({
-    source:'/ajax/stock/accession_population_autocomplete',
+    source:'/ajax/stock/pedigree_female_parent_autocomplete',
   });
 
   $("#search_pedigree_male_parents").click(function(){
@@ -223,7 +223,7 @@ jQuery(document).ready(function(){
     jQuery(document).ready(function () {
 
       jQuery("#female_parent").autocomplete({
-        source:'/ajax/stock/accession_population_autocomplete',
+        source:'/ajax/stock/cross_female_parent_autocomplete',
       });
 
       $("#search_cross_male_parents").click(function(){
