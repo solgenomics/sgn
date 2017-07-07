@@ -4,7 +4,13 @@
 #installs new ones from CRAN, bioconductor, github
 #in ~/cxgn/sgn/R_libs
 
-## check if these pkgs installed first, if not install
+#Leaves behind deps installed in site libraries ("/usr/local/lib/R/site-library:/usr/lib/R/site-library:/usr/lib/R/library")
+#To avoid future version conflicts between deps installed in these libraries and 'cxgn/sgn/R_libs', you would be better off
+#removing them manually.
+
+#Also set the env variable R_LIBS_USER in your system (/etc/R/Renviron) to "~/cxgn/sgn/R_libs".
+#This will ensure deps you manually install in R will be in the same place as sgn R libraries
+#and avoid installation of the same R packages in multiple places.
 
 
 rLibsUser <- unlist(strsplit(Sys.getenv("R_LIBS_USER"), .Platform$path.sep))
@@ -16,8 +22,6 @@ gitFile   <- "~/cxgn/sgn/R_files/github"
 bioCFile  <- "~/cxgn/sgn/R_files/bioconductor"
 
 preRLibsSgn <- grep(rLibsSgn, rLibsUser, perl=TRUE, value=TRUE)
-print('sgndirold')
-print(preRLibsSgn)
 
 if (!file.exists(preRLibsSgn) && !dir.create(rLibsSgn, recursive = TRUE, showWarnings = TRUE)) { 
     stop("SGN R Libs dir ", rLibsSgn, ' Does not exist and failed to create it.')
@@ -104,18 +108,20 @@ removeOlderPackages <- function (dupPackages) {
         lb <- dupsDf$LibPath[1]
         message( 'removing double copy ', dN, ' from ', lb)
         remove.packages(dN, lib=lb)
-        dupsDf <- dupsDf %>% filter(LibPath != lb) %>% data.frame
+
+        dupsDf <- dupsDf %>%
+          filter(LibPath != lb) %>%
+            data.frame
       
       } else if (v == 1)  {
         lb <- dupsDf[2, 'LibPath']
         message( 'removing older copy ', dN, ' from ', lb)
         remove.packages(dN, lib=lb)
 
-        print(dupsDf)
         dupsDf <- dupsDf %>%
           filter(LibPath != lb) %>%
             data.frame
-          print(dupsDf)
+
       } else if (v == -1) {
         lb <- dupsDf[1, 'LibPath']
         message( 'removing older copy ', dN, ' from ', lb)
@@ -142,8 +148,6 @@ filterFilePackages <- function (depsF) {
  
 }
 
-
-
 insPacks <- installedPackages(lib.loc=rLibsSgn)
 dupPackages <- duplicatedPackagesDf(insPacks)
 removeOlderPackages(dupPackages)
@@ -158,31 +162,47 @@ allReqPacks <-c(cranPacks, biocPacks, githubPacks)
 insPacksUni <- unique(insPacks$Package)
 
 newCran <- cranPacks[!cranPacks %in% insPacksUni]
-newGit  <- githubPackPaths 
+newGit  <- githubPacks[!githubPacks %in% insPacksUni]
 newBioc <- biocPacks[!biocPacks %in% insPacksUni]
 
 #stop('quit before install...')
+
 if (length(newCran) > 0) {
-  install_cran(newCran,
-               repos=cranSite)
+  install.packages(newCran,
+                   repos=cranSite,
+                   quiet=TRUE,
+                   verbose=FALSE)
+} else {
+  message('No new cran packages to install.')
 }
 
-if (length(newGit) > 0) {
-    install_github(newGit)
+newGitPaths <- c()
+if (!is.null(newGit)) {
+  for (ng in newGit) {
+    ngp <- grep(ng, githubPackPaths, value=TRUE)
+    ifelse(is.null(newGitPaths), newGitPaths <- ngp,  newGithPaths <- c(newGitPaths, ngp))   
+  }
 }
 
 
-if (length(newBioC) > 0 ) {
+if (length(newGitPaths) > 0) {
+    withr::with_libpaths(new=rLibsSgn,
+                         install_github(newGitPaths,
+                                        force=TRUE,
+                                        quiet=TRUE,
+                                        verbose=FALSE))
+} else {
+  message('No new github packages to install.')
+}
+
+
+if (length(newBioc) > 0 ) {
     source('http://bioconductor.org/biocLite.R')
     biocLite(newBioc,
              suppressUpdates=TRUE,
              suppressAutoUpdate=TRUE,
              ask=FALSE,
              siteRepos=cranSite)
+} else {
+  message('No new bioconductor packages to install.')
 }
-
-
-
-
-
-
