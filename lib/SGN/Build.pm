@@ -91,10 +91,10 @@ sub check_R {
             $ret = $self->_run_R_check( @args );
         };
 
-        $self->{R}{check_output} = $out;
-        if( !$ret and my ($missing) = $out =~ /required but not available:\s+(\S(?:[^\n]+\n)+)\n/si ) {
-            $self->{R}{missing_packages} = [ split /\s+/, $missing ];
-        }
+        # $self->{R}{check_output} = $out;
+        # if( !$ret and my ($missing) = $out =~ /required but not available:\s+(\S(?:[^\n]+\n)+)\n/si ) {
+        #     $self->{R}{missing_packages} = [ split /\s+/, $missing ];
+        # }
 
         return $ret;
     } else {
@@ -106,22 +106,22 @@ sub _R_installdeps {
     my ( $self ) = @_;
 
     if( $self->check_R ) {
-        print "All R prerequisites satisfied\n";
-        return;
-    }
+        print "R prerequisite satisfied\n";
+      #  return;
+    #}
 
-    # my @missing_packages = @{ $self->{R}{missing_packages} || [] };
-    # unless( @missing_packages ) {
-    #     print "No missing R packages detected, cannot installdeps for R.\n";
-    #     return;
-    # }
+  #   my @missing_packages = @{ $self->{R}{missing_packages} || [] };
+#     unless( @missing_packages ) {
+#         print "No missing R packages detected, cannot installdeps for R.\n";
+#         return;
+#     }
 
-  #   my $package_vec = 'c('.join( ',', map qq|"$_"|, @missing_packages ).')';
+#     my $package_vec = 'c('.join( ',', map qq|"$_"|, @missing_packages ).')';
 #     my $cran_mirror = $ENV{CRAN_MIRROR} || "http://lib.stat.cmu.edu/R/CRAN";
  
 #     my $tf = File::Temp->new;
 #     $tf->print( <<EOR );
-# userdir <- unlist(strsplit(Sys.getenv("R_LIBS_SITE"), .Platform\$path.sep))[1L]
+# userdir <- unlist(strsplit(Sys.getenv("R_LIBS_USER"), .Platform\$path.sep))[1L]
 # if (!file.exists(userdir) && !dir.create(userdir, recursive = TRUE, showWarnings = TRUE))
 #    stop("unable to create ", sQuote(userdir))
 # .libPaths(c(userdir, .libPaths()))
@@ -129,16 +129,20 @@ sub _R_installdeps {
 # EOR
 #      $tf->close;
 
-#     # use system so the user will be able to use the R graphical
-#     # mirror chooser, and other things
-#     system 'R', '--slave', -f => "$tf", '--no-save', '--no-restore';
-    system 'Rscript R/sgnPackages.r';
+    # use system so the user will be able to use the R graphical
+    # mirror chooser, and other things
+    # system 'R', '--slave', -f => "$tf", '--no-save', '--no-restore';
+   
+	`Rscript R/sgnPackages.r`;
 
-    if( $? ) {
-        _handle_errors($?);
-        warn "Failed to automatically install R dependencies\n";
-    } elsif( $self->check_R ) {
-        print "Successfully installed R dependencies.\n";
+	if( $? ) {
+	    _handle_errors($?);
+	    warn "Failed to automatically install R dependencies\n";
+	} elsif( $self->check_R ) {
+	    print "Successfully installed R dependencies.\n";
+	}
+
+	return;
     }
 }
 
@@ -164,16 +168,16 @@ sub _run_R_check {
     $self->_check_R_version
         or return 0;
 
-    my $no_manual = $self->_R_version_current ge version->new('3.2.5') ? '--no-manual' : '';
+    #my $no_manual = $self->_R_version_current ge version->new('3.2.5') ? '--no-manual' : '';
 
-    my $ret = system "R CMD check $no_manual --no-codoc --no-vignettes -o _build R_files";
-
-    if ( $ret || $? ) {
+   # my $ret = system "R CMD check $no_manual --no-codoc --no-vignettes -o _build R_files";
+    #if ( $ret || $? ) {
+    if ( $? ) {
         _handle_errors($?);
         warn "\nR PREREQUISITE CHECK FAILED.\n\n";
         return 0;
     } else {
-        print "R prerequisites OK.\n\n";
+        print "R prerequisite OK.\n\n";
         return 1;
     }
 }
@@ -197,7 +201,7 @@ sub _check_R_version {
     }
 }
 
-# parse and return the R DESCRIPTION file
+# parse and return the R cran deps file
 sub _R_desc {
     return Parse::Deb::Control->new([qw[ R_files cran ]]);
 }
