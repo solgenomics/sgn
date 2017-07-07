@@ -126,8 +126,8 @@ while (my $row = $stock_rs->next()) {
 		    print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
 		    print $OUT "\t$score\n";
 
-    }
 }
+
 
 $dbh->disconnect();
 
