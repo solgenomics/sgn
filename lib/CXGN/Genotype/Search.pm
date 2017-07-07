@@ -169,6 +169,7 @@ sub get_genotype_info_as_genotype_objects {
 	$gt->dosages($d->{genotype_hash});
 	push @genotypes, $gt;
     }
+    print STDERR "genotypes are". Dumper @genotypes;
     return @genotypes;
 }
 
