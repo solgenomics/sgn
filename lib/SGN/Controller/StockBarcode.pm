@@ -123,7 +123,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my @not_found;
     my @found;
 
-    my ($row, $stockprop_name, $value, $fdata, $accession_name, $female_parent, $male_parent, @parents_info, $parents);
+    my ($row, $stockprop_name, $value, $fdata, $accession_name);
 
     foreach my $name (@names) {
 
@@ -165,14 +165,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             }
       }
 
-      if ($nursery){
-        @parents_info = CXGN::Stock->new ( schema => $schema, stock_id => $stock_id)->get_direct_parents();
-        $male_parent = $parents_info[0][1] || '';
-        $female_parent = $parents_info[1][1] || '';
-      }
-
-      print "MY male $male_parent and female $female_parent\n";
-      $parents = $female_parent."/".$male_parent;
+      my $parents = CXGN::Stock->new ( schema => $schema, stock_id => $stock_id)->get_pedigree_string('Parents');
       print "MY parents: $parents\n";
 
       push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents];
@@ -402,7 +395,7 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
   my @not_found;
   my @found;
 
-  my ($row, $stockprop_name, $value, $fdata, $accession_name, $female_parent, $male_parent, @parents_info, $parents);
+  my ($row, $stockprop_name, $value, $fdata, $accession_name, $accession_id);
 
   foreach my $name (@names) {
 
@@ -439,21 +432,14 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
     $row = $stockprop_hash{$stock_id}->{'replicate'};
     $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."block:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
 
-    my $h_acc = $dbh->prepare("select stock.uniquename AS acesssion_name FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
+    my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
     $h_acc->execute($stock_id);
-    while (my($accession) = $h_acc->fetchrow_array) {
-      $accession_name = $accession;
-      }
-
-    if ($accession_name){
-      my $stock = $schema->resultset("Stock::Stock")->find( { name=>$accession_name });
-      my $accession_id = $stock->stock_id();
-      @parents_info = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id)->get_direct_parents();
-      $male_parent = $parents_info[0][1] || '';
-      $female_parent = $parents_info[1][1] || '';
+    while (my($row) = $h_acc->fetchrow_array) {
+      $accession_name = $row[0];
+      $accession_id = $row[1];
     }
 
-    $parents = $female_parent."/".$male_parent;
+    my $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id)->get_pedigree_string('Parents');
   #  push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents];
     push @found, [ $stock_id, $name, $accession_name, $fdata, $parents];
   }

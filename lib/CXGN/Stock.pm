@@ -688,14 +688,14 @@ sub get_pedigree_string {
     elsif ($level eq "Grandparents") {
         my $maternal_parent_string = $self->_get_parent_string($pedigree_hashref->{'female_parent'});
         my $paternal_parent_string = $self->_get_parent_string($pedigree_hashref->{'male_parent'});
-        return $maternal_parent_string."\\\\".$paternal_parent_string;
+        return "$maternal_parent_string//$paternal_parent_string";
     }
     elsif ($level eq "Great-Grandparents") {
         my $mm_parent_string = $self->_get_parent_string($pedigree_hashref->{'female_parent'}->{'female_parent'});
         my $mf_parent_string = $self->_get_parent_string($pedigree_hashref->{'female_parent'}->{'male_parent'});
         my $pm_parent_string = $self->_get_parent_string($pedigree_hashref->{'male_parent'}->{'female_parent'});
         my $pf_parent_string = $self->_get_parent_string($pedigree_hashref->{'male_parent'}->{'male_parent'});
-        return $mm_parent_string."\\\\".$mf_parent_string."\\\\\\".$pm_parent_string."\\\\".$pf_parent_string;
+        return "$mm_parent_string//$mf_parent_string///$pm_parent_string//$pf_parent_string";
     }
 }
 
@@ -703,7 +703,18 @@ sub _get_parent_string {
     my ($self, $pedigree_hashref) = @_;
     my $mother = $pedigree_hashref->{'female_parent'}->{'name'} || 'NA';
     my $father = $pedigree_hashref->{'male_parent'}->{'name'} || 'NA';
-    return "$mother\\$father";
+    return "$mother/$father";
+}
+
+sub get_parents {
+    my $self =  shift;
+    my $pedigree_hashref = $self->get_ancestor_hash();
+    my %parents;
+    $parents{'mother'} = $pedigree_hashref->{'female_parent'}->{'name'};
+    $parents{'mother_id'} = $pedigree_hashref->{'female_parent'}->{'id'};
+    $parents{'father'} = $pedigree_hashref->{'male_parent'}->{'name'};
+    $parents{'father_id'} = $pedigree_hashref->{'female_parent'}->{'id'};
+    return \%parents;
 }
 
 sub _store_stockprop {
