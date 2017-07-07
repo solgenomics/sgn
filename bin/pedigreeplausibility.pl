@@ -108,7 +108,7 @@ while (my $row = $stock_rs->next()) {
 my $s;
 my $m;
 my $d;
-	$s = $self_gts[0]
+	$s = $self_gts[0];
     #if (@mom_gts) { print $OUT  Dumper @mom_gts;}
   $m =(@mom_gts)[0];
 	$d = (@dad_gts)[0];
