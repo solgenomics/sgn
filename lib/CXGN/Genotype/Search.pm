@@ -158,6 +158,9 @@ sub get_genotype_info_as_genotype_objects {
 
     my ($total_count, $data) = $self->get_genotype_info(@_);
 
+    print STDERR " number of genotypes are". $total_count."\n";
+    print STDERR "length of genotypes is". scalar @$data;
+
     my @genotypes;
     foreach my $d (@$data) {
 	print STDERR "Processing entry ".$d->{germplasmName}."\n";
@@ -169,7 +172,6 @@ sub get_genotype_info_as_genotype_objects {
 	$gt->dosages($d->{genotype_hash});
 	push @genotypes, $gt;
     }
-    print STDERR "genotypes are". Dumper @genotypes;
     return @genotypes;
 }
 
