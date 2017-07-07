@@ -80,14 +80,16 @@ while (my $row = $stock_rs->next()) {
 	    accession_list => [ $parents[0]->[0]],
 	    protocol_id => $protocol_id,
 							    });
-
-	my @mom_gts = $gts->get_genotype_info_as_genotype_objects();
+  my @mom_gts;
+	@mom_gts = $gts->get_genotype_info_as_genotype_objects();
+  #if (@mom_gts) { print $OUT  Dumper @mom_gts;}
 
 	$gts = CXGN::Genotype::Search->new( {
 	    bcs_schema => $schema,
 	    accession_list => [ $parents[1]->[0]],
 	    protocol_id => $protocol_id,
 							    });
+
 
 	my (@dad_gts) = $gts->get_genotype_info_as_genotype_objects();
 
@@ -106,19 +108,16 @@ while (my $row = $stock_rs->next()) {
   if ($opt_o) {
       open($OUT, '>>', $opt_o);
 
-
-  print $OUT "at mom genos".@mom_gts;
-  print $OUT "at dad genos".@dad_gts;
-  print $OUT "at child genos".@self_gts;
-  #print $OUT "d child genos".$self_gts;
+#print $OUT "d child genos".$self_gts;
   #print $OUT "d father genos".$dad_gts;
   #print $OUT "d mother genos".$mom_gts;}
 ##check length
 ##index of array for
 }
-	foreach my $s (@self_gts) {
-	    foreach my $m (@mom_gts) {
-		foreach my $d (@dad_gts) {
+	my $s = $self_gts[0]
+    #if (@mom_gts) { print $OUT  Dumper @mom_gts;}
+    my $m =(@mom_gts)[0];
+		my $d = (@dad_gts)[0];
 		    my ($concordant, $discordant, $non_informative) =
 			$s->compare_parental_genotypes($m, $d);
 		    my $score = $concordant / ($concordant + $discordant);
@@ -126,9 +125,7 @@ while (my $row = $stock_rs->next()) {
 
 		    print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
 		    print $OUT "\t$score\n";
-		}
-	    }
-	}
+
     }
 }
 
