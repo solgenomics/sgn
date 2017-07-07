@@ -99,13 +99,13 @@ while (my $row = $stock_rs->next()) {
 	}
   if ($opt_o) {
       open($OUT, '>>', $opt_o);
-
+}
 #print $OUT "d child genos".$self_gts;
   #print $OUT "d father genos".$dad_gts;
-  #print $OUT "d mother genos".$mom_gts;}
+  #print $OUT "d mother genos".$mom_gts;
 ##check length
 ##index of array for
-}
+
 	my $s = $self_gts[0]
     #if (@mom_gts) { print $OUT  Dumper @mom_gts;}
     my $m =(@mom_gts)[0];
@@ -117,8 +117,9 @@ while (my $row = $stock_rs->next()) {
 
 		    print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
 		    print $OUT "\t$score\n";
-
 }
+}
+
 
 
 $dbh->disconnect();
