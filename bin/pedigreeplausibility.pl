@@ -98,7 +98,7 @@ while (my $row = $stock_rs->next()) {
 	    next;
 	}
   if ($opt_o) {
-      open($OUT, '>', $opt_o);
+      open($OUT, '>>', $opt_o);
 }
 #print $OUT "d child genos".$self_gts;
   #print $OUT "d father genos".$dad_gts;
