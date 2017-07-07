@@ -582,90 +582,50 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 # pedigree download -- begin
 
 sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
-my $self = shift;
-my $c = shift;
-my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedigree_stock_id, $accession_name);
+    my $self = shift;
+    my $c = shift;
 
-    $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
-    $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
-    @accession_list = map { $_->[1] } @$accession_data;
-
+    my $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
+    my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+    my @accession_list = map { $_->[1] } @$accession_data;
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $t = CXGN::List::Transform->new();
     my $acc_t = $t->can_transform("accessions", "accession_ids");
     my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
 
-    @accession_ids = @{$accession_id_hash->{transform}};
+    my @accession_ids = @{$accession_id_hash->{transform}};
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
 
-    open my $TEMP, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
+    open my $FILE, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
 
-	print $TEMP "Accession\tFemale_Parent\tMale_Parent\tCross_Type";
- 	print $TEMP "\n";
-       my $check_pedigree = "FALSE";
-       my $len;
+	print $FILE "Accession\tFemale_Parent\tMale_Parent\tCross_Type\n";
+    my $pedigrees_found = 0;
 
-       my %data = (
-           a => {
-               ab => 1,
-               ac => 2,
-               ad => {
-                   ada => 3,
-                   adb => 4,
-                   adc => {
-                       adca => 5,
-                       adcb => 6,
-                   },
-               },
-           },
-           b => 7,
-           c => {
-               ca => 8,
-               cb => {
-                   cba => 9,
-                   cbb => 10,
-               },
-           },
-       );
+    for (my $i=0 ; $i<scalar(@accession_ids); $i++) {
 
-	for (my $i=0 ; $i<scalar(@accession_ids); $i++)
-	{
+	    my $stock = CXGN::Stock->new ( schema => $schema, stock_id => $accession_ids[$i]);
+        my $ancestor_hashref = $stock->get_ancestor_hash();
+        my $pedigree_rows = $stock->get_pedigree_rows($ancestor_hashref);
 
-	$accession_name = $accession_list[$i];
-    my ($female_parent, $male_parent, $cross_type) = '';
-	my $pedigree_stock_id = $accession_ids[$i];
+        foreach my $row (@$pedigree_rows) {
+            print $FILE $row;
+            $pedigrees_found++;
+        }
+    }
+    unless ($pedigrees_found > 0) {
+        print $FILE "$pedigrees_found pedigrees found in the database for the accessions searched. \n";
+    }
+    close $FILE;
 
-	my $full_pedigree = CXGN::Stock->new ( schema => $schema, stock_id => $pedigree_stock_id)->get_full_pedigree();
+    my $filename = "pedigree.txt";
 
-    foreach my $parent (sort keys %$full_pedigree) {
+    $c->res->content_type("application/text");
+    $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
+    my $output = read_file($tempfile);
 
-    hash_walk(\%data, [], \&print_keys_and_value);
-    hash_walk($full_pedigree, [], \&print_keys_and_value);
-
-    #print $TEMP "$accession_name\t$female_parent\t$male_parent\t$cross_type\n";
-
-  	}
-
-if ($check_pedigree eq "FALSE")
-{
-print $TEMP "\n";
-print $TEMP "No pedigrees found in the Database for the accessions searched. \n";
-}
-
- close $TEMP;
-
- my $filename = "pedigree.txt";
-
- $c->res->content_type("application/text");
- $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
-  my $output = read_file($tempfile);
-
-  $c->res->body($output);
-
-}
-
+    $c->res->body($output);
 }
 
 sub hash_walk {
