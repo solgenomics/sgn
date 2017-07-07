@@ -105,11 +105,13 @@ while (my $row = $stock_rs->next()) {
   #print $OUT "d mother genos".$mom_gts;
 ##check length
 ##index of array for
-
-	my $s = $self_gts[0]
+my $s;
+my $m;
+my $d;
+	$s = $self_gts[0]
     #if (@mom_gts) { print $OUT  Dumper @mom_gts;}
-    my $m =(@mom_gts)[0];
-		my $d = (@dad_gts)[0];
+  $m =(@mom_gts)[0];
+	$d = (@dad_gts)[0];
 		    my ($concordant, $discordant, $non_informative) =
 			$s->compare_parental_genotypes($m, $d);
 		    my $score = $concordant / ($concordant + $discordant);
