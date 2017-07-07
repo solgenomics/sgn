@@ -29,6 +29,20 @@
                             <hr>
                             <form class="form-horizontal" >
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Location Name (Optional): </label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_location_select_list_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Trial Name(s): </label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_trial_select_list_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Female Accession List: </label>
                                     <div class="col-sm-9" id="female_accession_list_div" name="female_accession_list_div">
                                     </div>
@@ -50,7 +64,7 @@
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Trial Name(s): </label>
                                     <div class="col-sm-9" >
-                                        <div id="cross_wishlist_trial_select_div">
+                                        <div id="cross_wishlist_trial_select_no_list_div">
                                         </div>
                                     </div>
                                 </div>
@@ -147,7 +161,10 @@ jQuery(document).ready(function($) {
         draw_cross_grid(female_accessions, male_accessions);
     });
 
-    get_select_box('trials', 'cross_wishlist_trial_select_div', { 'name' : 'cross_wishlist_trial_id', 'id' : 'cross_wishlist_trial_id', 'empty':1 });
+    get_select_box('locations', 'cross_wishlist_location_select_list_div', { 'name' : 'cross_wishlist_location_id', 'id' : 'cross_wishlist_location_id', 'empty':1 });
+    get_select_box('trials', 'cross_wishlist_trial_select_no_list_div', { 'name' : 'cross_wishlist_trial_id', 'id' : 'cross_wishlist_trial_id', 'empty':1, 'multiple':1 });
+
+    get_select_box('trials', 'cross_wishlist_trial_select_list_div', { 'name' : 'cross_wishlist_list_trial_id', 'id' : 'cross_wishlist_list_trial_id', 'empty':1, 'multiple':1 });
 
     jQuery(document).on('change', "#cross_wishlist_trial_id", function() {
         cross_wishlist_change_trials();
@@ -235,6 +252,7 @@ jQuery(document).ready(function($) {
                     cross_data.push({ 'female_id':female_id, 'male_id':male_id, 'priority':value });
                 }
             });
+            trial_id = jQuery('#cross_wishlist_list_trial_id').val();
         }
         //console.log(cross_data);
         jQuery.ajax({
