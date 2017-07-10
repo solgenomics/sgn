@@ -100,10 +100,10 @@ sub get_cross_info {
 	$h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid, $female_parent);
     }
     elsif ($male_parent) {
-	$h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid, $male_parent);
+  $h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid, $male_parent);
     }
     else {
-	$h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid);
+  $h->execute($female_parent_typeid, $cross_typeid, $male_parent_typeid);
     }
 
     my @cross_info = ();
@@ -159,14 +159,14 @@ sub get_progeny_info {
     if($female_parent && $male_parent){
         $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $female_parent, $male_parent);
     }
-    elsif ($female_parent){
+    elsif ($female_parent) {
         $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $female_parent);
     }
-    elsif ($male_parent){
-        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $male_parent)
+    elsif ($male_parent) {
+        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $male_parent);
     }
     else {
-        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid)
+        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid);
     }
 
     my @progeny_info = ();
