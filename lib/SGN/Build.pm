@@ -88,62 +88,32 @@ sub check_R {
     if( $HAVE_CAPTURE ) {
         my $ret;
         my $out = Capture::Tiny::capture_merged {
-            $ret = $self->_run_R_check( @args );
+	    $ret = $self->_check_R_version;
         };
 
-        # $self->{R}{check_output} = $out;
-        # if( !$ret and my ($missing) = $out =~ /required but not available:\s+(\S(?:[^\n]+\n)+)\n/si ) {
-        #     $self->{R}{missing_packages} = [ split /\s+/, $missing ];
-        # }
-
+         $self->{R}{check_output} = $out;
+  
         return $ret;
     } else {
-        return $self->_run_R_check( @args );
+	return $self->_check_R_version
     }
 }
 
 sub _R_installdeps {
     my ( $self ) = @_;
 
-    if( $self->check_R ) {
-        print "R prerequisite satisfied\n";
-      #  return;
-    #}
+    print "\n\nInstalling R dependencies...\nDepending on the number of deps to install, this may take long time...\n\n";
+    my $rout = qx /Rscript R\/sgnPackages.r 2>&1 /;
 
-  #   my @missing_packages = @{ $self->{R}{missing_packages} || [] };
-#     unless( @missing_packages ) {
-#         print "No missing R packages detected, cannot installdeps for R.\n";
-#         return;
-#     }
+    print "\nR dependencies installation output:\n $rout\n";
 
-#     my $package_vec = 'c('.join( ',', map qq|"$_"|, @missing_packages ).')';
-#     my $cran_mirror = $ENV{CRAN_MIRROR} || "http://lib.stat.cmu.edu/R/CRAN";
- 
-#     my $tf = File::Temp->new;
-#     $tf->print( <<EOR );
-# userdir <- unlist(strsplit(Sys.getenv("R_LIBS_USER"), .Platform\$path.sep))[1L]
-# if (!file.exists(userdir) && !dir.create(userdir, recursive = TRUE, showWarnings = TRUE))
-#    stop("unable to create ", sQuote(userdir))
-# .libPaths(c(userdir, .libPaths()))
-# install.packages( $package_vec, contriburl = contrib.url("$cran_mirror") )
-# EOR
-#      $tf->close;
-
-    # use system so the user will be able to use the R graphical
-    # mirror chooser, and other things
-    # system 'R', '--slave', -f => "$tf", '--no-save', '--no-restore';
-   
-	`Rscript R/sgnPackages.r`;
-
-	if( $? ) {
-	    _handle_errors($?);
-	    warn "Failed to automatically install R dependencies\n";
-	} elsif( $self->check_R ) {
-	    print "Successfully installed R dependencies.\n";
-	}
-
-	return;
+    if( $? ) {
+	_handle_errors($?);
+	warn "Failed to automatically install R dependencies\n\n";
+    } else  {
+	print "Successfully installed R dependencies.\n\n";
     }
+
 }
 
 sub _handle_errors {
@@ -161,30 +131,23 @@ sub _handle_errors {
 sub _run_R_check {
     my $self = shift;
 
-    print STDERR "\n_run_R_check: Checking R prerequisites...\n";
-
     # check the R version ourself, since R CMD check apparently does
     # not do it.
     $self->_check_R_version
         or return 0;
 
-    #my $no_manual = $self->_R_version_current ge version->new('3.2.5') ? '--no-manual' : '';
-
-   # my $ret = system "R CMD check $no_manual --no-codoc --no-vignettes -o _build R_files";
-    #if ( $ret || $? ) {
     if ( $? ) {
         _handle_errors($?);
-        warn "\nR PREREQUISITE CHECK FAILED.\n\n";
+        warn "\nR version PREREQUISITE CHECK FAILED.\n\n";
         return 0;
     } else {
-        print "R prerequisite OK.\n\n";
+        print "\nR version prerequisite OK.\n\n";
         return 1;
     }
 }
 
 sub _check_R_version {
     my $self = shift;
-
 
     unless ($HAVE_PARSE_DEB_CONTROL) {
         warn "Parse::Deb::Control not present, skipping R configuration";
@@ -196,7 +159,7 @@ sub _check_R_version {
         return 1;
     } else {
         warn "R VERSION CHECK FAILED, we have ".$self->_R_version_current.", but we require $cmp $v.\n";
-        warn "To install R : sudo apt-get install r-base r-base-dev\n\n";
+        warn "To install R : sudo apt-get update; sudo apt-get install r-base r-base-dev\n\n";
         return 0;
     }
 }
@@ -210,6 +173,7 @@ sub _R_desc {
 # ('>=','2.10.0')
 sub _R_version_required {
     my $self = shift;
+    
     my @k = $self->_R_desc->get_keys('Depends')
         or return ( '>=', 0 );
     my ($version) = ${$k[0]->{value}} =~ / \b R \s* \( ([^\)]+) /x
