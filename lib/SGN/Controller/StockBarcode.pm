@@ -124,7 +124,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my @not_found;
     my @found;
 
-    my ($row, $stockprop_name, $value, $fdata, $accession_name, $female_parent, $male_parent, @parents_info, $tract_type_id, $parents_plot, $label_text_5, $parents_accession, $parents, $pedigree_string);
+    my ($row, $stockprop_name, $value, $fdata, $accession_id, $accession_name, $parents, $tract_type_id, $label_text_5);
 
     foreach my $name (@names) {
 
@@ -158,51 +158,22 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $row = $stockprop_hash{$stock_id}->{'replicate'};
           $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."block:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
 
-          my $h_acc = $dbh->prepare("select stock.uniquename AS acesssion_name FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
+          my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
 
           $h_acc->execute($stock_id);
-          while (my($accession) = $h_acc->fetchrow_array) {
-            $accession_name = $accession;
-            }
+          ($accession_name, $accession_id) = $h_acc->fetchrow_array;
+          print STDERR "Accession name for this plot is $accession_name and id is $accession_id\n";
 
-            if ($accession_name){
-              my $stock = $schema->resultset("Stock::Stock")->find( { uniquename=>$accession_name });
-              my $accession_id = $stock->stock_id();
-              @parents_info = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id)->get_direct_parents();
-              $male_parent = $parents_info[0][1] || '';
-              $female_parent = $parents_info[1][1] || '';
-            }
-
-            if (!$female_parent){
-                $parents_plot = '';
-            }
-            else{
-                $parents_plot = $female_parent."/".$male_parent;
-            }
-      }
-
-      if ($nursery){
-        @parents_info = CXGN::Stock->new ( schema => $schema, stock_id => $stock_id)->get_direct_parents();
-        $male_parent = $parents_info[0][1] || '';
-        $female_parent = $parents_info[1][1] || '';
-
-        if (!$female_parent){
-            $parents_accession = '';
-        }
-        else{
-            $parents_accession = $female_parent."/".$male_parent;
-        }
       }
 
       if ($plot_cvterm_id == $type_id) {
           $tract_type_id = 'plot';
-          $parents = $parents_plot;
+          $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
       }
       elsif ($accession_cvterm_id == $type_id){
           $tract_type_id = 'accession';
-          $parents = $parents_accession;
+          $parents = CXGN::Stock->new ( schema => $schema, stock_id => $stock_id )->get_pedigree_string('Parents');
       }
-      #print "MY male $male_parent and female $female_parent\n";
 
       #print "MY parents: $parents\n";
 
@@ -430,7 +401,7 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
   my @not_found;
   my @found;
 
-  my ($row, $stockprop_name, $value, $fdata, $accession_name, $female_parent, $male_parent, @parents_info, $parents);
+  my ($row, $stockprop_name, $value, $fdata, $accession_id, $accession_name, $parents);
 
   foreach my $name (@names) {
 
@@ -467,22 +438,13 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
     $row = $stockprop_hash{$stock_id}->{'replicate'};
     $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."block:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
 
-    my $h_acc = $dbh->prepare("select stock.uniquename AS acesssion_name FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
+    my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
+
     $h_acc->execute($stock_id);
-    while (my($accession) = $h_acc->fetchrow_array) {
-      $accession_name = $accession;
-      }
+    ($accession_name, $accession_id) = $h_acc->fetchrow_array;
 
-    if ($accession_name){
-      my $stock = $schema->resultset("Stock::Stock")->find( { name=>$accession_name });
-      my $accession_id = $stock->stock_id();
-      @parents_info = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id)->get_direct_parents();
-      $male_parent = $parents_info[0][1] || '';
-      $female_parent = $parents_info[1][1] || '';
-    }
+    $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
 
-    $parents = $female_parent."/".$male_parent;
-  #  push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents];
     push @found, [ $stock_id, $name, $accession_name, $fdata, $parents];
   }
 
@@ -516,15 +478,11 @@ sub download_qrcode : Path('/barcode/stock/download/plot_QRcode') : Args(0) {
     # generate barcode
 
     my $tempfile;
-    if ($female_parent =~ m/^\d+/ || $female_parent =~ m/^\w+/){
-      if ($found[$i]->[4] =~ m/^\//) {
-        ($found[$i]->[4] = $found[$i]->[4]) =~ s/\///;
-      }
-      $tempfile = $c->forward('/barcode/phenotyping_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]." ".$found[$i]->[3]." ".$found[$i]->[4]." ".$added_text]);
+    if ($parents =~ /NA\/NA/) {
+      $tempfile = $c->forward('/barcode/phenotyping_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]." ".$found[$i]->[3]." ".$added_text ]);
     }
     else {
-      $tempfile = $c->forward('/barcode/phenotyping_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]." ".$found[$i]->[3]." ".$added_text ]);
-
+      $tempfile = $c->forward('/barcode/phenotyping_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]." ".$found[$i]->[3]." ".$found[$i]->[4]." ".$added_text]);
     }
 
     print STDERR "$tempfile\n";
