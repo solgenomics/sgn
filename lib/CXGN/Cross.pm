@@ -89,7 +89,7 @@ sub get_cross_info {
     AND stock_relationship1.type_id= ? INNER JOIN stock AS cross_entry ON (cross_entry.stock_id=stock_relationship1.object_id) AND cross_entry.type_id= ?
     LEFT JOIN stock_relationship AS stock_relationship2 ON (cross_entry.stock_id=stock_relationship2.object_id) AND stock_relationship2.type_id= ?
     LEFT JOIN stock AS male_parent ON (male_parent.stock_id=stock_relationship2.subject_id)
-    $where_female $where_male ORDER BY stock_relationship1.value";
+    $where_female $where_male ORDER BY stock_relationship1.value, male_parent.uniquename";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
