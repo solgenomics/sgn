@@ -26,118 +26,52 @@ jQuery(document).ready(function ($) {
         open_upload_pedigrees_dialog();
     });
 
-//    jQuery("#upload_pedigrees_dialog").dialog({
-//	autoOpen: false,	
-//	modal: true,
-//	autoResize:true,
-//        width: 500,
-//        position: ['top', 75],
-//	buttons: {
-//            "Cancel": function () {
-//                jQuery('#upload_pedigrees_dialog').dialog("close");
-//            },
-//	    "Ok": function () {
-//		upload_pedigrees_file();
-//                jQuery('#upload_pedigrees_dialog').dialog("close");
-//		
-//	    },
-//	}
-//    });
-
-
-//    $("#pedigrees_upload_spreadsheet_info_dialog").dialog( {
-//	autoOpen: false,
-//	buttons: { "OK" :  function() { $("#pedigrees_upload_spreadsheet_info_dialog").dialog("close"); },},
-//	modal: true,
-//	position: ['top', 75],
-//	width: 900,
-//	autoResize:true,
-//    });
-
     $("#upload_pedigrees_dialog_submit").click( function () { 
-	$('#upload_pedigrees_dialog').modal("hide");
-	upload_pedigrees_file();	
-    });
-    
-    $("#pedigrees_upload_spreadsheet_format_info").click( function () { 
-	$('#upload_pedigrees_dialog').modal("hide");
-	$("#pedigrees_upload_spreadsheet_info_dialog" ).modal("show");	
+        $('#upload_pedigrees_dialog').modal("hide");
+        upload_pedigrees_file();
     });
 
-//    $("#pedigrees_upload_success_dialog_message").dialog({
-//	autoOpen: false,
-//	modal: true,
-//	buttons: {
-//            Ok: { id: "dismiss_pedigrees_upload_dialog",
-//                  click: function() {
-//		      //$("#upload_trial_form").dialog("close");
-//		      //$( this ).dialog( "close" );
-//		      location.reload();
-//                  },
-//                  text: "OK"
-//                }
-//        }
-//	
-//    });
+    $("#pedigrees_upload_spreadsheet_format_info").click( function () {
+        $('#upload_pedigrees_dialog').modal("hide");
+        $("#pedigrees_upload_spreadsheet_info_dialog" ).modal("show");
+    });
 
     $('#upload_pedigrees_form').iframePostForm({
-	json: true,
-	post: function () {
+        json: true,
+        post: function () {
             var uploadedPedigreesFile = $("#pedigrees_uploaded_file").val();
-	    $('#working_modal').modal("show");
+            $('#working_modal').modal("show");
             if (uploadedPedigreesFile === '') {
-		$('#working_modal').modal("hide");
-		alert("No file selected");
+                $('#working_modal').modal("hide");
+                alert("No file selected");
             }
-	},
-	complete: function (response) {
-	    $('#working_modal').modal("hide");
-            if (response.error_string) {
-		$("#upload_pedigrees_error_display tbody").html('');
-		$("#upload_pedigrees_error_display tbody").append(response.error_string);
-		$("#upload_pedigrees_error_display").modal('show');
-
-
-		//$(function () {
-                //    $("#upload_pedigrees_error_display").dialog({
-		//	modal: true,
-		//	autoResize:true,
-		//	width: 650,
-		//	position: ['top', 250],
-		//	title: "Errors in uploaded file",
-		//	buttons: {
-                //            Ok: function () {
-		//		$(this).dialog("close");
-                //            }
-		//	}
-                //    });
-		//});
-		return;
-            }
+        },
+        complete: function (response) {
+            $('#working_modal').modal("hide");
             if (response.error) {
-		alert(response.error);
-		return;
+                $("#upload_pedigrees_error_display tbody").html('');
+                $("#upload_pedigrees_error_display tbody").append(response.error);
+                $("#upload_pedigrees_error_display").modal('show');
+                return;
             }
             if (response.success) {
-		$('#pedigrees_upload_success_dialog_message').modal("show");
-		//alert("File uploaded successfully");
+                $('#pedigrees_upload_success_dialog_message').modal("show");
             }
-	}
+        }
     });
 
-        function upload_pedigrees_file() {
+    function upload_pedigrees_file() {
         var uploadFile = $("#pedigrees_uploaded_file").val();
         $('#upload_pedigrees_form').attr("action", "/ajax/pedigrees/upload");
         if (uploadFile === '') {
-	    alert("Please select a file");
-	    return;
+            alert("Please select a file");
+            return;
         }
         $("#upload_pedigrees_form").submit();
     }
 
     function open_upload_pedigrees_dialog() {
-	$('#upload_pedigrees_dialog').modal("show");
-	//add a blank line to design method select dropdown that dissappears when dropdown is opened 
-
+        $('#upload_pedigrees_dialog').modal("show");
     }
+
 });
