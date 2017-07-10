@@ -960,7 +960,7 @@ sub pedigree_female_parent_autocomplete_GET : Args(0){
     }
 
   print STDERR Dumper @response_list ;
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 
 }
 
@@ -998,7 +998,7 @@ sub cross_female_parent_autocomplete_GET : Args(0){
     }
 
   print STDERR Dumper @response_list ;
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 
 }
 
