@@ -166,7 +166,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             }
 
             if ($accession_name){
-              my $stock = $schema->resultset("Stock::Stock")->find( { name=>$accession_name });
+              my $stock = $schema->resultset("Stock::Stock")->find( { uniquename=>$accession_name });
               my $accession_id = $stock->stock_id();
               @parents_info = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id)->get_direct_parents();
               $male_parent = $parents_info[0][1] || '';
