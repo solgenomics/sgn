@@ -150,7 +150,7 @@ sub store_composed_term {
         push @new_terms, [$new_term->cvterm_id, $new_term->name().'|COMP:'.sprintf("%07d",$accession)];
     }
 
-    #Takes long on cassavabase causing user to think it failed.. instead the materialized view is refreshed automatically in a background ajax process.
+    #Takes long on cassavabase.. instead the materialized view is refreshed automatically in a background ajax process.
     #my $refresh1 = "REFRESH MATERIALIZED VIEW traits";
     #my $h = $dbh->prepare($refresh1);
     #$h->execute();
