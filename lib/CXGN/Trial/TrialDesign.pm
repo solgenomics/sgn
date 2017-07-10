@@ -1712,7 +1712,8 @@ sub _build_plot_names {
 	if ($self->get_design_type() eq "RCBD") { # as requested by IITA (Prasad)
       my $plot_num_per_block = $design{$key}->{plot_num_per_block};
       $design{$key}->{plot_number} = $design{$key}->{plot_num_per_block};
-	    $design{$key}->{plot_name} = $prefix.$trial_name."_rep_".$rep_number."_".$stock_name."_".$block_number."_".$plot_num_per_block."".$suffix;
+	    #$design{$key}->{plot_name} = $prefix.$trial_name."_rep_".$rep_number."_".$stock_name."_".$block_number."_".$plot_num_per_block."".$suffix;
+        $design{$key}->{plot_name} = $prefix.$trial_name."_rep".$rep_number."_".$stock_name."_".$plot_num_per_block."".$suffix;
 	}
 	elsif ($self->get_design_type() eq "Augmented") {
 	    $design{$key}->{plot_name} = $prefix.$trial_name."_plotno".$key."_".$stock_name."_".$suffix;

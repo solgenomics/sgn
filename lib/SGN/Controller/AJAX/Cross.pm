@@ -1003,10 +1003,12 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $ua = LWP::UserAgent->new;
     $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{ona_username}, $c->config->{ona_password} );
     my $server_endpoint = "https://api.ona.io/api/v1/metadata";
-    my $req = HTTP::Request->new(POST => $server_endpoint);
 
-    my $post_data = { "xform_id"=>"20170622", "data_type"=>"media", "data_value"=>"$file_path2", "data_file"=>"$file_path2" };
-    $req->content( encode_json $post_data);
+    #my $req = POST $server_endpoint, Content_Type => 'form-data', Content => [ "xform_id"=>"20170622", "data_type"=>"media", "data_value"=>"$file_path2", "data_file"=>["$file_path2"] ];
+
+    my $req = HTTP::Request->new(POST => $server_endpoint);
+    my $post_data = { "xform_id"=>"20170622", "data_type"=>"media", "data_value"=>"$file_path2", "data_file"=>["$file_path2"] };
+    $req->content($post_data);
 
     my $resp = $ua->request($req);
     if ($resp->is_success) {
