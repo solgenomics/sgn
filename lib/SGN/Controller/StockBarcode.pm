@@ -179,8 +179,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             else{
                 $parents_plot = $female_parent."/".$male_parent;
             }
-          #  push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents];
-            #push @found, [ $stock_id, $name, $accession_name, $fdata, $parents];
       }
 
       if ($nursery){
@@ -200,7 +198,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $tract_type_id = 'plot';
           $parents = $parents_plot;
       }
-      if ($accession_cvterm_id == $type_id){
+      elsif ($accession_cvterm_id == $type_id){
           $tract_type_id = 'accession';
           $parents = $parents_accession;
       }
@@ -274,39 +272,17 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
          elsif ($found[$i]->[5] eq 'accession'){
              $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $found[$i]->[4],  'large',  20  ]);
          }
-        #  elsif ($female_parent =~ m/^\d+/ || $female_parent =~ m/^\w+/){
-        #    if ($found[$i]->[4] =~ m/^\//) {
-        #      print "I SEE SLASH: $found[$i]->[4]\n";
-        #      ($found[$i]->[4] = $found[$i]->[4]) =~ s/\///;
-        #    }
-        #    $pedigree_string = $found[$i]->[4];
-        #    #$tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[1]." ".$found[$i]->[4],  'large',  20  ]);
-        #    $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $found[$i]->[4],  'large',  20  ]);
-        #  }
          else {
-        #
       	  $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[0], $found[$i]->[1], 'large',  20  ]);
          }
-
       }
       elsif ($barcode_type eq "2D") {
 
-        ##if (defined $row){}
-        #if ($plot_cvterm_id == $type_id){}
         if ($found[$i]->[5] eq 'plot'){
           #print "ACCESSION IS NOT EMPTY........ $row\n";
           $parents = $found[$i]->[4];
            $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$added_text, $fieldbook_barcode ]);
         }
-        # elsif ($female_parent =~ m/^\d+/ || $female_parent =~ m/^\w+/){
-        #   if ($found[$i]->[4] =~ m/^\//) {
-        #     print "I SEE SLASH: $found[$i]->[4]\n";
-        #     ($found[$i]->[4] = $found[$i]->[4]) =~ s/\///;
-        #   }
-        #    $label_text_4 = "Pedigree:".$found[$i]->[4];
-        #   $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]." ".$added_text, $fieldbook_barcode]);
-        # }
-        #elsif ($accession_cvterm_id == $type_id){}
         elsif ($found[$i]->[5] eq 'accession'){
             $parents = $found[$i]->[4];
             $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]."\n".$added_text, $fieldbook_barcode]);
@@ -357,9 +333,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
               my $plot_pedigree_text;
 
               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
-              print "PARENTS PLOT2: $parents\n";
-              #if ($found[$i]->[4] == '' ){}
-              #if ($found[$i]->[4] =~ m/^\//){}
                   if ($found[$i]->[5] eq 'plot'){
                       $label_text_5 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
                       if ($parents eq ''){
@@ -369,10 +342,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                       }
                   }
                   elsif ($found[$i]->[5] eq 'accession'){
-                      print "No PED_OUT: $label_text_4\n";
                       if ($parents eq ''){
                           $label_text_4 = "No pedigree for ".$found[$i]->[1];
-                          print "No PED_IN: $label_text_4\n";
                       }else{
                           $label_text_4 = "pedigree: ".$parents;
                       }
