@@ -268,7 +268,7 @@ jQuery(document).ready(function(){
         'destroy'    : true,
         'ajax':{'url':'/ajax/search/cross_info',
           data:{'female_parent':$('#female_parent').val(),
-               'male_parent':$('#male_parent').val()},
+               'male_parent':$('#cross_male_parent').val()},
                }
             });
          });
