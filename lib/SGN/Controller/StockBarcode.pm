@@ -174,6 +174,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $tract_type_id = 'accession';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $stock_id )->get_pedigree_string('Parents');
       }
+      #print "MY male $male_parent and female $female_parent\n";
 
       #print "MY parents: $parents\n";
 
