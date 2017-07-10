@@ -116,6 +116,27 @@
     </div>
 </div>
 
+<div class="modal fade" id="create_cross_wishlist_response_dialog" name="create_cross_wishlist_response_dialog" tabindex="-1" role="dialog" aria-labelledby="createCrossWishlistResponseDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="createCrossWishlistResponseDialog">Cross Wishlist</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="cross_wishlist_response_div"></div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 
 var lo = new CXGN.List();
@@ -162,9 +183,9 @@ jQuery(document).ready(function($) {
     });
 
     get_select_box('locations', 'cross_wishlist_location_select_list_div', { 'name' : 'cross_wishlist_location_id', 'id' : 'cross_wishlist_location_id', 'empty':1 });
-    get_select_box('trials', 'cross_wishlist_trial_select_no_list_div', { 'name' : 'cross_wishlist_trial_id', 'id' : 'cross_wishlist_trial_id', 'empty':1, 'multiple':1 });
+    get_select_box('trials', 'cross_wishlist_trial_select_no_list_div', { 'name' : 'cross_wishlist_trial_id', 'id' : 'cross_wishlist_trial_id', 'empty':1, 'multiple':0 });
 
-    get_select_box('trials', 'cross_wishlist_trial_select_list_div', { 'name' : 'cross_wishlist_list_trial_id', 'id' : 'cross_wishlist_list_trial_id', 'empty':1, 'multiple':1 });
+    get_select_box('trials', 'cross_wishlist_trial_select_list_div', { 'name' : 'cross_wishlist_list_trial_id', 'id' : 'cross_wishlist_list_trial_id', 'empty':1, 'multiple':0 });
 
     jQuery(document).on('change', "#cross_wishlist_trial_id", function() {
         cross_wishlist_change_trials();
@@ -255,6 +276,7 @@ jQuery(document).ready(function($) {
             trial_id = jQuery('#cross_wishlist_list_trial_id').val();
         }
         //console.log(cross_data);
+        //console.log(trial_id);
         jQuery.ajax({
             url: '/ajax/cross/create_cross_wishlist',
             method: 'POST',
@@ -267,7 +289,7 @@ jQuery(document).ready(function($) {
                 jQuery('#working_modal').modal('show');
             },
             success: function(response) {
-                console.log(response);
+                //console.log(response);
                 jQuery('#working_modal').modal('hide');
                 jQuery('#cross_wishlist_cross_select_div').html(response.data);
                 jQuery('#create_cross_wishlist_select_dialog').modal('show');
@@ -309,7 +331,16 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 //console.log(response);
                 jQuery('#working_modal').modal('hide');
-                window.location.href = "/download/"+response.filename;
+                if (response.filename) {
+                    window.location.href = "/download/"+response.filename;
+                }
+                if (response.error) {
+                    jQuery('#cross_wishlist_response_div').html(response.error);
+                }
+                if (response.success){
+                    jQuery('#cross_wishlist_response_div').html(response.success);
+                }
+                jQuery('#create_cross_wishlist_response_dialog').modal('show');
             },
             error: function(response) {
                 jQuery('#working_modal').modal('hide');

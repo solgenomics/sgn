@@ -997,26 +997,39 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     #print STDERR Dumper $uri2;
     my $urlencoded_filename2 = $urlencode{$uri2};
     #print STDERR Dumper $urlencoded_filename2;
-    $c->stash->{rest}->{filename} = $urlencoded_filename2;
+    #$c->stash->{rest}->{filename} = $urlencoded_filename2;
 
     my $universal_uri = $c->config->{main_production_site_url}.$uri2;
     my $ua = LWP::UserAgent->new;
     $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{ona_username}, $c->config->{ona_password} );
+    my $login_resp = $ua->get("https://api.ona.io/api/v1/user.json");
+
     my $server_endpoint = "https://api.ona.io/api/v1/metadata";
 
     #my $req = POST $server_endpoint, Content_Type => 'form-data', Content => [ "xform_id"=>"20170622", "data_type"=>"media", "data_value"=>"$file_path2", "data_file"=>["$file_path2"] ];
 
-    my $req = HTTP::Request->new(POST => $server_endpoint);
-    my $post_data = { "xform_id"=>"20170622", "data_type"=>"media", "data_value"=>"$file_path2", "data_file"=>["$file_path2"] };
-    $req->content($post_data);
+    my $resp = $ua->post(
+        $server_endpoint,
+        Content_Type => 'form-data',
+        Content => [
+            data_file => [ $file_path2, $file_path2, Content_Type => 'text/plain', ],
+            "xform"=>"215418",
+            "data_type"=>"media",
+            "data_value"=>$universal_uri
+        ]
+    );
 
-    my $resp = $ua->request($req);
+    #my $req = HTTP::Request->new(POST => $server_endpoint);
+    #my $post_data = { "xform_id"=>"20170622", "data_type"=>"media", "data_value"=>"$file_path2", "data_file"=>["$file_path2"] };
+    #$req->content($post_data);
+
+    #my $resp = $ua->request($req);
     if ($resp->is_success) {
         my $message = $resp->decoded_content;
         my $message_hash = decode_json $message;
         print STDERR Dumper $message_hash;
         if ($message_hash->{id}){
-            $c->stash->{rest}->{success} = 'The cross wishlist is now ready to be used on the ODK tablet application.';
+            $c->stash->{rest}->{success} = 'The cross wishlist is now ready to be used on the ODK tablet application. Files uploaded to ONA here: <a href="'.$message_hash->{media_url}.'">'.$message_hash->{media_url}.'</a>"';
         } else {
             $c->stash->{rest}->{error} = 'The cross wishlist was not posted to ONA. Please try again.';
         }
