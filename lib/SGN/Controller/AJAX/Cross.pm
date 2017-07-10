@@ -1029,7 +1029,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         my $message_hash = decode_json $message;
         print STDERR Dumper $message_hash;
         if ($message_hash->{id}){
-            $c->stash->{rest}->{success} = 'The cross wishlist is now ready to be used on the ODK tablet application. Files uploaded to ONA here: <a href="'.$message_hash->{media_url}.'">'.$message_hash->{media_url}.'</a>"';
+            $c->stash->{rest}->{success} = 'The cross wishlist is now ready to be used on the ODK tablet application. Files uploaded to ONA here: <a href="'.$message_hash->{media_url}.'">'.$message_hash->{data_value}.'</a> with <a href="'.$message_hash->{url}.'">metadata entry</a>.';
         } else {
             $c->stash->{rest}->{error} = 'The cross wishlist was not posted to ONA. Please try again.';
         }
