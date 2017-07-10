@@ -48,10 +48,13 @@
 <script>
 
 $(document).ready(function(){
-  if (isLoggedIn()) { 
+  if (isLoggedIn()) {
     var list = new CXGN.List();
     var select_html = list.listSelect('trials', ['trials'], ' ');
     $('#trials_list_select_container').html(select_html);
+    if (d3.select('#trials_list_select').selectAll("option").size()<2){
+      d3.select('#trials_list_select').html("<option>No trial lists! (Create one using the wizard.)</option>");
+    }
     $('#trials_list_select').change(function(){
       $(".tc-grid").hide();
       $(".tc-histogram").hide();
@@ -66,14 +69,14 @@ $(document).ready(function(){
       var item_data = list.getListData(trial_list_id);
       var items = item_data.elements;
       var params = "";
-      for (n=0; n<items.length; n++) { 
+      for (n=0; n<items.length; n++) {
         params += 'trial_name='+items[n][1]+'&';
       }
-      $.ajax({ 
+      $.ajax({
         url: '/ajax/trial/common_traits?'+params,
-        success: function(response) { 
-          if (response.error) { 
-            $('#trait_select').val('ERROR'); 
+        success: function(response) {
+          if (response.error) {
+            $('#trait_select').val('ERROR');
           }
           else {
             var option_html = '<option selected="selected" value=""> </option>';
@@ -86,34 +89,34 @@ $(document).ready(function(){
             $('#common_trait_count').html(response.common_trait_count);
            }
         },
-        error: function(response) { 
+        error: function(response) {
           //alert("An error occurred, the service may temporarily be unavailable");
         }
 
       });
     })
   }
-  else { 
+  else {
     $('#trials_list_select').html('<option selected="selected">You must be logged in to use lists.</option>');
   }
 })
 
 $('#trait_select').change(fetchAndBuildGraphs);
 
-function fetchAndBuildGraphs() { 
+function fetchAndBuildGraphs() {
   var list_id = $('#trials_list_select').val();
-  if ($('#trait_select').val()!=""){  
+  if ($('#trait_select').val()!=""){
     $(".tc-grid").hide();
     $(".tc-histogram").hide();
     $("#loading-spinner").show();
-    $.ajax( { 
+    $.ajax( {
      url: '/ajax/trial/compare_list_data',
      data: { 'cvterm_id' : $('#trait_select').val(), 'list_id': list_id },
-     success: function(response) { 
-        if (response.error) { 
+     success: function(response) {
+        if (response.error) {
            alert(response.error);
         }
-        else { 
+        else {
             d3.select('.tc-grid').html("");
             d3.select('.tc-histogram').html("");
             createVisualizations(response);
@@ -244,7 +247,7 @@ function updateScatter(studies,paired_studies){
         this_g.selectAll(".tc-var-stroke")
           .transition(ttime)
           .attr("stroke-width",function(d){return +d3.select(this).attr("orig-stroke");});
-          
+
       } else {
         var legents = d3.selectAll(".tc-legend-entry");
         legents.classed("orig-leg-hidden",false)
@@ -342,11 +345,11 @@ function updateScatter(studies,paired_studies){
        }
       }).filter(function(d,i) {
         return !(isNaN(d.x)||isNaN(d.y));
-      });  
+      });
 
     getx = (d) => Xscale(d.x)+axis_offset;
     gety = (d) => Yscale(d.y)+axis_offset;
-    //create plot points using data        
+    //create plot points using data
     var plotpoints = current_graph.selectAll(".tc-scatter-point")
       .data(accessions)
       .enter()
@@ -397,7 +400,7 @@ function updateScatter(studies,paired_studies){
 
 
     //add line of best fit and rsquared
-    
+
     var best_fit = lineOfBestFit(accessions);
 
     var x1 = Xscale.domain()[0];
@@ -508,7 +511,7 @@ function tooltipSetup(canv,view_width){
             if (!tooltip.datum().hoverlock){
               tooltip.style("opacity",0);
               tooltip.datum().onclick = onclick;
-            } 
+            }
           } else {
             tooltip.datum().onclick = onclick;
             bbox = getGlobalBBox(target);
@@ -664,7 +667,7 @@ function updateHistogram(studies,all_data){
       });
     });
 
-  var max_bin = d3.max(studies, function(d) { 
+  var max_bin = d3.max(studies, function(d) {
     return d.max_bin
   });
   Yscale.domain([0,max_bin]).nice();
@@ -758,7 +761,7 @@ function updateHistogram(studies,all_data){
   });
 
   var bb = legend.node().getBBox();
-  legend.attr("transform", function(d) { 
+  legend.attr("transform", function(d) {
     var nx = (400-axis_offset-bb.width);
     var ny = (axis_offset-bb.y);
     return "translate("+nx+","+ny+")";
@@ -822,5 +825,5 @@ function lineOfBestFit(points){
     rsquared: 1-(SSE/SSTO)
   };
 }
-			
+
 </script>
