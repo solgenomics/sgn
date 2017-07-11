@@ -5,8 +5,9 @@ $stock_id
 
 <&| /page/info_section.mas, title=>'Pedigree string' &>
   <select id="pedigree_level_select">
-    <option value="1">Parents</option>
-    <option value="2">Grandparents</option>
+    <option value="Parents">Parents</option>
+    <option value="Grandparents">Grandparents</option>
+    <option value="Great-Grandparents">Great-Grandparents</option>
   </select>
 
   <span id="pedigree_string">[loading...]</span>
@@ -15,28 +16,27 @@ $stock_id
 </&>
 
 <script>
-  
-jQuery(document).ready(function($) { 
+
+jQuery(document).ready(function($) {
 
   get_pedigree_string(<% $stock_id %>);
-  jQuery('#pedigree_level_select').change( function() { 
+  jQuery('#pedigree_level_select').change( function() {
     jQuery('#pedigree_string').html('[loading...]');
     get_pedigree_string(<% $stock_id %>);
   });
 });
-  
-function get_pedigree_string(stock_id) { 
-    jQuery.ajax( { 
+
+function get_pedigree_string(stock_id) {
+    jQuery.ajax( {
       url : '/stock/'+ stock_id +'/pedigree',
       data : { 'level' : jQuery('#pedigree_level_select').val() },
-      error : function(response) { 
+      error : function(response) {
          alert("an error occurred");
       },
-      success: function(response) { 
+      success: function(response) {
          jQuery('#pedigree_string').html(response.pedigree_string);
       }
     });
 }
 
 </script>
-
