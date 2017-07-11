@@ -10,7 +10,7 @@ registerDoMC(3)
 getDoParWorkers()
 
 genotype_data <- read.table ("/home/klz26/host/test/267genotypes-p3.txt", header = TRUE, check.names = FALSE, stringsAsFactors = FALSE, na.strings = "na")
-pedigree_data <- read.table ("/home/klz26/host/test/ped.txt", header = FALSE, sep = "\t", check.names = FALSE, stringsAsFactors = FALSE)
+pedigree_data <- read.table ("/home/klz26/host/test/poscontrol.txt", header = FALSE, sep = "\t", check.names = FALSE, stringsAsFactors = FALSE)
 
 colnames(pedigree_data)[1] <- "Name"
 colnames(pedigree_data)[2] <- "Mother"
@@ -119,8 +119,8 @@ results <- foreach (z = 1:5, .combine = rbind) %dopar%
   #pedigree_data [z, 5] <- bad_data
   informative <- length_g - bad_data
   #pedigree_data [z,6] <- informative
-  cat(pedigree_data$Name,pedigree_data$Mother,pedigree_data$Father,pedigree_data$`Pedigree Conflict`, pedigree_data$`Markers Skipped`,
-      pedigree_data$`Informative Markers`,file=f_out,sep=" ",append=TRUE);
+  #cat(pedigree_data$Name,pedigree_data$Mother,pedigree_data$Father,pedigree_data$`Pedigree Conflict`, pedigree_data$`Markers Skipped`,
+  #    pedigree_data$`Informative Markers`,file=f_out,sep=" ",append=TRUE);
   return_vector <- pedigree_data [z,] 
   return_vector [6] <- informative
   return_vector [5] <- bad_data
