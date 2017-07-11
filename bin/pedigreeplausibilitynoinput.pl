@@ -11,23 +11,23 @@ use CXGN::Genotype::Search;
 
 our ($opt_H, $opt_D, $opt_p, $opt_o); # host, database, genotyping protocol_id, out
 getopts('H:D:p:o:');
-
+print STDERR "output file is $opt_o\n";
 if (!$opt_p) {
     print STDERR "Need -p with genotyping protocol id.\n";
     exit();
 }
 
-open(my $OUT, '>', $opt_o) || die "Can't open output file $opt_o\n";
-print $OUT "Child\tChild id\tMother\tMother id\tFather\tFather id\tPedigree Conflict Score\n";
-
 my $protocol_id = $opt_p;
 
-my $dbh = CXGN::DB::InsertDBH->new( {
+my $dbh = CXGN::DB::InsertDBH->new({
     dbhost => $opt_H,
     dbname => $opt_D,
     dbuser => "postgres",
-				    }
-    );
+});
+
+my $OUT;
+open($OUT, '>>', $opt_o) || die "Can't open output file $opt_o\n";
+print $OUT "Child\tChild Id\tMother\tMother Id\tFather\tFather Id\tPedigree Conflict Score\n";
 
 my $schema = Bio::Chado::Schema->connect(sub { $dbh });
 
@@ -44,54 +44,51 @@ while (my $row = $stock_rs->next()) {
 
     if ($parents->{'mother'} && $parents->{'father'}) {
 
-	  my $gts = CXGN::Genotype::Search->new( {
-	    bcs_schema => $schema,
-	    accession_list => [ $row->stock_id ],
-	    protocol_id => $protocol_id,
-							    });
+        my $gts = CXGN::Genotype::Search->new( {
+            bcs_schema => $schema,
+            accession_list => [ $row->stock_id ],
+            protocol_id => $protocol_id,
+        });
+        my @self_gts = $gts->get_genotype_info_as_genotype_objects();
 
-  my @self_gts = $gts->get_genotype_info_as_genotype_objects();
-	$gts = CXGN::Genotype::Search->new( {
-	    bcs_schema => $schema,
-	    accession_list => [$parents->{'mother_id'}],
-	    protocol_id => $protocol_id,
-							    });
-  my @mom_gts;
-	@mom_gts = $gts->get_genotype_info_as_genotype_objects();
-  #if (@mom_gts) { print $OUT  Dumper @mom_gts;}
+        if (!@self_gts) {
+    	    print STDERR "Genotype of accession ".$row->uniquename()." not available. Skipping...\n";
+    	    next;
+    	}
 
-	$gts = CXGN::Genotype::Search->new( {
-	    bcs_schema => $schema,
-	    accession_list => [$parents->{'father_id'}],
-	    protocol_id => $protocol_id,
-							    });
+        my $mom_gts = CXGN::Genotype::Search->new( {
+    	    bcs_schema => $schema,
+    	    accession_list => [$parents->{'mother_id'}],
+    	    protocol_id => $protocol_id,
+        });
+    	my @mom_gts = $mom_gts->get_genotype_info_as_genotype_objects();
 
+        if (!@mom_gts) {
+    	    print STDERR "Genotype of female parent missing. Skipping.\n";
+    	    next;
+    	}
 
-	my (@dad_gts) = $gts->get_genotype_info_as_genotype_objects();
+    	my $dad_gts = CXGN::Genotype::Search->new( {
+    	    bcs_schema => $schema,
+    	    accession_list => [$parents->{'father_id'}],
+    	    protocol_id => $protocol_id,
+    	});
+    	my (@dad_gts) = $dad_gts->get_genotype_info_as_genotype_objects();
 
-	if (! (@self_gts)) {
-	    print STDERR "Genotype of accession ".$row->uniquename()." not available. Skipping...\n";
-	    next;
-	}
-	if (!@mom_gts) {
-	    print STDERR "Genotype of female parent missing. Skipping.\n";
-	    next;
-	}
-	if (! @dad_gts) {
-	    print STDERR "Genotype of male parent missing. Skipping.\n";
-	    next;
-	}
+    	if (!@dad_gts) {
+    	    print STDERR "Genotype of male parent missing. Skipping.\n";
+    	    next;
+    	}
 
-    my $s = shift @self_gts;
-    my $m = shift @mom_gts;
-    my $d = shift @dad_gts;
-    my ($concordant, $discordant, $non_informative) = $s->compare_parental_genotypes($m, $d);
-    my $score = $concordant / ($concordant + $discordant);
+        my $s = shift @self_gts;
+        my $m = shift @mom_gts;
+        my $d = shift @dad_gts;
+        my ($concordant, $discordant, $non_informative) = $s->compare_parental_genotypes($m, $d);
+        my $score = 1- ($concordant / ($concordant + $discordant));
 
-    print STDERR "scores are". $score. "\n";
-    print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
-    print $OUT "\t$score\n";
-
+        print STDERR "scores are". $score. "\n";
+        print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
+        print $OUT "\t$score\n";
     }
 }
 
