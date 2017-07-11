@@ -85,9 +85,9 @@ while (my $row = $stock_rs->next()) {
   my $s;
   my $m;
   my $d;
-  $s = shift my @self_gts;
-  $m = shift my @mom_gts;
-  $d = shift my @dad_gts;
+  $s = shift @self_gts;
+  $m = shift @mom_gts;
+  $d = shift @dad_gts;
 		    my ($concordant, $discordant, $non_informative) = $s->compare_parental_genotypes($m, $d);
 		    my $score = $concordant / ($concordant + $discordant);
 		    #push @scores, $score;
