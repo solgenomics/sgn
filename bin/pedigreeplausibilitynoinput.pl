@@ -17,6 +17,9 @@ if (!$opt_p) {
     exit();
 }
 
+open(my $OUT, '>', $opt_o) || die "Can't open output file $opt_o\n";
+print $OUT "Child\tChild id\tMother\tMother id\tFather\tFather id\tPedigree Conflict Score\n";
+
 my $protocol_id = $opt_p;
 
 my $dbh = CXGN::DB::InsertDBH->new( {
@@ -25,10 +28,6 @@ my $dbh = CXGN::DB::InsertDBH->new( {
     dbuser => "postgres",
 				    }
     );
-
-my $OUT;
-my $is_stdin =0;
-
 
 my $schema = Bio::Chado::Schema->connect(sub { $dbh });
 
@@ -54,7 +53,7 @@ while (my $row = $stock_rs->next()) {
   my @self_gts = $gts->get_genotype_info_as_genotype_objects();
 	$gts = CXGN::Genotype::Search->new( {
 	    bcs_schema => $schema,
-	    accession_list => [ $parents[0]->[0]],
+	    accession_list => [$parents->{'mother_id'}],
 	    protocol_id => $protocol_id,
 							    });
   my @mom_gts;
@@ -63,7 +62,7 @@ while (my $row = $stock_rs->next()) {
 
 	$gts = CXGN::Genotype::Search->new( {
 	    bcs_schema => $schema,
-	    accession_list => [ $parents[1]->[0]],
+	    accession_list => [$parents->{'father_id'}],
 	    protocol_id => $protocol_id,
 							    });
 
@@ -82,31 +81,19 @@ while (my $row = $stock_rs->next()) {
 	    print STDERR "Genotype of male parent missing. Skipping.\n";
 	    next;
 	}
-  if ($opt_o) {
-      open($OUT, '>>', $opt_o);
-}
-#print $OUT "d child genos".$self_gts;
-  #print $OUT "d father genos".$dad_gts;
-  #print $OUT "d mother genos".$mom_gts;
-##check length
-##index of array for
-my $s;
-my $m;
-my $d;
-$s = shift @self_gts;
-    #if (@mom_gts) { print $OUT  Dumper @mom_gts;}
-$m = shift @mom_gts;
-$d = shift @dad_gts;
-		    my ($concordant, $discordant, $non_informative) = $s->compare_parental_genotypes($m, $d);
-		    my $score = $concordant / ($concordant + $discordant);
-		    #push @scores, $score;
-        print STDERR "scores are". $score. "\n";
-		    print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
-		    print $OUT "\t$score\n";
-}
-}
 
+    my $s = shift @self_gts;
+    my $m = shift @mom_gts;
+    my $d = shift @dad_gts;
+    my ($concordant, $discordant, $non_informative) = $s->compare_parental_genotypes($m, $d);
+    my $score = $concordant / ($concordant + $discordant);
 
+    print STDERR "scores are". $score. "\n";
+    print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
+    print $OUT "\t$score\n";
+
+    }
+}
 
 $dbh->disconnect();
 
