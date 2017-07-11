@@ -11,7 +11,7 @@ use CXGN::Genotype::Search;
 
 our ($opt_H, $opt_D, $opt_p, $opt_o); # host, database, genotyping protocol_id, out
 getopts('H:D:p:o:');
-
+print STDERR "output file is $opt_o\n";
 if (!$opt_p) {
     print STDERR "Need -p with genotyping protocol id.\n";
     exit();
@@ -25,7 +25,7 @@ my $dbh = CXGN::DB::InsertDBH->new( {
     dbuser => "postgres",
 				    }
     );
-    
+
 my $OUT;
 my $is_stdin =0;
 
@@ -66,8 +66,6 @@ while (my $row = $stock_rs->next()) {
 	    accession_list => [ $parents[1]->[0]],
 	    protocol_id => $protocol_id,
 							    });
-
-
 	my (@dad_gts) = $gts->get_genotype_info_as_genotype_objects();
 
 	if (! (@self_gts)) {
@@ -84,29 +82,22 @@ while (my $row = $stock_rs->next()) {
 	}
   if ($opt_o) {
       open($OUT, '>>', $opt_o);
+      print $OUT "file opened\n";
 }
-#print $OUT "d child genos".$self_gts;
-  #print $OUT "d father genos".$dad_gts;
-  #print $OUT "d mother genos".$mom_gts;
-##check length
-##index of array for
-my $s;
-my $m;
-my $d;
-$s = shift @self_gts;
-    #if (@mom_gts) { print $OUT  Dumper @mom_gts;}
-$m = shift @mom_gts;
-$d = shift @dad_gts;
-		    my ($concordant, $discordant, $non_informative) = $s->compare_parental_genotypes($m, $d);
-		    my $score = $concordant / ($concordant + $discordant);
-		    #push @scores, $score;
-        print STDERR "scores are". $score. "\n";
-		    print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
-		    print $OUT "\t$score\n";
+  my $s;
+  my $m;
+  my $d;
+  $s = shift @self_gts;
+  $m = shift @mom_gts;
+  $d = shift @dad_gts;
+  my ($concordant, $discordant, $non_informative) = $s->compare_parental_genotypes($m, $d);
+  my $score = $concordant / ($concordant + $discordant);
+  $score = (1 - $score);
+  print STDERR "scores are". $score. "\n";
+  print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
+  print $OUT "\t$score\n";
 }
 }
-
-
 
 $dbh->disconnect();
 
