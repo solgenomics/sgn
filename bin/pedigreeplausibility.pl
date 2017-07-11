@@ -25,13 +25,13 @@ my %pedigreehash;
 my $childname;
 my @pedigreearray;
 
-open(IN, $filename) or die "Could not open file $filename $!";
 
 while (my $row = <IN>){
 @pedigreearray = split(/\s/ ,$row);
 $childname = $pedigreearray[0];
 $pedigreehash{$childname} = "1";
 }
+open(IN, $filename) or die "Could not open file $filename $!";
 
 my $dbh = CXGN::DB::InsertDBH->new( {
     dbhost => $opt_H,

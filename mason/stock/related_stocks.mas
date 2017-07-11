@@ -3,6 +3,8 @@
 
 related_stocks.mas
 
+This file is deprecated, replaced with related_stock.mas
+
 =head1 DESCRIPTION
 
 This component can print related stocks from the stock_relationship table

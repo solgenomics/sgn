@@ -17,7 +17,7 @@ jQuery(document).ready( function() {
 
 	var url = window.location.pathname;
 
-	if (url.match(/[solgs\/population|breeders_toolbox\/trial]/)) {
+	if (url.match(/[solgs\/population|breeders_toolbox\/trial|breeders\/trial]/)) {
 	    checkPhenoCorreResult();  
 	} 
     }
@@ -35,7 +35,7 @@ function checkPhenoCorreResult () {
         dataType: 'json',
         url: '/phenotype/correlation/check/result/' + popId,
         success: function(response) {
-            if (response.result === 'yes') {
+            if (response.result) {
 		phenotypicCorrelation();					
             } else { 
 		jQuery("#run_pheno_correlation").show();	
@@ -50,6 +50,7 @@ jQuery(document).ready( function() {
 
     jQuery("#run_pheno_correlation").click(function() {
         phenotypicCorrelation();
+	jQuery("#run_pheno_correlation").hide();
     }); 
   
 });
@@ -177,13 +178,14 @@ function formatGenCorInputData (popId, type, indexFile) {
                 jQuery("#correlation_message")
                     .css({"padding-left": '0px'})
                     .html("This population has no valid traits to correlate.");
+		
             }
         },
         error: function(response) {
             jQuery("#correlation_message")
                 .css({"padding-left": '0px'})
                 .html("Error occured preparing the additive genetic data for correlation analysis.");
-            
+	         
             jQuery.unblockUI();
         }         
     });
@@ -218,18 +220,23 @@ function phenotypicCorrelation () {
             data: {'population_id': population.population_id },
             url: '/correlation/phenotype/data/',
             success: function(response) {
-                if (response.status == 'success') {
+	
+                if (response.result) {
                     runPhenoCorrelationAnalysis();
                 } else {
                     jQuery("#correlation_message")
                         .css({"padding-left": '0px'})
                         .html("This population has no phenotype data.");
+
+		    jQuery("#run_pheno_correlation").show();
                 }
             },
             error: function(response) {
                 jQuery("#correlation_message")
                     .css({"padding-left": '0px'})
                     .html("Error occured preparing the phenotype data for correlation analysis.");
+
+		jQuery("#run_pheno_correlation").show();
             }
     });     
 }
@@ -245,7 +252,7 @@ function runPhenoCorrelationAnalysis () {
         data: {'population_id': popId },
         url: '/phenotypic/correlation/analysis/output',
         success: function(response) {
-            if (response.status == 'success') {
+            if (response.status== 'success') {
                 plotCorrelation(response.data);
 		
 		var corrDownload = "<a href=\"/download/phenotypic/correlation/population/" 
@@ -257,13 +264,17 @@ function runPhenoCorrelationAnalysis () {
             } else {
                 jQuery("#correlation_message")
                     .css({"padding-left": '0px'})
-                    .html("There is no correlation output for this dataset.");               
+                    .html("There is no correlation output for this dataset."); 
+		
+		jQuery("#run_pheno_correlation").show();
             }
         },
         error: function(response) {                          
             jQuery("#correlation_message")
                 .css({"padding-left": '0px'})
                 .html("Error occured running the correlation analysis.");
+	    	
+	    jQuery("#run_pheno_correlation").show();
         }                
     });
 }
