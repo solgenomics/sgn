@@ -165,7 +165,6 @@ function  createVisualizations(response){
   updateScatter(studies,paired_studies);
   var scatter = d3.selectAll(".tc-grid-box");
   if(scatter.size()==1){
-    console.log(scatter.on("click"));
     scatter.on("click").call(scatter.node(),scatter.datum());
     scatter.classed("only-box",true).on("click",null);
   }
