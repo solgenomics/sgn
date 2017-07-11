@@ -82,8 +82,6 @@ while (my $row = $stock_rs->next()) {
 	    print STDERR "Genotype of male parent missing. Skipping.\n";
 	    next;
 	}
-  if ($opt_o) {
-      open($OUT, '>', $opt_o);
 }
 #print $OUT "d child genos".$self_gts;
   #print $OUT "d father genos".$dad_gts;
@@ -101,6 +99,7 @@ $d = shift @dad_gts;
 		    my $score = $concordant / ($concordant + $discordant);
 		    #push @scores, $score;
         print STDERR "scores are". (1 - $score). "\n";
+        open($OUT, '>', $opt_o);
 		    print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
 		    print $OUT "\t$score\n";
 }
