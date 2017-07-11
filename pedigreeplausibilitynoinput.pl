@@ -37,6 +37,7 @@ my $accession_cvterm_id = $schema->resultset("Cv::Cvterm")->find({ name=> "acces
 my $stock_rs = $schema->resultset("Stock::Stock")->search( { type_id => $accession_cvterm_id });
 
 my @scores;
+open($OUT, '>', $opt_o);
 
 while (my $row = $stock_rs->next()) {
     print STDERR "working on accession ".$row->uniquename()."\n";
@@ -98,9 +99,9 @@ $d = shift @dad_gts;
 		    my ($concordant, $discordant, $non_informative) = $s->compare_parental_genotypes($m, $d);
 		    my $score = $concordant / ($concordant + $discordant);
 		    #push @scores, $score;
-        print STDERR "scores are". (1 - $score). "\n";
-        open($OUT, '>', $opt_o);
-		    print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
+        $score = (1 - $score;)
+        print STDERR "scores are". $score. "\n";
+        print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
 		    print $OUT "\t$score\n";
 }
 }
