@@ -11,7 +11,7 @@ use CXGN::Genotype::Search;
 
 our ($opt_H, $opt_D, $opt_p, $opt_o); # host, database, genotyping protocol_id, out
 getopts('H:D:p:o:');
-
+print STDERR "output file is $opt_o\n";
 if (!$opt_p) {
     print STDERR "Need -p with genotyping protocol id.\n";
     exit();
@@ -99,7 +99,7 @@ $d = shift @dad_gts;
 		    my ($concordant, $discordant, $non_informative) = $s->compare_parental_genotypes($m, $d);
 		    my $score = $concordant / ($concordant + $discordant);
 		    #push @scores, $score;
-        $score = (1 - $score;)
+        $score = (1 - $score);
         print STDERR "scores are". $score. "\n";
         print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
 		    print $OUT "\t$score\n";
