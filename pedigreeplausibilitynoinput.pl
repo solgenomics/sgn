@@ -37,7 +37,7 @@ my $accession_cvterm_id = $schema->resultset("Cv::Cvterm")->find({ name=> "acces
 my $stock_rs = $schema->resultset("Stock::Stock")->search( { type_id => $accession_cvterm_id });
 
 my @scores;
-open($OUT, '>', $opt_o);
+open($OUT, '>', $opt_o) || die "unable to open $opt_o \n";
 
 while (my $row = $stock_rs->next()) {
     print STDERR "working on accession ".$row->uniquename()."\n";
