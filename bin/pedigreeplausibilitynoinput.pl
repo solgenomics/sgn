@@ -5,7 +5,7 @@ use Data::Dumper;
 use Getopt::Std;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::Genotype;
 use CXGN::Genotype::Search;
 
@@ -25,7 +25,7 @@ my $dbh = CXGN::DB::InsertDBH->new( {
     dbuser => "postgres",
 				    }
     );
-    
+
 my $OUT;
 my $is_stdin =0;
 
@@ -40,10 +40,10 @@ my @scores;
 
 while (my $row = $stock_rs->next()) {
     print STDERR "working on accession ".$row->uniquename()."\n";
-    my $stock = CXGN::Chado::Stock->new($schema, $row->stock_id());
-    my @parents = $stock->get_direct_parents();
+    my $stock = CXGN::Stock->new(schema => $schema, stock_id => $row->stock_id());
+    my $parents = $stock->get_parents();
 
-    if (@parents == 2) {
+    if ($parents->{'mother'} && $parents->{'father'}) {
 
 	  my $gts = CXGN::Genotype::Search->new( {
 	    bcs_schema => $schema,

@@ -87,6 +87,31 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
     $c->stash->{rest} = { message => "Successfully deleted trial data.", success => 1 };
 }
 
+sub trial_phenotypes_fully_uploaded : Chained('trial') PathPart('phenotypes_fully_uploaded') Args(0) ActionClass('REST') {};
+
+sub trial_phenotypes_fully_uploaded_GET   {
+    my $self = shift;
+    my $c = shift;
+    my $trial = $c->stash->{trial};
+    $c->stash->{rest} = { phenotypes_fully_uploaded => $trial->get_phenotypes_fully_uploaded() };
+}
+
+sub trial_phenotypes_fully_uploaded_POST  {
+    my $self = shift;
+    my $c = shift;
+    my $value = $c->req->param("phenotypes_fully_uploaded");
+    my $trial = $c->stash->{trial};
+    eval {
+        $trial->set_phenotypes_fully_uploaded($value);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => "An error occurred setting phenotypes_fully_uploaded: $@" };
+    }
+    else {
+        $c->stash->{rest} = { success => 1 };
+    }
+}
+
 sub trial_details : Chained('trial') PathPart('details') Args(0) ActionClass('REST') {};
 
 sub trial_details_GET   {
@@ -244,7 +269,8 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             AND stock_relationship.type_id=?
             AND plot.type_id=?
             AND accession.type_id=?
-        GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional;");
+        GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
+        ORDER BY cvterm.name ASC;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $accesion_type_id);
@@ -600,7 +626,7 @@ sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0)
     }
 
     if (!$plants_per_plot || $plants_per_plot > 50) {
-	$c->stash->{rest} = { error => "Plants per plot number is required and must be smaller than 20." };
+	$c->stash->{rest} = { error => "Plants per plot number is required and must be smaller than 50." };
 	return;
     }
 
