@@ -38,9 +38,6 @@ my $stock_rs = $schema->resultset("Stock::Stock")->search( { type_id => $accessi
 
 my @scores;
 
-open($OUT, '>', $opt_o) || die "unable to open $opt_o \n";
-print $OUT "file opened\n";
-
 while (my $row = $stock_rs->next()) {
     print STDERR "working on accession ".$row->uniquename()."\n";
     my $stock = CXGN::Chado::Stock->new($schema, $row->stock_id());
@@ -83,20 +80,22 @@ while (my $row = $stock_rs->next()) {
 	    print STDERR "Genotype of male parent missing. Skipping.\n";
 	    next;
 	}
-
+  if ($opt_o) {
+      open($OUT, '>>', $opt_o);
+      print $OUT "file opened\n";
+}
   my $s;
   my $m;
   my $d;
   $s = shift @self_gts;
   $m = shift @mom_gts;
   $d = shift @dad_gts;
-		    my ($concordant, $discordant, $non_informative) = $s->compare_parental_genotypes($m, $d);
-		    my $score = $concordant / ($concordant + $discordant);
-		    #push @scores, $score;
-        $score = (1 - $score);
-        print STDERR "scores are". $score. "\n";
-        print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
-		    print $OUT "\t$score\n";
+  my ($concordant, $discordant, $non_informative) = $s->compare_parental_genotypes($m, $d);
+  my $score = $concordant / ($concordant + $discordant);
+  $score = (1 - $score);
+  print STDERR "scores are". $score. "\n";
+  print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
+  print $OUT "\t$score\n";
 }
 }
 
