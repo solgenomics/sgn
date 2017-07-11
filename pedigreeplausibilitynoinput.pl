@@ -33,10 +33,6 @@ if ($opt_o) {
     open($OUT, '>>', $opt_o);
     print $OUT "file opened\n";
 }
-else {
-    $OUT =  *STDIN;
-    $is_stdin = 1;
-}
 my $schema = Bio::Chado::Schema->connect(sub { $dbh });
 
 my $accession_cvterm_id = $schema->resultset("Cv::Cvterm")->find({ name=> "accession" })->cvterm_id();
