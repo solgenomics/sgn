@@ -1,19 +1,37 @@
 <%args>
 </%args>
 
-<div id="brapi_home_phenotype_search_div">
+<& /util/import_javascript.mas, classes => [ 'brapi.Table' ] &>
 
-    <h4>Phenotype Search</h4>
-    <input name="brapi_home_phenosearch_germplasmDbIds" id="brapi_home_phenosearch_germplasmDbIds" class="form-control" type="text" placeholder="GermplasmDbIds e.g. 139" value="139"/>
-    <input name="brapi_home_phenosearch_studyDbIds" id="brapi_home_phenosearch_studyDbIds" class="form-control" type="text" placeholder="StudyDbIds e.g. 139,137" value="139,137"/>
-    <input name="brapi_home_phenosearch_observationVariableDbIds" id="brapi_home_phenoseach_observationVariableDbIds" class="form-control" type="text" placeholder="ObservationDbIds e.g. 70741,70666,70773" value="70741,70666,70773"/>
+<& /page/page_title.mas, title=>"Phenotype Retrieval" &>
+
+<h4>Database Select</h4>
+<select name="brapi_home_phenotypes_url_select" id="brapi_home_phenotypes_url_select" class="form-control" />
+    <option value="">local</option>
+    <option value="https://cassbase.org">cassbase.org</option>
+    <option value="https://cassavabase.org">cassavabase.org</option>
+    <option value="https://musabase.org">musabase.org</option>
+    <option value="https://sweetpotatobase.org">sweetpotatobase.org</option>
+    <option value="https://yambase.org">yambase.org</option>
+    <option value="https://fernbase.org">fernbase.org</option>
+    <option value="https://solgenomics.net">solgenomics.net</option>
+</select>
+
+<h4>Phenotype Search</h4>
+
+<div id="brapi_home_phenotype_search_div" class="well">
+
+    <input name="brapi_home_phenosearch_germplasmDbIds" id="brapi_home_phenosearch_germplasmDbIds" class="form-control" type="text" placeholder="GermplasmDbIds e.g. 139" />
+    <input name="brapi_home_phenosearch_studyDbIds" id="brapi_home_phenosearch_studyDbIds" class="form-control" type="text" placeholder="StudyDbIds e.g. 139,137" />
+    <input name="brapi_home_phenosearch_observationVariableDbIds" id="brapi_home_phenoseach_observationVariableDbIds" class="form-control" type="text" placeholder="ObservationDbIds e.g. 70741,70666,70773" />
     <input name="brapi_home_phenosearch_locationDbIds" id="brapi_home_phenosearch_locationDbIds" class="form-control" type="text" placeholder="LocationDbIds e.g. 23" value="23"/>
-    <input name="brapi_home_phenosearch_years" id="brapi_home_phenosearch_years" class="form-control" type="text" placeholder="Years e.g. 2014,2015" value="2014,2015"/>
+    <input name="brapi_home_phenosearch_years" id="brapi_home_phenosearch_years" class="form-control" type="text" placeholder="Years e.g. 2014,2015" />
     <select name="brapi_home_phenosearch_observations_level" id="brapi_home_phenosearch_observations_level" class="form-control" />
         <option value="all">All</option>
         <option value="plot">Plot</option>
         <option value="plant">Plant</option>
     </select>
+    <br/>
     <button class="btn btn-primary" name="brapi_home_phenosearch_submit" id="brapi_home_phenosearch_submit">Search Phenotypes</button>
     <br/><br/>
     <div id="brapi_phenosearch_data_result_div">
@@ -21,19 +39,112 @@
 
 </div>
 
+<br/>
+<h4>Phenotypes For a Study in Table Format</h4>
+
+<div id="brapi_home_phenotype_study_table_div" class="well">
+
+    <select name="brapi_phenotype_studies_table_format" id="brapi_phenotype_studies_table_format" class="form-control" />
+        <option value="csv">CSV</option>
+        <option value="tsv">TSV</option>
+        <option value="xls">Excel (xls)</option>
+        <option value="json">JSON</option>
+    </select>
+
+    <div id="brapi_home_phenotype_study_table_studies_div">
+    </div>
+
+    <div id="brapi_pheno_studies_table_data_result_div">
+    </div>
+
+</div>
+
+<br/>
+<h4>Phenotypes For a Study in ObservationUnits Format</h4>
+
+<div id="brapi_home_phenotype_study_observation_units_div" class="well">
+
+    <div id="brapi_home_phenotype_study_observation_units_studies_div">
+    </div>
+
+    <div id="brapi_pheno_studies_observation_units_data_result_div">
+    </div>
+
+</div>
+
+<br/>
+<h4>Phenotypes For a Study in Granular Format</h4>
+
+<div id="brapi_home_phenotype_study_granular_div" class="well">
+
+    <div id="brapi_home_phenotype_study_granular_studies_div">
+    </div>
+
+    <div id="brapi_pheno_studies_granular_data_result_div">
+    </div>
+
+</div>
+
 <script>
 
+var selected_results = [];
+var studies_return_url;
+
 jQuery(document).ready(function() {
+
+    brapi_phenotypes_get_studies(jQuery('#brapi_home_phenotypes_url_select').val(), 'brapi_home_phenotype_study_table_studies_div');
+    brapi_phenotypes_get_studies(jQuery('#brapi_home_phenotypes_url_select').val(), 'brapi_home_phenotype_study_observation_units_studies_div');
+    brapi_phenotypes_get_studies(jQuery('#brapi_home_phenotypes_url_select').val(), 'brapi_home_phenotype_study_granular_studies_div');
+
+    jQuery('#brapi_home_phenotypes_url_select').change(function(){
+        brapi_phenotypes_get_studies(jQuery('#brapi_home_phenotypes_url_select').val(), 'brapi_home_phenotype_study_table_studies_div');
+        brapi_phenotypes_get_studies(jQuery('#brapi_home_phenotypes_url_select').val(), 'brapi_home_phenotype_study_observation_units_studies_div');
+        brapi_phenotypes_get_studies(jQuery('#brapi_home_phenotypes_url_select').val(), 'brapi_home_phenotype_study_granular_studies_div');
+    });
+
     jQuery("#brapi_home_phenosearch_submit").click(function() {
+    
+        var observationVariableDbIds = jQuery('#brapi_home_phenosearch_observationVariableDbIds').val();
+        if (observationVariableDbIds){
+            observationVariableDbIds = observationVariableDbIds.split(',');
+        } else {
+            observationVariableDbIds = [];
+        }
+        var germplasmDbIds = jQuery('#brapi_home_phenosearch_germplasmDbIds').val();
+        if (germplasmDbIds){
+            germplasmDbIds = germplasmDbIds.split(',');
+        } else {
+            germplasmDbIds = [];
+        }
+        var studyDbIds = jQuery('#brapi_home_phenosearch_studyDbIds').val();
+        if (studyDbIds){
+            studyDbIds = studyDbIds.split(',');
+        } else {
+            studyDbIds = [];
+        }
+        var locationDbIds = jQuery('#brapi_home_phenosearch_locationDbIds').val();
+        if (locationDbIds){
+            locationDbIds = locationDbIds.split(',');
+        } else {
+            locationDbIds = [];
+        }
+        var seasonDbIds = jQuery('#brapi_home_phenosearch_years').val();
+        if (seasonDbIds){
+            seasonDbIds = seasonDbIds.split(',');
+        } else {
+            seasonDbIds = [];
+        }
+
+        var return_url = jQuery('#brapi_home_phenotypes_url_select').val()+'/brapi/v1/phenotypes-search';
         jQuery.ajax( {
-          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/phenotypes-search',
+          'url': return_url,
           'data' : {
-            'observationVariableDbIds':jQuery('#brapi_home_phenosearch_observationVariableDbIds').val(),
-            'germplasmDbIds':jQuery('#brapi_home_phenosearch_germplasmDbIds').val(),
+            'observationVariableDbIds':observationVariableDbIds,
+            'germplasmDbIds':germplasmDbIds,
             'observationLevel':jQuery('#brapi_home_phenosearch_observations_level').val(),
-            'studyDbIds':jQuery('#brapi_home_phenosearch_studyDbIds').val(),
-            'locationDbIds':jQuery('#brapi_home_phenosearch_locationDbIds').val(),
-            'seasonDbIds':jQuery('#brapi_home_phenosearch_years').val()
+            'studyDbIds':studyDbIds,
+            'locationDbIds':locationDbIds,
+            'seasonDbIds':seasonDbIds
           },
           'method': 'POST',
           'beforeSend': function() {
@@ -42,7 +153,7 @@ jQuery(document).ready(function() {
           'success': function(response) {
             jQuery('#working_modal').modal('hide');
             console.log(response);
-            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_phenosearch_data_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/phenotypes-search', undefined);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_phenosearch_data_result_div', return_url, undefined, {}, ['observationUnitName','replicate','germplasmName','blockNumber', 'X', 'Y', 'entryType', 'studyName','studyLocation','observationLevel','observations'], 'observationUnitName', []);
 
           },
           error: function(response) {
@@ -51,6 +162,133 @@ jQuery(document).ready(function() {
           }
         });
     });
+
+    jQuery(document).on('click', '#brapi_table_select_submit_brapi_home_phenotype_study_table_studies_div', function(){
+        jQuery.each(jQuery('input[name="brapi_table_select_'+studies_return_url+'"]:checked'), function(){
+            if (jQuery.inArray(jQuery(this).val(), selected_results) == -1){
+                selected_results.push(jQuery(this).val());
+            }
+        });
+        console.log(selected_results);
+
+        var format = jQuery('#brapi_phenotype_studies_table_format').val();
+        var return_url = jQuery('#brapi_home_phenotypes_url_select').val()+'/brapi/v1/studies/'+selected_results[0]+'/table?format='+format;
+        jQuery.ajax( {
+            'url': return_url,
+            'beforeSend': function(){
+                jQuery('#working_modal').modal('show');
+            },
+            'success': function(response) {
+                //console.log(response);
+                if (response.metadata.datafiles.length > 0){
+                    var html = "<h4>Download Study Phenotype File(s) From Here: <br/>";
+                    for (var j=0; j<response.metadata.datafiles.length; j++){
+                        html = html + "<a href='"+response.metadata.datafiles[j]+"'>"+response.metadata.datafiles[j]+"</a><br/>";
+                    }
+                    jQuery('#brapi_pheno_studies_table_data_result_div').html(html);
+                } else {
+                    brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_pheno_studies_table_data_result_div', return_url, undefined, {}, ['headerRow','observationVariableDbIds','observationVariableNames','data'], 'observationVariableNames', []);
+                }
+                jQuery('#working_modal').modal('hide');
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred');
+            }
+        });
+
+    });
+
+    jQuery(document).on('click', '#brapi_table_select_submit_brapi_home_phenotype_study_observation_units_studies_div', function(){
+        jQuery.each(jQuery('input[name="brapi_table_select_'+studies_return_url+'"]:checked'), function(){
+            if (jQuery.inArray(jQuery(this).val(), selected_results) == -1){
+                selected_results.push(jQuery(this).val());
+            }
+        });
+        console.log(selected_results);
+
+        var return_url = jQuery('#brapi_home_phenotypes_url_select').val()+'/brapi/v1/studies/'+selected_results[0]+'/observationunits';
+        jQuery.ajax( {
+            'url': return_url,
+            'beforeSend': function(){
+                jQuery('#working_modal').modal('show');
+            },
+            'success': function(response) {
+                //console.log(response);
+                if (response.metadata.datafiles.length > 0){
+                    var html = "<h4>Download Study Phenotype File(s) From Here: <br/>";
+                    for (var j=0; j<response.metadata.datafiles.length; j++){
+                        html = html + "<a href='"+response.metadata.datafiles[j]+"'>"+response.metadata.datafiles[j]+"</a><br/>";
+                    }
+                    jQuery('#brapi_pheno_studies_observation_units_data_result_div').html(html);
+                } else {
+                    brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_pheno_studies_observation_units_data_result_div', return_url, undefined, {}, ['observationUnitName','replicate','germplasmName','blockNumber', 'X', 'Y', 'entryType', 'plotNumber','observations'], 'observationUnitName', []);
+                }
+                jQuery('#working_modal').modal('hide');
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred');
+            }
+        });
+
+    });
+
+    jQuery(document).on('click', '#brapi_table_select_submit_brapi_home_phenotype_study_granular_studies_div', function(){
+        jQuery.each(jQuery('input[name="brapi_table_select_'+studies_return_url+'"]:checked'), function(){
+            if (jQuery.inArray(jQuery(this).val(), selected_results) == -1){
+                selected_results.push(jQuery(this).val());
+            }
+        });
+        console.log(selected_results);
+
+        var return_url = jQuery('#brapi_home_phenotypes_url_select').val()+'/brapi/v1/studies/'+selected_results[0]+'/observations';
+        jQuery.ajax( {
+            'url': return_url,
+            'beforeSend': function(){
+                jQuery('#working_modal').modal('show');
+            },
+            'success': function(response) {
+                //console.log(response);
+                if (response.metadata.datafiles.length > 0){
+                    var html = "<h4>Download Study Phenotype File(s) From Here: <br/>";
+                    for (var j=0; j<response.metadata.datafiles.length; j++){
+                        html = html + "<a href='"+response.metadata.datafiles[j]+"'>"+response.metadata.datafiles[j]+"</a><br/>";
+                    }
+                    jQuery('#brapi_pheno_studies_granular_data_result_div').html(html);
+                } else {
+                    brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_pheno_studies_granular_data_result_div', return_url, undefined, {}, ['observationUnitName','observationLevel','observationDbId','observationVariableName','germplasmName','observationTimestamp', 'operator', 'value'], 'observationDbId', []);
+                }
+                jQuery('#working_modal').modal('hide');
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred');
+            }
+        });
+
+    });
+
 });
+
+
+function brapi_phenotypes_get_studies(url, div_id) {
+    studies_return_url = url+'/brapi/v1/studies-search';
+    jQuery.ajax( {
+        'url': url+'/brapi/v1/studies-search',
+        'beforeSend': function(){
+            jQuery('#working_modal').modal('show');
+        },
+        'success': function(response) {
+            //console.log(response);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, div_id, studies_return_url, undefined, {}, ['studyName','trialName','programName','locationName'], 'studyDbId', []);
+            jQuery('#working_modal').modal('hide');
+        },
+        error: function(response) {
+            jQuery('#working_modal').modal('hide');
+            alert('An error occurred');
+        }
+    });
+}
 
 </script>

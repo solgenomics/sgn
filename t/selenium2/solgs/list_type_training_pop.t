@@ -139,8 +139,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//input[@value="Go"]', 'xpath', 'select list sel pop')->click();
     sleep(5);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(10);
+    sleep(40);
     $d->find_element_ok('//table[@id="uploaded_selection_pops_table"]/tbody/tr[1]/td[2]/a[text()="DMCP"]', 'xpath',  'check trait DMCP prediction')->click();
+    sleep(5);
     $d->driver->go_back();
     sleep(5);
     $d->find_element_ok('//table[@id="uploaded_selection_pops_table"]/tbody/tr[1]/td[2]/a[text()="FRW"]', 'xpath',  'check trait FRW prediction')->click();

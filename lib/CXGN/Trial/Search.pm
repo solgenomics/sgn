@@ -264,8 +264,9 @@ sub search {
                 $trials{$trial_name}->{harvest_date} = $calendar_funcs->display_start_date($value);
             }
 
-            #print "$type_id corresponds to project type $trial_types{$type_id}\n";
-            $trials{$trial_name}->{trial_type} = $trial_types{$type_id};
+            if (exists($trial_types{$type_id})){
+                $trials{$trial_name}->{trial_type} = $trial_types{$type_id};
+            }
         }
 
         $trials{$trial_name}->{breeding_program} = $breeding_programs{$trial_id};

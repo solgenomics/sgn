@@ -12,6 +12,7 @@ use Tie::UrlEncoder;
 use PDF::LabelPage;
 use Math::Base36 ':all';
 use CXGN::QRcode;
+use Data::Dumper;
 
 our %urlencode;
 
@@ -110,7 +111,15 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
    my $stock_id = shift;
    my $stock_name = shift;
    my $field_info = shift;
-   my $text = "stock name: ".$stock_name. "\n stock id: ". $stock_id. "\n".$field_info;
+   my $fieldbook_enabled = shift;
+   my $text;
+   if ($fieldbook_enabled eq "enable_fieldbook_2d_barcode"){
+       $text = $stock_name;
+   }
+   else {
+       $text = "stock name: ".$stock_name. "\n stock id: ". $stock_id. "\n".$field_info;
+   }
+
 
    $c->tempfiles_subdir('barcode');
    my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
@@ -145,6 +154,30 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
     return $barcode_file;
   }
 
+  sub trial_qrcode_jpg : Path('/barcode/trial') Args(2){
+     my $self = shift;
+     my $c = shift;
+     my $trial_id = shift;
+     my $format = shift;
+     my $base_url = $c->config->{main_production_site_url};
+     my $text = "$base_url/breeders/direct_phenotyping?trial_id=$trial_id";
+     if ($format eq "stock_qrcode"){
+        $text =  $trial_id;
+     }
+
+      $c->tempfiles_subdir('barcode');
+      my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+
+       my $barcode_generator = CXGN::QRcode->new();
+       my $barcode_file = $barcode_generator->get_barcode_file(
+             $file_location,
+             $text,
+        );
+
+       $c->res->headers->content_type('image/jpg');
+       $c->res->body($barcode_file);
+   }
+
 =head2 barcode
 
  Usage:        $self->barcode($code, $text, $size, 30);
@@ -172,6 +205,7 @@ sub barcode {
     $barcode_object->border(2);
     $barcode_object->scale($scale);
     $barcode_object->top_margin($top);
+    #$barcode_object->show_text($show_text);
     $barcode_object->font_align("center");
     my  $barcode = $barcode_object ->gd_image();
     my $text_width = gdLargeFont->width()*length($text);

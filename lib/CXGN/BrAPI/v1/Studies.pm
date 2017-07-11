@@ -7,6 +7,7 @@ use CXGN::Trial;
 use CXGN::Trial::Search;
 use CXGN::Trial::TrialLayout;
 use CXGN::Trait;
+use CXGN::Stock;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::BrAPI::Pagination;
@@ -673,9 +674,8 @@ sub observation_units_granular {
 sub germplasm_pedigree_string {
 	my $self = shift;
 	my $stock_id = shift;
-	my $s = CXGN::Chado::Stock->new($self->bcs_schema, $stock_id);
-	my $pedigree_root = $s->get_parents('1');
-	my $pedigree_string = $pedigree_root ? $pedigree_root->get_pedigree_string('1') : '';
+	my $s = CXGN::Stock->new( schema => $self->bcs_schema, stock_id => $stock_id);
+	my $pedigree_string = $s->get_pedigree_string('Parents');
 	return $pedigree_string;
 }
 
