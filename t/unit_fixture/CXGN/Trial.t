@@ -40,7 +40,7 @@ is_deeply($result, [
             'design' => 'RCBD',
             'location_name' => 'test_location',
             'folder_id' => undef,
-            'trial_type' => undef,
+            'trial_type' => 'Preliminary Yield Trial',
             'planting_date' => undef
           },
           {
@@ -186,7 +186,7 @@ is_deeply($result, [
             'design' => 'RCBD',
             'folder_id' => undef,
             'planting_date' => undef,
-            'trial_type' => undef,
+            'trial_type' => 'Preliminary Yield Trial',
             'harvest_date' => undef,
             'breeding_program_id' => 134,
             'trial_name' => 'CASS_6Genotypes_Sampling_2015',
@@ -274,10 +274,9 @@ foreach (@$locations) {
 }
 @all_location_names = sort @all_location_names;
 #print STDERR Dumper \@all_location_names;
-is_deeply(\@all_location_names, [
-          'Cornell Biotech',
-          'test_location'
-        ], "check get_all_locations");
+my %all_location_names = map {$_=>1} @all_location_names;
+ok(exists($all_location_names{'Cornell Biotech'}));
+ok(exists($all_location_names{'test_location'}));
 
 my @project_types = CXGN::Trial::get_all_project_types($f->bcs_schema());
 my @all_project_types;

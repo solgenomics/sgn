@@ -17,7 +17,7 @@ package SGN::Controller::Pedigree;
 
 use Moose;
 #use GraphViz2;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use Bio::Chado::NaturalDiversity::Reports;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types/;
 use SVG;
@@ -38,19 +38,14 @@ sub _build_schema {
 
 sub stock_pedigree :  Path('/pedigree/svg')  Args(1) {
   my ($self, $c, $stock_id) = @_;
-  my $stock = CXGN::Chado::Stock->new($self->schema, $stock_id);
+
+  my $stock = CXGN::Stock->new( schema => $self->schema, stock_id => $stock_id);
   $c->stash->{stock} = $stock;
-  my $stock_row = $self->schema->resultset('Stock::Stock')
-    ->find({ stock_id => $stock_id });
-  my $stock_pedigree = $self->_get_pedigree($stock_row);
-  print STDERR "STOCK PEDIGREE: ". Data::Dumper::Dumper($stock_pedigree);
-  my $pedigree_rows = $self->_get_pedigree_rows($stock_pedigree);
-  print STDERR "PEDIGREE ROWS: ". Data::Dumper::Dumper($pedigree_rows);
-  my $pedigree_string = $self->_pedigree_string(2, $stock_pedigree);
-  print STDERR "PEDIGREE STRING: ". Data::Dumper::Dumper($pedigree_string);
-  my $stock_pedigree_svg = $self->_view_pedigree($stock_pedigree);
+  my $stock_ancestor_hash = $stock->get_ancestor_hash();
+
+  #print STDERR "STOCK ANCESTORS: ". Dumper($stock_ancestor_hash);
+  my $stock_pedigree_svg = $self->_view_pedigree($stock_ancestor_hash);
   print STDERR "SVG: $stock_pedigree_svg\n\n";
-  my $is_owner = $self->_check_role($c);
   $c->response->content_type('image/svg+xml');
   if ($stock_pedigree_svg) {
     $c->response->body($stock_pedigree_svg);
@@ -63,13 +58,12 @@ sub stock_pedigree :  Path('/pedigree/svg')  Args(1) {
 
 sub stock_descendants :  Path('/descendants/svg')  Args(1) {
   my ($self, $c, $stock_id) = @_;
-  my $stock = CXGN::Chado::Stock->new($self->schema, $stock_id);
+  my $stock = CXGN::Stock->new( schema=> $self->schema, stock_id => $stock_id);
   $c->stash->{stock} = $stock;
-  my $stock_row = $self->schema->resultset('Stock::Stock')
-    ->find({ stock_id => $stock_id });
-  my $stock_descedants = $self->_get_descendants($stock_row);
-  my $stock_descendants_svg = $self->_view_descendants($stock_descedants);
-  my $is_owner = $self->_check_role($c);
+
+  my $stock_descendant_hash = $stock->get_descendant_hash();
+  #print STDERR "STOCK DESCENDANTS: ". Dumper($stock_descendant_hash);
+  my $stock_descendants_svg = $self->_view_descendants($stock_descendant_hash);
   $c->response->content_type('image/svg+xml');
   if ($stock_descendants_svg) {
     $c->response->body($stock_descendants_svg);
@@ -80,6 +74,7 @@ sub stock_descendants :  Path('/descendants/svg')  Args(1) {
   }
 }
 
+<<<<<<< HEAD
 sub _check_role  {
   my ( $self, $c) = @_;
   my $logged_user = $c->user;
@@ -229,6 +224,8 @@ sub _get_descendants {
   }
 }
 
+=======
+>>>>>>> master
 sub _traverse_pedigree {
   my $pedigree_reference = shift;
   my %pedigree=%$pedigree_reference;

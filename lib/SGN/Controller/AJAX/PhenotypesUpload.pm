@@ -316,6 +316,7 @@ sub update_plot_phenotype_POST : Args(0) {
   my $plot_name = $c->req->param("plot_name");
   my $trait_id = $c->req->param("trait");
   my $trait_value = $c->req->param("trait_value");
+  my $trait_list_option = $c->req->param("trait_list_option");
   my $time = DateTime->now();
   my $timestamp = $time->ymd()."_".$time->hms();
   my $dbh = $c->dbc->dbh();
@@ -324,7 +325,7 @@ sub update_plot_phenotype_POST : Args(0) {
   my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
   my (@plots, @traits, %data, $trait);
   my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type' )->cvterm_id();
-
+  print "MY LIST OPTION:  $trait_list_option\n";
   my $plot = $schema->resultset("Stock::Stock")->find( { uniquename=>$plot_name });
   my $plot_type_id = $plot->type_id();
 
@@ -334,10 +335,15 @@ sub update_plot_phenotype_POST : Args(0) {
     return;
   }
 
-  my $h = $dbh->prepare("SELECT cvterm.cvterm_id AS trait_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id WHERE db.db_id = (( SELECT dbxref_1.db_id FROM stock JOIN nd_experiment_stock USING (stock_id) JOIN nd_experiment_phenotype USING (nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm cvterm_1 ON phenotype.cvalue_id = cvterm_1.cvterm_id JOIN dbxref dbxref_1 ON cvterm_1.dbxref_id = dbxref_1.dbxref_id LIMIT 1)) AND cvterm_id =? GROUP BY cvterm.cvterm_id, ((((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text);");
-  $h->execute($trait_id);
-  while (my ($id, $trait_name) = $h->fetchrow_array()) {
-    $trait = $trait_name;
+  if (!$trait_list_option){
+      my $h = $dbh->prepare("SELECT cvterm.cvterm_id AS trait_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id WHERE db.db_id = (( SELECT dbxref_1.db_id FROM stock JOIN nd_experiment_stock USING (stock_id) JOIN nd_experiment_phenotype USING (nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm cvterm_1 ON phenotype.cvalue_id = cvterm_1.cvterm_id JOIN dbxref dbxref_1 ON cvterm_1.dbxref_id = dbxref_1.dbxref_id LIMIT 1)) AND cvterm_id =? GROUP BY cvterm.cvterm_id, ((((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text);");
+      $h->execute($trait_id);
+      while (my ($id, $trait_name) = $h->fetchrow_array()) {
+        $trait = $trait_name;
+      }
+  }
+  else {
+      $trait = $trait_id;
   }
   push @plots, $plot_name;
   push @traits, $trait;
@@ -385,9 +391,18 @@ sub retrieve_plot_phenotype_POST : Args(0) {
   my $schema = $c->dbic_schema("Bio::Chado::Schema");
   my $plot_name = $c->req->param("plot_name");
   my $trait_id = $c->req->param("trait");
+  my $trait_list_option = $c->req->param("trait_list_option");
   my $trait_value;
   my $stock = $schema->resultset("Stock::Stock")->find( { uniquename=>$plot_name });
   my $stock_id = $stock->stock_id();
+
+  if ($trait_list_option){
+      my $h = $dbh->prepare("SELECT cvterm.cvterm_id AS trait_id, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name FROM cvterm JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id JOIN db ON dbxref.db_id = db.db_id WHERE db.db_id = (( SELECT dbxref_1.db_id FROM stock JOIN nd_experiment_stock USING (stock_id) JOIN nd_experiment_phenotype USING (nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN cvterm cvterm_1 ON phenotype.cvalue_id = cvterm_1.cvterm_id JOIN dbxref dbxref_1 ON cvterm_1.dbxref_id = dbxref_1.dbxref_id LIMIT 1)) AND (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text =? GROUP BY cvterm.cvterm_id, ((((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text);");
+      $h->execute($trait_id);
+      while (my ($id, $trait_name) = $h->fetchrow_array()) {
+        $trait_id = $id;
+      }
+  }
 
   my $h = $dbh->prepare("SELECT phenotype.value FROM stock
     JOIN nd_experiment_stock USING(stock_id)

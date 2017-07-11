@@ -214,6 +214,7 @@ function jqueryStuff() {
   &>
 
   </div>
+  <br /><br />
   <div class="col-sm-6">
 <& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"stock_qrcode"  &><br /><br />
 %#<& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"code128"  &><br /><br />
@@ -280,11 +281,21 @@ function jqueryStuff() {
 </&>
 
 <& /stock/download_stock_phenotypes_dialog.mas, stock_id => $stock_id, stock_name => $uniquename, stock_type => $type_name &>
-<&| /page/info_section.mas, title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='stock_download_phenotypes_button'>Download Data</a>]" &>
 
-  <& /stock/traits.mas, stock_id => $stock_id &>
+% if ($type_name eq 'plot'){
+    <&| /page/info_section.mas, title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='stock_download_phenotypes_button'>Download Data</a>] [<a target='_blank' href = '/breeders/plot_phenotyping?stock_id=$stock_id'>Direct plot phenotyping</a>]" &>
 
-</&>
+        <& /stock/traits.mas, stock_id => $stock_id &>
+
+  </&>
+% }
+% else {
+    <&| /page/info_section.mas, title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='stock_download_phenotypes_button'>Download Data</a>]" &>
+        <& /stock/traits.mas, stock_id => $stock_id &>
+
+  </&>
+% }
+
 
 <%perl>
  my $collapsible = 0;

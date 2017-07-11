@@ -5,7 +5,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
 use CXGN::Stock::Search;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::Chado::Organism;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
@@ -204,17 +204,16 @@ sub germplasm_pedigree {
 	my %result;
 	my @data_files;
 	my $total_count = 0;
-	my $s = CXGN::Chado::Stock->new($self->bcs_schema(), $stock_id);
+	my $s = CXGN::Stock->new( schema => $self->bcs_schema(), stock_id => $stock_id);
 	if ($s) {
 		$total_count = 1;
-		my @direct_parents = $s->get_direct_parents();
-		my $pedigree_root = $s->get_parents('1');
-		my $pedigree_string = $pedigree_root ? $pedigree_root->get_pedigree_string('1') : '';
+		my $parents = $s->get_parents();
+		my $pedigree_string = $s->get_pedigree_string('Parents');
 		%result = (
 			germplasmDbId=>$stock_id,
 			pedigree=>$pedigree_string,
-			parent1Id=>$direct_parents[0][0],
-			parent2Id=>$direct_parents[1][0]
+			parent1Id=>$parents->{'mother_id'},
+			parent2Id=>$parents->{'father_id'}
 		);
 	}
 
