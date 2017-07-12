@@ -4,7 +4,7 @@ use Moose;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 

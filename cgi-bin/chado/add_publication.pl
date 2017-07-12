@@ -17,7 +17,7 @@ use CXGN::Contact;
 use CXGN::Tools::Pubmed;
 use CXGN::Tools::Text qw / sanitize_string /;
 use Bio::Chado::Schema;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CatalystX::GlobalContext qw( $c );
 
 use base qw / CXGN::Page::Form::SimpleFormPage /;
@@ -26,13 +26,13 @@ sub new {
     my $class = shift;
     my $self = $class->SUPER::new(@_);
     $self->set_script_name("add_publication.pl");
-    return $self; 
+    return $self;
 }
- 
 
-sub define_object { 
+
+sub define_object {
     my $self = shift;
-    
+
     # call set_object_id, set_object and set_primary_key here
     # with the appropriate parameters.
     #
@@ -40,7 +40,7 @@ sub define_object {
     $self->set_object_id($args{pub_id});
     $self->set_object(CXGN::Chado::Publication->new( $self->get_dbh(), $self->get_object_id() )
 		      );
-    $self->set_primary_key("pub_id");		      
+    $self->set_primary_key("pub_id");
 #    $self->set_object_owner($self->get_object()->get_sp_person_id); #publications do not have owners, but object_dbxref linking tables do!
 
     $self->set_owners( ());
@@ -49,15 +49,15 @@ sub define_object {
 
 # override store to check if a publication with the submitted ID (pubmed accession?) already exists
 
-sub store { 
+sub store {
     my $self = shift;
-    
+
     my $publication = $self->get_object();
     my $sp_person_id=$self->get_user()->get_sp_person_id();
-    
+
     my %args = $self->get_args();
-    
-   
+
+
     my $action=$args{action};
     my $refering_page=$args{refering_page};
     my $type= $args{type};  #locus or allele or stock...?
@@ -69,7 +69,7 @@ sub store {
 
     if ($type eq 'locus') {  $locus= CXGN::Phenome::Locus->new($self->get_dbh(), $type_id); }
     elsif ($type eq 'allele') { $allele= CXGN::Phenome::Allele->new($self->get_dbh(), $type_id); }
-    elsif ($type eq 'stock') { $stock= CXGN::Chado::Stock->new($self->get_schema(), $type_id); }
+    elsif ($type eq 'stock') { $stock= CXGN::Stock->new(schema => $self->get_schema(), stock_id => $type_id); }
 
     my $pub_id;
     my $dbxref_id=undef;
@@ -81,7 +81,7 @@ sub store {
     }
     $publication->set_accession($accession);
     $publication->add_dbxref("PMID:$accession");
-    
+
     #dbxref object...
     my $dbxref= CXGN::Chado::Dbxref->new($self->get_dbh(), $dbxref_id);
 
@@ -105,20 +105,20 @@ sub store {
         }
 	$self->send_publication_email();
 	if (!$type && !$type_id) {
-	    $self->get_page()->client_redirect("/publication/$pub_id/view"); 
+	    $self->get_page()->client_redirect("/publication/$pub_id/view");
 	} else {
 	    $self->get_page()->client_redirect("$script_name?type=$type&amp;type_id=$type_id&amp;refering_page=$refering_page&amp;action=new");
 	}
     }
     #fetch the publication from pubmed:
-    my $pubmed= CXGN::Tools::Pubmed->new($publication); 
+    my $pubmed= CXGN::Tools::Pubmed->new($publication);
     my $e_id = $publication->get_eid;
     if ($e_id) {
 	$publication->add_dbxref("DOI:$e_id");
     }
     $self->SUPER::store(1); #this gives the publication a  dbxref id, and stores it in pub, pub_dbxref pubabstract(change to pubprop!!), and pub_author
 
-    #instantiate a new dbxref object 
+    #instantiate a new dbxref object
     my $dbxref= CXGN::Chado::Dbxref->new($self->get_dbh(), $publication->get_dbxref_id_by_db('PMID') );
 
     #store the new locus_dbxref..
@@ -127,13 +127,13 @@ sub store {
     elsif ($type eq 'stock') { $stock->get_object_row->find_or_create_related('stock_pubs' , {
         pub_id => $publication->get_pub_id } );
     }
-    $self->send_publication_email();	
-    if ($type && $type_id) { #if the publication is also associated with another object 
-	$self->get_page()->client_redirect("$script_name?type=$type&amp;type_id=$type_id&amp;refering_page=$refering_page&amp;action=new"); 
-    }else { 
+    $self->send_publication_email();
+    if ($type && $type_id) { #if the publication is also associated with another object
+	$self->get_page()->client_redirect("$script_name?type=$type&amp;type_id=$type_id&amp;refering_page=$refering_page&amp;action=new");
+    }else {
 	my $pub_id  = $publication->get_pub_id();
-	$self->get_page()->client_redirect("/publication/$pub_id/view"); 
-    } 
+	$self->get_page()->client_redirect("/publication/$pub_id/view");
+    }
 }
 
 
@@ -168,24 +168,24 @@ sub delete {
 
 }
 
-sub delete_dialog { 
+sub delete_dialog {
     my $self = shift;
     my %args = $self->get_args();
     $self->check_modify_privileges();
- 
+
     my $title = shift;
     my $object_name = shift;
     my $field_name = shift;
     my $object_id = shift;
 
-    my $type = $args{type}; 
+    my $type = $args{type};
     my $type_id= $args{type_id}; #the id of the object we want to associate to the publication
 
     my $object_name;
     my $object_pub_id = $args{object_pub_id};
     my $object_dbxref_id= $args{object_dbxref_id};
 
-    if ( $object_dbxref_id ) { 
+    if ( $object_dbxref_id ) {
 	if ($type eq 'locus') {
 	    my $locus = CXGN::Phenome::Locus->new($self->get_dbh(), $type_id);
 	    $object_name = $locus->get_locus_name();
@@ -209,14 +209,14 @@ sub delete_dialog {
     page_title_html();
     print qq {
 	<form>
-	    Delete publication association with $type ($object_name)? 
+	    Delete publication association with $type ($object_name)?
 	    <input type="hidden" name="action" value="delete" />
-	    <input type="hidden" name="$field_name" value="$object_id" />	    
+	    <input type="hidden" name="$field_name" value="$object_id" />
 	    <input type="hidden" name="type" value="$type" />
 	    <input type="hidden" name="type_id" value="$type_id" />
 	    <input type="hidden" name="object_dbxref_id" value="$object_dbxref_id" />
 	    <input type="hidden" name="object_pub_id" value="$object_pub_id" />
-	    <input type="hidden" name="refering_page" value="$args{refering_page}" />	
+	    <input type="hidden" name="refering_page" value="$args{refering_page}" />
 	    <input type="submit" value="Delete" />
 	    </form>
 
@@ -227,13 +227,13 @@ sub delete_dialog {
 }
 
 
-sub generate_form { 
+sub generate_form {
     my $self = shift;
 
     my %args = $self->get_args();
     my $publication = $self->get_object();
     my $pub_id = $self->get_object_id();
-    
+
     $self->init_form();
 
     # generate the form with the appropriate values filled in.
@@ -243,74 +243,74 @@ sub generate_form {
     # if we store, only take the form parameters into account.
     # for new, we don't do anything - we present an empty form.
     #
-    
+
     # add form elements
     #
-    $self->get_form()->add_field(display_name=>"Enter a PubMed ID: ", 
-				 field_name=>"accession", 
-				 length=>20, 
-				 object=>$publication, 
-				 getter=>"get_accession", 
-				 setter=>"set_accession", 
+    $self->get_form()->add_field(display_name=>"Enter a PubMed ID: ",
+				 field_name=>"accession",
+				 length=>20,
+				 object=>$publication,
+				 getter=>"get_accession",
+				 setter=>"set_accession",
 				 validate=>"token"
 				 );
-    
-   
+
+
     $self->get_form()->add_hidden( field_name=>"action", contents=>"confirm_store" );
     $self->get_form()->add_hidden( field_name=>"pub_id", contents=>$pub_id );
-    
-    $self->get_form()->add_hidden( field_name=>"type_id", 
+
+    $self->get_form()->add_hidden( field_name=>"type_id",
 				   contents=>$args{type_id}  );
-   
-    $self->get_form()->add_hidden( field_name=>"type", 
+
+    $self->get_form()->add_hidden( field_name=>"type",
 				   contents=>$args{type}  );
 
-    $self->get_form()->add_hidden( field_name=>"refering_page", 
+    $self->get_form()->add_hidden( field_name=>"refering_page",
 				   contents=>$args{refering_page}  );
 
-     
+
     if ($self->get_action()=~/store/i) {
 	$self->get_form()->from_request(%args);
     }
-    
-    
+
+
 }
 
-sub display_page { 
+sub display_page {
     my $self = shift;
     my %args = $self->get_args();
     #my $cvterm_name = $args{cvterm_name};
     # generate an appropriate edit link
     #
-    
+
     $self->get_page->jsan_use("CXGN.Phenome.Tools");
     $self->get_page->jsan_use("MochiKit.DOM");
     $self->get_page->jsan_use("Prototype");
-    
+
     my $script_name = $self->get_script_name();
     my @publications = ();
     my @obsoleted= ();
     my ($locus, $allele, $pop, $ind, @dbxref_objs, $object_dbxref_id, $obsolete, $name_dbxref_id, $stock, $pubs); #add vars here if you want this script to work with other object types..
-    
+
     # render the form
     $self->get_page()->header();
-    
+
     print page_title_html( qq { SGN publication upload page } );
 
     print qq { <b> Publications list</b> };
 
-    if ($args{type} eq 'locus') { 
+    if ($args{type} eq 'locus') {
 	$locus = CXGN::Phenome::Locus->new($self->get_dbh(), $args{type_id});
 	@dbxref_objs= $locus->get_dbxrefs(); #array of dbxref objects
 	print "for locus '".$locus->get_locus_name()."'<br /><br />\n";
-    
+
     }elsif ($args{type} eq 'allele') {
 	$allele = CXGN::Phenome::Allele->new($self->get_dbh(), $args{type_id});
 	@dbxref_objs=$allele->get_all_allele_dbxrefs(); #array of dbxref objects
 	print "for allele '".$allele->get_allele_name()."'<br /><br />\n";
     }
     elsif ($args{type} eq 'stock') {
-	$stock = CXGN::Chado::Stock->new($self->get_schema, $args{type_id});
+	$stock = CXGN::Stock->new(schema => $self->get_schema, stock_id => $args{type_id});
 	$pubs = $stock->get_object_row->search_related('stock_pubs');
         $pubs = $pubs->search_related('pub') if $pubs;
        	print "for stock '".$stock->get_name ."'<br /><br />\n";
@@ -343,7 +343,7 @@ sub display_page {
         }
 	if ($db_name eq 'SGN_ref') { $accession= $pub_id; }
 	if ($obsolete eq 'f') {
-	    if ($pub_id && $object_dbxref_id) {print "<a href= /publication/$pub_id/view>$db_name:$accession</a>" . $pub->get_title() . " (" . $pub->get_pyear() . ") <b>" . $pub->get_authors_as_string() . "</b>" . qq { \n <a href="add_publication.pl?pub_id=$pub_id&amp;type=$args{type}&amp;type_id=$args{type_id}&amp;object_dbxref_id=$object_dbxref_id&amp;action=confirm_delete&amp;refering_page=$args{refering_page}">[Remove]</a> <br /><br />\n }; } 
+	    if ($pub_id && $object_dbxref_id) {print "<a href= /publication/$pub_id/view>$db_name:$accession</a>" . $pub->get_title() . " (" . $pub->get_pyear() . ") <b>" . $pub->get_authors_as_string() . "</b>" . qq { \n <a href="add_publication.pl?pub_id=$pub_id&amp;type=$args{type}&amp;type_id=$args{type_id}&amp;object_dbxref_id=$object_dbxref_id&amp;action=confirm_delete&amp;refering_page=$args{refering_page}">[Remove]</a> <br /><br />\n }; }
 	}elsif($pub_id)  {
 	    push @obsoleted, [$pub, $object_dbxref_id] ; #an array of obsoletes pub objects
 	}
@@ -380,12 +380,12 @@ sub print_obsoleted {
 	my $url="/publication/$pub_id/view";
 	$obsoleted_pubs .=  qq |<a href= $url target=blank>$db_name:$accession</a> $uniquename | . $self->unobsolete_pub($type, $ref->[1])."<br />";
     }
-    my $print_obsoleted= 
+    my $print_obsoleted=
 	html_optional_show('obsoleted_pubs',
 			   'Show obsolete',
 			   qq|<div class="minorbox">$obsoleted_pubs</div> |,
 			   );
-    
+
     print $print_obsoleted;
     #return $print_obsoleted;
 }
@@ -395,20 +395,20 @@ sub unobsolete_pub {
     my $type=shift;
     my $type_dbxref_id= shift;
     my $unobsolete_link = "";
-   
+
     if (($self->get_user()->get_user_type() eq 'submitter') || ($self->get_user()->get_user_type() eq 'curator') || ($self->get_user()->get_user_type() eq 'sequencer')) {
-	$unobsolete_link=qq| 
+	$unobsolete_link=qq|
 	    <a href="javascript:Tools.unobsoleteAnnot('$type', '$type_dbxref_id')">[unobsolete]</a>
-	    
+
 	    <div id='unobsoleteAnnotationForm' style="display: none">
             <div id='type_dbxref_id_hidden'>
-	    <input type="hidden" 
+	    <input type="hidden"
 	    value=$type_dbxref_id
 	    id="$type_dbxref_id">
 	    </div>
 	    </div>
 	    |;
-    } 
+    }
     return $unobsolete_link;
 }
 
@@ -420,13 +420,13 @@ sub confirm_store {
     my $type= $args{type};  #locus or allele or stock...?
     my $type_id = $args{type_id}; #the database id of the refering object (locus..)
     my $accession= sanitize_string($args{accession});
-    
+
     my $publication= $self->get_object();
     $publication->set_accession($accession);
-    
+
 ############
     my $dbxref_id=undef;
-    
+
     #need to check if the publication is already in the database and associated with the object (locus..)
     my $existing_publication= CXGN::Chado::Publication->get_pub_by_accession($self->get_dbh(),$accession) ;
 
@@ -440,7 +440,7 @@ sub confirm_store {
 	}
 	else { #the publication isn't associated with this object
 	    if (!$type && !$type_id) {
-		$self->get_page()->client_redirect("/publication/$pub_id/view"); 
+		$self->get_page()->client_redirect("/publication/$pub_id/view");
 	    } else {
 		$self->get_page()->header();
 		$self->print_confirm_form();
@@ -450,8 +450,8 @@ sub confirm_store {
 	$self->get_page()->header();
 	$self->print_confirm_form();
     }
-    
-    
+
+
 }
 
 
@@ -462,49 +462,49 @@ sub print_confirm_form {
     my $type= $args{type};  #locus or...?
     my $type_id = $args{type_id}; #the database id of the refering object (locus..)
     my $accession= sanitize_string($args{accession});
-    
+
     my $script_name= $self->get_script_name();
-    
+
     my $publication= $self->get_object();
     $publication->set_accession($accession);
-    
+
 ############
     my $dbxref_id=undef;
-    
+
     #first fetch the publication from pubmed:
-  
-    my $pubmed= CXGN::Tools::Pubmed->new($publication); 
+
+    my $pubmed= CXGN::Tools::Pubmed->new($publication);
     my $pub_title=$publication->get_title();
-   
+
     #check if NCBI server is down (See CXGN::Tools::Pubmed for set_message($message)
     if ($publication->get_message() ) { $self->get_page->message_page( $publication->get_message() ); }
-    #add pubmed verification step	
+    #add pubmed verification step
     if ( !$pub_title ) {
 	print  qq |<h3> $accession is not a valid pubmed ID. </h3>  |;
 	print  qq |<a href="$script_name?type=$type&amp;type_id=$type_id&amp;refering_page=$refering_page&amp;action=new">Go back</a>|;
-	$self->get_page()->footer();		   
+	$self->get_page()->footer();
 	exit(0);
     }
-    
-    
+
+
 ############
     my $print_publication ="";
     my @authors= $publication->get_authors();
     foreach my $a (@authors) {
 	$print_publication .=$a .", ";
     }
-    
+
     chop $print_publication;
     chop $print_publication;
     $print_publication .= ". (" . $publication->get_pyear() . ") " . $publication->get_title() . " " . $publication->get_series_name(). " (" . $publication->get_volume() . "):" . $publication->get_pages() . ".";
-    
-    my $pyear= $publication->get_pyear(); #) $publication->get_title(). $publication->get_series_name() . $publication->get_volume() : $publication->get_pages() .  |; 
-   
+
+    my $pyear= $publication->get_pyear(); #) $publication->get_title(). $publication->get_series_name() . $publication->get_volume() : $publication->get_pages() .  |;
+
     my $print_associations;
-   
+
     my $publication_exists= CXGN::Chado::Publication->get_pub_by_accession($self->get_dbh(), $accession);
     $publication->set_pub_id($publication_exists->get_pub_id()) if $publication_exists;
-    
+
     if ($type eq 'locus') {
 	my $locus= CXGN::Phenome::Locus->new($self->get_dbh(), $type_id);
 	my $is_associated= $locus->associated_publication($accession);
@@ -521,35 +521,35 @@ sub print_confirm_form {
 	}
     }
     print qq | <br/> <h3>The following publication will be stored in the database and associated with $args{type}  $args{type_id}: </h3> $print_publication <br> <b> $print_associations </b>|;
-    
-    
-    
+
+
+
     $self->init_form();
-    
+
     $self->get_form()->add_hidden( field_name=>"accession", contents=>$accession );
     $self->get_form()->add_hidden( field_name=>"type", contents=>$args{type} );
     $self->get_form()->add_hidden( field_name=>"type_id", contents=>$args{type_id} );
     $self->get_form()->add_hidden( field_name=>"refering_page", contents=>$args{refering_page} );
-    
-    
+
+
     $self->get_form()->add_hidden( field_name=>"action", contents=>"store" );
-    
+
     page_title_html("Confirm store");
-    
-    
-    
+
+
+
     $self->get_form()->as_table();
-    
+
     if ($self->get_action()=~/store/i) {
 	$self->get_form()->from_request(%args);
-       
+
 
     }
-   
+
     print qq | <BR> <a href="javascript:history.back(1)">Go back without storing the publication</a> | ;
-   
+
     $self->get_page()->footer();
-    
+
 }
 
 sub send_publication_email {
@@ -589,7 +589,7 @@ sub send_publication_email {
 if ($action eq 'store') {
 
         $subject="[New publication associated with $type: $type_id]";
-	$fdbk_body="$username ($user_link) has associated publication $pubmed_link \n with $type: $type_link"; 
+	$fdbk_body="$username ($user_link) has associated publication $pubmed_link \n with $type: $type_link";
    }
     elsif($action eq 'delete') {
 
@@ -597,7 +597,7 @@ if ($action eq 'store') {
 	my $deleted_acc = $deleted_pub->get_accession();
 	my $deleted_pubmed = qq | http://www.ncbi.nlm.nih.gov/pubmed/$deleted_acc |;
 	$subject="[A publication-$type association removed from $type: $type_id]";
-	$fdbk_body="$username ($user_link) has removed publication $deleted_pubmed \n from $type: $type_link"; 
+	$fdbk_body="$username ($user_link) has removed publication $deleted_pubmed \n from $type: $type_link";
     }
 
     CXGN::Contact::send_email($subject,$fdbk_body, 'sgn-db-curation@sgn.cornell.edu');
@@ -607,7 +607,7 @@ if ($action eq 'store') {
 
 sub get_schema {
   my $self = shift;
-  return $self->{schema}; 
+  return $self->{schema};
 }
 
 sub set_schema {

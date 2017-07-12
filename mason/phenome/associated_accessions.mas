@@ -33,7 +33,7 @@ a database handle
 
 Naama Menda <nm249@cornell.edu>
 
-=cut 
+=cut
 
 </%doc>
 
@@ -68,7 +68,7 @@ if (@$accessions) {
   my %imageHoA;
 
   foreach my $stock_id (@$accessions) {
-    my $stock      = CXGN::Chado::Stock->new($schema, $stock_id );
+    my $stock      = CXGN::Stock->new(schema => $schema, stock_id => $stock_id );
     my $stock_name = $stock->get_name();
     $stockHash{$stock_id} = $stock_name;
 
@@ -78,12 +78,12 @@ if (@$accessions) {
       $imageHash{$image_id} = SGN::Image->new( undef, $image_id, $c );
       push @{ $imageHoA{$stock_id} }, $image_id;
     }
-    
+
     #if there are no associated images with this stock:
     if ( !@image_ids ) { push @no_image, $stock_id; }
   }
   my $ind_count = 0;
-  
+
   # Print the whole thing sorted by number of members and name.
   for
     my $stock_id ( sort { @{ $imageHoA{$b} } <=> @{ $imageHoA{$a} } }

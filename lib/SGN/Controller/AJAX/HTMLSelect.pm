@@ -29,7 +29,7 @@ use CXGN::Trial;
 use CXGN::Onto;
 use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::Stock::Search;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
@@ -305,7 +305,7 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
       @traits = @{$query->{results}};
       #print STDERR "Traits: ".Dumper(@traits)."\n";
     } elsif (looks_like_number($stock_id)) {
-        my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+        my $stock = CXGN::Stock->new( schema => $schema, stock_id => $stock_id);
         my @trait_list = $stock->get_trait_list();
         foreach (@trait_list){
             my @val = ($_->[0], $_->[2]."|".$_->[1]);

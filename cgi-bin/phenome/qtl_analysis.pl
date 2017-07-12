@@ -72,7 +72,7 @@ sub define_object
      my $stock_id = $args{stock_id};
     my $object;
     #########################
-    # this page needs to be re-written with CXGN::Chado::Stock object
+    # this page needs to be re-written with CXGN::Stock object
     # and without SimpleFormPage, since edits should be done on the parent page only
     #########################
    

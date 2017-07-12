@@ -60,7 +60,7 @@ $organism_autocomplete_uri => '/ajax/organism/autocomplete/'
 <%perl>
 
 use Bio::Chado::Schema;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::Page::FormattingHelpers qw / html_optional_show info_table_html /;
 use CXGN::People::Person;
 use CXGN::Chado::Publication;
@@ -91,7 +91,7 @@ my $stockprop_cv = $schema->resultset("Cv::Cv")->search( {
 my ($type_name, $uniquename);
 my $type = $stock_row ? $stock_row->type : undef;
 $type_name  = $type->name() if $type;
-$uniquename = $stock->get_uniquename if $type;
+$uniquename = $stock->uniquename() if $type;
 #################
 my $is_owner = $stockref->{is_owner};
 

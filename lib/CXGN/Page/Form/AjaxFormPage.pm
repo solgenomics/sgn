@@ -219,7 +219,7 @@ sub check_modify_privileges {
  Desc:         define the object that this simple form page operates on.
                The object needs to implement L<CXGN::DB::ModifiableI>
                 Need to set in the subclass:
-    set_object (e.g. CXGN::Chado::Stock)
+    set_object (e.g. CXGN::Stock)
     set_object_id (e.g. 1)
     set_object_name (e.g. 'stock')
     set_primary_key (e.g. 'stock_id')

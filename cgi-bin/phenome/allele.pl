@@ -120,8 +120,8 @@ qq { <a href="/locus/$locus_id/view">back to locus</a> };
  Args:
  Side Effects:
  Example:
-# $self->delete_dialog("Delete", "Object", 
-#  			     $self->get_primary_key(), 
+# $self->delete_dialog("Delete", "Object",
+#  			     $self->get_primary_key(),
 #  			     $id,
 #  			     "<a href=\"".$self->get_script_name()."?".$self->get_primary_key()."=".$id."&amp;action=view\">Go back to detail page without deleting</a>");
 
@@ -148,15 +148,15 @@ sub delete_dialog {
     $self->get_page()->header();
 
     page_title_html("$title");
-    print qq { 	
+    print qq {
 	<form>
-	Delete allele (id=$object_id)? 
+	Delete allele (id=$object_id)?
 	<input type="hidden" name="action" value="delete" />
 	<input type="hidden" name="$field_name" value="$object_id" />
 
 	<input type="submit" value="Delete" />
 	</form>
-	
+
 	$back_link
 
     };
@@ -244,10 +244,10 @@ sub display_page {
     my %stockHash;
     my %imageHash;
     my @no_image = ();
-    
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
     foreach my $stock_id (@$stock_ids) {
-        my $stock = CXGN::Chado::Stock->new( $schema, $stock_id );
+        my $stock = CXGN::Stock->new( schema => $schema, stock_id => $stock_id );
         my $stock_name = $stock->get_name();
         $stockHash{$stock_id} = $stock_name;
 

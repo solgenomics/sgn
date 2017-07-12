@@ -9,7 +9,7 @@ use base qw/CXGN::Page::Form::AjaxFormPage  /;
 
 use CXGN::Tools::Organism;
 use Bio::Chado::Schema;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 
 use CXGN::People::Person;
 use CXGN::Contact;
@@ -38,9 +38,9 @@ sub define_object {
 
     $self->set_object_id($stock_id);
     $self->set_object_name('Stock'); #this is useful for email messages
-    $self->set_object( CXGN::Chado::Stock->new($schema, $stock_id) );
+    $self->set_object( CXGN::Stock->new( schema => $schema, stock_id => $stock_id) );
 
-    if ( $self->get_object()->get_is_obsolete() == 1 && $user_type ne 'curator' )
+    if ( $self->get_object()->is_obsolete() == 1 && $user_type ne 'curator' )
     {
         $json_hash{error}="Stock $stock_id is obsolete!";
     }
@@ -64,17 +64,17 @@ sub store {
 
     my $stock    = $self->get_object();
     my $stock_id = $self->get_object_id();
-    my $bcs_stock = $stock->get_object_row();
+    my $bcs_stock = $stock->stock();
     my %args     = $self->get_args();
     my %json_hash = $self->get_json_hash();
     my $initial_stock_id = $stock_id;
 
     my $error;
-    $stock->set_species($args{organism});
-    $stock->set_type_id($args{type_id});
-    $stock->set_name($args{name});
-    $stock->set_uniquename($args{uniquename});
-    $stock->set_description($args{description});
+    $stock->species($args{organism});
+    $stock->type_id($args{type_id});
+    $stock->name($args{name});
+    $stock->uniquename($args{uniquename});
+    $stock->description($args{description});
 
 
     my $message = $stock->exists_in_database();
@@ -84,7 +84,7 @@ sub store {
     }else {
         try{
             $self->SUPER::store(); #this sets $json_hash{validate} if the form validation failed.
-            $stock_id = $stock->get_stock_id() ;
+            $stock_id = $stock->stock_id() ;
         } catch {
             $error = " An error occurred. Cannot store to the database\n An  email message has been sent to the SGN development team";
             CXGN::Contact::send_email('stock_ajax_form.pl died', $error . "\n" . $_ , 'sgn-bugs@sgn.cornell.edu');
@@ -114,14 +114,14 @@ sub delete {
     $self->print_json() if $check ; #error or no user privileges
 
     my $stock      = $self->get_object();
-    my $stock_name = $stock->get_name();
-    my $stock_id = $stock->get_stock_id();
+    my $stock_name = $stock->uniquename();
+    my $stock_id = $stock->stock_id();
     my %json_hash= $self->get_json_hash();
     my $refering_page="/phenome/stock/view/id/$stock_id";
 
     if (!$json_hash{error} ) {
         try {
-            $stock->set_is_obsolete(1) ;
+            $stock->is_obsolete(1) ;
             $stock->store();
         }catch {
             $json_hash{error} = " An error occurred. Cannot delete stock\n An  email message has been sent to the SGN development team";
@@ -130,7 +130,7 @@ sub delete {
         $json_hash{reload} = 1;
     }
     $self->send_form_email({subject=>"Stock obsoleted ($stock_name)", mailing_list=>'sgn-db-curation@sgn.cornell.edu', refering_page=>"www.solgenomics.net".$refering_page, action=>'delete'}) if (!$json_hash{error});
-    $self->set_json_hash(%json_hash);
+    $self->json_hash(%json_hash);
     $self->print_json();
 }
 
@@ -142,15 +142,15 @@ sub generate_form {
 
     $self->init_form($form_id) ; ## instantiate static/editable/confirmStore form
     my $stock = $self->get_object();
-    my $bcs_stock = $stock->get_object_row();
+    my $bcs_stock = $stock->stock();
     my %args  = $self->get_args();
     my $form = $self->get_form();
 
     #########
     my $organism_obj =  $bcs_stock->organism  if $bcs_stock;
     my $species = $organism_obj ? $organism_obj->species : undef;
-    my $organism_id = $stock->get_organism_id;
-    my ($stock_type) = $stock->get_schema->resultset("Cv::Cv")->search(
+    my $organism_id = $stock->organism_id;
+    my ($stock_type) = $stock->schema->resultset("Cv::Cv")->search(
         { name => 'stock_type' , }
         );
     my @types;
@@ -171,23 +171,23 @@ sub generate_form {
             field_name   => "Organism",
             id           => "species_name",
             object       => $stock,
-            getter       => "get_species",
-            setter       => "set_species",
+            getter       => "species",
+            setter       => "species",
             autocomplete => '/ajax/organism/autocomplete',
             );
         $self->get_form->add_select(
             display_name       => "Stock type",
             field_name         => "type_id",
-            contents           => $stock->get_type_id(),
+            contents           => $stock->type_id(),
             length             => 20,
             object             => $stock,
-            getter             => "get_type_id",
-            setter             => "set_type_id",
+            getter             => "type_id",
+            setter             => "type_id",
             select_list_ref    => \@types,
             select_id_list_ref => \@type_ids,
             );
     }
-    if ( $stock->get_is_obsolete()  ) {
+    if ( $stock->is_obsolete()  ) {
         $form->add_label(
             display_name => "Status",
             field_name   => "obsolete_stat",
@@ -203,7 +203,7 @@ sub generate_form {
         $form->add_label(
             display_name => "Stock type",
             field_name   => "stock_type",
-            contents => $stock->get_type()->name() ,
+            contents => $stock->type(),
             );
     }
 
@@ -211,16 +211,16 @@ sub generate_form {
         display_name => "Stock name ",
         field_name   => "name",
         object       => $stock,
-        getter       => "get_name",
-        setter       => "set_name",
+        getter       => "name",
+        setter       => "name",
         validate     => 'string',
         );
     $form->add_field(
         display_name => "Uniquename ",
         field_name   => "uniquename",
         object       => $stock,
-        getter       => "get_uniquename",
-        setter       => "set_uniquename",
+        getter       => "uniquename",
+        setter       => "uniquename",
         validate     => 'string',
         );
 
@@ -228,15 +228,15 @@ sub generate_form {
         display_name => "Description",
         field_name   => "description",
         object       => $stock,
-        getter       => "get_description",
-        setter       => "set_description",
+        getter       => "description",
+        setter       => "description",
         columns      => 40,
         rows         => 4,
         );
 
     $form->add_hidden(
         field_name => "stock_id",
-        contents   => $stock->get_stock_id(),
+        contents   => $stock->stock_id(),
         );
 
     $form->add_hidden(
@@ -246,7 +246,7 @@ sub generate_form {
     if ($self->get_action =~ /view/ ) {
         $form->add_hidden(
             field_name => "type_id",
-            contents   => $stock->get_type_id,
+            contents   => $stock->type_id,
             );
     }
     if ( $self->get_action() =~ /view|edit/ ) {

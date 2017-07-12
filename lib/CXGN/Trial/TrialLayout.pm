@@ -27,7 +27,7 @@ use CXGN::Stock::StockLookup;
 use CXGN::Location::LocationLookup;
 use Data::Dumper;
 use SGN::Model::Cvterm;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -78,7 +78,7 @@ sub _lookup_trial_id {
   $self->_set_trial_name($self->get_project->name());
   $self->_set_trial_description($self->get_project->description());
   #print STDERR "Check 2.3: ".localtime()."\n";
-  
+
   $design_type_from_project =  $self->_get_design_type_from_project();
   if (! $design_type_from_project) {
       print STDERR "Trial has no design type... not creating layout object.\n";
@@ -145,7 +145,7 @@ sub _get_plot_info_fields_from_trial {
   my %unique_field_values;
   foreach my $key (sort { $a cmp $b} keys %design) {
     my %design_info = %{$design{$key}};
-    if (exists($design_info{$field_name})) { 
+    if (exists($design_info{$field_name})) {
 	if (! exists($unique_field_values{$design_info{$field_name}})) {
 	    #print STDERR "pushing $design_info{$field_name}...\n";
 	    push(@field_values, $design_info{$field_name});
@@ -199,17 +199,17 @@ sub _get_design_from_trial {
       #print STDERR "_get_design_from_trial. Working on plot ".$plot->uniquename()."\n";
     my %design_info;
 
-    if ($genotyping_user_id_row) {       
+    if ($genotyping_user_id_row) {
 	$design_info{genotyping_user_id} = $genotyping_user_id_row->get_column("value") || "unknown";
 	#print STDERR "RETRIEVED: genotyping_user_id: $design{genotyping_user_id}\n";
     }
-    if ($genotyping_project_name_row) { 
+    if ($genotyping_project_name_row) {
 	$design_info{genotyping_project_name} = $genotyping_project_name_row->get_column("value") || "unknown";
 	#print STDERR "RETRIEVED: genotyping_project_name: $design{genotyping_project_name}\n";
     }
     my $plot_name = $plot->uniquename;
     my $plot_id = $plot->stock_id;
-    my $stockprop_hash = CXGN::Chado::Stock->new($schema, $plot_id)->get_stockprop_hash();
+    my $stockprop_hash = CXGN::Stock->new( schema => $schema, stock_id => $plot_id)->get_stockprop_hash();
     #print STDERR Dumper $stockprop_hash;
     my $plot_number_prop = $stockprop_hash->{'plot number'} ? join ',', @{$stockprop_hash->{'plot number'}} : undef;
     my $block_number_prop = $stockprop_hash->{'block'} ? join ',', @{$stockprop_hash->{'block'}} : undef;
@@ -230,8 +230,8 @@ sub _get_design_from_trial {
       if ($plot_number_prop) {
 	  $design_info{"plot_number"}=$plot_number_prop;
       }
-      else { 
-	  die "no plot number stockprop found for plot $plot_name"; 
+      else {
+	  die "no plot number stockprop found for plot $plot_name";
       }
 
     if ($block_number_prop) {
@@ -323,31 +323,31 @@ sub _get_plot_dimensions_from_trial {
   if ($plot_width_cvterm_id) {
       $plot_width_type_id = $plot_width_cvterm_id->cvterm_id;
 
-      my $plot_width_row = $schema->resultset('Project::Projectprop')->find({project_id => $self->get_trial_id(), type_id => $plot_width_type_id});      
+      my $plot_width_row = $schema->resultset('Project::Projectprop')->find({project_id => $self->get_trial_id(), type_id => $plot_width_type_id});
       if ($plot_width_row) {
 	  $plot_width = $plot_width_row->value();
       }
   }
-  
+
     my $plot_length = '';
   my $plot_length_cvterm_id = $schema->resultset("Cv::Cvterm")->find({name => 'plot_length'});
   my $plot_length_type_id = '';
   if ($plot_length_cvterm_id) {
       $plot_length_type_id = $plot_length_cvterm_id->cvterm_id;
 
-      my $plot_length_row = $schema->resultset('Project::Projectprop')->find({project_id => $self->get_trial_id(), type_id => $plot_length_type_id});      
+      my $plot_length_row = $schema->resultset('Project::Projectprop')->find({project_id => $self->get_trial_id(), type_id => $plot_length_type_id});
       if ($plot_length_row) {
 	  $plot_length = $plot_length_row->value();
       }
   }
-  
+
       my $plants_per_plot = '';
   my $plants_per_plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_has_plant_entries', 'project_property');
   my $plants_per_plot_type_id = '';
   if ($plants_per_plot_cvterm_id) {
       $plants_per_plot_type_id = $plants_per_plot_cvterm_id->cvterm_id;
 
-      my $plants_per_plot_row = $schema->resultset('Project::Projectprop')->find({project_id => $self->get_trial_id(), type_id => $plants_per_plot_type_id});      
+      my $plants_per_plot_row = $schema->resultset('Project::Projectprop')->find({project_id => $self->get_trial_id(), type_id => $plants_per_plot_type_id});
       if ($plants_per_plot_row) {
 	  $plants_per_plot = $plants_per_plot_row->value();
       }
@@ -565,7 +565,7 @@ sub _get_trial_accession_names_and_control_names {
 }
 
 
-# sub _get_genotyping_experiment_metadata { 
+# sub _get_genotyping_experiment_metadata {
 #     my $self = shift;
 
 #     my $project = $self->get_project();
@@ -578,7 +578,7 @@ sub _get_trial_accession_names_and_control_names {
 # 	->search_related("nd_experimentprop")
 #    	->search({ 'type.name' => ['genotyping_user_id', 'genotyping_project_name']}, {join => 'type' });
 #     return $metadata_rs;
-    
+
 # }
 
 

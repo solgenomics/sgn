@@ -57,7 +57,7 @@ use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Stock;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::Chado::Organism;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
@@ -471,7 +471,7 @@ sub search {
 			my $common_name = $a->get_column('common_name');
 			my $genus       = $a->get_column('genus');
 			my @owners = $owners_hash->{$stock_id} ? @{$owners_hash->{$stock_id}} : ();
-			my $stockprop_hash = CXGN::Chado::Stock->new($self->bcs_schema, $stock_id)->get_stockprop_hash();
+			my $stockprop_hash = CXGN::Stock->new( schema => $self->bcs_schema, stock_id => $stock_id)->get_stockprop_hash();
 			my $organismprop_hash = CXGN::Chado::Organism->new($self->bcs_schema, $organism_id)->get_organismprop_hash();
 			my @donor_array;
 			my $donor_accessions = $stockprop_hash->{'donor'} ? $stockprop_hash->{'donor'} : [];

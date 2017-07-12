@@ -24,7 +24,7 @@ use List::MoreUtils qw /any /;
 use Try::Tiny;
 use CXGN::Phenome::Schema;
 use CXGN::Phenome::Allele;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use CXGN::Pedigree::AddProgeny;
 use Scalar::Util qw(looks_like_number);

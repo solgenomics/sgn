@@ -304,7 +304,7 @@ sub display_ontologies_GET  {
     $c->forward('/stock/get_stock_cvterms');
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
     my $stock = $c->stash->{stock};
-    my $stock_id = $stock->get_stock_id;
+    my $stock_id = $stock->stock_id;
     my $trait_db_name => $c->get_conf('trait_ontology_db_name');
     my $trait_cvterms = $c->stash->{stock_cvterms}->{$trait_db_name};
     my $po_cvterms = $c->stash->{stock_cvterms}->{PO} ;
@@ -611,7 +611,7 @@ sub references_GET :Args(0) {
               JOIN public.dbxref USING (dbxref_id)
               WHERE stock_id= ?";
     my $sth = $c->dbc->dbh->prepare($q);
-    $sth->execute($stock->get_stock_id);
+    $sth->execute($stock->stock_id);
     my $response_hash={};
     while (my ($dbxref_id, $pub_id, $accession, $title) = $sth->fetchrow_array) {
         $response_hash->{$accession . ": " . $title} = $pub_id ;
@@ -1252,7 +1252,7 @@ sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') 
 
     my @formatted_trials;
     foreach my $t (@trials) {
-	push @formatted_trials, [ '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>', $t->[3], '<a href="javascript:show_stock_trial_detail('.$c->stash->{stock}->get_stock_id().', \''.$c->stash->{stock}->get_name().'\' ,'.$t->[0].',\''.$t->[1].'\')">Details</a>' ];
+	push @formatted_trials, [ '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>', $t->[3], '<a href="javascript:show_stock_trial_detail('.$c->stash->{stock}->stock_id().', \''.$c->stash->{stock}->uniquename().'\' ,'.$t->[0].',\''.$t->[1].'\')">Details</a>' ];
     }
     $c->stash->{rest} = { data => \@formatted_trials };
 }
@@ -1315,7 +1315,7 @@ sub get_shared_trials_GET :Args(1) {
     foreach my $stock_id (@stock_ids) {
 	     my $trials_string ='';
        my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
-       my $uniquename = $stock->get_uniquename;
+       my $uniquename = $stock->uniquename;
        $dataref = {
              'trials' => {
                          'accessions' => $stock_id
@@ -1390,7 +1390,7 @@ sub get_phenotypes_by_stock_and_trial :Chained('/stock/get_stock') PathPart('dat
     }
 
     my $h = $c->dbc->dbh->prepare($q);
-    $h->execute($trial_id, $c->stash->{stock}->get_stock_id());
+    $h->execute($trial_id, $c->stash->{stock}->stock_id());
 
     my @phenotypes;
     while (my ($stock_id, $stock_name, $cvterm_id, $cvterm_name, $avg, $stddev, $count) = $h->fetchrow_array()) {
@@ -1438,7 +1438,7 @@ sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigree') Args(0
 
     my $stock = CXGN::Stock->new(
         schema => $c->dbic_schema("Bio::Chado::Schema"),
-        stock_id => $c->stash->{stock}->get_stock_id()
+        stock_id => $c->stash->{stock}->stock_id()
     );
     my $parents = $stock->get_pedigree_string($level);
     print STDERR "Parents are: ".Dumper($parents)."\n";

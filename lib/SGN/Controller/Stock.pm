@@ -17,7 +17,7 @@ use File::Temp qw / tempfile /;
 use File::Slurp;
 use JSON::Any;
 
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use SGN::View::Stock qw/stock_link stock_organisms stock_types breeding_programs /;
 use Bio::Chado::NaturalDiversity::Reports;
 use SGN::Model::Cvterm;
@@ -165,7 +165,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     ###Check if a stock page can be printed###
 
     my $stock = $c->stash->{stock};
-    my $stock_id = $stock ? $stock->get_stock_id : undef ;
+    my $stock_id = $stock ? $stock->stock_id() : undef ;
     my $stock_type = $stock->get_object_row ? $stock->get_object_row->type->name : undef ;
     my $type = 1 if $stock_type && !$stock_type=~ m/population/;
     # print message if stock_id is not valid
@@ -203,7 +203,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     print STDERR "Checkpoint 3: Elapsed ".(time() - $time)."\n";
 
     # print message if the stock is obsolete
-    my $obsolete = $stock->get_is_obsolete();
+    my $obsolete = $stock->is_obsolete();
     if ( $obsolete  && !$curator ) {
         #$c->throw(is_client_error => 0,
         #          title             => 'Obsolete stock',
@@ -418,7 +418,7 @@ Path part: /stock/<stock_id>
 sub get_stock : Chained('/')  PathPart('stock')  CaptureArgs(1) {
     my ($self, $c, $stock_id) = @_;
 
-    $c->stash->{stock}     = CXGN::Chado::Stock->new($self->schema, $stock_id);
+    $c->stash->{stock}     = CXGN::Stock->new(schema => $self->schema, stock_id => $stock_id);
     $c->stash->{stock_row} = $self->schema->resultset('Stock::Stock')
                                   ->find({ stock_id => $stock_id });
 }
@@ -862,8 +862,8 @@ sub _stock_images {
     my $ids = $stock->get_schema->storage->dbh->selectcol_arrayref
         ( $query,
           undef,
-          $stock->get_stock_id,
-          $stock->get_stock_id,
+          $stock->stock_id(),
+          $stock->stock_id(),
         );
     return $ids;
 }
@@ -874,7 +874,7 @@ sub _stock_allele_ids {
     my $ids = $stock->get_schema->storage->dbh->selectcol_arrayref
 	( "SELECT allele_id FROM phenome.stock_allele WHERE stock_id=? ",
 	  undef,
-	  $stock->get_stock_id
+	  $stock->stock_id()
         );
     return $ids;
 }
@@ -884,7 +884,7 @@ sub _stock_owner_ids {
     my $ids = $stock->get_schema->storage->dbh->selectcol_arrayref
         ("SELECT sp_person_id FROM phenome.stock_owner WHERE stock_id = ? ",
          undef,
-         $stock->get_stock_id
+         $stock->stock_id()
         );
     return $ids;
 }

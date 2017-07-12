@@ -23,7 +23,7 @@ use CXGN::BreedersToolbox::Accessions;
 use CXGN::BreedersToolbox::AccessionsFuzzySearch;
 use CXGN::BreedersToolbox::OrganismFuzzySearch;
 use CXGN::Stock::Accession;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::List;
 use Data::Dumper;
 use Try::Tiny;
@@ -94,7 +94,7 @@ sub do_fuzzy_search {
     #remove all trailing and ending spaces from accessions and organisms
     s/^\s+|\s+$//g for @accession_list;
     s/^\s+|\s+$//g for @organism_list;
-   
+
     my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
     #print STDERR "\n\nAccessionFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
 
@@ -201,7 +201,7 @@ sub verify_fuzzy_options_POST : Args(0) {
             delete $names_to_add{$item_name};
         } elsif ($fuzzy_option eq 'synonymize'){
             my $stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$select_name})->stock_id();
-            my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+            my $stock = CXGN::Stock->new( schema => $schema, stock_id => $stock_id);
             $stock->add_synonym($item_name);
             #$list->replace_by_name($item_name, $select_name);
             delete $names_to_add{$item_name};

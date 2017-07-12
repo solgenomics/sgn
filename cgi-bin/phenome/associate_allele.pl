@@ -3,7 +3,7 @@ use warnings;
 
 use CXGN::Scrap::AjaxPage;
 use CXGN::Login;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::People::Person;
 use CXGN::Feed;
 use JSON;
@@ -25,7 +25,7 @@ if ($login_user_type eq 'curator' || $login_user_type eq 'submitter' || $login_u
     my $json = JSON->new();
 
     eval {
-        my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+        my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
         $stock->associate_allele($allele_id, $sp_person_id);
         $error{"response"} = "Associated allele $allele_id with stock $stock_id!";
     };

@@ -29,7 +29,7 @@ use strict;
 use Getopt::Std;
 use CXGN::DB::InsertDBH;
 use CXGN::DB::Schemas;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 
 our($opt_H, $opt_D, $opt_x);
 getopts('H:D:x');
@@ -75,8 +75,8 @@ eval {
 	    next();
 	}
 	
-	my $good_stock = CXGN::Chado::Stock->new($schema, $stock_row->stock_id);
-	my $merge_stock = CXGN::Chado::Stock->new($schema, $merge_row->stock_id);
+	my $good_stock = CXGN::Stock->new($schema, $stock_row->stock_id);
+	my $merge_stock = CXGN::Stock->new($schema, $merge_row->stock_id);
 	
 	print STDERR "Merging stock $merge_stock_name into $good_stock_name... ";
 	$good_stock->merge($merge_stock->get_stock_id(), $delete_merged_stock);

@@ -6,7 +6,7 @@ Version: 2.0
 
 =head1 DESCRIPTION
 
-This object was re-factored from CXGN::Chado::Stock and moosified.
+This object was re-factored from CXGN::Stock and moosified.
 
 Functions such as 'get_obsolete' , 'store' , and 'exists_in_database' are required , and do not use standard DBIC syntax.
 
@@ -801,6 +801,11 @@ sub _retrieve_populations {
         $self->populations(\@population_names);
         print STDERR "This stock is a member of the following populations: ".Dumper($self->populations())."\n";
     }
+}
+
+sub get_object_row {
+    my $self = shift;
+    return $self->stock();
 }
 
 =head2 _new_metadata_id

@@ -188,7 +188,7 @@ sub studies_germplasm {
 	my @germplasm_data;
 
 	foreach (@$data_window){
-		my $stockprop_hash = CXGN::Chado::Stock->new($self->bcs_schema, $_->{stock_id})->get_stockprop_hash();
+		my $stockprop_hash = CXGN::Stock->new( schema => $self->bcs_schema, stock_id => $_->{stock_id})->get_stockprop_hash();
 		push @germplasm_data, {
 			germplasmDbId=>$_->{stock_id},
 			germplasmName=>$_->{accession_name},
