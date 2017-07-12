@@ -96,6 +96,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $added_text = $c->req->param("text_margin");
     my $barcode_type = $c->req->param("select_barcode_type");
     my $fieldbook_barcode = $c->req->param("enable_fieldbook_2d_barcode");
+    my $cass_print_format = $c->req->param("select_print_format");
     my $label_text_4;
     my $type_id;
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
