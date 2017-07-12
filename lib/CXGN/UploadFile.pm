@@ -75,6 +75,13 @@ has 'user_role' => (isa => "Str",
     required => 0
 );
 
+has 'include_timestamp' => (
+    isa => "Bool",
+    is => 'rw',
+    required => 0,
+    default => 1
+);
+
 sub archive {
     my $self = shift;
     my $subdirectory = $self->subdirectory;
@@ -96,7 +103,12 @@ sub archive {
     if (!$subdirectory || !$tempfile || !$archive_filename ) {
 	die "File archive failed: incomplete information to archive file.\n";
     }
-    $file_destination =  catfile($archive_path, $user_id, $subdirectory,$timestamp."_".$archive_filename);
+    if ($self->include_timestamp){
+        $file_destination =  catfile($archive_path, $user_id, $subdirectory,$timestamp."_".$archive_filename);
+    }
+    else {
+        $file_destination =  catfile($archive_path, $user_id, $subdirectory,$archive_filename);
+    }
     try {
 	if (!-d $archive_path) {
 	    mkdir $archive_path;

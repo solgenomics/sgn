@@ -132,6 +132,9 @@ stock_property	stock_synonym				00046
 stock_property	T1				00052	
 stock_property	T2				00052	
 stock_property	transgenic				00052	
+stock_property	variety	Found in editable_stock_props				
+stock_property	notes	Found in editable_stock_props				
+stock_property	state	Found in editable_stock_props				
 stock_property	accession number	From BrAPI	03/27/2017	nm529	00076	
 stock_property	PUI	From BrAPI	03/27/2017	nm529	00076	
 stock_property	donor	From BrAPI	03/27/2017	nm529	00076	

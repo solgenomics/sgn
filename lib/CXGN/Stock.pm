@@ -30,6 +30,7 @@ use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 use base qw / CXGN::DB::Object / ;
 use CXGN::Stock::StockLookup;
+use Try::Tiny;
 
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
@@ -353,6 +354,76 @@ sub get_species {
     }
 }
 
+=head2 get_genus
+
+ Usage: $self->get_genus
+ Desc:  find the genus name of this stock , if one exists
+ Ret:   string
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_genus {
+    my $self = shift;
+    my $organism = $self->get_organism;
+    if ($organism) {
+        return $organism->genus;
+    }
+    else {
+	return undef;
+    }
+}
+
+=head2 get_species_authority
+
+ Usage: $self->get_species_authority
+ Desc:  find the species_authority of this stock , if one exists
+ Ret:   string
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_species_authority {
+    my $self = shift;
+    return $self->_retrieve_organismprop('species authority');
+}
+
+=head2 get_subtaxa
+
+ Usage: $self->get_subtaxa
+ Desc:  find the subtaxa of this stock , if one exists
+ Ret:   string
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_subtaxa {
+    my $self = shift;
+    return $self->_retrieve_organismprop('subtaxa');
+}
+
+=head2 get_subtaxa_authority
+
+ Usage: $self->get_subtaxa_authority
+ Desc:  find the subtaxa_authority of this stock , if one exists
+ Ret:   string
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_subtaxa_authority {
+    my $self = shift;
+    return $self->_retrieve_organismprop('subtaxa authority');
+}
+
 =head2 set_species
 
 Usage: $self->set_species
@@ -642,14 +713,19 @@ sub _store_stockprop {
 sub _retrieve_stockprop {
     my $self = shift;
     my $type = shift;
-
-    my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
-    my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id(), type_id => $stockprop_type_id }, { order_by => {-asc => 'stockprop_id'} });
-
     my @results;
-    while (my $r = $rs->next()){
-        push @results, $r->value;
-    }
+
+    try {
+        my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+        my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id(), type_id => $stockprop_type_id }, { order_by => {-asc => 'stockprop_id'} });
+
+        while (my $r = $rs->next()){
+            push @results, $r->value;
+        }
+    } catch {
+        print STDERR "Cvterm $type does not exist in this database\n";
+    };
+
     my $res = join ',', @results;
     return $res;
 }
@@ -673,6 +749,26 @@ sub _remove_stockprop {
         return 0;
     }
 
+}
+
+sub _retrieve_organismprop {
+    my $self = shift;
+    my $type = shift;
+    my @results;
+
+    try {
+        my $organismprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'organism_property')->cvterm_id();
+        my $rs = $self->schema()->resultset("Organism::Organismprop")->search({ organism_id => $self->stock->organism_id, type_id => $organismprop_type_id }, { order_by => {-asc => 'organismprop_id'} });
+
+        while (my $r = $rs->next()){
+            push @results, $r->value;
+        }
+    } catch {
+        print STDERR "Cvterm $type does not exist in this database\n";
+    };
+
+    my $res = join ',', @results;
+    return $res;
 }
 
 sub _store_population_relationship {
@@ -713,7 +809,7 @@ sub _retrieve_populations {
             push @population_names, $population->uniquename();
         }
         $self->populations(\@population_names);
-        print STDERR "This stock is a member of the following populations: ".Dumper($self->populations())."\n";
+        #print STDERR "This stock is a member of the following populations: ".Dumper($self->populations())."\n";
     }
 }
 

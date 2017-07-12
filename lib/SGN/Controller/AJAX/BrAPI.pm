@@ -471,27 +471,6 @@ POST Response:
 
 =cut
 
-sub germplasm_synonyms {
-	my $schema = shift;
-	my $stock_id = shift;
-	my $synonym_id = shift;
-	my @synonyms;
-	my $rsp = $schema->resultset("Stock::Stockprop")->search({type_id => $synonym_id, stock_id=>$stock_id });
-	while (my $stockprop = $rsp->next()) {
-		push( @synonyms, $stockprop->value() );
-	}
-	return \@synonyms;
-}
-
-sub germplasm_pedigree_string {
-	my $schema = shift;
-	my $stock_id = shift;
-	my $s = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
-	my $pedigree_root = $s->get_parents('1');
-	my $pedigree_string = $pedigree_root->get_pedigree_string('1');
-	return $pedigree_string;
-}
-
 sub germplasm_list  : Chained('brapi') PathPart('germplasm-search') Args(0) : ActionClass('REST') { }
 
 sub germplasm_list_GET {
