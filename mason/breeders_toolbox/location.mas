@@ -112,7 +112,7 @@ print "</div>";
       <div class="modal-body">
         <div class="container-fluid">
 	  <form class="form-horizontal" role="form" name="edit_location_form" id="edit_location_form">
-        <div class="form-group" id="change_id" style="display: none">
+        <div class="form-group" id="change_id" style="display: none"></div>
 	    <div class="form-group">
       	      <label class="col-sm-2 control-label">Name: </label>
       	      <div class="col-sm-10">
