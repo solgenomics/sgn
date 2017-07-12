@@ -62,32 +62,37 @@ while (my $row = $stock_rs->next()) {
         });
     	my @mom_gts = $mom_gts->get_genotype_info_as_genotype_objects();
 
-        if (!@mom_gts) {
+      if (!@mom_gts) {
     	    print STDERR "Genotype of female parent missing. Skipping.\n";
     	    next;
     	}
 
-    	my $dad_gts = CXGN::Genotype::Search->new( {
+      my $dad_gts;
+      if ($parents->{'father_id'} ==  $parents->{'mother_id'})){
+      $dad_gts = $mom_gts;
+      }
+    	else{
+      my $dad_gts = CXGN::Genotype::Search->new( {
     	    bcs_schema => $schema,
     	    accession_list => [$parents->{'father_id'}],
     	    protocol_id => $protocol_id,
     	});
     	my (@dad_gts) = $dad_gts->get_genotype_info_as_genotype_objects();
-
-    	if (!@dad_gts) {
+    	}
+      if (!@dad_gts) {
     	    print STDERR "Genotype of male parent missing. Skipping.\n";
     	    next;
-    	}
+      }
 
-        my $s = shift @self_gts;
-        my $m = shift @mom_gts;
-        my $d = shift @dad_gts;
-        my ($concordant, $discordant, $non_informative) = $s->compare_parental_genotypes($m, $d);
-        my $score = 1- ($concordant / ($concordant + $discordant));
+      my $s = shift @self_gts;
+      my $m = shift @mom_gts;
+      my $d = shift @dad_gts;
+      my ($concordant, $discordant, $non_informative) = $s->compare_parental_genotypes($m, $d);
+      my $score = 1- ($concordant / ($concordant + $discordant));
 
-        print STDERR "scores are". $score. "\n";
-        print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
-        print $OUT "\t$score\n";
+      print STDERR "scores are". $score. "\n";
+      print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
+      print $OUT "\t$score\n";
     }
 }
 
