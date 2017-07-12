@@ -78,7 +78,7 @@ sub store_location :Path("/ajax/breeders/location/store") Args(0) {
     my $c = shift;
     my $params = $c->request->parameters();
     my $is_new = $params->{is_new};
-    my $description = $params->{description};
+    my $name = $params->{name};
     my $latitude    = $params->{latitude};
     my $longitude   = $params->{longitude};
     my $altitude    = $params->{altitude};
@@ -96,7 +96,7 @@ sub store_location :Path("/ajax/breeders/location/store") Args(0) {
     my $location = CXGN::Location->new( {
         bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
         is_new => $is_new,
-        name => $description,
+        name => $name,
         latitude => $latitude,
         longitude => $longitude,
         altitude => $altitude

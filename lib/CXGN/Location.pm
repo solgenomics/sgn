@@ -96,7 +96,7 @@ sub BUILD {
     if (defined $location) {
         $self->location($location);
         $self->nd_geolocation_id($location->nd_geolocation_id);
-        $self->name($location->description);
+        $self->name($location->name);
         $self->latitude($location->latitude);
         $self->longitude($location->longitude);
         $self->altitude($location->altitude);
@@ -118,30 +118,17 @@ sub store_location {
     my $latitude = $self->latitude();
     my $longitude = $self->longitude();
     my $altitude = $self->altitude();
+    my ($new_row, $error);
 
     my $exists = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
 
     if ($is_new && $exists > 0) { # can't add a new location with name that already exists
 	    return { error => "The location - $name - already exists. Please choose another name, or use the exisiting location" };
     }
-    elsif (!$is_new && $exists > 0) { # editing location
-        print STDERR "Editing existing location $name\n";
-        my $row = $schema->resultset("NaturalDiversity::NdGeolocation")->find({ stock_id => $self->stock_id() });
-        $row->name($self->name());
 
-    }
-    elsif ($is_new && !$exists) { # adding new location
-
-    }
     elsif (!$is_new && !$exists) { # can't edit a location that doesn't exist!
-
+        return { error => "The location - $name - doesn't exist, unable to edit a location that doesn't exist!" };
     }
-
-
-
-
-
-
 
     if ( ($latitude && $latitude !~ /^-?[0-9.]+$/) || ($latitude && $latitude < -90) || ($latitude && $latitude > 90)) {
 	    return { error => "Latitude (in degrees) must be a number between 90 and -90." };
@@ -155,45 +142,69 @@ sub store_location {
         return { error => "Altitude (in meters) must be a number between -418 (Dead Sea) and 8,848 (Mt. Everest)." };
     }
 
-    my ($new_row, $error);
-	try {
-        $new_row = $schema->resultset('NaturalDiversity::NdGeolocation')
-          ->new({
-    	     description => $name,
-    	    });
+    if ($is_new && !$exists) { # adding new location
+        print STDERR "Checks completed, adding new location $name\n";
+    	try {
+            $new_row = $schema->resultset('NaturalDiversity::NdGeolocation')
+              ->new({
+        	     description => $name,
+        	    });
 
-        if ($longitude) { $new_row->longitude($longitude); }
-        if ($latitude) { $new_row->latitude($latitude); }
-        if ($altitude) { $new_row->altitude($altitude); }
-        $new_row->insert();
+            if ($longitude) { $new_row->longitude($longitude); }
+            if ($latitude) { $new_row->latitude($latitude); }
+            if ($altitude) { $new_row->altitude($altitude); }
+            $new_row->insert();
 
-        #$self->ndgeolocation_id($new_row->ndgeolocation_id());
-        $self->location($new_row);
+            #$self->ndgeolocation_id($new_row->ndgeolocation_id());
+            $self->location($new_row);
 
-        if ($self->abbreviation){
-            $self->_store_ndgeolocationprop('abbreviation', $self->abbreviation());
-        }
-        if ($self->country_name){
-            $self->_store_ndgeolocationprop('country_name', $self->country_name());
-        }
-        if ($self->country_code){
-            $self->_store_ndgeolocationprop('country_code', $self->country_code());
-        }
-        if ($self->location_type){
-            $self->_store_ndgeolocationprop('location_type', $self->location_type());
-        }
+            if ($self->abbreviation){
+                $self->_store_ndgeolocationprop('abbreviation', $self->abbreviation());
+            }
+            if ($self->country_name){
+                $self->_store_ndgeolocationprop('country_name', $self->country_name());
+            }
+            if ($self->country_code){
+                $self->_store_ndgeolocationprop('country_code', $self->country_code());
+            }
+            if ($self->location_type){
+                $self->_store_ndgeolocationprop('location_type', $self->location_type());
+            }
 
+        }
+        catch {
+            $error =  $_;
+        };
+
+        if ($error) {
+            print STDERR "Error creating location $name: $error\n";
+            return { error => $error };
+        } else {
+            print STDERR "Location $name added successfully\n";
+            return { success => "Location $name added successfully\n" };
+        }
     }
-    catch {
-        $error =  $_;
-    };
+    elsif (!$is_new && $exists > 0) { # editing location
+        print STDERR "Checks completed, editing existing location $name\n";
+        try {
+            my $row = $schema->resultset("NaturalDiversity::NdGeolocation")->find({ nd_geolocation_id => $self->nd_geolocation_id() });
+            $row->description($self->name);
+            $row->latitude($self->latitude);
+            $row->longitude($self->longitude);
+            $row->altitude($self->altitude);
+            $row->update();
+        }
+        catch {
+            $error =  $_;
+        };
 
-    if ($error) {
-        print STDERR "Error creating location $name: $error\n";
-        return { error => $error };
-    } else {
-        print STDERR "Location $name added successfully\n";
-        return { success => "Location $name added successfully\n" };
+        if ($error) {
+            print STDERR "Error editing location $name: $error\n";
+            return { error => $error };
+        } else {
+            print STDERR "Location $name was successfully updated\n";
+            return { success => "Location $name was successfully updated\n" };
+        }
     }
 }
 
