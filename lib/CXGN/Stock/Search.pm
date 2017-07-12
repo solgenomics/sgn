@@ -487,7 +487,7 @@ sub search {
 				organizations =>$stock_object->organization_name,
 				accessionNumber=>$stock_object->accessionNumber,
 				germplasmPUI=>$stock_object->germplasmPUI,
-				pedigree=>$self->display_pedigree ? $stock_object->get_pedigree_string : 'DISABLED',
+				pedigree=>$self->display_pedigree ? $stock_object->get_pedigree_string('Parents') : 'DISABLED',
 				germplasmSeedSource=>$stock_object->germplasmSeedSource,
 				synonyms=> $stock_object->synonyms,
 				instituteCode=>$stock_object->instituteCode,

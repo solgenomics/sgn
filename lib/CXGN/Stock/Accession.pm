@@ -223,12 +223,6 @@ sub store {
     return $self->stock_id();
 }
 
-sub get_pedigree_string {
-    my $self = shift;
-	my $pedigree_root = $self->get_parents('1');
-	my $pedigree_string = $pedigree_root ? $pedigree_root->get_pedigree_string('1') : '';
-	return $pedigree_string;
-}
 
 no Moose;
 __PACKAGE__->meta->make_immutable;
