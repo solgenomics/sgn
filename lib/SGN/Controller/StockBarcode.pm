@@ -105,6 +105,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     # convert mm into pixels
     #
+    if ($cass_print_format) {$left_margin_mm = 110; }
     my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } (
             $top_margin_mm,
     		$left_margin_mm,
@@ -195,6 +196,9 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     if (!$page_format) { $page_format = "Letter"; }
     if (!$labels_per_page) { $labels_per_page = 8; }
+    if ($cass_print_format) {$barcode_type = "2D"; }
+    if ($cass_print_format) {$labels_per_row = 2; }
+
     #if ($barcode_type eq "2D" && $labels_per_page > 7) { $labels_per_page = 7; }
 
     print STDERR "PAGE FORMAT IS: $page_format. LABELS PER PAGE: $labels_per_page\n";
@@ -274,6 +278,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     	#
     	my $final_barcode_width = ($page_width - $right_margin - $left_margin) / $labels_per_row;
 
+        print "FINAL BARCODE WIDTH: $final_barcode_width\n";
+
     	my $scalex = $final_barcode_width / $image->{width};
     	my $scaley = $label_height / $image->{height};
 
@@ -283,13 +289,13 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     	my $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
 
     	my $ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
-
+        print "LLLLL: $page_width, $label_boundary, $page_width, $label_boundary\n";
     	$pages[$page_nr-1]->line($page_width -100, $label_boundary, $page_width, $label_boundary);
 
       # print "My X Position: $left_margin and Y Position: $ypos and Xscale $scalex and Yscale $scaley\n";
       # my $lebel_number = scalar($#{$found[$i]});
       my $font = $pdf->font('BaseFont' => 'Courier');
-      if ($barcode_type eq "2D") {
+      if ($barcode_type eq "2D" && !$cass_print_format) {
         foreach my $label_count (1..$labels_per_row) {
           my $xposition = $left_margin + ($label_count -1) * $final_barcode_width + 20;
           my $yposition = $ypos -7;
@@ -341,11 +347,62 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
               my $label_count_15_xter_plot_name =  1-1;
               my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 20;
               my $yposition = $ypos -7;
-              my $label_size =  11;
+              my $label_size =  7;
               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
             }
         }
     }
+
+     elsif ($cass_print_format && $barcode_type eq "2D") {
+         print "CASS PRINT FORMAT\n";
+
+
+         foreach my $label_count (1..$labels_per_row) {
+             print "COUNT: $label_count\n";
+          #my $xposition = $left_margin + ($label_count -1) * $final_barcode_width + 80;
+          #my $yposition = $ypos -7;
+          #my $label_text = $found[$i]->[1];
+          #my $label_size =  7;
+          my $xpos = ($left_margin + ($label_count -1) * $final_barcode_width) + 100;
+          $pages[$page_nr-1]->image(image=>$image, xpos=>$xpos, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+          print "CHEKKKKKK: xpos: $xpos, ypos: $ypos, xscale: $scalex, yscale: $scaley\n";
+          #$pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
+
+        #   if ($labels_per_row == '1' ){
+        #       my $label_count_15_xter_plot_name =  1-1;
+        #       my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 80.63;
+        #       my $yposition_2 = $ypos - 20;
+        #       my $yposition_3 = $ypos - 30;
+        #       my $yposition_4 = $ypos - 40;
+        #       my $plot_pedigree_text;
+          #
+        #       $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
+        #           if ($found[$i]->[5] eq 'plot'){
+        #               $label_text_5 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
+        #               if ($parents eq ''){
+        #                   $label_text_4 = "No pedigree for ".$found[$i]->[2];
+        #               }else{
+        #                   $label_text_4 = "pedigree: ".$parents;
+        #               }
+        #           }
+        #           elsif ($found[$i]->[5] eq 'accession'){
+        #               if ($parents eq ''){
+        #                   $label_text_4 = "No pedigree for ".$found[$i]->[1];
+        #               }else{
+        #                   $label_text_4 = "pedigree: ".$parents;
+        #               }
+        #           }
+        #           else{
+        #               $label_text_4 = '';
+        #           }
+          #
+        #       $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
+        #       $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_5);
+        #   }
+       }
+
+     }
+
 
     elsif ($barcode_type eq "1D") {
 
