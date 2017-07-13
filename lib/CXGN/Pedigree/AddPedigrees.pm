@@ -57,6 +57,7 @@ has 'pedigrees' => (isa =>'ArrayRef[Bio::GeneticRelationships::Pedigree]', is =>
 
 sub add_pedigrees {
     my $self = shift;
+    my $overwrite_pedigrees = shift;
     my $schema = $self->get_schema();
     my @pedigrees;
     my %return;
@@ -122,6 +123,16 @@ sub add_pedigrees {
             }
 
             if ($female_parent) {
+                if ($overwrite_pedigrees){
+                    my $previous_female_parent = $self->get_schema->resultset('Stock::StockRelationship')->search({
+                        type_id => $female_parent_cvterm->cvterm_id(),
+                        object_id => $progeny_accession->stock_id(),
+                    });
+                    while(my $r = $previous_female_parent->next()){
+                        print STDERR "Deleted female parent stock_relationship_id: ".$r->stock_relationship_id."\n";
+                        $r->delete();
+                    }
+                }
                 $progeny_accession->create_related('stock_relationship_objects', {
                     type_id => $female_parent_cvterm->cvterm_id(),
                     object_id => $progeny_accession->stock_id(),
@@ -132,6 +143,16 @@ sub add_pedigrees {
 
             #create relationship to male parent
             if ($male_parent) {
+                if ($overwrite_pedigrees){
+                    my $previous_male_parent = $self->get_schema->resultset('Stock::StockRelationship')->search({
+                        type_id => $male_parent_cvterm->cvterm_id(),
+                        object_id => $progeny_accession->stock_id(),
+                    });
+                    while(my $r = $previous_male_parent->next()){
+                        print STDERR "Deleted male parent stock_relationship_id: ".$r->stock_relationship_id."\n";
+                        $r->delete();
+                    }
+                }
                 $progeny_accession->create_related('stock_relationship_objects', {
                     type_id => $male_parent_cvterm->cvterm_id(),
                     object_id => $progeny_accession->stock_id(),
@@ -176,20 +197,10 @@ sub validate_pedigrees {
 
     my @pedigrees = @{$self->get_pedigrees()};
     foreach my $pedigree (@pedigrees) {
-        my $v = $self->_validate_pedigree($pedigree, $female_parent_cvterm_id, $male_parent_cvterm_id);
-        if (!$v) {
-            push @{$return{error}}, "This pedigree is not valid: ".$pedigree->get_name;
+        my $error = $self->_validate_pedigree($pedigree, $female_parent_cvterm_id, $male_parent_cvterm_id);
+        if ($error) {
+            push @{$return{error}}, $error;
         }
-        if (exists($v->{bad_accession})){
-            push @{$return{error}}, $v->{bad_accession};
-        }
-        if (exists($v->{bad_cross})){
-            push @{$return{error}}, $v->{bad_cross};
-        }
-        if (exists($v->{pedigree_exists})){
-            push @{$return{error}}, $v->{pedigree_exists};
-        }
-
     }
 
     return \%return;
@@ -211,24 +222,20 @@ sub _validate_pedigree {
 
     my $progeny = $self->_get_accession($progeny_name);
     if (!$progeny){
-        $return{bad_cross} = "Pedigree name missing or not found as an accession in database.";
-        return \%return;
+        return "Pedigree name missing or not found as an accession in database.";
     }
 
     if (!$pedigree->get_female_parent()){
-        $return{bad_cross} = "Pedigree not structured correctly";
-        return \%return;
+        return "Pedigree not structured correctly";
     }
 
     $female_parent_name = $pedigree->get_female_parent()->get_name();
     if (!$female_parent_name) {
-        $return{bad_accession} = "Female parent not provided for $progeny_name.";
-        return \%return;
+        return "Female parent not provided for $progeny_name.";
     }
     $female_parent = $self->_get_accession($female_parent_name);
     if (!$female_parent) {
-        $return{bad_accession} = "Female parent not found for $progeny_name.";
-        return \%return;
+        return "Female parent not found for $progeny_name.";
     }
 
     my $progeny_female_parent_search = $schema->resultset('Stock::StockRelationship')->search({
@@ -236,28 +243,23 @@ sub _validate_pedigree {
         object_id => $progeny->stock_id(),
     });
     if ($progeny_female_parent_search->count == 1) {
-        $return{bad_cross} = "$progeny_name already has female parent stockID ".$progeny_female_parent_search->first->subject_id." saved with cross type ".$progeny_female_parent_search->first->value;
-        return \%return;
+        return "$progeny_name already has female parent stockID ".$progeny_female_parent_search->first->subject_id." saved with cross type ".$progeny_female_parent_search->first->value;
     }
     elsif ($progeny_female_parent_search->count > 1){
-        $return{bad_cross} = "$progeny_name already has MULTIPLE female parents saved.";
-        return \%return;
+        return "$progeny_name already has MULTIPLE female parents saved.";
     }
 
     if (($cross_type eq "biparental") || ($cross_type eq "self")) {
         if (!$pedigree->get_male_parent){
-            $return{bad_accession} = "Male parent not provided for $progeny_name and cross type is $cross_type.";
-            return \%return;
+            return "Male parent not provided for $progeny_name and cross type is $cross_type.";
         }
         $male_parent_name = $pedigree->get_male_parent()->get_name();
         if (!$male_parent_name) {
-            $return{bad_accession} = "Male parent not provided for $progeny_name and cross type is $cross_type.";
-            return \%return;
+            return "Male parent not provided for $progeny_name and cross type is $cross_type.";
         }
         $male_parent = $self->_get_accession($male_parent_name);
         if (!$male_parent) {
-            $return{bad_accession} = "Male parent not found for $progeny_name.";
-            return \%return;
+            return "Male parent not found for $progeny_name.";
         }
 
         my $progeny_male_parent_search = $schema->resultset('Stock::StockRelationship')->search({
@@ -265,12 +267,10 @@ sub _validate_pedigree {
             object_id => $progeny->stock_id(),
         });
         if ($progeny_male_parent_search->count == 1) {
-            $return{bad_cross} = "$progeny_name already has male parent stockID ".$progeny_male_parent_search->first->subject_id;
-            return \%return;
+            return "$progeny_name already has male parent stockID ".$progeny_male_parent_search->first->subject_id;
         }
         elsif ($progeny_male_parent_search->count > 1){
-            $return{bad_cross} = "$progeny_name already has MULTIPLE male parents saved.";
-            return \%return;
+            return "$progeny_name already has MULTIPLE male parents saved.";
         }
     }
     elsif ($cross_type eq "open") {
@@ -279,8 +279,7 @@ sub _validate_pedigree {
                 $male_parent_name = $pedigree->get_male_parent()->get_name();
                 $male_parent = $self->_get_accession($male_parent_name);
                 if (!$male_parent) {
-                    $return{bad_accession} = "Male parent not found for $progeny_name.";
-                    return \%return;
+                    return "Male parent not found for $progeny_name.";
                 }
 
                 my $progeny_male_parent_search = $schema->resultset('Stock::StockRelationship')->search({
@@ -288,28 +287,24 @@ sub _validate_pedigree {
                     object_id => $progeny->stock_id(),
                 });
                 if ($progeny_male_parent_search->count == 1) {
-                    $return{bad_cross} = "$progeny_name already has male parent stockID ".$progeny_male_parent_search->first->subject_id;
-                    return \%return;
+                    return "$progeny_name already has male parent stockID ".$progeny_male_parent_search->first->subject_id;
                 }
                 elsif ($progeny_male_parent_search->count > 1){
-                    $return{bad_cross} = "$progeny_name already has MULTIPLE male parents saved.";
-                    return \%return;
+                    return "$progeny_name already has MULTIPLE male parents saved.";
                 }
             }
         }
     }
     else {
-        $return{bad_cross} = "Cross type not detected.";
-        return \%return;
+        return "Cross type not detected.";
     }
 		my $conflict_score = $self->pedigree_snptest($pedigree);
 
 		if ($conflict_score >= .03){
 			my $percent_score->($conflict_score * 100);
-			$return{bad_cross} = "$percent_score% of markers are in conflict indiciating that at least one parent of $progreny_name may be incorrect.";
-			return \%return;
+			return = "$percent_score% of markers are in conflict indiciating that at least one parent of $progreny_name may be incorrect.";
 		}
-    return \%return;
+    return;
 }
 
 sub pedigree_snptest{
@@ -347,8 +342,7 @@ sub pedigree_snptest{
 
 	my @self_gts = $gts->get_genotype_info_as_genotype_objects();
   if (!@self_gts) {
-			print STDERR "Genotype of accession $acc_name not available. Skipping...\n";
-	    next;
+			return "Genotype of accession $acc_name not available. Skipping...\n";
 	}
 
   my $mom_gts = CXGN::Genotype::Search->new( {
@@ -358,8 +352,7 @@ sub pedigree_snptest{
   });
   my @mom_gts = $mom_gts->get_genotype_info_as_genotype_objects();
   if (!@mom_gts) {
-    print STDERR "Genotype of female parent missing. Skipping.\n";
-    return ;
+    return "Genotype of female parent missing. Skipping.\n";
   }
 
   my $dad_gts;
@@ -375,8 +368,7 @@ sub pedigree_snptest{
     my (@dad_gts) = $dad_gts->get_genotype_info_as_genotype_objects();
   }
   if (!@dad_gts) {
-    print STDERR "Genotype of male parent missing. Skipping.\n";
-    next;
+    return "Genotype of male parent missing. Skipping.\n";
   }
 
   my $s = shift @self_gts;
