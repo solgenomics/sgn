@@ -9,6 +9,7 @@ use Bio::GeneticRelationships::Individual;
 use Bio::GeneticRelationships::Pedigree;
 use CXGN::Pedigree::AddPedigrees;
 use CXGN::List::Validate;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -25,7 +26,7 @@ has 'schema' => (
 		);
 
 
-sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  { 
+sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $self = shift;
     my $c = shift;
    
@@ -112,7 +113,8 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
 	if ($acc[3] && !exists($legal_cross_types{lc($acc[3])})) { 
 	    $errors{"not legal cross type: $acc[3] (should be biparental, self, or open)"}=1;
 	}
-    }    
+    }
+    close($F);
     my @unique_stocks = keys(%stocks);
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'accessions_or_populations',\@unique_stocks)->{'missing'}};
@@ -124,21 +126,63 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
         $c->stash->{rest} = { error => "There were problems loading the pedigree for the following accessions: ".(join ",", keys(%errors)).". Please fix these errors and try again. (errors: ".(join ", ", values(%errors)).")" };
         return;
     }
-    close($F);
-    
-    open($F, "<", $archived_filename_with_path) || die "Can't open file $archived_filename_with_path";
-    $header = <$F>; 
-    my $female_parent;
-    my $male_parent;
 
-    my $cross_type = "";
+    my $pedigrees = _get_pedigrees_from_file($c, $archived_filename_with_path);
 
+    my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>$pedigrees });
+    my $error;
+
+    my $pedigree_check = $add->validate_pedigrees();
+    #print STDERR Dumper $pedigree_check;
+    if (!$pedigree_check){
+        $error = "There was a problem validating pedigrees. Pedigrees were not stored.";
+    }
+    if ($pedigree_check->{error}){
+        $c->stash->{rest} = {error => $pedigree_check->{error}, archived_file_name => $archived_filename_with_path};
+    } else {
+        $c->stash->{rest} = {archived_file_name => $archived_filename_with_path};
+    }
+}
+
+sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
+    my $self = shift;
+    my $c = shift;
+    my $archived_file_name = $c->req->param('archived_file_name');
+    my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees') ne 'false' ? $c->req->param('overwrite_pedigrees') : 0;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $pedigrees = _get_pedigrees_from_file($c, $archived_file_name);
+
+    my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>$pedigrees });
+    my $error;
+
+    my $return = $add->add_pedigrees($overwrite_pedigrees);
+    #print STDERR Dumper $return;
+    if (!$return){
+        $error = "The pedigrees were not stored";
+    }
+    if ($return->{error}){
+        $error = $return->{error};
+    }
+
+    if ($error){
+        $c->stash->{rest} = { error => $error };
+        $c->detach();
+    }
+    $c->stash->{rest} = { success => 1 };
+}
+
+sub _get_pedigrees_from_file {
+    my $c = shift;
+    my $archived_filename_with_path = shift;
+
+    open(my $F, "<", $archived_filename_with_path) || die "Can't open file $archived_filename_with_path";
+    my $header = <$F>; 
     my @pedigrees;
-
-    ## NEW FILE STRUCTURE: progeny_name, female parent, male parent, cross_type
-
     my $line_num = 2;
     while (<$F>) {
+        my $female_parent;
+        my $male_parent;
         chomp;
         $_ =~ s/\r//g;
         my ($progeny, $female, $male, $cross_type) = split /\t/;
@@ -192,42 +236,6 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
             if ($male){
                 $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
             }
-	#      my $population_name = "";
-	#      my @male_parents = split /\s*\,\s*/, $male;
-
-	#      if ($male) {
-	# 	 $population_name = join "_", @male_parents;
-	#      }
-	#      else { 
-	# 	 $population_name = $female."_open";
-	#      }
-	#      $male_parent = Bio::GeneticRelationships::Population->new( { name => $population_name});
-	#      $male_parent->set_members(\@male_parents);
-	     
-
-	#      my $population_cvterm_id = $c->model("Cvterm")->get_cvterm_row($schema, "population", "stock_type");
-	#      my $male_parent_cvterm_id = $c->model("Cvterm")->get_cvterm_row($schema, "male_parent", "stock_relationship");
-
-	#      # create population stock entry
-	#      # 
-	#      my $pop_rs = $schema->resultset("Stock::Stock")->create( 
-	# 	 { 
-	# 	     name => $population_name,
-	# 	     uniquename => $population_name,
-	# 	     type_id => $population_cvterm_id->cvterm_id(),
-	# 	 });
-
-	#       # generate population connections to the male parents
-	#      foreach my $p (@male_parents) { 
-	# 	 my $p_row = $schema->resultset("Stock::Stock")->find({ uniquename => $p });
-	# 	 my $connection = $schema->resultset("Stock::StockRelationship")->create( 
-	# 	     {
-	# 		 subject_id => $pop_rs->stock_id,
-	# 		 object_id => $p_row->stock_id,
-	# 		 type_id => $male_parent_cvterm_id->cvterm_id(),
-	# 	     });
-	#      }
-	#      $male = $population_name;
 
         }
 
@@ -245,37 +253,7 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
         push @pedigrees, $p;
         $line_num++;
     }
-
-    my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>\@pedigrees });
-    my $error;
-
-    my $pedigree_check = $add->validate_pedigrees();
-    #print STDERR Dumper $pedigree_check;
-    if (!$pedigree_check){
-        $error = "There was a problem validating pedigrees. Pedigrees were not stored.";
-    }
-    if ($pedigree_check->{error}){
-        $error = join ', ', @{$pedigree_check->{error}};
-    }
-    if ($error){
-        $c->stash->{rest} = { error => $error };
-        $c->detach();
-    }
-
-    my $return = $add->add_pedigrees();
-    #print STDERR Dumper $return;
-    if (!$return){
-        $error = "The pedigrees were not stored";
-    }
-    if ($return->{error}){
-        $error = $return->{error};
-    }
-
-    if ($error){
-        $c->stash->{rest} = { error => $error };
-        $c->detach();
-    }
-    $c->stash->{rest} = { success => 1 };
+    return \@pedigrees;
 }
 
 
