@@ -1,1 +1,2 @@
-COB1103	AR406	AR406
+progeny name	female parent accession	male parent accession	type
+IITA-TMS-IBA011412	IITA-TMS-IBA30572	IITA-TMS-IBA980581	biparental

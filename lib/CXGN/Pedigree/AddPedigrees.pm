@@ -62,6 +62,7 @@ sub add_pedigrees {
     my @pedigrees;
     my %return;
 
+		print STDERR "validating pedigrees";
     @pedigrees = @{$self->get_pedigrees()};
     #print STDERR Dumper \@pedigrees;
 
@@ -195,7 +196,9 @@ sub validate_pedigrees {
     my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'female_parent', 'stock_relationship')->cvterm_id;
     my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'male_parent', 'stock_relationship')->cvterm_id;
 
+		print STDERR "getting pedigrees";
     my @pedigrees = @{$self->get_pedigrees()};
+		print STDERR "validating pedigrees";
     foreach my $pedigree (@pedigrees) {
         my $error = $self->_validate_pedigree($pedigree, $female_parent_cvterm_id, $male_parent_cvterm_id);
         if ($error) {
@@ -298,8 +301,8 @@ sub _validate_pedigree {
     else {
         return "Cross type not detected.";
     }
+		print STDERR "calling snptest";
 		my $conflict_score = $self->pedigree_snptest($pedigree);
-
 		if ($conflict_score >= .03){
 			my $percent_score->($conflict_score * 100);
 			return = "$percent_score% of markers are in conflict indiciating that at least one parent of $progreny_name may be incorrect.";
@@ -308,6 +311,7 @@ sub _validate_pedigree {
 }
 
 sub pedigree_snptest{
+	print STDERR "begin of snptest \n";
   my $self = shift;
 	my $pedigree = shift;
 	my $schema = $self->get_schema();
@@ -323,7 +327,7 @@ sub pedigree_snptest{
 
 	my $mother_name = $pedigree->get_female_parent();
 	my $mother_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
-	$$mother_lookup->set_stock_name($mother_name);
+	$mother_lookup->set_stock_name($mother_name);
 	my $mother_lookup_result = $mother_lookup->get_stock_exact();
 	my $mother_id = $mother_lookup_result->stock_id();
 
@@ -369,7 +373,7 @@ sub pedigree_snptest{
   }
   if (!@dad_gts) {
     return "Genotype of male parent missing. Skipping.\n";
-  }
+	}
 
   my $s = shift @self_gts;
   my $m = shift @mom_gts;
