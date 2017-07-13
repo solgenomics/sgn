@@ -91,7 +91,7 @@ jQuery(document).ready(function(){
     jQuery('#trial_related_stock').on( 'draw.dt', function (){
         var name_links = trial_stock_table.column(0).data();
         var names = [];
-        console.log("name links are: "+JSON.stringify(name_links));
+        //console.log("name links are: "+JSON.stringify(name_links));
         for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
           names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
         }
@@ -111,7 +111,7 @@ jQuery(document).ready(function(){
     jQuery('#progenies').on( 'draw.dt', function (){
         var name_links = progeny_table.column(1).data();
         var names = [];
-        console.log("name links are: "+JSON.stringify(name_links));
+        //console.log("name links are: "+JSON.stringify(name_links));
         for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
           names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
         }
@@ -131,7 +131,7 @@ jQuery(document).ready(function(){
     jQuery('#group').on( 'draw.dt', function (){
         var name_links = group_and_member_table.column(0).data();
         var names = [];
-        console.log("name links are: "+JSON.stringify(name_links));
+        //console.log("name links are: "+JSON.stringify(name_links));
         for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
           names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
         }
@@ -152,7 +152,7 @@ jQuery(document).ready(function(){
     jQuery('#tissue_sample').on( 'draw.dt', function (){
        var name_links = group_and_member_table.column(0).data();
        var names = [];
-       console.log("name links are: "+JSON.stringify(name_links));
+       //console.log("name links are: "+JSON.stringify(name_links));
        for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
          names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
        }
