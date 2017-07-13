@@ -175,13 +175,13 @@ sub trial_details_POST  {
       if ($details->{location}) { $trial->set_location($details->{location}); }
       if ($details->{year}) { $trial->set_year($details->{year}); }
       if ($details->{type}) { $trial->set_project_type($details->{type}); }
-      if ($details->{planting_date}) {
-        if ($details->{planting_date} eq 'remove') { $trial->remove_planting_date($trial->get_planting_date()); }
-        else { $trial->set_planting_date($details->{planting_date}); }
+      if ($details->{project_planting_date}) {
+        if ($details->{project_planting_date} eq 'remove') { $trial->remove_planting_date($trial->get_planting_date()); }
+        else { $trial->set_planting_date($details->{project_planting_date}); }
       }
-      if ($details->{harvest_date}) {
+      if ($details->{project_harvest_date}) {
         if ($details->{harvest_date} eq 'remove') { $trial->remove_harvest_date($trial->get_harvest_date()); }
-        else { $trial->set_harvest_date($details->{harvest_date}); }
+        else { $trial->set_harvest_date($details->{project_harvest_date}); }
       }
       if ($details->{description}) { $trial->set_description($details->{description}); }
     };
