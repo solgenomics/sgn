@@ -8,7 +8,6 @@ use CXGN::DB::InsertDBH;
 use CXGN::Stock;
 use CXGN::Genotype;
 use CXGN::Genotype::Search;
-use IO::Handle;
 
 our ($opt_H, $opt_D, $opt_p, $opt_o); # host, database, genotyping protocol_id, out
 getopts('H:D:p:o:');
@@ -20,15 +19,14 @@ if (!$opt_p) {
 
 my $protocol_id = $opt_p;
 
+open(my $OUT, '>', $opt_o) || die "Can't open output file $opt_o! $!\n";
+print $OUT "Child\tChild Id\tMother\tMother Id\tFather\tFather Id\tPedigree Conflict Score\n";
+
 my $dbh = CXGN::DB::InsertDBH->new({
     dbhost => $opt_H,
     dbname => $opt_D,
     dbuser => "postgres",
 });
-
-open(my $OUT, '>', $opt_o) or die "Can't open output file $opt_o! $!\n";
-$OUT->autoflush(1);
-print $OUT "Child\tChild Id\tMother\tMother Id\tFather\tFather Id\tPedigree Conflict Score\n";
 
 my $schema = Bio::Chado::Schema->connect(sub { $dbh });
 
