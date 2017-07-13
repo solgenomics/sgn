@@ -193,12 +193,12 @@ $list_id => undef
 </div>
 -->
 
-<div class="modal fade" id="upload_pedigrees_error_display" name="upload_pedigrees_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesErrorDialog">
+<div class="modal fade" id="upload_pedigrees_validate_display" name="upload_pedigrees_validate_display" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesValidateDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadPedigreesErrorDialog">Errors During Upload. Pedigrees Not Saved</h4>
+        <h4 class="modal-title" id="uploadPedigreesValidateDialog">Results From Validation</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -209,6 +209,7 @@ $list_id => undef
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="upload_pedigrees_store" id="upload_pedigrees_store" data-dismiss="modal">Store</button>
       </div>
     </div>
   </div>
@@ -260,7 +261,7 @@ $list_id => undef
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	<button type="button" class="btn btn-primary" name="upload_pedigrees_dialog_submit" id="upload_pedigrees_dialog_submit">Submit File</button>
+	<button type="button" class="btn btn-primary" name="upload_pedigrees_dialog_submit" id="upload_pedigrees_dialog_submit">Validate</button>
       </div>
     </div>
   </div>
