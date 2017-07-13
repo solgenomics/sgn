@@ -44,6 +44,7 @@ use CXGN::Cross;
 use JSON;
 use Tie::UrlEncoder; our(%urlencode);
 use LWP::UserAgent;
+use HTML::Entities;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -816,7 +817,8 @@ sub create_cross_wishlist_POST : Args(0) {
         my $num_seen = 0;
         my $current_males = $ordered_data{$female_accession_name};
         my $current_males_string = join ',', @$current_males;
-        $cross_wishlist_plot_select_html .= '<div class="well" id="cross_wishlist_plot_'.$female_accession_name.'_tab" ><h2>Female: '.$female_accession_name.' Males: '.$current_males_string.'</h2><h3>Select All Male Plots <input type="checkbox" id="cross_wishlist_plot_select_all_male_'.$female_accession_name.'" />   Select All Female Plots <input type="checkbox" id="cross_wishlist_plot_select_all_female_'.$female_accession_name.'" /></h3><table class="table table-bordered table-hover"><thead>';
+        my $encoded_female_accession_name = encode_entities($female_accession_name);
+        $cross_wishlist_plot_select_html .= '<div class="well" id="cross_wishlist_plot_'.$female_accession_name.'_tab" ><h2>Female: '.$female_accession_name.' Males: '.$current_males_string.'</h2><h3>Select All Male Plots <input type="checkbox" id="cross_wishlist_plot_select_all_male_'.$encoded_female_accession_name.'" data-female_accession_name="'.$female_accession_name.'" />   Select All Female Plots <input type="checkbox" id="cross_wishlist_plot_select_all_female_'.$encoded_female_accession_name.'" data-female_accession_name="'.$female_accession_name.'" /></h3><table class="table table-bordered table-hover"><thead>';
 
         $cross_wishlist_plot_select_html .= "</thead><tbody>";
         my %current_males = map{$_=>1} @$current_males;
@@ -860,6 +862,9 @@ sub create_cross_wishlist_POST : Args(0) {
             $cross_wishlist_plot_select_html .= '</tr>'
         }
         $cross_wishlist_plot_select_html .= '</tbody></table></div>';
+
+        $cross_wishlist_plot_select_html .= '<script>jQuery(document).on("change", "#cross_wishlist_plot_select_all_male_'.$encoded_female_accession_name.'", function(){if(jQuery(this).is(":checked")){var female_accession = jQuery(this).data("female_accession_name");jQuery(\'input[name="cross_wishlist_plot_select_male_input"]\').each(function(){if(jQuery(this).data("female_accession_name")==female_accession){jQuery(this).prop("checked", true);}});}});jQuery(document).on("change", "#cross_wishlist_plot_select_all_female_'.$encoded_female_accession_name.'", function(){if(jQuery(this).is(":checked")){var female_accession = jQuery(this).data("female_accession_name");jQuery(\'input[name="cross_wishlist_plot_select_female_input"]\').each(function(){if(jQuery(this).data("female_accession_name")==female_accession){jQuery(this).prop("checked", true);}});}});</script>';
+
         print STDERR "NUM PLOTS SEEN: $num_seen\n";
     }
 

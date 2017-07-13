@@ -166,8 +166,6 @@ jQuery(document).ready(function($) {
         jQuery("#male_accession_list_div").html(lo.listSelect('male_accession_list_div', ["accessions"] ));
         var female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());
         var male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
-        //console.log(female_accessions);
-        //console.log(male_accessions);
         draw_cross_grid(female_accessions, male_accessions);
     });
 
