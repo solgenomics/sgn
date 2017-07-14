@@ -32,6 +32,8 @@ use Bio::GeneticRelationships::Individual;
 use Bio::GeneticRelationships::Population;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
+use CXGN::Genotype::Search;
+use CXGN::Genotype;
 
 #class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
 has 'schema' => (
@@ -301,11 +303,12 @@ sub _validate_pedigree {
     else {
         return "Cross type not detected.";
     }
-		print STDERR "calling snptest";
+		print STDERR "calling snptest\n";
 		my $conflict_score = $self->pedigree_snptest($pedigree);
+		my $percent_score;
 		if ($conflict_score >= .03){
 			my $percent_score->($conflict_score * 100);
-			return = "$percent_score% of markers are in conflict indiciating that at least one parent of $progreny_name may be incorrect.";
+			return "$percent_score % of markers are in conflict indiciating that at least one parent of $progeny_name may be incorrect.";
 		}
     return;
 }
@@ -316,39 +319,42 @@ sub pedigree_snptest{
 	my $pedigree = shift;
 	my $schema = $self->get_schema();
 	my @scores;
-
-  print STDERR "working on accession $acc_name \n";
+	my $protocol_id = 1;
 
 	my $acc_name = $pedigree->get_name();
+	print STDERR "working on accession $acc_name \n";
 	my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
 	$stock_lookup->set_stock_name($acc_name);
 	my $stock_lookup_result = $stock_lookup->get_stock_exact();
 	my $stock_id = $stock_lookup_result->stock_id();
-
-	my $mother_name = $pedigree->get_female_parent();
+	print STDERR "finding mother\n";
+	my $mother = $pedigree->get_female_parent();
+	my $mother_name = $mother->get_name();
+	print STDERR "mother is $mother_name\n";
 	my $mother_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
 	$mother_lookup->set_stock_name($mother_name);
 	my $mother_lookup_result = $mother_lookup->get_stock_exact();
 	my $mother_id = $mother_lookup_result->stock_id();
-
-	my $father_name = $pedigree->get_male_parent();
+	print STDERR "finding father\n";
+	my $father = $pedigree->get_male_parent();
+	my $father_name = $father->get_name();
 	my $father_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
 	$father_lookup->set_stock_name($father_name);
 	my $father_lookup_result = $father_lookup->get_stock_exact();
 	my $father_id = $father_lookup_result->stock_id();
-
+	print STDERR "father is $father_name\n";
   if ($mother_name && $father_name) {
   my $gts = CXGN::Genotype::Search->new( {
       bcs_schema => $schema,
       accession_list => [$stock_id],
-      protocol_qwsdid => $protocol_id,
+      protocol_id => $protocol_id,
       });
-
+	print STDERR "testing self gt\n";
 	my @self_gts = $gts->get_genotype_info_as_genotype_objects();
   if (!@self_gts) {
 			return "Genotype of accession $acc_name not available. Skipping...\n";
 	}
-
+	print STDERR "testing mom gt\n";
   my $mom_gts = CXGN::Genotype::Search->new( {
     bcs_schema => $schema,
     accession_list => [$mother_id],
@@ -358,28 +364,31 @@ sub pedigree_snptest{
   if (!@mom_gts) {
     return "Genotype of female parent missing. Skipping.\n";
   }
+	print STDERR "testing dad gt\n";
+	my $dad_gts;
+	my @dad_gts;
 
-  my $dad_gts;
   if ($mother_id == $father_id){
      $dad_gts = $mom_gts;
   }
   else{
-     my $dad_gts = CXGN::Genotype::Search->new( {
+     	$dad_gts = CXGN::Genotype::Search->new( {
        bcs_schema => $schema,
        accession_list => [$father_id],
        protocol_id => $protocol_id,
     });
-    my (@dad_gts) = $dad_gts->get_genotype_info_as_genotype_objects();
+    @dad_gts = $dad_gts->get_genotype_info_as_genotype_objects();
   }
   if (!@dad_gts) {
     return "Genotype of male parent missing. Skipping.\n";
 	}
-
+	print STDERR "calculating score \n";
   my $s = shift @self_gts;
   my $m = shift @mom_gts;
   my $d = shift @dad_gts;
   my ($concordant, $discordant, $non_informative) = $s->compare_parental_genotypes($m, $d);
-  my $score = ($concordant / ($concordant + $discordant));
+  my $score = $concordant / ($concordant + $discordant);
+	print STDERR "score is $score \n";
 	return $score;
 }
 }
