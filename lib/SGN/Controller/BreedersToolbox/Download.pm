@@ -431,8 +431,10 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $format            = $c->req->param("format");
     my $datalevel         = $c->req->param("phenotype_datalevel");
     my $timestamp_included = $c->req->param("timestamp") || 0;
-    my $cookie_value      = $c->req->param("download_token_value");
     my $search_type        = $c->req->param("search_type") || 'complete';
+    my $dl_token = $c->req->param("phenotype_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+    print STDERR "Token is: $dl_token\n";
 
     my $accession_data;
     if ($accession_list_id) {
@@ -571,7 +573,10 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         #Using tempfile and new filename,send file to client
         my $file_name = $time_stamp . "$what" . "$format";
         $c->res->content_type('Application/'.$format);
-        $c->res->cookies->{fileDownloadToken} = { value => $cookie_value};
+        $c->res->cookies->{$dl_cookie} = {
+          value => $dl_token,
+          expires => '+1m',
+        };
         $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
         $output = read_file($tempfile);
         $c->res->body($output);
@@ -587,6 +592,10 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 
     my $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
     my $ped_format = $c->req->param("ped_format");
+    my $dl_token = $c->req->param("pedigree_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+    print STDERR "Token is: $dl_token\n";
+
     my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
     my @accession_list = map { $_->[1] } @$accession_data;
 
@@ -619,6 +628,10 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     my $filename = "pedigree.txt";
 
     $c->res->content_type("application/text");
+    $c->res->cookies->{$dl_cookie} = {
+      value => $dl_token,
+      expires => '+1m',
+    };
     $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
     my $output = read_file($tempfile);
 
@@ -637,7 +650,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   print STDERR "Collecting download parameters ...  ".localtime()."\n";
   my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
   my $format = $c->req->param("format") || "list_id";
-  my $dl_token = $c->req->param("token") || "no_token";
+  my $dl_token = $c->req->param("gbs_download_token") || "no_token";
   my $dl_cookie = "download".$dl_token;
 
   my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $trial_id_string, @trial_ids);
@@ -789,6 +802,8 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     my $protocol_id     = $c->req->param("protocol_list2_select");
     my $data_type         = $c->req->param("data_type") || "genotype";
     my $format            = $c->req->param("format");
+    my $dl_token = $c->req->param("qc_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
 
     my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
     my $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
@@ -877,7 +892,10 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     my $contents = $tempfile_out;
 
     $c->res->content_type("text/plain");
-
+    $c->res->cookies->{$dl_cookie} = {
+      value => $dl_token,
+      expires => '+1m',
+    };
     $c->res->body($contents);
 
 

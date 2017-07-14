@@ -638,9 +638,9 @@ sub get_descendant_hash {
 =head2 get_pedigree_rows
 
  Usage:
- Desc:          get an array of pedigree rows for this stock, conatining female parent, male parent, and cross type if defined
+ Desc:          get an array of pedigree rows from an array of stock ids, conatining female parent, male parent, and cross type if defined
  Ret:
- Args:
+ Args: $accession_ids, $format (either 'parents_only' or 'full')
  Side Effects:
  Example:
 
@@ -648,7 +648,7 @@ sub get_descendant_hash {
 
 sub get_pedigree_rows {
     my ($self, $accession_ids, $format) = @_;
-    print STDERR "Accession ids are: ".Dumper(@$accession_ids)."\n";
+    #print STDERR "Accession ids are: ".Dumper(@$accession_ids)."\n";
 
     my $placeholders = join ( ',', ('?') x @$accession_ids );
     my ($query, $pedigree_rows);
@@ -708,6 +708,7 @@ sub get_pedigree_rows {
     my $sth = $self->schema()->storage()->dbh()->prepare($query);
     $sth->execute(@$accession_ids);
 
+    no warnings 'uninitialized';
     while (my ($name, $mother, $father, $cross_type) = $sth->fetchrow_array()) {
 	    push @$pedigree_rows, "$name\t$mother\t$father\t$cross_type\n";
     }
