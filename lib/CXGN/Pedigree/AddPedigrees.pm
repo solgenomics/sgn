@@ -307,12 +307,8 @@ sub _validate_pedigree {
 		my $conflict_score = $self->pedigree_snptest($pedigree);
 		my $percent_score;
 		if ($conflict_score >= .03){
-			my $rounded_conflict_score = sprintf("%.2f", $conflict_score);
-			print STDERR "rounded conflict score is $rounded_conflict_score";
-			$percent_score = (1 - $rounded_conflict_score);
-			print STDERR "1 - rounded is $percent_score";
-			my $mult_percent_score = (100 * $percent_score); 
-			print STDERR "1 - rounded times 100 is $mult_percent_score";
+			$percent_score = ((1 - $conflict_score) * 100);
+			$percent_score = sprintf("%.2f", $conflict_score);
 			return "$percent_score% of markers are in conflict indiciating that at least one parent of $progeny_name may be incorrect.";
 		}
     return;
