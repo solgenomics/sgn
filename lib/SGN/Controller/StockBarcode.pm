@@ -96,6 +96,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $added_text = $c->req->param("text_margin");
     my $barcode_type = $c->req->param("select_barcode_type");
     my $fieldbook_barcode = $c->req->param("enable_fieldbook_2d_barcode");
+    my $cass_print_format = $c->req->param("select_print_format");
     my $label_text_4;
     my $type_id;
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
@@ -104,6 +105,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     # convert mm into pixels
     #
+    if ($cass_print_format) {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
     my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } (
             $top_margin_mm,
     		$left_margin_mm,
@@ -144,7 +146,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     	my $stock_id = $stock->stock_id();
         $type_id = $stock->type_id();
 
-      if ($plot){
+      if (defined $plot){
           my $dbh = $c->dbc->dbh();
           my $h = $dbh->prepare("select name, value from cvterm inner join stockprop on cvterm.cvterm_id = stockprop.type_id where stockprop.stock_id=?;");
 
@@ -156,7 +158,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
           }
           $row = $stockprop_hash{$stock_id}->{'replicate'};
-          $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."block:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
+          $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."blk:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
 
           my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
 
@@ -166,7 +168,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
       }
 
-      if ($plot_cvterm_id == $type_id) {
+      if ($plot_cvterm_id == $type_id && defined $plot) {
           $tract_type_id = 'plot';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
       }
@@ -174,12 +176,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $tract_type_id = 'accession';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $stock_id )->get_pedigree_string('Parents');
       }
-      #print "MY male $male_parent and female $female_parent\n";
-
-      #print "MY parents: $parents\n";
 
       push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id];
-      print "STOCK FOUND: $stock_id, $name, $accession_name.\n";
     }
 
     my $dir = $c->tempfiles_subdir('pdfs');
@@ -194,9 +192,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     if (!$page_format) { $page_format = "Letter"; }
     if (!$labels_per_page) { $labels_per_page = 8; }
-    #if ($barcode_type eq "2D" && $labels_per_page > 7) { $labels_per_page = 7; }
-
-    print STDERR "PAGE FORMAT IS: $page_format. LABELS PER PAGE: $labels_per_page\n";
+    if ($cass_print_format) {$barcode_type = "2D", $labels_per_row = 2; }
 
     my $base_page = $pdf->new_page(MediaBox=>$pdf->get_page_size($page_format));
 
@@ -216,8 +212,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
         $label_height = int( ($page_height - $top_margin - $bottom_margin) / $labels_per_page);
     }
 
-    print "MY LABEL HEIGHT: $label_height\n";
-
     my @pages;
     foreach my $page (1..$self->label_to_page($labels_per_page, scalar(@found))) {
 	     print STDERR "Generating page $page...\n";
@@ -228,8 +222,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     	my $label_count = $i + 1;
     	my $page_nr = $self->label_to_page($labels_per_page, $label_count);
     	my $label_on_page = ($label_count -1) % $labels_per_page;
-      print "LABEL NUMBER: $label_on_page\n";
-      print "STOCK_NAME.............. $found[$i]->[1]\n";
+
     	# generate barcode
     	#
       #####
@@ -264,7 +257,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
         }
 
       }
-      print "PARENTS PLOT: $parents\n";
+
       print STDERR "$tempfile\n";
       my $image = $pdf->image($tempfile);
       #print STDERR "IMAGE: ".Data::Dumper::Dumper($image);
@@ -272,7 +265,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     	# note: pdf coord system zero is lower left corner
     	#
     	my $final_barcode_width = ($page_width - $right_margin - $left_margin) / $labels_per_row;
-
     	my $scalex = $final_barcode_width / $image->{width};
     	my $scaley = $label_height / $image->{height};
 
@@ -282,13 +274,11 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     	my $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
 
     	my $ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
-
     	$pages[$page_nr-1]->line($page_width -100, $label_boundary, $page_width, $label_boundary);
 
-      # print "My X Position: $left_margin and Y Position: $ypos and Xscale $scalex and Yscale $scaley\n";
       # my $lebel_number = scalar($#{$found[$i]});
       my $font = $pdf->font('BaseFont' => 'Courier');
-      if ($barcode_type eq "2D") {
+      if ($barcode_type eq "2D" && !$cass_print_format) {
         foreach my $label_count (1..$labels_per_row) {
           my $xposition = $left_margin + ($label_count -1) * $final_barcode_width + 20;
           my $yposition = $ypos -7;
@@ -340,12 +330,49 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
               my $label_count_15_xter_plot_name =  1-1;
               my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 20;
               my $yposition = $ypos -7;
-              my $label_size =  11;
+              my $label_size =  7;
               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
             }
         }
     }
 
+     elsif ($cass_print_format && $barcode_type eq "2D") {
+
+         foreach my $label_count (1..$labels_per_row) {
+          my $label_text = $found[$i]->[1];
+          my $label_size =  7;
+          my $xpos = ($left_margin + ($label_count -1) * $final_barcode_width) + 85;
+          my $label_count_15_xter_plot_name =  1-1;
+          my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width - 95.63;
+          my $yposition_2 = $ypos - 20;
+          my $yposition_3 = $ypos - 30;
+          my $yposition_4 = $ypos - 40;
+          my $plot_pedigree_text;
+
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
+              if ($found[$i]->[5] eq 'plot'){
+                  $label_text_5 = "stock:".$found[$i]->[2]." ".$found[$i]->[3];
+                  if ($parents eq ''){
+                      $label_text_4 = "No pedigree for ".$found[$i]->[2];
+                  }else{
+                      $label_text_4 = "pedigree: ".$parents;
+                  }
+              }
+              elsif ($found[$i]->[5] eq 'accession'){
+                  if ($parents eq ''){
+                      $label_text_4 = "No pedigree for ".$found[$i]->[1];
+                  }else{
+                      $label_text_4 = "pedigree: ".$parents;
+                  }
+              }
+              else{
+                  $label_text_4 = '';
+              }
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_5);
+          $pages[$page_nr-1]->image(image=>$image, xpos=>$xpos, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+       }
+     }
     elsif ($barcode_type eq "1D") {
 
     	foreach my $label_count (1..$labels_per_row) {
