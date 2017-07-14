@@ -64,7 +64,7 @@ sub add_pedigrees {
     my @pedigrees;
     my %return;
 
-		print STDERR "validating pedigrees";
+		print STDERR "adding pedigrees\n";
     @pedigrees = @{$self->get_pedigrees()};
     #print STDERR Dumper \@pedigrees;
 
@@ -198,9 +198,9 @@ sub validate_pedigrees {
     my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'female_parent', 'stock_relationship')->cvterm_id;
     my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'male_parent', 'stock_relationship')->cvterm_id;
 
-		print STDERR "getting pedigrees";
+		print STDERR "getting pedigrees\n";
     my @pedigrees = @{$self->get_pedigrees()};
-		print STDERR "validating pedigrees";
+		print STDERR "validating pedigrees\n";
     foreach my $pedigree (@pedigrees) {
         my $error = $self->_validate_pedigree($pedigree, $female_parent_cvterm_id, $male_parent_cvterm_id);
         if ($error) {
