@@ -586,6 +586,7 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     my $c = shift;
 
     my $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
+    my $ped_format = $c->req->param("ped_format");
     my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
     my @accession_list = map { $_->[1] } @$accession_data;
 
@@ -607,7 +608,13 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 
 	    my $stock = CXGN::Stock->new ( schema => $schema, stock_id => $accession_ids[$i]);
         my $ancestor_hashref = $stock->get_ancestor_hash();
-        my $pedigree_rows = $stock->get_pedigree_rows($ancestor_hashref);
+
+        my $pedigree_rows;
+        if ($ped_format eq 'full') { $pedigree_rows = $stock->get_pedigree_rows($ancestor_hashref); }
+        elsif ($ped_format eq 'parents_only') {
+            $pedigree_rows = $stock->get_pedigree_rows($ancestor_hashref);
+            $pedigree_rows = [shift @$pedigree_rows];
+        }
 
         foreach my $row (@$pedigree_rows) {
             print $FILE $row;
