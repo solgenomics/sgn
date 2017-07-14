@@ -245,7 +245,7 @@ sub compare_parental_genotypes {
 	    }
 	}
     }
-		print STDERR "concordant is $concordant, non_concordant is $non_concordant, non-informative is $non_informative";
+		print STDERR "concordant is $concordant, non_concordant is $non_concordant, non-informative is $non_informative\n";
     return ($concordant, $non_concordant, $non_informative);
 }
 
