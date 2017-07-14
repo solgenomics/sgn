@@ -647,21 +647,70 @@ sub get_descendant_hash {
 =cut
 
 sub get_pedigree_rows {
-    my ($self, $pedigree_hashref, $pedigree_rows) = @_;
+    my ($self, $accession_ids, $format) = @_;
+    print STDERR "Accession ids are: ".Dumper(@$accession_ids)."\n";
 
-    my $Name = $pedigree_hashref->{'name'} || '';
-    my $Female_Parent = $pedigree_hashref->{'female_parent'}->{'name'} || '';
-    my $Male_Parent = $pedigree_hashref->{'male_parent'}->{'name'} || '';
-    my $Cross_Type = $pedigree_hashref->{'cross_type'} || '';
-    push @$pedigree_rows, "$Name\t$Female_Parent\t$Male_Parent\t$Cross_Type\n";
+    my $placeholders = join ( ',', ('?') x @$accession_ids );
+    my ($query, $pedigree_rows);
 
-    if (keys %{ $pedigree_hashref->{'female_parent'} }) {
-        $self->get_pedigree_rows($pedigree_hashref->{'female_parent'}, $pedigree_rows);
+    if ($format eq 'parents_only') {
+        $query = "
+        SELECT child.uniquename AS Accession,
+            mother.uniquename AS Female_Parent,
+            father.uniquename AS Male_Parent,
+            m_rel.value AS cross_type
+        FROM stock child
+        LEFT JOIN stock_relationship m_rel ON(child.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+        LEFT JOIN stock mother ON(m_rel.subject_id = mother.stock_id)
+        LEFT JOIN stock_relationship f_rel ON(child.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+        LEFT JOIN stock father ON(f_rel.subject_id = father.stock_id)
+        WHERE child.stock_id IN ($placeholders)
+        GROUP BY 1,2,3,4";
     }
-    if (keys %{ $pedigree_hashref->{'male_parent'} }) {
-        $self->get_pedigree_rows($pedigree_hashref->{'male_parent'}, $pedigree_rows);
+    elsif ($format eq 'full') {
+        $query = "
+        WITH RECURSIVE included_rows(child, child_id, mother, mother_id, father, father_id, type) AS (
+                SELECT c.uniquename AS child,
+                c.stock_id AS child_id,
+                m.uniquename AS mother,
+                m.stock_id AS mother_id,
+                f.uniquename AS father,
+                f.stock_id AS father_id,
+                m_rel.value AS type
+                FROM stock c
+                LEFT JOIN stock_relationship m_rel ON(c.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+                LEFT JOIN stock m ON(m_rel.subject_id = m.stock_id)
+                LEFT JOIN stock_relationship f_rel ON(c.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+                LEFT JOIN stock f ON(f_rel.subject_id = f.stock_id)
+                WHERE c.stock_id IN ($placeholders)
+                GROUP BY 1,2,3,4,5,6,7
+            UNION
+                SELECT c.uniquename AS child,
+                c.stock_id AS child_id,
+                m.uniquename AS mother,
+                m.stock_id AS mother_id,
+                f.uniquename AS father,
+                f.stock_id AS father_id,
+                m_rel.value AS type
+                FROM included_rows, stock c
+                LEFT JOIN stock_relationship m_rel ON(c.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+                LEFT JOIN stock m ON(m_rel.subject_id = m.stock_id)
+                LEFT JOIN stock_relationship f_rel ON(c.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+                LEFT JOIN stock f ON(f_rel.subject_id = f.stock_id)
+                WHERE c.stock_id IN (included_rows.mother_id, included_rows.father_id)
+                GROUP BY 1,2,3,4,5,6,7
+        )
+        SELECT child, mother, father, type
+        FROM included_rows
+        GROUP BY 1,2,3,4;";
     }
 
+    my $sth = $self->schema()->storage()->dbh()->prepare($query);
+    $sth->execute(@$accession_ids);
+
+    while (my ($name, $mother, $father, $cross_type) = $sth->fetchrow_array()) {
+	    push @$pedigree_rows, "$name\t$mother\t$father\t$cross_type\n";
+    }
     return $pedigree_rows;
 }
 
