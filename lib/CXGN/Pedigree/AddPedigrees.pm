@@ -311,6 +311,8 @@ sub _validate_pedigree {
 			print STDERR "rounded conflict score is $rounded_conflict_score";
 			$percent_score = (1 - $rounded_conflict_score);
 			print STDERR "1 - rounded is $percent_score";
+			$mult_percent_score = (100 * $percent_score); 
+			print STDERR "1 - rounded times 100 is $mult_percent_score";
 			return "$percent_score% of markers are in conflict indiciating that at least one parent of $progeny_name may be incorrect.";
 		}
     return;
