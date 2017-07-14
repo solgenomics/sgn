@@ -358,47 +358,44 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
 
          foreach my $label_count (1..$labels_per_row) {
-             print "COUNT: $label_count\n";
-          #my $xposition = $left_margin + ($label_count -1) * $final_barcode_width + 80;
+          #my $xposition = $left_margin + ($label_count -1) * $final_barcode_width - 80;
           #my $yposition = $ypos -7;
-          #my $label_text = $found[$i]->[1];
-          #my $label_size =  7;
+          my $label_text = $found[$i]->[1];
+          my $label_size =  7;
           my $xpos = ($left_margin + ($label_count -1) * $final_barcode_width) + 100;
-          $pages[$page_nr-1]->image(image=>$image, xpos=>$xpos, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
-          print "CHEKKKKKK: xpos: $xpos, ypos: $ypos, xscale: $scalex, yscale: $scaley\n";
+          #$pages[$page_nr-1]->image(image=>$image, xpos=>$xpos, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
           #$pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
 
-        #   if ($labels_per_row == '1' ){
-        #       my $label_count_15_xter_plot_name =  1-1;
-        #       my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 80.63;
-        #       my $yposition_2 = $ypos - 20;
-        #       my $yposition_3 = $ypos - 30;
-        #       my $yposition_4 = $ypos - 40;
-        #       my $plot_pedigree_text;
-          #
-        #       $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
-        #           if ($found[$i]->[5] eq 'plot'){
-        #               $label_text_5 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
-        #               if ($parents eq ''){
-        #                   $label_text_4 = "No pedigree for ".$found[$i]->[2];
-        #               }else{
-        #                   $label_text_4 = "pedigree: ".$parents;
-        #               }
-        #           }
-        #           elsif ($found[$i]->[5] eq 'accession'){
-        #               if ($parents eq ''){
-        #                   $label_text_4 = "No pedigree for ".$found[$i]->[1];
-        #               }else{
-        #                   $label_text_4 = "pedigree: ".$parents;
-        #               }
-        #           }
-        #           else{
-        #               $label_text_4 = '';
-        #           }
-          #
-        #       $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
-        #       $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_5);
-        #   }
+              my $label_count_15_xter_plot_name =  1-1;
+              my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width - 95.63;
+              my $yposition_2 = $ypos - 20;
+              my $yposition_3 = $ypos - 30;
+              my $yposition_4 = $ypos - 40;
+              my $plot_pedigree_text;
+
+              $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
+                  if ($found[$i]->[5] eq 'plot'){
+                      $label_text_5 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
+                      if ($parents eq ''){
+                          $label_text_4 = "No pedigree for ".$found[$i]->[2];
+                      }else{
+                          $label_text_4 = "pedigree: ".$parents;
+                      }
+                  }
+                  elsif ($found[$i]->[5] eq 'accession'){
+                      if ($parents eq ''){
+                          $label_text_4 = "No pedigree for ".$found[$i]->[1];
+                      }else{
+                          $label_text_4 = "pedigree: ".$parents;
+                      }
+                  }
+                  else{
+                      $label_text_4 = '';
+                  }
+
+              $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
+              $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_5);
+              $pages[$page_nr-1]->image(image=>$image, xpos=>$xpos, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
        }
 
      }
