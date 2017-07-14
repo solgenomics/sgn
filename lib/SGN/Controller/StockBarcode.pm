@@ -105,7 +105,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     # convert mm into pixels
     #
-    if ($cass_print_format) {$left_margin_mm = 110; }
+    if ($cass_print_format) {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
     my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } (
             $top_margin_mm,
     		$left_margin_mm,
@@ -158,7 +158,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
           }
           $row = $stockprop_hash{$stock_id}->{'replicate'};
-          $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."block:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
+          $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."blk:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
 
           my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
 
@@ -196,8 +196,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     if (!$page_format) { $page_format = "Letter"; }
     if (!$labels_per_page) { $labels_per_page = 8; }
-    if ($cass_print_format) {$barcode_type = "2D"; }
-    if ($cass_print_format) {$labels_per_row = 2; }
+    if ($cass_print_format) {$barcode_type = "2D", $labels_per_row = 2; }
+    #if ($cass_print_format) {$labels_per_row = 2; }
 
     #if ($barcode_type eq "2D" && $labels_per_page > 7) { $labels_per_page = 7; }
 
@@ -362,7 +362,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           #my $yposition = $ypos -7;
           my $label_text = $found[$i]->[1];
           my $label_size =  7;
-          my $xpos = ($left_margin + ($label_count -1) * $final_barcode_width) + 100;
+          my $xpos = ($left_margin + ($label_count -1) * $final_barcode_width) + 85;
           #$pages[$page_nr-1]->image(image=>$image, xpos=>$xpos, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
           #$pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition, $label_text);
 
@@ -375,7 +375,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
                   if ($found[$i]->[5] eq 'plot'){
-                      $label_text_5 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
+                      $label_text_5 = "stock:".$found[$i]->[2]." ".$found[$i]->[3];
                       if ($parents eq ''){
                           $label_text_4 = "No pedigree for ".$found[$i]->[2];
                       }else{
