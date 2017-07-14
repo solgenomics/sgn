@@ -603,25 +603,14 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
 
 	print $FILE "Accession\tFemale_Parent\tMale_Parent\tCross_Type\n";
     my $pedigrees_found = 0;
+    my $stock = CXGN::Stock->new ( schema => $schema);
+    my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, $ped_format);
 
-    # for (my $i=0 ; $i<scalar(@accession_ids); $i++) {
+    foreach my $row (@$pedigree_rows) {
+        print $FILE $row;
+        $pedigrees_found++;
+    }
 
-	    my $stock = CXGN::Stock->new ( schema => $schema);
-        my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, $ped_format);
-
-        # my $pedigree_rows;
-        # if ($ped_format eq 'full') { $pedigree_rows = $stock->get_pedigree_rows($ancestor_hashref); }
-        # elsif ($ped_format eq 'parents_only') {
-        #
-        #     $pedigree_rows = $stock->get_pedigree_rows($ancestor_hashref);
-        #     $pedigree_rows = [shift @$pedigree_rows];
-        # }
-
-        foreach my $row (@$pedigree_rows) {
-            print $FILE $row;
-            $pedigrees_found++;
-        }
-    #}
     unless ($pedigrees_found > 0) {
         print $FILE "$pedigrees_found pedigrees found in the database for the accessions searched. \n";
     }
