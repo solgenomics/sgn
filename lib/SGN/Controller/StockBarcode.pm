@@ -146,7 +146,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     	my $stock_id = $stock->stock_id();
         $type_id = $stock->type_id();
 
-      if ($plot){
+      if (defined $plot){
           my $dbh = $c->dbc->dbh();
           my $h = $dbh->prepare("select name, value from cvterm inner join stockprop on cvterm.cvterm_id = stockprop.type_id where stockprop.stock_id=?;");
 
@@ -168,7 +168,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
       }
 
-      if ($plot_cvterm_id == $type_id) {
+      if ($plot_cvterm_id == $type_id && defined $plot) {
           $tract_type_id = 'plot';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
       }
@@ -176,12 +176,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $tract_type_id = 'accession';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $stock_id )->get_pedigree_string('Parents');
       }
-      #print "MY male $male_parent and female $female_parent\n";
-
-      #print "MY parents: $parents\n";
 
       push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id];
-      print "STOCK FOUND: $stock_id, $name, $accession_name.\n";
     }
 
     my $dir = $c->tempfiles_subdir('pdfs');
@@ -226,8 +222,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     	my $label_count = $i + 1;
     	my $page_nr = $self->label_to_page($labels_per_page, $label_count);
     	my $label_on_page = ($label_count -1) % $labels_per_page;
-      print "LABEL NUMBER: $label_on_page\n";
-      print "STOCK_NAME.............. $found[$i]->[1]\n";
+
     	# generate barcode
     	#
       #####
@@ -262,7 +257,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
         }
 
       }
-      
+
       print STDERR "$tempfile\n";
       my $image = $pdf->image($tempfile);
       #print STDERR "IMAGE: ".Data::Dumper::Dumper($image);
@@ -281,7 +276,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     	my $ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
     	$pages[$page_nr-1]->line($page_width -100, $label_boundary, $page_width, $label_boundary);
 
-      # print "My X Position: $left_margin and Y Position: $ypos and Xscale $scalex and Yscale $scaley\n";
       # my $lebel_number = scalar($#{$found[$i]});
       my $font = $pdf->font('BaseFont' => 'Courier');
       if ($barcode_type eq "2D" && !$cass_print_format) {
