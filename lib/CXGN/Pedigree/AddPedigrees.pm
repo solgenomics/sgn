@@ -307,8 +307,8 @@ sub _validate_pedigree {
 		my $conflict_score = $self->pedigree_snptest($pedigree);
 		my $percent_score;
 		if ($conflict_score >= .03){
-			my $percent_score = ($conflict_score * 100);
-			return "$percent_score % of markers are in conflict indiciating that at least one parent of $progeny_name may be incorrect.";
+			my $percent_score = ((1 -$conflict_score) * 100);
+			return "$percent_score% of markers are in conflict indiciating that at least one parent of $progeny_name may be incorrect.";
 		}
     return;
 }
