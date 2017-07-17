@@ -76,6 +76,26 @@ sub list_databases_GET : Args(0) {
     $c->stash->{rest} = {database_list=>\@db_list};
 }
 
+sub remove_database : Path('/brapiapp/remove_database') : ActionClass('REST') { }
+
+sub remove_database_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $session_id = $c->req->param('accessToken');
+    my $database_name = $c->req->param('databaseName');
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my $dbh = $c->dbc->dbh;
+    my $cookie_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+    if ($cookie_info){
+        my $db = $bcs_schema->resultset('General::Db')->find({description=>'BrAPI_App_Database_Display', name=>$database_name});
+        $db->delete();
+        $c->stash->{rest} = {success => 1};
+    } else {
+        $c->stash->{rest} = {error => "User Not Logged In"};
+    }
+}
+
 sub register : Path('/brapiapp/register') : ActionClass('REST') { }
 
 sub register_POST : Args(0) {
