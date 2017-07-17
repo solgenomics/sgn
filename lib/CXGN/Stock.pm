@@ -665,7 +665,8 @@ sub get_pedigree_rows {
         LEFT JOIN stock_relationship f_rel ON(child.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
         LEFT JOIN stock father ON(f_rel.subject_id = father.stock_id)
         WHERE child.stock_id IN ($placeholders)
-        GROUP BY 1,2,3,4";
+        GROUP BY 1,2,3,4
+        ORDER BY 1";
     }
     elsif ($format eq 'full') {
         $query = "
@@ -702,7 +703,8 @@ sub get_pedigree_rows {
         )
         SELECT child, mother, father, type
         FROM included_rows
-        GROUP BY 1,2,3,4;";
+        GROUP BY 1,2,3,4
+        ORDER BY 1;";
     }
 
     my $sth = $self->schema()->storage()->dbh()->prepare($query);
