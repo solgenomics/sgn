@@ -1,0 +1,34 @@
+<%args>
+</%args>
+
+<div id="brapi_home_study_detail_div">
+
+    <h4>Study Details</h4>
+    <input name="brapi_home_studydbid" id="brapi_home_studydbid" class="form-control" type="text" placeholder="StudyDbId e.g. 137" value="137"/>
+    <button class="btn btn-primary" name="brapi_home_studydbid_submit" id="brapi_home_studydbid_submit">Get Details</button>
+    <br/><br/>
+    <div id="brapi_studies_detail_result_div">
+    </div>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery("#brapi_home_studydbid_submit").click(function() {
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies/'+jQuery('#brapi_home_studydbid').val(),
+          'method': 'GET',
+          'success': function(response) {
+            console.log(response);
+            brapi_create_table(response.result, 'brapi_studies_detail_result_div', undefined);
+
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+    });
+});
+
+</script>

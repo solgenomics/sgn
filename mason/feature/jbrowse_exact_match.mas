@@ -6,26 +6,29 @@
 
 <%perl>
 my $jbrowse_url ;
-my $iframe_url ; 
-if ( $feature && $src_feature ) { 
-    my $feature_name= $feature->name;
-    my $data_source = $src_feature->name;
+my $iframe_url ;
+if ( $feature && $src_feature ) {
+
+   # check if $feature and $src_feature are an object (as used in the locus and feature pages)
+   # or a scalar (as used in the marker pages)
+    my $feature_name= ref($feature) ? $feature->name : $feature;
+    my $data_source = ref($src_feature)  ? $src_feature->name : $src_feature;
+
     $data_source =~ s/(.*\d)(\.?chr?\d\d)/$1/;
-    $jbrowse_url = "/jbrowse/current/?data=data/json/$data_source&loc=$feature_name&tracks=DNA,gene_models" ;
+    $jbrowse_url = $c->config->{jbrowse_path} . "/$data_source&loc=$feature_name&tracks=DNA,gene_models" ;
     $iframe_url = $jbrowse_url . "&tracklist=0&nav=1&overview=0" ;
     print STDERR "JB.MAS\njbrowse_url = $jbrowse_url\niframe_url = $iframe_url \n\n";
  }
-	
+
 </%perl>
 
-% if ( $jbrowse_url ) { 
+% if ( $jbrowse_url ) {
 
-  <iframe style="border: 1px solid rgb(80, 80, 80);" src="<% $iframe_url %>" height="250" width="700"  name="jbrowse_iframe"> 
+  <iframe style="border: 1px solid rgb(80, 80, 80);" src="<% $iframe_url %>" height="250" width="700"  name="jbrowse_iframe">
   <p>Your browser does not support iframes.</p> </iframe>
-  
+
 % }
 
 <script language="javascript" type="text/javascript">
   jQuery.noConflict();
 </script>
-

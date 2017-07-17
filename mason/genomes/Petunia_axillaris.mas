@@ -1,0 +1,35 @@
+<br />
+<& /page/page_title.mas, title=>"<i>Petunia axillaris</i> draft genome sequence v1.6.2" &>
+
+<p>
+  A draft sequence of the <i>Petunia axillaris</i> genome, one of the ancestors of Petunia hybrida, is publicly available (Bombarely et al, 2016).
+  The P. axillaris N genome sequence, was performed using a hybrid de novo assembly with a combination of short read (Illumina; coverage 137X) and long read technologies (PacBio; coverage 22X)<br>
+</p>
+
+
+<p>
+  The <i>Petunia axillaris</i> genome data are accessible on SGN through BLAST, JBrowse and the SGN VIGS Tool, and they can be downloaded from the SGN ftp site.
+</p>
+
+<br>
+
+<center>
+    <a class="btn btn-primary" href="/tools/blast/?db_id=272" target="_blank" style="color:white">BLAST</a>&nbsp;&nbsp;
+    <a class="btn btn-primary" href="ftp://ftp.solgenomics.net/genomes/Petunia_axillaris/" target="_blank" style="color:white">FTP Site</a>&nbsp;&nbsp;
+    <a class="btn btn-primary" href="http://solgenomics.net/jbrowse_solgenomics/?data=data%2Fjson%2FPeaxi162&loc=Peaxi162Scf00001" target="_blank" style="color:white">JBrowse</a>&nbsp;&nbsp;
+    <a class="btn btn-primary" href="http://vigs.solgenomics.net" target="_blank" style="color:white">VIGS Tool</a>
+</center>
+
+<br>
+<br>
+<h4>References</h4>
+<ul style="list-style-type:disc">
+  <li>
+    Bombarely, A., Moser, M, ... Sims, T.L. and Kuhlemeier, C. (2016)<br>
+    Insight into the evolution of the Solanaceae from the parental genomes of Petunia hybrida<br>
+   <a href="https://www.nature.com/articles/nplants201674">Nature Plants 2, Article number: 16074 (2016)</a><br>
+  </li>
+</ul>
+<br>
+<br>
+

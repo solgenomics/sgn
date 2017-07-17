@@ -1,0 +1,46 @@
+<%args>
+</%args>
+
+<div id="brapi_home_markerprofile_detail_div">
+
+    <h4>MarkerProfile Details</h4>
+    <input name="brapi_home_markerprofiledbid" id="brapi_home_markerprofiledbid" class="form-control" type="text" placeholder="MarkerProfileDbId e.g. 1622" value="1622"/>
+    <button class="btn btn-primary" name="brapi_home_markerprofiledbid_submit" id="brapi_home_markerprofiledbid_submit">Get Details</button>
+    <br/><br/>
+    <div id="brapi_markerprofile_detail_div">
+    </div>
+    <div id="brapi_markerprofile_detail_result_div">
+    </div>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery("#brapi_home_markerprofiledbid_submit").click(function() {
+
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/markerprofiles/'+jQuery('#brapi_home_markerprofiledbid').val(),
+          'method': 'GET',
+          'success': function(response) {
+            console.log(response);
+            var html = '<table class="table table-bordered"><thead><tr><th>GermplasmDbId</th><th>UniqueDisplayName</th><th>ExtractDbId</th><th>MarkerProfileDbId</th><th>AnalysisMethod</th></tr><tbody><tr><td>'+response.result.germplasmDbId+'</td><td>'+response.result.uniqueDisplayName+'</td><td>'+response.result.extractDbId+'</td><td>'+response.result.markerprofileDbId+'</td><td>'+response.result.analysisMethod+'</td></tr></tbody></table>';
+            jQuery('#brapi_markerprofile_detail_div').empty().html(html);
+            
+            var data = [];
+            for (var i=0; i<response.result.data.length; i++) {
+                for (var j in response.result.data[i]) {
+                    data.push({'marker':j, 'allele':response.result.data[i][j]});
+                }
+            }
+            brapi_create_paginated_table(data, response.metadata.pagination, 'brapi_markerprofile_detail_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/markerprofiles/'+jQuery('#brapi_home_markerprofiledbid').val(), undefined);
+
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+    });
+});
+
+</script>

@@ -27,7 +27,7 @@ Naama Menda <nm249@cornell.edu>
 
 <%args>
   $stock_id 
-  $subset => [ 'synonym' ]
+  $subset => [  'stock_synonym' ]
   $props
   $editable => []
   $div_name => ''
@@ -38,18 +38,20 @@ Naama Menda <nm249@cornell.edu>
 use JSON::Any;
 
 my $subset_json = JSON::Any->objToJson($subset);
+print STDERR "^^^^^^^^^^^^^^^SUBSET = $subset_json **** \n\n";
+
 $div_name ||= join("_", @$subset);
 $div_name =~ s/ +/\_/g;
-
+print STDERR "****div_name = $div_name *****\n\n\n";
 my $prop_select = prop_select($editable, $div_name);
 
 $edit_privs ||= 0;
 
 sub prop_select {
-  my $subset = shift;
+  my $editable = shift;
   my $div_name = shift;
   my $html = "<select id=\"$div_name"."_select"."\">";
-  foreach my $item (@$subset) { 
+  foreach my $item (@$editable) { 
       $html .= qq{ <option>$item</option> };
   }
   $html .= qq{ </select> };
@@ -150,11 +152,19 @@ function <% $div_name %>_addProp() {
   jQuery.ajax( { 
     type: 'POST',
     url: '/stock/prop/add',
+    beforeSend: function(){
+        jQuery('#working_modal').modal('show');
+    },
     data: { 'stock_id' : <% $stock_id %>, 'prop' : prop, 'prop_type': prop_type },
-    success: function(response) { 
-      if ("error" in response) { alert ('ERROR '+response.error); }
-      if ("message" in response) { alert('added prop ' + prop + ' ('+response.message+')'); }},
-    error: function(response) {   alert('an error occurred while storing the prop' + response.error) } 
+    success: function(response) {
+        jQuery('#working_modal').modal('hide');
+        if ("error" in response) { alert ('ERROR '+response.error); }
+        if ("message" in response) { alert('Successfully added property: ' + prop + '. ('+response.message+')'); }
+    },
+    error: function(response) {
+        jQuery('#working_modal').modal('hide');
+        alert('an error occurred while storing the prop ' + response.error);
+    }
   });
 
   <% $div_name %>_getProps();

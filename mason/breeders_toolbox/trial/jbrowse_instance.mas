@@ -1,0 +1,35 @@
+<%args>
+$trial_id
+</%args>
+
+<p id="trial_jbrowse_check">[loading...]</p>
+
+<%perl>
+
+my $jbrowse_path = $c->config->{jbrowse_path};
+my @path_parts = split('/', $jbrowse_path);
+my $basepath = $path_parts[1];
+my $test_url = "/" . $basepath . "/jbrowse.conf";
+my $jbrowse_url = $jbrowse_path ."%2Ftrials%2F" . $trial_id ."&tracks=DNA%2CGene%20exons%2C&cat=Diversity/NEXTGEN/Imputed&highlight=";
+
+</%perl>
+
+<script type="text/javascript" defer="defer">
+jQuery(document).ready(function () {
+
+	jQuery.ajax({
+		url: "<% $test_url %>",
+		success: function(response) {
+			if ( response.indexOf("Trial_<%$trial_id%>") > -1 ) { // if jbrowse instance is found, create and display link
+				jQuery('#trial_jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the dataset for this trial in JBrowse</a>');
+			}
+			else { // if not found, display message that jbrowse instance wasn't found
+				jQuery('#trial_jbrowse_check').html(" <i>This trial does not have a dataset in Jbrowse.</i>");
+			}
+		},
+		error: function() {
+			jQuery('#trial_jbrowse_check').html(" <i>Jbrowse has not been set up for this database.</i>");
+		}
+	});
+});
+</script>

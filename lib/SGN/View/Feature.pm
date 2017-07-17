@@ -324,7 +324,7 @@ sub cvterm_link {
     my ( $cvt, $caps ) = @_;
     my $name = cvterm_name( $cvt, $caps );
     my $id   = $cvt->id;
-    return qq{<a href="/chado/cvterm?cvterm_id=$id">$name</a>};
+    return qq{<a href="/cvterm/$id/view">$name</a>};
 }
 
 sub mrna_cds_protein_sequence {

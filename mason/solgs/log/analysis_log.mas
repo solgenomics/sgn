@@ -1,0 +1,16 @@
+
+
+<& /util/import_javascript.mas, classes => ["solGS.analysisStatus","jquery.dataTables"] &>
+
+
+<div id="analysis_log_div" style="display:none">
+  <table class="table" id="analysis_list" style="text-align: left;"> 
+    <thead>
+      <tr>
+	<th>Analysis name</th>
+	<th>Status</th>
+	<th>Result page</th>
+      </tr>
+    </thead>
+  </table>
+</div>

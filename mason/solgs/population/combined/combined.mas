@@ -17,12 +17,13 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 $combo_pops_id
 $show_data => 1;
-$traits_form
+$traits_form => ''
 $all_traits_file
 $project_name
 $project_desc
 $markers_no
 $traits_no
+$protocol
 $owner=>''
 $acronym
 
@@ -54,6 +55,7 @@ $acronym
     project_desc => $project_desc,
     markers_no   => $markers_no,
     traits_no    => $traits_no,
+    protocol     => $protocol,
     owner        => $owner,
  &>
 
@@ -98,3 +100,6 @@ $acronym
 
 </&>
 %}
+
+ <input type="hidden" id="population_id" value="<% $combo_pops_id %>" />
+ 

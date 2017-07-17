@@ -5,18 +5,15 @@ a general format for projects details presentation.
 </%doc>
 
 
-<& /util/import_javascript.mas, classes => [ "solGS.combineTrials"] &>
-<link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
-
-<div id="homepage_trials_list" style="display:none;width:100%">
+<div id="all_trials_div" style="display:none;">
 </div>
-<div id="homepage_message" style="padding: 30px 10px 10px 10px; font-weight:bold; text-align:center; text-transform:uppercase; color:#A7C942">
+<div id="all_trials_search_message" style="padding: 20px 10px 10px 10px; font-weight:bold; text-align:center; text-transform:uppercase; color:#A7C942">
 Searching for GS trials...
 </div>
 
 
-<div id="done_selecting">
-  <input  class="button" type="button" name="done_selecting"  value="Select" onclick="doneSelecting();"/>
+<div id="done_selecting_div">
+  <input  class="button" type="button" id="done_selecting"  value="Select"/>
 </div>
 
 

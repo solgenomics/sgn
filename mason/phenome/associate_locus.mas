@@ -61,7 +61,33 @@ $allele_div
 
 <& /util/import_javascript.mas, classes=>[qw[ jquery jqueryui popup]] &>
 
+<div class="well">
+
 <div id = "<% $allele_div %>" >&nbsp;Loading..</div>
+
+% if ($show_form) {
+<div id="associate_locus_form" class="container-fluid">
+  <div id="locus_search" >
+    <form name="loci_form" class="form-horizontal">
+
+        <div class="form-group">
+            <label for="loci" class="col-sm-6 control-label">Associate another Locus:</label>
+            <div class="input-group col-sm-6">
+                <input class="form-control" placeholder="Allele_name (Allele_symbol) Allele: AA" type="text" id="loci" name="loci">
+                <span class="input-group-btn">
+                    <button class="btn btn-primary" type="button" id="associate_allele_addon" name="associate_locus" onclick="javascript:submit_locus_form()">Associate locus</button>
+                </span>
+            </div>
+        </div>
+        <input type="hidden" id="object_id" name="object_id" value="<% $object_id %>" />
+
+    </form>
+  </div>
+</div>
+% }
+
+</div><!-- closes well -->
+
 
 <script language="javascript">
   display_alleles("<% $allele_div %>");
@@ -75,7 +101,7 @@ $allele_div
   function submit_locus_form() {
     //make an AJAX request with the form params
     var loci = jQuery("#loci").val();
-    jQuery.ajax({ url: "<% $locus_add_uri %>" , method:"POST", data: 'object_id='+<% $object_id %>+'&loci='+loci ,
+    jQuery.ajax({ url: "<% $locus_add_uri %>" , method:"GET", data: 'object_id='+<% $object_id %>+'&loci='+loci ,
      success: function(response) {
       var error = response.error;
       if (error) { alert(error) ; }
@@ -94,24 +120,3 @@ $allele_div
 }
 
 </script>
-
-<div id = "<%$allele_div %>" >
-
-</div>
-
-% if ($show_form) {
-<div id="associate_locus_form">
-  <b>Associate another Locus</b>
-  <div id="locus_search" >
-    <form name="loci_form" >
-      <input type="text" style="width: 50%" id="loci" name="loci" />
-      <input type="hidden" id="object_id" name="object_id" value="<% $object_id %>" />
-
-      <input type="button" name = "associate_locus" onclick="javascript:submit_locus_form()" value = "Associate locus" />
-      <div style="font-size: 80%; margin-left: 1em; color: #333">type a locus name</div>
-    </form>
-  </div>
-</div>
-
-
-% }

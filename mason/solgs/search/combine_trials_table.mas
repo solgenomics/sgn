@@ -1,0 +1,51 @@
+<%doc>
+
+=head1 NAME 
+
+/search/combine_trials_table.mas - a table with trials to combine
+
+=AUTHOR
+
+Isaak Y Tecle (iyt2@cornell.edu)
+
+=cut
+
+</%doc>
+
+<%args>
+
+</%args>
+
+
+<div id="selected_trials" style="display:none;width:100%">
+
+  <hr style="size:10px;color:#5cb85c;"/>
+
+ <p style="text-align:center"> Trials to combine </p>
+
+ <hr style="size:10px;color:#5cb85c;"/>
+
+<table class ="table" id="selected_trials_table" style="text-align:left;width:100%">
+<tr>
+  <th></th><th>Trial</th><th>Description</th><th>Location</th><th>Year</th><th>&nbsp</th>
+</tr>
+<tr> 
+</tr>
+</table>
+</div>
+
+
+<table class="table" id="selected_trials_header" style="text-align:left;width:100%">
+<tr>
+  <td>
+    <div id="combine_trials_div" style="display:none">
+      <input  class="button" type="button" id="combine_trait_trials" value="Combine trials & build model"/>
+  </div>  
+  </td>
+  <td>
+    <div id="search_again_div" style="display:none;text-align:right">
+    <input style class="button" type="button" id="search_again" value="Search again"/>
+  </div>
+ </td>
+</tr>
+</table>

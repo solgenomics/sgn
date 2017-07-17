@@ -34,3 +34,6 @@ sgn_local_zea.conf
 nytprof.out
 system_message.txt
 #sgn_local.conf#
+sgn_local.conf.old
+export/*
+temp_images/*

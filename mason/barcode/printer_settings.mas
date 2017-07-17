@@ -20,7 +20,7 @@
   	  <option value="A4">A4</option>
 	  </select>
       </td>
-      <td></td><td></td>
+      <td>Add text to label, e.g. location:  </td><td><input type="text" class="form-control" name="text_margin"  ></td>
     </tr>
     <tr>
       <td>Top Margin (mm):</td>

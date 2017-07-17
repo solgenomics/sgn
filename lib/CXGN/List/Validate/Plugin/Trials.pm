@@ -17,7 +17,7 @@ sub validate {
     foreach my $term (@$list) { 
 
 	my $rs = $schema->resultset("Project::Project")->search( { name => $term } );
-
+	#$schema->storage->debug(1);
 	if ($rs->count == 0) { 
 	    push @missing, $term;
 	}

@@ -24,12 +24,19 @@ use Data::Dumper;
 use Try::Tiny;
 use CXGN::Phenome::Schema;
 use CXGN::Phenome::Allele;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use CXGN::Phenome::DumpGenotypes;
+use CXGN::BreederSearch;
+use Scalar::Util 'reftype';
+use CXGN::BreedersToolbox::AccessionsFuzzySearch;
+use CXGN::Stock::RelatedStocks;
+
+use Bio::Chado::Schema;
 
 use Scalar::Util qw(looks_like_number);
 use DateTime;
+use SGN::Model::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -55,62 +62,59 @@ sub add_stockprop_POST {
     my ( $self, $c ) = @_;
     my $response;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    if (!$c->user()) { 
-	$c->stash->{rest} = { error => "Log in required for adding stock properties." }; return;  
+    if (!$c->user()) {
+	$c->stash->{rest} = { error => "Log in required for adding stock properties." }; return;
     }
 
     if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
         my $req = $c->req;
-	# refactor this code  using $stock->create_stockprop
         my $stock_id = $c->req->param('stock_id');
         my $prop  = $c->req->param('prop');
         my $prop_type = $c->req->param('prop_type');
 
-	my $type_row = $schema->resultset("Cv::Cvterm")->find( { name => $prop_type } );
+	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
 
-	if (!defined($type_row)) { 
-	    $c->stash->{rest} = { error => "the type $prop_type does not exist" }; return ;
-	        #$schema->resultset("Stock::Stock")->create_stockprop({ });
-	}
-	
+    if ($stock && $prop && $prop_type) {
 
-	my $type_id = $type_row->cvterm_id();
-				  
-        my ($existing_prop) = $schema->resultset("Stock::Stockprop")->search( {
-            stock_id => $stock_id,
-            type_id => $type_id,
-            value => $prop, } );
-
-        if ($existing_prop) { $c->stash->{rest} = { error=> 'type_id/prop '.$type_id." ".$prop." already associated" } ; 
-        } 
-	else {
-            my $prop_rs = $schema->resultset("Stock::Stockprop")->search( {
-                stock_id => $stock_id,
-                type_id => $type_id, } );
-            my $rank = $prop_rs ? $prop_rs->get_column('rank')->max : -1 ;
-            $rank++;
-
-            try {
-		$schema->resultset("Stock::Stockprop")->find_or_create( {
-		    stock_id => $stock_id,
-		    type_id => $type_id,
-		    value => $prop,
-		    rank => $rank, } );
-		
-		$c->stash->{rest} = { message => "stock_id $stock_id and type_id $type_id have been associated with value $prop", }
-            } 
-	    catch {
-                $c->stash->{rest} = { error => "Failed: $_" }
-            };
+        my $message = '';
+        if ($prop_type eq 'stock_synonym') {
+            my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
+            my $max_distance = 0.2;
+            my $fuzzy_search_result = $fuzzy_accession_search->get_matches([$prop], $max_distance);
+            #print STDERR Dumper $fuzzy_search_result;
+            my $found_accessions = $fuzzy_search_result->{'found'};
+            my $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
+            if (scalar(@$found_accessions) > 0){
+                $c->stash->{rest} = { error => "Synonym not added: The synonym you are adding is already stored as its own unique stock or as a synonym." };
+                $c->detach();
+            }
+            if (scalar(@$fuzzy_accessions) > 0){
+                my @fuzzy_match_names;
+                foreach my $a (@$fuzzy_accessions){
+                    foreach my $m (@{$a->{'matches'}}) {
+                        push @fuzzy_match_names, $m->{'name'};
+                    }
+                }
+                $message = "CAUTION: The synonym you are adding is similar to these accessions and synonyms in the database: ".join(', ', @fuzzy_match_names).".";
+            }
         }
-    } 
-    else {  
+
+        try {
+            $stock->create_stockprops( { $prop_type => $prop }, { autocreate => 1 } );
+            $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop", }
+        } catch {
+            $c->stash->{rest} = { error => "Failed: $_" }
+        };
+    } else {
+	    $c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with stock $stock_id " };
+	}
+    } else {
 	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
     }
     #$c->stash->{rest} = { message => 'success' };
 }
 
-sub add_stockprop_GET { 
+sub add_stockprop_GET {
     my $self = shift;
     my $c = shift;
     return $self->add_stockprop_POST($c);
@@ -132,34 +136,34 @@ sub add_stockprop_GET {
 
 sub get_stockprops : Path('/stock/prop/get') : ActionClass('REST') { }
 
-sub get_stockprops_GET { 
+sub get_stockprops_GET {
     my ($self, $c) = @_;
-    
+
     my $stock_id = $c->req->param("stock_id");
     my $type_id = $c->req->param("type_id");
-    
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    
-    my $prop_rs = $schema->resultset("Stock::Stockprop")->search( 
+
+    my $prop_rs = $schema->resultset("Stock::Stockprop")->search(
 	{
 	    stock_id => $stock_id,
 	    #type_id => $type_id,
-	}, { join => 'type' } );
+	}, { join => 'type', order_by => 'stockprop_id' } );
 
     my @propinfo = ();
-    while (my $prop = $prop_rs->next()) { 
-	push @propinfo, { stockprop_id => $prop->stockprop_id, stock_id => $prop->stock_id, type_id => $prop->type_id(), type_name => $prop->type->name(), value => $prop->value() }
+    while (my $prop = $prop_rs->next()) {
+	push @propinfo, { stockprop_id => $prop->stockprop_id, stock_id => $prop->stock_id, type_id => $prop->type_id(), type_name => $prop->type->name(), value => $prop->value() };
     }
-	
+
     $c->stash->{rest} = \@propinfo;
-    
+
 
 }
 
 
 sub delete_stockprop : Path('/stock/prop/delete') : ActionClass('REST') { }
 
-sub delete_stockprop_GET { 
+sub delete_stockprop_GET {
     my $self = shift;
     my $c = shift;
     my $stockprop_id = $c->req->param("stockprop_id");
@@ -169,19 +173,19 @@ sub delete_stockprop_GET {
     }
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $spr = $schema->resultset("Stock::Stockprop")->find( { stockprop_id => $stockprop_id });
-    if (! $spr) { 
+    if (! $spr) {
 	$c->stash->{rest} = { error => 'The specified prop does not exist' };
 	return;
     }
-    eval { 
+    eval {
 	$spr->delete();
     };
-    if ($@) { 
+    if ($@) {
 	$c->stash->{rest} = { error => "An error occurred during deletion: $@" };
 	    return;
     }
     $c->stash->{rest} = { message => "The element was removed from the database." };
-    
+
 }
 
 
@@ -209,6 +213,8 @@ sub associate_locus_GET :Args(0) {
     $locus_data =~ m/(.*)\s\((.*)\)/ ;
     my $locus_name = $1;
     my $locus_symbol = $2;
+    #print STDERR "Name: $locus_name Symbol: $locus_symbol Allele: $allele_symbol Default: $is_default\n";
+
     my $schema =  $c->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
     my ($allele) = $c->dbic_schema('CXGN::Phenome::Schema')
         ->resultset('Locus')
@@ -234,7 +240,7 @@ sub associate_locus_GET :Args(0) {
         # rightly) be counted as a server error
         if ($stock && $allele_id) {
             try {
-                my $cxgn_stock = CXGN::Chado::Stock->new($schema, $stock_id);
+                my $cxgn_stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
                 $cxgn_stock->associate_allele($allele_id, $c->user->get_object->get_sp_person_id);
 
                 $c->stash->{rest} = ['success'];
@@ -342,7 +348,7 @@ sub display_ontologies_GET  {
         $db_accession = $cvterm_id if $db_name eq $trait_db_name;
         my $url = $_->cvterm->dbxref->db->urlprefix . $_->cvterm->dbxref->db->url;
         my $cvterm_link =
-            qq |<a href="/chado/cvterm?cvterm_id=$cvterm_id" target="blank">$cvterm_name</a>|;
+            qq |<a href="/cvterm/$cvterm_id/view" target="blank">$cvterm_name</a>|;
         # the stock_cvtermprop objects have all the evidence and metadata for the annotation
         my $props = $_->stock_cvtermprops;
         my ($relationship_id) = $props->search( { type_id =>$rel_cvterm->cvterm_id} )->single ? $props->search( { type_id =>$rel_cvterm->cvterm_id} )->single->value : undef; # should be 1 relationship per annotation
@@ -547,10 +553,10 @@ sub associate_ontology_POST :Args(0) {
                 $s_cvterm->create_stock_cvtermprops(
                     { 'evidence_code' => $evidence_code } , { db_name => 'ECO', cv_name =>'evidence_code' } ) if looks_like_number($evidence_code);
                  $s_cvterm->create_stock_cvtermprops(
-                     { 'evidence_description' => $evidence_description } , { cv_name =>'null', autocreate => 1 } ) if looks_like_number($evidence_description);
+                     { 'evidence_description' => $evidence_description } , { cv_name =>'local', autocreate => 1 } ) if looks_like_number($evidence_description);
                 $s_cvterm->create_stock_cvtermprops(
                     { 'evidence_with' => $evidence_with  } , { cv_name =>'local' , autocreate=>1} ) if looks_like_number($evidence_with);
-                # store the person loading the annotation 
+                # store the person loading the annotation
                 $s_cvterm->create_stock_cvtermprops(
                     { 'sp_person_id' => $logged_person_id  } , { cv_name =>'local' , autocreate=>1} );
                 #store today's date
@@ -622,7 +628,7 @@ sub evidences_GET :Args(0) {
     my $stock = $c->stash->{stock};
     # get a list of evidences
     my $response_hash={};
-    
+
     $c->stash->{rest} = $response_hash;
 }
 
@@ -686,7 +692,7 @@ sub trait_autocomplete_GET :Args(0) {
     while  (my ($term_name) = $sth->fetchrow_array ) {
         push @response_list, $term_name;
     }
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 =head2 project_autocomplete
@@ -719,7 +725,7 @@ sub project_autocomplete_GET :Args(0) {
     while  (my ($project_name) = $sth->fetchrow_array ) {
         push @response_list, $project_name;
     }
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 =head2 project_year_autocomplete
@@ -753,7 +759,36 @@ sub project_year_autocomplete_GET :Args(0) {
     while  (my ($project_name) = $sth->fetchrow_array ) {
         push @response_list, $project_name;
     }
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
+}
+
+=head2 stock_organization_autocomplete
+
+Public Path: /ajax/stock/stock_organization_autocomplete
+
+Autocomplete a stock organization. Takes a single GET param,
+C<term>, responds with a JSON array of completions for that term.
+Finds only organization stockprops that are linked with a stock
+
+=cut
+
+sub stock_organization_autocomplete : Local : ActionClass('REST') { }
+
+sub stock_organization_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+
+    my $term = $c->req->param('term');
+    # trim and regularize whitespace
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+    my $q = "SELECT  distinct value FROM stockprop JOIN cvterm on cvterm_id = type_id WHERE cvterm.name = ? AND value ilike ?";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute( 'organization' , '%'.$term.'%');
+    while  (my ($organization_name) = $sth->fetchrow_array ) {
+        push @response_list, $organization_name;
+    }
+    $c->stash->{rest} = \@response_list;
 }
 
 =head2 geolocation_autocomplete
@@ -786,7 +821,7 @@ sub geolocation_autocomplete_GET :Args(0) {
     while  (my ($location) = $sth->fetchrow_array ) {
         push @response_list, $location;
     }
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 =head2 stock_autocomplete
@@ -800,9 +835,9 @@ sub geolocation_autocomplete_GET :Args(0) {
 
 =cut
 
-sub stock_autocomplete : Local : ActionClass('REST') { } 
+sub stock_autocomplete : Local : ActionClass('REST') { }
 
-sub stock_autocomplete_GET :Args(0) { 
+sub stock_autocomplete_GET :Args(0) {
     my ($self, $c) = @_;
 
     my $term = $c->req->param('term');
@@ -814,13 +849,13 @@ sub stock_autocomplete_GET :Args(0) {
     my $q = "select distinct(uniquename) from stock where uniquename ilike ? ORDER BY stock.uniquename LIMIT 100";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%');
-    while (my ($stock_name) = $sth->fetchrow_array) { 
+    while (my ($stock_name) = $sth->fetchrow_array) {
 	push @response_list, $stock_name;
     }
 
-    print STDERR "stock_autocomplete RESPONSELIST = ".join ", ", @response_list;
-    
-    $c->{stash}->{rest} = \@response_list;
+    #print STDERR "stock_autocomplete RESPONSELIST = ".join ", ", @response_list;
+
+    $c->stash->{rest} = \@response_list;
 }
 
 =head2 accession_autocomplete
@@ -834,9 +869,9 @@ sub stock_autocomplete_GET :Args(0) {
 
 =cut
 
-sub accession_autocomplete : Local : ActionClass('REST') { } 
+sub accession_autocomplete : Local : ActionClass('REST') { }
 
-sub accession_autocomplete_GET :Args(0) { 
+sub accession_autocomplete_GET :Args(0) {
     my ($self, $c) = @_;
 
     my $term = $c->req->param('term');
@@ -845,32 +880,144 @@ sub accession_autocomplete_GET :Args(0) {
     $term =~ s/\s+/ /g;
 
     my @response_list;
-    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='accession' ORDER BY stock.uniquename";
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and (cvterm.name='accession' or cvterm.name='vector_construct') ORDER BY stock.uniquename";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%');
-    while (my ($stock_name) = $sth->fetchrow_array) { 
+    while (my ($stock_name) = $sth->fetchrow_array) {
+	push @response_list, $stock_name;
+    }
+
+    print STDERR Dumper @response_list;
+
+    $c->stash->{rest} = \@response_list;
+}
+
+=head2 accession_population_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub accession_population_autocomplete : Local : ActionClass('REST') { }
+
+sub accession_population_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and (cvterm.name='accession' or cvterm.name='population') ORDER BY stock.uniquename";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
 	push @response_list, $stock_name;
     }
 
     #print STDERR "stock_autocomplete RESPONSELIST = ".join ", ", @response_list;
-    
-    $c->{stash}->{rest} = \@response_list;
+
+    $c->stash->{rest} = \@response_list;
 }
+
+
+=head2 pedigree_female_parent_autocomplete
+
+Public Path: /ajax/stock/pedigree_female_parent_autocomplete
+
+Autocomplete a female parent associated with pedigree.
+
+=cut
+
+sub pedigree_female_parent_autocomplete: Local : ActionClass('REST'){}
+
+sub pedigree_female_parent_autocomplete_GET : Args(0){
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+
+    my $q = "SELECT distinct (pedigree_female_parent.uniquename) FROM stock AS pedigree_female_parent
+    JOIN stock_relationship ON (stock_relationship.subject_id = pedigree_female_parent.stock_id)
+    JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'female_parent'
+    JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
+    JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'accession'
+    WHERE pedigree_female_parent.uniquename ilike ? ORDER BY pedigree_female_parent.uniquename";
+
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my($pedigree_female_parent) = $sth->fetchrow_array){
+      push @response_list, $pedigree_female_parent;
+    }
+
+  print STDERR Dumper @response_list ;
+    $c->stash->{rest} = \@response_list;
+
+}
+
+
+=head2 cross_female_parent_autocomplete
+
+Public Path: /ajax/stock/cross_female_parent_autocomplete
+
+Autocomplete a female parent associated with cross.
+
+=cut
+
+sub cross_female_parent_autocomplete: Local : ActionClass('REST'){}
+
+sub cross_female_parent_autocomplete_GET : Args(0){
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+
+    my $q = "SELECT distinct (cross_female_parent.uniquename) FROM stock AS cross_female_parent
+    JOIN stock_relationship ON (stock_relationship.subject_id = cross_female_parent.stock_id)
+    JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'female_parent'
+    JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
+    JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'cross'
+    WHERE cross_female_parent.uniquename ilike ? ORDER BY cross_female_parent.uniquename";
+
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my($cross_female_parent) = $sth->fetchrow_array){
+      push @response_list, $cross_female_parent;
+    }
+
+  print STDERR Dumper @response_list ;
+    $c->stash->{rest} = \@response_list;
+
+}
+
+
 
 sub parents : Local : ActionClass('REST') {}
 
-sub parents_GET : Path('/ajax/stock/parents') Args(0) { 
+sub parents_GET : Path('/ajax/stock/parents') Args(0) {
     my $self = shift;
     my $c = shift;
-    
+
     my $stock_id = $c->req->param("stock_id");
-    
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $female_parent_type_id = $schema->resultset("Cv::Cvterm")->find( { name=> "female_parent" } )->cvterm_id();
 
     my $male_parent_type_id = $schema->resultset("Cv::Cvterm")->find( { name=> "male_parent" } )->cvterm_id();
-    
+
     my %parent_types;
     $parent_types{$female_parent_type_id} = "female";
     $parent_types{$male_parent_type_id} = "male";
@@ -878,14 +1025,14 @@ sub parents_GET : Path('/ajax/stock/parents') Args(0) {
     my $parent_rs = $schema->resultset("Stock::StockRelationship")->search( { 'me.type_id' => { -in => [ $female_parent_type_id, $male_parent_type_id] }, object_id => $stock_id })->search_related("subject");
 
     my @parents;
-    while (my $p = $parent_rs->next()) { 
-	push @parents, [ 
-	    $p->get_column("stock_id"), 
-	    $p->get_column("uniquename"), 
+    while (my $p = $parent_rs->next()) {
+	push @parents, [
+	    $p->get_column("stock_id"),
+	    $p->get_column("uniquename"),
 	];
-	
+
     }
-    $c->stash->{rest} = { 
+    $c->stash->{rest} = {
 	stock_id => $stock_id,
 	parents => \@parents,
     };
@@ -893,17 +1040,17 @@ sub parents_GET : Path('/ajax/stock/parents') Args(0) {
 
 sub remove_stock_parent : Local : ActionClass('REST') { }
 
-sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) { 
+sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
     my ($self, $c) = @_;
 
     my $stock_id = $c->req->param("stock_id");
     my $parent_id = $c->req->param("parent_id");
 
-    if (!$stock_id || ! $parent_id) { 
+    if (!$stock_id || ! $parent_id) {
 	$c->stash->{rest} = { error => "No stock and parent specified" };
-	return;	
+	return;
     }
-    
+
     if (! ($c->user && ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))))  {
 	$c->stash->{rest} = { error => "Log in is required, or insufficent privileges, for removing parents" };
 	return;
@@ -911,10 +1058,10 @@ sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
 
     my $q = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::StockRelationship")->find( { object_id => $stock_id, subject_id=> $parent_id });
 
-    eval { 
+    eval {
 	$q->delete();
     };
-    if ($@) { 
+    if ($@) {
 	$c->stash->{rest} = { error => $@ };
 	return;
     }
@@ -937,17 +1084,17 @@ sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
 
 sub add_stock_parent : Local : ActionClass('REST') { }
 
-sub add_stock_parent_GET :Args(0) { 
+sub add_stock_parent_GET :Args(0) {
     my ($self, $c) = @_;
 
     print STDERR "Add_stock_parent function...\n";
-    if (!$c->user()) { 
+    if (!$c->user()) {
 	print STDERR "User not logged in... not associating stocks.\n";
 	$c->stash->{rest} = {error => "You need to be logged in to add pedigree information." };
 	return;
     }
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) { 
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
 	print STDERR "User does not have sufficient privileges.\n";
 	$c->stash->{rest} = {error =>  "you have insufficient privileges to add pedigree information." };
 	return;
@@ -960,13 +1107,13 @@ sub add_stock_parent_GET :Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 
     my $cvterm_name = "";
-    if ($parent_type eq "male") { 
+    if ($parent_type eq "male") {
 	$cvterm_name = "male_parent";
     }
-    elsif ($parent_type eq "female") { 
+    elsif ($parent_type eq "female") {
 	$cvterm_name = "female_parent";
     }
-    
+
     my $type_id_row = $schema->resultset("Cv::Cvterm")->find( { name=> $cvterm_name } );
 
     # check if a parent of this parent_type is already associated with this stock
@@ -981,52 +1128,54 @@ sub add_stock_parent_GET :Args(0) {
     }
 
     my $cvterm_id;
-    if ($type_id_row) { 
+    if ($type_id_row) {
 	$cvterm_id = $type_id_row->cvterm_id;
     }
 
     print STDERR "PARENT_NAME = $parent_name STOCK_ID $stock_id  $cvterm_name\n";
 
     my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id });
-    my $parent = $schema->resultset("Stock::Stock")->find( { name => $parent_name } );
 
-    if (!$stock) { 
-	$c->stash->{rest} = { error => "Stock with $stock_id is not found in the database!"}; 
-	return; 
-    }
-    if (!$parent) { 
-	$c->stash->{rest} = { error => "Stock with name $parent_name is not in the database!"}; 
-	return; 
-    }
+   my $parent = $schema->resultset("Stock::Stock")->find( { uniquename => $parent_name } );
 
-    my $new_row = $schema->resultset("Stock::StockRelationship")->new( 
-	{ 
+
+
+    if (!$stock) {
+	$c->stash->{rest} = { error => "Stock with $stock_id is not found in the database!"};
+	return;
+    }
+    if (!$parent) {
+	$c->stash->{rest} = { error => "Stock with uniquename $parent_name was not found, Either this is not unique name or it is not in the database!"};
+	return;     }
+
+    my $new_row = $schema->resultset("Stock::StockRelationship")->new(
+	{
 	    subject_id => $parent->stock_id,
 	    object_id  => $stock->stock_id,
 	    type_id    => $cvterm_id,
 	});
 
-    eval { 
+    eval {
 	$new_row->insert();
     };
 
-    if ($@) { 
+    if ($@) {
 	$c->stash->{rest} = { error => "An error occurred: $@"};
     }
-    else { 
+    else {
 	$c->stash->{rest} = { error => '', };
     }
 }
 
 
 
-sub generate_genotype_matrix : Path('/phenome/genotype/matrix/generate') :Args(1) { 
+sub generate_genotype_matrix : Path('/phenome/genotype/matrix/generate') :Args(1) {
     my $self = shift;
     my $c = shift;
     my $group = shift;
 
     my $file = $c->config->{genotype_dump_file} || "/tmp/genotype_dump_file";
-    
+
     CXGN::Phenome::DumpGenotypes::dump_genotypes($c->dbc->dbh, $file);
 
 
@@ -1068,12 +1217,8 @@ sub add_phenotype_POST {
         my $user =  $c->user->get_object->get_sp_person_id;
         try {
             # find the cvterm for a phenotyping experiment
-            my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
-                { name   => 'phenotyping experiment',
-                  cv     => 'experiment type',
-                  db     => 'null',
-                  dbxref => 'phenotyping experiment',
-                });
+            my $pheno_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'phenotyping_experiment','experiment_type');
+
 
             #create the new phenotype
             my $phenotype = $schema->resultset("Phenotype::Phenotype")->find_or_create(
@@ -1135,26 +1280,26 @@ sub stock_members_phenotypes :Chained('/stock/get_stock') PathPart('datatables/t
     #
     my @stock_data;
 
-    foreach my $project (keys (%$subject_phenotypes)) { 
-	foreach my $trait (@{$subject_phenotypes->{$project}}) { 
-	    push @stock_data, [ 
-		$project, 
+    foreach my $project (keys (%$subject_phenotypes)) {
+	foreach my $trait (@{$subject_phenotypes->{$project}}) {
+	    push @stock_data, [
+		$project,
 		$trait->get_column("db_name").":".$trait->get_column("accession"),
 		$trait->get_column("observable"),
 		$trait->get_column("value"),
 	    ];
 	}
-    }	
+    }
 
     $c->stash->{rest} = { data => \@stock_data,
-                          #has_members_genotypes => $has_members_genotypes 
+                          #has_members_genotypes => $has_members_genotypes
     };
-    
+
 }
 
 sub _stock_project_phenotypes {
     my ($self, $schema, $bcs_stock) = @_;
-    
+
     return {} unless $bcs_stock;
     my $rs =  $schema->resultset("Stock::Stock")->stock_phenotypes_rs($bcs_stock);
     my %project_hashref;
@@ -1176,17 +1321,109 @@ sub _stock_project_phenotypes {
 
 =cut
 
-sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') Args(0) { 
+sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') Args(0) {
     my $self = shift;
     my $c = shift;
-    
+
     my @trials = $c->stash->{stock}->get_trials();
 
     my @formatted_trials;
-    foreach my $t (@trials) { 
+    foreach my $t (@trials) {
 	push @formatted_trials, [ '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>', $t->[3], '<a href="javascript:show_stock_trial_detail('.$c->stash->{stock}->get_stock_id().', \''.$c->stash->{stock}->get_name().'\' ,'.$t->[0].',\''.$t->[1].'\')">Details</a>' ];
     }
     $c->stash->{rest} = { data => \@formatted_trials };
+}
+
+
+=head2 action get_shared_trials()
+
+ Usage:        /datatables/sharedtrials
+ Desc:         retrieves trials associated with multiple stocks
+ Ret:          a table in json suitable for datatables
+ Args:         array of stock uniquenames
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_shared_trials :Path('/stock/get_shared_trials') : ActionClass('REST'){
+
+sub get_shared_trials_POST :Args(1) {
+    my ($self, $c) = @_;
+    $c->stash->{rest} = { error => "Nothing here, it's a POST.." } ;
+}
+sub get_shared_trials_GET :Args(1) {
+
+    my $self = shift;
+    my $c = shift;
+    my @stock_ids = $c->request->param( 'stock_ids[]' );
+    my $stock_string = join ",", map { "'$_'" } (@stock_ids);
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh();
+    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
+
+    my $criteria_list = [
+               'accessions',
+               'trials'
+             ];
+
+    my $dataref = {
+               'trials' => {
+                           'accessions' => $stock_string
+                         }
+                  };
+
+    my $queryref = {
+               'trials' => {
+                           'accessions' => 1
+                         }
+                  };
+
+    my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
+    if ($status->{'error'}) {
+      $c->stash->{rest} = { error => $status->{'error'}};
+      return;
+    }
+    my $trial_query = $bs->metadata_query($criteria_list, $dataref, $queryref);
+    my @shared_trials = @{$trial_query->{results}};
+
+    my @formatted_rows = ();
+
+    foreach my $stock_id (@stock_ids) {
+	     my $trials_string ='';
+       my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
+       my $uniquename = $stock->get_uniquename;
+       $dataref = {
+             'trials' => {
+                         'accessions' => $stock_id
+                       }
+                };
+        $trial_query = $bs->metadata_query($criteria_list, $dataref, $queryref);
+        my @current_trials = @{$trial_query->{results}};
+	      my $num_trials = scalar @current_trials;
+
+	      foreach my $t (@current_trials) {
+          print STDERR "t = " . Dumper($t);
+          $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
+	      }
+	      $trials_string =~ s/,\s+$//;
+	      push @formatted_rows, ['<a href="/stock/'.$stock_id.'/view">'.$uniquename.'</a>', $num_trials, $trials_string ];
+    }
+
+    my $num_trials = scalar @shared_trials;
+    if ($num_trials > 0) {
+	    my $trials_string = '';
+	    foreach my $t (@shared_trials) {
+	       $trials_string = $trials_string . '<a href="/breeders/trial/'.$t->[0].'">'.$t->[1].'</a>,  ';
+      }
+	    $trials_string  =~ s/,\s+$//;
+	    push @formatted_rows, [ "Trials in Common", $num_trials, $trials_string];
+    } else {
+      push @formatted_rows, [ "Trials in Common", $num_trials, "No shared trials found."];
+    }
+
+    $c->stash->{rest} = { data => \@formatted_rows, shared_trials => \@shared_trials };
+  }
 }
 
 =head2 action get_stock_trait_list()
@@ -1200,42 +1437,49 @@ sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') 
 
 =cut
 
-sub get_stock_trait_list :Chained('/stock/get_stock') PathPart('datatables/traitlist') Args(0) { 
+sub get_stock_trait_list :Chained('/stock/get_stock') PathPart('datatables/traitlist') Args(0) {
     my $self = shift;
     my $c = shift;
 
     my @trait_list = $c->stash->{stock}->get_trait_list();
-    
-    my @formatted_list; 
-    foreach my $t (@trait_list) { 
-	push @formatted_list, [ '<a href="/chado/cvterm?cvterm_id='.$t->[0].'">'.$t->[1].'</a>', $t->[2], sprintf("%3.1f", $t->[3]), sprintf("%3.1f", $t->[4]) ];
+
+    my @formatted_list;
+    foreach my $t (@trait_list) {
+	#print STDERR Dumper($t);
+	push @formatted_list, [ '<a href="/cvterm/'.$t->[0].'/view">'.$t->[1].'</a>', $t->[2], sprintf("%3.1f", $t->[3]), sprintf("%3.1f", $t->[4]) ];
     }
-    print STDERR Dumper(\@formatted_list);
+    #print STDERR Dumper(\@formatted_list);
 
     $c->stash->{rest} = { data => \@formatted_list };
 }
 
-sub get_phenotypes_by_stock_and_trial :Chained('/stock/get_stock') PathPart('datatables/trial') Args(1) { 
+sub get_phenotypes_by_stock_and_trial :Chained('/stock/get_stock') PathPart('datatables/trial') Args(1) {
     my $self = shift;
     my $c = shift;
     my $trial_id = shift;
+    my $stock_type = $c->stash->{stock}->get_type()->name();
 
-    my $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL)   FROM stock JOIN stock_relationship ON (stock.stock_id=stock_relationship.object_id) JOIN  nd_experiment_stock ON (nd_experiment_stock.stock_id=stock_relationship.subject_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
+    my $q;
+    if ($stock_type eq 'accession'){
+        $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN stock_relationship ON (stock.stock_id=stock_relationship.object_id) JOIN  nd_experiment_stock ON (nd_experiment_stock.stock_id=stock_relationship.subject_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
+    } else {
+        $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
+    }
 
     my $h = $c->dbc->dbh->prepare($q);
     $h->execute($trial_id, $c->stash->{stock}->get_stock_id());
-    
+
     my @phenotypes;
-    while (my ($stock_id, $stock_name, $cvterm_id, $cvterm_name, $avg, $stddev) = $h->fetchrow_array()) { 
-	push @phenotypes, [ "<a href=\"/chado/cvterm?action=view&cvterm_id=$cvterm_id\">$cvterm_name</a>", sprintf("%.2f", $avg), sprintf("%.2f", $stddev) ];
+    while (my ($stock_id, $stock_name, $cvterm_id, $cvterm_name, $avg, $stddev, $count) = $h->fetchrow_array()) {
+	push @phenotypes, [ "<a href=\"/cvterm/$cvterm_id/view\">$cvterm_name</a>", sprintf("%.2f", $avg), sprintf("%.2f", $stddev), $count ];
     }
-    
-    $c->stash->{rest} = { data => \@phenotypes };      
+    $c->stash->{rest} = { data => \@phenotypes };
 }
 
-sub get_phenotypes { 
+sub get_phenotypes {
     my $self = shift;
     my $c = shift;
+    shift;
     my $trait_id = shift;
 
     my $stock_id = $c->stash->{stock_row}->stock_id();
@@ -1244,7 +1488,7 @@ sub get_phenotypes {
     my $bcs_stock_rs = $schema->resultset("Stock::Stock")->search( { stock_id => $stock_id });
 
     if (! $bcs_stock_rs) { die "The stock $stock_id does not exist in the database"; }
-    
+
     my $bcs_stock = $bcs_stock_rs->first();
 
 # #    my ($has_members_genotypes) = $bcs_stock->result_source->schema->storage->dbh->selectrow_array( <<'', undef, $bcs_stock->stock_id );
@@ -1264,16 +1508,122 @@ sub get_phenotypes {
     return $subject_phenotypes;
 }
 
-sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigree') Args(0) { 
+sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigree') Args(0) {
     my $self = shift;
     my $c = shift;
     my $level = $c->req->param("level");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $s = CXGN::Chado::Stock->new($schema, $c->stash->{stock}->get_stock_id());
-    my $pedigree_root = $s->get_parents($level);
-    my $pedigree_string = $pedigree_root->get_pedigree_string($level);
 
-    $c->stash->{rest} = { pedigree_string => $pedigree_string };
+    my $stock = CXGN::Stock->new(
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        stock_id => $c->stash->{stock}->get_stock_id()
+    );
+    my $parents = $stock->get_pedigree_string($level);
+    print STDERR "Parents are: ".Dumper($parents)."\n";
+
+    $c->stash->{rest} = { pedigree_string => $parents };
 }
+
+sub stock_lookup : Path('/stock_lookup/') Args(2) ActionClass('REST') { }
+
+sub stock_lookup_POST {
+    my $self = shift;
+    my $c = shift;
+    my $lookup_from_field = shift;
+    my $lookup_field = shift;
+    my $value_to_lookup = $c->req->param($lookup_from_field);
+
+    #print STDERR $lookup_from_field;
+    #print STDERR $lookup_field;
+    #print STDERR $value_to_lookup;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $s = $schema->resultset("Stock::Stock")->find( { $lookup_from_field => $value_to_lookup } );
+    my $value;
+    if ($s && $lookup_field eq 'stock_id') {
+        $value = $s->stock_id();
+    }
+    $c->stash->{rest} = { $lookup_from_field => $value_to_lookup, $lookup_field => $value };
+}
+
+sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/trial_related_stock') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+
+    my $trial_related_stock = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $trial_related_stock->get_trial_related_stock();
+    my @stocks;
+    foreach my $r (@$result){
+      my ($stock_id, $stock_name, $cvterm_name) = @$r;
+      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
+    }
+
+    $c->stash->{rest}={data=>\@stocks};
+}
+
+sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+    my $progenies = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $progenies->get_progenies();
+    my @stocks;
+    foreach my $r (@$result){
+      my ($cvterm_name, $stock_id, $stock_name) = @$r;
+      push @stocks, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}];
+    }
+
+    $c->stash->{rest}={data=>\@stocks};
+}
+
+sub get_group_and_member:Chained('/stock/get_stock') PathPart('datatables/group_and_member') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+
+    my $related_groups = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $related_groups->get_group_and_member();
+    my @group;
+    foreach my $r (@$result){
+
+      my ($stock_id, $stock_name, $cvterm_name) = @$r;
+
+      push @group, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
+    }
+
+    $c->stash->{rest}={data=>\@group};
+
+}
+
+sub get_stock_for_tissue:Chained('/stock/get_stock') PathPart('datatables/stock_for_tissue') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
+
+    my $tissue_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $tissue_stocks->get_stock_for_tissue();
+    my @stocks;
+    foreach my $r (@$result){
+
+      my ($stock_id, $stock_name, $cvterm_name) = @$r;
+
+      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
+    }
+
+    $c->stash->{rest}={data=>\@stocks};
+
+}
+
+
+
+
 
 1;

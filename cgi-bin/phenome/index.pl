@@ -14,8 +14,11 @@ print <<HTML;
 
 $page_title
 <br/>
-<div style="width:425px;text-align:left" id="__ss_1407362"><a style="font:14px Helvetica,Arial,Sans-serif;display:block;margin:12px 0 3px 0;text-decoration:underline;" href="http://www.slideshare.net/nm249/sgn-community-annotation-tutorial?type=presentation" title="SGN community Annotation Tutorial">SGN community Annotation Tutorial</a><object style="margin:0px" width="425" height="355"><param name="movie" value="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=sgncommunitytutorial-090508152333-phpapp01&rel=0&stripped_title=sgn-community-annotation-tutorial" /><param name="allowFullScreen" value="true"/><param name="allowScriptAccess" value="always"/><embed src="http://static.slidesharecdn.com/swf/ssplayer2.swf?doc=sgncommunitytutorial-090508152333-phpapp01&rel=0&stripped_title=sgn-community-annotation-tutorial" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="425" height="355"></embed></object>
-</div>
+
+<iframe src="//www.slideshare.net/slideshow/embed_code/key/rbDItCskr6kq5C" width="595" height="485" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/nm249/sgn-community-annotation-tutorial" title="SGN community Annotation Tutorial" target="_blank">SGN community Annotation Tutorial</a> </strong> from <strong><a href="//www.slideshare.net/nm249" target="_blank">Naama Menda</a></strong> </div>
+
+
+
 <br/>
 <hr/>
 

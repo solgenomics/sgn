@@ -1,0 +1,106 @@
+
+<%args>
+</%args>
+
+
+<div class="modal fade" id="add_person_role_dialog" name="add_person_role_dialog" tabindex="-1" role="dialog" aria-labelledby="addPersonRoleDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addPersonRoleDialog">Give Role to User</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+	       <form class="form-horizontal" >
+	        <div class="form-group">
+                <label class="col-sm-3 control-label">Username: </label>
+                <div class="col-sm-9" >
+                    <div id="add_person_role_person_select_div">
+                    [LOADING...]
+                    </div>
+                </div>
+	        </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Role: </label>
+                <div class="col-sm-9" >
+                    <div id="add_person_role_role_select_div">
+                    [LOADING...]
+                    </div>
+                </div>
+	        </div>
+	       </form><br/>
+         
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="add_person_role_cancel_button" id="add_person_role_cancel_button" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="add_person_role_submit_button" id="add_person_role_submit_button" title="Submit">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+
+    jQuery('#add_person_role_button').click( function () {
+
+        jQuery.ajax ( {
+            url : '/ajax/people/people_and_roles',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                //console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                var sp_person_html = '<select class="form-control" id="add_person_role_person_select">';
+                for (var i=0; i<response.sp_persons.length; i++) {
+                    sp_person_html = sp_person_html + '<option value="'+response.sp_persons[i][1]+'">'+response.sp_persons[i][0]+'</option>';
+                }
+                jQuery('#add_person_role_person_select_div').empty().html(sp_person_html);
+
+                var sp_role_html = '<select class="form-control" id="add_person_role_role_select">';
+                for (var i=0; i<response.sp_roles.length; i++) {
+                    sp_role_html = sp_role_html + '<option value="'+response.sp_roles[i][1]+'">'+response.sp_roles[i][0]+'</option>';
+                }
+                jQuery('#add_person_role_role_select_div').empty().html(sp_role_html);
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occured: '+response);
+            }
+        });
+
+        jQuery('#add_person_role_dialog').modal("show");
+
+    });
+  
+    jQuery('#add_person_role_submit_button').click( function () {
+        jQuery.ajax ( {
+            url : '/ajax/people/add_person_role?sp_person_id='+jQuery("#add_person_role_person_select").val()+'&sp_role_id='+jQuery("#add_person_role_role_select").val(),
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                //console.log(response);
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert('Error: '+response.error);
+                } else {
+                    alert('Role Added for User!');
+                }
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occured: '+response);
+            }
+        });
+    });
+
+});
+
+</script>

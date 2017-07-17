@@ -10,7 +10,7 @@ Crosses may be uploaded in an Excel file (.xls)
   Header:
 </b>
 <br>
-The first row (header) should contain the following:
+The first row (header) must contain the following:
 <br>
 
 <table class="table table-bordered table-hover">
@@ -20,33 +20,60 @@ The first row (header) should contain the following:
     <td>cross_type</td>
     <td>female_parent</td>
     <td>male_parent</td>
-    <td>number_of_progeny</td>
-    <td>number_of_flowers</td>
-    <td>number_of_seeds</td>
   </tr>
   </tbody>
 </table>
 
 <b>
-  Required fields:
+  Required columns:
 </b>
 <br>
-cross_name
+cross_name (must not conflict with an existing cross name)
 <br>
-cross_type (biparental, self, or open)
+cross_type (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)
 <br>
-female_parent
+female_parent (must exist in the database)
 <br>
-male_parent (header required but cells may be blank for some cross types)
+male_parent (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, must exist in the database)
 <br>
 <br>
 
 <b>
-  Optional fields:
+  Optional columns (dates must be in the format YYYY-MM-DD):
 </b>
-<br>
-number_of_progeny
 <br>
 number_of_flowers
 <br>
-number_of_seeds
+date_of_pollination
+<br>
+date_of_harvest
+<br>
+number_of_seeds_harvested
+<br>
+days_to_maturity
+<br>
+date_of_seed_extraction
+<br>
+number_of_seeds_extracted
+<br>
+number_of_viable_seeds
+<br>
+number_of_nonviable_seeds
+<br>
+days_from_harvest_to_extraction
+<br>
+date_of_embryo_rescue
+<br>
+number_of_embryos_rescued
+<br>
+days_from_extraction_to_embryo_rescue
+<br>
+number_of_embryos_germinated
+<br>
+number_of_embryos_contaminated
+<br>
+number_of_seeds_planted
+<br>
+number_of_seeds_germinated
+<br>
+number_of_progeny

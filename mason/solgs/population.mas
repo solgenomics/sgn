@@ -2,7 +2,7 @@
 
 $pop_id
 $show_data => 1;
-$traits_form
+$traits_form => ''
 $all_traits_file
 $no_traits_selected
 $project_name
@@ -12,6 +12,7 @@ $markers_no
 $traits_no
 $uploaded_reference=>''
 $owner=>''
+$protocol
 $acronym
 
 </%args>
@@ -46,13 +47,16 @@ $acronym
     markers_no   => $markers_no,
     traits_no    => $traits_no,
     owner        => $owner,
+    protocol     => $protocol,
     uploaded_reference => $uploaded_reference
  &>
 
 </&>
 
 % if ($show_data) 
-%{
+% {
+% if ($markers_no > 1)
+% {
  
 
 <&| /page/info_section.mas, 
@@ -80,6 +84,22 @@ $acronym
    acronym => $acronym,
 &>
 
+%} 
+% else
+% {
+
+<&| /page/info_section.mas, 
+      collapsible => 1, 
+      collapsed   => 0, 
+      title       => "Genotype Data"
+&>
+
+  <div id="traits_list_message"  style="font-weight:bold;text-align:center;text-transform:uppercase;color:#A7C942">
+    <p>There is no genotype data for this population.</p>
+  </div>
+
+</&>
+%}
 %}
 % else
 %{
@@ -94,3 +114,6 @@ $acronym
 
 </&>
 %}
+
+
+ <input type="hidden" id="population_id" value="<% $pop_id %>" />

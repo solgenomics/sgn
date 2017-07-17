@@ -11,7 +11,7 @@ $user_id => undef
 @roles => ()
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.FieldBook'] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.FieldBook', 'CXGN.BreedersToolbox.HTMLSelect'] &>
 
 <& /page/page_title.mas, title=>'Field Book Tools' &>
 
@@ -24,23 +24,27 @@ $user_id => undef
   </p>
 </&>
 
-<&| /page/info_section.mas, title=>'Field Layout Files', collapsible=>1, collapsed=>0, &>
+<& /fieldbook/create_fieldbook_dialog.mas &>
+
+<&| /page/info_section.mas, title=>'Field Layout Files', empty_message=>'', collapsible=>1, collapsed=>0, subtitle=>'[<a name="create_fieldbook_link">New</a>]' &>
 <%perl>
-my @breeding_programs = @{$programs};
-foreach my $prog (@breeding_programs) {
-  print @$prog[0].@$prog[1]."</br>";
-}
+#my @breeding_programs = @{$programs};
+#foreach my $prog (@breeding_programs) {
+#  print @$prog[0].@$prog[1]."</br>";
+#}
 foreach my $file (@file_metadata) {
    my @trial_array = @{$file};
    my $file_name = $trial_array[1];
-   my $trial_layout_download = '[<a href="/fieldbook/trial_download/'.$trial_array[2].'">Download</a>]';
+   my $trial_layout_download = '[<a href="/fieldbook/trial_download/'.$trial_array[2].'">Download File</a>]  |   [<a id="delete_fieldbook_layout_link" href="/fieldbook/delete_FB_layout/'.$trial_array[2].'">Delete Layout File</a>]';
    print $trial_array[1]."$trial_layout_download<br>";
    #print $trial_array[2]."</br>";
 }
 </%perl>
 </&>
 
-<&| /page/info_section.mas, title=>'Trait Files', collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_new_trait_file_link">New</a>]' &>
+<& /fieldbook/create_trait_file_dialog.mas &>
+
+<&| /page/info_section.mas, title=>'Trait Files', empty_message=>'', collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_new_trait_file_link">New</a>]' &>
   <%perl>
   foreach my $trait_ref (@trait_files) {
     my @trait_array = @{$trait_ref};
@@ -52,18 +56,26 @@ foreach my $file (@file_metadata) {
   </%perl>
 </&>
 
-<&| /page/info_section.mas, title=>'Uploaded Phenotype Files', collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_tablet_phenotype_file_link">Upload</a>]' &>
+<&| /page/info_section.mas, title=>'Uploaded Phenotype Files', collapsible=>1, collapsed=>0, subtitle=>'[<a id="upload_fieldbook_phenotypes_link">Upload</a>]' &>
   <%perl>
-  foreach my $phenotype_ref (@phenotype_files) {
-    my @phenotype_array = @{$phenotype_ref};
-    my $phenotype_file_name = $phenotype_array[0];
-    #my $phenotype_file_download = '[<a href="/fieldbook/trait_file_download/'.$trait_array[1].'">Download</a>]';
-    #print $phenotype_array[0]."$trait_file_download<br>";
-    print qq { $phenotype_array[0]  <a href="javascript:remove_phenotype_data($phenotype_array[1])"><b>X</b></a></br> };
+  if (scalar(@phenotype_files)>0) {
+    print qq { <br/><div class="well well-sm"><table class="table fieldbook_phenotype_datatables"><thead><tr><th>Filename</th><th>Delete</th></tr></thead><tbody> };
+
+    foreach my $phenotype_ref (@phenotype_files) {
+      my @phenotype_array = @{$phenotype_ref};
+      my $phenotype_file_name = $phenotype_array[0];
+      #my $phenotype_file_download = '[<a href="/fieldbook/trait_file_download/'.$trait_array[1].'">Download</a>]';
+      #print $phenotype_array[0]."$trait_file_download<br>";
+      print qq { <tr><td>$phenotype_array[0]</td><td><a href="javascript:remove_phenotype_data($phenotype_array[1])"><b>X</b></a></td></tr> };
+    }
+
+    print qq { </tbody></table></div> };
   }
   </%perl>
+
 </&>
 
+<& /fieldbook/upload_phenotype_fieldbook.mas &>
 
 <&| /page/info_section.mas, title=>'Removed Phenotype Files', collapsible=>1, collapsed=>1 &>
   <%perl>
@@ -79,49 +91,31 @@ foreach my $file (@file_metadata) {
 
 </div>
 
-<div id="create_trait_file_dialog" class="ui-widget" title="Create Trait File">
-  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="create_trait_file_form" name="create_trait_file_form">
-    <label for="trait_file_name" style="display: inline-block; width: 200px;">Trait file name:</label>
-    <input id="trait_file_name" name="trait_file_name" />
-    <div id="select_list_container" name="select_list">
-      <label id="select_list_label" for="select_list_list_select" style="display: inline-block; width: 200px;">List of traits to include:
-      </label>
-      <span id="select_list_div"></span>
-    </div>
-  </form>
-</div>
-
-
-
-<div id="upload_fieldbook_phenotypes_dialog" class="ui-widget" title="Upload Fieldbook File">
-  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_fieldbook_form" name="upload_fieldbook_form">
-      <label for="fieldbook_upload_file">Upload file:</label>
-      <input type="file" name="fieldbook_upload_file" id="fieldbook_upload_file" encoding="multipart/form-data" />
-  </form>
-</div>
-
 
 <script>
 
-  function remove_phenotype_data(file_id) { 
+jQuery(document).ready(function() {
+    jQuery('.fieldbook_phenotype_datatables').DataTable();
+} );
+
+  function remove_phenotype_data(file_id) {
     var yes = confirm("Do you really want to remove all data associated with this file (id="+file_id+")");
-    jQuery.ajax( { 
-      beforeSend: function() { jQuery('#working').dialog("open"); },
+    jQuery.ajax( {
+      beforeSend: function() { jQuery('#working_modal').modal("show"); },
       url: '/breeders/trial/delete/file/'+file_id,
-      success: function(response) { 
-         if (response.error) { 
+      success: function(response) {
+         jQuery('#working_modal').modal("hide");
+         if (response.error) {
            alert(response.error);
-           jQuery('#working').dialog("close");
          }
-         else { 
-           alert("SUCCESS!");
-           jQuery('#working').dialog("close");
-           location.reload();
+         else {
+            alert("SUCCESS!");
+            location.reload();
          }
       },
-      error: function(response) { 
-        alert("An error occurred!");
-       jQuery('#working').dialog("close");
+      error: function(response) {
+         jQuery('#working_modal').modal("hide");
+         alert("An error occurred!");
       }
     });
   }

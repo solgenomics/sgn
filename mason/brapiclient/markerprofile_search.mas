@@ -1,0 +1,43 @@
+<%args>
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'brapi.Table' ] &>
+
+<h4>MarkerProfile Search</h4>
+
+<div id="brapi_markerprofile_search_home_div">
+
+<input name="brapi_markerprofile_search_germplasmDbId" id="brapi_markerprofile_search_germplasmDbId" class="form-control" type="text" placeholder="GermplasmDbId" />
+<input name="brapi_markerprofile_search_studyDbId" id="brapi_markerprofile_search_studyDbId" class="form-control" type="text" placeholder="StudyDbId" />
+<input name="brapi_markerprofile_search_methodDbId" id="brapi_markerprofile_search_methodDbId" class="form-control" type="text" placeholder="MethodDbId" />
+<button class="btn btn-primary" name="brapi_markerprofile_search_submit" id="brapi_markerprofile_search_submit">Search</button>
+
+<br/><br/>
+
+<div id="brapi_markerprofile_search_result_div">
+
+</div>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery("#brapi_markerprofile_search_submit").click(function() {
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/markerprofiles?germplasmDbId='+jQuery("#brapi_markerprofile_search_germplasmDbId").val()+'&studyDbId='+jQuery("#brapi_markerprofile_search_studyDbId").val()+'&methodDbId='+jQuery("#brapi_markerprofile_search_methodDbId").val(),
+          'method': 'GET',
+          'success': function(response) {
+            console.log(response);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_markerprofile_search_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/markerprofiles', undefined);
+
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+    });
+});
+
+
+</script>

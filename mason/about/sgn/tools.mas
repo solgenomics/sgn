@@ -4,6 +4,8 @@
 
 <&| /page/info_section.mas, title => 'Data' &>
 <dl>
+<dt>Solanaceae and other Genomes</dt>
+<dd>SGN is a home for Solanaceae and closely related genomes, such as selected Rubiaceae genomes (e.g., <i>Coffea</i>). The <a href="/organism/Solanum_lycopersicum/genome">tomato</a>, <a href="/organism/Solanum_tuberosum/genome">potato</a>, <a href="/organism/Capsicum_annuum/genome">pepper</a>, and <a href="/organism/Solanum_melongena">eggplant</a> genome are examples of genomes that are currently available. If you would like to include a Solanaceae genome that you sequenced in SGN, please <a href="/contact/form">contact us</a>.</dd>
 <dt>ESTs</dt>
 <dd>SGN houses EST collections for tomato, potato, pepper, eggplant and
 petunia and corresponding unigene builds. EST sequence data and cDNA
@@ -17,17 +19,6 @@ microarray technology.
 <dt>Maps and Markers</dt>
 <dd>SGN has genetic maps and a searchable catalog of markers for
 tomato, potato, pepper, and eggplant.</dd>
-<dt>Tomato Sequencing</dt>
-<dd>SGN is the bioinformatics hub for the ongoing international project to
-fully sequence the euchromatic portion of the tomato genome.  In this role,
-we house:
-  <ul style="margin-top: 0.5em">
-    <li>a searchable catalog of tomato BACS</li>
-    <li>more than 400,000 BAC end sequences from these BACs</li>
-    <li>all BAC sequences used to assemble the tomato genome</li>
-% if( my $g = $c->enabled_feature('gbrowse2') ) {
-    <li>a <a href="<% $g->cgi_url.'/gbrowse' %>">Genome Browser</a> for sequence annotations</li>
-% }
   </ul>
 </dd>
 <dt>Tools</dt>
@@ -36,40 +27,20 @@ for use by anyone, listed <a href="/tools/">here</a>.  Some of our
 most popular tools include <a href="/tools/blast/">BLAST</a> searches,
 the <a href="/tools/solcyc/">SolCyc biochemical pathways database</a>,
 a <a href="/tools/caps_designer/caps_input.pl">CAPS experiment
-designer</a>, an innovative
-<a href="/tools/intron_detection/find_introns.pl">Intron detection
-tool</a>, an advanced <a href="/tools/align_viewer/">Alignment Analyzer</a> and <a href="/tools/tree_browser/">browser for phylogenetic trees</a>.   </dd>
+designer</a>,  an <a href="/tools/align_viewer/">Alignment Analyzer</a> and <a href="/tools/tree_browser/">browser for phylogenetic trees</a>. The <a href="http://vigs.solgenomics.net">VIGS tool</a> can help predict the properties of VIGS (Viral Induced Gene Silencing) constructs.</dd>
 
 </dl>
 
 <p>The data in SGN have been submitted by many different research
 groups around the world which are acknowledged on the corresponding
 pages on SGN.  If you have data you would like to submit for display
-on SGN, please use the <a href="/contact/form">contact us</a> web
-form, or email us at <a href="mailto:sgn-feedback\@sgn.cornell.edu">
-sgn-feedback\@sgn.cornell.edu</a>.</p>
+on SGN, please use the <a href="/contact/form">contact us</a> web form.</p>
 
 <p>For more information about SGN datasets, see the <a href= "/content/sgn_data.pl">SGN Data
-Overview</a>. Entire datasets can also be downloaded from our <a href="ftp://ftp.sgn.cornell.edu">FTP site</a>.</p>
+Overview</a>. Entire datasets can also be downloaded from our <a href="ftp://ftp.solgenomics.net">FTP site</a>.</p>
 
 </&>
-<&|  /page/info_section.mas, title => 'SGN Tools and Processing' &>
-<ul style="margin: 0; padding-left: 1em">
 
-   <li>We attempt to process all EST sequences
-   directly from sequencing chromatograms using a custom
-   pipeline developed at SGN. The sequences are assembled into unigenes
-   using standard clustering software and in-house tools. A higher level of sequence
-   quality is obtained when sequences are uniformly base-called and
-   quality trimmed. Other software developed at SGN include the <a href="/cview/view_chromosome.pl">interactive comparative map viewer</a> for genetic and
-   physical maps, the <a href="/tools/tree_browser/">Tree Browser</a> and the <a href="/tools/align_viewer">Alignment Analyzer</a>.</li>
-
-   <li><a href="/methods/unigene/index.pl">Unigene Methods</a>
-   including assembly process, builds, cluster, and validation</li>
-
-</ul>
-
-</&>
 
 <&| /page/info_section.mas, title => 'SGN community-driven gene and phenotype database' &>
 <ul style="margin: 0; padding-left: 1em">

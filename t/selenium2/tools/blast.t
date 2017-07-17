@@ -10,8 +10,19 @@ my $t = SGN::Test::WWW::WebDriver->new();
 
 $t->get_ok('/tools/blast');
 
-my $example = $t->find_element_ok('input_example', 'id', 'find input example link');
-$example->click();
+#my $example = $t->find_element_ok('input_example', 'id', 'find input example link');
+#$example->click();
+
+my $test_sequence = <<SEQ;
+>test_sequence
+aattcggcaccagtaaattttcccaaaggtttcaaaaatgaaaattttgattttcctaat
+aatgtttcttgctatgttgctagtaacaagtgggaataataatctagtagagacaacatg
+caagaacacaccaaattataatttgtgtgtgaaaactttgtctttagaca
+SEQ
+
+my $input_box = $t->find_element_ok('sequence', 'id', 'find the seq input box');
+
+$input_box->send_keys($test_sequence);
 
 my $submit = $t->find_element_ok('submit_blast_button', 'id', 'find blast submit button');
 $submit->click();

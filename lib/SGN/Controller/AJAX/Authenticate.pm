@@ -1,18 +1,3 @@
-=head1 NAME
-
-SGN::Controller::AJAX::Authenticate - a REST controller class to provide the
-backend for authenticating users across websites.
-
-=head1 DESCRIPTION
-
-If a user has logged into an sgn database, they will have an active session cookie stored inthe sgn database. If a user is on an external website, that website could use this module to check if that user is logged into the sgn website, and can then have access to the user's information.
-=head1 AUTHOR
-Nicolas Morales <nm529@cornell.edu>
-Created: 09/24/15
-
-=cut
-
-
 package SGN::Controller::AJAX::Authenticate;
 
 use strict;

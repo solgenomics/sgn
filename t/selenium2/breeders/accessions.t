@@ -9,17 +9,18 @@ my $t = SGN::Test::WWW::WebDriver->new();
 $t->while_logged_in_as("submitter", sub { 
     $t->get_ok('/breeders/accessions');
 
+    sleep(2);
 
     # Add a test list
     $t->find_element_ok("lists_link", "name", "find lists_link")->click();
 
     $t->find_element_ok("add_list_input", "id", "find add list input");
 
-    my $add_list_input = $t->find_element_ok("add_list_input", "id", "find add list input test")->send_keys("new_test_list");
+    my $add_list_input = $t->find_element_ok("add_list_input", "id", "find add list input test")->send_keys("new_test_list_accessions");
 
     $t->find_element_ok("add_list_button", "id", "find add list button test")->click();
 
-    $t->find_element_ok("view_list_new_test_list", "id", "view list test")->click();
+    $t->find_element_ok("view_list_new_test_list_accessions", "id", "view list test")->click();
 
     sleep(2);
 
@@ -35,6 +36,10 @@ $t->while_logged_in_as("submitter", sub {
 
 
     #first try with fuzzy search. test_list will cause fuzzy search to return hits
+    $t->get_ok('/breeders/accessions');
+
+    sleep(2);
+    
     $t->find_element_ok("add_accessions_link", "id", "find element add accessions link as submitter")->click();
 
     $t->find_element_ok("accessions_list_select", "id", "select new list test")->send_keys("test_list");
@@ -73,8 +78,10 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
+    $t->driver->accept_alert();
+
     
-    #then we add new_test_list not using fuzzy search
+    #then we add new_test_list_accessions not using fuzzy search
 
     $t->get_ok('/breeders/accessions');
 
@@ -83,7 +90,7 @@ $t->while_logged_in_as("submitter", sub {
     my $add_accessions_link = $t->find_element_ok("add_accessions_link", "id", "find element add accessions link as submitter")->click();
 
     #then try without fuzzy search.
-    $t->find_element_ok("accessions_list_select", "id", "select new list test")->send_keys("new_test_list");
+    $t->find_element_ok("accessions_list_select", "id", "select new list test")->send_keys("new_test_list_accessions");
 
     sleep(2);
 
@@ -100,6 +107,8 @@ $t->while_logged_in_as("submitter", sub {
     sleep(1);
 
     $t->driver->accept_alert();
+
+    sleep(1);
 
     $t->find_element_ok("species_name_input", "id", "input species name")->send_keys("Manihot esculenta");
 
@@ -109,8 +118,10 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(2);
 
+    $t->driver->accept_alert();
 
-    #then we add new_test_list again, not using fuzzy search to see if it sees them in the db.
+
+    #then we add new_test_list_accession again, not using fuzzy search to see if it sees them in the db.
 
     $t->get_ok('/breeders/accessions');
 
@@ -119,7 +130,7 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok("add_accessions_link", "id", "find element add accessions link as submitter")->click();
 
     #then try without fuzzy search.
-    $t->find_element_ok("accessions_list_select", "id", "select new list test")->send_keys("new_test_list");
+    $t->find_element_ok("accessions_list_select", "id", "select new list test")->send_keys("new_test_list_accessions");
 
     sleep(2);
 
@@ -138,7 +149,7 @@ $t->while_logged_in_as("submitter", sub {
     $t->driver->accept_alert();
 
 
-    #then we add new_test_list again, using fuzzy search to see if it sees them in the db.
+    #then we add new_test_list_accessions again, using fuzzy search to see if it sees them in the db.
 
     $t->get_ok('/breeders/accessions');
 
@@ -148,7 +159,7 @@ $t->while_logged_in_as("submitter", sub {
 
     my $fuzzy = $t->find_element_ok("fuzzy_check", "id", "select fuzzy check test")->click();
 
-    $t->find_element_ok("accessions_list_select", "id", "select new list test")->send_keys("new_test_list");
+    $t->find_element_ok("accessions_list_select", "id", "select new list test")->send_keys("new_test_list_accessions");
 
     sleep(2);
 
@@ -179,6 +190,10 @@ $t->while_logged_in_as("submitter", sub {
     my $review_matches = $t->find_element_ok("review_absent_accessions_submit", "id", "review matches submit");
    
     $review_matches->click();
+
+    sleep(2);
+
+    $t->driver->accept_alert();
 
     sleep(1);
 

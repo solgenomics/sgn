@@ -1,0 +1,36 @@
+<%args>
+</%args>
+
+<div id="brapi_home_trial_search_div">
+
+    <h4>Trial Search</h4>
+    <input name="brapi_home_trials_locationid" id="brapi_home_trials_locationid" class="form-control" type="text" placeholder="LocationDbId e.g. 23" value="23"/>
+    <input name="brapi_home_trials_programid" id="brapi_home_trials_programid" class="form-control" type="text" placeholder="ProgramDbId e.g. 134" value="134"/>
+    <button class="btn btn-primary" name="brapi_home_trial_search_submit" id="brapi_home_trial_search_submit">Get Trials</button>
+    <br/><br/>
+    <div id="brapi_trials_result_div">
+    </div>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery("#brapi_home_trial_search_submit").click(function() {
+
+        jQuery.ajax( {
+          'url':  jQuery('#brapi_home_url_select').val()+'/brapi/v1/trials?locationDbIds='+jQuery('#brapi_home_trials_locationid').val()+'&programDbIds='+jQuery('#brapi_home_trials_programid').val(),
+          'method': 'GET',
+          'success': function(response) {
+            console.log(response);
+            brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_trials_result_div',  jQuery('#brapi_home_url_select').val()+'/brapi/v1/trials?locationDbId='+jQuery('#brapi_home_trials_locationid').val()+'&programDbId='+jQuery('#brapi_home_trials_programid').val(), undefined);
+
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+    });
+});
+
+</script>

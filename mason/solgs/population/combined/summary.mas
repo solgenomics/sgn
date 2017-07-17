@@ -2,7 +2,7 @@
 
 =head1 NAME 
 
-/solgs/population/combined/sumary.mas - displays combined trials descriptive data.
+/solgs/population/combined/summary.mas - displays combined trials descriptive data.
 
 =AUTHOR
 
@@ -20,6 +20,7 @@ $project_desc
 $markers_no
 $traits_no
 $owner => ''
+$protocol
 
 </%args>
 
@@ -27,6 +28,7 @@ $owner => ''
 
 if (!$owner) {$owner = 'NextGen Cassava Project'; } 
 $traits_no = 1 if !$traits_no;
+
 
 
 </%perl>
@@ -48,6 +50,7 @@ $traits_no = 1 if !$traits_no;
          data       => [[' ',  ' '],
                         ['No. of traits', $traits_no],
                         ['No. of markers', $markers_no],
+			['Genotyping version', $protocol],
                        ],
         __alt_freq  => 1,
         __align     => "l",

@@ -1,0 +1,35 @@
+<%args>
+</%args>
+
+<div id="brapi_home_trial_details_div">
+
+    <h4>Trial Detail</h4>
+    <input name="brapi_home_trials_id" id="brapi_home_trials_id" class="form-control" type="text" placeholder="TrialDbId e.g. 145" value="145"/>
+    <button class="btn btn-primary" name="brapi_home_trial_detail_submit" id="brapi_home_trial_detail_submit">Get Trial Details</button>
+    <br/><br/>
+    <div id="brapi_trials_details_div">
+    </div>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery("#brapi_home_trial_detail_submit").click(function() {
+
+        jQuery.ajax( {
+          'url':  jQuery('#brapi_home_url_select').val()+'/brapi/v1/trials/'+jQuery('#brapi_home_trials_id').val(),
+          'method': 'GET',
+          'success': function(response) {
+            console.log(response);
+            brapi_create_table(response.result, 'brapi_trials_details_div', undefined);
+
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+    });
+});
+
+</script>

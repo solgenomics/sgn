@@ -2,6 +2,8 @@ use CatalystX::GlobalContext qw( $c );
 
 =head1 NAME
 
+THIS PAGE IS DEPRECATED AND WILL CLIENT REDIRECT TO THE REAL BLAST.
+
 /tools/blast/ - the entry page to the SGN blast tool
 
 =head1 DESCRIPTION
@@ -57,6 +59,17 @@ changes by SGN staff. POD by Lukas.
 =cut
 
 
+    use CXGN::Page;
+
+
+my $page  = CXGN::Page->new("BLAST Search Interface","Evan");
+
+$page->client_redirect("/tools/blast");
+
+
+return;
+
+
 use Modern::Perl;
 use POSIX;
 use English;
@@ -76,7 +89,7 @@ use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/evens distinct/;
 use CatalystX::GlobalContext '$c';
 
-my $page  = CXGN::Page->new("BLAST Search Interface","Evan");
+$page  = CXGN::Page->new("BLAST Search Interface","Evan");
 my $dbh   = CXGN::DB::Connection->new;
 my $prefs = CXGN::Page::UserPrefs->new( $dbh );
 

@@ -4,7 +4,7 @@
 use strict;
 use CXGN::Tools::File;
 
-my $file = $c->path_to('documents', 'affiliated_sites.txt');
+my $file = $c->get_conf('homepage_files_dir').'/affiliated_sites.txt';
 
 </%perl>
 

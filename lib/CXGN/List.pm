@@ -32,6 +32,7 @@ Class function (without instantiation):
 package CXGN::List;
 
 use Moose;
+use Data::Dumper;
 
 has 'dbh' => ( isa => 'DBI::db',
 	       is => 'rw',
@@ -75,13 +76,13 @@ sub create_list {
     ($new_list_id) = $h->fetchrow_array();
     print STDERR "NEW LIST using returning = $new_list_id\n";
     
-    $q = "SELECT list.name, list.description, type_id, cvterm.name, list_id FROM sgn_people.list LEFT JOIN cvterm ON (type_id=cvterm_id)";
-    $h = $dbh->prepare($q);
-    $h->execute();
-    while (my @data = $h->fetchrow_array()) {
-	print STDERR join ", ", @data;
-	print STDERR "\n";
-    }
+    #$q = "SELECT list.name, list.description, type_id, cvterm.name, list_id FROM sgn_people.list LEFT JOIN cvterm ON (type_id=cvterm_id)";
+    #$h = $dbh->prepare($q);
+    #$h->execute();
+    #while (my @data = $h->fetchrow_array()) {
+	#print STDERR join ", ", @data;
+	#print STDERR "\n";
+    #}
     ###END TEST
     }; 
     if ($@) { 
@@ -112,18 +113,41 @@ sub available_lists {
     my $owner = shift;
     my $requested_type = shift;
 
-    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name ORDER BY list.name";
+    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name, is_public FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE owner=? GROUP BY list_id, list.name, description, type_id, cvterm.name, is_public ORDER BY list.name";
     my $h = $dbh->prepare($q);
     $h->execute($owner);
 
     my @lists = ();
-    while (my ($id, $name, $desc, $item_count, $type_id, $type) = $h->fetchrow_array()) { 
+    while (my ($id, $name, $desc, $item_count, $type_id, $type, $public) = $h->fetchrow_array()) { 
 	if ($requested_type) { 
+	    if ($type && ($type eq $requested_type)) { 
+		push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public ];
+	    }
+	}
+	else { 
+	    push @lists, [ $id, $name, $desc, $item_count, $type_id, $type, $public ];
+	}
+    }
+    return \@lists;
+}
+
+sub available_public_lists { 
+    my $dbh = shift;
+    my $requested_type = shift;
+
+    my $q = "SELECT list_id, list.name, description, count(distinct(list_item_id)), type_id, cvterm.name FROM sgn_people.list left join sgn_people.list_item using(list_id) LEFT JOIN cvterm ON (type_id=cvterm_id) WHERE is_public='t' GROUP BY list_id, list.name, description, type_id, cvterm.name ORDER BY list.name";
+    my $h = $dbh->prepare($q);
+    $h->execute();
+
+    my @lists = ();
+    while (my ($id, $name, $desc, $item_count, $type_id, $type) = $h->fetchrow_array()) { 
+	if ($requested_type) {
 	    if ($type && ($type eq $requested_type)) { 
 		push @lists, [ $id, $name, $desc, $item_count, $type_id, $type ];
 	    }
 	}
 	else { 
+	    
 	    push @lists, [ $id, $name, $desc, $item_count, $type_id, $type ];
 	}
     }
@@ -252,7 +276,7 @@ after 'description' => sub {
     my $description = shift;
     
     if (!$description) { 
-	print STDERR "NO desc provided... skipping!\n";
+	#print STDERR "NO desc provided... skipping!\n";
 	return; 
     }
 
@@ -272,7 +296,11 @@ after 'description' => sub {
 sub add_element {
     my $self = shift;
     my $element = shift;
-    
+    #remove trailing spaces
+    $element =~ s/^\s+|\s+$//g;
+    if (!$element) { 
+	return "Empty list elements are not allowed"; 
+    }
     if ($self->exists_element($element)) { 
 	return "The element $element already exists";
     }
@@ -329,7 +357,54 @@ sub remove_element_by_id {
     }
     
     return 0;
-}   
+}
+
+sub update_element_by_id {
+	my $self = shift;
+	my $element_id = shift;
+	my $content = shift;
+	my $h = $self->dbh()->prepare("UPDATE sgn_people.list_item SET content=? where list_id=? and list_item_id=?");
+
+	eval { 
+		$h->execute($content, $self->list_id(), $element_id);
+	};
+	if ($@) {
+		return "An error occurred while attempting to update item $element_id";
+	}
+
+	return;
+}
+
+sub replace_by_name {
+	my $self = shift;
+	my $item_name = shift;
+	my $new_name = shift;
+	my $h = $self->dbh()->prepare("UPDATE sgn_people.list_item SET content=? where list_id=? and content=?");
+
+	eval {
+		$h->execute($new_name, $self->list_id(), $item_name);
+	};
+	if ($@) {
+		return "An error occurred while attempting to update item $item_name";
+	}
+
+	return;
+}
+
+sub remove_by_name {
+	my $self = shift;
+	my $item_name = shift;
+	my $h = $self->dbh()->prepare("DELETE FROM sgn_people.list_item WHERE list_id=? and content=?");
+
+	eval {
+		$h->execute($self->list_id(), $item_name);
+	};
+	if ($@) {
+		return "An error occurred while attempting to remove item $item_name";
+	}
+
+	return;
+}
 
 sub list_size { 
     my $self = shift;
@@ -338,6 +413,72 @@ sub list_size {
     $h->execute($self->list_id());
     my ($count) = $h->fetchrow_array();
     return $count;
+}    
+
+sub toggle_public { 
+    my $self = shift;
+
+    my $h = $self->dbh->prepare("SELECT is_public FROM sgn_people.list WHERE list_id=?");
+    $h->execute($self->list_id());
+    my $public = $h->fetchrow_array();
+
+    my $rows_affected;
+    if ($public == 0) {
+	my $h = $self->dbh->prepare("UPDATE sgn_people.list SET is_public='t' WHERE list_id=?");
+	$h->execute($self->list_id());
+	$rows_affected = $h->rows;
+    } elsif ($public == 1) {
+	my $h = $self->dbh->prepare("UPDATE sgn_people.list SET is_public='f' WHERE list_id=?");
+	$h->execute($self->list_id());
+	$rows_affected = $h->rows;
+    }
+    return ($public, $rows_affected);
+}    
+
+sub make_public { 
+    my $self = shift;
+
+	my $h = $self->dbh->prepare("UPDATE sgn_people.list SET is_public='t' WHERE list_id=?");
+	$h->execute($self->list_id());
+	my $rows_affected = $h->rows;
+    return $rows_affected;
+}
+
+sub make_private { 
+    my $self = shift;
+
+	my $h = $self->dbh->prepare("UPDATE sgn_people.list SET is_public='f' WHERE list_id=?");
+	$h->execute($self->list_id());
+	my $rows_affected = $h->rows;
+    return $rows_affected;
+}
+
+sub copy_public { 
+    my $self = shift;
+    my $user_id = shift;
+
+    my $h = $self->dbh->prepare("INSERT INTO sgn_people.list (name, description, owner, type_id) SELECT name, description, ?, type_id FROM sgn_people.list as old WHERE old.list_id=? RETURNING list_id");
+    $h->execute($user_id, $self->list_id());
+    my $list_id = $h->fetchrow_array();
+
+	$h = $self->dbh->prepare("SELECT content FROM sgn_people.list_item WHERE list_id=?");
+	$h->execute($self->list_id());
+	my @elements;
+	while (my $el = $h->fetchrow_array) {
+		push @elements, $el;
+	}
+
+	$self->add_bulk(\@elements, $list_id);
+
+    return $list_id;
+}    
+
+sub check_if_public { 
+    my $self = shift;
+    my $h = $self->dbh->prepare("SELECT is_public FROM sgn_people.list WHERE list_id=?");
+    $h->execute($self->list_id());
+    my $public = $h->fetchrow_array();
+    return $public;
 }    
 
 sub exists_element {
@@ -374,6 +515,76 @@ sub retrieve_elements_with_ids {
 	push @list, [ $id, $content ];
     }
     return \@list;
+}
+
+sub add_bulk {
+	my $self = shift;
+	my $elements = shift;
+	my $list_id = shift // $self->list_id();
+	my %elements_in_list;
+	my @elements_added;
+	my @duplicates;
+	s/^\s+|\s+$//g for @$elements;
+	#print STDERR Dumper $elements;
+
+	my $q = "SELECT content FROM sgn_people.list join sgn_people.list_item using(list_id) where list.list_id =?";
+	my $h = $self->dbh()->prepare($q);
+	$h->execute($list_id);
+	while (my $list_content = $h->fetchrow_array()) {
+		$elements_in_list{$list_content} = 1;
+	}
+
+	$q = "SELECT list_item_id FROM sgn_people.list_item ORDER BY list_item_id DESC LIMIT 1";
+	$h = $self->dbh()->prepare($q);
+	$h->execute();
+	my $list_item_id = $h->fetchrow_array() + 1;
+
+	my $iq = "INSERT INTO sgn_people.list_item (list_item_id, list_id, content) VALUES";
+
+	my $count = 0;
+	eval {
+		$self->dbh()->begin_work;
+
+		my @values;
+		foreach (@$elements) {
+			if ($_ && !exists $elements_in_list{$_}){
+				push @values, [$list_item_id, $list_id, $_];
+				$elements_in_list{$_} = 1;
+				push @elements_added, $_;
+				$list_item_id++;
+				$count++;
+			} else {
+				push @duplicates, $_;
+			}
+		}
+
+		my $step = 1;
+		my $num_values = scalar(@values);
+		foreach (@values) {
+			if ($step < $num_values) {
+				$iq = $iq." (".$_->[0].",".$_->[1].",'".$_->[2]."'),";
+			} else {
+				$iq = $iq." (".$_->[0].",".$_->[1].",'".$_->[2]."');";
+			}
+			$step++;
+		}
+		#print STDERR Dumper $iq;
+		if ($count>0){
+			$self->dbh()->do($iq);
+		}
+		$self->dbh()->commit;
+	};
+	if ($@) {
+		$self->dbh()->rollback;
+		return {error => "An error occurred in bulk addition to list. ($@)"};
+	}
+
+	$elements = $self->elements();
+	push @$elements, \@elements_added;
+	$self->elements($elements);
+
+	my %response = (count => $count, duplicates => \@duplicates);
+	return \%response;
 }
 
 

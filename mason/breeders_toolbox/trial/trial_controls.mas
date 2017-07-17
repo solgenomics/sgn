@@ -1,0 +1,48 @@
+
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [  ] &>
+
+
+<div id="trial_controls_html">
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#trial_controls_onswitch').one("click", function() {
+
+	jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/controls',
+	    beforeSend: function() {
+		jQuery("#working_modal").modal("show");
+	    },
+	    success: function(response){
+	        console.log(response);
+		jQuery("#working_modal").modal("hide");
+		var trial_accessions_html = "<table class='table table-hover table-condensed table-bordered' id='trial_controls_table'><thead><tr><th>Unique Name</th></tr></thead><tbody>";
+		for (i=0; i<response.accessions[0].length; i++) {
+		    trial_accessions_html = trial_accessions_html + "<tr><td><a href='/stock/" + response.accessions[0][i].stock_id +"/view'>"+ response.accessions[0][i].accession_name + "</a></td></tr>";
+		}
+		trial_accessions_html = trial_accessions_html + "</tbody></table>";
+		jQuery('#trial_controls_html').empty();
+		jQuery('#trial_controls_html').html(trial_accessions_html);
+        enable_controls_datatable();
+	    },
+	    error: function(response){
+	        jQuery("#working_modal").modal("hide");
+		alert("Error retrieving controls.");
+	    }
+	});
+    });
+
+});
+
+function enable_controls_datatable() {
+    jQuery('#trial_controls_table').DataTable();
+}
+
+</script>

@@ -4,17 +4,32 @@
 
 <%args>
 $files => []
+$allow_delete => 0
 </%args>
 
-
-<table cellpadding="5" alt="">
+% if (scalar(@$files)>0) {
+<table class="table table-bordered files_datatables" alt="">
+<thead>
+  <tr><th>Filename</th><th>Date Uploaded</th><th>Options</th></tr>
+</thead>
+<tbody>
 % foreach my $f (@$files) { 
   <tr>
     <td><% $f->{basename} %></td>
     <td><% $f->{create_date} %></td>
-    <td><a href="">delete</a> | <a href="">view</a></td>
+    <td>
+% if ($allow_delete){
+    <a id="delete_pheno_file_link" href="/breeders/phenotyping/delete/<% $f->{file_id} %>" >Delete</a> | 
+% }
+    <a href="/breeders/phenotyping/view/<% $f->{file_id} %>">View</a> | <a href="/breeders/phenotyping/download/<% $f->{file_id} %>">Download</a></td>
   </tr>
 % }
+</tbody>
 </table>
+% }
 
-
+<script>
+jQuery(document).ready(function() {
+    jQuery('.files_datatables').DataTable();
+} );
+</script>

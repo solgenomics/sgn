@@ -116,7 +116,7 @@ if (scalar(@exp_list) > 0) {
 	}
 	my @onto_html;
 	foreach my $onto (sort keys %ontologies) {
-	    my $onto_link = '/chado/cvterm?action=view&cvterm_id='.$cvterm_id{$onto};
+	    my $onto_link = '/cvterm/'.$cvterm_id{$onto}.'/view';
 	    my $onto_line = "<a href=$onto_link>$onto</a> ($ontologies{$onto})";
 	    push @onto_html, $onto_line;
 	}

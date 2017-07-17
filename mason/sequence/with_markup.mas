@@ -125,7 +125,7 @@ to the given URL as `seq`
   ><% $seq->id %> <% $seq->desc %>
 % if( $blast_url ) {
     <form style="display: inline" method="post" action="<% $blast_url %>">
-        <input type="hidden" name="seq" value="<% '>'.$seq->id.( $seq->desc ? ' '.$seq->desc : '' )."\n".$seq->seq | h %>" />
+        <input type="hidden" name="seq" value="<% '>'.$seq->id."\n".$seq->seq | h %>" />
         <input style="padding: 1px; line-height: 0.8" type="submit" value="BLAST" />
     </form>
 % }

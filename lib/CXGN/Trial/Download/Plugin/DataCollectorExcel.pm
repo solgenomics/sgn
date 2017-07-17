@@ -4,13 +4,13 @@ package CXGN::Trial::Download::Plugin::DataCollectorExcel;
 use Moose::Role;
 use utf8;
 
-sub verify { 
+sub verify {
     my $self = shift;
     return 1;
 }
 
 
-sub download { 
+sub download {
     my $self = shift;
 
     my $schema = $self->bcs_schema();
@@ -22,9 +22,9 @@ sub download {
     my $design = $trial_layout->get_design();
 
     if (! $design) {
-	return "No design found for this trial.";
+	     return { error => "No design found for this trial. A trial design must exist in order to create this file"};
     }
-	
+
     my %design = %{$trial_layout->get_design()};
     my @plot_names = @{$trial_layout->get_plot_names};
 
@@ -37,7 +37,7 @@ sub download {
     my $ws6 = $workbook->add_worksheet("Crop_management");
     my $ws7 = $workbook->add_worksheet("Var List");
     my $ws = $workbook->add_worksheet("Field Book");
-	
+
     my $bold = $workbook->add_format();
     $bold->set_bold();
 
@@ -56,7 +56,7 @@ sub download {
     $ws1->write(15, 0, 'Admin1'); $ws1->write(16, 0, 'Admin2');
     $ws1->write(17, 0, 'Admin3'); $ws1->write(18, 0, 'Locality');
     $ws1->write(19, 0, 'Elevation'); $ws1->write(20, 0, 'Latitude');
-    $ws1->write(21, 0, 'Longitude'); 
+    $ws1->write(21, 0, 'Longitude');
     $ws1->write(22, 0, 'Owner'); $ws1->write(22, 1, 'International Potato Center');
     $ws1->write(23, 0, 'Publisher'); $ws1->write(23, 1, 'International Potato Center');
     $ws1->write(24, 0, 'Type'); $ws1->write(24, 1, 'dataset');
@@ -64,7 +64,7 @@ sub download {
     $ws1->write(26, 0, 'Identifier'); $ws1->write(26, 1, 'to be done: doi');
     $ws1->write(27, 0, 'Language'); $ws1->write(27, 1, 'en');
     $ws1->write(28, 0, 'Relation'); $ws1->write(28, 1, 'NA');
-    $ws1->write(29, 0, 'License'); $ws1->write(29, 1, '© International Potato Center');
+    $ws1->write(29, 0, 'License'); $ws1->write(29, 1, "\x{a9} International Potato Center");
     $ws1->write(30, 0, 'Audience'); $ws1->write(30, 1, 'Breeder');
     $ws1->write(31, 0, 'Provenance'); $ws1->write(31, 1, 'original');
     $ws1->write(32, 0, 'Embargo till'); $ws1->write(32, 1, '2012-12-31');
@@ -77,7 +77,7 @@ sub download {
     #
     $ws2->write(0, 0, 'Factor', $bold); $ws2->write(0, 1, 'Value', $bold);
     $ws2->write(1, 0, 'Experimental design'); $ws2->write(1, 1, 'Randomized Complete Block Design (RCBD)');
-    $ws2->write(2, 0, 'Genetic design'); 
+    $ws2->write(2, 0, 'Genetic design');
     $ws2->write(3, 0, 'Labels for factor genotypes'); $ws2->write(3, 1, 'Institutional number');
     $ws2->write(4, 0, 'Number of repetitions or blocks'); $ws2->write(4, 1, '2');
     $ws2->write(5, 0, 'Block size (applicable for BIBD only)');
@@ -89,7 +89,7 @@ sub download {
     $ws2->write(11, 0, 'Distance between plants (m)'); $ws2->write(11, 1, '0.3');
     $ws2->write(12, 0, 'Distance between rows (m)'); $ws2->write(12, 1, '0.9');
     $ws2->write(13, 0, 'Planting density (plants/Ha)'); $ws2->write(13, 1, '37,037');
-    $ws2->write(14, 0, 'Row direction'); 
+    $ws2->write(14, 0, 'Row direction');
     $ws2->write(15, 0, 'Planting mode');
     $ws2->write(16, 0, 'Area of the experiment'); $ws2->write(17, 0, 'Additional factor name');
     $ws2->write(18, 0, 'Labels for additional factor, level 1'); $ws2->write(19, 0, 'Labels for additional factor, level 2');
@@ -171,11 +171,11 @@ sub download {
     # add information to Weather_data (sheet5)
     #
     $ws5->write(0, 0, 'Date of weather observation', $bold); $ws5->write(0, 1, 'Hour of weather observation', $bold);
-    $ws5->write(0, 2, 'Rainfall (mm)', $bold); $ws5->write(0, 3, 'Average temperature (°C)', $bold);
-    $ws5->write(0, 4, 'Minimum temperature (°C)', $bold); $ws5->write(0, 5, 'Maximum temperature (°C)', $bold);
-    $ws5->write(0, 6, 'Temperature amplitude °C ', $bold); $ws5->write(0, 7, 'Relative humidity (%)', $bold);
+    $ws5->write(0, 2, 'Rainfall (mm)', $bold); $ws5->write(0, 3, "Average temperature (\x{b0}C)", $bold);
+    $ws5->write(0, 4, "Minimum temperature (\x{b0}C)", $bold); $ws5->write(0, 5, "Maximum temperature (\x{b0}C)", $bold);
+    $ws5->write(0, 6, "Temperature amplitude \x{b0}C ", $bold); $ws5->write(0, 7, 'Relative humidity (%)', $bold);
     $ws5->write(0, 8, 'Solar Radiation (w/m2)', $bold); $ws5->write(0, 9, 'Barometric Pressure (mm)', $bold);
-    $ws5->write(0, 10, 'Dew point (°C) ', $bold); $ws5->write(0, 11, 'Wind speed (m/s)', $bold);
+    $ws5->write(0, 10, "Dew point (\x{b0}C) ", $bold); $ws5->write(0, 11, 'Wind speed (m/s)', $bold);
     $ws5->write(0, 12, 'Gust speed', $bold); $ws5->write(0, 13, 'Wind direction', $bold);
 
     # add information to Crop_management (sheet6)
@@ -184,7 +184,7 @@ sub download {
     $ws6->write(0, 2, 'Date', $bold); $ws6->write(0, 3, 'Operator', $bold);
     $ws6->write(0, 4, 'Observations', $bold); $ws6->write(0, 5, 'Active Ingredient', $bold);
     $ws6->write(0, 6, 'Product concentration ', $bold); $ws6->write(0, 7, 'Dose of application', $bold);
-    $ws6->write(0, 8, 'Uncertainty of Measurement', $bold); 
+    $ws6->write(0, 8, 'Uncertainty of Measurement', $bold);
     $ws6->write(1, 0, 'Preparation'); $ws6->write(1, 1, 'Planting');
     $ws6->write(2, 0, 'Harvest '); $ws6->write(2, 1, 'Vine cutting / killing');
     $ws6->write(3, 0, 'Harvest'); $ws6->write(3, 1, 'Harvest');
@@ -271,77 +271,109 @@ sub download {
 
     # generate worksheet headers
     #
-    
-    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
-    $ws->write(0, 0, 'Spreadsheet ID'); $ws->write('0', '1', 'ID'.$$.time());
-    $ws->write(0, 2, 'Spreadsheet format'); $ws->write(0, 3, "BasicExcel");
-    $ws->write(1, 0, 'Trial name'); $ws->write(1, 1, $trial->get_name(), $bold);
-    $ws->write(2, 0, 'Description'); $ws->write(2, 1, $trial->get_description(), $bold);
-    $ws->write(3, 0, "Trial location");  $ws->write(3, 1, $trial->get_location()->[1], $bold);
-    $ws->write(1, 2, 'Operator');       $ws->write(1, 3, "Enter operator here");
-    $ws->write(2, 2, 'Date');           $ws->write(2, 3, "Enter date here");
-    #$ws->data_validation(2,3, { validate => "date" });
-    
 
-    my @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
-    for(my $n=0; $n<@column_headers; $n++) { 
-	$ws->write(5, $n, $column_headers[$n]);
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+   #$ws->write(0, 0, 'Spreadsheet ID'); $ws->write('0', '1', 'ID'.$$.time());
+   #$ws->write(0, 2, 'Spreadsheet format'); $ws->write(0, 3, "BasicExcel");
+   #$ws->write(1, 0, 'Trial name'); $ws->write(1, 1, $trial->get_name(), $bold);
+   #$ws->write(2, 0, 'Description'); $ws->write(2, 1, $trial->get_description(), $bold);
+   #$ws->write(3, 0, "Trial location");  $ws->write(3, 1, $trial->get_location()->[1], $bold);
+   #$ws->write(1, 2, 'Operator');       $ws->write(1, 3, "Enter operator here");
+   #$ws->write(2, 2, 'Date');           $ws->write(2, 3, "Enter date here");
+   #$ws->data_validation(2,3, { validate => "date" });
+    
+    my $num_col_before_traits;
+    if ($self->data_level eq 'plots') {
+        $num_col_before_traits = 6;
+        my @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
+        for(my $n=0; $n<@column_headers; $n++) { 
+            $ws->write(0, $n, $column_headers[$n]);
+        }
+        
+        my @ordered_plots = sort { $a <=> $b} keys(%design);        
+        for(my $n=0; $n<@ordered_plots; $n++) { 
+            my %design_info = %{$design{$ordered_plots[$n]}};
+
+            $ws->write($n+1, 0, $design_info{plot_name});
+            $ws->write($n+1, 1, $design_info{accession_name});
+            $ws->write($n+1, 2, $design_info{plot_number});
+            $ws->write($n+1, 3, $design_info{block_number});
+            $ws->write($n+1, 4, $design_info{is_a_control});
+            $ws->write($n+1, 5, $design_info{rep_number});
+        }
+    } elsif ($self->data_level eq 'plants') {
+        $num_col_before_traits = 7;
+        my @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+        for(my $n=0; $n<@column_headers; $n++) { 
+            $ws->write(0, $n, $column_headers[$n]);
+        }
+        
+        my @ordered_plots = sort { $a <=> $b} keys(%design);
+        my $line = 1;
+        for(my $n=0; $n<@ordered_plots; $n++) { 
+            my %design_info = %{$design{$ordered_plots[$n]}};
+
+            my $plant_names = $design_info{plant_names};
+            foreach (@$plant_names) {
+                $ws->write($line, 0, $_);
+                $ws->write($line, 1, $design_info{plot_name});
+                $ws->write($line, 2, $design_info{accession_name});
+                $ws->write($line, 3, $design_info{plot_number});
+                $ws->write($line, 4, $design_info{block_number});
+                $ws->write($line, 5, $design_info{is_a_control});
+                $ws->write($line, 6, $design_info{rep_number});
+                $line++;
+            }
+        }
     }
-    my @ordered_plots = sort { $a <=> $b} keys(%design);
-    for(my $n=0; $n<@ordered_plots; $n++) { 
-	my %design_info = %{$design{$ordered_plots[$n]}};
-	    
-	$ws->write($n+6, 0, $design_info{plot_name});
-	$ws->write($n+6, 1, $design_info{accession_name});
-	$ws->write($n+6, 2, $design_info{plot_number});
-	$ws->write($n+6, 3, $design_info{block_number});
-	$ws->write($n+6, 4, $design_info{is_a_control});
-	$ws->write($n+6, 5, $design_info{rep_number});
-    }
+    
 
     # write traits and format trait columns
     #
     my $lt = CXGN::List::Transform->new();
-    
+
     my $transform = $lt->transform($schema, "traits_2_trait_ids", \@trait_list);
 
     if (@{$transform->{missing}}>0) { 
-	print STDERR "Warning: Some traits could not be found. ".join(",",@{$transform->{missing}})."\n";
+        print STDERR "Warning: Some traits could not be found. ".join(",",@{$transform->{missing}})."\n";
     }
     my @trait_ids = @{$transform->{transform}};
-    
+
     my %cvinfo = ();
     foreach my $t (@trait_ids) { 
-	my $trait = CXGN::Trait->new( { bcs_schema=> $schema, cvterm_id => $t });
-	$cvinfo{$trait->display_name()} = $trait;
+        my $trait = CXGN::Trait->new( { bcs_schema=> $schema, cvterm_id => $t });
+        $cvinfo{$trait->display_name()} = $trait;
     }
-									       
-    for (my $i = 0; $i < @trait_list; $i++) { 
-	if (exists($cvinfo{$trait_list[$i]})) { 
-	    $ws->write(5, $i+6, $cvinfo{$trait_list[$i]}->display_name());
-	}
-	else { 
-	    print STDERR "Skipping output of trait $trait_list[$i] because it does not exist\n";
-	}
-    
-	my $plot_count = scalar(keys(%design));
 
-	for (my $n = 0; $n < $plot_count; $n++) { 
-	    my $format = $cvinfo{$trait_list[$i]}->format();
-	    if ($format eq "numeric") { 
-		$ws->data_validation($n+6, $i+6, { validate => "any" });
-	    }
-	    elsif ($format =~ /\,/) {  # is a list
-		$ws->data_validation($n+6, $i+6, 
-				     { 
-					 validate => 'list',
-					 value    => [ split ",", $format ]
-				     });
-	    }
-	}
+    for (my $i = 0; $i < @trait_list; $i++) { 
+        #if (exists($cvinfo{$trait_list[$i]})) { 
+            #$ws->write(0, $i+6, $cvinfo{$trait_list[$i]}->display_name());
+            $ws->write(0, $i+$num_col_before_traits, $trait_list[$i]);
+        #}
+        #else { 
+        #    print STDERR "Skipping output of trait $trait_list[$i] because it does not exist\n";
+        #}
+
+        my $plot_count = scalar(keys(%design));
+
+        for (my $n = 1; $n < $plot_count; $n++) {
+            if ($cvinfo{$trait_list[$i]}) {
+                my $format = $cvinfo{$trait_list[$i]}->format();
+                if ($format eq "numeric") { 
+                    $ws->data_validation($n, $i+$num_col_before_traits, { validate => "any" });
+                }
+                elsif ($format =~ /\,/) {  # is a list
+                    $ws->data_validation($n, $i+$num_col_before_traits, {
+                        validate => 'list',
+                        value    => [ split ",", $format ]
+                    });
+                }
+            }
+        }
     }
     $workbook->close();
-    
+    print STDERR "DataCollector File created!\n";
+    return { message => "DataCollector File created!"};
 }
-    
+
 1;

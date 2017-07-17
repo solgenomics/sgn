@@ -21,7 +21,7 @@ sub check_regression_data :Path('/heritability/check/data/') Args(0) {
     my $solgs_controller = $c->controller('solGS::solGS');
 
     my $trait_id = $c->req->param('trait_id');
-    $solgs_controller->get_trait_name($c, $trait_id);
+    $solgs_controller->get_trait_details($c, $trait_id);
     
     $self->get_regression_data_files($c);
 
@@ -92,7 +92,7 @@ sub heritability_regeression_data :Path('/heritability/regression/data/') Args(0
 
     my $trait_id = $c->req->param('trait_id');
     my $solgs_controller = $c->controller('solGS::solGS');
-    $solgs_controller->get_trait_name($c, $trait_id);
+    $solgs_controller->get_trait_details($c, $trait_id);
 
     $self->get_regression_data_files($c);
 

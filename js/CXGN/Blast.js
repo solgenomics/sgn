@@ -4,7 +4,13 @@ function run_blast(database_types, input_option_types) {
   update_status("Initializing run... ");
 
   jQuery('#prereqs').html('');
-  jQuery('#blast_report').html('');
+  // jQuery('#blast_report').html('');
+  jQuery('#Basic_output').html('');
+  jQuery('#Overview_output').html('');
+  jQuery('#Coverage_output').html('');
+  jQuery('#Table_output').html('');
+  jQuery('#SGN_output').html('');
+  jQuery('#Bioperl_output').html('');
 
   var program  = jQuery('#program_select').val();
   var sequence = jQuery('#sequence').val();
@@ -14,6 +20,7 @@ function run_blast(database_types, input_option_types) {
   if (msie) {
     sequence = sequence.replace(/\s+/g, "\n");
   }
+  
 
   var database = jQuery('#database').val();
   var evalue   = jQuery('#evalue').val();
@@ -97,58 +104,105 @@ function wait_result(jobid, seq_count) {
   }
 }
 
-function finish_blast(jobid, seq_count) { 	
+function finish_blast(jobid, seq_count) {
 
   update_status('Run complete.<br />');
   
-  var format   =  jQuery('#parse_options').val() || [ 'Basic' ];
+  var format   =  jQuery('#parse_options').val();
   
-  //alert("FORMAT IS: "+format + " seqcount ="+ seq_count + "jobid = "+jobid);
+  // alert("FORMAT IS: "+format + " seqcount ="+ seq_count + "jobid = "+jobid);
 
   var blast_reports = new Array();
   var prereqs = new Array();
-
+  var database = jQuery('#database').val();
+  
   if (seq_count > 1) { 
     format = [ "Table", "Basic" ];
     alert("Multiple sequences were detected. The output will be shown in the tabular and basic format");
-  }
-
-  var database = jQuery('#database').val();
-
-  for (var n in format) { 
-    update_status('Formatting output ('+format[n]+')<br />');
-
+  } else {
+    
+    // get BLAST Graph
     jQuery.ajax( { 
-      url: '/tools/blast/result/'+jobid,
-      data: { 'format': format[n], 'db_id': database },
+      url: '/tools/blast/render_graph/'+jobid,
+      data: { 'db_id': database },
     
       success: function(response) { 
-        if (response.blast_report) {
-          var out_id = "#"+response.blast_format+"_output";
-          // var out_id = "#"+response.blast_format.replace(" graph", "")+"_output";
-          
-          jQuery(out_id).html(response.blast_report+"<br><br>\n");
-        }
+        var sgn_graph_array = response.desc_array;
+        var seq_length = response.sequence_length;
+        
+        // alert("descriptions: "+response.sequence_length);
+        // jQuery('#blast_query_length').html("Query length ("+seq_length+")");
+        // alert(response.sgn_html);
+        
+        draw_blast_graph(sgn_graph_array, seq_length);
+        jQuery('#sgn_blast_graph').css("display", "inline");
+        
+        jQuery("#SGN_output").html(response.sgn_html);
+        
         if (response.prereqs) { 
-            prereqs.push(response.prereqs);
-            jQuery('#prereqs').html(prereqs.join("\n\n<br />\n\n"));
+          prereqs.push(response.prereqs);
+          jQuery('#prereqs').html(prereqs.join("\n\n<br />\n\n"));
         }
-
+        
         jQuery('#jobid').html(jobid);
 
         Effects.swapElements('input_parameter_section_offswitch', 'input_parameter_section_onswitch'); 
         Effects.hideElement('input_parameter_section_content');
         jQuery('#download_basic').css("display", "inline");
-        
-        if (response.blast_format == "Table") {
-          jQuery('#download_table').css("display", "inline");
-        }
+      
         jQuery('#notes').css("width","75%")
+        
         enable_ui();
       },
-      error: function(response) { alert("Parse BLAST: An error occurred. "+response.error); }
+      error: function(response) { alert("SGN BLAST Graph: An error occurred. "+response.error); enable_ui();}
     });
-  }
+    
+  } //else closed
+
+  if (format) {
+
+    for (var n in format) {
+      update_status('Formatting output ('+format[n]+')<br />');
+
+      jQuery.ajax( {
+        url: '/tools/blast/result/'+jobid,
+        data: { 'format': format[n], 'db_id': database },
+
+        success: function(response) {
+
+          // alert("output format: "+response.blast_format);
+
+          if (response.blast_report) {
+            var out_id = "#"+response.blast_format+"_output";
+            // var out_id = "#"+response.blast_format.replace(" graph", "")+"_output";
+            // alert("out_id: "+out_id);
+            // alert("blast_report: "+response.blast_report);
+
+            jQuery(out_id).html(response.blast_report+"<br><br>\n");
+          }
+          if (response.prereqs) {
+              prereqs.push(response.prereqs);
+              jQuery('#prereqs').html(prereqs.join("\n\n<br />\n\n"));
+          }
+
+          jQuery('#jobid').html(jobid);
+
+          Effects.swapElements('input_parameter_section_offswitch', 'input_parameter_section_onswitch');
+          Effects.hideElement('input_parameter_section_content');
+          jQuery('#download_basic').css("display", "inline");
+
+          if (response.blast_format == "Table") {
+            jQuery('#download_table').css("display", "inline");
+          }
+          jQuery('#notes').css("width","75%")
+          enable_ui();
+        },
+        error: function(response) { alert("Parse BLAST: An error occurred. "+response.error); enable_ui();}
+      });
+    } // for close
+
+  } // if format closed
+  
 }
 
 function disable_ui() { 

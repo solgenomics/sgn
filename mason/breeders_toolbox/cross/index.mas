@@ -9,7 +9,7 @@ $trial_name => undef
 $user_id => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.BreedersToolbox.CrossDetailPage" ] &>
+<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Phenome.Tools", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch", "CXGN.BreedersToolbox.CrossDetailPage" ] &>
 
 % use utf8;
 % $cross_name ||= "Untitled cross";
@@ -56,7 +56,7 @@ $user_id => undef
 
   <div id="progeny_information_div">
     [loading...]
-    </div>
+  </div>
 
   <div id="add_more_progeny_dialog">
     <table>
@@ -80,17 +80,33 @@ $user_id => undef
 
 </&>
 
-<div id="edit_properties_dialog"> 
+<div id="edit_properties_dialog">
 
   <select id="properties_select">
-    <option value="cross_type">Cross type</option>
-    <option value="time">Time</option>
-    <option value="date">Date</option>
-    <option value="number_of_flowers">Number of flowers</option>
-    <option value="number_of_seeds">Number of seeds</option>
-    <option value="operator">Operator</option>
     <option value="cross_name">Cross name</option>
-</select>
+    <option value="cross_type">Cross type</option>
+    <option value="number_of_flowers">Number of flowers</option>
+    <option value="number_of_fruits">Number of fruits</option>
+    <option value="number_of_seeds_planted">Number of seeds planted</option>
+    <option value="number_of_seedlings_transplanted">Number of seedlings transplanted</option>
+    <option value="date_of_pollination">Date of pollination</option>
+    <option value="date_of_harvest">Date of harvest</option>
+    <option value="number_of_seeds_harvested">Number of seeds harvested</option>
+    <option value="days_to_maturity">Days to maturity</option>
+    <option value="date_of_seed_extraction">Date of seed extraction</option>
+    <option value="number_of_seeds_extracted">Number of seeds extracted</option>
+    <option value="number_of_viable_seeds">Number of viable seeds</option>
+    <option value="number_of_nonviable_seeds">Number of nonviable seeds</option>
+    <option value="days_from_harvest_to_extraction">Days from harvest to extraction</option>
+    <option value="date_of_embryo_rescue">Date of embryo rescue</option>
+    <option value="number_of_embryos_rescued">Number of embryos rescued</option>
+    <option value="days_from_extraction_to_embryo_rescue">Days from extraction to embryo rescue</option>
+    <option value="number_of_embryos_germinated">Number of embryos germinated</option>
+    <option value="number_of_embryos_contaminated">Number of embryos contaminated</option>
+    <option value="number_of_seeds_planted">Number of embryos planted</option>
+    <option value="number_of_seeds_germinated">Number of seeds germinated</option>
+    <option value="number_of_progeny">Number of progeny</option>
+  </select>
 
   <input id="property_value" />
 
@@ -99,4 +115,3 @@ $user_id => undef
   <p><b>WARNING!</b>&nbsp;Changing the parameters can have unpredicatable results in downstream analyses if they are inconsistent with other data.</p>
 
 </div>
-

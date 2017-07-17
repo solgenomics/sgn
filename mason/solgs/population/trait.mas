@@ -24,19 +24,20 @@ $list_of_prediction_pops=> ''
 $prediction_pop_name => ''
 $analyzed_traits => ''
 $owner=>''
+$protocol
 $combo_pops_id => ''
 </%args>
 
 <%perl>
 
-#my $submit_new = qq | <a href="/submit/intro">Submit GS population</a> |;
+my $pop_link = qq | <a href="/solgs/population/$pop_id">$project_name</a> |;
 
 </%perl>
 
   <& /util/import_javascript.mas, classes => ["d3.d3Min", "solGS.histogram", "solGS.phenotypeDataFlot", "solGS.traitGebvFlot", 
                                               "flot.flot", "flot.categories", 
                                               "flot.tooltip", "flot.selection", "flot.navigate", 
-                                              "flot.axisLabels", "statistics/simple_statistics"                                             ] 
+                                              "flot.axisLabels", "statistics/simple_statistics"                                            ] 
   &>
 
 
@@ -54,12 +55,14 @@ $combo_pops_id => ''
 
  <& summary.mas,
     project_id   => $pop_id,
+    pop_link     => $pop_link,
     project_name => $project_name,
     project_desc => $project_desc,
     stocks_no    => $stocks_no,
     markers_no   => $markers_no,
     traits_no    => $traits_no,
-    owner        => $owner
+    owner        => $owner,
+    protocol     => $protocol,
  &>
  
 </&>
@@ -79,6 +82,8 @@ $combo_pops_id => ''
 
 </&>
 
+<& /solgs/model/pca.mas &>
+
 % if ($show_data) 
 %{
 
@@ -90,8 +95,6 @@ $combo_pops_id => ''
    accuracy_report        => $accuracy_report,
   validation_download_url => $validation_download_url
 &>
-
-<& /solgs/model/pca.mas &>
 
 <& /solgs/model/top_blups.mas, 
    top_blups          => $top_blups,
@@ -130,7 +133,7 @@ $combo_pops_id => ''
 
 
 
-<input type="hidden"  id="model_id" value="<% $pop_id %>" /> 
+<input type="hidden" id="model_id" value="<% $pop_id %>" /> 
 <input type="hidden" id="population_id" value="<% $pop_id %>" /> 
 <input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" /> 
 <input type="hidden" id="trait_id" value="<% $trait_id %>" />  

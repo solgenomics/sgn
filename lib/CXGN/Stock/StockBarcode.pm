@@ -26,6 +26,7 @@ use warnings;
 use Moose;
 use Bio::Chado::Schema;
 use Try::Tiny;
+use SGN::Model::Cvterm;
 
 has 'schema' => (
     is  => 'rw',
@@ -194,12 +195,8 @@ sub store {
 
     my $coderef = sub {
         # find the cvterm for a phenotyping experiment
-        my $pheno_cvterm = $schema->resultset('Cv::Cvterm')->create_with(
-            { name   => 'phenotyping experiment',
-              cv     => 'experiment type',
-              db     => 'null',
-              dbxref => 'phenotyping experiment',
-            });
+        my $pheno_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type');
+
         print STDERR " ***store: phenotyping experiment cvterm = " . $pheno_cvterm->cvterm_id . "\n";
         ##
         ##  $hashref->{$op_name . "\t" . $project_id . "\t" . $location_id . "\t" . $date}->{$stock_id}->{$cvterm_accession}->{time} = $time, ->{value} = $value

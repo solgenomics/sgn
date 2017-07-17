@@ -23,19 +23,20 @@ use Moose;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
-#this function maps the url /calender/test_page/ to test_page.mas
-#sub test_page :Path('/calendar/test_page/') :Args(0) { 
-#    my $self = shift;
-#    my $c = shift;
-#    $c->stash->{template} = '/calendar/test_page.mas';
-#}
 
-#this function maps the url /calender/test_datatables/ to test_datatables.mas
-#sub test_datatables :Path('/calendar/test_datatables/') :Args(0) { 
-#    my $self = shift;
-#    my $c = shift;
-#    $c->stash->{template} = '/calendar/test_datatables.mas';
-#}
+
+sub ethz_cass_sync :Path('/ethz_cass/sync/') :Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    #This mason component is in cassbase git repo.
+    $c->stash->{template} = '/stock/ethz_cass_sync.mas';
+}
+
+sub varitome_project_page :Path('/projects/varitome/') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = '/projects/varitome/index.mas';
+}
 
 sub test_authentication :Path('/test_authentication/') :Args(0) { 
     my $self = shift;

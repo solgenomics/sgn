@@ -1,4 +1,3 @@
-
 =head1 NAME
 
 CXGN::BreederSearch - class for retrieving breeder information for the breeder search wizard
@@ -15,606 +14,398 @@ Aimin Yan <ay247@cornell.edu>
 package CXGN::BreederSearch;
 
 use Moose;
-
 use Data::Dumper;
+use Try::Tiny;
 
-has 'dbh' => ( 
+has 'dbh' => (
     is  => 'rw',
     required => 1,
     );
+has 'dbname' => (
+    is => 'rw',
+    isa => 'Str',
+    );
 
+=head2 metadata_query
 
-=head2 get_intersect
+ Usage:        my $results_ref = $bs->metadata_query($criteria_list, $dataref, $queryref);
 
- Usage:        my %info = $bs->get_intersect($criteria_list, $dataref, $db_name);
- Desc:         
- Ret:          returns a hash with a key called results that contains 
-               a listref of listrefs specifying the matching list with ids
-               and names. 
- Args:         criteria_list: a comma separated string called a criteria_list, 
-               listing all the criteria that need to be applied. Possible 
-               criteria are trials, years, traits, and locations. The last 
+ Ret:          returns a hash with a list of ids and names that were matched.
+
+ Args:         criteria_list: a comma separated string of criteria categories. Possible
+               criteria include accessions, breeding programs, genotyping protocols,
+               locations, plots, plants, trials, trial_designs, traits, and years. The last
                criteria in the list is the return type.
+
                dataref: The dataref is a hashref of hashrefs. The first key
                is the target of the transformation, and the second is the
                source type of the transformation, containing comma separated
-               values of the source type. 
-               db_name: the db name of the ontology used
- Side Effects: will create a materialized view of the ontology corresponding to 
-               $db_name
- Example:
+               values of the source type.
+
+               queryref: same structure as dataref, but instead of storing ids it stores a
+               1 if user to retrieve an intersection of matches, or 0 for the default union
+
+ Side Effects: none
+ Example:   retrieving all the trials from location 'test_location' (location_id = 23) and year '2014' in the fixture db:
+
+ my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
+ my $criteria_list = [
+                'years',
+                'locations',
+                'trials'
+              ];
+ my $dataref = {
+                'trials' => {
+                            'locations' => '\'23\'',
+                            'years' => '\'2014\''
+                          }
+              };
+ my $queryref = {
+                'trials' => {
+                            'locations' => 0,
+                            'years' => 0
+                          }
+              };
+
+ my $results_ref = $bs ->metadata_query($criteria_list, $dataref, $queryref);
+
+ print Dumper($results);
+ will give you:
+
+            {
+                'results' => [
+                               [
+                                 139,
+                                 'Kasese solgs trial'
+                               ],
+                               [
+                                 137,
+                                 'test_trial'
+                               ],
+                               [
+                                 141,
+                                 'trial2 NaCRRI'
+                               ]
+                             ]
+              },
+=cut
+
+sub metadata_query {
+  my $self = shift;
+  my $criteria_list = shift;
+  my $dataref = shift;
+  my $queryref = shift;
+  my $h;
+  print STDERR "criteria_list=" . Dumper($criteria_list);
+  print STDERR "dataref=" . Dumper($dataref);
+  print STDERR "queryref=" . Dumper($queryref);
+
+  my $target_table = $criteria_list->[-1];
+  print STDERR "target_table=". $target_table . "\n";
+  my $target = $target_table;
+  $target =~ s/s$//;
+
+  my $select = "SELECT ".$target."_id, ".$target."_name ";
+  my $group = "GROUP BY ".$target."_id, ".$target."_name ";
+
+  my $full_query;
+  if (!$dataref->{"$target_table"}) {
+    my $from = "FROM public.". $target_table;
+    my $where = " WHERE ".$target."_id IS NOT NULL";
+	  $full_query = $select . $from . $where;
+  }
+  else {
+	  my @queries;
+	  foreach my $category (@$criteria_list) {
+
+      if ($dataref->{$criteria_list->[-1]}->{$category}) {
+        my $query;
+		    my @categories = ($target_table, $category);
+	      @categories = sort @categories;
+	      my $from = "FROM public.". $categories[0] ."x". $categories[1] . " JOIN public." . $target_table . " USING(" . $target."_id) ";
+        my $criterion = $category;
+        $criterion =~ s/s$//;
+        my $intersect = $queryref->{$criteria_list->[-1]}->{$category};
+
+        if ($intersect) {
+          my @parts;
+          my @ids = split(/,/, $dataref->{$criteria_list->[-1]}->{$category});
+          foreach my $id (@ids) {
+            my $where = "WHERE ". $criterion. "_id IN (". $id .") ";
+            my $statement = $select . $from . $where . $group;
+            push @parts, $statement;
+          }
+          $query = join (" INTERSECT ", @parts);
+          push @queries, $query;
+        }
+        else {
+          my $where = "WHERE ". $criterion. "_id IN (" . $dataref->{$criteria_list->[-1]}->{$category} . ") ";
+          $query = $select . $from . $where . $group;
+          push @queries, $query;
+        }
+      }
+    }
+    $full_query = join (" INTERSECT ", @queries);
+  }
+  $full_query .= " ORDER BY 2";
+  print STDERR "QUERY: $full_query\n";
+  $h = $self->dbh->prepare($full_query);
+  $h->execute();
+
+  my @results;
+  while (my ($id, $name) = $h->fetchrow_array()) {
+    push @results, [ $id, $name ];
+  }
+
+  return { results => \@results };
+
+}
+
+=head2 avg_phenotypes_query
+
+parameters: trait_id, trial_id, allow_missing
+
+returns: values, the avg pheno value of each accession in a trial for the given trait, and column_names, an array of the trait names
+
+Side Effects: none
 
 =cut
 
-sub get_intersect { 
-    my $self = shift;
-    my $criteria_list = shift;
-    my $dataref = shift;
-    my $traits_db_name = shift;
-    my $genotypes = shift;
+sub avg_phenotypes_query {
+  my $self = shift;
+  my $trial_id = shift;
+  my $trait_ids = shift;
+  my $weights = shift;
+  my $controls = shift;
+  my @trait_ids = @$trait_ids;
+  my @weights = @$weights;
+  my @controls = @$controls;
+  my $allow_missing = shift;
 
-    if (!$traits_db_name) { die "Need a db_name for the ontology!"; }
-    
-    $self->create_materialized_cvterm_view($traits_db_name);
-    $self->create_materialized_cvalue_ids_view();
-    
-    #print STDERR "CRITERIA LIST: ".(join ",", @$criteria_list)."\n";
-    print STDERR "Dataref = ".Dumper($dataref);
-    
-    my $type_id = $self->get_type_id('project year');
-    my $accession_id = $self->get_stock_type_id('accession');
-    my $breeding_program_type_id = $self->get_projectprop_type_id('breeding_program');
+  my $select = "SELECT table0.accession_id, table0.accession_name";
+  my $from = " FROM (SELECT accession_id, accession_name FROM materialized_phenoview JOIN accessions USING (accession_id) WHERE trial_id = $trial_id GROUP BY 1,2) AS table0";
+  for (my $i = 1; $i <= scalar @trait_ids; $i++) {
+    $select .= ",  ROUND( CAST(table$i.trait$i AS NUMERIC), 2)";
+    $from .= " JOIN (SELECT accession_id, accession_name, AVG(value::REAL) AS trait$i FROM materialized_phenoview JOIN accessions USING (accession_id) JOIN phenotype USING (phenotype_id) WHERE trial_id = $trial_id AND trait_id = ? GROUP BY 1,2) AS table$i USING (accession_id)";
+  }
+  my $query = $select . $from . " ORDER BY 2";
+  if ($allow_missing eq 'true') { $query =~ s/JOIN/FULL OUTER JOIN/g; }
 
-    print STDERR "BREEDING PROGRAM TYPE ID: $breeding_program_type_id\n";
+  print STDERR "QUERY: $query\n";
 
-    my $plot_id = $self->get_stock_type_id('plot');
-    
-    my %queries;
-    { 
-	no warnings;
-	%queries = ( 
+  my $h = $self->dbh->prepare($query);
+  $h->execute(@$trait_ids);
 
-	    breeding_programs => { 
+  my (@raw_avg_values, @reference_values, @rows_to_scale, @weighted_values);
 
-		breeding_programs  => "SELECT distinct(project_id), project.name FROM project JOIN projectprop USING(project_id) WHERE type_id=$breeding_program_type_id",
-
-		locations => "SELECT distinct(breeding_program.project_id), breeding_program.name FROM project AS breeding_program JOIN project_relationship ON (project_relationship.object_project_id=breeding_program.project_id) JOIN projectprop ON (project_relationship.subject_project_id=projectprop.project_id) JOIN cvterm ON (projectprop.type_id=cvterm_id) WHERE cvterm.name='project location' and projectprop.value in ($dataref->{breeding_programs}->{locations})",
-		
-		years => "SELECT distinct(breeding_program.project_id), breeding_program.name FROM project AS breeding_program JOIN project_relationship ON (project_relationship.object_project_id=breeding_program.project_id) JOIN projectprop ON (project_relationship.subject_project_id=projectprop.project_id) WHERE projectprop.type_id=$type_id AND projectprop.value in ($dataref->{breeding_programs}->{years}) ",
-		
-		projects => "SELECT distinct(breeding_program.project_id), breeding_program.name FROM project AS breeding_program JOIN project_relationship ON (project_relationship.object_project_id=breeding_program.project_id) JOIN project AS trial ON (project_relationship.subject_project_id=trial.project_id) WHERE trial.project_id in ($dataref->{breeding_programs}->{projects})",
-
-		traits => "SELECT distinct(breeding_program.project_id), breeding_program.name FROM project AS breeding_program JOIN project_relationship ON (project_relationship.object_project_id=breeding_program.project_id) JOIN nd_experiment_project ON (project_relationship.subject_project_id=nd_experiment.project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING(phenotype_id) WHERE phenotype.cvalue_id IN ($dataref->{breeding_programs}->{traits})",
-		
-
-		order_by      => " ORDER BY 2 ",
-		
-	    },
-
-	    accessions => {
-		locations => "SELECT distinct(accession.uniquename), accession.uniquename FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock as plot using(stock_id) JOIN stock_relationship on (plot.stock_id=subject_id) JOIN stock as accession on (object_id=accession.stock_id) WHERE accession.type_id=$accession_id and nd_geolocation.nd_geolocation_id in ($dataref->{accessions}->{locations})",
-		
-		years     => "SELECT distinct(accession.uniquename), accession.uniquename FROM projectprop JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock as plot using(stock_id) JOIN stock_relationship on (plot.stock_id=subject_id) JOIN stock as accession on (object_id=accession.stock_id) WHERE accession.type_id=$accession_id and projectprop.value in ($dataref->{accessions}->{years}) ",
-		
-		projects  => "SELECT distinct(accession.uniquename), accession.uniquename FROM project JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock as plot using(stock_id) JOIN stock_relationship on (plot.stock_id=subject_id) JOIN stock as accession on (object_id=accession.stock_id) WHERE accession.type_id=$accession_id and project.project_id in ($dataref->{accessions}->{projects}) ",
-		
-		traits    => "SELECT distinct(accession.uniquename), accession.uniquename FROM phenotype JOIN nd_experiment_phenotype using(phenotype_id) JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock as plot using(stock_id) JOIN stock_relationship on (plot.stock_id=subject_id) JOIN stock as accession on (object_id=accession.stock_id) WHERE accession.type_id=$accession_id and phenotype.cvalue_id in ($dataref->{accessions}->{traits}) ",
-		
-		accessions    => "SELECT distinct(stock.uniquename), stock.uniquename FROM stock WHERE stock.type_id=$accession_id ",
-		
-		genotypes => "SELECT distinct(accession.uniquename), accession.uniquename FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) JOIN stock as accession ON (object_id=accession.stock_id) JOIN nd_experiment_stock ON (accession.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_genotype USING (nd_experiment_id) JOIN genotype USING(genotype_id) ",
-
-		breeding_programs => "SELECT distinct(accession.uniquename), accession.uniquename FROM project AS breeding_program JOIN project_relationship ON (breeding_program.project_id=project_relationship.object_project_id) JOIN nd_experiment_project ON (project_relationship.subject_project_id=nd_experiment_project.project_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock AS plot USING(stock_id) JOIN stock_relationship ON (plot.stock_id=stock_relationship.subject_id) JOIN stock as accession ON (stock_relationship.object_id=accession.stock_id) WHERE plot.type_id=(SELECT cvterm_id FROM cvterm WHERE name='plot') AND breeding_program.project_id in ($dataref->{accessions}->{breeding_programs})",
-		
-		order_by      => " ORDER BY 2 ",
-	    },
-	    
-	    plots => {
-
-		locations => "SELECT distinct(stock.uniquename), stock.uniquename FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) WHERE stock.type_id=$plot_id and nd_geolocation.nd_geolocation_id in ($dataref->{plots}->{locations}) ",
-		
-		years     => "SELECT distinct(stock.uniquename), stock.uniquename FROM projectprop JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock using(stock_id) WHERE  stock.type_id=$plot_id and projectprop.value in ($dataref->{plots}->{years}) ",
-		
-		projects  => "SELECT distinct(stock.uniquename), stock.uniquename FROM project JOIN nd_experiment_project using(project_id) JOIN nd_experiment_stock using(nd_experiment_id) JOIN stock using(stock_id) WHERE  stock.type_id=$plot_id and project.project_id in ($dataref->{plots}->{projects}) ",
-		
-		traits    => "SELECT distinct(stock.uniquename), stock.uniquename FROM phenotype JOIN nd_experiment_phenotype using(phenotype_id) JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) WHERE  stock.type_id=$plot_id and phenotype.cvalue_id in ($dataref->{plots}->{traits}) ",
-		
-		plots    => "SELECT distinct(stock.uniquename), stock.uniquename FROM stock WHERE  stock.type_id=$plot_id ",
-		
-		accessions => "SELECT distinct(plot.uniquename), plot.uniquename FROM stock JOIN stock_relationship ON (stock.stock_id=stock_relationship.object_id)  JOIN stock as plot ON (stock_relationship.subject_id=plot.stock_id) WHERE plot.type_id=$plot_id and stock.stock_id in ($dataref->{plots}->{accessions}) ",
-		
-		genotypes => "SELECT distinct(plot.uniquename), plot.uniquename FROM stock as plot JOIN stock_relationship on (plot.stock_id=stock_relationship.subject_id) JOIN stock as accession on (stock_relationship.object_id=accession.stock_id) JOIN  nd_experiment_stock ON (accession.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_genotype USING (nd_experiment_id) JOIN genotype USING(genotype_id) ",
-		
-		breeding_programs => "SELECT distinct(plot.uniquename), plot.uniquename FROM project AS breeding_program JOIN project_relationship ON (breeding_program.project_id=project_relationship.object_project_id) JOIN nd_experiment_project ON (project_relationship.subject_project_id=nd_experiment_project.project_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock AS plot USING(stock_id) WHERE plot.type_id=(SELECT cvterm_id FROM cvterm WHERE name='plot') AND breeding_program.project_id in ($dataref->{plots}->{breeding_programs})",
-
-		order_by => " ORDER BY 2",
-		
-	    },
-	    
-	    locations => { 
-		years     => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation join nd_experiment using(nd_geolocation_id) JOIN nd_experiment_project USING (nd_experiment_id) JOIN projectprop using(project_id) where projectprop.value in ($dataref->{locations}->{years}) ",
-		
-		projects  => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE project.project_id in ($dataref->{locations}->{projects}) ",
-		
-		locations => "SELECT nd_geolocation_id, description FROM nd_geolocation ",
-		
-		plots    => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment using(nd_geolocation_id) JOIN nd_experiment_stock USING (nd_experiment_id) WHERE stock in ($dataref->{locations}->{plots}) ",
-		
-		traits    => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment USING (nd_geolocation_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) WHERE cvalue_id in ($dataref->{locations}->{traits}) ",
-		
-		accessions => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment USING (nd_geolocation_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.type_id=$accession_id and stock.stock_id in ($dataref->{locations}->{accessions}) ",
-
-		#genotypes => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN nd_experiment USING(nd_geolocation_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) join nd_experiment_stock as genotype_experiment_stock on(genotype_experiment_stock.stock_id = nd_experiment_stock.stock_id) JOIN nd_experiment_genotype on (genotype_experiment_stock.nd_experiment_id = nd_experiment_genotype.nd_experiment_id) JOIN genotypeprop USING(genotype_id) ",
-
-		breeding_programs => "SELECT distinct(nd_geolocation.nd_geolocation_id), nd_geolocation.description FROM nd_geolocation JOIN projectprop ON (projectprop.type_id=(SELECT cvterm_id FROM cvterm WHERE name='project location') AND nd_geolocation_id=projectprop.value::int) JOIN project as trial USING (project_id) JOIN project_relationship ON (trial.project_id=project_relationship.subject_project_id) JOIN project AS breeding_program ON (project_relationship.object_project_id=breeding_program.project_id) WHERE breeding_program.project_id IN ($dataref->{locations}->{breeding_programs})",
-		order_by => " ORDER BY 2 ",
-	    },
-	    
-	    years => {
-		locations => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING (project_id) JOIN nd_experiment using(nd_experiment_id) JOIN nd_geolocation USING (nd_geolocation_id) where nd_geolocation_id in ($dataref->{years}->{locations}) ",
-		
-		projects  => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN  project using(project_id) WHERE project.project_id in ($dataref->{years}->{projects}) ",
-		
-		years     => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop WHERE type_id=$type_id ",
-		
-		plots    => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING(nd_experiment_id) WHERE type_id=$type_id AND stock_id IN ($dataref->{years}->{plots}) ",
-		
-		traits    => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING(phenotype_id) WHERE type_id=$type_id AND cvalue_id IN ($dataref->{years}->{traits}) ",
-		
-		accessions => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) WHERE type_id=$accession_id and stock.stock_id in ($dataref->{years}->{accessions}) ",
-		
-		#genotypes => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING (stock_id) JOIN nd_experiment_stock AS genotype_experiment_stock ON (genotype_experiment_stock.stock_id=stock.stock_id) JOIN nd_experiment_genotype ON (genotype_experiment_stock.nd_experiment_id=nd_experiment_genotype.nd_experiment_id) JOIN genotypeprop ON (nd_experiment_genotype.genotype_id=genotypeprop.genotype_id) ",
-		
-		breeding_programs => "SELECT distinct(projectprop.value), projectprop.value FROM projectprop JOIN project as trial USING(project_id) JOIN project_relationship ON (trial.project_id=subject_project_id) JOIN project AS breeding_program ON (project_relationship.object_project_id=breeding_program.project_id) WHERE project_relationship.type_id=(SELECT cvterm_id FROM cvterm where name='breeding_program_trial_relationship') AND breeding_program.project_id in ($dataref->{years}->{breeding_programs})",
-		
-		order_by => " ORDER BY 1 ",
-		
-	    },
-	    
-	    projects => { 
-
-		locations => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_geolocation USING(nd_geolocation_id) WHERE nd_geolocation_id in ($dataref->{projects}->{locations}) ",
-		
-		years     => "SELECT distinct(project_id), project.name FROM project JOIN projectprop USING (project_id) WHERE projectprop.value in ($dataref->{projects}->{years}) ",
-		
-		projects  => "SELECT project_id, project.name FROM project ", 
-		
-		plots    => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING(nd_experiment_id) WHERE stock_id in ($dataref->{projects}->{plots}) ",
-		
-		traits    => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) WHERE cvalue_id in ($dataref->{projects}->{traits}) ",
-		
-		accessions => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.type_id=$accession_id and stock.stock_id in ($dataref->{projects}->{accessions}) ",
-
-		#genotypes => "SELECT distinct(project_id), project.name FROM project JOIN nd_experiment_project USING(project_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING (stock_id) JOIN nd_experiment AS genotype_experiment_stock ON (stock.stock_id=genotype_experiment_stock.nd_experiment_id) JOIN nd_experiment_genotype ON (genotype_experiment_stock.nd_experiment_id=nd_experiment_genotype.nd_experiment_id) JOIN genotypeprop USING(genotype_id)",
-
-		breeding_programs => "SELECT distinct(trial.project_id), trial.name FROM project AS trial JOIN project_relationship ON (project_relationship.subject_project_id=trial.project_id) JOIN project AS breeding_program ON (project_relationship.object_project_id=breeding_program.project_id) WHERE breeding_program.project_id IN ($dataref->{projects}->{breeding_programs})",
-		
-		order_by => " ORDER BY 2 ",
-	    },
-	    
-	    traits  => { 
-		
-		# prereq   => "DROP TABLE IF EXISTS cvalue_ids; CREATE TEMP TABLE cvalue_ids AS SELECT distinct(cvalue_id), phenotype_id FROM phenotype",
-		
-		locations => "SELECT distinct(materialized_traits.cvterm_id), materialized_traits.name FROM materialized_traits JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment USING(nd_experiment_id) JOIN nd_geolocation USING(nd_geolocation_id)  WHERE nd_geolocation.nd_geolocation_id in ($dataref->{traits}->{locations}) ",
-		
-		years => "SELECT distinct(materialized_traits.cvterm_id), materialized_traits.name FROM materialized_traits JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN projectprop USING(project_id) WHERE projectprop.type_id=$type_id and projectprop.value IN ($dataref->{traits}->{years}) ", 
-	    
-		projects => "SELECT distinct(materialized_traits.cvterm_id), materialized_traits.name FROM materialized_traits JOIN cvalue_ids on (cvalue_id=cvterm_id) JOIN nd_experiment_phenotype USING(phenotype_id) JOIN nd_experiment_project USING(nd_experiment_id) JOIN project USING(project_id) WHERE project.project_id in ($dataref->{traits}->{projects}) ",
-		
-		traits => "SELECT distinct(materialized_traits.cvterm_id), materialized_traits.name FROM cvalue_ids JOIN  materialized_traits on (cvalue_id=cvterm_id)",
-		
-		plots => "SELECT distinct(materialized_traits.cvterm_id), materialized_traits.name FROM nd_experiment_stock JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN materialized_traits ON (cvalue_id=cvterm_id) WHERE stock_id IN ($dataref->{traits}->{plots}) ",
-		
-		accessions => "SELECT distinct(materialized_traits.cvterm_id), materialized_traits.name FROM nd_experiment_stock JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN materialized_traits ON (cvalue_id=cvterm_id) WHERE stock_id IN ($dataref->{traits}->{plots}) ",
-
-		#genotypes => "SELECT distinct(materialized_traits.cvterm_id), materialized_traits.name FROM stock JOIN nd_experiment_stock USING (stock_id) JOIN nd_experiment_phenotype USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN materialized_traits ON (cvalue_id=cvterm_id) JOIN nd_experiment_stock AS genotype_experiment_stock ON (stock.stock_id=genotype_experiment_stock.stock_id) JOIN nd_experiment_genotype ON (genotype_experiment_stock.nd_experiment_id=nd_experiment_genotype.nd_experiment_id) JOIN genotypeprop USING(genotype_id) ",
-
-		breeding_programs => "SELECT distinct(materialized_traits.cvterm_id), materialized_traits.name FROM project AS breeding_program JOIN project_relationship ON (project_relationship.object_project_id=breeding_program.project_id) JOIN nd_experiment_project ON (project_relationship.subject_project_id=nd_experiment_project.project_id) JOIN nd_experiment_phenotype  USING(nd_experiment_id) JOIN phenotype USING (phenotype_id) JOIN materialized_traits ON (cvalue_id=cvterm_id) WHERE breeding_program.project_id in ($dataref->{traits}->{breeding_programs})",
-
-		order_by => " ORDER BY 2 ",
-	   
-		
-	    },
-	    
-	    
-	    );
+  if (grep { defined($_) } @controls) {
+  while (my @row = $h->fetchrow_array()) {
+    push @rows_to_scale, @row;
+    my ($id, $name, @avg_values) = @row;
+    for my $i (0..$#controls) {
+      my $control = $controls[$i] || 0;
+      if ($id == $control) {
+        #print STDERR "Matched control accession $name with values @avg_values\n";
+        if (!defined($avg_values[$i])) {
+          return { error => "Can't scale values using control $name, it has a zero or undefined value for trait with id @$trait_ids[$i] in this trial. Please select a different control for this trait." };
+        }
+        $reference_values[$i] = $avg_values[$i];
+      }
     }
-    my @query;
-    my $item = $criteria_list->[-1];
-    
-    if (exists($queries{$item}->{prereq})) { 
-	my $h = $self->dbh->prepare($queries{$item}->{prereq});
-	$h->execute();
+  }
+    for my $i (0..$#trait_ids) {
+        $reference_values[$i] = 1 unless defined $reference_values[$i];
     }
-    
-    push @query, $queries{$item}->{$item}; # make the empty query work
 
-    foreach my $criterion (@$criteria_list) { 
-	if (exists($queries{$item}->{$criterion}) && $queries{$item}->{$criterion} && $dataref->{$item}->{$criterion}) { 
-       	    push @query, $queries{$item}{$criterion};
-	}
+    #print STDERR "reference values = @reference_values\n";
+    $h->execute(@$trait_ids);
+    while (my ($id, $name, @avg_values) = $h->fetchrow_array()) {
+
+      my @scaled_values = map {sprintf("%.2f", $avg_values[$_] / $reference_values[$_])} 0..$#avg_values;
+      my @scaled_and_weighted = map {sprintf("%.2f", $scaled_values[$_] * $weights[$_])} 0..$#scaled_values;
+      unshift @scaled_values, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
+      push @raw_avg_values, [@scaled_values];
+
+      my $sum;
+      map { $sum += $_ } @scaled_and_weighted;
+      my $rounded_sum = sprintf("%.2f", $sum);
+      push @scaled_and_weighted, $rounded_sum;
+      unshift @scaled_and_weighted, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
+      push @weighted_values, [@scaled_and_weighted];
     }
-    
-    print STDERR "Genotypes: $genotypes\n";
-    if ($genotypes) { 
-	print STDERR "Restricting by available genotypes... \n";
-	push @query, $queries{$item}{genotypes};
-    }
-    
-    my $query = join (" INTERSECT ", @query). $queries{$item}{order_by};
-    
-    print STDERR "QUERY: $query\n";
-    
-    my $h = $self->dbh->prepare($query);
-    $h->execute();
-    
-    my @results;
-    while (my ($id, $name) = $h->fetchrow_array()) { 
-	push @results, [ $id, $name ];
-    }    
-    
-    if (@results <= 10_000) { 
-	return { results => \@results };
-    }
-    else { 
-	return { message => '<font color="red">Too many items to display ('.(scalar(@results)).')</font>' };
-    }
+
+  } else {
+
+  while (my ($id, $name, @avg_values) = $h->fetchrow_array()) {
+
+    my @values_to_weight = @avg_values;
+    unshift @avg_values, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
+    push @raw_avg_values, [@avg_values];
+
+    @values_to_weight = map {$values_to_weight[$_] * $weights[$_]} 0..$#values_to_weight;
+    my $sum;
+    map { $sum += $_ } @values_to_weight;
+    unshift @values_to_weight, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
+    my $rounded_sum = sprintf("%.2f", $sum);
+    push @values_to_weight, $rounded_sum;
+    push @weighted_values, [@values_to_weight];
+  }
+
 }
 
+  my @weighted_values2 = sort { $b->[-1] <=> $a->[-1] } @weighted_values;
+  my @weighted_values3;
+  for (my $i = 0; $i < scalar @weighted_values2; $i++ ) {
+    my $temp_array = $weighted_values2[$i];
+    my @temp_array = @$temp_array;
+    push @temp_array, $i+1;
+    push @weighted_values3, [@temp_array];
+  }
 
-=head2 get_phenotype_info
+  #print STDERR "avg_phenotypes: ".Dumper(@raw_avg_values);
+  #print STDERR "avg_phenotypes: ".Dumper(@weighted_values3);
 
-parameters: comma-separated lists of accession, trial, and trait IDs. May be empty.
+  return {
+    raw_avg_values => \@raw_avg_values,
+    weighted_values => \@weighted_values3
+  };
 
-returns: an array with phenotype information
+}
+
+=head2 test_matviews
+
+parameters: db parameters
+
+returns: message detailing matview status
+
+Side Effects: If they are unavailable, it will use the refresh_matviews method to populate the materialized views
 
 =cut
 
 
-sub get_phenotype_info {  
-    my $self = shift;
-    my $accession_sql = shift;
-    my $trial_sql = shift;
-    my $trait_sql = shift;
+sub test_matviews {
 
-    print STDERR "GET_PHENOTYPE_INFO: $accession_sql - $trial_sql - $trait_sql \n\n";
+  my $self = shift;
+  my $dbhost = shift;
+  my $dbname = shift;
+  my $dbuser = shift;
+  my $dbpass = shift;
+  my ($status, %response_hash);
 
-    my $rep_type_id = $self->get_stockprop_type_id("replicate");
-    my $block_number_type_id = $self -> get_stockprop_type_id("block");
+  try {
+    my $populated_query = "select * from materialized_phenoview limit 1";
+    my $sth = $self->dbh->prepare($populated_query);
+    $sth->execute();
+  } catch { #if test query fails because views aren't populated
+    print STDERR "Using basic refresh to populate views . . .\n";
+    $status = $self->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'basic');
+    %response_hash = %$status;
+  };
 
-
-    my @where_clause = ();
-    if ($accession_sql) { push @where_clause,  "stock.stock_id in ($accession_sql)"; }
-    if ($trial_sql) { push @where_clause, "project.project_id in ($trial_sql)"; }
-    if ($trait_sql) { push @where_clause, "cvterm.cvterm_id in ($trait_sql)"; }
-
-    my $where_clause = "";
-   
-    if (@where_clause>0) {
-	$where_clause .= $rep_type_id ? "WHERE (stockprop.type_id = $rep_type_id OR stockprop.type_id IS NULL) " : "WHERE stockprop.type_id IS NULL";
-	$where_clause .= $block_number_type_id  ? "AND (block_number.type_id = $block_number_type_id OR block_number.type_id IS NULL)" : "AND block_number.type_id IS NULL";
-	$where_clause .= " AND " . (join (" AND " , @where_clause));
-
-	#$where_clause = "where (stockprop.type_id=$rep_type_id or stockprop.type_id IS NULL) AND (block_number.type_id=$block_number_type_id or block_number.type_id IS NULL) AND  ".(join (" and ", @where_clause));
-    }
-
-    my $order_clause = " order by project.name, plot.uniquename";
-
-    my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, db.name ||  ':' || dbxref.accession AS accession, stockprop.value, block_number.value AS rep
-             FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) 
-             JOIN stock ON (object_id=stock.stock_id) 
-             LEFT JOIN stockprop ON (plot.stock_id=stockprop.stock_id)
-             LEFT JOIN stockprop AS block_number ON (plot.stock_id=block_number.stock_id)
-             JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id) 
-             JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id) 
-             JOIN nd_geolocation USING(nd_geolocation_id) 
-             JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)  
-             JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) 
-             JOIN cv USING(cv_id)
-             JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
-             JOIN db USING(db_id)
-             JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id) 
-             JOIN project USING(project_id)  
-             $where_clause
-             $order_clause";
-    
-    print STDERR "QUERY: $q\n\n";
-    my $h = $self->dbh()->prepare($q);
-    $h->execute();
-
-    my $result = [];
-    while (my ($project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number) = $h->fetchrow_array()) { 
-	push @$result, [ $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number ];
-	
-    }
-    print STDERR "QUERY returned ".scalar(@$result)." rows.\n";
-    return $result;
+  if (%response_hash && $response_hash{'message'} eq 'Wizard update completed!') {
+    print STDERR "Populated views, now proceeding with query . . . .\n";
+    return { success => "Populated views, query can proceed." };
+  } elsif (%response_hash && $response_hash{'message'} eq 'Wizard update initiated.') {
+    return { error => "The search wizard is temporarily unavailable while database indexes are being repopulated. Please try again later." };
+  } elsif (%response_hash && $response_hash{'error'}) {
+    return { error => $response_hash{'error'} };
+  } else {
+    return { success => "Test successful, query can proceed." };
+  }
 }
 
-sub get_phenotype_info_matrix { 
-    my $self = shift;
-    my $accession_sql = shift;
-    my $trial_sql = shift;
-    my $trait_sql = shift;
-    
-    my $data = $self->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
-    
-    my %plot_data;
-    my %traits;
+=head2 refresh_matviews
 
-    foreach my $d (@$data) { 
-	print STDERR "PRINTING TRAIT DATA FOR TERM " . $d->[3] . "\n\n";
-	my $cvterm = $d->[3]."|".$d->[7];
-	my $trait_data = $d->[4];
-	my $plot = $d->[5];
-	$plot_data{$plot}->{$cvterm} = $trait_data;
-	$traits{$cvterm}++;
-    }
-    
-    my @info = ();
-    my $line = "";
+parameters: db parameters, and a string to specify desired refresh type, basic or concurrent. defaults to concurrent
 
-    # generate header line
-    #
-    my @sorted_traits = sort keys(%traits);
-    foreach my $trait (@sorted_traits) { 
-	$line .= "\t".$trait;  # first header has to be empty (plot name column)
-    }
-    push @info, $line;
-    
-    # dump phenotypic values
-    #
-    my $count2 = 0;
-    foreach my $plot (sort keys (%plot_data)) { 
-	$line = $plot;
+returns: message detailing success or error
 
-	foreach my $trait (@sorted_traits) { 
-	    my $tab = $plot_data{$plot}->{$trait}; # ? "\t".$plot_data{$plot}->{$trait} : "\t";
-	    $line .= $tab ? "\t".$tab : "\t";
-
-	}
-	push @info, $line;
-    }
-
-    return @info;
-}
-
-sub get_extended_phenotype_info_matrix { 
-    my $self = shift;
-    my $accession_sql = shift;
-    my $trial_sql = shift;
-    my $trait_sql = shift;
-
-    my $data = $self->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
-    
-    my %plot_data;
-    my %traits;
-
-    print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
-    foreach my $d (@$data) { 
-
-	my ($project_name, $stock_name, $location, $trait, $trait_data, $plot, $cv_name, $cvterm_accession, $rep, $block_number) = @$d;
-	
-	my $cvterm = $d->[3]."|".$d->[7];
-	if (!defined($rep)) { $rep = ""; }
-	$plot_data{$plot}->{$cvterm} = $trait_data;
-	$plot_data{$plot}->{metadata} = {
-	    rep => $rep,
-	    trial_name => $project_name,
-	    accession => $stock_name,
-	    location => $location,
-	    block_number => $block_number,
-	    plot => $plot, 
-	    rep => $rep, 
-	    cvterm => $cvterm, 
-	    trait_data => $trait_data 
-	};
-	$traits{$cvterm}++;
-    }
-    
-    my @info = ();
-    my $line = join "\t", qw | trial_name location accession plot rep block_number |;
-
-    # generate header line
-    #
-    my @sorted_traits = sort keys(%traits);
-    foreach my $trait (@sorted_traits) { 
-	$line .= "\t".$trait; 
-    }
-    push @info, $line;
-    
-    # dump phenotypic values
-    #
-    my $count2 = 0;
-
-    my @unique_plot_list = ();
-    my $previous_plot = "";
-    foreach my $d (@$data) { 
-	my $plot = $d->[5];
-	if ($plot ne $previous_plot) { 
-	    push @unique_plot_list, $plot;
-	}
-	$previous_plot = $plot;
-    }
-
-
-    foreach my $p (@unique_plot_list) { 
-	$line = join "\t", map { $plot_data{$p}->{metadata}->{$_} } ( "trial_name", "location", "accession", "plot", "rep", "block_number" );
-	print STDERR "Adding line for plot $p\n";
-	foreach my $trait (@sorted_traits) { 
-	    my $tab = $plot_data{$p}->{$trait}; 
-	    
-	    $line .= $tab ? "\t".$tab : "\t";
-
-	}
-	push @info, $line;
-    }
-
-    return @info;
-}
-
-
-
-=head2 get_genotype_info
-
-parameters: comma-separated lists of accession, trial, and trait IDs. May be empty.
-
-returns: an array with genotype information
+Side Effects: Refreshes materialized views
 
 =cut
 
-sub get_genotype_info {
-  
-    my $self = shift;
-    my $accession_sql = shift;
-    my $trial_sql = shift;
-   # my $trait_sql = shift;
+sub refresh_matviews {
 
-    #my $q = "SELECT project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id) JOIN stock ON (object_id=stock.stock_id) JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id) JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id) JOIN nd_geolocation USING(nd_geolocation_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id) JOIN project USING(project_id)  WHERE cvterm.cvterm_id in ($trait_sql) and project.project_id in ($trial_sql) and stock.stock_id in ($accession_sql)";
+  my $self = shift;
+  my $dbhost = shift;
+  my $dbname = shift;
+  my $dbuser = shift;
+  my $dbpass = shift;
+  my $refresh_type = shift || 'concurrent';
+  my $refresh_finished = 0;
+  my $async_refresh;
 
-   # my $q ="select genotype_id from genotype where name ilike '$accession_sql' ";
-    #my $q ="select genotype_id,value from genotypeprop where genotype_id in (select genotype_id from genotype where name in ($accession_sql)";
+  my $q = "SELECT currently_refreshing FROM public.matviews WHERE mv_id=?";
+  my $h = $self->dbh->prepare($q);
+  $h->execute(1);
 
-   # my $q="select genotype_id,name,uniquename,description,type_id from genotype where name ilike ('WEMA_6x1017_MARS-WEMA_270239%')";
+  my $refreshing = $h->fetchrow_array();
 
-    print "$accession_sql \n";
+  if ($refreshing) {
+    return { error => 'Wizard update already in progress . . . ' };
+  }
+  else {
+    try {
+      my $dbh = $self->dbh();
+      if ($refresh_type eq 'concurrent') {
+        #print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -c";
+        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -c");
+      } else {
+        print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass";
+        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
+      }
 
-    #my $q="select genotype_id,name,uniquename,description,type_id from genotype where name in ($accession_sql)";
+      for (my $i = 1; $i < 10; $i++) {
+        sleep($i/5);
+        if ($async_refresh->alive) {
+          next;
+        } else {
+          $refresh_finished = 1;
+        }
+      }
 
-   #my $q="select stock.stock_id,stock.uniquename from stock where stock.stock_id in ($accession_sql)";
-
-#    my $q="select genotype_id,value from genotypeprop where genotype_id in (select genotype_id from genotype where genotype_id in (select genotype_id from nd_experiment_genotype where nd_experiment_id in (select nd_experiment_id from nd_experiment_stock where stock_id in (select stock_id from stock where stock.stock_id in ($accession_sql)))))";
-
-    #my $q = "SELECT genotype_id FROM genotype join nd_experiment_genotype USING (genotype_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.stock_id in ($accession_sql)";
-
-        my $result = [];
-    if ($accession_sql) { 
-	my $q = "SELECT genotype_id,value FROM public.genotypeprop join nd_experiment_genotype USING (genotype_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE stock.stock_id in ($accession_sql)";
-
-    #if ($trait_sql) { 
-#	push @qs, "";
- #   }
-
-  #  my $q = join " INTERSECT ", @qs;
-
-    print "QUERY: $q\n\n";
-
-    print "before\n\n";
-    print STDERR "QUERY: $q\n\n";
-    print "after\n\n";
-
-    my $h = $self->dbh()->prepare($q);
-    $h->execute();
-
-
-
-  #  while (my ($genotype_id,$name,$uniquename,$description,$type_id) = $h->fetchrow_array()) { 
-#	push @$result, [ $genotype_id,$name,$uniquename,$description,$type_id ];
-#	
-#    }
-
-
-    while (my ($genotype_id,$value) = $h->fetchrow_array()) { 
-	push @$result, [ $genotype_id,$value ];
-	
+      if ($refresh_finished) {
+        return { message => 'Wizard update completed!' };
+      } else {
+        return { message => 'Wizard update initiated.' };
+      }
+    } catch {
+      print STDERR 'Error initiating wizard update.' . $@ . "\n";
+      return { error => 'Error initiating wizard update.' . $@ };
     }
+  }
+}
 
-    }
-   
-#    while (my ($genotype_id) = $h->fetchrow_array()) { 
-#	push @$result, [ $genotype_id ];
-#	
-#    }
+=head2 matviews_status
 
+Desc: checks tracking table to see if materialized views are updating, and if not, when they were last updated.
 
-    return $result;
+parameters: None.
 
+returns: refreshing message or timestamp
 
+Side Effects: none
+
+=cut
+
+sub matviews_status {
+  my $self = shift;
+  my $q = "SELECT currently_refreshing, last_refresh FROM public.matviews WHERE mv_id=?";
+  my $h = $self->dbh->prepare($q);
+  $h->execute(1);
+
+  my ($refreshing, $timestamp) = $h->fetchrow_array();
+
+  if ($refreshing) {
+    print STDERR "Wizard is already refreshing, current status: $refreshing \n";
+    return { refreshing => "<p id='wizard_status'>Wizard update in progress . . . </p>"};
+  }
+  else {
+    print STDERR "materialized views last updated $timestamp\n";
+    return { timestamp => "<p id='wizard_status'>Wizard last updated: $timestamp</p>" };
+  }
 }
 
 
-sub get_type_id { 
-    my $self = shift;
-    my $term = shift;
-    my $q = "SELECT projectprop.type_id FROM projectprop JOIN cvterm on (projectprop.type_id=cvterm.cvterm_id) WHERE cvterm.name='$term'";
-    my $h = $self->dbh->prepare($q);
-    $h->execute();
-    my ($type_id) = $h->fetchrow_array();
-    return $type_id;
-}
-
-
-sub get_stock_type_id { 
-    my $self = shift;
-    my $term =shift;
-    my $q = "SELECT stock.type_id FROM stock JOIN cvterm on (stock.type_id=cvterm.cvterm_id) WHERE cvterm.name='$term'";
-    my $h = $self->dbh->prepare($q);
-    $h->execute();
-    my ($type_id) = $h->fetchrow_array();
-    return $type_id;
-}
-
-sub get_stockprop_type_id { 
-    my $self = shift;
-    my $term = shift;
-    my $q = "SELECT stockprop.type_id FROM stockprop JOIN cvterm on (stockprop.type_id=cvterm.cvterm_id) WHERE cvterm.name=?";
-    my $h = $self->dbh->prepare($q);
-    $h->execute($term);
-    my ($type_id) = $h->fetchrow_array();
-    return $type_id;
-}
-
-sub get_projectprop_type_id { 
-    my $self = shift;
-    my $term = shift;
-    my $q = "SELECT projectprop.type_id FROM projectprop JOIN cvterm ON (projectprop.type_id=cvterm.cvterm_id) WHERE cvterm.name=?";
-    my $h = $self->dbh->prepare($q);
-    $h->execute($term);
-    my ($type_id) = $h->fetchrow_array();
-    return $type_id;
-}
-
-sub create_materialized_cvterm_view { 
-    my $self = shift;
-    my $db_name = shift;
-
-    # change this to materialized view once we use 9.4.
-    #
-    eval { 
-	my $q = "CREATE TABLE public.materialized_traits
-               AS SELECT cvterm_id, cvterm.name || '|' || db.name || ':' || dbxref.accession AS name FROM db JOIN dbxref using(db_id) JOIN cvterm using(dbxref_id) WHERE db.name=?";
-	my $h = $self->dbh()->prepare($q);
-	$h->execute($db_name);
-	$q = "GRANT ALL ON public.materialized_traits TO web_usr";
-	$h = $self->dbh()->prepare($q);
-	$h->execute();
-    };
-    if ($@) {
-	if ($@!~/relation.*already exists/) { 
-	    die "Materialized trait view: $@\n";
-	}
-    }
-    
-
-}
-
-sub create_materialized_cvalue_ids_view { 
-    my $self = shift;
-    
-    eval { 
-       my $q = "CREATE TABLE public.cvalue_ids 
-              AS SELECT distinct(cvalue_id), phenotype_id FROM phenotype";
-       my $h = $self->dbh->prepare($q);
-       $h->execute();
-       $q = "GRANT ALL ON cvalue_ids TO web_usr";
-       $h->execute();
-    };
-    if ($@) { 
-       if ($@!~/relation.*already exists/) { 
-	    die "Materialized cvalue view $@\n";
-	}
-    }
-}
 
 1;

@@ -1,0 +1,155 @@
+<%args>
+</%args>
+
+<& /page/page_title.mas, title=>"BrAPI" &>
+
+<h1>Modules</h1>
+<div class="well">
+<ul>
+    <li><a href="/brapihome/germplasm">Germplasm Search and Exchange</a></li>
+</ul>
+</div>
+<div class="well">
+<ul>
+    <li><a href="/brapihome/phenotyping_handhelds">Phenotyping Handhelds</a></li>
+</ul>
+</div>
+<div class="well">
+<ul>
+    <li><a href="/brapihome/phenotype">Phenotype Retrieval</a></li>
+</ul>
+</div>
+<div class="well">
+<ul>
+    <li><a href="/brapihome/genotype">Genotype Retrieval</a></li>
+</ul>
+</div>
+
+<&| /page/info_section.mas, title=>'Calls Testing', collapsible=>1, collapsed=>1 &>
+
+<div id="brapi_home_url_select_div">
+
+    <h4>URL Select</h4>
+    <select name="brapi_home_url_select" id="brapi_home_url_select" class="form-control" />
+        <option value="">local</option>
+        <option value="https://cassbase.org">cassbase.org</option>
+        <option value="https://cassavabase.org">cassavabase.org</option>
+        <option value="https://musabase.org">musabase.org</option>
+        <option value="https://sweetpotatobase.org">sweetpotatobase.org</option>
+        <option value="https://yambase.org">yambase.org</option>
+        <option value="https://fernbase.org">fernbase.org</option>
+        <option value="https://solgenomics.net">solgenomics.net</option>
+    </select>
+
+</div>
+
+<hr>
+<& /brapiclient/authentication.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/calls.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/observation_levels.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/crops.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/seasons.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/studytypes.mas &>
+<br/>
+
+
+<hr>
+<& /brapiclient/germplasm_search.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/germplasm_detail.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/germplasm_attributes.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/markerprofile_search.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/markerprofile_detail.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/markerprofile_allelematrix.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/programs.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/trials.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/trials_detail.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/studies_search.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/studies_detail.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/studies_germplasm.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/studies_table.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/studies_layout.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/studies_observations.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/phenotypes_search.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/traits.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/traits_detail.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/locations.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/maps.mas &>
+<br/>
+
+<hr>
+<& /brapiclient/maps_detail.mas &>
+<br/>
+
+</&>

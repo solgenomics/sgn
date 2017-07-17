@@ -10,6 +10,8 @@ my $d = SGN::Test::WWW::WebDriver->new();
 
 $d->get_ok('/search/trials');
 
+sleep(1);
+
 ok($d->driver->get_page_source()=~/Kasese/, "find trial search result content");
 
 ok($d->driver->get_page_source()=~/2014/, "find trial year in trial search results");
@@ -18,7 +20,7 @@ my $trial_search_input = $d->find_element("//div[\@id=\"search_results_filter\"]
 
 $trial_search_input->send_keys("Kasese");
 
-sleep(20);
+sleep(5);
 
 my $page_source = $d->driver->get_page_source();
 

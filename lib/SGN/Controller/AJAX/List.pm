@@ -9,6 +9,8 @@ use Data::Dumper;
 use CXGN::List;
 use CXGN::List::Validate;
 use CXGN::List::Transform;
+use CXGN::Cross;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -41,15 +43,17 @@ sub get_list_data_action :Path('/list/data') Args(0) {
 
     my $list_id = $c->req->param("list_id");
 
-    my $type_id = ""; # fIX this
-    my $list_type = ""; #fix this
-    my $error = $self->check_user($c, $list_id);
-    if ($error) { 
-	$c->stash->{rest} = { error => $error };
-	return; 
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+    my $public = $list->check_if_public();
+    if ($public == 0) {
+	my $error = $self->check_user($c, $list_id);
+	if ($error) { 
+	    $c->stash->{rest} = { error => $error };
+	    return; 
+	}
     }
 
-    my $list = $self->retrieve_list($c, $list_id);
+    $list = $self->retrieve_list($c, $list_id);
 
     my $metadata = $self->get_list_metadata($c, $list_id);
 
@@ -76,7 +80,6 @@ sub retrieve_contents :Path('/list/contents') Args(1) {
     my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id=>$list_id });
 
     my $elements = $list->elements();
-
     $c->stash->{rest} = $elements;
 }
 
@@ -200,6 +203,28 @@ sub all_types : Path('/list/alltypes') :Args(0) {
     $c->stash->{rest} = $all_types;
 }
 
+sub download_list :Path('/list/download') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = $c->req->param("list_id");
+
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+    my $public = $list->check_if_public();
+    if ($public == 0) {
+	my $error = $self->check_user($c, $list_id);
+	if ($error) { 
+	    $c->res->content_type("text/plain");
+	    $c->res->body($error);
+	    return; 
+	}
+    }
+
+    $list = $self->retrieve_list($c, $list_id);
+    
+    $c->res->content_type("text/plain");
+    $c->res->body(join "\n", map { $_->[1] }  @$list);
+}
+
 =head2 available_lists()
 
  Usage:
@@ -227,6 +252,23 @@ sub available_lists : Path('/list/available') Args(0) {
     }
 
     my $lists = CXGN::List::available_lists($c->dbc->dbh(), $user_id, $requested_type);
+    
+    $c->stash->{rest} = $lists;
+}
+
+sub available_public_lists : Path('/list/available_public') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    
+    my $requested_type = $c->req->param("type");
+
+    my $user_id = $self->get_user($c);
+    if (!$user_id) { 
+	$c->stash->{rest} = { error => "You must be logged in to use lists.", };
+	return;
+    }
+
+    my $lists = CXGN::List::available_public_lists($c->dbc->dbh(), $requested_type);
     
     $c->stash->{rest} = $lists;
 }
@@ -270,23 +312,138 @@ sub add_item :Path('/list/item/add') Args(0) {
     }
 }
 
+sub toggle_public_list : Path('/list/public/toggle') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = $c->req->param("list_id"); 
+
+    my $error = $self->check_user($c, $list_id);
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+	return; 
+    }
+
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+    my ($public, $rows_affected) = $list->toggle_public();
+    if ($rows_affected == 1) {
+	$c->stash->{rest} = { r => $public };
+    } else {
+	die;
+    }
+}
+
+sub make_public_list : Path('/list/public/true') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = $c->req->param("list_id"); 
+
+    my $error = $self->check_user($c, $list_id);
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+	return; 
+    }
+
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+    my ($rows_affected) = $list->make_public();
+    if ($rows_affected == 1) {
+	$c->stash->{rest} = { success=>1 };
+    } else {
+	die;
+    }
+}
+
+sub make_private_list : Path('/list/public/false') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = $c->req->param("list_id"); 
+
+    my $error = $self->check_user($c, $list_id);
+    if ($error) { 
+	$c->stash->{rest} = { error => $error };
+	return; 
+    }
+
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+    my ($rows_affected) = $list->make_private();
+    if ($rows_affected == 1) {
+	$c->stash->{rest} = { success=>1 };
+    } else {
+	die;
+    }
+}
+
+sub copy_public_list : Path('/list/public/copy') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $list_id = $c->req->param("list_id");
+
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+    my $public = $list->check_if_public();
+    my $user_id = $self->get_user($c);
+    if (!$user_id || $public == 0) { 
+	$c->stash->{rest} = { error => 'You must be logged in to use lists and list must be public!' };
+	return; 
+    }
+
+    my $copied = $list->copy_public($user_id);
+    if ($copied) {
+	$c->stash->{rest} = { success => 'true' };
+    } else {
+	die;
+    }
+}
+
+sub add_cross_progeny : Path('/list/add_cross_progeny') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+    my $cross_id_list = decode_json($c->req->param("cross_id_list"));
+    print STDERR Dumper $cross_id_list;
+    my $list_id = $c->req->param("list_id");
+
+    my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id => $list_id });
+
+    my %response;
+    $response{'count'} = 0;
+    foreach (@$cross_id_list) {
+        my $cross = CXGN::Cross->new({bcs_schema=>$c->dbic_schema("Bio::Chado::Schema"), cross_stock_id=>$_});
+        my ($maternal_parent, $paternal_parent, $progeny) = $cross->get_cross_relationships();
+
+        my @accession_names;
+        foreach (@$progeny) {
+            push @accession_names, $_->[0];
+        }
+
+        my $r = $list->add_bulk(\@accession_names);
+        if ($r->{error}) {
+            $c->stash->{rest} = { error => $r->{error}};
+            return;
+        }
+        if (scalar(@{$r->{duplicates}}) > 0){
+            $response{'duplicates'} = $r->{duplicates};
+        }
+        $response{'count'} += $r->{count};
+    }
+    print STDERR Dumper \%response;
+    $c->stash->{rest} = { duplicates => $response{'duplicates'} };
+    $c->stash->{rest}->{success} = { count => $response{'count'} };
+}
+
 sub add_bulk : Path('/list/add/bulk') Args(0) { 
     my $self = shift;
     my $c = shift;
     my $list_id = $c->req->param("list_id");
     my $elements = $c->req->param("elements");
-
+   
     my $user_id = $self->get_user($c);
-    
     my $error = $self->check_user($c, $list_id);
     if ($error) { 
-	$c->stash->{rest} = { error => $error };
-	return;
+        $c->stash->{rest} = { error => $error };
+        return;
     }
 
     if (!$elements) { 
-	$c->stash->{rest} = { error => "You must provide one or more elements to add to the list" };
-	return;
+        $c->stash->{rest} = { error => "You must provide one or more elements to add to the list" };
+        return;
     }
 
     my @elements = split "\t", $elements;
@@ -296,23 +453,18 @@ sub add_bulk : Path('/list/add/bulk') Args(0) {
     my @duplicates = ();
     my $count = 0;
 
-    foreach my $element (@elements) {
-	$element =~ s/^\s*(.+?)\s*$/$1/; 
+    my $response = $list->add_bulk(\@elements);
+    #print STDERR Dumper $response;
 
-	if ($list->exists_element($element)) { 
-	    push @duplicates, $element;
-	}
-	else { 
-	    #$ih->execute($list_id, $element);	    
-	    $list->add_element($element);
-	    $count++;
-	}
+    if ($response->{error}) {
+        $c->stash->{rest} = { error => $response->{error}};
+        return;
     }
-    if (@duplicates) { 
-	$c->stash->{rest} = { duplicates => \@duplicates };
+    if (scalar(@{$response->{duplicates}}) > 0){
+        $c->stash->{rest} = { duplicates => $response->{duplicates} };
     }
-    $c->stash->{rest}->{success} = $count;
-
+    
+    $c->stash->{rest}->{success} = $response->{count};
 }
 
 sub insert_element : Private { 
@@ -536,6 +688,35 @@ sub remove_element_action :Path('/list/item/remove') Args(0) {
     
 }
 
+sub update_element_action :Path('/list/item/update') Args(0) {
+    my $self = shift;
+    my $c = shift;
+ 
+    my $list_id = $c->req->param("list_id");
+    my $item_id = $c->req->param("item_id");
+    my $content = $c->req->param("content");
+    my $error = $self->check_user($c, $list_id);
+
+    if ($content) {
+        print STDERR "update ".$list_id." ".$item_id." ".$content."\n";
+
+        if ($error) {
+            $c->stash->{rest} = { error => $error };
+            return;
+        }
+
+        my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+        $error = $list->update_element_by_id($item_id, $content);
+    }
+
+    if ($error) {
+        $c->stash->{rest} = { error => "An error occurred while attempting to update item $item_id" };
+    }
+    else {
+        $c->stash->{rest} = { success => 1 };
+    }
+}
+
 sub new_list : Private { 
     my $self = shift;
     my $c = shift;
@@ -571,18 +752,19 @@ sub retrieve_list : Private {
     my $self = shift;
     my $c = shift;
     my $list_id = shift;
-    
-    my $error = $self->check_user($c, $list_id);
-    if ($error) { 
-	$c->stash->{rest} = { error => $error };
-	return;
+
+    my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+    my $public = $list->check_if_public();
+    if ($public == 0) {
+	my $error = $self->check_user($c, $list_id);
+	if ($error) { 
+	    $c->stash->{rest} = { error => $error };
+	    return;
+	}
     }
-
-    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-
     my $list_elements_with_ids = $list->retrieve_elements_with_ids($list_id);
     
-    print STDERR "LIST ELEMENTS WITH IDS: ".Dumper($list_elements_with_ids);
+    #print STDERR "LIST ELEMENTS WITH IDS: ".Dumper($list_elements_with_ids);
     return $list_elements_with_ids;
 }
 
@@ -651,16 +833,13 @@ sub check_user : Private {
     my $error = "";
 
     if (!$user_id) { 
-	$error = "You must be logged in to delete a list";
-
+	$error = "You must be logged in to manipulate this list.";
     }
 
-    if ($self->get_list_owner($c, $list_id) != $user_id) { 
+    elsif ($self->get_list_owner($c, $list_id) != $user_id) { 
 	$error = "You have insufficient privileges to manipulate this list.";
-	
     }
     return $error;
-
 }
 
 

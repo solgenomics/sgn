@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/stock/index.mas - a page for displaying stock details (e.g. accession, population, etc.) 
+/stock/index.mas - a page for displaying stock details (e.g. accession, population, etc.)
 
 =head1 DESCRIPTION
 
@@ -12,7 +12,7 @@ parameters:
 
 =item $stockref
 
-a hashref with all the parameters needed for printing the stock page! 
+a hashref with all the parameters needed for printing the stock page!
 
  $stockref->{stock_id}
  $stockref->{stock}
@@ -29,7 +29,7 @@ a hashref with all the parameters needed for printing the stock page!
  cvterm_add_uri
  cvterm_autocomplete_uri => '/ajax/cvterm/autocomplete/'
  barcode_tempdir
- barcode_tempuri 
+ barcode_tempuri
  organism_autocomplete_uri => '/ajax/organism/autocomplete/'
 
 =back
@@ -78,9 +78,11 @@ my $pubs = $stockref->{pubs};
 my $has_pedigree = $stockref->{has_pedigree};
 my $has_descendants = $stockref->{has_descendants};
 my $trait_ontology_db_name = $stockref->{trait_ontology_db_name};
-
+my $editable_stock_props_string = $stockref->{editable_stock_props};
 my $schema = $stockref->{schema};
 my $dbh = $stockref->{dbh};
+
+my @editable_stock_props = split "," , $editable_stock_props_string;
 
 my $stockprop_cv = $schema->resultset("Cv::Cv")->search( {
  'me.name' => 'stock_property'} );
@@ -99,17 +101,13 @@ my $add_image_link = qq|<a href="/image/add?type_id=$stock_id&action=new&type=st
 my $image_ids =  $stockref->{image_ids} || [] ;
 my $stockprops = $stockref->{props};
 
-my $metadata = ['variety', 'donor', 'donor institute', 'country', 'state' , 'adaptation' , 'notes'];
 
 #my $pedigree= ['pedigree', 'male parent', 'female parent'];
 # get pedigree of stock
 #my $stock_pedigree = $stockref->{stock_pedigree};
 #my $stock_descendants = $stockref->{stock_descendants};
 
-
-my $experiment = ['year', 'location', 'replicate']; # these values should be in nd_experimentprop ?
-
-my $resources = [ 'synonym', 'solcap number'];
+my $resources = [ 'stock_synonym', 'solcap number'];
 
 my $allele_div = "stock_alleles";
 my $new_locus_link = !$person_id ? qq|<a href="/solpeople/login.pl">[log-in to associate new locus]</a> | : '' ;
@@ -129,7 +127,8 @@ my $direct_phenotypes = $stockref->{direct_phenotypes} || undef;
 
 # get all phenotypes of subjects
 my $members_phenotypes = $stockref->{members_phenotypes};
-my $p_download_link = qq|<a href = "/stock/$stock_id/phenotypes">[Download phenotypes]</a>| if ( (keys %$direct_phenotypes) || ( keys %$members_phenotypes) );
+#my $p_download_link = qq|<a href = "/stock/$stock_id/phenotypes">[Download phenotypes]</a>| if ( (keys %$direct_phenotypes) || ( keys %$members_phenotypes) );
+my $p_download_link = '<a target="_blank" href = "/breeders/trials/phenotype/download?format=csv&timestamp=1&dataLevel=all&'.$type_name.'_list=['.$stock_id.']&search_type=complete">[Download phenotypes]</a>';
 my $direct_genotypes = $stockref->{direct_genotypes};
 my $g_download_link = qq|<a href =  "/stock/$stock_id/genotypes">Download genotypes</a>| if (keys %$direct_genotypes) ;
 ############################
@@ -176,16 +175,18 @@ my $add_phenotype_link =  $curator || $submitter || $sequencer  ? qq| <a href="j
 
 my $edit_privs = $curator || $submitter || $sequencer;
 
-my $project_name = lc($c->config->{project_name});
-my $test_url = "/jbrowse_$project_name/current/data/json/accessions/" . $stock_id . "/trackList.json";
-my $jbrowse_url = "/jbrowse/?data=data%2Fjson%2Faccessions%2F" . $stock_id;
+my $jbrowse_path = $c->config->{jbrowse_path};
+my @path_parts = split('/', $jbrowse_path);
+my $basepath = $path_parts[1];
+my $test_url = "/" . $basepath . "/jbrowse.conf";
+my $jbrowse_url = $jbrowse_path . "%2Faccessions%2F" . $stock_id . "&tracks=DNA%2CGene%20exons%2C" . $uniquename . "_2015_V6_imputed&highlight=";
 
 </%perl>
 <& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock"] &>
 
 
 <script language="javascript">
-function jqueryStuff() { 
+function jqueryStuff() {
    jQuery(function() {
      jQuery("#species_name").autocomplete({
         source: '/organism/autocomplete'
@@ -213,10 +214,12 @@ function jqueryStuff() {
   &>
 
   </div>
+  <br /><br />
   <div class="col-sm-6">
-<& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"code128"  &><br /><br />
-% #<& /util/barcode.mas, identifier => "http://solgenomics.net/stock/$stock_id/view", text=>"SGN stock $stock_id ($uniquename)", format=>"qrcode" &>
-
+<& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"stock_qrcode"  &><br /><br />
+%#<& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"code128"  &><br /><br />
+%# <& /util/barcode.mas, identifier => "http://solgenomics.net/stock/$stock_id/view", text=>"SGN stock $stock_id ($uniquename)", format=>"qrcode" &>
+%#<& /util/barcode.mas, identifier => "$identifier_prefix"."$stock_id", text=> "$identifier_prefix stock $stock_id ($uniquename)", format=>"qrcode" &>
   </div>
 </div>
 
@@ -230,24 +233,24 @@ function jqueryStuff() {
 % my $subtitle = $edit_privs ? "[<a id=\"stock_add_synonym\" href=\"javascript:synonyms_addPropDialog()\">Add...</a>]" : "[Add]";
    <&| /page/info_section.mas, title => "Synonyms" , is_subsection => 1 , subtitle=>$subtitle &>
       <& /stock/stockprops.mas,
-       stock_id=> $stock_id,
-	props=> $stockprops ,
-	div_name=>'synonyms',
-	subset=>$resources,
-	editable=> [ 'synonym' ],
-	edit_privs => $edit_privs   &>
+       stock_id    => $stock_id,
+       props      => $stockprops ,
+       div_name   =>'synonyms',
+       subset     =>$resources,
+       editable   => [ 'stock_synonym' ],
+       edit_privs => $edit_privs   &>
 </&>
-%  $div_name = join("_", @$metadata);
+%  $div_name = join("_", @editable_stock_props);
 % my $props_subtitle = $edit_privs ? "[<a id=\"stock_add_props\" href=\"javascript:stockprops_addPropDialog()\">Add...</a>]" : "[Add]";
 
     <&| /page/info_section.mas, title => "Additional information" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
       <& /stock/stockprops.mas,
-	 stock_id=>$stock_id,
-	props=> $stockprops,
-        div_name => 'stockprops',
-	subset=>  $metadata ,
+       stock_id  =>$stock_id,
+       props      => $stockprops,
+        div_name   => 'stockprops',
 	edit_privs => $edit_privs,
-	editable=> [ ]  &>
+	subset     => \@editable_stock_props,
+	editable   => \@editable_stock_props  &>
 </&>
 
 
@@ -261,9 +264,7 @@ function jqueryStuff() {
 </&>
 
 
-<&| /page/info_section.mas, title => "Experimental data" , collapsible=> 1, is_subsection => 0 &>
-      <& /stock/stockprops.mas, stock_id=>$stock_id, props=> $stockprops, subset=> $experiment  &>
-</&>
+
 
 % if($is_owner) {
 <&| /page/info_section.mas, title=>"Stock history", collapsible=>1, collapsed=>1 &>
@@ -273,16 +274,39 @@ function jqueryStuff() {
 
 % }
 
+<&| /page/info_section.mas, title => "Trials" &>
+
+  <& /stock/trials.mas, stock_id => $stock_id &>
+
+</&>
+
+<& /stock/download_stock_phenotypes_dialog.mas, stock_id => $stock_id, stock_name => $uniquename, stock_type => $type_name &>
+
+% if ($type_name eq 'plot'){
+    <&| /page/info_section.mas, title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='stock_download_phenotypes_button'>Download Data</a>] [<a target='_blank' href = '/breeders/plot_phenotyping?stock_id=$stock_id'>Direct plot phenotyping</a>]" &>
+
+        <& /stock/traits.mas, stock_id => $stock_id &>
+
+  </&>
+% }
+% else {
+    <&| /page/info_section.mas, title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='stock_download_phenotypes_button'>Download Data</a>]" &>
+        <& /stock/traits.mas, stock_id => $stock_id &>
+
+  </&>
+% }
+
+
 <%perl>
- my $collapsible = 0; 
+ my $collapsible = 0;
  if ($has_pedigree==1) {
   $collapsible = 1;
  }
  my $add_parent_link = "Add parent";
- if ($person_id && $submitter) { $add_parent_link = qq | <a id="add_parent_link" >Add parent</a> |; }
+ if ($person_id && ($submitter || $curator || $sequencer)) { $add_parent_link = qq | <a id="add_parent_link" >Add parent</a> |; }
 
 my $remove_parent_link = "Remove parent";
-if ($person_id && $submitter) { $remove_parent_link = qq | <a id="remove_parent_link">Remove parent</a> |; }
+if ($person_id && ($submitter || $curator || $sequencer)) { $remove_parent_link = qq | <a id="remove_parent_link">Remove parent</a> |; }
 
 </%perl>
 
@@ -292,11 +316,21 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 </div>
 
 
+% if ($type_name eq 'accession'){
+
 <&| /page/info_section.mas, title=>"Pedigree" , collapsible=> $collapsible, collapsed=>0, subtitle=>"[$add_parent_link] [$remove_parent_link]" &>
   <& /pedigree/stock_pedigree.mas, stock_id => $stock_id, has_pedigree => $has_pedigree &>
 </&>
 
-% if ($has_descendants==1) {
+% my $maximum_descendants = 50;
+% if ($has_descendants > $maximum_descendants) {
+
+  <&| /page/info_section.mas, title=>"Descendants" , collapsible=>1, collapsed=>0 &>
+    <& /generic_message.mas, message => "This accession has a total of $has_descendants direct descendants in the database. Descendants are shown only if there are fewer than $maximum_descendants direct descendants in the database. You can see all the direct descendants in the 'Related stocks' section below." &>
+</&>
+
+% }
+% elsif ($has_descendants > 0) {
 
 <&| /page/info_section.mas, title=>"Descendants" , collapsible=>1, collapsed=>0 &>
   <& /pedigree/stock_descendants.mas, stock_id => $stock_id &>
@@ -311,15 +345,13 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 
 <& /pedigree/stock_pedigree_string.mas, stock_id => $stock_id &>
 
-
-% if ($type) {
-<&| /page/info_section.mas, title=>"Related stocks" , collapsible=>1, collapsed=>0 &>
-  <& /stock/related_stocks.mas, stock => $stock_row &>
-
-</&>
-
 % }
 
+
+<&| /page/info_section.mas, title=>"Related stocks" , collapsible=>1, collapsed=>0 &>
+  <& /stock/related_stock.mas, stock_id => $stock_id &>
+
+</&>
 
 <&| /page/info_section.mas, title=>"Images (" .  scalar(@$image_ids)  . ")", subtitle => "$add_image_link", collapsible=>1, collapsed=>1 &>
   <& /image/print_images.mas , images=>$image_ids , dbh=>$dbh &>
@@ -398,7 +430,7 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 <div id="stock_trials_info_popup">
   <table id="stock_trials_info_table" >
     <thead>
-    <tr><th>Trait</th><th>Average</th><th>Std dev</th></tr>
+    <tr><th>Trait</th><th>Average</th><th>Std dev</th><th>Count</th></tr>
     </thead>
   </table>
 </div>
@@ -406,20 +438,10 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
 
-<&| /page/info_section.mas, title => "Trials" &>
 
-  <& /stock/trials.mas, stock_id => $stock_id &>
-
-</&>
-
-<&| /page/info_section.mas, title => "Traits assayed" &>
-
-  <& /stock/traits.mas, stock_id => $stock_id &>
-
-</&>
 
 %#<&| /page/info_section.mas, title => "Phenotypic data" &>
-  
+
 %#  <& /stock/phenotypes.mas, stock_id => $stock_id &>
 
 %#</&>
@@ -431,44 +453,44 @@ Remove a parent (this will only remove the link to the parent, not the parent ac
 <&| /page/info_section.mas, title=>"Experiment: $project", is_subsection => 1, collapsible => 1 &>
 % foreach my $genotype (@$genotypes) {
 %  print $genotype->description . "\n";
-% }       
+% }
   </&>
 % }
 </&>
 
+% if ($type_name eq 'accession'){
 
 <&| /page/info_section.mas, title=>"Accession JBrowse", collapsible => 1 , collapsed => 0 &>
 <p id="jbrowse_check">[loading...]</p>
 </&>
 
+% }
 
 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$this_page &>
 
 
 <script>
-  jQuery(document).ready(function() { 
+  jQuery(document).ready(function() {
     stock_detail_page_init_dialogs();
-    prepareJbrowse();
 
-    jQuery('#remove_parent_link').click( function() { 
+    jQuery('#remove_parent_link').click( function() {
       jQuery('#remove_parent_dialog').dialog("open");
       get_remove_parents_list(<% $stock_id %>);
     });
 
-    function prepareJbrowse () { //ajax function to test for existence of given jbrowse trial url
     jQuery.ajax({
-    type: 'GET',
-    url: "<% $test_url %>",
-    statusCode: {
-        200: function () {  // if page is found, create and display link
-		jQuery('#jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View vcf tracks for <% $uniquename %> in JBrowse</a>');
-	},
-	404: function () { // if page not found, display message that jbrowse instance wasn't found
-		jQuery('#jbrowse_check').html(" <i>No Jbrowse instance found for this accession</i>.");
-     		}
-	}
+      url: "<% $test_url %>",
+      success: function(response) {
+        if ( response.indexOf("Accession_<%$stock_id%>") > -1 ) {  // if dataset is found, create and display link
+	         jQuery('#jbrowse_check').replaceWith('<a id="jbrowse_link" href="<% $jbrowse_url %>">View the tracks for this accession in JBrowse</a>');
+		       }
+        else { // if not found, display message that dataset doesn't exist
+	           jQuery('#jbrowse_check').html(" <i>This accession does not have any data in Jbrowse.</i>");
+     		   				   }
+						       },
+      error: function() {
+        jQuery('#jbrowse_check').html(" <i>Jbrowse has not been set up for this database.</i>");
+      }
+    });
   });
-  }
-
-});
 </script>

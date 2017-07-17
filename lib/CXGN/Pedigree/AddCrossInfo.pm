@@ -26,6 +26,7 @@ use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
+use SGN::Model::Cvterm;
 
 has 'chado_schema' => (
 		 is       => 'rw',
@@ -34,8 +35,9 @@ has 'chado_schema' => (
 		 required => 1,
 		);
 has 'cross_name' => (isa =>'Str', is => 'rw', predicate => 'has_cross_name', required => 1,);
-has 'number_of_flowers' => (isa =>'Str', is => 'rw', predicate => 'has_number_of_flowers',);
-has 'number_of_seeds' => (isa =>'Str', is => 'rw', predicate => 'has_number_of_seeds',);
+has 'info_type' => (isa =>'Str', is => 'rw', predicate => 'has_info_type', required => 1,);
+has 'value' => (isa =>'Str', is => 'rw', predicate => 'has_value', required => 1,);
+
 
 sub add_info {
   my $self = shift;
@@ -67,38 +69,14 @@ sub add_info {
       return;
     }
 
-    if ($self->has_number_of_seeds()) {
-      my $number_of_seeds_cvterm = $schema->resultset("Cv::Cvterm")
-	->create_with({
-		       name   => 'number_of_seeds',
-		       cv     => 'local',
-		       db     => 'null',
-		       dbxref => 'number_of_seeds',
-		      });
-      $experiment
-	->find_or_create_related('nd_experimentprops' , {
-							 nd_experiment_id => $experiment->nd_experiment_id(),
-							 type_id  =>  $number_of_seeds_cvterm->cvterm_id(),
-							 value  =>  $self->get_number_of_seeds(),
-							});
-    }
+		#print STDERR "Adding info type: " . $self->get_info_type() . " value: " . $self->get_value() . "\n";
+    my $info_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $self->get_info_type(), 'nd_experiment_property');
 
-
-    if ($self->has_number_of_flowers()) {
-      my $number_of_flowers_cvterm = $schema->resultset("Cv::Cvterm")
-	->create_with({
-		       name   => 'number_of_flowers',
-		       cv     => 'local',
-		       db     => 'null',
-		       dbxref => 'number_of_flowers',
-		      });
-      $experiment
-	->find_or_create_related('nd_experimentprops' , {
-							 nd_experiment_id => $experiment->nd_experiment_id(),
-							 type_id  =>  $number_of_flowers_cvterm->cvterm_id(),
-							 value  =>  $self->get_number_of_flowers(),
-							});
-    }
+		$experiment->find_or_create_related('nd_experimentprops' , {
+	      nd_experiment_id => $experiment->nd_experiment_id(),
+	      type_id  =>  $info_type_cvterm->cvterm_id(),
+	      value  =>  $self->get_value(),
+		});
 
   };
 
@@ -125,13 +103,8 @@ sub _get_cross {
   my $schema = $self->get_chado_schema();
   my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
   my $stock;
-  my $cross_cvterm = $schema->resultset("Cv::Cvterm")
-    ->create_with({
-		   name   => 'cross',
-		   cv     => 'stock type',
-		   db     => 'null',
-		   dbxref => 'accession',
-		  });
+  my $cross_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type');
+
   $stock_lookup->set_stock_name($cross_name);
   $stock = $stock_lookup->get_stock_exact();
 
