@@ -589,22 +589,28 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $input_format = $c->req->param("input_format") || 'list_id';
+    my @accession_ids = [];
+    if ($input_format eq 'accession_ids') {       #use accession ids supplied directly
+      my $id_string = $c->req->param("ids");
+      @accession_ids = split(',',$id_string);
+    }
+    elsif ($input_format eq 'list_id') {        #get accession names from list and tranform them to ids
+        my$accession_list_id = $c->req->param("pedigree_accession_list_list_select");
+        my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+        my @accession_list = map { $_->[1] } @$accession_data;
 
-    my $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
+        my $t = CXGN::List::Transform->new();
+        my $acc_t = $t->can_transform("accessions", "accession_ids");
+        my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
+        @accession_ids = @{$accession_id_hash->{transform}};
+    }
+
     my $ped_format = $c->req->param("ped_format");
     my $dl_token = $c->req->param("pedigree_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
     print STDERR "Token is: $dl_token\n";
-
-    my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
-    my @accession_list = map { $_->[1] } @$accession_data;
-
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $t = CXGN::List::Transform->new();
-    my $acc_t = $t->can_transform("accessions", "accession_ids");
-    my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
-
-    my @accession_ids = @{$accession_id_hash->{transform}};
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
 
