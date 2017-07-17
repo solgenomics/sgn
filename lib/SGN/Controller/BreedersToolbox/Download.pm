@@ -764,7 +764,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     $filename = scalar(@$genotypes) . "genotypes-p" . $protocol_id . ".txt";
   }
   else { #name file with acesssion name and protocol id if there's just one
-    $filename = $genotypes->[0][0] . "genotype-p" . $protocol_id . ".txt";
+    $filename = $genotypes->[0]->{germplasmName} . "genotype-p" . $protocol_id . ".txt";
   }
 
   $c->res->content_type("application/text");

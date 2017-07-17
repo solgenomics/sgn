@@ -176,6 +176,7 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
         </select>
     </div>
   </div>
+
   <div id="2D_fieldbook_option" style="display: none">
   <div class="form-group form-group-sm" >
     <label class="col-sm-4 control-label">Enable 2D Barcode For FieldBook: </label>
@@ -184,6 +185,17 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
     </div>
   </div>
   </div>
+
+  <div class="form-group form-group-sm">
+    <label class="col-sm-4 control-label">Printing Format (Optional): </label>
+    <div class="col-sm-8">
+        <select class="form-control" id="select_print_format" name="select_print_format">
+          <option selected disabled>select printing format</option>
+          <option value="CASS">CASS printing format</option>
+        </select>
+    </div>
+  </div>
+
   <div class="form-group form-group-sm">
     <label class="col-sm-4 control-label">Or Upload <font size="3" color="#5bc0de">Tab-delimited Text File</font> With Stock Names: </label>
     <div class="col-sm-8">
