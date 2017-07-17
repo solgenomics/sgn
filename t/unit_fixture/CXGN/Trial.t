@@ -148,12 +148,12 @@ is_deeply($result, [
             'breeding_program_name' => 'test',
             'folder_name' => undef,
             'trial_type' => undef,
-            'project_planting_date' => undef,
+            'project_planting_date' => '2017-July-04',
             'folder_id' => undef,
             'location_name' => 'test_location',
             'design' => 'CRD',
             'breeding_program_id' => 134,
-            'project_harvest_date' => undef
+            'project_harvest_date' => '2017-July-21'
           },
           {
             'breeding_program_id' => 134,
@@ -231,8 +231,8 @@ is_deeply($result, [
           },
           {
             'breeding_program_id' => 134,
-            'project_harvest_date' => undef,
-            'project_planting_date' => undef,
+            'project_harvest_date' => '2017-July-21',
+            'project_planting_date' => '2017-July-04',
             'trial_type' => undef,
             'design' => 'CRD',
             'location_name' => 'test_location',
