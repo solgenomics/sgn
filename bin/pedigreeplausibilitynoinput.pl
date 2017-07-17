@@ -68,7 +68,7 @@ while (my $row = $stock_rs->next()) {
     	}
 
       my $dad_gts;
-      if ($parents->{'father_id'} ==  $parents->{'mother_id'})){
+      if $parents->{'father_id'} ==  $parents->{'mother_id'})){
       $dad_gts = $mom_gts;
       }
     	else{
