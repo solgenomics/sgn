@@ -325,8 +325,8 @@ sub search {
             location_name => $trials{$t}->{location}->[1],
             breeding_program_id => $trials{$t}->{breeding_program}->[0],
             breeding_program_name => $trials{$t}->{breeding_program}->[1],
-            harvest_date => $trials{$t}->{project_harvest_date},
-            planting_date => $trials{$t}->{project_planting_date},
+            project_harvest_date => $trials{$t}->{project_harvest_date},
+            project_planting_date => $trials{$t}->{project_planting_date},
             description => $trials{$t}->{trial_description},
             design => $trials{$t}->{design}
         };
