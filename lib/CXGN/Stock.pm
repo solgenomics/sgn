@@ -772,7 +772,7 @@ sub get_parents {
     $parents{'mother'} = $pedigree_hashref->{'female_parent'}->{'name'};
     $parents{'mother_id'} = $pedigree_hashref->{'female_parent'}->{'id'};
     $parents{'father'} = $pedigree_hashref->{'male_parent'}->{'name'};
-    $parents{'father_id'} = $pedigree_hashref->{'female_parent'}->{'id'};
+    $parents{'father_id'} = $pedigree_hashref->{'male_parent'}->{'id'};
     return \%parents;
 }
 
