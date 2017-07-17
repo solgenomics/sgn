@@ -17,6 +17,7 @@ package SGN::Controller::AJAX::BrAPIAndroidApp;
 use Moose;
 use Data::Dumper;
 use JSON;
+use CXGN::People::Login;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -74,5 +75,35 @@ sub list_databases_GET : Args(0) {
     $c->stash->{rest} = {database_list=>\@db_list};
 }
 
+sub register : Path('/brapiapp/register') : ActionClass('REST') { }
+
+sub register_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $username = $c->req->param('username');
+    my $password = $c->req->param('password');
+    my $email = $c->req->param('email');
+    my $organization = $c->req->param('organization');
+    my $first_name  = $c->req->param('first_name');
+    my $last_name = $c->req->param('last_name');
+
+    my $new_user = CXGN::People::Login->new($dbh);
+    $new_user -> set_username($username);
+    $new_user -> set_password($password);
+    $new_user -> set_pending_email($email);
+    #$new_user -> set_confirm_code($confirm_code);
+    #$new_user -> set_disabled('unconfirmed account');
+    $new_user -> set_organization($organization);
+    $new_user -> store();
+
+    #this is being added because the person object still uses two different objects, despite the fact that we've merged the tables
+    my $person_id=$new_user->get_sp_person_id();
+    my $new_person=CXGN::People::Person->new($c->dbc->dbh,$person_id);
+    $new_person->set_first_name($first_name);
+    $new_person->set_last_name($last_name);
+    $new_person->store();
+
+    $c->stash->{rest} = {success => 1};
+}
 
 1;
