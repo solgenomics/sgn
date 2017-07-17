@@ -5,8 +5,8 @@ use CXGN::Stock::StockLookup;
 use CXGN::DB::InsertDBH;
 use Bio::GeneticRelationships::Pedigree;
 use Getopt::Std;
+use Bio::Chado::Schema;
 use CXGN::Stock;
-use Bio::Schema;
 
 our ($opt_H, $opt_D, $opt_o, $opt_f); # host, database, out, in
 getopts('H:D:p:o:f:');
@@ -24,7 +24,7 @@ my $dbh = CXGN::DB::InsertDBH->new( {
 		  }
     );
 my %pedigreehash;
-my $schema = Bio::Schema->connect(sub { $dbh });
+my $schema = Bio::Chado::Schema->connect(sub { $dbh });
 my $accession_cvterm_id = $schema->resultset("Cv::Cvterm")->find({ name=> "accession" })->cvterm_id();
 my $stock_rs = $schema->resultset("Stock::Stock")->search( { type_id => $accession_cvterm_id });
 
