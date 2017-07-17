@@ -18,6 +18,7 @@ use Moose;
 use Data::Dumper;
 use JSON;
 use CXGN::People::Login;
+use CXGN::DB::Connection;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -80,6 +81,7 @@ sub register : Path('/brapiapp/register') : ActionClass('REST') { }
 sub register_POST : Args(0) {
     my $self = shift;
     my $c = shift;
+    my $dbh = CXGN::DB::Connection->new();
     my $username = $c->req->param('username');
     my $password = $c->req->param('password');
     my $email = $c->req->param('email');
@@ -87,18 +89,19 @@ sub register_POST : Args(0) {
     my $first_name  = $c->req->param('first_name');
     my $last_name = $c->req->param('last_name');
 
-    my $new_user = CXGN::People::Login->new($c->dbc->dbh);
+    my $new_user = CXGN::People::Login->new($dbh);
     $new_user -> set_username($username);
     $new_user -> set_password($password);
     $new_user -> set_pending_email($email);
-    #$new_user -> set_confirm_code($confirm_code);
-    #$new_user -> set_disabled('unconfirmed account');
+    $new_user -> set_private_email($email);
+    $new_user -> set_confirm_code("ConfirmedByBrAPIApp");
+    #$new_user -> set_disabled("x");
     $new_user -> set_organization($organization);
     $new_user -> store();
 
     #this is being added because the person object still uses two different objects, despite the fact that we've merged the tables
     my $person_id=$new_user->get_sp_person_id();
-    my $new_person=CXGN::People::Person->new($c->dbc->dbh,$person_id);
+    my $new_person=CXGN::People::Person->new($dbh,$person_id);
     $new_person->set_first_name($first_name);
     $new_person->set_last_name($last_name);
     $new_person->store();
