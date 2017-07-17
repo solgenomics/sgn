@@ -87,7 +87,7 @@ sub register_POST : Args(0) {
     my $first_name  = $c->req->param('first_name');
     my $last_name = $c->req->param('last_name');
 
-    my $new_user = CXGN::People::Login->new($dbh);
+    my $new_user = CXGN::People::Login->new($c->dbc->dbh);
     $new_user -> set_username($username);
     $new_user -> set_password($password);
     $new_user -> set_pending_email($email);
