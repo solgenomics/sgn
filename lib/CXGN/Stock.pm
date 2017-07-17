@@ -140,7 +140,7 @@ has 'populations' => (
 sub BUILD {
     my $self = shift;
 
-    print STDERR "RUNNING BUILD FOR STOCK.PM...\n";
+    #print STDERR "RUNNING BUILD FOR STOCK.PM...\n";
     my $stock;
     if ($self->stock_id){
         $stock = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
@@ -799,7 +799,7 @@ sub _retrieve_populations {
             push @population_names, $population->uniquename();
         }
         $self->populations(\@population_names);
-        print STDERR "This stock is a member of the following populations: ".Dumper($self->populations())."\n";
+        #print STDERR "This stock is a member of the following populations: ".Dumper($self->populations())."\n";
     }
 }
 
