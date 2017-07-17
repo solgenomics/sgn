@@ -3,7 +3,7 @@ use warnings;
 
 use Data::Dumper;
 use Getopt::Std;
-use Bio::Chado::Schema;
+use Bio::Schema;
 use CXGN::DB::InsertDBH;
 use CXGN::Stock;
 use CXGN::Genotype;
@@ -28,7 +28,7 @@ my $dbh = CXGN::DB::InsertDBH->new({
     dbuser => "postgres",
 });
 
-my $schema = Bio::Chado::Schema->connect(sub { $dbh });
+my $schema = Bio::Schema->connect(sub { $dbh });
 
 my $accession_cvterm_id = $schema->resultset("Cv::Cvterm")->find({ name=> "accession" })->cvterm_id();
 
