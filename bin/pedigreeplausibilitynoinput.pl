@@ -16,7 +16,7 @@ if (!$opt_p) {
     print STDERR "Need -p with genotyping protocol id.\n";
     exit();
 }
-my $schema;
+
 my $protocol_id = $opt_p;
 
 open(my $OUT, '>', $opt_o) || die "Can't open output file $opt_o! $!\n";
@@ -30,59 +30,59 @@ my $dbh = CXGN::DB::InsertDBH->new({
 
 my $schema = Bio::Chado::Schema->connect(sub { $dbh });
 
-#my $accession_cvterm_id = $schema->resultset("Cv::Cvterm")->find({ name=> "accession" })->cvterm_id();
+my $accession_cvterm_id = $schema->resultset("Cv::Cvterm")->find({ name=> "accession" })->cvterm_id();
 
-#my $stock_rs = $schema->resultset("Stock::Stock")->search( { type_id => $accession_cvterm_id });
+my $stock_rs = $schema->resultset("Stock::Stock")->search( { type_id => $accession_cvterm_id });
 
 my @scores;
 
-#while (my $row = $stock_rs->next()) {
-    #print STDERR "working on accession ".$row->uniquename()."\n";
-    #my $stock = CXGN::Stock->new(schema => $schema, stock_id => $row->stock_id());
-    #my $parents = $stock->get_parents();
+while (my $row = $stock_rs->next()) {
+    print STDERR "working on accession ".$row->uniquename()."\n";
+    my $stock = CXGN::Stock->new(schema => $schema, stock_id => $row->stock_id());
+    my $parents = $stock->get_parents();
 
-    #if ($parents->{'mother'} && $parents->{'father'}) {
+    if ($parents->{'mother'} && $parents->{'father'}) {
 
         my $gts = CXGN::Genotype::Search->new( {
             bcs_schema => $schema,
-            accession_list => ['39945'],
+            accession_list => [ $row->stock_id ],
             protocol_id => $protocol_id,
         });
         my @self_gts = $gts->get_genotype_info_as_genotype_objects();
 
-      #   if (!@self_gts) {
-    	#     print STDERR "Genotype of accession ".$row->uniquename()." not available. Skipping...\n";
-    	#     next;
-    	# }
+        if (!@self_gts) {
+    	    print STDERR "Genotype of accession ".$row->uniquename()." not available. Skipping...\n";
+    	    next;
+    	}
 
         my $mom_gts = CXGN::Genotype::Search->new( {
     	    bcs_schema => $schema,
-    	    accession_list => ['39983'],
+    	    accession_list => [$parents->{'mother_id'}],
     	    protocol_id => $protocol_id,
         });
     	my @mom_gts = $mom_gts->get_genotype_info_as_genotype_objects();
 
-      #if (!@mom_gts) {
-    	#    print STDERR "Genotype of female parent missing. Skipping.\n";
-    	#    next;
-    	#}
+      if (!@mom_gts) {
+    	    print STDERR "Genotype of female parent missing. Skipping.\n";
+    	    next;
+    	}
 
-      #my $dad_gts;
-      #if ($parents->{'father_id'} ==  $parents->{'mother_id'})){
-      #$dad_gts = $mom_gts;
-      #}
-    	#else{
+      my $dad_gts;
+      if ($parents->{'father_id'} ==  $parents->{'mother_id'})){
+      $dad_gts = $mom_gts;
+      }
+    	else{
       my $dad_gts = CXGN::Genotype::Search->new( {
     	    bcs_schema => $schema,
-    	    accession_list => ['39980'],
+    	    accession_list => [$parents->{'father_id'}],
     	    protocol_id => $protocol_id,
     	});
-    	my (@dad_gts) = $dad_gts->get_genotype_info_as_genotype_objects();
-    	# }
-      # if (!@dad_gts) {
-    	#     print STDERR "Genotype of male parent missing. Skipping.\n";
-    	#     next;
-      # }
+    	my @dad_gts = $dad_gts->get_genotype_info_as_genotype_objects();
+    	}
+      if (!@dad_gts) {
+    	    print STDERR "Genotype of male parent missing. Skipping.\n";
+    	    next;
+      }
 
       my $s = shift @self_gts;
       my $m = shift @mom_gts;
@@ -93,8 +93,8 @@ my @scores;
       print STDERR "scores are". $score. "\n";
       print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
       print $OUT "\t$score\n";
-#    }
-#}
+    }
+}
 
 $dbh->disconnect();
 
