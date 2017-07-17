@@ -159,8 +159,8 @@ sub studies_search {
 			locationName => $_->{location_name},
 			programDbId => $_->{breeding_program_id},
 			programName => $_->{breeding_program_name},
-			startDate => $_->{harvest_date},
-			endDate => $_->{planting_date},
+			startDate => $_->{project_harvest_date},
+			endDate => $_->{project_planting_date},
 			active=>'',
 			additionalInfo=>\%additional_info
 		);
