@@ -66,17 +66,17 @@ while (my $row = $stock_rs->next()) {
     	    print STDERR "Genotype of female parent missing. Skipping.\n";
     	    next;
     	}
-
       my $dad_gts;
       if ($parents->{'father_id'} ==  $parents->{'mother_id'}){
       $dad_gts = $mom_gts;
       }
     	else{
-      my $dad_gts = CXGN::Genotype::Search->new( {
+      $dad_gts = CXGN::Genotype::Search->new( {
     	    bcs_schema => $schema,
     	    accession_list => [$parents->{'father_id'}],
     	    protocol_id => $protocol_id,
     	});
+
     	my @dad_gts = $dad_gts->get_genotype_info_as_genotype_objects();
     	}
       if (!@dad_gts) {
