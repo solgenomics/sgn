@@ -162,7 +162,7 @@ sub get_genotype_info_as_genotype_objects {
     #print STDERR "length of genotypes is". scalar @$data;
 
   my @genotypes;
-  my $d = shift @$data;
+  my $d = $data->[0];
 	print STDERR "Processing entry ".$d->{germplasmName}."\n";
 	my $gt = CXGN::Genotype->new();
 	$gt->id($d->{markerProfileDbId});
