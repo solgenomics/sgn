@@ -137,7 +137,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     	    next;
     	}
 
-    	my $stock = $schema->resultset("Stock::Stock")->find( { name=>$name });
+    	my $stock = $schema->resultset("Stock::Stock")->find( { uniquename=>$name });
 
     	if (!$stock) {
     	    push @not_found, $name;
@@ -175,7 +175,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             }
         }
 
-      if (defined $plot && !$plant_cvterm_id){
+      if (defined $plot && $plant_cvterm_id != $type_id){
           my $dbh = $c->dbc->dbh();
           my $h = $dbh->prepare("select name, value from cvterm inner join stockprop on cvterm.cvterm_id = stockprop.type_id where stockprop.stock_id=?;");
 
