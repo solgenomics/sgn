@@ -72,7 +72,7 @@ is_deeply($response, {'result' => {'donors' => [],'acquisitionDate' => undef,'ge
 $mech->get_ok('http://localhost:3010/brapi/v1/germplasm/38876/pedigree');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'metadata' => {'datafiles' => [],'status' => [{'info' => 'BrAPI base call found with page=0, pageSize=10'},{'info' => 'Loading CXGN::BrAPI::v1::Germplasm'},{'success' => 'Germplasm pedigree result constructed'}],'pagination' => {'currentPage' => 0,'pageSize' => 1,'totalCount' => 1,'totalPages' => 1}},'result' => {'parent2Id' => 38844,'germplasmDbId' => '38876','pedigree' => 'test_accession4/test_accession5','parent1Id' => 38843}}, 'germplasm pedigree');
+is_deeply($response, {'result' => {'parent2Id' => 38843,'pedigree' => 'test_accession4/test_accession5','parent1Id' => 38843,'germplasmDbId' => '38876'},'metadata' => {'datafiles' => [],'status' => [{'info' => 'BrAPI base call found with page=0, pageSize=10'},{'info' => 'Loading CXGN::BrAPI::v1::Germplasm'},{'success' => 'Germplasm pedigree result constructed'}],'pagination' => {'currentPage' => 0,'totalCount' => 1,'pageSize' => 1,'totalPages' => 1}}}, 'germplasm pedigree');
 
 $mech->get_ok('http://localhost:3010/brapi/v1/germplasm/38937/markerprofiles');
 $response = decode_json $mech->content;
