@@ -6,6 +6,7 @@ use CXGN::DB::InsertDBH;
 use Bio::GeneticRelationships::Pedigree;
 use Getopt::Std;
 use CXGN::Stock;
+use Bio::Schema;
 
 our ($opt_H, $opt_D, $opt_o, $opt_f); # host, database, out, in
 getopts('H:D:p:o:f:');
