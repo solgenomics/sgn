@@ -526,8 +526,7 @@ sub germplasm_pedigree_string {
 	my $self = shift;
 	my $stock_id = shift;
 	my $s = CXGN::Stock->new(schema => $self->bcs_schema, stock_id => $stock_id);
-	my $pedigree_root = $s->get_parents('1');
-	my $pedigree_string = $pedigree_root ? $pedigree_root->get_pedigree_string('1') : '';
+	my $pedigree_string = $s->get_pedigree_string('Parents');
 	return $pedigree_string;
 }
 
