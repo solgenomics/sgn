@@ -14,6 +14,7 @@ experiment_type	genotyping_experiment				00052
 experiment_type	genotyping_layout				00052	
 experiment_type	phenotyping_experiment				00052	
 experiment_type	seedlot_experiment				00077	
+experiment_type	grafting_experiment				00079
 genotype_property	igd number					
 genotype_property	infinium array					sgn database
 genotype_property	snp genotyping					
@@ -84,17 +85,15 @@ project_property	breeding_program				00051
 project_property	data_agreement					
 project_property	design					
 project_property	genomic selection					
-project_property	harvest_date				00051	
+project_property	project_harvest_date				00080	
 project_property	marker_count					
-project_property	planting_date				00051	
+project_property	project_planting_date				00080	
 project_property	population type					
 project_property	project fertilizer date					
 project_property	project first harvest date					sgn database
-project_property	project harvest date					
 project_property	project harvested plants					
 project_property	project last harvest date					sgn database
 project_property	project location					
-project_property	project planting date					
 project_property	project sowing date					sgn database
 project_property	project sown plants					
 project_property	project transplanting date					sgn database
@@ -117,6 +116,9 @@ project_type	Seed Multiplication
 project_type	Seedling Nursery					
 project_type	Uniform Yield Trial				00052	
 project_type	Variety Release Trial					
+project_type	crossing_trial	00079
+project_type	grafting_trial	00079
+project_type	pollinating_trial	00079
 stock_property	block				00052	
 stock_property	col_number				00052	
 stock_property	igd_synonym				00052	
@@ -155,6 +157,8 @@ stock_relationship	plot_of				00052
 stock_relationship	tissue_sample_of				00052	
 stock_relationship	collection_of				00077	
 stock_relationship	seed transaction				00077	
+stock_relationship	rootstock_of					00079
+stock_relationship	scion_of					00079
 stock_type	accession				00052	
 stock_type	backcross population				00052	
 stock_type	cross				00052	
@@ -167,6 +171,7 @@ stock_type	tissue_sample				00052
 stock_type	training population				00052	
 stock_type	vector_construct				00052	
 stock_type	seedlot				00077	
+stock_type	grafted_accession		00079
 trait_property	trait_categories					
 trait_property	trait_default_value					
 trait_property	trait_details					
