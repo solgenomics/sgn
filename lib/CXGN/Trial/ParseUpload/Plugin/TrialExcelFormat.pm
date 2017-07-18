@@ -349,44 +349,38 @@ sub _parse_with_plugin {
 
 
 sub _get_accession {
-  my $self = shift;
-  my $accession_name = shift;
-  my $chado_schema = $self->get_chado_schema();
-  my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-  my $stock;
-  my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession' , 'stock_type');
+    my $self = shift;
+    my $accession_name = shift;
+    my $schema = $self->get_chado_schema();
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $stock = $schema->resultset('Stock::Stock')->search(
+      {
+          'me.is_obsolete' => { '!=' => 't' },
+          'me.type_id' => $accession_cvterm,
+          -or => [
+              'lower(me.uniquename)' => lc($accession_name),
+              -and => [
+                  'lower(type.name)' => { like => '%synonym%' },
+                  'lower(stockprops.value)' => lc($accession_name),
+              ],
+          ],
+      },
+      {
+          join => {'stockprops' => 'type'},
+          distinct => 1
+      }
+    );
 
-  $stock_lookup->set_stock_name($accession_name);
-  $stock = $stock_lookup->get_stock();
+    if (!$stock) {
+        print STDERR "$accession_name is not an accession\n";
+        return;
+    }
+    if ($stock->count != 1){
+        print STDERR "Accession name ($accession_name) is not a unique stock unqiuename or synonym\n";
+        return;
+    }
 
-  if (!$stock) {
-    return;
-  }
-
-  if ($stock->type_id() != $accession_cvterm->cvterm_id()) {
-    return;
-   }
-
-  return $stock;
-
-}
-
-
-sub _get_stock {
-  my $self = shift;
-  my $stock_name = shift;
-  my $chado_schema = $self->get_chado_schema();
-  my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-  my $stock;
-
-  $stock_lookup->set_stock_name($stock_name);
-  $stock = $stock_lookup->get_stock();
-
-  if (!$stock) {
-    return;
-  }
-
-  return $stock;
+    return $stock->first();
 }
 
 
