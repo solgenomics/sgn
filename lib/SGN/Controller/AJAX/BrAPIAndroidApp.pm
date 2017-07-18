@@ -35,6 +35,7 @@ sub new_database_GET : Args(0) {
     my $c = shift;
     my $name = $c->req->param('databaseName');
     my $url = $c->req->param('databaseURL');
+    my $token = $c->req->param('accessToken');
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $previous_name_search = $bcs_schema->resultset('General::Db')->search({name=>$name});
@@ -48,15 +49,22 @@ sub new_database_GET : Args(0) {
         $c->detach();
     }
 
-    my $new_entry = $bcs_schema->resultset('General::Db')->create({
-        name=>$name,
-        url=>$url,
-        description=>'BrAPI_App_Database_Display'
-    });
-    if ($new_entry->db_id){
-        $c->stash->{rest} = {success => 1};
+    my $dbh = $c->dbc->dbh;
+    my $cookie_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+    if ($cookie_info){
+
+        my $new_entry = $bcs_schema->resultset('General::Db')->create({
+            name=>$name,
+            url=>$url,
+            description=>'BrAPI_App_Database_Display'
+        });
+        if ($new_entry->db_id){
+            $c->stash->{rest} = {success => 1};
+        } else {
+            $c->stash->{rest} = {error => 'The new database entry was not saved!'};
+        }
     } else {
-        $c->stash->{rest} = {error => 'The new database entry was not saved!'};
+        $c->stash->{rest} = {error => "User Not Logged In"};
     }
     
 }
