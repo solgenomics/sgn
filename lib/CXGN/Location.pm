@@ -201,19 +201,18 @@ sub store_location {
 
 sub delete_location {
     my $self = shift;
-
-    my $rs = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->search({ nd_geolocation_id=> $self->nd_geolocation_id() });
-    my $name = $rs->first()->description();
-    my @experiments = $rs->first()->nd_experiments;
+    print STDERR "Nd geolocation id in cxgn object is ".$self->nd_geolocation_id()."\n";
+    my $row = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find({ nd_geolocation_id=> $self->nd_geolocation_id() });
+    my $name = $row->description();
+    my @experiments = $row->nd_experiments;
     #print STDERR "Associated experiments: ".Dumper(@experiments)."\n";
 
     if (@experiments) {
         my $error = "Location $name cannot be deleted because there are ".scalar @experiments." measurements associated with it from at least one trial.\n";
 	    print STDERR $error;
-	    return { error => $error };
 	}
 	else {
-	    $rs->first->delete();
+	    $row->delete();
 	    return { success => "Location $name was successfully deleted.\n" };
 	}
 }

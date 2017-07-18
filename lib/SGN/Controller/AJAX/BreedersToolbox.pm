@@ -116,7 +116,7 @@ sub store_location :Path("/ajax/breeders/location/store") Args(0) {
 sub delete_location :Path('/ajax/breeders/location/delete') Args(1) {
     my $self = shift;
     my $c = shift;
-    my $location_id = $c->req->param("location_id");
+    my $location_id = shift;
 
     if (!$c->user) {  # require login
 	$c->stash->{rest} = { error => "You need to be logged in to delete a location." };
