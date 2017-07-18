@@ -184,6 +184,19 @@ sub store_location {
             $row->longitude($self->longitude);
             $row->altitude($self->altitude);
             $row->update();
+
+            if ($self->abbreviation){
+                $self->_store_ndgeolocationprop('abbreviation', $self->abbreviation());
+            }
+            if ($self->country_name){
+                $self->_store_ndgeolocationprop('country_name', $self->country_name());
+            }
+            if ($self->country_code){
+                $self->_store_ndgeolocationprop('country_code', $self->country_code());
+            }
+            if ($self->location_type){
+                $self->_store_ndgeolocationprop('location_type', $self->location_type());
+            }
         }
         catch {
             $error =  $_;
@@ -236,6 +249,7 @@ sub _store_ndgeolocationprop {
     my $self = shift;
     my $type = shift;
     my $value = shift;
+    print STDERR " Storing value $value with type $type\n";
     #my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, 'geolocations_property')->name();
     my $stored_ndgeolocationprop = $self->location->create_geolocationprops({ $type => $value});
 }

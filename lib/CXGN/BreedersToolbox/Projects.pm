@@ -233,7 +233,26 @@ sub get_locations_by_breeding_program {
     if ($breeding_program_id) {
 	#my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description, count(distinct(stock.stock_id)) FROM project JOIN project_relationship on (project_id=object_project_id) JOIN project as trial ON (subject_project_id=trial.project_id) JOIN nd_experiment_project ON (trial.project_id=nd_experiment_project.project_id) JOIN nd_experiment USING (nd_experiment_id) JOIN nd_experiment_stock ON (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id) JOIN stock ON (nd_experiment_stock.stock_id=stock.stock_id) JOIN nd_geolocation USING (nd_geolocation_id) WHERE project.project_id=? and stock.type_id=? GROUP BY nd_geolocation.nd_geolocation_id, nd_experiment.nd_geolocation_id, nd_geolocation.description";
 
-	my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description, longitude, latitude, altitude, count(distinct(trial.project_id)) FROM project JOIN project_relationship on (project_id=object_project_id) JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) LEFT JOIN nd_geolocation ON (projectprop.value::INT = nd_geolocation.nd_geolocation_id) WHERE project.project_id =? AND projectprop.type_id=$project_location_type_id  GROUP BY nd_geolocation.nd_geolocation_id,  nd_geolocation.description";
+	my $q = "SELECT distinct(geo.nd_geolocation_id),
+	geo.description,
+	abbreviation.value,
+	country_name.value,
+	country_code.value,
+	location_type.value,
+	longitude,
+	latitude,
+	altitude
+FROM project
+JOIN project_relationship on (project_id=object_project_id)
+JOIN project AS trial ON (subject_project_id=trial.project_id)
+LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id)
+LEFT JOIN nd_geolocation AS geo ON (projectprop.value::INT = geo.nd_geolocation_id)
+LEFT JOIN nd_geolocationprop AS abbreviation ON (geo.nd_geolocation_id = abbreviation.nd_geolocation_id AND abbreviation.type_id = (SELECT cvterm_id from cvterm where name = 'abbreviation') )
+LEFT JOIN nd_geolocationprop AS country_name ON (geo.nd_geolocation_id = country_name.nd_geolocation_id AND country_name.type_id = (SELECT cvterm_id from cvterm where name = 'country_name') )
+LEFT JOIN nd_geolocationprop AS country_code ON (geo.nd_geolocation_id = country_code.nd_geolocation_id AND country_code.type_id = (SELECT cvterm_id from cvterm where name = 'country_code') )
+LEFT JOIN nd_geolocationprop AS location_type ON (geo.nd_geolocation_id = location_type.nd_geolocation_id AND location_type.type_id = (SELECT cvterm_id from cvterm where name = 'location_type') )
+WHERE project.project_id =? AND projectprop.type_id=$project_location_type_id
+GROUP BY 1,2,3,4,5,6";
 
 
 	$h = $self->schema()->storage()->dbh()->prepare($q);
@@ -241,15 +260,30 @@ sub get_locations_by_breeding_program {
 
     }
     else {
-	my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description, longitude, latitude, altitude FROM nd_geolocation LEFT JOIN nd_experiment USING(nd_geolocation_id) where nd_experiment_id IS NULL";
+	my $q = "SELECT distinct(geo.nd_geolocation_id),
+	geo.description,
+	abbreviation.value,
+	country_name.value,
+	country_code.value,
+	location_type.value,
+	longitude,
+	latitude,
+	altitude
+FROM nd_geolocation AS geo
+LEFT JOIN nd_geolocationprop AS abbreviation ON (geo.nd_geolocation_id = abbreviation.nd_geolocation_id AND abbreviation.type_id = (SELECT cvterm_id from cvterm where name = 'abbreviation') )
+LEFT JOIN nd_geolocationprop AS country_name ON (geo.nd_geolocation_id = country_name.nd_geolocation_id AND country_name.type_id = (SELECT cvterm_id from cvterm where name = 'country_name') )
+LEFT JOIN nd_geolocationprop AS country_code ON (geo.nd_geolocation_id = country_code.nd_geolocation_id AND country_code.type_id = (SELECT cvterm_id from cvterm where name = 'country_code') )
+LEFT JOIN nd_geolocationprop AS location_type ON (geo.nd_geolocation_id = location_type.nd_geolocation_id AND location_type.type_id = (SELECT cvterm_id from cvterm where name = 'location_type') )
+LEFT JOIN nd_experiment ON (geo.nd_geolocation_id = nd_experiment.nd_geolocation_id)
+WHERE nd_experiment_id IS NULL";
 
 	$h = $self->schema()->storage()->dbh()->prepare($q);
 	$h->execute();
     }
 
     my @locations;
-    while (my ($id, $name, $longitude, $latitude, $altitude, $plot_count) = $h->fetchrow_array()) {
-	push @locations, [ $id, $name, $longitude, $latitude, $altitude, $plot_count ];
+    while (my ($id, $name, $abbrev, $country_name, $country_code, $type, $longitude, $latitude, $altitude, $plot_count) = $h->fetchrow_array()) {
+	push @locations, [ $id, $name, $abbrev, $country_name, $country_code, $type, $longitude, $latitude, $altitude, $plot_count ];
     }
     return \@locations;
 }
