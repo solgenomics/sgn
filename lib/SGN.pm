@@ -112,7 +112,7 @@ __PACKAGE__->config(
             store =>"FastMmap",
         },
     },
-
+    
 
 
     'Plugin::Authentication' => {
@@ -130,6 +130,11 @@ __PACKAGE__->config(
 		},
 	    },
 	},
+    },
+    
+    'Plugin::Assets' => {
+
+	path => "/static",
     },
 
     ( $ENV{SGN_TEST_MODE} ? ( test_mode => 1 ) : () ),
