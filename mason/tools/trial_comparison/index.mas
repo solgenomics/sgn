@@ -22,6 +22,7 @@
             <option selected="selected">Loading...</option>
           </select>
         </div>
+        <img hidden id="trials-loading-spinner" src="/img/wheel.gif" alt="loading">
         <small hidden="true" id = "trials_list_info" class="form-text text-muted">
           Trials contain a total of <span id="total_accession_count">?</span> accessions, with <span id="common_accession_count">?</span> common accessions, phenotyped for <span id="common_trait_count">?</span> common traits.
         </small>
@@ -32,7 +33,7 @@
           <option selected="selected" value=""> </option>
         </select>
       </div>
-      <img hidden id="loading-spinner" src="/img/wheel.gif" alt="loading">
+      <img hidden id="results-loading-spinner" src="/img/wheel.gif" alt="loading">
     </form>
   </center>
 </div>
@@ -58,42 +59,48 @@ $(document).ready(function(){
     $('#trials_list_select').change(function(){
       $(".tc-grid").hide();
       $(".tc-histogram").hide();
+      $("#trials_list_info").hide();
+      $("#trials-loading-spinner").show();
+      $(".tc-grid").hide();
+      $(".tc-histogram").hide();
+      $('#trait_select').attr("disabled",true).html('<option selected="selected" value=""> </option>');
       var trial_list_id = $('#trials_list_select').val();
       if (trial_list_id === "") {
-        $("#trials_list_info").hide();
-        $('#trait_select').attr("disabled",true).html('<option selected="selected" value=""> </option>');
+        $("#trials-loading-spinner").hide();
         return;
-      } else {
-        $("#trials_list_info").show();
       }
-      var item_data = list.getListData(trial_list_id);
-      var items = item_data.elements;
-      var params = "";
-      for (n=0; n<items.length; n++) {
-        params += 'trial_name='+items[n][1]+'&';
-      }
-      $.ajax({
-        url: '/ajax/trial/common_traits?'+params,
-        success: function(response) {
-          if (response.error) {
-            $('#trait_select').val('ERROR');
-          }
-          else {
-            var option_html = '<option selected="selected" value=""> </option>';
-            for (var i =0 ; i < response.options.length; i++) {
-              option_html += '<option value="'+response.options[i][0]+'">'+(response.options[i][1])+'</option>';
-            }
-            $('#trait_select').attr("disabled",false).html(option_html);
-            $('#total_accession_count').html(response.total_accession_count);
-            $('#common_accession_count').html(response.common_accession_count);
-            $('#common_trait_count').html(response.common_trait_count);
-           }
-        },
-        error: function(response) {
-          //alert("An error occurred, the service may temporarily be unavailable");
+      setTimeout(function(){ //use setTimeout to pull sync call list.getListData out of event listener thread.
+        var item_data = list.getListData(trial_list_id);
+        var items = item_data.elements;
+        var params = "";
+        for (n=0; n<items.length; n++) {
+          params += 'trial_name='+items[n][1]+'&';
         }
+        $.ajax({
+          url: '/ajax/trial/common_traits?'+params,
+          success: function(response) {
+            if (response.error) {
+              $('#trait_select').val('ERROR');
+            }
+            else {
+              var option_html = '<option selected="selected" value=""> </option>';
+              for (var i =0 ; i < response.options.length; i++) {
+                option_html += '<option value="'+response.options[i][0]+'">'+(response.options[i][1])+'</option>';
+              }
+              $("#trials-loading-spinner").hide();
+              $("#trials_list_info").show();
+              $('#trait_select').attr("disabled",false).html(option_html);
+              $('#total_accession_count').html(response.total_accession_count);
+              $('#common_accession_count').html(response.common_accession_count);
+              $('#common_trait_count').html(response.common_trait_count);
+             }
+          },
+          error: function(response) {
+            //alert("An error occurred, the service may temporarily be unavailable");
+          }
 
-      });
+        });
+      },1);
     })
   }
   else {
@@ -103,14 +110,16 @@ $(document).ready(function(){
 
 $('#trait_select').change(fetchAndBuildGraphs);
 
-function fetchAndBuildGraphs() {
+function fetchAndBuildGraphs(){
+  $(".tc-grid").hide();
+  $(".tc-histogram").hide();
   var list_id = $('#trials_list_select').val();
   if ($('#trait_select').val()!=""){
     $(".tc-grid").hide();
     $(".tc-histogram").hide();
-    $("#loading-spinner").show();
+    $("#results-loading-spinner").show();
     $.ajax( {
-     url: '/ajax/trial/compare_list_data',
+     url: '/ajax/trial/compare_list_data_test',
      data: { 'cvterm_id' : $('#trait_select').val(), 'list_id': list_id },
      success: function(response) {
         if (response.error) {
@@ -147,13 +156,18 @@ function  createVisualizations(response){
 
   $(".tc-grid").show();
   $(".tc-histogram").show();
-  $("#loading-spinner").hide();
+  $("#results-loading-spinner").hide();
 
   //nest by study
   var studies = d3.nest().key(function(d){
     return d.study
-  }).sortKeys().entries(all_data);
+  }).entries(all_data);
   updateHistogram(studies,all_data);
+
+  //sort studies by key
+  studies.sort(function(a,b){
+    return a.key>b.key ? 1 : -1;
+  });
 
   //pair studies for scatter grid
   var paired_studies = d3.cross(
@@ -761,8 +775,8 @@ function updateHistogram(studies,all_data){
 
   var bb = legend.node().getBBox();
   legend.attr("transform", function(d) {
-    var nx = (400-axis_offset-bb.width);
-    var ny = (axis_offset-bb.y);
+    var nx = (400-10-bb.width);
+    var ny = (15-bb.y);
     return "translate("+nx+","+ny+")";
   });
   legend.insert("rect","*")

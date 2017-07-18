@@ -4,7 +4,7 @@
 
 import csv, time,random, sys
 cols = ['studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'Variable']
-study_count = 3
+study_count = 5
 accession_count = 50
 value_range = (0,100)
 value_wobble = 30
@@ -12,7 +12,7 @@ value_wobble = 30
 def make_row(study,accession,base_value):
     studyYear = "2038"
     studyDbId = str(study)
-    studyName = "Study"+str(study)
+    studyName = str(random.random()*1000000)#"Study"+str(study)
     studyDesign = "chaos"
     locationDbId = "00800"
     locationName = "The Moon"
