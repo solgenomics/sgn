@@ -9,7 +9,7 @@ cl <- makeCluster(cores)
 registerDoMC(3)
 getDoParWorkers()
 
-genotype_data <- read.table ("/home/klz26/host/test/267genotypes-p3.txt", header = TRUE, check.names = FALSE, stringsAsFactors = FALSE, na.strings = "na")
+genotype_data <- read.table ("/home/klz26/host/test/6genotypes-p3.txt", header = TRUE, check.names = FALSE, stringsAsFactors = FALSE, na.strings = "na")
 pedigree_data <- read.table ("/home/klz26/host/test/poscontrol.txt", header = FALSE, sep = "\t", check.names = FALSE, stringsAsFactors = FALSE)
 
 colnames(pedigree_data)[1] <- "Name"
