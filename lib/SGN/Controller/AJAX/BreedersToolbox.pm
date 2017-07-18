@@ -79,6 +79,10 @@ sub store_location :Path("/ajax/breeders/location/store") Args(0) {
     my $params = $c->request->parameters();
     my $id = $params->{id};
     my $name = $params->{name};
+    my $abbreviation =  $params->{abbreviation};
+    my $country_name =  $params->{country_name};
+    my $country_code =  $params->{country_code};
+    my $type =  $params->{type};
     my $latitude    = $params->{latitude};
     my $longitude   = $params->{longitude};
     my $altitude    = $params->{altitude};
@@ -97,6 +101,10 @@ sub store_location :Path("/ajax/breeders/location/store") Args(0) {
         bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
         nd_geolocation_id => $id || undef,
         name => $name,
+        abbreviation => $abbreviation,
+        country_name => $country_name,
+        country_code => $country_code,
+        location_type => $type,
         latitude => $latitude,
         longitude => $longitude,
         altitude => $altitude

@@ -129,7 +129,7 @@ sub store_location {
 	    return { error => "Longitude (in degrees) must be a number between 180 and -180." };
     }
 
-    if ( ($altitude && $altitude !~ /^[0-9.]+$/) || ($altitude && $altitude < -418) || ($altitude && $altitude > 8848) ) {
+    if ( ($altitude && $altitude !~ /^-?[0-9.]+$/) || ($altitude && $altitude < -418) || ($altitude && $altitude > 8848) ) {
         return { error => "Altitude (in meters) must be a number between -418 (Dead Sea) and 8,848 (Mt. Everest)." };
     }
 
@@ -236,8 +236,8 @@ sub _store_ndgeolocationprop {
     my $self = shift;
     my $type = shift;
     my $value = shift;
-    my $ndgeolocationprop = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, 'geolocations_property')->name();
-    my $stored_ndgeolocationprop = $self->location->create_geolocationprops({ $ndgeolocationprop => $value});
+    #my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, 'geolocations_property')->name();
+    my $stored_ndgeolocationprop = $self->location->create_geolocationprops({ $type => $value});
 }
 
 sub _remove_ndgeolocationprop {

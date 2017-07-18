@@ -12,9 +12,6 @@ $locations => ()
     print "<tr><td>No locations have been added yet.</td></tr>";
   }
 
-#print "<table class=\"table table-striped table-hover table-condensed\">";
-
-
 print "<div class=\"col-sm-12 col-md-12 col-lg-12 table-responsive\" id=\"location_table_div\">";
 
 foreach my $prog (sort keys %$locations) {
@@ -48,15 +45,77 @@ foreach my $prog (sort keys %$locations) {
     print "<tr><td id=\"".$id."\">".$name."</td><td id=\"".$id."_lat\">".$lat."</td><td id=\"".$id."_long\">".$long."</td><td id=\"".$id."_alt\">".$alt."</td><td>(<a href=\"/search/trials?nd_geolocation=$name\">".$count." trials</a>)</td><td>$edit_link</td><td>$delete_link</td></tr>";
    }
 
-   #print "</tbody><thead><tr style=\"height:30px\"><td colspan=\"6\"></td></tr></thead>";
    print "</tbody></table>";
 }
 
-#print "</table>";
 print "</div>";
 
 </%perl>
 
+<div class="modal fade" id="store_location_dialog" name="store_location_dialog" tabindex="-1" role="dialog" aria-labelledby="storeLocationDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="storeLocationDialog">Location Details</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <form class="form-horizontal" role="form" name="store_location_form" id="store_location_form">
+        <div class="form-group" id="location_id" style="display: none"></div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Name: </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="location_name" id="location_name" type="text" />
+              </div>
+	    </div>
+        <div class="form-group">
+      	      <label class="col-sm-2 control-label">Abbreviation: </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="location_abbreviation" id="location_abbreviation" type="text" />
+              </div>
+	    </div>
+        <div class="form-group">
+      	      <label class="col-sm-2 control-label">Country: </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="location_country" id="location_country" type="text" />
+              </div>
+	    </div>
+        <div class="form-group">
+      	      <label class="col-sm-2 control-label">Type: </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="location_type" id="location_type" type="text" />
+              </div>
+	    </div>
+      <div class="form-group">
+              <label class="col-sm-2 control-label">Latitude: </label>
+              <div class="col-sm-10">
+    <input class="form-control" name="location_latitude" id="location_latitude" type="text" size="4"/>
+              </div>
+      </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Longitude: </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="location_longitude" id="location_longitude" type="text" size="4"/>
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Altitude (m): </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="location_altitude" id="location_altitude" type="text" size="4"/>
+              </div>
+	    </div>
+	  </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="store_location_submit" id="store_location_submit">Store Location Details</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!--
 <div class="modal fade" id="add_location_dialog" name="add_location_dialog" tabindex="-1" role="dialog" aria-labelledby="addLocationDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -71,6 +130,24 @@ print "</div>";
       	      <label class="col-sm-2 control-label">Name: </label>
       	      <div class="col-sm-10">
 		<input class="form-control" name="new_name" id="new_name" type="text" />
+              </div>
+	    </div>
+        <div class="form-group">
+      	      <label class="col-sm-2 control-label">Abbreviation: </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="new_abbreviation" id="new_abbreviation" type="text" />
+              </div>
+	    </div>
+        <div class="form-group">
+      	      <label class="col-sm-2 control-label">Country: </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="new_country" id="new_country" type="text" />
+              </div>
+	    </div>
+        <div class="form-group">
+      	      <label class="col-sm-2 control-label">Type: </label>
+      	      <div class="col-sm-10">
+		<input class="form-control" name="new_type" id="new_type" type="text" />
               </div>
 	    </div>
       <div class="form-group">
@@ -119,6 +196,24 @@ print "</div>";
 		<input class="form-control" name="change_name" id="change_name" type="text" />
               </div>
 	    </div>
+        <div class="form-group">
+              <label class="col-sm-2 control-label">Abbreviation: </label>
+              <div class="col-sm-10">
+        <input class="form-control" name="change_abbreviation" id="change_abbreviation" type="text" />
+              </div>
+        </div>
+        <div class="form-group">
+              <label class="col-sm-2 control-label">Country: </label>
+              <div class="col-sm-10">
+        <input class="form-control" name="change_country" id="change_country" type="text" />
+              </div>
+        </div>
+        <div class="form-group">
+              <label class="col-sm-2 control-label">Type: </label>
+              <div class="col-sm-10">
+        <input class="form-control" name="change_type" id="change_type" type="text" />
+              </div>
+        </div>
       <div class="form-group">
               <label class="col-sm-2 control-label">Latitude: </label>
               <div class="col-sm-10">
@@ -146,66 +241,109 @@ print "</div>";
       </div>
     </div>
   </div>
-</div>
+</div> -->
 
 <script defer="defer">
 
 jQuery(document).ready(function() {
 
   $('#add_location_link').click( function() {
-      $('#add_location_dialog').modal("show");
+      $('#store_location_dialog').modal("show");
    });
 
-  $('#new_location_submit').click( function(event) {
-      event.preventDefault();
-      var name = $('#new_name').val();
-      var longitude = $('#new_longitude').val();
-      var latitude = $('#new_latitude').val();
-      var altitude = $('#new_altitude').val();
+   $('#store_location_submit').click( function(event) {
+       event.preventDefault();
+       var id= $('#location_id').val();
+       var name = $('#location_name').val();
+       var abbreviation = $('#location_abbreviation').val();
+       var country = $('#location_country').val();
+       var type = $('#location_type').val();
+       var longitude = $('#location_longitude').val();
+       var latitude = $('#location_latitude').val();
+       var altitude = $('#location_altitude').val();
 
-      if (name == '') { alert('A location name is required.');  return; }
 
-      $.ajax({
-        type: 'POST',
-        url: '/ajax/breeders/location/store',
-        data: { 'id':'', 'name': name,  'longitude':longitude, 'latitude':latitude, 'altitude': altitude },
-        success: function(response) {
-                 if (response.error) { alert(response.error); }
-                 else {
-                     alert(response.success);
-                     $('#add_location_dialog').modal("hide");
-                     location.reload();
-                 }
-                },
-        error: function() { alert('An error occurred while saving the new location. Please try again later.'); }
-      });
-  });
+       var country_name = country.substr(0, country.indexOf('('));
+       var re = /\((.*)\)/;
+       var country_code = country.match(re)[1];
 
-  $('#edit_location_submit').click( function(event) {
-      event.preventDefault();
-      var id= $('#change_id').val();
-      var name = $('#change_name').val();
-      var longitude = $('#change_longitude').val();
-      var latitude = $('#change_latitude').val();
-      var altitude = $('#change_altitude').val();
+       console.log("Location name to store is "+name);
+       console.log("Location country name to store is "+country_name+" and country code is "+country_code);
 
-      if (name == '') { alert('A location name is required.');  return; }
+       if (name == '') { alert('A location name is required.');  return; }
 
-      $.ajax({
-        type: 'POST',
-        url: '/ajax/breeders/location/store',
-        data: { 'id':id, 'name': name,  'longitude':longitude, 'latitude':latitude, 'altitude': altitude },
-        success: function(response) {
-                 if (response.error) { alert(response.error); }
-                 else {
-                     alert(response.success);
-                     $('#edit_location_dialog').modal("hide");
-                     location.reload();
-                 }
-                },
-        error: function() { alert('An error occurred while editing the location. Please try again later.'); }
-      });
-  });
+       $.ajax({
+         type: 'POST',
+         url: '/ajax/breeders/location/store',
+         data: { 'id': id, 'name': name, 'abbreviation': abbreviation, 'country_name': country_name, 'country_code': country_code, 'type': type, 'longitude':longitude, 'latitude':latitude, 'altitude': altitude },
+         success: function(response) {
+                  if (response.error) { alert(response.error); }
+                  else {
+                      alert(response.success);
+                      $('#store_location_dialog').modal("hide");
+                      location.reload();
+                  }
+                 },
+         error: function() { alert('An error occurred while storing the location details. Please try again later.'); }
+       });
+   });
+
+  // $('#new_location_submit').click( function(event) {
+  //     event.preventDefault();
+  //     var name = $('#new_name').val();
+  //     var abbreviation = $('#new_abbreviation').val();
+  //     var country = $('#new_country').val();
+  //     var type = $('#new_type').val();
+  //     var longitude = $('#new_longitude').val();
+  //     var latitude = $('#new_latitude').val();
+  //     var altitude = $('#new_altitude').val();
+  //
+  //     if (name == '') { alert('A location name is required.');  return; }
+  //
+  //     $.ajax({
+  //       type: 'POST',
+  //       url: '/ajax/breeders/location/store',
+  //       data: { 'id':'', 'name': name, 'abbreviation': abbreviation, 'country_name': country_name, 'country_code': country_code, 'type': type, 'longitude':longitude, 'latitude':latitude, 'altitude': altitude },
+  //       success: function(response) {
+  //                if (response.error) { alert(response.error); }
+  //                else {
+  //                    alert(response.success);
+  //                    $('#add_location_dialog').modal("hide");
+  //                    location.reload();
+  //                }
+  //               },
+  //       error: function() { alert('An error occurred while saving the new location. Please try again later.'); }
+  //     });
+  // });
+  //
+  // $('#edit_location_submit').click( function(event) {
+  //     event.preventDefault();
+  //     var id= $('#change_id').val();
+  //     var name = $('#change_name').val();
+  //     var abbreviation = $('#change_abbreviation').val();
+  //     var country = $('#change_country').val();
+  //     var type = $('#change_type').val();
+  //     var longitude = $('#change_longitude').val();
+  //     var latitude = $('#change_latitude').val();
+  //     var altitude = $('#change_altitude').val();
+  //
+  //     if (name == '') { alert('A location name is required.');  return; }
+  //
+  //     $.ajax({
+  //       type: 'POST',
+  //       url: '/ajax/breeders/location/store',
+  //       data: { 'id':id, 'name': name, 'abbreviation': abbreviation, 'country_name': country_name, 'country_code': country_code, 'type': type, 'longitude':longitude, 'latitude':latitude, 'altitude': altitude },
+  //       success: function(response) {
+  //                if (response.error) { alert(response.error); }
+  //                else {
+  //                    alert(response.success);
+  //                    $('#edit_location_dialog').modal("hide");
+  //                    location.reload();
+  //                }
+  //               },
+  //       error: function() { alert('An error occurred while editing the location. Please try again later.'); }
+  //     });
+  // });
 
 });
 
@@ -234,12 +372,15 @@ jQuery(document).ready(function() {
 
    function edit_location(id) {
         console.log("Id for location to edit is "+id);
-        $('#change_id').val(id);
-        $('#change_name').val($('#'+id).text());
-        $('#change_latitude').val($('#'+id+'_lat').text());
-        $('#change_longitude').val($('#'+id+'_long').text());
-        $('#change_altitude').val($('#'+id+'_alt').text());
-        $('#edit_location_dialog').modal("show");
+        $('#location_id').val(id);
+        $('#location_name').val($('#'+id).text());
+        $('#location_abbreviation').val($('#'+id+'_abbrev').text());
+        $('#location_country').val($('#'+id+'_country').text());
+        $('#location_type').val($('#'+id+'_type').text());
+        $('#location_latitude').val($('#'+id+'_lat').text());
+        $('#location_longitude').val($('#'+id+'_long').text());
+        $('#location_altitude').val($('#'+id+'_alt').text());
+        $('#store_location_dialog').modal("show");
     }
 
 
