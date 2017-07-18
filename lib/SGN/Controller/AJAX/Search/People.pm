@@ -56,14 +56,14 @@ sub people_search :Path('/ajax/search/people') Args(0) {
     
     my $params = $c->req->params() || {};
 
-    print STDERR "PARAMS: ".Dumper($params);
+    #print STDERR "PARAMS: ".Dumper($params);
 
     my %query;
 
     foreach my $k ( qw |  first_name last_name organization country | ) { 
 	if (exists($params->{$k}) && $params->{$k}) { 
 	    print STDERR "transferring $k $params->{$k}\n";
-	    $query{$k} = ( $k => { 'ilike', '%'.$params->{$k}.'%' });
+	    $query{$k} = { 'ilike' => '%'.$params->{$k}.'%' };
 	}
     }
 
@@ -94,7 +94,7 @@ sub people_search :Path('/ajax/search/people') Args(0) {
 	push @result, [ '<a href="/solpeople/personal-info.pl?sp_person_id='.$p->sp_person_id().'">'.$p->last_name()."</a>", $p->first_name(), $p->organization(), $p->country() ];
     }
 
-    print STDERR "RESULTS: ".Dumper(\@result);
+    #print STDERR "RESULTS: ".Dumper(\@result);
 
     $c->stash->{rest} = { data => [ @result ], draw => $draw, recordsTotal => $records_total,  recordsFiltered => $records_total };
     

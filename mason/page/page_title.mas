@@ -1,4 +1,4 @@
 <%args>
   $title
 </%args>
-<div id="pagetitle"><h3><% $title %></h3></div>
+<div id="pagetitle"><h3 id="pagetitle_h3"><% $title %></h3></div>

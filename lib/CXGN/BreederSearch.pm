@@ -15,6 +15,7 @@ package CXGN::BreederSearch;
 
 use Moose;
 use Data::Dumper;
+use Try::Tiny;
 
 has 'dbh' => (
     is  => 'rw',
@@ -27,25 +28,66 @@ has 'dbname' => (
 
 =head2 metadata_query
 
- Usage:        my %info = $bs->metadata_query($criteria_list, $dataref, $queryref);
- Desc:
- Ret:          returns a hash with a key called results that contains
-               a listref of listrefs specifying the matching list with ids
-               and names.
- Args:         criteria_list: a comma separated string called a criteria_list,
-               listing all the criteria that need to be applied. Possible
-               criteria are trials, years, traits, and locations. The last
+ Usage:        my $results_ref = $bs->metadata_query($criteria_list, $dataref, $queryref);
+
+ Ret:          returns a hash with a list of ids and names that were matched.
+
+ Args:         criteria_list: a comma separated string of criteria categories. Possible
+               criteria include accessions, breeding programs, genotyping protocols,
+               locations, plots, plants, trials, trial_designs, traits, and years. The last
                criteria in the list is the return type.
+
                dataref: The dataref is a hashref of hashrefs. The first key
                is the target of the transformation, and the second is the
                source type of the transformation, containing comma separated
                values of the source type.
-               queryref: same structure as dataref, but instead of storing ids it stores a
-               1 if user requested intersect, or 0 for default union
- Side Effects: will create a materialized view of the ontology corresponding to
-               $db_name
- Example:
 
+               queryref: same structure as dataref, but instead of storing ids it stores a
+               1 if user to retrieve an intersection of matches, or 0 for the default union
+
+ Side Effects: none
+ Example:   retrieving all the trials from location 'test_location' (location_id = 23) and year '2014' in the fixture db:
+
+ my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
+ my $criteria_list = [
+                'years',
+                'locations',
+                'trials'
+              ];
+ my $dataref = {
+                'trials' => {
+                            'locations' => '\'23\'',
+                            'years' => '\'2014\''
+                          }
+              };
+ my $queryref = {
+                'trials' => {
+                            'locations' => 0,
+                            'years' => 0
+                          }
+              };
+
+ my $results_ref = $bs ->metadata_query($criteria_list, $dataref, $queryref);
+
+ print Dumper($results);
+ will give you:
+
+            {
+                'results' => [
+                               [
+                                 139,
+                                 'Kasese solgs trial'
+                               ],
+                               [
+                                 137,
+                                 'test_trial'
+                               ],
+                               [
+                                 141,
+                                 'trial2 NaCRRI'
+                               ]
+                             ]
+              },
 =cut
 
 sub metadata_query {
@@ -115,29 +157,183 @@ sub metadata_query {
     push @results, [ $id, $name ];
   }
 
-  if (@results >= 10_000) {
-    return { error => scalar(@results).' matches. Too many results to display' };
+  return { results => \@results };
+
+}
+
+=head2 avg_phenotypes_query
+
+parameters: trait_id, trial_id, allow_missing
+
+returns: values, the avg pheno value of each accession in a trial for the given trait, and column_names, an array of the trait names
+
+Side Effects: none
+
+=cut
+
+sub avg_phenotypes_query {
+  my $self = shift;
+  my $trial_id = shift;
+  my $trait_ids = shift;
+  my $weights = shift;
+  my $controls = shift;
+  my @trait_ids = @$trait_ids;
+  my @weights = @$weights;
+  my @controls = @$controls;
+  my $allow_missing = shift;
+
+  my $select = "SELECT table0.accession_id, table0.accession_name";
+  my $from = " FROM (SELECT accession_id, accession_name FROM materialized_phenoview JOIN accessions USING (accession_id) WHERE trial_id = $trial_id GROUP BY 1,2) AS table0";
+  for (my $i = 1; $i <= scalar @trait_ids; $i++) {
+    $select .= ",  ROUND( CAST(table$i.trait$i AS NUMERIC), 2)";
+    $from .= " JOIN (SELECT accession_id, accession_name, AVG(value::REAL) AS trait$i FROM materialized_phenoview JOIN accessions USING (accession_id) JOIN phenotype USING (phenotype_id) WHERE trial_id = $trial_id AND trait_id = ? GROUP BY 1,2) AS table$i USING (accession_id)";
   }
-  elsif (@results < 1) {
-    return { error => scalar(@results).' matches. No results to display' };
+  my $query = $select . $from . " ORDER BY 2";
+  if ($allow_missing eq 'true') { $query =~ s/JOIN/FULL OUTER JOIN/g; }
+
+  print STDERR "QUERY: $query\n";
+
+  my $h = $self->dbh->prepare($query);
+  $h->execute(@$trait_ids);
+
+  my (@raw_avg_values, @reference_values, @rows_to_scale, @weighted_values);
+
+  if (grep { defined($_) } @controls) {
+  while (my @row = $h->fetchrow_array()) {
+    push @rows_to_scale, @row;
+    my ($id, $name, @avg_values) = @row;
+    for my $i (0..$#controls) {
+      my $control = $controls[$i] || 0;
+      if ($id == $control) {
+        #print STDERR "Matched control accession $name with values @avg_values\n";
+        if (!defined($avg_values[$i])) {
+          return { error => "Can't scale values using control $name, it has a zero or undefined value for trait with id @$trait_ids[$i] in this trial. Please select a different control for this trait." };
+        }
+        $reference_values[$i] = $avg_values[$i];
+      }
+    }
   }
-  else {
-    return { results => \@results };
+    for my $i (0..$#trait_ids) {
+        $reference_values[$i] = 1 unless defined $reference_values[$i];
+    }
+
+    #print STDERR "reference values = @reference_values\n";
+    $h->execute(@$trait_ids);
+    while (my ($id, $name, @avg_values) = $h->fetchrow_array()) {
+
+      my @scaled_values = map {sprintf("%.2f", $avg_values[$_] / $reference_values[$_])} 0..$#avg_values;
+      my @scaled_and_weighted = map {sprintf("%.2f", $scaled_values[$_] * $weights[$_])} 0..$#scaled_values;
+      unshift @scaled_values, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
+      push @raw_avg_values, [@scaled_values];
+
+      my $sum;
+      map { $sum += $_ } @scaled_and_weighted;
+      my $rounded_sum = sprintf("%.2f", $sum);
+      push @scaled_and_weighted, $rounded_sum;
+      unshift @scaled_and_weighted, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
+      push @weighted_values, [@scaled_and_weighted];
+    }
+
+  } else {
+
+  while (my ($id, $name, @avg_values) = $h->fetchrow_array()) {
+
+    my @values_to_weight = @avg_values;
+    unshift @avg_values, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
+    push @raw_avg_values, [@avg_values];
+
+    @values_to_weight = map {$values_to_weight[$_] * $weights[$_]} 0..$#values_to_weight;
+    my $sum;
+    map { $sum += $_ } @values_to_weight;
+    unshift @values_to_weight, '<a href="/stock/'.$id.'/view">'.$name.'</a>';
+    my $rounded_sum = sprintf("%.2f", $sum);
+    push @values_to_weight, $rounded_sum;
+    push @weighted_values, [@values_to_weight];
+  }
+
+}
+
+  my @weighted_values2 = sort { $b->[-1] <=> $a->[-1] } @weighted_values;
+  my @weighted_values3;
+  for (my $i = 0; $i < scalar @weighted_values2; $i++ ) {
+    my $temp_array = $weighted_values2[$i];
+    my @temp_array = @$temp_array;
+    push @temp_array, $i+1;
+    push @weighted_values3, [@temp_array];
+  }
+
+  #print STDERR "avg_phenotypes: ".Dumper(@raw_avg_values);
+  #print STDERR "avg_phenotypes: ".Dumper(@weighted_values3);
+
+  return {
+    raw_avg_values => \@raw_avg_values,
+    weighted_values => \@weighted_values3
+  };
+
+}
+
+=head2 test_matviews
+
+parameters: db parameters
+
+returns: message detailing matview status
+
+Side Effects: If they are unavailable, it will use the refresh_matviews method to populate the materialized views
+
+=cut
+
+
+sub test_matviews {
+
+  my $self = shift;
+  my $dbhost = shift;
+  my $dbname = shift;
+  my $dbuser = shift;
+  my $dbpass = shift;
+  my ($status, %response_hash);
+
+  try {
+    my $populated_query = "select * from materialized_phenoview limit 1";
+    my $sth = $self->dbh->prepare($populated_query);
+    $sth->execute();
+  } catch { #if test query fails because views aren't populated
+    print STDERR "Using basic refresh to populate views . . .\n";
+    $status = $self->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'basic');
+    %response_hash = %$status;
+  };
+
+  if (%response_hash && $response_hash{'message'} eq 'Wizard update completed!') {
+    print STDERR "Populated views, now proceeding with query . . . .\n";
+    return { success => "Populated views, query can proceed." };
+  } elsif (%response_hash && $response_hash{'message'} eq 'Wizard update initiated.') {
+    return { error => "The search wizard is temporarily unavailable while database indexes are being repopulated. Please try again later." };
+  } elsif (%response_hash && $response_hash{'error'}) {
+    return { error => $response_hash{'error'} };
+  } else {
+    return { success => "Test successful, query can proceed." };
   }
 }
 
 =head2 refresh_matviews
 
-parameters: None.
+parameters: db parameters, and a string to specify desired refresh type, basic or concurrent. defaults to concurrent
 
-returns: success or error message
+returns: message detailing success or error
 
-Side Effects: refreshes matertialized_fullview and all of the smaller materialized views that are based on it and used in the wizard.
+Side Effects: Refreshes materialized views
 
 =cut
 
 sub refresh_matviews {
+
   my $self = shift;
+  my $dbhost = shift;
+  my $dbname = shift;
+  my $dbuser = shift;
+  my $dbpass = shift;
+  my $refresh_type = shift || 'concurrent';
+  my $refresh_finished = 0;
+  my $async_refresh;
 
   my $q = "SELECT currently_refreshing FROM public.matviews WHERE mv_id=?";
   my $h = $self->dbh->prepare($q);
@@ -149,26 +345,48 @@ sub refresh_matviews {
     return { error => 'Wizard update already in progress . . . ' };
   }
   else {
-    my $connect = "SELECT dblink_connect_u('async','dbname=".$self->dbname."')";
-    my $send_query = "SELECT dblink_send_query('async','SELECT refresh_materialized_views()')";
+    try {
+      my $dbh = $self->dbh();
+      if ($refresh_type eq 'concurrent') {
+        #print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -c";
+        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -c");
+      } else {
+        print STDERR "Using CXGN::Tools::Run to run perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass";
+        $async_refresh = CXGN::Tools::Run->run_async("perl bin/refresh_matviews.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
+      }
 
-    $self->dbh->do($connect);
-    $h = $self->dbh->do($send_query);
+      for (my $i = 1; $i < 10; $i++) {
+        sleep($i/5);
+        if ($async_refresh->alive) {
+          next;
+        } else {
+          $refresh_finished = 1;
+        }
+      }
 
-    if ($h != 1) {
-      return { error => 'Error initiating wizard update.'};
-    }
-    else {
-      $q = "UPDATE public.matviews SET currently_refreshing=?";
-      my $true = 'TRUE';
-      my $h = $self->dbh->prepare($q);
-      $h->execute($true);
-
-      print STDERR "materialized fullview status updated to refreshing\n";
-      return { message => 'Wizard update initiated' };
+      if ($refresh_finished) {
+        return { message => 'Wizard update completed!' };
+      } else {
+        return { message => 'Wizard update initiated.' };
+      }
+    } catch {
+      print STDERR 'Error initiating wizard update.' . $@ . "\n";
+      return { error => 'Error initiating wizard update.' . $@ };
     }
   }
 }
+
+=head2 matviews_status
+
+Desc: checks tracking table to see if materialized views are updating, and if not, when they were last updated.
+
+parameters: None.
+
+returns: refreshing message or timestamp
+
+Side Effects: none
+
+=cut
 
 sub matviews_status {
   my $self = shift;
@@ -183,295 +401,11 @@ sub matviews_status {
     return { refreshing => "<p id='wizard_status'>Wizard update in progress . . . </p>"};
   }
   else {
-    print STDERR "materialized fullview last updated $timestamp\n";
+    print STDERR "materialized views last updated $timestamp\n";
     return { timestamp => "<p id='wizard_status'>Wizard last updated: $timestamp</p>" };
   }
 }
 
-sub get_phenotype_info {
-    my $self = shift;
-    my $accession_sql = shift;
-    my $trial_sql = shift;
-    my $trait_sql = shift;
 
-    print STDERR "GET_PHENOTYPE_INFO: $accession_sql - $trial_sql - $trait_sql \n\n";
-
-    my $rep_type_id = $self->get_stockprop_type_id("replicate");
-    my $block_number_type_id = $self -> get_stockprop_type_id("block");
-    my $year_type_id = $self->get_projectprop_type_id("project year");
-    my $plot_type_id = $self->get_stock_type_id("plot");
-    my $accession_type_id = $self->get_stock_type_id("accession");
-
-    my @where_clause = ();
-    if ($accession_sql) { push @where_clause,  "stock.stock_id in ($accession_sql)"; }
-    if ($trial_sql) { push @where_clause, "project.project_id in ($trial_sql)"; }
-    if ($trait_sql) { push @where_clause, "cvterm.cvterm_id in ($trait_sql)"; }
-
-    my $where_clause = "";
-
-    if (@where_clause>0) {
-	$where_clause .= $rep_type_id ? "WHERE (stockprop.type_id = $rep_type_id OR stockprop.type_id IS NULL) " : "WHERE stockprop.type_id IS NULL";
-	$where_clause .= "AND plot.type_id = $plot_type_id AND stock.type_id = $accession_type_id";
-	$where_clause .= $block_number_type_id  ? " AND (block_number.type_id = $block_number_type_id OR block_number.type_id IS NULL)" : " AND block_number.type_id IS NULL";
-	$where_clause .= $year_type_id ? " AND projectprop.type_id = $year_type_id" :"" ;
-	$where_clause .= " AND " . (join (" AND " , @where_clause));
-
-	#$where_clause = "where (stockprop.type_id=$rep_type_id or stockprop.type_id IS NULL) AND (block_number.type_id=$block_number_type_id or block_number.type_id IS NULL) AND  ".(join (" and ", @where_clause));
-    }
-
-    my $order_clause = " order by project.name, plot.uniquename";
-    my $q = "SELECT projectprop.value, project.name, stock.uniquename, nd_geolocation.description, cvterm.name, phenotype.value, plot.uniquename, db.name, db.name ||  ':' || dbxref.accession AS accession, stockprop.value, block_number.value AS rep, cvterm.cvterm_id, project.project_id, nd_geolocation.nd_geolocation_id, stock.stock_id, plot.stock_id, phenotype.uniquename
-             FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)
-             JOIN stock ON (object_id=stock.stock_id)
-             LEFT JOIN stockprop ON (plot.stock_id=stockprop.stock_id)
-             LEFT JOIN stockprop AS block_number ON (plot.stock_id=block_number.stock_id)
-             JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id)
-             JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
-             JOIN nd_geolocation USING(nd_geolocation_id)
-             JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)
-             JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
-             JOIN cv USING(cv_id)
-             JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
-             JOIN db USING(db_id)
-             JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)
-             JOIN project USING(project_id)
-  JOIN projectprop USING(project_id)
-             $where_clause
-             $order_clause";
-
-    #print STDERR "QUERY: $q\n\n";
-    my $h = $self->dbh()->prepare($q);
-    $h->execute();
-
-    my $result = [];
-    while (my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename) = $h->fetchrow_array()) {
-	push @$result, [ $year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename ];
-
-    }
-    #print STDERR Dumper $result;
-    print STDERR "QUERY returned ".scalar(@$result)." rows.\n";
-    return $result;
-}
-
-sub get_phenotype_info_matrix {
-    my $self = shift;
-    my $accession_sql = shift;
-    my $trial_sql = shift;
-    my $trait_sql = shift;
-
-    my $data = $self->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
-    #data contains [$year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id]
-
-    my %plot_data;
-    my %traits;
-
-    foreach my $d (@$data) {
-	print STDERR "PRINTING TRAIT DATA FOR TERM " . $d->[4] . "\n\n";
-	my $cvterm = $d->[4]."|".$d->[8];
-	my $trait_data = $d->[5];
-	my $plot = $d->[6];
-	$plot_data{$plot}->{$cvterm} = $trait_data;
-	$traits{$cvterm}++;
-    }
-
-    my @info = ();
-    my $line = "";
-
-    # generate header line
-    #
-    my @sorted_traits = sort keys(%traits);
-    foreach my $trait (@sorted_traits) {
-	$line .= "\t".$trait;  # first header has to be empty (plot name column)
-    }
-    push @info, $line;
-
-    # dump phenotypic values
-    #
-    my $count2 = 0;
-    foreach my $plot (sort keys (%plot_data)) {
-	$line = $plot;
-
-	foreach my $trait (@sorted_traits) {
-	    my $tab = $plot_data{$plot}->{$trait}; # ? "\t".$plot_data{$plot}->{$trait} : "\t";
-	    $line .= defined($tab) ? "\t".$tab : "\t";
-
-	}
-	push @info, $line;
-    }
-
-    return @info;
-}
-
-sub get_extended_phenotype_info_matrix {
-    my $self = shift;
-    my $accession_sql = shift;
-    my $trial_sql = shift;
-    my $trait_sql = shift;
-    my $include_timestamp = shift // 0;
-
-    my $data = $self->get_phenotype_info($accession_sql, $trial_sql, $trait_sql);
-    #data contains [$year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename]
-
-    my %plot_data;
-    my %traits;
-
-    print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
-    foreach my $d (@$data) {
-
-        my ($year, $project_name, $stock_name, $location, $trait, $trait_data, $plot, $cv_name, $cvterm_accession, $rep, $block_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename) = @$d;
-
-        my $cvterm = $d->[4]."|".$d->[8];
-        if ($include_timestamp) {
-            my ($p1, $p2) = split /date: /, $phenotype_uniquename;
-            my ($timestamp, $p3) = split /  operator/, $p2;
-            if( $timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                $plot_data{$plot}->{$cvterm} = "$trait_data,$timestamp";
-            } else {
-                $plot_data{$plot}->{$cvterm} = $trait_data;
-            }
-        } else {
-            $plot_data{$plot}->{$cvterm} = $trait_data;
-        }
-
-        if (!defined($rep)) { $rep = ""; }
-        $plot_data{$plot}->{metadata} = {
-            rep => $rep,
-            studyName => $project_name,
-            germplasmName => $stock_name,
-            locationName => $location,
-            blockNumber => $block_number,
-            plotName => $plot,
-            cvterm => $cvterm,
-            trait_data => $trait_data,
-            year => $year,
-            cvterm_id => $trait_id,
-            studyDbId => $project_id,
-            locationDbId => $location_id,
-            germplasmDbId => $stock_id,
-            plotDbId => $plot_id
-        };
-        $traits{$cvterm}++;
-    }
-
-    my @info = ();
-    my $line = join "\t", qw | studyYear studyDbId studyName locationDbId locationName germplasmDbId germplasmName plotDbId plotName rep blockNumber |;
-
-    # generate header line
-    #
-    my @sorted_traits = sort keys(%traits);
-    foreach my $trait (@sorted_traits) {
-	$line .= "\t".$trait;
-    }
-    push @info, $line;
-
-    # dump phenotypic values
-    #
-    my $count2 = 0;
-
-    my @unique_plot_list = ();
-    my $previous_plot = "";
-    foreach my $d (@$data) {
-	my $plot = $d->[6];
-	if ($plot ne $previous_plot) {
-	    push @unique_plot_list, $plot;
-	}
-	$previous_plot = $plot;
-    }
-
-    foreach my $p (@unique_plot_list) {
-      #$line = join "\t", map { $plot_data{$p}->{metadata}->{$_} } ( "year", "trial_name", "location", "accession", "plot", "rep", "block_number" );
-      $line = join "\t", map { $plot_data{$p}->{metadata}->{$_} } ( "year", "studyDbId", "studyName", "locationDbId", "locationName", "germplasmDbId", "germplasmName", "plotDbId", "plotName", "rep", "blockNumber" );
-
-      #print STDERR "Adding line for plot $p\n";
-      foreach my $trait (@sorted_traits) {
-        my $tab = $plot_data{$p}->{$trait};
-        $line .= defined($tab) ? "\t".$tab : "\t";
-      }
-      push @info, $line;
-    }
-
-    return @info;
-}
-
-
-
-=head2 get_genotype_info
-
-parameters: comma-separated lists of accession, trial, and trait IDs. May be empty.
-
-returns: an array with genotype information
-
-=cut
-
-sub get_genotype_info {
-
-    my $self = shift;
-    my $accession_idref = shift;
-    my $protocol_id = shift;
-    my $snp_genotype_id = shift || '76434';
-    my @accession_ids = @$accession_idref;
-    my ($q, @result, $protocol_name);
-
-    if (@accession_ids) {
-      $q = "SELECT name, uniquename, value FROM (SELECT nd_protocol.name, stock.uniquename, genotypeprop.value, row_number() over (partition by stock.uniquename order by genotypeprop.genotype_id) as rownum from genotypeprop join nd_experiment_genotype USING (genotype_id) JOIN nd_experiment_protocol USING(nd_experiment_id) JOIN nd_protocol USING(nd_protocol_id) JOIN nd_experiment_stock USING(nd_experiment_id) JOIN stock USING(stock_id) WHERE genotypeprop.type_id = ? AND stock.stock_id in (@{[join',', ('?') x @accession_ids]}) AND nd_experiment_protocol.nd_protocol_id=?) tmp WHERE rownum <2";
-    }
-    print STDERR "QUERY: $q\n\n";
-
-    my $h = $self->dbh()->prepare($q);
-    $h->execute($snp_genotype_id, @accession_ids,$protocol_id);
-
-
-    while (my($name,$uniquename,$genotype_string) = $h->fetchrow_array()) {
-      push @result, [ $uniquename, $genotype_string ];
-      $protocol_name = $name;
-    }
-
-    return {
-      protocol_name => $protocol_name,
-      genotypes => \@result
-    };
-}
-
-
-sub get_type_id {
-    my $self = shift;
-    my $term = shift;
-    my $q = "SELECT projectprop.type_id FROM projectprop JOIN cvterm on (projectprop.type_id=cvterm.cvterm_id) WHERE cvterm.name='$term'";
-    my $h = $self->dbh->prepare($q);
-    $h->execute();
-    my ($type_id) = $h->fetchrow_array();
-    return $type_id;
-}
-
-
-sub get_stock_type_id {
-    my $self = shift;
-    my $term =shift;
-    my $q = "SELECT stock.type_id FROM stock JOIN cvterm on (stock.type_id=cvterm.cvterm_id) WHERE cvterm.name='$term'";
-    my $h = $self->dbh->prepare($q);
-    $h->execute();
-    my ($type_id) = $h->fetchrow_array();
-    return $type_id;
-}
-
-sub get_stockprop_type_id {
-    my $self = shift;
-    my $term = shift;
-    my $q = "SELECT stockprop.type_id FROM stockprop JOIN cvterm on (stockprop.type_id=cvterm.cvterm_id) WHERE cvterm.name=?";
-    my $h = $self->dbh->prepare($q);
-    $h->execute($term);
-    my ($type_id) = $h->fetchrow_array();
-    return $type_id;
-}
-
-sub get_projectprop_type_id {
-    my $self = shift;
-    my $term = shift;
-    my $q = "SELECT projectprop.type_id FROM projectprop JOIN cvterm ON (projectprop.type_id=cvterm.cvterm_id) WHERE cvterm.name=?";
-    my $h = $self->dbh->prepare($q);
-    $h->execute($term);
-    my ($type_id) = $h->fetchrow_array();
-    return $type_id;
-}
 
 1;

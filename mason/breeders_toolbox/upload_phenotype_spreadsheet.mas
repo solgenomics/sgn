@@ -44,18 +44,20 @@
                         <input type="file" id="upload_spreadsheet_phenotype_file_input" name="upload_spreadsheet_phenotype_file_input" encoding="multipart/form-data" />
                     </div>
                 </div>
+
+
+                <div id="upload_phenotype_spreadsheet_verify_status"></div>
+                </div>
             </form><br/>
 
-            <div id="upload_phenotype_spreadsheet_verify_status"></div>
-            </div>
         </div>
-        
+
         <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             <button type="button" class="btn btn-info" name="upload_spreadsheet_phenotype_submit_verify" id="upload_spreadsheet_phenotype_submit_verify">Verify</button>
             <button disabled type="button" class="btn btn-primary" name="upload_spreadsheet_phenotype_submit_store" id="upload_spreadsheet_phenotype_submit_store" title="First Verify Your File">Store</button>
         </div>
-        
+
     </div>
   </div>
 </div>
@@ -85,11 +87,11 @@
 
             <h4>Notes:</h4>
             <ul>
-                <li>For <i>"sprouting proportion"</i> in cassava, <i>"trait name|trait id"</i><br> should be written as <i>"sprouting proportion|CO:0000008"</i>.</li>
+                <li>For <i>"sprouting proportion"</i>, <i>"trait name|trait id"</i><br> should be written as <i>"sprouting proportion|CO:0000008"</i>.</li>
                 <li>If spreadsheet file was not generated from the database, </br>consult the <i>Trait Ontology</i> to ensure you have the correct trait id.</li>
                 <li>Two or more traits can be uploaded at the same time.</li>
             </ul>
-            
+
             <h4>Timestamps:</h4>
             <ul>
                 <li>To include timestamp information for your measurements, click the checkbox "Includes Timestamps".</li>
@@ -128,7 +130,7 @@
                 </table>
                 </li>
             </ul>
-            
+
         </div>
       </div>
       <div class="modal-footer">
@@ -147,14 +149,10 @@ jQuery(document).ready(function() {
         jQuery('#upload_phenotype_spreadsheet_dialog').modal("show");
     });
 
-    jQuery("#phenotype_upload_spreadsheet_format_info").click( function () { 
-        jQuery("#phenotype_upload_spreadsheet_info_dialog" ).modal("show");	
+    jQuery("#phenotype_upload_spreadsheet_format_info").click( function () {
+        jQuery("#phenotype_upload_spreadsheet_info_dialog" ).modal("show");
     });
 
-});  
+});
 
 </script>
-
-
-
-    

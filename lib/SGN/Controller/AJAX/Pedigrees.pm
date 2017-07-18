@@ -8,6 +8,7 @@ use Data::Dumper;
 use Bio::GeneticRelationships::Individual;
 use Bio::GeneticRelationships::Pedigree;
 use CXGN::Pedigree::AddPedigrees;
+use CXGN::List::Validate;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -60,15 +61,21 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
 	$c->stash->{rest} = { error => "Pedigree upload requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again." };
 	return;
     }
-			      
-    my $md5;
 
-    my $uploader = CXGN::UploadFile->new();
+    my $md5;
+    print STDERR "TEMP FILE: $upload_tempfile\n";
+    my $uploader = CXGN::UploadFile->new({
+      tempfile => $upload_tempfile,
+      subdirectory => $subdirectory,
+      archive_path => $c->config->{archive_path},
+      archive_filename => $upload_original_name,
+      timestamp => $timestamp,
+      user_id => $user_id,
+      user_role => $c->user()->roles
+    });
 
     my %upload_metadata;
-  ## Store uploaded temporary file in archive
-    print STDERR "TEMP FILE: $upload_tempfile\n";
-    my $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+    my $archived_filename_with_path = $uploader->archive();
 
     if (!$archived_filename_with_path) {
 	$c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
@@ -92,7 +99,7 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
 	chomp;
 	$_ =~ s/\r//g;
 	my @acc = split /\t/;
-	for(my $i=0; $i<3; $i++) { 
+	for(my $i=0; $i<3; $i++) {
 	    if ($acc[$i] =~ /\,/) { 
 		my @a = split /\s*\,\s*/, $acc[$i];  # a comma separated list for an open pollination can be given
 		foreach (@a) { $stocks{$_}++ if $_ };
@@ -107,8 +114,12 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
 	}
     }    
     my @unique_stocks = keys(%stocks);
-    %errors = $self->check_stocks($c, \@unique_stocks);
-    
+    my $accession_validator = CXGN::List::Validate->new();
+    my @accessions_missing = @{$accession_validator->validate($schema,'accessions',\@unique_stocks)->{'missing'}};
+    if (scalar(@accessions_missing)>0){
+        $errors{"The following accessions are not in the database: ".(join ",", @accessions_missing)} = 1;
+    }
+
     if (%errors) { 
 	$c->stash->{rest} = { error => "There were problems loading the pedigree for the following accessions: ".(join ",", keys(%errors)).". Please fix these errors and try again. (errors: ".(join ", ", values(%errors)).")" };
 	return;
@@ -148,108 +159,101 @@ sub upload_pedigrees : Path('/ajax/pedigrees/upload') Args(0)  {
 	elsif ($female && !$male) { 
 	    if ($cross_type ne 'open') { 
 		print STDERR "No male parent specified and cross_type is not open... setting to unknown\n";
-		$cross_type = 'unknown';
+            $c->stash->{rest} = { error => "For $progeny No male parent specified and cross_type is not open..." };
+            $c->detach();
 	    }
 	}
 	
-	if($cross_type eq "self") { 
-	    $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-	    $male_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-	}
-	elsif($cross_type eq "biparental") { 
+    if($cross_type eq "self") { 
+        if (!$female){
+            $c->stash->{rest} = { error => "For $progeny Cross Type is self, but no female parent given" };
+            $c->detach();
+        }
+        $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+        $male_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
+    }
+    elsif($cross_type eq "biparental") {
+        if (!$female || !$male){
+            $c->stash->{rest} = { error => "For $progeny Cross Type is biparental, but no female or male parent given" };
+            $c->detach();
+        }
 	    $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
 	    $male_parent = Bio::GeneticRelationships::Individual->new( { name => $male });
 	}
 	elsif($cross_type eq "open") { 
+        if (!$female){
+            $c->stash->{rest} = { error => "For $progeny Cross Type is open, but no female parent given" };
+            $c->detach();
+        }
 	     $female_parent = Bio::GeneticRelationships::Individual->new( { name => $female });
-	     my $population_name = "";
-	     my @male_parents = split /\s*\,\s*/, $male;
 
-	     if ($male) {
-		 $population_name = join "_", @male_parents;
-	     }
-	     else { 
-		 $population_name = $female."_open";
-	     }
-	     $male_parent = Bio::GeneticRelationships::Population->new( { name => $population_name});
-	     $male_parent->set_members(\@male_parents);
+	     $male_parent = undef;
+	#      my $population_name = "";
+	#      my @male_parents = split /\s*\,\s*/, $male;
+
+	#      if ($male) {
+	# 	 $population_name = join "_", @male_parents;
+	#      }
+	#      else { 
+	# 	 $population_name = $female."_open";
+	#      }
+	#      $male_parent = Bio::GeneticRelationships::Population->new( { name => $population_name});
+	#      $male_parent->set_members(\@male_parents);
 	     
 
-	     my $population_cvterm_id = $c->model("Cvterm")->get_cvterm_row($schema, "population", "stock_type");
-	     my $male_parent_cvterm_id = $c->model("Cvterm")->get_cvterm_row($schema, "male_parent", "stock_relationship");
+	#      my $population_cvterm_id = $c->model("Cvterm")->get_cvterm_row($schema, "population", "stock_type");
+	#      my $male_parent_cvterm_id = $c->model("Cvterm")->get_cvterm_row($schema, "male_parent", "stock_relationship");
 
-	     # create population stock entry
-	     # 
-	     my $pop_rs = $schema->resultset("Stock::Stock")->create( 
-		 { 
-		     name => $population_name,
-		     uniquename => $population_name,
-		     type_id => $population_cvterm_id->cvterm_id(),
-		 });
+	#      # create population stock entry
+	#      # 
+	#      my $pop_rs = $schema->resultset("Stock::Stock")->create( 
+	# 	 { 
+	# 	     name => $population_name,
+	# 	     uniquename => $population_name,
+	# 	     type_id => $population_cvterm_id->cvterm_id(),
+	# 	 });
 
-	      # generate population connections to the male parents
-	     foreach my $p (@male_parents) { 
-		 my $p_row = $schema->resultset("Stock::Stock")->find({ uniquename => $p });
-		 my $connection = $schema->resultset("Stock::StockRelationship")->create( 
-		     {
-			 subject_id => $pop_rs->stock_id,
-			 object_id => $p_row->stock_id,
-			 type_id => $male_parent_cvterm_id->cvterm_id(),
-		     });
-	     }
-	     $male = $population_name;
+	#       # generate population connections to the male parents
+	#      foreach my $p (@male_parents) { 
+	# 	 my $p_row = $schema->resultset("Stock::Stock")->find({ uniquename => $p });
+	# 	 my $connection = $schema->resultset("Stock::StockRelationship")->create( 
+	# 	     {
+	# 		 subject_id => $pop_rs->stock_id,
+	# 		 object_id => $p_row->stock_id,
+	# 		 type_id => $male_parent_cvterm_id->cvterm_id(),
+	# 	     });
+	#      }
+	#      $male = $population_name;
 	}
 	
-	my $p = Bio::GeneticRelationships::Pedigree->new( 
-	    { 
-		cross_type => $cross_type,
-		female_parent => $female_parent,
-		male_parent => $male_parent,
-		name => $progeny,
-	    });
+	my $opts = { 
+	    cross_type => $cross_type,
+	    female_parent => $female_parent,
+	    name => $progeny
+	};
+
+	if ($male_parent) { 
+	    $opts->{male_parent} = $male_parent;
+	}
+
+	my $p = Bio::GeneticRelationships::Pedigree->new($opts);
 	push @pedigrees, $p;
     }
-    
-    my $add = CXGN::Pedigree::AddPedigrees->new( { schema=>$c->dbic_schema("Bio::Chado::Schema"), pedigrees=>\@pedigrees });
+
+    my $add = CXGN::Pedigree::AddPedigrees->new( { schema=>$schema, pedigrees=>\@pedigrees, validate_accessions=>0 });
     eval { 
-	my $ok = $add->validate_pedigrees();
-	$add->add_pedigrees();
+        my $ok = $add->add_pedigrees();
+        if (!$ok){
+            die "The pedigrees were not stored";
+        }
     };
     if ($@) { 
-	$c->stash->{rest} = { error => "An error occurred while storing the provided pedigree. Please check your file and try again ($@)\n" };
+        $c->stash->{rest} = { error => "An error occurred while storing the provided pedigree. Please check your file and try again ($@)" };
+        $c->detach();
     }
     
     $c->stash->{rest} = { success => 1 };
 }
-
-sub check_stocks { 
-    my $self = shift;
-    my $c = shift;
-    my $stock_names = shift;
-    
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    
-    my %errors;
-    my $error_alert = "";
-    
-    foreach my $stock_name (@$stock_names) {	
-	my $stock;
-	my $number_of_stocks_found;
-	my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
-	$stock_lookup->set_stock_name($stock_name);
-	$stock = $stock_lookup->get_stock();
-	$number_of_stocks_found = $stock_lookup->get_matching_stock_count();
-	if ($number_of_stocks_found > 1) {
-	    $errors{$stock_name} = "Multiple stocks found matching $stock_name\n";
-	}
-	if (!$number_of_stocks_found) {
-	    $errors{$stock_name} = "No stocks found matching $stock_name\n";
-	}
-    }
-    
-    return %errors;
-}
-
 
 
 1; 

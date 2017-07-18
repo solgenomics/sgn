@@ -224,12 +224,12 @@ function gebvsComparison () {
 	var linePlot  = solGS.linePlot(allData);
 
 	var trainingMidlineData  = [
-	    [trMean, d3.min(yValuesT)], 
+	    [trMean, 0], 
 	    [trMean, d3.max(yValuesT)]
 	];
 	
 	var selectionMidlineData = [
-	    [slMean, d3.min(yValuesS)], 
+	    [slMean, 0], 
 	    [slMean, d3.max(yValuesS)]
 	];
 
@@ -262,9 +262,6 @@ function gebvsComparison () {
             .on("mouseout", function() {
                 d3.selectAll("text#tr_mean").remove();
             });
-
-	console.log('std tr ' + xMT[0] + '  ' + xMT[1])
-	console.log('std sl ' + xMS[0] + '  ' + xMS[1])
 
 	linePlot.graph.append("path")
 	    .attr("d", midLine(selectionMidlineData))

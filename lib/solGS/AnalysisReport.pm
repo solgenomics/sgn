@@ -26,7 +26,6 @@ sub run {
  my $self = shift;   
 
  my $output_details = retrieve($self->output_details_file);
-
  $self->check_analysis_status($output_details);
 
 }
@@ -34,9 +33,8 @@ sub run {
 
 sub check_analysis_status {   
     my ($self, $output_details) = @_;
-   
+ 
     $output_details = $self->check_success($output_details);
-    
     $self->log_analysis_status($output_details);
     $self->report_status($output_details); 
     
@@ -78,7 +76,6 @@ sub check_success {
 	{
 	    $output_details = $self->check_selection_prediction($output_details);
 	}
-
     }
     
     return $output_details;  
@@ -193,7 +190,6 @@ sub check_multi_pops_data_download {
 	    {
 		$pheno_file = $output_details->{$k}->{phenotype_file}; 
 		$geno_file  = $output_details->{$k}->{genotype_file}; 
-		print STDERR "\n $k - pheno_file: $pheno_file -- geno_file: $geno_file\n";
 	    } 
     
 	    if ($geno_file && $pheno_file) 
@@ -228,7 +224,6 @@ sub check_multi_pops_data_download {
 		    {
 			if ($job_tempdir) 
 			{
-			    print STDERR "\n job_tempdir: $job_tempdir\n";
 			    $died_file = $self->get_file($job_tempdir, 'died');
 			    if ($died_file) 
 			    {
@@ -260,6 +255,70 @@ sub check_multi_pops_data_download {
 
 
 sub check_selection_prediction {
+    my ($self, $output_details) = @_;
+
+    my $job_tempdir = $output_details->{r_job_tempdir};
+    
+    foreach my $k (keys %{$output_details})
+    {
+	if ($k =~ /trait_id/)
+	{
+	    my $gebv_file;
+	    if (ref $output_details->{$k} eq 'HASH') 
+	    { 
+		if ($output_details->{$k}->{trait_id})
+		{
+		    my $trait = $output_details->{$k}->{trait_id};
+		    $gebv_file = $output_details->{$k}->{gebv_file};
+		}
+
+		if ($gebv_file) 
+		{
+		    my $gebv_size;
+		    my $died_file;
+		    
+		    while (1) 
+		    {
+			sleep 60;
+			$gebv_size = -s $gebv_file;
+			if ($gebv_size) 
+			{
+			    $output_details->{$k}->{success} = 1;
+			    $output_details->{status} = 'Done';
+			    last;		
+			}
+			else
+			{
+			    if ($job_tempdir) 
+			    {
+				$died_file = $self->get_file($job_tempdir, 'died');
+				if ($died_file) 
+				{
+				    $output_details->{$k}->{success} = 0;
+				    $output_details->{status} = 'Failed';
+				    last;
+				}
+			    }
+			}	    
+		    }	   	    
+		}
+	    }
+	    else 
+	    {  
+		if (ref $output_details->{$k} eq 'HASH')	
+		{   	    
+		    $output_details->{$k}->{success} = 0;
+		    $output_details->{status} = 'Failed';
+		}	   
+	    }
+	}  
+    }
+
+    return $output_details;
+}
+
+
+sub check_trait_modeling {
     my ($self, $output_details) = @_;
 
     my $job_tempdir = $output_details->{r_job_tempdir};
@@ -315,73 +374,8 @@ sub check_selection_prediction {
 		    $output_details->{$k}->{success} = 0;
 		    $output_details->{status} = 'Failed';
 		}	   
-	    }
-	}  
-    }
-
-    return $output_details;
-}
-
-
-
-sub check_trait_modeling {
-    my ($self, $output_details) = @_;
-
-    my $job_tempdir = $output_details->{r_job_tempdir};
-    
-    foreach my $k (keys %{$output_details})
-    {
-	if ($k =~ /trait_id/)
-{
-	my $gebv_file;
-	if (ref $output_details->{$k} eq 'HASH') 
-	{ 
-	     if ($output_details->{$k}->{trait_id})
-	    {
-		$gebv_file = $output_details->{$k}->{gebv_file}; 
-	    }
-
-	     if ($gebv_file) 
-	     {
-		 my $gebv_size;
-		 my $died_file;
-	
-		 while (1) 
-		 {
-		     sleep 60;
-		     $gebv_size = -s $gebv_file;
-
-		     if ($gebv_size) 
-		     {
-			 $output_details->{$k}->{success} = 1;
-			 $output_details->{status} = 'Done';
-			 last;		
-		     }
-		     else
-		     {
-			 if ($job_tempdir) 
-			 {
-			     $died_file = $self->get_file($job_tempdir, 'died');
-			     if ($died_file) 
-			     {
-				 $output_details->{$k}->{success} = 0;
-				 $output_details->{status} = 'Failed';
-				 last;
-			     }
-			 }
-		     }	    
-		 }	   	    
-	     }
-	}
-	else 
-	{  
-	    if (ref $output_details->{$k} eq 'HASH')	
-	    {   	    
-		$output_details->{$k}->{success} = 0;
-		$output_details->{status} = 'Failed';
-	    }	   
+	    } 
 	} 
-} 
     }
 
     return $output_details;
@@ -406,27 +400,45 @@ sub check_population_download {
 		{ 
 		    $pheno_file = $output_details->{$k}->{phenotype_file}; 
 		    $geno_file  = $output_details->{$k}->{genotype_file}; 
+		   
+		    if (!$pheno_file) 
+		    {
+			$output_details->{$k}->{pheno_message} = 'Could not find the phenotype file for this dataset.';
+		    }
+		    
+		    if (!$geno_file) 
+		    {
+			$output_details->{$k}->{geno_message} = 'Could not find the genotype file for this dataset.';
+		    }
 
 		    if ($pheno_file && $geno_file) 
 		    {
 			my $pheno_size;
 			my $geno_size;
 			my $died_file;
-			
+		
 			while (1) 
 			{
 			    sleep 60;
 			    $pheno_size = -s $pheno_file;
 			    $geno_size  = -s $geno_file;
 
-			    unless (!$pheno_size) 
+			    if ($pheno_size) 
 			    {
-				$output_details->{$k}->{pheno_success} = 1;	
+				$output_details->{$k}->{pheno_success} = 1;
+			    } 
+			    else 
+			    {
+				$output_details->{$k}->{pheno_message} = 'There is no phenotype data for this dataset.';
 			    }
 
-			    unless (!$geno_size) 
+			    if ($geno_size) 
 			    {
 				$output_details->{$k}->{geno_success} = 1;		
+			    }
+			    else 
+			    {
+				$output_details->{$k}->{geno_message} = 'There is no genotype data for this dataset.';
 			    }
 
 			    if ($pheno_size && $geno_size) 
@@ -446,10 +458,11 @@ sub check_population_download {
 					$output_details->{$k}->{geno_success}    = 0;
 					$output_details->{$k}->{success} = 0;
 					$output_details->{status} = 'Failed';
+					
 					last;
 				    }
 				}
-			    }	    
+			    }
 			}	   	    
 		    }
 		    else 
@@ -572,40 +585,41 @@ sub multi_modeling_message {
 
     foreach my $k (keys %{$output_details}) 
     {
-	if ($k =~ /trait_id/)
-	{
-	    my $all_success;
+    	if ($k =~ /trait_id/)
+    	{
+    	    my $all_success;
 	    
-	    if (ref $output_details->{$k} eq 'HASH')
-	    {
-		if ($output_details->{$k}->{trait_id})
-		{	  
-		    if ($output_details->{$k}->{success})
-		    {
-			$cnt++;
-			$all_success = 1;
-			my $trait_name = uc($output_details->{$k}->{trait_name});
-			my $trait_page = $output_details->{$k}->{trait_page};
-			$message .= "The analysis for $trait_name is done."
-			    ." You can view the model output here:"
-			    ."\n\n$trait_page.\n\n";
-		    }
-		    else 
-		    {  
-			$all_success = 0; 
-			my $trait_name = uc($output_details->{$k}->{trait_name});
-			$message .= "The analysis for $trait_name failed.\n\n";	 
-		    }		
-		}
-	    }
-	}
+    	    if (ref $output_details->{$k} eq 'HASH')
+    	    {
+    		if ($output_details->{$k}->{trait_id})
+    		{	  
+    		    if ($output_details->{$k}->{success})
+    		    {
+    			$cnt++;
+    			$all_success = 1;
+    			my $trait_name = uc($output_details->{$k}->{trait_name});
+    			my $trait_page = $output_details->{$k}->{trait_page};
+    			$message .= "The analysis for $trait_name is done."
+    			    ." You can view the model output here:"
+    			    ."\n\n$trait_page\n\n";
+    		    }
+    		    else 
+    		    {  
+    			$all_success = 0; 
+    			my $trait_name = uc($output_details->{$k}->{trait_name});
+    			$message .= "The analysis for $trait_name failed.\n\n";	 
+    		    }		
+    		}
+    	    }
+    	}
     }
     if ($cnt > 1 ) 
     {
-	$message .= "You can also view the summary of all the analyses in the page below."
-	    ."\nAdditionally, you may find the analytical features in the page useful.\n"
-	    . $output_details->{analysis_profile}->{analysis_page}
-	    . "\n\n";
+	my $analysis_page = $output_details->{analysis_profile}->{analysis_page};
+	
+    	$message .= "You can also view the summary of all the analyses in the page below."
+    	    ."\nAdditionally, you may find the analytical features in the page useful.\n"
+    	    . $analysis_page ."\n\n";
     }
 
     return  $message;
@@ -634,7 +648,7 @@ sub single_modeling_message {
 		    {		
 			$message = "The analysis for $trait_name is done."
 			    ."\nYou can view the model output here:"
-			    ."\n\n$trait_page.\n\n";
+			    ."\n\n$trait_page\n\n";
 		    }
 		    else 
 		    {  
@@ -655,36 +669,50 @@ sub selection_prediction_message {
     my ($self, $output_details) = @_;
     
     my $message;
+    my $cnt = 0;
     foreach my $k (keys %{$output_details}) 
     {
-	if ($k =~ /trait_id/)
-	{
-	    my $gebv_file;
-	    if (ref $output_details->{$k} eq 'HASH')
-	    {
-		if ($output_details->{$k}->{trait_id})
-		{
-		    my $trait_name          = uc($output_details->{$k}->{trait_name});
-		    my $training_pop_page   = $output_details->{$k}->{training_pop_page};
-		    my $model_page          = $output_details->{$k}->{model_page};
-		    my $prediction_pop_name = $output_details->{$k}->{prediction_pop_name};
-		    
-		    if ($output_details->{$k}->{success})		
-		    {		
-			$message = "The prediction of selection population $prediction_pop_name is done."
-			    . "\nYou can view the prediction output by clicking the trait name "
-			    . "\nat the bottom of the model page:"
-			    . "\n\n$model_page.\n\n";
-		    }
-		    else 
-		    {  
-			$message = "The analysis for $trait_name failed."
-			    ."\n\nWe are troubleshooting the cause. " 
-			    . "We will contact you when we find out more.";	 
-		    }		
-		}
-	    }
-	}
+    	if ($k =~ /trait_id/)
+    	{
+    	    my $gebv_file;
+    	    if (ref $output_details->{$k} eq 'HASH')
+    	    {
+    		if ($output_details->{$k}->{trait_id})
+    		{
+    		    my $trait_name          = uc($output_details->{$k}->{trait_name});
+    		    my $training_pop_page   = $output_details->{$k}->{training_pop_page};
+    		    my $prediction_pop_page = $output_details->{$k}->{prediction_pop_page};
+    		    my $prediction_pop_name = $output_details->{$k}->{prediction_pop_name};
+		    $prediction_pop_name =~ s/^\s+|\s+$//g;
+
+    		    if ($output_details->{$k}->{success})		
+    		    {	
+			
+    			$cnt++;	
+    			if($cnt == 1) 
+    			{
+    			    $message .= "The prediction of selection population $prediction_pop_name is done."
+    				. "\nYou can view the prediction output here:\n\n"
+    			}
+		
+    			$message .= "$prediction_pop_page\n\n";
+    		    }
+    		    else 
+    		    {  
+    			$message .= "The analysis for $trait_name failed."
+    			    ."\n\nWe are troubleshooting the cause. " 
+    			    . "We will contact you when we find out more.";	 
+    		    }
+
+    		    if ($cnt > 1) 
+    		    {
+    			$message .= "You can also view the summary of all the analyses in the page below."
+    			    ."\nAdditionally, you may find the analytical features in the page useful.\n"
+    			    . $output_details->{referer} . "\n\n";	
+    		    }
+    		}
+    	    }
+    	}
     }
 
     return  $message;
@@ -714,8 +742,13 @@ sub population_download_message {
 			    ."\n$pop_page.\n\n";
 		    }
 		    else 
-		    {  
-			$message = "Downloading phenotype and genotype data for $pop_name failed."
+		    {   
+			no warnings 'uninitialized';
+			my $msg_geno  = $output_details->{$k}->{geno_message};
+			my $msg_pheno = $output_details->{$k}->{pheno_message};
+
+			$message = "Downloading phenotype and genotype data for $pop_name failed.\n"
+			    ."\nPossible causes are:\n$msg_geno\n$msg_pheno\n"
 			    ."\nWe are troubleshooting the cause. " 
 			    . "We will contact you when we find out more.";	 
 		    }

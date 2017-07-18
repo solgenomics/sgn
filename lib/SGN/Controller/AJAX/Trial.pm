@@ -42,7 +42,9 @@ use CXGN::BreedersToolbox::Delete;
 use CXGN::UploadFile;
 use CXGN::Trial::ParseUpload;
 use CXGN::List::Transform;
+use CXGN::List::Validate;
 use SGN::Model::Cvterm;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -58,14 +60,15 @@ has 'schema' => (
 		 lazy_build => 1,
 		);
 
-sub get_trial_layout : Path('/ajax/trial/layout') : ActionClass('REST') { }
+#DEPRECATED by lack of use. below functions handle saving an uploaded trial and generating/saving a new trial.
+#sub get_trial_layout : Path('/ajax/trial/layout') : ActionClass('REST') { }
 
-sub get_trial_layout_POST : Args(0) {
-  my ($self, $c) = @_;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  my $project;
-  print STDERR "\n\ntrial layout controller\n";
-  my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, project => $project} );
+#sub get_trial_layout_POST : Args(0) {
+#  my ($self, $c) = @_;
+#  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+#  my $project;
+#  print STDERR "\n\ntrial layout controller\n";
+#  my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, project => $project} );
 
   #my $trial_id = $c->req->parm('trial_id');
   # my $project = $schema->resultset('Project::Project')->find(
@@ -73,7 +76,7 @@ sub get_trial_layout_POST : Args(0) {
   # 							      id => $trial_id,
   # 							     }
   # 							    );
-}
+#}
 
 
 sub generate_experimental_design : Path('/ajax/trial/generate_experimental_design') : ActionClass('REST') { }
@@ -107,6 +110,11 @@ sub generate_experimental_design_POST : Args(0) {
     @control_names = @{_parse_list_from_json($c->req->param('control_list'))};
   }
 
+  my @control_names_crbd;
+  if ($c->req->param('control_list_crbd')) {
+    @control_names_crbd = @{_parse_list_from_json($c->req->param('control_list_crbd'))};
+  }
+
   my $design_type =  $c->req->param('design_type');
   my $rep_count =  $c->req->param('rep_count');
   my $block_number =  $c->req->param('block_number');
@@ -122,21 +130,38 @@ sub generate_experimental_design_POST : Args(0) {
   my $start_number =  $c->req->param('start_number');
   my $increment =  $c->req->param('increment');
   my $trial_location = $c->req->param('trial_location');
-  my $trial_name = $c->req->param('project_name');
+  my $fieldmap_col_number = $c->req->param('fieldmap_col_number');
+  my $fieldmap_row_number = $c->req->param('fieldmap_row_number');
+  my $plot_layout_format = $c->req->param('plot_layout_format');
+  #my $trial_name = $c->req->param('project_name');
+  my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
+  my $use_same_layout = $c->req->param('use_same_layout');
+  my $number_of_checks = scalar(@control_names_crbd);
   #my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
+  if ($design_type eq "RCBD" || $design_type eq "Alpha" || $design_type eq "CRD" || $design_type eq "Lattice") {
+    if (@control_names_crbd) {
+        @stock_names = (@stock_names, @control_names_crbd);
+    }
+  }
 
+my @locations;
+my $trial_locations;
+my $multi_location;
 
+try {
+   $multi_location = decode_json($trial_location);
+   foreach my $loc (@$multi_location) {
+     push @locations, $loc;
+   }
 
-   print STDERR join "\n",$design_type;
-   print STDERR "\n";
+}
+catch {
+  push @locations, $trial_location;
+};
 
-   print STDERR join "\n",$block_number;
-   print STDERR "\n";
+my $location_number = scalar(@locations);
 
-   print STDERR join "\n",$row_number;
-   print STDERR "\n";
-
-
+#print STDERR Dumper(@locations);
 
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
@@ -148,12 +173,20 @@ sub generate_experimental_design_POST : Args(0) {
     return;
   }
 
-  my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
-  $geolocation_lookup->set_location_name($c->req->param('trial_location'));
-  if (!$geolocation_lookup->get_geolocation()){
-    $c->stash->{rest} = { error => "Trial location not found" };
-    return;
-  }
+  my @design_array;
+  my @design_layout_view_html_array;
+
+  foreach $trial_locations (@locations) {
+
+    my $trial_name = $c->req->param('project_name');
+    my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
+    #$geolocation_lookup->set_location_name($c->req->param('trial_location'));
+    $geolocation_lookup->set_location_name($trial_locations);
+    #print STDERR Dumper(\$geolocation_lookup);
+    if (!$geolocation_lookup->get_geolocation()){
+      $c->stash->{rest} = { error => "Trial location not found" };
+      return;
+    }
 
   # my $trial_create = CXGN::Trial::TrialCreate->new(chado_schema => $schema);
   # $trial_create->set_trial_year($c->req->param('year'));
@@ -163,7 +196,21 @@ sub generate_experimental_design_POST : Args(0) {
   #   return;
   # }
 
+  if (scalar(@locations) > 1) {
+    $trial_name = $trial_name."_".$trial_locations;
+  }
+
   $trial_design->set_trial_name($trial_name);
+
+  my $design_created = 0;
+      if ($use_same_layout) {
+        $design_created = 1;
+      }
+
+    if ($design_created) {
+      $trial_design->set_randomization_seed($design_created);
+
+    }
 
   if (@stock_names) {
     $trial_design->set_stock_list(\@stock_names);
@@ -175,6 +222,10 @@ sub generate_experimental_design_POST : Args(0) {
   if (@control_names) {
     $trial_design->set_control_list(\@control_names);
     $design_info{'number_of_controls'} = scalar(@control_names);
+  }
+  if (@control_names_crbd) {
+    $trial_design->set_control_list_crbd(\@control_names_crbd);
+    $design_info{'number_of_controls_crbd'} = scalar(@control_names_crbd);
   }
   if ($start_number) {
     $trial_design->set_plot_start_number($start_number);
@@ -218,6 +269,16 @@ sub generate_experimental_design_POST : Args(0) {
   if ($max_block_size) {
     $trial_design->set_maximum_block_size($max_block_size);
   }
+  if ($greenhouse_num_plants) {
+      my $json = JSON->new();
+    $trial_design->set_greenhouse_num_plants($json->decode($greenhouse_num_plants));
+  }
+  if ($location_number) {
+    $design_info{'number_of_locations'} = $location_number;
+  }
+  if($number_of_checks){
+    $design_info{'number_of_checks'} = $number_of_checks;
+  }
   if ($design_type) {
     $trial_design->set_design_type($design_type);
     $design_info{'design_type'} = $design_type;
@@ -229,7 +290,15 @@ sub generate_experimental_design_POST : Args(0) {
     $c->stash->{rest} = {error => "Design type not supported." };
     return;
   }
-
+  if ($fieldmap_col_number) {
+    $trial_design->set_fieldmap_col_number($fieldmap_col_number);
+  }
+  if ($fieldmap_row_number) {
+    $trial_design->set_fieldmap_row_number($fieldmap_row_number);
+  }
+  if ($plot_layout_format) {
+    $trial_design->set_plot_layout_format($plot_layout_format);
+  }
 
   try {
     $trial_design->calculate_design();
@@ -240,20 +309,36 @@ sub generate_experimental_design_POST : Args(0) {
   if ($error) {return;}
   if ($trial_design->get_design()) {
     %design = %{$trial_design->get_design()};
+    #print STDERR "DESIGN: ". Dumper(%design);
   } else {
     $c->stash->{rest} = {error => "Could not generate design" };
     return;
   }
-  $design_layout_view_html = design_layout_view(\%design, \%design_info);
+  my $design_level;
+  if ($design_type eq 'greenhouse'){
+      $design_level = 'plants';
+  } else {
+      $design_level = 'plots';
+  }
+  $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_level);
   $design_info_view_html = design_info_view(\%design, \%design_info);
   my $design_json = encode_json(\%design);
-  $c->stash->{rest} = {
-		       success => "1",
-		       design_layout_view_html => $design_layout_view_html,
-		       design_info_view_html => $design_info_view_html,
-		       design_json => $design_json,
-		      };
+  push @design_array,  $design_json;
+  push @design_layout_view_html_array, $design_layout_view_html;
 }
+
+    $c->stash->{rest} = {
+        success => "1",
+        design_layout_view_html => encode_json(\@design_layout_view_html_array),
+        #design_layout_view_html => $design_layout_view_html,
+        design_info_view_html => $design_info_view_html,
+        #design_json => $design_json,
+        design_json =>  encode_json(\@design_array),
+    };
+
+}
+
+
 
 sub save_experimental_design : Path('/ajax/trial/save_experimental_design') : ActionClass('REST') { }
 
@@ -279,27 +364,77 @@ sub save_experimental_design_POST : Args(0) {
   my $user_id = $c->user()->get_object()->get_sp_person_id();
 
   my $user_name = $c->user()->get_object()->get_username();
-
-  print STDERR "\nUserName: $user_name\n\n";
   my $error;
 
   my $design = _parse_design_from_json($c->req->param('design_json'));
+  #print STDERR "\nDesign: " . Dumper $design;
 
-  #print STDERR Dumper $design;
+  my @locations;
+  my $trial_location;
+  my $multi_location;
+  my $trial_locations = $c->req->param('trial_location');
+  my $trial_name = $c->req->param('project_name');
+  my $trial_type = $c->req->param('trial_type');
+  my $breeding_program = $c->req->param('breeding_program_name');
+  my $schema = $c->dbic_schema("Bio::Chado::Schema");
+  my $breeding_program_id = $schema->resultset("Project::Project")->find({name=>$breeding_program})->project_id();
+  my $folder;
+  my $new_trial_id;
 
-  my $trial_create = CXGN::Trial::TrialCreate
-    ->new({
-	   chado_schema => $chado_schema,
-	   phenome_schema => $phenome_schema,
-	   dbh => $dbh,
-	   user_name => $user_name,
-	   design => $design,
-	   program => $c->req->param('breeding_program_name'),
-	   trial_year => $c->req->param('year'),
-	   trial_description => $c->req->param('project_description'),
-	   trial_location => $c->req->param('trial_location'),
-	   trial_name => $c->req->param('project_name'),
-	   design_type => $c->req->param('design_type'),
+  try {
+     $multi_location = decode_json($trial_locations);
+     foreach my $loc (@$multi_location) {
+       push @locations, $loc;
+     }
+
+  }
+  catch {
+    push @locations, $trial_locations;
+  };
+  my $folder_id;
+  my $parent_folder_id = 0;
+  if (scalar(@locations) > 1) {
+
+      my $existing = $schema->resultset("Project::Project")->find( { name => $trial_name });
+
+      if ($existing) {
+  	     $c->stash->{rest} = { error => "An folder or trial with that name already exists in the database. Please select another name." };
+  	      return;
+      }
+
+        $folder = CXGN::Trial::Folder->create({
+            bcs_schema => $schema,
+            parent_folder_id => $parent_folder_id,
+            name => $trial_name,
+            breeding_program_id => $breeding_program_id,
+            folder_for_trials => 1
+        });
+        $folder_id = $folder->folder_id();
+  }
+
+  my $design_index = 0;
+
+  foreach $trial_location (@locations) {
+    my $trial_name = $c->req->param('project_name');
+    if (scalar(@locations) > 1) {
+      $trial_name = $trial_name."_".$trial_location;
+    }
+
+    my $trial_location_design = decode_json($design->[$design_index]);
+    #print STDERR Dumper $trial_location_design;
+
+      my $trial_create = CXGN::Trial::TrialCreate->new({
+        chado_schema => $chado_schema,
+        dbh => $dbh,
+        user_name => $user_name, #not implemented
+        design => $trial_location_design,
+        program => $breeding_program,
+        trial_year => $c->req->param('year'),
+        trial_description => $c->req->param('project_description'),
+        trial_location => $trial_location,
+        trial_name => $trial_name,
+        design_type => $c->req->param('design_type'),
+        trial_type => $trial_type
 	  });
 
   #$trial_create->set_user($c->user()->id());
@@ -313,76 +448,75 @@ sub save_experimental_design_POST : Args(0) {
   # if ($c->req->param('control_list')) {
   #   $trial_create->set_control_list(_parse_list_from_json($c->req->param('control_list')));
   # }
-  if ($trial_create->trial_name_already_exists()) {
-    $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
-    return;
-  }
+    if ($trial_create->trial_name_already_exists()) {
+      $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
+      return;
+    }
 
-  try {
-    $trial_create->save_trial();
-  } catch {
-    $c->stash->{rest} = {error => "Error saving trial in the database $_"};
-    print STDERR "ERROR SAVING TRIAL!\n";
-    $error = 1;
-  };
-  if ($error) {return;}
-  print STDERR "Trial saved successfully\n";
-  $c->stash->{rest} = {success => "1",};
-  return;
+    my %message;
+    try {
+        %message = $trial_create->save_trial();
+    } catch {
+        $error = $_;
+    };
+    if ($message{'error'}){
+        $error = $message{'error'};
+    }
+    if ($error) {
+        print STDERR "Error trialcreate save: $error\n";
+        $c->stash->{rest} = {error => "Error saving trial in the database: $error"};
+        $c->detach;
+    }
+
+    $design_index++;
+
+    if ($folder_id) {
+      $new_trial_id = $schema->resultset("Project::Project")->find({name=>$trial_name})->project_id();
+
+      my $folder1 = CXGN::Trial::Folder->new(
+	 		{
+	 			bcs_schema => $chado_schema,
+	 			folder_id => $new_trial_id,
+			});
+      $folder1->associate_parent($folder_id);
+    }
+  }
+    if ($error) {return;}
+    print STDERR "Trial saved successfully\n";
+    $c->stash->{rest} = {success => "1",};
+    return;
+
 }
 
 sub verify_stock_list : Path('/ajax/trial/verify_stock_list') : ActionClass('REST') { }
 
 sub verify_stock_list_POST : Args(0) {
-  my ($self, $c) = @_;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  my @stock_names;
-  my $error;
-  my %errors;
-  my $error_alert;
-  if ($c->req->param('stock_list')) {
-    @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
-    #my $data = $self->transform_stock_list($c, \@raw_stock_names);
-    #if (exists($data->{missing}) && ref($data->{missing}) && @{$data->{missing}} >0) {
-#	$c->stash->{rest} = { error => "Some stocks were not found. Please edit the list and try again." };
-#	return;
- #   }
-  #  if ($data->{transform} && @{$data->{transform}}>0) {
-#	@stock_names = @{$data->{transform}};
- #   }
-  }
-
-  if (!@stock_names) {
-    $c->stash->{rest} = {error => "No stock names supplied"};
-    return;
-  }
-
-
-  foreach my $stock_name (@stock_names) {
-
-    my $stock;
-    my $number_of_stocks_found;
-    my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
-    $stock_lookup->set_stock_name($stock_name);
-    $stock = $stock_lookup->get_stock();
-    $number_of_stocks_found = $stock_lookup->get_matching_stock_count();
-    if ($number_of_stocks_found > 1) {
-      $errors{$stock_name} = "Multiple stocks found matching $stock_name\n";
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my @stock_names;
+    my $error;
+    my %errors;
+    my $error_alert;
+    if ($c->req->param('stock_list')) {
+        @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
     }
-    if (!$number_of_stocks_found) {
-      $errors{$stock_name} = "No stocks found matching $stock_name\n";
+
+    if (!@stock_names) {
+        $c->stash->{rest} = {error => "No stock names supplied"};
+        $c->detach;
     }
-  }
-  if (%errors) {
-    foreach my $key (keys %errors) {
-      $error_alert .= "Stock $key: ".$errors{$key}."\n";
+
+    my $lv = CXGN::List::Validate->new();
+    my @accessions_missing = @{$lv->validate($schema,'accessions',\@stock_names)->{'missing'}};
+
+    if (scalar(@accessions_missing) > 0){
+        my $error = 'The following accessions are not valid in the database, so you must add them first: '.join ',', @accessions_missing;
+        $c->stash->{rest} = {error => $error};
+    } else {
+        $c->stash->{rest} = {
+            success => "1",
+        };
     }
-    $c->stash->{rest} = {error => $error_alert};
-  } else {
-    $c->stash->{rest} = {
-		       success => "1",
-		      };
-  }
 }
 
 sub _parse_list_from_json {
@@ -405,8 +539,8 @@ sub _parse_design_from_json {
   if ($design_json) {
     my $decoded_json = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
     #my $decoded_json = decode_json($design_json);
-    my %design = %{$decoded_json};
-    return \%design;
+    #my %design = %{$decoded_json};
+    return $decoded_json;
   }
   else {
     return;
@@ -420,7 +554,7 @@ sub upload_trial_file : Path('/ajax/trial/upload_trial_file') : ActionClass('RES
 sub upload_trial_file_POST : Args(0) {
   my ($self, $c) = @_;
 
-  print STDERR "Check 1: ".localtime();
+  print STDERR "Check 1: ".localtime()."\n";
 
   my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
@@ -430,10 +564,10 @@ sub upload_trial_file_POST : Args(0) {
   my $trial_location = $c->req->param('trial_upload_location');
   my $trial_name = $c->req->param('trial_upload_name');
   my $trial_year = $c->req->param('trial_upload_year');
+  my $trial_type = $c->req->param('trial_upload_trial_type');
   my $trial_description = $c->req->param('trial_upload_description');
   my $trial_design_method = $c->req->param('trial_upload_design_method');
   my $upload = $c->req->upload('trial_uploaded_file');
-  my $uploader = CXGN::UploadFile->new();
   my $parser;
   my $parsed_data;
   my $upload_original_name = $upload->filename();
@@ -452,7 +586,7 @@ sub upload_trial_file_POST : Args(0) {
   my $user_name;
   my $error;
 
-  print STDERR "Check 2: ".localtime();
+  print STDERR "Check 2: ".localtime()."\n";
 
   if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
       print STDERR "File name must not have spaces or slashes.\n";
@@ -461,12 +595,12 @@ sub upload_trial_file_POST : Args(0) {
   }
 
   if (!$c->user()) {
-    print STDERR "User not logged in... not adding a crosses.\n";
-    $c->stash->{rest} = {error => "You need to be logged in to add a cross." };
+    print STDERR "User not logged in... not uploading a trial.\n";
+    $c->stash->{rest} = {error => "You need to be logged in to upload a trial." };
     return;
   }
   if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a trial." };
     return;
   }
 
@@ -475,7 +609,16 @@ sub upload_trial_file_POST : Args(0) {
   $user_name = $c->user()->get_object()->get_username();
 
   ## Store uploaded temporary file in archive
-  $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+  my $uploader = CXGN::UploadFile->new({
+      tempfile => $upload_tempfile,
+      subdirectory => $subdirectory,
+      archive_path => $c->config->{archive_path},
+      archive_filename => $upload_original_name,
+      timestamp => $timestamp,
+      user_id => $user_id,
+      user_role => $c->user()->roles
+  });
+  $archived_filename_with_path = $uploader->archive();
   $md5 = $uploader->get_md5($archived_filename_with_path);
   if (!$archived_filename_with_path) {
       $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
@@ -483,7 +626,7 @@ sub upload_trial_file_POST : Args(0) {
   }
   unlink $upload_tempfile;
 
-  print STDERR "Check 3: ".localtime();
+  print STDERR "Check 3: ".localtime()."\n";
 
   $upload_metadata{'archived_file'} = $archived_filename_with_path;
   $upload_metadata{'archived_file_type'}="trial upload file";
@@ -494,6 +637,8 @@ sub upload_trial_file_POST : Args(0) {
   $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
   $parser->load_plugin('TrialExcelFormat');
   $parsed_data = $parser->parse();
+
+
 
   if (!$parsed_data) {
     my $return_error = '';
@@ -516,18 +661,18 @@ sub upload_trial_file_POST : Args(0) {
     return;
   }
 
-  print STDERR "Check 4: ".localtime();
+  print STDERR "Check 4: ".localtime()."\n";
 
   #print STDERR Dumper $parsed_data;
 
   my $trial_create = CXGN::Trial::TrialCreate
     ->new({
 	   chado_schema => $chado_schema,
-	   phenome_schema => $phenome_schema,
 	   dbh => $dbh,
 	   trial_year => $trial_year,
 	   trial_description => $trial_description,
 	   trial_location => $trial_location,
+	   trial_type => $trial_type,
 	   trial_name => $trial_name,
 	   user_name => $user_name, #not implemented
 	   design_type => $trial_design_method,
@@ -543,7 +688,7 @@ sub upload_trial_file_POST : Args(0) {
       $error = 1;
   };
 
-  print STDERR "Check 5: ".localtime();
+  print STDERR "Check 5: ".localtime()."\n";
 
   if ($error) {return;}
   $c->stash->{rest} = {success => "1",};
@@ -556,321 +701,327 @@ sub upload_trial_file_POST : Args(0) {
 
 ###################################################################################
 ##remove this soon.  using above instead
-sub upload_trial_layout :  Path('/trial/upload_trial_layout') : ActionClass('REST') { }
+##DEPRECATED: use upload_trial_file above
+#sub upload_trial_layout :  Path('/trial/upload_trial_layout') : ActionClass('REST') { }
 
-sub upload_trial_layout_POST : Args(0) {
-  my ($self, $c) = @_;
-  my @contents;
-  my $error = 0;
-  my $upload = $c->req->upload('trial_upload_file');
-  my $header_line;
-  my @header_contents;
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  if (!$c->user()) {  #user must be logged in
-    $c->stash->{rest} = {error => "You need to be logged in to upload a file." };
-    return;
-  }
-  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {  #user must have privileges to add a trial
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a file." };
-    return;
-  }
-  if (!$upload) { #upload file required
-    $c->stash->{rest} = {error => "File upload failed: no file name received"};
-    return;
-  }
-  try { #get file contents
-    @contents = split /\n/, $upload->slurp;
-  } catch {
-    $c->stash->{rest} = {error => "File upload failed: $_"};
-    $error = 1;
-  };
-  if ($error) {return;}
-  if (@contents < 2) { #upload file must contain at least one line of data plus a header
-    $c->stash->{rest} = {error => "File upload failed: contains less than two lines"};
-    return;
-  }
-  $header_line = shift(@contents);
-  @header_contents = split /\t/, $header_line;
-  try { #verify header contents
-  _verify_trial_layout_header(\@header_contents);
-  } catch {
-    $c->stash->{rest} = {error => "File upload failed: $_"};
-    $error = 1;
-  };
-  if ($error) {return;}
+#sub upload_trial_layout_POST : Args(0) {
+#  my ($self, $c) = @_;
+#  my @contents;
+#  my $error = 0;
+#  my $upload = $c->req->upload('trial_upload_file');
+#  my $header_line;
+#  my @header_contents;
+#  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+#  if (!$c->user()) {  #user must be logged in
+#    $c->stash->{rest} = {error => "You need to be logged in to upload a file." };
+#    return;
+#  }
+#  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {  #user must have privileges to add a trial
+#    $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a file." };
+#    return;
+#  }
+#  if (!$upload) { #upload file required
+#    $c->stash->{rest} = {error => "File upload failed: no file name received"};
+#    return;
+#  }
+#  try { #get file contents
+#    @contents = split /\n/, $upload->slurp;
+#  } catch {
+#    $c->stash->{rest} = {error => "File upload failed: $_"};
+#    $error = 1;
+#  };
+#  if ($error) {return;}
+#  if (@contents < 2) { #upload file must contain at least one line of data plus a header
+#    $c->stash->{rest} = {error => "File upload failed: contains less than two lines"};
+#    return;
+#  }
+#  $header_line = shift(@contents);
+#  @header_contents = split /\t/, $header_line;
+#  try { #verify header contents
+#  _verify_trial_layout_header(\@header_contents);
+#  } catch {
+#    $c->stash->{rest} = {error => "File upload failed: $_"};
+#    $error = 1;
+#  };
+#  if ($error) {return;}
 
   #verify location
-  if (! $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$c->req->param('add_project_location'),})){
-    $c->stash->{rest} = {error => "File upload failed: location not found"};
-    return;
-  }
+#  if (! $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$c->req->param('add_project_location'),})){
+#    $c->stash->{rest} = {error => "File upload failed: location not found"};
+#    return;
+#  }
 
-  try { #verify contents of file
-  _verify_trial_layout_contents($self, $c, \@contents);
-  } catch {
-    my %error_hash = %{$_};
+#  try { #verify contents of file
+#  _verify_trial_layout_contents($self, $c, \@contents);
+#  } catch {
+#    my %error_hash = %{$_};
     #my $error_string = Dumper(%error_hash);
-    my $error_string = _formatted_string_from_error_hash(\%error_hash);
-    $c->stash->{rest} = {error => "File upload failed: missing or invalid content (see details that follow..)", error_string => "$error_string"};
-    $error = 1;
-  };
-  if ($error) {return;}
+#    my $error_string = _formatted_string_from_error_hash(\%error_hash);
+#    $c->stash->{rest} = {error => "File upload failed: missing or invalid content (see details that follow..)", error_string => "$error_string"};
+#    $error = 1;
+#  };
+#  if ($error) {return;}
 
-  try { #add file contents to the database
-    _add_trial_layout_to_database($self,$c,\@contents);
-  } catch {
-    $c->stash->{rest} = {error => "File upload failed: $_"};
-  };
+#  try { #add file contents to the database
+#    _add_trial_layout_to_database($self,$c,\@contents);
+#  } catch {
+#    $c->stash->{rest} = {error => "File upload failed: $_"};
+#  };
 
-  if ($error) {
-    return;
-  } else {
-     $c->stash->{rest} = {success => "1"};
-  }
-}
+#  if ($error) {
+#    return;
+#  } else {
+#     $c->stash->{rest} = {success => "1"};
+#  }
+#}
 
-sub _add_trial_layout_to_database {
-  my $self = shift;
-  my $c = shift;
-  my $contents_ref = shift;
-  my @contents = @{$contents_ref};
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  my $year = $c->req->param('add_project_year');
-  my $location = $c->req->param('add_project_location');
-  my $project_name = $c->req->param('add_project_name');
-  my $project_description = $c->req->param('add_project_description');
-  my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type');
-  my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")
-    ->find_or_create({
-		      description => $location, #add this as an option
-		     });
-  my $organism = $schema->resultset("Organism::Organism")
-    ->find_or_create({
-		      genus   => 'Manihot',
-		      species => 'Manihot esculenta',
-		     });
+#DEPRECATED by deprecation of above function. saving layout to database handled in CXGN::Trial::TrialCreate
+#sub _add_trial_layout_to_database {
+#  my $self = shift;
+#  my $c = shift;
+#  my $contents_ref = shift;
+#  my @contents = @{$contents_ref};
+#  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+#  my $year = $c->req->param('add_project_year');
+#  my $location = $c->req->param('add_project_location');
+#  my $project_name = $c->req->param('add_project_name');
+#  my $project_description = $c->req->param('add_project_description');
+#  my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type');
+#  my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")
+#    ->find_or_create({
+#		      description => $location, #add this as an option
+#		     });
+#  my $organism = $schema->resultset("Organism::Organism")
+#    ->find_or_create({
+#		      genus   => 'Manihot',
+#		      species => 'Manihot esculenta',
+#		     });
 
   #this is wrong.  Does not seem to be used in the database !!
-  my $plot_exp_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_experiment', 'experiment_type');
+#  my $plot_exp_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_experiment', 'experiment_type');
 
 
   #create project
-  my $project = $schema->resultset('Project::Project')
-    ->find_or_create({
-		      name => $project_name,
-		      description => $location,
-		     }
-		    );
+#  my $project = $schema->resultset('Project::Project')
+#    ->find_or_create({
+#		      name => $project_name,
+#		      description => $location,
+#		     }
+#		    );
 
-  my $projectprop_year = $project->create_projectprops( { 'project year' => $year,}, {autocreate=>1});
-  my $organism_id = $organism->organism_id();
+#  my $projectprop_year = $project->create_projectprops( { 'project year' => $year,}, {autocreate=>1});
+#  my $organism_id = $organism->organism_id();
 
-  foreach my $content_line (@contents) {
-    my @line_contents = split /\t/, $content_line;
-    my $plot_name = $line_contents[0];
-    my $block_number = $line_contents[1];
-    my $rep_number = $line_contents[2];
-    my $stock_name = $line_contents[3];
-    my $stock;
-    my $stock_rs = $schema->resultset("Stock::Stock")
-      ->search({
-		-or => [
-			'lower(me.uniquename)' => { like => lc($stock_name) },
-			-and => [
-				 'lower(type.name)'       => { like => '%synonym%' },
-				 'lower(stockprops.value)' => { like => lc($stock_name) },
-				],
-		       ],
-	       },
-	       {
-		join => { 'stockprops' => 'type'} ,
-		distinct => 1
-	       }
-	      );
-    if ($stock_rs->count >1 ) {
-      die ("multiple stocks found matching $stock_name");
-    } elsif ($stock_rs->count == 1) {
-      $stock = $stock_rs->first;
-    } else {
-      die ("no stocks found matching $stock_name");
-    }
-    my $unique_plot_name =
-      $project_name."_".$stock_name."_plot_".$plot_name."_block_".$block_number."_rep_".$rep_number."_".$year."_".$location;
-    my $plot = $schema->resultset("Stock::Stock")
-      ->find_or_create({
-			organism_id => $stock->organism_id(),
-			name       => $unique_plot_name,
-			uniquename => $unique_plot_name,
-			type_id => $plot_cvterm->cvterm_id,
-		       });
-    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
-      ->create({
-                nd_geolocation_id => $geolocation->nd_geolocation_id(),
-                type_id => $plot_exp_cvterm->cvterm_id(),
-	       });
-    #link to the project
-    $experiment
-      ->find_or_create_related('nd_experiment_projects',{
-							 project_id => $project->project_id()
-							});
-    #link the experiment to the stock
-    $experiment
-      ->find_or_create_related('nd_experiment_stocks' ,{
-							stock_id => $plot->stock_id(),
-							type_id  =>  $plot_exp_cvterm->cvterm_id(),
-						       });
-    }
-}
+#  foreach my $content_line (@contents) {
+#    my @line_contents = split /\t/, $content_line;
+#    my $plot_name = $line_contents[0];
+#    my $block_number = $line_contents[1];
+#    my $rep_number = $line_contents[2];
+#    my $stock_name = $line_contents[3];
+#    my $stock;
+#    my $stock_rs = $schema->resultset("Stock::Stock")
+#      ->search({
+#		-or => [
+#			'lower(me.uniquename)' => { like => lc($stock_name) },
+#			-and => [
+#				 'lower(type.name)'       => { like => '%synonym%' },
+#				 'lower(stockprops.value)' => { like => lc($stock_name) },
+#				],
+#		       ],
+#	       },
+#	       {
+#		join => { 'stockprops' => 'type'} ,
+#		distinct => 1
+#	       }
+#	      );
+#    if ($stock_rs->count >1 ) {
+#      die ("multiple stocks found matching $stock_name");
+#    } elsif ($stock_rs->count == 1) {
+#      $stock = $stock_rs->first;
+#    } else {
+#      die ("no stocks found matching $stock_name");
+#    }
+#    my $unique_plot_name =
+#      $project_name."_".$stock_name."_plot_".$plot_name."_block_".$block_number."_rep_".$rep_number."_".$year."_".$location;
+#    my $plot = $schema->resultset("Stock::Stock")
+#      ->find_or_create({
+#			organism_id => $stock->organism_id(),
+#			name       => $unique_plot_name,
+#			uniquename => $unique_plot_name,
+#			type_id => $plot_cvterm->cvterm_id,
+#		       });
+#    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
+#      ->create({
+#                nd_geolocation_id => $geolocation->nd_geolocation_id(),
+#                type_id => $plot_exp_cvterm->cvterm_id(),
+#	       });
+#    #link to the project
+#    $experiment
+#      ->find_or_create_related('nd_experiment_projects',{
+#							 project_id => $project->project_id()
+#							});
+#    #link the experiment to the stock
+#    $experiment
+#      ->find_or_create_related('nd_experiment_stocks' ,{
+#							stock_id => $plot->stock_id(),
+#							type_id  =>  $plot_exp_cvterm->cvterm_id(),
+#						       });
+#    }
+#}
 
-sub _verify_trial_layout_header {
-  my $header_content_ref = shift;
-  my @header_contents = @{$header_content_ref};
-  if ($header_contents[0] ne 'plot_name' ||
-      $header_contents[1] ne 'block_number' ||
-      $header_contents[2] ne 'rep_number' ||
-      $header_contents[3] ne 'stock_name') {
-    die ("Wrong column names in header\n");
-  }
-  if (@header_contents != 4) {
-    die ("Wrong number of columns in header\n");
-  }
-  return;
-}
+#DEPRECATED by deprecation of above function
+#sub _verify_trial_layout_header {
+#  my $header_content_ref = shift;
+#  my @header_contents = @{$header_content_ref};
+#  if ($header_contents[0] ne 'plot_name' ||
+#      $header_contents[1] ne 'block_number' ||
+#      $header_contents[2] ne 'rep_number' ||
+#      $header_contents[3] ne 'stock_name') {
+#    die ("Wrong column names in header\n");
+#  }
+#  if (@header_contents != 4) {
+#    die ("Wrong number of columns in header\n");
+#  }
+#  return;
+#}
 
-sub _verify_trial_layout_contents {
-  my $self = shift;
-  my $c = shift;
-  my $contents_ref = shift;
-  my @contents = @{$contents_ref};
-  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-  my $year = $c->req->param('add_project_year');
-  my $location = $c->req->param('add_project_location');
-  my $project_name = $c->req->param('add_project_name');
-  my $line_number = 1;
-  my %error_hash;
-  my %plot_name_errors;
-  my %block_number_errors;
-  my %rep_number_errors;
-  my %stock_name_errors;
-  my %column_number_errors;
-  foreach my $content_line (@contents) {
-    my @line_contents = split /\t/, $content_line;
-    if (@line_contents != 4) {
-      my $column_count = scalar(@line_contents);
-      $column_number_errors{$line_number} = "Line $line_number: wrong number of columns, expected 4, found $column_count";
-      $line_number++;
-      next;
-    }
-    my $plot_name = $line_contents[0];
-    my $block_number = $line_contents[1];
-    my $rep_number = $line_contents[2];
-    my $stock_name = $line_contents[3];
-    if (!$stock_name) {
-      $stock_name_errors{$line_number} = "Line $line_number: stock name is missing";
-    } else {
-      #make sure stock name exists and returns a unique result
-      my $stock_rs = $schema->resultset("Stock::Stock")
-	->search({
-		  -or => [
-			  'lower(me.uniquename)' => { like => lc($stock_name) },
-			  -and => [
-				   'lower(type.name)'       => { like => '%synonym%' },
-				   'lower(stockprops.value)' => { like => lc($stock_name) },
-				  ],
-			 ],
-		 },
-		 {
-		  join => { 'stockprops' => 'type'} ,
-		  distinct => 1
-		 }
-		);
-      if ($stock_rs->count >1 ) {
-	my $error_string = "Line $line_number:  multiple accessions found for stock name $stock_name (";
-	while ( my $st = $stock_rs->next) {
-	  my $error_string .= $st->uniquename.",";
-	}
-	$stock_name_errors{$line_number} = $error_string;
-      } elsif ($stock_rs->count == 1) {
-      } else {
-	$stock_name_errors{$line_number} = "Line $line_number: stock name $stock_name not found";
-      }
-    }
+#DEPRECATED by deprecation of above function
+#sub _verify_trial_layout_contents {
+#  my $self = shift;
+#  my $c = shift;
+#  my $contents_ref = shift;
+#  my @contents = @{$contents_ref};
+#  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+#  my $year = $c->req->param('add_project_year');
+#  my $location = $c->req->param('add_project_location');
+#  my $project_name = $c->req->param('add_project_name');
+#  my $line_number = 1;
+#  my %error_hash;
+#  my %plot_name_errors;
+#  my %block_number_errors;
+#  my %rep_number_errors;
+#  my %stock_name_errors;
+#  my %column_number_errors;
+#  foreach my $content_line (@contents) {
+#    my @line_contents = split /\t/, $content_line;
+#    if (@line_contents != 4) {
+#      my $column_count = scalar(@line_contents);
+#      $column_number_errors{$line_number} = "Line $line_number: wrong number of columns, expected 4, found $column_count";
+#      $line_number++;
+#      next;
+#    }
+#    my $plot_name = $line_contents[0];
+#    my $block_number = $line_contents[1];
+#    my $rep_number = $line_contents[2];
+#    my $stock_name = $line_contents[3];
+#    if (!$stock_name) {
+#      $stock_name_errors{$line_number} = "Line $line_number: stock name is missing";
+#    } else {
+#      #make sure stock name exists and returns a unique result
+#      my $stock_rs = $schema->resultset("Stock::Stock")
+#	->search({
+#		  -or => [
+#			  'lower(me.uniquename)' => { like => lc($stock_name) },
+#			  -and => [
+#				   'lower(type.name)'       => { like => '%synonym%' },
+#				   'lower(stockprops.value)' => { like => lc($stock_name) },
+#				  ],
+#			 ],
+#		 },
+#		 {
+#		  join => { 'stockprops' => 'type'} ,
+#		  distinct => 1
+#		 }
+#		);
+#      if ($stock_rs->count >1 ) {
+#	my $error_string = "Line $line_number:  multiple accessions found for stock name $stock_name (";
+#	while ( my $st = $stock_rs->next) {
+#	  my $error_string .= $st->uniquename.",";
+#	}
+#	$stock_name_errors{$line_number} = $error_string;
+#      } elsif ($stock_rs->count == 1) {
+#      } else {
+#	$stock_name_errors{$line_number} = "Line $line_number: stock name $stock_name not found";
+#      }
+#    }
 
-    if (!$plot_name) {
-      $plot_name_errors{$line_number} = "Line $line_number: plot name is missing";
-    } else {
-      my $unique_plot_name = $project_name."_".$stock_name."_plot_".$plot_name."_block_".$block_number."_rep_".$rep_number."_".$year."_".$location;
-      if ($schema->resultset("Stock::Stock")->find({uniquename=>$unique_plot_name,})) {
-	$plot_name_errors{$line_number} = "Line $line_number: plot name $unique_plot_name is not unique";
-      }
-    }
+#    if (!$plot_name) {
+#      $plot_name_errors{$line_number} = "Line $line_number: plot name is missing";
+#    } else {
+#      my $unique_plot_name = $project_name."_".$stock_name."_plot_".$plot_name."_block_".$block_number."_rep_".$rep_number."_".$year."_".$location;
+#      if ($schema->resultset("Stock::Stock")->find({uniquename=>$unique_plot_name,})) {
+#	$plot_name_errors{$line_number} = "Line $line_number: plot name $unique_plot_name is not unique";
+#      }
+#    }
 
     #check for valid block number
-    if (!$block_number) {
-      $block_number_errors{$line_number} = "Line $line_number: block number is missing";
-    } else {
-      if (!($block_number =~ /^\d+?$/)) {
-	$block_number_errors{$line_number} = "Line $line_number: block number $block_number is not an integer";
-      } elsif ($block_number < 1 || $block_number > 1000000) {
-	$block_number_errors{$line_number} = "Line $line_number: block number $block_number is out of range";
-      }
-    }
+#    if (!$block_number) {
+#      $block_number_errors{$line_number} = "Line $line_number: block number is missing";
+#    } else {
+#      if (!($block_number =~ /^\d+?$/)) {
+#	$block_number_errors{$line_number} = "Line $line_number: block number $block_number is not an integer";
+#      } elsif ($block_number < 1 || $block_number > 1000000) {
+#	$block_number_errors{$line_number} = "Line $line_number: block number $block_number is out of range";
+#      }
+#    }
 
     #check for valid rep number
-    if (!$rep_number) {
-      $rep_number_errors{$line_number} = "Line $line_number: rep number is missing";
-    } else {
-      if (!($rep_number =~ /^\d+?$/)) {
-	$rep_number_errors{$line_number} = "Line $line_number: rep number $rep_number is not an integer";
-      } elsif ($rep_number < 1 || $rep_number > 1000000) {
-	$rep_number_errors{$line_number} = "Line $line_number: rep number $block_number is out of range";
-      }
-    }
-    $line_number++;
-  }
+#    if (!$rep_number) {
+#      $rep_number_errors{$line_number} = "Line $line_number: rep number is missing";
+#    } else {
+#      if (!($rep_number =~ /^\d+?$/)) {
+#	$rep_number_errors{$line_number} = "Line $line_number: rep number $rep_number is not an integer";
+#      } elsif ($rep_number < 1 || $rep_number > 1000000) {
+#	$rep_number_errors{$line_number} = "Line $line_number: rep number $block_number is out of range";
+#      }
+#    }
+#    $line_number++;
+ # }
 
-  if (%plot_name_errors) {$error_hash{'plot_name_errors'}=\%plot_name_errors;}
-  if (%block_number_errors) {$error_hash{'block_number_errors'}=\%block_number_errors;}
-  if (%rep_number_errors) {$error_hash{'rep_number_errors'}=\%rep_number_errors;}
-  if (%stock_name_errors) {$error_hash{'stock_name_errors'}=\%stock_name_errors;}
-  if (%column_number_errors) {$error_hash{'column_number_errors'}=\%column_number_errors;}
-  if (%error_hash) {
-    die (\%error_hash);
-  }
-  return;
-}
+#  if (%plot_name_errors) {$error_hash{'plot_name_errors'}=\%plot_name_errors;}
+# if (%block_number_errors) {$error_hash{'block_number_errors'}=\%block_number_errors;}
+#  if (%rep_number_errors) {$error_hash{'rep_number_errors'}=\%rep_number_errors;}
+#  if (%stock_name_errors) {$error_hash{'stock_name_errors'}=\%stock_name_errors;}
+# if (%column_number_errors) {$error_hash{'column_number_errors'}=\%column_number_errors;}
+#  if (%error_hash) {
+#    die (\%error_hash);
+#  }
+#  return;
+#}
 
-sub _formatted_string_from_error_hash {
-  my $error_hash_ref = shift;
-  my %error_hash = %{$error_hash_ref};
-  my $error_string ;
-  if ($error_hash{column_number_errors}) {
-    $error_string .= "<b>Column number errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{column_number_errors}})."<br><br>";
-  }
-  if ($error_hash{stock_name_errors}) {
-    $error_string .= "<b>Stock name errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{stock_name_errors}})."<br><br>";
-  }
-  if ($error_hash{'plot_name_errors'}) {
-    $error_string .= "<b>Plot name errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{'plot_name_errors'}})."<br><br>";
-  }
-  if ($error_hash{'block_number_errors'}) {
-    $error_string .= "<b>Block number errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{'block_number_errors'}})."<br><br>";
-  }
-  if ($error_hash{'rep_number_errors'}) {
-    $error_string .= "<b>Rep number errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{'rep_number_errors'}})."<br><br>";
-  }
-  return $error_string;
-}
+#DEPRECATED by deprecation of above function
+#sub _formatted_string_from_error_hash {
+#  my $error_hash_ref = shift;
+#  my %error_hash = %{$error_hash_ref};
+#  my $error_string ;
+#  if ($error_hash{column_number_errors}) {
+#    $error_string .= "<b>Column number errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{column_number_errors}})."<br><br>";
+#  }
+#  if ($error_hash{stock_name_errors}) {
+#    $error_string .= "<b>Stock name errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{stock_name_errors}})."<br><br>";
+#  }
+#  if ($error_hash{'plot_name_errors'}) {
+#    $error_string .= "<b>Plot name errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{'plot_name_errors'}})."<br><br>";
+#  }
+#  if ($error_hash{'block_number_errors'}) {
+#    $error_string .= "<b>Block number errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{'block_number_errors'}})."<br><br>";
+#  }
+#  if ($error_hash{'rep_number_errors'}) {
+#    $error_string .= "<b>Rep number errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{'rep_number_errors'}})."<br><br>";
+#  }
+#  return $error_string;
+#}
 
-sub _formatted_string_from_error_hash_by_type {
-  my $error_hash_ref = shift;
-  my %error_hash = %{$error_hash_ref};
-  my $error_string;
-  foreach my $key (sort { $a <=> $b} keys %error_hash) {
-    $error_string .= $error_hash{$key} . "<br>";
-  }
-  return $error_string;
-}
+#DEPRECATED by deprecation of above function
+#sub _formatted_string_from_error_hash_by_type {
+#  my $error_hash_ref = shift;
+#  my %error_hash = %{$error_hash_ref};
+#  my $error_string;
+#  foreach my $key (sort { $a <=> $b} keys %error_hash) {
+#    $error_string .= $error_hash{$key} . "<br>";
+#  }
+#  return $error_string;
+#}
 
 
 ### The following was moved to TrialMetadata.

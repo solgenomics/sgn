@@ -40,12 +40,15 @@ The following functions are provided in this class:
 
 use Modern::Perl;
 
+use IO::File;
+use File::Path 'make_path';
 use File::Temp qw/ tempfile tempdir /;
 use File::Copy qw/ copy move /;
 use File::Basename qw/ basename /;
 use File::Spec;
 use CXGN::DB::Connection;
 use CXGN::Tag;
+use CXGN::Metadata::Metadbdata;
 
 use CatalystX::GlobalContext '$c';
 
@@ -148,6 +151,10 @@ sub process_image {
     elsif ( $type eq "organism" ) {
         $self->associate_organism($type_id);
     } 
+    elsif ( $type eq "cvterm" ) {
+	$self->associate_cvterm($type_id);
+    }
+
     elsif ( $type eq "test") { 
 	# need to return something to make this function happy
 	return 1;
@@ -289,6 +296,8 @@ sub apache_upload_image {
         $upload_filename = $upload->filename;
     }
 
+    my $upload_fh = $upload->fh;
+
     my $temp_file =
         $self->config()->get_conf("basepath") . "/"
       . $self->config()->get_conf("tempfiles_subdir")
@@ -296,7 +305,81 @@ sub apache_upload_image {
       . $ENV{REMOTE_ADDR} . "-"
       . $upload_filename;
 
-    my $upload_fh = $upload->fh;
+    my $ret_temp_file = $self->upload_image($temp_file, $upload_fh);
+    return $ret_temp_file;
+
+}
+
+sub upload_fieldbook_zipfile {
+    my $self = shift;
+    my $image_zip = shift;
+    my $user_id = shift;
+    my $c = $self->config();
+    my $error_status;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $dbh = $schema->storage->dbh;
+    my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$image_zip);
+    my $file_members = $archived_zip->file_members();
+    if (!$file_members){
+        $error_status = 'Could not read your zipfile. Is is .zip format?</br></br>';
+        return $error_status;
+    }
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+
+    foreach (@$file_members) {
+        my $image = SGN::Image->new( $dbh, undef, $c );
+        #print STDERR Dumper $_;
+        my $img_name = substr($_->fileName(), 0, -24);
+        $img_name =~ s/^.*photos\///;
+        my $stock = $schema->resultset("Stock::Stock")->find( { uniquename => $img_name, 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id] } );
+        my $stock_id = $stock->stock_id;
+
+        my $temp_file = $image->upload_zipfile_images($_);
+
+        #Check if image already stored in database
+        my $md5checksum = $image->calculate_md5sum($temp_file);
+        #print STDERR "MD5: $md5checksum\n";
+        my $md_image = $metadata_schema->resultset("MdImage")->search({md5sum=>$md5checksum})->count();
+        #print STDERR "Count: $md_image\n";
+        if ($md_image > 0) {
+            $error_status .= "Image $temp_file has already been added to the database and will not be added again.<br/><br/>";
+        } else {
+            $image->set_sp_person_id($user_id);
+            my $ret = $image->process_image($temp_file, 'stock', $stock_id);
+            if (!$ret ) {
+                $error_status .= "Image processing for $temp_file did not work. Image not associated to stock_id $stock_id.<br/><br/>";
+            }
+        }
+    }
+    return $error_status;
+}
+
+sub upload_zipfile_images {
+    my $self   = shift;
+    my $file_member = shift;
+
+    my $filename = $file_member->fileName();
+
+    my $zipfile_image_temp_path = $self->config()->get_conf("basepath") . $self->config()->get_conf("tempfiles_subdir") . "/temp_images/photos";
+    make_path($zipfile_image_temp_path);
+    my $temp_file =
+        $self->config()->get_conf("basepath")
+      . $self->config()->get_conf("tempfiles_subdir")
+      . "/temp_images/"
+      . $filename;
+    system("chmod 775 $zipfile_image_temp_path");
+    $file_member->extractToFileNamed($temp_file);
+    print STDERR "Temp Image: ".$temp_file."\n";
+    return $temp_file;
+}
+
+
+sub upload_image {
+    my $self = shift;
+    my $temp_file = shift;
+    my $upload_fh = shift;
 
     ### 11/30/07 - change this so it removes existing file
     #     -deanx
@@ -318,7 +401,6 @@ sub apache_upload_image {
     warn "Done uploading.\n";
 
     return $temp_file;
-
 }
 
 =head2 associate_stock
@@ -336,10 +418,10 @@ sub associate_stock  {
     my $self = shift;
     my $stock_id = shift;
     if ($stock_id) {
-        my $user = $self->config->user_exists;
-        if ($user) {
+        my $username = $self->config->can('user_exists') ? $self->config->user->get_object->get_username : $self->config->username;
+        if ($username) {
             my $metadata_schema = $self->config->dbic_schema('CXGN::Metadata::Schema');
-            my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema, $self->config->user->get_object->get_username);
+            my $metadata = CXGN::Metadata::Metadbdata->new($metadata_schema, $username);
             my $metadata_id = $metadata->store()->get_metadata_id();
 
             my $q = "INSERT INTO phenome.stock_image (stock_id, image_id, metadata_id) VALUES (?,?,?) RETURNING stock_image_id";
@@ -563,6 +645,10 @@ sub get_associated_objects {
     foreach my $o ($self->get_organisms ) {
         push @associations, ["organism", $o->organism_id, $o->species];
     }
+
+    foreach my $cvterm ( $self->get_cvterms ) {
+	push @associations, ["cvterm" , $cvterm->cvterm_id, $cvterm->name];
+    }
     return @associations;
 }
 
@@ -712,8 +798,69 @@ sub get_associated_object_links {
         if ($assoc->[0] eq "organism" ) {
             $s .= qq { <a href="/organism/$assoc->[1]/view/">Organism name:$assoc->[2]</a> };
         }
+	if ($assoc->[0] eq "cvterm" ) {
+	    $s .= qq { <a href="/cvterm/$assoc->[1]/view/">Cvterm: $assoc->[2]</a> };
+	}
     }
     return $s;
 }
+
+
+=head2 associate_cvterm
+
+ Usage: $image->associate_cvterm($cvterm_id)
+ Desc:  link uploaded image with a cvterm        
+ Ret:   database ID md_image_cvterm_id
+ Args:  $cvterm_id
+ Side Effects: Insert database row
+ Example:
+
+=cut
+
+sub associate_cvterm {
+    my $self = shift;
+    my $cvterm_id = shift;
+    my $sp_person_id= $self->get_sp_person_id();
+    my $query = "INSERT INTO metadata.md_image_cvterm
+                   (image_id,
+                   sp_person_id,
+                   cvterm_id)
+                 VALUES (?, ?, ?) RETURNING md_image_cvterm_id";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute(
+        $self->get_image_id,
+        $sp_person_id,
+        $cvterm_id,
+        );
+    my ($image_cvterm_id) = $sth->fetchrow_array;
+    return $image_cvterm_id;
+}
+
+=head2 get_cvterms
+
+ Usage:   $self->get_cvterms
+ Desc:    find the cvterm objects asociated with this image
+ Ret:     a list of BCS Cvterm objects
+ Args:    none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_cvterms {
+    my $self = shift;
+    my $schema = $self->config->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
+    my $query = "SELECT cvterm_id FROM metadata.md_image_cvterm WHERE md_image_cvterm.obsolete != 't' and md_image_cvterm.image_id=?";
+    my $sth = $self->get_dbh()->prepare($query);
+    $sth->execute( $self->get_image_id() );
+    my @cvterms = ();
+    while (my ($cvterm_id) = $sth->fetchrow_array ) {
+        push @cvterms, $schema->resultset("Cv::Cvterm")->find(
+            { cvterm_id => $cvterm_id } );
+    }
+    return @cvterms;
+}
+
+
 
 1;

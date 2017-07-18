@@ -9,9 +9,10 @@
   $organisms       => undef
   $stock_types     => undef
   $breeding_programs => undef
+  $editable_stock_props => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects', 'CXGN.List' ] &>
 
 <div class="container-fluid">
 
@@ -21,9 +22,6 @@
 <%perl>
 
 use CXGN::Page::FormattingHelpers qw / conditional_like_input_html simple_selectbox_html/;
-
-
-my $any_name_select = conditional_like_input_html("any_name","contains", "", '30');
 
 my $accession_cvterm_id;
 
@@ -47,21 +45,60 @@ my $organism_select = simple_selectbox_html(
 
 my $breeding_programs_select = simple_selectbox_html(
     choices => $breeding_programs,
-    id      => "organization" ,
+    id      => "breeding_program" ,
 );
-
 
 </%perl>
 
-<&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0, subtitle=>'[<a href="/stock/0/new/">Submit New Stock</a>]' &>
+<&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
 
   <div id="stock_search_form" class="form-horizontal well">
+
+    <&| /page/info_section.mas, title => 'Properties', collapsible=>1, collapsed=>0 &>
+
     <div class="row">
-      <div class="col-sm-6">
+      <div class="col-sm-11">
         <div class="form-group form-group-sm">
       	  <label class="col-sm-3 control-label">Stock Name or Description: </label>
           <div class="col-sm-9" >
-            <% $any_name_select %>
+            <div class="form-group">
+              <div class="input-group">
+                <span class="input-group-btn" width="20%">
+                  <select class="form-control" id="any_name_matchtype" name="any_name_matchtype">
+                    <option title="contains" value="contains" selected="selected">contains</option>
+                    <option title="starts with" value="starts_with">starts with</option>
+                    <option title="ends with" value="ends_with">ends with</option>
+                    <option title="exactly" value="exactly">exactly</option>
+                  </select>
+                </span>
+                  <span class="input-group-btn">
+                  <input class="form-control" name="any_name" id="any_name" value="" size="30" type="text" placeholder="Type search here..."/>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-11">
+        <div class="form-group form-group-sm">
+      	  <label class="col-sm-3 control-label">Properties: </label>
+          <div class="col-sm-9" >
+            <div class="form-group">
+              <div class="input-group">
+                <span class="input-group-btn" width="20%">
+                  <select class="form-control" id="editable_stockprop_search_term" name="editable_stockprop_search_term">
+%  foreach my $stockprop (@$editable_stock_props){
+                    <option title="<% $stockprop %>" value="<% $stockprop %>" ><% $stockprop %></option>
+%  }
+                  </select>
+                </span>
+                  <span class="input-group-btn">
+                  <input class="form-control" name="editable_stockprop_search_value" id="editable_stockprop_search_value" value="" size="30" type="text" placeholder="Type search here..."/>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -89,25 +126,29 @@ my $breeding_programs_select = simple_selectbox_html(
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Stock Owner: </label>
           <div class="col-sm-9" >
-            <input type="text" class="form-control" id="person" />
+            <input type="text" class="form-control" id="person" placeholder="Type to Autocomplete"/>
           </div>
         </div>
       </div>
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Trait: </label>
+          <label class="col-sm-3 control-label">Organization: </label>
           <div class="col-sm-9" >
-            <input type="text" class="form-control" id="trait" />
+            <input type="text" class="form-control" id="organization" placeholder="Type to Autocomplete"/>
           </div>
         </div>
       </div>
     </div>
+
+    </&>
+    <&| /page/info_section.mas, title => 'Usage', collapsible=>1, collapsed=>1 &>
+
     <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Project Name: </label>
           <div class="col-sm-9" >
-            <input type="text" class="form-control" id="project" />
+            <input type="text" class="form-control" id="project" placeholder="Type to Autocomplete"/>
           </div>
         </div>
       </div>
@@ -115,7 +156,7 @@ my $breeding_programs_select = simple_selectbox_html(
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Project Location: </label>
           <div class="col-sm-9" >
-            <input type="text" class="form-control" id="location" />
+            <input type="text" class="form-control" id="location" placeholder="Type to Autocomplete"/>
           </div>
         </div>
       </div>
@@ -125,50 +166,59 @@ my $breeding_programs_select = simple_selectbox_html(
         <div class="form-group form-group-sm">
           <label class="col-sm-3 control-label">Project Year: </label>
           <div class="col-sm-9" >
-            <input type="text" class="form-control" id="year" />
+            <input type="text" class="form-control" id="year" placeholder="Type to Autocomplete"/>
           </div>
         </div>
       </div>
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Organization: </label>
+          <label class="col-sm-3 control-label">Breeding Program: </label>
           <div class="col-sm-9" >
             <% $breeding_programs_select %>
           </div>
         </div>
       </div>
     </div>
-    <button style="float:right" class="btn btn-primary" id="submit_stock_search" />Search</button>
+
+    </&>
+    <&| /page/info_section.mas, title => 'Phenotypes', collapsible=>1, collapsed=>1 &>
+
+    <div class="row">
+        <div class="col-sm-6">
+          <div class="form-group form-group-sm">
+            <label class="col-sm-3 control-label">Trait: </label>
+            <div class="col-sm-9" >
+              <input type="text" class="form-control" id="trait" placeholder="Type to Autocomplete"/>
+            </div>
+          </div>
+        </div>
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Minimum Trait Value: </label>
+          <div class="col-sm-9" >
+            <input type="text" class="form-control" id="minimum_trait_value" />
+          </div>
+        </div>
+      </div>
+      </div>
+      <div class="row">
+      <div class="col-sm-6">
+        <div class="form-group form-group-sm">
+          <label class="col-sm-3 control-label">Maximum Trait Value: </label>
+          <div class="col-sm-9" >
+            <input type="text" class="form-control" id="maximum_trait_value" />
+          </div>
+        </div>
+      </div>
+    </div>
+    </&>
+
+    <center>
+    <button class="btn btn-primary" id="submit_stock_search" />Search</button>
+    </center>
     <br/><br/>
   </div>
 </&>
-
-<!--
-<div id="stock_search_form">
-  <table>
-  <tr><td colspan="4" align="right"><a href="/stock/0/new/">[Submit new stock]</a></td>
-    </tr>
-  <tr><td><label for="any_name_matchtype">Stock name or description</label></td><td colspan="2"><% $any_name_select %></td>
-    </tr>
-  <tr><td><label for="stock_type_select">Stock type</label></td><td><% $stock_type_select %></td>
-    <td><label for="organism_select">Organism</label></td><td><% $organism_select %></td>
-    </tr>
-  <tr><td><label for="person">Stock owner</label></td><td><input id="person"></td>
-    <td><label for="trait">Trait</label></td><td><input id="trait"></td>
-  </tr>
-  <tr><td><label for="project">Project name</label></td><td><input id="project"></td>
-    <td><label for="location">Project location</label></td><td><input id="location"></td>
-  </tr>
-  <tr><td><label for="year">Project year</label></td><td><input id="year"></td>
-    <td><label for="organization">Organization</label></td><td><% $breeding_programs_select %></td>
-  </tr>
-  
-  <tr><td colspan="4" align="right"><button id="submit_stock_search" />Search</button></td>
-</tr></table>
-<br />
-
-</div>
--->
 
 <br />
 
@@ -176,23 +226,15 @@ my $breeding_programs_select = simple_selectbox_html(
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
-
-<div style="text-align:right">
-Copy items on this page to list: 
-<span id="item_list_menu">
-</span>
-
-<div id="item_list">
-</div>	
-</div>
-
-
-<table id="stock_search_results" class="display">
+<table id="stock_search_results" width="100%" class="table table-hover table-striped">
 <thead>
   <tr>
     <th>Stock Name</th>
     <th>Stock Type</th>
     <th>Organism</th>
+    <th>Synonyms</th>
+    <th>Owners</th>
+    <th>Organizations</th>
 </tr>
 </thead>
 
@@ -200,12 +242,18 @@ Copy items on this page to list:
 
 </&>
 
+<&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the stock names currently showing in the search results table to a new or exisiting list</i>'&>
+<br>
+<div style="text-align:right" id="results_to_list_menu"></div>
+<div id="search_result_names" style="display: none;"></div>
+</&>
+
 </div>
 
 <script>
 
 jQuery(document).ready(function () {
-     
+
      jQuery("#person").autocomplete({
         source: '<% $sp_person_autocomplete_uri %>'
      });
@@ -215,11 +263,11 @@ jQuery(document).ready(function () {
      jQuery("#onto").autocomplete({
         source: '<% $onto_autocomplete_uri %>' + "?db_name=" + '<% $trait_db_name %>'
      });
-     jQuery("#stock_name").autocomplete({
-        source: '/ajax/stock/stock_autocomplete',
-     });
      jQuery("#project").autocomplete({
         source: '/ajax/stock/project_autocomplete',
+     });
+     jQuery("#any_name").autocomplete({
+        source: '/ajax/stock/stock_autocomplete',
      });
      jQuery("#location").autocomplete({
         source: '/ajax/stock/geolocation_autocomplete',
@@ -227,34 +275,57 @@ jQuery(document).ready(function () {
      jQuery("#year").autocomplete({
         source: '/ajax/stock/project_year_autocomplete',
      });
+     jQuery("#organization").autocomplete({
+        source: '/ajax/stock/stock_organization_autocomplete',
+     });
 
-   var table = jQuery('#stock_search_results').DataTable( { 
-   
+   var stock_table = jQuery('#stock_search_results').DataTable( {
+
      'searching' : false,
      'ordering'  : false,
      'processing': true,
      'serverSide': true,
+     'lengthMenu': [10,20,50,100,1000],
      'ajax': { 'url':  '/ajax/search/stocks',
-               'data': function(d) { 
+               'data': function(d) {
                   d.any_name  = jQuery('#any_name').val();
                   d.any_name_matchtype = jQuery('#any_name_matchtype').val();
-                  d.stock_type   = jQuery('#stock_type_select').val(); 
-                  d.organism     = jQuery('#organism_select').val(); 
-                  d.person       = jQuery('#person').val(); 
-                  d.trait        = jQuery('#trait').val(); 
-                  d.project      = jQuery('#project').val(); 
+                  d.stock_type   = jQuery('#stock_type_select').val();
+                  d.organism     = jQuery('#organism_select').val();
+                  d.person       = jQuery('#person').val();
+                  d.trait        = jQuery('#trait').val();
+                  d.minimum_trait_value        = jQuery('#minimum_trait_value').val();
+                  d.maximum_trait_value        = jQuery('#maximum_trait_value').val();
+                  d.project      = jQuery('#project').val();
                   d.location     = jQuery('#location').val();
                   d.year         = jQuery('#year').val();
-                  d.organization = jQuery('#organization').val(); 
+                  d.breeding_program = jQuery('#breeding_program').val();
+                  d.organization = jQuery('#organization').val();
+                  d.property_term = jQuery('#editable_stockprop_search_term').val();
+                  d.property_value = jQuery('#editable_stockprop_search_value').val();
              }
          }
-     });
+    });
 
+    jQuery('#stock_search_results').on( 'draw.dt', function () {
+      var name_links = stock_table.column(0).data();
+      var names = [];
 
-   jQuery('#submit_stock_search').click( function() { 
-        table.search("stock_search_results").draw();
+      for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
+        names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+      }
+
+      jQuery('#search_result_names').html(names);
+      addToListMenu('results_to_list_menu', 'search_result_names', {
+        listType: jQuery('#stock_type_select option:selected').text()+'s' || 'null'
+      });
+
+    });
+
+   jQuery('#submit_stock_search').click( function() {
+        stock_table.search("stock_search_results").draw();
    });
-  
+
    jQuery('#stock_search_form').keypress( function( e ) {
            var code = e.keyCode || e.which;
            if( code == 13 ) {
@@ -263,6 +334,5 @@ jQuery(document).ready(function () {
     } );
 
 });
-  
-</script>
 
+</script>

@@ -26,11 +26,11 @@ sub check_pheno_corr_result :Path('/phenotype/correlation/check/result/') Args(1
     $self->pheno_correlation_output_files($c);
     my $corre_output_file = $c->stash->{corre_coefficients_json_file};
    
-    my $ret->{result} ='No';
+    my $ret->{result} = undef;
    
     if (-s $corre_output_file && $pop_id =~ /\d+/) 
     {
-	$ret->{result} = 'yes';                
+	$ret->{result} = 1;                
     }    
 
     $ret = to_json($ret);
@@ -75,17 +75,13 @@ sub correlation_phenotype_data :Path('/correlation/phenotype/data/') Args(0) {
         $phenotype_file =  $c->stash->{phenotype_file};
     }
 
-    my $ret->{status} = 'failed';
+    my $ret->{result} = undef;
 
     if (-s $phenotype_file)
     {
-        $ret->{status} = 'success';             
+        $ret->{result} = 1;             
     } 
-    else 
-    {
-	$ret->{status} = 'This population set has no phenotype data.';
-    }
-
+   
     $ret = to_json($ret);
        
     $c->res->content_type('application/json');
@@ -112,11 +108,11 @@ sub correlation_genetic_data :Path('/correlation/genetic/data/') Args(0) {
     $self->combine_gebvs_of_traits($c);   
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
    
-    my $ret->{status} = 'failed';
+    my $ret->{result} = undef;
 
     if ( -s $combined_gebvs_file )
     {
-        $ret->{status} = 'success'; 
+        $ret->{result} = 1; 
         $ret->{gebvs_file} = $combined_gebvs_file;
     }
 
@@ -154,13 +150,13 @@ sub combine_gebvs_of_traits {
         my $pred_pop_id = $c->stash->{prediction_pop_id};
         my $model_id    = $c->stash->{model_id};
         my $identifier  =  $pred_pop_id ? $model_id . "_" . $pred_pop_id :  $model_id; 
-    
-        my $combined_gebvs_file = $c->controller("solGS::solGS")->create_tempfile($c, "combined_gebvs_${identifier}"); 
+	my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
+        my $combined_gebvs_file = $c->controller("solGS::solGS")->create_tempfile($tmp_dir, "combined_gebvs_${identifier}"); 
    
         $c->stash->{input_files}  = $gebvs_files;
         $c->stash->{output_files} = $combined_gebvs_file;
         $c->stash->{r_temp_file}  = "combining-gebvs-${identifier}";
-        $c->stash->{r_script}     = 'R/combine_gebvs_files.r';
+        $c->stash->{r_script}     = 'R/solGS/combine_gebvs_files.r';
 
         $c->controller("solGS::solGS")->run_r_script($c);
         $c->stash->{combined_gebvs_file} = $combined_gebvs_file;
@@ -260,8 +256,9 @@ sub genetic_correlation_output_files {
     my $identifier  =  $type =~ /selection/ ? $model_id . "_" . $corre_pop_id :  $corre_pop_id; 
 
     my $solgs_controller = $c->controller("solGS::solGS");
-    my $corre_json_file  = $solgs_controller->create_tempfile($c, "genetic_corre_json_${identifier}");
-    my $corre_table_file = $solgs_controller->create_tempfile($c, "genetic_corre_table_${identifier}");
+    my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $corre_json_file  = $solgs_controller->create_tempfile($tmp_dir, "genetic_corre_json_${identifier}");
+    my $corre_table_file = $solgs_controller->create_tempfile($tmp_dir, "genetic_corre_table_${identifier}");
    
     $c->stash->{genetic_corre_table_file} = $corre_table_file;
     $c->stash->{genetic_corre_json_file}  = $corre_json_file;
@@ -354,7 +351,7 @@ sub run_pheno_correlation_analysis {
     $c->stash->{referer} = $c->req->referer;
     
     $c->stash->{correlation_type} = "pheno_correlation_${pop_id}";
-    $c->stash->{correlation_script} = "R/phenotypic_correlation.r";
+    $c->stash->{correlation_script} = "R/solGS/phenotypic_correlation.r";
     
     $self->run_correlation_analysis($c);
 
@@ -373,7 +370,7 @@ sub run_genetic_correlation_analysis {
     $c->stash->{referer} = $c->req->referer;
     
     $c->stash->{correlation_type} = "genetic_correlation_${pop_id}";
-    $c->stash->{correlation_script} = "R/genetic_correlation.r";
+    $c->stash->{correlation_script} = "R/solGS/genetic_correlation.r";
     $self->run_correlation_analysis($c);
 
 }

@@ -53,6 +53,13 @@ $locations
                             </div>
                         </div>
                         <div class="form-group">
+                            <label class="col-sm-3 control-label">Trial Type: </label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="trial_upload_trial_type" name="trial_upload_trial_type" type="text">
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="col-sm-3 control-label">Year: </label>
                             <div class="col-sm-9" >
                                 <select class="form-control" id="trial_upload_year" name="trial_upload_year"></select>
@@ -127,6 +134,7 @@ $locations
                                 <td>rep_number</td>
                                 <td>range_number</td>
                                 <td>row_number</td>
+                                <td>col_number</td>
                             </tr>
                         </tbody>
                     </table>
@@ -149,8 +157,9 @@ $locations
                     <br />
                     range_number (range number, numeric)
                     <br />
-                    row_number (row number, numeric)
+                    row_number (row number, numeric, required for field map generation)
                     <br />
+                    col_number (column number, numeric, required for field map generation)
                 </div>
             </div>
             <div class="modal-footer">

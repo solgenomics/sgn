@@ -1,0 +1,31 @@
+<%args>
+</%args>
+
+<h4>Seasons</h4>
+
+<div id="brapi_seasons_div">
+<button class="btn btn-primary" id="brapi_home_show_seasons">Show Seasons</button>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+
+jQuery("#brapi_home_show_seasons").click(function() {
+    jQuery.ajax( {
+      'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/seasons',
+      'method': 'GET',
+      'success': function(response) {
+        console.log(response);
+        brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_seasons_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/seasons', undefined);
+      },
+      error: function(response) {
+        alert('An error occurred getting seasons');
+      }
+    });
+});
+
+});
+
+</script>

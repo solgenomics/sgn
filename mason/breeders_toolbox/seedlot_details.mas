@@ -1,0 +1,327 @@
+
+<%args>
+$seedlot_id
+$uniquename
+$location_code => ''
+$current_count => 0
+$accessions
+$organization_name
+$population_name
+$timestamp
+$breeding_program_name
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
+
+<style>
+.ui-autocomplete {
+    z-index: 5000;
+}
+</style>
+
+<& /page/page_title.mas, title => 'Seedlot '.$uniquename &>
+
+<table class="table table-bordered table-hover">
+<tr><td><b>Breeding Program</b></td><td><% $breeding_program_name %></td></tr>
+<tr><td><b>Name</b></td><td><a href="/stock/<% $seedlot_id %>/view"><% $uniquename %></a></td></tr>
+<tr><td><b>Organization</b></td><td><% $organization_name %></td></tr>
+<tr><td><b>Location Code</b><td><% $location_code %></td></tr>
+<tr><td><b>Accession</b></td><td><% $accessions %></td></tr>
+<tr><td><b>Population</b></td><td><% $population_name %></td></tr>
+<tr><td><b>Current count</b></td><td><% $current_count %></td></tr>
+</table>
+
+<center>
+<h3>Transactions</h3>
+</center>
+
+<table id="available_seedlot_transactions_table" class="table table-hover table-bordered">
+<thead>
+  <tr>
+    <th>Transaction Id</th>
+    <th>Transaction Date</th>
+    <th>From</th>
+    <th>To</th>
+    <th>Transaction Count</th>
+    <th>Operator</th>
+    <th>Description</th>
+  </tr>
+</thead>
+
+</table>
+
+<button class="btn btn-primary" id="add_seedlot_transaction_button">Add new seedlot transaction</button>
+
+<div class="modal fade" id="add_seedlot_transaction_dialog" name="add_seedlot_transaction_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_transaction_dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="seedlot_transaction_dialog">Add New Seedlot Transaction</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <form class="form-horizontal" role="form" method="post" id="create_new_seedlot_transaction_form" name="create_new_seedlot_transaction_form">
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Transaction Type: </label>
+                    <div class="col-sm-9" >
+                        <select class="form-control" id="seedlot_transaction_factor">
+                            <option value="1">Added to this Seedlot (<% $uniquename %>)</option>
+                            <option value="-1">Taken from this Seedlot (<% $uniquename %>)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="seedlot_transaction_from_seedlot">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Taken From Existing Seedlot:</label>
+                        <div class="col-sm-9" >
+                            <div id="seedlot_transaction_seedlot_div"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="seedlot_transaction_to_seedlot" style="display: none">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Transferring to a new seed lot?: </label>
+                        <div class="col-sm-9" >
+                            <select class="form-control" id="seedlot_transaction_to_seedlot_new">
+                                <option value="no">No</option>
+                                <option value="yes">Yes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="seedlot_transaction_to_seedlot_new_no">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">To Existing Seedlot: </label>
+                            <div class="col-sm-9" >
+                                <div id="seedlot_transaction_to_seedlot_existing"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="seedlot_transaction_to_seedlot_new_yes" style="display: none">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">To New Seedlot: </label>
+                            <div class="col-sm-9" >
+                            
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Name: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="transaction_new_seedlot_name" placeholder="Required">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Breeding Program: </label>
+                                    <div class="col-sm-9" >
+                                        <div id="transaction_new_seedlot_breeding_program_div"></div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Location: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="transaction_new_seedlot_location" placeholder="Required">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Accession Uniquename: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="transaction_new_seedlot_accession_uniquename" placeholder="Required">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Amount (number of seeds): </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="transaction_new_seedlot_amount" placeholder="Required">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Population: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="transaction_new_seedlot_population_name" placeholder="Optional">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Organization: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="transaction_new_seedlot_organization" placeholder="Optional">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Timestamp: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="transaction_new_seedlot_timestamp" value="<% $timestamp %>" placeholder="<% $timestamp %>">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Description: </label>
+                                    <div class="col-sm-9" >
+                                        <input class="form-control" id="transaction_new_seedlot_description" placeholder="Optional">
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Amount: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_transaction_amount" placeholder="Required">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Timestamp: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_transaction_timestamp" value="<% $timestamp %>" placeholder="<% $timestamp %>">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Description: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" id="seedlot_transaction_description" placeholder="Required">
+                    </div>
+                </div>
+            </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="create_new_seedlot_transaction_button" type="button" class="btn btn-default" >OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+  jQuery(document).ready(function () {
+  
+    jQuery('#add_seedlot_transaction_button').click( function() { jQuery('#add_seedlot_transaction_dialog').modal('show') });
+
+    jQuery("#transaction_new_seedlot_location").autocomplete({
+       source: '/ajax/stock/geolocation_autocomplete',
+    });
+    jQuery("#transaction_new_seedlot_accession_uniquename").autocomplete({
+       source: '/ajax/stock/accession_autocomplete',
+    });
+
+    get_select_box('stocks', 'seedlot_transaction_seedlot_div', { 'name' : 'seedlot_transaction_seedlot_id', 'id' : 'seedlot_transaction_seedlot_id', 'stock_type_name':'seedlot', 'multiple':'0' });
+    get_select_box('stocks', 'seedlot_transaction_to_seedlot_existing', { 'name' : 'seedlot_transaction_to_seedlot_existing_id', 'id' : 'seedlot_transaction_to_seedlot_existing_id', 'stock_type_name':'seedlot', 'multiple':'0' });
+    get_select_box('breeding_programs', 'transaction_new_seedlot_breeding_program_div', { 'name' : 'transaction_new_seedlot_breeding_program_id', 'id' : 'transaction_new_seedlot_breeding_program_id' });
+
+    var seedlot_transactions_table = jQuery('#available_seedlot_transactions_table').DataTable( {
+      'ajax': '/ajax/breeders/seedlot/<% $seedlot_id %>/transactions',
+    });
+
+    jQuery('#create_new_seedlot_transaction_button').click( function() {
+      var factor = jQuery('#seedlot_transaction_factor').val();
+      var to_new = jQuery('#seedlot_transaction_to_seedlot_new').val();
+      var from_existing_seedlot_id;
+      var to_existing_seedlot_id;
+      var to_new_seedlot_name;
+      var to_new_seedlot_breeding_program_id;
+      var to_new_seedlot_location_name;
+      var to_new_seedlot_accession_name;
+      var to_new_seedlot_amount;
+      var to_new_seedlot_population_name;
+      var to_new_seedlot_organization;
+      var to_new_seedlot_timestamp;
+      var to_new_seedlot_description;
+      if (factor == 1){
+        from_existing_seedlot_id = jQuery('#seedlot_transaction_seedlot_id').val();
+      }
+      if (factor == -1){
+        if (to_new == 'no'){
+            to_existing_seedlot_id = jQuery('#seedlot_transaction_to_seedlot_existing_id').val();
+        }
+        if (to_new == 'yes'){
+            to_new_seedlot_name = jQuery('#transaction_new_seedlot_name').val();
+            to_new_seedlot_breeding_program_id = jQuery('#transaction_new_seedlot_breeding_program_id').val();
+            to_new_seedlot_location_name = jQuery('#transaction_new_seedlot_location').val();
+            to_new_seedlot_accession_name = jQuery('#transaction_new_seedlot_accession_uniquename').val();
+            to_new_seedlot_amount = jQuery('#transaction_new_seedlot_amount').val();
+            to_new_seedlot_population_name = jQuery('#transaction_new_seedlot_population_name').val();
+            to_new_seedlot_organization = jQuery('#transaction_new_seedlot_organization').val();
+            to_new_seedlot_timestamp = jQuery('#transaction_new_seedlot_timestamp').val();
+            to_new_seedlot_description = jQuery('#transaction_new_seedlot_description').val();
+        }
+      }
+      var amount = jQuery('#seedlot_transaction_amount').val();
+      var timestamp = jQuery('#seedlot_transaction_timestamp').val();
+      var description = jQuery('#seedlot_transaction_description').val();
+
+      if (factor == '') { alert("Please provide a factor"); }
+      else if (amount == '') { alert("Please provide an amount"); }
+      else if (timestamp == '') { alert("Please provide a timestamp"); }
+      else if (description == '') { alert("Please provide a description"); }
+      else if (from_existing_seedlot_id == '' && to_existing_seedlot_id == '' && to_new_seedlot_name == '') { alert("Please provide seed lot"); }
+      else {
+
+      jQuery.ajax( {
+        url: '/ajax/breeders/seedlot/<% $seedlot_id %>/transaction/add',
+        data : {
+            'factor' : factor,
+            'seedlot_id': <% $seedlot_id %>,
+            'amount': amount,
+            'timestamp': timestamp,
+            'description': description,
+            'from_existing_seedlot_id': from_existing_seedlot_id,
+            'to_existing_seedlot_id': to_existing_seedlot_id,
+            'to_new_seedlot_name' : to_new_seedlot_name,
+            'to_new_seedlot_breeding_program_id': to_new_seedlot_breeding_program_id,
+            'to_new_seedlot_location_name': to_new_seedlot_location_name,
+            'to_new_seedlot_accession_name': to_new_seedlot_accession_name,
+            'to_new_seedlot_amount': to_new_seedlot_amount,
+            'to_new_seedlot_population_name': to_new_seedlot_population_name,
+            'to_new_seedlot_organization': to_new_seedlot_organization,
+            'to_new_seedlot_timestamp': to_new_seedlot_timestamp,
+            'to_new_seedlot_description': to_new_seedlot_description
+        },
+        success: function(response) {
+          if (response.success == 1) {
+             alert("The seedlot transaction has been created.");
+             jQuery('#add_seedlot_transaction_dialog').modal('hide');
+             seedlot_transactions_table.ajax.reload();
+          }
+          if (response.error) {
+             alert(response.error);
+          }
+        },
+        error: function(response) {
+          alert('An error occurred creating seedlot transaction');
+        }
+       });
+
+      }
+    });
+
+    jQuery('#seedlot_transaction_factor').change(function(){
+        var transaction_factor = jQuery('#seedlot_transaction_factor').val();
+        if (transaction_factor == 1){
+            jQuery('#seedlot_transaction_to_seedlot').hide();
+            jQuery('#seedlot_transaction_from_seedlot').show();
+        }
+        if (transaction_factor == -1){
+            jQuery('#seedlot_transaction_from_seedlot').hide();
+            jQuery('#seedlot_transaction_to_seedlot').show();
+        }
+    });
+
+    jQuery('#seedlot_transaction_to_seedlot_new').change(function(){
+        var option = jQuery('#seedlot_transaction_to_seedlot_new').val();
+        if (option == 'yes'){
+            jQuery('#seedlot_transaction_to_seedlot_new_no').hide();
+            jQuery('#seedlot_transaction_to_seedlot_new_yes').show();
+        }
+        if (option == 'no'){
+            jQuery('#seedlot_transaction_to_seedlot_new_no').show();
+            jQuery('#seedlot_transaction_to_seedlot_new_yes').hide();
+        }
+    });
+
+  });
+</script>
+
+

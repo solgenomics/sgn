@@ -25,38 +25,50 @@ $trial_type => undef
 $planting_date => undef
 $harvest_date => undef
 $trial_description => undef
-$design_layout_view => undef
 $user_can_modify => undef
 $has_plant_entries => undef
 $hidap_enabled => undef
 $folder_name => undef
 $folder_id => undef
 $plants_per_plot => undef
+$has_expression_atlas => undef
+$expression_atlas_url => undef
+$site_project_name => undef
+$trial_phenotype_files => undef
+$sgn_session_id => undef
+$user_name => undef
+$design_name => undef
+$has_layout => undef
+$has_physical_map => undef
+$has_phenotypes => undef
+$phenotypes_fully_uploaded => undef
+$identifier_prefix => 'SGN'
 </%args>
+
+<style>
+
+@media (min-width: 1200px) {
+    .affix {
+        top:100px;
+        right:0;
+        position:fixed;
+    }
+}
+
+</style>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
 
 <%perl>
   use Data::Dumper;
 my $start_time = time();
-my $description_empty = 1;
-if ($trial_description) {
-  if ($trial_description ne "") {
-    $description_empty = 0;
-  }
-}
-
-my $design_subtitle = '[<a href="\\fieldbook\\trial_download\\'.$trial_id.'">Download Field Book</a>]';
-
-my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link">change</a>] } if $user_can_modify;
 
 #print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
-
-#print STDERR "BREEDING PROGRAM: ".Dumper($breeding_program);
 
 </%perl>
 
 <br/>
+
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 
@@ -137,7 +149,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 <td>
 <div id="planting_date">
 % if ($planting_date) {
-  <a href="/calendar/personal?currentDate=<% $planting_date %>" target="_blank"><% $planting_date %></a>
+  <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $planting_date %>" ><% $planting_date %></a>
 % } else {
 %  print "[No Planting Date]";
 % }
@@ -150,7 +162,7 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 <td>
 <div id="harvest_date">
 % if ($harvest_date) {
-  <a href="/calendar/personal?currentDate=<% $harvest_date %>" target="_blank"><% $harvest_date %></a>
+  <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $harvest_date %>" ><% $harvest_date %></a>
 % } else {
 %  print "[No Harvest Date]";
 % }
@@ -172,14 +184,12 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 </table>
 </div>
 
-</&>
-
-<& /breeders_toolbox/trial/edit_trial_details_dialog.mas, trial_name => $trial_name, breeding_program => $breeding_program_id, location => $location_id, year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description &>
-
 % my $folder_collapsed = 1;
 % if ($folder_id) {
 % $folder_collapsed = 0;
 % }
+
+<div class="well well-sm">
 
 <&| /page/info_section.mas, title=>"Folder", collaspible=>1, collapsed=>$folder_collapsed,
   subtitle => '[<a id="new_folder_dialog_link">New Folder</a>] | [<a id="open_folder_dialog_link">Change</a>]' &>
@@ -191,6 +201,19 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 </&>
 
+</div><!--closes well-->
+
+</&>
+
+<&| /page/info_section.mas, title=>"Trial barcode",  collapsible => 1, subtitle => '[<a id="generate_trial_barcode_link">Generate Barcode</a>]|[<a id="direct_phenotyping_link">Direct Phenotyping</a>]'&>
+    <div class="well">
+     <center><& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &></center><br />
+     </div>
+     <& /breeders_toolbox/trial/generate_trial_barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name" &>
+
+</&>
+
+<& /breeders_toolbox/trial/edit_trial_details_dialog.mas, trial_name => $trial_name, breeding_program => $breeding_program_id, location => $location_id, year => $year, trial_type => $trial_type, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description &>
 
 % if ($hidap_enabled) {
 
@@ -198,11 +221,12 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 % }
 
-
-<&| /page/info_section.mas, id => "physical_layout", title=>"Physical Trial Layout", collapsible=>1, collapsed => 1, subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>]' &>
+<& /breeders_toolbox/trial/edit_fieldMap.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<&| /page/info_section.mas, id => "physical_layout", title=>"Physical Trial Layout", collapsible=>1, collapsed => 1, subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>] [<a id="edit_field_map_link">Edit Field Map</a>] [<button type="button" class="btn btn-link" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>]' &>
 
 
   <& /breeders_toolbox/trial/trial_coords.mas, trial_id => $trial_id &>
+
 
 </&>
 
@@ -256,6 +280,8 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 
 <&| /page/info_section.mas, id => "trial_design_section", title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"[<a id='trial_download_layout_button'>Download Layout</a>]"  &>
 
+<div class="well well-sm">
+
 <& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
 
 <&| /page/info_section.mas, id => "trial_accessions", title=>"Accessions", is_subsection => 1, collapsible=>1, collapsed=>1 &>
@@ -283,29 +309,43 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 % if (!$has_plant_entries) {
    <button class="btn btn-default" id="create_plant_entries_button">Add plant entries</button>
    <& /breeders_toolbox/trial/add_plants_per_plot.mas, trial_id => $trial_id, trial_name => $trial_name &>
-   
+
 % } else {
 
 <& /breeders_toolbox/trial/trial_plants.mas, trial_id => $trial_id &>
 
 % }
 
-</div>
+</div><!--closes plant_entries_section -->
 
 </&>
 
+</div><!-- closes well -->
+
 </&>
 
+<& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $trial_id, dialog_name => $trial_name, dialog_type => 'Trial' &>
 
-<& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<&| /page/info_section.mas,
+   title       => 'Weather at Trial Location',
+   collapsible => 1,
+&>
+
+	<& /breeders_toolbox/trial/weather.mas, location => $location_name &>
+
+</&>
 
 <&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='trial_download_phenotypes_button'>Download Trial Data</a>]" &>
+
+% if ($has_expression_atlas) {
+    <& /breeders_toolbox/trial/export_trial_to_expression_atlas.mas, trial_id => $trial_id, trial_name=>$trial_name, expression_atlas_url=>$expression_atlas_url, site_project_name=>$site_project_name, sgn_session_id=>$sgn_session_id, user_name=>$user_name &>
+% }
 
 <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
 
 </&>
 
-<&| /page/info_section.mas, id=> "compute_derived_traits", title=>'Compute Derived Traits', collapsible=>1, collapsed=>1, &>
+<&| /page/info_section.mas, id=> "compute_derived_traits", title=>'Compute Trait Phenotypes', collapsible=>1, collapsed=>1, &>
 
 	<& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
 
@@ -318,11 +358,14 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
    collapsible => 1,
 &>
 
-	<& /breeders_toolbox/trial_jbrowse_instance.mas, trial_id => $trial_id &>
+	<& /breeders_toolbox/trial/jbrowse_instance.mas, trial_id => $trial_id &>
 
 </&>
 
 <&| /page/info_section.mas, title=>"Files", collapsible=>1, collapsed=>0 &>
+
+<div class="well well-sm">
+
   <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
     <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a name="create_spreadsheet_link">Create Spreadsheet</a>]' &>
     </&>
@@ -330,16 +373,39 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
     </&>
     <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=> '[<a id="create_DataCollector_link">Create DataCollector Spreadsheet</a>]' &>
     </&>
-  </&>
-  <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+  </&><!-- closes create new phenotyping file section -->
+  <&| /page/info_section.mas, title=>"Upload Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
     <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_spreadsheet_phenotypes_link">Upload</a>]'&>
     </&>
     <&| /page/info_section.mas, title=>"Android Field Book Exported", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_fieldbook_phenotypes_link">Upload</a>]'&>
     </&>
     <&| /page/info_section.mas, title=>"Data Collector Spreadsheet", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'[<a id="upload_datacollector_phenotypes_link">Upload</a>]'&>
     </&>
-  </&>
-</&>
+  </&><!-- closes upload new phenotype file section -->
+  <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'[<a id="trial_set_phenotypes_fully_link">Phenotypes Fully Uploaded?</a>]' &>
+
+  <table class="table table-bordered files_datatables" alt="">
+  <thead>
+    <tr><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>File Type</th><th>Options</th></tr>
+  </thead>
+  <tbody>
+% foreach my $f (@$trial_phenotype_files) {
+    <tr>
+      <td><% $f->[4] %></td>
+      <td><% $f->[1] %></td>
+      <td><a href="/solpeople/profile/<% $f->[2] %>"><% $f->[3] %></a></td>
+      <td><% $f->[6] %></td>
+      <td><a href="/breeders/phenotyping/view/<% $f->[0] %>">View</a> | <a href="/breeders/phenotyping/download/<% $f->[0] %>">Download</a></td>
+    </tr>
+% }
+  </tbody>
+  </table>
+
+  </&><!-- closes uploaded file section -->
+
+</div><!-- closes well -->
+
+</&><!-- closes entire phenotyping file section -->
 
 <& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
 <& /fieldbook/upload_phenotype_fieldbook.mas &>
@@ -348,6 +414,8 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 <& /breeders_toolbox/trial/create_datacollector_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <& /fieldbook/create_fieldbook_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <& /breeders_toolbox/trial/create_spreadsheet_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+
+<& /breeders_toolbox/trial/set_phenotypes_fully_uploaded.mas, trial_id => $trial_id &>
 
 % my $data_agreement_link = "Add/edit data agreement";
 % if ($user_can_modify) { $data_agreement_link = '[<a id="add_data_agreement">Add/edit data agreement</a>]'; }
@@ -380,11 +448,98 @@ my $change_breeding_program_link = qq{[<a id="show_change_breeding_program_link"
 % print $trial_id;
 </div>
 
+<div data-spy="affix" data-offset-top="0" style="max-height: 100%; overflow-y: auto;">
+    <div class="panel panel-info">
+        <div class="panel-heading">Completion</div>
+        <div class="panel-body">
 
-<div id="trial_design_view_layout" title="Trial design layout">
-% print $design_layout_view;
+<&| /page/info_section.mas, title=>"Trial Info", collapsible=>1, collapsed=>0 &>
+%  if ($trial_name) {
+            <p class="text-success" title="This trial has a name saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Trial Name&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger" title="This trial does not have a name. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Trial Name&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($breeding_program_name) {
+            <p class="text-success" title="This trial has a breeding program saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Breeding Program&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger" title="This trial does not have a breeding program. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Breeding Program&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($location_name) {
+            <p class="text-success" title="This trial has a location saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Location&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger" title="This trial does not have a location. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Location&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($year) {
+            <p class="text-success" title="This trial has a year saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Year&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger" title="This trial does not have a year. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Year&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($trial_type) {
+            <p class="text-success" title="This trial has a trial type saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Trial Type&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger" title="This trial does not have a trial type. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Trial Type&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($planting_date) {
+            <p class="text-success" title="This trial has a planting date saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Planting Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger" title="This trial does not have a planting date. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Planting Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($harvest_date) {
+            <p class="text-success" title="This trial has a harvest date saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Harvest Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger" title="This trial does not have a harvest date. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Harvest Date&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($trial_description) {
+            <p class="text-success" title="This trial has a description saved. You can view and edit this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Description&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger" title="This trial does not have a description. Please add this information by clicking [Edit Trial Details] in the Trial Detail section on this page."><small>Description&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($folder_id) {
+            <p class="text-success" title="This trial is saved in a folder or breeding program. You can change this by clicking [Change] in the Folder section on this page."><small>In Folder&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-info" title="This trial is not in a folder! If this happens please contact us because this should not happen. A trial should always be in a folder or breeding program."><small>Not In Folder&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>
+%  }
+</&>
+
+<&| /page/info_section.mas, title=>"Field Design", collapsible=>1, collapsed=>1 &>
+%  if ($design_name) {
+            <p class="text-success" title="This trial has a design type saved. You can view and download this information in the Design section on this page."><small>Has Field Design&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger" title="This trial does not have a design type saved! If this happens please contact us because this should not happen!"><small>No Field Design&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($has_layout) {
+            <p class="text-success" title="This trial has plots and their layout information saved in the database. You can view and download this information in the Design section on this page."><small>Has Field Layout&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-danger" title="This trial does not have any plot layout info saved in the trial! If this occurs please contact us because this should not occur!"><small>No Field Layout&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>
+%  }
+%  if ($has_physical_map) {
+            <p class="text-success" title="This trial has a physical map saved. You can view and edit the physical map in the Physical Trial Layout section on this page."><small>Has Physial Map&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-info" title="This trial does not have physical map information. This means the map will not appear in the Physical Trial Layout section. You can add physical map info by clicking [Upload Trial Coordinates] in the Physical Trial Layout section on this page."><small>No Physical Map&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>
+%  }
+%  if ($has_plant_entries) {
+            <p class="text-success" title="This trial has plot and plant entries saved. This means that phenotypes can be recorded on the plot and plant level."><small>Has Plots<br/>And Plants&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-info" title="This trial has plot entries saved, but no plant entries. Plant entries are needed for plant level phenotyping. You can create plant entries in Design->Plant Entries section on this page."><small>Has Plots<br/>No Plants&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>
+%  }
+</&>
+
+<&| /page/info_section.mas, title=>"Phenotyping", collapsible=>1, collapsed=>1 &>
+%  if ($has_phenotypes) {
+            <p class="text-success" title="This trial has phenotypes saved. You can view and download this data in the Traits Assayed section on this page."><small>Has Phenotypes&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-info" title="This trial does not have any phenotypes stored. You can upload phenotypes in the Files section on this page."><small>No Phenotypes&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>
+%  }
+%  if ($phenotypes_fully_uploaded) {
+            <p class="text-success" title="All recorded phenotypes for this trial are saved in the database. You can change this by clicking [Phenotypes Fully Uploaded?] in the Files section on this page."><small>Phenotyping<br/>Complete&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>
+%  } else {
+            <p class="text-info" title="Once phenotypes are fully uploaded for a trial, you can click [Phenotypes Fully Uploaded?] in the Files section on this page."><small>Phenotyping<br/>Incomplete&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>
+%  }
+</&>
+
+        </div>
+    </div>
 </div>
-
 
 <script defer="defer">
 

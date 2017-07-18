@@ -27,7 +27,11 @@ Lukas Mueller <lam87@cornell.edu>
 package SGN::Controller::AJAX::Onto;
 
 use Moose;
+use SGN::Model::Cvterm;
 use CXGN::Chado::Cvterm;
+use CXGN::Onto;
+use Data::Dumper;
+use JSON;
 
 use namespace::autoclean;
 
@@ -38,6 +42,112 @@ __PACKAGE__->config(
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
+
+=head2 compose_trait
+
+Creates a new term in the designated composed trait cv and links it to component terms through cvterm_relationship
+
+=cut
+
+sub compose_trait: Path('/ajax/onto/store_composed_term') Args(0) {
+
+  my $self = shift;
+  my $c = shift;
+
+  #my @ids = $c->req->param("ids[]");
+  #print STDERR "Ids array for composing in AJAX Onto = @ids\n";
+
+  my $new_trait_names = decode_json $c->req->param("new_trait_names");
+  #print STDERR Dumper $new_trait_names;
+  my $new_terms;
+  eval {
+      my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+      $new_terms = $onto->store_composed_term($new_trait_names);
+  };
+  if ($@) {
+      $c->stash->{rest} = { error => "An error occurred saving the new trait details: $@" };
+  }
+  else {
+      my $message = '';
+      my @names;
+      foreach (@$new_terms){
+          $message .= 'Saved new trait <a href="/cvterm/'.$_->[0].'/view">'.$_->[1].'</a><br>';
+          push @names, $_->[1];
+      }
+      $c->stash->{rest} = { success => $message,
+                            names => \@names };
+  }
+
+}
+
+=head2 get_trait_from_exact_components
+
+searches for and returns (if found) a composed trait that contains the exact components supplied
+
+=cut
+
+sub get_trait_from_exact_components: Path('/ajax/onto/get_trait_from_exact_components') Args(0) {
+
+  my $self = shift;
+  my $c = shift;
+  my @component_ids = $c->req->param("ids[]");
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+  my $trait_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@component_ids);
+  if (!$trait_id) {
+    $c->stash->{rest} = { error => "No exact matches found."};
+  }
+  else {
+    $c->stash->{rest} = { trait_id => $trait_id };
+  }
+}
+
+=head2 get_trait_from_component_categories
+
+searches for and returns traits that contain one of the ids from each id category supplied
+
+=cut
+
+sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_component_categories') Args(0) {
+
+  my $self = shift;
+  my $c = shift;
+  my @allowed_composed_cvs = split ',', $c->config->{composable_cvs};
+  my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
+  my $composable_cvterm_format = $c->config->{composable_cvterm_format};
+  my @object_ids = $c->req->param("object_ids[]");
+  my @attribute_ids = $c->req->param("attribute_ids[]");
+  my @method_ids = $c->req->param("method_ids[]");
+  my @unit_ids = $c->req->param("unit_ids[]");
+  my @trait_ids = $c->req->param("trait_ids[]");
+  my @tod_ids = $c->req->param("tod_ids[]");
+  my @toy_ids = $c->req->param("toy_ids[]");
+  my @gen_ids = $c->req->param("gen_ids[]");
+
+  print STDERR "Obj ids are @object_ids\n Attr ids are @attribute_ids\n Method ids are @method_ids\n unit ids are @unit_ids\n trait ids are @trait_ids\n tod ids are @tod_ids\n toy ids are @toy_ids\n gen ids are @gen_ids\n";
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+  my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, {
+      object => \@object_ids,
+      attribute => \@attribute_ids,
+      method => \@method_ids,
+      unit => \@unit_ids,
+      trait => \@trait_ids,
+      tod => \@tod_ids,
+      toy => \@toy_ids,
+      gen => \@gen_ids,
+  });
+
+  if (!$traits) {
+    $c->stash->{rest} = { error => "No matches found."};
+  }
+  else {
+    $c->stash->{rest} = {
+      existing_traits => $traits->{existing_traits},
+      new_traits => $traits->{new_traits}
+    };
+  }
+}
 
 
 =head2 children
@@ -73,15 +183,15 @@ sub children_GET {
         my $child_node = $cvrel_row->subject();
 
         #only report back children of the same cv namespace
-        if ($child_node->cv_id() != $cvterm->cv_id()) {
-            next();
-        }
+      #  if ($child_node->cv_id() != $cvterm->cv_id()) {
+      #      next();
+      #  }
 
         my $responsehash = $self->flatten_node($child_node, $relationship_node);
         push @response_list, $responsehash;
     }
     @response_list = sort { lc $a->{cvterm_name} cmp lc $b->{cvterm_name} } @response_list;
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 
@@ -111,13 +221,13 @@ sub parents_GET  {
     if (!$db || !$accession) {
         #not sure we need here to send an error key, since cache is usually called after parents (? )
         $response{error} = "Did not pass a legal ontology term ID! ( $db_name : $accession)";
-        $c->{stash}->{rest} = \%response;
+        $c->stash->{rest} = \%response;
         return;
     }
     $dbxref = $db->find_related('dbxrefs', { accession => $accession }) if $db;
     if (!$dbxref) {
         $response{error} = "Could not find term $db_name : $accession in the database! Check your input and try again";
-        $c->{stash}->{rest} = \%response;
+        $c->stash->{rest} = \%response;
         return;
     }
     my $cvterm = $dbxref->cvterm;
@@ -135,10 +245,10 @@ sub parents_GET  {
         }
     } else {
         $response{error} = "Could not find term $db_name : $accession in the database! Check your input and try again. THIS MAY BE AN INTERNAL DATABASE PROBLEM! Please contact sgn-feedback\@sgn.cornell.edu for help.";
-        $c->{stash}->{rest} = \%response;
+        $c->stash->{rest} = \%response;
         return;
     }
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 =head2 menu
@@ -157,7 +267,7 @@ sub menu  : Local : ActionClass('REST') { }
 sub menu_GET  {
     my $self = shift;
     my $c = shift;
-    
+
     my $menudata = $c->config->{onto_root_namespaces};
 
     print STDERR "MENUDATA: $menudata\n";
@@ -165,19 +275,19 @@ sub menu_GET  {
 
     my $menu = '<select name="cv_select">';
 
-    foreach my $mi (@menuitems) { 
+    foreach my $mi (@menuitems) {
 	print STDERR "MENU ITEM: $mi\n";
-	if ($mi =~ /\s*(\w+)?\s*(.*)$/) { 
+	if ($mi =~ /\s*(\w+)?\s*(.*)$/) {
 	    my $value = $1;
 	    my $name = $2;
 
 	    $menu .= qq { <option value="$value">$value $name</option>\n };
 	}
     }
-    
+
     $menu .= "</select>\n";
     $c->stash->{rest} = [ $menu ];
-    
+
 }
 
 
@@ -244,7 +354,7 @@ sub roots_GET {
         my $hashref = $self->flatten_node($r, undef);
         push @response_list, $hashref;
     }
-    $c->{stash}->{rest}= \@response_list;
+    $c->stash->{rest}= \@response_list;
 }
 
 
@@ -283,7 +393,7 @@ GROUP BY cvterm.cvterm_id,cv.name, cvterm.name, dbxref.accession, db.name ";
     while  (my $hashref = $sth->fetchrow_hashref ) {
         push @response_list, $hashref;
     }
-    $c->{stash}->{rest} = \@response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 =head2 cache
@@ -313,7 +423,7 @@ sub cache_GET {
     my ($db_name, $accession) = split ":", $c->request->param('node');
     if (!$db_name || !$accession) {
         $response{error} = "Looks like you passed an illegal ontology term ID ! ($db_name : $accession) Please try again.";
-        $c->{stash}->{rest} = \%response;
+        $c->stash->{rest} = \%response;
         return;
     }
 
@@ -321,23 +431,23 @@ sub cache_GET {
     my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
     if (!$dbxref) {
         $response{error} = "Did not find ontology term $db_name : $accession in the database. Please try again. If you think this term should exist please contact sgn-feedback\@sgn.cornell.edu";
-        $c->{stash}->{rest} = \%response;
+        $c->stash->{rest} = \%response;
         return;
     }
 
     my $cvterm = $dbxref->cvterm;
     if (!$cvterm) {
         $response{error} = "Did not find ontology term $db_name : $accession in the database. This may be an internal database issue. Please contact sgn-feedback\@sgn.cornell.edu and we will fic this error ASAP";
-        $c->{stash}->{rest} = \%response;
+        $c->stash->{rest} = \%response;
         return;
     }
     my $parents_rs = $cvterm->recursive_parents(); # returns a result set
-    if (!$parents_rs->next) { 
+    if (!$parents_rs->next) {
         $response{error} = "did not find recursive parents for cvterm " . $cvterm->name;
-        $c->{stash}->{rest} = \%response;
+        $c->stash->{rest} = \%response;
         return;
     }
-    
+
 #    $self->add_cache_list(undef, $cvterm, $cvterm->type());
     while (my $p = $parents_rs->next()) {
         my $children_rs = $p->children();
@@ -346,7 +456,7 @@ sub cache_GET {
             $self->add_cache_list($p, $child, $rel_rs->type());
         }
     }
-    $c->{stash}->{rest} = $self->{cache_list};
+    $c->stash->{rest} = $self->{cache_list};
 }
 
 
@@ -372,7 +482,7 @@ sub add_cache_list :Private {
     if (exists($self->{duplicates}->{$unique_hashkey})) {
         return;
     }
-    
+
     $self->{duplicates}->{$unique_hashkey}++;
 
     my $hashref = $self->flatten_node($child, $relationship);

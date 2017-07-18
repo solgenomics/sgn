@@ -27,8 +27,16 @@ is_deeply($results, {
                                 '2014'
                               ],
                               [
+                                '2015',
+                                '2015'
+                              ],
+                              [
                                 '2016',
                                 '2016'
+                              ],
+                              [
+                                '2017',
+                                '2017'
                               ]
                             ]
              }, 'wizard one category query');
@@ -177,7 +185,7 @@ $queryref = {
              };
 $results = $bs ->metadata_query($criteria_list, $dataref, $queryref);
 is_deeply($results, {
-               'error' => '0 matches. No results to display'
+               'results' => []
              }, "wizard 0 results error query");
 
 done_testing();

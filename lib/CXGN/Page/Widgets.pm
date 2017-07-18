@@ -27,7 +27,6 @@ that it is dynamic.
 
 All functions are EXPORT_OK.
 
-=over 4
 
 =cut
 BEGIN {

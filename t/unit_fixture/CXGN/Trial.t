@@ -15,8 +15,255 @@ use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
 use CXGN::Trial::Folder;
 use CXGN::Phenotypes::StorePhenotypes;
+use CXGN::Trial::Search;
+use SGN::Model::Cvterm;
 
 my $f = SGN::Test::Fixture->new();
+my $schema = $f->bcs_schema;
+
+my $trial_search = CXGN::Trial::Search->new({
+    bcs_schema=>$schema,
+});
+my $result = $trial_search->search();
+print STDERR Dumper $result;
+is_deeply($result, [
+          {
+            'folder_name' => undef,
+            'breeding_program_name' => 'test',
+            'description' => 'Copy of trial with postcomposed phenotypes from cassbase.',
+            'trial_name' => 'CASS_6Genotypes_Sampling_2015',
+            'location_id' => '23',
+            'trial_id' => 165,
+            'year' => '2017',
+            'harvest_date' => undef,
+            'breeding_program_id' => 134,
+            'design' => 'RCBD',
+            'location_name' => 'test_location',
+            'folder_id' => undef,
+            'trial_type' => undef,
+            'planting_date' => undef
+          },
+          {
+            'design' => 'Alpha',
+            'location_name' => 'test_location',
+            'folder_id' => undef,
+            'planting_date' => undef,
+            'trial_type' => 'Clonal Evaluation',
+            'harvest_date' => undef,
+            'breeding_program_id' => 134,
+            'trial_name' => 'Kasese solgs trial',
+            'location_id' => '23',
+            'trial_id' => 139,
+            'year' => '2014',
+            'folder_name' => undef,
+            'breeding_program_name' => 'test',
+            'description' => 'This trial was loaded into the fixture to test solgs.'
+          },
+          {
+            'trial_name' => 'new_test_cross',
+            'trial_id' => 135,
+            'location_id' => undef,
+            'year' => undef,
+            'folder_name' => undef,
+            'breeding_program_name' => 'test',
+            'description' => 'new_test_cross',
+            'location_name' => undef,
+            'design' => undef,
+            'folder_id' => undef,
+            'trial_type' => undef,
+            'planting_date' => undef,
+            'harvest_date' => undef,
+            'breeding_program_id' => 134
+          },
+          {
+            'breeding_program_id' => undef,
+            'harvest_date' => undef,
+            'trial_type' => undef,
+            'planting_date' => undef,
+            'folder_id' => undef,
+            'location_name' => undef,
+            'design' => undef,
+            'description' => 'selection_population',
+            'breeding_program_name' => undef,
+            'folder_name' => undef,
+            'year' => '2015',
+            'location_id' => undef,
+            'trial_id' => 143,
+            'trial_name' => 'selection_population'
+          },
+          {
+            'trial_id' => 140,
+            'location_id' => undef,
+            'year' => '2015',
+            'trial_name' => 'test_genotyping_project',
+            'description' => 'test_genotyping_project',
+            'folder_name' => undef,
+            'breeding_program_name' => undef,
+            'planting_date' => undef,
+            'trial_type' => undef,
+            'location_name' => undef,
+            'design' => undef,
+            'folder_id' => undef,
+            'breeding_program_id' => undef,
+            'harvest_date' => undef
+          },
+          {
+            'trial_type' => undef,
+            'planting_date' => undef,
+            'location_name' => undef,
+            'design' => undef,
+            'folder_id' => undef,
+            'breeding_program_id' => undef,
+            'harvest_date' => undef,
+            'trial_id' => 142,
+            'location_id' => undef,
+            'year' => '2015',
+            'trial_name' => 'test_population2',
+            'description' => 'test_population2',
+            'folder_name' => undef,
+            'breeding_program_name' => undef
+          },
+          {
+            'breeding_program_name' => 'test',
+            'folder_name' => undef,
+            'description' => 'test tets',
+            'trial_name' => 'test_t',
+            'year' => '2016',
+            'location_id' => '23',
+            'trial_id' => 144,
+            'harvest_date' => undef,
+            'breeding_program_id' => 134,
+            'folder_id' => undef,
+            'design' => 'CRD',
+            'location_name' => 'test_location',
+            'planting_date' => undef,
+            'trial_type' => undef
+          },
+          {
+            'year' => '2014',
+            'trial_id' => 137,
+            'location_id' => '23',
+            'trial_name' => 'test_trial',
+            'description' => 'test trial',
+            'breeding_program_name' => 'test',
+            'folder_name' => undef,
+            'trial_type' => undef,
+            'planting_date' => undef,
+            'folder_id' => undef,
+            'location_name' => 'test_location',
+            'design' => 'CRD',
+            'breeding_program_id' => 134,
+            'harvest_date' => undef
+          },
+          {
+            'breeding_program_id' => 134,
+            'harvest_date' => undef,
+            'planting_date' => undef,
+            'trial_type' => undef,
+            'folder_id' => undef,
+            'design' => 'CRD',
+            'location_name' => 'test_location',
+            'description' => 'another trial for solGS',
+            'breeding_program_name' => 'test',
+            'folder_name' => undef,
+            'year' => '2014',
+            'location_id' => '23',
+            'trial_id' => 141,
+            'trial_name' => 'trial2 NaCRRI'
+          }
+        ], 'trial search test 1');
+
+$trial_search = CXGN::Trial::Search->new({
+    bcs_schema=>$schema,
+    location_list=>['test_location'],
+    program_list=>['test'],
+});
+$result = $trial_search->search();
+print STDERR Dumper $result;
+is_deeply($result, [
+          {
+            'location_name' => 'test_location',
+            'design' => 'RCBD',
+            'folder_id' => undef,
+            'planting_date' => undef,
+            'trial_type' => undef,
+            'harvest_date' => undef,
+            'breeding_program_id' => 134,
+            'trial_name' => 'CASS_6Genotypes_Sampling_2015',
+            'trial_id' => 165,
+            'location_id' => '23',
+            'year' => '2017',
+            'folder_name' => undef,
+            'breeding_program_name' => 'test',
+            'description' => 'Copy of trial with postcomposed phenotypes from cassbase.'
+          },
+          {
+            'trial_name' => 'Kasese solgs trial',
+            'year' => '2014',
+            'location_id' => '23',
+            'trial_id' => 139,
+            'breeding_program_name' => 'test',
+            'folder_name' => undef,
+            'description' => 'This trial was loaded into the fixture to test solgs.',
+            'folder_id' => undef,
+            'location_name' => 'test_location',
+            'design' => 'Alpha',
+            'trial_type' => 'Clonal Evaluation',
+            'planting_date' => undef,
+            'harvest_date' => undef,
+            'breeding_program_id' => 134
+          },
+          {
+            'trial_type' => undef,
+            'planting_date' => undef,
+            'design' => 'CRD',
+            'location_name' => 'test_location',
+            'folder_id' => undef,
+            'breeding_program_id' => 134,
+            'harvest_date' => undef,
+            'location_id' => '23',
+            'trial_id' => 144,
+            'year' => '2016',
+            'trial_name' => 'test_t',
+            'description' => 'test tets',
+            'folder_name' => undef,
+            'breeding_program_name' => 'test'
+          },
+          {
+            'breeding_program_id' => 134,
+            'harvest_date' => undef,
+            'planting_date' => undef,
+            'trial_type' => undef,
+            'design' => 'CRD',
+            'location_name' => 'test_location',
+            'folder_id' => undef,
+            'description' => 'test trial',
+            'folder_name' => undef,
+            'breeding_program_name' => 'test',
+            'trial_id' => 137,
+            'location_id' => '23',
+            'year' => '2014',
+            'trial_name' => 'test_trial'
+          },
+          {
+            'folder_id' => undef,
+            'design' => 'CRD',
+            'location_name' => 'test_location',
+            'trial_type' => undef,
+            'planting_date' => undef,
+            'harvest_date' => undef,
+            'breeding_program_id' => 134,
+            'trial_name' => 'trial2 NaCRRI',
+            'year' => '2014',
+            'location_id' => '23',
+            'trial_id' => 141,
+            'breeding_program_name' => 'test',
+            'folder_name' => undef,
+            'description' => 'another trial for solGS'
+          }
+        ], 'trial search test 2');
+
+
 
 #CXGN::Trial Class METHODS
 my $locations = CXGN::Trial::get_all_locations($f->bcs_schema());
@@ -40,14 +287,12 @@ foreach (@project_types) {
 @all_project_types = sort @all_project_types;
 #print STDERR Dumper \@all_project_types;
 is_deeply(\@all_project_types, [
-          'AYT',
-          'Advance Yield Trial',
-          'PYT',
+          'Advanced Yield Trial',
+          'Clonal Evaluation',
           'Preliminary Yield Trial',
-          'UYT',
+          'Seedling Nursery',
           'Uniform Yield Trial',
-          'clonal',
-          'seedling'
+          'Variety Release Trial'
         ], "check get_all_project_types");
 
 
@@ -73,20 +318,21 @@ my $number_of_plots = $number_of_reps * scalar(@$stock_list);
 $td->calculate_design();
 
 my $trial_design = $td->get_design();
+#print STDERR Dumper $trial_design;
 
 my $breeding_program_row = $f->bcs_schema->resultset("Project::Project")->find( { name => 'test' });
+my $trial_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'Advanced Yield Trial', 'project_type')->cvterm_id();
 
 my $new_trial = CXGN::Trial::TrialCreate->new(
     {
 	dbh => $f->dbh(),
 	chado_schema => $f->bcs_schema(),
-	metadata_schema => $f->metadata_schema(),
-	phenome_schema => $f->phenome_schema(),
-	user_name => 'janedoe',
+	user_name => 'janedoe', #not implemented
 	program => 'test',
 	trial_year => 2014,
 	trial_description => 'another test trial...',
 	design_type => 'RCBD',
+    trial_type => $trial_type_cvterm_id,
 	trial_location => 'test_location',
 	trial_name => "anothertrial",
 	design => $trial_design,
@@ -121,9 +367,10 @@ foreach (@$breeding_programs){
 #print STDERR Dumper \@breeding_program_names;
 is_deeply(\@breeding_program_names, ['test'], "check breeding_program_names");
 
-my $rs = $f->bcs_schema()->resultset("Stock::Stock")->search( { name => 'anothertrial1' });
+my $plot_name = $trial_design->{1}->{plot_name};
+my $rs = $f->bcs_schema()->resultset("Stock::Stock")->search( { name => $plot_name });
 is($rs->count(), 1, "check that a single plot was saved for a single name.");
-is($rs->first->name(), 'anothertrial1', 'check that plot name was saved correctly');
+is($rs->first->name(), $plot_name, 'check that plot name was saved correctly');
 
 if ($rs->count() > 0) {
     print STDERR "antohertrial1 has id ".$rs->first()->stock_id()."\n";
@@ -138,28 +385,32 @@ my $phenotype_count_before_store = $trial->phenotype_count();
 
 ok($trial->phenotype_count() == 0, "trial has no phenotype data");
 
-my $c = SimulateC->new( { dbh => $f->dbh(),
-			  bcs_schema => $f->bcs_schema(),
-			  metadata_schema => $f->metadata_schema(),
-			  sp_person_id => 41 });
-
-my $lp = CXGN::Phenotypes::StorePhenotypes->new();
-
-my $plotlist_ref = [ 'anothertrial1', 'anothertrial2', 'anothertrial3', 'anothertrial4', 'anothertrial5' ];
+my $plotlist_ref = [ $trial_design->{1}->{plot_name}, $trial_design->{2}->{plot_name}, $trial_design->{3}->{plot_name} ];
 
 my $traitlist_ref = [ 'root number|CO:0000011', 'dry yield|CO:0000014' ];
 
-my %plot_trait_value = ( 'anothertrial1' => { 'root number|CO:0000011'  => [0,''], 'dry yield|CO:0000014' => [30,''] },
-			   'anothertrial2' => { 'root number|CO:0000011'  => [10,''], 'dry yield|CO:0000014' => [40,''] },
-			   'anothertrial3' => { 'root number|CO:0000011'  => [20,''], 'dry yield|CO:0000014' => [50,''] },
+my %plot_trait_value = ( $trial_design->{1}->{plot_name} => { 'root number|CO:0000011'  => [0,''], 'dry yield|CO:0000014' => [30,''] },
+			   $trial_design->{2}->{plot_name} => { 'root number|CO:0000011'  => [10,''], 'dry yield|CO:0000014' => [40,''] },
+			   $trial_design->{3}->{plot_name} => { 'root number|CO:0000011'  => [20,''], 'dry yield|CO:0000014' => [50,''] },
     );
 
 
 my %metadata = ( operator => 'johndoe', date => '20141223' );
 
-my $size = scalar(@$plotlist_ref) * scalar(@$traitlist_ref);
+my $lp = CXGN::Phenotypes::StorePhenotypes->new(
+    bcs_schema=>$f->bcs_schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>$plotlist_ref,
+    trait_list=>$traitlist_ref,
+    values_hash=>\%plot_trait_value,
+    has_timestamps=>0,
+    overwrite_values=>0,
+    metadata_hash=>\%metadata,
+);
 
-$lp->store($c, $size, $plotlist_ref, $traitlist_ref, \%plot_trait_value, \%metadata, 'plots');
+$lp->store();
 
 my $total_phenotypes = $trial->total_phenotypes();
 
@@ -167,7 +418,7 @@ my $trial_phenotype_count = $trial->phenotype_count();
 
 print STDERR "Total phentoypes: $total_phenotypes\n";
 print STDERR "Trial phentoypes: $trial_phenotype_count\n";
-is($total_phenotypes, 3310, "total phenotype data");
+is($total_phenotypes, 3508, "total phenotype data");
 is($trial_phenotype_count, 6, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -181,25 +432,27 @@ foreach (@$traits_assayed) {
 }
 @traits_assayed_names = sort @traits_assayed_names;
 #print STDERR Dumper \@traits_assayed_names;
-is_deeply(\@traits_assayed_names, ['Dry yield', 'Root number counting'], 'check traits assayed' );
+is_deeply(\@traits_assayed_names, ['dry yield|CO:0000014', 'root number counting|CO:0000011'], 'check traits assayed' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70727);
 my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
 #print STDERR Dumper \@pheno_for_trait_sorted;
 is_deeply(\@pheno_for_trait_sorted, ['30','40','50'], 'check traits assayed' );
 
-my $plot_pheno_for_trait = $tn->get_plot_phenotypes_for_trait(70727);
+my $plot_pheno_for_trait = $tn->get_stock_phenotypes_for_traits([70727], 'all', ['plot_of','plant_of'], 'accession', 'subject');
 #print STDERR Dumper $plot_pheno_for_trait;
 my @phenotyped_stocks;
 my @phenotyped_stocks_values;
 foreach (@$plot_pheno_for_trait) {
     push @phenotyped_stocks, $_->[1];
-    push @phenotyped_stocks_values, $_->[4];
+    push @phenotyped_stocks_values, $_->[7];
 }
 @phenotyped_stocks = sort @phenotyped_stocks;
 @phenotyped_stocks_values = sort @phenotyped_stocks_values;
-#print STDERR Dumper \@phenotyped_stocks;
-is_deeply(\@phenotyped_stocks, ['anothertrial1', 'anothertrial2', 'anothertrial3'], "check phenotyped stocks");
+my @expected_sorted_stocks = sort ($trial_design->{1}->{plot_name}, $trial_design->{2}->{plot_name}, $trial_design->{3}->{plot_name});
+print STDERR Dumper \@phenotyped_stocks;
+print STDERR Dumper \@expected_sorted_stocks;
+is_deeply(\@phenotyped_stocks, \@expected_sorted_stocks, "check phenotyped stocks");
 is_deeply(\@phenotyped_stocks_values, ['30', '40', '50'], "check phenotyped stocks");
 
 my $trial_experiment_count = $trial->get_experiment_count();
@@ -272,18 +525,12 @@ foreach (@$trial_plots){
     push @trial_plot_names, $_->[1];
 }
 @trial_plot_names = sort @trial_plot_names;
-#print STDERR Dumper \@trial_plot_names;
-is_deeply(\@trial_plot_names, [
-          'anothertrial1',
-          'anothertrial2',
-          'anothertrial3',
-          'anothertrial4',
-          'anothertrial5',
-          'anothertrial6',
-          'anothertrial7',
-          'anothertrial8',
-          'anothertrial9'
-        ], 'Check get_plots');
+print STDERR "Num plots: ".scalar(@trial_plot_names)."\n";
+is(scalar(@trial_plot_names), 9, 'check number of plots');
+my @expected_sorted_plots = sort ($trial_design->{1}->{plot_name}, $trial_design->{2}->{plot_name}, $trial_design->{3}->{plot_name}, $trial_design->{4}->{plot_name}, $trial_design->{5}->{plot_name}, $trial_design->{6}->{plot_name}, $trial_design->{7}->{plot_name}, $trial_design->{8}->{plot_name}, $trial_design->{9}->{plot_name});
+print STDERR Dumper \@trial_plot_names;
+print STDERR Dumper \@expected_sorted_plots;
+is_deeply(\@trial_plot_names, \@expected_sorted_plots, 'Check get_plots');
 
 my $trial_controls = $trial->get_controls();
 #print STDERR Dumper $trial_controls;
@@ -292,7 +539,8 @@ is_deeply($trial_controls, [], "check get_controls");
 
 
 #add plant entries
-$trial->create_plant_entities(3);
+my $num_plants_add = 3;
+$trial->create_plant_entities($num_plants_add);
 
 ok($trial->has_plant_entries(), "check if plant entries created.");
 
@@ -301,20 +549,30 @@ my $plants = $trial->get_plants();
 #print STDERR Dumper $plants;
 is(scalar(@$plants), $number_of_plots*3, "check if the right number of plants was created");
 
-my $plantlist_ref = [ 'anothertrial9_plant_2', 'anothertrial8_plant_3', 'anothertrial2_plant_2' ];
+my $plantlist_ref = [ $trial_design->{1}->{plot_name}.'_plant_2', $trial_design->{2}->{plot_name}.'_plant_2', $trial_design->{3}->{plot_name}.'_plant_1' ];
 
 my $traitlist_ref = [ 'root number|CO:0000011', 'dry yield|CO:0000014', 'harvest index|CO:0000015' ];
 
-my %plant_trait_value = ( 'anothertrial9_plant_2' => { 'root number|CO:0000011'  => [12,''], 'dry yield|CO:0000014' => [30,''], 'harvest index|CO:0000015' => [2,''] },
-    'anothertrial8_plant_3' => { 'root number|CO:0000011'  => [10,''], 'dry yield|CO:0000014' => [40,''], 'harvest index|CO:0000015' => [3,''] },
-    'anothertrial2_plant_2' => { 'root number|CO:0000011'  => [20,''], 'dry yield|CO:0000014' => [50,''], 'harvest index|CO:0000015' => [7,''] },
+my %plant_trait_value = ( $trial_design->{1}->{plot_name}.'_plant_2' => { 'root number|CO:0000011'  => [12,''], 'dry yield|CO:0000014' => [30,''], 'harvest index|CO:0000015' => [2,''] },
+    $trial_design->{2}->{plot_name}.'_plant_2' => { 'root number|CO:0000011'  => [10,''], 'dry yield|CO:0000014' => [40,''], 'harvest index|CO:0000015' => [3,''] },
+    $trial_design->{3}->{plot_name}.'_plant_1' => { 'root number|CO:0000011'  => [20,''], 'dry yield|CO:0000014' => [50,''], 'harvest index|CO:0000015' => [7,''] },
 );
 
 my %metadata = ( operator => 'johndoe', date => '20141225' );
 
-my $size = scalar(@$plantlist_ref) * scalar(@$traitlist_ref);
-
-$lp->store($c, $size, $plantlist_ref, $traitlist_ref, \%plant_trait_value, \%metadata, 'plants');
+my $lp = CXGN::Phenotypes::StorePhenotypes->new(
+    bcs_schema=>$f->bcs_schema,
+    metadata_schema=>$f->metadata_schema,
+    phenome_schema=>$f->phenome_schema,
+    user_id=>41,
+    stock_list=>$plantlist_ref,
+    trait_list=>$traitlist_ref,
+    values_hash=>\%plant_trait_value,
+    has_timestamps=>0,
+    overwrite_values=>0,
+    metadata_hash=>\%metadata,
+);
+$lp->store();
 
 my $total_phenotypes = $trial->total_phenotypes();
 
@@ -322,7 +580,7 @@ my $trial_phenotype_count = $trial->phenotype_count();
 
 print STDERR "Total phentoypes: $total_phenotypes\n";
 print STDERR "Trial phentoypes: $trial_phenotype_count\n";
-is($total_phenotypes, 3319, "total phenotype data");
+is($total_phenotypes, 3517, "total phenotype data");
 is($trial_phenotype_count, 15, "trial has phenotype data");
 
 my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
@@ -377,55 +635,25 @@ foreach (@$retrieve_plots){
 }
 @get_plot_names = sort @get_plot_names;
 #print STDERR Dumper \@get_plot_names;
-is_deeply(\@get_plot_names, [
-          'anothertrial1',
-          'anothertrial2',
-          'anothertrial3',
-          'anothertrial4',
-          'anothertrial5',
-          'anothertrial6',
-          'anothertrial7',
-          'anothertrial8',
-          'anothertrial9'
-        ], "check get_plots");
+is_deeply(\@get_plot_names, \@expected_sorted_plots, "check get_plots");
+
+my @expected_plants;
+foreach (@expected_sorted_plots) {
+    for my $i (1..$num_plants_add){
+        push @expected_plants, $_."_plant_".$i;
+    }
+}
+my @expected_sorted_plants = sort @expected_plants;
 
 my $retrieve_plants = $trial->get_plants();
 #print STDERR Dumper $retrieve_plants;
 my @get_plant_names;
 foreach (@$retrieve_plants){
-    push @get_plant_names, $_->{'plant_name'};
+    push @get_plant_names, $_->[1];
 }
 @get_plant_names = sort @get_plant_names;
-#print STDERR Dumper \@get_plant_names;
-is_deeply(\@get_plant_names, [
-          'anothertrial1_plant_1',
-          'anothertrial1_plant_2',
-          'anothertrial1_plant_3',
-          'anothertrial2_plant_1',
-          'anothertrial2_plant_2',
-          'anothertrial2_plant_3',
-          'anothertrial3_plant_1',
-          'anothertrial3_plant_2',
-          'anothertrial3_plant_3',
-          'anothertrial4_plant_1',
-          'anothertrial4_plant_2',
-          'anothertrial4_plant_3',
-          'anothertrial5_plant_1',
-          'anothertrial5_plant_2',
-          'anothertrial5_plant_3',
-          'anothertrial6_plant_1',
-          'anothertrial6_plant_2',
-          'anothertrial6_plant_3',
-          'anothertrial7_plant_1',
-          'anothertrial7_plant_2',
-          'anothertrial7_plant_3',
-          'anothertrial8_plant_1',
-          'anothertrial8_plant_2',
-          'anothertrial8_plant_3',
-          'anothertrial9_plant_1',
-          'anothertrial9_plant_2',
-          'anothertrial9_plant_3'
-        ], "check get_plants()");
+print STDERR Dumper \@get_plant_names;
+is_deeply(\@get_plant_names, \@expected_sorted_plants, "check get_plants()");
 
 
 # check trial deletion - first, delete associated phenotypes
@@ -505,11 +733,11 @@ is_deeply($trial->get_location(), [ 23, 'test_location' ], "set location");
 
 # test project type accessors
 #
-is($trial->get_project_type(), undef, "get type test");
+is($trial->get_project_type()->[1], "Advanced Yield Trial", "get type test");
 
-my $error = $trial->set_project_type("76463");
+my $error = $trial->set_project_type("77106");
 
-is($trial->get_project_type()->[1], "clonal", "set type test");
+is($trial->get_project_type()->[1], "Clonal Evaluation", "set type test");
 
 $trial->delete_project_entry();
 

@@ -1,0 +1,68 @@
+<%args>
+</%args>
+
+<div id="brapi_home_germplasm_detail_div">
+
+    <h4>Germplasm Details</h4>
+    <input name="brapi_home_germplasmdbid" id="brapi_home_germplasmdbid" class="form-control" type="text" placeholder="GermplasmDbId e.g. 38896" value="38896"/>
+    <button class="btn btn-primary" name="brapi_home_germplasmdbid_submit" id="brapi_home_germplasmdbid_submit">Get Details</button>
+    <br/><br/>
+    <div id="brapi_germplasm_detail_result_div">
+    </div>
+    <div id="brapi_germplasm_detail_pedigree_result_div">
+    </div>
+    <div id="brapi_germplasm_detail_markerprofiles_result_div">
+    </div>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+    jQuery("#brapi_home_germplasmdbid_submit").click(function() {
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm/'+jQuery('#brapi_home_germplasmdbid').val(),
+          'method': 'GET',
+          'success': function(response) {
+            console.log(response);
+            brapi_create_table(response.result, 'brapi_germplasm_detail_result_div', { "germplasmName": ["germplasmDbId", "stock"] });
+
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm/'+jQuery('#brapi_home_germplasmdbid').val()+'/pedigree',
+          'method': 'GET',
+          'success': function(response) {
+            console.log(response);
+            brapi_create_table(response.result, 'brapi_germplasm_detail_pedigree_result_div', undefined);
+
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+
+        jQuery.ajax( {
+          'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm/'+jQuery('#brapi_home_germplasmdbid').val()+'/markerprofiles',
+          'method': 'GET',
+          'success': function(response) {
+            console.log(response);
+            var data = [];
+            for (var i=0; i<response.result.markerProfiles.length; i++) {
+                data.push({'markerProfileDbId':response.result.markerProfiles[i]});
+            }
+            brapi_create_paginated_table(data, response.metadata.pagination, 'brapi_germplasm_detail_markerprofiles_result_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/germplasm/'+jQuery('#brapi_home_germplasmdbid').val()+'/markerprofiles', undefined);
+
+          },
+          error: function(response) {
+            alert('An error occurred');
+          }
+        });
+    });
+});
+
+</script>

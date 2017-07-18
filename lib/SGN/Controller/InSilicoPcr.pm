@@ -16,7 +16,6 @@ use Tie::UrlEncoder; our %urlencode;
 use File::Spec qw | catfile |;
 use File::Slurp qw | read_file write_file |;
 use CXGN::Tools::Run;
-use CXGN::BlastDB;
 use Bio::Seq;
 use CXGN::Page::FormattingHelpers qw/ html_break_string/;
 
@@ -38,7 +37,7 @@ sub index :Path('/tools/in_silico_pcr/') :Args(0) {
   my $seq = $c->req->param('seq');
   my $schema = $c->dbic_schema("SGN::Schema");
   
-  my $group_rs = $schema->resultset("BlastDbGroup")->search( name => "Genome Sequences");
+  my $group_rs = $schema->resultset("BlastDbGroup")->search( name => "In Silico PCR datasets");
   # my $group_rs = $schema->resultset("BlastDbGroup")->search( undef, { order_by=>'ordinal' });
 
   my $databases = {};
@@ -381,7 +380,7 @@ sub _blast_to_pcr {
             	      -lane_length => 400,
             	      -lane_width => 100,
             	      -band_thickness => 2,
-            	      -min_frag => 1000,
+                    # -min_frag => 1000,
             	      -font_size => 16,
             	      -gelcolor => [240,240,240],
             	      -bandcolor => [170,170,170]

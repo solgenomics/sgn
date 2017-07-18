@@ -1,0 +1,82 @@
+<%args>
+
+
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+
+<& /page/page_title.mas, title=>'Accession Usage' &>
+
+<&| /page/info_section.mas, title => 'Accession Usage for Trials', collapsible=>1, collapsed=>1 &>
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<table id="accession_usage_trials" width="100%" class="table table-hover table-striped">
+<thead>
+  <tr>
+    <th>Accession Name</th>
+    <th>Number of Trials</th>
+    <th>Total Number of Plots</th>
+  </tr>
+</thead>
+</table>
+
+</&>
+
+<&| /page/info_section.mas, title => 'Accession Usage as Female Parent', collapsible=>1, collapsed=>1 &>
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<table id="accession_usage_female" width="100%" class="table table-hover table-striped">
+<thead>
+  <tr>
+    <th>Accession Name</th>
+    <th>Number of Progenies</th>
+  </tr>
+</thead>
+</table>
+
+</&>
+
+<&| /page/info_section.mas, title => 'Accession Usage as Male Parent', collapsible=>1, collapsed=>1 &>
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<table id="accession_usage_male" width="100%" class="table table-hover table-striped">
+<thead>
+  <tr>
+    <th>Accession Name</th>
+    <th>Number of Progenies</th>
+  </tr>
+</thead>
+</table>
+
+</&>
+
+<script>
+
+jQuery(document).ready(function(){
+
+  jQuery('#accession_usage_trials').DataTable({
+
+     'ordering' : false,
+     'ajax':'ajax/accession_usage_trials'
+  });
+
+
+  jQuery('#accession_usage_female').DataTable({
+
+     'ordering' : false,
+     'ajax':'ajax/accession_usage_female'
+  });
+
+
+  jQuery('#accession_usage_male').DataTable({
+
+     'ordering' : false,
+     'ajax':'ajax/accession_usage_male'
+  });
+
+});
+
+</script>

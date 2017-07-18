@@ -3,16 +3,15 @@ $organism
 </%args>
 <& /page/page_title.mas, title => 'International Tomato Genome Sequencing Project' &>
 
-
-<& /homepage/tomato_genome_publication.mas &>
-
-<br />
-<br />
+<& /homepage/tomato_genome_release.mas &>
 <center>
   <img style="display: block" src="/documents/img/tomato_varieties_720x.jpg" border="0" width="720" />
 </center>
 <br />
 <br />
+
+<& /homepage/tomato_genome_publication.mas &>
+
 
 <&| /page/info_section.mas,
     title  => 'Data release policy',

@@ -15,7 +15,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <%args>
 
 
-$traits_form
+$traits_form => ''
 $pop_id
 $all_traits_file
 $no_traits_selected
@@ -57,7 +57,6 @@ if ($no_traits_selected eq 'none')
 
 </%perl>
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS"] &>
 
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 

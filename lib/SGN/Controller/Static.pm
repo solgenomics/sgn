@@ -24,11 +24,6 @@ use Moose;
 BEGIN { extends 'Catalyst::Controller'; }
 
 
-sub brapi_test :Path('/brapi_test/') :Args(0) { 
-    my $self = shift;
-    my $c = shift;
-    $c->stash->{template} = '/brapiclient/test.mas';
-}
 
 sub ethz_cass_sync :Path('/ethz_cass/sync/') :Args(0) { 
     my $self = shift;
@@ -37,10 +32,10 @@ sub ethz_cass_sync :Path('/ethz_cass/sync/') :Args(0) {
     $c->stash->{template} = '/stock/ethz_cass_sync.mas';
 }
 
-sub personal_calendar :Path('/calendar/personal/') :Args(0) { 
+sub varitome_project_page :Path('/projects/varitome/') Args(0) { 
     my $self = shift;
     my $c = shift;
-    $c->stash->{template} = '/calendar/personal.mas';
+    $c->stash->{template} = '/projects/varitome/index.mas';
 }
 
 sub test_authentication :Path('/test_authentication/') :Args(0) { 

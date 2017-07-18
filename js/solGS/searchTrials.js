@@ -23,7 +23,7 @@ jQuery(document).ready(function(){
 });
 
 
-function searchAllTrials(url) {
+function searchAllTrials(url, result) {
     
     jQuery("#all_trials_search_message").html('Searching for GS trials..').show();
     
@@ -31,6 +31,8 @@ function searchAllTrials(url) {
         type: 'POST',
         dataType: "json",
         url: url,
+        data: {'show_result': result},
+        cache: true,
         success: function(res) { 
 
             jQuery("#all_trials_search_message").hide();
@@ -79,7 +81,7 @@ function searchAllTrials(url) {
 
 
 function listAllTrials (trials)  {
- 
+   
     if (trials) {
 	var tableId = 'all_trials_table';
 	var divId   = 'all_trials_div';
@@ -89,10 +91,10 @@ function listAllTrials (trials)  {
 	    'tableId': tableId, 
 	    'data'   : trials
 	};
-	
+
 	jQuery('#searched_trials_div').empty();
 	jQuery('#all_trials_div').empty();
-	
+
 	displayTrainingPopulations(tableDetails);
 
     } else {
@@ -170,7 +172,8 @@ jQuery(document).ready( function () {
 	jQuery("#searched_trials_div").empty();
 	jQuery("#all_trials_div").empty();
 	var url = '/solgs/search/trials';
-	searchAllTrials(url);
+        var result = 'all';
+	searchAllTrials(url, result);
     });
           
 });
@@ -243,21 +246,25 @@ function displayTrainingPopulations (tableDetails) {
 	var tableRows = jQuery('#' + tableId + ' tr').length;
 	
 	if (tableRows > 1) {
-	    jQuery('#' + tableId).dataTable().fnAddData(data);
+	    jQuery('#' + tableId).dataTable().fnAddData(data);	
 	} else {
 	    
 	    var table = createTrialsTable(tableId);
-
+	   
 	    jQuery('#' + divId).html(table).show();
-	    
+	   
 	    jQuery('#' + tableId).dataTable({
-		'searching' : false,
-		'ordering'  : false,
-		'processing': true,
-		'paging': false,
-		'info': false,
-		'data': data,
-	    });
+                    'order'       : [[1, "desc"], [4, "desc"]],
+		    'searching'   : true,
+		    'ordering'    : true,
+		    'processing'  : true,
+		    'paging'      : true,
+		    'lengthChange': false,
+                    'oLanguage'   : {
+		                     "sSearch": "Filter result by: "
+		                    },
+		    'data'        : data,
+	    }).draw();
 	}
     }
    

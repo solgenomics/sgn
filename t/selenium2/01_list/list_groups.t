@@ -14,6 +14,8 @@ $d->get_ok("/about/index.pl", "get root url test");
 
 my $out = $d->find_element_ok("lists_link", "name", "find lists_link")->click();
 
+sleep(1);
+
 $d->find_element_ok("list_select_checkbox_808", "id", "checkbox select list")->click();
 
 sleep(1);

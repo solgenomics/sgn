@@ -10,6 +10,7 @@ use List::Util qw/sum/;
 use Bio::SeqIO;
 use CXGN::Tools::Text qw/ sanitize_string /;
 #use SGN::Schema;
+use CXGN::Blast;
 use CXGN::Blast::SeqQuery;
 
 
@@ -75,10 +76,10 @@ sub index :Path('/tools/blast/') :Args(0) {
 
   # # remove the Basic option from the list (it will still be the default if nothing is selected)
   # #
-  # for (my $i=0; $i<@parse_options; $i++) { 
-  # 	if ($parse_options[$i]->[0] eq 'Basic') { 
-  # 	    delete($parse_options[$i]);
-  # 	}
+  # for (my $i=0; $i<@parse_options; $i++) {
+  #   if ($parse_options[$i]->[0] eq 'Basic') {
+  #       delete($parse_options[$i]);
+  #   }
   # }
 
   #print STDERR "INPUT OPTIONS: ".Data::Dumper::Dumper(\@input_options);
@@ -128,18 +129,20 @@ sub dbinfo : Path('/tools/blast/dbinfo') Args(0) {
 	while (my $group_row = $group_rs->next()) { 
 	    my $db_rs = $group_row->blast_dbs->search({ web_interface_visible => 't'});
 	    my @groups = ();
+	   
 	    while (my $db_row = $db_rs->next()) { 
-		if ($db_row->files_exist()) { 
+		my $db = CXGN::Blast->new( sgn_schema => $c->dbic_schema("SGN::Schema"), blast_db_id => $db_row->blast_db_id(), dbpath => $c->config->{blast_db_path}); 
+		if ($db->files_are_complete()) { 
 		    
 		    push @groups, { 
-			title              => $db_row->title(),
-			sequence_type      => $db_row->type(),
-			sequence_count     => $db_row->sequences_count(),
-			update_freq        => $db_row->update_freq(),
-			description        => $db_row->description(),
-			source_url         => $db_row->source_url(),
-			current_as_of      => strftime('%m-%d-%y %R GMT',gmtime $db_row->file_modtime),
-			needs_update       => $db_row->needs_update(),
+			title              => $db->title(),
+			sequence_type      => $db->type(),
+			sequence_count     => $db->sequences_count(),
+			update_freq        => $db->update_freq(),
+			description        => $db->description(),
+			source_url         => $db->source_url(),
+			current_as_of      => strftime('%m-%d-%y %R GMT',gmtime $db->file_modtime),
+			needs_update       => $db->needs_update(),
 		    };
 		}
 	    }
@@ -155,16 +158,17 @@ sub dbinfo : Path('/tools/blast/dbinfo') Args(0) {
 	my @other_groups = ();
 	if ($ungrouped_rs) {
 	    while (my $db_row = $ungrouped_rs->next()) { 
-		if ($db_row->files_exist()) { 
+		my $db = CXGN::Blast->new( sgn_schema => $c->dbic_schema("SGN::Schema"), blast_db_id => $db_row->blast_db_id(), dbpath => $c->config->{blast_db_path}); 
+		if ($db->files_are_complete()) { 
 		    push @other_groups, { 
-			title              => $db_row->title(),
-			sequence_type      => $db_row->type(),
-			sequence_count     => $db_row->sequences_count(),
-			update_freq        => $db_row->update_freq(),
-			description        => $db_row->description(),
-			source_url         => $db_row->source_url(),
-			current_as_of      => strftime('%m-%d-%y %R GMT',gmtime $db_row->file_modtime),
-			needs_update       => $db_row->needs_update(),
+			title              => $db->title(),
+			sequence_type      => $db->type(),
+			sequence_count     => $db->sequences_count(),
+			update_freq        => $db->update_freq(),
+			description        => $db->description(),
+			source_url         => $db->source_url(),
+			current_as_of      => strftime('%m-%d-%y %R GMT',gmtime $db->file_modtime),
+			needs_update       => $db->needs_update(),
 		    };
 		}
 	    }

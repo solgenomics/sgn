@@ -31,17 +31,8 @@ $create_spreadsheet->download();
 my @contents = ReadData ($tempfile);
 
 #print STDERR Dumper @contents->[0]->[0];
-is_deeply(@contents->[0]->[0], {
-          'version' => '0.65',
-          'sheet' => {
-                       'Sheet1' => 1
-                     },
-          'type' => 'xls',
-          'parser' => 'Spreadsheet::ParseExcel',
-          'error' => undef,
-          'sheets' => 1
-      }, 'test that the type of the created pheno spreadsheet is correct.'
-);
+is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
+is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
 
 my $columns = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
@@ -111,7 +102,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
           'Spreadsheet format',
           'Operator',
           'Date',
-          undef,
+          'Design Type',
           undef,
           undef,
           'plot_number',
@@ -139,7 +130,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[4], [
           'BasicExcel',
           'Enter operator here',
           'Enter date here',
-          undef,
+          'CRD',
           undef,
           undef,
           'block_number',

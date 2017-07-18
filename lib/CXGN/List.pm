@@ -276,7 +276,7 @@ after 'description' => sub {
     my $description = shift;
     
     if (!$description) { 
-	print STDERR "NO desc provided... skipping!\n";
+	#print STDERR "NO desc provided... skipping!\n";
 	return; 
     }
 
@@ -296,7 +296,11 @@ after 'description' => sub {
 sub add_element {
     my $self = shift;
     my $element = shift;
-    
+    #remove trailing spaces
+    $element =~ s/^\s+|\s+$//g;
+    if (!$element) { 
+	return "Empty list elements are not allowed"; 
+    }
     if ($self->exists_element($element)) { 
 	return "The element $element already exists";
     }
@@ -353,7 +357,54 @@ sub remove_element_by_id {
     }
     
     return 0;
-}   
+}
+
+sub update_element_by_id {
+	my $self = shift;
+	my $element_id = shift;
+	my $content = shift;
+	my $h = $self->dbh()->prepare("UPDATE sgn_people.list_item SET content=? where list_id=? and list_item_id=?");
+
+	eval { 
+		$h->execute($content, $self->list_id(), $element_id);
+	};
+	if ($@) {
+		return "An error occurred while attempting to update item $element_id";
+	}
+
+	return;
+}
+
+sub replace_by_name {
+	my $self = shift;
+	my $item_name = shift;
+	my $new_name = shift;
+	my $h = $self->dbh()->prepare("UPDATE sgn_people.list_item SET content=? where list_id=? and content=?");
+
+	eval {
+		$h->execute($new_name, $self->list_id(), $item_name);
+	};
+	if ($@) {
+		return "An error occurred while attempting to update item $item_name";
+	}
+
+	return;
+}
+
+sub remove_by_name {
+	my $self = shift;
+	my $item_name = shift;
+	my $h = $self->dbh()->prepare("DELETE FROM sgn_people.list_item WHERE list_id=? and content=?");
+
+	eval {
+		$h->execute($self->list_id(), $item_name);
+	};
+	if ($@) {
+		return "An error occurred while attempting to remove item $item_name";
+	}
+
+	return;
+}
 
 sub list_size { 
     my $self = shift;
@@ -473,7 +524,7 @@ sub add_bulk {
 	my %elements_in_list;
 	my @elements_added;
 	my @duplicates;
-
+	s/^\s+|\s+$//g for @$elements;
 	#print STDERR Dumper $elements;
 
 	my $q = "SELECT content FROM sgn_people.list join sgn_people.list_item using(list_id) where list.list_id =?";
@@ -496,7 +547,7 @@ sub add_bulk {
 
 		my @values;
 		foreach (@$elements) {
-			if (!exists $elements_in_list{$_}){
+			if ($_ && !exists $elements_in_list{$_}){
 				push @values, [$list_item_id, $list_id, $_];
 				$elements_in_list{$_} = 1;
 				push @elements_added, $_;

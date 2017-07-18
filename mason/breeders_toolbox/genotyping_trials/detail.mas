@@ -1,7 +1,6 @@
 
 <%args>
 $trial_id
-$breeding_program
 $trial_name
 $location_data => undef
 $year => undef
@@ -11,6 +10,7 @@ $harvest_date => undef
 $trial_description => undef
 $design_layout_view => undef
 $user_can_modify => undef
+$identifier_prefix => 'SGN'
 </%args>
 
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;"><% $trial_id %></div>
@@ -45,6 +45,8 @@ $user_can_modify => undef
 </div>
 </div>
 </div>
+
+<center><& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", text=> "$identifier_prefix trial $trial_id ($trial_name)", format=>"stock_qrcode"  &></center><br />
 
 <center><a id="genotyping_trial_spreadsheet_link" class="btn btn-default" href="/breeders/genotyping/spreadsheet/<% $trial_id %>">Download Cornell Sequencing Facility Submission Spreadsheet</a></center><br />
 

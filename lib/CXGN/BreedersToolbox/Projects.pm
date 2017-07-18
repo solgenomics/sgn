@@ -4,6 +4,7 @@ package CXGN::BreedersToolbox::Projects;
 use Moose;
 use Data::Dumper;
 use SGN::Model::Cvterm;
+use CXGN::People::Roles;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -333,6 +334,13 @@ sub new_breeding_program {
     }
 
     eval {
+
+		my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
+		my $error = $role->add_sp_role($name);
+		if ($error){
+			die $error;
+		}
+
 	my $row = $self->schema()->resultset("Project::Project")->create(
 	    {
 		name => $name,
@@ -363,10 +371,10 @@ sub delete_breeding_program {
     my $type_id = $self->get_breeding_program_cvterm_id();
 
     # check if this project entry is of type 'breeding program'
-    my $prop = $self->schema->resultset("Project::Projectprop")->search(
+    my $prop = $self->schema->resultset("Project::Projectprop")->search({
 	type_id => $type_id,
 	project_id => $project_id,
-	);
+	});
 
     if ($prop->count() == 0) {
 	return 0; # wrong type, return 0.
@@ -374,14 +382,14 @@ sub delete_breeding_program {
 
     $prop->delete();
 
-    my $rs = $self->schema->resultset("Project::Project")->search(
+    my $rs = $self->schema->resultset("Project::Project")->search({
 	project_id => $project_id,
-	);
+	});
 
     if ($rs->count() > 0) {
-	my $pprs = $self->schema->resultset("Project::ProjectRelationship")->search(
+	my $pprs = $self->schema->resultset("Project::ProjectRelationship")->search({
 	    object_project_id => $project_id,
-	    );
+	});
 
 	if ($pprs->count()>0) {
 	    $pprs->delete();

@@ -1,0 +1,31 @@
+<%args>
+</%args>
+
+<h4>StudyTypes</h4>
+
+<div id="brapi_studytypes_div">
+<button class="btn btn-primary" id="brapi_home_show_studytypes">Show StudyTypes</button>
+
+</div>
+
+<script>
+
+jQuery(document).ready(function() {
+
+jQuery("#brapi_home_show_studytypes").click(function() {
+    jQuery.ajax( {
+      'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/studyTypes',
+      'method': 'GET',
+      'success': function(response) {
+        console.log(response);
+        brapi_create_paginated_table(response.result.data, response.metadata.pagination, 'brapi_studytypes_div', jQuery('#brapi_home_url_select').val()+'/brapi/v1/studyTypes', undefined);
+      },
+      error: function(response) {
+        alert('An error occurred getting seasons');
+      }
+    });
+});
+
+});
+
+</script>

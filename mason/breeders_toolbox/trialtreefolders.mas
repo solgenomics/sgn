@@ -4,16 +4,18 @@
 $breeding_programs
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'jstree.dist.jstree', 'CXGN.Trial', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.TrialTreeFolders' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'jstree.dist.jstree', 'CXGN.Trial', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.TrialTreeFolders','CXGN.BreedersToolbox.AddMultipleTrial' ] &>
 
 <link rel="stylesheet" href="/static/documents/inc/jstree_theme/jstree-bstheme-min.css" />
 
 <& /breeders_toolbox/folder/folder_set.mas &>
 <& /breeders_toolbox/folder/folder_new.mas &>
 <& /breeders_toolbox/folder/folder_move.mas &>
+<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Trial', folder_tree_identifier => 'trial_list', folder_tree_refresh_name => 'refresh_jstree_html' &>
 
 <& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
 <& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/trial/trial_create_multiloc_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs &>
 
 <& /breeders_toolbox/trial/download_trials_phenotypes_dialog.mas &>
 
@@ -21,7 +23,7 @@ $breeding_programs
   <thead>
     <tr>
       <th>Information</th>
-      <th>Breeding Programs -- Folders -- Trials&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" name="refresh_jstree_html">Refresh</button></th>
+      <th>Breeding Programs -- Folders -- Trials&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_jstree_html_trialtree_button" name="refresh_jstree_html">Refresh</button></th>
     </tr>
   </thead>
   <tbody>
@@ -41,7 +43,13 @@ $breeding_programs
       <button class="btn btn-sm btn-default" id="new_folder_dialog_link">Create new folder</button><br/><br/>
       <button class="btn btn-sm btn-default" id="open_folder_dialog_link">Move trial to folder</button><br/><br/>
       <button class="btn btn-sm btn-default" id="move_folder_dialog_link">Move folder</button>
-      <br/>
+      
+      <div id="folder_edit_options" style="display:none">
+          <hr>
+          <h5><i>Select multiple folders by holding 'Ctrl'.</i></h5>
+          <button class="btn btn-primary" id="edit_folders_button" title="First Select Folder(s) to Edit">Edit Folder(s)</button>
+          <br/>
+      </div>
 
       <!--<button id="delete" disabled="disabled" >Delete</button -->
       <br />
@@ -52,12 +60,14 @@ $breeding_programs
   </tr>
   </tbody>
 </table>
+
+
 <script>
 
   jQuery.noConflict();
 
   jQuery(document).ready(function($) {
-  
+
     jQuery.ajax( {
       url: '/ajax/breeders/get_trials_with_folders_cached',
       success: function(response) {
@@ -79,8 +89,8 @@ $breeding_programs
                     "icon": 'glyphicon glyphicon-leaf text-success',
                 }
             },
-            "search" : {  
-                 "case_insensitive" : true,    
+            "search" : {
+                 "case_insensitive" : true,
              },
           "plugins" : ["html_data","types","search"],
 
@@ -91,7 +101,7 @@ $breeding_programs
         alert("An error occurred while loading the trial data.");
       }
   });
-  
+
     jQuery("#trial_tree_search").keyup(function() {
         var v = jQuery("#trial_tree_search").val();
         jQuery("#trial_list").jstree(true).search(v);
@@ -99,13 +109,19 @@ $breeding_programs
 
 
 
-  $('#trial_list').on("changed.jstree", function (e, data) {
+  jQuery('#trial_list').on("changed.jstree", function (e, data) {
     //console.log(data);
        if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'trial') {
-         $('#trials_download_phenotypes_button').removeAttr('disabled');
+         jQuery('#trials_download_phenotypes_button').removeAttr('disabled');
+         jQuery("#folder_edit_options").hide();
+       }
+       else if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'folder') {
+         jQuery('#trials_download_phenotypes_button').attr('disabled', 'disabled');
+         jQuery("#folder_edit_options").show();
        }
        else {
-         $('#trials_download_phenotypes_button').attr('disabled', 'disabled');
+         jQuery('#trials_download_phenotypes_button').attr('disabled', 'disabled');
+         jQuery("#folder_edit_options").hide();
        }
     });
 
@@ -126,4 +142,3 @@ $breeding_programs
   });
 
 </script>
-

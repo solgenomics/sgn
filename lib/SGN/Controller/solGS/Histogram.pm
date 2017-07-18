@@ -17,7 +17,7 @@ BEGIN { extends 'Catalyst::Controller' }
 sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
     my ($self, $c) = @_;
     
-    my $pop_id   = $c->req->param('population_id');
+    my $pop_id   = $c->req->param('training_pop_id');
     my $trait_id = $c->req->param('trait_id');
     my $referer  = $c->req->referer;
   
@@ -34,6 +34,8 @@ sub histogram_phenotype_data :Path('/histogram/phenotype/data/') Args(0) {
     
     $c->controller('solGS::solGS')->trait_phenodata_file($c);    
     my $trait_pheno_file = $c->stash->{trait_phenodata_file}; 
+
+
     $c->stash->{histogram_trait_file} = $c->stash->{trait_phenodata_file};
 
     if (!$trait_pheno_file || -z $trait_pheno_file)
@@ -126,7 +128,7 @@ sub create_trait_phenodata {
         } qw / in out /;
     
 	{
-	    my $histogram_commands_file = $c->path_to('/R/histogram.r');
+	    my $histogram_commands_file = $c->path_to('/R/solGS/histogram.r');
 	    copy( $histogram_commands_file, $histogram_commands_temp )
             or die "could not copy '$histogram_commands_file' to '$histogram_commands_temp'";
 	}

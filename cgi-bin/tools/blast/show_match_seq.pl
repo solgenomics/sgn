@@ -2,6 +2,9 @@ use CatalystX::GlobalContext qw( $c );
 
 =head1 NAME
 
+NOTE: This script has been deprecated. The functionality was moved
+to SGN::Controller::Blast.
+
 show_match_seq.pl - a simple script to show the entire sequence of a
 match in a blast database with optional highlighting of the matched
 region

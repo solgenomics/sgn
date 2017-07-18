@@ -79,6 +79,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{harvest_date} = $trial->get_harvest_date();
 
     $c->stash->{trial_description} = $trial->get_description();
+    $c->stash->{trial_phenotype_files} = $trial->get_phenotype_metadata();
 
     my $location_data = $trial->get_location();
     $c->stash->{location_id} = $location_data->[0];
@@ -94,7 +95,32 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     $c->stash->{has_plant_entries} = $trial->has_plant_entries();
 
+    my $layout_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $plot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property')->cvterm_id();
+    my $block_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'block', 'stock_property')->cvterm_id();
+    my $has_plot_number_check = $schema->resultset('Stock::Stock')->search({'me.type_id'=>$plot_type_id, 'stockprops.type_id'=>$plot_number_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}, 'nd_experiment.type_id'=>$layout_experiment_type_id}, {join=>['stockprops', {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'} } } ], rows=>1 });
+    my $has_block_check = $schema->resultset('Stock::Stock')->search({'me.type_id'=>$plot_type_id, 'stockprops.type_id'=>$block_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}, 'nd_experiment.type_id'=>$layout_experiment_type_id}, {join=>['stockprops', {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'} } } ], rows=>1 });
+    $c->stash->{has_layout} = $has_plot_number_check->first && $has_block_check->first ? 1 : 0;
+
+    my $row_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property')->cvterm_id();
+    my $col_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property')->cvterm_id();
+    my $has_row_check = $schema->resultset('Stock::Stock')->search({'me.type_id'=>$plot_type_id, 'stockprops.type_id'=>$row_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}, 'nd_experiment.type_id'=>$layout_experiment_type_id}, {join=>['stockprops', {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'} } } ], rows=>1 });
+    my $has_col_check = $schema->resultset('Stock::Stock')->search({'me.type_id'=>$plot_type_id, 'stockprops.type_id'=>$col_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}, 'nd_experiment.type_id'=>$layout_experiment_type_id}, {join=>['stockprops', {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'} } } ], rows=>1 });
+    $c->stash->{has_physical_map} = $has_row_check->first && $has_col_check->first ? 1 : 0;
+
+    my $phenotyping_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+    my $has_phenotype_check = $schema->resultset('Phenotype::Phenotype')->search({'stock.type_id'=> [$plot_type_id, $plant_type_id], 'nd_experiment.type_id'=>$phenotyping_experiment_type_id, 'me.value' => { '!=' => ''}, 'project.project_id'=>$c->stash->{trial_id}}, {join=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>[{'nd_experiment_stocks'=>'stock' }, {'nd_experiment_projects'=>'project'}] } }, rows=>1 });
+    $c->stash->{has_phenotypes} = $has_phenotype_check->first > 0 ? 1 : 0;
+    $c->stash->{phenotypes_fully_uploaded} = $trial->get_phenotypes_fully_uploaded();
+
     $c->stash->{hidap_enabled} = $c->config->{hidap_enabled};
+    $c->stash->{has_expression_atlas} = $c->config->{has_expression_atlas};
+    $c->stash->{expression_atlas_url} = $c->config->{expression_atlas_url};
+    $c->stash->{site_project_name} = $c->config->{project_name};
+    $c->stash->{sgn_session_id} = $c->req->cookie('sgn_session_id');
+    $c->stash->{user_name} = $c->user->get_object->get_username;
 
     if ($trial->get_folder) {
       $c->stash->{folder_id} = $trial->get_folder()->project_id();
@@ -102,6 +128,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     }
 
     my $design_type = $trial->get_design_type();
+    $c->stash->{design_name} = $design_type;
 
     if ($design_type eq "genotyping_plate") {
 	if ($format eq "as_table") {
@@ -157,6 +184,8 @@ sub trial_tree : Path('/breeders/trialtree') Args(0) {
 
 }
 
+#For downloading trial layout in CSV and Excel, for downloading trial phenotypes in CSV and Excel, and for downloading trial phenotyping spreadsheets in Excel.
+#For phenotype download, better to use SGN::Controller::BreedersToolbox::Download->download_phenotypes_action and provide a single trial_id in the trial_list argument. This is how the phenotype download works from the wizard page, the trial tree page, and the trial detail page for phenotype download.
 sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;
@@ -165,14 +194,15 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
     my $user = $c->user();
     if (!$user) {
-	$c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
-	return;
+        $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
     }
 
     my $format = $c->req->param("format") || "xls";
-    my $data_level = $c->req->param("dataLevel") || "plots";
+    my $data_level = $c->req->param("dataLevel") || "plot";
     my $timestamp_option = $c->req->param("timestamp") || 0;
-    my $trait_list = $c->req->param("trait_list") || "";
+    my $trait_list = $c->req->param("trait_list");
+    my $search_type = $c->req->param("search_type") || 'fast';
 
     if ($data_level eq 'plants') {
         my $trial = $c->stash->{trial};
@@ -184,25 +214,25 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my @trait_list;
-    if ($trait_list) {
-	@trait_list = @{_parse_list_from_json($trait_list)};
+    if ($trait_list && $trait_list ne 'null') {
+        @trait_list = @{_parse_list_from_json($trait_list)};
     }
 
     my $plugin = "";
     if ( ($format eq "xls") && ($what eq "layout")) {
-	$plugin = "TrialLayoutExcel";
+        $plugin = "TrialLayoutExcel";
     }
     if (($format eq "csv") && ($what eq "layout")) {
-	$plugin = "TrialLayoutCSV";
+        $plugin = "TrialLayoutCSV";
     }
     if (($format eq "xls") && ($what =~ /phenotype/)) {
-	$plugin = "TrialPhenotypeExcel";
+        $plugin = "TrialPhenotypeExcel";
     }
     if (($format eq "csv") && ($what =~ /phenotype/)) {
-	$plugin = "TrialPhenotypeCSV";
+        $plugin = "TrialPhenotypeCSV";
     }
     if (($format eq "xls") && ($what eq "basic_trial_excel")) {
-	$plugin = "BasicExcel";
+        $plugin = "BasicExcel";
     }
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -217,22 +247,22 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
 
     print STDERR "TEMPFILE : $tempfile\n";
 
-    my $download = CXGN::Trial::Download->new(
-	{
-	    bcs_schema => $c->stash->{schema},
-	    trial_id => $c->stash->{trial_id},
-	    trait_list => \@trait_list,
-	    filename => $tempfile,
-	    format => $plugin,
+    my $download = CXGN::Trial::Download->new({
+        bcs_schema => $c->stash->{schema},
+        trial_id => $c->stash->{trial_id},
+        trait_list => \@trait_list,
+        filename => $tempfile,
+        format => $plugin,
         data_level => $data_level,
+        search_type => $search_type,
         include_timestamp => $timestamp_option,
-      });
+    });
 
-      my $error = $download->download();
+    my $error = $download->download();
 
-      my $file_name = $trial_id . "_" . "$what" . ".$format";
-     $c->res->content_type('Application/'.$format);
-     $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+    my $file_name = $trial_id . "_" . "$what" . ".$format";
+    $c->res->content_type('Application/'.$format);
+    $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
 
     my $output = read_file($tempfile);
 

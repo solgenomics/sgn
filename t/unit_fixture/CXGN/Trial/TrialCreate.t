@@ -86,9 +86,8 @@ ok(my $design = $trial_design->get_design(), "retrieve design");
 
 ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
-    phenome_schema => $phenome_schema,
     dbh => $dbh,
-    user_name => "johndoe",
+    user_name => "johndoe", #not implemented
     design => $design,	
     program => "test",
     trial_year => "2015",
@@ -111,7 +110,7 @@ ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
 
 						    }), "create trial layout object");
 
-ok(my $accession_names = $trial_layout->get_accession_names(), "retrieve accession names");
+ok(my $accession_names = $trial_layout->get_accession_names(), "retrieve accession names1");
 
 my %stocks = map { $_ => 1 } @stock_names;
 
@@ -138,9 +137,8 @@ ok(my $design = $trial_design->get_design(), "retrieve design");
 
 ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
-    phenome_schema => $phenome_schema,
     dbh => $dbh,
-    user_name => "johndoe",
+    user_name => "johndoe", #not implemented
     design => $design,	
     program => "test",
     trial_year => "2015",
@@ -163,7 +161,7 @@ ok(my $trial_layout = CXGN::Trial::TrialLayout->new({
 
 						    }), "create trial layout object");
 
-ok(my $accession_names = $trial_layout->get_accession_names(), "retrieve accession names");
+ok(my $accession_names = $trial_layout->get_accession_names(), "retrieve accession names2");
 
 my %stocks = map { $_ => 1 } @stock_names;
 
@@ -189,17 +187,16 @@ my %geno_design;
 
 ok(my $genotyping_trial_create = CXGN::Trial::TrialCreate->new({
     chado_schema => $chado_schema,
-    phenome_schema => $phenome_schema,
     dbh => $dbh,
     is_genotyping => 1,
-    user_name => "johndoe",
+    user_name => "johndoe", #not implemented
     design => \%geno_design,	
     program => "test",
     trial_year => "2015",
     trial_description => "test description",
     trial_location => "test_location_for_trial",
     trial_name => "test_genotyping_trial_name",
-    design_type => "Genotyping",
+    design_type => "genotyping_plate",
 							       }), "create genotyping trial");
 
 ok($genotyping_trial_create->save_trial(), "save genotyping trial");
@@ -215,7 +212,7 @@ ok(my $genotyping_trial_layout = CXGN::Trial::TrialLayout->new({
     trial_id => $genotyping_trial_id,
 
 						    }), "create trial layout object for genotyping trial");
-ok(my $genotyping_accession_names = $genotyping_trial_layout->get_accession_names(), "retrieve accession names");
+ok(my $genotyping_accession_names = $genotyping_trial_layout->get_accession_names(), "retrieve accession names3");
 my %genotyping_stocks = map { $_ => 1 } @genotyping_stock_names;
 foreach my $acc (@$genotyping_accession_names) { 
     ok(exists($genotyping_stocks{$acc->{accession_name}}), "check existence of accession names $acc->{accession_name}");

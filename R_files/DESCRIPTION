@@ -1,10 +1,11 @@
 Package: sgn
 Title: The SGN websites
-Version: 0.1
-Date: 2010-10-12
-Author: Robert Buels <rmb32@cornell.edu>
-Maintainer: Robert Buels <rmb32@cornell.edu>, Isaak Y Tecle <iyt2@cornell.edu> 
+Version: 1.9
+Date: 28-12-2017
+Author: Robert Buels <rmb32@cornell.edu> & Isaak Y Tecle <iyt2@cornell.edu>
+Maintainer: Isaak Y Tecle <iyt2@cornell.edu> 
 Description: The R code behind the SGN websites 
 
-Depends: R (>= 3.2.0), qtl (>= 1.24-9), gplots (>= 2.10.1), ltm (>= 0.9-7), RColorBrewer (>= 1.0.5), rrBLUP (>= 3.8), plyr (>= 1.7.1), mail(>= 1.0), rjson(>= 0.2.12), agricolae (>= 1.2-1),  gtools (>= 2.6.2), gdata (>= 2.8.2), bitops (>= 1.0-4.1), caTools (>= 1.13), KernSmooth (>= 2.23-7), msm (>= 1.1.1), mvtnorm (>= 0.9.9992), polycor (>= 0.7-8), sfsmisc (>= 1.0-24), nlme (>= 3.1-103), irlba (>= 1.0.3), lme4 (>= 1.1-7), randomForest (>= 4.6-10), data.table (>= 1.9.6) 
+Depends: R (>= 3.2.0), qtl (>= 1.24-9), gplots (>= 2.10.1), ltm (>= 0.9-7), RColorBrewer (>= 1.0.5), rrBLUP (>= 3.8), plyr (>= 1.7.1), mail(>= 1.0), rjson(>= 0.2.12), agricolae (>= 1.2-1),  gtools (>= 2.6.2), gdata (>= 2.8.2), bitops (>= 1.0-4.1), caTools (>= 1.13), KernSmooth (>= 2.23-7), msm (>= 1.1.1), mvtnorm (>= 0.9.9992), polycor (>= 0.7-8), sfsmisc (>= 1.0-24), nlme (>= 3.1-103), irlba (>= 1.0.3), lme4 (>= 1.1.12), randomForest (>= 4.6-10), data.table (>= 1.9.6), ggplot2 (>= 2.2.1), devtools (>= 1.12.0), genoDataFilter (>= 0.1.1), bioconductor (>= 3.4), SNPRelate (>= 1.8.0), lsmeans(>= 2.26.3), dplyr(>= 0.5.0), phenoAnalysis(>= 0.1.0), caret (>= 6.0.76)
+
 License: Artistic-3
