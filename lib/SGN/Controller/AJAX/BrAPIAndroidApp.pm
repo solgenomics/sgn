@@ -35,7 +35,7 @@ sub new_database_GET : Args(0) {
     my $c = shift;
     my $name = $c->req->param('databaseName');
     my $url = $c->req->param('databaseURL');
-    my $token = $c->req->param('accessToken');
+    my $session_id = $c->req->param('accessToken');
     my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $previous_name_search = $bcs_schema->resultset('General::Db')->search({name=>$name});
