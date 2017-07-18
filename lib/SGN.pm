@@ -131,11 +131,6 @@ __PACKAGE__->config(
 	    },
 	},
     },
-    
-    'Plugin::Assets' => {
-
-	path => "/static",
-    },
 
     ( $ENV{SGN_TEST_MODE} ? ( test_mode => 1 ) : () ),
 );
