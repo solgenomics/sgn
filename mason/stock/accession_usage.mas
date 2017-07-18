@@ -31,7 +31,7 @@
 <thead>
   <tr>
     <th>Accession Name</th>
-    <th>Number of Crosses</th>
+    <th>Number of Progenies</th>
   </tr>
 </thead>
 </table>
@@ -46,7 +46,7 @@
 <thead>
   <tr>
     <th>Accession Name</th>
-    <th>Number of Crosses</th>
+    <th>Number of Progenies</th>
   </tr>
 </thead>
 </table>

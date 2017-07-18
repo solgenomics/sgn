@@ -582,70 +582,51 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 # pedigree download -- begin
 
 sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
-my $self = shift;
-my $c = shift;
-my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedigree_stock_id, $accession_name, $female_parent, $male_parent);
+    my $self = shift;
+    my $c = shift;
 
-    $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
-    $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
-    @accession_list = map { $_->[1] } @$accession_data;
-
+    my $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
+    my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+    my @accession_list = map { $_->[1] } @$accession_data;
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $t = CXGN::List::Transform->new();
     my $acc_t = $t->can_transform("accessions", "accession_ids");
     my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
 
-    @accession_ids = @{$accession_id_hash->{transform}};
+    my @accession_ids = @{$accession_id_hash->{transform}};
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
 
-    open my $TEMP, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
+    open my $FILE, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
 
-	print $TEMP "Accession\tFemale_Parent\tMale_Parent";
- 	print $TEMP "\n";
-       my $check_pedigree = "FALSE";
-       my $len;
+	print $FILE "Accession\tFemale_Parent\tMale_Parent\tCross_Type\n";
+    my $pedigrees_found = 0;
 
+    for (my $i=0 ; $i<scalar(@accession_ids); $i++) {
 
-	for (my $i=0 ; $i<scalar(@accession_ids); $i++)
-	{
+	    my $stock = CXGN::Stock->new ( schema => $schema, stock_id => $accession_ids[$i]);
+        my $ancestor_hashref = $stock->get_ancestor_hash();
+        my $pedigree_rows = $stock->get_pedigree_rows($ancestor_hashref);
 
-	$accession_name = $accession_list[$i];
-	my $pedigree_stock_id = $accession_ids[$i];
-	my @pedigree_parents = CXGN::Chado::Stock->new ($schema, $pedigree_stock_id)->get_direct_parents();
-	$len = scalar(@pedigree_parents);
-	if($len > 0)
-	{
-      		$check_pedigree = "TRUE";
-	}
+        foreach my $row (@$pedigree_rows) {
+            print $FILE $row;
+            $pedigrees_found++;
+        }
+    }
+    unless ($pedigrees_found > 0) {
+        print $FILE "$pedigrees_found pedigrees found in the database for the accessions searched. \n";
+    }
+    close $FILE;
 
+    my $filename = "pedigree.txt";
 
+    $c->res->content_type("application/text");
+    $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
+    my $output = read_file($tempfile);
 
-	    $female_parent = $pedigree_parents[0][1] || '';
-	    $male_parent = $pedigree_parents[1][1] || '';
-	  print $TEMP "$accession_name \t  $female_parent \t $male_parent\n";
-
-  	}
-
-if ($check_pedigree eq "FALSE")
-{
-print $TEMP "\n";
-print $TEMP "No pedigrees found in the Database for the accessions searched. \n";
+    $c->res->body($output);
 }
-
- close $TEMP;
-
- my $filename = "pedigree.txt";
-
- $c->res->content_type("application/text");
- $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
-  my $output = read_file($tempfile);
-
-  $c->res->body($output);
-
-}
-
 
 # pedigree download -- end
 
@@ -729,7 +710,9 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   print STDERR "Decoding genotype data ...".localtime()."\n";
 
   for (my $i=0; $i < scalar(@$genotypes) ; $i++) {       # loop through resultset, printing accession uniquenames as column headers and storing decoded gt strings in array of hashes
-    print $TEMP $genotypes->[$i]->{genotypeUniquename} . "\t";
+
+    my ($name,$batch_id) = split(/\|/, $genotypes->[$i]->{genotypeUniquename});
+    print $TEMP $genotypes->[$i]->{germplasmName} . "|" . $batch_id . "\t";
     push(@accession_genotypes, $genotypes->[$i]->{genotype_hash});
   }
   @unsorted_markers = keys   %{ $accession_genotypes[0] };
@@ -781,7 +764,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     $filename = scalar(@$genotypes) . "genotypes-p" . $protocol_id . ".txt";
   }
   else { #name file with acesssion name and protocol id if there's just one
-    $filename = $genotypes->[0][0] . "genotype-p" . $protocol_id . ".txt";
+    $filename = $genotypes->[0]->{germplasmName} . "genotype-p" . $protocol_id . ".txt";
   }
 
   $c->res->content_type("application/text");
