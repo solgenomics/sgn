@@ -56,6 +56,7 @@ use Moose;
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
+use CXGN::Stock;
 use CXGN::Chado::Stock;
 use CXGN::Chado::Organism;
 
@@ -451,8 +452,11 @@ sub search {
 		$rs = $rs->slice($offset, $limit);
 	}
 
-	my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
-	my $owners_hash = $stock_lookup->get_owner_hash_lookup();
+    my $owners_hash;
+    if (!$self->minimal_info){
+        my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
+        $owners_hash = $stock_lookup->get_owner_hash_lookup();
+    }
 
 	my @result;
 	while (my $a = $rs->next()) {
@@ -521,9 +525,8 @@ sub search {
 sub germplasm_pedigree_string {
 	my $self = shift;
 	my $stock_id = shift;
-	my $s = CXGN::Chado::Stock->new($self->bcs_schema, $stock_id);
-	my $pedigree_root = $s->get_parents('1');
-	my $pedigree_string = $pedigree_root ? $pedigree_root->get_pedigree_string('1') : '';
+	my $s = CXGN::Stock->new(schema => $self->bcs_schema, stock_id => $stock_id);
+	my $pedigree_string = $s->get_pedigree_string('Parents');
 	return $pedigree_string;
 }
 

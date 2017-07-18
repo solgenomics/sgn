@@ -1,1 +1,2 @@
-COB1103	AR406	AR406
+progeny name	female parent accession	male parent accession	type
+UG120041	UG120237	UG120217	biparental

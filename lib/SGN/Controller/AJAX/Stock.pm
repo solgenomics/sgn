@@ -24,7 +24,7 @@ use Data::Dumper;
 use Try::Tiny;
 use CXGN::Phenome::Schema;
 use CXGN::Phenome::Allele;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use CXGN::Phenome::DumpGenotypes;
 use CXGN::BreederSearch;
@@ -240,7 +240,7 @@ sub associate_locus_GET :Args(0) {
         # rightly) be counted as a server error
         if ($stock && $allele_id) {
             try {
-                my $cxgn_stock = CXGN::Chado::Stock->new($schema, $stock_id);
+                my $cxgn_stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
                 $cxgn_stock->associate_allele($allele_id, $c->user->get_object->get_sp_person_id);
 
                 $c->stash->{rest} = ['success'];
@@ -887,7 +887,7 @@ sub accession_autocomplete_GET :Args(0) {
 	push @response_list, $stock_name;
     }
 
-    #print STDERR "stock_autocomplete RESPONSELIST = ".join ", ", @response_list;
+    print STDERR Dumper @response_list;
 
     $c->stash->{rest} = \@response_list;
 }
@@ -925,6 +925,83 @@ sub accession_population_autocomplete_GET :Args(0) {
 
     $c->stash->{rest} = \@response_list;
 }
+
+
+=head2 pedigree_female_parent_autocomplete
+
+Public Path: /ajax/stock/pedigree_female_parent_autocomplete
+
+Autocomplete a female parent associated with pedigree.
+
+=cut
+
+sub pedigree_female_parent_autocomplete: Local : ActionClass('REST'){}
+
+sub pedigree_female_parent_autocomplete_GET : Args(0){
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+
+    my $q = "SELECT distinct (pedigree_female_parent.uniquename) FROM stock AS pedigree_female_parent
+    JOIN stock_relationship ON (stock_relationship.subject_id = pedigree_female_parent.stock_id)
+    JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'female_parent'
+    JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
+    JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'accession'
+    WHERE pedigree_female_parent.uniquename ilike ? ORDER BY pedigree_female_parent.uniquename";
+
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my($pedigree_female_parent) = $sth->fetchrow_array){
+      push @response_list, $pedigree_female_parent;
+    }
+
+  print STDERR Dumper @response_list ;
+    $c->stash->{rest} = \@response_list;
+
+}
+
+
+=head2 cross_female_parent_autocomplete
+
+Public Path: /ajax/stock/cross_female_parent_autocomplete
+
+Autocomplete a female parent associated with cross.
+
+=cut
+
+sub cross_female_parent_autocomplete: Local : ActionClass('REST'){}
+
+sub cross_female_parent_autocomplete_GET : Args(0){
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+    my @response_list;
+
+    my $q = "SELECT distinct (cross_female_parent.uniquename) FROM stock AS cross_female_parent
+    JOIN stock_relationship ON (stock_relationship.subject_id = cross_female_parent.stock_id)
+    JOIN cvterm AS cvterm1 ON (stock_relationship.type_id = cvterm1.cvterm_id) AND cvterm1.name = 'female_parent'
+    JOIN stock AS check_type ON (stock_relationship.object_id = check_type.stock_id)
+    JOIN cvterm AS cvterm2 ON (check_type.type_id = cvterm2.cvterm_id) AND cvterm2.name = 'cross'
+    WHERE cross_female_parent.uniquename ilike ? ORDER BY cross_female_parent.uniquename";
+
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my($cross_female_parent) = $sth->fetchrow_array){
+      push @response_list, $cross_female_parent;
+    }
+
+  print STDERR Dumper @response_list ;
+    $c->stash->{rest} = \@response_list;
+
+}
+
 
 
 sub parents : Local : ActionClass('REST') {}
@@ -1314,7 +1391,7 @@ sub get_shared_trials_GET :Args(1) {
 
     foreach my $stock_id (@stock_ids) {
 	     my $trials_string ='';
-       my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
+       my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
        my $uniquename = $stock->get_uniquename;
        $dataref = {
              'trials' => {
@@ -1435,12 +1512,15 @@ sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigree') Args(0
     my $self = shift;
     my $c = shift;
     my $level = $c->req->param("level");
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $s = CXGN::Chado::Stock->new($schema, $c->stash->{stock}->get_stock_id());
-    my $pedigree_root = $s->get_parents($level);
-    my $pedigree_string = $pedigree_root->get_pedigree_string($level);
 
-    $c->stash->{rest} = { pedigree_string => $pedigree_string };
+    my $stock = CXGN::Stock->new(
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        stock_id => $c->stash->{stock}->get_stock_id()
+    );
+    my $parents = $stock->get_pedigree_string($level);
+    print STDERR "Parents are: ".Dumper($parents)."\n";
+
+    $c->stash->{rest} = { pedigree_string => $parents };
 }
 
 sub stock_lookup : Path('/stock_lookup/') Args(2) ActionClass('REST') { }
@@ -1477,7 +1557,7 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
     my @stocks;
     foreach my $r (@$result){
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
-      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a}, $cvterm_name];
+      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -1494,7 +1574,7 @@ sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') A
     my @stocks;
     foreach my $r (@$result){
       my ($cvterm_name, $stock_id, $stock_name) = @$r;
-      push @stocks, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a}];
+      push @stocks, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}];
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -1514,7 +1594,7 @@ sub get_group_and_member:Chained('/stock/get_stock') PathPart('datatables/group_
 
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
 
-      push @group, [qq{<a href = "/stock/$stock_id/view">$stock_name</a}, $cvterm_name];
+      push @group, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
     }
 
     $c->stash->{rest}={data=>\@group};
@@ -1535,7 +1615,7 @@ sub get_stock_for_tissue:Chained('/stock/get_stock') PathPart('datatables/stock_
 
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
 
-      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a}, $cvterm_name];
+      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
     }
 
     $c->stash->{rest}={data=>\@stocks};

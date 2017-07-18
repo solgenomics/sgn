@@ -78,6 +78,7 @@ if ( length(refererQtl) != 0 ) {
 
 allTraitNames <- c()
 nonTraitNames <- c()
+naTraitNames  <- c()
 
 if (length(refererQtl) != 0) {
 
@@ -104,21 +105,26 @@ if (!is.null(phenoData) && length(refererQtl) == 0) {
     if (class(phenoData[, i]) != 'numeric') {
       phenoData[, i] <- as.numeric(as.character(phenoData[, i]))
     }
-    
-    if (all(is.nan(phenoData$i))) {
+
+    if (all(is.nan(phenoData[, i]))) {
       phenoData[, i] <- sapply(phenoData[, i], function(x) ifelse(is.numeric(x), x, NA))                     
+    }
+
+    if (sum(is.na(phenoData[,i])) > (0.5 * nrow(phenoData))) { 
+      phenoData$i <- NULL
+      naTraitNames <- c(naTraitNames, i)
+      message('dropped trait ', i, ' no of missing values: ', sum(is.na(phenoData[,i])))
     }
   }
 }
 
-#phenoData     <- phenoData[, colSums(is.na(phenoData)) < nrow(phenoData)]
-#allTraitNames <- names(phenoData)[! names(phenoData) %in% nonTraitNames]
+filteredTraits <- allTraitNames[!allTraitNames %in% naTraitNames]
 
 ###############################
 if (length(refererQtl) == 0  ) {
   cnt   <- 0
  
-  for (trait in allTraitNames) {
+  for (trait in filteredTraits) {
 
     cnt   <- cnt + 1
     adjMeans <- getAdjMeans(phenoData, trait)

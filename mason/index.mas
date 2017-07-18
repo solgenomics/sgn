@@ -76,3 +76,5 @@ $phenotype_files => undef
 % if ($phenotype_files) {
      <& homepage/phenotype_uploads.mas, phenotype_files=>$phenotype_files &>
 % }
+
+<& homepage/github_pullrequests.mas &>

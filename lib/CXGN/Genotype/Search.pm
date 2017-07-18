@@ -151,7 +151,6 @@ sub get_genotype_info {
     return ($total_count, \@data);
 }
 
-
 sub get_genotype_info_as_genotype_objects {
     my $self = shift;
     my @params = @_;
@@ -161,18 +160,23 @@ sub get_genotype_info_as_genotype_objects {
     #print STDERR " number of genotypes are". $total_count."\n";
     #print STDERR "length of genotypes is". scalar @$data;
 
-    my @genotypes;
-    foreach my $d (@$data) {
-	print STDERR "Processing entry ".$d->{germplasmName}."\n";
-	my $gt = CXGN::Genotype->new();
-	$gt->id($d->{markerProfileDbId});
-	$gt->name($d->{germplasmName});
-	$gt->markers([keys %{$d->{genotype_hash}}]);
-	$gt->markerscores($d->{genotype_hash});
-	$gt->dosages($d->{genotype_hash});
-	push @genotypes, $gt;
+  my @genotypes;
+  my $counter = 0;
+  foreach my $d (@$data) {
+    if ($counter > 0){
+      last;
     }
-    return @genotypes;
+    print STDERR "Processing entry ".$d->{germplasmName}."\n";
+    my $gt = CXGN::Genotype->new();
+    $gt->id($d->{markerProfileDbId});
+    $gt->name($d->{germplasmName});
+    $gt->markers([keys %{$d->{genotype_hash}}]);
+    $gt->markerscores($d->{genotype_hash});
+    $gt->dosages($d->{genotype_hash});
+    push @genotypes, $gt;
+    $counter++;
+  }
+  return @genotypes;
 }
 
 1;
