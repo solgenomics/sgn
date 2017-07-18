@@ -89,18 +89,18 @@ sub BUILD {
         $location = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $self->nd_geolocation_id });
         $self->location($location);
     }
-    # if (defined $location) {
-    #     $self->location($location);
-    #     $self->nd_geolocation_id($location->nd_geolocation_id);
-    #     $self->name($location->description);
-    #     $self->latitude($location->latitude);
-    #     $self->longitude($location->longitude);
-    #     $self->altitude($location->altitude);
-    #     $self->abbreviation($self->_get_ndgeolocationprop('abbreviation'));
-    #     $self->country_name($self->_get_ndgeolocationprop('country_name'));
-    #     $self->country_code($self->_get_ndgeolocationprop('country_code'));
-    #     $self->location_type($self->_get_ndgeolocationprop('location_type'));
-    # }
+    if (defined $location) {
+        $self->location( $self->location || $location );
+        $self->nd_geolocation_id( $self->nd_geolocation_id || $location->nd_geolocation_id );
+        $self->name( $self->name || $location->description );
+        $self->latitude( $self->latitude || $location->latitude );
+        $self->longitude( $self->longitude || $location->longitude );
+        $self->altitude( $self->altitude || $location->altitude );
+        $self->abbreviation( $self->abbreviation || $self->_get_ndgeolocationprop('abbreviation') );
+        $self->country_name( $self->country_name || $self->_get_ndgeolocationprop('country_name') );
+        $self->country_code( $self->country_code || $self->_get_ndgeolocationprop('country_code') );
+        $self->location_type( $self->location_type || $self->_get_ndgeolocationprop('location_type') );
+    }
 
     return $self;
 }
@@ -201,7 +201,7 @@ sub store_location {
 
 sub delete_location {
     my $self = shift;
-    print STDERR "Nd geolocation id in cxgn object is ".$self->nd_geolocation_id()."\n";
+
     my $row = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find({ nd_geolocation_id=> $self->nd_geolocation_id() });
     my $name = $row->description();
     my @experiments = $row->nd_experiments;
@@ -259,126 +259,6 @@ sub _remove_ndgeolocationprop {
         return 0;
     }
 
-}
-
-=head2 accessors get_name(), set_name()
-
- Usage:
- Desc:         retrieve and store location name from/to database
- Ret:
- Args:
- Side Effects: setter modifies the database
- Example:
-
-
-
-sub get_name {
-    my $self = shift;
-    my $row = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $self->nd_geolocation_id() });
-
-    if ($row) {
-	return $row->description();
-    }
-}
-=cut
-sub set_name {
-    my $self = shift;
-    my $name = shift;
-    my $row = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $self->nd_geolocation_id() });
-    if ($row) {
-	    $row->description($name);
-	    $row->update();
-    }
-}
-
-=head2 accessors get_latitude(), set_latitude()
-
- Usage:
- Desc:         retrieve and store location latitude from/to database
- Ret:
- Args:
- Side Effects: setter modifies the database
- Example:
-
-
-
-sub get_latitude {
-    my $self = shift;
-    my $row = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $self->nd_geolocation_id() });
-
-    if ($row) {
-	return $row->latitude();
-    }
-}
-=cut
-sub set_latitude {
-    my $self = shift;
-    my $latitude = shift;
-    my $row = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $self->nd_geolocation_id() });
-    if ($row) {
-	    $row->latitude($latitude);
-	    $row->update();
-    }
-}
-
-=head2 accessors get_longitude(), set_longitude()
-
- Usage:
- Desc:         retrieve and store location longitude from/to database
- Ret:
- Args:
- Side Effects: setter modifies the database
- Example:
-
-
-
-sub get_longitude {
-    my $self = shift;
-    my $row = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $self->nd_geolocation_id() });
-
-    if ($row) {
-	return $row->longitude();
-    }
-}
-=cut
-sub set_longitude {
-    my $self = shift;
-    my $longitude = shift;
-    my $row = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $self->nd_geolocation_id() });
-    if ($row) {
-	    $row->longitude($longitude);
-	    $row->update();
-    }
-}
-
-=head2 accessors get_altitude(), set_altitude()
-
- Usage:
- Desc:         retrieve and store location altitude from/to database
- Ret:
- Args:
- Side Effects: setter modifies the database
- Example:
-
-
-
-sub get_altitude {
-    my $self = shift;
-    my $row = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $self->nd_geolocation_id() });
-
-    if ($row) {
-	return $row->altitude();
-    }
-}
-=cut
-sub set_altitude {
-    my $self = shift;
-    my $altitude = shift;
-    my $row = $self->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => $self->nd_geolocation_id() });
-    if ($row) {
-	    $row->altitude($altitude);
-	    $row->update();
-    }
 }
 
 1;
