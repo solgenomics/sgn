@@ -306,7 +306,7 @@ sub get_common_traits {
     my $self = shift;
     my $c = shift;
     my @trials = @_;
-
+    
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_id_rs = $schema->resultset("Project::Project")->search( { name => { in => [ @trials ]} });
@@ -346,17 +346,17 @@ sub get_common_traits {
 
     my @total_accessions;
     my @previous_accessions = @{$common_accessions[0]};
+    my @previous_accession_names = map { $_->{accession_name} } @previous_accessions;
     for(my $i = 1; $i<@common_accessions; $i++) {
- 	my @previous_accession_names = map { $_->{accession_name} } @previous_accessions;
  	my @accession_names = map { $_->{accession_name} } @{$common_accessions[$i]};
 
 	my $list = List::Compare->new(\@previous_accession_names, \@accession_names);
 
-	@previous_accessions = $list->get_intersection();
-	@total_accessions = $list->get_union();
+	@previous_accession_names = $list->get_intersection();
+	@total_accessions = List::Compare->new(\@total_accessions, \@accession_names)->get_union();
     }
 
-    @common_accessions = @previous_accessions;
+    @common_accessions = @previous_accession_names;
     my $common_accession_count = scalar(@common_accessions);
     my $total_accession_count = scalar(@total_accessions);
 
