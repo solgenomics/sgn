@@ -52,7 +52,7 @@ function checkPcaResult () {
         dataType: 'json',
         url: '/pca/check/result/' + popId,
         success: function(response) {
-            if (response.result === 'yes') {
+            if (response.result) {
 		pcaResult();					
             } else { 
 		jQuery("#run_pca").show();	
@@ -140,28 +140,27 @@ function pcaResult () {
 
     var popId  = getPopulationId();
     var listId = getListId();
-
-    if ( popId && popId.match(/uploaded_/)) {	
+   
+    if (!listId && popId.match(/uploaded_/)) {	
 	listId = popId.replace("uploaded_", "");
+    } else if (listId) {
+	popId = 'uploaded_' + listId;
     }
 
     var listName;
     var listType;
     
     if (listId) {
-    var genoList = getPcaGenotypesListData(listId);
+	var genoList = getPcaGenotypesListData(listId);
 	listName = genoList.name;
 	listType = genoList.listType;
     }
     
-    if ( popId == null) {
-	popId = listId;
-    }
-
     if (listId || popId) {
 	jQuery("#pca_message").html("Running PCA... please wait...");
+	jQuery("#run_pca").hide();
     }  
-   
+  
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -193,11 +192,13 @@ function pcaResult () {
 		jQuery("#run_pca").hide();
 
             } else {                
-		jQuery("#pca_message").html(response.status); 
+		jQuery("#pca_message").html(response.status);
+		jQuery("#run_pca").show();
             }
 	},
         error: function(response) {                    
             jQuery("#pca_message").html('Error occured running population structure analysis (PCA).');
+	    jQuery("#run_pca").show();
         }  
     });
   
@@ -320,7 +321,7 @@ function plotPca(plotData){
      
     var height = 300;
     var width  = 500;
-    var pad    = {left:20, top:20, right:20, bottom: 100}; 
+    var pad    = {left:40, top:20, right:40, bottom: 100}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
    
@@ -420,8 +421,8 @@ function plotPca(plotData){
     pcaPlot.append("g")
         .attr("id", "pc1_axis_label")
         .append("text")
-        .text("PC1 -- " + variances[0][1] + "%" )
-        .attr("y", pad.top + height + 30)
+        .text("PC1: " + variances[0][1] + "%" )
+        .attr("y", pad.top + height + 55)
         .attr("x", width/2)
         .attr("font-size", 12)
         .style("fill", "green")
@@ -429,10 +430,10 @@ function plotPca(plotData){
     pcaPlot.append("g")
         .attr("id", "pc2_axis_label")
         .append("text")
-        .text("PC2 -- " + variances[1][1] + "%" )
+        .text("PC2: " + variances[1][1] + "%" )
 	.attr("transform", "rotate(-90)")
 	.attr("y", -5)
-        .attr("x", -((pad.top + height/2) + 10))
+        .attr("x", -((pad.left + height/2) + 10))
         .attr("font-size", 12)
         .style("fill", "red")
 
@@ -508,7 +509,7 @@ function plotPca(plotData){
 	.attr("xlink:href", pcaDownload)
 	.append("text")
 	.text("[ Download PCA scores ]" + popName)
-	.attr("y", pad.top + height + 60)
+	.attr("y", pad.top + height + 75)
         .attr("x", pad.left)
         .attr("font-size", 14)
         .style("fill", "#954A09") 

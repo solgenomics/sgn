@@ -59,10 +59,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
   my $data_level = $c->req->param('data_level') || "plots";
   my $sample_number = $c->req->param('sample_number');
   if ($sample_number eq '') {$sample_number = undef};
-  my $predefined_columns = $c->req->param('predefined_columns');
-  if ($predefined_columns) {
-      $predefined_columns = decode_json($predefined_columns);
-  }
+  my $predefined_columns = $c->req->param('predefined_columns') ? decode_json $c->req->param('predefined_columns') : [];
 
   #print STDERR Dumper $sample_number;
   #print STDERR Dumper $predefined_columns;
@@ -96,6 +93,43 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
 
     print STDERR "DOWNLOAD FILENAME = ".$create_spreadsheet->filename()."\n";
     print STDERR "RELATIVE  = $rel_file\n";
+
+    #Add postcomposed terms from selected predefined_columns
+    if (scalar(@$predefined_columns)>0){
+        my @allowed_composed_cvs = split ',', $c->config->{composable_cvs};
+        my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
+        my $composable_cvterm_format = $c->config->{composable_cvterm_format};
+        my @allowed_composed_cvs_minus_trait = grep { $_ ne 'trait' } @allowed_composed_cvs;
+        my %id_hash;
+        for my $i (0 .. scalar @$predefined_columns){
+            my $cv_type = $allowed_composed_cvs_minus_trait[$i];
+            foreach my $selected_term (values %{$predefined_columns->[$i]}){
+                my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $selected_term)->cvterm_id();
+                push @{$id_hash{$cv_type}}, $cvterm_id;
+            }
+        }
+        my @trait_cvterm_ids;
+        foreach (@trait_list){
+            push @trait_cvterm_ids, SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $_)->cvterm_id();
+        }
+        $id_hash{'trait'} = \@trait_cvterm_ids;
+        #print STDERR Dumper \%id_hash;
+        my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, \%id_hash);
+        my %new_traits;
+        foreach (@{$traits->{new_traits}}){
+            $new_traits{$_->[1]} = join ',', @{$_->[0]};
+        }
+        #print STDERR Dumper \%new_traits;
+        my $new_terms;
+        eval {
+            my $onto = CXGN::Onto->new({ schema => $schema });
+            $new_terms = $onto->store_composed_term(\%new_traits);
+        };
+        if ($@) {
+            die "An error occurred saving the new trait details: $@";
+        }
+        #print STDERR Dumper $new_terms;
+    }
 
 #if ($error) {
 #$c->stash->{rest} = { error => $error };

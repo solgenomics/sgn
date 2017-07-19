@@ -310,37 +310,42 @@ sub selection_combined_pops_trait :Path('/solgs/selection/') Args(6) {
     $c->stash->{data_set_type}        = 'combined populations';
     $c->stash->{combined_populations} = 1;
         
-    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);
-
-    my $page = $c->req->referer();
-
-    if ($page =~ /solgs\/model\/combined\/populations/ || $page =~ /solgs\/models\/combined\/trials/)
-    { 
-	$self->get_combined_pops_arrayref($c);   
-	$c->stash->{trait_combo_pops} = $c->stash->{arrayref_combined_pops_ids};  
-    } 
-       
-    $self->combined_trials_desc($c);      
+    $c->controller('solGS::solGS')->get_trait_details($c, $trait_id);   
   
     if ($selection_pop_id =~ /uploaded/) 
     {
-        $c->stash->{prediction_pop_id} = $selection_pop_id;
-        $c->controller('solGS::solGS')->uploaded_population_summary($c);
+	$c->controller('solGS::solGS')->uploaded_population_summary($c, $selection_pop_id);
+	$c->stash->{selection_pop_id} = $c->stash->{project_id};
+	$c->stash->{selection_pop_name} = $c->stash->{project_name};
+	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
+	$c->stash->{selection_pop_owner} = $c->stash->{owner}; 
     }
     else 
     {
-	my $pop_rs = $c->model("solGS::solGS")->project_details($selection_pop_id);    
-    
-	while (my $pop_row = $pop_rs->next) 
-	{      
-	    $c->stash->{prediction_pop_name} = $pop_row->name;    
-	}
+	$c->controller('solGS::solGS')->get_project_details($c, $selection_pop_id); 
+	$c->stash->{selection_pop_id} = $c->stash->{project_id};
+	$c->stash->{selection_pop_name} = $c->stash->{project_name};
+	$c->stash->{selection_pop_desc} = $c->stash->{project_desc};
+
+        $c->controller('solGS::solGS')->get_project_owners($c, $selection_pop_id);       
+        $c->stash->{selection_pop_owner} = $c->stash->{project_owners}; 
     }  
 
+    my $mr_cnt_args = {'selection_pop' => 1,  'selection_pop_id' => $selection_pop_id};
+    my $sel_pop_mr_cnt = $c->controller('solGS::solGS')->get_markers_count($c, $mr_cnt_args);
+    $c->stash->{selection_markers_cnt} = $sel_pop_mr_cnt;
+
+    my $protocol = $c->config->{default_genotyping_protocol};
+    $protocol = 'N/A' if !$protocol;
+    $c->stash->{protocol} = $protocol;
+    
     my $identifier    = $model_id . '_' . $selection_pop_id;
     $c->controller('solGS::solGS')->prediction_pop_gebvs_file($c, $identifier, $trait_id);
     my $gebvs_file = $c->stash->{prediction_pop_gebvs_file};
-    
+
+    my @stock_rows = read_file($gebvs_file);
+    $c->stash->{selection_stocks_cnt} = scalar(@stock_rows) - 1;
+   
     $c->controller('solGS::solGS')->top_blups($c, $gebvs_file);
  
     $c->stash->{blups_download_url} = qq | <a href="/solgs/download/prediction/model/$model_id/prediction/$selection_pop_id/$trait_id">Download all GEBVs</a>|; 

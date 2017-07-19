@@ -1,0 +1,172 @@
+
+<%args>
+$stock_id
+</%args>
+
+<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<&| /page/info_section.mas, title => 'Related stocks in trials', collapsible=>1, collapsed=>1 &>
+<table id = "trial_related_stock" class="table table-hover table-striped">
+<thead>
+ <tr>
+  <th>Name</th>
+  <th>Type</th>
+</tr>
+</thead>
+</table>
+
+<br>
+<&| /page/info_section.mas, title => 'Copy Stocks to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the stock names showing in table to a new or exisiting list</i>'&>
+<br>
+<div style="text-align:right" id="trial_stocks_to_list_menu"></div>
+<div id="trial_stock_names" style="display: none;"></div>
+</&>
+</&>
+
+<&| /page/info_section.mas, title => 'Progenies', collapsible=>1, collapsed=>1 &>
+<table id = "progenies" class="table table-hover table-striped">
+<thead>
+ <tr>
+  <th>As female or male parent</th>
+  <th>Progeny name</th>
+</tr>
+</thead>
+</table>
+
+<br>
+<&| /page/info_section.mas, title => 'Copy Stocks to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the stock names showing in table to a new or exisiting list</i>'&>
+<br>
+<div style="text-align:right" id="progenies_to_list_menu"></div>
+<div id="progeny_names" style="display: none;"></div>
+</&>
+
+</&>
+
+<&| /page/info_section.mas, title => 'Groups / members', collapsible=>1, collapsed=>1 &>
+<table id = "group" class="table table-hover table-striped">
+<thead>
+ <tr>
+  <th>Name</th>
+  <th>Type</th>
+</tr>
+</thead>
+</table>
+
+<br>
+<&| /page/info_section.mas, title => 'Copy Stocks to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the stock names showing in table to a new or exisiting list</i>'&>
+<br>
+<div style="text-align:right" id="groups_and_members_to_list_menu"></div>
+<div id="group_and_member_names" style="display: none;"></div>
+</&>
+
+</&>
+
+<&| /page/info_section.mas, title => 'Related stocks for tissue sample', collapsible=>1, collapsed=>1 &>
+<table id = "tissue_sample" class="table table-hover table-striped">
+<thead>
+ <tr>
+  <th>Name</th>
+  <th>Type</th>
+</tr>
+</thead>
+</table>
+
+<br>
+<&| /page/info_section.mas, title => 'Copy Stocks to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the stock names showing in table to a new or exisiting list</i>'&>
+<br>
+<div style="text-align:right" id="tissue_samples_to_list_menu"></div>
+<div id="tissue_sample_names" style="display: none;"></div>
+</&>
+
+</&>
+<script>
+
+jQuery(document).ready(function(){
+
+    var trial_stock_table = jQuery('#trial_related_stock').DataTable({
+        'ajax':'/stock/'+ <% $stock_id %> + '/datatables/trial_related_stock',
+    });
+
+    jQuery('#trial_related_stock').on( 'draw.dt', function (){
+        var name_links = trial_stock_table.column(0).data();
+        var names = [];
+        //console.log("name links are: "+JSON.stringify(name_links));
+        for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
+          names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+        }
+
+        jQuery('#trial_stock_names').html(names);
+        addToListMenu('trial_stocks_to_list_menu', 'trial_stock_names',{
+        listType:'null'
+        });
+    });
+
+
+    var progeny_table = jQuery('#progenies').DataTable({
+        'ordering': false,
+        'ajax':'/stock/'+ <% $stock_id %> + '/datatables/progenies',
+    });
+
+    jQuery('#progenies').on( 'draw.dt', function (){
+        var name_links = progeny_table.column(1).data();
+        var names = [];
+        //console.log("name links are: "+JSON.stringify(name_links));
+        for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
+          names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+        }
+
+        jQuery('#progeny_names').html(names);
+        addToListMenu('progenies_to_list_menu', 'progeny_names',{
+        listType:'accessions'
+        });
+    });
+
+
+     var group_and_member_table = jQuery('#group').DataTable({
+         'ajax':'/stock/'+ <% $stock_id %> + '/datatables/group_and_member',
+
+    });
+
+    jQuery('#group').on( 'draw.dt', function (){
+        var name_links = group_and_member_table.column(0).data();
+        var names = [];
+        //console.log("name links are: "+JSON.stringify(name_links));
+        for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
+          names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+        }
+
+        jQuery('#group_and_member_names').html(names);
+        addToListMenu('groups_and_members_to_list_menu', 'group_and_member_names',{
+        listType:'null'
+        });
+
+    });
+
+
+    var tissue_sample_table = jQuery('#tissue_sample').DataTable({
+        'ajax':'/stock/'+ <% $stock_id %> + '/datatables/stock_for_tissue',
+
+   });
+
+    jQuery('#tissue_sample').on( 'draw.dt', function (){
+       var name_links = group_and_member_table.column(0).data();
+       var names = [];
+       //console.log("name links are: "+JSON.stringify(name_links));
+       for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
+         names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+       }
+
+       jQuery('#tissue_sample_names').html(names);
+       addToListMenu('tissue_samples_to_list_menu', 'tissue_sample_names',{
+       listType:'null'
+       });
+
+   });
+
+});
+
+
+
+
+ </script>

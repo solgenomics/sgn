@@ -165,7 +165,7 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            11,
+            12,
             'new_test_name',
             'new description',
             1,
@@ -234,7 +234,7 @@ is_deeply(\@lists_sorted, [
             0
           ],
           [
-            11,
+            12,
             'new_test_name',
             'new description',
             1,
@@ -277,6 +277,22 @@ is_deeply($items, [
             'updated name'
           ]
         ], 'check updated list item');
+
+my $space1 = $list->add_element(" bla1");
+ok($list->exists_element("bla1"), 'remove leading space element check');
+ok(!$list->exists_element(" bla1"), 'leading space removed from element');
+
+
+my $space2 = $list->add_element("bla2 ");
+ok($list->exists_element("bla2"), 'remove trailing space element check');
+ok(!$list->exists_element("bla2 "), 'trailing space removed from element');
+
+my $space3 = $list->add_element(" bla3 ");
+ok($list->exists_element("bla3"), 'remove trailing and leading spaces element check');
+ok(!$list->exists_element(" bla3 "), 'trailing and leading spaces removed from element');
+
+my $space4 = $list->add_element("    ");
+ok($space4 eq "Empty list elements are not allowed", 'element with only spaces cannot be added'); 
 
 
 done_testing();
