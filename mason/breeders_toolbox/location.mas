@@ -1,69 +1,29 @@
 
 <%args>
 $user_id => undef
-$locations => ()
 </%args>
 
 <& /util/import_javascript.mas, classes => [ ] &>
 
-<%perl>
-
-  if (!$locations) {
-    print "<tr><td>No locations have been added yet.</td></tr>";
-  }
-
-print "<div class=\"col-sm-12 col-md-12 col-lg-12 table-responsive\" id=\"location_table_div\">";
-
-foreach my $prog (sort keys %$locations) {
-    print "<label><a href=\"/breeders/manage_programs/\">$prog</a> locations:</label>
-    <table class=\"table table-bordered table-striped table-highlight\">
-      <thead>
-        <th>Location name</th>
-        <th>Abbrev.</th>
-        <th>Country</th>
-        <th>Type</th>
-        <th>Lat.</th>
-        <th>Long.</th>
-        <th>Altitude(m)</th>
-        <th>Trials</th>
-        <th>Edit</th>
-        <th>Remove</th>
-      </thead>
-      <tbody>";
-
-  foreach my $loc (@{$locations->{$prog}}) {
-    my $id = $loc->[0];
-    my $name = $loc->[1];
-    my $abbrev = $loc->[2] || '';
-    my $country_name = $loc->[3] || '';
-    my $country_code = $loc->[4] || '';
-    my $country = '';
-    if ( $country_name || $country_code ) {
-        $country = "$country_name ($country_code)";
-    }
-    my $type = $loc->[5] || '';
-    my $lat = $loc->[6] || '';
-    my $long = $loc->[7] || '';
-    my $alt = $loc->[8] || '';
-    my $count = $loc->[9] || 0;
-    my ($edit_link, $delete_link);
-
-    if ($user_id && $count < 1) {
-        $delete_link = "&nbsp;&nbsp;&nbsp;<a href=\"javascript:delete_location($id)\"><font style=\"color: red; font-weight: bold\">X</a>";
-    }
-    if ($user_id) {
-        $edit_link = "&nbsp;&nbsp;&nbsp;<a href=\"javascript:edit_location($id)\"><font style=\"color: blue; font-weight: bold\">Edit</a>";
-    }
-
-    print "<tr><td id=\"".$id."\">".$name."</td><td id=\"".$id."_abbrev\">".$abbrev."</td><td id=\"".$id."_country\">".$country."</td><td id=\"".$id."_type\">".$type."</td><td id=\"".$id."_lat\">".$lat."</td><td id=\"".$id."_long\">".$long."</td><td id=\"".$id."_alt\">".$alt."</td><td>(<a href=\"/search/trials?nd_geolocation=$name\">".$count." trials</a>)</td><td>$edit_link</td><td>$delete_link</td></tr>";
-   }
-
-   print "</tbody></table>";
-}
-
-print "</div>";
-
-</%perl>
+<div class="table-responsive" style="margin-top: 10px;">
+    <table id="location_table" class="table table-hover table-striped table-bordered" width="100%">
+        <thead>
+            <tr>
+    <th>Location name</th>
+    <th>Abbrev.</th>
+    <th>Country</th>
+    <th>Type</th>
+    <th>Lat.</th>
+    <th>Long.</th>
+    <th>Altitude(m)</th>
+    <th>Trials</th>
+    <th>Edit</th>
+    <th>Remove</th>
+</tr>
+  </thead>
+  <caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Locations </center></caption>
+</table>
+</div>
 
 <div class="modal fade" id="store_location_dialog" name="store_location_dialog" tabindex="-1" role="dialog" aria-labelledby="storeLocationDialog">
   <div class="modal-dialog" role="document">
@@ -133,6 +93,10 @@ print "</div>";
 
 jQuery(document).ready(function() {
 
+    var location_table = jQuery('#location_table').DataTable( {
+        'ajax': '/ajax/location/all'
+    });
+
   $('#add_location_link').click( function() {
       $('#store_location_dialog').modal("show");
    });
@@ -160,7 +124,7 @@ jQuery(document).ready(function() {
 
        $.ajax({
          type: 'POST',
-         url: '/ajax/breeders/location/store',
+         url: '/ajax/location/store',
          data: { 'id': id, 'name': name, 'abbreviation': abbreviation, 'country_name': country_name, 'country_code': country_code, 'type': type, 'longitude':longitude, 'latitude':latitude, 'altitude': altitude },
          success: function(response) {
                   if (response.error) { alert(response.error); }
@@ -185,7 +149,7 @@ jQuery(document).ready(function() {
 
     new jQuery.ajax( {
       type: 'POST',
-      url: '/ajax/breeders/location/delete/'+id,
+      url: '/ajax/location/delete/'+id,
       success: function(response) {
                   if (response.error) { alert(response.error); }
                   else {

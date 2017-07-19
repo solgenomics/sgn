@@ -1,6 +1,5 @@
 
 <%args>
-$locations
 $user_id => undef
 </%args>
 
@@ -10,7 +9,7 @@ $user_id => undef
 
 <&| /page/info_section.mas, title=>'Locations',  collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_location_link">Add Location</a>]' &>
 
-<& /breeders_toolbox/location.mas, locations=>$locations, user_id=>$user_id &>
+<& /breeders_toolbox/location.mas, user_id=>$user_id &>
 
 </&>
 
