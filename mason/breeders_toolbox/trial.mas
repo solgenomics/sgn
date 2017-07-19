@@ -598,6 +598,11 @@ jQuery(document).ready(function () {
         });
     });
 
+    jQuery('#direct_phenotyping_link').click(function () {
+        var  id = <% $trial_id %>;
+        location.href = '/breeders/trial_phenotyping?trial_id=' + id + '';
+    });
+
 });
 
 </script>
