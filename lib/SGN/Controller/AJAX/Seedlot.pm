@@ -10,6 +10,7 @@ use CXGN::Stock::Seedlot;
 use CXGN::Stock::Seedlot::Transaction;
 use SGN::Model::Cvterm;
 use CXGN::Stock::Seedlot::ParseUpload;
+use CXGN::Login;
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -132,9 +133,30 @@ sub upload_seedlots : Path('/ajax/breeders/seedlot-upload/') : ActionClass('REST
 sub upload_seedlots_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    if (!$c->user){
-        $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
-        $c->detach();
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user()->roles;
     }
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -148,8 +170,6 @@ sub upload_seedlots_POST : Args(0) {
     my $upload_tempfile = $upload->tempname;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    my $user_name = $c->user()->get_object()->get_username();
 
     ## Store uploaded temporary file in archive
     my $uploader = CXGN::UploadFile->new({
@@ -159,7 +179,7 @@ sub upload_seedlots_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $c->user()->roles
+        user_role => $user_role
     });
     my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
