@@ -49,8 +49,10 @@ foreach my $prog (sort keys %$locations) {
     my ($edit_link, $delete_link);
 
     if ($user_id && $count < 1) {
-      $delete_link = "&nbsp;&nbsp;&nbsp;<a href=\"javascript:delete_location($id)\"><font style=\"color: red; font-weight: bold\">X</a>";
-      $edit_link = "&nbsp;&nbsp;&nbsp;<a href=\"javascript:edit_location($id)\"><font style=\"color: blue; font-weight: bold\">Edit</a>";
+        $delete_link = "&nbsp;&nbsp;&nbsp;<a href=\"javascript:delete_location($id)\"><font style=\"color: red; font-weight: bold\">X</a>";
+    }
+    if ($user_id) {
+        $edit_link = "&nbsp;&nbsp;&nbsp;<a href=\"javascript:edit_location($id)\"><font style=\"color: blue; font-weight: bold\">Edit</a>";
     }
 
     print "<tr><td id=\"".$id."\">".$name."</td><td id=\"".$id."_abbrev\">".$abbrev."</td><td id=\"".$id."_country\">".$country."</td><td id=\"".$id."_type\">".$type."</td><td id=\"".$id."_lat\">".$lat."</td><td id=\"".$id."_long\">".$long."</td><td id=\"".$id."_alt\">".$alt."</td><td>(<a href=\"/search/trials?nd_geolocation=$name\">".$count." trials</a>)</td><td>$edit_link</td><td>$delete_link</td></tr>";

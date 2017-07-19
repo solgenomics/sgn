@@ -241,7 +241,8 @@ sub get_locations_by_breeding_program {
 	location_type.value,
 	longitude,
 	latitude,
-	altitude
+	altitude,
+    count(distinct(trial.project_id))
 FROM project
 JOIN project_relationship on (project_id=object_project_id)
 JOIN project AS trial ON (subject_project_id=trial.project_id)
@@ -282,8 +283,8 @@ WHERE nd_experiment_id IS NULL";
     }
 
     my @locations;
-    while (my ($id, $name, $abbrev, $country_name, $country_code, $type, $longitude, $latitude, $altitude, $plot_count) = $h->fetchrow_array()) {
-	push @locations, [ $id, $name, $abbrev, $country_name, $country_code, $type, $longitude, $latitude, $altitude, $plot_count ];
+    while (my ($id, $name, $abbrev, $country_name, $country_code, $type, $longitude, $latitude, $altitude, $trial_count) = $h->fetchrow_array()) {
+	push @locations, [ $id, $name, $abbrev, $country_name, $country_code, $type, $longitude, $latitude, $altitude, $trial_count ];
     }
     return \@locations;
 }
