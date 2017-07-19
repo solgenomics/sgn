@@ -133,7 +133,7 @@ sub upload_seedlots_POST : Args(0) {
     my $self = shift;
     my $c = shift;
     if (!$c->user){
-        $c->stash->{rest} = {error=>'You must be logged in to add a seedlot transaction!'};
+        $c->stash->{rest} = {error=>'You must be logged in to upload seedlots!'};
         $c->detach();
     }
 
