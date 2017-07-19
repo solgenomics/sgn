@@ -42,6 +42,15 @@ $timestamp
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
+
+                    <&| /page/explanation.mas, title=>'Template information' &>
+                        <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="seedlot_upload_spreadsheet_format_info">Spreadsheet format</a>
+                        </p>
+                    </&>
+
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_seedlot_form" name="upload_seedlot_form">
 
                         <div class="form-group">
@@ -69,7 +78,7 @@ $timestamp
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Upload File: </label>
+                            <label class="col-sm-3 control-label">Upload File (.xls): </label>
                             <div class="col-sm-9" >
                                 <input type="file" name="seedlot_uploaded_file" id="seedlot_uploaded_file" encoding="multipart/form-data" />
                             </div>
@@ -160,6 +169,56 @@ $timestamp
   </div>
 </div>
 
+<div class="modal fade" id="seedlot_upload_spreadsheet_info_dialog" name="seedlot_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSeedlotInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadSeedlotInfoDialog">Upload Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Seedlots may be uploaded in an Excel file (.xls)</b>
+                    <br />
+                    (.xlsx format not supported)
+                    <br /><br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>seedlot_name</td>
+                                <td>accession_name</td>
+                                <td>amount</td>
+                                <td>description</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <br/>
+                    seedlot_name (must be unique)
+                    <br />
+                    accession_name (must exist in the database)
+                    <br />
+                    <b>Optional fields:</b>
+                    <br />
+                    amount (number of seeds in seedlot. if not given will default to 0)
+                    <br />
+                    description
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_seedlot_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 jQuery(document).ready(function(){
 
@@ -184,6 +243,10 @@ jQuery(document).ready(function(){
     jQuery('#seedlot_bulk_upload').click( function() {
         jQuery('#upload_seedlot_dialog').modal('show');
         get_select_box('breeding_programs', 'upload_seedlot_breeding_program_div', { 'name' : 'upload_seedlot_breeding_program_id', 'id' : 'upload_seedlot_breeding_program_id' });
+    });
+
+    jQuery("#seedlot_upload_spreadsheet_format_info").click( function () {
+        jQuery("#seedlot_upload_spreadsheet_info_dialog" ).modal("show");
     });
 
     jQuery('#upload_seedlot_button').click(function () {
