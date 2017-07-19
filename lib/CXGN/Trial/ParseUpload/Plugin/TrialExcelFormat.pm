@@ -373,7 +373,7 @@ sub _get_accession {
 
 
 sub _get_stock {
- my $self = shift;
+  my $self = shift;
   my $stock_name = shift;
   my $chado_schema = $self->get_chado_schema();
   my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
