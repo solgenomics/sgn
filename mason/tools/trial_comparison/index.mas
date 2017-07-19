@@ -24,7 +24,7 @@
         </div>
         <img hidden id="trials-loading-spinner" src="/img/wheel.gif" alt="loading">
         <small hidden="true" id = "trials_list_info" class="form-text text-muted">
-          Trials contain a total of <span id="total_accession_count">?</span> accessions, with <span id="common_accession_count">?</span> common accessions, phenotyped for <span id="common_trait_count">?</span> common traits.
+          List contains <span id="list_trial_count">?</span> trials phenotyped for <span id="common_trait_count">?</span> common traits.
         </small>
       </div>
       <div class="form-group">
@@ -71,11 +71,13 @@ $(document).ready(function(){
       }
       setTimeout(function(){ //use setTimeout to pull sync call list.getListData out of event listener thread.
         var item_data = list.getListData(trial_list_id);
-	var items = item_data.elements;
-	console.log("items: ",items);
+        // var items = item_data.elements;
+        // console.log("items: ",items);
+        var ids = list.transform2Ids(trial_list_id, item_data);
+        console.log("ids: ",ids);
         var params = "";
-        for (n=0; n<items.length; n++) {
-          params += 'trial_id='+items[n][0]+'&';
+        for (n=0; n<ids.length; n++) {
+          params += 'trial_id='+ids[n]+'&';
         }
         $.ajax({
           url: '/ajax/trial/common_traits?'+params,
@@ -91,8 +93,7 @@ $(document).ready(function(){
               $("#trials-loading-spinner").hide();
               $("#trials_list_info").show();
               $('#trait_select').attr("disabled",false).html(option_html);
-              $('#total_accession_count').html(response.total_accession_count);
-              $('#common_accession_count').html(response.common_accession_count);
+              $('#list_trial_count').html(response.list_trial_count);
               $('#common_trait_count').html(response.common_trait_count);
              }
           },

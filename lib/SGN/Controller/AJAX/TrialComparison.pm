@@ -172,16 +172,14 @@ sub get_common_traits {
     print STDERR 'data: '.Dumper(\%dataref);
     print STDERR 'query: '.Dumper(\%queryref);
     my $breedersearch =  CXGN::BreederSearch->new({"dbh"=>$c->dbc->dbh});
-    print STDERR "Results: \n";
     my $results_ref = $breedersearch->metadata_query(@criteria, \%dataref, \%queryref);
+    print STDERR "Results: \n";
     print STDERR Dumper($results_ref);
-#    $c->stash->{rest} = {
-#	options => \@options ,
-#	common_accession_count => $common_accession_count,
-#        common_trait_count => $common_trait_count,
-#	total_accession_count => $total_accession_count,
-#    };
-    $c->stash->{rest} = {common_accession_count => "1"}
+    $c->stash->{rest} = {
+    	options => $results_ref->{results},
+      list_trial_count=> scalar(@trials),
+      common_trait_count => scalar(@{$results_ref->{results}}),
+    };
 }
 
 1;
