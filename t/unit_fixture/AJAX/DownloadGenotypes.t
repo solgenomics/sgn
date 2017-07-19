@@ -2,26 +2,20 @@
 use strict;
 use warnings;
 
-#use lib 't/lib';
-#use SGN::Test::Fixture;
 use Test::More;
 use Test::WWW::Mechanize;
-
-#Needed to update IO::Socket::SSL
 use Data::Dumper;
 use JSON;
 local $Data::Dumper::Indent = 0;
 
 my $mech = Test::WWW::Mechanize->new;
-my $response;
 
 $mech->get_ok('http://localhost:3010/breeders/download_gbs_action?format=accession_ids&ids=39973');
-$response = $mech->content;
-$response = substr($response, 55);
-print STDERR Dumper $response;
+my $response = $mech->content;
 
+$response  =~ s/^.*Protocol/Protocol/s;
 
-is_deeply($response, ' Protocol Id=1, Accession List: , Accession Ids: 39973, Trial Ids:  
+my $expected_response = 'Protocol Id=1, Accession List: , Accession Ids: 39973, Trial Ids: 
 Marker	UG120180|79759	
 S5_36739	0
 S13_92567	0
@@ -523,15 +517,16 @@ S12794_1954311	0
 S12794_2162836	0
 S12865_649906	0
 S12946_101555	1
-'
-, 'download single genotype');
+';
+
+is_deeply($response, $expected_response, 'download single genotype');
 
 $mech->get_ok('http://localhost:3010/breeders/download_gbs_action?format=accession_ids&ids=39973,39029');
 $response = $mech->content;
-$response = substr($response, 55);
-print STDERR Dumper $response;
 
-is($response, ' Protocol Id=1, Accession List: , Accession Ids: 39973,39029, Trial Ids:  
+$response  =~ s/^.*Protocol/Protocol/s;
+
+$expected_response = 'Protocol Id=1, Accession List: , Accession Ids: 39973,39029, Trial Ids: 
 Marker	UG120181|78355	UG120180|79759	UG120181|79767	
 S5_36739	0	0	0
 S13_92567	0	0	0
@@ -1033,6 +1028,8 @@ S12794_1954311	1	0	1
 S12794_2162836	1	0	1
 S12865_649906	0	0	0
 S12946_101555	0	1	0
-', "test multiple genotype download");
+';
+
+is($response, $expected_response, "test multiple genotype download");
 
 done_testing();
