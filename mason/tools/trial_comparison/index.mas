@@ -71,10 +71,11 @@ $(document).ready(function(){
       }
       setTimeout(function(){ //use setTimeout to pull sync call list.getListData out of event listener thread.
         var item_data = list.getListData(trial_list_id);
-        var items = item_data.elements;
+	var items = item_data.elements;
+	console.log("items: ",items);
         var params = "";
         for (n=0; n<items.length; n++) {
-          params += 'trial_name='+items[n][1]+'&';
+          params += 'trial_id='+items[n][0]+'&';
         }
         $.ajax({
           url: '/ajax/trial/common_traits?'+params,
