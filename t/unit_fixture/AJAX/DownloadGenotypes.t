@@ -6,18 +6,14 @@ use Test::More;
 use Test::WWW::Mechanize;
 use Data::Dumper;
 use JSON;
-
-# for identifying whitespace differences
-# use String::Diff;
-# use String::Diff qw( diff_fully diff diff_merge diff_regexp );# export functions
-
 local $Data::Dumper::Indent = 0;
 
 my $mech = Test::WWW::Mechanize->new;
 
 $mech->get_ok('http://localhost:3010/breeders/download_gbs_action?format=accession_ids&ids=39973');
 my $response = $mech->content;
-$response = substr($response, 50);
+
+$response  =~ s/^.*Protocol/Protocol/s;
 
 my $expected_response = 'Protocol Id=1, Accession List: , Accession Ids: 39973, Trial Ids: 
 Marker	UG120180|79759	
@@ -523,16 +519,12 @@ S12865_649906	0
 S12946_101555	1
 ';
 
-# for identifying whitespace differences
-# my($old, $new) = String::Diff::diff($expected_response, $response);
-# print STDERR "expected: $old\n";
-# print STDERR "got: $new\n";
-
 is_deeply($response, $expected_response, 'download single genotype');
 
 $mech->get_ok('http://localhost:3010/breeders/download_gbs_action?format=accession_ids&ids=39973,39029');
 $response = $mech->content;
-$response = substr($response, 50);
+
+$response  =~ s/^.*Protocol/Protocol/s;
 
 $expected_response = 'Protocol Id=1, Accession List: , Accession Ids: 39973,39029, Trial Ids: 
 Marker	UG120181|78355	UG120180|79759	UG120181|79767	
@@ -1037,11 +1029,6 @@ S12794_2162836	1	0	1
 S12865_649906	0	0	0
 S12946_101555	0	1	0
 ';
-
-# for identifying whitespace differences
-# my($old, $new) = String::Diff::diff($expected_response, $response);
-# print STDERR "expected: $old\n";
-# print STDERR "got: $new\n";
 
 is($response, $expected_response, "test multiple genotype download");
 
