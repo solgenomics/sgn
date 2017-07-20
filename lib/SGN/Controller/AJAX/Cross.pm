@@ -1071,7 +1071,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     #print STDERR Dumper $urlencoded_filename3;
     #$c->stash->{rest}->{filename} = $urlencoded_filename3;
 
-    my $uploader = CXGN::UploadFile->new({
+    $uploader = CXGN::UploadFile->new({
        include_timestamp => 0,
        tempfile => $file_path3,
        subdirectory => 'cross_wishlist',
@@ -1202,6 +1202,22 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         $c->stash->{rest}->{error} .= "There was an error submitting germplasm info file to ONA. Please try again.";
     }
 
+}
+
+sub list_cross_wishlists : Path('/ajax/cross/list_cross_wishlists') : ActionClass('REST') { }
+
+sub list_cross_wishlists_GET : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $q = "SELECT file_id, basename, dirname, filetype, comment, m.create_date, m.create_person_id, p.first_name, p.last_name FROM metadata.md_files JOIN metadata.md_metadata as m USING(metadata_id) JOIN sgn_people.sp_person as p ON(p.sp_person_id=m.create_person_id) WHERE filetype ilike 'cross_wishlist_%';";
+    my $h = $c->dbc->dbh->prepare($q);
+    $h->execute();
+    my @files;
+    while(my ($file_id, $basename, $dirname, $filetype, $comment, $create_date, $sp_person_id, $first_name, $last_name) = $h->fetchrow_array()){
+        push @files, [$file_id, $basename, $dirname, $filetype, $comment, $create_date, $sp_person_id, $first_name, $last_name];
+    }
+    #print STDERR Dumper \@files;
+    $c->stash->{rest} = {"success" => 1, "files"=>\@files};
 }
 
 ###
