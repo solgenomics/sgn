@@ -225,36 +225,51 @@ sub get_all_locations {
 
     my $project_location_type_id = $self ->schema->resultset('Cv::Cvterm')->search( { 'name' => 'project location' })->first->cvterm_id();
 
-	my $q = "SELECT distinct(geo.nd_geolocation_id),
+	my $q = "SELECT geo.nd_geolocation_id,
 	geo.description,
 	abbreviation.value,
-	country_name.value,
 	country_code.value,
-    trial.name,
+	breeding_program.name,
 	location_type.value,
 	longitude,
 	latitude,
 	altitude,
-    count(distinct(trial.project_id))
-FROM project
-JOIN project_relationship on (project_id=object_project_id)
+    count(distinct(projectprop.project_id))
+FROM project AS breeding_program
+JOIN project_relationship on (breeding_program.project_id=object_project_id)
 JOIN project AS trial ON (subject_project_id=trial.project_id)
 LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id)
 LEFT JOIN nd_geolocation AS geo ON (projectprop.value::INT = geo.nd_geolocation_id)
 LEFT JOIN nd_geolocationprop AS abbreviation ON (geo.nd_geolocation_id = abbreviation.nd_geolocation_id AND abbreviation.type_id = (SELECT cvterm_id from cvterm where name = 'abbreviation') )
-LEFT JOIN nd_geolocationprop AS country_name ON (geo.nd_geolocation_id = country_name.nd_geolocation_id AND country_name.type_id = (SELECT cvterm_id from cvterm where name = 'country_name') )
 LEFT JOIN nd_geolocationprop AS country_code ON (geo.nd_geolocation_id = country_code.nd_geolocation_id AND country_code.type_id = (SELECT cvterm_id from cvterm where name = 'country_code') )
 LEFT JOIN nd_geolocationprop AS location_type ON (geo.nd_geolocation_id = location_type.nd_geolocation_id AND location_type.type_id = (SELECT cvterm_id from cvterm where name = 'location_type') )
 WHERE projectprop.type_id=?
-GROUP BY 1,2,3,4,5,6,7";
+GROUP BY 1,2,3,4,5,6
+ORDER BY 8,2";
 
 
 	my $h = $self->schema()->storage()->dbh()->prepare($q);
 	$h->execute($project_location_type_id);
 #
     my @locations;
-    while (my ($id, $name, $abbrev, $country_name, $country_code, $type, $longitude, $latitude, $altitude, $trial_count) = $h->fetchrow_array()) {
-        push @locations, [$id, $name, $abbrev, $country_name, $country_code, $type, $longitude, $latitude, $altitude, $trial_count];
+    while (my ($id, $name, $abbrev, $country_code, $prog, $type, $longitude, $latitude, $altitude, $trial_count) = $h->fetchrow_array()) {
+        $name = '<font id="'.$id.'_name">'.$name.'</font>';
+        $abbrev = '<font id="'.$id.'_abbrev">'.$abbrev.'</font>';
+        $country_code = '<font id="'.$id.'_country">'.$country_code.'</font>';
+        $prog = '<font id="'.$id.'_prog">'.$prog.'</font>';
+        $type = '<font id="'.$id.'_type">'.$type.'</font>';
+        $latitude = '<font id="'.$id.'_lat">'.$latitude.'</font>';
+        $longitude = '<font id="'.$id.'_long">'.$longitude.'</font>';
+        $altitude = '<font id="'.$id.'_alt">'.$altitude.'</font>';
+        $trial_count = '<font id="'.$id.'_count">'.$trial_count.'</font>';
+        my $edit_link = "<a href=\"javascript:edit_location($id)\"><font style=\"color: blue; font-weight: bold\">Edit</a>";
+        my $delete_link;
+        if ($trial_count == 0) {
+            $delete_link = '<a title="Delete" id="'.$id.'_remove" href="javascript:delete_location('.$id.')"><span style="color: red" class="glyphicon glyphicon-remove"></span></a>';
+        } else {
+            $delete_link = '<a title="Unable to delete locations that are linked to one or more trials" id="'.$id.'_remove"><span class="glyphicon glyphicon-remove"></span></a>';
+        }
+        push @locations, [$name, $abbrev, $country_code, $prog, $type, $longitude, $latitude, $altitude, $trial_count, $edit_link, $delete_link];
     }
     return \@locations;
 }

@@ -9,13 +9,14 @@ $user_id => undef
     <table id="location_table" class="table table-hover table-striped table-bordered" width="100%">
         <thead>
             <tr>
-    <th>Location name</th>
+    <th>Name</th>
     <th>Abbrev.</th>
     <th>Country</th>
+    <th>Program</th>
     <th>Type</th>
     <th>Lat.</th>
     <th>Long.</th>
-    <th>Altitude(m)</th>
+    <th>Alt.(m)</th>
     <th>Trials</th>
     <th>Edit</th>
     <th>Remove</th>
@@ -98,6 +99,9 @@ jQuery(document).ready(function() {
     });
 
   $('#add_location_link').click( function() {
+      if (!isLoggedIn()) {
+          alert("You must be logged in to add new locations");
+      }
       $('#store_location_dialog').modal("show");
    });
 
@@ -142,6 +146,9 @@ jQuery(document).ready(function() {
 
 
   function delete_location(id) {
+      if (!isLoggedIn()) {
+          alert("You must be logged in to delete locations");
+      }
     var name = $('#'+id).text();
     var yes = confirm('Are you sure you want to delete location '+name+'? ');
 
@@ -164,9 +171,12 @@ jQuery(document).ready(function() {
    }
 
    function edit_location(id) {
+       if (!isLoggedIn()) {
+           alert("You must be logged in to edit locations");
+       }
         console.log("Id for location to edit is "+id);
         $('#location_id').val(id);
-        $('#location_name').val($('#'+id).text());
+        $('#location_name').val($('#'+id+'_name').text());
         $('#location_abbreviation').val($('#'+id+'_abbrev').text());
         $('#location_country').val($('#'+id+'_country').text());
         $('#location_type').val($('#'+id+'_type').text());
