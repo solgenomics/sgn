@@ -219,7 +219,7 @@ sub compare_parental_genotypes {
 	$matrix[ 0 ][ 1 ][ 0 ] =-1;
 	$matrix[ 0 ][ 1 ][ 1 ] =-1;
 	$matrix[ 2 ][ 0 ][ 1 ] =-1;
-  	$matrix[ 2 ][ 1 ][ 1 ] =-1;
+  $matrix[ 2 ][ 1 ][ 1 ] =-1;
 	$matrix[ 2 ][ 1 ][ 2 ] =-1;
 
 	#print "self markers". Dumper $self_markers;

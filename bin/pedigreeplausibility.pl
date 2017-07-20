@@ -112,7 +112,7 @@ $s = shift @self_gts;
 $m = shift @mom_gts;
 $d = shift @dad_gts;
 		    my ($concordant, $discordant, $non_informative) = $s->compare_parental_genotypes($m, $d);
-		    my $score = $concordant / ($concordant + $discordant);
+		    my $score = 1 - ($concordant / ($concordant + $discordant));
 		    #push @scores, $score;
         print STDERR "scores are". $score. "\n";
 		    print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
