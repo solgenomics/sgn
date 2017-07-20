@@ -704,7 +704,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   }
 
   print $TEMP "# Downloaded from ".$c->config->{project_name}.": ".localtime()."\n"; # print header info
-  print $TEMP "# Protocol Id=$protocol_id, Accession List: ".join(',',@accession_list).", Accession Ids: $id_string, Trial Ids: $trial_id_string \n";
+  print $TEMP "# Protocol Id=$protocol_id, Accession List: ".join(',',@accession_list).", Accession Ids: $id_string, Trial Ids: $trial_id_string\n";
   print $TEMP "Marker\t";
 
   print STDERR "Decoding genotype data ...".localtime()."\n";
