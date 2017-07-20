@@ -40,9 +40,9 @@
 
 <div id="result_div" class="row">
   <div class="tc-main">
-    <div hidden="true" class="tc-grid col-lg-6 col-sm-12">
+    <div hidden="true" class="tc-grid col-lg-6 col-md-6 col-sm-12">
     </div>
-    <div hidden="true" class="tc-histogram col-lg-6 col-sm-12"></div>
+    <div hidden="true" class="tc-histogram col-lg-6 col-md-6 col-sm-12"></div>
   </div>
 </div>
 

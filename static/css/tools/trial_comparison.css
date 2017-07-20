@@ -10,7 +10,6 @@
 .tc-grid, .tc-histogram{
     box-sizing: border-box;
     margin: auto;
-    float: left;
     position:relative;
 }
 
