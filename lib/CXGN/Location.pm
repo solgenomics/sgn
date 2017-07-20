@@ -223,6 +223,7 @@ sub delete_location {
     if (@experiments) {
         my $error = "Location $name cannot be deleted because there are ".scalar @experiments." measurements associated with it from at least one trial.\n";
 	    print STDERR $error;
+        return { error => $error };
 	}
 	else {
 	    $row->delete();
@@ -234,7 +235,7 @@ sub _get_ndgeolocationprop {
     my $self = shift;
     my $type = shift;
 
-    my $ndgeolocationprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, 'geolocations_property')->cvterm_id();
+    my $ndgeolocationprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, 'geolocation_property')->cvterm_id();
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdGeolocationprop")->search({ nd_geolocation_id=> $self->nd_geolocation_id(), type_id => $ndgeolocationprop_type_id }, { order_by => {-asc => 'nd_geolocationprop_id'} });
 
     my @results;
@@ -250,15 +251,22 @@ sub _store_ndgeolocationprop {
     my $type = shift;
     my $value = shift;
     print STDERR " Storing value $value with type $type\n";
-    #my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, 'geolocations_property')->name();
-    my $stored_ndgeolocationprop = $self->location->create_geolocationprops({ $type => $value});
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, 'geolocation_property')->cvterm_id();
+    my $row = $self->bcs_schema()->resultset("NaturalDiversity::NdGeolocationprop")->find( { type_id=>$type_id, nd_geolocation_id=> $self->nd_geolocation_id() } );
+
+    if (defined $row) {
+        $row->value($value);
+        $row->update();
+    } else {
+        my $stored_ndgeolocationprop = $self->location->create_geolocationprops({ $type => $value});
+    }
 }
 
 sub _remove_ndgeolocationprop {
     my $self = shift;
     my $type = shift;
     my $value = shift;
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, 'geolocations_property')->cvterm_id();
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, 'geolocation_property')->cvterm_id();
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdGeolocationprop")->search( { type_id=>$type_id, nd_geolocation_id=> $self->nd_geolocation_id(), value=>$value } );
 
     if ($rs->count() == 1) {

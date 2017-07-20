@@ -99,9 +99,6 @@ jQuery(document).ready(function() {
     });
 
   $('#add_location_link').click( function() {
-      if (!isLoggedIn()) {
-          alert("You must be logged in to add new locations");
-      }
       $('#store_location_dialog').modal("show");
    });
 
@@ -146,9 +143,6 @@ jQuery(document).ready(function() {
 
 
   function delete_location(id) {
-      if (!isLoggedIn()) {
-          alert("You must be logged in to delete locations");
-      }
     var name = $('#'+id).text();
     var yes = confirm('Are you sure you want to delete location '+name+'? ');
 
@@ -171,9 +165,6 @@ jQuery(document).ready(function() {
    }
 
    function edit_location(id) {
-       if (!isLoggedIn()) {
-           alert("You must be logged in to edit locations");
-       }
         console.log("Id for location to edit is "+id);
         $('#location_id').val(id);
         $('#location_name').val($('#'+id+'_name').text());
