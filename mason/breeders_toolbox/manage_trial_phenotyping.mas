@@ -22,3 +22,9 @@ $layout_info
   </div>
   </div>
 </div>
+<script>
+jQuery(document).ready(function () {
+    var plot1 = <% $layout_info %>;
+    alert("plot");
+});
+</script>
