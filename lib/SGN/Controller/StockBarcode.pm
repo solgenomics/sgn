@@ -91,7 +91,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $left_margin_mm = $c->req->param("left_margin");
     my $bottom_margin_mm = $c->req->param("bottom_margin");
     my $right_margin_mm = $c->req->param("right_margin");
-    my $plot = $c->req->param("plots");
+    ##my $plot = $c->req->param("plots");
     my $nursery = $c->req->param("nursery");
     my $added_text = $c->req->param("text_margin");
     my $barcode_type = $c->req->param("select_barcode_type");
@@ -175,7 +175,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             }
         }
 
-      if (defined $plot && $plant_cvterm_id != $type_id){
+      if ($plot_cvterm_id == $type_id){
           my $dbh = $c->dbc->dbh();
           my $h = $dbh->prepare("select name, value from cvterm inner join stockprop on cvterm.cvterm_id = stockprop.type_id where stockprop.stock_id=?;");
 
@@ -189,15 +189,14 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $row = $stockprop_hash{$stock_id}->{'replicate'};
           $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."blk:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
 
-          my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
+          my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =? and stock.type_id=?;");
 
-          $h_acc->execute($stock_id);
+          $h_acc->execute($stock_id,$accession_cvterm_id);
           ($accession_name, $accession_id) = $h_acc->fetchrow_array;
           print STDERR "Accession name for this plot is $accession_name and id is $accession_id\n";
-
       }
 
-      if ($plot_cvterm_id == $type_id && defined $plot) {
+      if ($plot_cvterm_id == $type_id) {
           $tract_type_id = 'plot';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
       }
@@ -262,13 +261,15 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
       my $tempfile;
       my $plot_text = "accession: ".$found[$i]->[2]." ".$found[$i]->[3];
       if ($barcode_type eq "1D"){
-         if (defined $row){
-           print "ACCESSION IS NOT EMPTY........ $row\n";
+         if ($found[$i]->[5] eq 'plot'){
             #$tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[0], $found[$i]->[2]." ".$found[$i]->[3],  'large',  20  ]);
             $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $plot_text,  'large',  20 ]);
          }
          elsif ($found[$i]->[5] eq 'accession'){
              $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $found[$i]->[4],  'large',  20  ]);
+         }
+         elsif ($found[$i]->[5] eq 'plant'){
+            $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [ $found[$i]->[1], $plot_text,  'large',  20 ]);
          }
          else {
       	  $tempfile = $c->forward('/barcode/barcode_tempfile_jpg', [  $found[$i]->[0], $found[$i]->[1], 'large',  20  ]);
@@ -277,7 +278,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
       elsif ($barcode_type eq "2D") {
 
         if ($found[$i]->[5] eq 'plot'){
-          #print "ACCESSION IS NOT EMPTY........ $row\n";
           $parents = $found[$i]->[4];
            $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$added_text, $fieldbook_barcode ]);
         }
