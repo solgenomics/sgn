@@ -1,0 +1,32 @@
+<div class="modal fade" id="check_pedigree_dialog" name="check_pedigree_dialog" tabindex="-1" role="dialog" aria-labelledby="checkPedigreeDialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="checkPedigreeDialog">Check Pedigrees of Existing Accessions</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <form class="form-horizontal" role="form" name="check_pedigree_form" id="check_pedigree_form">
+	    <div class="form-group">
+      	      <label class="col-sm-6 control-label">Choose a List of Pedigrees to Check: </label>
+      	      <div class="col-sm-6" id="list_div_check_pedigree" name="list_div_check_pedigree">
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-6 control-label"></label>
+      	      <div class="col-sm-6">
+	        <button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button">Manage Lists</button>
+              </div>
+	    </div>
+        <input type="hidden" id="fuzzy_check_pedigree" name="fuzzy_check_pedigree" value="true" checked></input>
+	  </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="check_pedigree_submit" id="check_pedigree_submit">Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
