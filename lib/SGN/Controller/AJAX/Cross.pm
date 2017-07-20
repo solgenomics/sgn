@@ -948,6 +948,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $header = '"FemalePlotID","FemalePlotName","FemaleAccessionName","FemaleAccessionId","FemalePlotNumber","FemaleBlockNumber","FemaleRepNumber","NumberMales"';
     my @lines;
     my $max_male_num = 0;
+    my %seen_info_plots;
     foreach my $female_id (keys %individual_cross_plot_ids){
         my $male_ids = $ordered_data{$female_id};
         my $female_plot_ids = $individual_cross_plot_ids{$female_id}->{female_plot_ids};
@@ -960,8 +961,11 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my $num_males = 0;
             my $line = '"'.$female->{plot_id}.'","'.$female->{plot_name}.'","'.$female->{accession_name}.'","'.$female->{accession_id}.'","'.$female->{plot_number}.'","'.$female->{block_number}.'","'.$female->{rep_number}.'","';
 
-            my $female_accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$female->{accession_id}});
-            push @plot_info_lines, '"'.$female->{plot_name}.'","'.$female->{plot_id}.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$female->{accession_name}.'","'.$female->{accession_id}.'","'.join(',',@{$female_accession_stock->synonyms()}).'","'.$female_accession_stock->get_pedigree_string.'","'.$female_accession_stock->get_genus.'","'.$female_accession_stock->get_species.'","'.$female_accession_stock->variety.'","'.encode_json($female_accession_stock->donors).'","'.$female_accession_stock->countryOfOriginCode.'","'.$female_accession_stock->state.'","'.$female_accession_stock->instituteCode.'","'.$female_accession_stock->instituteName.'","'.$female_accession_stock->biologicalStatusOfAccessionCode.'","'.$female_accession_stock->notes.'","'.$female_accession_stock->accessionNumber.'","'.$female_accession_stock->germplasmPUI.'","'.$female_accession_stock->germplasmSeedSource.'","'.$female_accession_stock->typeOfGermplasmStorageCode.'","'.$female_accession_stock->acquisitionDate.'","'.$female_accession_stock->organization_name.'","'.$female_accession_stock->population_name.'","NA","NA","NA"';
+            if (!exists($seen_info_plots{$female->{plot_id}})){
+                my $female_accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$female->{accession_id}});
+                push @plot_info_lines, '"'.$female->{plot_name}.'","'.$female->{plot_id}.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$female->{accession_name}.'","'.$female->{accession_id}.'","'.join(',',@{$female_accession_stock->synonyms()}).'","'.$female_accession_stock->get_pedigree_string.'","'.$female_accession_stock->get_genus.'","'.$female_accession_stock->get_species.'","'.$female_accession_stock->variety.'","'.encode_json($female_accession_stock->donors).'","'.$female_accession_stock->countryOfOriginCode.'","'.$female_accession_stock->state.'","'.$female_accession_stock->instituteCode.'","'.$female_accession_stock->instituteName.'","'.$female_accession_stock->biologicalStatusOfAccessionCode.'","'.$female_accession_stock->notes.'","'.$female_accession_stock->accessionNumber.'","'.$female_accession_stock->germplasmPUI.'","'.$female_accession_stock->germplasmSeedSource.'","'.$female_accession_stock->typeOfGermplasmStorageCode.'","'.$female_accession_stock->acquisitionDate.'","'.$female_accession_stock->organization_name.'","'.$female_accession_stock->population_name.'","NA","NA","NA"';
+                $seen_info_plots{$female->{plot_id}}++;
+            }
 
             my @male_segments;
             foreach my $male_id (@$male_ids){
@@ -970,8 +974,11 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                     if (exists($allowed_male_plot_ids{$male->{plot_id}})){
                         push @male_segments, ',"'.$male->{plot_id}.'","'.$male->{plot_name}.'","'.$male->{accession_name}.'","'.$male->{accession_id}.'","'.$male->{plot_number}.'","'.$male->{block_number}.'","'.$male->{rep_number}.'"';
 
-                        my $male_accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$male->{accession_id}});
-                        push @plot_info_lines, '"'.$male->{plot_name}.'","'.$male->{plot_id}.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$male->{accession_name}.'","'.$male->{accession_id}.'","'.join(',',@{$male_accession_stock->synonyms()}).'","'.$male_accession_stock->get_pedigree_string.'","'.$male_accession_stock->get_genus.'","'.$male_accession_stock->get_species.'","'.$male_accession_stock->variety.'","'.encode_json($male_accession_stock->donors).'","'.$male_accession_stock->countryOfOriginCode.'","'.$male_accession_stock->state.'","'.$male_accession_stock->instituteCode.'","'.$male_accession_stock->instituteName.'","'.$male_accession_stock->biologicalStatusOfAccessionCode.'","'.$male_accession_stock->notes.'","'.$male_accession_stock->accessionNumber.'","'.$male_accession_stock->germplasmPUI.'","'.$male_accession_stock->germplasmSeedSource.'","'.$male_accession_stock->typeOfGermplasmStorageCode.'","'.$male_accession_stock->acquisitionDate.'","'.$male_accession_stock->organization_name.'","'.$male_accession_stock->population_name.'","NA","NA","NA"';
+                        if (!exists($seen_info_plots{$male->{plot_id}})){
+                            my $male_accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$male->{accession_id}});
+                            push @plot_info_lines, '"'.$male->{plot_name}.'","'.$male->{plot_id}.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$male->{accession_name}.'","'.$male->{accession_id}.'","'.join(',',@{$male_accession_stock->synonyms()}).'","'.$male_accession_stock->get_pedigree_string.'","'.$male_accession_stock->get_genus.'","'.$male_accession_stock->get_species.'","'.$male_accession_stock->variety.'","'.encode_json($male_accession_stock->donors).'","'.$male_accession_stock->countryOfOriginCode.'","'.$male_accession_stock->state.'","'.$male_accession_stock->instituteCode.'","'.$male_accession_stock->instituteName.'","'.$male_accession_stock->biologicalStatusOfAccessionCode.'","'.$male_accession_stock->notes.'","'.$male_accession_stock->accessionNumber.'","'.$male_accession_stock->germplasmPUI.'","'.$male_accession_stock->germplasmSeedSource.'","'.$male_accession_stock->typeOfGermplasmStorageCode.'","'.$male_accession_stock->acquisitionDate.'","'.$male_accession_stock->organization_name.'","'.$male_accession_stock->population_name.'","NA","NA","NA"';
+                            $seen_info_plots{$male->{plot_id}}++;
+                        }
 
                         $num_males++;
                     }
