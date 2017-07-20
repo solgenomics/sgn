@@ -11,7 +11,7 @@ $list_id => undef
 
 <div class="container-fluid">
 
-<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add Accessions</a>] [<a id="upload_pedigrees_link">Upload Pedigree File</a>]' &>
+<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add Accessions</a>] [<a id="check_pedigree_link">Check Pedigrees</a>] [<a id="upload_pedigrees_link">Upload Pedigree File</a>]'&>
 
 <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
 

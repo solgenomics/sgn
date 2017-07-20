@@ -26,7 +26,7 @@ jQuery(document).ready(function ($) {
         open_upload_pedigrees_dialog();
     });
 
-    $("#upload_pedigrees_dialog_submit").click( function () { 
+    $("#upload_pedigrees_dialog_submit").click( function () {
         $('#upload_pedigrees_dialog').modal("hide");
         upload_pedigrees_file();
     });

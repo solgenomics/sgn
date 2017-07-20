@@ -32,7 +32,6 @@ use Bio::GeneticRelationships::Individual;
 use Bio::GeneticRelationships::Population;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
-use CXGN::Genotypes::SNPSearch;
 
 #class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
 has 'schema' => (
