@@ -1,2 +1,0 @@
-Child	Child Id	Mother	Mother Id	Father	Father Id	Pedigree Conflict Score
-UG120041	2037	UG120237	2091	UG120217	2022	0.274

@@ -5,7 +5,7 @@ $preferred_species => ""
 $list_id => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees' ] &>
+<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'CXGN.BreedersToolbox.PedigreeCheck'] &>
 
 <& /page/page_title.mas, title=>"Manage Accessions" &>
 
@@ -35,6 +35,8 @@ $list_id => undef
 </div>
 
 <& /breeders_toolbox/accessions/pedigree_spreadsheet_upload_format_info.mas &>
+
+<& /pedigree/pedigree_check.mas &>
 
 <form id="add_accession_fuzzy_match_download" method="post" action="/ajax/accession_list/fuzzy_download" target="TheWindow">
     <input type="hidden" name="fuzzy_response" value="" />

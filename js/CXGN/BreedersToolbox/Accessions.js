@@ -382,4 +382,3 @@ function process_fuzzy_options(accession_list_id) {
         }
     });
 }
-
