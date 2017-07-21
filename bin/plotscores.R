@@ -1,6 +1,6 @@
 library(ggplot2)
 originalscores <- read.table("/home/klz26/sgn/bin/OriginalScores.txt", header = TRUE, check.names = FALSE, stringsAsFactors = FALSE)
-newscores <- read.table("/home/klz26/sgn/bin/sinkwithupdate.txt", header= FALSE, check.names = FALSE, stringsAsFactors = FALSE)
+newscores <- read.table("/home/klz26/sink.txt", header= TRUE, check.names = FALSE, stringsAsFactors = FALSE, fill = TRUE)
 
 originalscores [1] <- NULL
 colnames(originalscores) [1] <- "Accession"
@@ -10,9 +10,10 @@ colnames(originalscores) [4] <- "Conflict Score"
 originalscores <- originalscores[ , c("Accession", "Mother", "Father", "Conflict Score")]
 originalscores <- originalscores[-c(104), ] 
 
-colnames(newscores) [1] <- "Accession"
+newscores[8:12]<- NULL
+colnames(newscores) [1] <- "Child"
 newscores [2] <- NULL
-colnames(newscores) [2] <- "Father"
+colnames(newscores) [2] <- "Child ID"
 newscores [3] <- NULL
 colnames(newscores) [3] <- "Mother"
 newscores [4] <- NULL
