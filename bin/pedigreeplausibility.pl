@@ -3,6 +3,7 @@ use warnings;
 
 use Data::Dumper;
 use Getopt::Std;
+use IO::Handle;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use CXGN::Chado::Stock;
@@ -20,6 +21,10 @@ if (!$opt_p) {
 my $protocol_id = $opt_p;
 
 my $filename = $opt_f;
+
+open(my $OUT, '>>', $opt_o);
+$OUT->autoflush(1);
+print $OUT "Child\tChild Id\tMother\tMother Id\tFather\tFather Id\tPedigree Conflict Score\n";
 
 my %pedigreehash;
 my $childname;
@@ -39,7 +44,6 @@ my $dbh = CXGN::DB::InsertDBH->new( {
 				    }
     );
 
-my $OUT;
 my $is_stdin =0;
 
 
@@ -96,9 +100,8 @@ while (my $row = $stock_rs->next()) {
 	    print STDERR "Genotype of male parent missing. Skipping.\n";
 	    next;
 	}
-  if ($opt_o) {
-      open($OUT, '>>', $opt_o);
-}
+      open($OUT, '>', $opt_o);
+
 #print $OUT "d child genos".$self_gts;
   #print $OUT "d father genos".$dad_gts;
   #print $OUT "d mother genos".$mom_gts;
@@ -112,7 +115,7 @@ $s = shift @self_gts;
 $m = shift @mom_gts;
 $d = shift @dad_gts;
 		    my ($concordant, $discordant, $non_informative) = $s->compare_parental_genotypes($m, $d);
-		    my $score = $concordant / ($concordant + $discordant);
+		    my $score = 1 - ($concordant / ($concordant + $discordant));
 		    #push @scores, $score;
         print STDERR "scores are". $score. "\n";
 		    print $OUT join "\t", map { ($_->name(), $_->id()) } ($s, $m, $d);
