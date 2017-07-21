@@ -40,13 +40,12 @@ while (my $row = <IN>){
   my $mothername = $pedigreearray[1];
   my $fathername = $pedigreearray[2];
 
-  my $stock_rs = $schema->resultset("Stock::Stock")->find({uniquename => $childname});
-  print STDERR "my stock rs is $stock_rs";
-  my $stock_id = $stock_rs->stock_id;
-  my $mother_rs = $schema->resultset("Stock::Stock")->find({uniquename => $mothername});
-  my $mother_id = $mother_rs->stock_id;
-  my $father_rs = $schema->resultset("Stock::Stock")->find({uniquename => $fathername});
-  my $father_id = $father_rs->stock_id;
+  my $stock_rs = $schema->resultset("Stock::Stock")->search({uniquename => $childname});
+  my $stock_id = $stock_rs->first->stock_id;
+  my $mother_rs = $schema->resultset("Stock::Stock")->search({uniquename => $mothername});
+  my $mother_id = $mother_rs->first->stock_id;
+  my $father_rs = $schema->resultset("Stock::Stock")->search({uniquename => $fathername});
+  my $father_id = $father_rs->first->stock_id;
 
   my $gts = CXGN::Genotype::Search->new( {
       bcs_schema => $schema,
@@ -65,7 +64,7 @@ while (my $row = <IN>){
 	  protocol_id => $protocol_id,
   });
 	my @mom_gts = $mom_gts->get_genotype_info_as_genotype_objects();
-
+g
   if (!@mom_gts) {
 	    print STDERR "Genotype of female parent missing. Skipping.\n";
 	    next;
