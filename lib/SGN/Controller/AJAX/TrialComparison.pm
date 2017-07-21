@@ -39,7 +39,7 @@ sub compare_trail_list_data_test : Path('/ajax/trial/compare_list_data_test') : 
 sub compare_trail_list_data_test_GET : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $result = `python bin/TrialComparisonFakeDataGen.py`;#`python TrialComparison_test.py`;
+    my $result = `python bin/test/TrialComparisonFakeDataGen.py`;#`python TrialComparison_test.py`;
     my $cvterm_id = "TEST_TEST";
     $c->stash->{rest} = { csv => $result, cvterm_id => $cvterm_id};
 }
