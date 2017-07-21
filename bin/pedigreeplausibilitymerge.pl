@@ -7,6 +7,7 @@ use IO::Handle;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use CXGN::Stock;
+use CXGN::Genotype;
 use CXGN::Genotype::Search;
 
 our ($opt_H, $opt_D, $opt_p, $opt_o, $opt_f); # host, database, genotyping protocol_id, out, in
