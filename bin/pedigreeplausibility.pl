@@ -6,8 +6,7 @@ use Getopt::Std;
 use IO::Handle;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
-use CXGN::Chado::Stock;
-use CXGN::Genotype;
+use CXGN::Stock;
 use CXGN::Genotype::Search;
 
 our ($opt_H, $opt_D, $opt_p, $opt_o, $opt_f); # host, database, genotyping protocol_id, out, in
@@ -58,7 +57,7 @@ my @scores;
 while (my $row = $stock_rs->next()) {
     print STDERR "working on accession ".$row->uniquename()."\n";
     unless($pedigreehash{$row->uniquename()}){next;}
-    my $stock = CXGN::Chado::Stock->new($schema, $row->stock_id());
+    my $stock = CXGN::Stock->new($schema, $row->stock_id());
     my @parents = $stock->get_direct_parents();
 
     if (@parents == 2) {
