@@ -46,7 +46,7 @@ while (my $row = <IN>){
   my $mother_rs = $schema->resultset("Stock::Stock")->find({uniquename => $mothername});
   my $mother_id = $mother_rs->stock_id;
   my $father_rs = $schema->resultset("Stock::Stock")->find({uniquename => $fathername});
-  my $father_rs = $father_rs->stock_id;
+  my $father_id = $father_rs->stock_id;
 
   my $gts = CXGN::Genotype::Search->new( {
       bcs_schema => $schema,
