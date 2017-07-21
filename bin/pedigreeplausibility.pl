@@ -22,7 +22,7 @@ my $protocol_id = $opt_p;
 
 my $filename = $opt_f;
 
-open(my $OUT, '>', $opt_o);
+open(my $OUT, '>>', $opt_o);
 $OUT->autoflush(1);
 print $OUT "Child\tChild Id\tMother\tMother Id\tFather\tFather Id\tPedigree Conflict Score\n";
 
