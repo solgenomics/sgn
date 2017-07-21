@@ -34,6 +34,7 @@ use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Trial;
+use JSON::Any;
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',

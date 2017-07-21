@@ -9,7 +9,7 @@ use CXGN::DB::InsertDBH;
 use CXGN::Stock;
 use CXGN::Genotype::Search;
 
-our ($opt_H, $opt_D, $opt_p, $opt_o); # host, database, genotyping protocol_id, out
+our ($opt_H, $opt_D, $opt_p, $opt_o, $opt_f); # host, database, genotyping protocol_id, out, in
 getopts('H:D:p:o:');
 
 if (!$opt_p) {
@@ -18,6 +18,7 @@ if (!$opt_p) {
 }
 
 my $protocol_id = $opt_p;
+my $filename = $opt_f;
 
 my $dbh = CXGN::DB::InsertDBH->new({
     dbhost => $opt_H,
@@ -28,6 +29,17 @@ my $dbh = CXGN::DB::InsertDBH->new({
 open(my $OUT, '>>', $opt_o) || die "Can't open output file $opt_o! $!\n";
 $OUT->autoflush(1);
 print $OUT "Child\tChild Id\tMother\tMother Id\tFather\tFather Id\tPedigree Conflict Score\n";
+
+my %pedigreehash;
+my $childname;
+my @pedigreearray;
+
+open(IN, $filename) or die "Could not open file $filename $!";
+while (my $row = <IN>){
+@pedigreearray = split(/\s/ ,$row);
+$childname = $pedigreearray[0];
+$pedigreehash{$childname} = "1";
+}
 
 my $schema = Bio::Chado::Schema->connect(sub { $dbh });
 
