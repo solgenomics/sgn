@@ -30,7 +30,6 @@ my $schema = Bio::Chado::Schema->connect(sub { $dbh });
 
 open(my $OUT, '>>', $opt_o) || die "Can't open output file $opt_o! $!\n";
 $OUT->autoflush(1);
-print $OUT "Child\tChild Id\tMother\tMother Id\tFather\tFather Id\tPedigree Conflict Score\n";
 
 open(IN, $filename) or die "Could not open file $filename $!";
 
