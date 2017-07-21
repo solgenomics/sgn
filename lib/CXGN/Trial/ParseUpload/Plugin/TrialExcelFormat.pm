@@ -273,6 +273,13 @@ sub _parse_with_plugin {
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
 
+  my @treatment_names;
+  for (9 .. $col_max){
+      if ($worksheet->get_cell(0,$_)){
+          push @treatment_names, $worksheet->get_cell(0,$_)->value();
+      }
+  }
+
   for my $row ( 1 .. $row_max ) {
     my $plot_name;
     my $accession_name;
@@ -316,6 +323,14 @@ sub _parse_with_plugin {
       next;
     }
 
+    my $treatment_col = 9;
+    foreach my $treatment_name (@treatment_names){
+        if($worksheet->get_cell($row,$treatment_col)){
+            push @{$design{treatments}->{$treatment_name}}, $plot_name;
+        }
+        $treatment_col++;
+    }
+
     my $key = $row;
     $design{$key}->{plot_name} = $plot_name;
     $design{$key}->{stock_name} = $accession_name;
@@ -340,7 +355,7 @@ sub _parse_with_plugin {
     }
   
   }
-
+  #print STDERR Dumper \%design;
   $self->_set_parsed_data(\%design);
 
   return 1;
@@ -349,45 +364,38 @@ sub _parse_with_plugin {
 
 
 sub _get_accession {
-  my $self = shift;
-  my $accession_name = shift;
-  my $chado_schema = $self->get_chado_schema();
-  my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-  my $stock;
-  my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession' , 'stock_type');
+    my $self = shift;
+    my $accession_name = shift;
+    my $schema = $self->get_chado_schema();
+    my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $stock = $schema->resultset('Stock::Stock')->search(
+      {
+          'me.is_obsolete' => { '!=' => 't' },
+          'me.type_id' => $accession_cvterm,
+          -or => [
+              'lower(me.uniquename)' => lc($accession_name),
+              -and => [
+                  'lower(type.name)' => { like => '%synonym%' },
+                  'lower(stockprops.value)' => lc($accession_name),
+              ],
+          ],
+      },
+      {
+          join => {'stockprops' => 'type'},
+          distinct => 1
+      }
+    );
 
-  $stock_lookup->set_stock_name($accession_name);
-  $stock = $stock_lookup->get_stock();
+    if (!$stock) {
+        print STDERR "$accession_name is not an accession or synonym\n";
+        return;
+    }
+    if ($stock->count != 1){
+        print STDERR "Accession name ($accession_name) is not a unique stock unqiuename or synonym\n";
+        return;
+    }
 
-  if (!$stock) {
-    return;
-  }
-
-  if ($stock->type_id() != $accession_cvterm->cvterm_id()) {
-    return;
-   }
-
-  return $stock;
-
+    return $stock->first();
 }
-
-
-sub _get_stock {
-  my $self = shift;
-  my $stock_name = shift;
-  my $chado_schema = $self->get_chado_schema();
-  my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-  my $stock;
-
-  $stock_lookup->set_stock_name($stock_name);
-  $stock = $stock_lookup->get_stock();
-
-  if (!$stock) {
-    return;
-  }
-
-  return $stock;
-}
-
 
 1;

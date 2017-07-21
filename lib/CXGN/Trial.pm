@@ -1925,6 +1925,31 @@ sub get_controls_by_plot {
 	return \@controls;
 }
 
+=head2 get_treatments
+
+ Usage:        $plants = $t->get_treatments();
+ Desc:         retrieves the treatments that are part of this trial
+ Ret:          an array ref containing from project table [ treatment_name, treatment_id ]
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_treatments {
+    my $self = shift;
+    my @plants;
+    my $treatment_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "trial_treatment_relationship", "project_relationship")->cvterm_id();
+
+    my $treatment_rs = $self->bcs_schema->resultset("Project::ProjectRelationship")->search({type_id=>$treatment_rel_cvterm_id, object_project_id=>$self->get_trial_id()})->search_related('subject_project');
+
+    my @treatments;
+    while(my $rs = $treatment_rs->next()) {
+        push @treatments, [$rs->project_id, $rs->name];
+    }
+    return \@treatments;
+}
+
 =head2 get_trial_contacts
 
  Usage:        my $contacts = $t->get_trial_contacts();

@@ -224,6 +224,7 @@ sub save_trial {
 	my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
 		bcs_schema => $chado_schema,
 		trial_id => $project->project_id(),
+        trial_name => $self->get_trial_name(),
 		nd_geolocation_id => $geolocation->nd_geolocation_id(),
 		design_type => $design_type,
 		design => \%design,

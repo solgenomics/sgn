@@ -1,0 +1,49 @@
+
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [  ] &>
+
+
+<div id="trial_treatments_html">
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#trial_treatments_onswitch').one("click", function() {
+
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/treatments',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+                console.log(response);
+                jQuery("#working_modal").modal("hide");
+                var trial_treatments_html = "<table class='table table-hover table-condensed table-bordered' id='trial_treatments_table_html'><thead><tr><th>Name</th></tr></thead><tbody>";
+                for (i=0; i<response.treatments.length; i++) {
+                    trial_treatments_html = trial_treatments_html + "<tr><td><a href='/breeders/trial/" + response.treatments[i][0] +"'>"+ response.treatments[i][1] + "</a></td></tr>";
+                }
+                trial_treatments_html = trial_treatments_html + "</tbody></table>";
+                jQuery('#trial_treatments_html').empty();
+                jQuery('#trial_treatments_html').html(trial_treatments_html);
+                enable_treatments_datatable();
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving treatments.");
+            }
+        });
+        
+    });
+
+});
+
+function enable_treatments_datatable() {
+    jQuery('#trial_treatments_table_html').DataTable();
+}
+
+</script>

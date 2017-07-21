@@ -25,6 +25,7 @@ Store will do the following: (for genotyping trials, replace 'plot' with 'tissue
  my $design_store = CXGN::Trial::TrialDesignStore->new({
 	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
 	trial_id => $trial_id,
+    trial_name => $trial_name,
 	design_type => 'CRD',
 	design => $design_hash,
 	is_genotyping => 0
@@ -72,6 +73,7 @@ has 'bcs_schema' => (
 	required => 1,
 );
 has 'trial_id' => (isa => 'Int', is => 'rw', predicate => 'has_trial_id', required => 1);
+has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 0);
 has 'nd_geolocation_id' => (isa => 'Int', is => 'rw', predicate => 'has_nd_geolocation_id', required => 1);
 has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', required => 1);
 has 'design' => (isa => 'HashRef[HashRef[Str|ArrayRef]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
@@ -174,6 +176,9 @@ sub store {
 	my $range_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'range', 'stock_property');
 	my $row_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property');
 	my $col_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property');
+    my $treatment_nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
+    my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
+    my $trial_treatment_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
 
 	my $nd_experiment_type_id;
 	my $stock_type_id;
@@ -240,7 +245,12 @@ sub store {
 	my $coderef = sub {
 
 		#print STDERR Dumper \%design;
+        my %new_stock_ids_hash;
 		foreach my $key (sort { $a cmp $b} keys %design) {
+
+            if ($key eq 'treatments'){
+                next;
+            }
 
 			my $plot_name;
 			if ($design{$key}->{plot_name}) {
@@ -317,6 +327,7 @@ sub store {
 					uniquename => $plot_name,
 					type_id => $stock_type_id,
 				});
+                $new_stock_ids_hash{$plot_name} = $plot->stock_id();
 				$plot->create_stockprops({$replicate_cvterm->name() => $rep_number});
 				$plot->create_stockprops({$block_cvterm->name() => $block_number});
 				$plot->create_stockprops({$plot_number_cvterm->name() => $plot_number});
@@ -363,7 +374,7 @@ sub store {
 						uniquename => $plant_name,
 						type_id => $plant_cvterm->cvterm_id,
 					});
-
+                    $new_stock_ids_hash{$plant_name} = $plant->stock_id();
 					$plant->create_stockprops({$plant_index_number_cvterm->name() => $plant_index_number});
 					$plant_index_number++;
 					$plant->create_stockprops({$replicate_cvterm->name() => $rep_number});
@@ -411,6 +422,44 @@ sub store {
 				}
 			}
 		}
+
+        if (exists($design{treatments})){
+            my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
+            ->create({
+                nd_geolocation_id => $nd_geolocation_id,
+                type_id => $treatment_nd_experiment_type_id,
+            });
+
+            while(my($treatment_name, $stock_names) = each(%{$design{treatments}})){
+
+                #Create a project for each treatment_name
+                my $project_treatment_name = $self->get_trial_name()."_".$treatment_name;
+                my $treatment_project = $chado_schema->resultset('Project::Project')
+                ->create({
+                    name => $project_treatment_name,
+                    description => '',
+                });
+                $treatment_project->create_projectprops({
+                    $project_design_cvterm->name() => "treatment"
+                });
+                $nd_experiment->create_related('nd_experiment_projects',{project_id => $treatment_project->project_id()});
+
+                my $trial_treatment_relationship = $chado_schema->resultset("Project::ProjectRelationship")->create({
+                    object_project_id => $self->get_trial_id(),
+                    subject_project_id => $treatment_project->project_id(),
+                    type_id => $trial_treatment_relationship_cvterm_id,
+                });
+
+                foreach (@$stock_names){
+                    my $stock_id = $new_stock_ids_hash{$_};
+                    my $treatment_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
+                        nd_experiment_id => $nd_experiment->nd_experiment_id(),
+                        type_id => $treatment_nd_experiment_type_id,
+                        stock_id => $stock_id,
+                    });
+                }
+            }
+        }
 
 	};
 
