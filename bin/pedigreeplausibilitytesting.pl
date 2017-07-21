@@ -41,7 +41,7 @@ while (my $row = <IN>){
   my $fathername = $pedigreearray[2];
 
   my $stock_rs = $schema->resultset("Stock::Stock")->find({uniquename => $childname});
-  print STDERR "working on accession ".$childname."\n";
+  print STDERR "my stock rs is $stock_rs";
   my $stock_id = $stock_rs->stock_id;
   my $mother_rs = $schema->resultset("Stock::Stock")->find({uniquename => $mothername});
   my $mother_id = $mother_rs->stock_id;
