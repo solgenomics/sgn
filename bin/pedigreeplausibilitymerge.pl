@@ -11,7 +11,7 @@ use CXGN::Genotype;
 use CXGN::Genotype::Search;
 
 our ($opt_H, $opt_D, $opt_p, $opt_o, $opt_f); # host, database, genotyping protocol_id, out, in
-getopts('H:D:p:o:');
+getopts('H:D:p:o:f');
 
 if (!$opt_p) {
     print STDERR "Need -p with genotyping protocol id.\n";
