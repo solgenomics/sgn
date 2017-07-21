@@ -1,7 +1,7 @@
 <%args>
 $trial_id
 $trial_name
-$layout_info
+#$layout_info
 </%args>
 
 
@@ -19,7 +19,7 @@ $layout_info
             <div class="form-group form-group-sm">
                 <label class="col-sm-4 control-label">Plot Name: </label>
                 <div class="col-sm-8" id="plot_name">
-                    <select class="form-control" id="plot_name"></select>
+
                 </div>
             </div>
             <div class="form-group form-group-sm">
@@ -131,6 +131,67 @@ $layout_info
 <script>
 
   jQuery(document).ready(function($) {
+
+      var  trial_id = <% $trial_id %>;
+
+      new jQuery.ajax( {
+           type: 'POST',
+           url: '/ajax/breeders/trial_phenotyping_info',
+           dataType: "json",
+           data: {
+            'trial_id' : trial_id,
+           },
+
+           success: function(response) {
+               if (response.error){
+                 alert("Error Retrieving Trial Information: "+response.error);
+               }
+
+               var trial_plot_name_html = "<select class='form-control' id='trial_plot_name_table'>";
+               var trial_accession_html = "<select class='form-control' id='trial_accession_table'>";
+               var trial_plot_number_html = "<select class='form-control' id='trial_plot_number_table'>";
+               var trial_block_number_html = "<select class='form-control' id='trial_block_number_table'>";
+               var trial_rep_number_html = "<select class='form-control' id='trial_rep_number_table'>";
+
+                for (n=0; n<response.trial_info.length; n++){
+                console.log(response.trial_info[n]);
+
+                      trial_plot_name_html = trial_plot_name_html + "<option value=" + response.trial_info[n].plot_name + ">" + response.trial_info[n].plot_name + "</option>";
+                      trial_accession_html = trial_accession_html + "<option value=" + response.trial_info[n].accession_name + ">" + response.trial_info[n].accession_name + "</option>";
+                      trial_plot_number_html = trial_plot_number_html + "<option value=" + response.trial_info[n].plot_number + ">" + response.trial_info[n].plot_number + "</option>";
+                      trial_block_number_html = trial_block_number_html + "<option value=" + response.trial_info[n].block_number + ">" + response.trial_info[n].block_number + "</option>";
+                      trial_rep_number_html = trial_rep_number_html + "<option value=" + response.trial_info[n].rep_number + ">" + response.trial_info[n].rep_number + "</option>";
+
+                  }
+                  trial_plot_name_html = trial_plot_name_html + "</select>";
+                  jQuery('#plot_name').empty();
+                  jQuery('#plot_name').html(trial_plot_name_html);
+
+                  trial_accession_html = trial_accession_html + "</select>";
+                  jQuery('#accession_name').empty();
+                  jQuery('#accession_name').html(trial_accession_html);
+
+                  trial_plot_number_html = trial_plot_number_html + "</select>";
+                  jQuery('#plot_no').empty();
+                  jQuery('#plot_no').html(trial_plot_number_html);
+
+                  trial_block_number_html = trial_block_number_html + "</select>";
+                  jQuery('#block_no').empty();
+                  jQuery('#block_no').html(trial_block_number_html);
+
+                  trial_rep_number_html = trial_rep_number_html + "</select>";
+                  jQuery('#rep_no').empty();
+                  jQuery('#rep_no').html(trial_rep_number_html);
+
+              },
+              error: function() {
+                alert('An error occurred retrieving trial information');
+              }
+
+      });
+
+
+
 
   var null_trait_value = '';
 
