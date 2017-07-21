@@ -40,14 +40,17 @@ while (my $row = <IN>){
   my $mothername = $pedigreearray[1];
   my $fathername = $pedigreearray[2];
 
-  my $stock_rs = $schema->resultset("Stock::Stock")->find({uniquename => $childname})->stock_id();
+  my $stock_rs = $schema->resultset("Stock::Stock")->find({uniquename => $childname});
   print STDERR "working on accession ".$childname."\n";
-  my $mother_rs = $schema->resultset("Stock::Stock")->find({uniquename => $mothername})->stock_id();
-  my $father_rs = $schema->resultset("Stock::Stock")->find({uniquename => $fathername})->stock_id();
+  my $stock_id = $stock_rs->stock_id;
+  my $mother_rs = $schema->resultset("Stock::Stock")->find({uniquename => $mothername});
+  my $mother_id = $mother_rs->stock_id;
+  my $father_rs = $schema->resultset("Stock::Stock")->find({uniquename => $fathername});
+  my $father_rs = $father_rs->stock_id;
 
   my $gts = CXGN::Genotype::Search->new( {
       bcs_schema => $schema,
-      accession_list => [$stock_rs],
+      accession_list => [$stock_id],
       protocol_id => $protocol_id,
   });
   my @self_gts = $gts->get_genotype_info_as_genotype_objects();
@@ -58,7 +61,7 @@ while (my $row = <IN>){
 	}
   my $mom_gts = CXGN::Genotype::Search->new( {
 	  bcs_schema => $schema,
-	  accession_list => [$mother_rs],
+	  accession_list => [$mother_id],
 	  protocol_id => $protocol_id,
   });
 	my @mom_gts = $mom_gts->get_genotype_info_as_genotype_objects();
@@ -70,13 +73,13 @@ while (my $row = <IN>){
   my $dad_gts;
   my @dad_gts;
 
-  if ($mother_rs == $father_rs){
+  if ($mother_id == $father_id){
       @dad_gts = @mom_gts;
   }
 	else{
   $dad_gts = CXGN::Genotype::Search->new({
 	    bcs_schema => $schema,
-	    accession_list => [$father_rs],
+	    accession_list => [my $father_id],
 	    protocol_id => $protocol_id,
 	});
 	@dad_gts = $dad_gts->get_genotype_info_as_genotype_objects();
