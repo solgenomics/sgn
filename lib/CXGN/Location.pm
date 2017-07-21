@@ -66,17 +66,17 @@ has 'location_type' => (
 );
 
 has 'latitude' => (
-    isa => 'Maybe[Int]',
+    isa => 'Maybe[Num]',
 	is => 'rw',
 );
 
 has 'longitude' => (
-    isa => 'Maybe[Int]',
+    isa => 'Maybe[Num]',
 	is => 'rw',
 );
 
 has 'altitude' => (
-    isa => 'Maybe[Int]',
+    isa => 'Maybe[Num]',
 	is => 'rw',
 );
 

@@ -252,23 +252,24 @@ ORDER BY 8,2";
 #
     my @locations;
     while (my ($id, $name, $abbrev, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count) = $h->fetchrow_array()) {
-        $name = '<font id="'.$id.'_name">'.$name.'</font>';
-        $abbrev = '<font id="'.$id.'_abbrev">'.$abbrev.'</font>';
-        $country_code = '<font id="'.$id.'_country">'.$country_code.'</font>';
-        $prog = '<font id="'.$id.'_prog">'.$prog.'</font>';
-        $type = '<font id="'.$id.'_type">'.$type.'</font>';
-        $latitude = '<font id="'.$id.'_lat">'.$latitude.'</font>';
-        $longitude = '<font id="'.$id.'_long">'.$longitude.'</font>';
-        $altitude = '<font id="'.$id.'_alt">'.$altitude.'</font>';
-        $trial_count = '<font id="'.$id.'_count">'.$trial_count.'</font>';
-        my $edit_link = "<a href=\"javascript:edit_location($id)\"><font style=\"color: blue; font-weight: bold\">Edit</a>";
-        my $delete_link;
-        if ($trial_count == 0) {
-            $delete_link = '<a title="Delete" id="'.$id.'_remove" href="javascript:delete_location('.$id.')"><span style="color: red" class="glyphicon glyphicon-remove"></span></a>';
-        } else {
-            $delete_link = '<a title="Unable to delete locations that are linked to one or more trials" id="'.$id.'_remove"><span class="glyphicon glyphicon-remove"></span></a>';
-        }
-        push @locations, [$name, $abbrev, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count, $edit_link, $delete_link];
+        # $name = '<font id="'.$id.'_name">'.$name.'</font>';
+        # $abbrev = '<font id="'.$id.'_abbrev">'.$abbrev.'</font>';
+        # $country_code = '<font id="'.$id.'_country">'.$country_code.'</font>';
+        # $prog = '<font id="'.$id.'_prog">'.$prog.'</font>';
+        # $type = '<font id="'.$id.'_type">'.$type.'</font>';
+        # $latitude = '<font id="'.$id.'_lat">'.$latitude.'</font>';
+        # $longitude = '<font id="'.$id.'_long">'.$longitude.'</font>';
+        # $altitude = '<font id="'.$id.'_alt">'.$altitude.'</font>';
+        # $trial_count = '<font id="'.$id.'_count">'.$trial_count.'</font>';
+        # my $edit_link = "<a href=\"javascript:edit_location($id)\"><font style=\"color: blue; font-weight: bold\">Edit</a>";
+        # my $delete_link;
+        # if ($trial_count == 0) {
+        #     $delete_link = '<a title="Delete" id="'.$id.'_remove" href="javascript:delete_location('.$id.')"><span style="color: red" class="glyphicon glyphicon-remove"></span></a>';
+        # } else {
+        #     $delete_link = '<a title="Unable to delete locations that are linked to one or more trials" id="'.$id.'_remove"><span class="glyphicon glyphicon-remove"></span></a>';
+        # }
+        # push @locations, [$name, $abbrev, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count, $edit_link, $delete_link];
+        push @locations, [$id, $name, $abbrev, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count];
     }
     return \@locations;
 }

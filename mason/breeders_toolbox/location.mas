@@ -3,28 +3,31 @@
 $user_id => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ ] &>
+<& /util/import_javascript.mas, classes => ['leaflet'] &>
 
 <div class="table-responsive" style="margin-top: 10px;">
     <table id="location_table" class="table table-hover table-striped table-bordered" width="100%">
         <thead>
             <tr>
-    <th>Name</th>
-    <th>Abbrev.</th>
-    <th>Country</th>
-    <th>Program</th>
-    <th>Type</th>
-    <th>Lat.</th>
-    <th>Long.</th>
-    <th>Alt.(m)</th>
-    <th>Trials</th>
-    <th>Edit</th>
-    <th>Remove</th>
-</tr>
-  </thead>
-  <caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Locations </center></caption>
-</table>
+                <th>Name</th>
+                <th>Abbrev.</th>
+                <th>Country</th>
+                <th>Program</th>
+                <th>Type</th>
+                <th>Lat.</th>
+                <th>Long.</th>
+                <th>Alt.(m)</th>
+                <th>Trials</th>
+                <th>Edit</th>
+                <th>Remove</th>
+            </tr>
+        </thead>
+        <caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Locations </center></caption>
+    </table>
 </div>
+<br>
+<br>
+<div id="mapid" style="height: 540px;"></div>
 
 <div class="modal fade" id="store_location_dialog" name="store_location_dialog" tabindex="-1" role="dialog" aria-labelledby="storeLocationDialog">
   <div class="modal-dialog" role="document">
@@ -300,14 +303,19 @@ $user_id => undef
                     <option value="ZMB">ZMB Zambia </option>
                     <option value="ZWE">ZWE Zimbabwe</option>
                   </select>
-		<!-- <input class="form-control" name="location_country" id="location_country" type="text" /> -->
-
               </div>
 	    </div>
         <div class="form-group">
       	      <label class="col-sm-2 control-label">Type: </label>
       	      <div class="col-sm-10">
-		<!-- <input class="form-control" name="location_type" id="location_type" type="text" /> -->
+                  <select class="form-control" id="location_type" name="location_type">
+                      <option value="Farm">Farm</option>
+                      <option value="Field">Field</option>
+                      <option value="Greenhouse">Greenhouse</option>
+                      <option value="Screenhouse">Screenhouse</option>
+                      <option value="Lab">Lab</option>
+                      <option value="Storage">Storage</option>
+                  </select>
               </div>
 	    </div>
       <div class="form-group">
@@ -343,8 +351,64 @@ $user_id => undef
 
 jQuery(document).ready(function() {
 
-    var location_table = jQuery('#location_table').DataTable( {
-        'ajax': '/ajax/location/all'
+    var token = 'pk.eyJ1IjoiYmVsbGVyYnJvY2siLCJhIjoiY2o1ZTh2ZXVpMDFxdzJxampzajJna3A4OSJ9.QvrHuiUk2gf0pQfI5B46ag';
+    var mymap;
+
+    jQuery.ajax( {
+	url: '/ajax/location/all',
+    beforeSend: function() {
+        mymap = L.map('mapid').fitWorld();
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token='+token, {
+            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox.streets',
+        }).addTo(mymap);
+	},
+	success: function(response) {
+        var locations = response.data;
+        var all_locations = [];
+        for (var i = 0; i < locations.length; i++) {
+            if (locations[i][6])
+            var id = locations[i][0];
+            var name = '<font id="'+id+'_name">'+locations[i][1]+'</font>';
+            var abbrev = '<font id="'+id+'_abbrev">'+locations[i][2]+'</font>';
+            var country_code = '<font id="'+id+'_country">'+locations[i][3]+'</font>';
+            var prog = '<font id="'+id+'_prog">'+locations[i][4]+'</font>';
+            var type = '<font id="'+id+'_type">'+locations[i][5]+'</font>';
+            var latitude = '<font id="'+id+'_lat">'+locations[i][6]+'</font>';
+            var longitude = '<font id="'+id+'_long">'+locations[i][7]+'</font>';
+            var altitude = '<font id="'+id+'_alt">'+locations[i][8]+'</font>';
+            var trial_count = '<font id="'+id+'_count">'+locations[i][9]+'</font>';
+            var edit_link = '<a href="javascript:edit_location('+id+')"><font style="color: blue; font-weight: bold">Edit</a>';
+            var delete_link;
+            if (locations[i][9] < 1) {
+                delete_link = '<a title="Delete" id="'+id+'_remove" href="javascript:delete_location('+id+')"><span style="color: red" class="glyphicon glyphicon-remove"></span></a>';
+            } else {
+                delete_link = '<span id="'+id+'_remove" title="Unable to delete locations that are linked to one or more trials" class="glyphicon glyphicon-remove"></span>';
+            }
+            marker = new L.marker([locations[i][6],locations[i][7]])
+				.bindPopup(locations[i][1])
+				.addTo(mymap);
+            all_locations.push( [name, abbrev, country_code, prog, type, latitude, longitude, altitude, trial_count, edit_link, delete_link] );
+        }
+
+        var table = jQuery('#location_table').DataTable( {
+            data: all_locations
+        });
+
+        var latitudes = locations.map(function(value,index) { return value[6]; });
+        var longitudes = locations.map(function(value,index) { return value[7]; });
+        var min_lat = Math.min.apply(null, latitudes);
+        var min_long = Math.min.apply(null, longitudes);
+        var max_lat = Math.max.apply(null, latitudes);
+        var max_long = Math.max.apply(null, longitudes);
+        //console.log("Min lat is "+min_lat+"\nMin long is "+min_long+"\nMax lat is "+max_lat+"\nAnd max long is "+max_long);
+        mymap.fitBounds([[min_lat, min_long],[max_lat,max_long]]);
+
+	},
+	error: function(response) {
+	    alert("An error occurred");
+	}
     });
 
   $('#add_location_link').click( function() {
