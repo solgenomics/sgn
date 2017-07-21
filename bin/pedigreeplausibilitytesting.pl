@@ -79,7 +79,7 @@ while (my $row = <IN>){
 	else{
   $dad_gts = CXGN::Genotype::Search->new({
 	    bcs_schema => $schema,
-	    accession_list => [my $father_id],
+	    accession_list => [$father_id],
 	    protocol_id => $protocol_id,
 	});
 	@dad_gts = $dad_gts->get_genotype_info_as_genotype_objects();
