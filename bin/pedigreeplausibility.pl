@@ -57,7 +57,7 @@ my @scores;
 while (my $row = $stock_rs->next()) {
     print STDERR "working on accession ".$row->uniquename()."\n";
     unless($pedigreehash{$row->uniquename()}){next;}
-    my $stock = CXGN::Stock->new($schema, $row->stock_id());
+    my $stock = CXGN::Stock->new(schema => $schema, stock_id => $row->stock_id(), );
     my @parents = $stock->get_direct_parents();
 
     if (@parents == 2) {
