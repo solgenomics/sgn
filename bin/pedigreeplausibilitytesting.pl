@@ -42,12 +42,12 @@ while (my $row = <IN>){
   my $fathername = $pedigreearray[2];
   print STDERR "father name is $fathername";
 
-  my $stock_rs = $schema->resultset("Stock::Stock")->search({uniquename => $childname});
-  my $stock_id = $stock_rs->first->stock_id;
-  my $mother_rs = $schema->resultset("Stock::Stock")->search({uniquename => $mothername});
-  my $mother_id = $mother_rs->first->stock_id;
-  my $father_rs = $schema->resultset("Stock::Stock")->search({uniquename => $fathername});
-  my $father_id = $father_rs->first->stock_id;
+  my $stock_rs = $schema->resultset("Stock::Stock")->find({uniquename => $childname});
+  my $stock_id = $stock_rs->stock_id;
+  my $mother_rs = $schema->resultset("Stock::Stock")->find({uniquename => $mothername});
+  my $mother_id = $mother_rs->stock_id;
+  my $father_rs = $schema->resultset("Stock::Stock")->find({uniquename => $fathername});
+  my $father_id = $father_rs->stock_id;
 
   my $gts = CXGN::Genotype::Search->new( {
       bcs_schema => $schema,
