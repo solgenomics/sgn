@@ -21,12 +21,12 @@ if (!$opt_p) {
 my $protocol_id = $opt_p;
 my $filename = $opt_f;
 
-my $schema = Bio::Chado::Schema->connect(sub { $dbh });
 my $dbh = CXGN::DB::InsertDBH->new({
     dbhost => $opt_H,
     dbname => $opt_D,
     dbuser => "postgres",
 });
+my $schema = Bio::Chado::Schema->connect(sub { $dbh });
 
 open(my $OUT, '>>', $opt_o) || die "Can't open output file $opt_o! $!\n";
 $OUT->autoflush(1);
@@ -43,7 +43,7 @@ while (my $row = <IN>){
   my $stock_rs = $schema->resultset("Stock::Stock")->find({uniquename => $childname})->stock_id();
   print STDERR "working on accession ".$childname."\n";
   my $mother_rs = $schema->resultset("Stock::Stock")->find({uniquename => $mothername})->stock_id();
-  my $father_rs = $schema->resultset("Stock::Stock")->find{(uniquename => $fathername)}->stock_id();
+  my $father_rs = $schema->resultset("Stock::Stock")->find({uniquename => $fathername})->stock_id();
 
   my $gts = CXGN::Genotype::Search->new( {
       bcs_schema => $schema,
