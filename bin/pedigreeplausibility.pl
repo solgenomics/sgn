@@ -60,11 +60,11 @@ my @scores;
 while (my $row = $stock_rs->next()) {
     print STDERR "working on accession ".$row->uniquename()."\n";
     unless($pedigreehash{$row->uniquename()}){next;}
-    print STDERR "found accession\n";
     my $stock = CXGN::Stock->new(schema => $schema, stock_id => $row->stock_id(), );
-    my @parents = $stock->get_parents();
+    my $parents = $stock->get_parents();
+    print STDERR "my parents are $parents";
 
-    if (@parents == 2) {
+    if ($parents->{'mother'} && $parents->{'father'}) {
 
 	  my $gts = CXGN::Genotype::Search->new( {
 	    bcs_schema => $schema,
