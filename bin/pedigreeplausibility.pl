@@ -36,6 +36,9 @@ $childname = $pedigreearray[0];
 $pedigreehash{$childname} = "1";
 }
 
+
+print STDERR "pedigree hash is".Dumper %pedigreehash;
+
 my $dbh = CXGN::DB::InsertDBH->new( {
     dbhost => $opt_H,
     dbname => $opt_D,
@@ -57,7 +60,6 @@ my @scores;
 while (my $row = $stock_rs->next()) {
     print STDERR "working on accession ".$row->uniquename()."\n";
     unless($pedigreehash{$row->uniquename()}){next;}
-    print STDERR "pedigree hash is" Dumper %pedigreehash;
     my $stock = CXGN::Stock->new(schema => $schema, stock_id => $row->stock_id(), );
     my @parents = $stock->get_parents();
 
