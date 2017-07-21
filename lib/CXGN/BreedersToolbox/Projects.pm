@@ -231,8 +231,8 @@ sub get_all_locations {
 	country_code.value,
 	breeding_program.name,
 	location_type.value,
-	longitude,
 	latitude,
+    longitude,
 	altitude,
     count(distinct(projectprop.project_id))
 FROM nd_geolocation AS geo
@@ -251,7 +251,7 @@ ORDER BY 8,2";
 	$h->execute($project_location_type_id);
 #
     my @locations;
-    while (my ($id, $name, $abbrev, $country_code, $prog, $type, $longitude, $latitude, $altitude, $trial_count) = $h->fetchrow_array()) {
+    while (my ($id, $name, $abbrev, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count) = $h->fetchrow_array()) {
         $name = '<font id="'.$id.'_name">'.$name.'</font>';
         $abbrev = '<font id="'.$id.'_abbrev">'.$abbrev.'</font>';
         $country_code = '<font id="'.$id.'_country">'.$country_code.'</font>';
@@ -268,7 +268,7 @@ ORDER BY 8,2";
         } else {
             $delete_link = '<a title="Unable to delete locations that are linked to one or more trials" id="'.$id.'_remove"><span class="glyphicon glyphicon-remove"></span></a>';
         }
-        push @locations, [$name, $abbrev, $country_code, $prog, $type, $longitude, $latitude, $altitude, $trial_count, $edit_link, $delete_link];
+        push @locations, [$name, $abbrev, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count, $edit_link, $delete_link];
     }
     return \@locations;
 }

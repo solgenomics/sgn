@@ -109,8 +109,8 @@ jQuery(document).ready(function() {
        var abbreviation = $('#location_abbreviation').val();
        var country = $('#location_country').val();
        var type = $('#location_type').val();
-       var longitude = $('#location_longitude').val();
        var latitude = $('#location_latitude').val();
+       var longitude = $('#location_longitude').val();
        var altitude = $('#location_altitude').val();
 
 
@@ -126,7 +126,7 @@ jQuery(document).ready(function() {
        $.ajax({
          type: 'POST',
          url: '/ajax/location/store',
-         data: { 'id': id, 'name': name, 'abbreviation': abbreviation, 'country_name': country_name, 'country_code': country_code, 'type': type, 'longitude':longitude, 'latitude':latitude, 'altitude': altitude },
+         data: { 'id': id, 'name': name, 'abbreviation': abbreviation, 'country_name': country_name, 'country_code': country_code, 'type': type, 'latitude':latitude, 'longitude':longitude, 'altitude': altitude },
          success: function(response) {
                   if (response.error) { alert(response.error); }
                   else {
@@ -143,7 +143,7 @@ jQuery(document).ready(function() {
 
 
   function delete_location(id) {
-    var name = $('#'+id).text();
+    var name = $('#'+id+'_name').text();
     var yes = confirm('Are you sure you want to delete location '+name+'? ');
 
     if (! yes) { return; }
