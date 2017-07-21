@@ -64,7 +64,6 @@ while (my $row = <IN>){
 	  protocol_id => $protocol_id,
   });
 	my @mom_gts = $mom_gts->get_genotype_info_as_genotype_objects();
-g
   if (!@mom_gts) {
 	    print STDERR "Genotype of female parent missing. Skipping.\n";
 	    next;
