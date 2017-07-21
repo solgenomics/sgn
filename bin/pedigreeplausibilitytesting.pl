@@ -37,8 +37,11 @@ open(IN, $filename) or die "Could not open file $filename $!";
 while (my $row = <IN>){
   my @pedigreearray = split(/\s/ ,$row);
   my $childname = $pedigreearray[0];
+  print STDERR "child name is $childname";
   my $mothername = $pedigreearray[1];
+  print STDERR "mother name is $mothername";
   my $fathername = $pedigreearray[2];
+  print STDERR "father name is $fathername";
 
   my $stock_rs = $schema->resultset("Stock::Stock")->search({uniquename => $childname});
   my $stock_id = $stock_rs->first->stock_id;
