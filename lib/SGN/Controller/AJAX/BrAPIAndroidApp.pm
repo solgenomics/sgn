@@ -137,4 +137,20 @@ sub register_POST : Args(0) {
     $c->stash->{rest} = {success => 1};
 }
 
+sub search_parameters : Path('/brapiapp/searchparameters') : ActionClass('REST') { }
+
+sub search_parameters_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $current_call = $c->req->param('call');
+    my $cv_id = $bcs_schema->resultset('Cv::Cv')->find({name=>'BrAPIParameters'})->cv_id();
+    my $brapi_search_params = $bcs_schema->resultset('Cv::Cvterm')->find({cv_id=>$cv_id, name=>$current_call})->definition();
+    my @search_params = split ',', $brapi_search_params;
+    $c->stash->{rest} = {
+        success => 1,
+        parameters => \@search_params
+    };
+}
+
 1;
