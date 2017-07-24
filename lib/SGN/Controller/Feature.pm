@@ -33,17 +33,6 @@ has 'default_page_size' => (
 =cut
 
 
-sub search :Path('/search/features') Args(0) {
-    my ( $self, $c ) = @_;
-
-    $c->stash(
-        template => '/search/features.mas',
-	feature_types => feature_types($self->schema), 
-	organisms     => feature_organisms($self->schema) ,
-	
-    );
-}
-
 # deprecated old paths are now redirects
 sub view_by_name :Path('/feature/view/name') Path('/feature/view/id') Args(1) {
     my ( $self, $c, $id ) = @_;
