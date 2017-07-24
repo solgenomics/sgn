@@ -47,8 +47,6 @@ $trial_name
                 </div>
             </div>
 
-
-
     </div>
   <div class="col-md-1 col-lg-1">
   </div>
@@ -120,7 +118,6 @@ $trial_name
           </div>
         </div>
 
-
     </div>
     <div class="col-md-1 col-lg-1">
     </div>
@@ -128,7 +125,10 @@ $trial_name
 </div>
 
 </form>
+var
 <script>
+
+var trial_info_object = [];
 
   jQuery(document).ready(function($) {
 
@@ -143,18 +143,19 @@ $trial_name
            },
 
            success: function(response) {
+                trial_info_object = response.trial_info;
                if (response.error){
                  alert("Error Retrieving Trial Information: "+response.error);
                }
 
-               var trial_plot_name_html = "<select class='form-control' id='trial_plot_name_table'>";
-               var trial_accession_html = "<select class='form-control' id='trial_accession_table'>";
+               var trial_plot_name_html = "<select class='form-control' id='trial_plot_name_table' >";
+               var trial_accession_html = "<select class='form-control' id='trial_accession_table' disabled>";
                var trial_plot_number_html = "<select class='form-control' id='trial_plot_number_table'>";
-               var trial_block_number_html = "<select class='form-control' id='trial_block_number_table'>";
-               var trial_rep_number_html = "<select class='form-control' id='trial_rep_number_table'>";
+               var trial_block_number_html = "<select class='form-control' id='trial_block_number_table' disabled>";
+               var trial_rep_number_html = "<select class='form-control' id='trial_rep_number_table' disabled>";
 
                 for (n=0; n<response.trial_info.length; n++){
-                console.log(response.trial_info[n]);
+                //console.log(response.trial_info[n]);
 
                       trial_plot_name_html = trial_plot_name_html + "<option value=" + response.trial_info[n].plot_name + ">" + response.trial_info[n].plot_name + "</option>";
                       trial_accession_html = trial_accession_html + "<option value=" + response.trial_info[n].accession_name + ">" + response.trial_info[n].accession_name + "</option>";
@@ -189,9 +190,6 @@ $trial_name
               }
 
       });
-
-
-
 
   var null_trait_value = '';
 
@@ -313,9 +311,50 @@ $trial_name
         Retrieve_pheno();
     });
 
+  });
 
+  jQuery(document).on('change', '#trial_plot_name_table', function(){
+      var plot_infor = jQuery('#trial_plot_name_table').val();
+      //alert(plot_infor);
+      //console.log(trial_info_object);
+      for (i=0; i<trial_info_object.length; i++){
+          //console.log(trial_info_object[i]);
+          if (trial_info_object[i].plot_name == plot_infor){
+              var plotNo = trial_info_object[i].plot_number;
+              var accessionName = trial_info_object[i].accession_name;
+              var blockNo = trial_info_object[i].block_number;
+              var repNo = trial_info_object[i].rep_number;
+              alert(plotNo+","+accessionName+","+blockNo+","+repNo);
+
+              jQuery('#trial_accession_table').val(accessionName);
+              jQuery('#trial_plot_number_table').val(plotNo);
+              jQuery('#trial_block_number_table').val(blockNo);
+              jQuery('#trial_rep_number_table').val(repNo);
+          }
+      }
 
   });
 
+  jQuery(document).on('change', '#trial_plot_number_table', function(){
+      var plot_infor = jQuery('#trial_plot_number_table').val();
+      //alert(plot_infor);
+      //console.log(trial_info_object);
+      for (i=0; i<trial_info_object.length; i++){
+          //console.log(trial_info_object[i]);
+          if (trial_info_object[i].plot_number == plot_infor){
+              var accessionName = trial_info_object[i].accession_name;
+              var plotName = trial_info_object[i].plot_name;
+              var blockNo = trial_info_object[i].block_number;
+              var repNo = trial_info_object[i].rep_number;
+              alert(accessionName+","+plotName+","+blockNo+","+repNo);
+
+              jQuery('#trial_plot_name_table').val(plotName);
+              jQuery('#trial_accession_table').val(accessionName);
+              jQuery('#trial_block_number_table').val(blockNo);
+              jQuery('#trial_rep_number_table').val(repNo);
+          }
+      }
+
+  });
 
 </script>
