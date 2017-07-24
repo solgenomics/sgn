@@ -665,6 +665,28 @@ jQuery(document).ready(function ($) {
          open_project_dialog();
      });
 
+    jQuery('button[name="new_trial_add_treatments"]').click(function(){
+        jQuery('#trial_design_add_treatments').modal('show');
+    });
+
+    jQuery('#new_trial_add_treatments_continue').click(function(){
+        var treatment_name = jQuery('#new_treatment_name').val();
+        var html = "";
+        var design_array = JSON.parse(design_json);
+        for (var i=0; i<design_array.length; i++){
+            html += "<table class='table table-hover'><thead><tr><th>plot_name</th><th>accession</th><th>plot_number</th><th>block_number</th><th>rep_number</th><th>is_a_control</th><th>row_number</th><th>col_number</th><th>"+treatment_name+"</th></tr></thead><tbody>";
+            var design_hash = JSON.parse(design_array[i]);
+            for (var key in design_hash){
+                var plot_obj = design_hash[key];
+                html += "<tr><td>"+plot_obj.plot_name+"</td><td>"+plot_obj.stock_name+"</td><td>"+plot_obj.plot_number+"</td><td>"+plot_obj.block_number+"</td><td>"+plot_obj.rep_number+"</td><td>"+plot_obj.is_a_control+"</td><td>"+plot_obj.row_number+"</td><td>"+plot_obj.col_number+"</td><td><input type='text' class='form-control' id='add_trial_treatment_input' /></td></tr>";
+            }
+            html += "</tbody></table>";
+        }
+        html += "<br/><br/>";
+        jQuery('#trial_design_add_treatment_select_html').html(html);
+        jQuery('#trial_design_add_treatment_select').modal('show');
+    });
+
 });
 
 function greenhouse_show_num_plants_section(){
