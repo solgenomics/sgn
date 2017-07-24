@@ -1,2 +1,0 @@
-Test_Child	Test_Mother	Test_Father
-
