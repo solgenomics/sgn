@@ -677,8 +677,10 @@ jQuery(document).ready(function ($) {
             html += "<table class='table table-hover'><thead><tr><th>plot_name</th><th>accession</th><th>plot_number</th><th>block_number</th><th>rep_number</th><th>is_a_control</th><th>row_number</th><th>col_number</th><th class='table-success'>"+treatment_name+"</th></tr></thead><tbody>";
             var design_hash = JSON.parse(design_array[i]);
             for (var key in design_hash){
-                var plot_obj = design_hash[key];
-                html += "<tr><td>"+plot_obj.plot_name+"</td><td>"+plot_obj.stock_name+"</td><td>"+plot_obj.plot_number+"</td><td>"+plot_obj.block_number+"</td><td>"+plot_obj.rep_number+"</td><td>"+plot_obj.is_a_control+"</td><td>"+plot_obj.row_number+"</td><td>"+plot_obj.col_number+"</td><td><input data-plot_name='"+plot_obj.plot_name+"' data-trial_index='"+i+"' data-trial_treatment='"+treatment_name+"' type='checkbox' name='add_trial_treatment_input'/></td></tr>";
+                if (key != 'treatments'){
+                    var plot_obj = design_hash[key];
+                    html += "<tr><td>"+plot_obj.plot_name+"</td><td>"+plot_obj.stock_name+"</td><td>"+plot_obj.plot_number+"</td><td>"+plot_obj.block_number+"</td><td>"+plot_obj.rep_number+"</td><td>"+plot_obj.is_a_control+"</td><td>"+plot_obj.row_number+"</td><td>"+plot_obj.col_number+"</td><td><input data-plot_name='"+plot_obj.plot_name+"' data-trial_index='"+i+"' data-trial_treatment='"+treatment_name+"' type='checkbox' name='add_trial_treatment_input'/></td></tr>";
+                }
             }
             html += "</tbody></table>";
         }
@@ -714,10 +716,34 @@ jQuery(document).ready(function ($) {
         var design_array = JSON.parse(design_json);
         for (var i=0; i<design_array.length; i++){
             var design_hash = JSON.parse(design_array[i]);
-            design_hash['treatments'] = trial_treatments[i];
+            if ('treatments' in design_hash){
+                treatment_obj = design_hash['treatments'];
+                new_treatments = trial_treatments[i];
+                for (var key in new_treatments){
+                    treatment_obj[key] = new_treatments[key];
+                }
+                design_hash['treatments'] = treatment_obj;
+            } else {
+                design_hash['treatments'] = trial_treatments[i];
+            }
             new_design_array[i] = JSON.stringify(design_hash);
         }
-        var json_encode_new_design = JSON.stringify(new_design_array);
+        design_json = JSON.stringify(new_design_array);
+
+        var html = '';
+        for (var i=0; i<new_design_array.length; i++){
+            var design_hash = JSON.parse(new_design_array[i]);
+            var treatments = design_hash['treatments'];
+            html += "Trial "+i+"<br/>";
+            for (var key in treatments){
+                html += "Treatment: <b>"+key+"</b> Plots: ";
+                var plot_array = treatments[key];
+                html += plot_array.join(', ') + "<br/>";
+            }
+        }
+        jQuery('#trial_design_confirm_treatments').html(html);
+        jQuery('#trial_design_add_treatment_select').modal('hide');
+        jQuery('#trial_design_add_treatments').modal('hide');
     });
 
 });

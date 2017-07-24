@@ -314,6 +314,10 @@ $breeding_programs
                     <p><span class="ui-icon ui-icon-check"></span>Trial Is Valid<br>The following trial will be added</p>
                     <button class="btn btn-info btn-sm" id="view_trial_layout_button" >View Trial Layout</button>
                     <hr>
+                    <b>Treatments:</b>
+                    <div id="trial_design_confirm_treatments" >
+                    </div>
+                    <hr>
                     <div id="trial_design_information">
                     </div>
                 </div>
