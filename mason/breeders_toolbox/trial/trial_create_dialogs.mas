@@ -389,7 +389,7 @@ $breeding_programs
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-info" name="new_trial_add_treatments_submit" >Continue</button>
+                <button type="button" class="btn btn-info" id="new_trial_add_treatments_submit" >Continue</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
