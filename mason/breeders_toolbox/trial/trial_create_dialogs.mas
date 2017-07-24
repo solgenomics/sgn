@@ -346,7 +346,6 @@ $breeding_programs
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-info" name="new_trial_add_treatments" >Add Treatments to Design</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>

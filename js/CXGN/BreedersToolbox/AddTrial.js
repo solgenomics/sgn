@@ -734,7 +734,7 @@ jQuery(document).ready(function ($) {
         for (var i=0; i<new_design_array.length; i++){
             var design_hash = JSON.parse(new_design_array[i]);
             var treatments = design_hash['treatments'];
-            html += "Trial "+i+"<br/>";
+            //html += "Trial "+i+"<br/>";
             for (var key in treatments){
                 html += "Treatment: <b>"+key+"</b> Plots: ";
                 var plot_array = treatments[key];
