@@ -167,7 +167,7 @@ sub display_ontologies_GET  {
     if ($c->user) {
         if ( $c->user->check_roles('curator') || $c->user->check_roles('submitter')  || $c->user->check_roles('sequencer') ) { $privileged = 1; }
     }
-    my $trait_db_name = $c->config->{trait_ontology_db_name} || 'SP'; 
+    my $trait_db_name = $c->config->{trait_ontology_db_name} || 'SP';
     #now add all GO PO SP CO annotations to an array
     my @ont_annot;
     foreach ( @{ $dbs{'GO'} } ) { push @ont_annot, $_; }
@@ -272,7 +272,7 @@ sub associate_ontology_GET :Args(0) {
     my ($self, $c) = @_;
     $c->stash->{rest} = { error => "Nothing here, it's a GET.." } ;
 }
-#########################change this to the locus object !! 
+#########################change this to the locus object !!
 sub associate_ontology_POST :Args(0) {
     my ( $self, $c ) = @_;
      my $dbh = $c->dbc->dbh;
@@ -944,7 +944,7 @@ sub assign_owner_POST :Args(0) {
 
 Public Path: /ajax/locus/organisms
 
-get a list of available organisms as stored in locus.common_name_id, 
+get a list of available organisms as stored in locus.common_name_id,
 responds with a JSON array .
 
 =cut
