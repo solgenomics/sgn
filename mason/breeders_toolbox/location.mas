@@ -4,7 +4,7 @@ $user_id => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => ['leaflet'] &>
-
+<br>
 <div class="table-responsive" style="margin-top: 10px;">
     <table id="location_table" class="table table-hover table-striped table-bordered" width="100%">
         <thead>
@@ -22,10 +22,9 @@ $user_id => undef
                 <th>Remove</th>
             </tr>
         </thead>
-        <caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Locations </center></caption>
+        <!-- <caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Locations </center></caption> -->
     </table>
 </div>
-<br>
 <br>
 <div id="mapid" style="height: 540px;"></div>
 
@@ -358,11 +357,23 @@ jQuery(document).ready(function() {
 	url: '/ajax/location/all',
     beforeSend: function() {
         mymap = L.map('mapid').fitWorld();
-        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token='+token, {
-            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
-            maxZoom: 18,
-            id: 'mapbox.streets',
+
+        L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+	        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
         }).addTo(mymap);
+
+        // var Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+	    //        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        // });
+        //
+        // var Esri_WorldTopoMap = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+	    //     attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community'
+        // });
+        //
+        // var Esri_WorldStreetMap = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        // 	attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012'
+        // });
+
 	},
 	success: function(response) {
         var locations = response.data;
@@ -378,12 +389,13 @@ jQuery(document).ready(function() {
             var latitude = '<font id="'+id+'_lat">'+locations[i][6]+'</font>';
             var longitude = '<font id="'+id+'_long">'+locations[i][7]+'</font>';
             var altitude = '<font id="'+id+'_alt">'+locations[i][8]+'</font>';
-            var trial_count = '<font id="'+id+'_count">'+locations[i][9]+'</font>';
             var edit_link = '<a href="javascript:edit_location('+id+')"><font style="color: blue; font-weight: bold">Edit</a>';
-            var delete_link;
+            var delete_link, trial_count;
             if (locations[i][9] < 1) {
+                trial_count = '<font id="'+id+'_count">'+locations[i][9]+'</font>';
                 delete_link = '<a title="Delete" id="'+id+'_remove" href="javascript:delete_location('+id+')"><span style="color: red" class="glyphicon glyphicon-remove"></span></a>';
             } else {
+                trial_count = '<a id="'+id+'_count" href="/search/trials?nd_geolocation='+locations[i][1]+'">'+locations[i][9]+' trials</a>';
                 delete_link = '<span id="'+id+'_remove" title="Unable to delete locations that are linked to one or more trials" class="glyphicon glyphicon-remove"></span>';
             }
             marker = new L.marker([locations[i][6],locations[i][7]])
