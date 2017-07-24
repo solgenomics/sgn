@@ -3,7 +3,6 @@
  $feature_types     => undef
 </%args>
 
-<& /util/import_extjs.mas &>
 <& /util/import_javascript.mas, classes => 'SGN.Search.Feature' &>
 
 
