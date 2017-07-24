@@ -61,13 +61,19 @@ foreach (@$children) {
         <table name="folder_datatables_table" class="table table-hover table-bordered">
         <thead><tr><th>Trial Name</th></tr></thead>
         <tbody>
+% my @trial_ids;
 % foreach (@$children) {
 %   if ($_->folder_type eq 'trial') {
     <tr><td><a href="/breeders/trial/<% $_->folder_id() %>"><% $_->name() %></a></td></tr>
+% push @trial_ids, $_->folder_id();
 % }
 % }
+% my $trial_ids = join ',', @trial_ids;
         </tbody>
         </table>
+
+		<br/>
+		<button class="btn btn-primary" id="trial_download_phenotypes_button">Download Phenotypes</button>
 
       </div>
     </div>
@@ -183,6 +189,8 @@ foreach (@$children) {
         </div>
     </div>
 </div>
+
+<& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $trial_ids, dialog_name => $folder_name, dialog_type => 'Folder' &>
 
 <script>
 

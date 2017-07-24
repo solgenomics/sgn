@@ -138,7 +138,7 @@ sub generate_experimental_design_POST : Args(0) {
   my $use_same_layout = $c->req->param('use_same_layout');
   my $number_of_checks = scalar(@control_names_crbd);
   #my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
-  if ($design_type eq "RCBD" || $design_type eq "Alpha" || $design_type eq "CRD") {
+  if ($design_type eq "RCBD" || $design_type eq "Alpha" || $design_type eq "CRD" || $design_type eq "Lattice") {
     if (@control_names_crbd) {
         @stock_names = (@stock_names, @control_names_crbd);
     }
@@ -314,7 +314,13 @@ my $location_number = scalar(@locations);
     $c->stash->{rest} = {error => "Could not generate design" };
     return;
   }
-  $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type);
+  my $design_level;
+  if ($design_type eq 'greenhouse'){
+      $design_level = 'plants';
+  } else {
+      $design_level = 'plots';
+  }
+  $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_level);
   $design_info_view_html = design_info_view(\%design, \%design_info);
   my $design_json = encode_json(\%design);
   push @design_array,  $design_json;

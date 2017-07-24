@@ -26,7 +26,7 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         offset=>$offset
     }
 );
-my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
+my @data = $phenotypes_search->search();
 
 =head1 DESCRIPTION
 
@@ -141,24 +141,33 @@ sub search {
 
     my %columns = (
       accession_id=> 'accession_id',
-      plot_id=> 'plot_id',
+      plot_id=> 'stock.stock_id',
       trial_id=> 'trial_id',
       trait_id=> 'trait_id',
       location_id=> 'location_id',
       year_id=> 'year_id',
-      trait_name=> 'trait_name',
-      phenotype_value=> 'phenotype_value',
-      trial_name=> 'trial_name',
-      plot_name=> 'plot_name',
-      accession_name=> 'accession_name',
-      location_name=> 'location_name',
-      trial_design=> 'trial_design_value',
-      plot_type=> "'plot' AS plot_type",
+      trait_name=> 'traits.trait_name',
+      phenotype_value=> 'phenotype.value',
+      trial_name=> 'trials.trial_name',
+      plot_name=> 'stock.uniquename AS plot_name',
+      accession_name=> 'accessions.accession_name',
+      location_name=> 'locations.location_name',
+      trial_design=> 'trial_designs.trial_design_name',
+      plot_type=> "plot_type.name",
       from_clause=> " FROM materialized_phenoview
-             LEFT JOIN stockprop AS rep ON (plot_id=rep.stock_id AND rep.type_id = $rep_type_id)
-             LEFT JOIN stockprop AS block_number ON (plot_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
-             LEFT JOIN stockprop AS plot_number ON (plot_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
-             JOIN phenotype USING(phenotype_id)",
+          LEFT JOIN traits USING(trait_id)
+          LEFT JOIN trials USING(trial_id)
+          LEFT JOIN stock USING(stock_id)
+          JOIN stock_relationship ON (stock.stock_id=subject_id)
+          JOIN cvterm as plot_type ON (plot_type.cvterm_id = stock.type_id)
+          LEFT JOIN accessions USING(accession_id)
+          LEFT JOIN locations USING(location_id)
+          LEFT JOIN trial_designsXtrials USING(trial_id)
+          LEFT JOIN trial_designs USING(trial_design_id)
+          LEFT JOIN stockprop AS rep ON (stock.stock_id=rep.stock_id AND rep.type_id = $rep_type_id)
+          LEFT JOIN stockprop AS block_number ON (stock.stock_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
+          LEFT JOIN stockprop AS plot_number ON (stock.stock_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
+          JOIN phenotype USING(phenotype_id)",
     );
 
     my $select_clause = "SELECT ".$columns{'year_id'}.", ".$columns{'trial_name'}.", ".$columns{'accession_name'}.", ".$columns{'location_name'}.", ".$columns{'trait_name'}.", ".$columns{'phenotype_value'}.", ".$columns{'plot_name'}.",
@@ -222,7 +231,7 @@ sub search {
         push @where_clause, $columns{'phenotype_value'}."~\'$numeric_regex\'";
     }
 
-    my $where_clause = "WHERE " . (join (" AND " , @where_clause));
+    my $where_clause = " WHERE " . (join (" AND " , @where_clause));
 
     my $offset_clause = '';
     my $limit_clause = '';
@@ -262,81 +271,6 @@ sub _sql_from_arrayref {
     my $arrayref = shift;
     my $sql = join ("," , @$arrayref);
     return $sql;
-}
-
-
-sub get_extended_phenotype_info_matrix {
-    my $self = shift;
-    my $data = $self->search();
-    my %plot_data;
-    my %traits;
-    my $include_timestamp = $self->include_timestamp;
-
-    print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
-    print STDERR "Construct Pheno Matrix Start:".localtime."\n";
-    my @unique_plot_list = ();
-    my %seen_plots;
-    foreach my $d (@$data) {
-
-        my ($year, $project_name, $stock_name, $location, $cvterm, $value, $plot_name, $rep, $block_number, $plot_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id) = @$d;
-
-        if (!exists($seen_plots{$plot_id})) {
-            push @unique_plot_list, $plot_id;
-            $seen_plots{$plot_id} = 1;
-        }
-
-        #my $cvterm = $trait."|".$cvterm_accession;
-        if ((!exists($plot_data{$plot_id}->{$cvterm})) && $include_timestamp && $timestamp_value) {
-            $plot_data{$plot_id}->{$cvterm} = "$value,$timestamp_value";
-        } elsif (!exists($plot_data{$plot_id}->{$cvterm})) {
-            $plot_data{$plot_id}->{$cvterm} = $value;
-        }
-        my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
-        $plot_data{$plot_id}->{metadata} = {
-            replicate => $rep,
-            studyName => $project_name,
-            germplasmName => $stock_name,
-            locationName => $location,
-            blockNumber => $block_number,
-            plotNumber => $plot_number,
-            observationUnitName => $plot_name,
-            year => $year,
-            studyDbId => $project_id,
-            locationDbId => $location_id,
-            germplasmDbId => $stock_id,
-            observationUnitDbId => $plot_id,
-            germplasmSynonyms => $synonym_string,
-            studyDesign => $design,
-            observationLevel => $stock_type_name
-        };
-        $traits{$cvterm}++;
-    }
-    #print STDERR Dumper \%plot_data;
-
-    my @info = ();
-    my $line = join "\t", qw | studyYear studyDbId studyName studyDesign locationDbId locationName germplasmDbId germplasmName germplasmSynonyms observationLevel observationUnitDbId observationUnitName replicate blockNumber plotNumber|;
-
-    # generate header line
-    #
-    my @sorted_traits = sort keys(%traits);
-    foreach my $trait (@sorted_traits) {
-        $line .= "\t".$trait;
-    }
-    push @info, $line;
-
-    #print STDERR Dumper \@unique_plot_list;
-
-    foreach my $p (@unique_plot_list) {
-        $line = join "\t", map { $plot_data{$p}->{metadata}->{$_} } ( "year", "studyDbId", "studyName", "studyDesign", "locationDbId", "locationName", "germplasmDbId", "germplasmName", "germplasmSynonyms", "observationLevel", "observationUnitDbId", "observationUnitName", "replicate", "blockNumber", "plotNumber" );
-
-        foreach my $trait (@sorted_traits) {
-            my $tab = $plot_data{$p}->{$trait};
-            $line .= defined($tab) ? "\t".$tab : "\t";
-        }
-        push @info, $line;
-    }
-    print STDERR "Construct Pheno Matrix End:".localtime."\n";
-    return @info;
 }
 
 1;

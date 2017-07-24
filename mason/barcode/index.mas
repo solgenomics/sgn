@@ -152,6 +152,16 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 <script defer="defer">
   jQuery(document).ready(function() {
       pasteListMenu('stock_names', 'list_menu_location_1');
+
+      $(document).on('change', '#select_barcode_type', function () {
+          var barcode_type = jQuery("#select_barcode_type").val();
+          if (barcode_type == "2D") {
+              jQuery("#2D_fieldbook_option").show();
+          }
+          else if (barcode_type == "1D") {
+            jQuery("#2D_fieldbook_option").hide();
+          }
+      });
   });
 </script>
     </div>
@@ -163,6 +173,25 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
         <select class="form-control" id="select_barcode_type" name="select_barcode_type">
           <option value="1D">1D Barcode</option>
           <option value="2D">2D Barcode</option>
+        </select>
+    </div>
+  </div>
+
+  <div id="2D_fieldbook_option" style="display: none">
+  <div class="form-group form-group-sm" >
+    <label class="col-sm-4 control-label">Enable 2D Barcode For FieldBook: </label>
+    <div class="col-sm-8">
+      <input type="checkbox" id="enable_fieldbook_2d_barcode" name="enable_fieldbook_2d_barcode" value="enable_fieldbook_2d_barcode" />
+    </div>
+  </div>
+  </div>
+
+  <div class="form-group form-group-sm">
+    <label class="col-sm-4 control-label">Printing Format (Optional): </label>
+    <div class="col-sm-8">
+        <select class="form-control" id="select_print_format" name="select_print_format">
+          <option selected disabled>select printing format</option>
+          <option value="CASS">CASS printing format</option>
         </select>
     </div>
   </div>
@@ -179,18 +208,18 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
       <input type="checkbox" name="duplicate_labels_per_row" checked="1" disabled="1" />
     </div>
     </div>
-    <div class="form-group form-group-sm">
+    <!--<div class="form-group form-group-sm">
     <label class="col-sm-4 control-label">Print Field Information For Plots: </label>
     <div class="col-sm-8">
       <input type="checkbox" name="plots" value="plots" /> &nbsp; &nbsp; &nbsp; Useful for Printing Field Information of Trials.
     </div>
-  </div>
-  <div class="form-group form-group-sm">
+  </div>-->
+  <!--<div class="form-group form-group-sm">
     <label class="col-sm-4 control-label">Print Parents For Nurseries: </label>
     <div class="col-sm-8">
       <input type="checkbox" name="nursery" value="nursery" /> &nbsp; &nbsp; &nbsp; Useful for Printing Pedigree Information for Nurseries.
     </div>
-  </div>
+  </div>-->
 
   <& /barcode/printer_settings.mas &>
 
@@ -235,6 +264,7 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
   jQuery(document).ready(function() {
       pasteListMenu('stock_names_2', 'list_menu_location_2');
   });
+
 </script>
     </div>
   </div>
@@ -276,8 +306,6 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
 <br/>
 
 </&>
-
-
 
 %#<&| /page/info_section.mas, title=>'Generate unique barcodes', collapsible=>1, collapsed=>0 &>
 

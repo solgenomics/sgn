@@ -422,9 +422,9 @@ sub modesel {
         "\n",
         (
             map { "  $_  " } (
-                join( $spacer, ( map { $_->{contents}[0] } @buttons ) ),
-                join( $spacer, ( map { $_->{contents}[1] } @buttons ) ),
-                join( $spacer, ( map { $_->{contents}[2] } @buttons ) ),
+                join( $spacer, ( map { $_->{contents}[0] ? $_->{contents}[0] : '' } @buttons ) ),
+                join( $spacer, ( map { $_->{contents}[1] ? $_->{contents}[1] : '' } @buttons ) ),
+                join( $spacer, ( map { $_->{contents}[2] ? $_->{contents}[2] : '' } @buttons ) ),
             )
         )
     );
@@ -494,14 +494,19 @@ sub simple_selectbox_html {
     }
     $params{params} ||= '';
     $params{name}   ||= '';
+    my $data_related = $params{data_related} ? "data-related=".$params{data_related} : '';
     my $size = $params{size};
-    $retstring = qq!<select class="form-control" $id $params{multiple} $params{params} name="$params{name}"!;
+    $retstring = qq!<select class="form-control" $id $data_related $params{multiple} $params{params} name="$params{name}"!;
     if ($size) {
         $retstring .= qq!size="$params{size}"!;
     }
     $retstring .= qq!>!;
     $retstring =~ s/ +/ /;    #collapse spaces
     my $in_group = 0;
+    if ($params{default}){
+        my $default = $params{default};
+        $retstring .= qq{<option title="$default" value="$default" disabled>$default</option>};
+    }
     foreach ( @{ $params{choices} } ) {
         no warnings 'uninitialized';
         if ( !ref && s/^__// ) {

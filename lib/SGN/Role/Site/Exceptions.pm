@@ -208,12 +208,13 @@ around 'finalize_error' => sub {
 
     if( @$notify && $self->config->{production_server} ) {
         $self->stash->{email_errors} = $notify;
-        try {
-            $self->view('Email::ErrorEmail')->process( $self )
-        } catch {
-            $self->log->error("Failed to send error email! Error was: $_");
-            push @{$self->error}, $_;
-        };
+        ####supress sgn-bugs emails#####
+        #try {
+        #    $self->view('Email::ErrorEmail')->process( $self )
+        #} catch {
+        #    $self->log->error("Failed to send error email! Error was: $_");
+        #    push @{$self->error}, $_;
+        #};
     }
 
     my @server_errors = grep $_->is_server_error, $self->_error_objects;

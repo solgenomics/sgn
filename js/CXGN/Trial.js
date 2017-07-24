@@ -732,17 +732,9 @@ jQuery(document).ready(function ($) {
     }
 
     function open_upload_trial_coord_dialog() {
-	$('#upload_trial_coord_dialog').dialog("open");
+	     $('#upload_trial_coord_dialog').dialog("open");
 
     }
-
-    function open_edit_field_map_dialog() {
-      jQuery('#edit_field_map_dialog').modal('show');
-    }
-
-    $('#edit_field_map_link').click(function () {
-      open_edit_field_map_dialog();
-    });
 
     function open_replace_trial_accession_dialog() {
       jQuery('#replace_trial_accessions_dialog').modal('show');
@@ -760,5 +752,24 @@ jQuery(document).ready(function ($) {
     $('#substitute_accession_submit').click(function () {
       jQuery('#edit_field_map_dialog').modal('hide');
       open_subtitute_plot_accession_dialog();
+    });
+
+    jQuery('#generate_trial_barcode_link').click(function () {
+        $('#generate_trial_barcode_button_dialog').modal("show");
+    });
+
+    jQuery('#trial_plot_barcode').click(function () {
+        $('#generate_trial_barcode_button_dialog').modal("hide");
+        $('#generate_trial_barcode_dialog').modal("show");
+    });
+
+    jQuery('#trial_accession_barcode').click(function () {
+        $('#generate_trial_barcode_button_dialog').modal("hide");
+        $('#generate_trial_barcode_dialog').modal("show");
+    });
+
+    jQuery('#trial_plant_barcode').click(function () {
+        $('#generate_trial_barcode_button_dialog').modal("hide");
+        $('#generate_trial_barcode_dialog').modal("show");
     });
 });

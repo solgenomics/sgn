@@ -9,7 +9,7 @@ use POSIX;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::Login;
 use CXGN::Trial::TrialCreate;
 use CXGN::Trial::Search;
@@ -17,7 +17,6 @@ use CXGN::Location::LocationLookup;
 use JSON qw( decode_json );
 use Data::Dumper;
 use Try::Tiny;
-use CXGN::Phenotypes::SearchFactory;
 use File::Slurp qw | read_file |;
 use Spreadsheet::WriteExcel;
 use Time::Piece;
@@ -42,7 +41,7 @@ has 'bcs_schema' => (
 	is => 'rw',
 );
 
-my $DEFAULT_PAGE_SIZE=20;
+my $DEFAULT_PAGE_SIZE=10;
 
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $self = shift;
@@ -56,6 +55,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 	my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
 	my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+	my $people_schema = $c->dbic_schema("CXGN::People::Schema");
 	push @status, { 'info' => "BrAPI base call found with page=$page, pageSize=$page_size" };
 
 	my $brapi = CXGN::BrAPI->new({
@@ -64,6 +64,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 			bcs_schema => $bcs_schema,
 			metadata_schema => $metadata_schema,
 			phenome_schema => $phenome_schema,
+			people_schema => $people_schema,
 			page_size => $page_size,
 			page => $page,
 			status => \@status
@@ -79,7 +80,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	$c->stash->{clean_inputs} = _clean_inputs($c->req->params);
 }
 
-#useful because javascript can pass 'undef' as an empty value
+#useful because javascript can pass 'undef' as an empty value, and also standardizes all inputs as arrayrefs
 sub _clean_inputs {
 	no warnings 'uninitialized';
 	my $params = shift;
@@ -95,6 +96,7 @@ sub _clean_inputs {
 		}
 		@$ret_val = grep {$_ ne undef} @$ret_val;
 		@$ret_val = grep {$_ ne ''} @$ret_val;
+        $_ =~ s/\[\]$//; #ajax POST with arrays adds [] to the end of the name e.g. germplasmName[]. since all inputs are arrays now we can remove the [].
 		$params->{$_} = $ret_val;
 	}
 	return $params;
@@ -484,9 +486,8 @@ sub germplasm_synonyms {
 sub germplasm_pedigree_string {
 	my $schema = shift;
 	my $stock_id = shift;
-	my $s = CXGN::Chado::Stock->new($schema, $stock_id);
-	my $pedigree_root = $s->get_parents('1');
-	my $pedigree_string = $pedigree_root->get_pedigree_string('1');
+	my $s = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
+	my $pedigree_string = $s->get_pedigree_string('Parents');
 	return $pedigree_string;
 }
 
@@ -1551,15 +1552,30 @@ sub studies_layout_POST {
 }
 
 sub studies_layout_GET {
-	my $self = shift;
-	my $c = shift;
-	#my $auth = _authenticate_user($c);
+    my $self = shift;
+    my $c = shift;
+    my $clean_inputs = $c->stash->{clean_inputs};
+    #my $auth = _authenticate_user($c);
+    my $format = $clean_inputs->{format}->[0] || 'json';
+    my $file_path;
+    my $uri;
+    if ($format eq 'tsv' || $format eq 'csv' || $format eq 'xls'){
+        my $dir = $c->tempfiles_subdir('download');
+        my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
+        my $temp_file_name = $time_stamp . "phenotype_download_$format"."_XXXX";
+        ($file_path, $uri) = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+    }
+
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Studies');
-	my $brapi_package_result = $brapi_module->studies_layout(
-		$c->stash->{study_id}
-	);
-	_standard_response_construction($c, $brapi_package_result);
+    my $brapi_package_result = $brapi_module->studies_layout({
+        study_id => $c->stash->{study_id},
+        format => $format,
+        main_production_site_url => $c->config->{main_production_site_url},
+        file_path => $file_path,
+        file_uri => $uri
+    });
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -1598,7 +1614,7 @@ sub studies_layout_GET {
 
 =cut
 
-sub studies_observations : Chained('studies_single') PathPart('observationUnits') Args(0) : ActionClass('REST') { }
+sub studies_observations : Chained('studies_single') PathPart('observationunits') Args(0) : ActionClass('REST') { }
 
 sub studies_observations_POST {
 	my $self = shift;
@@ -1685,6 +1701,7 @@ sub studies_table_GET {
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
 		trait_ids => $clean_inputs->{observationVariableDbId},
+		trial_ids => $clean_inputs->{studyDbId},
 		format => $format,
 		main_production_site_url => $c->config->{main_production_site_url},
 		file_path => $file_path,
