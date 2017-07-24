@@ -21,8 +21,7 @@ sub get_barcode_file {
     );
   my $barcode = $qrcode->plot($text);
   $barcode->write(file => $file);
-  close($file);
-  
+
   return $file;
 
 }
