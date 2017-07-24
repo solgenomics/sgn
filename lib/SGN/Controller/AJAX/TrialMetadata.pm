@@ -9,6 +9,7 @@ use CXGN::Trial;
 use Math::Round::Var;
 use List::MoreUtils qw(uniq);
 use CXGN::Trial::FieldMap;
+#use Sort::Maker;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -463,11 +464,12 @@ sub retrieve_trial_info_POST : Args(0) {
   	});
 
   	my $design = $layout-> get_design();
+    #print STDERR Dumper($design);
 
     my @layout_info;
   	foreach my $plot_number (keys %{$design}) {
   		push @layout_info, {
-  		plot_id => $design->{$plot_number}->{plot_id},
+        plot_id => $design->{$plot_number}->{plot_id},
   		plot_number => $plot_number,
   		row_number => $design->{$plot_number}->{row_number},
   		col_number => $design->{$plot_number}->{col_number},
@@ -477,9 +479,10 @@ sub retrieve_trial_info_POST : Args(0) {
   		accession_name => $design->{$plot_number}-> {accession_name},
   		plant_names => $design->{$plot_number}-> {plant_names},
   		};
-  		#print STDERR Dumper(@layout_info);
+        @layout_info = sort { $a->{plot_number} <=> $b->{plot_number} } @layout_info;
   	}
 
+    print STDERR Dumper(@layout_info);
     $c->stash->{rest} = {trial_info => \@layout_info};
     #$c->stash->{layout_info} = \@layout_info;
 }
