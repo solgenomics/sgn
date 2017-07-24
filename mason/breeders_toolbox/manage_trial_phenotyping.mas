@@ -125,7 +125,7 @@ $trial_name
 </div>
 
 </form>
-var
+
 <script>
 
 var trial_info_object = [];
@@ -324,7 +324,7 @@ var trial_info_object = [];
               var accessionName = trial_info_object[i].accession_name;
               var blockNo = trial_info_object[i].block_number;
               var repNo = trial_info_object[i].rep_number;
-              alert(plotNo+","+accessionName+","+blockNo+","+repNo);
+              //alert(plotNo+","+accessionName+","+blockNo+","+repNo);
 
               jQuery('#trial_accession_table').val(accessionName);
               jQuery('#trial_plot_number_table').val(plotNo);
@@ -346,7 +346,7 @@ var trial_info_object = [];
               var plotName = trial_info_object[i].plot_name;
               var blockNo = trial_info_object[i].block_number;
               var repNo = trial_info_object[i].rep_number;
-              alert(accessionName+","+plotName+","+blockNo+","+repNo);
+              //alert(accessionName+","+plotName+","+blockNo+","+repNo);
 
               jQuery('#trial_plot_name_table').val(plotName);
               jQuery('#trial_accession_table').val(accessionName);
