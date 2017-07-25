@@ -102,6 +102,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type' )->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type' )->cvterm_id();
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type' )->cvterm_id();
 
     # convert mm into pixels
     #
@@ -126,7 +127,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my @not_found;
     my @found;
 
-    my ($row, $stockprop_name, $value, $fdata, $accession_id, $accession_name, $parents, $tract_type_id, $label_text_5);
+    my ($row, $stockprop_name, $value, $fdata, $accession_id, $accession_name, $parents, $tract_type_id, $label_text_5, $plot_name, $label_text_6);
 
     foreach my $name (@names) {
 
@@ -136,7 +137,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     	    next;
     	}
 
-    	my $stock = $schema->resultset("Stock::Stock")->find( { name=>$name });
+    	my $stock = $schema->resultset("Stock::Stock")->find( { uniquename=>$name });
 
     	if (!$stock) {
     	    push @not_found, $name;
@@ -146,7 +147,35 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     	my $stock_id = $stock->stock_id();
         $type_id = $stock->type_id();
 
-      if (defined $plot){
+        if ($plant_cvterm_id == $type_id){
+            my $dbh = $c->dbc->dbh();
+            my $h = $dbh->prepare("select stock_relationship.subject_id, stock.name from stock join stock_relationship on stock.stock_id=stock_relationship.subject_id where object_id=?;");
+
+            $h->execute($stock_id);
+            while (my($plot_of_plant_id, $plant_plot_name) = $h->fetchrow_array) {
+                $plot_name = $plant_plot_name;
+
+                my $dbh = $c->dbc->dbh();
+                my $h = $dbh->prepare("select name, value from cvterm inner join stockprop on cvterm.cvterm_id = stockprop.type_id where stockprop.stock_id=?;");
+
+                $h->execute($plot_of_plant_id);
+
+                my %stockprop_hash;
+                 while (($stockprop_name, $value) = $h->fetchrow_array) {
+                   $stockprop_hash{$stock_id}->{$stockprop_name} = $value;
+
+                }
+                $row = $stockprop_hash{$stock_id}->{'replicate'};
+                $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."blk:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
+
+                my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
+
+                $h_acc->execute($stock_id);
+                ($accession_name, $accession_id) = $h_acc->fetchrow_array;
+            }
+        }
+
+      if (defined $plot && $plant_cvterm_id != $type_id){
           my $dbh = $c->dbc->dbh();
           my $h = $dbh->prepare("select name, value from cvterm inner join stockprop on cvterm.cvterm_id = stockprop.type_id where stockprop.stock_id=?;");
 
@@ -176,8 +205,12 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $tract_type_id = 'accession';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $stock_id )->get_pedigree_string('Parents');
       }
+      elsif ($plant_cvterm_id == $type_id) {
+          $tract_type_id = 'plant';
+          $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
+      }
 
-      push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id];
+      push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name];
     }
 
     my $dir = $c->tempfiles_subdir('pdfs');
@@ -252,6 +285,10 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             $parents = $found[$i]->[4];
             $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]."\n".$added_text, $fieldbook_barcode]);
         }
+        elsif ($found[$i]->[5] eq 'plant'){
+            $parents = $found[$i]->[4];
+            $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]."\nplot:".$found[$i]->[6]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$added_text, $fieldbook_barcode ]);
+        }
         else {
          $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [  $found[$i]->[0], $found[$i]->[1], $added_text, $fieldbook_barcode ]);
         }
@@ -292,6 +329,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
               my $yposition_2 = $ypos - 20;
               my $yposition_3 = $ypos - 30;
               my $yposition_4 = $ypos - 40;
+              my $yposition_5 = $ypos - 50;
               my $plot_pedigree_text;
 
               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
@@ -310,11 +348,21 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                           $label_text_4 = "pedigree: ".$parents;
                       }
                   }
+                  elsif ($found[$i]->[5] eq 'plant'){
+                      $label_text_6 = "plot:".$found[$i]->[6];
+                      $label_text_5 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
+                      if ($parents eq ''){
+                          $label_text_4 = "No pedigree for ".$found[$i]->[2];
+                      }else{
+                          $label_text_4 = "pedigree: ".$parents;
+                      }
+                  }
                   else{
                       $label_text_4 = '';
                   }
 
               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
+              $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $label_text_6);
               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_5);
           }
           elsif ($labels_per_row > '1'){
@@ -347,6 +395,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           my $yposition_2 = $ypos - 20;
           my $yposition_3 = $ypos - 30;
           my $yposition_4 = $ypos - 40;
+          my $yposition_5 = $ypos - 50;
           my $plot_pedigree_text;
 
           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
@@ -365,11 +414,21 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                       $label_text_4 = "pedigree: ".$parents;
                   }
               }
+              elsif ($found[$i]->[5] eq 'plant'){
+                  $label_text_6 = "plot:".$found[$i]->[6];
+                  $label_text_5 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
+                  if ($parents eq ''){
+                      $label_text_4 = "No pedigree for ".$found[$i]->[2];
+                  }else{
+                      $label_text_4 = "pedigree: ".$parents;
+                  }
+              }
               else{
                   $label_text_4 = '';
               }
           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_5);
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $label_text_6);
           $pages[$page_nr-1]->image(image=>$image, xpos=>$xpos, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
        }
      }
