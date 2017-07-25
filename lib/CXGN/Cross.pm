@@ -163,13 +163,13 @@ sub get_progeny_info {
         $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $member_typeid, $female_parent_typeid, $female_parent, $male_parent);
     }
     elsif ($female_parent) {
-        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $member_typeid, $female_parent);
+        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $member_typeid, $female_parent_typeid, $female_parent);
     }
     elsif ($male_parent) {
-        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $member_typeid, $male_parent);
+        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $member_typeid, $female_parent_typeid, $male_parent);
     }
     else {
-        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $member_typeid);
+        $h->execute($female_parent_typeid, $accession_typeid, $male_parent_typeid, $member_typeid, $female_parent_typeid);
     }
 
     my @progeny_info = ();
