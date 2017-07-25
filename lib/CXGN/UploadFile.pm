@@ -97,7 +97,7 @@ sub archive {
         die "To archive a tempfile you need to provide: tempfile, subdirectory, archive_filename, timestamp, archive_path, and user_id\n";
     }
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($self->user_role)  ) {
+    if (!any { $_ eq "curator" || $_ eq "submitter" || $_ eq "sequencer" } ($self->user_role)  ) {
 	die  "You have insufficient privileges to archive a file.\n";
     }
     if (!$subdirectory || !$tempfile || !$archive_filename ) {

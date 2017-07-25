@@ -33,6 +33,7 @@ geolocations_property	adm3	From BrAPI	03/27/2017	nm529	00076
 geolocations_property	local_name	From BrAPI	03/27/2017	nm529	00076	
 geolocations_property	region	From BrAPI	03/27/2017	nm529	00076	
 geolocations_property	alternative_name	From BrAPI	03/27/2017	nm529	00076	
+list_types	seedlots		07/20/2017	nm529	00081	
 list_types	accessions					
 list_types	crosses				00067	
 list_types	dataset				00067	
