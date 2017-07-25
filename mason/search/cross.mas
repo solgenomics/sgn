@@ -190,12 +190,9 @@ jQuery(document).ready(function () {
     $('#search_pedigree').click(function(){
 
     var table = jQuery('#pedigree_search_results').DataTable({
-
-    'searching'  : false,
-    'paging'     : false,
+    'searching'  : true,
+    'paging'     : true,
     'ordering'   : false,
-    'processing' : true,
-    'serverSide' : false,
     'destroy'    : true,
     'ajax':{'url':'/ajax/search/progenies',
       data:{'pedigree_female_parent':$('#pedigree_female_parent').val(),
@@ -224,10 +221,8 @@ jQuery(document).ready(function () {
     var table = jQuery('#pedigree_search_results').DataTable({
 
       'searching'  : true,
-      'paging'     : false,
+      'paging'     : true,
       'ordering'   : false,
-      'processing' : true,
-      'serverSide' : false,
       'destroy'    : true,
       'ajax':{'url':'/ajax/search/all_progenies',
         data:{'pedigree_female_parent':$('#pedigree_female_parent').val()},
@@ -287,11 +282,9 @@ jQuery(document).ready(function () {
 
       var table = jQuery('#cross_search_results').DataTable({
 
-        'searching'  : false,
-        'paging'     : false,
+        'searching'  : true,
+        'paging'     : true,
         'ordering'   : false,
-        'processing' : true,
-        'serverSide' : false,
         'destroy'    : true,
         'ajax':{'url':'/ajax/search/cross_info',
           data:{'female_parent':$('#female_parent').val(),
@@ -321,10 +314,8 @@ jQuery(document).ready(function () {
         var table = jQuery('#cross_search_results').DataTable({
 
           'searching'  : true,
-          'paging'     : false,
+          'paging'     : true,
           'ordering'   : false,
-          'processing' : true,
-          'serverSide' : false,
           'destroy'    : true,
           'ajax':{'url':'/ajax/search/all_crosses',
             data:{'female_parent':$('#female_parent').val()},
