@@ -209,7 +209,9 @@ sub search {
         push @where_clause, $columns{'trait_id'}." in ($trait_sql)";
     }
     if ($self->location_list && scalar(@{$self->location_list})>0) {
-        my $location_sql = _sql_from_arrayref($self->location_list);
+        my $arrayref = $self->location_list;
+        my $sql = join ("','" , @$arrayref);
+        my $location_sql = "'" . $sql . "'";
         push @where_clause, $columns{'location_id'}." in ($location_sql)";
     }
     if ($self->year_list && scalar(@{$self->year_list})>0) {
