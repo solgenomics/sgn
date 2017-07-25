@@ -129,7 +129,8 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
          $file_location,
          $text,
     );
-
+    
+   close($barcode_file);
    return $barcode_file;
  }
 
