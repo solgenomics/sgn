@@ -26,7 +26,7 @@ $user_id => undef
     </table>
 </div>
 <br>
-<div id="mapid" style="height: 540px;"></div>
+<div id="location_map" style="height: 540px;"></div>
 
 <div class="modal fade" id="store_location_dialog" name="store_location_dialog" tabindex="-1" role="dialog" aria-labelledby="storeLocationDialog">
   <div class="modal-dialog" role="document">
@@ -350,77 +350,19 @@ $user_id => undef
 
 jQuery(document).ready(function() {
 
-    var token = 'pk.eyJ1IjoiYmVsbGVyYnJvY2siLCJhIjoiY2o1ZTh2ZXVpMDFxdzJxampzajJna3A4OSJ9.QvrHuiUk2gf0pQfI5B46ag';
-    var mymap;
-
     jQuery.ajax( {
-	url: '/ajax/location/all',
-    beforeSend: function() {
-        mymap = L.map('mapid').fitWorld();
-
-        L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-	        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-        }).addTo(mymap);
-
-        // var Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-	    //        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-        // });
-        //
-        // var Esri_WorldTopoMap = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-	    //     attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community'
-        // });
-        //
-        // var Esri_WorldStreetMap = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-        // 	attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012'
-        // });
-
-	},
-	success: function(response) {
-        var locations = response.data;
-        var all_locations = [];
-        for (var i = 0; i < locations.length; i++) {
-            if (locations[i][6])
-            var id = locations[i][0];
-            var name = '<font id="'+id+'_name">'+locations[i][1]+'</font>';
-            var abbrev = '<font id="'+id+'_abbrev">'+locations[i][2]+'</font>';
-            var country_code = '<font id="'+id+'_country">'+locations[i][3]+'</font>';
-            var prog = '<font id="'+id+'_prog">'+locations[i][4]+'</font>';
-            var type = '<font id="'+id+'_type">'+locations[i][5]+'</font>';
-            var latitude = '<font id="'+id+'_lat">'+locations[i][6]+'</font>';
-            var longitude = '<font id="'+id+'_long">'+locations[i][7]+'</font>';
-            var altitude = '<font id="'+id+'_alt">'+locations[i][8]+'</font>';
-            var edit_link = '<a href="javascript:edit_location('+id+')"><font style="color: blue; font-weight: bold">Edit</a>';
-            var delete_link, trial_count;
-            if (locations[i][9] < 1) {
-                trial_count = '<font id="'+id+'_count">'+locations[i][9]+'</font>';
-                delete_link = '<a title="Delete" id="'+id+'_remove" href="javascript:delete_location('+id+')"><span style="color: red" class="glyphicon glyphicon-remove"></span></a>';
-            } else {
-                trial_count = '<a id="'+id+'_count" href="/search/trials?nd_geolocation='+locations[i][1]+'">'+locations[i][9]+' trials</a>';
-                delete_link = '<span id="'+id+'_remove" title="Unable to delete locations that are linked to one or more trials" class="glyphicon glyphicon-remove"></span>';
-            }
-            marker = new L.marker([locations[i][6],locations[i][7]])
-				.bindPopup(locations[i][1])
-				.addTo(mymap);
-            all_locations.push( [name, abbrev, country_code, prog, type, latitude, longitude, altitude, trial_count, edit_link, delete_link] );
-        }
-
-        var table = jQuery('#location_table').DataTable( {
-            data: all_locations
-        });
-
-        var latitudes = locations.map(function(value,index) { return value[6]; });
-        var longitudes = locations.map(function(value,index) { return value[7]; });
-        var min_lat = Math.min.apply(null, latitudes);
-        var min_long = Math.min.apply(null, longitudes);
-        var max_lat = Math.max.apply(null, latitudes);
-        var max_long = Math.max.apply(null, longitudes);
-        //console.log("Min lat is "+min_lat+"\nMin long is "+min_long+"\nMax lat is "+max_lat+"\nAnd max long is "+max_long);
-        mymap.fitBounds([[min_lat, min_long],[max_lat,max_long]]);
-
-	},
-	error: function(response) {
-	    alert("An error occurred");
-	}
+    	url: '/ajax/location/all',
+        beforeSend: function() {
+            //do something
+    	},
+    	success: function(response) {
+            var locations = response.data;
+            initialize_table('location_table', locations);
+            initialize_map('location_map', locations);
+    	},
+    	error: function(response) {
+    	    alert("An error occurred");
+    	}
     });
 
   $('#add_location_link').click( function() {
@@ -462,6 +404,83 @@ jQuery(document).ready(function() {
    });
 
 });
+
+function initialize_table(id, locations) {
+    var all_locations = [];
+    for (var i = 0; i < locations.length; i++) {
+        var id = locations[i][0];
+        var name = '<font id="'+id+'_name">'+locations[i][1]+'</font>';
+        var abbrev = '<font id="'+id+'_abbrev">'+locations[i][2]+'</font>';
+        var country_code = '<font id="'+id+'_country">'+locations[i][3]+'</font>';
+        var prog = '<font id="'+id+'_prog">'+locations[i][4]+'</font>';
+        var type = '<font id="'+id+'_type">'+locations[i][5]+'</font>';
+        var latitude = '<font id="'+id+'_lat">'+locations[i][6]+'</font>';
+        var longitude = '<font id="'+id+'_long">'+locations[i][7]+'</font>';
+        var altitude = '<font id="'+id+'_alt">'+locations[i][8]+'</font>';
+        var edit_link = '<a href="javascript:edit_location('+id+')"><font style="color: blue; font-weight: bold">Edit</a>';
+        var delete_link, trial_count;
+        if (locations[i][9] < 1) {
+            trial_count = '<font id="'+id+'_count">'+locations[i][9]+'</font>';
+            delete_link = '<a title="Delete" id="'+id+'_remove" href="javascript:delete_location('+id+')"><span style="color: red" class="glyphicon glyphicon-remove"></span></a>';
+        } else {
+            trial_count = '<a id="'+id+'_count" href="/search/trials?nd_geolocation='+locations[i][1]+'">'+locations[i][9]+' trials</a>';
+            delete_link = '<span id="'+id+'_remove" title="Unable to delete locations that are linked to one or more trials" class="glyphicon glyphicon-remove"></span>';
+        }
+        all_locations.push( [name, abbrev, country_code, prog, type, latitude, longitude, altitude, trial_count, edit_link, delete_link] );
+    }
+
+    var table = jQuery('#location_table').DataTable( {
+        data: all_locations
+    });
+}
+
+function initialize_map(id, locations) {
+
+    var marker_array = [];
+    for (var i = 0; i < locations.length; i++) {
+        var new_marker = new L.marker([locations[i][6],locations[i][7]]).bindPopup(locations[i][1]);
+        marker_array.push(new_marker);
+    }
+
+    var location_markers = L.layerGroup(marker_array);
+
+    var satellite = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+           attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    });
+
+    var topomap = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community'
+    });
+
+    var streetmap = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012'
+    });
+
+    var baseMaps = {
+        "Street (Default)": streetmap,
+        "Topographical": topomap,
+        "Satellite": satellite
+    };
+
+    var overlayMaps = {
+        "Locations": location_markers
+    };
+
+    var latitudes = locations.map(function(value,index) { return value[6]; });
+    var longitudes = locations.map(function(value,index) { return value[7]; });
+    var min_lat = Math.min.apply(null, latitudes);
+    var min_long = Math.min.apply(null, longitudes);
+    var max_lat = Math.max.apply(null, latitudes);
+    var max_long = Math.max.apply(null, longitudes);
+
+    var mymap = L.map( id, {
+        layers: [streetmap, location_markers]
+    });
+
+    L.control.layers(baseMaps, overlayMaps).addTo(mymap);
+    mymap.fitBounds([[min_lat, min_long],[max_lat,max_long]]);
+
+}
 
 
   function delete_location(id) {
