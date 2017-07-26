@@ -1,0 +1,31 @@
+<%doc>
+
+
+</%doc>
+
+<%args>
+
+</%args>
+
+<& '/page/page_title.mas', title => "Graphical Filtering" &>
+
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'CXGN.List', 'CXGN.Login', 'd3.d3v4Min' ] &>
+
+<div class="row">
+  <center class = "col-md-offset-2 col-md-8">
+    <form class="tc-form">
+      <div class="form-group">
+        <label for="trials_list_select">Choose a list of trials:</label>
+        <div id="trials_list_select_container">
+          <select disabled class="form-control input-sm" id="trials_list_select">
+            <option selected="selected">Loading...</option>
+          </select
+      </div>
+      <img hidden id="results-loading-spinner" src="/img/wheel.gif" alt="loading">
+    </form>
+  </center>
+</div>
+
+<div id="filter_div" class="row">
+  results
+</div>
