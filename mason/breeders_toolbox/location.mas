@@ -9,6 +9,7 @@ $user_id => undef
     <table id="location_table" class="table table-hover table-striped table-bordered" width="100%">
         <thead>
             <tr>
+                <th>Id</th>
                 <th>Name</th>
                 <th>Abbrev.</th>
                 <th>Country</th>
@@ -18,8 +19,8 @@ $user_id => undef
                 <th>Long.</th>
                 <th>Alt.(m)</th>
                 <th>Trials</th>
-                <th>Edit</th>
-                <th>Remove</th>
+                <!-- <th>Edit</th>
+                <th>Remove</th> -->
             </tr>
         </thead>
         <!-- <caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Locations </center></caption> -->
@@ -353,12 +354,18 @@ jQuery(document).ready(function() {
     jQuery.ajax( {
     	url: '/ajax/location/all',
         beforeSend: function() {
-            //do something
+            // put working animation handling here
     	},
     	success: function(response) {
-            var locations = response.data;
-            initialize_table('location_table', locations);
-            initialize_map('location_map', locations);
+            var table = jQuery('#location_table').DataTable( {
+                data: response.data
+            });
+            var map = initialize_map('location_map', table);
+            table.on( 'draw.dt', function () {
+                map.locations.clearLayers();
+                map.locations.addData(get_markers(table));
+                map.self.fitBounds(map.locations.getBounds());
+            });
     	},
     	error: function(response) {
     	    alert("An error occurred");
@@ -405,44 +412,7 @@ jQuery(document).ready(function() {
 
 });
 
-function initialize_table(id, locations) {
-    var all_locations = [];
-    for (var i = 0; i < locations.length; i++) {
-        var id = locations[i][0];
-        var name = '<font id="'+id+'_name">'+locations[i][1]+'</font>';
-        var abbrev = '<font id="'+id+'_abbrev">'+locations[i][2]+'</font>';
-        var country_code = '<font id="'+id+'_country">'+locations[i][3]+'</font>';
-        var prog = '<font id="'+id+'_prog">'+locations[i][4]+'</font>';
-        var type = '<font id="'+id+'_type">'+locations[i][5]+'</font>';
-        var latitude = '<font id="'+id+'_lat">'+locations[i][6]+'</font>';
-        var longitude = '<font id="'+id+'_long">'+locations[i][7]+'</font>';
-        var altitude = '<font id="'+id+'_alt">'+locations[i][8]+'</font>';
-        var edit_link = '<a href="javascript:edit_location('+id+')"><font style="color: blue; font-weight: bold">Edit</a>';
-        var delete_link, trial_count;
-        if (locations[i][9] < 1) {
-            trial_count = '<font id="'+id+'_count">'+locations[i][9]+'</font>';
-            delete_link = '<a title="Delete" id="'+id+'_remove" href="javascript:delete_location('+id+')"><span style="color: red" class="glyphicon glyphicon-remove"></span></a>';
-        } else {
-            trial_count = '<a id="'+id+'_count" href="/search/trials?nd_geolocation='+locations[i][1]+'">'+locations[i][9]+' trials</a>';
-            delete_link = '<span id="'+id+'_remove" title="Unable to delete locations that are linked to one or more trials" class="glyphicon glyphicon-remove"></span>';
-        }
-        all_locations.push( [name, abbrev, country_code, prog, type, latitude, longitude, altitude, trial_count, edit_link, delete_link] );
-    }
-
-    var table = jQuery('#location_table').DataTable( {
-        data: all_locations
-    });
-}
-
-function initialize_map(id, locations) {
-
-    var marker_array = [];
-    for (var i = 0; i < locations.length; i++) {
-        var new_marker = new L.marker([locations[i][6],locations[i][7]]).bindPopup(locations[i][1]);
-        marker_array.push(new_marker);
-    }
-
-    var location_markers = L.layerGroup(marker_array);
+function initialize_map(id, table) {
 
     var satellite = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
@@ -462,26 +432,33 @@ function initialize_map(id, locations) {
         "Satellite": satellite
     };
 
+    var location_layer = L.geoJSON(get_markers(table));
+
     var overlayMaps = {
-        "Locations": location_markers
+        "Locations": location_layer
     };
 
-    var latitudes = locations.map(function(value,index) { return value[6]; });
-    var longitudes = locations.map(function(value,index) { return value[7]; });
-    var min_lat = Math.min.apply(null, latitudes);
-    var min_long = Math.min.apply(null, longitudes);
-    var max_lat = Math.max.apply(null, latitudes);
-    var max_long = Math.max.apply(null, longitudes);
-
     var mymap = L.map( id, {
-        layers: [streetmap, location_markers]
+        layers: [streetmap, location_layer]
     });
 
+    mymap.fitBounds(location_layer.getBounds());
     L.control.layers(baseMaps, overlayMaps).addTo(mymap);
-    mymap.fitBounds([[min_lat, min_long],[max_lat,max_long]]);
 
+    return { self: mymap, locations: location_layer };
 }
 
+    function get_markers (table) {
+        var marker_array = [];
+        table.rows({filter: 'applied'}).eq(0).each( function ( index ) {
+            var row = table.row( index );
+            var data = row.data();
+            //console.log("Row "+index+" contains "+JSON.stringify(data));
+            var new_marker = new L.marker([data[6],data[7]]).bindPopup(data[1]);
+            marker_array.push(new_marker.toGeoJSON());
+        });
+        return marker_array;
+    }
 
   function delete_location(id) {
     var name = $('#'+id+'_name').text();
