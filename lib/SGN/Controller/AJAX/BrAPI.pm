@@ -1897,7 +1897,10 @@ sub traits_list_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Traits');
-	my $brapi_package_result = $brapi_module->list();
+	my $brapi_package_result = $brapi_module->list({
+        trait_ids => $clean_inputs->{traitDbIds},
+        names => $clean_inputs->{names}
+    });
 	_standard_response_construction($c, $brapi_package_result);
 }
 
