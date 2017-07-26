@@ -1,0 +1,62 @@
+.tc-form {
+    max-width: 400px;
+    margin: auto;
+}
+
+#result_div{
+    margin-top: 1em;
+}
+
+.tc-grid, .tc-histogram{
+    box-sizing: border-box;
+    margin: auto;
+    position:relative;
+}
+
+.tc-legend-entry:hover .tc-legend-circle{
+    stroke: #49f;
+    stroke-width: 2;
+}
+
+.tc-background {
+    fill: white;
+    stroke: #aaa;
+}
+.tc-ph-bg{
+    fill: #eee;
+    stroke: #aaa;
+}
+.tc-grid-box:not(.only-box):hover .tc-background{
+    stroke: #49f;
+}
+.tc-scatter-point{
+    fill: #49f;
+}
+.tc-fit-line{
+    stroke: #f94;
+}
+.tc-info-text{
+    text-anchor: end;
+    font-size: 12px;
+}
+.tc-graph-axis text{
+    font-size: 12px;
+    fill: #333;
+}
+.tc-axis-label{
+    text-anchor: middle;
+    alignment-baseline: middle;
+}
+.tc-tool-tip-text{
+    fill: white;
+    font-size: 40pt;
+}
+.tc-label rect{
+    fill: #eee;
+    stroke: #aaa;
+}
+
+.tc-label text{
+    text-anchor: middle;
+    alignment-baseline: middle;
+}
