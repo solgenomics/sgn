@@ -139,7 +139,7 @@ window.onload = function initialize() {
         ladda.start();
         var token = new Date().getTime(); //use the current timestamp as the token name and value
         manage_dl_with_cookie(token, ladda);
-        window.location.href = '/breeders/download_gbs_action/?ids='+accession_ids.join(",")+'&protocol_id='+protocol_id+'&token='+token+'&format=accession_ids&trial_ids='+trial_ids.join(",");
+        window.location.href = '/breeders/download_gbs_action/?ids='+accession_ids.join(",")+'&protocol_id='+protocol_id+'&gbs_download_token='+token+'&format=accession_ids&trial_ids='+trial_ids.join(",");
     });
 }
 

@@ -130,6 +130,7 @@ sub search {
     my $plot_number_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property')->cvterm_id();
     my $year_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id();
     my $design_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
+    my $project_location_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -144,14 +145,14 @@ sub search {
       plot_id=> 'plot.stock_id',
       trial_id=> 'project.project_id',
       trait_id=> 'cvterm.cvterm_id',
-      location_id=> 'nd_geolocation.nd_geolocation_id',
+      location_id=> 'location.value',
       year_id=> 'year.value',
       trait_name=> "(((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text",
       phenotype_value=> 'phenotype.value',
       trial_name=> 'project.name',
       plot_name=> 'plot.uniquename AS plot_name',
       accession_name=> 'accession.uniquename',
-      location_name=> 'nd_geolocation.description',
+      location_name=> 'location.value',
       trial_design=> 'design.value',
       plot_type=> 'plot_type.name',
       from_clause=> " FROM stock as plot JOIN stock_relationship ON (plot.stock_id=subject_id)
@@ -162,7 +163,6 @@ sub search {
       LEFT JOIN stockprop AS plot_number ON (plot.stock_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
       JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=plot.stock_id)
       JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id=nd_experiment.nd_experiment_id)
-      JOIN nd_geolocation USING(nd_geolocation_id)
       JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)
       JOIN phenotype USING(phenotype_id)
       JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
@@ -171,7 +171,8 @@ sub search {
       JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)
       JOIN project USING(project_id)
       LEFT JOIN projectprop as year ON (project.project_id=year.project_id AND year.type_id = $year_type_id)
-      LEFT JOIN projectprop as design ON (project.project_id=design.project_id AND design.type_id = $design_type_id)",
+      LEFT JOIN projectprop as design ON (project.project_id=design.project_id AND design.type_id = $design_type_id)
+      LEFT JOIN projectprop as location ON (project.project_id=location.project_id AND location.type_id = $project_location_type_id)",
     );
 
     my $select_clause = "SELECT ".$columns{'year_id'}.", ".$columns{'trial_name'}.", ".$columns{'accession_name'}.", ".$columns{'location_name'}.", ".$columns{'trait_name'}.", ".$columns{'phenotype_value'}.", ".$columns{'plot_name'}.",
@@ -208,7 +209,9 @@ sub search {
         push @where_clause, $columns{'trait_id'}." in ($trait_sql)";
     }
     if ($self->location_list && scalar(@{$self->location_list})>0) {
-        my $location_sql = _sql_from_arrayref($self->location_list);
+        my $arrayref = $self->location_list;
+        my $sql = join ("','" , @$arrayref);
+        my $location_sql = "'" . $sql . "'";
         push @where_clause, $columns{'location_id'}." in ($location_sql)";
     }
     if ($self->year_list && scalar(@{$self->year_list})>0) {
@@ -257,6 +260,12 @@ sub search {
 
     print STDERR "QUERY: $q\n\n";
 
+    my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search();
+    my %location_id_lookup;
+    while( my $r = $location_rs->next()){
+        $location_id_lookup{$r->nd_geolocation_id} = $r->description;
+    }
+
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my $result = [];
@@ -271,7 +280,7 @@ sub search {
             }
         }
         my $synonyms = $synonym_hash_lookup{$stock_name};
-        push @$result, [ $year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id, $full_count ];
+        push @$result, [ $year, $project_name, $stock_name, $location_id_lookup{$location_id}, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id, $full_count ];
     }
 
     print STDERR "Search End:".localtime."\n";
