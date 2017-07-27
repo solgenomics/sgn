@@ -74,7 +74,6 @@ use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
 use CXGN::Location::LocationLookup;
-use CXGN::BreedersToolbox::Projects;
 use CXGN::People::Person;
 use CXGN::Trial;
 use SGN::Model::Cvterm;
@@ -118,8 +117,7 @@ sub trial_name_already_exists {
 
 sub get_breeding_program_id {
   my $self = shift;
-  my $project_lookup =  CXGN::BreedersToolbox::Projects->new(schema => $self->get_chado_schema);
-  my $breeding_program_ref = $project_lookup->get_breeding_program_by_name($self->get_program());
+  my $breeding_program_ref = $self->get_chado_schema->resultset('Project::Project')->find({name=>$self->get_program});
   if (!$breeding_program_ref ) {
       print STDERR "UNDEF breeding program " . $self->get_program . "\n\n";
       return ;
@@ -131,7 +129,7 @@ sub get_breeding_program_id {
 
 
 sub save_trial {
-	#print STDERR "Check 4.1: ".localtime();
+	print STDERR "Check 4.1: ".localtime();
 	my $self = shift;
 	my $chado_schema = $self->get_chado_schema();
 	my %design = %{$self->get_design()};
@@ -226,6 +224,7 @@ sub save_trial {
 		trial_id => $project->project_id(),
         trial_name => $self->get_trial_name(),
 		nd_geolocation_id => $geolocation->nd_geolocation_id(),
+        nd_experiment_id => $nd_experiment->nd_experiment_id(),
 		design_type => $design_type,
 		design => \%design,
 		is_genotyping => $self->get_is_genotyping

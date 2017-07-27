@@ -61,7 +61,6 @@ use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use CXGN::Stock::StockLookup;
-use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial;
 use SGN::Model::Cvterm;
 use Data::Dumper;
@@ -74,6 +73,7 @@ has 'bcs_schema' => (
 );
 has 'trial_id' => (isa => 'Int', is => 'rw', predicate => 'has_trial_id', required => 1);
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 0);
+has 'nd_experiment_id' => (isa => 'Int', is => 'rw', predicate => 'has_nd_experiment_id', required => 0);
 has 'nd_geolocation_id' => (isa => 'Int', is => 'rw', predicate => 'has_nd_geolocation_id', required => 1);
 has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', required => 1);
 has 'design' => (isa => 'HashRef[HashRef[Str|ArrayRef]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
@@ -157,7 +157,7 @@ sub validate_design {
 }
 
 sub store {
-	print STDERR "Saving design\n";
+	print STDERR "Saving design ".localtime()."\n";
 	my $self = shift;
 	my $chado_schema = $self->get_bcs_schema;
 	my $design_type = $self->get_design_type;
@@ -193,50 +193,46 @@ sub store {
 		$stock_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
 	}
 
-	my $nd_experiment_project;
-	my $nd_experiment_project_rs = $chado_schema->resultset('NaturalDiversity::NdExperimentProject')->search(
-		{
-			'me.project_id'=>$trial_id,
-			'nd_experiment.type_id'=>$nd_experiment_type_id,
-			'nd_experiment.nd_geolocation_id'=>$nd_geolocation_id
-		},
-		{ join => 'nd_experiment'}
-	);
+    my $nd_experiment_id;
+    if ($self->has_nd_experiment_id){
+        $nd_experiment_id = $self->get_nd_experiment_id();
+    } else {
+        my $nd_experiment_project;
+        my $nd_experiment_project_rs = $chado_schema->resultset('NaturalDiversity::NdExperimentProject')->search(
+            {
+                'me.project_id'=>$trial_id,
+                'nd_experiment.type_id'=>$nd_experiment_type_id,
+                'nd_experiment.nd_geolocation_id'=>$nd_geolocation_id
+            },
+            { join => 'nd_experiment'}
+        );
 
-	if ($nd_experiment_project_rs->count < 1) {
-		my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
-		->create({
-			nd_geolocation_id => $self->get_nd_geolocation_id,
-			type_id => $nd_experiment_type_id,
-		});
-		$nd_experiment_project = $nd_experiment->find_or_create_related('nd_experiment_projects', {project_id => $trial_id} );
-	} elsif ($nd_experiment_project_rs->count > 1) {
-		print STDERR "ERROR: More than one nd_experiment of type=$nd_experiment_type_id for project=$trial_id\n";
-		$nd_experiment_project = $nd_experiment_project_rs->first;
-	} elsif ($nd_experiment_project_rs->count == 1) {
-		print STDERR "OKAY: NdExperimentProject type=$nd_experiment_type_id for project$trial_id\n";
-		$nd_experiment_project = $nd_experiment_project_rs->first;
-	}
+        if ($nd_experiment_project_rs->count < 1) {
+            my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
+            ->create({
+                nd_geolocation_id => $self->get_nd_geolocation_id,
+                type_id => $nd_experiment_type_id,
+            });
+            $nd_experiment_project = $nd_experiment->find_or_create_related('nd_experiment_projects', {project_id => $trial_id} );
+        } elsif ($nd_experiment_project_rs->count > 1) {
+            print STDERR "ERROR: More than one nd_experiment of type=$nd_experiment_type_id for project=$trial_id\n";
+            $nd_experiment_project = $nd_experiment_project_rs->first;
+        } elsif ($nd_experiment_project_rs->count == 1) {
+            print STDERR "OKAY: NdExperimentProject type=$nd_experiment_type_id for project$trial_id\n";
+            $nd_experiment_project = $nd_experiment_project_rs->first;
+        }
+        if ($nd_experiment_project){
+            $nd_experiment_id = $nd_experiment_project->nd_experiment_id();
+        }
+    }
 
 	my $rs = $chado_schema->resultset('Stock::Stock')->search(
-		{ 'me.is_obsolete' => { '!=' => 't' }, 'me.type_id' => $accession_cvterm->cvterm_id },
-		{ join => [ 'stock_relationship_objects', 'nd_experiment_stocks' ],
-		'+select'=> ['me.stock_id', 'me.uniquename', 'me.organism_id', 'stock_relationship_objects.type_id', 'stock_relationship_objects.subject_id', 'nd_experiment_stocks.nd_experiment_id', 'nd_experiment_stocks.type_id'],
-		'+as'=> ['stock_id', 'uniquename', 'organism_id', 'stock_relationship_type_id', 'stock_relationship_subject_id', 'stock_experiment_id', 'stock_experiment_type_id']
-		}
+		{ 'is_obsolete' => { '!=' => 't' }, 'type_id' => $accession_cvterm->cvterm_id },
 	);
 
 	my %stock_data;
-	my %stock_relationship_data;
-	my %stock_experiment_data;
 	while (my $s = $rs->next()) {
-		$stock_data{$s->get_column('uniquename')} = [$s->get_column('stock_id'), $s->get_column('organism_id') ];
-		if ($s->get_column('stock_relationship_type_id') && $s->get_column('stock_relationship_subject_id') ) {
-			$stock_relationship_data{$s->get_column('stock_id'), $s->get_column('stock_relationship_type_id'), $s->get_column('stock_relationship_subject_id') } = 1;
-		}
-		if ($s->get_column('stock_experiment_id') && $s->get_column('stock_experiment_type_id') ) {
-			$stock_experiment_data{$s->get_column('stock_id'), $s->get_column('stock_experiment_id'), $s->get_column('stock_experiment_type_id')} = 1;
-		}
+		$stock_data{$s->uniquename} = [$s->stock_id, $s->organism_id];
 	}
 
 	my $stock_id_checked;
@@ -344,23 +340,17 @@ sub store {
 					$plot->create_stockprops({$col_number_cvterm->name() => $col_number});
 				}
 
-				#create the stock_relationship of the accession with the plot, if it does not exist already
-				if (!$stock_relationship_data{$stock_id_checked, $stock_rel_type_id, $plot->stock_id()} ) {
-					my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
-						object_id => $stock_id_checked,
-						type_id => $stock_rel_type_id,
-						subject_id => $plot->stock_id()
-					});
-				}
+                my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
+                    object_id => $stock_id_checked,
+                    type_id => $stock_rel_type_id,
+                    subject_id => $plot->stock_id()
+                });
 
-				#link the experiment to the plot, if it is not already
-				if (!$stock_experiment_data{$plot->stock_id(), $nd_experiment_project->nd_experiment_id(), $nd_experiment_type_id} ) {
-					my $stock_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
-						nd_experiment_id => $nd_experiment_project->nd_experiment_id(),
-						type_id => $nd_experiment_type_id,
-						stock_id => $plot->stock_id(),
-					});
-				}
+                my $stock_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
+                    nd_experiment_id => $nd_experiment_id,
+                    type_id => $nd_experiment_type_id,
+                    stock_id => $plot->stock_id(),
+                });
 			}
 
 			#Create plant entry if given. Currently this is for the greenhouse trial creation.
@@ -393,32 +383,23 @@ sub store {
 						$plant->create_stockprops({$col_number_cvterm->name() => $col_number});
 					}
 
-					#the plant has a relationship to the plot
-					if (!$stock_relationship_data{$plant->stock_id(), $plant_of->cvterm_id(), $plot->stock_id()} ) {
-						my $stock_relationship = $chado_schema->resultset("Stock::StockRelationship")->create({
-							subject_id => $plot->stock_id,
-							object_id => $plant->stock_id(),
-							type_id => $plant_of->cvterm_id(),
-						});
-					}
+                    my $stock_relationship = $chado_schema->resultset("Stock::StockRelationship")->create({
+                        subject_id => $plot->stock_id,
+                        object_id => $plant->stock_id(),
+                        type_id => $plant_of->cvterm_id(),
+                    });
 
-					#create the stock_relationship of the accession with the plant, if it does not exist already
-					if (!$stock_relationship_data{$stock_id_checked, $plant_of->cvterm_id(), $plant->stock_id()} ) {
-						my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
-							object_id => $stock_id_checked,
-							type_id => $plant_of->cvterm_id(),
-							subject_id => $plant->stock_id()
-						});
-					}
+                    my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
+                        object_id => $stock_id_checked,
+                        type_id => $plant_of->cvterm_id(),
+                        subject_id => $plant->stock_id()
+                    });
 
-					#link the experiment to the plant, if it is not already
-					if (!$stock_experiment_data{$plant->stock_id(), $nd_experiment_project->nd_experiment_id(), $nd_experiment_type_id} ) {
-						my $stock_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
-							nd_experiment_id => $nd_experiment_project->nd_experiment_id(),
-							type_id => $nd_experiment_type_id,
-							stock_id => $plant->stock_id(),
-						});
-					}
+                    my $stock_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
+                        nd_experiment_id => $nd_experiment_id,
+                        type_id => $nd_experiment_type_id,
+                        stock_id => $plant->stock_id(),
+                    });
 				}
 			}
 		}
