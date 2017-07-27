@@ -70,286 +70,361 @@ $(document).ready(function(){
   };
   window.gfiltering.main = function(filter_selector,table_selector,data){
     console.log(data);
-    filtergroup = {
-      type:"filtergroup",
-      depth:0,
-      parent:null,
-      input_data:data,//[{a:10,b:4},{a:5,b:6},{a:4,b:4},{a:3,b:6},{a:8,b:4},{a:4,b:6}],
-      operator:"init",
-      children:[]
-    };
-    filtergroup.children.push({
-      type:"input",
-      depth:1,
-      operator:"init",
-      parent:filtergroup
-    });
-    var canv = d3.select(filter_selector,table_selector);
-    var darr = [filtergroup];
-    buildFilterItems(canv.node(),darr,0);
-    window.rereun = function(){
-      buildFilterItems(canv.node(),darr,0);
+    // filtergroup = {
+    //   type:"filtergroup",
+    //   depth:0,
+    //   parent:null,
+    //   input_data:data,//[{a:10,b:4},{a:5,b:6},{a:4,b:4},{a:3,b:6},{a:8,b:4},{a:4,b:6}],
+    //   operator:"init",
+    //   children:[]
+    // };
+    // filtergroup.children.push({
+    //   type:"input",
+    //   depth:1,
+    //   operator:"init",
+    //   parent:filtergroup
+    // });
+    var canv = d3.select(filter_selector);
+    var root = new FilterGroup(null,0,"init");
+    window.redraw = function(){
+      root.draw(canv.node());
     }
-    window.gfiltering._refresh = function(){
-      updateViz(filtergroup);
-      var dataSet = filtergroup.run(data);
-      var cols = Object.keys(dataSet[0]).map(function(k){
-        return {title:k};
-      });
-      console.log(cols)
-      var rows = dataSet.map(function(row){
-        return cols.map(function(col){
-          return row[col.title]
-        });
-      });
-      console.log(rows)
-      if (window.gfiltering.dt) window.gfiltering.dt.destroy();
-      window.gfiltering.dt = $(table_selector).DataTable({data: rows, columns:cols});
-    }
-    window.gfiltering._refresh();
+    window.redraw();
+    // buildFilterItems(canv.node(),darr,0);
+    // window.rereun = function(){
+    //   buildFilterItems(canv.node(),darr,0);
+    // }
+    // window.gfiltering._refresh = function(){
+    //   updateViz(filtergroup);
+    //   var dataSet = filtergroup.run(data);
+    //   var cols = Object.keys(dataSet[0]).map(function(k){
+    //     return {title:k};
+    //   });
+    //   console.log(cols)
+    //   var rows = dataSet.map(function(row){
+    //     return cols.map(function(col){
+    //       return row[col.title]
+    //     });
+    //   });
+    //   console.log(rows)
+    //   if (window.gfiltering.dt) window.gfiltering.dt.destroy();
+    //   window.gfiltering.dt = $(table_selector).DataTable({data: rows, columns:cols});
+    // }
+    // window.gfiltering._refresh();
   }
-  var operator_types = [
+  // function buildFilterItems(parentNode,data,depth){
+  //   var filterItems = d3.select(parentNode)
+  //     .selectAll("[depth = '"+depth+"'].filter-item")
+  //     .data(data);
+  //
+  //   //create new filter items (groups+tools)
+  //   var fiEnter = filterItems.enter().append("div")
+  //     .classed("filter-item",true)
+  //     .attr("depth",depth);
+  //
+  //   //build filter input
+  //   var finPut = fiEnter
+  //     .filter(function(d){return d.type=="input";})
+  //     .each(function(d,i){
+  //       d.tool = new inputFilterTool(this,d);
+  //       d.checker = d.tool.checker;
+  //     });
+  //
+  //   //build filter groups
+  //   var fgEnter = fiEnter
+  //     .filter(function(d){return d.type=="filtergroup";})
+  //     .call(buildfilterGroups);
+  //
+  //   //build filter ranges
+  //   var frEnter = fiEnter
+  //     .filter(function(d){return d.type=="range";})
+  //     .each(function(d,i){
+  //       d.tool = new histoFilterTool(this,d);
+  //       d.checker = d.tool.checker;
+  //     });
+  //
+  //   //build contents
+  //   var allfg = fiEnter.merge(filterItems)
+  //     .filter(function(d){return d.type=="filtergroup";});
+  //   allfg.each(function(d){
+  //     buildFilterItems(d.childdiv,d.children,d.depth+1);
+  //   });
+  // }
+  // // filter tool and group classes
+  // function buildfilterGroups(selection,depth){
+  //   selection.each(function(d){
+  //     var s = d3.select(this);
+  //     if(s.filter(".filter-item:first-of-type").empty()){
+  //       s.call(operatorIndicator,d);
+  //     }
+  //     // if (d.depth==0) {
+  //     //   s.classed("container",true);
+  //     // }
+  //     d.checker = function(isNegated){
+  //       //determine conjunction groups
+  //       cjgroups = [[]];
+  //       for (var i = 0; i < d.children.length; i++) {
+  //         if (d.children[i].operator == "or" || d.children[i].operator == "or not"){
+  //           cjgroups.push([]);
+  //         }
+  //         cjgroups[cjgroups.length-1].push(d.children[i]);
+  //         isNegated = d.children[i].operator=="and not" || d.children[i].operator=="or not";
+  //         d.children[i]._check = d.children[i].checker(isNegated);
+  //       }
+  //       return function(item){
+  //         var val = cjgroups.reduce(function(acc,group){
+  //           return acc || group.reduce(function(acc2,filterObj){
+  //             var val = filterObj._check(item);
+  //             return val && acc2;
+  //           },true);
+  //         },false);
+  //         return isNegated?!val:val;
+  //       };
+  //     };
+  //     d.run = function(items){
+  //       return items.filter(d.checker());
+  //     }
+  //   });
+  //   var wrappers = selection.append("div")
+  //       .classed("filter-wrapper",true);
+  //   wrappers.append("span")
+  //     .classed("filter-wrapper-children",true)
+  //     .each(function(d){d.childdiv=this;});
+  //   var addmenu = wrappers.append("div")
+  //     .classed("filter-new",true)
+  //     .append("div")
+  //     .classed("filter-new-menu",true);
+  //   addmenu.append("span")
+  //       .classed("filter-new-text",true)
+  //       .text("Range")
+  //       .on("click",function(d){
+  //         d.children.push({
+  //           type:"range",
+  //           depth:d.depth+1,
+  //           operator:"init",
+  //           parent:d,
+  //         });
+  //         buildFilterItems(d.childdiv,d.children,d.depth+1);
+  //       });
+  //   addmenu.append("span")
+  //       .classed("filter-new-text",true)
+  //       .text("Group")
+  //       .on("click",function(d){
+  //         d.children.push({
+  //           type:"filtergroup",
+  //           depth:d.depth+1,
+  //           children:[],
+  //           operator:"init",
+  //           parent:d,
+  //         });
+  //         buildFilterItems(d.childdiv,d.children,d.depth+1);
+  //       });
+  // }
+
+  function Filter(parent,depth,operator){
+    //constructor
+    this.type = "default";
+    this.parent = parent || null;
+    this.depth = depth || 0;
+    this.operator = operator || "init";
+  }
+  //static
+  Filter.operator_types = [
     [0,"and","filter-operator-and"],
     [1,"or","filter-operator-or"],
     [2,"and not","filter-operator-and-not"],
     [3,"or not","filter-operator-or-not"]
   ];
-  var operator_map = d3.map(operator_types,function(d){return d[1]});
-  function buildFilterItems(parentNode,data,depth){
-    var filterItems = d3.select(parentNode)
-      .selectAll("[depth = '"+depth+"'].filter-item")
-      .data(data);
+  Filter.operator_map = d3.map(Filter.operator_types,function(d){return d[1]});
+  //prototype
+  Filter.prototype.getFilter = function(){
+    var negate = (this.operator.indexOf("not", this.operator.length - 3) == -1);
+    return function(d){
+      return !negate;
+    }
+  };
+  Filter.prototype.updateData = function(data){
+    //update the visuals / forms
+  };
+  Filter.prototype.draw = function(node){
+    if (node) this.node = node;
+    if (!this.node) return false;
+    //update the visuals / forms
+    this.updateOperator();
+    // var panel = d3.select(this.node).selectAll("filter-panel")
+    //   .data([this]);
+    // var pe = panel.enter().append('div')
+    //   .classed("filter-panel panel panel-default",true);
+    // pe.append('div')
+    //   .classed("panel-heading",true)
+    // pe.append('div')
+    //   .classed("panel-body",true)
+    // return {enter:pe,exists:panel};
+  };
+  Filter.prototype.updateOperator = function(){
+    var f = d3.select(this.node);
+    var operatorData = this.operator == "init" ? [] : [this];
+    var operator = f.selectAll(".filter-operator[depth = '"+(this.depth)+"']")
+      .data(operatorData);
+    operator.exit().remove();
+    if (operatorData.length>0){
+      operator.enter().append("div")
+        .classed("filter-operator",true)
+        .attr("depth",this.depth)
+        .classed(Filter.operator_map.get(this.operator)[2],true)
+        .on("click",function(d){
+          var preoperator = Filter.operator_map.get(d.operator);
+          var newindex = (preoperator[0]+1)%Filter.operator_types.length;
+          var newoperator = Filter.operator_types[newindex];
+          d3.select(this)
+            .classed(preoperator[2],false)
+            .classed(newoperator[2],true);
+          d.operator = newoperator[1];
+          window.redraw();
+        });
+      }
+  };
 
-    //create new filter items (groups+tools)
-    var fiEnter = filterItems.enter().append("div")
-      .classed("filter-item",true)
-      .attr("depth",depth);
-
-    //build filter input
-    var finPut = fiEnter
-      .filter(function(d){return d.type=="input";})
-      .each(function(d,i){
-        d.tool = new inputFilterTool(this,d);
-        d.checker = d.tool.checker;
-      });
-
-    //build filter groups
-    var fgEnter = fiEnter
-      .filter(function(d){return d.type=="filtergroup";})
-      .call(buildfilterGroups);
-
-    //build filter ranges
-    var frEnter = fiEnter
-      .filter(function(d){return d.type=="range";})
-      .each(function(d,i){
-        d.tool = new histoFilterTool(this,d);
-        d.checker = d.tool.checker;
-      });
-
-    //build contents
-    var allfg = fiEnter.merge(filterItems)
-      .filter(function(d){return d.type=="filtergroup";});
-    allfg.each(function(d){
-      buildFilterItems(d.childdiv,d.children,d.depth+1);
-    });
+  function FilterGroup(parent,depth,operator){
+    //constructor
+    Filter.call(this,parent,depth,operator);
+    this.type = "filtergroup";
+    this.children = [];
   }
-  // filter tool and group classes
-  function buildfilterGroups(selection,depth){
-    selection.each(function(d){
-      var s = d3.select(this);
-      if(s.filter(".filter-item:first-of-type").empty()){
-        s.call(operatorIndicator,d);
-      }
-      // if (d.depth==0) {
-      //   s.classed("container",true);
-      // }
-      d.checker = function(isNegated){
-        //determine conjunction groups
-        cjgroups = [[]];
-        for (var i = 0; i < d.children.length; i++) {
-          if (d.children[i].operator == "or" || d.children[i].operator == "or not"){
-            cjgroups.push([]);
+  FilterGroup.prototype = Object.create(Filter.prototype);
+  FilterGroup.prototype.constructor = FilterGroup;
+  Filter.prototype.getFilter = function(){
+    var negate = (this.operator.indexOf("not", this.operator.length - 3) == -1);
+    var conjointGs = this.getConjointGroups(true);
+    return function(d){
+      var result = false;
+      for (var i = 0; i < conjointGs.length; i++) {
+        var groupval = true;
+        //set groupval to false if any conjoint filter is false
+        for (var j = 0; j < conjointGs[i].length; j++) {
+          if (!conjointGs[i][j](d)){
+            groupval = false;
+            break;
           }
-          cjgroups[cjgroups.length-1].push(d.children[i]);
-          isNegated = d.children[i].operator=="and not" || d.children[i].operator=="or not";
-          d.children[i]._check = d.children[i].checker(isNegated);
         }
-        return function(item){
-          var val = cjgroups.reduce(function(acc,group){
-            return acc || group.reduce(function(acc2,filterObj){
-              var val = filterObj._check(item);
-              return val && acc2;
-            },true);
-          },false);
-          return isNegated?!val:val;
-        };
-      };
-      d.run = function(items){
-        return items.filter(d.checker());
+        // OR-join the result of each conjoint group
+        result = result || groupval;
       }
-    });
-    var wrappers = selection.append("div")
-        .classed("filter-wrapper",true);
-    wrappers.append("span")
-      .classed("filter-wrapper-children",true)
-      .each(function(d){d.childdiv=this;});
-    var addmenu = wrappers.append("div")
+      return negate ? !result : result;
+    }
+  };
+  FilterGroup.prototype.updateData = function(data){
+    this.draw(this.node);
+    this.childgroups = this.getConjointGroups();
+    this.filtergroups = this.getConjointGroups(true);
+    for (var i = 0; i < this.children.length; i++) {
+      this.children[i].updateData(data);
+    }
+  };
+  FilterGroup.prototype.draw = function(node){
+    Filter.prototype.draw.call(this,node);
+    var f = d3.select(this.node);
+    var fg = f.selectAll(".filter-wrapper").data([this]);
+    var fgenter = fg.enter().append("div")
+      .classed("filter-wrapper",true);
+    fgenter.append("span")
+      .classed("filter-wrapper-children",true);
+    var addmenuE = fgenter.append("div")
       .classed("filter-new",true)
       .append("div")
       .classed("filter-new-menu",true);
-    addmenu.append("span")
-        .classed("filter-new-text",true)
-        .text("Range")
-        .on("click",function(d){
-          d.children.push({
-            type:"range",
-            depth:d.depth+1,
-            operator:"init",
-            parent:d,
-          });
-          buildFilterItems(d.childdiv,d.children,d.depth+1);
-        });
-    addmenu.append("span")
-        .classed("filter-new-text",true)
-        .text("Group")
-        .on("click",function(d){
-          d.children.push({
-            type:"filtergroup",
-            depth:d.depth+1,
-            children:[],
-            operator:"init",
-            parent:d,
-          });
-          buildFilterItems(d.childdiv,d.children,d.depth+1);
-        });
-  }
-
-  function operatorIndicator(selection,filterObj){
-    if (filterObj.operator=="init") filterObj.operator = "and";
-    selection.append("div")
-      .classed("filter-operator",true)
-      .classed(operator_map.get(filterObj.operator)[2],true)
+    addmenuE.append("span")
+      .classed("filter-new-text",true)
+      .text("Range")
       .on("click",function(d){
-        var preoperator = operator_map.get(d.operator);
-        var newindex = (preoperator[0]+1)%operator_types.length;
-        var newoperator = operator_types[newindex];
-        d3.select(this)
-          .classed(preoperator[2],false)
-          .classed(newoperator[2],true);
-        d.operator = newoperator[1];
-        window.gfiltering._refresh();
-    });
+        var op = d.children.length==0 ? "init" : "and";
+        d.children.push(new FilterRange(d,d.depth+1,op));
+        window.redraw();
+      });
+    addmenuE.append("span")
+      .classed("filter-new-text",true)
+      .text("Group")
+      .on("click",function(d){
+        var op = d.children.length==0 ? "init" : "and";
+        d.children.push(new FilterGroup(d,d.depth+1,op));
+        window.redraw();
+      });
+    //draw children
+    fgenter.merge(fg).select(".filter-wrapper-children")
+      .each(function(d){
+        var subfilters = d3.select(this)
+          .selectAll("[depth = '"+(d.depth+1)+"'].filter-item")
+          .data(d.children);
+        subfilters.exit().remove();
+        subfilters.enter()
+          .append("div")
+          .classed("filter-item",true)
+          .attr("depth",d.depth+1)
+        .merge(subfilters)
+          .each(function(d){
+            d.draw(this);
+          })
+      })
   }
-
-  function updateViz(rootFilterObj){
-    var r = rootFilterObj;
-    for (var i = 0; i < r.children.length; i++) {
-      if (r.children[i].type=="filtergroup"){
-        updateViz(r.children[i]);
-      } else if (r.children[i].type=="range"){
-        r.children[i].tool.filterer.updateFilter();
+  FilterGroup.prototype.getConjointGroups = function(returnFilters){
+    // returns groups of filters connected by ANDs
+    var cjGroups = [[this.children[0]]]
+    for (var i = 1; i < this.children.length; i++) {
+      var op = this.children[i].operator;
+      var disjunct = !op.lastIndexOf("or", 0);
+      if (disjunct) cjGroups.push([]);
+      if (returnFilters) {
+        cjGroups[cjGroups.length-1].push(this.children[i].getFilter());
+      } else {
+        cjGroups[cjGroups.length-1].push(this.children[i]);
       }
     }
+    return cjGroups;
   }
 
-  function getConjunctionSiblings(filterObj){
-    if (!filterObj.parent){
-      return [];
-    } else {
-      var cjsiblings = [];
-      var siblings = filterObj.parent.children;
-      var cindex = siblings.indexOf(filterObj);
-      var i = cindex;
-      while(siblings[i].operator == "and" || siblings[i].operator == "and not"){
-        i-=1;
-        cjsiblings.push(siblings[i]);
-      }
-      i = cindex+1;
-      while(i<siblings.length && (siblings[i].operator == "and" || siblings[i].operator == "and not")){
-        cjsiblings.push(siblings[i]);
-        i+=1;
-      }
-      return cjsiblings;
-    }
-  }
-
-  function getInputData(filterObj){
-    if (!filterObj.parent){
-      return filterObj.input_data;
-    } else {
-      var groupData = getInputData(filterObj.parent);
-      var cjsiblings = getConjunctionSiblings(filterObj);
-      for (var i = 0; i < cjsiblings.length; i++) {
-        var negate = cjsiblings[i].operator == "and not" || cjsiblings[i].operator == "or not";
-        groupData = groupData.filter(cjsiblings[i].checker(negate));
-      }
-      return groupData;
-    }
-  }
-
-  function filterTool(parentNode,filterObj){
-    this.parentNode = parentNode;
-    this.filterObj = filterObj;
-    if(d3.select(this.parentNode).filter(".filter-item:first-of-type").empty()){
-      d3.select(this.parentNode).call(operatorIndicator,filterObj);
-    }
-    this.panel = d3.select(this.parentNode).append('div')
-      .classed("filter-panel panel panel-default",true)
-      .node();
-    this.heading = d3.select(this.panel).append('div')
-      .classed("panel-heading",true)
-      .node();
-    this.body = d3.select(this.panel).append('div')
-      .classed("panel-body",true)
-      .node();
-  }
-  filterTool.prototype.checker = function(negate){
-    return function(){return true;};
-  }
-
-  function inputFilterTool(parentNode,filterObj){
-    filterTool.call(this,parentNode,filterObj);
-    d3.select(this.panel).classed("input-filter",true);
-    this.filterData = filterObj;
-  }
-  inputFilterTool.prototype.checker = function(negate){
-    return function(){return true;};
-  }
-
-  function histoFilterTool(parentNode,filterData){
-    filterTool.call(this,parentNode,filterData);
-    this.filterData = filterData;
-    var select = d3.select(this.heading).append("select");
-    this.select = select.node();
-    filterKeys = Object.keys(getInputData(this.filterData)[0]);
-    select.append("option").text("Select a Trait...")
-      .attr("disabled",true).attr("selected",true);
-    for (var i = 0; i < filterKeys.length; i++) {
-      select.append("option").text(filterKeys[i])
-        .property("value",filterKeys[i]);
-    }
-    var fp = this;
-    select.on("change",function(){
-      var trait = $(select.node()).val();
-      var data = getInputData(fp.filterData);
-      var svg = d3.select(fp.body).select("svg").remove();
-      var svg = d3.select(fp.body).append("svg")
-        .attr("width","100%")
-        .attr("shape-rendering","geometricPrecision")
-        .attr("viewBox","0 0 320 150");
-      fp.filterer = HistChart(svg.node(),320,150,trait)
-        .value(function(d){return parseFloat(d[trait]);})
-        .setCenterVal(data||[0]);
-      fp.filterer.filterData = fp.filterData;
-      fp.filterer.update(data);
-    });
-  }
-  histoFilterTool.prototype = Object.create(filterTool.prototype);
-  histoFilterTool.prototype.constructor = histoFilterTool;
-  histoFilterTool.prototype.checker = function(negate){
-    if (this.tool.filterer) return this.tool.filterer.checker(negate);
-    return function () {return true;};
-  };
+  // function inputFilterTool(parentNode,filterObj){
+  //   filterTool.call(this,parentNode,filterObj);
+  //   d3.select(this.panel).classed("input-filter",true);
+  //   this.filterData = filterObj;
+  // }
+  // inputFilterTool.prototype.checker = function(negate){
+  //   return function(){return true;};
+  // }
+  //
+  // function histoFilterTool(parentNode,filterData){
+  //   filterTool.call(this,parentNode,filterData);
+  //   this.filterData = filterData;
+  //   var select = d3.select(this.heading).append("select");
+  //   this.select = select.node();
+  //   filterKeys = Object.keys(getInputData(this.filterData)[0]);
+  //   select.append("option").text("Select a Trait...")
+  //     .attr("disabled",true).attr("selected",true);
+  //   for (var i = 0; i < filterKeys.length; i++) {
+  //     select.append("option").text(filterKeys[i])
+  //       .property("value",filterKeys[i]);
+  //   }
+  //   var fp = this;
+  //   select.on("change",function(){
+  //     var trait = $(select.node()).val();
+  //     var data = getInputData(fp.filterData);
+  //     var svg = d3.select(fp.body).select("svg").remove();
+  //     var svg = d3.select(fp.body).append("svg")
+  //       .attr("width","100%")
+  //       .attr("shape-rendering","geometricPrecision")
+  //       .attr("viewBox","0 0 320 150");
+  //     fp.filterer = HistChart(svg.node(),320,150,trait)
+  //       .value(function(d){return parseFloat(d[trait]);})
+  //       .setCenterVal(data||[0]);
+  //     fp.filterer.filterData = fp.filterData;
+  //     fp.filterer.update(data);
+  //   });
+  // }
+  // histoFilterTool.prototype = Object.create(filterTool.prototype);
+  // histoFilterTool.prototype.constructor = histoFilterTool;
+  // histoFilterTool.prototype.checker = function(negate){
+  //   if (this.tool.filterer) return this.tool.filterer.checker(negate);
+  //   return function () {return true;};
+  // };
 
   //other classes
   function HistChart(parent,width,height,name){
