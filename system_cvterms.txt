@@ -33,6 +33,7 @@ geolocations_property	adm3	From BrAPI	03/27/2017	nm529	00076
 geolocations_property	local_name	From BrAPI	03/27/2017	nm529	00076	
 geolocations_property	region	From BrAPI	03/27/2017	nm529	00076	
 geolocations_property	alternative_name	From BrAPI	03/27/2017	nm529	00076	
+list_types	seedlots		07/20/2017	nm529	00081	
 list_types	accessions					
 list_types	crosses				00067	
 list_types	dataset				00067	
@@ -85,17 +86,15 @@ project_property	breeding_program				00051
 project_property	data_agreement					
 project_property	design					
 project_property	genomic selection					
-project_property	harvest_date				00051	
+project_property	project_harvest_date				00080	
 project_property	marker_count					
-project_property	planting_date				00051	
+project_property	project_planting_date				00080	
 project_property	population type					
 project_property	project fertilizer date					
 project_property	project first harvest date					sgn database
-project_property	project harvest date					
 project_property	project harvested plants					
 project_property	project last harvest date					sgn database
 project_property	project location					
-project_property	project planting date					
 project_property	project sowing date					sgn database
 project_property	project sown plants					
 project_property	project transplanting date					sgn database
@@ -136,6 +135,9 @@ stock_property	stock_synonym				00046
 stock_property	T1				00052	
 stock_property	T2				00052	
 stock_property	transgenic				00052	
+stock_property	variety	Found in editable_stock_props				
+stock_property	notes	Found in editable_stock_props				
+stock_property	state	Found in editable_stock_props				
 stock_property	accession number	From BrAPI	03/27/2017	nm529	00076	
 stock_property	PUI	From BrAPI	03/27/2017	nm529	00076	
 stock_property	donor	From BrAPI	03/27/2017	nm529	00076	

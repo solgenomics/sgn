@@ -30,6 +30,7 @@ use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 use base qw / CXGN::DB::Object / ;
 use CXGN::Stock::StockLookup;
+use Try::Tiny;
 
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
@@ -353,6 +354,76 @@ sub get_species {
     }
 }
 
+=head2 get_genus
+
+ Usage: $self->get_genus
+ Desc:  find the genus name of this stock , if one exists
+ Ret:   string
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_genus {
+    my $self = shift;
+    my $organism = $self->get_organism;
+    if ($organism) {
+        return $organism->genus;
+    }
+    else {
+	return undef;
+    }
+}
+
+=head2 get_species_authority
+
+ Usage: $self->get_species_authority
+ Desc:  find the species_authority of this stock , if one exists
+ Ret:   string
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_species_authority {
+    my $self = shift;
+    return $self->_retrieve_organismprop('species authority');
+}
+
+=head2 get_subtaxa
+
+ Usage: $self->get_subtaxa
+ Desc:  find the subtaxa of this stock , if one exists
+ Ret:   string
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_subtaxa {
+    my $self = shift;
+    return $self->_retrieve_organismprop('subtaxa');
+}
+
+=head2 get_subtaxa_authority
+
+ Usage: $self->get_subtaxa_authority
+ Desc:  find the subtaxa_authority of this stock , if one exists
+ Ret:   string
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_subtaxa_authority {
+    my $self = shift;
+    return $self->_retrieve_organismprop('subtaxa authority');
+}
+
 =head2 set_species
 
 Usage: $self->set_species
@@ -638,30 +709,89 @@ sub get_descendant_hash {
 =head2 get_pedigree_rows
 
  Usage:
- Desc:          get an array of pedigree rows for this stock, conatining female parent, male parent, and cross type if defined
+ Desc:          get an array of pedigree rows from an array of stock ids, conatining female parent, male parent, and cross type if defined
  Ret:
- Args:
+ Args: $accession_ids, $format (either 'parents_only' or 'full')
  Side Effects:
  Example:
 
 =cut
 
 sub get_pedigree_rows {
-    my ($self, $pedigree_hashref, $pedigree_rows) = @_;
+    my ($self, $accession_ids, $format) = @_;
+    #print STDERR "Accession ids are: ".Dumper(@$accession_ids)."\n";
 
-    my $Name = $pedigree_hashref->{'name'} || '';
-    my $Female_Parent = $pedigree_hashref->{'female_parent'}->{'name'} || '';
-    my $Male_Parent = $pedigree_hashref->{'male_parent'}->{'name'} || '';
-    my $Cross_Type = $pedigree_hashref->{'cross_type'} || '';
-    push @$pedigree_rows, "$Name\t$Female_Parent\t$Male_Parent\t$Cross_Type\n";
+    my $placeholders = join ( ',', ('?') x @$accession_ids );
+    my ($query, $pedigree_rows);
 
-    if (keys %{ $pedigree_hashref->{'female_parent'} }) {
-        $self->get_pedigree_rows($pedigree_hashref->{'female_parent'}, $pedigree_rows);
+    if ($format eq 'parents_only') {
+        $query = "
+        SELECT child.uniquename AS Accession,
+            mother.uniquename AS Female_Parent,
+            father.uniquename AS Male_Parent,
+            m_rel.value AS cross_type
+        FROM stock child
+        LEFT JOIN stock_relationship m_rel ON(child.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+        LEFT JOIN stock mother ON(m_rel.subject_id = mother.stock_id)
+        LEFT JOIN stock_relationship f_rel ON(child.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+        LEFT JOIN stock father ON(f_rel.subject_id = father.stock_id)
+        WHERE child.stock_id IN ($placeholders)
+        GROUP BY 1,2,3,4
+        ORDER BY 1";
     }
-    if (keys %{ $pedigree_hashref->{'male_parent'} }) {
-        $self->get_pedigree_rows($pedigree_hashref->{'male_parent'}, $pedigree_rows);
+    elsif ($format eq 'full') {
+        $query = "
+        WITH RECURSIVE included_rows(child, child_id, mother, mother_id, father, father_id, type, depth, path, cycle) AS (
+                SELECT c.uniquename AS child,
+                c.stock_id AS child_id,
+                m.uniquename AS mother,
+                m.stock_id AS mother_id,
+                f.uniquename AS father,
+                f.stock_id AS father_id,
+                m_rel.value AS type,
+                1,
+                ARRAY[c.stock_id],
+                false
+                FROM stock c
+                LEFT JOIN stock_relationship m_rel ON(c.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+                LEFT JOIN stock m ON(m_rel.subject_id = m.stock_id)
+                LEFT JOIN stock_relationship f_rel ON(c.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+                LEFT JOIN stock f ON(f_rel.subject_id = f.stock_id)
+                WHERE c.stock_id IN ($placeholders)
+                GROUP BY 1,2,3,4,5,6,7,8,9,10
+            UNION
+                SELECT c.uniquename AS child,
+                c.stock_id AS child_id,
+                m.uniquename AS mother,
+                m.stock_id AS mother_id,
+                f.uniquename AS father,
+                f.stock_id AS father_id,
+                m_rel.value AS type,
+                included_rows.depth + 1,
+                path || c.stock_id,
+                c.stock_id = ANY(path)
+                FROM included_rows, stock c
+                LEFT JOIN stock_relationship m_rel ON(c.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+                LEFT JOIN stock m ON(m_rel.subject_id = m.stock_id)
+                LEFT JOIN stock_relationship f_rel ON(c.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+                LEFT JOIN stock f ON(f_rel.subject_id = f.stock_id)
+                WHERE c.stock_id IN (included_rows.mother_id, included_rows.father_id) AND NOT cycle
+                GROUP BY 1,2,3,4,5,6,7,8,9,10
+        )
+        SELECT child, mother, father, type, depth
+        FROM included_rows
+        GROUP BY 1,2,3,4,5
+        ORDER BY 5,1;";
     }
 
+    my $sth = $self->schema()->storage()->dbh()->prepare($query);
+    $sth->execute(@$accession_ids);
+
+    no warnings 'uninitialized';
+    while (my ($name, $mother, $father, $cross_type, $depth) = $sth->fetchrow_array()) {
+        #print STDERR "For child $name:\n\tMother:$mother\n\tFather:$father\n\tCross Type:$cross_type\n\tDepth:$depth\n\n";
+	    push @$pedigree_rows, "$name\t$mother\t$father\t$cross_type\n";
+    }
     return $pedigree_rows;
 }
 
@@ -713,7 +843,7 @@ sub get_parents {
     $parents{'mother'} = $pedigree_hashref->{'female_parent'}->{'name'};
     $parents{'mother_id'} = $pedigree_hashref->{'female_parent'}->{'id'};
     $parents{'father'} = $pedigree_hashref->{'male_parent'}->{'name'};
-    $parents{'father_id'} = $pedigree_hashref->{'female_parent'}->{'id'};
+    $parents{'father_id'} = $pedigree_hashref->{'male_parent'}->{'id'};
     return \%parents;
 }
 
@@ -728,14 +858,19 @@ sub _store_stockprop {
 sub _retrieve_stockprop {
     my $self = shift;
     my $type = shift;
-
-    my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
-    my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id(), type_id => $stockprop_type_id }, { order_by => {-asc => 'stockprop_id'} });
-
     my @results;
-    while (my $r = $rs->next()){
-        push @results, $r->value;
-    }
+
+    try {
+        my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+        my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id(), type_id => $stockprop_type_id }, { order_by => {-asc => 'stockprop_id'} });
+
+        while (my $r = $rs->next()){
+            push @results, $r->value;
+        }
+    } catch {
+        #print STDERR "Cvterm $type does not exist in this database\n";
+    };
+
     my $res = join ',', @results;
     return $res;
 }
@@ -759,6 +894,26 @@ sub _remove_stockprop {
         return 0;
     }
 
+}
+
+sub _retrieve_organismprop {
+    my $self = shift;
+    my $type = shift;
+    my @results;
+
+    try {
+        my $organismprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'organism_property')->cvterm_id();
+        my $rs = $self->schema()->resultset("Organism::Organismprop")->search({ organism_id => $self->stock->organism_id, type_id => $organismprop_type_id }, { order_by => {-asc => 'organismprop_id'} });
+
+        while (my $r = $rs->next()){
+            push @results, $r->value;
+        }
+    } catch {
+        #print STDERR "Cvterm $type does not exist in this database\n";
+    };
+
+    my $res = join ',', @results;
+    return $res;
 }
 
 sub _store_population_relationship {
@@ -799,7 +954,7 @@ sub _retrieve_populations {
             push @population_names, $population->uniquename();
         }
         $self->populations(\@population_names);
-        print STDERR "This stock is a member of the following populations: ".Dumper($self->populations())."\n";
+        #print STDERR "This stock is a member of the following populations: ".Dumper($self->populations())."\n";
     }
 }
 
