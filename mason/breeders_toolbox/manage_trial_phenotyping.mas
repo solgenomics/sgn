@@ -211,6 +211,7 @@ var trial_info_object = [];
         $('#all_traits').show();
         $('#show_trait_textbox').hide();
         $('#show_trait_list_box').hide();
+        jQuery('#select_traits_for_trait_file_2').empty();
         jQuery("#select_pheno_value").val(null_trait_value);
         jQuery('#select_pheno_value').empty();
         get_select_box('traits', 'select_traits_for_trait_file', {
