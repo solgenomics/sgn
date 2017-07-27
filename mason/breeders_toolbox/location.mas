@@ -3,7 +3,7 @@
 $user_id => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => ['leaflet'] &>
+<& /util/import_javascript.mas, classes => ['leaflet','jquery.dataTables-buttons-min', 'jquery.datatables-select-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min',] &>
 <br>
 <div class="table-responsive" style="margin-top: 10px;">
     <table id="location_table" class="table table-hover table-striped table-bordered" width="100%">
@@ -357,8 +357,45 @@ jQuery(document).ready(function() {
             // put working animation handling here
     	},
     	success: function(response) {
+            var export_message = window.location.href + ' location data.';
             var table = jQuery('#location_table').DataTable( {
-                data: response.data
+                data: response.data,
+                dom: 'Bfrtip',
+                select: true,
+                buttons: [ 'copy',
+                    {
+                        extend: 'excelHtml5',
+                        title: 'locations'
+                    },
+                    {
+                        extend: 'csvHtml5',
+                        title: 'locations'
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        title: 'locations',
+                        message: export_message
+                    },
+                    {
+                        extend: 'print',
+                        message: export_message
+                    },
+            {
+                text: 'Get selected data',
+                action: function () {
+                    var data = table.rows( { selected: true } ).data();
+                    var all_rows = [];
+                    for (var i=0; i < data.length ;i++){
+                        var row_data = data[i];
+                        var row = row_data.join();
+                        all_rows.push(row);
+                    }
+                    table_data = all_rows.join();
+                    console.log("Selected rows contain "+JSON.stringify(table_data));
+                }
+            }
+        ]
+
             });
             var map = initialize_map('location_map', table);
             table.on( 'draw.dt', function () {
@@ -432,7 +469,12 @@ function initialize_map(id, table) {
         "Satellite": satellite
     };
 
-    var location_layer = L.geoJSON(get_markers(table));
+    var location_layer = L.geoJSON(get_markers(table), {
+        pointToLayer: function (feature, latlng) {
+           return L.circleMarker(latlng, style(feature));
+       },
+       onEachFeature: onEachFeature
+    });
 
     var overlayMaps = {
         "Locations": location_layer
@@ -448,14 +490,52 @@ function initialize_map(id, table) {
     return { self: mymap, locations: location_layer };
 }
 
+function style(feature) {
+    console.log("Type of marker "+feature.properties.name+" is "+feature.properties.type);
+    switch (feature.properties.type) {
+        case 'Farm':   return {color: "#663300"};
+        case 'Field': return {color: "#0000ff"};
+        case 'Greenhouse':   return {color: "#009900"};
+        case 'Screenhouse':   return {color: "#ffffff"};
+        case 'Lab':   return {color: "#000000"};
+        case 'Storage':   return {color: "#ff6600"};
+    }
+}
+
+function onEachFeature(feature, layer) {
+    if (feature.properties && feature.properties.popupContent) {
+        layer.bindPopup(feature.properties.popupContent);
+    }
+}
+
     function get_markers (table) {
         var marker_array = [];
         table.rows({filter: 'applied'}).eq(0).each( function ( index ) {
-            var row = table.row( index );
-            var data = row.data();
+            var data = table.row( index ).data();
             //console.log("Row "+index+" contains "+JSON.stringify(data));
-            var new_marker = new L.marker([data[6],data[7]]).bindPopup(data[1]);
-            marker_array.push(new_marker.toGeoJSON());
+            //var new_marker = new L.marker([data[6],data[7]]).bindPopup(data[1]);
+            var new_marker = {
+                "type": "Feature",
+                "properties": {
+                    "id": data[0],
+                    "name": data[1],
+                    "abbreviation": data[2],
+                    "country_code": data[3],
+                    "program": data[4],
+                    "type": data[5],
+                    "latitude": data[6],
+                    "longitude": data[7],
+                    "altitude": data[8],
+                    "trials": '<a href="/search/trials?nd_geolocation='+data[1]+'">'+data[9]+' trials</a>',
+                    "popupContent": '<table class="table"><thead><tr><th>Attribute</th><th>Value</th></thead><tbody><tr><th>ID</th><td>'+data[0]+'</td></tr><tr><th>Name</th><td>'+data[1]+'</td></tr><tr><th>Abbrev.</th><td>'+data[2]+'</td></tr><tr><th>Country Code</th><td>'+data[3]+'</td></tr><tr><th>Program</th><td>'+data[4]+'</td></tr><tr><th>Type</th><td>'+data[5]+'</td></tr><tr><th>Altitude</th><td>'+data[8]+'</td></tr><tr><th>Trials</th><td><a href="/search/trials?nd_geolocation='+data[1]+'">'+data[9]+' trials</a></td></tr></tbody></table>'
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [data[7], data[6]]
+                }
+            };
+            //marker_array.push(new_marker.toGeoJSON());
+            marker_array.push(new_marker);
         });
         return marker_array;
     }
