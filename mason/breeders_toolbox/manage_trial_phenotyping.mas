@@ -79,7 +79,7 @@ $trial_name
         <div id="show_trait_textbox" style="display: none">
           <div class="form-group form-group-sm" >
               <label class="col-sm-4 control-label">Enter a List of Trait Names: </label>
-              <i class="fa fa-chevron-left" aria-hidden="true"></i><div class="col-sm-8" id="show_trait_selectbox"><i class="fa fa-chevron-right" aria-hidden="true"></i>
+              <div class="col-sm-8" id="show_trait_selectbox">
 
               </div>
           </div>
@@ -318,10 +318,8 @@ var trial_info_object = [];
         Retrieve_pheno();
     });
 
-  });
-
-  jQuery(document).on('change', '#trial_plot_name_table', function(){
-      var plot_infor = jQuery('#trial_plot_name_table').val();
+  jQuery(document).on('change', '#plot_name', function(){
+      var plot_infor = jQuery('#plot_name').val();
       //alert(plot_infor);
       //console.log(trial_info_object);
       for (i=0; i<trial_info_object.length; i++){
@@ -337,6 +335,7 @@ var trial_info_object = [];
               jQuery('#trial_plot_number_table').val(plotNo);
               jQuery('#trial_block_number_table').val(blockNo);
               jQuery('#trial_rep_number_table').val(repNo);
+              Retrieve_pheno();
           }
       }
 
@@ -355,13 +354,14 @@ var trial_info_object = [];
               var repNo = trial_info_object[i].rep_number;
               //alert(accessionName+","+plotName+","+blockNo+","+repNo);
 
-              jQuery('#trial_plot_name_table').val(plotName);
+              jQuery('#plot_name').val(plotName);
               jQuery('#trial_accession_table').val(accessionName);
               jQuery('#trial_block_number_table').val(blockNo);
               jQuery('#trial_rep_number_table').val(repNo);
+              Retrieve_pheno();
           }
       }
 
   });
-
+});
 </script>
