@@ -18,7 +18,7 @@ $trial_name
         <form class="form-horizontal" role="form" action="/barcode/direct_trial_phenotyping">
             <div class="form-group form-group-sm">
                 <label class="col-sm-4 control-label">Plot Name: </label>
-                <div class="col-sm-8" id="plot_name">
+                <div class="col-sm-8" id="plot_name_1">
 
                 </div>
             </div>
@@ -124,9 +124,6 @@ $trial_name
   </div>
 </div>
 
-<!--
-<& /breeders_toolbox/onscreen_keyboard.mas &> -->
-
 </form>
 <div id="main" class="container">
     <div id="virtualKeyboard"></div>
@@ -157,7 +154,7 @@ var trial_info_object = [];
                  alert("Error Retrieving Trial Information: "+response.error);
                }
 
-               var trial_plot_name_html = "<select class='form-control' id='trial_plot_name_table' >";
+               var trial_plot_name_html = "<select class='form-control' id='plot_name' >";
                var trial_accession_html = "<select class='form-control' id='trial_accession_table' disabled>";
                var trial_plot_number_html = "<select class='form-control' id='trial_plot_number_table'>";
                var trial_block_number_html = "<select class='form-control' id='trial_block_number_table' disabled>";
@@ -174,8 +171,8 @@ var trial_info_object = [];
 
                   }
                   trial_plot_name_html = trial_plot_name_html + "</select>";
-                  jQuery('#plot_name').empty();
-                  jQuery('#plot_name').html(trial_plot_name_html);
+                  jQuery('#plot_name_1').empty();
+                  jQuery('#plot_name_1').html(trial_plot_name_html);
 
                   trial_accession_html = trial_accession_html + "</select>";
                   jQuery('#accession_name').empty();

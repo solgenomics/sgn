@@ -8,7 +8,7 @@ font-size:14px; font-family:Arial Unicode MS;font-weight:normal;
 #virtualKeyboard {
     width: 100%;
     text-align: center;
-    background-color:#7b8490;
+    /*background-color:#7b8490;*/
     /*border-top:3px solid #000;*/
 }
 
