@@ -482,7 +482,7 @@ sub retrieve_trial_info_POST : Args(0) {
         @layout_info = sort { $a->{plot_number} <=> $b->{plot_number} } @layout_info;
   	}
 
-    print STDERR Dumper(@layout_info);
+    #print STDERR Dumper(@layout_info);
     $c->stash->{rest} = {trial_info => \@layout_info};
     #$c->stash->{layout_info} = \@layout_info;
 }
