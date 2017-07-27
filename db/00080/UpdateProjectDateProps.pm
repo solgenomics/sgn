@@ -96,13 +96,13 @@ sub patch {
 
 	#update type_ids in projecprop table
 	if ($old_harvest_cvterm ) {
-	    my $harvest_projectprops = $schema->resultset("Project::Project")->search(
+	    my $harvest_projectprops = $schema->resultset("Project::Projectprop")->search(
 		{ type_id => $old_harvest_cvterm->cvterm_id , } );
 	    $harvest_projectprops->update( { type_id => $harvest_date_cvterm_id , });
 	    $old_harvest_cvterm->delete;
 	}
 	if ($old_planting_cvterm) {
-	    my $planting_projectprops = $schema->resultset("Project::Project")->search(
+	    my $planting_projectprops = $schema->resultset("Project::Projectprop")->search(
 		{ type_id => $old_planting_cvterm->cvterm_id , } );
 	    $planting_projectprops->update( { type_id => $planting_date_cvterm_id , });
 	   
