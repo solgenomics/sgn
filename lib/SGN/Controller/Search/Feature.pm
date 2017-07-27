@@ -2,7 +2,7 @@ package SGN::Controller::Search::Feature;
 use Moose;
 use namespace::autoclean;
 
-use SGN::View::Feature qw( location_string description_featureprop_types get_descriptions );
+use SGN::View::Feature qw( location_string description_featureprop_types get_descriptions feature_types feature_organisms);
 
 use URI::FromHash 'uri';
 use YAML::Any;
@@ -21,6 +21,15 @@ has 'maximum_export_size' => (
     default => 10_000,
 );
 
+has 'schema' => (
+    is       => 'rw',
+    isa      => 'DBIx::Class::Schema',
+    lazy_build => 1,
+);
+sub _build_schema {
+    shift->_app->dbic_schema( 'Bio::Chado::Schema', 'sgn_chado' )
+}
+
 =head1 PUBLIC ACTIONS
 
 =head2 search
@@ -37,11 +46,13 @@ sub oldsearch : Path('/feature/search') Args(0) {
 
 sub search :Path('/search/features') Args(0) {
     my ( $self, $c ) = @_;
-
+   
     $c->stash(
         template => '/search/features.mas',
         maximum_export_size => $self->maximum_export_size,
-    );
+	feature_types => feature_types($self->schema), 
+	organisms     => feature_organisms($self->schema) ,
+	);
     $c->forward('View::Mason');
 }
 
