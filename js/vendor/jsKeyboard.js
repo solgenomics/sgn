@@ -271,8 +271,8 @@ jQuery.fn.getSelectionStart = function(){
         if (r.text == '')
         pos = input.value.length;
         pos = input.value.lastIndexOf(r.text);
-    } else if(typeof(input.selectionStart)!="undefined")
-    pos = input.selectionStart;
+    } //else if(typeof(input.selectionStart)!="undefined")
+    //pos = input.selectionStart;
 
     return pos;
 }
