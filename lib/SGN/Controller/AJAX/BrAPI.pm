@@ -806,17 +806,17 @@ sub studies_search_process {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Studies');
 	my $brapi_package_result = $brapi_module->studies_search({
-		programDbIds => $clean_inputs->{programDbIds},
-		programNames => $clean_inputs->{programNames},
-		studyDbIds => $clean_inputs->{studyDbIds},
-		studyNames => $clean_inputs->{studyNames},
+		programDbIds => $clean_inputs->{programDbId},
+		programNames => $clean_inputs->{programName},
+		studyDbIds => $clean_inputs->{studyDbId},
+		studyNames => $clean_inputs->{studyName},
 		studyLocationDbIds => $clean_inputs->{locationDbId},
-		studyLocationNames => $clean_inputs->{locationNames},
-		studyTypeName => $clean_inputs->{studyTypeName},
-		germplasmDbIds => $clean_inputs->{germplasmDbIds},
-		germplasmNames => $clean_inputs->{germplasmNames},
-		observationVariableDbIds => $clean_inputs->{observationVariableDbIds},
-		observationVariableNames => $clean_inputs->{observationVariableNames},
+		studyLocationNames => $clean_inputs->{locationName},
+		studyTypeName => $clean_inputs->{studyType},
+		germplasmDbIds => $clean_inputs->{germplasmDbId},
+		germplasmNames => $clean_inputs->{germplasmName},
+		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
+		observationVariableNames => $clean_inputs->{observationVariableName},
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -844,8 +844,8 @@ sub trials_search_process {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Trials');
 	my $brapi_package_result = $brapi_module->trials_search({
-		locationDbIds => $clean_inputs->{locationDbIds},
-		programDbIds => $clean_inputs->{programDbIds},
+		locationDbIds => $clean_inputs->{locationDbId},
+		programDbIds => $clean_inputs->{programDbId},
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -1851,11 +1851,11 @@ sub process_phenotypes_search {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
 	my $brapi_package_result = $brapi_module->search({
-		trait_ids => $clean_inputs->{observationVariableDbIds},
-		accession_ids => $clean_inputs->{germplasmDbIds},
-		study_ids => $clean_inputs->{studyDbIds},
-		location_ids => $clean_inputs->{locationDbIds},
-		years => $clean_inputs->{seasonDbIds},
+		trait_ids => $clean_inputs->{observationVariableDbId},
+		accession_ids => $clean_inputs->{germplasmDbId},
+		study_ids => $clean_inputs->{studyDbId},
+		location_ids => $clean_inputs->{locationDbId},
+		years => $clean_inputs->{seasonDbId},
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
 	});
@@ -1877,7 +1877,10 @@ sub traits_list_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Traits');
-	my $brapi_package_result = $brapi_module->list();
+	my $brapi_package_result = $brapi_module->list({
+        trait_ids => $clean_inputs->{traitDbIds},
+        names => $clean_inputs->{names}
+    });
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2211,14 +2214,14 @@ sub _observationvariable_search_process {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
 	my $brapi_package_result = $brapi_module->observation_variable_search({
-		observationvariable_db_ids => $clean_inputs->{observationVariableDbIds},
-		ontology_db_names => $clean_inputs->{ontologyXrefs},
-		ontology_dbxref_terms => $clean_inputs->{ontologyDbIds},
-		method_db_ids => $clean_inputs->{methodDbIds},
-		scale_db_ids => $clean_inputs->{scaleDbIds},
-		observationvariable_names => $clean_inputs->{names},
-		observationvariable_datatypes => $clean_inputs->{datatypes},
-		observationvariable_classes => $clean_inputs->{traitClasses},
+		observationvariable_db_ids => $clean_inputs->{observationVariableDbId},
+		ontology_db_names => $clean_inputs->{ontologyXref},
+		ontology_dbxref_terms => $clean_inputs->{ontologyDbId},
+		method_db_ids => $clean_inputs->{methodDbId},
+		scale_db_ids => $clean_inputs->{scaleDbId},
+		observationvariable_names => $clean_inputs->{name},
+		observationvariable_datatypes => $clean_inputs->{datatype},
+		observationvariable_classes => $clean_inputs->{traitClass},
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
