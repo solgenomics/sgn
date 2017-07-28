@@ -76,7 +76,11 @@ sub patch {
 	    { name => 'harvest_date', } )->single;
 	
 	print "Updating existing cvterm 'harvest_date' \n";
-	$harvest_date_cvterm->update( { name => 'project_harvest_date' }, );
+	if ($harvest_date_cvterm) {
+	    $harvest_date_cvterm->update( { name => 'project_harvest_date' }, );
+	} else { 
+	    $harvest_date_cvterm = $cvterm_rs->search( { name => 'project_harvest_date' } )->single;
+	}
 	my $harvest_date_cvterm_id = $harvest_date_cvterm->cvterm_id;
 
 
@@ -84,25 +88,29 @@ sub patch {
 	    { name => 'planting_date', } )->single;
 	
 	print "Updating existing cvterm 'planting_date' \n";
-	$planting_date_cvterm->update( { name => 'project_planting_date' }, );
+	if ($planting_date_cvterm) {
+	    $planting_date_cvterm->update( { name => 'project_planting_date'},);
+	} else { 
+	    $planting_date_cvterm = $cvterm_rs->search( { name => 'project_planting_date' } )->single;
+	}
 	my $planting_date_cvterm_id = $planting_date_cvterm->cvterm_id;
 	####
-
-       #redundant cvterms that should nopt be used
+	
+	#redundant cvterms that should nopt be used
 	my $old_harvest_cvterm = $cvterm_rs->search( 
 	    { name => 'project harvest date', } )->single;
 	my $old_planting_cvterm = $cvterm_rs->search(
 	    { name => 'project planting date' , })->single;
-
+	
 	#update type_ids in projecprop table
 	if ($old_harvest_cvterm ) {
-	    my $harvest_projectprops = $schema->resultset("Project::Project")->search(
+	    my $harvest_projectprops = $schema->resultset("Project::Projectprop")->search(
 		{ type_id => $old_harvest_cvterm->cvterm_id , } );
 	    $harvest_projectprops->update( { type_id => $harvest_date_cvterm_id , });
 	    $old_harvest_cvterm->delete;
 	}
 	if ($old_planting_cvterm) {
-	    my $planting_projectprops = $schema->resultset("Project::Project")->search(
+	    my $planting_projectprops = $schema->resultset("Project::Projectprop")->search(
 		{ type_id => $old_planting_cvterm->cvterm_id , } );
 	    $planting_projectprops->update( { type_id => $planting_date_cvterm_id , });
 	   
