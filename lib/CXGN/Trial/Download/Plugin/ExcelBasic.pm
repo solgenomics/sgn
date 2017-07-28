@@ -44,8 +44,14 @@ sub download {
         }
     }
     #print STDERR Dumper \@predefined_columns;
-
     my $predefined_columns_json = $json->encode(\@predefined_columns);
+
+    my $treatment = $self->treatment_project_id() ? $self->treatment_project_id() : undef;
+    my $treatment_trial;
+    if ($treatment){
+        $treatment_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $treatment});
+        my $treatment_plants = $treatment_trial->get_plants();
+    }
 
     $ws->write(0, 0, 'Spreadsheet ID'); $ws->write('0', '1', 'ID'.$$.time());
     $ws->write(0, 2, 'Spreadsheet format'); $ws->write(0, 3, "BasicExcel");
@@ -54,6 +60,7 @@ sub download {
     $ws->write(2, 0, 'Description'); $ws->write(2, 1, $trial->get_description(), $bold);
     $ws->write(3, 0, "Trial location");  $ws->write(3, 1, $trial->get_location()->[1], $bold);
     $ws->write(4, 0, "Predefined Columns");  $ws->write(4, 1, $predefined_columns_json, $bold);
+    $ws->write(4, 2, "Treatment"); $ws->write(4, 3, $treatment);
     $ws->write(1, 2, 'Operator');       $ws->write(1, 3, "Enter operator here");
     $ws->write(2, 2, 'Date');           $ws->write(2, 3, "Enter date here");
     $ws->data_validation(2,3, { validate => "date", criteria => '>', value=>'1000-01-01' });
@@ -63,8 +70,21 @@ sub download {
     my $line = 7;
 
     if ($self->data_level eq 'plots') {
-        $num_col_before_traits = 6;
-        my @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
+        my $num_col_before_traits;
+        my @column_headers;
+        my $treatment_plots;
+        my %treatment_plot_hash;
+        if($treatment_trial){
+            $treatment_plots = $treatment_trial->get_plots();
+            foreach (@$treatment_plots){
+                $treatment_plot_hash{$_}++;
+            }
+            $num_col_before_traits = 7;
+            @column_headers = qq | plot_name accession_name plot_number block_number is_a_control rep_number $treatment |;
+        } else {
+            $num_col_before_traits = 6;
+            @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
+        }
         for(my $n=0; $n<@column_headers; $n++) {
             $ws->write(6, $n, $column_headers[$n]);
         }
@@ -89,6 +109,11 @@ sub download {
             $ws->write($n+7, 3, $design_info{block_number});
             $ws->write($n+7, 4, $design_info{is_a_control});
             $ws->write($n+7, 5, $design_info{rep_number});
+
+            if (exists($treatment_plot_hash{$design_info{plot_name}})){
+                $ws->write($n+7, 6, 1);
+            }
+
             $line++;
         }
 

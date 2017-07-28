@@ -131,6 +131,7 @@ function create_phenotype_spreadsheet() {
             'trial_id': parseInt(jQuery("#html_select_trial_for_create_spreadsheet").val()),
             'trait_list': trait_list,
             'data_level': jQuery("#create_spreadsheet_data_level").val(),
+            'treatment_project_id': jQuery("#html_select_treatment_create_spreadsheet").val(),
             'sample_number': jQuery("#create_spreadsheet_sample_number").val(),
         },
         beforeSend: function() {
