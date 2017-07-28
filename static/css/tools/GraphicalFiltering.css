@@ -1,3 +1,5 @@
+@charset "UTF-8";
+
 .brush .selection {
   stroke: #2be;
   stroke-width: 1px;
@@ -15,6 +17,16 @@
 
 #filter_div {
   font-size: 16px;
+}
+
+.filter-panel-range .tick text{
+  text-anchor: center;
+}
+.filter-panel-range .tick:first-of-type text{
+  text-anchor: start;
+}
+.filter-panel-range .tick:last-of-type text{
+  text-anchor: end;
 }
 
 .filter-item{
