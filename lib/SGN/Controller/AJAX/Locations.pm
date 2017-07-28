@@ -17,6 +17,7 @@ use CXGN::Location;
 use CXGN::BreedersToolbox::Projects;
 use Data::Dumper;
 use Try::Tiny;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -32,10 +33,9 @@ __PACKAGE__->config(
 
        my $location = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
 
-       my $all_locations = $location->get_all_locations();
+       my $all_locations = $location->get_location_json();
 
-       print STDERR "Returning with all locations: ".Dumper($all_locations)."\n";
-
+       #print STDERR "Returning with all locations: ".$all_locations."\n";
        $c->stash->{rest} = { data => $all_locations };
 
    }

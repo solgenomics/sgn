@@ -5,6 +5,7 @@ use Moose;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::People::Roles;
+use JSON;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -252,26 +253,70 @@ ORDER BY 8,2";
 #
     my @locations;
     while (my ($id, $name, $abbrev, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count) = $h->fetchrow_array()) {
-        # $name = '<font id="'.$id.'_name">'.$name.'</font>';
-        # $abbrev = '<font id="'.$id.'_abbrev">'.$abbrev.'</font>';
-        # $country_code = '<font id="'.$id.'_country">'.$country_code.'</font>';
-        # $prog = '<font id="'.$id.'_prog">'.$prog.'</font>';
-        # $type = '<font id="'.$id.'_type">'.$type.'</font>';
-        # $latitude = '<font id="'.$id.'_lat">'.$latitude.'</font>';
-        # $longitude = '<font id="'.$id.'_long">'.$longitude.'</font>';
-        # $altitude = '<font id="'.$id.'_alt">'.$altitude.'</font>';
-        # $trial_count = '<font id="'.$id.'_count">'.$trial_count.'</font>';
-        # my $edit_link = "<a href=\"javascript:edit_location($id)\"><font style=\"color: blue; font-weight: bold\">Edit</a>";
-        # my $delete_link;
-        # if ($trial_count == 0) {
-        #     $delete_link = '<a title="Delete" id="'.$id.'_remove" href="javascript:delete_location('.$id.')"><span style="color: red" class="glyphicon glyphicon-remove"></span></a>';
-        # } else {
-        #     $delete_link = '<a title="Unable to delete locations that are linked to one or more trials" id="'.$id.'_remove"><span class="glyphicon glyphicon-remove"></span></a>';
-        # }
-        # push @locations, [$name, $abbrev, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count, $edit_link, $delete_link];
-        push @locations, [$id, $name, $abbrev, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count];
+        # my @location = (
+        #     Id => $id,
+        #     Name => $name,
+        #     Abbreviation => $abbrev,
+        #     Country => $country_code,
+        #     Program => $prog,
+        #     Type => $type,
+        #     Latitude => $latitude,
+        #     Longitude => $longitude,
+        #     Altitude => $altitude,
+        #     Trials => '<a href="/search/trials?nd_geolocation='.$name.'">'.$trial_count.' trials</a>'
+        # );
+         push @locations, [$id, $name, $abbrev, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count];
+        # push @locations, %location;
     }
     return \@locations;
+}
+
+sub get_location_json {
+    my $self = shift;
+
+    my $project_location_type_id = $self ->schema->resultset('Cv::Cvterm')->search( { 'name' => 'project location' })->first->cvterm_id();
+
+	my $q = "SELECT geo.nd_geolocation_id,
+	geo.description,
+	abbreviation.value,
+	country_code.value,
+	breeding_program.name,
+	location_type.value,
+	latitude,
+    longitude,
+	altitude,
+    count(distinct(projectprop.project_id))
+FROM nd_geolocation AS geo
+LEFT JOIN nd_geolocationprop AS abbreviation ON (geo.nd_geolocation_id = abbreviation.nd_geolocation_id AND abbreviation.type_id = (SELECT cvterm_id from cvterm where name = 'abbreviation') )
+LEFT JOIN nd_geolocationprop AS country_code ON (geo.nd_geolocation_id = country_code.nd_geolocation_id AND country_code.type_id = (SELECT cvterm_id from cvterm where name = 'country_code') )
+LEFT JOIN nd_geolocationprop AS location_type ON (geo.nd_geolocation_id = location_type.nd_geolocation_id AND location_type.type_id = (SELECT cvterm_id from cvterm where name = 'location_type') )
+LEFT JOIN projectprop ON (projectprop.value::INT = geo.nd_geolocation_id AND projectprop.type_id=?)
+LEFT JOIN project AS trial ON (trial.project_id=projectprop.project_id)
+LEFT JOIN project_relationship ON (subject_project_id=trial.project_id)
+LEFT JOIN project breeding_program ON (breeding_program.project_id=object_project_id)
+GROUP BY 1,2,3,4,5,6
+ORDER BY 8,2";
+
+
+	my $h = $self->schema()->storage()->dbh()->prepare($q);
+	$h->execute($project_location_type_id);
+    my @locations;
+    while (my ($id, $name, $abbrev, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count) = $h->fetchrow_array()) {
+        push(@locations, {
+            Id => $id,
+            Name => $name,
+            Abbreviation => $abbrev,
+            Country => $country_code,
+            Program => $prog,
+            Type => $type,
+            Latitude => $latitude,
+            Longitude => $longitude,
+            Altitude => $altitude,
+            Trials => '<a href="/search/trials?nd_geolocation='.$name.'">'.$trial_count.' trials</a>'
+        });
+    }
+    my $json = JSON->new();
+    return $json->encode(\@locations);
 }
 
 sub get_locations {
