@@ -432,7 +432,12 @@ sub store {
                 });
 
                 foreach (@$stock_names){
-                    my $stock_id = $new_stock_ids_hash{$_};
+                    my $stock_id;
+                    if (exists($new_stock_ids_hash{$_})){
+                        $stock_id = $new_stock_ids_hash{$_};
+                    } else {
+                        $stock_id = $chado_schema->resultset("Stock::Stock")->find({uniquename=>$_})->stock_id();
+                    }
                     my $treatment_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
                         nd_experiment_id => $nd_experiment->nd_experiment_id(),
                         type_id => $treatment_nd_experiment_type_id,
