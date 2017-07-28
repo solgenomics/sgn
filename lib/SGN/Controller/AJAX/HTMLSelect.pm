@@ -51,7 +51,7 @@ sub get_location_select : Path('/ajax/html/select/locations') Args(0) {
 
     my $locations = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_all_locations();
 
-    if ($empty) { unshift @$locations, [ "", "please select" ] }
+    if ($empty) { unshift @$locations, [ "", "Select Location" ] }
 
     my $default = $c->req->param("default") || @$locations[0]->[0];
 

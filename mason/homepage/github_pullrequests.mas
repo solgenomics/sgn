@@ -7,9 +7,8 @@ $phenotype_files => undef
         <div class="col-sm-12">
             <div class="panel panel-info">
                 <div class="panel-heading">Recent Changes to Database</div>
-                    <div class="panel-body">
-                        <div id="homepage_github_pullrequests_div"></div>
-                    </div>
+                <div class="panel-body">
+                    <div id="homepage_github_pullrequests_div"></div>
                 </div>
             </div>
         </div>
