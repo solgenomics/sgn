@@ -37,34 +37,56 @@
   overflow:visible;
 }
 
-.filter-operator{
-  vertical-align: middle;
-  text-align: center;
+.filter-operator {
+    font-weight: bold;
+    vertical-align: middle;
+    text-align: center;
+    display: inline-block;
+    box-sizing: border-box;
+    font-size: 0.8em;
+    height: 2em;
+    border-radius: 3px 0px 0px 3px;
+    border: solid;
+    border-width: thin;
+    border-color: #ddd;
+    border-right: none;
+    overflow: hidden;
+}
+.filter-wrapper .filter-operator-init{
+  visibility: hidden;
+  width:0;
+}
+.filter-operator::before {
   display: inline-block;
-  font-size: 2em;
-  color: #999;
-  margin: 0.125em;
-  width: 1.75em;
-  height: 1em;
-  background: white;
-  line-height: 0.75em;
-  border-radius: 3px;
-  border:solid;
-  border-width: thin;
-  border-color: rgba(100, 100, 100, 1);
-  padding: 0 0 0.1em 0;
+  height: 2em;
+  margin: 0 0 0 0.25em;
+  padding: 0.35em 0.3em 0 0.1em;
+}
+.filter-operator-and, .filter-operator-init{
+  background: #f5f5f5;
+  color: rgba(100, 100, 100, 1);
 }
 .filter-operator-and::before{
-  content: "∧";
+  content: "AND";
+}
+.filter-operator-or{
+  color: #f5f5f5;
+  background: rgba(100, 100, 100, 1);
 }
 .filter-operator-or::before{
-  content: "∨";
+  content: "OR";
 }
-.filter-operator-and-not::before{
-  content: "∧¬";
+.filter-operator-init::before{
+  content:"WHERE";
 }
-.filter-operator-or-not::before{
-  content: "∨¬";
+.filter-operator-not::after {
+  background: #f5e0e0;
+  color: rgba(100, 100, 100, 1);
+  content: "NOT";
+  display: inline-block;
+  height: 2em;
+  margin: 0 0 0 -0.05em;
+  padding: 0.35em 0.3em 0 0.3em;
 }
 
 .filter-new {
@@ -154,7 +176,7 @@
   width: 20em;
   display: inline-block;
   vertical-align: middle;
-  margin: 0.25em;
+  margin: 0.25em 0.25em 0.25em 0;
 }
 
 .input-filter {

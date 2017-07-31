@@ -58,27 +58,65 @@ $(document).ready(function(){
           .filter(function(d){
             return d!=null;
           });
-        rangeTraits = response.traits.results.map(function(d){return d[1];});
-        console.log(data);
-        window.gfiltering.main("#filter_div","#filtered_results",data,rangeTraits);
+        var rangeTraits = response.traits.results.map(function(d){return d[1];});
+        // columns = ["studyYear",
+        //            "studyDbId",
+        //            "studyName",
+        //            "studyDesign",
+        //            "locationDbId",
+        //            "locationName",
+        //            "germplasmDbId",
+        //            "germplasmName",
+        //            "germplasmSynonyms",
+        //            "observationLevel",
+        //            "observationUnitDbId",
+        //            "observationUnitName",
+        //            "replicate",
+        //            "blockNumber",
+        //            "plotNumber",
+        //            "dry matter content percentage|CO:0000092",
+        //            "fresh root weight|CO:0000012",
+        //            "fresh shoot weight measurement in kg|CO:0000016"]
+        var tableCols = [
+          {title:"Study",data:"studyName"},
+          {title:"Block",data:"blockNumber"},
+          {title:"Plot",data:"plotNumber"},
+          {title:"Accession",data:"germplasmName"},
+
+        ].concat(rangeTraits.map(function(d){
+          return {title:d,data:d};
+        }));
+        console.log(tableCols);
+        console.log("All Rows",data);
+        window.gfiltering.main("#filter_div","#filtered_results",data,tableCols,rangeTraits);
     });
   })
 });
 
 (function(d3){
   window.gfiltering = {};
-  window.gfiltering.main = function(filter_selector,table_selector,data,rangeTraits){
-    console.log(data);
+  window.gfiltering.main = function(filter_selector,table_selector,data,tableCols,rangeTraits){
     var canv = d3.select(filter_selector);
     var root = new FilterGroup(null,0,"init");
     window.gfiltering.rangeTraits = rangeTraits;
     root.draw(canv.node());
+    var results_table = $(table_selector).DataTable({
+      data: data,
+      "columns": tableCols
+    });
     window.gfiltering.redraw = function(){
       root.updateData(data);
       root.draw();
+
+      var currentFilter = root.getFilter();
+      $.fn.dataTableExt.afnFiltering.push(function( _1, _2, dataIndex ){
+        return currentFilter(data[dataIndex]);
+      });
+      results_table.draw();
+      $.fn.dataTableExt.afnFiltering.pop();
     }
     window.gfiltering.redraw();
-  }
+  };
 
   function Filter(parent,depth,operator){
     //constructor
@@ -88,13 +126,32 @@ $(document).ready(function(){
     this.operator = operator || "init";
   }
   //static
-  Filter.operator_types = [
-    [0,"and","filter-operator-and"],
-    [1,"or","filter-operator-or"],
-    [2,"and not","filter-operator-and-not"],
-    [3,"or not","filter-operator-or-not"]
-  ];
-  Filter.operator_map = d3.map(Filter.operator_types,function(d){return d[1]});
+  Filter.operators = [{
+      name:"and",
+      "class":"filter-operator-and",
+      next:1
+    },{
+      name:"and not",
+      "class":"filter-operator-and filter-operator-not",
+      next:2
+    },{
+      name:"or",
+      "class":"filter-operator-or",
+      next:3
+    },{
+      name:"or not",
+      "class":"filter-operator-or filter-operator-not",
+      next:0
+    },{
+      name:"init",
+      "class":"filter-operator-init",
+      next:5
+    },{
+      name:"init not",
+      "class":"filter-operator-init filter-operator-not",
+      next:4
+  }];
+  Filter.operator_map = d3.map(Filter.operators,function(d){return d.name});
   //prototype
   Filter.prototype.getFilter = function(){
     return null;
@@ -110,7 +167,7 @@ $(document).ready(function(){
   };
   Filter.prototype.updateOperator = function(){
     var f = d3.select(this.node);
-    var operatorData = this.operator == "init" ? [] : [this];
+    var operatorData = [this];
     var operator = f.selectAll(".filter-operator[depth = '"+(this.depth)+"']")
       .data(operatorData);
     operator.exit().remove();
@@ -118,15 +175,15 @@ $(document).ready(function(){
       operator.enter().append("div")
         .classed("filter-operator",true)
         .attr("depth",this.depth)
-        .classed(Filter.operator_map.get(this.operator)[2],true)
+        .classed(Filter.operator_map.get(this.operator).class,true)
         .on("click",function(d){
           var preoperator = Filter.operator_map.get(d.operator);
-          var newindex = (preoperator[0]+1)%Filter.operator_types.length;
-          var newoperator = Filter.operator_types[newindex];
+          var newindex = preoperator.next;
+          var newoperator = Filter.operators[newindex];
           d3.select(this)
-            .classed(preoperator[2],false)
-            .classed(newoperator[2],true);
-          d.operator = newoperator[1];
+            .classed(preoperator.class,false)
+            .classed(newoperator.class,true);
+          d.operator = newoperator.name;
           window.gfiltering.redraw();
         });
       }
