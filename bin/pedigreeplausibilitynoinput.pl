@@ -41,8 +41,10 @@ while (my $row = $stock_rs->next()) {
     print STDERR "working on accession ".$row->uniquename()."\n";
     my $stock = CXGN::Stock->new(schema => $schema, stock_id => $row->stock_id());
     my $parents = $stock->get_parents();
+    my $mother = $parents->{'mother'};
+    my $father = $parents->{'father'};
 
-    if ($parents->{'mother'} && $parents->{'father'}) {
+    if ($mother && $father) {
 
         my $gts = CXGN::Genotype::Search->new( {
             bcs_schema => $schema,
