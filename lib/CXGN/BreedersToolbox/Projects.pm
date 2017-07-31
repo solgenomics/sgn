@@ -292,7 +292,7 @@ LEFT JOIN nd_geolocationprop AS country_code ON (geo.nd_geolocation_id = country
 LEFT JOIN nd_geolocationprop AS location_type ON (geo.nd_geolocation_id = location_type.nd_geolocation_id AND location_type.type_id = (SELECT cvterm_id from cvterm where name = 'location_type') )
 LEFT JOIN projectprop ON (projectprop.value::INT = geo.nd_geolocation_id AND projectprop.type_id=?)
 LEFT JOIN project AS trial ON (trial.project_id=projectprop.project_id)
-LEFT JOIN project_relationship ON (subject_project_id=trial.project_id)
+LEFT JOIN project_relationship ON (subject_project_id=trial.project_id AND project_relationship.type_id = (SELECT cvterm_id from cvterm where name = 'breeding_program_trial_relationship'))
 LEFT JOIN project breeding_program ON (breeding_program.project_id=object_project_id)
 GROUP BY 1,2,3,4,5,6
 ORDER BY 8,2";

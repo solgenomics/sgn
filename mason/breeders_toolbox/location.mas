@@ -412,30 +412,26 @@ jQuery(document).ready(function() {
 
             });
             var map = initialize_map('location_map', locationJSON);
-            var location_layer = map.locations;
-            console.log("Location layer is: "+JSON.stringify(location_layer));
+            //var location_layer = map.locations;
+            //console.log("Location layer is: "+JSON.stringify(location_layer));
             table.on( 'draw.dt', function () {
-                var ids = [];
+                var ids = {};
                 table.column(0,  { search:'applied' } ).data().each(function(value, index) {
-                    ids.push(value);
+                    ids[value] = true;
                 });
-                console.log("Filtered Ids are: "+ids);
-                saved_layers = L.geoJson(location_layer, {
+                //console.log("Filtered Ids are: "+ids);
+                var saved_layers = L.geoJson(locationJSON, {
                     filter: function(feature, layer) {
-                        console.log("Current feature properties are: "+JSON.stringify(feature.properties));
-                        //add table filter here
-                        //return feature.properties.show_on_map;
-                        for (var i = 0; i < ids.length; i += 1) {
-                            if (feature.properties.Id == ids[i]) {
-                            console.log("Feature with id "+ids[i]+" is being saved\n");
-                            return true;
-                        }
-                      }
-                      return false;
-                    }
+                        console.log("value for "+feature.properties.Id+" is "+ids[feature.properties.Id]);
+                        return ids[feature.properties.Id];
+                    },
+                    pointToLayer: function (feature, latlng) {
+                       return L.circleMarker(latlng, style(feature));
+                   },
+                   onEachFeature: onEachFeature
                 });
-                location_layer.clearLayers();
-                saved_layers.addTo(map);
+                map.locations.clearLayers();
+                saved_layers.addTo(map.self);
                 //map.locations.addData(get_markers(table));
                 map.self.fitBounds(saved_layers.getBounds());
             });
