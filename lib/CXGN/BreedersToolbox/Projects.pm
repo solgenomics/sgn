@@ -303,16 +303,23 @@ ORDER BY 8,2";
     my @locations;
     while (my ($id, $name, $abbrev, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count) = $h->fetchrow_array()) {
         push(@locations, {
-            Id => $id,
-            Name => $name,
-            Abbreviation => $abbrev,
-            Country => $country_code,
-            Program => $prog,
-            Type => $type,
-            Latitude => $latitude,
-            Longitude => $longitude,
-            Altitude => $altitude,
-            Trials => '<a href="/search/trials?nd_geolocation='.$name.'">'.$trial_count.' trials</a>'
+            type => "Feature",
+            properties => {
+                Id => $id,
+                Name => $name,
+                Abbreviation => $abbrev,
+                Country => $country_code,
+                Program => $prog,
+                Type => $type,
+                Latitude => $latitude,
+                Longitude => $longitude,
+                Altitude => $altitude,
+                Trials => '<a href="/search/trials?nd_geolocation='.$name.'">'.$trial_count.' trials</a>'
+            },
+            geometry => {
+                type => "Point",
+                coordinates => [$longitude, $latitude]
+            }
         });
     }
     my $json = JSON->new();

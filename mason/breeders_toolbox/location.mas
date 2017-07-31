@@ -11,13 +11,13 @@ $user_id => undef
             <tr>
                 <th>Id</th>
                 <th>Name</th>
-                <th>Abbreviation</th>
+                <th>Abbrev.</th>
                 <th>Country</th>
                 <th>Program</th>
                 <th>Type</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
-                <th>Altitude(m)</th>
+                <th>Lat./th>
+                <th>Long.</th>
+                <th>Alt.(m)</th>
                 <th>Trials</th>
 
             </tr>
@@ -357,22 +357,24 @@ jQuery(document).ready(function() {
     	},
     	success: function(response) {
             var export_message = window.location.href + ' location data.';
-            console.log("Data is "+JSON.stringify(response.data));
+            locationJSON = JSON.parse(response.data);
+            console.log("Data is "+JSON.stringify(locationJSON, null, 2));
+
             var table = jQuery('#location_table').DataTable( {
-                data: response.data,
+                data: locationJSON,
                 dom: 'Bfrtip',
                 select: true,
                 "columns": [
-                    { "data": "Id" },
-                    { "data": "Name" },
-                    { "data": "Abbreviation" },
-                    { "data": "Country" },
-                    { "data": "Program" },
-                    { "data": "Type" },
-                    { "data": "Latitude" },
-                    { "data": "Longitude" },
-                    { "data": "Altitude" },
-                    { "data": "Trials" },
+                    { "data": "properties.Id" },
+                    { "data": "properties.Name" },
+                    { "data": "properties.Abbreviation" },
+                    { "data": "properties.Country" },
+                    { "data": "properties.Program" },
+                    { "data": "properties.Type" },
+                    { "data": "properties.Latitude" },
+                    { "data": "properties.Longitude" },
+                    { "data": "properties.Altitude" },
+                    { "data": "properties.Trials" },
                 ],
                 buttons: [ 'copy',
                     {
@@ -409,11 +411,33 @@ jQuery(document).ready(function() {
         ]
 
             });
-            var map = initialize_map('location_map', table);
+            var map = initialize_map('location_map', locationJSON);
+            var location_layer = map.locations;
+            console.log("Location layer is: "+JSON.stringify(location_layer));
             table.on( 'draw.dt', function () {
-                map.locations.clearLayers();
-                map.locations.addData(get_markers(table));
-                map.self.fitBounds(map.locations.getBounds());
+                var ids = [];
+                table.column(0,  { search:'applied' } ).data().each(function(value, index) {
+                    ids.push(value);
+                });
+                console.log("Filtered Ids are: "+ids);
+                saved_layers = L.geoJson(location_layer, {
+                    filter: function(feature, layer) {
+                        console.log("Current feature properties are: "+JSON.stringify(feature.properties));
+                        //add table filter here
+                        //return feature.properties.show_on_map;
+                        for (var i = 0; i < ids.length; i += 1) {
+                            if (feature.properties.Id == ids[i]) {
+                            console.log("Feature with id "+ids[i]+" is being saved\n");
+                            return true;
+                        }
+                      }
+                      return false;
+                    }
+                });
+                location_layer.clearLayers();
+                saved_layers.addTo(map);
+                //map.locations.addData(get_markers(table));
+                map.self.fitBounds(saved_layers.getBounds());
             });
     	},
     	error: function(response) {
@@ -461,7 +485,7 @@ jQuery(document).ready(function() {
 
 });
 
-function initialize_map(id, table) {
+function initialize_map(id, locations) {
 
     var satellite = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
@@ -481,7 +505,7 @@ function initialize_map(id, table) {
         "Satellite": satellite
     };
 
-    var location_layer = L.geoJSON(get_markers(table), {
+    var location_layer = L.geoJSON(locations, {
         pointToLayer: function (feature, latlng) {
            return L.circleMarker(latlng, style(feature));
        },
@@ -515,44 +539,47 @@ function style(feature) {
 }
 
 function onEachFeature(feature, layer) {
-    if (feature.properties && feature.properties.popupContent) {
-        layer.bindPopup(feature.properties.popupContent);
-    }
+        var popupContent = [];
+        // render properties
+        for (var key in feature.properties) {
+            popupContent.push(key + ": " + feature.properties[key]);
+        }
+        layer.bindPopup(popupContent.join("<br/>"));
 }
 
-    function get_markers (table) {
-        var marker_array = [];
-        var keys = ["id","name","abbreviation","country_code","program","type","latitude","longitude","altitude","trials"];
-        table.rows({filter: 'applied'}).eq(0).each( function ( index ) {
-            var data = table.row( index ).data();
-            //console.log("Row "+index+" contains "+JSON.stringify(data));
-            //var new_marker = new L.marker([data[6],data[7]]).bindPopup(data[1]);
-
-            var new_marker = {
-                "type": "Feature",
-                "properties": {
-                    "id": data[0],
-                    "name": data[1],
-                    "abbreviation": data[2],
-                    "country_code": data[3],
-                    "program": data[4],
-                    "type": data[5],
-                    "latitude": data[6],
-                    "longitude": data[7],
-                    "altitude": data[8],
-                    "trials": '<a href="/search/trials?nd_geolocation='+data[1]+'">'+data[9]+' trials</a>',
-                    "popupContent": '<table class="table"><thead><tr><th>Attribute</th><th>Value</th></thead><tbody><tr><th>ID</th><td>'+data[0]+'</td></tr><tr><th>Name</th><td>'+data[1]+'</td></tr><tr><th>Abbrev.</th><td>'+data[2]+'</td></tr><tr><th>Country Code</th><td>'+data[3]+'</td></tr><tr><th>Program</th><td>'+data[4]+'</td></tr><tr><th>Type</th><td>'+data[5]+'</td></tr><tr><th>Altitude</th><td>'+data[8]+'</td></tr><tr><th>Trials</th><td><a href="/search/trials?nd_geolocation='+data[1]+'">'+data[9]+' trials</a></td></tr></tbody></table>'
-                },
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [data[7], data[6]]
-                }
-            };
-            //marker_array.push(new_marker.toGeoJSON());
-            marker_array.push(new_marker);
-        });
-        return marker_array;
-    }
+    // function get_markers (table) {
+    //     var marker_array = [];
+    //     var keys = ["id","name","abbreviation","country_code","program","type","latitude","longitude","altitude","trials"];
+    //     table.rows({filter: 'applied'}).eq(0).each( function ( index ) {
+    //         var data = table.row( index ).data();
+    //         //console.log("Row "+index+" contains "+JSON.stringify(data));
+    //         //var new_marker = new L.marker([data[6],data[7]]).bindPopup(data[1]);
+    //
+    //         var new_marker = {
+    //             "type": "Feature",
+    //             "properties": {
+    //                 "id": data[0],
+    //                 "name": data[1],
+    //                 "abbreviation": data[2],
+    //                 "country_code": data[3],
+    //                 "program": data[4],
+    //                 "type": data[5],
+    //                 "latitude": data[6],
+    //                 "longitude": data[7],
+    //                 "altitude": data[8],
+    //                 "trials": '<a href="/search/trials?nd_geolocation='+data[1]+'">'+data[9]+' trials</a>',
+    //                 "popupContent": '<table class="table"><thead><tr><th>Attribute</th><th>Value</th></thead><tbody><tr><th>ID</th><td>'+data[0]+'</td></tr><tr><th>Name</th><td>'+data[1]+'</td></tr><tr><th>Abbrev.</th><td>'+data[2]+'</td></tr><tr><th>Country Code</th><td>'+data[3]+'</td></tr><tr><th>Program</th><td>'+data[4]+'</td></tr><tr><th>Type</th><td>'+data[5]+'</td></tr><tr><th>Altitude</th><td>'+data[8]+'</td></tr><tr><th>Trials</th><td><a href="/search/trials?nd_geolocation='+data[1]+'">'+data[9]+' trials</a></td></tr></tbody></table>'
+    //             },
+    //             "geometry": {
+    //                 "type": "Point",
+    //                 "coordinates": [data[7], data[6]]
+    //             }
+    //         };
+    //         //marker_array.push(new_marker.toGeoJSON());
+    //         marker_array.push(new_marker);
+    //     });
+    //     return marker_array;
+    // }
 
   function delete_location(id) {
     var name = $('#'+id+'_name').text();
