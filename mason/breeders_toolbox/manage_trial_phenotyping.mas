@@ -227,14 +227,6 @@ var trial_info_object = [];
         'empty': 1
     });
 
-    //jQuery("#virtualKeyboard").click(function () {
-    //    var input = $("input");
-    //    input[0].selectionStart = input[0].selectionEnd = input.val().length;
-    //    jQuery("#select_pheno_value").focusin(function() {
-
-    //    });
-    //})
-
     var plot_focusin;
     var trait_focusin;
     var trait_list_option_focusin;
@@ -254,15 +246,6 @@ var trial_info_object = [];
 
     jQuery( "#select_pheno_value" ).focusout(function() {
     //jQuery('input[name=select_pheno_value]').change(function() {
-      //var plot_name = jQuery("#plot_name").val();
-      //var trait = jQuery("#select_traits_for_trait_file").val();
-      //var trait_list_option = '';
-      //if ($('#use_trait_list').is(':checked')) {
-        // trait_list_option = jQuery('#use_trait_list').val();
-      //}
-      //if (trait === null){
-    //    trait = jQuery("#select_traits_for_trait_file_2").val();
-     // }
       var trait_value = jQuery("#select_pheno_value").val();
       var plot_name = plot_focusin;
       var trait = trait_focusin;
@@ -348,16 +331,12 @@ var trial_info_object = [];
 
   jQuery(document).on('change', '#plot_name', function(){
       var plot_infor = jQuery('#plot_name').val();
-      //alert(plot_infor);
-      //console.log(trial_info_object);
       for (i=0; i<trial_info_object.length; i++){
-          //console.log(trial_info_object[i]);
           if (trial_info_object[i].plot_name == plot_infor){
               var plotNo = trial_info_object[i].plot_number;
               var accessionName = trial_info_object[i].accession_name;
               var blockNo = trial_info_object[i].block_number;
               var repNo = trial_info_object[i].rep_number;
-              //alert(plotNo+","+accessionName+","+blockNo+","+repNo);
 
               jQuery('#trial_accession_table').val(accessionName);
               jQuery('#trial_plot_number_table').val(plotNo);
@@ -371,16 +350,12 @@ var trial_info_object = [];
 
   jQuery(document).on('change', '#trial_plot_number_table', function(){
       var plot_infor = jQuery('#trial_plot_number_table').val();
-      //alert(plot_infor);
-      //console.log(trial_info_object);
       for (i=0; i<trial_info_object.length; i++){
-          //console.log(trial_info_object[i]);
           if (trial_info_object[i].plot_number == plot_infor){
               var accessionName = trial_info_object[i].accession_name;
               var plotName = trial_info_object[i].plot_name;
               var blockNo = trial_info_object[i].block_number;
               var repNo = trial_info_object[i].rep_number;
-              //alert(accessionName+","+plotName+","+blockNo+","+repNo);
 
               jQuery('#plot_name').val(plotName);
               jQuery('#trial_accession_table').val(accessionName);
