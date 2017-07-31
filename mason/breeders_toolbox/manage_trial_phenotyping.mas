@@ -113,7 +113,7 @@ $trial_name
         <div class="form-group form-group-sm">
           <label class="col-sm-4 control-label">Enter trait value: </label>
           <div class="col-sm-3">
-              <input type="num" class="form-control" id="select_pheno_value" name="select_pheno_value"></input>
+              <input type="number" class="form-control" id="select_pheno_value" name="select_pheno_value"></input>
           </div>
         </div>
 
@@ -124,11 +124,11 @@ $trial_name
 </div>
 
 </form>
-<div id="main" class="container">
+<!--<div id="main" class="container">
     <div id="virtualKeyboard"></div>
     <hr>
 
-</div>
+</div>-->
 
 
 <script>
@@ -227,6 +227,14 @@ var trial_info_object = [];
         'empty': 1
     });
 
+    //jQuery("#virtualKeyboard").click(function () {
+    //    var input = $("input");
+    //    input[0].selectionStart = input[0].selectionEnd = input.val().length;
+    //    jQuery("#select_pheno_value").focusin(function() {
+
+    //    });
+    //})
+
     var plot_focusin;
     var trait_focusin;
     var trait_list_option_focusin;
@@ -259,7 +267,7 @@ var trial_info_object = [];
       var plot_name = plot_focusin;
       var trait = trait_focusin;
       var trait_list_option = trait_list_option_focusin;
-      
+
       new jQuery.ajax ( {
         type: 'POST',
         url : '/ajax/phenotype/plot_phenotype_upload',
