@@ -1469,6 +1469,7 @@ sub get_harvest_date_cvterm_id {
 sub create_plant_entities {
 	my $self = shift;
 	my $plants_per_plot = shift || 30;
+    my $inherits_plot_treatments = shift;
 
 	my $create_plant_entities_txn = sub {
 		my $chado_schema = $self->bcs_schema();
@@ -1485,7 +1486,32 @@ sub create_plant_entities {
 		my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
 		my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
 		my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
+		my $treatment_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
 		#my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
+
+        my $treatments;
+        my %treatment_experiments;
+        my %treatment_plots;
+        if ($inherits_plot_treatments){
+            $treatments = $self->get_treatments();
+            foreach (@$treatments){
+
+                my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                    type_id => $has_plants_cvterm,
+                    value => $plants_per_plot,
+                    project_id => $_->[0],
+                });
+
+                my $treatment_nd_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $_->[0] }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $treatment_cvterm })->single();
+                $treatment_experiments{$_->[0]} = $treatment_nd_experiment->nd_experiment_id();
+
+                my $treatment_trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $_->[0]});
+                my $plots = $treatment_trial->get_plots();
+                foreach my $plot (@$plots){
+                    $treatment_plots{$_->[0]}->{$plot->[0]} = 1;
+                }
+            }
+        }
 
 		my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
 			type_id => $has_plants_cvterm,
@@ -1493,6 +1519,8 @@ sub create_plant_entities {
 			project_id => $self->get_trial_id(),
 		});
 
+
+        my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $field_layout_cvterm })->single();
 
 		foreach my $plot (keys %$design) {
 			print STDERR " ... creating plants for plot $plot...\n";
@@ -1511,14 +1539,14 @@ sub create_plant_entities {
 				my $plant_name = $parent_plot_name."_plant_$number";
 				#print STDERR "... ... creating plant $plant_name...\n";
 
-				my $plant = $chado_schema->resultset("Stock::Stock")->find_or_create({
+				my $plant = $chado_schema->resultset("Stock::Stock")->create({
 					organism_id => $parent_plot_organism,
 					name       => $plant_name,
 					uniquename => $plant_name,
 					type_id => $plant_cvterm,
 				});
 
-				my $plantprop = $chado_schema->resultset("Stock::Stockprop")->find_or_create( {
+				my $plantprop = $chado_schema->resultset("Stock::Stockprop")->create( {
 					stock_id => $plant->stock_id(),
 					type_id => $plant_index_number_cvterm,
 					value => $number,
@@ -1528,7 +1556,7 @@ sub create_plant_entities {
 				my $plot_props = $chado_schema->resultset("Stock::Stockprop")->search({ stock_id => $parent_plot, type_id => [$block_cvterm, $plot_number_cvterm, $replicate_cvterm] });
 				while (my $prop = $plot_props->next() ) {
 					#print STDERR $plant->uniquename()." ".$prop->type_id()."\n";
-					$plantprop = $chado_schema->resultset("Stock::Stockprop")->find_or_create( {
+					$plantprop = $chado_schema->resultset("Stock::Stockprop")->create( {
 						stock_id => $plant->stock_id(),
 						type_id => $prop->type_id(),
 						value => $prop->value(),
@@ -1551,12 +1579,26 @@ sub create_plant_entities {
 				});
 
 				#link plant to project through nd_experiment. also add nd_genolocation_id of plot to nd_experiment for the plant
-				my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $field_layout_cvterm })->single();
 				my $plant_nd_experiment_stock = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
 					nd_experiment_id => $field_layout_experiment->nd_experiment_id(),
 					type_id => $field_layout_cvterm,
 					stock_id => $plant->stock_id(),
 				});
+
+                if ($inherits_plot_treatments){
+                    if($treatments){
+                        foreach (@$treatments){
+                            my $plots = $treatment_plots{$_->[0]};
+                            if (exists($plots->{$parent_plot})){
+                                my $plant_nd_experiment_stock = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
+                                    nd_experiment_id => $treatment_experiments{$_->[0]},
+                                    type_id => $treatment_cvterm,
+                                    stock_id => $plant->stock_id(),
+                                });
+                            }
+                        }
+                    }
+                }
 			}
 		}
 	};
