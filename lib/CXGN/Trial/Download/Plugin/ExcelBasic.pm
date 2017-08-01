@@ -177,7 +177,7 @@ sub download {
                 $ws->write($line, 6, $design_info{rep_number});
 
                 if (exists($treatment_plant_hash{$_})){
-                    $ws->write($n+7, $num_col_before_traits, 1);
+                    $ws->write($line, $num_col_before_traits-1, 1);
                 }
 
                 if (scalar(@predefined_columns) > 0) {
