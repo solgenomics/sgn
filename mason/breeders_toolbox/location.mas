@@ -395,17 +395,21 @@ jQuery(document).ready(function() {
                         message: export_message
                     },
             {
-                text: 'Get selected data',
+                text: 'Edit selected location',
                 action: function () {
                     var data = table.rows( { selected: true } ).data();
+                    //console.log("data "+JSON.stringify(data));
                     var all_rows = [];
                     for (var i=0; i < data.length ;i++){
                         var row_data = data[i];
-                        var row = row_data.join();
-                        all_rows.push(row);
+                        //console.log("row_data "+JSON.stringify(row_data));
+                        //var row = row_data.join();
+                        //console.log("Row "+JSON.stringify(row));
+                        all_rows.push(row_data);
                     }
-                    table_data = all_rows.join();
+                    table_data = all_rows.shift();
                     console.log("Selected rows contain "+JSON.stringify(table_data));
+                    edit_location(table_data)
                 }
             }
         ]
@@ -522,13 +526,22 @@ function initialize_map(id, locationJSON, table) {
 
 function style(feature) {
     //console.log("Type of marker "+feature.properties.name+" is "+feature.properties.type);
+    //
+    // var myIcon = L.icon({
+    //   iconUrl: 'my-icon-url',
+    //   iconSize: [32, 37],
+    //   iconAnchor: [16, 37],
+    //   popupAnchor: [0, -28]
+    // });
+    //
+    //
     switch (feature.properties.Type) {
-        case 'Farm':   return {color: "#663300"};
-        case 'Field': return {color: "#0000ff"};
-        case 'Greenhouse':   return {color: "#009900"};
-        case 'Screenhouse':   return {color: "#ffffff"};
-        case 'Lab':   return {color: "#000000"};
-        case 'Storage':   return {color: "#ff6600"};
+        case 'Farm':   return { color: "#663300", icon: L.icon.glyph({ prefix: 'glyphicon', glyph: 'adjust' }) };
+        case 'Field': return {color: "#0000ff", icon: fieldIcon};
+        case 'Greenhouse':   return {color: "#009900", icon: greenhouseIcon};
+        case 'Screenhouse':   return {color: "#ffffff", icon: screenhouseIcon};
+        case 'Lab':   return {color: "#000000", icon: labIcon};
+        case 'Storage':   return {color: "#ff6600", icon: storageIcon};
     }
 }
 
@@ -564,16 +577,25 @@ function onEachFeature(feature, layer) {
       });
    }
 
-   function edit_location(id) {
-        console.log("Id for location to edit is "+id);
-        $('#location_id').val(id);
-        $('#location_name').val($('#'+id+'_name').text());
-        $('#location_abbreviation').val($('#'+id+'_abbrev').text());
-        $('#location_country').val($('#'+id+'_country').text());
-        $('#location_type').val($('#'+id+'_type').text());
-        $('#location_latitude').val($('#'+id+'_lat').text());
-        $('#location_longitude').val($('#'+id+'_long').text());
-        $('#location_altitude').val($('#'+id+'_alt').text());
+   function edit_location(table_data) {
+        console.log("Id for location to edit is "+table_data.properties.Id);
+        // $('#location_id').val(id);
+        // $('#location_name').val($('#'+id+'_name').text());
+        // $('#location_abbreviation').val($('#'+id+'_abbrev').text());
+        // $('#location_country').val($('#'+id+'_country').text());
+        // $('#location_type').val($('#'+id+'_type').text());
+        // $('#location_latitude').val($('#'+id+'_lat').text());
+        // $('#location_longitude').val($('#'+id+'_long').text());
+        // $('#location_altitude').val($('#'+id+'_alt').text());
+        // $('#store_location_dialog').modal("show");
+        $('#location_id').val(table_data.properties.Id);
+        $('#location_name').val(table_data.properties.Name);
+        $('#location_abbreviation').val(table_data.properties.Abbreviation);
+        $('#location_country').val(table_data.Country);
+        $('#location_type').val(table_data.properties.Type);
+        $('#location_latitude').val(table_data.properties.Latitude);
+        $('#location_longitude').val(table_data.properties.Longitude);
+        $('#location_altitude').val(table_data.properties.Altitude);
         $('#store_location_dialog').modal("show");
     }
 
