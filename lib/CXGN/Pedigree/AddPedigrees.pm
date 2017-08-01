@@ -32,6 +32,8 @@ use Bio::GeneticRelationships::Individual;
 use Bio::GeneticRelationships::Population;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
+use CXGN::Genotype::PedigreeCheck;
+
 
 #class_type 'Pedigree', { class => 'Bio::GeneticRelationships::Pedigree' };
 has 'schema' => (
@@ -185,7 +187,10 @@ sub add_pedigrees {
 
 sub validate_pedigrees {
     my $self = shift;
-    my $schema = $self->get_schema();
+		my $protocol_id = shift;
+		print STDERR "my protocol id is $protocol_id\n";
+
+		my $schema = $self->get_schema();
     my %return;
 
     if (!$self->has_pedigrees()){
@@ -200,7 +205,7 @@ sub validate_pedigrees {
     my @pedigrees = @{$self->get_pedigrees()};
 		print STDERR "validating pedigrees\n";
     foreach my $pedigree (@pedigrees) {
-        my $error = $self->_validate_pedigree($pedigree, $female_parent_cvterm_id, $male_parent_cvterm_id);
+        my $error = $self->_validate_pedigree($pedigree, $female_parent_cvterm_id, $male_parent_cvterm_id, $protocol_id);
         if ($error) {
             push @{$return{error}}, $error;
         }
@@ -214,6 +219,7 @@ sub _validate_pedigree {
     my $pedigree = shift;
     my $female_parent_cvterm_id = shift;
     my $male_parent_cvterm_id = shift;
+		my $protocol_id = shift;
     my $schema = $self->get_schema();
     my $progeny_name = $pedigree->get_name();
     my $cross_type = $pedigree->get_cross_type();
@@ -223,6 +229,7 @@ sub _validate_pedigree {
     my $male_parent;
     my %return;
 
+		print STDERR "my protocol id is _ $protocol_id\n";
     my $progeny = $self->_get_accession($progeny_name);
     if (!$progeny){
         return "Pedigree name missing or not found as an accession in database.";
@@ -302,14 +309,30 @@ sub _validate_pedigree {
         return "Cross type not detected.";
     }
 
-		my $conflict_object = CXGN::Genotype::SNPSearch->new({schema=>$schema});
-		my $conflict_score = $conflict_object->pedigree_SNPtest($pedigree);
+		my $mother_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
+		$mother_lookup->set_stock_name($female_parent_name);
+		my $mother_lookup_result = $mother_lookup->get_stock_exact();
+		my $mother_id = $mother_lookup_result->stock_id();
+
+		my $father_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
+		$father_lookup->set_stock_name($male_parent_name);
+		my $father_lookup_result = $father_lookup->get_stock_exact();
+		my $father_id = $father_lookup_result->stock_id();
+
+		print STDERR "progeny name is $progeny_name\n";
+
+		my $conflict_object = CXGN::Genotype::PedigreeCheck->new({schema=>$schema, accession_name => $progeny_name, mother_id => $mother_id, father_id => $father_id, protocol_id => $protocol_id});
+		my $conflict_return = $conflict_object->pedigree_check();
+		my $conflict_score = $conflict_return->{'score'};
+		$conflict_score = (1 - $conflict_score);
+		my $percent_score = (100 * $conflict_score);
+		my $rounded_percent_score = sprintf("%.2f", $percent_score);
 
 		if ($conflict_score >= .03){
-			$conflict_score = (1 - $conflict_score);
-			my $percent_score = (100 * $conflict_score);
-			my $rounded_percent_score = sprintf("%.2f", $percent_score);
 			return "$rounded_percent_score% of markers are in conflict indiciating that at least one parent of $progeny_name may be incorrect.";
+		}
+		else{
+			return "$rounded_percent_score% of markers are in conflict indiciating that the pedigree of $progeny_name is likely correct.";
 		}
     return;
 }

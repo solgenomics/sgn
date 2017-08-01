@@ -25,17 +25,16 @@ has 'schema' => (
 		 lazy_build => 1,
 		);
 
-
 sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $self = shift;
     my $c = shift;
-   
-    if (!$c->user()) { 
+
+    if (!$c->user()) {
 	print STDERR "User not logged in... not uploading pedigrees.\n";
 	$c->stash->{rest} = {error => "You need to be logged in to upload pedigrees." };
 	return;
     }
-    
+
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
 	$c->stash->{rest} = {error =>  "You have insufficient privileges to add pedigrees." };
 	return;
@@ -58,7 +57,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 
     # check file type by file name extension
     #
-    if ($upload_original_name =~ /\.xls$|\.xlsx/) { 
+    if ($upload_original_name =~ /\.xls$|\.xlsx/) {
 	$c->stash->{rest} = { error => "Pedigree upload requires a tab delimited file. Excel files (.xls and .xlsx) are currently not supported. Please convert the file and try again." };
 	return;
     }
@@ -85,32 +84,32 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
 
     $md5 = $uploader->get_md5($archived_filename_with_path);
     unlink $upload_tempfile;
-    
+
     # check if all accessions exist
     #
     open(my $F, "<", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my %stocks;
 
-    my $header = <$F>; 
+    my $header = <$F>;
     my %legal_cross_types = ( biparental => 1, open => 1, self => 1);
     my %errors;
 
-    while (<$F>) { 
+    while (<$F>) {
 	chomp;
 	$_ =~ s/\r//g;
 	my @acc = split /\t/;
 	for(my $i=0; $i<3; $i++) {
-	    if ($acc[$i] =~ /\,/) { 
+	    if ($acc[$i] =~ /\,/) {
 		my @a = split /\s*\,\s*/, $acc[$i];  # a comma separated list for an open pollination can be given
 		foreach (@a) { $stocks{$_}++ if $_ };
 	    }
-	    else { 
+	    else {
 		$stocks{$acc[$i]}++ if $acc[$i];
 	    }
 	}
 	# check if the cross types are recognized...
-	if ($acc[3] && !exists($legal_cross_types{lc($acc[3])})) { 
+	if ($acc[3] && !exists($legal_cross_types{lc($acc[3])})) {
 	    $errors{"not legal cross type: $acc[3] (should be biparental, self, or open)"}=1;
 	}
     }
@@ -132,7 +131,10 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>$pedigrees });
     my $error;
 
-    my $pedigree_check = $add->validate_pedigrees();
+    my $default_genotyping_protocol = $c->config->{default_genotyping_protocol};
+    my $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
+
+    my $pedigree_check = $add->validate_pedigrees($protocol_id);
     #print STDERR Dumper $pedigree_check;
     if (!$pedigree_check){
         $error = "There was a problem validating pedigrees. Pedigrees were not stored.";
@@ -177,7 +179,7 @@ sub _get_pedigrees_from_file {
     my $archived_filename_with_path = shift;
 
     open(my $F, "<", $archived_filename_with_path) || die "Can't open file $archived_filename_with_path";
-    my $header = <$F>; 
+    my $header = <$F>;
     my @pedigrees;
     my $line_num = 2;
     while (<$F>) {
@@ -257,4 +259,4 @@ sub _get_pedigrees_from_file {
 }
 
 
-1; 
+1;

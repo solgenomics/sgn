@@ -94,7 +94,7 @@ sub do_fuzzy_search {
     #remove all trailing and ending spaces from accessions and organisms
     s/^\s+|\s+$//g for @accession_list;
     s/^\s+|\s+$//g for @organism_list;
-   
+
     my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
     #print STDERR "\n\nAccessionFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
 
@@ -317,7 +317,7 @@ sub add_accession_list_POST : Args(0) {
     return;
 }
 
-sub fuzzy_response_download : Path('/ajax/accession_list/fuzzy_download') : ActionClass('REST') { }
+sub fuzzy_response_download : Path('/ajax/accession_list/fuzzy_download') :   { }
 
 sub fuzzy_response_download_POST : Args(0) {
     my ($self, $c) = @_;
