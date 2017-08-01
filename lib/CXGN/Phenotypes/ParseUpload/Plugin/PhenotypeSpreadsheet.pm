@@ -90,6 +90,14 @@ sub validate {
     }
     my $num_fixed_col = scalar(@fixed_columns);
 
+    my $treatment_name;
+    if ($worksheet->get_cell(4,3)) {
+        $treatment_name  = $worksheet->get_cell(4,3)->value();
+    }
+    if ($treatment_name){
+        $num_fixed_col += 1;
+    }
+
     my $predefined_columns;
     my $num_predef_col = 0;
     my $json = JSON->new();
@@ -183,6 +191,16 @@ sub parse {
     }
     my $num_fixed_col = scalar(@fixed_columns);
 
+    my $treatment_name;
+    my $treatment_col;
+    if ($worksheet->get_cell(4,3)) {
+        $treatment_name  = $worksheet->get_cell(4,3)->value();
+    }
+    if ($treatment_name){
+        $treatment_col = $num_fixed_col;
+        $num_fixed_col += 1;
+    }
+
     my $predefined_columns;
     my $num_predef_col = 0;
     my $json = JSON->new();
@@ -201,6 +219,15 @@ sub parse {
             if (defined($plot_name)){
                 if ($plot_name ne ''){
                     $plots_seen{$plot_name} = 1;
+
+                    my $has_treatment_name;
+                    if($treatment_name){
+                        if($worksheet->get_cell($row,$treatment_col)){
+                            if($worksheet->get_cell($row,$treatment_col)->value()){
+                                $has_treatment_name = $worksheet->get_cell($row,$treatment_col)->value();
+                            }
+                        }
+                    }
 
                     for my $col ($num_col_before_traits .. $col_max) {
                         my $trait_name;
@@ -239,7 +266,7 @@ sub parse {
 
                                     if ( defined($trait_value) && defined($timestamp) ) {
                                         if ($trait_value ne '.'){
-                                            $data{$plot_name}->{$trait_name} = [$trait_value, $timestamp];
+                                            $data{$plot_name}->{$trait_name} = [$trait_value, $timestamp, [$has_treatment_name]];
                                         }
                                     }
                                 }
@@ -261,7 +288,7 @@ sub parse {
     $parse_result{'data'} = \%data;
     $parse_result{'plots'} = \@plots;
     $parse_result{'traits'} = \@traits;
-    #print STDERR Dumper \%parse_result;
+    print STDERR Dumper \%parse_result;
 
     return \%parse_result;
 }

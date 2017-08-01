@@ -109,11 +109,6 @@ sub download {
             $ws->write($n+7, 3, $design_info{block_number});
             $ws->write($n+7, 4, $design_info{is_a_control});
             $ws->write($n+7, 5, $design_info{rep_number});
-
-            if (exists($treatment_plot_hash{$design_info{plot_name}})){
-                $ws->write($n+7, 6, 1);
-            }
-
             $line++;
         }
 
@@ -123,7 +118,7 @@ sub download {
         my %treatment_plant_hash;
         if($treatment_trial){
             $treatment_plants = $treatment_trial->get_plants();
-            foreach (@$treatment_plamts){
+            foreach (@$treatment_plants){
                 $treatment_plant_hash{$_->[1]}++;
             }
             $num_col_before_traits = 8;
