@@ -35,7 +35,34 @@
   border-color: rgba(100, 100, 100, 1);
   min-height: 2.5em;
   overflow:visible;
+  padding: 0.25em 0.25em 0.25em 0.25em;
 }
+
+.filter-remove{
+  width:1em;
+  height:1em;
+  top:-0.25em;
+  right:-0.25em;
+  background:#b55;
+  border-radius:0.5em;
+  position:absolute;
+}
+
+.filter-range-form{
+  padding:0;
+}
+
+/*.filter-remove::before {
+    content: "+";
+    font-size: 18px;
+    color: #ddd;
+    position: absolute;
+    top: -2.5px;
+    left: 4px;
+    -ms-transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+}*/
 
 .filter-operator {
     font-weight: bold;
@@ -44,17 +71,19 @@
     display: inline-block;
     box-sizing: border-box;
     font-size: 0.8em;
+    margin: 0px -1px -1px 4px;
     height: 2em;
-    border-radius: 3px 0px 0px 3px;
+    border-radius: 0;
     border: solid;
     border-width: thin;
     border-color: #ddd;
-    border-right: none;
     overflow: hidden;
 }
+
 .filter-wrapper .filter-operator-init{
   visibility: hidden;
   width:0;
+  height: 0;
 }
 .filter-operator::before {
   display: inline-block;
@@ -141,15 +170,16 @@
 }
 
 .filter-wrapper {
-  border-color: rgba(100, 100, 100, 1);
+  position: relative;
   display: inline-block;
   vertical-align: middle;
   overflow:visible;
-  background: rgba(150, 150, 150, 0.1);
+  background: rgba(221, 221, 221, 0.1);
   border: solid;
+  border-color: #ddd;
   border-width: thin;
   border-radius: 3px;
-  padding: 0.25em;
+  padding: 0.4em;
   min-height: 2.6em;
 }
 .filter-wrapper::-webkit-scrollbar {
@@ -164,30 +194,13 @@
   border-radius: 3px;
 }
 
-.filter-item::before{
-  display: inline-block;
-  vertical-align: middle;
-  width:0;
-  height:2.5em;
-  content: " ";
-}
 
 .filter-panel {
   width: 20em;
   display: inline-block;
   vertical-align: middle;
-  margin: 0.25em 0.25em 0.25em 0;
-}
-
-.input-filter {
-  text-align: center;
-  width: 24em;
-}
-.input-filter .panel-heading::before{
-  content: "Data in List";
-}
-.input-filter .panel-heading{
-  background: white;
+  position: relative;
+  margin: 0;
 }
 
 .filter-panel .panel-heading select {
@@ -198,20 +211,20 @@
   padding: 0;
 }
 
-.filter-panel input{
-  display: block;
-  font-size: 0.8em;
-  width:4em;
-  margin:0.5em;
+.filter-range-form {
+    padding: 0.1em;
+    display: block;
+    text-align: center;
+    font-size: 0.8em;
+    width:6em;
+    margin: 0.5em;
 }
-.filter-panel input:first-of-type{
+.filter-range-form:first-of-type{
   float: left;
-  text-align: left;
   clear:left;
 }
-.filter-panel input:last-of-type{
+.filter-range-form:last-of-type{
   float: right;
-  text-align: right;
   clear:right;
 }
 .filter-panel .filter-status{

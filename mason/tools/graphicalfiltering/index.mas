@@ -117,9 +117,16 @@ $(document).ready(function(){
     }
     window.gfiltering.redraw();
   };
-
+  var colors = ["#ffffff","#b3e2cd","#f1e2cc","#fff2ae","#f4cae4","#e6f5c9","#cbd5e8","#fdcdac"];
+  var color = d3.scaleOrdinal()
+    .range(colors.map(d3.color));
+  var filterID = (function(){
+    var i = 0;
+    return function(){return i++;};
+  })();
   function Filter(parent,depth,operator){
     //constructor
+    this.filterID = filterID();
     this.type = "default";
     this.parent = parent || null;
     this.depth = depth || 0;
@@ -165,28 +172,44 @@ $(document).ready(function(){
     if (!this.node) return false;
     this.updateOperator();
   };
+  Filter.prototype.updateRemoveButton = function(){
+    var f = d3.select(this.node);
+    var remove = f.select(".filter-wrapper,.filter-panel").selectAll(".filter-remove[depth = '"+(this.depth)+"']")
+      .data(this.parent?[this]:[]);
+    remove.exit().remove();
+    remove.enter().append("div")
+      .classed("filter-remove",true)
+      .attr("depth",this.depth)
+      .on("click",function(d){
+        var chIndex = d.parent.children.indexOf(d);
+        d.parent.children.splice(chIndex, 1);
+        window.gfiltering.redraw();
+      });
+  }
   Filter.prototype.updateOperator = function(){
     var f = d3.select(this.node);
-    var operatorData = [this];
     var operator = f.selectAll(".filter-operator[depth = '"+(this.depth)+"']")
-      .data(operatorData);
-    operator.exit().remove();
-    if (operatorData.length>0){
-      operator.enter().append("div")
-        .classed("filter-operator",true)
-        .attr("depth",this.depth)
-        .classed(Filter.operator_map.get(this.operator).class,true)
-        .on("click",function(d){
-          var preoperator = Filter.operator_map.get(d.operator);
-          var newindex = preoperator.next;
-          var newoperator = Filter.operators[newindex];
-          d3.select(this)
-            .classed(preoperator.class,false)
-            .classed(newoperator.class,true);
-          d.operator = newoperator.name;
-          window.gfiltering.redraw();
-        });
-      }
+      .data([this]);
+    operator = operator.enter().append("div")
+      .classed("filter-operator",true)
+      .attr("depth",this.depth)
+      .classed(Filter.operator_map.get(this.operator).class,true)
+      .on("click",function(d){
+        var preoperator = Filter.operator_map.get(d.operator);
+        var newindex = preoperator.next;
+        var newoperator = Filter.operators[newindex];
+        d3.select(this)
+          .classed(preoperator.class,false)
+          .classed(newoperator.class,true);
+        d.operator = newoperator.name;
+        window.gfiltering.redraw();
+      })
+      .merge(operator);
+    if (this.parent && this.parent.children.indexOf(this)==0){
+      operator.classed(Filter.operator_map.get(this.operator).class,true)
+        .classed(Filter.operator_map.get("init").class,true);
+      this.operator = Filter.operator_map.get("init").name;
+    }
   };
 
   function FilterGroup(parent,depth,operator){
@@ -232,6 +255,7 @@ $(document).ready(function(){
       var group = childgroups[i];
       for (var j = 0; j < group.length; j++) {
         var childData = data;
+        group[j].group = this.depth+i;
         for (var k = 0; k < group.length; k++) {
           if (k!=j && filtergroups[i][k]) {
             childData = childData.filter(filtergroups[i][k]);
@@ -270,21 +294,36 @@ $(document).ready(function(){
         window.gfiltering.redraw();
       });
     //draw children
-    fgenter.merge(fg).select(".filter-wrapper-children")
+    fgenter.merge(fg)
+      .style("background",function(d){
+        var c = color(d.depth%color.range().length);
+        c.opacity = 0.2;
+        return c;
+      })
+      .select(".filter-wrapper-children")
       .each(function(d){
         var subfilters = d3.select(this)
           .selectAll("[depth = '"+(d.depth+1)+"'].filter-item")
-          .data(d.children);
-        subfilters.exit().remove();
+          .data(d.children,function(d){return d.filterID;});
+        subfilters.exit()
+          .style("opacity",1)
+          .transition()
+          .style("opacity",0)
+          .remove();
         subfilters.enter()
           .append("div")
           .classed("filter-item",true)
           .attr("depth",d.depth+1)
+          .style("opacity",0)
+          .transition()
+          .style("opacity",1)
+          .selection()
         .merge(subfilters)
           .each(function(d){
             d.draw(this);
           })
       })
+    this.updateRemoveButton();
   }
   FilterGroup.prototype.getConjointGroups = function(returnFilters){
     // returns groups of filters connected by ANDs
@@ -309,13 +348,9 @@ $(document).ready(function(){
     return cjGroups;
   }
 
-  var frIDer = (function*(){
-    var i = 10000;
-    while (true) yield i++;
-  })();
+
   function FilterRange(parent,depth,operator){
     //constructor
-    this.frID = frIDer.next().value;
     Filter.call(this,parent,depth,operator);
     this.type = "filterrange";
     this.brushRange = [null,null];
@@ -378,6 +413,7 @@ $(document).ready(function(){
       var body = pe.append('div')
         .classed("panel-body",true);
       var select = heading.append("select")
+        .classed("form-control",true)
         .on("change",function(){
           var fr = d3.select(this).datum();
           fr.filterTrait = $(this).val();
@@ -392,7 +428,9 @@ $(document).ready(function(){
     }
     this.refreshSelect();
     if (this.valueAccessor && this.filterTrait){
-      var svg = panel.select(".panel-body").selectAll("svg").data([this]);
+      var body = panel.select(".panel-body")
+      var svg = body.selectAll("svg").data([this]);
+      this.body = panel.select(".panel-body").node();
       if (!svg.enter().empty()){
         var svgE = svg.enter().append("svg");
         svgE.attr("width","100%")
@@ -430,6 +468,7 @@ $(document).ready(function(){
     } else {
       panel.selectAll("svg").remove();
     }
+    this.updateRemoveButton();
   };
 
   FilterRange.prototype.drawHistogram = function(){
@@ -528,9 +567,11 @@ $(document).ready(function(){
       .selectAll("input")
       .raise()
       .data([[0,this.brushRange,"from..."],[1,this.brushRange,"...to"]]);
+    var rangeFormat = d3.format(".5s");
     inputs.enter()
       .append("input")
-      .attr("type","number")
+      .classed("form-control input-sm filter-range-form",true)
+      // .attr("type","number")
       .attr("step","0.1")
       .attr("placeholder",function(d){
         return d[2];
@@ -541,9 +582,9 @@ $(document).ready(function(){
       })
     .merge(inputs)
       .each(function(d){
-        this.value = d[1][d[0]];
+        this.value = d[1][d[0]]==null?null:rangeFormat(d[1][d[0]]);
       });
-    var status = d3.select(this.panel)
+    var status = d3.select(this.body)
       .selectAll(".filter-status").raise().data([0]);
     status = status.enter().append("div")
       .classed("filter-status",true)
