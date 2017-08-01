@@ -1,6 +1,6 @@
 
 //JSAN.use('jqueryui');
-var k = jQuery.noConflict();
+//var k = jQuery.noConflict();
 function isLoggedIn() {
 
     var user_id;
@@ -66,7 +66,7 @@ function logout() {
 
 function setUpLogin() {
 
- k('#working').dialog( {
+ jQuery('#working').dialog( {
     height: 80,
     width: 100,
     modal: true,
@@ -75,7 +75,7 @@ function setUpLogin() {
     autoOpen: false
   });
 
-k('#login_window').dialog( {
+jQuery('#login_window').dialog( {
     height: 180,
     width: 300,
     modal: true,
