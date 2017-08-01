@@ -69,6 +69,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 	my $draw = $params->{draw};
 	$draw =~ s/\D//g; # cast to int
 
+    #print STDERR Dumper $result;
 	my @return;
 	foreach (@$result){
 		my $stock_id = $_->{stock_id};
@@ -80,7 +81,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 		my @owners = @{$_->{owners}};
 		my @owners_html;
 		foreach (@owners){
-			push @owners_html ,'<a href="/solpeople/personal-info.pl?sp_person_id='.$_->[0].'">'.$_->[1].'</a>';
+			push @owners_html ,'<a href="/solpeople/personal-info.pl?sp_person_id='.$_->[0].'">'.$_->[2].' '.$_->[3].'</a>';
 		}
 		my $owners_string = join ', ', @owners_html;
 		push @return, [  "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string, $organization_string ];
