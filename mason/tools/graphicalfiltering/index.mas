@@ -231,12 +231,12 @@ $(document).ready(function(){
         var filtered = false;
         //set groupval to false if any conjoint filter is false
         for (var j = 0; j < conjointGs[i].length; j++) {
-          if (conjointGs[i][j]!=null){
+          if (conjointGs[i][j]){
             filtered = true;
-          }
-          if (conjointGs[i][j] && !conjointGs[i][j](d)){
-            groupval = false;
-            break;
+            if(!conjointGs[i][j](d)){
+              groupval = false;
+              break;
+            }
           }
         }
         // OR-join the result of each conjoint group
@@ -437,6 +437,7 @@ $(document).ready(function(){
           .attr("shape-rendering","geometricPrecision")
           .attr("viewBox","0 0 "+this.width+" "+this.height);
         svgE.append("rect")
+          .classed("svg-bg",true)
           .attr("x",this.margin.left)
           .attr("y",this.margin.top)
           .attr("width",this.b_width)
@@ -454,11 +455,11 @@ $(document).ready(function(){
         var plotgroup = svgE.append("g")
           .attr("transform","translate("+this.margin.left+","+this.margin.top+")");
         this.plotgroup = plotgroup.node();
-        var brushfunc = this.getBrushCallback();
+        this.brushed = this.getBrushCallback();
         this.brush = d3.brushX()
           .extent([[this.margin.left,this.margin.top],[this.margin.left+this.b_width,this.margin.top+this.b_height]])
-          .on("end",brushfunc)
-          .on("brush",brushfunc);
+          .on("end",this.brushed)
+          .on("brush",this.brushed);
         svgE.append("g")
           .classed("brush",true)
           .call(this.brush);
@@ -472,7 +473,14 @@ $(document).ready(function(){
   };
 
   FilterRange.prototype.drawHistogram = function(){
-
+    var negate = (this.operator.indexOf("not", this.operator.length - 3) != -1);
+    var n = this;
+    var negated_from_root = negate;
+    while(n.parent){
+      negated_from_root ^= (n.parent.operator.indexOf("not", n.parent.operator.length - 3) != -1);
+      n = n.parent;
+    }
+    var svg = d3.select(this.svg).classed("filter-negated",negated_from_root);
     var extent = d3.extent(this.data, this.valueAccessor);
     if (this.data.length<2) extent = [-1,1];
     this.x.domain(extent);
@@ -590,16 +598,45 @@ $(document).ready(function(){
       .classed("filter-status",true)
       .merge(status);
 
+    svg.select(".brush-out-indicator").remove();
     if (hist.brushRange[0]!==null){
       var total = this.data.length;
-      var filtered = this.data.filter(this.getFilter()).length;
+      var sFilter = this.getFilter();
+      var filtered = this.data.filter(function(d){
+        return negate ? !sFilter(d) : sFilter(d);
+      }).length;
       status.text(filtered+"/"+total+" selected.");
       var transition = d3.select(this.svg)
         .select(".brush")
         .transition().duration(this.ttime);
-      var brushExtent = this.brushRange
-        .map(this.x.copy().clamp(true))
-        .map(function(d){return d+hist.margin.left;});
+      var bscale = this.x.copy()
+        .range(this.x.range()
+          .map(function(d){return d+hist.margin.left;}))
+        .clamp(true);
+      var brushExtent = this.brushRange.map(bscale);
+      var bg = svg.select(".svg-bg");
+      if (brushExtent[0]==brushExtent[1]){
+        var bgx = parseFloat(bg.attr("x"));
+        var bgy = parseFloat(bg.attr("y"));
+        var bgw = parseFloat(bg.attr("width"));
+        var bgh = parseFloat(bg.attr("height"));
+        if (brushExtent[0]==bscale.range()[0]){
+          svg.append("line").classed("brush-out-indicator",true)
+            .attr("x1",bgx)
+            .attr("y1",bgy)
+            .attr("x2",bgx)
+            .attr("y2",bgy+bgh);
+          brushExtent[1]+=1;
+        } else {
+          svg.append("line").classed("brush-out-indicator",true)
+            .attr("x1",bgx+bgw)
+            .attr("y1",bgy)
+            .attr("x2",bgx+bgw)
+            .attr("y2",bgy+bgh);
+          brushExtent[0]-=1;
+        }
+      }
+      console.log(brushExtent)
       this.brush.move(transition,brushExtent);
     } else {
       status.text("Select a range.");
@@ -619,33 +656,33 @@ $(document).ready(function(){
   FilterRange.prototype.getBrushCallback = function(){
     var hist = this;
     return function(d,i){
-      if (d3.event.type!="change" && !d3.event.selection){
-        clearTimeout(hist.brush_timeout);
-        hist.brushRange = [null,null];
-        window.gfiltering.redraw();
-      } else if (d3.event.sourceEvent || d3.event.type=="change"){
-        clearTimeout(hist.brush_timeout);
-        var lastSelectedRange = d3.event.selection;
-        hist.brush_timeout = setTimeout(function(){
-          if(lastSelectedRange){
-            hist.brushRange = lastSelectedRange
-            .map(function(d){return d-hist.margin.left;})
-            .map(hist.x.invert);
-            // .map(d3.format(".2"))
-            // .map(parseFloat);
-          }
-          //if there arent enough items in the selection (2) expand the selection to include the nearest ones.
-          if (hist.getFilter()&&hist.data.filter(hist.getFilter()).length<2){
-            console.log("adjusted")
-            var values = hist.data.map(hist.valueAccessor);
-            values.sort(function(a,b){return a-b;});
-            var midVal = d3.mean(hist.brushRange);
-            var midI = d3.bisect(values.slice(1),midVal);
-            hist.brushRange = [values[midI],values[midI+1]];
-          }
+      if (d3.event.sourceEvent){
+        if (d3.event.type!="change" && !d3.event.selection){
+          clearTimeout(hist.brush_timeout);
+          hist.brushRange = [null,null];
           window.gfiltering.redraw();
-          clearTimeout(hist.brush_timeout)
-        },d3.event.type=="end"?0:hist.ttime);
+        } else {
+          clearTimeout(hist.brush_timeout);
+          var lastSelectedRange = d3.event.selection;
+          hist.brush_timeout = setTimeout(function(){
+            if(lastSelectedRange){
+              hist.brushRange = lastSelectedRange
+              .map(function(d){return d-hist.margin.left;})
+              .map(hist.x.invert);
+            }
+            //if there arent enough items in the selection (2) expand the selection to include the nearest ones.
+            if (hist.getFilter()&&hist.data.filter(hist.getFilter()).length<2){
+              console.log("adjusted")
+              var values = hist.data.map(hist.valueAccessor);
+              values.sort(function(a,b){return a-b;});
+              var midVal = d3.mean(hist.brushRange);
+              var midI = d3.bisect(values.slice(1),midVal);
+              hist.brushRange = [values[midI],values[midI+1]];
+            }
+            window.gfiltering.redraw();
+            clearTimeout(hist.brush_timeout)
+          },d3.event.type=="end"?0:hist.ttime);
+        }
       }
     }
   };

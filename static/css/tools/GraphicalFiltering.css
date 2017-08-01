@@ -1,10 +1,20 @@
 @charset "UTF-8";
 
-.brush .selection {
-  stroke: #2be;
+.brush .selection, .brush-out-indicator {
+  stroke: #22BBEE;
   stroke-width: 1px;
-  fill: #acf;
+  fill: #78D4F3;
   fill-opacity: 0.1;
+}
+
+.filter-negated .brush .selection, .brush-out-indicator {
+  stroke: #EE0022;
+  fill: #F65E73;
+}
+
+.brush-out-indicator {
+    stroke-width: 4px;
+    stroke-dasharray: 4 2;
 }
 
 .bar text {
@@ -36,6 +46,7 @@
   min-height: 2.5em;
   overflow:visible;
   padding: 0.25em 0.25em 0.25em 0.25em;
+  text-align: left;
 }
 
 .filter-remove{
@@ -76,7 +87,7 @@
     border-radius: 0;
     border: solid;
     border-width: thin;
-    border-color: #ddd;
+    border-color: #999;
     overflow: hidden;
 }
 
@@ -176,11 +187,15 @@
   overflow:visible;
   background: rgba(221, 221, 221, 0.1);
   border: solid;
-  border-color: #ddd;
+  border-color: #999;
   border-width: thin;
   border-radius: 3px;
   padding: 0.4em;
   min-height: 2.6em;
+  text-align: center;
+}
+#filter_div > .filter-wrapper{
+  min-width: 52em;
 }
 .filter-wrapper::-webkit-scrollbar {
     width: 0.75em;
@@ -200,7 +215,13 @@
   display: inline-block;
   vertical-align: middle;
   position: relative;
+  border-color: #999;
   margin: 0;
+}
+
+.filter-panel .panel-heading {
+  padding: 0.5em;
+  border-radius: 3px;
 }
 
 .filter-panel .panel-heading select {
