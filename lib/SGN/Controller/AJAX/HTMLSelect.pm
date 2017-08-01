@@ -187,7 +187,7 @@ sub get_treatments_select : Path('/ajax/html/select/treatments') Args(0) {
     my $data = $trial->get_treatments();
 
     if ($empty) {
-        unshift @$data, [ '', "None" ];
+        unshift @$data, [ 0, "None" ];
     }
     my $html = simple_selectbox_html(
       name => $name,
