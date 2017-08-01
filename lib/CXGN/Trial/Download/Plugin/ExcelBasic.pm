@@ -36,7 +36,7 @@ sub download {
     if ($self->predefined_columns) {
         $submitted_predefined_columns = $self->predefined_columns;
         foreach (@$submitted_predefined_columns) {
-            foreach my $header_predef_col (keys $_) {
+            foreach my $header_predef_col (keys %{$_}) {
                 if ($_->{$header_predef_col}) {
                     push @predefined_columns, $header_predef_col;
                 }
@@ -109,6 +109,11 @@ sub download {
             $ws->write($n+7, 3, $design_info{block_number});
             $ws->write($n+7, 4, $design_info{is_a_control});
             $ws->write($n+7, 5, $design_info{rep_number});
+
+            if (exists($treatment_plot_hash{$design_info{plot_name}})){
+                $ws->write($n+7, 6, 1);
+            }
+
             $line++;
         }
 
@@ -125,7 +130,7 @@ sub download {
             @column_headers = ("plant_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", $treatment_name);
         } else {
             $num_col_before_traits = 7;
-            @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
+            @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
         }
         if (scalar(@predefined_columns) > 0) {
             push (@column_headers, @predefined_columns);
@@ -178,7 +183,7 @@ sub download {
                 if (scalar(@predefined_columns) > 0) {
                     my $pre_col_ind = $num_col_before_traits;
                     foreach (@$submitted_predefined_columns) {
-                        foreach my $header_predef_col (keys $_) {
+                        foreach my $header_predef_col (keys %{$_}) {
                             if ($_->{$header_predef_col}) {
                                 $ws->write($line, $pre_col_ind, $_->{$header_predef_col});
                                 $pre_col_ind++;

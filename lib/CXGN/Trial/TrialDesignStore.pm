@@ -405,13 +405,13 @@ sub store {
 		}
 
         if (exists($design{treatments})){
-            my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
-            ->create({
-                nd_geolocation_id => $nd_geolocation_id,
-                type_id => $treatment_nd_experiment_type_id,
-            });
-
             while(my($treatment_name, $stock_names) = each(%{$design{treatments}})){
+
+                my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')
+                ->create({
+                    nd_geolocation_id => $nd_geolocation_id,
+                    type_id => $treatment_nd_experiment_type_id,
+                });
 
                 #Create a project for each treatment_name
                 my $project_treatment_name = $self->get_trial_name()."_".$treatment_name;
