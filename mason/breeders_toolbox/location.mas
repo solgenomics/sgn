@@ -499,7 +499,7 @@ function initialize_map(id, locationJSON, table) {
     });
 
     mymap.fitBounds(location_layer.getBounds());
-    L.control.layers(baseMaps, overlayMaps).addTo(mymap);
+    var layerControl = L.control.layers(baseMaps, overlayMaps).addTo(mymap);
 
     table.on( 'draw.dt', function () {  // recreate location layer based on filtered table contents
         location_layer.clearLayers();
@@ -507,9 +507,9 @@ function initialize_map(id, locationJSON, table) {
         table.column(0,  { search:'applied' } ).data().each(function(value, index) {
             ids[value] = true;
         });
+        layerControl.removeLayer(location_layer);
         location_layer = L.geoJson(locationJSON, {
             filter: function(feature, layer) {
-                console.log("value for "+feature.properties.Id+" is "+ids[feature.properties.Id]);
                 return ids[feature.properties.Id];
             },
             pointToLayer: function (feature, latlng) {
@@ -518,6 +518,7 @@ function initialize_map(id, locationJSON, table) {
            onEachFeature: onEachFeature
         });
 
+        layerControl.addOverlay(location_layer, "Locations");
         location_layer.addTo(mymap);
         mymap.fitBounds(location_layer.getBounds());
     });
@@ -525,48 +526,62 @@ function initialize_map(id, locationJSON, table) {
 }
 
 function style(feature) {
-    console.log("Type of marker "+feature.properties.Name+" is "+feature.properties.Type);
+    //console.log("Type of marker "+feature.properties.Name+" is "+feature.properties.Type);
 
     var farmMarker = L.ExtraMarkers.icon({
-        icon: 'glyphicon glyphicon-grain',
+        icon: 'fa-number',
+        number: feature.properties.Id,
         markerColor: 'red',
         shape: 'circle',
-        prefix: 'glyphicon'
+        prefix: ''
     });
 
     var fieldMarker = L.ExtraMarkers.icon({
-        icon: 'glyphicon glyphicon-grain',
+        icon: 'fa-number',
+        number: feature.properties.Id,
         markerColor: 'orange',
         shape: 'circle',
-        prefix: 'glyphicon'
+        prefix: ''
+    });
+
+    var defaultMarker = L.ExtraMarkers.icon({
+        icon: 'fa-number',
+        number: feature.properties.Id,
+        markerColor: 'cyan',
+        shape: 'circle',
+        prefix: ''
     });
 
     var greenhouseMarker = L.ExtraMarkers.icon({
-        icon: 'glyphicon glyphicon-home',
+        icon: 'fa-number',
+        number: feature.properties.Id,
         markerColor: 'green-light',
         shape: 'penta',
-        prefix: 'glyphicon'
+        prefix: ''
     });
 
     var screenhouseMarker = L.ExtraMarkers.icon({
-        icon: 'glyphicon glyphicon-home',
+        icon: 'fa-number',
+        number: feature.properties.Id,
         markerColor: 'white',
         shape: 'penta',
-        prefix: 'glyphicon'
+        prefix: ''
     });
 
     var labMarker = L.ExtraMarkers.icon({
-        icon: 'glyphicon glyphicon-folder-close',
+        icon: 'fa-number',
+        number: feature.properties.Id,
         markerColor: 'blue',
         shape: 'square',
-        prefix: 'glyphicon'
+        prefix: ''
     });
 
     var storageMarker = L.ExtraMarkers.icon({
-        icon: 'glyphicon glyphicon-folder-close',
+        icon: 'fa-number',
+        number: feature.properties.Id,
         markerColor: 'purple',
         shape: 'square',
-        prefix: 'glyphicon'
+        prefix: ''
     });
 
     switch (feature.properties.Type) {
@@ -576,6 +591,7 @@ function style(feature) {
         case 'Screenhouse':   return { icon: screenhouseMarker };
         case 'Lab':   return { icon: labMarker };
         case 'Storage':   return { icon: storageMarker };
+        default:    return { icon: defaultMarker };
     }
 }
 
