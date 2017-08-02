@@ -70,6 +70,11 @@ has 'data_level' => (
   
 has 'file_metadata' => (isa => 'Str', is => 'rw', predicate => 'has_file_metadata');
 
+has 'treatment_project_id' => (
+    isa => 'Maybe[Int]',
+    is => 'rw'
+);
+
 
 sub download { 
     my $self = shift;
@@ -97,9 +102,18 @@ sub download {
         $errors{'error_messages'} = \@error_messages;
         return \%errors;
     }
+    
+    my $treatment = $self->treatment_project_id();
+    my $treatment_trial;
+    my $treatment_name = "";
+    if ($treatment){
+        $treatment_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $treatment});
+        $treatment_name = $treatment_trial->get_name();
+    }
 
     my $trial_name =  $trial_layout->get_trial_name();
 
+    my %treatment_stock_hash;
     if ($self->data_level eq 'plots') {
         $ws->write(0, 0, 'plot_id');
         $ws->write(0, 1, 'range');
@@ -107,6 +121,15 @@ sub download {
         $ws->write(0, 3, 'rep');
         $ws->write(0, 4, 'accession');
         $ws->write(0, 5, 'is_a_control');
+
+        if($treatment_trial){
+            $ws->write(0, 6, $treatment_name);
+            my $treatment_plots = $treatment_trial->get_plots();
+            foreach (@$treatment_plots){
+                $treatment_stock_hash{$_->[1]}++;
+            }
+        }
+
     } elsif ($self->data_level eq 'plants') {
         $ws->write(0, 0, 'plot_id');
         $ws->write(0, 1, 'range');
@@ -115,6 +138,14 @@ sub download {
         $ws->write(0, 4, 'rep');
         $ws->write(0, 5, 'accession');
         $ws->write(0, 6, 'is_a_control');
+
+        if($treatment_trial){
+            $ws->write(0, 7, $treatment_name);
+            my $treatment_plots = $treatment_trial->get_plants();
+            foreach (@$treatment_plots){
+                $treatment_stock_hash{$_->[1]}++;
+            }
+        }
     }
 
     my %design = %{$trial_layout->get_design()};
@@ -128,6 +159,11 @@ sub download {
             $ws->write($row_num,3,$design_info{'rep_number'});
             $ws->write($row_num,4,$design_info{'accession_name'});
             $ws->write($row_num,5,$design_info{'is_a_control'});
+
+            if(exists($treatment_stock_hash{$design_info{'plot_name'}})){
+                $ws->write($row_num,6,1);
+            }
+
             $row_num++;
         } elsif ($self->data_level eq 'plants'){
             my $plant_names = $design_info{'plant_names'};
@@ -140,6 +176,11 @@ sub download {
                 $ws->write($row_num,4,$design_info{'rep_number'});
                 $ws->write($row_num,5,$design_info{'accession_name'});
                 $ws->write($row_num,6,$design_info{'is_a_control'});
+
+                if(exists($treatment_stock_hash{$_})){
+                    $ws->write($row_num,7,1);
+                }
+
                 $plant_num++;
                 $row_num++;
             }

@@ -88,11 +88,11 @@ jQuery(document).ready(function() {
         jQuery('#create_spreadsheet_dialog').modal("show");
         var list = new CXGN.List();
         jQuery("#trait_list_spreadsheet").html(list.listSelect("trait_list_spreadsheet", [ 'traits' ]));
-        show_treatments();
+        show_spreadsheet_treatments();
     });
 
     jQuery(document).on('change', '#html_select_trial_for_create_spreadsheet', function() {
-        show_treatments();
+        show_spreadsheet_treatments();
     });
 
     jQuery('#create_spreadsheet_data_level').change(function() {
@@ -110,7 +110,7 @@ jQuery(document).ready(function() {
 
 });
 
-function show_treatments(){
+function show_spreadsheet_treatments(){
     var selected_trial_id = parseInt(jQuery("#html_select_trial_for_create_spreadsheet").val());
     get_select_box('treatments', 'create_spreadsheet_treatment', { 'name':'html_select_treatment_create_spreadsheet', 'id':'html_select_treatment_create_spreadsheet', 'trial_id':selected_trial_id, 'empty':1 });
 }
