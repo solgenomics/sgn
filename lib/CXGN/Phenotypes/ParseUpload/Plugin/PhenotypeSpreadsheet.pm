@@ -220,11 +220,14 @@ sub parse {
                 if ($plot_name ne ''){
                     $plots_seen{$plot_name} = 1;
 
-                    my $has_treatment_name;
+                    my @treatments;
                     if($treatment_name){
                         if($worksheet->get_cell($row,$treatment_col)){
                             if($worksheet->get_cell($row,$treatment_col)->value()){
-                                $has_treatment_name = $worksheet->get_cell($row,$treatment_col)->value();
+                                my $val = $worksheet->get_cell($row,$treatment_col)->value();
+                                if ($val){
+                                    push @treatments, $treatment_name;
+                                }
                             }
                         }
                     }
@@ -266,7 +269,7 @@ sub parse {
 
                                     if ( defined($trait_value) && defined($timestamp) ) {
                                         if ($trait_value ne '.'){
-                                            $data{$plot_name}->{$trait_name} = [$trait_value, $timestamp, [$has_treatment_name]];
+                                            $data{$plot_name}->{$trait_name} = [$trait_value, $timestamp, \@treatments];
                                         }
                                     }
                                 }
