@@ -20,6 +20,7 @@
   <link rel="stylesheet" type="text/css" href="/css/bootstrap3-xl-class.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/select/1.2.2/css/select.dataTables.min.css" crossorigin="anonymous">
   <link rel="stylesheet" type="text/css" href="/css/leaflet.css">
+   <link rel="stylesheet" type="text/css" href="/css/leaflet.extra-markers.min.css">
 
   <% $c->assets->export() %>
 

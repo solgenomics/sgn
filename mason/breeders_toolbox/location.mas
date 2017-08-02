@@ -3,7 +3,7 @@
 $user_id => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => ['leaflet','jquery.dataTables-buttons-min', 'jquery.datatables-select-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min',] &>
+<& /util/import_javascript.mas, classes => ['leaflet','leaflet_extra-markers_min','jquery.dataTables-buttons-min', 'jquery.datatables-select-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min',] &>
 <br>
 <div class="table-responsive" style="margin-top: 10px;">
     <table id="location_table" class="table table-hover table-striped table-bordered" width="100%">
@@ -485,7 +485,7 @@ function initialize_map(id, locationJSON, table) {
 
     var location_layer = L.geoJSON(locationJSON, {
         pointToLayer: function (feature, latlng) {
-           return L.circleMarker(latlng, style(feature));
+           return L.marker(latlng, style(feature));
        },
        onEachFeature: onEachFeature
     });
@@ -513,7 +513,7 @@ function initialize_map(id, locationJSON, table) {
                 return ids[feature.properties.Id];
             },
             pointToLayer: function (feature, latlng) {
-               return L.circleMarker(latlng, style(feature));
+               return L.marker(latlng, style(feature));
            },
            onEachFeature: onEachFeature
         });
@@ -525,23 +525,57 @@ function initialize_map(id, locationJSON, table) {
 }
 
 function style(feature) {
-    //console.log("Type of marker "+feature.properties.name+" is "+feature.properties.type);
-    //
-    // var myIcon = L.icon({
-    //   iconUrl: 'my-icon-url',
-    //   iconSize: [32, 37],
-    //   iconAnchor: [16, 37],
-    //   popupAnchor: [0, -28]
-    // });
-    //
-    //
+    console.log("Type of marker "+feature.properties.Name+" is "+feature.properties.Type);
+
+    var farmMarker = L.ExtraMarkers.icon({
+        icon: 'glyphicon glyphicon-grain',
+        markerColor: 'red',
+        shape: 'circle',
+        prefix: 'glyphicon'
+    });
+
+    var fieldMarker = L.ExtraMarkers.icon({
+        icon: 'glyphicon glyphicon-grain',
+        markerColor: 'orange',
+        shape: 'circle',
+        prefix: 'glyphicon'
+    });
+
+    var greenhouseMarker = L.ExtraMarkers.icon({
+        icon: 'glyphicon glyphicon-home',
+        markerColor: 'green-light',
+        shape: 'penta',
+        prefix: 'glyphicon'
+    });
+
+    var screenhouseMarker = L.ExtraMarkers.icon({
+        icon: 'glyphicon glyphicon-home',
+        markerColor: 'white',
+        shape: 'penta',
+        prefix: 'glyphicon'
+    });
+
+    var labMarker = L.ExtraMarkers.icon({
+        icon: 'glyphicon glyphicon-folder-close',
+        markerColor: 'blue',
+        shape: 'square',
+        prefix: 'glyphicon'
+    });
+
+    var storageMarker = L.ExtraMarkers.icon({
+        icon: 'glyphicon glyphicon-folder-close',
+        markerColor: 'purple',
+        shape: 'square',
+        prefix: 'glyphicon'
+    });
+
     switch (feature.properties.Type) {
-        case 'Farm':   return { color: "#663300", icon: L.icon.glyph({ prefix: 'glyphicon', glyph: 'adjust' }) };
-        case 'Field': return {color: "#0000ff", icon: fieldIcon};
-        case 'Greenhouse':   return {color: "#009900", icon: greenhouseIcon};
-        case 'Screenhouse':   return {color: "#ffffff", icon: screenhouseIcon};
-        case 'Lab':   return {color: "#000000", icon: labIcon};
-        case 'Storage':   return {color: "#ff6600", icon: storageIcon};
+        case 'Farm':   return { icon: farmMarker };
+        case 'Field': return { icon: fieldMarker };
+        case 'Greenhouse':   return { icon: greenhouseMarker };
+        case 'Screenhouse':   return { icon: screenhouseMarker };
+        case 'Lab':   return { icon: labMarker };
+        case 'Storage':   return { icon: storageMarker };
     }
 }
 
@@ -579,15 +613,6 @@ function onEachFeature(feature, layer) {
 
    function edit_location(table_data) {
         console.log("Id for location to edit is "+table_data.properties.Id);
-        // $('#location_id').val(id);
-        // $('#location_name').val($('#'+id+'_name').text());
-        // $('#location_abbreviation').val($('#'+id+'_abbrev').text());
-        // $('#location_country').val($('#'+id+'_country').text());
-        // $('#location_type').val($('#'+id+'_type').text());
-        // $('#location_latitude').val($('#'+id+'_lat').text());
-        // $('#location_longitude').val($('#'+id+'_long').text());
-        // $('#location_altitude').val($('#'+id+'_alt').text());
-        // $('#store_location_dialog').modal("show");
         $('#location_id').val(table_data.properties.Id);
         $('#location_name').val(table_data.properties.Name);
         $('#location_abbreviation').val(table_data.properties.Abbreviation);
