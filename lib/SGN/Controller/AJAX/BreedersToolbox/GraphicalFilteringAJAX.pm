@@ -24,8 +24,8 @@ has 'schema' => (
 		 lazy_build => 1,
 		);
 
-sub accession_trait_csv : Path('/ajax/trial/accession_trait_csv') : ActionClass('REST') {}
-sub accession_trait_csv_GET : Args(0) {
+sub common_plot_traits : Path('/ajax/trial/common_plot_traits') : ActionClass('REST') {}
+sub common_plot_traits_GET : Args(0) {
    my $self = shift;
    my $c = shift;
 

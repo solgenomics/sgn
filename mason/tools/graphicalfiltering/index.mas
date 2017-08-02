@@ -21,14 +21,23 @@
             <option selected="selected">Loading...</option>
           </select
       </div>
-      <img hidden id="results-loading-spinner" src="/img/wheel.gif" alt="loading">
     </form>
   </center>
 </div>
-
+<center>
+  <img hidden="true" id="results-loading-spinner" src="/img/wheel.gif" alt="loading">
+</center>
 <div id="filter_div" class="row"></div>
-<div id="filtered_results_wrap" class="row dataTables_wrapper">
-  <table id="filtered_results" width="100%" class="table table-hover table-striped dataTable no-footer" role="grid" style="width: 100%;"></table>
+<div id="filtered_results_wrap" hidden="true" class="row dataTables_wrapper">
+  <&| /page/info_section.mas, title => 'Filtered Results', collapsible=>0, collapsed=>0 &>
+    <table id="filtered_results" width="100%" class="table table-hover table-striped dataTable no-footer" role="grid" style="width: 100%;"></table>
+  </&>
+  <&| /page/info_section.mas, title => 'Save Results as List', collapsible=>1, collapsed=>1 &>
+    <form id="new-list-form">
+      <label>List Name: </label> <input name="name" class="form-control" type="text">
+      <button type="submit" class="btn btn-primary">Create</button>
+    </form>
+  </&>
 </div>
 
 <script>
@@ -42,7 +51,9 @@ $(document).ready(function(){
   $("#trials_list_select").change(function(){
     var trial_list_id = $(this).val();
     console.log(trial_list_id);
-    $.get('/ajax/trial/accession_trait_csv?trial_list_id='+trial_list_id, function(response) {
+    $('#filtered_results_wrap').hide();
+    $('#results-loading-spinner').show();
+    $.get('/ajax/trial/common_plot_traits?trial_list_id='+trial_list_id, function(response) {
         console.log(response);
         var cols = response.data[0];
         var data = response.data
@@ -59,58 +70,69 @@ $(document).ready(function(){
             return d!=null;
           });
         var rangeTraits = response.traits.results.map(function(d){return d[1];});
-        // columns = ["studyYear",
-        //            "studyDbId",
-        //            "studyName",
-        //            "studyDesign",
-        //            "locationDbId",
-        //            "locationName",
-        //            "germplasmDbId",
-        //            "germplasmName",
-        //            "germplasmSynonyms",
-        //            "observationLevel",
-        //            "observationUnitDbId",
-        //            "observationUnitName",
-        //            "replicate",
-        //            "blockNumber",
-        //            "plotNumber",
-        //            "dry matter content percentage|CO:0000092",
-        //            "fresh root weight|CO:0000012",
-        //            "fresh shoot weight measurement in kg|CO:0000016"]
         var tableCols = [
           {title:"Study",data:"studyName"},
           {title:"Block",data:"blockNumber"},
           {title:"Plot",data:"plotNumber"},
           {title:"Accession",data:"germplasmName"},
-
         ].concat(rangeTraits.map(function(d){
           return {title:d,data:d};
         }));
         console.log(tableCols);
         console.log("All Rows",data);
         window.gfiltering.main("#filter_div","#filtered_results",data,tableCols,rangeTraits);
+        $('#filtered_results_wrap').show();
+        $('#results-loading-spinner').hide();
     });
   })
+
+  $('#new-list-form').submit(function () {
+    if (!window.gfiltering.data){
+      alert("Can't create a list from nothing.")
+      return false;
+    }
+    try {
+      var form = d3.map($(this).serializeArray(),function(d){return d.name;});
+      var list = new CXGN.List();
+      var newListID = list.newList(form.get("name").value);
+      if (!newListID) throw "List creation failed.";
+      list.setListType(newListID,"plots");
+      var data = window.gfiltering.data.filter(window.gfiltering.root.getFilter());
+      var count = list.addBulk(newListID,data.map(function(d){return d.observationUnitName}));
+      if (!count) throw "Added nothing to list or addition failed.";
+      alert("List \""+form.get("name").value+"\" created with "+count+" entries.")
+    }
+    catch(err) {
+      setTimeout(function(){throw err;});
+    }
+    finally {
+      return false;
+    }
+  });
+
 });
+
+
 
 (function(d3){
   window.gfiltering = {};
   window.gfiltering.main = function(filter_selector,table_selector,data,tableCols,rangeTraits){
     var canv = d3.select(filter_selector);
-    var root = new FilterGroup(null,0,"init");
+    window.gfiltering.root = new FilterGroup(null,0,"init");
     window.gfiltering.rangeTraits = rangeTraits;
-    root.draw(canv.node());
+    window.gfiltering.root.draw(canv.node());
     var results_table = $(table_selector).DataTable({
       data: data,
       "columns": tableCols
     });
+    window.gfiltering.data = data;
     window.gfiltering.redraw = function(){
-      root.updateData(data);
-      root.draw();
+      window.gfiltering.root.updateData(window.gfiltering.data);
+      window.gfiltering.root.draw();
 
-      var currentFilter = root.getFilter();
+      var currentFilter = window.gfiltering.root.getFilter();
       $.fn.dataTableExt.afnFiltering.push(function( _1, _2, dataIndex ){
-        return currentFilter(data[dataIndex]);
+        return currentFilter(window.gfiltering.data[dataIndex]);
       });
       results_table.draw();
       $.fn.dataTableExt.afnFiltering.pop();
@@ -171,6 +193,7 @@ $(document).ready(function(){
     if (node) this.node = node;
     if (!this.node) return false;
     this.updateOperator();
+    var negate = (this.operator.indexOf("not", this.operator.length - 3) != -1);
     var n = this;
     var negated_from_root = negate;
     while(n.parent){
@@ -280,26 +303,40 @@ $(document).ready(function(){
       .classed("filter-wrapper",true);
     fgenter.append("span")
       .classed("filter-wrapper-children",true);
-    var addmenuE = fgenter.append("div")
-      .classed("filter-new",true)
-      .append("div")
-      .classed("filter-new-menu",true);
-    addmenuE.append("span")
-      .classed("filter-new-text",true)
-      .text("Range")
+
+    var dropID = this.filterID+"dropdown";
+    var newFilterMenu = fgenter.append("div")
+      .classed("dropdown",true);
+    newFilterMenu.append("button")
+      .classed("btn btn-secondary dropdown-toggle",true)
+      .attr("type","button")
+      .attr("id",dropID)
+      .attr("data-toggle","dropdown")
+      .attr("aria-haspopup","true")
+      .attr("aria-expanded","false");
+    var newFilterMenuContents = newFilterMenu.append("ul")
+      .classed("dropdown-menu",true)
+      .attr("aria-labelledby",dropID);
+
+    newFilterMenuContents.append("li").append("a").text("Range")
+      .attr("href","#")
+      .classed("dropdown-item",true)
       .on("click",function(d){
         var op = d.children.length==0 ? "init" : "and";
         d.children.push(new FilterRange(d,d.depth+1,op));
         window.gfiltering.redraw();
-      });
-    addmenuE.append("span")
-      .classed("filter-new-text",true)
-      .text("Group")
+        return false;
+      })
+    newFilterMenuContents.append("li").append("a").text("Group")
+      .attr("href","#")
+      .classed("dropdown-item",true)
       .on("click",function(d){
         var op = d.children.length==0 ? "init" : "and";
         d.children.push(new FilterGroup(d,d.depth+1,op));
         window.gfiltering.redraw();
-      });
+        return false;
+      })
+
     //draw children
     fgenter.merge(fg)
       .style("background",function(d){
