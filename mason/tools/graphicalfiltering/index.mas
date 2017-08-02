@@ -171,6 +171,13 @@ $(document).ready(function(){
     if (node) this.node = node;
     if (!this.node) return false;
     this.updateOperator();
+    var n = this;
+    var negated_from_root = negate;
+    while(n.parent){
+      negated_from_root ^= (n.parent.operator.indexOf("not", n.parent.operator.length - 3) != -1);
+      n = n.parent;
+    }
+    d3.select(this.node).classed("filter-negated",negated_from_root);
   };
   Filter.prototype.updateRemoveButton = function(){
     var f = d3.select(this.node);
@@ -474,13 +481,6 @@ $(document).ready(function(){
 
   FilterRange.prototype.drawHistogram = function(){
     var negate = (this.operator.indexOf("not", this.operator.length - 3) != -1);
-    var n = this;
-    var negated_from_root = negate;
-    while(n.parent){
-      negated_from_root ^= (n.parent.operator.indexOf("not", n.parent.operator.length - 3) != -1);
-      n = n.parent;
-    }
-    var svg = d3.select(this.svg).classed("filter-negated",negated_from_root);
     var extent = d3.extent(this.data, this.valueAccessor);
     if (this.data.length<2) extent = [-1,1];
     this.x.domain(extent);
@@ -597,7 +597,7 @@ $(document).ready(function(){
     status = status.enter().append("div")
       .classed("filter-status",true)
       .merge(status);
-
+    var svg = d3.select(this.svg);
     svg.select(".brush-out-indicator").remove();
     if (hist.brushRange[0]!==null){
       var total = this.data.length;
@@ -606,8 +606,7 @@ $(document).ready(function(){
         return negate ? !sFilter(d) : sFilter(d);
       }).length;
       status.text(filtered+"/"+total+" selected.");
-      var transition = d3.select(this.svg)
-        .select(".brush")
+      var transition = svg.select(".brush")
         .transition().duration(this.ttime);
       var bscale = this.x.copy()
         .range(this.x.range()

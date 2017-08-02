@@ -7,7 +7,8 @@
   fill-opacity: 0.1;
 }
 
-.filter-negated .brush .selection, .brush-out-indicator {
+.filter-negated>.filter-panel .brush .selection,
+.filter-negated>.filter-panel .brush-out-indicator {
   stroke: #EE0022;
   fill: #F65E73;
 }
@@ -89,13 +90,21 @@
     border-width: thin;
     border-color: #999;
     overflow: hidden;
+    min-width: 6em;
 }
 
 .filter-wrapper .filter-operator-init{
   visibility: hidden;
-  width:0;
-  height: 0;
 }
+
+.filter-item:first-child:nth-last-child(2)
+>.filter-operator-init,
+.filter-item:first-child:nth-last-child(1)
+>.filter-operator-init {
+  width:0;
+  min-width: 0;
+}
+
 .filter-operator::before {
   display: inline-block;
   height: 2em;
@@ -120,18 +129,23 @@
   content:"WHERE";
 }
 .filter-operator-not::after {
-  background: #f5e0e0;
-  color: rgba(100, 100, 100, 1);
-  content: "NOT";
-  display: inline-block;
-  height: 2em;
-  margin: 0 0 0 -0.05em;
-  padding: 0.35em 0.3em 0 0.3em;
+    background: #A6E5FA;
+    color: rgba(100, 100, 100, 1);
+    content: "NOT";
+    display: block;
+    float: right;
+    height: 2em;
+    margin: 0 0 0 -0.05em;
+    padding: 0.35em 0.3em 0 0.3em;
+}
+.filter-negated>.filter-operator-not::after{
+  background: #FCB1BB;
 }
 
 .filter-new {
-  display: inline-block;
-  vertical-align: middle;
+  display: block;
+  clear:both;
+  margin: auto;
   width:2em;
   height:2em;
   color: white;
@@ -192,10 +206,10 @@
   border-radius: 3px;
   padding: 0.4em;
   min-height: 2.6em;
-  text-align: center;
+  text-align: left;
 }
 #filter_div > .filter-wrapper{
-  min-width: 52em;
+  min-width: 100%;
 }
 .filter-wrapper::-webkit-scrollbar {
     width: 0.75em;
