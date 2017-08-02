@@ -42,17 +42,13 @@ $mech->get_ok('http://localhost:3010/ajax/accession_usage_female');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
-is_deeply($response,{'data' =>[
-['<a href="/stock/38843/view">test_accession4</a>', 15]
-]}, 'female usage');
+is_deeply($response,{'data' => [['<a href="/stock/38843/view">test_accession4</a>',15],['<a href="/stock/38840/view">test_accession1</a>',1],['<a href="/stock/38842/view">test_accession3</a>',1]]}, 'female usage');
 
 
 $mech->get_ok('http://localhost:3010/ajax/accession_usage_male');
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 
-is_deeply($response, {'data'=>[
-['<a href="/stock/38844/view">test_accession5</a>', 15]
-]}, 'male usage');
+is_deeply($response, {'data' => [['<a href="/stock/38844/view">test_accession5</a>',15],['<a href="/stock/38841/view">test_accession2</a>',1]]}, 'male usage');
 
 done_testing();

@@ -273,10 +273,14 @@ sub search {
     while (my ($year, $project_name, $stock_name, $location, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $phenotype_uniquename, $design, $stock_type_name, $phenotype_id, $full_count) = $h->fetchrow_array()) {
         my $timestamp_value;
         if ($include_timestamp) {
-            my ($p1, $p2) = split /date: /, $phenotype_uniquename;
-            my ($timestamp, $p3) = split /  operator/, $p2;
-            if( $timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                $timestamp_value = $timestamp;
+            if ($phenotype_uniquename){
+                my ($p1, $p2) = split /date: /, $phenotype_uniquename;
+                if ($p2){
+                    my ($timestamp, $p3) = split /  operator/, $p2;
+                    if ( $timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
+                        $timestamp_value = $timestamp;
+                    }
+                }
             }
         }
         my $synonyms = $synonym_hash_lookup{$stock_name};
