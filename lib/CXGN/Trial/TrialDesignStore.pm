@@ -79,6 +79,7 @@ has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', 
 has 'design' => (isa => 'HashRef[HashRef[Str|ArrayRef]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 has 'stocks_exist' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
+has 'new_treatment_has_plant_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
 
 sub validate_design {
 	print STDERR "validating design\n";
@@ -179,6 +180,7 @@ sub store {
     my $treatment_nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
     my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
     my $trial_treatment_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
+    my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
 
 	my $nd_experiment_type_id;
 	my $stock_type_id;
@@ -423,6 +425,15 @@ sub store {
                 $treatment_project->create_projectprops({
                     $project_design_cvterm->name() => "treatment"
                 });
+
+                if ($self->get_new_treatment_has_plant_entries){
+                    my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                        type_id => $has_plants_cvterm,
+                        value => $self->get_new_treatment_has_plant_entries,
+                        project_id => $treatment_project->project_id(),
+                    });
+                }
+
                 $nd_experiment->create_related('nd_experiment_projects',{project_id => $treatment_project->project_id()});
 
                 my $trial_treatment_relationship = $chado_schema->resultset("Project::ProjectRelationship")->create({

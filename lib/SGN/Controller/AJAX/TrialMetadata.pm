@@ -413,6 +413,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     my $trial_id = $c->stash->{trial_id};
     my $trial = $c->stash->{trial};
     my $design = decode_json $c->req->param('design');
+    my $new_treatment_has_plant_entries = $c->req->param('has_plant_entries');
 
     my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
 		bcs_schema => $schema,
@@ -421,6 +422,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
 		nd_geolocation_id => $trial->get_location()->[0],
 		design_type => $trial->get_design_type(),
 		design => $design,
+        new_treatment_has_plant_entries => $new_treatment_has_plant_entries
 	});
     my $error = $trial_design_store->store();
     if ($error){
