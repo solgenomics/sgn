@@ -213,14 +213,10 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           my @propinfo = ();
           while (my $prop = $prop_rs->next()) {
               push @propinfo, $prop->value();
-      	#push @propinfo, { stockprop_id => $prop->stockprop_id, stock_id => $prop->stock_id, type_id => $prop->type_id(), type_name => $prop->type->name(), value => $prop->value() };
           }
-          #if (scalar(@propinfo) > 0 ) {
-              foreach my $synonym (@propinfo){
-                  $synonyms .= $synonym.", ";
-              }
-          #}
-          print STDERR Dumper(\@propinfo);
+          foreach my $synonym (@propinfo){
+              $synonyms .= $synonym.", ";
+          }
 
       }
       elsif ($plant_cvterm_id == $type_id) {
@@ -372,12 +368,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                           $label_text_4 = "pedigree: ".$parents;
                       }
                       $label_text_5 = $found[$i]->[7];
-                      #my $syns = $found[$i]->[7];
-                      #if ($syns eq ''){
-                         # $label_text_5 = "No synonym(s) for ".$found[$i]->[1];
-                      #}else{
-                          #$label_text_5 = "synonym(s): ".$syns;
-                      #}
                   }
                   elsif ($found[$i]->[5] eq 'plant'){
                       $label_text_6 = "plot:".$found[$i]->[6];
@@ -445,12 +435,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                       $label_text_4 = "pedigree: ".$parents;
                   }
                   $label_text_5 = $found[$i]->[7];
-                #   my $syns = $found[$i]->[7];
-                #   if ($syns eq ''){
-                #       $label_text_5 = "No synonym(s) for ".$found[$i]->[1];
-                #   }else{
-                #       $label_text_5 = "synonym(s): ".$syns;
-                #   }
               }
               elsif ($found[$i]->[5] eq 'plant'){
                   $label_text_6 = "plot:".$found[$i]->[6];
