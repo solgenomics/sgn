@@ -362,7 +362,7 @@ jQuery(document).ready(function() {
             locationJSON = JSON.parse(response.data);
             //console.log("Data is "+JSON.stringify(locationJSON, null, 2));
 
-            table = jQuery('#location_table').DataTable( {
+            var table = jQuery('#location_table').DataTable( {
                 data: locationJSON,
                 dom: 'Bfrtip',
                 select: true,
@@ -378,39 +378,7 @@ jQuery(document).ready(function() {
                     { "data": "properties.Altitude" },
                     { "data": "properties.Trials" },
                 ],
-                buttons: [ 'copy',
-                    {
-                        extend: 'excelHtml5',
-                        title: 'locations'
-                    },
-                    {
-                        extend: 'csvHtml5',
-                        title: 'locations'
-                    },
-                    {
-                        extend: 'pdfHtml5',
-                        title: 'locations',
-                        message: export_message
-                    },
-                    {
-                        extend: 'print',
-                        message: export_message
-                    },
-            {
-                text: 'Edit selected location',
-                action: function () {
-                    var data = table.rows( { selected: true } ).data();
-                    //console.log("data "+JSON.stringify(data));
-                    var all_rows = [];
-                    for (var i=0; i < data.length ;i++){
-                        all_rows.push(data[i]);
-                    }
-                    table_data = all_rows.shift();
-                    console.log("Selected rows contain "+JSON.stringify(table_data));
-                    edit_location(table_data)
-                }
-            }
-        ]
+                buttons: [ 'copy','print']
 
             });
             var map = initialize_map('location_map', locationJSON, table);
@@ -505,7 +473,9 @@ function initialize_map(id, locationJSON, table) {
         popup
             .setLatLng(e.latlng)
             .setContent(
-                'Add a new location here?<br><br><center><button id="map_add" class="btn btn-secondary btn-sm" type="button" value="'+e.latlng.lat+','+e.latlng.lng+'" onclick="add_from_map()">Add Location</button></center>'
+                'Add a new location here?<br><center><a href="javascript:;" onclick="add_from_map(\''+e.latlng.lat+','+e.latlng.lng+'\')">Add Location</a></center>'
+                //
+                // <button id="map_add" class="btn btn-secondary btn-sm" type="button" value="'+e.latlng.lat+','+e.latlng.lng+'" onclick="add_from_map()">Add Location</button></center>'
             )
             .openOn(mymap);
     }
@@ -626,15 +596,12 @@ function style(feature) {
 function onEachFeature(feature, layer) {
         // var keys = ["Id","Name","Abbreviation","Country","Program","Type","Latitude","Longitude","Altitude","Trials"];
         var keys = ["Abbreviation","Program","Type","Trials"];
-
-        // add edit and delete button to popup content <button id="map_add" class="btn btn-secondary btn-sm" type="button" value="'+e.latlng.lat+','+e.latlng.lng+'" onclick="add_from_map()">Add Location</button>
-        var popupContent = '<button class="btn btn-secondary btn-sm" type="button" onclick="edit_location('+feature.properties.Id+')">Edit</button>';
-        popupContent += '<button class="btn btn-secondary btn-sm" type="button" onclick="delete_location('+feature.properties.Id+')">Delete</button>';
-        popupContent += '<table class="table table-sm"><caption style="text-align: center;"><font size="3" color="black">'+feature.properties.Name+'</font></caption><tbody>';
+        var popupContent = '<table class="table table-sm"><caption style="text-align: center;"><font id="'+feature.properties.Id+'_name" size="3" color="black">'+feature.properties.Name+'</font></caption><tbody>';
         for (var i = 0; i < keys.length; i++) {
             popupContent += '<tr><th>'+keys[i]+'</th><td>'+feature.properties[keys[i]]+'</td></tr>';
         }
-        popupContent += '</table></tbody>';
+        var options = '[<a href="javascript:;" onclick="edit_location('+feature.properties.Id+')">Edit</a>]&nbsp[<a href="javascript:;" onclick="delete_location('+feature.properties.Id+')">Delete</a>]';
+        popupContent += '<tr><th>Options</th><td>'+options+'</td></tr></tbody></table>';
         layer.bindPopup(popupContent);
 }
 
@@ -661,23 +628,25 @@ function onEachFeature(feature, layer) {
    }
 
 
-    function add_from_map() {
-        var coordinate_string =  $('#map_add').val();
-        //console.log("Coordinate string is "+coordinate_string);
+    function add_from_map(coordinate_string) {
+        //console.log("coordinate_string is"+coordinate_string);
         var latlng = coordinate_string.split(',');
         latitude = latlng[0], longitude = latlng[1];
         var coordinates = [parseFloat(latitude),parseFloat(longitude)];
-        //console.log("Coordinates are "+coordinates);
         var dstk = $.DSTK();
-        dstk.coordinates2statistics(coordinates, function(result) {
-          //console.log("DSTK Elevation is "+JSON.stringify(result[0].statistics.elevation.value));
-          var elevation = result[0].statistics.elevation.value
-          dstk.coordinates2politics(coordinates, function(result) {
-            //console.log("DSTK response is "+JSON.stringify(result));
-            //console.log("DSTK response index 0 is "+JSON.stringify(result[0]));
-            //console.log("DSTK Country code  is "+result[0].politics[0].code);
-            var code= result[0].politics[0].code;
-            code = code.toUpperCase();
+        dstk.coordinates2statistics(coordinates, function(c2s_result) {
+
+          dstk.coordinates2politics(coordinates, function(c2p_result) {
+            //console.log("elevation result is "+JSON.stringify(c2s_result));
+            //console.log("politics result is "+JSON.stringify(c2p_result));
+            //console.log("elevation result is "+c2s_result[0].statistics.elevation+" and politics result is "+c2p_result[0].politics);
+            if (!c2s_result[0].statistics.elevation || !c2p_result[0].politics) {
+                alert("Unable to add a location at these coordinates. Please make sure your new location is located on land between 60 north and south.");
+                return;
+            }
+            var elevation = c2s_result[0].statistics.elevation.value;
+            var code= c2p_result[0].politics[0].code.toUpperCase();
+            //console.log("elevation is "+elevation+" and code is "+code);
             $('#location_country').val(code);
             $('#location_altitude').val(elevation);
             $('#location_latitude').val(coordinates[0]);
@@ -689,28 +658,27 @@ function onEachFeature(feature, layer) {
     }
 
    function edit_location(id) {
-       var data = table.rows().data();
-       //console.log("data "+JSON.stringify(data));
+        var table = jQuery('#location_table').DataTable();
+        var index = table.rows().eq( 0 ).filter( function (rowIdx) {
+            return table.cell( rowIdx, 0 ).data() === id ? true : false;
+        } );
+       var data = table.rows(index).data();
        var all_rows = [];
        for (var i=0; i < data.length ;i++){
            all_rows.push(data[i]);
        }
-       table_data = all_rows.shift();
-       console.log("Selected rows contain "+JSON.stringify(table_data));
-       //search fo rrow with mathcing id
-    //    var rowId = table.fnFindCellRowIndexes(id, 0);
-    //    var data = table.row( rowID ).data();
-    //    console.log("Data for row to edit are "+JSON.stringify(data));
+       var loc_data = all_rows.shift();
+       console.log("Data for location to edit: "+JSON.stringify(loc_data));
         // console.log("Id for location to edit is "+table_data.properties.Id);
-        // $('#location_id').val(table_data.properties.Id);
-        // $('#location_name').val(table_data.properties.Name);
-        // $('#location_abbreviation').val(table_data.properties.Abbreviation);
-        // $('#location_country').val(table_data.Country);
-        // $('#location_type').val(table_data.properties.Type);
-        // $('#location_latitude').val(table_data.properties.Latitude);
-        // $('#location_longitude').val(table_data.properties.Longitude);
-        // $('#location_altitude').val(table_data.properties.Altitude);
-        // $('#store_location_dialog').modal("show");
+        $('#location_id').val(loc_data.properties.Id);
+        $('#location_name').val(loc_data.properties.Name);
+        $('#location_abbreviation').val(loc_data.properties.Abbreviation);
+        $('#location_country').val(loc_data.Country);
+        $('#location_type').val(loc_data.properties.Type);
+        $('#location_latitude').val(loc_data.properties.Latitude);
+        $('#location_longitude').val(loc_data.properties.Longitude);
+        $('#location_altitude').val(loc_data.properties.Altitude);
+        $('#store_location_dialog').modal("show");
     }
 
 
