@@ -132,6 +132,7 @@ sub download {
             $num_col_before_traits = 7;
             @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
         }
+        my $num_col_b = $num_col_before_traits;
         if (scalar(@predefined_columns) > 0) {
             push (@column_headers, @predefined_columns);
             $num_col_before_traits += scalar(@predefined_columns);
@@ -177,11 +178,11 @@ sub download {
                 $ws->write($line, 6, $design_info{rep_number});
 
                 if (exists($treatment_plant_hash{$_})){
-                    $ws->write($line, $num_col_before_traits-1, 1);
+                    $ws->write($line, $num_col_b-1, 1);
                 }
 
                 if (scalar(@predefined_columns) > 0) {
-                    my $pre_col_ind = $num_col_before_traits;
+                    my $pre_col_ind = $num_col_b;
                     foreach (@$submitted_predefined_columns) {
                         foreach my $header_predef_col (keys %{$_}) {
                             if ($_->{$header_predef_col}) {
