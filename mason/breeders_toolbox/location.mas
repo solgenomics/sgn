@@ -3,7 +3,7 @@
 $user_id => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => ['leaflet','leaflet_extra-markers_min','jquery.dataTables-buttons-min', 'jquery.datatables-select-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min','jquery.dstk'] &>
+<& /util/import_javascript.mas, classes => ['leaflet', 'esri-leaflet', 'esri-leaflet-geocoder-debug', 'leaflet_extra-markers_min', 'jquery.dataTables-buttons-min', 'jquery.datatables-select-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'jquery.dstk'] &>
 <br>
 <div class="table-responsive" style="margin-top: 10px;">
     <table id="location_table" class="table table-hover table-striped table-bordered" width="100%">
@@ -515,6 +515,23 @@ function initialize_map(id, locationJSON, table) {
     }
 
     mymap.on('click', onMapClick);
+
+    var arcgisOnline = L.esri.Geocoding.arcgisOnlineProvider();
+
+    var searchControl = L.esri.Geocoding.geosearch({
+        providers: [
+          arcgisOnline,
+          L.esri.Geocoding.featureLayerProvider({
+            url: 'https://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/gisday/FeatureServer/0/',
+            searchFields: ['Name', 'Organization'],
+            label: 'GIS Day Events',
+            bufferRadius: 5000,
+            formatSuggestion: function(feature){
+              return feature.properties.Name + ' - ' + feature.properties.Organization;
+            }
+          })
+        ]
+    }).addTo(mymap);
 
     table.on( 'draw.dt', function () {  // recreate location layer based on filtered table contents
         location_layer.clearLayers();
