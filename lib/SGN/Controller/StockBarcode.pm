@@ -8,6 +8,7 @@ use Bio::Chado::Schema::Result::Stock::Stock;
 use CXGN::Stock::StockBarcode;
 use Data::Dumper;
 use CXGN::Stock;
+use SGN::Model::Cvterm;
 
 BEGIN { extends "Catalyst::Controller"; }
 
@@ -119,7 +120,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     if ($stock_names_file) {
 	     my $stock_file_contents = read_file($stock_names_file->{tempname});
 	     $stock_names = $stock_names ."\n".$stock_file_contents;
-    }
+    } 
 
     $stock_names =~ s/\r//g;
     my @names = split /\n/, $stock_names;
@@ -195,7 +196,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           ($accession_name, $accession_id) = $h_acc->fetchrow_array;
           print STDERR "Accession name for this plot is $accession_name and id is $accession_id\n";
       }
-
+      my $synonyms;
       if ($plot_cvterm_id == $type_id) {
           $tract_type_id = 'plot';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
@@ -203,13 +204,31 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
       elsif ($accession_cvterm_id == $type_id){
           $tract_type_id = 'accession';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $stock_id )->get_pedigree_string('Parents');
+
+          my $prop_rs = $schema->resultset("Stock::Stockprop")->search(
+      	   {
+      	    stock_id => $stock_id,
+      	    }, { join => 'type', order_by => 'stockprop_id' } );
+
+          my @propinfo = ();
+          while (my $prop = $prop_rs->next()) {
+              push @propinfo, $prop->value();
+      	#push @propinfo, { stockprop_id => $prop->stockprop_id, stock_id => $prop->stock_id, type_id => $prop->type_id(), type_name => $prop->type->name(), value => $prop->value() };
+          }
+          #if (scalar(@propinfo) > 0 ) {
+              foreach my $synonym (@propinfo){
+                  $synonyms .= $synonym.", ";
+              }
+          #}
+          print STDERR Dumper(\@propinfo);
+
       }
       elsif ($plant_cvterm_id == $type_id) {
           $tract_type_id = 'plant';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
       }
 
-      push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name];
+      push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name, $synonyms];
     }
 
     my $dir = $c->tempfiles_subdir('pdfs');
@@ -282,8 +301,13 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
            $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$added_text, $fieldbook_barcode ]);
         }
         elsif ($found[$i]->[5] eq 'accession'){
+            if ($found[$i]->[7] eq ''){
+                $found[$i]->[7] = "No synonym(s) available";
+            }else{
+                $found[$i]->[7] = "synonym(s): ".$found[$i]->[7];
+            }
             $parents = $found[$i]->[4];
-            $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]."\n".$added_text, $fieldbook_barcode]);
+            $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]."\n".$added_text."\n".$found[$i]->[7], $fieldbook_barcode]);
         }
         elsif ($found[$i]->[5] eq 'plant'){
             $parents = $found[$i]->[4];
@@ -347,6 +371,13 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                       }else{
                           $label_text_4 = "pedigree: ".$parents;
                       }
+                      $label_text_5 = $found[$i]->[7];
+                      #my $syns = $found[$i]->[7];
+                      #if ($syns eq ''){
+                         # $label_text_5 = "No synonym(s) for ".$found[$i]->[1];
+                      #}else{
+                          #$label_text_5 = "synonym(s): ".$syns;
+                      #}
                   }
                   elsif ($found[$i]->[5] eq 'plant'){
                       $label_text_6 = "plot:".$found[$i]->[6];
@@ -413,6 +444,13 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                   }else{
                       $label_text_4 = "pedigree: ".$parents;
                   }
+                  $label_text_5 = $found[$i]->[7];
+                #   my $syns = $found[$i]->[7];
+                #   if ($syns eq ''){
+                #       $label_text_5 = "No synonym(s) for ".$found[$i]->[1];
+                #   }else{
+                #       $label_text_5 = "synonym(s): ".$syns;
+                #   }
               }
               elsif ($found[$i]->[5] eq 'plant'){
                   $label_text_6 = "plot:".$found[$i]->[6];
