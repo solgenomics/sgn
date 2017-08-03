@@ -18,7 +18,6 @@
   <!-- <link rel="stylesheet" type="text/css" href="/css/dataTables.bootstrap.min.css"> -->
   <link rel="stylesheet" type="text/css" href="/css/buttons/buttons.bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="/css/bootstrap3-xl-class.css">
-  <link rel="stylesheet" href="https://cdn.datatables.net/select/1.2.2/css/select.dataTables.min.css" crossorigin="anonymous">
   <link rel="stylesheet" type="text/css" href="/css/leaflet.css">
   <link rel="stylesheet" type="text/css" href="/css/leaflet.extra-markers.min.css">
   <link rel="stylesheet" type="text/css" href="/css/esri-leaflet-geocoder.css" />

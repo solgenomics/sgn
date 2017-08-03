@@ -3,7 +3,7 @@
 $user_id => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => ['leaflet', 'esri-leaflet', 'esri-leaflet-geocoder-debug', 'leaflet_extra-markers_min', 'jquery.dataTables-buttons-min', 'jquery.datatables-select-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'jquery.dstk'] &>
+<& /util/import_javascript.mas, classes => ['leaflet', 'esri-leaflet', 'esri-leaflet-geocoder-debug', 'leaflet_extra-markers_min', 'jquery.dataTables-buttons-min', 'jszip-min','buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'jquery.dstk'] &>
 <br>
 <div class="table-responsive" style="margin-top: 10px;">
     <table id="location_table" class="table table-hover table-striped table-bordered" width="100%">
