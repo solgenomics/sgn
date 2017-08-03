@@ -15,7 +15,7 @@ $user_id => undef
                 <th>Country</th>
                 <th>Program</th>
                 <th>Type</th>
-                <th>Lat./th>
+                <th>Lat.</th>
                 <th>Long.</th>
                 <th>Alt.(m)</th>
                 <th>Trials</th>
@@ -362,7 +362,7 @@ jQuery(document).ready(function() {
             locationJSON = JSON.parse(response.data);
             //console.log("Data is "+JSON.stringify(locationJSON, null, 2));
 
-            var table = jQuery('#location_table').DataTable( {
+            table = jQuery('#location_table').DataTable( {
                 data: locationJSON,
                 dom: 'Bfrtip',
                 select: true,
@@ -403,11 +403,7 @@ jQuery(document).ready(function() {
                     //console.log("data "+JSON.stringify(data));
                     var all_rows = [];
                     for (var i=0; i < data.length ;i++){
-                        var row_data = data[i];
-                        //console.log("row_data "+JSON.stringify(row_data));
-                        //var row = row_data.join();
-                        //console.log("Row "+JSON.stringify(row));
-                        all_rows.push(row_data);
+                        all_rows.push(data[i]);
                     }
                     table_data = all_rows.shift();
                     console.log("Selected rows contain "+JSON.stringify(table_data));
@@ -509,7 +505,7 @@ function initialize_map(id, locationJSON, table) {
         popup
             .setLatLng(e.latlng)
             .setContent(
-                'Add a new location here?<br><br><center><button id="map_add" type="button" value="'+e.latlng.lat+','+e.latlng.lng+'" onclick="add_from_map()">Add Location</button></center>'
+                'Add a new location here?<br><br><center><button id="map_add" class="btn btn-secondary btn-sm" type="button" value="'+e.latlng.lat+','+e.latlng.lng+'" onclick="add_from_map()">Add Location</button></center>'
             )
             .openOn(mymap);
     }
@@ -628,8 +624,13 @@ function style(feature) {
 }
 
 function onEachFeature(feature, layer) {
-        var keys = ["Id","Name","Abbreviation","Country","Program","Type","Latitude","Longitude","Altitude","Trials"];
-        var popupContent = '<table class="table table-sm"><thead></thead><tbody>';
+        // var keys = ["Id","Name","Abbreviation","Country","Program","Type","Latitude","Longitude","Altitude","Trials"];
+        var keys = ["Abbreviation","Program","Type","Trials"];
+
+        // add edit and delete button to popup content <button id="map_add" class="btn btn-secondary btn-sm" type="button" value="'+e.latlng.lat+','+e.latlng.lng+'" onclick="add_from_map()">Add Location</button>
+        var popupContent = '<button class="btn btn-secondary btn-sm" type="button" onclick="edit_location('+feature.properties.Id+')">Edit</button>';
+        popupContent += '<button class="btn btn-secondary btn-sm" type="button" onclick="delete_location('+feature.properties.Id+')">Delete</button>';
+        popupContent += '<table class="table table-sm"><caption style="text-align: center;"><font size="3" color="black">'+feature.properties.Name+'</font></caption><tbody>';
         for (var i = 0; i < keys.length; i++) {
             popupContent += '<tr><th>'+keys[i]+'</th><td>'+feature.properties[keys[i]]+'</td></tr>';
         }
@@ -662,32 +663,19 @@ function onEachFeature(feature, layer) {
 
     function add_from_map() {
         var coordinate_string =  $('#map_add').val();
-        console.log("Coordinate string is "+coordinate_string);
-        var latlang = coordinate_string.split(',');
-        var latitude = parseFloat(latlang[0]);
-        var longitude = parseFloat(latlang[1]);
-        var coordinates = []
-        coordinates.push(latitude);
-        coordinates.push(longitude);
-
-        // console.log("Coordinates are "+coordinates);
-        // var xhttp = new XMLHttpRequest();
-        // xhttp.open("POST", "http://nominatim.openstreetmap.org/reverse?format=json&lat="+latitude+"&lon="+longitude+"&zoom=18&addressdetails=1", false);
-        // xhttp.setRequestHeader("Content-type", "application/json");
-        // xhttp.send();
-        // var response = JSON.parse(xhttp.responseText);
-        // console.log("Nominate API response is "+JSON.stringify(response));
-
-        var country_code;
-        var elevation;
+        //console.log("Coordinate string is "+coordinate_string);
+        var latlng = coordinate_string.split(',');
+        latitude = latlng[0], longitude = latlng[1];
+        var coordinates = [parseFloat(latitude),parseFloat(longitude)];
+        //console.log("Coordinates are "+coordinates);
         var dstk = $.DSTK();
         dstk.coordinates2statistics(coordinates, function(result) {
           //console.log("DSTK Elevation is "+JSON.stringify(result[0].statistics.elevation.value));
-          elevation = result[0].statistics.elevation.value
+          var elevation = result[0].statistics.elevation.value
           dstk.coordinates2politics(coordinates, function(result) {
-            console.log("DSTK response is "+JSON.stringify(result));
+            //console.log("DSTK response is "+JSON.stringify(result));
             //console.log("DSTK response index 0 is "+JSON.stringify(result[0]));
-            console.log("DSTK Country code  is "+result[0].politics[0].code);
+            //console.log("DSTK Country code  is "+result[0].politics[0].code);
             var code= result[0].politics[0].code;
             code = code.toUpperCase();
             $('#location_country').val(code);
@@ -700,17 +688,29 @@ function onEachFeature(feature, layer) {
 
     }
 
-   function edit_location(table_data) {
-        console.log("Id for location to edit is "+table_data.properties.Id);
-        $('#location_id').val(table_data.properties.Id);
-        $('#location_name').val(table_data.properties.Name);
-        $('#location_abbreviation').val(table_data.properties.Abbreviation);
-        $('#location_country').val(table_data.Country);
-        $('#location_type').val(table_data.properties.Type);
-        $('#location_latitude').val(table_data.properties.Latitude);
-        $('#location_longitude').val(table_data.properties.Longitude);
-        $('#location_altitude').val(table_data.properties.Altitude);
-        $('#store_location_dialog').modal("show");
+   function edit_location(id) {
+       var data = table.rows().data();
+       //console.log("data "+JSON.stringify(data));
+       var all_rows = [];
+       for (var i=0; i < data.length ;i++){
+           all_rows.push(data[i]);
+       }
+       table_data = all_rows.shift();
+       console.log("Selected rows contain "+JSON.stringify(table_data));
+       //search fo rrow with mathcing id
+    //    var rowId = table.fnFindCellRowIndexes(id, 0);
+    //    var data = table.row( rowID ).data();
+    //    console.log("Data for row to edit are "+JSON.stringify(data));
+        // console.log("Id for location to edit is "+table_data.properties.Id);
+        // $('#location_id').val(table_data.properties.Id);
+        // $('#location_name').val(table_data.properties.Name);
+        // $('#location_abbreviation').val(table_data.properties.Abbreviation);
+        // $('#location_country').val(table_data.Country);
+        // $('#location_type').val(table_data.properties.Type);
+        // $('#location_latitude').val(table_data.properties.Latitude);
+        // $('#location_longitude').val(table_data.properties.Longitude);
+        // $('#location_altitude').val(table_data.properties.Altitude);
+        // $('#store_location_dialog').modal("show");
     }
 
 
