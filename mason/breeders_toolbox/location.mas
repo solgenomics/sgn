@@ -3,7 +3,7 @@
 $user_id => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => ['leaflet','leaflet_extra-markers_min','jquery.dataTables-buttons-min', 'jquery.datatables-select-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min',] &>
+<& /util/import_javascript.mas, classes => ['leaflet','leaflet_extra-markers_min','jquery.dataTables-buttons-min', 'jquery.datatables-select-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min','jquery.dstk'] &>
 <br>
 <div class="table-responsive" style="margin-top: 10px;">
     <table id="location_table" class="table table-hover table-striped table-bordered" width="100%">
@@ -55,6 +55,7 @@ $user_id => undef
       	      <label class="col-sm-2 control-label">Country: </label>
       	      <div class="col-sm-10">
                   <select class="form-control" id="location_country" name="location_country">
+                    <option value=""></option>
                     <option value="ABW">ABW Aruba </option>
                     <option value="AFG">AFG Afghanistan </option>
                     <option value="AGO">AGO Angola </option>
@@ -308,6 +309,7 @@ $user_id => undef
       	      <label class="col-sm-2 control-label">Type: </label>
       	      <div class="col-sm-10">
                   <select class="form-control" id="location_type" name="location_type">
+                      <option value=""></option>
                       <option value="Farm">Farm</option>
                       <option value="Field">Field</option>
                       <option value="Greenhouse">Greenhouse</option>
@@ -358,7 +360,7 @@ jQuery(document).ready(function() {
     	success: function(response) {
             var export_message = window.location.href + ' location data.';
             locationJSON = JSON.parse(response.data);
-            console.log("Data is "+JSON.stringify(locationJSON, null, 2));
+            //console.log("Data is "+JSON.stringify(locationJSON, null, 2));
 
             var table = jQuery('#location_table').DataTable( {
                 data: locationJSON,
@@ -501,6 +503,19 @@ function initialize_map(id, locationJSON, table) {
     mymap.fitBounds(location_layer.getBounds());
     var layerControl = L.control.layers(baseMaps, overlayMaps).addTo(mymap);
 
+    var popup = L.popup();
+
+    function onMapClick(e) {
+        popup
+            .setLatLng(e.latlng)
+            .setContent(
+                'Add a new location here?<br><br><center><button id="map_add" type="button" value="'+e.latlng.lat+','+e.latlng.lng+'" onclick="add_from_map()">Add Location</button></center>'
+            )
+            .openOn(mymap);
+    }
+
+    mymap.on('click', onMapClick);
+
     table.on( 'draw.dt', function () {  // recreate location layer based on filtered table contents
         location_layer.clearLayers();
         var ids = {};
@@ -626,6 +641,47 @@ function onEachFeature(feature, layer) {
              }
       });
    }
+
+
+    function add_from_map() {
+        var coordinate_string =  $('#map_add').val();
+        console.log("Coordinate string is "+coordinate_string);
+        var latlang = coordinate_string.split(',');
+        var latitude = parseFloat(latlang[0]);
+        var longitude = parseFloat(latlang[1]);
+        var coordinates = []
+        coordinates.push(latitude);
+        coordinates.push(longitude);
+
+        // console.log("Coordinates are "+coordinates);
+        // var xhttp = new XMLHttpRequest();
+        // xhttp.open("POST", "http://nominatim.openstreetmap.org/reverse?format=json&lat="+latitude+"&lon="+longitude+"&zoom=18&addressdetails=1", false);
+        // xhttp.setRequestHeader("Content-type", "application/json");
+        // xhttp.send();
+        // var response = JSON.parse(xhttp.responseText);
+        // console.log("Nominate API response is "+JSON.stringify(response));
+
+        var country_code;
+        var elevation;
+        var dstk = $.DSTK();
+        dstk.coordinates2statistics(coordinates, function(result) {
+          //console.log("DSTK Elevation is "+JSON.stringify(result[0].statistics.elevation.value));
+          elevation = result[0].statistics.elevation.value
+          dstk.coordinates2politics(coordinates, function(result) {
+            console.log("DSTK response is "+JSON.stringify(result));
+            //console.log("DSTK response index 0 is "+JSON.stringify(result[0]));
+            console.log("DSTK Country code  is "+result[0].politics[0].code);
+            var code= result[0].politics[0].code;
+            code = code.toUpperCase();
+            $('#location_country').val(code);
+            $('#location_altitude').val(elevation);
+            $('#location_latitude').val(coordinates[0]);
+            $('#location_longitude').val(coordinates[1]);
+            $('#store_location_dialog').modal("show");
+          });
+        });
+
+    }
 
    function edit_location(table_data) {
         console.log("Id for location to edit is "+table_data.properties.Id);
