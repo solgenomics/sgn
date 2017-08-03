@@ -1,0 +1,175 @@
+
+<%args>
+$user_id => undef
+</%args>
+
+<& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jszip-min','buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min'] &>
+<br>
+<div class="table-responsive" style="margin-top: 10px;">
+    <table id="location_table" class="table table-hover table-striped table-bordered" width="100%">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Abbreviation</th>
+                <th>Country</th>
+                <th>Program</th>
+                <th>Type</th>
+                <th>Altitude(m)</th>
+                <th>Trials</th>
+
+            </tr>
+        </thead>
+        <!-- <caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Locations </center></caption> -->
+    </table>
+</div>
+<br>
+
+<div class="modal fade" id="upload_locations_dialog" name="upload_locations_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadLocationsDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadLocationsDialog">Upload Locations</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+    	  <&| /page/explanation.mas, title=>'Template Information' &>
+    	  <p>
+      	  <b>File format information</b>
+      	  <br>
+      	  <a id="locations_upload_spreadsheet_format_info">Spreadsheet Format</a>
+    	  </p>
+  	  </&>
+
+  	  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_locations_form" name="upload_locations_form">
+    	    <label for="locations_uploaded_file" style="display: inline-block; width: 100px;">Upload Location File:</label>
+    	    <input type="file" name="locations_uploaded_file" id="locations_uploaded_file" encoding="multipart/form-data" />
+    	  </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	<button type="button" class="btn btn-primary" name="upload_locations_dialog_submit" id="upload_locations_dialog_submit">Upload</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="locations_upload_spreadsheet_info_dialog" name="locations_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="locationUploadInfoDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="locationUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <b>
+            Locations may be uploaded in an Excel file (.xls)
+            </b>
+            <br>
+            (.xlsx format not supported)
+            <br><br>
+            <b>
+              Header:
+            </b>
+            <br>
+            The first row (header) must contain the following:
+            <br>
+
+            <table class="table table-bordered table-hover">
+              <tbody>
+              <tr>
+                <td>Name</td>
+                <td>Abbreviation</td>
+                <td>Country</td>
+                <td>Program</td>
+                <td>Type</td>
+                <td>Latittude</td>
+                <td>Longitude</td>
+                <td>Altitude</td>
+              </tr>
+              </tbody>
+            </table>
+
+            <b>
+              Required columns:
+            </b>
+            <br>
+            Name (must not conflict with an existing location name)
+            <br>
+            Abbreviation
+            <br>
+            Country (must be a 3-letter ISO code)
+            <br>
+            Program (must be an exisiting Breeding Program in the database)
+            <br>
+            Type (must be one of the following: Farm, Field, Greenhouse, Screenhouse, Lab, Storage)
+            <br>
+            Latitude (in degrees) must be a number between 90 and -90.
+            <br>
+            Longitude (in degrees) must be a number between 180 and -180.
+            <br>
+            Altitude (in meters) must be a number between -418 (Dead Sea) and 8,848 (Mt. Everest).
+            <br>
+            <br>
+<!-- 
+            <b>
+              Optional columns (dates must be in the format YYYY-MM-DD):
+            </b> -->
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script defer="defer">
+
+jQuery(document).ready(function() {
+
+    jQuery.ajax( {
+    	url: '/ajax/location/all',
+        beforeSend: function() {
+            // put working animation handling here
+    	},
+    	success: function(response) {
+            var export_message = window.location.href + ' location data.';
+            locationJSON = JSON.parse(response.data);
+            //console.log("Data is "+JSON.stringify(locationJSON, null, 2));
+
+            var table = jQuery('#location_table').DataTable( {
+                data: locationJSON,
+                dom: 'Bfrtip',
+                select: true,
+                "columns": [
+                    { "data": "properties.Id" },
+                    { "data": "properties.Name" },
+                    { "data": "properties.Abbreviation" },
+                    { "data": "properties.Country" },
+                    { "data": "properties.Program" },
+                    { "data": "properties.Type" },
+                    { "data": "properties.Altitude" },
+                    { "data": "properties.Trials" },
+                ],
+                buttons: [ 'copy','print']
+
+            });
+            var map = initialize_map('location_map', locationJSON, table);
+
+    	},
+    	error: function(response) {
+    	    alert("An error occurred");
+    	}
+    });
+
+  $('#upload_locations_link').click( function() {
+      $('#upload_locations_dialog').modal("show");
+   });
+
+ });
+</script>
