@@ -346,10 +346,18 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           if ($labels_per_row == '1' ){
               my $label_count_15_xter_plot_name =  1-1;
               my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 80.63;
-              my $yposition_2 = $ypos - 20;
-              my $yposition_3 = $ypos - 30;
-              my $yposition_4 = $ypos - 40;
-              my $yposition_5 = $ypos - 50;
+              my ($yposition_2, $yposition_3, $yposition_4, $yposition_5);
+              if ($labels_per_page > 15){
+                   $yposition_2 = $ypos - 10;
+                   $yposition_3 = $ypos - 20;
+                   $yposition_4 = $ypos - 30;
+                   $yposition_5 = $ypos - 40;
+              }else{
+                   $yposition_2 = $ypos - 20;
+                   $yposition_3 = $ypos - 30;
+                   $yposition_4 = $ypos - 40;
+                   $yposition_5 = $ypos - 50;
+              }
               my $plot_pedigree_text;
 
               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
@@ -367,7 +375,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                       }else{
                           $label_text_4 = "pedigree: ".$parents;
                       }
-                      $label_text_5 = $found[$i]->[7];
+                    $label_text_5 = $found[$i]->[7];
                   }
                   elsif ($found[$i]->[5] eq 'plant'){
                       $label_text_6 = "plot:".$found[$i]->[6];
@@ -413,10 +421,18 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           my $xpos = ($left_margin + ($label_count -1) * $final_barcode_width) + 85;
           my $label_count_15_xter_plot_name =  1-1;
           my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width - 95.63;
-          my $yposition_2 = $ypos - 20;
-          my $yposition_3 = $ypos - 30;
-          my $yposition_4 = $ypos - 40;
-          my $yposition_5 = $ypos - 50;
+          my ($yposition_2, $yposition_3, $yposition_4, $yposition_5);
+          if ($labels_per_page > 15){
+               $yposition_2 = $ypos - 10;
+               $yposition_3 = $ypos - 20;
+               $yposition_4 = $ypos - 30;
+               $yposition_5 = $ypos - 40;
+          }else{
+               $yposition_2 = $ypos - 20;
+               $yposition_3 = $ypos - 30;
+               $yposition_4 = $ypos - 40;
+               $yposition_5 = $ypos - 50;
+          }
           my $plot_pedigree_text;
 
           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
