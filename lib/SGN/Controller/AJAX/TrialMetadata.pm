@@ -9,6 +9,7 @@ use CXGN::Trial;
 use Math::Round::Var;
 use List::MoreUtils qw(uniq);
 use CXGN::Trial::FieldMap;
+#use Sort::Maker;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -448,6 +449,44 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
 
     $c->stash->{rest} = $return;
 }
+
+sub retrieve_trial_info :  Path('/ajax/breeders/trial_phenotyping_info') : ActionClass('REST') { }
+sub retrieve_trial_info_POST : Args(0) {
+#sub retrieve_trial_info : chained('trial') Pathpart("trial_phenotyping_info") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->req->param('trial_id');
+
+    my $layout = CXGN::Trial::TrialLayout->new({
+  		schema => $schema,
+  		trial_id => $trial_id
+  	});
+
+  	my $design = $layout-> get_design();
+    #print STDERR Dumper($design);
+
+    my @layout_info;
+  	foreach my $plot_number (keys %{$design}) {
+  		push @layout_info, {
+        plot_id => $design->{$plot_number}->{plot_id},
+  		plot_number => $plot_number,
+  		row_number => $design->{$plot_number}->{row_number},
+  		col_number => $design->{$plot_number}->{col_number},
+  		block_number=> $design->{$plot_number}-> {block_number},
+  		rep_number =>  $design->{$plot_number}-> {rep_number},
+  		plot_name => $design->{$plot_number}-> {plot_name},
+  		accession_name => $design->{$plot_number}-> {accession_name},
+  		plant_names => $design->{$plot_number}-> {plant_names},
+  		};
+        @layout_info = sort { $a->{plot_number} <=> $b->{plot_number} } @layout_info;
+  	}
+
+    #print STDERR Dumper(@layout_info);
+    $c->stash->{rest} = {trial_info => \@layout_info};
+    #$c->stash->{layout_info} = \@layout_info;
+}
+
 
 sub trial_completion_layout_section : Chained('trial') PathPart('trial_completion_layout_section') Args(0) {
     my $self = shift;
