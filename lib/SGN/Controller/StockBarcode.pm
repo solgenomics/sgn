@@ -104,7 +104,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type' )->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type' )->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type' )->cvterm_id();
-    #my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'synonym', 'stockprop' )->cvterm_id();
 
     # convert mm into pixels
     #
