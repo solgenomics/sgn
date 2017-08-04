@@ -131,7 +131,7 @@ sub markerprofiles_detail {
 			push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}) };
 		}
 
-		my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
+		#my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
 		%result = (
 			germplasmDbId=>$rs->get_column('stock_id'),
 			uniqueDisplayName=>$rs->get_column('uniquename'),
@@ -139,7 +139,7 @@ sub markerprofiles_detail {
 			markerprofileDbId=>$genotypeprop_id,
 			analysisMethod=>$rs->get_column('protocol_name'),
 			#encoding=>"AA,BB,AB",
-			data => $data_window
+			data => \@data
 		);
 	}
 
