@@ -34,95 +34,45 @@ $user_id => undef
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-    	  <&| /page/explanation.mas, title=>'Template Information' &>
-    	  <p>
-      	  <b>File format information</b>
-      	  <br>
-      	  <a id="locations_upload_spreadsheet_format_info">Spreadsheet Format</a>
-    	  </p>
-  	  </&>
-
+                <b>Locations may be uploaded in an Excel file (.xls)</b><br>
+                (.xlsx format not supported)
+                <br><br>
+                <b>Header:</b><br>
+                The first row (header) must contain the following:
+                <br>
+                <table class="table table-bordered table-hover">
+                  <tbody>
+                  <tr>
+                    <td>Name</td>
+                    <td>Abbreviation</td>
+                    <td>Country</td>
+                    <td>Program</td>
+                    <td>Type</td>
+                    <td>Latittude</td>
+                    <td>Longitude</td>
+                    <td>Altitude</td>
+                  </tr>
+                  </tbody>
+                </table>
+                <b>Required columns:</b><br><br>
+                <b>Name:</b> must not conflict with an existing location name<br>
+                <b>Abbreviation</b><br>
+                <b>Country:</b> must be an <a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3">ISO Alpha-3 country code</a><br>
+                <b>Program:</b> must be an exisiting Breeding Program in the database<br>
+                <b>Type:</b> must be one of the following: Farm, Field, Greenhouse, Screenhouse, Lab, Storage<br>
+                <b>Latitude:</b> (in degrees) must be a number between 90 and -90.<br>
+                <b>Longitude:</b> (in degrees) must be a number between 180 and -180.<br>
+                <b>Altitude:</b> (in meters) must be a number between -418 (Dead Sea) and 8,848 (Mt. Everest).<br>
+                <br>
   	  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_locations_form" name="upload_locations_form">
-    	    <label for="locations_uploaded_file" style="display: inline-block; width: 100px;">Upload Location File:</label>
-    	    <input type="file" name="locations_uploaded_file" id="locations_uploaded_file" encoding="multipart/form-data" />
+    	    <label for="locations_upload_file" style="display: inline-block;">Location File:</label>
+    	    <input type="file" name="locations_upload_file" id="locations_upload_file" encoding="multipart/form-data" />
     	  </form>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 	<button type="button" class="btn btn-primary" name="upload_locations_dialog_submit" id="upload_locations_dialog_submit">Upload</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="locations_upload_spreadsheet_info_dialog" name="locations_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="locationUploadInfoDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="locationUploadInfoDialog">Template Information</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-            <b>
-            Locations may be uploaded in an Excel file (.xls)
-            </b>
-            <br>
-            (.xlsx format not supported)
-            <br><br>
-            <b>
-              Header:
-            </b>
-            <br>
-            The first row (header) must contain the following:
-            <br>
-
-            <table class="table table-bordered table-hover">
-              <tbody>
-              <tr>
-                <td>Name</td>
-                <td>Abbreviation</td>
-                <td>Country</td>
-                <td>Program</td>
-                <td>Type</td>
-                <td>Latittude</td>
-                <td>Longitude</td>
-                <td>Altitude</td>
-              </tr>
-              </tbody>
-            </table>
-
-            <b>
-              Required columns:
-            </b>
-            <br>
-            Name (must not conflict with an existing location name)
-            <br>
-            Abbreviation
-            <br>
-            Country (must be a 3-letter ISO code)
-            <br>
-            Program (must be an exisiting Breeding Program in the database)
-            <br>
-            Type (must be one of the following: Farm, Field, Greenhouse, Screenhouse, Lab, Storage)
-            <br>
-            Latitude (in degrees) must be a number between 90 and -90.
-            <br>
-            Longitude (in degrees) must be a number between 180 and -180.
-            <br>
-            Altitude (in meters) must be a number between -418 (Dead Sea) and 8,848 (Mt. Everest).
-            <br>
-            <br>
-<!-- 
-            <b>
-              Optional columns (dates must be in the format YYYY-MM-DD):
-            </b> -->
-
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -170,6 +120,17 @@ jQuery(document).ready(function() {
   $('#upload_locations_link').click( function() {
       $('#upload_locations_dialog').modal("show");
    });
+
+  $('#upload_locations_dialog_submit').click( function() {
+      var uploadFile = $("#locations_upload_file").val();
+      $('#upload_locations_form').attr("action", "/ajax/locations/upload");
+      if (uploadFile === '') {
+          alert("Please select a file");
+          return;
+      }
+      $("#upload_locations_form").submit();
+   });
+
 
  });
 </script>

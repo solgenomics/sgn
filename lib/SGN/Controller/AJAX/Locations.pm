@@ -15,6 +15,7 @@ package SGN::Controller::AJAX::Locations;
 use Moose;
 use CXGN::Location;
 use CXGN::BreedersToolbox::Projects;
+use CXGN::Location::ParseUpload;
 use Data::Dumper;
 use Try::Tiny;
 use JSON;
@@ -118,5 +119,97 @@ __PACKAGE__->config(
    	}
    }
 
+   sub upload_locations : Path('/ajax/locations/upload') : ActionClass('REST') { }
+
+   sub upload_locations_POST : Args(0) {
+     my ($self, $c) = @_;
+     my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+     my $upload = $c->req->upload('locations_upload_file');
+     my $upload_original_name = $upload->filename();
+     my $upload_tempfile = $upload->tempname;
+
+     my $time = DateTime->now();
+     my $timestamp = $time->ymd()."_".$time->hms();
+     my %response;
+
+
+     if (!$c->user()) {
+       print STDERR "User not logged in... not uploading locations.\n";
+       $c->stash->{rest} = {error => "You need to be logged in to upload locations." };
+       return;
+     }
+
+     my $user_id = $c->user()->get_object()->get_sp_person_id();
+
+     my $uploader = CXGN::UploadFile->new({
+       tempfile => $upload_tempfile,
+       subdirectory => 'location_upload',
+       archive_path => $c->config->{archive_path},
+       archive_filename => $upload_original_name,
+       timestamp => $timestamp,
+       user_id => $user_id,
+       user_role => $c->user()->roles
+     });
+
+     ## Store uploaded temporary file in archive
+     my $archived_filename_with_path = $uploader->archive();
+     my $md5 = $uploader->get_md5($archived_filename_with_path);
+     if (!$archived_filename_with_path) {
+         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+         return;
+     }
+     unlink $upload_tempfile;
+
+     #parse uploaded file with appropriate plugin
+     my $type = 'location excel';
+     my $parser = CXGN::Location::ParseUpload->new();
+     my $validate_file = $parser->validate($type, $archived_filename_with_path, $schema);
+     if ($validate_file->{'error'}) {
+         $c->stash->{rest} = {error => $validate_file->{'error'}};
+         return;
+     }
+     my $parse_results = $parser->parse($type, $archived_filename_with_path, $schema);
+
+
+     print STDERR "Dumper of parsed data:\t" . Dumper($parse_results) . "\n";
+
+     if (!$parse_results) {
+         $c->stash->{rest} = {error => "Error parsing file."};
+         return;
+     }
+     if ($parse_results->{'error'}) {
+         $c->stash->{rest} = {error => $parse_results->{'error'}};
+         return;
+     }
+
+    foreach my $row (@$parse_results) {
+     #get data from rows one at a time
+        my @data = @$row;
+         my $location = CXGN::Location->new( {
+             bcs_schema => $schema,
+             nd_geolocation_id => undef,
+             name => $data[0],
+             abbreviation => $data[1],
+             country_name => $data[2],
+             country_code => $data[3],
+             location_type => $data[5],
+             latitude => $data[6],
+             longitude => $data[7],
+             altitude => $data[8]
+         });
+
+         my $store = $location->store_location();
+
+         if ($store->{'error'}) {
+            $response{$data[0]} = $store->{'error'};
+         }
+         else {
+             $response{$data[0]} = $store->{'success'};
+         }
+    }
+
+     $c->stash->{rest} = \%response;
+   }
 
 1;
