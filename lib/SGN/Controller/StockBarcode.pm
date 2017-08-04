@@ -104,6 +104,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type' )->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type' )->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type' )->cvterm_id();
+    #my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'synonym', 'stockprop' )->cvterm_id();
 
     # convert mm into pixels
     #
@@ -196,7 +197,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           ($accession_name, $accession_id) = $h_acc->fetchrow_array;
           print STDERR "Accession name for this plot is $accession_name and id is $accession_id\n";
       }
-      my $synonyms;
+      my $synonym_string;
       if ($plot_cvterm_id == $type_id) {
           $tract_type_id = 'plot';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
@@ -204,27 +205,15 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
       elsif ($accession_cvterm_id == $type_id){
           $tract_type_id = 'accession';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $stock_id )->get_pedigree_string('Parents');
-
-          my $prop_rs = $schema->resultset("Stock::Stockprop")->search(
-      	   {
-      	    stock_id => $stock_id,
-      	    }, { join => 'type', order_by => 'stockprop_id' } );
-
-          my @propinfo = ();
-          while (my $prop = $prop_rs->next()) {
-              push @propinfo, $prop->value();
-          }
-          foreach my $synonym (@propinfo){
-              $synonyms .= $synonym.", ";
-          }
-
+          my $stock_synonyms = CXGN::Stock::Accession->new({ schema => $schema, stock_id => $stock_id })->synonyms();
+          $synonym_string = join ',', @$stock_synonyms;
       }
       elsif ($plant_cvterm_id == $type_id) {
           $tract_type_id = 'plant';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
       }
 
-      push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name, $synonyms];
+      push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name, $synonym_string];
     }
 
     my $dir = $c->tempfiles_subdir('pdfs');
