@@ -13,6 +13,10 @@
   fill: #F65E73;
 }
 
+.select_container{
+  margin-top: 0.5em;
+}
+
 .brush-out-indicator {
     stroke-width: 4px;
     stroke-dasharray: 4 2;

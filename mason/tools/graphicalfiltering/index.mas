@@ -5,28 +5,47 @@
 
 <%args>
 
+$ajaxRequestString => ""
+
 </%args>
 
 <& '/page/page_title.mas', title => "Graphical Filtering" &>
 
-<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'CXGN.List', 'CXGN.Login', 'd3.d3v4Min' ] &>
+<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'CXGN.List', 'd3.d3v4Min' ] &>
 
-<div class="row">
-  <center class = "col-md-offset-2 col-md-8">
-    <form class="tc-form">
-      <div class="form-group">
-        <label for="trials_list_select">Choose a list of trials:</label>
-        <div id="trials_list_select_container">
+<div id="select_div" class="row" hidden="true">
+  <form class="tc-form">
+    <div class="form-group">
+        <div class="select_container nohide col-md-offset-2 col-md-2">
+          <select id="list_type_select" class="form-control input-sm">
+            <option disabled selected="selected">Choose List Type:</option>
+            <option value="#trial_list_select_container">Trials</option>
+            <option value="#plot_list_select_container">Plots</option>
+          </select>
+        </div>
+        <div id="empty_select_container" class="select_container col-md-6">
+          <select disabled class="form-control input-sm">
+            <option selected="selected">Select a list type first.</option>
+          </select>
+        </div>
+        <div id="trial_list_select_container" hidden="true" class="select_container col-md-6">
           <select disabled class="form-control input-sm" id="trials_list_select">
             <option selected="selected">Loading...</option>
-          </select
-      </div>
-    </form>
+          </select>
+        </div>
+        <div id="plot_list_select_container" hidden="true" class="select_container col-md-6">
+          <select disabled class="form-control input-sm" id="plots_list_select">
+            <option selected="selected">Loading...</option>
+          </select>
+        </div>
+    </div>
+  </form>
+</div>
+<div class="row">
+  <center>
+    <img hidden="true" id="results-loading-spinner" src="/img/wheel.gif" alt="loading">
   </center>
 </div>
-<center>
-  <img hidden="true" id="results-loading-spinner" src="/img/wheel.gif" alt="loading">
-</center>
 <div id="filter_div" class="row"></div>
 <div id="filtered_results_wrap" hidden="true" class="row dataTables_wrapper">
   <&| /page/info_section.mas, title => 'Filtered Results', collapsible=>0, collapsed=>0 &>
@@ -41,51 +60,67 @@
 </div>
 
 <script>
+var ajaxRequestString = "<% $ajaxRequestString %>";
 $(document).ready(function(){
   var list = new CXGN.List();
-  var select_html = list.listSelect('trials', ['trials'], ' ');
-  $('#trials_list_select_container').html(select_html);
-  if (d3.select('#trials_list_select').selectAll("option").size()<2){
-    d3.select('#trials_list_select').html("<option>No trial lists! (Create one using the wizard.)</option>");
-  }
-  $("#trials_list_select").change(function(){
-    var trial_list_id = $(this).val();
-    console.log(trial_list_id);
+  if (ajaxRequestString){
+    $('#select_div').hide();
     $('#filtered_results_wrap').hide();
+    $('#filter_div').hide();
     $('#results-loading-spinner').show();
-    $.get('/ajax/trial/common_plot_traits?trial_list_id='+trial_list_id, function(response) {
-        console.log(response);
-        var cols = response.data[0];
-        var data = response.data
-          .slice(1,response.data.length)
-          .map(function(row){
-            var obj = {};
-            for (var i = 0; i < cols.length; i++) {
-              if (row[i]==null) return null;
-              obj[cols[i]] = row[i];
-            }
-            return obj;
-          })
-          .filter(function(d){
-            return d!=null;
-          });
-        var rangeTraits = response.traits.results.map(function(d){return d[1];});
-        var tableCols = [
-          {title:"Study",data:"studyName"},
-          {title:"Block",data:"blockNumber"},
-          {title:"Plot",data:"plotNumber"},
-          {title:"Accession",data:"germplasmName"},
-        ].concat(rangeTraits.map(function(d){
-          return {title:d,data:d};
-        }));
-        console.log(tableCols);
-        console.log("All Rows",data);
-        window.gfiltering.main("#filter_div","#filtered_results",data,tableCols,rangeTraits);
-        $('#filtered_results_wrap').show();
-        $('#results-loading-spinner').hide();
+    $.get(ajaxRequestString, loadGFilter);
+  } else {
+    $('#select_div').show();
+    var trial_list_select_html = list.listSelect('trials', ['trials'], 'Choose a Trial List:');
+    var plot_list_select_html = list.listSelect('plots', ['plots'], 'Choose a Plot List:');
+    $('#trial_list_select_container').html(trial_list_select_html);
+    $('#plot_list_select_container').html(plot_list_select_html);
+    if (d3.select('#trials_list_select').selectAll("option").size()<2){
+      d3.select('#trials_list_select').html("<option>No trials lists! (Create one using the wizard.)</option>");
+    }
+    if (d3.select('#trials_list_select').selectAll("option").size()<2){
+      d3.select('#trials_list_select').html("<option>No plots lists! (Create one using the wizard.)</option>");
+    }
+    $("#list_type_select").change(function(){
+      $('#filtered_results_wrap').hide();
+      $('#filter_div').hide();
+      $('.select_container:not(.nohide) option').prop('selected', function() {
+        return this.value=="";
+      });
+      $('.select_container:not(.nohide)').hide();
+      $($(this).val()).show();
+    })
+    $("#trials_list_select").change(function(){
+      var trial_list_id = $(this).val();
+      if (trial_list_id!==""){
+        console.log(trial_list_id);
+        $('#filtered_results_wrap').hide();
+        $('#filter_div').hide();
+        $('#results-loading-spinner').show();
+        var rqString = '/ajax/plot/common_traits_by/trial_list?trial_list_id='+trial_list_id;
+        console.log(rqString);
+        $.get(rqString, loadGFilter);
+      } else {
+        $('#filtered_results_wrap').hide();
+        $('#filter_div').hide();
+      }
     });
-  })
-
+    $("#plots_list_select").change(function(){
+      var plot_list_id = $(this).val();
+      if (plot_list_id!==""){
+        console.log(plot_list_id);
+        $('#filtered_results_wrap').hide();
+        $('#filter_div').hide();
+        $('#results-loading-spinner').show();
+        var rqString = '/ajax/plot/common_traits_by/plot_list?plot_list_id='+plot_list_id;
+        console.log(rqString);
+        $.get(rqString, loadGFilter);
+      } else {
+        $('#filtered_results_wrap').hide();
+        $('#filter_div').hide();
+      }
+    });
+  }
   $('#new-list-form').submit(function () {
     if (!window.gfiltering.data){
       alert("Can't create a list from nothing.")
@@ -112,19 +147,56 @@ $(document).ready(function(){
 
 });
 
-
+function loadGFilter(response){
+  console.log(response);
+  var cols = response.data[0];
+  var data = response.data
+    .slice(1,response.data.length)
+    .map(function(row){
+      var obj = {};
+      for (var i = 0; i < cols.length; i++) {
+        if (row[i]==null) return null;
+        obj[cols[i]] = row[i];
+      }
+      return obj;
+    })
+    .filter(function(d){
+      return d!=null;
+    });
+  var rangeTraits = response.traits.results.map(function(d){return d[1];});
+  var tableCols = [
+    {title:"Study",data:"studyName"},
+    {title:"Block",data:"blockNumber"},
+    {title:"Plot",data:"plotNumber"},
+    {title:"Accession",data:"germplasmName"},
+  ].concat(rangeTraits.map(function(d){
+    return {title:d,data:d};
+  }));
+  console.log(tableCols);
+  console.log("All Rows",data);
+  window.gfiltering.main("#filter_div","#filtered_results",data,tableCols,rangeTraits);
+  $('#filtered_results_wrap').show();
+  $('#filter_div').show();
+  $('#results-loading-spinner').hide();
+}
 
 (function(d3){
   window.gfiltering = {};
   window.gfiltering.main = function(filter_selector,table_selector,data,tableCols,rangeTraits){
     var canv = d3.select(filter_selector);
+    canv.html("");
     window.gfiltering.root = new FilterGroup(null,0,"init");
     window.gfiltering.rangeTraits = rangeTraits;
     window.gfiltering.root.draw(canv.node());
+    if (window.gfiltering.results_table){
+      window.gfiltering.results_table.destroy();
+      $(table_selector).html("");
+    }
     var results_table = $(table_selector).DataTable({
       data: data,
       "columns": tableCols
     });
+    window.gfiltering.results_table = results_table;
     window.gfiltering.data = data;
     window.gfiltering.redraw = function(){
       window.gfiltering.root.updateData(window.gfiltering.data);
@@ -319,18 +391,22 @@ $(document).ready(function(){
       .attr("aria-labelledby",dropID);
 
     newFilterMenuContents.append("li").append("a").text("Range")
-      .attr("href","#")
+      .attr("href","")
       .classed("dropdown-item",true)
       .on("click",function(d){
+        d3.event.preventDefault();
+        d3.event.stopPropagation();
         var op = d.children.length==0 ? "init" : "and";
         d.children.push(new FilterRange(d,d.depth+1,op));
         window.gfiltering.redraw();
         return false;
       })
     newFilterMenuContents.append("li").append("a").text("Group")
-      .attr("href","#")
+      .attr("href","")
       .classed("dropdown-item",true)
       .on("click",function(d){
+        d3.event.preventDefault();
+        d3.event.stopPropagation();
         var op = d.children.length==0 ? "init" : "and";
         d.children.push(new FilterGroup(d,d.depth+1,op));
         window.gfiltering.redraw();
