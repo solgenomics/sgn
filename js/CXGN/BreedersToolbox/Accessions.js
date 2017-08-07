@@ -48,8 +48,8 @@ jQuery(document).ready(function ($) {
             var accessions = populations[i].members;
             var table_id = name+i+"_pop_table";
 
-            var section_html = '<div class="row"><div class="panel panel-default"><div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse'+i+'">';
-            section_html += '<div class="panel-title"><a name="populations_members_table_toggle" href="#'+table_id+'" data-population_id="'+population_id+'" class="accordion-toggle">'+name+'</a></div></div>';
+            var section_html = '<div class="row"><div class="panel panel-default"><div class="panel-heading" >';
+            section_html += '<div class="panel-title" name="populations_members_table_toggle" data-table_id="#'+table_id+'" data-population_id="'+population_id+'"><div class="row"><div class="col-sm-6" data-toggle="collapse" data-parent="#accordion" data-target="#collapse'+i+'"><a href="#'+table_id+'" class="accordion-toggle">'+name+'</a></div><div class="col-sm-3"><a href="/stock/'+population_id+'/view"><small>[Go To Population Page]</small></a></div><div class="col-sm-3"><a name="manage_populations_add_accessions" data-population_id="'+population_id+'"><small>[Add Accessions To Population]</small></a></div></div></div></div>';
             section_html += '<div id="collapse'+i+'" class="panel-collapse collapse">';
             section_html += '<div class="panel-body" style="overflow:hidden"><div class="table-responsive" style="margin-top: 10px;"><table id="'+table_id+'" class="table table-hover table-striped table-bordered" width="100%"></table></div>';
             section_html += '</div></div></div></div><br/>';
@@ -65,19 +65,24 @@ jQuery(document).ready(function ($) {
       });
     });
 
-    jQuery(document).on("click", "a[name='populations_members_table_toggle']", function(){
-        var table_id = jQuery(this).attr('href');
+    jQuery(document).on("click", "div[name='populations_members_table_toggle']", function(){
+        var table_id = jQuery(this).data('table_id');
         var population_id = jQuery(this).data('population_id');
 
         jQuery(table_id).DataTable( {
           ajax: '/ajax/manage_accessions/population_members/'+population_id,
-          retrieve: false,
+          destroy: true,
           columns: [
             { title: "Accession Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
             { title: "Description", "data": "description" },
             { title: "Synonyms", "data": "synonyms[, ]" }
           ]
         });
+    });
+
+    jQuery(document).on("click", "a[name='manage_populations_add_accessions']", function(){
+        var population_id = jQuery(this).data('population_id');
+        
     });
 
     function add_accessions(accessionsToAdd, speciesName, populationName, organizationName  ) {

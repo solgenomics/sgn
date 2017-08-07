@@ -55,7 +55,10 @@ sub get_all_populations {
 
     my $population_member_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship');
     
-    my $populations_rs = $schema->resultset("Stock::Stock")->search({'type_id' => $population_cvterm->cvterm_id()});
+    my $populations_rs = $schema->resultset("Stock::Stock")->search({
+        'type_id' => $population_cvterm->cvterm_id(),
+        'is_obsolete' => 'f'
+    });
 
     my @accessions_by_population;
 
