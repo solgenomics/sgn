@@ -44,27 +44,17 @@ jQuery(document).ready(function ($) {
           var populations = response.populations;
           for (var i in populations) {
             var name = populations[i].name;
+            var population_id = populations[i].stock_id;
             var accessions = populations[i].members;
             var table_id = name+i+"_pop_table";
 
             var section_html = '<div class="row"><div class="panel panel-default"><div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse'+i+'">';
-            section_html += '<div class="panel-title"><a href="#'+table_id+'" class="accordion-toggle">'+name+'</a></div></div>';
+            section_html += '<div class="panel-title"><a name="populations_members_table_toggle" href="#'+table_id+'" data-population_id="'+population_id+'" class="accordion-toggle">'+name+'</a></div></div>';
             section_html += '<div id="collapse'+i+'" class="panel-collapse collapse">';
             section_html += '<div class="panel-body" style="overflow:hidden"><div class="table-responsive" style="margin-top: 10px;"><table id="'+table_id+'" class="table table-hover table-striped table-bordered" width="100%"></table></div>';
             section_html += '</div></div></div></div><br/>';
 
             jQuery('#accordion').append(section_html);
-
-            jQuery('#'+table_id).DataTable( {
-              data: accessions,
-              retrieve: false,
-              columns: [
-                { title: "Accession Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
-                { title: "Description", "data": "description" },
-                { title: "Synonyms", "data": "synonyms[, ]" }
-              ]
-            });
-
           }
           enable_ui();
         },
@@ -73,6 +63,21 @@ jQuery(document).ready(function ($) {
           alert('An error occured retrieving population data.');
         }
       });
+    });
+
+    jQuery(document).on("click", "a[name='populations_members_table_toggle']", function(){
+        var table_id = jQuery(this).attr('href');
+        var population_id = jQuery(this).data('population_id');
+
+        jQuery(table_id).DataTable( {
+          ajax: '/ajax/manage_accessions/population_members/'+population_id,
+          retrieve: false,
+          columns: [
+            { title: "Accession Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
+            { title: "Description", "data": "description" },
+            { title: "Synonyms", "data": "synonyms[, ]" }
+          ]
+        });
     });
 
     function add_accessions(accessionsToAdd, speciesName, populationName, organizationName  ) {
