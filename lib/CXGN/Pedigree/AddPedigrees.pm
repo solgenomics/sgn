@@ -324,15 +324,12 @@ sub _validate_pedigree {
 		my $conflict_object = CXGN::Genotype::PedigreeCheck->new({schema=>$schema, accession_name => $progeny_name, mother_id => $mother_id, father_id => $father_id, protocol_id => $protocol_id});
 		my $conflict_return = $conflict_object->pedigree_check();
 		my $conflict_score = $conflict_return->{'score'};
-		$conflict_score = (1 - $conflict_score);
-		my $percent_score = (100 * $conflict_score);
-		my $rounded_percent_score = sprintf("%.2f", $percent_score);
 
 		if ($conflict_score >= .03){
-			return "$rounded_percent_score% of markers are in conflict indiciating that at least one parent of $progeny_name may be incorrect.";
+			return "$conflict_score% of markers are in conflict indiciating that at least one parent of $progeny_name may be incorrect.";
 		}
 		else{
-			return "$rounded_percent_score% of markers are in conflict indiciating that the pedigree of $progeny_name is likely correct.";
+			return "$conflict_score% of markers are in conflict indiciating that the pedigree of $progeny_name is likely correct.";
 		}
     return;
 }

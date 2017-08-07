@@ -19,18 +19,39 @@ jQuery(document).ready(function ($) {
               'accession_list': accession_list,
             },
             beforeSend: function(){
+              jQuery('#working_modal').modal('show');
               disable_ui();
             },
             success: function (response) {
-                enable_ui();
-                if (response.error) {
-                    alert(response.error);
-                } else {
-                    var score = response.conflict_score;
-                    jQuery ('check_pedigree_dialog').modal("show");
-                    //print score
+              jQuery('#working_modal').modal('hide');
+              enable_ui();
+              if (response.error) {
+                  alert(response.error);
+              }
+              else {
+                  var return_array = new Array();
+                  var json_hash_string = JSON.stringify(response);
+                  var json_hash_object = JSON.parse(json_hash_string);
+                  var linesCount = Object.keys(json_hash_object).length;
+                  var output_string;
 
-                }
+                  for (var i=0; i < linesCount; i++){
+                    var key = Object.keys(json_hash_object)[i];
+                    var value = json_hash_object[key];
+
+                    if (value > 3){
+                       output_string = "<p>Accession " + key + " has a pedigree conflict of " + value  + "%. A pedigree error is likely to have occurred.<\p>";
+                    }
+                    else{
+                       output_string = "<p>Accession " + key + " has a pedigree conflict of " + value + "%. A pedigree error is unlikely to have occurred.<\p>";
+                    }
+                    return_array.push(output_string);
+                    var breaks_return_array = return_array.join("<br>");
+                    console.log(breaks_return_array);
+                  }
+                  jQuery("#pedigree_check_body").append(breaks_return_array);
+                  jQuery('#pedigree_check_results').modal('show');
+              }
             },
             error: function () {
               enable_ui();

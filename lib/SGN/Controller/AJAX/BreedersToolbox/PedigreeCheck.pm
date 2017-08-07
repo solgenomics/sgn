@@ -10,6 +10,14 @@ use CXGN::Genotype::Search;
 use CXGN::Stock::StockLookup;
 use Bio::GeneticRelationships::Pedigree;
 
+use JSON -support_by_pp;
+use List::MoreUtils qw /any /;
+use CXGN::BreedersToolbox::Accessions;
+use CXGN::Stock::Accession;
+use CXGN::Chado::Stock;
+use CXGN::List;
+use Data::Dumper;
+
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
 __PACKAGE__->config(
@@ -17,7 +25,6 @@ __PACKAGE__->config(
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
-#process in control until standardized input
 
 sub pedigree_check : Path('/ajax/accession_list/pedigree_check') : ActionClass('REST') { }
 
@@ -25,9 +32,7 @@ sub pedigree_check_POST :  Args(0) {
   my $self = shift;
   my $c = shift;
   my %result_hash;
-  my $result_hash;
-	my $schema = $c->debic_schema("Bio::Chado::Schema"); ##syntax
-
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $default_genotyping_protocol = $c->config->{default_genotyping_protocol};
   my $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
 
@@ -51,8 +56,6 @@ sub pedigree_check_POST :  Args(0) {
     my $conflict_object = CXGN::Genotype::PedigreeCheck->new({schema=>$schema, accession_name => $accession, mother_id => $mother_id, father_id => $father_id, protocol_id => $protocol_id});
     my $conflict_results = $conflict_object->pedigree_check();
 
-    print STDERR "conflict results are ".Dumper $conflict_results;
-
     if ($conflict_results->{error}){
       my $error = $conflict_results->{error};
       $result_hash{$accession} = $error;
@@ -61,9 +64,21 @@ sub pedigree_check_POST :  Args(0) {
     else{
       my $conflict_score = $conflict_results->{'score'};
       $result_hash{$accession} = $conflict_score;
-      print STDERR "conflict score is controller $conflict_score";
     }
-    }
-    $c->stash->{rest} = $result_hash;
+  }
+    $c->stash->{rest} = \%result_hash;
+}
+sub _parse_list_from_json {
+  my $list_json = shift;
+  my $json = new JSON;
+  if ($list_json) {
+    my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
+    #my $decoded_list = decode_json($list_json);
+    my @array_of_list_items = @{$decoded_list};
+    return \@array_of_list_items;
+  }
+  else {
+    return;
+  }
 }
 1;

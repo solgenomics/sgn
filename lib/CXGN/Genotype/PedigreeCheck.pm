@@ -94,13 +94,16 @@ sub pedigree_check{
 	  if (!@dad_gts) {
 	    return {error => "Genotype of male parent $father_id missing. Skipping.\n"};
 		}
-		print STDERR "found dad gts";
+		print STDERR "found dad gts\n";
 	  my $s = shift @self_gts;
 	  my $m = shift @mom_gts;
 	  my $d = shift @dad_gts;
 	  my ($concordant, $discordant, $non_informative) = $s->compare_parental_genotypes($m, $d);
-	  my $score = $concordant / ($concordant + $discordant);
-		print STDERR "scores are $score";
+	  my $score = ($concordant / ($concordant + $discordant));
+		$score = (1 - $score);
+		$score = (100 * $score);
+		$score = sprintf("%.2f", $score);
+		print STDERR "scores are $score\n";
 		return {score => $score};
 		}
 		else{
