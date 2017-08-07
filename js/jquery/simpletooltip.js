@@ -6,7 +6,7 @@
 *	visit http://dev.mariusilie.net for details
 *
 **/
-//var k = jQuery.noConflict();
+
 (function($){ $.fn.simpletooltip = function(){
 	return this.each(function() {
 		var text = $(this).attr("title");
