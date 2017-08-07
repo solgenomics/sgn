@@ -6,6 +6,7 @@
 *	visit http://dev.mariusilie.net for details
 *
 **/
+
 (function($){ $.fn.simpletooltip = function(){
 	return this.each(function() {
 		var text = $(this).attr("title");
@@ -14,7 +15,7 @@
 			$(this).hover(function(e){
 				var tipX = e.pageX + 12;
 				var tipY = e.pageY + 12;
-				$(this).attr("title", ""); 
+				$(this).attr("title", "");
 				$("body").append("<div id='simpleTooltip' style='position: absolute; z-index: 100; display: none;'>" + text + "</div>");
 				if($.browser.msie) var tipWidth = $("#simpleTooltip").outerWidth(true)
 				else var tipWidth = $("#simpleTooltip").width()

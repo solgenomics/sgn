@@ -380,7 +380,7 @@ sub update_plot_phenotype_POST : Args(0) {
       $c->detach;
   }
 
-  $c->stash->{rest} = {success => 1}
+  $c->stash->{rest} = {success => 1};
 }
 
 sub retrieve_plot_phenotype :  Path('/ajax/phenotype/plot_phenotype_retrieve') : ActionClass('REST') { }

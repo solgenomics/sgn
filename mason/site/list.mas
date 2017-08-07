@@ -1,4 +1,4 @@
-
+<& /util/import_javascript.mas, classes => [ 'CXGN.List'] &>
 <!-- Lists dialog -->
 
 <div class="modal fade" id="list_dialog" name="list_dialog" tabindex="-1" role="dialog" aria-labelledby="listDialog">
@@ -87,12 +87,4 @@
             </div>
         </div>
     </div>
-</div>  
-
-<script>
-
-jQuery("#list_item_dialog").draggable();
-jQuery("#list_dialog").draggable();
-jQuery("#public_list_dialog").draggable();
-
-</script>
+</div>
