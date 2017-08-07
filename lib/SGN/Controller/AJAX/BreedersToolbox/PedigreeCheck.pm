@@ -28,6 +28,12 @@ __PACKAGE__->config(
 
 sub pedigree_check : Path('/ajax/accession_list/pedigree_check') : ActionClass('REST') { }
 
+sub pedigree_check_GET : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    $self->pedigree_check_POST($c);
+}
+
 sub pedigree_check_POST :  Args(0) {
   my $self = shift;
   my $c = shift;
@@ -37,7 +43,9 @@ sub pedigree_check_POST :  Args(0) {
   my $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
 
   my $accession_list_json = $c->req->param('accession_list');
+  print STDERR "acccession list json $accession_list_json\n";
   my @accession_list = @{_parse_list_from_json($accession_list_json)}; ##add package and find function
+  print STDERR Dumper (@accession_list);
 
   foreach my $accession (@accession_list){
     #keep stock object if not in addpedigrees
@@ -45,13 +53,16 @@ sub pedigree_check_POST :  Args(0) {
     $stock_lookup->set_stock_name($accession);
     my $stock_lookup_result = $stock_lookup->get_stock_exact();
     my $stock_id = $stock_lookup_result->stock_id();
+    print STDERR "stock id is $stock_id";
+
     my $stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
 
     my $parents = $stock->get_parents();
     my $mother_id = $parents->{'mother_id'};
-    print STDERR "mother id controller is $mother_id\n";
+    print STDERR "mother id is $mother_id";
+
     my $father_id = $parents->{'father_id'};
-    print STDERR "father id controller is $father_id\n";
+    print STDERR "father id is $father_id";
 
     my $conflict_object = CXGN::Genotype::PedigreeCheck->new({schema=>$schema, accession_name => $accession, mother_id => $mother_id, father_id => $father_id, protocol_id => $protocol_id});
     my $conflict_results = $conflict_object->pedigree_check();

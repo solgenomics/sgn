@@ -43,12 +43,7 @@ sub pedigree_check{
 	my $mother_id = $self->mother_id();
 	my $father_id = $self->father_id();
 	my $protocol_id = $self->protocol_id();
-
-	print STDERR "protocol id is";
 	my $schema = $self->schema();
-
-	print STDERR "father id is $father_id\n";
-	print STDERR "mother id is $mother_id\n";
 
 	my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
 	$stock_lookup->set_stock_name($accession_name);
@@ -66,7 +61,7 @@ sub pedigree_check{
 	  if (!@self_gts) {
 				return {error => "Genotype of accession $accession_name not available. Skipping...\n"};
 		}
-		print STDERR "found self gts\n";
+
 		my $mom_gts = CXGN::Genotype::Search->new( {
 	    bcs_schema => $schema,
 	    accession_list => [$mother_id],
@@ -76,7 +71,6 @@ sub pedigree_check{
 	  if (!@mom_gts) {
 	    return {error => "Genotype of female parent $mother_id missing. Skipping.\n"};
 	  }
-		print STDERR "found mom gts\n";
 		my $dad_gts;
 
 	  if ($mother_id == $father_id){
@@ -94,7 +88,6 @@ sub pedigree_check{
 	  if (!@dad_gts) {
 	    return {error => "Genotype of male parent $father_id missing. Skipping.\n"};
 		}
-		print STDERR "found dad gts\n";
 	  my $s = shift @self_gts;
 	  my $m = shift @mom_gts;
 	  my $d = shift @dad_gts;
@@ -109,7 +102,6 @@ sub pedigree_check{
 		else{
 			return {error => "No parents were found for this accession $accession_name. Skipping\n"};
 		}
-	print STDERR "Done.\n";
 }
 1;
 #return error as hash to prevent errors
