@@ -782,7 +782,7 @@ function setUpLists() {
 
 
 function show_lists() {
-    jQuery('#list_dialog').modal("show");
+   jQuery('#list_dialog').modal("show");
 
     var l = new CXGN.List();
     l.renderLists('list_dialog');
@@ -1336,3 +1336,10 @@ function combineSelectedListGroup(list_ids) {
         lo.renderLists('list_dialog');
     }
 }
+
+
+  jQuery(document).ready(function() {
+    jQuery("#list_item_dialog").draggable();
+    jQuery("#list_dialog").draggable();
+    jQuery("#public_list_dialog").draggable();
+});
