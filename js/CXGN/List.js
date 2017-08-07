@@ -45,7 +45,7 @@ Lukas Mueller <lam87@cornell.edu>
 */
 
 //JSAN.use('jqueryui');
-var k = jQuery.noConflict();
+
 if (!CXGN) CXGN = function () { };
 
 CXGN.List = function () {
@@ -782,7 +782,7 @@ function setUpLists() {
 
 
 function show_lists() {
-    k('#list_dialog').modal("show");
+   jQuery('#list_dialog').modal("show");
 
     var l = new CXGN.List();
     l.renderLists('list_dialog');
@@ -1337,9 +1337,9 @@ function combineSelectedListGroup(list_ids) {
     }
 }
 
-var k = jQuery.noConflict();
+
   jQuery(document).ready(function() {
-k("#list_item_dialog").draggable();
-k("#list_dialog").draggable();
-k("#public_list_dialog").draggable();
+    jQuery("#list_item_dialog").draggable();
+    jQuery("#list_dialog").draggable();
+    jQuery("#public_list_dialog").draggable();
 });

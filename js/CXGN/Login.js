@@ -1,6 +1,6 @@
 
 //JSAN.use('jqueryui');
-//var k = jQuery.noConflict();
+
 function isLoggedIn() {
 
     var user_id;
