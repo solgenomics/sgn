@@ -169,21 +169,21 @@ __PACKAGE__->config(
          $c->stash->{rest} = {error => $validate_file->{'error'}};
          return;
      }
-     my $parse_results = $parser->parse($type, $archived_filename_with_path, $schema);
+     my $parse_result = $parser->parse($type, $archived_filename_with_path, $schema);
 
 
-     print STDERR "Dumper of parsed data:\t" . Dumper($parse_results) . "\n";
+     print STDERR "Dumper of parsed data:\t" . Dumper($parse_result) . "\n";
 
-     if (!$parse_results) {
+     if (!$parse_result) {
          $c->stash->{rest} = {error => "Error parsing file."};
          return;
      }
-     if ($parse_results->{'error'}) {
-         $c->stash->{rest} = {error => $parse_results->{'error'}};
+     if ($parse_result->{'error'}) {
+         $c->stash->{rest} = {error => $parse_result->{'error'}};
          return;
      }
 
-    foreach my $row (@$parse_results) {
+    foreach my $row (@{$parse_result->{'success'}}) {
      #get data from rows one at a time
         my @data = @$row;
          my $location = CXGN::Location->new( {
