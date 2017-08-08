@@ -68,14 +68,14 @@ $ajaxRequestString => ""
 </div>
 
 <script>
-// This variable will be filled on the server side if url parameters are given
+// This variable will be filled on the server side if url parameters are given.
 // the proper params are : `trial_list_id`, `plot_list_id`,
 // or multiple instances of `trial_id`
 var ajaxRequestString = "<% $ajaxRequestString %>";
 $(document).ready(function(){
 
   // If the data to be filtered was specified in the url, request and display it.
-  if (!ajaxRequestString || ajaxRequestString == "<% $ajaxRequestString %>"){
+  if (!ajaxRequestString && ajaxRequestString !== "<% $ajaxRequestString %>"){
     $('#select_div').hide();
     $('#filtered_results_wrap').hide();
     $('#filter_div').hide();
@@ -178,7 +178,7 @@ $(document).ready(function(){
 // filters and modifies the response and then creates the root filter object
 // and datatable
 function loadGFilter(response){
-
+  console.log(response)
   // convert CSV ata to a list of JS objects and filter rows with missing data
   var csv_columns = response.data[0];
   var csv_data = response.data
