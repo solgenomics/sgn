@@ -31,6 +31,38 @@ jQuery(document).ready(function ($) {
         $('#working_modal').modal("hide");
     }
 
+    jQuery('#manage_accessions_populations_new').click(function(){
+        jQuery("#create_population_list_div").html(list.listSelect("create_population_list_div", ["accessions"] ));
+        jQuery('#manage_populations_add_population_dialog').modal('show');
+    });
+
+    jQuery("#create_population_submit").click(function(){
+        jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/population/new',
+            dataType: "json",
+            data: {
+                'population_name': jQuery('#create_population_name').val(),
+                'accession_list_id': jQuery('#create_population_list_div_list_select').val(),
+            },
+            beforeSend: function(){
+                disable_ui();
+            },
+            success: function (response) {
+                enable_ui();
+                if (response.error){
+                    alert(response.error);
+                }
+                if (response.success){
+                    alert(response.success);
+                }
+            },
+            error: function () {
+                alert('An error occurred in adding population. sorry');
+            }
+        });
+    });
+
     jQuery('#manage_accessions_populations_onswitch').click( function() {
       var already_loaded_tables = jQuery('#accordion').find("table");
       if (already_loaded_tables.length > 0) { return; }

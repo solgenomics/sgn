@@ -67,10 +67,10 @@ catch {
 };
 if ($error) {
 	print STDERR "Error creating population $population_name: $error\n";
-	return 0;
+	return { error => "Error creating population $population_name: $error" };
 } else {
 	print STDERR "population $population_name added successfully\n";
-	return { success => 1 };
+	return { success => "Success! Population $population_name created" };
 }
 }
 
