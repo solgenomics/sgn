@@ -47,43 +47,49 @@ sub validate {
             print STDERR $validate_result{'error'};
             return \%validate_result;
         }
-        my $country = $worksheet->get_cell($row,2)->value();
-        if (!$country) { # check is defined and is valid ISO code, use to retrieve country name
-            $validate_result{'error'} = "Country $country is undefined at row $row, column 3.\n";
+        my $country_code = $worksheet->get_cell($row,2)->value();
+        if (!$country_code) { # check is defined and is valid ISO code, use to retrieve country name
+            $validate_result{'error'} = "Country code $country_code is undefined at row $row, column 3.\n";
             print STDERR $validate_result{'error'};
             return \%validate_result;
         }
-        my $program = $worksheet->get_cell($row,3)->value();
+        my $country_name = $worksheet->get_cell($row,3)->value();
+        if (!$country_name) { # check is defined and is valid ISO code, use to retrieve country name
+            $validate_result{'error'} = "Country name $country_name is undefined at row $row, column 4.\n";
+            print STDERR $validate_result{'error'};
+            return \%validate_result;
+        }
+        my $program = $worksheet->get_cell($row,4)->value();
         if (!$program) { # check is defined, is in database
-            $validate_result{'error'} = "Program $program is undefined at row $row, column 4.\n";
+            $validate_result{'error'} = "Program $program is undefined at row $row, column 5.\n";
             print STDERR $validate_result{'error'};
             return \%validate_result;
         }
-        my $type = $worksheet->get_cell($row,4)->value();
+        my $type = $worksheet->get_cell($row,5)->value();
         if (!$type) { # check is defined, is one of approved types
-            $validate_result{'error'} = "Type $type is undefined at row $row, column 5.\n";
+            $validate_result{'error'} = "Type $type is undefined at row $row, column 6.\n";
             print STDERR $validate_result{'error'};
             return \%validate_result;
         }
-        my $latitude = $worksheet->get_cell($row,5)->value();
+        my $latitude = $worksheet->get_cell($row,6)->value();
         if (!$latitude) { # check is defined, is number between 90 and -90
-            $validate_result{'error'} = "Latitude $latitude is undefined at row $row, column 6.\n";
+            $validate_result{'error'} = "Latitude $latitude is undefined at row $row, column 7.\n";
             print STDERR $validate_result{'error'};
             return \%validate_result;
         }
-        my $longitude= $worksheet->get_cell($row,6)->value();
+        my $longitude= $worksheet->get_cell($row,7)->value();
         if (!$longitude) { # check is defined, is number between 180 and -180
-            $validate_result{'error'} = "Longitude $longitude is undefined at row $row, column 7.\n";
+            $validate_result{'error'} = "Longitude $longitude is undefined at row $row, column 8.\n";
             print STDERR $validate_result{'error'};
             return \%validate_result;
         }
         my $altitude = $worksheet->get_cell($row,7)->value();
         if (!$altitude) { # check is defined, is number between -418 and 8,848
-            $validate_result{'error'} = "Altitude $altitude is undefined at row $row, column 8.\n";
+            $validate_result{'error'} = "Altitude $altitude is undefined at row $row, column 9.\n";
             print STDERR $validate_result{'error'};
             return \%validate_result;
         }
-        print STDERR "Validated row is $name, $abbreviation, $country, $program, $type, $latitude, $longitude, $altitude\n";
+        print STDERR "Validated row is $name, $abbreviation, $country_code, $country_name, $program, $type, $latitude, $longitude, $altitude\n";
     }
     $validate_result{'success'} = 1;
     return \%validate_result;
@@ -111,14 +117,15 @@ sub parse {
     for my $row ( 1 .. $row_max ) {
         my $name = $worksheet->get_cell($row,0)->value();
         my $abbreviation = $worksheet->get_cell($row,1)->value();
-        my $country = $worksheet->get_cell($row,2)->value();
-        my $program = $worksheet->get_cell($row,3)->value();
-        my $type = $worksheet->get_cell($row,4)->value();
-        my $latitude = $worksheet->get_cell($row,5)->value();
-        my $longitude= $worksheet->get_cell($row,6)->value();
-        my $altitude = $worksheet->get_cell($row,7)->value();
-        print STDERR "Row is $name, $abbreviation, $country, $program, $type, $latitude, $longitude, $altitude\n";
-        push @rows, [$name,$abbreviation,$country,$program,$type,$latitude,$longitude,$altitude];
+        my $country_code = $worksheet->get_cell($row,2)->value();
+        my $country_name = $worksheet->get_cell($row,3)->value();
+        my $program = $worksheet->get_cell($row,4)->value();
+        my $type = $worksheet->get_cell($row,5)->value();
+        my $latitude = $worksheet->get_cell($row,6)->value();
+        my $longitude= $worksheet->get_cell($row,7)->value();
+        my $altitude = $worksheet->get_cell($row,8)->value();
+        print STDERR "Row is $name, $abbreviation, $country_code, $country_name, $program, $type, $latitude, $longitude, $altitude\n";
+        push @rows, [$name,$abbreviation,$country_code,$country_name,$program,$type,$latitude,$longitude,$altitude];
     }
     $parse_result{'success'} = \@rows;
 
