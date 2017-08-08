@@ -166,15 +166,15 @@ __PACKAGE__->config(
      #parse uploaded file with appropriate plugin
      my $type = 'location excel';
      my $parser = CXGN::Location::ParseUpload->new();
-     my $validate_file = $parser->validate($type, $archived_filename_with_path, $schema);
-     if ($validate_file->{'error'}) {
-         $c->stash->{rest} = {filename => $upload_original_name, error => $validate_file->{'error'}};
-         return;
-     }
+    #  my $validate_file = $parser->validate($type, $archived_filename_with_path, $schema);
+    #  if ($validate_file->{'error'}) {
+    #      $c->stash->{rest} = {filename => $upload_original_name, error => $validate_file->{'error'}};
+    #      return;
+    #  }
      my $parse_result = $parser->parse($type, $archived_filename_with_path, $schema);
 
 
-     print STDERR "Dumper of parsed data:\t" . Dumper($parse_result) . "\n";
+     print STDERR "Dumper of parsed result:\t" . Dumper($parse_result) . "\n";
 
      if (!$parse_result) {
          push @errors, "Error parsing file.";
