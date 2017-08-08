@@ -59,7 +59,7 @@ $user_id => undef
                 <b>Name:</b> must not conflict with an existing location name<br>
                 <b>Abbreviation</b><br>
                 <b>Country Code:</b> must be an <a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3">ISO Alpha-3 country code</a><br>
-                <b>Country Name:</b> must be a lowercase english short name from the<a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3">ISO standard</a><br>
+                <b>Country Name:</b> must be a lowercase english short name from the <a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3">ISO standard</a><br>
                 <b>Program:</b> must be an exisiting Breeding Program in the database<br>
                 <b>Type:</b> must be one of the following: Farm, Field, Greenhouse, Screenhouse, Lab, Storage<br>
                 <b>Latitude:</b> (in degrees) must be a number between 90 and -90.<br>
@@ -81,17 +81,17 @@ $user_id => undef
   </div>
 </div>
 
-<div class="modal fade" id="locations_saved_dialog" tabindex="-1" role="dialog" aria-labelledby="locationsSavedDialog">
+<div class="modal fade" id="locations_result_dialog" tabindex="-1" role="dialog" aria-labelledby="locationsResultDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content ui-front">
             <div class="modal-header text-center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="locationsSavedDialog">Upload Results</h4>
+                <h4 class="modal-title" id="locationsResultDialog">Results</h4>
             </div>
-            <div id="locations_saved_body" class="container-fluid">
+            <div id="locations_result_body" class="container-fluid">
             </div>
             <div class="modal-footer">
-                <button id="locations_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="locations_result_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -154,29 +154,30 @@ jQuery(document).ready(function() {
    $('#upload_locations_form').iframePostForm({
        json: true,
        post: function () {
-        //    var uploadedPedigreesFile = $("#pedigrees_uploaded_file").val();
            $('#working_modal').modal("show");
-        //    if (uploadedPedigreesFile === '') {
-        //        $('#working_modal').modal("hide");
-        //        alert("No file selected");
-        //    }
        },
        complete: function (response) {
            $('#working_modal').modal("hide");
-           console.log(response);
+           //console.log(response);
            if (response.error) {
-               alert("An error occurred"+JSON.stringify(response.error));
+                var errors = [];
+                for (i = 0; i < response.error.length; i++) {
+                    errors.push( '<p>'+response.error[i]+'</p>');
+                }
+                var html = '<br><center><b>Validation failed. Please fix the following errors in </b>'+response.filename+'<b> and try again:</b>';
+                html += errors.join('') + '</center>';
+                document.getElementById('locations_result_body').innerHTML = html;
+                $('#locations_result_dialog').modal("show");
            }
            else {
                $('#upload_locations_dialog').modal("hide");
-               //alert("Success! "+JSON.stringify(response));
                var saved_locations = [];
                for (var key in response) {
                    saved_locations.push( '<p>'+key+': '+response[key]+'</p>');
                }
-               var html = saved_locations.join('<br>');
-               document.getElementById('locations_saved_body').innerHTML = '<br>'+html;
-               $('#locations_saved_dialog').modal("show");
+               var html = '<br><center>'+saved_locations.join('')+'</center>';
+               document.getElementById('locations_result_body').innerHTML = html;
+               $('#locations_result_dialog').modal("show");
            }
        },
        error: function(response) {

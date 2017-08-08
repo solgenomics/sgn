@@ -131,12 +131,13 @@ __PACKAGE__->config(
 
      my $time = DateTime->now();
      my $timestamp = $time->ymd()."_".$time->hms();
-     my %response;
+     my (@errors, %response);
 
 
      if (!$c->user()) {
        print STDERR "User not logged in... not uploading locations.\n";
-       $c->stash->{rest} = {error => "You need to be logged in to upload locations." };
+       push @errors, "You need to be logged in to upload locations.";
+       $c->stash->{rest} = {filename => $upload_original_name, error => \@errors };
        return;
      }
 
@@ -156,7 +157,8 @@ __PACKAGE__->config(
      my $archived_filename_with_path = $uploader->archive();
      my $md5 = $uploader->get_md5($archived_filename_with_path);
      if (!$archived_filename_with_path) {
-         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+         push @errors, "Could not save file $upload_original_name in archive";
+         $c->stash->{rest} = {filename => $upload_original_name, error => \@errors };
          return;
      }
      unlink $upload_tempfile;
@@ -166,7 +168,7 @@ __PACKAGE__->config(
      my $parser = CXGN::Location::ParseUpload->new();
      my $validate_file = $parser->validate($type, $archived_filename_with_path, $schema);
      if ($validate_file->{'error'}) {
-         $c->stash->{rest} = {error => $validate_file->{'error'}};
+         $c->stash->{rest} = {filename => $upload_original_name, error => $validate_file->{'error'}};
          return;
      }
      my $parse_result = $parser->parse($type, $archived_filename_with_path, $schema);
@@ -175,11 +177,12 @@ __PACKAGE__->config(
      print STDERR "Dumper of parsed data:\t" . Dumper($parse_result) . "\n";
 
      if (!$parse_result) {
-         $c->stash->{rest} = {error => "Error parsing file."};
+         push @errors, "Error parsing file.";
+         $c->stash->{rest} = {filename => $upload_original_name, error => \@errors };
          return;
      }
      if ($parse_result->{'error'}) {
-         $c->stash->{rest} = {error => $parse_result->{'error'}};
+         $c->stash->{rest} = {filename => $upload_original_name, error => $parse_result->{'error'}};
          return;
      }
 

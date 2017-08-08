@@ -15,13 +15,14 @@ sub validate {
     my $filename = shift;
     my $schema = shift;
     my $parser   = Spreadsheet::ParseExcel->new();
-    my %validate_result;
+    my (@errors, %validate_result);
 
     #try to open the excel file and report any errors
     my $excel_obj = $parser->parse($filename);
     if ( !$excel_obj ) {
-        $validate_result{'error'} = $parser->error();
         print STDERR "validate error: ".$parser->error()."\n";
+        push @errors, $parser->error();
+        $validate_result{'error'} = \@errors;
         return \%validate_result;
     }
 
@@ -29,69 +30,95 @@ sub validate {
     my ( $row_min, $row_max ) = $worksheet->row_range();
     my ( $col_min, $col_max ) = $worksheet->col_range();
     if (($col_max - $col_min)  < 1 || ($row_max - $row_min) < 1 ) { #must have header with at least plot_name and one trait, as well as one row of phenotypes
-        $validate_result{'error'} = "Location file is missing header and/or location data";
-        print STDERR $validate_result{'error'};
+        print STDERR "Location file is missing header and/or location data";
+        push @errors, "Location file is missing header and/or location data";
+        $validate_result{'error'} = \@errors;
         return \%validate_result;
     }
-
     for my $row ( 1 .. $row_max ) {
-        my $name = $worksheet->get_cell($row,0)->value();
+        my $row_num = $row+1;
+        our($name,$abbreviation,$country_code,$country_name,$program,$type,$latitude,$longitude,$altitude) = undef;
+        if ($worksheet->get_cell($row,0)) {
+          $name = $worksheet->get_cell($row,0)->value();
+        }
         if (!$name) { # check is defined and isn't already in database
-            $validate_result{'error'} = "Name $name is undefined at row $row, column 1.\n";
-            print STDERR $validate_result{'error'};
-            return \%validate_result;
+            push @errors, "Name $name is undefined at row $row_num, column A.\n";
+            # print STDERR $validate_result{'error'};
+            # return \%validate_result;
         }
-        my $abbreviation = $worksheet->get_cell($row,1)->value();
+        if ($worksheet->get_cell($row,1)) {
+          $abbreviation = $worksheet->get_cell($row,1)->value();
+        }
         if (!$abbreviation) { # check is defined and isn't already in database
-            $validate_result{'error'} = "Abbreviation $abbreviation is undefined at row $row, column 2.\n";
-            print STDERR $validate_result{'error'};
-            return \%validate_result;
+            push @errors, "Abbreviation $abbreviation is undefined at row $row_num, column B.\n";
+            # print STDERR $validate_result{'error'};
+            # return \%validate_result;
         }
-        my $country_code = $worksheet->get_cell($row,2)->value();
-        if (!$country_code) { # check is defined and is valid ISO code, use to retrieve country name
-            $validate_result{'error'} = "Country code $country_code is undefined at row $row, column 3.\n";
-            print STDERR $validate_result{'error'};
-            return \%validate_result;
+        if ($worksheet->get_cell($row,2)) {
+          $country_code = $worksheet->get_cell($row,2)->value();
         }
-        my $country_name = $worksheet->get_cell($row,3)->value();
-        if (!$country_name) { # check is defined and is valid ISO code, use to retrieve country name
-            $validate_result{'error'} = "Country name $country_name is undefined at row $row, column 4.\n";
-            print STDERR $validate_result{'error'};
-            return \%validate_result;
+        if (!$country_code) { # check is defined and is valid ISO code
+            push @errors, "Country code $country_code is undefined at row $row_num, column C.\n";
+            # print STDERR $validate_result{'error'};
+            # return \%validate_result;
         }
-        my $program = $worksheet->get_cell($row,4)->value();
+        if ($worksheet->get_cell($row,3)) {
+          $country_name = $worksheet->get_cell($row,3)->value();
+        }
+        if (!$country_name) { # check is defined and is valid country name
+            push @errors, "Country name $country_name is undefined at row $row_num, column D.\n";
+            # print STDERR $validate_result{'error'};
+            # return \%validate_result;
+        }
+        if ($worksheet->get_cell($row,4)) {
+          $program = $worksheet->get_cell($row,4)->value();
+        }
         if (!$program) { # check is defined, is in database
-            $validate_result{'error'} = "Program $program is undefined at row $row, column 5.\n";
-            print STDERR $validate_result{'error'};
-            return \%validate_result;
+            push @errors, "Program $program is undefined at row $row_num, column E.\n";
+            # print STDERR $validate_result{'error'};
+            # return \%validate_result;
         }
-        my $type = $worksheet->get_cell($row,5)->value();
+        if ($worksheet->get_cell($row,5)) {
+          $type = $worksheet->get_cell($row,5)->value();
+        }
         if (!$type) { # check is defined, is one of approved types
-            $validate_result{'error'} = "Type $type is undefined at row $row, column 6.\n";
-            print STDERR $validate_result{'error'};
-            return \%validate_result;
+            push @errors, "Type $type is undefined at row $row_num, column F.\n";
+            # print STDERR $validate_result{'error'};
+            # return \%validate_result;
         }
-        my $latitude = $worksheet->get_cell($row,6)->value();
+        if ($worksheet->get_cell($row,6)) {
+          $latitude = $worksheet->get_cell($row,6)->value();
+        }
         if (!$latitude) { # check is defined, is number between 90 and -90
-            $validate_result{'error'} = "Latitude $latitude is undefined at row $row, column 7.\n";
-            print STDERR $validate_result{'error'};
-            return \%validate_result;
+            push @errors, "Latitude $latitude is undefined at row $row_num, column G.\n";
+            # print STDERR $validate_result{'error'};
+            # return \%validate_result;
         }
-        my $longitude= $worksheet->get_cell($row,7)->value();
+        if ($worksheet->get_cell($row,7)) {
+          $longitude = $worksheet->get_cell($row,7)->value();
+        }
         if (!$longitude) { # check is defined, is number between 180 and -180
-            $validate_result{'error'} = "Longitude $longitude is undefined at row $row, column 8.\n";
-            print STDERR $validate_result{'error'};
-            return \%validate_result;
+            push @errors, "Longitude $longitude is undefined at row $row_num, column H.\n";
+            # print STDERR $validate_result{'error'};
+            # return \%validate_result;
         }
-        my $altitude = $worksheet->get_cell($row,7)->value();
+        if ($worksheet->get_cell($row,8)) {
+          $altitude = $worksheet->get_cell($row,8)->value();
+        }
         if (!$altitude) { # check is defined, is number between -418 and 8,848
-            $validate_result{'error'} = "Altitude $altitude is undefined at row $row, column 9.\n";
-            print STDERR $validate_result{'error'};
-            return \%validate_result;
+            push @errors, "Altitude $altitude is undefined at row $row_num, column I.\n";
+            # print STDERR $validate_result{'error'};
+            # return \%validate_result;
         }
-        print STDERR "Validated row is $name, $abbreviation, $country_code, $country_name, $program, $type, $latitude, $longitude, $altitude\n";
+        # print STDERR "Validated row is $name, $abbreviation, $country_code, $country_name, $program, $type, $latitude, $longitude, $altitude\n";
     }
-    $validate_result{'success'} = 1;
+    if (scalar @errors > 0) {
+        $validate_result{'error'} = \@errors;
+    }
+    else {
+        print STDERR "Validation passed with no errors.\n";
+        $validate_result{'success'} = 1;
+    }
     return \%validate_result;
 }
 
@@ -100,13 +127,14 @@ sub parse {
     my $filename = shift;
     my $schema = shift;
     my $parser   = Spreadsheet::ParseExcel->new();
-    my %parse_result;
+    my (@errors, %parse_result);
 
     #try to open the excel file and report any errors
     my $excel_obj = $parser->parse($filename);
     if ( !$excel_obj ) {
-        $parse_result{'error'} = $parser->error();
-        print STDERR "validate error: ".$parser->error()."\n";
+        print STDERR "parse error: ".$parser->error()."\n";
+        push @errors, $parser->error();
+        $parse_result{'error'} = \@errors;
         return \%parse_result;
     }
 
