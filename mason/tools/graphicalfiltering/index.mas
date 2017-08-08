@@ -14,8 +14,10 @@ $ajaxRequestString => ""
 <& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'CXGN.List', 'd3.d3v4Min' ] &>
 
 <div id="select_div" class="row" hidden="true">
+  <!-- form for selecting a list -->
   <form class="tc-form">
     <div class="form-group">
+        <!-- for selecting list types -->
         <div class="select_container nohide col-md-offset-2 col-md-2">
           <select id="list_type_select" class="form-control input-sm">
             <option disabled selected="selected">Choose List Type:</option>
@@ -23,16 +25,19 @@ $ajaxRequestString => ""
             <option value="#plot_list_select_container">Plots</option>
           </select>
         </div>
+        <!-- show this disabled select before a list type has been selected-->
         <div id="empty_select_container" class="select_container col-md-6">
           <select disabled class="form-control input-sm">
             <option selected="selected">Select a list type first.</option>
           </select>
         </div>
+        <!-- trials list select -->
         <div id="trial_list_select_container" hidden="true" class="select_container col-md-6">
           <select disabled class="form-control input-sm" id="trials_list_select">
             <option selected="selected">Loading...</option>
           </select>
         </div>
+        <!-- plot list select -->
         <div id="plot_list_select_container" hidden="true" class="select_container col-md-6">
           <select disabled class="form-control input-sm" id="plots_list_select">
             <option selected="selected">Loading...</option>
@@ -41,12 +46,15 @@ $ajaxRequestString => ""
     </div>
   </form>
 </div>
+<!-- spinner to show during ajax call -->
 <div class="row">
   <center>
     <img hidden="true" id="results-loading-spinner" src="/img/wheel.gif" alt="loading">
   </center>
 </div>
+<!-- div in which to draw filters -->
 <div id="filter_div" class="row"></div>
+<!-- div with table of filtered results and an option to save the output as a list -->
 <div id="filtered_results_wrap" hidden="true" class="row dataTables_wrapper">
   <&| /page/info_section.mas, title => 'Filtered Results', collapsible=>0, collapsed=>0 &>
     <table id="filtered_results" width="100%" class="table table-hover table-striped dataTable no-footer" role="grid" style="width: 100%;"></table>
@@ -60,27 +68,41 @@ $ajaxRequestString => ""
 </div>
 
 <script>
+// This variable will be filled on the server side if url parameters are given
+// the proper params are : `trial_list_id`, `plot_list_id`,
+// or multiple instances of `trial_id`
 var ajaxRequestString = "<% $ajaxRequestString %>";
 $(document).ready(function(){
-  var list = new CXGN.List();
-  if (ajaxRequestString){
+
+  // If the data to be filtered was specified in the url, request and display it.
+  if (!ajaxRequestString || ajaxRequestString == "<% $ajaxRequestString %>"){
     $('#select_div').hide();
     $('#filtered_results_wrap').hide();
     $('#filter_div').hide();
     $('#results-loading-spinner').show();
     $.get(ajaxRequestString, loadGFilter);
-  } else {
+  }
+
+  // otherwise set up and show the list select div.
+  else {
     $('#select_div').show();
+
+    // set up lists
+    var list = new CXGN.List();
     var trial_list_select_html = list.listSelect('trials', ['trials'], 'Choose a Trial List:');
-    var plot_list_select_html = list.listSelect('plots', ['plots'], 'Choose a Plot List:');
     $('#trial_list_select_container').html(trial_list_select_html);
+    var plot_list_select_html = list.listSelect('plots', ['plots'], 'Choose a Plot List:');
     $('#plot_list_select_container').html(plot_list_select_html);
+
+    // show warning for empty lists
     if (d3.select('#trials_list_select').selectAll("option").size()<2){
       d3.select('#trials_list_select').html("<option>No trials lists! (Create one using the wizard.)</option>");
     }
     if (d3.select('#trials_list_select').selectAll("option").size()<2){
       d3.select('#trials_list_select').html("<option>No plots lists! (Create one using the wizard.)</option>");
     }
+
+    // show the apropriate list select when the list-type select changes
     $("#list_type_select").change(function(){
       $('#filtered_results_wrap').hide();
       $('#filter_div').hide();
@@ -90,6 +112,8 @@ $(document).ready(function(){
       $('.select_container:not(.nohide)').hide();
       $($(this).val()).show();
     })
+
+    // when a trials list is selected, request and display it.
     $("#trials_list_select").change(function(){
       var trial_list_id = $(this).val();
       if (trial_list_id!==""){
@@ -105,6 +129,8 @@ $(document).ready(function(){
         $('#filter_div').hide();
       }
     });
+
+    // when a plots list is selected, request and display it.
     $("#plots_list_select").change(function(){
       var plot_list_id = $(this).val();
       if (plot_list_id!==""){
@@ -121,6 +147,8 @@ $(document).ready(function(){
       }
     });
   }
+
+  // set up the form for saving results as a list
   $('#new-list-form').submit(function () {
     if (!window.gfiltering.data){
       alert("Can't create a list from nothing.")
@@ -147,22 +175,27 @@ $(document).ready(function(){
 
 });
 
+// filters and modifies the response and then creates the root filter object
+// and datatable
 function loadGFilter(response){
-  console.log(response);
-  var cols = response.data[0];
-  var data = response.data
+
+  // convert CSV ata to a list of JS objects and filter rows with missing data
+  var csv_columns = response.data[0];
+  var csv_data = response.data
     .slice(1,response.data.length)
     .map(function(row){
       var obj = {};
-      for (var i = 0; i < cols.length; i++) {
+      for (var i = 0; i < csv_columns.length; i++) {
         if (row[i]==null) return null;
-        obj[cols[i]] = row[i];
+        obj[csv_columns[i]] = row[i];
       }
       return obj;
     })
     .filter(function(d){
       return d!=null;
     });
+
+  // use the list of shared traits to create dataTables columns
   var rangeTraits = response.traits.results.map(function(d){return d[1];});
   var tableCols = [
     {title:"Study",data:"studyName"},
@@ -172,9 +205,11 @@ function loadGFilter(response){
   ].concat(rangeTraits.map(function(d){
     return {title:d,data:d};
   }));
-  console.log(tableCols);
-  console.log("All Rows",data);
-  window.gfiltering.main("#filter_div","#filtered_results",data,tableCols,rangeTraits);
+
+  // create the root filter object and datatable
+  window.gfiltering.main("#filter_div","#filtered_results",csv_data,tableCols,rangeTraits);
+
+  // show relevant divs
   $('#filtered_results_wrap').show();
   $('#filter_div').show();
   $('#results-loading-spinner').hide();
@@ -390,7 +425,7 @@ function loadGFilter(response){
       .classed("dropdown-menu",true)
       .attr("aria-labelledby",dropID);
 
-    newFilterMenuContents.append("li").append("a").text("Range")
+    newFilterMenuContents.append("li").append("a").text("New Range")
       .attr("href","")
       .classed("dropdown-item",true)
       .on("click",function(d){
@@ -401,7 +436,7 @@ function loadGFilter(response){
         window.gfiltering.redraw();
         return false;
       })
-    newFilterMenuContents.append("li").append("a").text("Group")
+    newFilterMenuContents.append("li").append("a").text("New Group")
       .attr("href","")
       .classed("dropdown-item",true)
       .on("click",function(d){

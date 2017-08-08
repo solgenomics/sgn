@@ -17,6 +17,11 @@
   margin-top: 0.5em;
 }
 
+#filter_div .dropdown-menu > li > a {
+  color: #2e6da4;
+  line-height: 2em !important;
+}
+
 .brush-out-indicator {
     stroke-width: 4px;
     stroke-dasharray: 4 2;
@@ -67,18 +72,6 @@
 .filter-range-form{
   padding:0;
 }
-
-/*.filter-remove::before {
-    content: "+";
-    font-size: 18px;
-    color: #ddd;
-    position: absolute;
-    top: -2.5px;
-    left: 4px;
-    -ms-transform: rotate(45deg);
-    -webkit-transform: rotate(45deg);
-    transform: rotate(45deg);
-}*/
 
 .filter-operator {
     font-weight: bold;
