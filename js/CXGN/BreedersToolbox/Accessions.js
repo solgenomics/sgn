@@ -49,7 +49,7 @@ jQuery(document).ready(function ($) {
             var table_id = name+i+"_pop_table";
 
             var section_html = '<div class="row"><div class="panel panel-default"><div class="panel-heading" >';
-            section_html += '<div class="panel-title" name="populations_members_table_toggle" data-table_id="#'+table_id+'" data-population_id="'+population_id+'"><div class="row"><div class="col-sm-6" data-toggle="collapse" data-parent="#accordion" data-target="#collapse'+i+'"><a href="#'+table_id+'" class="accordion-toggle">'+name+'</a></div><div class="col-sm-3"><a href="/stock/'+population_id+'/view"><small>[Go To Population Page]</small></a></div><div class="col-sm-3"><a name="manage_populations_add_accessions" data-population_id="'+population_id+'"><small>[Add Accessions To Population]</small></a></div></div></div></div>';
+            section_html += '<div class="panel-title" name="populations_members_table_toggle" data-table_id="#'+table_id+'" data-population_id="'+population_id+'" data-population_name="'+name+'"><div class="row"><div class="col-sm-6" data-toggle="collapse" data-parent="#accordion" data-target="#collapse'+i+'"><a href="#'+table_id+'" class="accordion-toggle">'+name+'</a></div><div class="col-sm-3"><a href="/stock/'+population_id+'/view"><small>[Go To Population Page]</small></a></div><div class="col-sm-3"><a name="manage_populations_add_accessions" data-population_id="'+population_id+'" data-population_name="'+name+'"><small>[Add Accessions To Population]</small></a></div></div></div></div>';
             section_html += '<div id="collapse'+i+'" class="panel-collapse collapse">';
             section_html += '<div class="panel-body" style="overflow:hidden"><div class="table-responsive" style="margin-top: 10px;"><table id="'+table_id+'" class="table table-hover table-striped table-bordered" width="100%"></table></div>';
             section_html += '</div></div></div></div><br/>';
@@ -80,9 +80,42 @@ jQuery(document).ready(function ($) {
         });
     });
 
+    var population_id;
+    var population_name;
+
     jQuery(document).on("click", "a[name='manage_populations_add_accessions']", function(){
-        var population_id = jQuery(this).data('population_id');
-        
+        population_id = jQuery(this).data('population_id');
+        population_name = jQuery(this).data('population_name');
+        jQuery("#add_accession_to_population_list_div").html(list.listSelect("add_accession_to_population_list_div", ["accessions"] ));
+        jQuery('#add_accession_population_name').html(population_name);
+        jQuery('#manage_populations_add_accessions_dialog').modal('show');
+    });
+
+    jQuery("#add_accessions_to_population_submit").click(function(){
+        jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/population/add_accessions',
+            dataType: "json",
+            data: {
+                'population_name': population_name,
+                'accession_list_id': jQuery('#add_accession_to_population_list_div_list_select').val(),
+            },
+            beforeSend: function(){
+                disable_ui();
+            },
+            success: function (response) {
+                enable_ui();
+                if (response.error){
+                    alert(response.error);
+                }
+                if (response.success){
+                    alert(response.success);
+                }
+            },
+            error: function () {
+                alert('An error occurred in adding accessions to population. sorry');
+            }
+        });
     });
 
     function add_accessions(accessionsToAdd, speciesName, populationName, organizationName  ) {

@@ -32,7 +32,23 @@ sub create_population :Path('/ajax/population/new') Args(0) {
     $population_add->add_population();
 
     $c->stash->{rest} = { message => "Success! Population created" };
-    return;
+}
+
+sub add_accessions_to_population :Path('/ajax/population/add_accessions') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $population_name = $c->req->param('population_name');
+    my $accession_list_id = $c->req->param('accession_list_id');
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $list = CXGN::List->new({dbh=>$dbh, list_id=>$accession_list_id});
+    my $members = $list->elements();
+    print STDERR Dumper $members;
+
+    my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $schema, name => $population_name, members => $members });
+    my $return = $population_add->add_accessions();
+    $c->stash->{rest} = $return;
 }
 
 1;
