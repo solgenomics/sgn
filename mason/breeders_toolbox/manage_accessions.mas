@@ -104,6 +104,31 @@ $list_id => undef
     </div>
 </div>
 
+<div class="modal fade" id="manage_populations_delete_dialog" name="manage_populations_delete_dialog" tabindex="-1" role="dialog" aria-labelledby="deletePopulationsDialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="deletePopulationsDialog">Delete Population <div id="delete_population_name"></div></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">Are You Sure?</label>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="delete_population_submit" id="delete_population_submit">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="modal fade" id="add_accessions_dialog" name="add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsDialog" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog" role="document">

@@ -5,6 +5,7 @@ use Moose;
 use CXGN::Pedigree::AddPopulations;
 use List::MoreUtils qw | any |;
 use Data::Dumper;
+use Try::Tiny;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -56,6 +57,39 @@ sub add_accessions_to_population :Path('/ajax/population/add_accessions') Args(0
 
     my $population_add = CXGN::Pedigree::AddPopulations->new({ schema => $schema, name => $population_name, members => $members });
     my $return = $population_add->add_accessions();
+
+    $c->stash->{rest} = $return;
+}
+
+sub delete_population :Path('/ajax/population/delete') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $population_id = $c->req->param('population_id');
+    my $population_name = $c->req->param('population_name');
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
+
+    my $error;
+    try {
+        my $population = $schema->resultset("Stock::Stock")->find({
+            stock_id => $population_id,
+            type_id => $population_cvterm_id,
+        });
+        $population->delete;
+        #On cascade should delete all relationships to population
+    }
+    catch {
+        $error =  $_;
+    };
+    my $return;
+    if ($error) {
+        print STDERR "Error deleting population $population_name: $error\n";
+        $return = { error => "Error deleting population $population_name: $error" };
+    } else {
+        print STDERR "population $population_name deleted successfully\n";
+        $return = { success => "Population $population_name deleted successfully!" };
+    }
 
     $c->stash->{rest} = $return;
 }
