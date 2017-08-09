@@ -41,6 +41,7 @@ sub add_population {
 
     my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
     my $member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
+    my $population_id;
 
 	# create population stock entry
 	try {
@@ -50,6 +51,7 @@ sub add_population {
 		uniquename => $population_name,
 		type_id => $population_cvterm_id,
 });
+    $population_id = $pop_rs->stock_id();
 
 	 # generate population connections to the members
 	foreach my $m (@members) {
@@ -70,7 +72,7 @@ if ($error) {
 	return { error => "Error creating population $population_name: $error" };
 } else {
 	print STDERR "population $population_name added successfully\n";
-	return { success => "Success! Population $population_name created" };
+	return { success => "Success! Population $population_name created", population_id=>$population_id };
 }
 }
 
