@@ -202,25 +202,27 @@ jQuery(document).ready(function ($) {
 
     jQuery(document).on("click", "a[name='populations_member_remove']", function(){
         var stock_relationship_id= jQuery(this).data("stock_relationship_id");
-        jQuery.ajax({
-            url: '/ajax/population/remove_member?stock_relationship_id='+stock_relationship_id,
-            dataType: "json",
-            beforeSend: function(){
-                disable_ui();
-            },
-            success: function (response) {
-                enable_ui();
-                if (response.error){
-                    alert(response.error);
+        if (confirm("Are you sure?")){
+            jQuery.ajax({
+                url: '/ajax/population/remove_member?stock_relationship_id='+stock_relationship_id,
+                dataType: "json",
+                beforeSend: function(){
+                    disable_ui();
+                },
+                success: function (response) {
+                    enable_ui();
+                    if (response.error){
+                        alert(response.error);
+                    }
+                    if (response.success){
+                        alert(response.success);
+                    }
+                },
+                error: function () {
+                    alert('An error occurred in removing accession from population. sorry');
                 }
-                if (response.success){
-                    alert(response.success);
-                }
-            },
-            error: function () {
-                alert('An error occurred in removing accession from population. sorry');
-            }
-        });
+            });
+        }
     });
 
     function add_accessions(accessionsToAdd, speciesName, populationName, organizationName  ) {
