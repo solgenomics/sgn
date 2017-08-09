@@ -631,8 +631,9 @@ CXGN.List.prototype = {
 
         var html = '<select class="form-control input-sm" id="'+div_name+'_list_select" name="'+div_name+'_list_select" >';
         if (empty_element) {
-            html += '<option value="">'+empty_element+'</option>\n';
+            html += '<option value="" disabled>'+empty_element+'</option>\n';
         }
+        html += '<option disabled>--------YOUR LISTS BELOW--------</option>';
         for (var n=0; n<lists.length; n++) {
             html += '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
         }
