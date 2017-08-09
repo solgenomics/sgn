@@ -107,7 +107,8 @@ jQuery(document).ready(function ($) {
           columns: [
             { title: "Accession Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
             { title: "Description", "data": "description" },
-            { title: "Synonyms", "data": "synonyms[, ]" }
+            { title: "Synonyms", "data": "synonyms[, ]" },
+            { title: "Remove From Population", "data": null, "render": function ( data, type, row ) { return "<a name='populations_member_remove' data-stock_relationship_id='"+row.stock_relationship_id+"'>X</a>"; } },
           ]
         });
     });
@@ -180,6 +181,29 @@ jQuery(document).ready(function ($) {
             },
             error: function () {
                 alert('An error occurred in deleting population. sorry');
+            }
+        });
+    });
+
+    jQuery(document).on("click", "a[name='populations_member_remove']", function(){
+        var stock_relationship_id= jQuery(this).data("stock_relationship_id");
+        jQuery.ajax({
+            url: '/ajax/population/remove_member?stock_relationship_id='+stock_relationship_id,
+            dataType: "json",
+            beforeSend: function(){
+                disable_ui();
+            },
+            success: function (response) {
+                enable_ui();
+                if (response.error){
+                    alert(response.error);
+                }
+                if (response.success){
+                    alert(response.success);
+                }
+            },
+            error: function () {
+                alert('An error occurred in removing accession from population. sorry');
             }
         });
     });

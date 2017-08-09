@@ -86,11 +86,12 @@ sub get_population_members {
         'object.stock_id'=> $population_stock_id,
         'stock_relationship_subjects.type_id' => $population_member_cvterm->cvterm_id()
     },
-    {join => {'stock_relationship_subjects' => 'object'}, order_by => { -asc => 'stock_id'}}
+    {join => {'stock_relationship_subjects' => 'object'}, order_by => { -asc => 'stock_id'}, '+select'=>['stock_relationship_subjects.stock_relationship_id'], '+as'=>['stock_relationship_id']}
     );
 
     while (my $population_member_row = $population_members->next()) {
         my %accession_info;
+        $accession_info{'stock_relationship_id'}=$population_member_row->get_column('stock_relationship_id');
         $accession_info{'name'}=$population_member_row->name();
         $accession_info{'description'}=$population_member_row->description();
         $accession_info{'stock_id'}=$population_member_row->stock_id();

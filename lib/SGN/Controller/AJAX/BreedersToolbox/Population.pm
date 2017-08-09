@@ -94,4 +94,39 @@ sub delete_population :Path('/ajax/population/delete') Args(0) {
     $c->stash->{rest} = $return;
 }
 
+sub remove_population_member :Path('/ajax/population/remove_member') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if(!$c->user){
+        $c->stash->{rest} = { error => "You must be logged in to remove an accession from population" };
+        $c->detach;
+    }
+
+    my $stock_relationship_id = $c->req->param('stock_relationship_id');
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $error;
+    try {
+        my $stock_relationship = $schema->resultset("Stock::StockRelationship")->find({
+            stock_relationship_id => $stock_relationship_id,
+        });
+        $stock_relationship->delete;
+        #On cascade should delete all relationships to population
+    }
+    catch {
+        $error =  $_;
+    };
+    my $return;
+    if ($error) {
+        print STDERR "Error removing member from population: $error\n";
+        $return = { error => "Error removing member from population: $error" };
+    } else {
+        print STDERR "Member removed successfully\n";
+        $return = { success => "Removed successfully!" };
+    }
+
+    $c->stash->{rest} = $return;
+}
+
 1;
