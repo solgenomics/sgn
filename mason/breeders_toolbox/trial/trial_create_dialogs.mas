@@ -105,6 +105,7 @@ $breeding_programs
                                         <option title="some  treatments  (checks)  are  replicate  r  times  and  other  treatments  (new)  are replicated once." value=Augmented>Augmented</option>
                                         <option title="Adjustments are calculated using data from all checks" value=MAD>Modified Augmented Design </option>
                                         <option title="A greenhouse/nursery houses plants in no particular layout design." value="greenhouse" >Nursery/Greenhouse </option>
+                                        <option title="have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments." value=p-rep>Partially Replicated</option>
                                         <!--<option value=MADIII>MADIII</option>-->
                                         <!--<option value=MADIV>MADIV</option>-->
                                         <!--<option value=MADV>MADV</option>-->
