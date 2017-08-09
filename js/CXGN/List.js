@@ -605,29 +605,42 @@ CXGN.List.prototype = {
     */
 
     listSelect: function(div_name, types, empty_element, refresh) {
-	var lists = new Array();
+        var lists = new Array();
+        var public_lists = new Array();
 
-	if (types) {
-	    for (var n=0; n<types.length; n++) {
-		var more = this.availableLists(types[n]);
-		if (more) {
-		    for (var i=0; i<more.length; i++) {
-			lists.push(more[i]);
-		    }
-		}
-	    }
-	}
-	else {
-	    lists = this.availableLists();
-	}
-
-	var html = '<select class="form-control input-sm" id="'+div_name+'_list_select" name="'+div_name+'_list_select" >';
-	if (empty_element) {
-	    html += '<option value="">'+empty_element+'</option>\n';
+        if (types) {
+            for (var n=0; n<types.length; n++) {
+                var more = this.availableLists(types[n]);
+                var more_public_lists = this.publicLists(types[n]);
+                if (more) {
+                    for (var i=0; i<more.length; i++) {
+                        lists.push(more[i]);
+                    }
+                }
+                if (more_public_lists) {
+                    for (var i=0; i<more_public_lists.length; i++) {
+                        public_lists.push(more_public_lists[i]);
+                    }
+                }
+            }
         }
-	for (var n=0; n<lists.length; n++) {
-	    html += '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
-	}
+        else {
+            lists = this.availableLists();
+            public_lists = this.publicLists();
+        }
+
+        var html = '<select class="form-control input-sm" id="'+div_name+'_list_select" name="'+div_name+'_list_select" >';
+        if (empty_element) {
+            html += '<option value="">'+empty_element+'</option>\n';
+        }
+        for (var n=0; n<lists.length; n++) {
+            html += '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
+        }
+        html += '<option disabled>--------PUBLIC LISTS BELOW--------</option>';
+        for (var n=0; n<public_lists.length; n++) {
+            html += '<option value='+public_lists[n][0]+'>'+public_lists[n][1]+'</option>';
+        }
+
   if (refresh) {
     if (types.length > 1) { types = types.join(',') };
 	  html = '<div class="input-group">'+html+'</select><span class="input-group-btn"><button class="btn btn-default" type="button" id="'+div_name+'_list_refresh" title="Refresh lists" onclick="refreshListSelect(\''+div_name+'_list_select\',\''+types+'\',\'Options refreshed.\')"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></span></div>';
