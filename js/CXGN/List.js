@@ -882,6 +882,7 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
     var typeSourceDiv;
     var type;
     var addition_type;
+    var list_name_value = "";
 
     if (options) {
         if (options.selectText) {
@@ -899,9 +900,12 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
         if (options.additionType) {
             addition_type = options.additionType;
         }
+        if (options.listName){
+            list_name_value = options.listName;
+        }
     }
 
-    html = '<div class="row"><div class="col-sm-6" style="margin-right:0px; padding-right:0px;"><input class="form-control input-sm" type="text" id="'+dataDiv+'_new_list_name" placeholder="New list..." />';
+    html = '<div class="row"><div class="col-sm-6" style="margin-right:0px; padding-right:0px;"><input class="form-control input-sm" type="text" id="'+dataDiv+'_new_list_name" placeholder="New list..." value="'+list_name_value+'"/>';
     html += '</div><div class="col-sm-6" style="margin-left:0px; padding-left:0px; margin-right:0px; padding-right:0px;"><input type="hidden" id="'+dataDiv+'_addition_type" value="'+addition_type+'" /><input type="hidden" id="'+dataDiv+'_list_type" value="'+type+'" />';
     html += '<input class="btn btn-primary btn-sm" id="'+dataDiv+'_add_to_new_list" type="button" value="add to new list" /></div></div><br />';
 

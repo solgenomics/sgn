@@ -83,8 +83,8 @@ jQuery(document).ready(function ($) {
             var section_html = '<div class="row"><div class="panel panel-default"><div class="panel-heading" >';
             section_html += '<div class="panel-title" name="populations_members_table_toggle" data-table_id="#'+table_id+'" data-population_id="'+population_id+'" data-population_name="'+name+'"><div class="row"><div class="col-sm-6" data-toggle="collapse" data-parent="#accordion" data-target="#collapse'+i+'"><a href="#'+table_id+'" class="accordion-toggle">'+name+'</a></div><div class="col-sm-3"><a href="/stock/'+population_id+'/view"><small>[Go To Population Page]</small></a></div><div class="col-sm-3"><a name="manage_populations_add_accessions" data-population_id="'+population_id+'" data-population_name="'+name+'"><small>[Add Accessions To Population]</small></a><br/><a name="manage_populations_delete_population" data-population_id="'+population_id+'" data-population_name="'+name+'"><small>[Delete Population]</small></a></div></div></div></div>';
             section_html += '<div id="collapse'+i+'" class="panel-collapse collapse">';
-            section_html += '<div class="panel-body" style="overflow:hidden"><div class="table-responsive" style="margin-top: 10px;"><table id="'+table_id+'" class="table table-hover table-striped table-bordered" width="100%"></table></div>';
-            section_html += '</div></div></div></div><br/>';
+            section_html += '<div class="panel-body" style="overflow:hidden"><div class="table-responsive" style="margin-top: 10px;"><table id="'+table_id+'" class="table table-hover table-striped table-bordered" width="100%"></table><div id="populations_members_add_to_list_data_'+population_id+'" style="display:none"></div><br/><div id="populations_members_add_to_list_menu_'+population_id+'"></div></div>';
+            section_html += '</div><br/></div></div></div><br/>';
 
             jQuery('#accordion').append(section_html);
           }
@@ -100,17 +100,32 @@ jQuery(document).ready(function ($) {
     jQuery(document).on("click", "div[name='populations_members_table_toggle']", function(){
         var table_id = jQuery(this).data('table_id');
         var population_id = jQuery(this).data('population_id');
+        var population_name = jQuery(this).data('population_name');
 
-        jQuery(table_id).DataTable( {
-          ajax: '/ajax/manage_accessions/population_members/'+population_id,
-          destroy: true,
-          columns: [
-            { title: "Accession Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
-            { title: "Description", "data": "description" },
-            { title: "Synonyms", "data": "synonyms[, ]" },
-            { title: "Remove From Population", "data": null, "render": function ( data, type, row ) { return "<a name='populations_member_remove' data-stock_relationship_id='"+row.stock_relationship_id+"'>X</a>"; } },
-          ]
+        var table = jQuery(table_id).DataTable({
+            ajax: '/ajax/manage_accessions/population_members/'+population_id,
+            destroy: true,
+            columns: [
+                { title: "Accession Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
+                { title: "Description", "data": "description" },
+                { title: "Synonyms", "data": "synonyms[, ]" },
+                { title: "Remove From Population", "data": null, "render": function ( data, type, row ) { return "<a name='populations_member_remove' data-stock_relationship_id='"+row.stock_relationship_id+"'>X</a>"; } },
+            ],
+            "fnInitComplete": function(oSettings, json) {
+                console.log(json);
+                var html = "";
+                for(var i=0; i<json.data.length; i++){
+                    html += json.data[i].name+"\n";
+                }
+                jQuery("#populations_members_add_to_list_data_"+population_id).html(html);
+                addToListMenu("populations_members_add_to_list_menu_"+population_id, "populations_members_add_to_list_data_"+population_id, {
+                    selectText: true,
+                    listType: 'accessions',
+                    listName: population_name
+                });
+            }
         });
+
     });
 
     var population_id;
