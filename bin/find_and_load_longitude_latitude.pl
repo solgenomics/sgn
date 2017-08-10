@@ -2,11 +2,11 @@
 
 =head1
 
-find_longitude_latitude.pl - find long and lat for locations in cxgn databases.
+find_and_load_longitude_latitude.pl - find long and lat for locations in cxgn databases. optionally can store the found lat and long
 
 =head1 SYNOPSIS
 
-    find_longitude_latitude.pl -I https://cassavabase.org/brapi/v1/locations -O outfile.tsv
+    find_and_load_longitude_latitude.pl -I https://cassavabase.org/brapi/v1/locations -O outfile.tsv
 
 =head1 COMMAND-LINE OPTIONS
   ARGUMENTS
