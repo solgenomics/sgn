@@ -435,6 +435,29 @@ jQuery(document).ready(function ($) {
             $('#greenhouse_default_num_plants_per_accession').show();
             greenhouse_show_num_plants_section();
         }
+        
+        else if (design_method == 'p-rep') {
+            $("#FieldMap").hide();
+            $("#trial_design_more_info").show();
+            $("#trial_multi-design_more_info").show();
+            $("#show_list_of_checks_section").hide();
+            $("#crbd_show_list_of_checks_section").hide();
+            $("#rep_count_section").hide();
+            $("#block_number_section").hide();
+            $("#block_size_section").hide();
+            $("#max_block_section").hide();
+            $("#row_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#col_number_per_block_section").hide();
+            $("#col_number_section").hide();
+            $("#row_number_per_block_section").hide();
+            $("#other_parameter_section").hide();
+            $("#design_info").hide();
+            $('#greenhouse_default_num_plants_per_accession').hide();
+            $("#greenhouse_num_plants_per_accession_section").hide();
+            $('#greenhouse_default_num_plants_per_accession').hide();
+            
+        }
 
         else {
             alert("Unsupported design method");
