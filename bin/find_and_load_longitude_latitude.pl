@@ -128,37 +128,33 @@ while(my$r = $geolocation_rs->next){
                 }
             }
             if($country_code){
-                if($country){
-                    my $country_code_prop = $schema->resultset('NaturalDiversity::NdGeolocationprop')->find({
+                my $country_code_prop = $schema->resultset('NaturalDiversity::NdGeolocationprop')->find({
+                    nd_geolocation_id=>$r->nd_geolocation_id(),
+                    type_id=>$country_code_cvterm_id,
+                });
+                if ($country_code_prop){
+                    $country_code_prop->update({value=>$country_code})
+                } else {
+                    $country_code_prop = $schema->resultset('NaturalDiversity::NdGeolocationprop')->create({
                         nd_geolocation_id=>$r->nd_geolocation_id(),
                         type_id=>$country_code_cvterm_id,
+                        value=>$country_code
                     });
-                    if ($country_code_prop){
-                        $country_code_prop->update({value=>$country_code})
-                    } else {
-                        $country_code_prop = $schema->resultset('NaturalDiversity::NdGeolocationprop')->create({
-                            nd_geolocation_id=>$r->nd_geolocation_id(),
-                            type_id=>$country_code_cvterm_id,
-                            value=>$country_code
-                        });
-                    }
                 }
             }
             if($formatted_address){
-                if($country){
-                    my $formatted_address_prop = $schema->resultset('NaturalDiversity::NdGeolocationprop')->find({
+                my $formatted_address_prop = $schema->resultset('NaturalDiversity::NdGeolocationprop')->find({
+                    nd_geolocation_id=>$r->nd_geolocation_id(),
+                    type_id=>$address_cvterm_id,
+                });
+                if ($formatted_address_prop){
+                    $formatted_address_prop->update({value=>$formatted_address})
+                } else {
+                    $formatted_address_prop = $schema->resultset('NaturalDiversity::NdGeolocationprop')->create({
                         nd_geolocation_id=>$r->nd_geolocation_id(),
                         type_id=>$address_cvterm_id,
+                        value=>$formatted_address
                     });
-                    if ($formatted_address_prop){
-                        $formatted_address_prop->update({value=>$formatted_address})
-                    } else {
-                        $formatted_address_prop = $schema->resultset('NaturalDiversity::NdGeolocationprop')->create({
-                            nd_geolocation_id=>$r->nd_geolocation_id(),
-                            type_id=>$address_cvterm_id,
-                            value=>$formatted_address
-                        });
-                    }
                 }
             }
         }
