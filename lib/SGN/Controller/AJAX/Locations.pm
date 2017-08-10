@@ -35,7 +35,6 @@ __PACKAGE__->config(
        my $location = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
 
        my $all_locations = $location->get_location_json();
-
        #print STDERR "Returning with all locations: ".$all_locations."\n";
        $c->stash->{rest} = { data => $all_locations };
 
@@ -166,15 +165,9 @@ __PACKAGE__->config(
      #parse uploaded file with appropriate plugin
      my $type = 'location excel';
      my $parser = CXGN::Location::ParseUpload->new();
-    #  my $validate_file = $parser->validate($type, $archived_filename_with_path, $schema);
-    #  if ($validate_file->{'error'}) {
-    #      $c->stash->{rest} = {filename => $upload_original_name, error => $validate_file->{'error'}};
-    #      return;
-    #  }
      my $parse_result = $parser->parse($type, $archived_filename_with_path, $schema);
 
-
-     print STDERR "Dumper of parsed result:\t" . Dumper($parse_result) . "\n";
+     print STDERR "Dump of parsed result:\t" . Dumper($parse_result) . "\n";
 
      if (!$parse_result) {
          push @errors, "Error parsing file.";
