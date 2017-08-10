@@ -107,7 +107,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     # convert mm into pixels
     #
-    if ($cass_print_format) {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
+    if ($cass_print_format eq 'CASS') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
     my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } (
             $top_margin_mm,
     		$left_margin_mm,
@@ -227,7 +227,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     if (!$page_format) { $page_format = "Letter"; }
     if (!$labels_per_page) { $labels_per_page = 8; }
-    if ($cass_print_format) {$barcode_type = "2D", $labels_per_row = 2; }
+    if ($cass_print_format eq 'CASS') {$barcode_type = "2D", $labels_per_row = 2; }
 
     my $base_page = $pdf->new_page(MediaBox=>$pdf->get_page_size($page_format));
 
@@ -401,7 +401,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
         }
     }
 
-     elsif ($cass_print_format && $barcode_type eq "2D") {
+     elsif ($cass_print_format eq 'CASS' && $barcode_type eq "2D") {
 
          foreach my $label_count (1..$labels_per_row) {
           my $label_text = $found[$i]->[1];
