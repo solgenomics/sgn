@@ -47,7 +47,7 @@ sub parse {
         if (!$name) {
             push @errors, "Name $name is undefined at row $row_num, column A.\n";
         }
-        elsif ($schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count()) {
+        elsif (!_is_valid_name($name)) {
             push @errors, "Name $name at row $row_num, column A already exists in the database. Please delete this location or choose a different name.\n";
         }
 
@@ -58,7 +58,7 @@ sub parse {
         if (!$abbreviation) {
             push @errors, "Abbreviation $abbreviation is undefined at row $row_num, column B.\n";
         }
-        elsif ($schema->resultset('NaturalDiversity::NdGeolocationprop')->search( { value => $abbreviation } )->count()) {
+        elsif (!_is_valid_abbreviation($abbreviation)) {
             push @errors, "Abbreviation $abbreviation at row $row_num, column B already exists in the database. Please delete this location or choose a different abbreviation.\n";
         }
 
@@ -91,15 +91,23 @@ sub parse {
         if (!$program) {
             push @errors, "Program $program is undefined at row $row_num, column E.\n";
         }
-        $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count()
+        elsif (!_is_valid_program($program)) {
+            push @errors, "Program $program at row $row_num, column D does not exist in the database. Please use an existing breeding program and try again.\n";
+        }
 
-
+        # check is defined, is one of approved types
         if ($worksheet->get_cell($row,5)) {
           $type = $worksheet->get_cell($row,5)->value();
         }
-        if (!$type) { # check is defined, is one of approved types
+        if (!$type) {
             push @errors, "Type $type is undefined at row $row_num, column F.\n";
         }
+        elsif(!is_valid_type($type)) {
+            push @errors, "Type $type is undefined at row $row_num, column F.\n";
+        }
+
+
+
         if ($worksheet->get_cell($row,6)) {
           $latitude = $worksheet->get_cell($row,6)->value();
         }
@@ -130,6 +138,77 @@ sub parse {
         $parse_result{'success'} = \@rows;
     }
     return \%parse_result;
+}
+
+sub _is_valid_name {
+    my $self = shift;
+    my $name = shift;
+    my $existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count()
+    if ($existing_name_count > 0) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
+
+sub _is_valid_abbreviation {
+    my $self = shift;
+    my $abbreviation = shift;
+    my $existing_abbreviation_count = $schema->resultset('NaturalDiversity::NdGeolocationprop')->search( { value => $abbreviation } )->count()
+    if ($existing_abbreviation_count > 0) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
+
+sub _is_valid_country_code {
+    my $self = shift;
+    my $country_code = shift;
+    
+    if ($existing_name_count > 0) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
+
+sub _is_valid_country_name {
+    my $self = shift;
+    my $country_name = shift;
+    my $existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count()
+    if ($existing_name_count > 0) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
+
+sub _is_valid_program {
+    my $self = shift;
+    my $program = shift;
+    my $existing_program_count = $schema->resultset('Project::Project')->search(
+        {
+            'type.name'=> 'breeding_program',
+            'me.name' => $program
+        },
+        # {
+            join => {
+                'projectprops' =>
+                'type'
+            }
+        # }
+    )->count();
+    if ($existing_program_count < 1) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
 }
 
 1;
