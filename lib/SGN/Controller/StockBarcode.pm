@@ -487,6 +487,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
               if ($found[$i]->[5] eq 'plot'){
                   $label_text_5 = "stock:".$found[$i]->[2]." ".$found[$i]->[3];
+                  $label_text_6 = $found[$i]->[8];
                   if ($parents eq ''){
                       $label_text_4 = "No pedigree for ".$found[$i]->[2];
                   }else{
