@@ -70,7 +70,7 @@ while(my$r = $geolocation_rs->next){
 
     my $name = $r->description;
     $name =~ s/\s/+/g;
-    my $server_endpoint = "https://maps.googleapis.com/maps/api/geocode/json?address=$name";
+    my $server_endpoint = "http://maps.googleapis.com/maps/api/geocode/json?address=$name";
     my $req = HTTP::Request->new(GET => $server_endpoint);
     $req->header('content-type' => 'application/json');
     my $ua = LWP::UserAgent->new;
