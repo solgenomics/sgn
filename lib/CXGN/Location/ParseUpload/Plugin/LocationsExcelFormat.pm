@@ -47,7 +47,7 @@ sub parse {
         if (!$name) {
             push @errors, "Name $name is undefined at row $row_num, column A.\n";
         }
-        elsif (!_is_valid_name($name)) {
+        elsif (!_is_valid_name($name, $schema)) {
             push @errors, "Name $name at row $row_num, column A already exists in the database. Please delete this location or choose a different name.\n";
         }
 
@@ -58,29 +58,29 @@ sub parse {
         if (!$abbreviation) {
             push @errors, "Abbreviation $abbreviation is undefined at row $row_num, column B.\n";
         }
-        elsif (!_is_valid_abbreviation($abbreviation)) {
+        elsif (!_is_valid_abbreviation($abbreviation, $schema)) {
             push @errors, "Abbreviation $abbreviation at row $row_num, column B already exists in the database. Please delete this location or choose a different abbreviation.\n";
         }
 
-        # check is defined and is valid ISO code
+        # check is defined, is all uppercase letters, and is 3 chars long
         if ($worksheet->get_cell($row,2)) {
           $country_code = $worksheet->get_cell($row,2)->value();
         }
         if (!$country_code) {
             push @errors, "Country code $country_code is undefined at row $row_num, column C.\n";
         }
-        elsif (!_is_valid_country_code($country_code)) {
+        elsif (($country_code !~ m/^[^a-z]*$/) || (length($country_code) != 3 )) {
             push @errors, "Country code $country_code is not a valid ISO Alpha-3 code at row $row_num, column C. Please fix and try again.\n";
         }
 
-        # check is defined and is valid country name
+        # check is defined and is not numeric
         if ($worksheet->get_cell($row,3)) {
           $country_name = $worksheet->get_cell($row,3)->value();
         }
         if (!$country_name) {
             push @errors, "Country name $country_name is undefined at row $row_num, column D.\n";
         }
-        elsif (!_is_valid_country_name($country_name)) {
+        elsif ($country_name =~ m/[0-9]/) {
             push @errors, "Country name $country_name is not a valid ISO standard country name at row $row_num, column C. Please fix and try again.\n";
         }
 
@@ -91,7 +91,7 @@ sub parse {
         if (!$program) {
             push @errors, "Program $program is undefined at row $row_num, column E.\n";
         }
-        elsif (!_is_valid_program($program)) {
+        elsif (!_is_valid_program($program, $schema)) {
             push @errors, "Program $program at row $row_num, column D does not exist in the database. Please use an existing breeding program and try again.\n";
         }
 
@@ -102,30 +102,43 @@ sub parse {
         if (!$type) {
             push @errors, "Type $type is undefined at row $row_num, column F.\n";
         }
-        elsif(!is_valid_type($type)) {
-            push @errors, "Type $type is undefined at row $row_num, column F.\n";
+        elsif(!_is_valid_type($type)) {
+            push @errors, "Type $type is is not a valid location type at row $row_num, column F. Please fix and try again.\n";
         }
 
-
-
+        # check is defined, is number between 90 and -90
         if ($worksheet->get_cell($row,6)) {
           $latitude = $worksheet->get_cell($row,6)->value();
         }
         if (!$latitude) { # check is defined, is number between 90 and -90
             push @errors, "Latitude $latitude is undefined at row $row_num, column G.\n";
         }
+        elsif( ($latitude !~ /^-?[0-9.]+$/) || ($latitude < -90) || ($latitude > 90) ) {
+            push @errors, "Latitude $latitude is not a number between 90 and -90 at row $row_num, column G. Please fix and try again.\n";
+        }
+
+        # check is defined, is number between 180 and -180
         if ($worksheet->get_cell($row,7)) {
           $longitude = $worksheet->get_cell($row,7)->value();
         }
-        if (!$longitude) { # check is defined, is number between 180 and -180
+        if (!$longitude) {
             push @errors, "Longitude $longitude is undefined at row $row_num, column H.\n";
         }
+        elsif( ($longitude !~ /^-?[0-9.]+$/) || ($longitude < -180) || ($longitude > 180) ) {
+            push @errors, "Latitude $latitude is not a number between 180 and -180 at row $row_num, column H. Please fix and try again.\n";
+        }
+
+        # check is defined, is number between -418 and 8,848
         if ($worksheet->get_cell($row,8)) {
           $altitude = $worksheet->get_cell($row,8)->value();
         }
-        if (!$altitude) { # check is defined, is number between -418 and 8,848
+        if (!$altitude) {
             push @errors, "Altitude $altitude is undefined at row $row_num, column I.\n";
         }
+        elsif( ($altitude !~ /^-?[0-9.]+$/) || ($altitude < -418) || ($altitude > 8848) ) {
+            push @errors, "Altitude $altitude is not a number between -418 (Dead Sea) and 8,848 (Mt. Everest) at row $row_num, column I. Please fix and try again.\n";
+        }
+
         print STDERR "Row is $name, $abbreviation, $country_code, $country_name, $program, $type, $latitude, $longitude, $altitude\n";
         push @rows, [$name,$abbreviation,$country_code,$country_name,$program,$type,$latitude,$longitude,$altitude];
     }
@@ -141,9 +154,10 @@ sub parse {
 }
 
 sub _is_valid_name {
-    my $self = shift;
+    # my $self = shift;
     my $name = shift;
-    my $existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count()
+    my $schema = shift;
+    my $existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
     if ($existing_name_count > 0) {
         return 0;
     }
@@ -153,9 +167,10 @@ sub _is_valid_name {
 }
 
 sub _is_valid_abbreviation {
-    my $self = shift;
+    # my $self = shift;
     my $abbreviation = shift;
-    my $existing_abbreviation_count = $schema->resultset('NaturalDiversity::NdGeolocationprop')->search( { value => $abbreviation } )->count()
+    my $schema = shift;
+    my $existing_abbreviation_count = $schema->resultset('NaturalDiversity::NdGeolocationprop')->search( { value => $abbreviation } )->count();
     if ($existing_abbreviation_count > 0) {
         return 0;
     }
@@ -164,46 +179,42 @@ sub _is_valid_abbreviation {
     }
 }
 
-sub _is_valid_country_code {
-    my $self = shift;
-    my $country_code = shift;
-    
-    if ($existing_name_count > 0) {
-        return 0;
-    }
-    else {
-        return 1;
-    }
-}
-
-sub _is_valid_country_name {
-    my $self = shift;
-    my $country_name = shift;
-    my $existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count()
-    if ($existing_name_count > 0) {
-        return 0;
-    }
-    else {
-        return 1;
-    }
-}
-
 sub _is_valid_program {
-    my $self = shift;
+    # my $self = shift;
     my $program = shift;
+    my $schema = shift;
     my $existing_program_count = $schema->resultset('Project::Project')->search(
         {
             'type.name'=> 'breeding_program',
             'me.name' => $program
         },
-        # {
+        {
             join => {
                 'projectprops' =>
                 'type'
             }
-        # }
+        }
     )->count();
     if ($existing_program_count < 1) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
+
+sub _is_valid_type {
+    # my $self = shift;
+    my $type = shift;
+    my %valid_types = (
+        Farm => 1,
+        Field => 1,
+        Greenhouse => 1,
+        Screenhouse => 1,
+        Lab => 1,
+        Storage => 1
+    );
+    if (!$valid_types{$type}) {
         return 0;
     }
     else {
