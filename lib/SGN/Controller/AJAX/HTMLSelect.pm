@@ -31,7 +31,6 @@ use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Stock;
 use CXGN::Stock::Search;
-use Try::Tiny;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -288,9 +287,6 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $stock_id = $c->req->param('stock_id') || 'all';
     my $stock_type = $c->req->param('stock_type') ? $c->req->param('stock_type') . 's' : 'none';
     my $data_level = $c->req->param('data_level') || 'all';
-    my $id = $c->req->param("id") || "html_trial_select";
-    my $name = $c->req->param("name") || "html_trial_select";
-    my $size = $c->req->param("size");
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     if ($data_level eq 'all') {
