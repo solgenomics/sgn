@@ -129,7 +129,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my @not_found;
     my @found;
 
-    my ($row, $stockprop_name, $value, $fdata, $accession_id, $accession_name, $parents, $tract_type_id, $label_text_5, $plot_name, $label_text_6, $musa_row_col_number);
+    my ($row, $stockprop_name, $value, $fdata, $accession_id, $accession_name, $parents, $tract_type_id, $label_text_5, $plot_name, $label_text_6, $musa_row_col_number, $label_text_7);
 
     foreach my $name (@names) {
 
@@ -169,7 +169,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                 }
                 $row = $stockprop_hash{$stock_id}->{'replicate'};
                 $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."blk:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
-
+                $musa_row_col_number = "row:".$stockprop_hash{$stock_id}->{'row_number'}.' '."col:".$stockprop_hash{$stock_id}->{'col_number'};
+                
                 my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
 
                 $h_acc->execute($stock_id);
@@ -470,17 +471,19 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           my $xpos = ($left_margin + ($label_count -1) * $final_barcode_width) + 85;
           my $label_count_15_xter_plot_name =  1-1;
           my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width - 95.63;
-          my ($yposition_2, $yposition_3, $yposition_4, $yposition_5);
+          my ($yposition_2, $yposition_3, $yposition_4, $yposition_5, $yposition_6);
           if ($labels_per_page > 15){
                $yposition_2 = $ypos - 10;
                $yposition_3 = $ypos - 20;
                $yposition_4 = $ypos - 30;
                $yposition_5 = $ypos - 40;
+               $yposition_6 = $ypos - 50;
           }else{
                $yposition_2 = $ypos - 20;
                $yposition_3 = $ypos - 30;
                $yposition_4 = $ypos - 40;
                $yposition_5 = $ypos - 50;
+               $yposition_6 = $ypos - 60;
           }
           my $plot_pedigree_text;
 
@@ -503,8 +506,10 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                   $label_text_5 = $found[$i]->[7];
               }
               elsif ($found[$i]->[5] eq 'plant'){
+                  print "I HAVE ROW AND COL: $found[$i]->[8]\n";
                   $label_text_6 = "plot:".$found[$i]->[6];
                   $label_text_5 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
+                  $label_text_7 = $found[$i]->[8];
                   if ($parents eq ''){
                       $label_text_4 = "No pedigree for ".$found[$i]->[2];
                   }else{
@@ -517,6 +522,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_5);
           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $label_text_6);
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_6, $label_text_7);
           $pages[$page_nr-1]->image(image=>$image, xpos=>$xpos, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
        }
      }
