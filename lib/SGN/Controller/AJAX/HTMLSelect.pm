@@ -31,6 +31,7 @@ use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Stock;
 use CXGN::Stock::Search;
+use Try::Tiny;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -287,6 +288,9 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     my $stock_id = $c->req->param('stock_id') || 'all';
     my $stock_type = $c->req->param('stock_type') ? $c->req->param('stock_type') . 's' : 'none';
     my $data_level = $c->req->param('data_level') || 'all';
+    my $id = $c->req->param("id") || "html_trial_select";
+    my $name = $c->req->param("name") || "html_trial_select";
+    my $size = $c->req->param("size");
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     if ($data_level eq 'all') {
@@ -297,9 +301,9 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     if (($trial_ids eq 'all') && ($stock_id eq 'all')) {
       my $bs = CXGN::BreederSearch->new( { dbh=> $c->dbc->dbh() } );
       my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
-      if ($status->{'error'}) {
-        $c->stash->{rest} = { error => $status->{'error'}};
-        return;
+      unless ($status->{'success'}) {
+          $c->stash->{rest} = { select => '<center><p>Direct trait select is not currently available</p></center>'};
+          return;
       }
       my $query = $bs->metadata_query([ 'traits' ], {}, {});
       @traits = @{$query->{results}};
