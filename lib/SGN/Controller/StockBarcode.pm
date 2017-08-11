@@ -108,6 +108,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     # convert mm into pixels
     #
     if ($cass_print_format eq 'CASS') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
+    if ($cass_print_format eq 'MUSA') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
     my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } (
             $top_margin_mm,
     		$left_margin_mm,
@@ -228,6 +229,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     if (!$page_format) { $page_format = "Letter"; }
     if (!$labels_per_page) { $labels_per_page = 8; }
     if ($cass_print_format eq 'CASS') {$barcode_type = "2D", $labels_per_row = 2; }
+    if ($cass_print_format eq 'MUSA') {$barcode_type = "2D", $labels_per_row = 2; }
 
     my $base_page = $pdf->new_page(MediaBox=>$pdf->get_page_size($page_format));
 
@@ -458,6 +460,65 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $pages[$page_nr-1]->image(image=>$image, xpos=>$xpos, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
        }
      }
+     
+     elsif ($cass_print_format eq 'MUSA' && $barcode_type eq "2D") {
+
+         foreach my $label_count (1..$labels_per_row) {
+          my $label_text = $found[$i]->[1];
+          my $label_size =  7;
+          my $xpos = ($left_margin + ($label_count -1) * $final_barcode_width) + 85;
+          my $label_count_15_xter_plot_name =  1-1;
+          my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width - 95.63;
+          my ($yposition_2, $yposition_3, $yposition_4, $yposition_5);
+          if ($labels_per_page > 15){
+               $yposition_2 = $ypos - 10;
+               $yposition_3 = $ypos - 20;
+               $yposition_4 = $ypos - 30;
+               $yposition_5 = $ypos - 40;
+          }else{
+               $yposition_2 = $ypos - 20;
+               $yposition_3 = $ypos - 30;
+               $yposition_4 = $ypos - 40;
+               $yposition_5 = $ypos - 50;
+          }
+          my $plot_pedigree_text;
+
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
+              if ($found[$i]->[5] eq 'plot'){
+                  $label_text_5 = "stock:".$found[$i]->[2]." ".$found[$i]->[3];
+                  if ($parents eq ''){
+                      $label_text_4 = "No pedigree for ".$found[$i]->[2];
+                  }else{
+                      $label_text_4 = "pedigree: ".$parents;
+                  }
+              }
+              elsif ($found[$i]->[5] eq 'accession'){
+                  if ($parents eq ''){
+                      $label_text_4 = "No pedigree for ".$found[$i]->[1];
+                  }else{
+                      $label_text_4 = "pedigree: ".$parents;
+                  }
+                  $label_text_5 = $found[$i]->[7];
+              }
+              elsif ($found[$i]->[5] eq 'plant'){
+                  $label_text_6 = "plot:".$found[$i]->[6];
+                  $label_text_5 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
+                  if ($parents eq ''){
+                      $label_text_4 = "No pedigree for ".$found[$i]->[2];
+                  }else{
+                      $label_text_4 = "pedigree: ".$parents;
+                  }
+              }
+              else{
+                  $label_text_4 = '';
+              }
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_5);
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $label_text_6);
+          $pages[$page_nr-1]->image(image=>$image, xpos=>$xpos, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+       }
+     }
+     
     elsif ($barcode_type eq "1D") {
 
     	foreach my $label_count (1..$labels_per_row) {
