@@ -71,13 +71,15 @@ sub retrieve_contents :Path('/list/contents') Args(1) {
     my $c = shift;
     my $list_id = shift;
 
-    my $error = $self->check_user($c, $list_id);
-    if ($error) { 
-	$c->stash->{rest} = { error => $error };
-	return;
-    }
-
     my $list = CXGN::List->new( { dbh=>$c->dbc->dbh(), list_id=>$list_id });
+    my $public = $list->check_if_public();
+    if ($public == 0) {
+        my $error = $self->check_user($c, $list_id);
+        if ($error) {
+            $c->stash->{rest} = { error => $error };
+            return;
+        }
+    }
 
     my $elements = $list->elements();
     $c->stash->{rest} = $elements;

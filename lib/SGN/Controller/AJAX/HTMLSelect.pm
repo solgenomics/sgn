@@ -297,9 +297,9 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     if (($trial_ids eq 'all') && ($stock_id eq 'all')) {
       my $bs = CXGN::BreederSearch->new( { dbh=> $c->dbc->dbh() } );
       my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
-      if ($status->{'error'}) {
-        $c->stash->{rest} = { error => $status->{'error'}};
-        return;
+      unless ($status->{'success'}) {
+          $c->stash->{rest} = { select => '<center><p>Direct trait select is not currently available</p></center>'};
+          return;
       }
       my $query = $bs->metadata_query([ 'traits' ], {}, {});
       @traits = @{$query->{results}};
