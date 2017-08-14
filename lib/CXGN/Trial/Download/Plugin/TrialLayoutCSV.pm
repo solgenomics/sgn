@@ -18,7 +18,7 @@ sub download {
     open(my $F, ">", $self->filename()) || die "Can't open file ".$self->filename();
 
     if ($self->data_level eq 'plots') {
-        my $header = join (",", "plot_name", "accession_name", "plot_number","block_number", "is_a_control", "rep_number");
+        my $header = join (",", "plot_name", "accession_name", "plot_number","block_number", "is_a_control", "rep_number", "row_number", "col_number");
         
         print $F $header."\n";
 
@@ -30,13 +30,15 @@ sub download {
             $design->{$n}->{plot_number},
             $design->{$n}->{block_number},
             $design->{$n}->{is_a_control} || '',
-            $design->{$n}->{rep_number};
+            $design->{$n}->{rep_number},
+            $design->{$n}->{row_number},
+            $design->{$n}->{col_number};
             print $F "\n";
         }
         close($F);
         
     } elsif ($self->data_level eq 'plants') {
-        my $header = join (",", "plant_name", "plot_name", "accession_name", "plot_number","block_number", "is_a_control", "rep_number");
+        my $header = join (",", "plant_name", "plot_name", "accession_name", "plot_number","block_number", "is_a_control", "rep_number", "row_number", "col_number");
         
         print $F $header."\n";
 
@@ -51,7 +53,9 @@ sub download {
                 $design->{$n}->{plot_number},
                 $design->{$n}->{block_number},
                 $design->{$n}->{is_a_control} || '',
-                $design->{$n}->{rep_number};
+                $design->{$n}->{rep_number},
+                $design->{$n}->{row_number},
+                $design->{$n}->{col_number};
                 print $F "\n";
             }
         }
