@@ -45,10 +45,10 @@ sub parse {
           $name = $worksheet->get_cell($row,0)->value();
         }
         if (!$name) {
-            push @errors, "Name $name is undefined at row $row_num, column A.\n";
+            push @errors, "Row $row_num, column A: Name is undefined.\n";
         }
         elsif (!_is_valid_name($name, $schema)) {
-            push @errors, "Name $name at row $row_num, column A already exists in the database. Please delete this location or choose a different name.\n";
+            push @errors, "Row $row_num, column A: Name $name already exists in the database.\n";
         }
 
         # check that abbreviation is defined and isn't already in database
@@ -56,10 +56,10 @@ sub parse {
           $abbreviation = $worksheet->get_cell($row,1)->value();
         }
         if (!$abbreviation) {
-            push @errors, "Abbreviation $abbreviation is undefined at row $row_num, column B.\n";
+            push @errors, "Row $row_num, column B: Abbreviation is undefined.\n";
         }
         elsif (!_is_valid_abbreviation($abbreviation, $schema)) {
-            push @errors, "Abbreviation $abbreviation at row $row_num, column B already exists in the database. Please delete this location or choose a different abbreviation.\n";
+            push @errors, "Row $row_num, column B: Abbreviation $abbreviation already exists in the database.\n";
         }
 
         # check is defined, is all uppercase letters, and is 3 chars long
@@ -67,10 +67,10 @@ sub parse {
           $country_code = $worksheet->get_cell($row,2)->value();
         }
         if (!$country_code) {
-            push @errors, "Country code $country_code is undefined at row $row_num, column C.\n";
+            push @errors, "Row $row_num, column C: Country code is undefined.\n";
         }
         elsif (($country_code !~ m/^[^a-z]*$/) || (length($country_code) != 3 )) {
-            push @errors, "Country code $country_code is not a valid ISO Alpha-3 code at row $row_num, column C. Please fix and try again.\n";
+            push @errors, "Row $row_num, column C: Country code $country_code is not a valid ISO Alpha-3 code.\n";
         }
 
         # check is defined and is not numeric
@@ -78,10 +78,10 @@ sub parse {
           $country_name = $worksheet->get_cell($row,3)->value();
         }
         if (!$country_name) {
-            push @errors, "Country name $country_name is undefined at row $row_num, column D.\n";
+            push @errors, "Row $row_num, column D: Country name is undefined.\n";
         }
         elsif ($country_name =~ m/[0-9]/) {
-            push @errors, "Country name $country_name is not a valid ISO standard country name at row $row_num, column C. Please fix and try again.\n";
+            push @errors, "Row $row_num, column D: Country name $country_name is not a valid ISO standard country name.\n";
         }
 
         # check is defined, is in database
@@ -89,10 +89,10 @@ sub parse {
           $program = $worksheet->get_cell($row,4)->value();
         }
         if (!$program) {
-            push @errors, "Program $program is undefined at row $row_num, column E.\n";
+            push @errors, "Row $row_num, column E: Program is undefined.\n";
         }
         elsif (!_is_valid_program($program, $schema)) {
-            push @errors, "Program $program at row $row_num, column D does not exist in the database. Please use an existing breeding program and try again.\n";
+            push @errors, "Row $row_num, column E: Program $program does not exist in the database.\n";
         }
 
         # check is defined, is one of approved types
@@ -100,10 +100,10 @@ sub parse {
           $type = $worksheet->get_cell($row,5)->value();
         }
         if (!$type) {
-            push @errors, "Type $type is undefined at row $row_num, column F.\n";
+            push @errors, "Row $row_num, column F: Type is undefined.\n";
         }
         elsif(!_is_valid_type($type)) {
-            push @errors, "Type $type is is not a valid location type at row $row_num, column F. Please fix and try again.\n";
+            push @errors, "Row $row_num, column F: Type $type is is not a valid location type.\n";
         }
 
         # check is defined, is number between 90 and -90
@@ -111,10 +111,10 @@ sub parse {
           $latitude = $worksheet->get_cell($row,6)->value();
         }
         if (!$latitude) { # check is defined, is number between 90 and -90
-            push @errors, "Latitude $latitude is undefined at row $row_num, column G.\n";
+            push @errors, "Row $row_num, column G: Latitude is undefined.\n";
         }
         elsif( ($latitude !~ /^-?[0-9.]+$/) || ($latitude < -90) || ($latitude > 90) ) {
-            push @errors, "Latitude $latitude is not a number between 90 and -90 at row $row_num, column G. Please fix and try again.\n";
+            push @errors, "Row $row_num, column G: Latitude $latitude is not a number between 90 and -90.\n";
         }
 
         # check is defined, is number between 180 and -180
@@ -122,10 +122,10 @@ sub parse {
           $longitude = $worksheet->get_cell($row,7)->value();
         }
         if (!$longitude) {
-            push @errors, "Longitude $longitude is undefined at row $row_num, column H.\n";
+            push @errors, "Row $row_num, column H: Longitude is undefined.\n";
         }
         elsif( ($longitude !~ /^-?[0-9.]+$/) || ($longitude < -180) || ($longitude > 180) ) {
-            push @errors, "Latitude $latitude is not a number between 180 and -180 at row $row_num, column H. Please fix and try again.\n";
+            push @errors, "Row $row_num, column H: Latitude $latitude is not a number between 180 and -180.\n";
         }
 
         # check is defined, is number between -418 and 8,848
@@ -133,10 +133,10 @@ sub parse {
           $altitude = $worksheet->get_cell($row,8)->value();
         }
         if (!$altitude) {
-            push @errors, "Altitude $altitude is undefined at row $row_num, column I.\n";
+            push @errors, "Row $row_num, column I: Altitude is undefined.\n";
         }
         elsif( ($altitude !~ /^-?[0-9.]+$/) || ($altitude < -418) || ($altitude > 8848) ) {
-            push @errors, "Altitude $altitude is not a number between -418 (Dead Sea) and 8,848 (Mt. Everest) at row $row_num, column I. Please fix and try again.\n";
+            push @errors, "Row $row_num, column I: Altitude $altitude is not a number between -418 (Dead Sea) and 8,848 (Mt. Everest).\n";
         }
 
         print STDERR "Row is $name, $abbreviation, $country_code, $country_name, $program, $type, $latitude, $longitude, $altitude\n";
