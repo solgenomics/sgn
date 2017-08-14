@@ -323,6 +323,7 @@ ORDER BY 8,2";
         });
     }
     my $json = JSON->new();
+    $json->canonical(); # output sorted JSON
     return $json->encode(\@locations);
 }
 
