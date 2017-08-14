@@ -125,6 +125,38 @@ $breeding_programs
                                 <div class="col-sm-5" id="list_of_checks_section" >
                                 </div>
                             </div>
+                            
+                            <div class="form-group form-group-sm" id="show_list_of_unrep_accession" style="display: none" >
+                                <label class="col-sm-7 control-label">List of unreplicated accession (required): </label>
+                                <div class="col-sm-5" id="list_of_unrep_accession" >
+                                </div>
+                            </div>
+                            <div class="form-group form-group-sm" id="show_list_of_rep_accession" style="display: none" >
+                                <label class="col-sm-7 control-label">List of replicated accession (required): </label>
+                                <div class="col-sm-5" id="list_of_rep_accession" >
+                                </div>
+                            </div>
+                            <div class="form-group form-group-sm" id="show_no_of_row_in_design" style="display: none" >
+                                <label class="col-sm-7 control-label">Number of rows in design (required): </label>
+                                <div class="col-sm-5" id="no_of_row_in_design" >
+                                </div>
+                            </div>
+                            <div class="form-group form-group-sm" id="show_no_of_col_in_design" style="display: none" >
+                                <label class="col-sm-7 control-label">Number of columns in design (required): </label>
+                                <div class="col-sm-5" id="no_of_col_in_design" >
+                                </div>
+                            </div>
+                            <div class="form-group form-group-sm" id="show_no_of_rep_times" style="display: none" >
+                                <label class="col-sm-7 control-label">Number of times replicated accessions are replicated (required): </label>
+                                <div class="col-sm-5" id="no_of_rep_times" >
+                                </div>
+                            </div>
+                            <div class="form-group form-group-sm" id="show_no_of_block_sequence" style="display: none" >
+                                <label class="col-sm-7 control-label">Block sequence (required): </label>
+                                <div class="col-sm-5" id="no_of_block_sequence" >
+                                </div>
+                            </div>
+                            
                             <div class="form-group form-group-sm" id="greenhouse_default_num_plants_per_accession" style="display: none">
                                 <label class="col-sm-7 control-label">Default Number of Plants: </label>
                                 <div class="col-sm-5" >
