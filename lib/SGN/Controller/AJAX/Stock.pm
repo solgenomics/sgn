@@ -880,14 +880,14 @@ sub accession_autocomplete_GET :Args(0) {
     $term =~ s/\s+/ /g;
 
     my @response_list;
-    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and (cvterm.name='accession' or cvterm.name='vector_construct') ORDER BY stock.uniquename";
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and (cvterm.name='accession' or cvterm.name='vector_construct') ORDER BY stock.uniquename LIMIT 20";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute('%'.$term.'%');
     while (my ($stock_name) = $sth->fetchrow_array) {
 	push @response_list, $stock_name;
     }
 
-    print STDERR Dumper @response_list;
+    #print STDERR Dumper @response_list;
 
     $c->stash->{rest} = \@response_list;
 }
@@ -959,7 +959,7 @@ sub pedigree_female_parent_autocomplete_GET : Args(0){
       push @response_list, $pedigree_female_parent;
     }
 
-  print STDERR Dumper @response_list ;
+  #print STDERR Dumper @response_list ;
     $c->stash->{rest} = \@response_list;
 
 }
@@ -997,7 +997,7 @@ sub cross_female_parent_autocomplete_GET : Args(0){
       push @response_list, $cross_female_parent;
     }
 
-  print STDERR Dumper @response_list ;
+  #print STDERR Dumper @response_list ;
     $c->stash->{rest} = \@response_list;
 
 }
@@ -1107,29 +1107,28 @@ sub add_stock_parent_GET :Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 
     my $cvterm_name = "";
+    my $cross_type = "";
     if ($parent_type eq "male") {
-	$cvterm_name = "male_parent";
+        $cvterm_name = "male_parent";
     }
     elsif ($parent_type eq "female") {
-	$cvterm_name = "female_parent";
+        $cvterm_name = "female_parent";
+        $cross_type = $c->req->param('cross_type');
     }
 
-    my $type_id_row = $schema->resultset("Cv::Cvterm")->find( { name=> $cvterm_name } );
+    my $type_id_row = SGN::Model::Cvterm->get_cvterm_row($schema, $cvterm_name, "stock_relationship" )->cvterm_id();
 
     # check if a parent of this parent_type is already associated with this stock
     #
-    my $previous_parent = $schema->resultset("Stock::StockRelationship")->find( { type_id => $type_id_row->cvterm_id,
-										  object_id => $stock_id });
+    my $previous_parent = $schema->resultset("Stock::StockRelationship")->find({
+        type_id => $type_id_row,
+        object_id => $stock_id
+    });
 
     if ($previous_parent) {
 	print STDERR "The stock ".$previous_parent->subject_id." is already associated with stock $stock_id - returning.\n";
 	$c->stash->{rest} = { error => "A $parent_type parent with id ".$previous_parent->subject_id." is already associated with this stock. Please specify another parent." };
 	return;
-    }
-
-    my $cvterm_id;
-    if ($type_id_row) {
-	$cvterm_id = $type_id_row->cvterm_id;
     }
 
     print STDERR "PARENT_NAME = $parent_name STOCK_ID $stock_id  $cvterm_name\n";
@@ -1152,7 +1151,8 @@ sub add_stock_parent_GET :Args(0) {
 	{
 	    subject_id => $parent->stock_id,
 	    object_id  => $stock->stock_id,
-	    type_id    => $cvterm_id,
+	    type_id    => $type_id_row,
+        value => $cross_type
 	});
 
     eval {
