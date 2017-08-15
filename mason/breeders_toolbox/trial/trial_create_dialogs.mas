@@ -172,6 +172,15 @@ $breeding_programs
                                     </div>
                                 </div>
                             </div>
+                            <div class="form-group form-group-sm" id="show_no_of_sub_block_sequence" style="display: none" >
+                                <label class="col-sm-7 control-label">Sub-block sequence: </label>
+                                <div class="col-sm-5" >
+                                    <div class="input-group">
+                                        <span class="input-group-addon"><i class="glyphicon glyphicon-qrcode"></i></span>
+                                        <input class="form-control" id="no_of_sub_block_sequence" name="no_of_sub-block_sequence" placeholder="13, 1"/>
+                                    </div>
+                                </div>
+                            </div>
                             
                             <div class="form-group form-group-sm" id="greenhouse_default_num_plants_per_accession" style="display: none">
                                 <label class="col-sm-7 control-label">Default Number of Plants: </label>

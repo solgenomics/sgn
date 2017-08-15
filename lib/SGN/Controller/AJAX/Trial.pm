@@ -139,6 +139,7 @@ sub generate_experimental_design_POST : Args(0) {
   my $no_of_block_sequence = $c->req->param('no_of_block_sequence');      
   my $unreplicated_accession_list = $c->req->param('unreplicated_accession_list');
   my $replicated_accession_list = $c->req->param('replicated_accession_list');
+  my $no_of_sub_block_sequence = $c->req->param('no_of_sub_block_sequence');
   #my $trial_name = $c->req->param('project_name');
   my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
   my $use_same_layout = $c->req->param('use_same_layout');

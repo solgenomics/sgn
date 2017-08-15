@@ -170,6 +170,7 @@ jQuery(document).ready(function ($) {
         var col_in_design_number = $('#no_of_col_in_design').val();
         var no_of_rep_times = $('#no_of_rep_times').val();
         var no_of_block_sequence = $('#no_of_block_sequence').val();
+        var no_of_sub_block_sequence = $('#no_of_sub_block_sequence').val();
         
         var unreplicated_accession_list;
         if (unreplicated_accession_list_id != "") {
@@ -233,6 +234,7 @@ jQuery(document).ready(function ($) {
                 'no_of_block_sequence': no_of_block_sequence,
                 'unreplicated_accession_list': unreplicated_accession_list,
                 'replicated_accession_list': replicated_accession_list,
+                'no_of_sub_block_sequence': no_of_sub_block_sequence,
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
@@ -308,6 +310,7 @@ jQuery(document).ready(function ($) {
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
             $("show_no_of_block_sequence").hide();
+            $("#show_no_of_sub_block_sequence").hide();
             $("#show_list_of_checks_section").hide();
             $("#crbd_show_list_of_checks_section").show();
             $("#rep_count_section").show();
@@ -335,6 +338,7 @@ jQuery(document).ready(function ($) {
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
             $("show_no_of_block_sequence").hide();
+            $("#show_no_of_sub_block_sequence").hide();
             $("#crbd_show_list_of_checks_section").show();
             $("#show_list_of_checks_section").hide();
             $("#rep_count_section").hide();
@@ -362,6 +366,7 @@ jQuery(document).ready(function ($) {
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
             $("show_no_of_block_sequence").hide();
+            $("#show_no_of_sub_block_sequence").hide();
             $("#crbd_show_list_of_checks_section").show();
             $("#show_list_of_checks_section").hide();
             $("#rep_count_section").show();
@@ -389,6 +394,7 @@ jQuery(document).ready(function ($) {
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
             $("show_no_of_block_sequence").hide();
+            $("#show_no_of_sub_block_sequence").hide();
             $("#show_list_of_checks_section").hide();
             $("#rep_count_section").show();
             $("#block_number_section").hide();
@@ -417,6 +423,7 @@ jQuery(document).ready(function ($) {
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
             $("show_no_of_block_sequence").hide();
+            $("#show_no_of_sub_block_sequence").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").hide();
             $("#block_size_section").hide();
@@ -442,6 +449,7 @@ jQuery(document).ready(function ($) {
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
             $("show_no_of_block_sequence").hide();
+            $("#show_no_of_sub_block_sequence").hide();
             $("#trial_design_more_info").hide();
             $("#trial_multi-design_more_info").hide();
             $("#rep_count_section").hide();
@@ -474,6 +482,7 @@ jQuery(document).ready(function ($) {
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
             $("show_no_of_block_sequence").hide();
+            $("#show_no_of_sub_block_sequence").hide();
             $("#rep_count_section").hide();
             $("#row_number_section").show();
             $("#block_number_section").hide();
@@ -513,6 +522,7 @@ jQuery(document).ready(function ($) {
             $("#show_no_of_col_in_design").hide();
             $("#show_no_of_rep_times").hide();
             $("show_no_of_block_sequence").hide();
+            $("#show_no_of_sub_block_sequence").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").hide();
             $("#block_size_section").hide();
@@ -542,6 +552,7 @@ jQuery(document).ready(function ($) {
             $("#show_no_of_col_in_design").show();
             $("#show_no_of_rep_times").show();
             $("#show_no_of_block_sequence").show();
+            $("#show_no_of_sub_block_sequence").show();
             $("#crbd_show_list_of_checks_section").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").hide();
@@ -728,8 +739,8 @@ jQuery(document).ready(function ($) {
 
   //add lists to the list select and list of checks select dropdowns for CRBD.
 	$("#crbd_list_of_checks_section").append(list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list", 'refresh'));
-    $("#list_of_unrep_accession").append(list.listSelect("list_of_unrep_accession", [ 'accessions' ], "Required", 'refresh'));
-    $("#list_of_rep_accession").append(list.listSelect("list_of_rep_accession", [ 'accessions' ], "Required", 'refresh'));
+    $("#list_of_unrep_accession").append(list.listSelect("list_of_unrep_accession", [ 'accessions' ], "Required: e.g. 200", 'refresh'));
+    $("#list_of_rep_accession").append(list.listSelect("list_of_rep_accession", [ 'accessions' ], "Required: e.g. 119", 'refresh'));
 
 	//add a blank line to location select dropdown that dissappears when dropdown is opened
 	$("#add_project_location").prepend("<option value=''></option>").val('');
