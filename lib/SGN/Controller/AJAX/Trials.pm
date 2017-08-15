@@ -49,7 +49,7 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
 
     my $html = "";
     my $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => @$projects[0]->[0] });
-    
+
     print STDERR "Starting get trials at time ".localtime()."\n";
     foreach my $project (@$projects) {
         my %project = ( "id" => $project->[0], "name" => $project->[1]);
@@ -109,7 +109,7 @@ sub trial_autocomplete_GET :Args(0) {
     while (my ($project_name) = $sth->fetchrow_array) {
         push @response_list, $project_name;
     }
-    print STDERR Dumper \@response_list;
+    #print STDERR Dumper \@response_list;
 
     print STDERR "Returning...\n";
     $c->stash->{rest} = \@response_list;
