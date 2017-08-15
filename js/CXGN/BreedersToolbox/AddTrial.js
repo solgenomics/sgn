@@ -227,6 +227,12 @@ jQuery(document).ready(function ($) {
                 'fieldmap_col_number': fieldmap_col_number,
                 'fieldmap_row_number': fieldmap_row_number,
                 'plot_layout_format': plot_layout_format,
+                'row_in_design_number': row_in_design_number,
+                'col_in_design_number': col_in_design_number,
+                'no_of_rep_times': no_of_rep_times,
+                'no_of_block_sequence': no_of_block_sequence,
+                'unreplicated_accession_list': unreplicated_accession_list,
+                'replicated_accession_list': replicated_accession_list,
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
