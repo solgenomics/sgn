@@ -951,8 +951,8 @@ sub studies_germplasm_POST {
 	my %metadata_hash = %$metadata;
 	my %result_hash = %$result;
 
-	print STDERR Dumper($metadata);
-	print STDERR Dumper($result);
+	#print STDERR Dumper($metadata);
+	#print STDERR Dumper($result);
 
 	my $pagintation = $metadata_hash{"pagination"};
 }
