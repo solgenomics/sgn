@@ -210,14 +210,14 @@ sub delete {
 	my $cross_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
 	# delete the project entries
 	#
-	#print STDERR "Deleting project entry for cross...\n";
+	print STDERR "Deleting project entry for cross...\n";
 	my $q1 = "delete from project where project_id=(SELECT project_id FROM nd_experiment_project JOIN nd_experiment_stock USING (nd_experiment_id) JOIN stock USING(stock_id) where stock_id=? and type_id = ?)";
 	my $h1 = $dbh->prepare($q1);
 	$h1->execute($self->cross_stock_id(), $cross_typeid);
 
 	# delete the nd_experiment entries
 	#
-	#print STDERR "Deleting nd_experiment entry for cross...\n";
+	print STDERR "Deleting nd_experiment entry for cross...\n";
 	my $q2= "delete from nd_experiment where nd_experiment.nd_experiment_id=(SELECT nd_experiment_id FROM nd_experiment_stock JOIN stock USING (stock_id) where stock.stock_id=? and stock.type_id =?)";
 	my $h2 = $dbh->prepare($q2);
 	$h2->execute($self->cross_stock_id(), $cross_typeid);
@@ -230,7 +230,7 @@ sub delete {
     };
 
     if ($@) {
-	#print STDERR "An error occurred while deleting cross id ".$self->cross_stock_id()."\n";
+	print STDERR "An error occurred while deleting cross id ".$self->cross_stock_id()."\n";
 	$dbh->rollback();
 	return $@;
     }
