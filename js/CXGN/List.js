@@ -438,7 +438,7 @@ CXGN.List.prototype = {
 	html += '<table class="table"><tr><td>List ID</td><td id="list_id_div">'+list_id+'</td></tr>';
 	html += '<tr><td>List name:<br/><input type="button" class="btn btn-primary btn-xs" id="updateNameButton" value="Update" /></td>';
 	html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td></tr>';
-	html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" /></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
+	html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" /><div id="fuzzySearchAccessionListDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
 	html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /></textarea></td></tr></table>';
 
 	html += '<table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
@@ -456,6 +456,17 @@ CXGN.List.prototype = {
             scrollCollapse: true,
             paging:         false,
 	});
+
+    if (list_type == 'accessions'){
+        jQuery('#fuzzySearchAccessionListDiv').html('<br/><button id="fuzzySearchAccessionListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>');
+    }
+    jQuery(document).on("change", "#type_select", function(){
+        if (jQuery('#type_select').val() == 'accessions'){
+            jQuery('#fuzzySearchAccessionListDiv').html('<br/><button id="fuzzySearchAccessionListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>');
+        } else {
+            jQuery('#fuzzySearchAccessionListDiv').html('');
+        }
+    });
 
 	for (var n=0; n<items.length; n++) {
 	    var list_item_id = items[n][0];
@@ -733,6 +744,59 @@ CXGN.List.prototype = {
         }
     },
 
+    fuzzySearch: function(list_id, list_type) {
+        var error = 0;
+        jQuery.ajax( {
+            url: '/list/fuzzysearch/'+list_id+'/'+list_type,
+            async: false,
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                //console.log(response);
+                var html = "";
+                if (response.success) {
+                    html += "<h2>Accessions that exactly match</h2>";
+                    html += "<table class='table table-hover table-bordered' ><thead><tr><th>Found In Database</th></tr></thead><tbody>";
+                    for(var i=0; i<response.found.length; i++){
+                        html += "<tr><td>"+response.found[i].unique_name+"</td></tr>";
+                    }
+                    html += "</tbody></table>";
+                    html += "<h2>Accessions that fuzzy match</h2>";
+                    html += "<table class='table table-hover table-bordered' ><thead><tr><th>Name In Your List</th><th>Found In Database</th><th>Distance Score</th></tr></thead><tbody>";
+                    for(var i=0; i<response.fuzzy.length; i++){
+                        for(j=0; j <response.fuzzy[i].matches.length; j++){
+                            if (response.fuzzy[i].matches[j].is_synonym){
+                                html += "<tr><td>"+response.fuzzy[i].name+"</td><td>"+response.fuzzy[i].matches[j].name+" (SYNONYM OF: "+response.fuzzy[i].matches[j].synonym_of+") </td><td>"+response.fuzzy[i].matches[j].distance+"</td></tr>";
+                            } else {
+                                html += "<tr><td>"+response.fuzzy[i].name+"</td><td>"+response.fuzzy[i].matches[j].name+"</td><td>"+response.fuzzy[i].matches[j].distance+"</td></tr>";
+                            }
+                        }
+                    }
+                    html += "</tbody></table>";
+                    html += "<h2>Accessions that have no match</h2>";
+                    html += "<table class='table table-hover table-bordered' ><thead><tr><th>Not Found In Database</th></tr></thead><tbody>";
+                    for(var i=0; i<response.absent.length; i++){
+                        html += "<tr><td>"+response.absent[i]+"</td></tr>";
+                    }
+                    html += "</tbody></table>";
+                    html += "<form id='fuzzy_search_result_download' method='post' action='/ajax/accession_list/fuzzy_download' target='TheWindow'><input type='hidden' name='fuzzy_response' value='"+JSON.stringify(response.fuzzy)+"' /></form>";
+                    jQuery('#fuzzy_search_result_display_html').html(html);
+                    jQuery('#fuzzy_search_result_display').modal('show');
+                } else {
+                    alert("An error occurred while fuzzy searching list "+list_id);
+                }
+            },
+            error: function(response) {
+                alert("An error occurred while validating the list "+list_id);
+                error=1;
+            }
+        });
+
+        if (error === 1 ) { return; }
+    },
+
     transform: function(list_id, transform_name) {
 	var transformed = new CXGN.List();
 	var ajaxResponse = [];
@@ -896,6 +960,7 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
     var typeSourceDiv;
     var type;
     var addition_type;
+    var list_name_value = "";
 
     if (options) {
         if (options.selectText) {
@@ -913,9 +978,12 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
         if (options.additionType) {
             addition_type = options.additionType;
         }
+        if (options.listName){
+            list_name_value = options.listName;
+        }
     }
 
-    html = '<div class="row"><div class="col-sm-6" style="margin-right:0px; padding-right:0px;"><input class="form-control input-sm" type="text" id="'+dataDiv+'_new_list_name" placeholder="New list..." />';
+    html = '<div class="row"><div class="col-sm-6" style="margin-right:0px; padding-right:0px;"><input class="form-control input-sm" type="text" id="'+dataDiv+'_new_list_name" placeholder="New list..." value="'+list_name_value+'"/>';
     html += '</div><div class="col-sm-6" style="margin-left:0px; padding-left:0px; margin-right:0px; padding-right:0px;"><input type="hidden" id="'+dataDiv+'_addition_type" value="'+addition_type+'" /><input type="hidden" id="'+dataDiv+'_list_type" value="'+type+'" />';
     html += '<input class="btn btn-primary btn-sm" id="'+dataDiv+'_add_to_new_list" type="button" value="add to new list" /></div></div><br />';
 
@@ -1269,6 +1337,20 @@ function validateList(list_id, html_select_id) {
     lo.validate(list_id, type);
 }
 
+/*
+   fuzzySearchList - perform a fuzzy search over the items in the list and return the match results of this search
+
+   Parameters:
+   * list_id: the id of the list
+   * list_type: the type of the list
+
+*/
+
+function fuzzySearchList(list_id, list_type) {
+    var lo = new CXGN.List();
+    lo.fuzzySearch(list_id, list_type);
+}
+
 function deleteSelectedListGroup(list_ids) {
     var arrayLength = list_ids.length;
     if (confirm('Delete the selected lists? This cannot be undone.')) {
@@ -1351,6 +1433,11 @@ function combineSelectedListGroup(list_ids) {
     }
 }
 
+function downloadFuzzyResponse(){
+    var f = document.getElementById('fuzzy_search_result_download');
+    window.open('', 'TheWindow');
+    f.submit();
+}
 
   jQuery(document).ready(function() {
     jQuery("#list_item_dialog").draggable();

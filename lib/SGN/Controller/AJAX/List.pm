@@ -9,6 +9,7 @@ use Data::Dumper;
 use CXGN::List;
 use CXGN::List::Validate;
 use CXGN::List::Transform;
+use CXGN::List::FuzzySearch;
 use CXGN::Cross;
 use JSON;
 
@@ -575,6 +576,22 @@ sub validate : Path('/list/validate') Args(2) {
 
     my $lv = CXGN::List::Validate->new();
     my $data = $lv->validate($c->dbic_schema("Bio::Chado::Schema"), $type, \@flat_list);
+
+    $c->stash->{rest} = $data;
+}
+
+sub fuzzysearch : Path('/list/fuzzysearch') Args(2) {
+    my $self = shift;
+    my $c = shift;
+    my $list_id = shift;
+    my $list_type = shift;
+
+    my $list = $self->retrieve_list($c, $list_id);
+
+    my @flat_list = map { $_->[1] } @$list;
+
+    my $f = CXGN::List::FuzzySearch->new();
+    my $data = $f->fuzzysearch($c->dbic_schema("Bio::Chado::Schema"), $list_type, \@flat_list);
 
     $c->stash->{rest} = $data;
 }
