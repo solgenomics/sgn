@@ -127,37 +127,49 @@ $breeding_programs
                             </div>
                             
                             <div class="form-group form-group-sm" id="show_list_of_unrep_accession" style="display: none" >
-                                <label class="col-sm-7 control-label">List of unreplicated accession (required): <br/><button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></label>
-                                <div class="col-sm-5" id="list_of_unrep_accession" >
+                                <label class="col-sm-7 control-label">List of unreplicated accession: <br/><button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></label>
+                                <div class="col-sm-5" id="list_of_unrep_accession"  >
                                 </div>
                             </div>
                             <div class="form-group form-group-sm" id="show_list_of_rep_accession" style="display: none" >
-                                <label class="col-sm-7 control-label">List of replicated accession (required): </label>
+                                <label class="col-sm-7 control-label">List of replicated accession: </label>
                                 <div class="col-sm-5" id="list_of_rep_accession" >
                                 </div>
                             </div>
                             <div class="form-group form-group-sm" id="show_no_of_row_in_design" style="display: none" >
-                                <label class="col-sm-7 control-label">Number of rows in design (required): </label>
+                                <label class="col-sm-7 control-label">Number of rows in design: </label>
                                 <div class="col-sm-5"  >
-                                    <input class="form-control" id="no_of_row_in_design" name="no_of_row_in_design" />
+                                    <div class="input-group">
+                                        <span class="input-group-addon"><i class="glyphicon glyphicon-qrcode"></i></span>
+                                        <input class="form-control" id="no_of_row_in_design" name="no_of_row_in_design" placeholder="26"/>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-group form-group-sm" id="show_no_of_col_in_design" style="display: none" >
-                                <label class="col-sm-7 control-label">Number of columns in design (required): </label>
+                                <label class="col-sm-7 control-label">Number of columns in design : </label>
                                 <div class="col-sm-5"  >
-                                    <input class="form-control" id="no_of_col_in_design" name="no_of_col_in_design" />
+                                    <div class="input-group">
+                                        <span class="input-group-addon"><i class="glyphicon glyphicon-qrcode"></i></span>
+                                        <input class="form-control" id="no_of_col_in_design" name="no_of_col_in_design" placeholder="26"/>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-group form-group-sm" id="show_no_of_rep_times" style="display: none" >
-                                <label class="col-sm-7 control-label">Number of times replicated accessions are replicated (required): </label>
+                                <label class="col-sm-7 control-label">Number of times replicated accessions are replicated: </label>
                                 <div class="col-sm-5"  >
-                                    <input class="form-control" id="no_of_rep_times" name="no_of_rep_times" />
+                                    <div class="input-group">
+                                        <span class="input-group-addon"><i class="glyphicon glyphicon-qrcode"></i></span>
+                                        <input class="form-control" id="no_of_rep_times" name="no_of_rep_times" placeholder="4"/>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-group form-group-sm" id="show_no_of_block_sequence" style="display: none" >
-                                <label class="col-sm-7 control-label">Block sequence (required): </label>
+                                <label class="col-sm-7 control-label">Block sequence: </label>
                                 <div class="col-sm-5" >
-                                    <input class="form-control" id="no_of_block_sequence" name="no_of_block_sequence" />
+                                    <div class="input-group">
+                                        <span class="input-group-addon"><i class="glyphicon glyphicon-qrcode"></i></span>
+                                        <input class="form-control" id="no_of_block_sequence" name="no_of_block_sequence" placeholder="13, 2"/>
+                                    </div>
                                 </div>
                             </div>
                             
