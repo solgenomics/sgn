@@ -71,6 +71,22 @@ jQuery(document).ready(function ($) {
             verify_stock_list(stock_list);
         }
     });
+    
+    $(document).on('focusout', '#list_of_unrep_accession_list_select', function() {
+        if ($('#clist_of_unrep_accession_list_select').val()) {
+            var stock_list_id = $('#list_of_unrep_accession_list_select').val();
+            var stock_list = JSON.stringify(list.getList(stock_list_id));
+            verify_stock_list(stock_list);
+        }
+    });
+    
+    $(document).on('focusout', '#list_of_rep_accession_list_select', function() {
+        if ($('#list_of_rep_accession_list_select').val()) {
+            var stock_list_id = $('#list_of_rep_accession_list_select').val();
+            var stock_list = JSON.stringify(list.getList(stock_list_id));
+            verify_stock_list(stock_list);
+        }
+    });
 
     var stock_list_verified = 0;
     function verify_stock_list(stock_list) {
@@ -679,8 +695,10 @@ jQuery(document).ready(function ($) {
 	$("#select_list_list_select").remove();
 	$("#list_of_checks_section_list_select").remove();
 
-  $("#select_list_list_select").remove();
+    $("#select_list_list_select").remove();
 	$("#crbd_list_of_checks_section_list_select").remove();
+    $("#list_of_unrep_accession_list_select").remove();
+    $("#list_of_rep_accession_list_select").remove();
 
 	//add lists to the list select and list of checks select dropdowns.
 	$("#select_list").append(list.listSelect("select_list", [ 'accessions' ], '', 'refresh'));
@@ -688,6 +706,8 @@ jQuery(document).ready(function ($) {
 
   //add lists to the list select and list of checks select dropdowns for CRBD.
 	$("#crbd_list_of_checks_section").append(list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list", 'refresh'));
+    $("#list_of_unrep_accession").append(list.listSelect("list_of_unrep_accession", [ 'accessions' ], "Required", 'refresh'));
+    $("#list_of_rep_accession").append(list.listSelect("list_of_rep_accession", [ 'accessions' ], "Required", 'refresh'));
 
 	//add a blank line to location select dropdown that dissappears when dropdown is opened
 	$("#add_project_location").prepend("<option value=''></option>").val('');
