@@ -440,7 +440,14 @@ jQuery(document).ready(function ($) {
             $("#FieldMap").hide();
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
+            $("#show_list_of_accession_section").hide();
             $("#show_list_of_checks_section").hide();
+            $("#show_list_of_unrep_accession").show();
+            $("#show_list_of_rep_accession").show();
+            $("#show_no_of_row_in_design").show();
+            $("#show_no_of_col_in_design").show();
+            $("#show_no_of_rep_times").show();
+            $("show_no_of_block_sequence").show();
             $("#crbd_show_list_of_checks_section").hide();
             $("#rep_count_section").hide();
             $("#block_number_section").hide();
