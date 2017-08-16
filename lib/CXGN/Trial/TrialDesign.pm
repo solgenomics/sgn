@@ -51,7 +51,15 @@ has 'blank' => ( isa => 'Str', is => 'rw', predicate=> 'has_blank' );
 has 'fieldmap_col_number' => (isa => 'Int',is => 'rw',predicate => 'has_fieldmap_col_number',clearer => 'clear_fieldmap_col_number');
 has 'fieldmap_row_number' => (isa => 'Int',is => 'rw',predicate => 'has_fieldmap_row_number',clearer => 'clear_fieldmap_row_number');
 has 'plot_layout_format' => (isa => 'Str', is => 'rw', predicate => 'has_plot_layout_format', clearer => 'clear_plot_layout_format');
+has 'replicated_accession_no' => (isa => 'Int',is => 'rw',predicate => 'has_replicated_accession_no',clearer => 'clear_replicated_accession_no');
+has 'unreplicated_accession_no' => (isa => 'Int',is => 'rw',predicate => 'has_unreplicated_accession_no',clearer => 'clear_unreplicated_accession_no');
+has 'num_of_replicated_times' => (isa => 'Int',is => 'rw',predicate => 'has_num_of_replicated_times',clearer => 'clear_num_of_replicated_times');
+has 'sub_block_sequence' => (isa => 'Str', is => 'rw', predicate => 'has_sub_block_sequence', clearer => 'clear_sub_block_sequence');
+has 'block_sequence' => (isa => 'Str', is => 'rw', predicate => 'has_block_sequence', clearer => 'clear_block_sequence');
+has 'col_in_design_number' => (isa => 'Int',is => 'rw',predicate => 'has_col_in_design_number',clearer => 'clear_col_in_design_number');
+has 'row_in_design_number' => (isa => 'Int',is => 'rw',predicate => 'has_row_in_design_number',clearer => 'clear_row_in_design_number');
 
+unreplicated_accession_no
 subtype 'RandomizationMethodType',
   as 'Str',
   where { $_ eq "Wichmann-Hill" || $_ eq  "Marsaglia-Multicarry" || $_ eq  "Super-Duper" || $_ eq  "Mersenne-Twister" || $_ eq  "Knuth-
@@ -62,7 +70,7 @@ has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', def
 
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" },
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep"},
   message { "The string, $_, was not a valid design type" };
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
@@ -94,6 +102,9 @@ sub calculate_design {
     elsif ($self->get_design_type() eq "Augmented") {
        $design = _get_augmented_design($self);
     #  $design = _get_alpha_lattice_design($self);
+    }
+    elsif ($self->get_design_type() eq "p-rep") {
+      $design = _get_p_rep_design($self);
     }
 
 #    elsif ($self->get_design_type() eq "MADII") {
@@ -363,6 +374,10 @@ sub _get_crd_design {
 
     %crd_design = %{_build_plot_names($self,\%crd_design)};
     return \%crd_design;
+}
+
+sub _get_p_rep_design {
+    
 }
 
 sub _get_rcbd_design {

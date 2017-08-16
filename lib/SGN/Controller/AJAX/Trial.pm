@@ -332,6 +332,27 @@ my $location_number = scalar(@locations);
   if ($plot_layout_format) {
     $trial_design->set_plot_layout_format($plot_layout_format);
   }
+  if ($number_of_replicated_accession) {
+    $trial_design->set_replicated_accession_no($number_of_replicated_accession);
+  }
+  if ($number_of_unreplicated_accession) {
+    $trial_design->set_unreplicated_accession_no($number_of_unreplicated_accession);
+  }
+  if ($row_in_design_number) {
+    $trial_design->set_row_in_design_number($row_in_design_number);
+  }
+  if ($col_in_design_number) {
+    $trial_design->set_col_in_design_number($col_in_design_number);
+  }
+  if ($no_of_rep_times) {
+    $trial_design->set_num_of_replicated_times($no_of_rep_times);
+  }
+  if ($no_of_block_sequence) {
+    $trial_design->set_block_sequence($no_of_block_sequence);
+  }
+  if ($no_of_sub_block_sequence) {
+    $trial_design->set_sub_block_sequence($no_of_sub_block_sequence);
+  }
 
   try {
     $trial_design->calculate_design();
