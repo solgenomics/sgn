@@ -288,8 +288,12 @@ foreach (@project_types) {
 is_deeply(\@all_project_types, [
           'Advanced Yield Trial',
           'Clonal Evaluation',
+          'Genetic Gain',
+          'Health Status',
+          'Heterosis',
           'Preliminary Yield Trial',
           'Seedling Nursery',
+          'Storage',
           'Uniform Yield Trial',
           'Variety Release Trial'
         ], "check get_all_project_types");

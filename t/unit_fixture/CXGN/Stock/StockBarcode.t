@@ -27,7 +27,7 @@ print join "\n", @contents;
 
 my $sb = CXGN::Stock::StockBarcode->new({ schema => $schema });
 
-$sb->parse(\@contents, 'CB', 'CO');
+$sb->parse(\@contents, 'CB', 'CO_334');
 
 my $data = $sb->parsed_data();
 

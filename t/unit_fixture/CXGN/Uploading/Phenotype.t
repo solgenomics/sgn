@@ -2784,7 +2784,7 @@ ok($validate_file == 1, "Check if parse validate works for plant fieldbook file"
 $parsed_file = $parser->parse('field book', $filename, 1, 'plots', $f->bcs_schema);
 ok($parsed_file, "Check if parse parse phenotype plant fieldbook works");
 
-#print STDERR Dumper $parsed_file;
+print STDERR Dumper $parsed_file;
 
 is_deeply($parsed_file, {
           'data' => {

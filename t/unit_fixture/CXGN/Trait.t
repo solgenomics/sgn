@@ -15,7 +15,7 @@ is($trait->name(), "fresh root weight", "check trait name");
 
 is($trait->format(), "numeric", "check trait format");
 
-is($trait->db(), "CO", "check db property");
+is($trait->db(), "CO_334", "check db property");
 
 is($trait->accession(), "0000012", "check accession property");
 
