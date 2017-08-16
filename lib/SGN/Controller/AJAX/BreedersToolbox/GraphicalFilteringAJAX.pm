@@ -35,6 +35,12 @@ sub common_traits_by_trial_list_GET : Args(0) {
    #get userinfo from db
    my $schema = $c->dbic_schema("Bio::Chado::Schema");
    my $user = $c->user();
+   if (! $c->user) {
+     $c->stash->{rest} = {
+       status => "not logged in"
+     };
+     return;
+   }
    my $user_id = $user->get_object()->get_sp_person_id();
 
    #get list contents
@@ -92,6 +98,7 @@ sub common_traits_by_trial_list_GET : Args(0) {
 
    $c->stash->{rest} = {
       traits => $traits_results_ref,
+      status => "success",
       data => \@data
    };
 }
@@ -107,6 +114,12 @@ sub common_traits_by_plot_list_GET : Args(0) {
    #get userinfo from db
    my $schema = $c->dbic_schema("Bio::Chado::Schema");
    my $user = $c->user();
+   if (! $c->user) {
+     $c->stash->{rest} = {
+       status => "not logged in"
+     };
+     return;
+   }
    my $user_id = $user->get_object()->get_sp_person_id();
 
    #get list contents
@@ -144,6 +157,7 @@ sub common_traits_by_plot_list_GET : Args(0) {
 
    $c->stash->{rest} = {
       traits => $traits_results_ref,
+      status => "success",
       data => \@data
    };
 }
@@ -207,6 +221,7 @@ sub common_traits_by_trials_GET : Args(0) {
 
    $c->stash->{rest} = {
       traits => $traits_results_ref,
+      status => "success",
       data => \@data
    };
 }

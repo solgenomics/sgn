@@ -178,7 +178,12 @@ $(document).ready(function(){
 // filters and modifies the response and then creates the root filter object
 // and datatable
 function loadGFilter(response){
-  console.log(response)
+  console.log(response);
+  if (response.status!="success") {
+    alert("You must be logged in.");
+    $('#results-loading-spinner').hide();
+    return;
+  }
   // convert CSV ata to a list of JS objects and filter rows with missing data
   var csv_columns = response.data[0];
   var csv_data = response.data
