@@ -59,7 +59,6 @@ has 'block_sequence' => (isa => 'Str', is => 'rw', predicate => 'has_block_seque
 has 'col_in_design_number' => (isa => 'Int',is => 'rw',predicate => 'has_col_in_design_number',clearer => 'clear_col_in_design_number');
 has 'row_in_design_number' => (isa => 'Int',is => 'rw',predicate => 'has_row_in_design_number',clearer => 'clear_row_in_design_number');
 
-unreplicated_accession_no
 subtype 'RandomizationMethodType',
   as 'Str',
   where { $_ eq "Wichmann-Hill" || $_ eq  "Marsaglia-Multicarry" || $_ eq  "Super-Duper" || $_ eq  "Mersenne-Twister" || $_ eq  "Knuth-
