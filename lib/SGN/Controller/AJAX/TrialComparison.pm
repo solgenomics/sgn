@@ -174,7 +174,7 @@ sub get_common_traits {
     my $breedersearch =  CXGN::BreederSearch->new({"dbh"=>$c->dbc->dbh});
     my $results_ref = $breedersearch->metadata_query(@criteria, \%dataref, \%queryref);
     print STDERR "Results: \n";
-    print STDERR Dumper($results_ref);
+    #print STDERR Dumper($results_ref);
     $c->stash->{rest} = {
     	options => $results_ref->{results},
       list_trial_count=> scalar(@trials),
