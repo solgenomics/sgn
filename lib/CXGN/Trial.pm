@@ -1656,7 +1656,7 @@ sub duplicate {
     my $self = shift;
     my $new_name = shift;
 
-        my $design = $self->get_layout()->get_design();;
+    my $design = $self->get_layout()->get_design();;
 
     print STDERR Dumper($design);
 
@@ -1679,24 +1679,22 @@ sub duplicate {
 
 	$i++;
     }
+
     print STDERR Dumper(\%new_design);
 
-
-    
     my $new_trial = CXGN::Trial::TrialCreate->new( 
-	{ bcs_schema => $self->bcs_schema(), 
-
-	  dbh => $self->bcs_schema()->storage->dbh(),
-	  trial_name => $new_name,
-	  trial_description => $self->get_description(),
-	  location => $self->get_location(),
-	  trial_year => $self->get_year(),
-	  program => $self->get_breeding_programs()->[0]->[2],
-	  design_type => $self->get_design_type(),
-	  design => \%new_design,
+	{ 
+	    bcs_schema => $self->bcs_schema(), 
+	    dbh => $self->bcs_schema()->storage->dbh(),
+	    trial_name => $new_name,
+	    trial_description => $self->get_description(),
+	    location => $self->get_location(),
+	    trial_year => $self->get_year(),
+	    program => $self->get_breeding_programs()->[0]->[2],
+	    design_type => $self->get_design_type(),
+	    design => \%new_design,
 	});
 
-    
     $new_trial->save_trial();
 }
 
