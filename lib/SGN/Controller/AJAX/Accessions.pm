@@ -362,9 +362,23 @@ sub populations_GET : Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
-    my $populations = $ac->get_all_populations($c);
+    my $populations = $ac->get_all_populations();
 
     $c->stash->{rest} = { populations => $populations };
+}
+
+sub population_members : Path('/ajax/manage_accessions/population_members') : ActionClass('REST') { }
+
+sub population_members_GET : Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = shift;
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
+    my $members = $ac->get_population_members($stock_id);
+
+    $c->stash->{rest} = { data => $members };
 }
 
 sub _parse_list_from_json {
