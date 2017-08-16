@@ -137,9 +137,20 @@ sub generate_experimental_design_POST : Args(0) {
   my $col_in_design_number = $c->req->param('col_in_design_number');
   my $no_of_rep_times = $c->req->param('no_of_rep_times');
   my $no_of_block_sequence = $c->req->param('no_of_block_sequence');      
-  my $unreplicated_accession_list = $c->req->param('unreplicated_accession_list');
-  my $replicated_accession_list = $c->req->param('replicated_accession_list');
+  #my $unreplicated_accession_list = $c->req->param('unreplicated_accession_list');
+  #my $replicated_accession_list = $c->req->param('replicated_accession_list');
   my $no_of_sub_block_sequence = $c->req->param('no_of_sub_block_sequence');
+  
+  my @replicated_accession;
+  if ($c->req->param('replicated_accession_list')) {
+    @replicated_accession = @{_parse_list_from_json($c->req->param('replicated_accession_list'))};
+  }
+  
+  my @unreplicated_accession;
+  if ($c->req->param('unreplicated_accession_list')) {
+    @unreplicated_accession = @{_parse_list_from_json($c->req->param('unreplicated_accession_list'))};
+  }
+  
   #my $trial_name = $c->req->param('project_name');
   my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
   my $use_same_layout = $c->req->param('use_same_layout');
