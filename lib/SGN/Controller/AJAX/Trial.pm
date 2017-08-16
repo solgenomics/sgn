@@ -141,15 +141,17 @@ sub generate_experimental_design_POST : Args(0) {
   #my $replicated_accession_list = $c->req->param('replicated_accession_list');
   my $no_of_sub_block_sequence = $c->req->param('no_of_sub_block_sequence');
   
-  my @replicated_accession;
+  my @replicated_accession; 
   if ($c->req->param('replicated_accession_list')) {
     @replicated_accession = @{_parse_list_from_json($c->req->param('replicated_accession_list'))};
   }
+  my $number_of_replicated_accession = scalar(@replicated_accession);
   
   my @unreplicated_accession;
   if ($c->req->param('unreplicated_accession_list')) {
     @unreplicated_accession = @{_parse_list_from_json($c->req->param('unreplicated_accession_list'))};
   }
+  my $number_of_unreplicated_accession = scalar(@unreplicated_accession);
   
   #my $trial_name = $c->req->param('project_name');
   my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
@@ -161,6 +163,14 @@ sub generate_experimental_design_POST : Args(0) {
         @stock_names = (@stock_names, @control_names_crbd);
     }
   }
+  if($design_type eq "p-rep"){
+      @stock_names = (@replicated_accession, @unreplicated_accession);
+  }
+  my $number_of_prep_accession = scalar(@stock_names);
+  my $p_rep_total_plots = $row_in_design_number * $col_in_design_number;
+  my $replicated_plots = $no_of_rep_times * $number_of_replicated_accession;
+  my $unreplicated_plots = scalar(@unreplicated_accession);
+  my $calculated_total_plot = $replicated_plots + $unreplicated_plots;
 
 my @locations;
 my $trial_locations;
@@ -189,6 +199,11 @@ my $location_number = scalar(@locations);
   if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {  #user must have privileges to add a trial
     $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
     return;
+  }
+  
+  if($p_rep_total_plots == $calculated_total_plot){
+      $c->stash->{rest} = {error => "Treatment repeats do not equal number of plots in design" };
+      return;
   }
 
   my @design_array;
