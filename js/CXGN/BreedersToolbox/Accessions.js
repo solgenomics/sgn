@@ -31,6 +31,38 @@ jQuery(document).ready(function ($) {
         $('#working_modal').modal("hide");
     }
 
+    jQuery('#manage_accessions_populations_new').click(function(){
+        jQuery("#create_population_list_div").html(list.listSelect("create_population_list_div", ["accessions"] ));
+        jQuery('#manage_populations_add_population_dialog').modal('show');
+    });
+
+    jQuery("#create_population_submit").click(function(){
+        jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/population/new',
+            dataType: "json",
+            data: {
+                'population_name': jQuery('#create_population_name').val(),
+                'accession_list_id': jQuery('#create_population_list_div_list_select').val(),
+            },
+            beforeSend: function(){
+                disable_ui();
+            },
+            success: function (response) {
+                enable_ui();
+                if (response.error){
+                    alert(response.error);
+                }
+                if (response.success){
+                    alert(response.success);
+                }
+            },
+            error: function () {
+                alert('An error occurred in adding population. sorry');
+            }
+        });
+    });
+
     jQuery('#manage_accessions_populations_onswitch').click( function() {
       var already_loaded_tables = jQuery('#accordion').find("table");
       if (already_loaded_tables.length > 0) { return; }
@@ -44,27 +76,17 @@ jQuery(document).ready(function ($) {
           var populations = response.populations;
           for (var i in populations) {
             var name = populations[i].name;
+            var population_id = populations[i].stock_id;
             var accessions = populations[i].members;
             var table_id = name+i+"_pop_table";
 
-            var section_html = '<div class="row"><div class="panel panel-default"><div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse'+i+'">';
-            section_html += '<div class="panel-title"><a href="#'+table_id+'" class="accordion-toggle">'+name+'</a></div></div>';
+            var section_html = '<div class="row"><div class="panel panel-default"><div class="panel-heading" >';
+            section_html += '<div class="panel-title" name="populations_members_table_toggle" data-table_id="#'+table_id+'" data-population_id="'+population_id+'" data-population_name="'+name+'"><div class="row"><div class="col-sm-6" data-toggle="collapse" data-parent="#accordion" data-target="#collapse'+i+'"><a href="#'+table_id+'" class="accordion-toggle">'+name+'</a></div><div class="col-sm-3"><a href="/stock/'+population_id+'/view"><small>[Go To Population Page]</small></a></div><div class="col-sm-3"><a name="manage_populations_add_accessions" data-population_id="'+population_id+'" data-population_name="'+name+'"><small>[Add Accessions To Population]</small></a><br/><a name="manage_populations_delete_population" data-population_id="'+population_id+'" data-population_name="'+name+'"><small>[Delete Population]</small></a></div></div></div></div>';
             section_html += '<div id="collapse'+i+'" class="panel-collapse collapse">';
-            section_html += '<div class="panel-body" style="overflow:hidden"><div class="table-responsive" style="margin-top: 10px;"><table id="'+table_id+'" class="table table-hover table-striped table-bordered" width="100%"></table></div>';
-            section_html += '</div></div></div></div><br/>';
+            section_html += '<div class="panel-body" style="overflow:hidden"><div class="table-responsive" style="margin-top: 10px;"><table id="'+table_id+'" class="table table-hover table-striped table-bordered" width="100%"></table><div id="populations_members_add_to_list_data_'+population_id+'" style="display:none"></div><br/><div id="populations_members_add_to_list_menu_'+population_id+'"></div></div>';
+            section_html += '</div><br/></div></div></div><br/>';
 
             jQuery('#accordion').append(section_html);
-
-            jQuery('#'+table_id).DataTable( {
-              data: accessions,
-              retrieve: false,
-              columns: [
-                { title: "Accession Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
-                { title: "Description", "data": "description" },
-                { title: "Synonyms", "data": "synonyms[, ]" }
-              ]
-            });
-
           }
           enable_ui();
         },
@@ -73,6 +95,134 @@ jQuery(document).ready(function ($) {
           alert('An error occured retrieving population data.');
         }
       });
+    });
+
+    jQuery(document).on("click", "div[name='populations_members_table_toggle']", function(){
+        var table_id = jQuery(this).data('table_id');
+        var population_id = jQuery(this).data('population_id');
+        var population_name = jQuery(this).data('population_name');
+
+        var table = jQuery(table_id).DataTable({
+            ajax: '/ajax/manage_accessions/population_members/'+population_id,
+            destroy: true,
+            columns: [
+                { title: "Accession Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.stock_id+"/view'>"+row.name+"</a>"; } },
+                { title: "Description", "data": "description" },
+                { title: "Synonyms", "data": "synonyms[, ]" },
+                { title: "Remove From Population", "data": null, "render": function ( data, type, row ) { return "<a name='populations_member_remove' data-stock_relationship_id='"+row.stock_relationship_id+"'>X</a>"; } },
+            ],
+            "fnInitComplete": function(oSettings, json) {
+                console.log(json);
+                var html = "";
+                for(var i=0; i<json.data.length; i++){
+                    html += json.data[i].name+"\n";
+                }
+                jQuery("#populations_members_add_to_list_data_"+population_id).html(html);
+                addToListMenu("populations_members_add_to_list_menu_"+population_id, "populations_members_add_to_list_data_"+population_id, {
+                    selectText: true,
+                    listType: 'accessions',
+                    listName: population_name
+                });
+            }
+        });
+
+    });
+
+    var population_id;
+    var population_name;
+
+    jQuery(document).on("click", "a[name='manage_populations_add_accessions']", function(){
+        population_id = jQuery(this).data('population_id');
+        population_name = jQuery(this).data('population_name');
+        jQuery("#add_accession_to_population_list_div").html(list.listSelect("add_accession_to_population_list_div", ["accessions"] ));
+        jQuery('#add_accession_population_name').html(population_name);
+        jQuery('#manage_populations_add_accessions_dialog').modal('show');
+    });
+
+    jQuery(document).on("click", "a[name='manage_populations_delete_population']", function(){
+        population_id = jQuery(this).data('population_id');
+        population_name = jQuery(this).data('population_name');
+        jQuery('#delete_population_name').html(population_name);
+        jQuery('#manage_populations_delete_dialog').modal('show');
+    });
+
+    jQuery("#add_accessions_to_population_submit").click(function(){
+        jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/population/add_accessions',
+            dataType: "json",
+            data: {
+                'population_name': population_name,
+                'accession_list_id': jQuery('#add_accession_to_population_list_div_list_select').val(),
+            },
+            beforeSend: function(){
+                disable_ui();
+            },
+            success: function (response) {
+                enable_ui();
+                if (response.error){
+                    alert(response.error);
+                }
+                if (response.success){
+                    alert(response.success);
+                }
+            },
+            error: function () {
+                alert('An error occurred in adding accessions to population. sorry');
+            }
+        });
+    });
+
+    jQuery("#delete_population_submit").click(function(){
+        jQuery.ajax({
+            type: 'POST',
+            url: '/ajax/population/delete',
+            dataType: "json",
+            data: {
+                'population_id': population_id,
+                'population_name': population_name,
+            },
+            beforeSend: function(){
+                disable_ui();
+            },
+            success: function (response) {
+                enable_ui();
+                if (response.error){
+                    alert(response.error);
+                }
+                if (response.success){
+                    alert(response.success);
+                }
+            },
+            error: function () {
+                alert('An error occurred in deleting population. sorry');
+            }
+        });
+    });
+
+    jQuery(document).on("click", "a[name='populations_member_remove']", function(){
+        var stock_relationship_id= jQuery(this).data("stock_relationship_id");
+        if (confirm("Are you sure?")){
+            jQuery.ajax({
+                url: '/ajax/population/remove_member?stock_relationship_id='+stock_relationship_id,
+                dataType: "json",
+                beforeSend: function(){
+                    disable_ui();
+                },
+                success: function (response) {
+                    enable_ui();
+                    if (response.error){
+                        alert(response.error);
+                    }
+                    if (response.success){
+                        alert(response.success);
+                    }
+                },
+                error: function () {
+                    alert('An error occurred in removing accession from population. sorry');
+                }
+            });
+        }
     });
 
     function add_accessions(accessionsToAdd, speciesName, populationName, organizationName  ) {
