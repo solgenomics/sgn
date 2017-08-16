@@ -376,7 +376,95 @@ sub _get_crd_design {
 }
 
 sub _get_p_rep_design {
+    my $self = shift;
+    my %prep_design;
+    my $rbase = R::YapRI::Base->new();
+    my @stock_list;
+    my $number_of_blocks;
+    my $stock_data_matrix;
+    my $r_block;
+    my $result_matrix;
+    my @plot_numbers;
+    my @stock_names;
+    my @block_numbers;
+    my @converted_plot_numbers;
+    my $stock_name_iter;
+    my $number_of_replicated_accession;
+    my $number_of_unreplicated_accession;
+    my $num_of_replicated_times;
+    my $sub_block_sequence;
+    my $block_sequence;
+    my $col_in_design_number;
+    my $row_in_design_number;
     
+    if ($self->has_stock_list()) {
+      @stock_list = @{$self->get_stock_list()};
+    } else {
+      die "No stock list specified\n";
+    }
+    
+    if ($self->has_replicated_accession_no()) {
+      $number_of_replicated_accession = $self->get_replicated_accession_no();
+    } 
+    
+    if ($self->has_unreplicated_accession_no()) {
+      $number_of_unreplicated_accession = $self->get_unreplicated_accession_no();
+    } 
+    
+    if ($self->has_num_of_replicated_times()) {
+      $num_of_replicated_times = $self->get_num_of_replicated_times();
+    } 
+    
+    if ($self->has_sub_block_sequence()) {
+      $sub_block_sequence = $self->get_sub_block_sequence();
+    }
+    
+    if ($self->has_block_sequence()) {
+      $block_sequence = $self->get_block_sequence();
+    }
+    
+    if ($self->has_col_in_design_number()) {
+      $col_in_design_number = $self->get_col_in_design_number();
+    }   
+    
+    if ($self->has_row_in_design_number()) {
+      $row_in_design_number = $self->get_row_in_design_number();
+    }
+    my $treatGV1 = '1, 2'; 
+    my $rngSeeds = '156, 444';
+    
+    $stock_data_matrix =  R::YapRI::Data::Matrix->new(
+  						       {
+  							name => 'stock_data_matrix',
+  							rown => 1,
+  							coln => scalar(@stock_list),
+  							data => \@stock_list,
+  						       }
+  						      );
+                              
+    $r_block = $rbase->create_block('r_block');
+    $stock_data_matrix->send_rbase($rbase, 'r_block');
+    $r_block->add_command('library(DiGGer)');
+    $r_block->add_command('library(R.methodsS3)');
+    $r_block->add_command('library(R.oo)');
+    $r_block->add_command('numberOfTreatments <- stock_data_matrix[1,]'); 
+    $r_block->add_command('rowsInDesign <- '.$row_in_design_number);
+    $r_block->add_command('columnsInDesign <- '.$col_in_design_number); 
+    $r_block->add_command('blockSequence <- list(c('.$block_sequence.'), c('.$sub_block_sequence.'))');
+    $r_block->add_command('treatRepPerRep <- rep(c(1,'.$num_of_replicated_times.'), c('.$number_of_unreplicated_accession.', '.$number_of_replicated_accession.'))');
+    $r_block->add_command('treatGroup <- rep(c('.$treatGV1.'), c('.$number_of_unreplicated_accession.', '.$number_of_replicated_accession.'))');
+    $r_block->add_command('rngSeeds <- c('.$rngSeeds.')');
+    $r_block->add_command('runSearch <- TRUE');
+    
+    $r_block->add_command('pRepDesign<-prDiGGer(numberOfTreatments = numberOfTreatments,
+                                                rowsInDesign = rowsInDesign,
+                                                columnsInDesign = columnsInDesign,
+                                                blockSequence = blockSequence,
+                                                treatRepPerRep = treatRepPerRep, 
+                                                treatGroup = treatGroup, 
+                                                rngSeeds = rngSeeds, 
+                                                runSearch = runSearch )');
+                              
 }
 
 sub _get_rcbd_design {
