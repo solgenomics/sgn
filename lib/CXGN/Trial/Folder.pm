@@ -239,7 +239,8 @@ sub _get_children {
 
 	my @children;
 
-	my $rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_subject_projects', { object_project_id => $self->folder_id() }, { order_by => 'me.name' });
+    my $folder_cvterm_id = $self->folder_cvterm_id();
+	my $rs = $self->bcs_schema()->resultset("Project::Project")->search_related( 'project_relationship_subject_projects', { object_project_id => $self->folder_id(), type_id => $folder_cvterm_id }, { order_by => 'me.name' });
 
 	@children = map { $_->subject_project_id() } $rs->all();
 

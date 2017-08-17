@@ -665,6 +665,87 @@ jQuery(document).ready(function ($) {
          open_project_dialog();
      });
 
+    jQuery('button[name="new_trial_add_treatments"]').click(function(){
+        jQuery('#trial_design_add_treatments').modal('show');
+    });
+
+    jQuery('#new_trial_add_treatments_continue').click(function(){
+        var treatment_name = jQuery('#new_treatment_name').val();
+        var html = "";
+        var design_array = JSON.parse(design_json);
+        for (var i=0; i<design_array.length; i++){
+            html += "<table class='table table-hover'><thead><tr><th>plot_name</th><th>accession</th><th>plot_number</th><th>block_number</th><th>rep_number</th><th>is_a_control</th><th>row_number</th><th>col_number</th><th class='table-success'>"+treatment_name+"</th></tr></thead><tbody>";
+            var design_hash = JSON.parse(design_array[i]);
+            for (var key in design_hash){
+                if (key != 'treatments'){
+                    var plot_obj = design_hash[key];
+                    html += "<tr><td>"+plot_obj.plot_name+"</td><td>"+plot_obj.stock_name+"</td><td>"+plot_obj.plot_number+"</td><td>"+plot_obj.block_number+"</td><td>"+plot_obj.rep_number+"</td><td>"+plot_obj.is_a_control+"</td><td>"+plot_obj.row_number+"</td><td>"+plot_obj.col_number+"</td><td><input data-plot_name='"+plot_obj.plot_name+"' data-trial_index='"+i+"' data-trial_treatment='"+treatment_name+"' type='checkbox' name='add_trial_treatment_input'/></td></tr>";
+                }
+            }
+            html += "</tbody></table>";
+        }
+        html += "<br/><br/>";
+        jQuery('#trial_design_add_treatment_select_html').html(html);
+        jQuery('#trial_design_add_treatment_select').modal('show');
+    });
+
+    jQuery('#new_trial_add_treatments_submit').click(function(){
+        var trial_treatments = [];
+        jQuery('input[name="add_trial_treatment_input"]').each(function() {
+            if (this.checked){
+                var plot_name = jQuery(this).data('plot_name');
+                var trial_index = jQuery(this).data('trial_index');
+                var trial_treatment = jQuery(this).data('trial_treatment');
+                if (trial_index in trial_treatments){
+                    var trial = trial_treatments[trial_index];
+                    if (trial_treatment in trial){
+                        trial[trial_treatment].push(plot_name);
+                    } else {
+                        trial[trial_treatment] = [plot_name];
+                    }
+                    trial_treatments[trial_index] = trial;
+                } else {
+                    obj = {};
+                    obj[trial_treatment] = [plot_name];
+                    trial_treatments[trial_index] = obj;
+                }
+            }
+        });
+
+        var new_design_array = [];
+        var design_array = JSON.parse(design_json);
+        for (var i=0; i<design_array.length; i++){
+            var design_hash = JSON.parse(design_array[i]);
+            if ('treatments' in design_hash){
+                treatment_obj = design_hash['treatments'];
+                new_treatments = trial_treatments[i];
+                for (var key in new_treatments){
+                    treatment_obj[key] = new_treatments[key];
+                }
+                design_hash['treatments'] = treatment_obj;
+            } else {
+                design_hash['treatments'] = trial_treatments[i];
+            }
+            new_design_array[i] = JSON.stringify(design_hash);
+        }
+        design_json = JSON.stringify(new_design_array);
+
+        var html = '';
+        for (var i=0; i<new_design_array.length; i++){
+            var design_hash = JSON.parse(new_design_array[i]);
+            var treatments = design_hash['treatments'];
+            //html += "Trial "+i+"<br/>";
+            for (var key in treatments){
+                html += "Treatment: <b>"+key+"</b> Plots: ";
+                var plot_array = treatments[key];
+                html += plot_array.join(', ') + "<br/>";
+            }
+        }
+        jQuery('#trial_design_confirm_treatments').html(html);
+        jQuery('#trial_design_add_treatment_select').modal('hide');
+        jQuery('#trial_design_add_treatments').modal('hide');
+    });
+
 });
 
 function greenhouse_show_num_plants_section(){

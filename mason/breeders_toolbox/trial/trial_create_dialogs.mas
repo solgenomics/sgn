@@ -314,11 +314,16 @@ $breeding_programs
                     <p><span class="ui-icon ui-icon-check"></span>Trial Is Valid<br>The following trial will be added</p>
                     <button class="btn btn-info btn-sm" id="view_trial_layout_button" >View Trial Layout</button>
                     <hr>
+                    <b>Treatments:</b>
+                    <div id="trial_design_confirm_treatments" >
+                    </div>
+                    <hr>
                     <div id="trial_design_information">
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-info" name="new_trial_add_treatments" >Add Treatments to Design</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" name="new_trial_confirm_submit" id="new_trial_confirm_submit">Confirm</button>
             </div>
@@ -346,6 +351,10 @@ $breeding_programs
         </div>
     </div>
 </div>
+
+
+<& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas &>
+
 
 <div class="modal fade" id="trial_saved_dialog_message" name="trial_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addTrialSavedDialog">
     <div class="modal-dialog modal-lg" role="document">

@@ -10,6 +10,7 @@ calendar	Presentation Event				00052
 experiment_type	pedigree experiment					
 experiment_type	cross_experiment				00052	
 experiment_type	field_layout				00052	
+experiment_type	treatment_experiment				00081	
 experiment_type	genotyping_experiment				00052	
 experiment_type	genotyping_layout				00052	
 experiment_type	phenotyping_experiment				00052	
@@ -108,6 +109,7 @@ project_property	active	From BrAPI	03/27/2017	nm529	00076
 project_property	breeding_program_abbreviation	From BrAPI	03/27/2017	nm529	00076	
 project_property	phenotypes_fully_uploaded	To determine when a trial has all phenotypes uploaded	06/09/2017	nm529	00078	
 project_relationship	breeding_program_trial_relationship				00051	
+project_relationship	trial_treatment_relationship				00081	
 project_type	Advanced Yeld Trials				00052	
 project_type	Advanced Yield Trial					
 project_type	Clonal Evaluation					

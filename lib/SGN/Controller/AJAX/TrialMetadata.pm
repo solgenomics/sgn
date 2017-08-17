@@ -9,7 +9,7 @@ use CXGN::Trial;
 use Math::Round::Var;
 use List::MoreUtils qw(uniq);
 use CXGN::Trial::FieldMap;
-#use Sort::Maker;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -394,6 +394,55 @@ sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
     $c->stash->{rest} = { plants => \@data };
 }
 
+sub trial_treatments : Chained('trial') PathPart('treatments') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my $data = $trial->get_treatments();
+
+    $c->stash->{rest} = { treatments => $data };
+}
+
+sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = $c->stash->{trial};
+    my $design = decode_json $c->req->param('design');
+    my $new_treatment_has_plant_entries = $c->req->param('has_plant_entries');
+
+    my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
+		bcs_schema => $schema,
+		trial_id => $trial_id,
+        trial_name => $trial->get_name(),
+		nd_geolocation_id => $trial->get_location()->[0],
+		design_type => $trial->get_design_type(),
+		design => $design,
+        new_treatment_has_plant_entries => $new_treatment_has_plant_entries
+	});
+    my $error = $trial_design_store->store();
+    if ($error){
+        $c->stash->{rest} = {error => "Treatment not added: ".$error};
+    } else {
+        $c->stash->{rest} = {success => 1};
+    }
+}
+
+sub trial_layout : Chained('trial') PathPart('layout') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
+
+    my $design = $layout->get_design();
+    $c->stash->{rest} = {design => $design};
+}
+
 sub trial_design : Chained('trial') PathPart('design') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -695,6 +744,11 @@ sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0)
     my $self = shift;
     my $c = shift;
     my $plants_per_plot = $c->req->param("plants_per_plot") || 8;
+    my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $plants_with_treatments;
+    if($inherits_plot_treatments eq '1'){
+        $plants_with_treatments = 1;
+    }
 
     if (my $error = $self->privileges_denied($c)) {
 	$c->stash->{rest} = { error => $error };
@@ -708,7 +762,7 @@ sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0)
 
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
 
-    if ($t->create_plant_entities($plants_per_plot)) {
+    if ($t->create_plant_entities($plants_per_plot, $plants_with_treatments)) {
         $c->stash->{rest} = {success => 1};
         return;
     } else {

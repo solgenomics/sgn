@@ -36,7 +36,7 @@ sub download {
     if ($self->predefined_columns) {
         $submitted_predefined_columns = $self->predefined_columns;
         foreach (@$submitted_predefined_columns) {
-            foreach my $header_predef_col (keys $_) {
+            foreach my $header_predef_col (keys %{$_}) {
                 if ($_->{$header_predef_col}) {
                     push @predefined_columns, $header_predef_col;
                 }
@@ -44,8 +44,15 @@ sub download {
         }
     }
     #print STDERR Dumper \@predefined_columns;
-
     my $predefined_columns_json = $json->encode(\@predefined_columns);
+
+    my $treatment = $self->treatment_project_id() ? $self->treatment_project_id() : undef;
+    my $treatment_trial;
+    my $treatment_name = "";
+    if ($treatment){
+        $treatment_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $treatment});
+        $treatment_name = $treatment_trial->get_name();
+    }
 
     $ws->write(0, 0, 'Spreadsheet ID'); $ws->write('0', '1', 'ID'.$$.time());
     $ws->write(0, 2, 'Spreadsheet format'); $ws->write(0, 3, "BasicExcel");
@@ -54,6 +61,7 @@ sub download {
     $ws->write(2, 0, 'Description'); $ws->write(2, 1, $trial->get_description(), $bold);
     $ws->write(3, 0, "Trial location");  $ws->write(3, 1, $trial->get_location()->[1], $bold);
     $ws->write(4, 0, "Predefined Columns");  $ws->write(4, 1, $predefined_columns_json, $bold);
+    $ws->write(4, 2, "Treatment"); $ws->write(4, 3, $treatment_name);
     $ws->write(1, 2, 'Operator');       $ws->write(1, 3, "Enter operator here");
     $ws->write(2, 2, 'Date');           $ws->write(2, 3, "Enter date here");
     $ws->data_validation(2,3, { validate => "date", criteria => '>', value=>'1000-01-01' });
@@ -63,8 +71,20 @@ sub download {
     my $line = 7;
 
     if ($self->data_level eq 'plots') {
-        $num_col_before_traits = 6;
-        my @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
+        my @column_headers;
+        my $treatment_plots;
+        my %treatment_plot_hash;
+        if($treatment_trial){
+            $treatment_plots = $treatment_trial->get_plots();
+            foreach (@$treatment_plots){
+                $treatment_plot_hash{$_->[1]}++;
+            }
+            $num_col_before_traits = 7;
+            @column_headers = ("plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", $treatment_name);
+        } else {
+            $num_col_before_traits = 6;
+            @column_headers = qw | plot_name accession_name plot_number block_number is_a_control rep_number |;
+        }
         for(my $n=0; $n<@column_headers; $n++) {
             $ws->write(6, $n, $column_headers[$n]);
         }
@@ -89,13 +109,30 @@ sub download {
             $ws->write($n+7, 3, $design_info{block_number});
             $ws->write($n+7, 4, $design_info{is_a_control});
             $ws->write($n+7, 5, $design_info{rep_number});
+
+            if (exists($treatment_plot_hash{$design_info{plot_name}})){
+                $ws->write($n+7, 6, 1);
+            }
+
             $line++;
         }
 
     } elsif ($self->data_level eq 'plants') {
-
-        $num_col_before_traits = 7;
-        my @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+        my @column_headers;
+        my $treatment_plants;
+        my %treatment_plant_hash;
+        if($treatment_trial){
+            $treatment_plants = $treatment_trial->get_plants();
+            foreach (@$treatment_plants){
+                $treatment_plant_hash{$_->[1]}++;
+            }
+            $num_col_before_traits = 8;
+            @column_headers = ("plant_name", "plot_name", "accession_name", "plot_number", "block_number", "is_a_control", "rep_number", $treatment_name);
+        } else {
+            $num_col_before_traits = 7;
+            @column_headers = qw | plant_name plot_name accession_name plot_number block_number is_a_control rep_number |;
+        }
+        my $num_col_b = $num_col_before_traits;
         if (scalar(@predefined_columns) > 0) {
             push (@column_headers, @predefined_columns);
             $num_col_before_traits += scalar(@predefined_columns);
@@ -140,10 +177,14 @@ sub download {
                 $ws->write($line, 5, $design_info{is_a_control});
                 $ws->write($line, 6, $design_info{rep_number});
 
+                if (exists($treatment_plant_hash{$_})){
+                    $ws->write($line, $num_col_b-1, 1);
+                }
+
                 if (scalar(@predefined_columns) > 0) {
-                    my $pre_col_ind = 7;
+                    my $pre_col_ind = $num_col_b;
                     foreach (@$submitted_predefined_columns) {
-                        foreach my $header_predef_col (keys $_) {
+                        foreach my $header_predef_col (keys %{$_}) {
                             if ($_->{$header_predef_col}) {
                                 $ws->write($line, $pre_col_ind, $_->{$header_predef_col});
                                 $pre_col_ind++;

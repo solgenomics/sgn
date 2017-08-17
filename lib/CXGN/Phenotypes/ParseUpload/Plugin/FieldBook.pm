@@ -44,35 +44,43 @@ sub validate {
     }
 
     #  Check header row contents
-    if ( ($header_row[0] ne "\"plot_id\"" &&
-        $header_row[1] ne "\"range\"" &&
-        $header_row[2] ne "\"plot\"" &&
-        $header_row[3] ne "\"rep\"" &&
-        $header_row[4] ne "\"accession\"" &&
-        $header_row[5] ne "\"is_a_control\"" &&
-        $header_row[6] ne "\"trait\"" &&
-        $header_row[7] ne "\"value\"" &&
-        $header_row[8] ne "\"timestamp\"" &&
-        $header_row[9] ne "\"person\"" &&
-        $header_row[10] ne "\"location\"" &&
-        $header_row[11] ne "\"number\""
-        ) || ($header_row[0] ne "\"plot_id\"" &&
-            $header_row[1] ne "\"range\"" &&
-            $header_row[2] ne "\"plant\"" &&
-            $header_row[3] ne "\"plot\"" &&
-            $header_row[4] ne "\"rep\"" &&
-            $header_row[5] ne "\"accession\"" &&
-            $header_row[6] ne "\"is_a_control\"" &&
-            $header_row[7] ne "\"trait\"" &&
-            $header_row[8] ne "\"value\"" &&
-            $header_row[9] ne "\"timestamp\"" &&
-            $header_row[10] ne "\"person\"" &&
-            $header_row[11] ne "\"location\"" &&
-            $header_row[12] ne "\"number\""
-            )) {
-        $parse_result{'error'} = "File contents incorrect. For uploading plot phenotypes, header needs to be plot_id, range, plot, rep, accession, is_a_control, trait, value, timestamp, person, location, number. For uploading plant phenotypes, header needs to be plot_id, range, plant, plot, rep, accession, is_a_control, trait, value, timestamp, person, location, number";
-        print STDERR "File contents incorrect.\n";
+    if ($header_row[0] ne "\"plot_id\"" && $header_row[1] ne "\"range\""){
+        $parse_result{'error'} = "File contents incorrect. First column in header must be plot_id, Second column in header must be range.";
         return \%parse_result;
+    }
+    if ($header_row[2] ne "\"plot\"" && $header_row[2] ne "\"plant\""){
+        $parse_result{'error'} = "File contents incorrect. Third column must be either plot or plant";
+        return \%parse_result;
+    }
+    my $col_num;
+    if($header_row[2] eq "\"plot\""){
+        $col_num = 3;
+    } elsif ($header_row[2] eq "\"plant\""){
+        $col_num = 4;
+    }
+
+    if ($header_row[$col_num] ne "\"rep\"" && $header_row[$col_num+1] ne "\"accession\"" && $header_row[$col_num+2] ne "\"is_a_control\""){
+        $parse_result{'error'} = "File contents incorrect. Column @{[$col_num + 1]} in header must be rep. Column @{[$col_num + 2]} in header must be accession. Column @{[$col_num + 3]} in header must be is_a_control.";
+        return \%parse_result;
+    }
+    if (!$header_row[$col_num+3]){
+        $parse_result{'error'} = "File contents incorrect. Column @{[$col_num + 4]} must be either trait or a treatment";
+        return \%parse_result;
+    }
+    my $has_treatment;
+    if ($header_row[$col_num+3] ne "\"trait\""){
+        $has_treatment = 1;
+    }
+    if($has_treatment){
+        if($header_row[$col_num+4] ne "\"trait\"" && $header_row[$col_num+5] ne "\"value\"" && $header_row[$col_num+6] ne "\"timestamp\"" && $header_row[$col_num+7] ne "\"person\"" && $header_row[$col_num+8] ne "\"location\"" && $header_row[$col_num+9] ne "\"number\""){
+            $parse_result{'error'} = "File contents incorrect. It seems you are uploading a treatment. Column @{[$col_num + 5]} must be trait. Column @{[$col_num + 6]} must be value. Column @{[$col_num + 7]} must be timestamp. Column @{[$col_num + 8]} must be person. Column @{[$col_num + 9]} must be location. Column @{[$col_num + 10]} must be number.";
+            return \%parse_result;
+        }
+    } else {
+        if($header_row[$col_num+3] ne "\"trait\"" && $header_row[$col_num+4] ne "\"value\"" && $header_row[$col_num+5] ne "\"timestamp\"" && $header_row[$col_num+6] ne "\"person\"" && $header_row[$col_num+7] ne "\"location\"" && $header_row[$col_num+8] ne "\"number\""){
+            $parse_result{'error'} = "File contents incorrect. It seems you are uploading a treatment. Column @{[$col_num + 4]} must be trait. Column @{[$col_num + 5]} must be value. Column @{[$col_num + 6]} must be timestamp. Column @{[$col_num + 7]} must be person. Column @{[$col_num + 8]} must be location. Column @{[$col_num + 9]} must be number.";
+            return \%parse_result;
+        }
     }
 
     return 1;
@@ -132,6 +140,17 @@ sub parse {
 	return \%parse_result;
     }
 
+    my $treatment_col;
+    if($header_row[2] eq "plot"){
+        $treatment_col = 6;
+    }
+    if($header_row[2] eq "plant"){
+        $treatment_col = 7;
+    }
+    if($header_row[$treatment_col] ne "trait"){
+        $header_column_info{'treatment'} = [$treatment_col, $header_row[$treatment_col]];
+    }
+
     foreach my $line (sort @file_lines) {
         chomp($line);
         my @row =  split($delimiter, $line);
@@ -146,7 +165,16 @@ sub parse {
         #substr($row[$header_column_info{'value'}],1,-1);
         my $timestamp = $row[$header_column_info{'timestamp'}];
         $timestamp =~ s/\"//g;
-        
+
+        my @treatments;
+        if(exists($header_column_info{'treatment'})){
+            my $treatment_val = $row[$header_column_info{'treatment'}->[0]];
+            $treatment_val =~ s/\"//g;
+            if($treatment_val eq "1"){
+                push @treatments, $header_column_info{'treatment'}->[1];
+            }
+        }
+
         if (!defined($plot_id) || !defined($trait) || !defined($value) || !defined($timestamp)) {
             $parse_result{'error'} = "Error getting value from file";
             print STDERR "value: $value\n";
@@ -160,7 +188,7 @@ sub parse {
         $plots_seen{$plot_id} = 1;
         $traits_seen{$trait} = 1;
         if (defined($value) && defined($timestamp)) {
-            $data{$plot_id}->{$trait} = [$value, $timestamp];
+            $data{$plot_id}->{$trait} = [$value, $timestamp, \@treatments];
         }
     }
 

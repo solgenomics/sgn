@@ -385,6 +385,7 @@ sub store {
                 if (!$timestamp) {
                     $timestamp = 'NA'.$upload_date;
                 }
+                my $treatments = $value_array->[2];
 
                 if (defined($trait_value) && length($trait_value)) {
 
@@ -427,6 +428,12 @@ sub store {
 
                         ## Link the experiment to the project
                         $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
+
+                        #Link the experiment to the treatments
+                        foreach my $treatment (@$treatments){
+                            my $treatment_project_id = $schema->resultset('Project::Project')->find({name=>$treatment})->project_id();
+                            $experiment->create_related('nd_experiment_projects', {project_id => $treatment_project_id});
+                        }
 
                         # Link the experiment to the stock
                         $experiment->create_related('nd_experiment_stocks', { stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id });

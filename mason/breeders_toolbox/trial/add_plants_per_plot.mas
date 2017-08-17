@@ -18,7 +18,13 @@ $trial_name => undef
 	        <div class="form-group">
       	      <label class="col-sm-3 control-label">Number of plants per plot: </label>
       	      <div class="col-sm-9" >
-                <input name="trial_name_input" id="add_plants_per_plot_num" class="form-control" type="text" autofocus/>
+                <input name="add_plants_per_plot_num" id="add_plants_per_plot_num" class="form-control" type="text" autofocus/>
+              </div>
+	        </div>
+            <div class="form-group">
+      	      <label class="col-sm-3 control-label">Inherits Trial Treatment(s): </label>
+      	      <div class="col-sm-9" >
+                <input name="add_plants_per_plot_inherit_treatments" id="add_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
               </div>
 	        </div>
 	       </form><br/>
@@ -50,13 +56,21 @@ jQuery(document).ready(function() {
 
 function add_plants_to_trial() {
 
+    var is_checked;
+    if(jQuery('#add_plants_per_plot_inherit_treatments').is(":checked")){
+        is_checked = 1;
+    }
+
     jQuery.ajax( {
       url: '/ajax/breeders/trial/'+<% $trial_id %>+'/create_subplots/',
       type: 'POST',
       beforeSend: function() {
           enable_working_modal();
       },
-      data: {'plants_per_plot' : jQuery('#add_plants_per_plot_num').val()},
+      data: {
+        'plants_per_plot' : jQuery('#add_plants_per_plot_num').val(),
+        'inherits_plot_treatments' : is_checked
+      },
       success: function(response) {
         disable_working_modal();
         if (response.error) {
