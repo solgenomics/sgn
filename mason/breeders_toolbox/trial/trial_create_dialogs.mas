@@ -105,6 +105,7 @@ $breeding_programs
                                         <option title="some  treatments  (checks)  are  replicate  r  times  and  other  treatments  (new)  are replicated once." value=Augmented>Augmented</option>
                                         <option title="Adjustments are calculated using data from all checks" value=MAD>Modified Augmented Design </option>
                                         <option title="A greenhouse/nursery houses plants in no particular layout design." value="greenhouse" >Nursery/Greenhouse </option>
+                                        <option title="Split plot designs are useful for applying treatments to subplots of a plot. If you give three treatments, there will be three subplots with the treatment distributed randomly among them." value="splitplot">Split Plot</option>
                                         <!--<option value=MADIII>MADIII</option>-->
                                         <!--<option value=MADIV>MADIV</option>-->
                                         <!--<option value=MADV>MADV</option>-->
@@ -166,6 +167,33 @@ $breeding_programs
                                     <label class="col-sm-7 control-label">Number of Rows Per Block (Optional): </label>
                                     <div class="col-sm-5" >
                                         <input class="form-control" id="row_number_per_block" name="row_number_per_block" />
+                                    </div>
+                                </div>
+
+                                <div id="create_trial_with_treatment_section" style="display: none">
+                                    <div class="form-group form-group-sm" >
+                                        <label class="col-sm-7 control-label">Treatment Name: </label>
+                                        <div class="col-sm-5" >
+                                            <input class="form-control" id="create_trial_with_treatment_name_input1" name="create_trial_with_treatment_name_input1" type="text" value="Control" placeholder="Treatment 1"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" >
+                                        <label class="col-sm-7 control-label">Treatment Name: </label>
+                                        <div class="col-sm-5" >
+                                            <input class="form-control" id="create_trial_with_treatment_name_input2" name="create_trial_with_treatment_name_input2" type="text" placeholder="Treatment 2"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" >
+                                        <label class="col-sm-7 control-label">Treatment Name: </label>
+                                        <div class="col-sm-5" >
+                                            <input class="form-control" id="create_trial_with_treatment_name_input3" name="create_trial_with_treatment_name_input3" type="text" placeholder="Treatment 3"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" >
+                                        <label class="col-sm-7 control-label">Treatment Name: </label>
+                                        <div class="col-sm-5" >
+                                            <input class="form-control" id="create_trial_with_treatment_name_input4" name="create_trial_with_treatment_name_input4" type="text" placeholder="Treatment 4"/>
+                                        </div>
                                     </div>
                                 </div>
 
