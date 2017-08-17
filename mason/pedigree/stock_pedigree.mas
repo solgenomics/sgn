@@ -31,38 +31,88 @@ $stock_id
 $has_pedigree
 </%args>
 
-<div id="add_parent_dialog" title="Add parent" >
-  Enter the name of an accession that is a known parent of this stock<br />
-<br />
-<b>Stock name</b> <input type="text" id="stock_autocomplete" name="stock_autocomplete" /><br />
-<br />
-Parent is<br />
-<input type="radio" id="female" name="parent_type" value="female" checked="1"  /> female<br />
-<input type="radio" id="male" name="parent_type" value="male" /> male<br />
+<style>
+.ui-autocomplete {
+    z-index: 2147483647;
+}
+</style>
 
+<div class="modal fade" id="add_parent_dialog" name="add_parent_dialog" tabindex="-1" role="dialog" aria-labelledby="addParentDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addParentDialog">Add Parent</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" id="add_parent_dialog_form" name="add_parent_dialog_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Stock Name: </label>
+                            <div class="col-sm-9" >
+                                <input name="stock_autocomplete" id="stock_autocomplete" class="form-control" type="text" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Parent is: </label>
+                            <div class="col-sm-9" >
+                                <input type="radio" id="female" name="parent_type" value="female" checked="1"  /> female<br />
+                                <input type="radio" id="male" name="parent_type" value="male" /> male<br />
+                            </div>
+                        </div>
+                        <div class="form-group" id="add_parent_cross_type_div">
+                            <label class="col-sm-3 control-label">Cross Type: </label>
+                            <div class="col-sm-9" >
+                                <select class="form-control" id="add_parent_cross_type">
+                                    <option value="biparental">biparental</option>
+                                    <option value="self">self</option>
+                                    <option value="open">open pollinated</option>
+                                    <option value="bulk">bulk</option>
+                                    <option value="bulk_self">bulk selfed</option>
+                                    <option value="bulk_open">bulk and open pollinated</option>
+                                    <option value="doubled_haploid">doubled haploid</option>
+                                    <option value="polycross">polycross</option>
+                                    <option value="reciprocal">reciprocal</option>
+                                    <option value="multicross">multicross</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_add_parent_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="add_parent_submit" id="add_parent_submit" title="Save Parent">Save</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-  
-  //alert( document.getElementById("add_parent_dialog").innerHTML );
-  
-    jQuery("#add_parent_dialog").dialog( {
-      autoOpen: false,
-      buttons: { "Cancel" :  function() { jQuery("#add_parent_dialog").dialog("close"); }, "Submit": { text:'Submit', id:'add_parent_dialog_submit_button', click: function() { associate_parent() } }  },
-      modal: true 
+
+    jQuery('#add_parent_submit').click(function(){
+        associate_parent();
     });
-    
+
     jQuery("#add_parent_link").click( function () { 
-     jQuery("#add_parent_dialog" ).dialog("open");
+        jQuery("#add_parent_dialog" ).modal("show");
     });
 
     jQuery("#stock_autocomplete").autocomplete({
-      source: '/ajax/stock/accession_autocomplete'
+        source: '/ajax/stock/accession_autocomplete'
     });
 
-    jQuery("#parent_type").buttonset();
-
-  //alert("Done setting up");
+    jQuery('input:radio[name="parent_type"]').change(function(){
+        var type = jQuery("input:radio[name='parent_type']:checked").val();
+        if(type == 'female'){
+            jQuery('#add_parent_cross_type_div').show();
+        } else {
+            jQuery('#add_parent_cross_type_div').hide();
+            jQuery('#add_parent_cross_type').val('');
+        }
+    });
 
     function associate_parent() { 
       var parentType = "";
@@ -72,21 +122,28 @@ Parent is<br />
       //alert("Parent name = "+parentName);
 
       if (!parentName) { alert("We need a name here, sorry!"); return; }
+
+      var cross_type = jQuery('#add_parent_cross_type').val();
+      //alert(cross_type);
+
       var stock_id = "<% $stock_id %>";
-      //alert("Sending AJAX request.. /ajax/stock/add_stock_parent?stock_id="+stock_id+"&parent_name="+parentName+"&parent_type="+parentType);
       jQuery.ajax({
         url: '/ajax/stock/add_stock_parent',
         dataType: "json",
         type: 'GET',
         async: false,
-        data: 'stock_id='+stock_id+'&parent_name='+parentName+'&parent_type='+parentType,
-        error: function(response) { alert("An error occurred. Please try again later!"+response); },
-        parseerror: function(response) { alert("A parse error occurred. Please try again."+response); },
+        data: 'stock_id='+stock_id+'&parent_name='+parentName+'&parent_type='+parentType+'&cross_type='+cross_type,
+        error: function(response) {
+            alert("An error occurred. Please try again later!"+response);
+        },
+        parseerror: function(response) {
+            alert("A parse error occurred. Please try again."+response);
+        },
         success: function(response) { 
           if (response.error) { alert(response.error); }
           else {
             alert("The parent has been added. ["+response.error+"]");
-            jQuery("#add_parent_dialog").dialog("close");
+            jQuery("#add_parent_dialog").modal("hide");
             document.location.reload(); // reload the entire page, because pedigree info is in several places. 
           }
         }, 

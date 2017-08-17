@@ -113,7 +113,7 @@ $t->find_element_ok("derived_button", "id", "click on compute trait link button"
 
     my $trait_select = $t->find_element_ok("derived_trait_select", "id", "find trait select dialog");
 
-    $trait_select->send_keys('sprouting|CO:0000008');
+    $trait_select->send_keys('sprouting|CO_334:0000008');
 
    # $t->find_element_ok("button", "id", "submit compute trait ")->click();
 
@@ -137,7 +137,7 @@ $t->find_element_ok("derived_button", "id", "click on compute trait link button"
 
     my $trait_select = $t->find_element_ok("derived_trait_select", "id", "find trait select dialog");
 
-    $trait_select->send_keys('specific gravity|CO:0000163');
+    $trait_select->send_keys('specific gravity|CO_334:0000163');
 
 
     $t->find_element_ok("create_derived_trait_submit_button", "id", "submit compute trait ")->click();
@@ -154,7 +154,7 @@ $t->find_element_ok("derived_button", "id", "click on compute trait link button"
 
     my $trait_select = $t->find_element_ok("derived_trait_select", "id", "find trait select dialog");
 
-    $trait_select->send_keys('starch content|CO:0000071');
+    $trait_select->send_keys('starch content|CO_334:0000071');
 
     $t->find_element_ok("create_derived_trait_submit_button", "id", "submit compute trait ")->click();
 
@@ -170,7 +170,7 @@ $t->find_element_ok("derived_button", "id", "click on compute trait link button"
 
     my $trait_select = $t->find_element_ok("derived_trait_select", "id", "find trait select dialog");
 
-    $trait_select->send_keys('dry matter content by specific gravity method|CO:0000160');
+    $trait_select->send_keys('dry matter content by specific gravity method|CO_334:0000160');
 
     $t->find_element_ok("create_derived_trait_submit_button", "id", "submit compute trait ")->click();
 
