@@ -73,7 +73,7 @@ sleep(1);
     
     sleep(2);
 
-    $trait_select->send_keys("dry matter content percentage|CO:0000092");
+    $trait_select->send_keys("dry matter content percentage|CO_334:0000092");
 
     sleep(1);
 

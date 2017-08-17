@@ -19,6 +19,7 @@ use Try::Tiny;
 use File::Basename qw | basename dirname|;
 use File::Spec::Functions;
 use CXGN::People::Roles;
+use CXGN::Trial::TrialLayout;
 
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -78,6 +79,7 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $list_id = $c->req->param('list_id') || ''; #If a list_id is given in the URL, then the add accessions process will automatically begin with that list.
 
     if (!$c->user()) {
 	# redirect to login page
@@ -92,6 +94,7 @@ sub manage_accessions : Path("/breeders/accessions") Args(0) {
     # my $populations = $ac->get_all_populations($c);
 
     $c->stash->{accessions} = $accessions;
+    $c->stash->{list_id} = $list_id;
     #$c->stash->{population_groups} = $populations;
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{template} = '/breeders_toolbox/manage_accessions.mas';
@@ -244,6 +247,23 @@ sub manage_plot_phenotyping :Path("/breeders/plot_phenotyping") Args(0) {
     $c->stash->{stock_id} = $stock_id;
     $c->stash->{template} = '/breeders_toolbox/manage_plot_phenotyping.mas';
 
+}
+
+sub manage_trial_phenotyping :Path("/breeders/trial_phenotyping") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->req->param('trial_id');
+
+    if (!$c->user()) {
+	     $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	      return;
+    }
+    my $project_name = $schema->resultset("Project::Project")->find( { project_id=>$trial_id })->name();
+
+    $c->stash->{trial_name} = $project_name;
+    $c->stash->{trial_id} = $trial_id;
+    $c->stash->{template} = '/breeders_toolbox/manage_trial_phenotyping.mas';
 }
 
 sub manage_phenotyping_download : Path("/breeders/phenotyping/download") Args(1) {

@@ -76,14 +76,14 @@ sub trial_detail_design_view {
 sub design_layout_view {
     my $design_ref = shift;
     my $design_info_ref = shift;
-    my $design_type = shift;
+    my $design_level = shift;
     my %design = %{$design_ref};
     my %design_info = %{$design_info_ref};
     my $design_result_html;
 
     $design_result_html .= '<table border="1">';
 
-    if ($design_type eq 'greenhouse') {
+    if ($design_level eq 'plants') {
         $design_result_html .= qq{<tr><th>Plant Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th></tr>};
     } else {
         $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th></tr>};

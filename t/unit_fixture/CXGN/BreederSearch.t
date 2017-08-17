@@ -33,6 +33,10 @@ is_deeply($results, {
                               [
                                 '2016',
                                 '2016'
+                              ],
+                              [
+                                '2017',
+                                '2017'
                               ]
                             ]
              }, 'wizard one category query');
@@ -149,15 +153,15 @@ is_deeply($results, {
                'results' => [
                               [
                                 70741,
-                                'dry matter content percentage|CO:0000092'
+                                'dry matter content percentage|CO_334:0000092'
                               ],
                               [
                                 70666,
-                                'fresh root weight|CO:0000012'
+                                'fresh root weight|CO_334:0000012'
                               ],
                               [
                                 70773,
-                                'fresh shoot weight measurement in kg|CO:0000016'
+                                'fresh shoot weight measurement in kg|CO_334:0000016'
                               ]
                             ]
              }, "wizard intersect query");

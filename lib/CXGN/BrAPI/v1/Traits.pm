@@ -35,15 +35,30 @@ has 'status' => (
 
 sub list {
 	my $self = shift;
+    my $inputs = shift;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
+
+    my $names = $inputs->{names};
+    my $trait_ids = $inputs->{trait_ids};
+
+    my $where_clause = '';
+    if($names && scalar(@$names)>0){
+        my $sql = join ("','" , @$names);
+        my $name_sql = "'" . $sql . "'";
+        $where_clause .= " AND cvterm.name in ($name_sql)";
+    }
+    if($trait_ids && scalar(@$trait_ids)>0){
+        my $sql = join ("," , @$trait_ids);
+        $where_clause .= " AND cvterm.cvterm_id in ($sql)";
+    }
 
 	my $limit = $page_size;
 	my $offset = $page*$page_size;
 	my $total_count = 0;
 	my @data;
-	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db using(db_id) JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) WHERE reltype.name='VARIABLE_OF' ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset;";
+	my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, db.name, db.db_id, dbxref.accession, count(cvterm.cvterm_id) OVER() AS full_count FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db using(db_id) JOIN cvterm_relationship as rel on (rel.subject_id=cvterm.cvterm_id) JOIN cvterm as reltype on (rel.type_id=reltype.cvterm_id) WHERE reltype.name='VARIABLE_OF' $where_clause ORDER BY cvterm.name ASC LIMIT $limit OFFSET $offset;";
 	my $sth = $self->bcs_schema->storage->dbh->prepare($q);
 	$sth->execute();
 	while (my ($cvterm_id, $cvterm_name, $cvterm_definition, $db_name, $db_id, $accession, $count) = $sth->fetchrow_array()) {

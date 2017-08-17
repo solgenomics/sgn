@@ -49,7 +49,7 @@ sub get_stock {
   my $self = shift;
   my $stock_rs = $self->_get_stock_resultset();
   my $stock;
-  if ($stock_rs->count == 1) {
+  if ($stock_rs->count > 0) {
     $stock = $stock_rs->first;
   } else {
     return;
@@ -119,12 +119,12 @@ sub get_owner_hash_lookup {
     my $self = shift;
     print STDERR "StockOwner Start:".localtime."\n";
     my $schema = $self->get_schema();
-    my $q = "SELECT stock_id, sp_person_id, username FROM sgn_people.sp_person JOIN phenome.stock_owner USING(sp_person_id) ORDER BY sp_person_id;";
+    my $q = "SELECT stock_id, sp_person_id, username, first_name, last_name FROM sgn_people.sp_person JOIN phenome.stock_owner USING(sp_person_id) ORDER BY sp_person_id;";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my %result;
-    while (my ($stock_id, $sp_person_id, $username) = $h->fetchrow_array()) {
-        push @{$result{$stock_id}}, [$sp_person_id, $username];
+    while (my ($stock_id, $sp_person_id, $username, $first_name, $last_name) = $h->fetchrow_array()) {
+        push @{$result{$stock_id}}, [$sp_person_id, $username, $first_name, $last_name];
     }
     print STDERR "StockOwner End:".localtime."\n";
     return \%result;

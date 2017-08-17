@@ -183,10 +183,10 @@ sub avg_phenotypes_query {
   my $allow_missing = shift;
 
   my $select = "SELECT table0.accession_id, table0.accession_name";
-  my $from = " FROM (SELECT accession_id, accession_name FROM materialized_phenoview WHERE trial_id = $trial_id GROUP BY 1,2) AS table0";
+  my $from = " FROM (SELECT accession_id, accession_name FROM materialized_phenoview JOIN accessions USING (accession_id) WHERE trial_id = $trial_id GROUP BY 1,2) AS table0";
   for (my $i = 1; $i <= scalar @trait_ids; $i++) {
     $select .= ",  ROUND( CAST(table$i.trait$i AS NUMERIC), 2)";
-    $from .= " JOIN (SELECT accession_id, accession_name, AVG(phenotype_value::REAL) AS trait$i FROM materialized_phenoview WHERE trial_id = $trial_id AND trait_id = ? GROUP BY 1,2) AS table$i USING (accession_id)";
+    $from .= " JOIN (SELECT accession_id, accession_name, AVG(value::REAL) AS trait$i FROM materialized_phenoview JOIN accessions USING (accession_id) JOIN phenotype USING (phenotype_id) WHERE trial_id = $trial_id AND trait_id = ? GROUP BY 1,2) AS table$i USING (accession_id)";
   }
   my $query = $select . $from . " ORDER BY 2";
   if ($allow_missing eq 'true') { $query =~ s/JOIN/FULL OUTER JOIN/g; }
@@ -304,7 +304,7 @@ sub test_matviews {
 
   if (%response_hash && $response_hash{'message'} eq 'Wizard update completed!') {
     print STDERR "Populated views, now proceeding with query . . . .\n";
-    return { success => "Populated views, query can proceed." };
+    return { status => "Populated views, query can proceed." };
   } elsif (%response_hash && $response_hash{'message'} eq 'Wizard update initiated.') {
     return { error => "The search wizard is temporarily unavailable while database indexes are being repopulated. Please try again later." };
   } elsif (%response_hash && $response_hash{'error'}) {
@@ -401,7 +401,7 @@ sub matviews_status {
     return { refreshing => "<p id='wizard_status'>Wizard update in progress . . . </p>"};
   }
   else {
-    print STDERR "materialized fullview last updated $timestamp\n";
+    print STDERR "materialized views last updated $timestamp\n";
     return { timestamp => "<p id='wizard_status'>Wizard last updated: $timestamp</p>" };
   }
 }

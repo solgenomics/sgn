@@ -9,7 +9,7 @@ use POSIX;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::Login;
 use CXGN::Trial::TrialCreate;
 use CXGN::Trial::Search;
@@ -41,7 +41,7 @@ has 'bcs_schema' => (
 	is => 'rw',
 );
 
-my $DEFAULT_PAGE_SIZE=20;
+my $DEFAULT_PAGE_SIZE=10;
 
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $self = shift;
@@ -80,7 +80,7 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	$c->stash->{clean_inputs} = _clean_inputs($c->req->params);
 }
 
-#useful because javascript can pass 'undef' as an empty value
+#useful because javascript can pass 'undef' as an empty value, and also standardizes all inputs as arrayrefs
 sub _clean_inputs {
 	no warnings 'uninitialized';
 	my $params = shift;
@@ -96,6 +96,7 @@ sub _clean_inputs {
 		}
 		@$ret_val = grep {$_ ne undef} @$ret_val;
 		@$ret_val = grep {$_ ne ''} @$ret_val;
+        $_ =~ s/\[\]$//; #ajax POST with arrays adds [] to the end of the name e.g. germplasmName[]. since all inputs are arrays now we can remove the [].
 		$params->{$_} = $ret_val;
 	}
 	return $params;
@@ -470,27 +471,6 @@ POST Response:
 
 =cut
 
-sub germplasm_synonyms {
-	my $schema = shift;
-	my $stock_id = shift;
-	my $synonym_id = shift;
-	my @synonyms;
-	my $rsp = $schema->resultset("Stock::Stockprop")->search({type_id => $synonym_id, stock_id=>$stock_id });
-	while (my $stockprop = $rsp->next()) {
-		push( @synonyms, $stockprop->value() );
-	}
-	return \@synonyms;
-}
-
-sub germplasm_pedigree_string {
-	my $schema = shift;
-	my $stock_id = shift;
-	my $s = CXGN::Chado::Stock->new($schema, $stock_id);
-	my $pedigree_root = $s->get_parents('1');
-	my $pedigree_string = $pedigree_root->get_pedigree_string('1');
-	return $pedigree_string;
-}
-
 sub germplasm_list  : Chained('brapi') PathPart('germplasm-search') Args(0) : ActionClass('REST') { }
 
 sub germplasm_list_GET {
@@ -826,17 +806,17 @@ sub studies_search_process {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Studies');
 	my $brapi_package_result = $brapi_module->studies_search({
-		programDbIds => $clean_inputs->{programDbIds},
-		programNames => $clean_inputs->{programNames},
-		studyDbIds => $clean_inputs->{studyDbIds},
-		studyNames => $clean_inputs->{studyNames},
-		studyLocationDbIds => $clean_inputs->{studyLocationDbIds},
-		studyLocationNames => $clean_inputs->{studyLocationNames},
-		studyTypeName => $clean_inputs->{studyTypeName},
-		germplasmDbIds => $clean_inputs->{germplasmDbIds},
-		germplasmNames => $clean_inputs->{germplasmNames},
-		observationVariableDbIds => $clean_inputs->{observationVariableDbIds},
-		observationVariableNames => $clean_inputs->{observationVariableNames},
+		programDbIds => $clean_inputs->{programDbId},
+		programNames => $clean_inputs->{programName},
+		studyDbIds => $clean_inputs->{studyDbId},
+		studyNames => $clean_inputs->{studyName},
+		studyLocationDbIds => $clean_inputs->{locationDbId},
+		studyLocationNames => $clean_inputs->{locationName},
+		studyTypeName => $clean_inputs->{studyType},
+		germplasmDbIds => $clean_inputs->{germplasmDbId},
+		germplasmNames => $clean_inputs->{germplasmName},
+		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
+		observationVariableNames => $clean_inputs->{observationVariableName},
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -864,8 +844,8 @@ sub trials_search_process {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Trials');
 	my $brapi_package_result = $brapi_module->trials_search({
-		locationDbIds => $clean_inputs->{locationDbIds},
-		programDbIds => $clean_inputs->{programDbIds},
+		locationDbIds => $clean_inputs->{locationDbId},
+		programDbIds => $clean_inputs->{programDbId},
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }
@@ -971,8 +951,8 @@ sub studies_germplasm_POST {
 	my %metadata_hash = %$metadata;
 	my %result_hash = %$result;
 
-	print STDERR Dumper($metadata);
-	print STDERR Dumper($result);
+	#print STDERR Dumper($metadata);
+	#print STDERR Dumper($result);
 
 	my $pagintation = $metadata_hash{"pagination"};
 }
@@ -1552,15 +1532,30 @@ sub studies_layout_POST {
 }
 
 sub studies_layout_GET {
-	my $self = shift;
-	my $c = shift;
-	#my $auth = _authenticate_user($c);
+    my $self = shift;
+    my $c = shift;
+    my $clean_inputs = $c->stash->{clean_inputs};
+    #my $auth = _authenticate_user($c);
+    my $format = $clean_inputs->{format}->[0] || 'json';
+    my $file_path;
+    my $uri;
+    if ($format eq 'tsv' || $format eq 'csv' || $format eq 'xls'){
+        my $dir = $c->tempfiles_subdir('download');
+        my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
+        my $temp_file_name = $time_stamp . "phenotype_download_$format"."_XXXX";
+        ($file_path, $uri) = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+    }
+
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Studies');
-	my $brapi_package_result = $brapi_module->studies_layout(
-		$c->stash->{study_id}
-	);
-	_standard_response_construction($c, $brapi_package_result);
+    my $brapi_package_result = $brapi_module->studies_layout({
+        study_id => $c->stash->{study_id},
+        format => $format,
+        main_production_site_url => $c->config->{main_production_site_url},
+        file_path => $file_path,
+        file_uri => $uri
+    });
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -1599,7 +1594,7 @@ sub studies_layout_GET {
 
 =cut
 
-sub studies_observations : Chained('studies_single') PathPart('observationUnits') Args(0) : ActionClass('REST') { }
+sub studies_observations : Chained('studies_single') PathPart('observationunits') Args(0) : ActionClass('REST') { }
 
 sub studies_observations_POST {
 	my $self = shift;
@@ -1686,6 +1681,7 @@ sub studies_table_GET {
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
 		trait_ids => $clean_inputs->{observationVariableDbId},
+		trial_ids => $clean_inputs->{studyDbId},
 		format => $format,
 		main_production_site_url => $c->config->{main_production_site_url},
 		file_path => $file_path,
@@ -1855,11 +1851,11 @@ sub process_phenotypes_search {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
 	my $brapi_package_result = $brapi_module->search({
-		trait_ids => $clean_inputs->{observationVariableDbIds},
-		accession_ids => $clean_inputs->{germplasmDbIds},
-		study_ids => $clean_inputs->{studyDbIds},
-		location_ids => $clean_inputs->{locationDbIds},
-		years => $clean_inputs->{seasonDbIds},
+		trait_ids => $clean_inputs->{observationVariableDbId},
+		accession_ids => $clean_inputs->{germplasmDbId},
+		study_ids => $clean_inputs->{studyDbId},
+		location_ids => $clean_inputs->{locationDbId},
+		years => $clean_inputs->{seasonDbId},
 		data_level => $clean_inputs->{observationLevel}->[0],
 		search_type => $clean_inputs->{search_type}->[0],
 	});
@@ -1881,7 +1877,10 @@ sub traits_list_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Traits');
-	my $brapi_package_result = $brapi_module->list();
+	my $brapi_package_result = $brapi_module->list({
+        trait_ids => $clean_inputs->{traitDbIds},
+        names => $clean_inputs->{names}
+    });
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2215,14 +2214,14 @@ sub _observationvariable_search_process {
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
 	my $brapi_package_result = $brapi_module->observation_variable_search({
-		observationvariable_db_ids => $clean_inputs->{observationVariableDbIds},
-		ontology_db_names => $clean_inputs->{ontologyXrefs},
-		ontology_dbxref_terms => $clean_inputs->{ontologyDbIds},
-		method_db_ids => $clean_inputs->{methodDbIds},
-		scale_db_ids => $clean_inputs->{scaleDbIds},
-		observationvariable_names => $clean_inputs->{names},
-		observationvariable_datatypes => $clean_inputs->{datatypes},
-		observationvariable_classes => $clean_inputs->{traitClasses},
+		observationvariable_db_ids => $clean_inputs->{observationVariableDbId},
+		ontology_db_names => $clean_inputs->{ontologyXref},
+		ontology_dbxref_terms => $clean_inputs->{ontologyDbId},
+		method_db_ids => $clean_inputs->{methodDbId},
+		scale_db_ids => $clean_inputs->{scaleDbId},
+		observationvariable_names => $clean_inputs->{name},
+		observationvariable_datatypes => $clean_inputs->{datatype},
+		observationvariable_classes => $clean_inputs->{traitClass},
 	});
 	_standard_response_construction($c, $brapi_package_result);
 }

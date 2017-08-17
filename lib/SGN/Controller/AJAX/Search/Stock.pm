@@ -58,26 +58,30 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
 		location_name_list=>$params->{location} ? [$params->{location}] : undef,
 		year_list=>$params->{year} ? [$params->{year}] : undef,
 		organization_list=>$params->{organization} ? [$params->{organization}] : undef,
+        property_term=>$params->{property_term},
+        property_value=>$params->{property_value},
 		limit=>$limit,
-		offset=>$offset
+		offset=>$offset,
+        display_pedigree=>0
 	});
 	my ($result, $records_total) = $stock_search->search();
 
 	my $draw = $params->{draw};
 	$draw =~ s/\D//g; # cast to int
 
+    #print STDERR Dumper $result;
 	my @return;
 	foreach (@$result){
 		my $stock_id = $_->{stock_id};
 		my $uniquename = $_->{uniquename};
 		my $type = $_->{stock_type};
 		my $organism = $_->{species};
-		my $synonym_string = $_->{synonyms};
+		my $synonym_string = join ',', @{$_->{synonyms}};
 		my $organization_string = $_->{organizations};
 		my @owners = @{$_->{owners}};
 		my @owners_html;
 		foreach (@owners){
-			push @owners_html ,'<a href="/solpeople/personal-info.pl?sp_person_id='.$_->[0].'">'.$_->[1].'</a>';
+			push @owners_html ,'<a href="/solpeople/personal-info.pl?sp_person_id='.$_->[0].'">'.$_->[2].' '.$_->[3].'</a>';
 		}
 		my $owners_string = join ', ', @owners_html;
 		push @return, [  "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string, $owners_string, $organization_string ];

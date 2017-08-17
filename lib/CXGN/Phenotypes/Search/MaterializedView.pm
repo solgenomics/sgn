@@ -141,24 +141,33 @@ sub search {
 
     my %columns = (
       accession_id=> 'accession_id',
-      plot_id=> 'plot_id',
+      plot_id=> 'stock.stock_id',
       trial_id=> 'trial_id',
       trait_id=> 'trait_id',
       location_id=> 'location_id',
       year_id=> 'year_id',
-      trait_name=> 'trait_name',
-      phenotype_value=> 'phenotype_value',
-      trial_name=> 'trial_name',
-      plot_name=> 'plot_name',
-      accession_name=> 'accession_name',
-      location_name=> 'location_name',
-      trial_design=> 'trial_design_value',
-      plot_type=> "'plot' AS plot_type",
+      trait_name=> 'traits.trait_name',
+      phenotype_value=> 'phenotype.value',
+      trial_name=> 'trials.trial_name',
+      plot_name=> 'stock.uniquename AS plot_name',
+      accession_name=> 'accessions.accession_name',
+      location_name=> 'locations.location_name',
+      trial_design=> 'trial_designs.trial_design_name',
+      plot_type=> "plot_type.name",
       from_clause=> " FROM materialized_phenoview
-             LEFT JOIN stockprop AS rep ON (plot_id=rep.stock_id AND rep.type_id = $rep_type_id)
-             LEFT JOIN stockprop AS block_number ON (plot_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
-             LEFT JOIN stockprop AS plot_number ON (plot_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
-             JOIN phenotype USING(phenotype_id)",
+          LEFT JOIN traits USING(trait_id)
+          LEFT JOIN trials USING(trial_id)
+          LEFT JOIN stock USING(stock_id)
+          JOIN stock_relationship ON (stock.stock_id=subject_id)
+          JOIN cvterm as plot_type ON (plot_type.cvterm_id = stock.type_id)
+          LEFT JOIN accessions USING(accession_id)
+          LEFT JOIN locations USING(location_id)
+          LEFT JOIN trial_designsXtrials USING(trial_id)
+          LEFT JOIN trial_designs USING(trial_design_id)
+          LEFT JOIN stockprop AS rep ON (stock.stock_id=rep.stock_id AND rep.type_id = $rep_type_id)
+          LEFT JOIN stockprop AS block_number ON (stock.stock_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
+          LEFT JOIN stockprop AS plot_number ON (stock.stock_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
+          JOIN phenotype USING(phenotype_id)",
     );
 
     my $select_clause = "SELECT ".$columns{'year_id'}.", ".$columns{'trial_name'}.", ".$columns{'accession_name'}.", ".$columns{'location_name'}.", ".$columns{'trait_name'}.", ".$columns{'phenotype_value'}.", ".$columns{'plot_name'}.",
@@ -222,7 +231,7 @@ sub search {
         push @where_clause, $columns{'phenotype_value'}."~\'$numeric_regex\'";
     }
 
-    my $where_clause = "WHERE " . (join (" AND " , @where_clause));
+    my $where_clause = " WHERE " . (join (" AND " , @where_clause));
 
     my $offset_clause = '';
     my $limit_clause = '';

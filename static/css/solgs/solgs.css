@@ -154,7 +154,7 @@
                
 /* list inputs */
 
-#prediction_genotypes_list, 
+#list_type_selection_pops_list, 
 #list_type_training_pops_list, 
 #pca_genotypes_list {
     display: inline-block; 
@@ -162,7 +162,7 @@
     margin-right: 5px;
 }
 
-#prediction_genotypes_list_upload input, 
+#list_type_selection_pop_load input, 
 #list_type_training_pop_load input,
 #pca_genotypes_list_upload input {
     color: #ffffff;
@@ -170,7 +170,7 @@
     background: #5cb85c;
 }
 
-#prediction_genotypes_list_upload input:hover, 
+#list_type_selection_pop_load input:hover, 
 #list_type_training_pop_load input:hover,
 #pca_genotypes_list_upload input:hover {
     background-color: #c6e6c6; 

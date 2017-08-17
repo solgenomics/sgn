@@ -29,7 +29,6 @@ use Digest::MD5;
 use JSON -support_by_pp;
 use Spreadsheet::WriteExcel;
 use SGN::View::Trial qw/design_layout_view design_info_view/;
-use CXGN::Phenotypes::ParseUpload;
 use CXGN::Trial::TrialLayout;
 use CXGN::Location::LocationLookup;
 use CXGN::Stock::StockLookup;
@@ -168,11 +167,9 @@ sub create_trait_file_for_field_book_POST : Args(0) {
       $db_name =~ s/\s+$//;
       $db_name =~ s/^\s+//;
 
-      print STDERR "traitname: $term | accession: $accession \n";
-
       my $cvterm = CXGN::Chado::Cvterm->new( $dbh, $trait_ids[$order] );
       my $synonym = $cvterm->get_uppercase_synonym();
-      my $name = $synonym || $trait_name;
+      my $name = $synonym || $trait_name; # use uppercase synonym if defined, otherwise use full trait name
       $order++;
 
       #get trait info
@@ -188,6 +185,7 @@ sub create_trait_file_for_field_book_POST : Args(0) {
       #return error if not $trait_info_string;
       #print line with trait info
       #print FILE "$trait_name:$db_name:$accession,text,,,,,,TRUE,$order\n";
+      print STDERR " Adding line \"$name\t\t\t|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\" to trait file\n";
       print FILE "\"$name\t\t\t|$db_name:$accession\",$trait_info_string,\"TRUE\",\"$order\"\n";
   }
 

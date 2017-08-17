@@ -32,9 +32,12 @@ my $stock_search = CXGN::Stock::Search->new({
 	location_name_list=>\@location_name_list,
 	year_list=>\@year_list,
 	organization_list=>\@organization_list,
+    property_term=>$property_term,
+    $property_value=>$property_value,
 	limit=>$limit,
 	offset=>$offset,
 	minimal_info=>o  #for only returning stock_id and uniquenames
+    display_pedigree=>1 #to calculate and display pedigree
 });
 my ($result, $records_total) = $stock_search->search();
 
@@ -53,6 +56,7 @@ use Moose;
 use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
+use CXGN::Stock;
 use CXGN::Chado::Stock;
 use CXGN::Chado::Organism;
 
@@ -182,6 +186,16 @@ has 'organization_list' => (
     is => 'rw',
 );
 
+has 'property_term' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+);
+
+has 'property_value' => (
+    isa => 'Str|Undef',
+    is => 'rw',
+);
+
 has 'limit' => (
     isa => 'Int|Undef',
     is => 'rw',
@@ -193,6 +207,12 @@ has 'offset' => (
 );
 
 has 'minimal_info' => (
+    isa => 'Bool',
+    is => 'rw',
+	default => 0
+);
+
+has 'display_pedigree' => (
     isa => 'Bool',
     is => 'rw',
 	default => 0
@@ -225,6 +245,8 @@ sub search {
 	my @species_array = $self->species_list ? @{$self->species_list} : ();
 	my @stock_ids_array = $self->stock_id_list ? @{$self->stock_id_list} : ();
 	my @pui_array = $self->pui_list ? @{$self->pui_list} : ();
+    my $property_term = $self->property_term;
+    my $property_value = $self->property_value;
 	my $limit = $self->limit;
 	my $offset = $self->offset;
 
@@ -341,7 +363,6 @@ sub search {
 
 	foreach (@trial_id_array){
 		if ($_){
-			print STDERR $_."\n";
 			push @{$and_conditions->{ 'project.project_id' }}, $_ ;
 		}
 	}
@@ -402,6 +423,12 @@ sub search {
 		}
 	}
 
+    if ($property_term && $property_value){
+        my $property_term_id = SGN::Model::Cvterm->get_cvterm_row($schema, $property_term, 'stock_property')->cvterm_id();
+        $and_conditions->{ 'stockprops.type_id'} = $property_term_id;
+        push @{$and_conditions->{ 'lower(stockprops.value)' }}, { -like  => lc($property_value) } ;
+    }
+
 	#$schema->storage->debug(1);
 	my $rs = $schema->resultset("Stock::Stock")->search(
 	{
@@ -425,8 +452,11 @@ sub search {
 		$rs = $rs->slice($offset, $limit);
 	}
 
-	my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
-	my $owners_hash = $stock_lookup->get_owner_hash_lookup();
+    my $owners_hash;
+    if (!$self->minimal_info){
+        my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
+        $owners_hash = $stock_lookup->get_owner_hash_lookup();
+    }
 
 	my @result;
 	while (my $a = $rs->next()) {
@@ -441,15 +471,8 @@ sub search {
 			my $common_name = $a->get_column('common_name');
 			my $genus       = $a->get_column('genus');
 			my @owners = $owners_hash->{$stock_id} ? @{$owners_hash->{$stock_id}} : ();
-			my $stockprop_hash = CXGN::Chado::Stock->new($self->bcs_schema, $stock_id)->get_stockprop_hash();
-			my $organismprop_hash = CXGN::Chado::Organism->new($self->bcs_schema, $organism_id)->get_organismprop_hash();
-			my @donor_array;
-			my $donor_accessions = $stockprop_hash->{'donor'} ? $stockprop_hash->{'donor'} : [];
-			my $donor_institutes = $stockprop_hash->{'donor institute'} ? $stockprop_hash->{'donor institute'} : [];
-			my $donor_puis = $stockprop_hash->{'donor PUI'} ? $stockprop_hash->{'donor PUI'} : [];
-			for (0 .. scalar(@$donor_accessions)){
-				push @donor_array, { 'donorGermplasmName'=>$donor_accessions->[$_], 'donorAccessionNumber'=>$donor_accessions->[$_], 'donorInstituteCode'=>$donor_institutes->[$_], 'germplasmPUI'=>$donor_puis->[$_] };
-			}
+			my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$stock_id});
+
 			push @result, {
 				stock_id => $stock_id,
 				uniquename => $uniquename,
@@ -461,22 +484,22 @@ sub search {
 				common_name => $common_name,
 				organism_id => $organism_id,
 				owners => \@owners,
-				organizations =>$stockprop_hash->{'organization'} ? join ',', @{$stockprop_hash->{'organization'}} : undef,
-				accessionNumber=>$stockprop_hash->{'accession number'} ? join ',', @{$stockprop_hash->{'accession number'}} : undef,
-				germplasmPUI=>$stockprop_hash->{'PUI'} ? join ',', @{$stockprop_hash->{'PUI'}} : undef,
-				pedigree=>$self->germplasm_pedigree_string($stock_id),
-				germplasmSeedSource=>$stockprop_hash->{'seed source'} ? join ',', @{$stockprop_hash->{'seed source'}} : undef,
-				synonyms=> $stockprop_hash->{'stock_synonym'} ? join ',', @{$stockprop_hash->{'stock_synonym'}} : undef,
-				instituteCode=>$stockprop_hash->{'institute code'} ? join ',', @{$stockprop_hash->{'institute code'}} : undef,
-				instituteName=>$stockprop_hash->{'institute name'} ? join ',', @{$stockprop_hash->{'institute name'}} : undef,
-				biologicalStatusOfAccessionCode=>$stockprop_hash->{'biological status of accession code'} ? join ',', @{$stockprop_hash->{'biological status of accession code'}} : undef,
-				countryOfOriginCode=>$stockprop_hash->{'country of origin'} ? join ',', @{$stockprop_hash->{'country of origin'}} : undef,
-				typeOfGermplasmStorageCode=>$stockprop_hash->{'type of germplasm storage code'} ? join ',', @{$stockprop_hash->{'type of germplasm storage code'}} : undef,
-				speciesAuthority=>$organismprop_hash->{'species authority'} ? join ',', @{$organismprop_hash->{'species authority'}} : undef,
-				subtaxa=>$organismprop_hash->{'subtaxa'} ? join ',', @{$organismprop_hash->{'subtaxa'}} : undef,
-				subtaxaAuthority=>$organismprop_hash->{'subtaxa authority'} ? join ',', @{$organismprop_hash->{'subtaxa authority'}} : undef,
-				donors=>\@donor_array,
-				acquisitionDate=>$stockprop_hash->{'acquisition date'} ? join ',', @{$stockprop_hash->{'acquisition date'}} : undef,
+				organizations =>$stock_object->organization_name,
+				accessionNumber=>$stock_object->accessionNumber,
+				germplasmPUI=>$stock_object->germplasmPUI,
+				pedigree=>$self->display_pedigree ? $stock_object->get_pedigree_string('Parents') : 'DISABLED',
+				germplasmSeedSource=>$stock_object->germplasmSeedSource,
+				synonyms=> $stock_object->synonyms,
+				instituteCode=>$stock_object->instituteCode,
+				instituteName=>$stock_object->instituteName,
+				biologicalStatusOfAccessionCode=>$stock_object->biologicalStatusOfAccessionCode,
+				countryOfOriginCode=>$stock_object->countryOfOriginCode,
+				typeOfGermplasmStorageCode=>$stock_object->typeOfGermplasmStorageCode,
+				speciesAuthority=>$stock_object->get_species_authority,
+				subtaxa=>$stock_object->get_subtaxa,
+				subtaxaAuthority=>$stock_object->get_subtaxa_authority,
+				donors=>$stock_object->donors,
+				acquisitionDate=>$stock_object->acquisitionDate,
 			};
 		} else {
 			push @result, {
@@ -490,13 +513,5 @@ sub search {
 	return (\@result, $records_total);
 }
 
-sub germplasm_pedigree_string {
-	my $self = shift;
-	my $stock_id = shift;
-	my $s = CXGN::Chado::Stock->new($self->bcs_schema, $stock_id);
-	my $pedigree_root = $s->get_parents('1');
-	my $pedigree_string = $pedigree_root ? $pedigree_root->get_pedigree_string('1') : '';
-	return $pedigree_string;
-}
 
 1;
