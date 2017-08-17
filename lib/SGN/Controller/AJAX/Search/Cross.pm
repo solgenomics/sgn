@@ -18,7 +18,7 @@ sub search_cross_male_parents :Path('/ajax/search/cross_male_parents') :Args(0){
     my $self = shift;
     my $c = shift;
     my $female_parent= $c->req->param("female_parent");
-     print STDERR "Female parent =" . Dumper($female_parent) . "\n";
+     #print STDERR "Female parent =" . Dumper($female_parent) . "\n";
 
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -56,8 +56,8 @@ sub search_cross_info : Path('/ajax/search/cross_info') Args(0) {
     my $female_parent = $c->req->param("female_parent");
     my $male_parent = $c->req->param("male_parent");
 
-    print STDERR "Female parent =" . Dumper($female_parent) . "\n";
-    print STDERR "Male parent =" . Dumper($male_parent) . "\n";
+    #print STDERR "Female parent =" . Dumper($female_parent) . "\n";
+    #print STDERR "Male parent =" . Dumper($male_parent) . "\n";
 
 
 
@@ -66,13 +66,13 @@ sub search_cross_info : Path('/ajax/search/cross_info') Args(0) {
     my $result = CXGN::Cross->get_cross_info($schema, $female_parent, $male_parent);
     my @cross_info;
     foreach my $r (@$result){
-      print STDERR Dumper $r;
+      #print STDERR Dumper $r;
 
     my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_entry_id, $cross_name, $cross_type) = @$r;
 	  push @cross_info, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
     qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>},
     qq{<a href="/cross/$cross_entry_id">$cross_name</a>}, $cross_type];
-    print STDERR "Cross info =" . Dumper(@cross_info) . "\n";
+    #print STDERR "Cross info =" . Dumper(@cross_info) . "\n";
   }
 
   $c->stash->{rest}={ data=> \@cross_info};
@@ -91,13 +91,13 @@ sub search_all_crosses : Path('/ajax/search/all_crosses') Args(0) {
     my $result = CXGN::Cross->get_cross_info($schema, $female_parent);
     my @cross_info;
     foreach my $r (@$result){
-      print STDERR Dumper $r;
+      #print STDERR Dumper $r;
 
     my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_entry_id, $cross_name, $cross_type) = @$r;
     push @cross_info, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
     qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>},
     qq{<a href="/cross/$cross_entry_id">$cross_name</a>}, $cross_type];
-    print STDERR "Cross info =" . Dumper(@cross_info) . "\n";
+    #print STDERR "Cross info =" . Dumper(@cross_info) . "\n";
   }
 
   $c->stash->{rest}={ data=> \@cross_info};
@@ -149,13 +149,13 @@ sub search_all_progenies : Path('/ajax/search/all_progenies') Args(0) {
     my $result = CXGN::Cross->get_progeny_info($schema, $pedigree_female_parent);
     my @all_progenies;
     foreach my $r(@$result){
-      print STDERR Dumper $r;
+      #print STDERR Dumper $r;
 
     my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $progeny_id, $progeny_name, $cross_type) = @$r;
     push @all_progenies, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
       qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>},
       qq{<a href="/stock/$progeny_id/view">$progeny_name</a>}, $cross_type];
-      print STDERR Dumper @all_progenies;
+      #print STDERR Dumper @all_progenies;
     }
 
     $c->stash->{rest}={ data=> \@all_progenies};
@@ -174,13 +174,13 @@ sub search_progenies : Path('/ajax/search/progenies') Args(0) {
     my $result = CXGN::Cross->get_progeny_info($schema, $pedigree_female_parent, $pedigree_male_parent);
     my @progenies;
     foreach my $r(@$result){
-      print STDERR Dumper $r;
+      #print STDERR Dumper $r;
 
     my ($female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $progeny_id, $progeny_name, $cross_type) = @$r;
     push @progenies, [ qq{<a href="/stock/$female_parent_id/view">$female_parent_name</a>},
       qq{<a href="/stock/$male_parent_id/view">$male_parent_name</a>},
       qq{<a href="/stock/$progeny_id/view">$progeny_name</a>}, $cross_type];
-      print STDERR Dumper @progenies;
+      #print STDERR Dumper @progenies;
     }
 
     $c->stash->{rest}={ data=> \@progenies};
