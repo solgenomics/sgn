@@ -662,7 +662,7 @@ is_deeply($columns->[7],[
           ], "check contents of 7th col");
 
 
-my @trait_list = ("dry matter content percentage|CO:0000092", "fresh root weight|CO:0000012");
+my @trait_list = ("dry matter content percentage|CO_334:0000092", "fresh root weight|CO_334:0000012");
 my $tempfile = "/tmp/test_create_pheno_spreadsheet_plots_after_plants.xls";
 my $format = 'ExcelBasic';
 my $create_spreadsheet = CXGN::Trial::Download->new( 
@@ -837,7 +837,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
                             undef,
                             undef,
                             undef,
-                            'dry matter content percentage|CO:0000092'
+                            'dry matter content percentage|CO_334:0000092'
                           ], "check 7th col");
 
 is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
@@ -848,11 +848,11 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
                             undef,
                             undef,
                             undef,
-                            'fresh root weight|CO:0000012'
+                            'fresh root weight|CO_334:0000012'
                           ], "check 8th col");
 
 
-my @trait_list = ("dry matter content percentage|CO:0000092", "fresh root weight|CO:0000012");
+my @trait_list = ("dry matter content percentage|CO_334:0000092", "fresh root weight|CO_334:0000012");
 my $tempfile = "/tmp/test_create_pheno_spreadsheet_plots_after_plants.xls";
 my $format = 'ExcelBasic';
 my $create_spreadsheet = CXGN::Trial::Download->new( 
@@ -1186,7 +1186,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
                           undef,
                           undef,
                           undef,
-                          'dry matter content percentage|CO:0000092'
+                          'dry matter content percentage|CO_334:0000092'
                         ], "check col9");
 
 is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
@@ -1197,7 +1197,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
                           undef,
                           undef,
                           undef,
-                          'fresh root weight|CO:0000012'
+                          'fresh root weight|CO_334:0000012'
                         ], "check col10");
 
 done_testing();
