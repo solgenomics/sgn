@@ -375,11 +375,23 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+    my $trial = $c->stash->{trial};
 
     my @data = $trial->get_plots();
 
     $c->stash->{rest} = { plots => \@data };
+}
+
+sub trial_subplots : Chained('trial') PathPart('subplots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = $c->stash->{trial};
+
+    my @data = $trial->get_subplots();
+
+    $c->stash->{rest} = { subplots => \@data };
 }
 
 sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
@@ -387,7 +399,7 @@ sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+    my $trial = $c->stash->{trial};
 
     my @data = $trial->get_plants();
 
@@ -399,7 +411,7 @@ sub trial_treatments : Chained('trial') PathPart('treatments') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+    my $trial = $c->stash->{trial};
 
     my $data = $trial->get_treatments();
 

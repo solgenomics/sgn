@@ -299,6 +299,12 @@ my $start_time = time();
 
 </&>
 
+<&| /page/info_section.mas, id => "trial_subplots", title=>"Subplots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+
+<& /breeders_toolbox/trial/trial_subplots.mas, trial_id => $trial_id &>
+
+</&>
+
 <&| /page/info_section.mas, id => "trial_plants", title=>"Plant Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
 
 <div id="plant_entries_section">

@@ -167,6 +167,9 @@ sub store {
 	my $nd_geolocation_id = $self->get_nd_geolocation_id;
 
 	my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
+	my $subplot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type');
+	my $subplot_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot_of', 'stock_relationship');
+	my $subplot_index_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot_index_number', 'stock_property');
 	my $plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type');
 	my $plant_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of', 'stock_relationship');
 	my $plant_index_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_index_number', 'stock_property');
@@ -264,6 +267,10 @@ sub store {
 			if ($design{$key}->{plant_names}) {
 				$plant_names = $design{$key}->{plant_names};
 			}
+			my $subplot_names;
+			if ($design{$key}->{subplots_names}) {
+				$subplot_names = $design{$key}->{subplots_names};
+			}
 			my $stock_name;
 			if ($design{$key}->{stock_name}) {
 				$stock_name = $design{$key}->{stock_name};
@@ -319,7 +326,7 @@ sub store {
 			my $plot;
 			if ($plot_name) {
 				$plot = $chado_schema->resultset("Stock::Stock")
-				->find_or_create({
+				->create({
 					organism_id => $organism_id_checked,
 					name       => $plot_name,
 					uniquename => $plot_name,
@@ -360,7 +367,7 @@ sub store {
 				my $plant_index_number = 1;
 				foreach my $plant_name (@$plant_names) {
 					my $plant = $chado_schema->resultset("Stock::Stock")
-					->find_or_create({
+					->create({
 						organism_id => $organism_id_checked,
 						name       => $plant_name,
 						uniquename => $plant_name,
@@ -402,6 +409,55 @@ sub store {
                         type_id => $nd_experiment_type_id,
                         stock_id => $plant->stock_id(),
                     });
+				}
+			}
+			#Create subplot entry if given. Currently this is for the splitplot trial creation.
+			if ($subplot_names) {
+				my $subplot_index_number = 1;
+				foreach my $subplot_name (@$subplot_names) {
+					my $subplot = $chado_schema->resultset("Stock::Stock")
+					->create({
+						organism_id => $organism_id_checked,
+						name       => $subplot_name,
+						uniquename => $subplot_name,
+						type_id => $subplot_cvterm->cvterm_id,
+					});
+					$new_stock_ids_hash{$subplot_name} = $subplot->stock_id();
+					$subplot->create_stockprops({$subplot_index_number_cvterm->name() => $subplot_index_number});
+					$subplot_index_number++;
+					$subplot->create_stockprops({$replicate_cvterm->name() => $rep_number});
+					$subplot->create_stockprops({$block_cvterm->name() => $block_number});
+					$subplot->create_stockprops({$plot_number_cvterm->name() => $plot_number});
+					if ($is_a_control) {
+						$subplot->create_stockprops({$is_control_cvterm->name() => $is_a_control});
+					}
+					if ($range_number) {
+						$subplot->create_stockprops({$range_cvterm->name() => $range_number});
+					}
+					if ($row_number) {
+						$subplot->create_stockprops({$row_number_cvterm->name() => $row_number});
+					}
+					if ($col_number) {
+						$subplot->create_stockprops({$col_number_cvterm->name() => $col_number});
+					}
+
+					my $stock_relationship = $chado_schema->resultset("Stock::StockRelationship")->create({
+						subject_id => $plot->stock_id,
+						object_id => $subplot->stock_id(),
+						type_id => $subplot_of->cvterm_id(),
+					});
+
+					my $parent_stock = $chado_schema->resultset("Stock::StockRelationship")->create({
+						object_id => $stock_id_checked,
+						type_id => $subplot_of->cvterm_id(),
+						subject_id => $subplot->stock_id()
+					});
+
+					my $stock_experiment_link = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
+						nd_experiment_id => $nd_experiment_id,
+						type_id => $nd_experiment_type_id,
+						stock_id => $subplot->stock_id(),
+					});
 				}
 			}
 		}

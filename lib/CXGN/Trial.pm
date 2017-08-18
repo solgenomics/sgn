@@ -1710,6 +1710,7 @@ sub get_accessions {
 	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
 	my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
+	my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "subplot_of", "stock_relationship")->cvterm_id();
 	my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
 
 	my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename
@@ -1721,7 +1722,7 @@ sub get_accessions {
 		JOIN nd_experiment_project using(nd_experiment_id)
 		JOIN project using(project_id)
 		WHERE accession.type_id = $accession_cvterm_id
-		AND stock_relationship.type_id IN ($plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id)
+		AND stock_relationship.type_id IN ($plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id)
 		AND project.project_id = ?
 		GROUP BY accession.stock_id
 		ORDER BY accession.stock_id;";
@@ -1884,6 +1885,50 @@ sub get_plots_per_accession {
     }
     #print STDERR Dumper \%return;
     return \%return;
+}
+
+=head2 get_subplots
+
+ Usage:         my $subplots = $trial->get_subplots();
+ Desc:          returns a list of subplots that are defined for the trial.
+ Ret:           an array ref of elements that contain
+                [ subplot_name, subplot_stock_id ]
+ Args:          none
+ Side Effects:  db access
+ Example:
+
+=cut
+
+sub get_subplots {
+	my $self = shift;
+	my @plots;
+
+	# note: this function also retrieves stocks of type tissue_sample (for genotyping trials).
+	my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'subplot', 'stock_type' )->cvterm_id();
+	my $tissue_sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type');
+	my $tissue_sample_cvterm_id = $tissue_sample_cvterm ? $tissue_sample_cvterm->cvterm_id() : '';
+
+	my @type_ids;
+	push @type_ids, $plot_cvterm_id if $plot_cvterm_id;
+	push @type_ids, $tissue_sample_cvterm_id if $tissue_sample_cvterm_id;
+
+	print STDERR "TYPE IDS: ".join(", ", @type_ids);
+	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=> { in => [@type_ids]}});
+
+	# removed "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id]
+
+	my %unique_plots;
+	while(my $rs = $trial_plot_rs->next()) {
+		$unique_plots{$rs->uniquename} = $rs->stock_id;
+	}
+	foreach (sort keys %unique_plots) {
+		#push @plots, {plot_name=> $_, plot_id=>$unique_plots{$_} } ;
+		my $combine = [$unique_plots{$_}, $_ ];
+		push @plots, $combine;
+	}
+
+	return \@plots;
+
 }
 
 =head2 get_controls
