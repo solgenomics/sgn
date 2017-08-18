@@ -22,7 +22,7 @@ jQuery(document).ready(function () {
             },
             success: function(response){
 
-                console.log(response);
+                //console.log(response);
                 jQuery("#working_modal").modal("hide");
 
                 html = '<table class="table borderless" alt="breeder search" border="0" ><tr><td><select multiple class="form-control" id="plot_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select></td></tr>'

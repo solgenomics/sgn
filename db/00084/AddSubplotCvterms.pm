@@ -71,6 +71,9 @@ sub patch {
 		'stock_relationship' => [
 			'subplot_of',
 		],
+		'list_types' => [
+			'subplots'
+		]
 	};
 
 	foreach my $t (keys %$terms){
