@@ -133,6 +133,7 @@ sub generate_experimental_design_POST : Args(0) {
   my $fieldmap_col_number = $c->req->param('fieldmap_col_number');
   my $fieldmap_row_number = $c->req->param('fieldmap_row_number');
   my $plot_layout_format = $c->req->param('plot_layout_format');
+  my @treatments = $c->req->param('treatments[]');
   #my $trial_name = $c->req->param('project_name');
   my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
   my $use_same_layout = $c->req->param('use_same_layout');
@@ -230,12 +231,12 @@ my $location_number = scalar(@locations);
   if ($start_number) {
     $trial_design->set_plot_start_number($start_number);
   } else {
-    $trial_design->set_plot_start_number(1);
+    $trial_design->clear_plot_start_number();
   }
   if ($increment) {
     $trial_design->set_plot_number_increment($increment);
   } else {
-    $trial_design->set_plot_number_increment(1);
+    $trial_design->clear_plot_number_increment();
   }
   if ($plot_prefix) {
     $trial_design->set_plot_name_prefix($plot_prefix);
@@ -300,6 +301,10 @@ my $location_number = scalar(@locations);
     $trial_design->set_plot_layout_format($plot_layout_format);
   }
 
+  if (scalar(@treatments)>0) {
+    $trial_design->set_treatments(\@treatments);
+  }
+
   try {
     $trial_design->calculate_design();
   } catch {
@@ -317,6 +322,8 @@ my $location_number = scalar(@locations);
   my $design_level;
   if ($design_type eq 'greenhouse'){
       $design_level = 'plants';
+  } elsif ($design_type eq 'splitplot') {
+      $design_level = 'subplots';
   } else {
       $design_level = 'plots';
   }

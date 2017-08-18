@@ -149,6 +149,15 @@ jQuery(document).ready(function ($) {
         var fieldmap_row_number = $('#fieldMap_row_number').val();
         var plot_layout_format = $('#plot_layout_format').val();
 
+        var treatments = []
+        for(var i=1; i<5; i++){
+            var treatment_value = $('#create_trial_with_treatment_name_input'+i).val();
+            if(treatment_value != ''){
+                treatments.push(treatment_value);
+            }
+        }
+        //console.log(treatments);
+
         var greenhouse_num_plants = [];
         if (stock_list_id != "" && design_type == 'greenhouse') {
             for (var i=0; i<stock_list_array.length; i++) {
@@ -195,6 +204,7 @@ jQuery(document).ready(function ($) {
                 'fieldmap_col_number': fieldmap_col_number,
                 'fieldmap_row_number': fieldmap_row_number,
                 'plot_layout_format': plot_layout_format,
+                'treatments':treatments
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
@@ -445,7 +455,7 @@ jQuery(document).ready(function ($) {
         }
         
         else if (design_method == 'splitplot') {
-            $("#FieldMap").hide();
+            $("#FieldMap").show();
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
             $("#show_list_of_checks_section").hide();

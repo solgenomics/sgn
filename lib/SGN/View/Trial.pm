@@ -85,6 +85,8 @@ sub design_layout_view {
 
     if ($design_level eq 'plants') {
         $design_result_html .= qq{<tr><th>Plant Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th></tr>};
+    } elsif ($design_level eq 'subplots') {
+        $design_result_html .= qq{<tr><th>SubPlot Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th></tr>};
     } else {
         $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th></tr>};
     }
@@ -103,6 +105,10 @@ sub design_layout_view {
         if ($design{$key}->{plant_names}) {
             foreach my $plant_name (@{$design{$key}->{plant_names}}) {
                 $design_result_html .= "<tr><td>".$plant_name."</td><td>".$plot_name."</td><td>".$stock_name."</td><td>".$check_name."</td><td>".$row_number."</td><td>".$col_number."</td><td>".$block_number."</td><td>".$block_row_number."</td><td>".$block_col_number."</td><td>".$rep_number."</td></tr>";
+            }
+        } elsif ($design{$key}->{subplots_names}) {
+            foreach my $subplot_name (@{$design{$key}->{subplots_names}}) {
+                $design_result_html .= "<tr><td>".$subplot_name."</td><td>".$plot_name."</td><td>".$stock_name."</td><td>".$check_name."</td><td>".$row_number."</td><td>".$col_number."</td><td>".$block_number."</td><td>".$block_row_number."</td><td>".$block_col_number."</td><td>".$rep_number."</td></tr>";
             }
         } else {
             $design_result_html .= "<tr><td>".$plot_name."</td><td>".$stock_name."</td><td>".$check_name."</td><td>".$row_number."</td><td>".$col_number."</td><td>".$block_number."</td><td>".$block_row_number."</td><td>".$block_col_number."</td><td>".$rep_number."</td></tr>";
@@ -170,6 +176,7 @@ sub design_info_view {
     $design_info_html .= "<dt>Number of controls</dt><dd>".$design_info{'number_of_controls'}."</dd>";
   }
 
+  my $treatment_info_string = "";
   foreach my $key (sort { $a <=> $b} keys %design) {
     my $current_block_number = $design{$key}->{block_number};
     my $current_rep_number;
@@ -188,6 +195,13 @@ sub design_info_view {
 	$rep_hash{$current_rep_number} = 1;
       }
     }
+
+    if($key eq 'treatments'){
+        while(my($k,$v) = each %{$design{$key}}){
+            my $treatment_units = join ',', @{$v};
+            $treatment_info_string .= "<b>$k:</b> $treatment_units<br/>";
+        }
+    }
   }
 
   if (%block_hash) {
@@ -203,6 +217,8 @@ sub design_info_view {
   if (%rep_hash) {
     $design_info_html .= "<dt>Number of reps</dt><dd>".scalar(keys %rep_hash)."</dd>";
   }
+
+  $design_info_html .= "<dt>Treatments:</dt><dd><div id='trial_design_confirm_treatments' >$treatment_info_string</div></dd>";
 
   $design_info_html .= "</dl>";
 
