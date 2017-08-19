@@ -73,7 +73,7 @@ jQuery(document).ready(function ($) {
     });
     
     $(document).on('focusout', '#list_of_unrep_accession_list_select', function() {
-        if ($('#clist_of_unrep_accession_list_select').val()) {
+        if ($('#list_of_unrep_accession_list_select').val()) {
             var stock_list_id = $('#list_of_unrep_accession_list_select').val();
             var stock_list = JSON.stringify(list.getList(stock_list_id));
             verify_stock_list(stock_list);
@@ -164,8 +164,8 @@ jQuery(document).ready(function ($) {
         var fieldmap_col_number = $('#fieldMap_col_number').val();
         var fieldmap_row_number = $('#fieldMap_row_number').val();
         var plot_layout_format = $('#plot_layout_format').val();
-        var replicated_accession_list_id = $('#list_of_rep_accession').val();
-        var unreplicated_accession_list_id = $('#list_of_unrep_accession').val();
+        var replicated_accession_list_id = $('#list_of_rep_accession_list_select').val();
+        var unreplicated_accession_list_id = $('#list_of_unrep_accession_list_select').val();
         var row_in_design_number = $('#no_of_row_in_design').val();
         var col_in_design_number = $('#no_of_col_in_design').val();
         var no_of_rep_times = $('#no_of_rep_times').val();

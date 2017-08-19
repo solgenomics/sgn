@@ -166,6 +166,7 @@ sub generate_experimental_design_POST : Args(0) {
   if($design_type eq "p-rep"){
       @stock_names = (@replicated_accession, @unreplicated_accession);
   }
+  #print STDERR Dumper(\@stock_names);
   my $number_of_prep_accession = scalar(@stock_names);
   my $p_rep_total_plots = $row_in_design_number * $col_in_design_number;
   my $replicated_plots = $no_of_rep_times * $number_of_replicated_accession;
@@ -200,8 +201,8 @@ my $location_number = scalar(@locations);
     $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
     return;
   }
-  
-  if($p_rep_total_plots == $calculated_total_plot){
+  print "TOTAL PLOTS $p_rep_total_plots AND CALCULATED PLOTS $calculated_total_plot\n";
+  if($p_rep_total_plots != $calculated_total_plot){
       $c->stash->{rest} = {error => "Treatment repeats do not equal number of plots in design" };
       return;
   }
