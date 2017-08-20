@@ -52,6 +52,7 @@ has 'fieldmap_col_number' => (isa => 'Int',is => 'rw',predicate => 'has_fieldmap
 has 'fieldmap_row_number' => (isa => 'Int',is => 'rw',predicate => 'has_fieldmap_row_number',clearer => 'clear_fieldmap_row_number');
 has 'plot_layout_format' => (isa => 'Str', is => 'rw', predicate => 'has_plot_layout_format', clearer => 'clear_plot_layout_format');
 has 'treatments' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_treatments', clearer => 'clear_treatments');
+has 'num_plants_per_plot' => (isa => 'Int',is => 'rw',predicate => 'has_num_plants_per_plot',clearer => 'clear_num_plants_per_plot');
 
 subtype 'RandomizationMethodType',
   as 'Str',
@@ -1807,6 +1808,7 @@ sub _get_splitplot_design {
     my $plot_layout_format;
     my @col_number_fieldmaps;
     my $treatments;
+    my $num_plants_per_plot;
     if ($self->has_stock_list()) {
         @stock_list = @{$self->get_stock_list()};
         $number_of_stocks = scalar(@stock_list);
@@ -1836,6 +1838,9 @@ sub _get_splitplot_design {
 
     if ($self->has_plot_layout_format()) {
         $plot_layout_format = $self->get_plot_layout_format();
+    }
+    if($self->has_num_plants_per_plot()){
+        $num_plants_per_plot = $self->get_num_plants_per_plot();
     }
 
     $stock_data_matrix =  R::YapRI::Data::Matrix->new({
@@ -1952,6 +1957,11 @@ sub _get_splitplot_design {
         for(my $i=0; $i<scalar(@$subplots); $i++){
             push @{$treatment_subplot_hash{$treatments->[$i]}}, $subplots->[$i];
         }
+        my @plant_names;
+        for (1 .. $num_plants_per_plot){
+            push @plant_names, $val->{plot_name}."_$_";
+        }
+        $val->{plant_names} = \@plant_names;
     }
     $splitplot_design{'treatments'} = \%treatment_subplot_hash;
     print STDERR Dumper \%splitplot_design;

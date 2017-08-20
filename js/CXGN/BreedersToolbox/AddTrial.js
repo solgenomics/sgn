@@ -157,6 +157,7 @@ jQuery(document).ready(function ($) {
             }
         }
         //console.log(treatments);
+        var num_plants_per_plot = $('#num_plants_per_plot').val();
 
         var greenhouse_num_plants = [];
         if (stock_list_id != "" && design_type == 'greenhouse') {
@@ -204,7 +205,8 @@ jQuery(document).ready(function ($) {
                 'fieldmap_col_number': fieldmap_col_number,
                 'fieldmap_row_number': fieldmap_row_number,
                 'plot_layout_format': plot_layout_format,
-                'treatments':treatments
+                'treatments':treatments,
+                'num_plants_per_plot':num_plants_per_plot
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
@@ -289,6 +291,7 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").hide();
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").hide();
+            $("#num_plants_per_plot_section").hide();
         } else if (design_method == "RCBD") {
             $("#trial_design_more_info").show();
             $("#trial_multi-design_more_info").show();
@@ -310,6 +313,7 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").hide();
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").hide();
+            $("#num_plants_per_plot_section").hide();
         } else if (design_method == "Alpha") {
             $("#FieldMap").show();
             $("#trial_design_more_info").show();
@@ -331,6 +335,7 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").hide();
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").hide();
+            $("#num_plants_per_plot_section").hide();
         } else if (design_method == "Lattice") {
             $("#FieldMap").show();
             $("#trial_design_more_info").show();
@@ -351,6 +356,7 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").hide();
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").hide();
+            $("#num_plants_per_plot_section").hide();
         } else if (design_method == "Augmented") {
             $("#FieldMap").hide();
             $("#trial_design_more_info").show();
@@ -372,6 +378,7 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").hide();
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").hide();
+            $("#num_plants_per_plot_section").hide();
         } else if (design_method == "") {
             $("#FieldMap").hide();
             //$("#add_project_dialog").dialog("option", "height","auto");
@@ -394,6 +401,7 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").hide();
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").hide();
+            $("#num_plants_per_plot_section").hide();
         }
 
         else if (design_method == "MAD") {
@@ -428,6 +436,7 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").hide();
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").hide();
+            $("#num_plants_per_plot_section").hide();
         }
 
         else if (design_method == 'greenhouse') {
@@ -451,6 +460,7 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").show();
             $('#greenhouse_default_num_plants_per_accession').show();
             $("#create_trial_with_treatment_section").hide();
+            $("#num_plants_per_plot_section").hide();
             greenhouse_show_num_plants_section();
         }
         
@@ -475,6 +485,7 @@ jQuery(document).ready(function ($) {
             $("#greenhouse_num_plants_per_accession_section").hide();
             $('#greenhouse_default_num_plants_per_accession').hide();
             $("#create_trial_with_treatment_section").show();
+            $("#num_plants_per_plot_section").show();
         }
 
         else {

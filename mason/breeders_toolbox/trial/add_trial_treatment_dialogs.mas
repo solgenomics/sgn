@@ -17,6 +17,15 @@
                                 <input class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" />
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Treatment Unit: </label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="new_treatment_unit" name="new_treatment_unit">
+                                    <option value='plot'>Plots/option>
+                                    <option value='subplot'>Subplots/option>
+                                </select>
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>

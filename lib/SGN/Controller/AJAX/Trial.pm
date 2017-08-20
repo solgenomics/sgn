@@ -134,6 +134,7 @@ sub generate_experimental_design_POST : Args(0) {
   my $fieldmap_row_number = $c->req->param('fieldmap_row_number');
   my $plot_layout_format = $c->req->param('plot_layout_format');
   my @treatments = $c->req->param('treatments[]');
+  my $num_plants_per_plot = $c->req->param('num_plants_per_plot');
   #my $trial_name = $c->req->param('project_name');
   my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
   my $use_same_layout = $c->req->param('use_same_layout');
@@ -303,6 +304,9 @@ my $location_number = scalar(@locations);
 
   if (scalar(@treatments)>0) {
     $trial_design->set_treatments(\@treatments);
+  }
+  if($num_plants_per_plot){
+      $trial_design->set_num_plants_per_plot($num_plants_per_plot);
   }
 
   try {
