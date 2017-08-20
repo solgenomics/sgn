@@ -169,37 +169,38 @@ $breeding_programs
                                         <input class="form-control" id="row_number_per_block" name="row_number_per_block" />
                                     </div>
                                 </div>
-                                <div class="form-group form-group-sm" id="num_plants_per_plot_section" style="display: none">
-                                    <label class="col-sm-7 control-label">Number of Plants Per Plot: </label>
-                                    <div class="col-sm-5" >
-                                        <input class="form-control" id="num_plants_per_plot" name="num_plants_per_plot" />
-                                    </div>
-                                </div>
 
                                 <div id="create_trial_with_treatment_section" style="display: none">
                                     <div class="form-group form-group-sm" >
                                         <label class="col-sm-7 control-label">Treatment Name: </label>
                                         <div class="col-sm-5" >
-                                            <input class="form-control" id="create_trial_with_treatment_name_input1" name="create_trial_with_treatment_name_input1" type="text" value="Control" placeholder="Treatment 1"/>
+                                            <input class="form-control" id="create_trial_with_treatment_name_input1" name="create_trial_with_treatment_name_input1" type="text" value="Control" placeholder="Required Treatment 1"/>
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" >
                                         <label class="col-sm-7 control-label">Treatment Name: </label>
                                         <div class="col-sm-5" >
-                                            <input class="form-control" id="create_trial_with_treatment_name_input2" name="create_trial_with_treatment_name_input2" type="text" placeholder="Treatment 2"/>
+                                            <input class="form-control" id="create_trial_with_treatment_name_input2" name="create_trial_with_treatment_name_input2" type="text" placeholder="Optional Treatment 2"/>
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" >
                                         <label class="col-sm-7 control-label">Treatment Name: </label>
                                         <div class="col-sm-5" >
-                                            <input class="form-control" id="create_trial_with_treatment_name_input3" name="create_trial_with_treatment_name_input3" type="text" placeholder="Treatment 3"/>
+                                            <input class="form-control" id="create_trial_with_treatment_name_input3" name="create_trial_with_treatment_name_input3" type="text" placeholder="Optional Treatment 3"/>
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" >
                                         <label class="col-sm-7 control-label">Treatment Name: </label>
                                         <div class="col-sm-5" >
-                                            <input class="form-control" id="create_trial_with_treatment_name_input4" name="create_trial_with_treatment_name_input4" type="text" placeholder="Treatment 4"/>
+                                            <input class="form-control" id="create_trial_with_treatment_name_input4" name="create_trial_with_treatment_name_input4" type="text" placeholder="Optional Treatment 4"/>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group form-group-sm" id="num_plants_per_plot_section" style="display: none">
+                                    <label class="col-sm-7 control-label">Number of Plants Per Treatment (required): </label>
+                                    <div class="col-sm-5" >
+                                        <input class="form-control" id="num_plants_per_plot" name="num_plants_per_plot" />
                                     </div>
                                 </div>
 

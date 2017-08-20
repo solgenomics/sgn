@@ -1736,7 +1736,7 @@ sub _build_plot_names {
             my $nums = $design{$key}->{subplots_names};
             my @named_subplots;
             foreach (@$nums){
-                push @named_subplots, $design{$key}->{plot_name}."_".$_;
+                push @named_subplots, $design{$key}->{plot_name}."_subplot_".$_;
             }
             $design{$key}->{subplots_names} = \@named_subplots;
         }
@@ -1892,7 +1892,7 @@ sub _get_splitplot_design {
     if ($plot_layout_format eq "zigzag") {
         if (!$fieldmap_col_number){
             print STDERR "NUMREP: $number_of_reps\n";
-            @col_number_fieldmaps = ((1..(scalar(@stock_list))) x ($number_of_reps*scalar(@$treatments)));
+            @col_number_fieldmaps = ( ( (1..(scalar(@stock_list))) x scalar(@$treatments) ) x $number_of_reps);
         } else {
             print STDERR "ROWNUM: $fieldmap_row_number\n";
             @col_number_fieldmaps = ((1..$fieldmap_col_number*scalar(@$treatments)) x $fieldmap_row_number);
@@ -1919,12 +1919,16 @@ sub _get_splitplot_design {
     }
 
     if ($plot_layout_format && !$fieldmap_col_number && !$fieldmap_row_number){
+        print STDERR "HERE\n";
         @fieldmap_row_numbers = sort(@rep_numbers);
     }
     elsif ($plot_layout_format && $fieldmap_row_number){
         @fieldmap_row_numbers = ((1..$fieldmap_row_number) x $fieldmap_col_number);
         @fieldmap_row_numbers = sort {$a <=> $b} @fieldmap_row_numbers;
     }
+    @col_number_fieldmaps = sort(@col_number_fieldmaps);
+    print STDERR Dumper \@fieldmap_row_numbers;
+    print STDERR Dumper \@col_number_fieldmaps;
 
     my %subplot_plots;
     my %treatment_plots;
@@ -1954,14 +1958,22 @@ sub _get_splitplot_design {
     while(my($plot,$val) = each(%splitplot_design)){
         my $subplots = $val->{'subplots_names'};
         my $treatments = $val->{'treatments'};
+        my $num_plants_per_subplot = $num_plants_per_plot/scalar(@$subplots);
+        my %subplot_plants_hash;
+        my @plant_names;
+        my $plant_index = 1;
         for(my $i=0; $i<scalar(@$subplots); $i++){
             push @{$treatment_subplot_hash{$treatments->[$i]}}, $subplots->[$i];
-        }
-        my @plant_names;
-        for (1 .. $num_plants_per_plot){
-            push @plant_names, $val->{plot_name}."_$_";
+            for(my $j=0; $j<$num_plants_per_subplot; $j++){
+                my $plant_name = $subplots->[$i]."_plant_$plant_index";
+                push @{$subplot_plants_hash{$subplots->[$i]}}, $plant_name;
+                push @{$treatment_subplot_hash{$treatments->[$i]}}, $plant_name;
+                push @plant_names, $plant_name;
+                $plant_index++;
+            }
         }
         $val->{plant_names} = \@plant_names;
+        $val->{subplots_plant_names} = \%subplot_plants_hash;
     }
     $splitplot_design{'treatments'} = \%treatment_subplot_hash;
     print STDERR Dumper \%splitplot_design;
