@@ -288,8 +288,12 @@ foreach (@project_types) {
 is_deeply(\@all_project_types, [
           'Advanced Yield Trial',
           'Clonal Evaluation',
+          'Genetic Gain',
+          'Health Status',
+          'Heterosis',
           'Preliminary Yield Trial',
           'Seedling Nursery',
+          'Storage',
           'Uniform Yield Trial',
           'Variety Release Trial'
         ], "check get_all_project_types");
@@ -386,11 +390,11 @@ ok($trial->phenotype_count() == 0, "trial has no phenotype data");
 
 my $plotlist_ref = [ $trial_design->{1}->{plot_name}, $trial_design->{2}->{plot_name}, $trial_design->{3}->{plot_name} ];
 
-my $traitlist_ref = [ 'root number|CO:0000011', 'dry yield|CO:0000014' ];
+my $traitlist_ref = [ 'root number|CO_334:0000011', 'dry yield|CO_334:0000014' ];
 
-my %plot_trait_value = ( $trial_design->{1}->{plot_name} => { 'root number|CO:0000011'  => [0,''], 'dry yield|CO:0000014' => [30,''] },
-			   $trial_design->{2}->{plot_name} => { 'root number|CO:0000011'  => [10,''], 'dry yield|CO:0000014' => [40,''] },
-			   $trial_design->{3}->{plot_name} => { 'root number|CO:0000011'  => [20,''], 'dry yield|CO:0000014' => [50,''] },
+my %plot_trait_value = ( $trial_design->{1}->{plot_name} => { 'root number|CO_334:0000011'  => [0,''], 'dry yield|CO_334:0000014' => [30,''] },
+			   $trial_design->{2}->{plot_name} => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''] },
+			   $trial_design->{3}->{plot_name} => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''] },
     );
 
 
@@ -431,7 +435,7 @@ foreach (@$traits_assayed) {
 }
 @traits_assayed_names = sort @traits_assayed_names;
 #print STDERR Dumper \@traits_assayed_names;
-is_deeply(\@traits_assayed_names, ['dry yield|CO:0000014', 'root number counting|CO:0000011'], 'check traits assayed' );
+is_deeply(\@traits_assayed_names, ['dry yield|CO_334:0000014', 'root number counting|CO_334:0000011'], 'check traits assayed' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70727);
 my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
@@ -550,11 +554,11 @@ is(scalar(@$plants), $number_of_plots*3, "check if the right number of plants wa
 
 my $plantlist_ref = [ $trial_design->{1}->{plot_name}.'_plant_2', $trial_design->{2}->{plot_name}.'_plant_2', $trial_design->{3}->{plot_name}.'_plant_1' ];
 
-my $traitlist_ref = [ 'root number|CO:0000011', 'dry yield|CO:0000014', 'harvest index|CO:0000015' ];
+my $traitlist_ref = [ 'root number|CO_334:0000011', 'dry yield|CO_334:0000014', 'harvest index|CO_334:0000015' ];
 
-my %plant_trait_value = ( $trial_design->{1}->{plot_name}.'_plant_2' => { 'root number|CO:0000011'  => [12,''], 'dry yield|CO:0000014' => [30,''], 'harvest index|CO:0000015' => [2,''] },
-    $trial_design->{2}->{plot_name}.'_plant_2' => { 'root number|CO:0000011'  => [10,''], 'dry yield|CO:0000014' => [40,''], 'harvest index|CO:0000015' => [3,''] },
-    $trial_design->{3}->{plot_name}.'_plant_1' => { 'root number|CO:0000011'  => [20,''], 'dry yield|CO:0000014' => [50,''], 'harvest index|CO:0000015' => [7,''] },
+my %plant_trait_value = ( $trial_design->{1}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [12,''], 'dry yield|CO_334:0000014' => [30,''], 'harvest index|CO_334:0000015' => [2,''] },
+    $trial_design->{2}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''], 'harvest index|CO_334:0000015' => [3,''] },
+    $trial_design->{3}->{plot_name}.'_plant_1' => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''], 'harvest index|CO_334:0000015' => [7,''] },
 );
 
 my %metadata = ( operator => 'johndoe', date => '20141225' );

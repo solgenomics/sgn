@@ -486,7 +486,7 @@ sub delete_previous_phenotypes {
         FROM phenotype
         JOIN nd_experiment_phenotype using(phenotype_id)
         JOIN nd_experiment_stock using(nd_experiment_id)
-        JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
+        LEFT JOIN phenome.nd_experiment_md_files using(nd_experiment_id)
         JOIN stock using(stock_id)
         WHERE stock.stock_id=?
         AND phenotype.cvalue_id=?);
@@ -521,15 +521,17 @@ sub check_overwritten_files_status {
     my $h3 = $self->bcs_schema->storage->dbh()->prepare($q3);
     my @obsoleted_files;
     foreach (@file_ids){
-        $h->execute($_);
-        my $count = $h->fetchrow;
-        print STDERR "COUNT $count \n";
-        if ($count == 0){
-            $h2->execute($_);
-            $h3->execute($_);
-            my $basename = $h3->fetchrow;
-            push @obsoleted_files, [$_, $basename];
-            print STDERR "MADE file_id $_ OBSOLETE\n";
+        if ($_){
+            $h->execute($_);
+            my $count = $h->fetchrow;
+            print STDERR "COUNT $count \n";
+            if ($count == 0){
+                $h2->execute($_);
+                $h3->execute($_);
+                my $basename = $h3->fetchrow;
+                push @obsoleted_files, [$_, $basename];
+                print STDERR "MADE file_id $_ OBSOLETE\n";
+            }
         }
     }
     #print STDERR Dumper \@obsoleted_files;

@@ -391,7 +391,7 @@ sub get_cross_properties :Path('/cross/ajax/properties') Args(1) {
 	push @{$props->{$prop->type->name()}}, [ $prop->get_column('value'), $prop->get_column('nd_experimentprop_id') ];
     }
 
-    print STDERR Dumper($props);
+    #print STDERR Dumper($props);
     $c->stash->{rest} = { props => $props };
 
 
@@ -520,7 +520,7 @@ sub add_more_progeny :Path('/cross/progeny/add') Args(1) {
 	push @progeny_names, $basename. (sprintf "%03d", $n + $start_number -1);
     }
 
-    print STDERR Dumper(\@progeny_names);
+    #print STDERR Dumper(\@progeny_names);
 
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
@@ -566,7 +566,7 @@ sub get_crosses_with_folders : Path('/ajax/breeders/get_crosses_with_folders') A
         $html .= $folder_obj->get_jstree_html(\%project, $schema, 'breeding_program', 'cross');
     }
     print STDERR "Finished get crosses at time ".localtime()."\n";
-    
+
     my $dir = catdir($c->site_cluster_shared_dir, "folder");
     eval { make_path($dir) };
     if ($@) {
@@ -876,13 +876,13 @@ sub create_cross_wishlist_submit : Path('/ajax/cross/create_cross_wishlist_submi
 sub create_cross_wishlist_submit_POST : Args(0) {
     my ($self, $c) = @_;
     my $time = DateTime->now();
-    
+
     if (!$c->user){
         $c->stash->{rest}->{error} = "You must be logged in to actually create a cross wishlist.";
         $c->detach();
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
-    
+
     my $timestamp = $time->ymd()."_".$time->hms();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
@@ -1114,7 +1114,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         }
         else {
             print STDERR "ERROR: Did not delete metadata file\n";
-            print STDERR Dumper $delete_resp;
+            #print STDERR Dumper $delete_resp;
         }
     }
     if ($previously_saved_germplasm_info_metadata_id){
@@ -1126,7 +1126,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         }
         else {
             print STDERR "ERROR: Did not delete metadata file\n";
-            print STDERR Dumper $delete_resp;
+            #print STDERR Dumper $delete_resp;
         }
     }
 
@@ -1145,7 +1145,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     if ($resp->is_success) {
         my $message = $resp->decoded_content;
         my $message_hash = decode_json $message;
-        print STDERR Dumper $message_hash;
+        #print STDERR Dumper $message_hash;
         if ($message_hash->{id}){
 
             my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
@@ -1166,7 +1166,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             $c->stash->{rest}->{error} = 'The cross wishlist was not posted to ONA. Please try again.';
         }
     } else {
-        print STDERR Dumper $resp;
+        #print STDERR Dumper $resp;
         $c->stash->{rest}->{error} = "There was an error submitting cross wishlist to ONA. Please try again.";
     }
 
@@ -1184,7 +1184,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     if ($germplasm_info_resp->is_success) {
         my $message = $germplasm_info_resp->decoded_content;
         my $message_hash = decode_json $message;
-        print STDERR Dumper $message_hash;
+        #print STDERR Dumper $message_hash;
         if ($message_hash->{id}){
 
             my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
@@ -1205,7 +1205,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             $c->stash->{rest}->{error} .= 'The germplasm info file was not posted to ONA. Please try again.';
         }
     } else {
-        print STDERR Dumper $germplasm_info_resp;
+        #print STDERR Dumper $germplasm_info_resp;
         $c->stash->{rest}->{error} .= "There was an error submitting germplasm info file to ONA. Please try again.";
     }
 

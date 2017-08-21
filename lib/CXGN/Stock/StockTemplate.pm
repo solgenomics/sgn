@@ -178,7 +178,7 @@ sub parse {
         my $surv_plants = $worksheet->get_cell ($row , $headers{'NOSV'})->value;
         foreach my $header (keys %headers) {
 	      print STDERR "header loop header: $header\n";
-            if ($header =~ m/^CO:\d{7}/ ) {
+            if ($header =~ m/^CO_\d{1-4}:\d{7}/ ) {
 	      print STDERR "has header: $header row: $row col: ".$headers{$header}."\n";
 	      my $value = $worksheet->get_cell( $row , $headers{$header} )->value();
 	      print STDERR "has value: $value\n";
@@ -209,7 +209,7 @@ sub parse {
             }
         }
     }
-    ##unique#  PLOT REP  DESIG  BLOCK NOPLT NOSV CO:0000010	CO:0000099|scale:cassavabase  CO:0000018|unit:cm   CO:0000039|date:1MAP
+    ##unique#  PLOT REP  DESIG  BLOCK NOPLT NOSV CO_334:0000010	CO_334:0000099|scale:cassavabase  CO_334:0000018|unit:cm   CO_334:0000039|date:1MAP
 ###########
 #################################
     #my ($op_name, $project_id, $location_id, $stock_id, $cvterm_accession, $value, $date, $count);

@@ -8,6 +8,7 @@ use Bio::Chado::Schema::Result::Stock::Stock;
 use CXGN::Stock::StockBarcode;
 use Data::Dumper;
 use CXGN::Stock;
+use SGN::Model::Cvterm;
 
 BEGIN { extends "Catalyst::Controller"; }
 
@@ -106,7 +107,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     # convert mm into pixels
     #
-    if ($cass_print_format) {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
+    if ($cass_print_format eq 'CASS') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
+    if ($cass_print_format eq 'MUSA') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
     my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } (
             $top_margin_mm,
     		$left_margin_mm,
@@ -119,7 +121,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     if ($stock_names_file) {
 	     my $stock_file_contents = read_file($stock_names_file->{tempname});
 	     $stock_names = $stock_names ."\n".$stock_file_contents;
-    }
+    } 
 
     $stock_names =~ s/\r//g;
     my @names = split /\n/, $stock_names;
@@ -127,7 +129,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my @not_found;
     my @found;
 
-    my ($row, $stockprop_name, $value, $fdata, $accession_id, $accession_name, $parents, $tract_type_id, $label_text_5, $plot_name, $label_text_6);
+    my ($row, $stockprop_name, $value, $fdata, $accession_id, $accession_name, $parents, $tract_type_id, $label_text_5, $plot_name, $label_text_6, $musa_row_col_number, $label_text_7);
 
     foreach my $name (@names) {
 
@@ -167,7 +169,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                 }
                 $row = $stockprop_hash{$stock_id}->{'replicate'};
                 $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."blk:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
-
+                $musa_row_col_number = "row:".$stockprop_hash{$stock_id}->{'row_number'}.' '."col:".$stockprop_hash{$stock_id}->{'col_number'};
+                
                 my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
 
                 $h_acc->execute($stock_id);
@@ -188,14 +191,15 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           }
           $row = $stockprop_hash{$stock_id}->{'replicate'};
           $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."blk:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
-
+          $musa_row_col_number = "row:".$stockprop_hash{$stock_id}->{'row_number'}.' '."col:".$stockprop_hash{$stock_id}->{'col_number'};
+          
           my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =? and stock.type_id=?;");
 
           $h_acc->execute($stock_id,$accession_cvterm_id);
           ($accession_name, $accession_id) = $h_acc->fetchrow_array;
           print STDERR "Accession name for this plot is $accession_name and id is $accession_id\n";
       }
-
+      my $synonym_string;
       if ($plot_cvterm_id == $type_id) {
           $tract_type_id = 'plot';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
@@ -203,13 +207,15 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
       elsif ($accession_cvterm_id == $type_id){
           $tract_type_id = 'accession';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $stock_id )->get_pedigree_string('Parents');
+          my $stock_synonyms = CXGN::Stock::Accession->new({ schema => $schema, stock_id => $stock_id })->synonyms();
+          $synonym_string = join ',', @$stock_synonyms;
       }
       elsif ($plant_cvterm_id == $type_id) {
           $tract_type_id = 'plant';
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
       }
 
-      push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name];
+      push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name, $synonym_string, $musa_row_col_number];
     }
 
     my $dir = $c->tempfiles_subdir('pdfs');
@@ -224,7 +230,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     if (!$page_format) { $page_format = "Letter"; }
     if (!$labels_per_page) { $labels_per_page = 8; }
-    if ($cass_print_format) {$barcode_type = "2D", $labels_per_row = 2; }
+    if ($cass_print_format eq 'CASS') {$barcode_type = "2D", $labels_per_row = 2; }
+    if ($cass_print_format eq 'MUSA') {$barcode_type = "2D", $labels_per_row = 2; }
 
     my $base_page = $pdf->new_page(MediaBox=>$pdf->get_page_size($page_format));
 
@@ -279,15 +286,20 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
         if ($found[$i]->[5] eq 'plot'){
           $parents = $found[$i]->[4];
-           $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$added_text, $fieldbook_barcode ]);
+           $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$found[$i]->[8]."\n".$added_text, $fieldbook_barcode ]);
         }
         elsif ($found[$i]->[5] eq 'accession'){
+            if ($found[$i]->[7] eq ''){
+                $found[$i]->[7] = "No synonym(s) available";
+            }else{
+                $found[$i]->[7] = "synonym(s): ".$found[$i]->[7];
+            }
             $parents = $found[$i]->[4];
-            $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]."\n".$added_text, $fieldbook_barcode]);
+            $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[4]."\n".$added_text."\n".$found[$i]->[7], $fieldbook_barcode]);
         }
         elsif ($found[$i]->[5] eq 'plant'){
             $parents = $found[$i]->[4];
-            $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]."\nplot:".$found[$i]->[6]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$added_text, $fieldbook_barcode ]);
+            $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [ $found[$i]->[0], $found[$i]->[1], $found[$i]->[2]."\nplot:".$found[$i]->[6]."\n".$found[$i]->[3]."\n".$found[$i]->[4]."\n".$found[$i]->[8]."\n".$added_text, $fieldbook_barcode ]);
         }
         else {
          $tempfile = $c->forward('/barcode/barcode_qrcode_jpg', [  $found[$i]->[0], $found[$i]->[1], $added_text, $fieldbook_barcode ]);
@@ -326,10 +338,18 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           if ($labels_per_row == '1' ){
               my $label_count_15_xter_plot_name =  1-1;
               my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width + 80.63;
-              my $yposition_2 = $ypos - 20;
-              my $yposition_3 = $ypos - 30;
-              my $yposition_4 = $ypos - 40;
-              my $yposition_5 = $ypos - 50;
+              my ($yposition_2, $yposition_3, $yposition_4, $yposition_5);
+              if ($labels_per_page > 15){
+                   $yposition_2 = $ypos - 10;
+                   $yposition_3 = $ypos - 20;
+                   $yposition_4 = $ypos - 30;
+                   $yposition_5 = $ypos - 40;
+              }else{
+                   $yposition_2 = $ypos - 20;
+                   $yposition_3 = $ypos - 30;
+                   $yposition_4 = $ypos - 40;
+                   $yposition_5 = $ypos - 50;
+              }
               my $plot_pedigree_text;
 
               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
@@ -347,6 +367,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                       }else{
                           $label_text_4 = "pedigree: ".$parents;
                       }
+                    $label_text_5 = $found[$i]->[7];
                   }
                   elsif ($found[$i]->[5] eq 'plant'){
                       $label_text_6 = "plot:".$found[$i]->[6];
@@ -384,7 +405,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
         }
     }
 
-     elsif ($cass_print_format && $barcode_type eq "2D") {
+     elsif ($cass_print_format eq 'CASS' && $barcode_type eq "2D") {
 
          foreach my $label_count (1..$labels_per_row) {
           my $label_text = $found[$i]->[1];
@@ -392,10 +413,18 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           my $xpos = ($left_margin + ($label_count -1) * $final_barcode_width) + 85;
           my $label_count_15_xter_plot_name =  1-1;
           my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width - 95.63;
-          my $yposition_2 = $ypos - 20;
-          my $yposition_3 = $ypos - 30;
-          my $yposition_4 = $ypos - 40;
-          my $yposition_5 = $ypos - 50;
+          my ($yposition_2, $yposition_3, $yposition_4, $yposition_5);
+          if ($labels_per_page > 15){
+               $yposition_2 = $ypos - 10;
+               $yposition_3 = $ypos - 20;
+               $yposition_4 = $ypos - 30;
+               $yposition_5 = $ypos - 40;
+          }else{
+               $yposition_2 = $ypos - 20;
+               $yposition_3 = $ypos - 30;
+               $yposition_4 = $ypos - 40;
+               $yposition_5 = $ypos - 50;
+          }
           my $plot_pedigree_text;
 
           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
@@ -413,6 +442,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                   }else{
                       $label_text_4 = "pedigree: ".$parents;
                   }
+                  $label_text_5 = $found[$i]->[7];
               }
               elsif ($found[$i]->[5] eq 'plant'){
                   $label_text_6 = "plot:".$found[$i]->[6];
@@ -432,6 +462,71 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $pages[$page_nr-1]->image(image=>$image, xpos=>$xpos, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
        }
      }
+     
+     elsif ($cass_print_format eq 'MUSA' && $barcode_type eq "2D") {
+
+         foreach my $label_count (1..$labels_per_row) {
+          my $label_text = $found[$i]->[1];
+          my $label_size =  7;
+          my $xpos = ($left_margin + ($label_count -1) * $final_barcode_width) + 85;
+          my $label_count_15_xter_plot_name =  1-1;
+          my $xposition = $left_margin + ($label_count_15_xter_plot_name) * $final_barcode_width - 95.63;
+          my ($yposition_2, $yposition_3, $yposition_4, $yposition_5, $yposition_6);
+          if ($labels_per_page > 15){
+               $yposition_2 = $ypos - 10;
+               $yposition_3 = $ypos - 20;
+               $yposition_4 = $ypos - 30;
+               $yposition_5 = $ypos - 40;
+               $yposition_6 = $ypos - 50;
+          }else{
+               $yposition_2 = $ypos - 20;
+               $yposition_3 = $ypos - 30;
+               $yposition_4 = $ypos - 40;
+               $yposition_5 = $ypos - 50;
+               $yposition_6 = $ypos - 60;
+          }
+          my $plot_pedigree_text;
+
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
+              if ($found[$i]->[5] eq 'plot'){
+                  $label_text_5 = "stock:".$found[$i]->[2]." ".$found[$i]->[3];
+                  $label_text_6 = $found[$i]->[8];
+                  if ($parents eq ''){
+                      $label_text_4 = "No pedigree for ".$found[$i]->[2];
+                  }else{
+                      $label_text_4 = "pedigree: ".$parents;
+                  }
+              }
+              elsif ($found[$i]->[5] eq 'accession'){
+                  if ($parents eq ''){
+                      $label_text_4 = "No pedigree for ".$found[$i]->[1];
+                  }else{
+                      $label_text_4 = "pedigree: ".$parents;
+                  }
+                  $label_text_5 = $found[$i]->[7];
+              }
+              elsif ($found[$i]->[5] eq 'plant'){
+                  print "I HAVE ROW AND COL: $found[$i]->[8]\n";
+                  $label_text_6 = "plot:".$found[$i]->[6];
+                  $label_text_5 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
+                  $label_text_7 = $found[$i]->[8];
+                  if ($parents eq ''){
+                      $label_text_4 = "No pedigree for ".$found[$i]->[2];
+                  }else{
+                      $label_text_4 = "pedigree: ".$parents;
+                  }
+              }
+              else{
+                  $label_text_4 = '';
+              }
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_5);
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $label_text_6);
+          $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_6, $label_text_7);
+          $pages[$page_nr-1]->image(image=>$image, xpos=>$xpos, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+       }
+     }
+     
     elsif ($barcode_type eq "1D") {
 
     	foreach my $label_count (1..$labels_per_row) {
