@@ -232,6 +232,12 @@ function trait_summary_hist_change(value) {
 }
 
 function draw_histogram(data,loc){
+  if (data.length<3){
+    d3.select("#trial_summary_hist").html("<center><h4>There is not enough data to plot.</h4></center>");
+    return;
+  } else {
+    d3.selectAll("#trial_summary_hist>*:not(.histogram)").remove();
+  }
   var layout = {
     "width":700,
     "height":300,
