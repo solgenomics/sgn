@@ -2,46 +2,54 @@
 
 #removes older ones of duplicate packages
 #installs new ones from CRAN, bioconductor, github
-#in ~/cxgn/sgn/R_libs
+#in ~/cxgn/R_libs
 
 #Leaves behind deps installed in site libraries ("/usr/local/lib/R/site-library:/usr/lib/R/site-library:/usr/lib/R/library")
 #To avoid future version conflicts between deps installed in these libraries and 'cxgn/sgn/R_libs', you would be better off
 #removing them manually.
 
-#Also set the env variable R_LIBS_USER in your system (/etc/R/Renviron) to "~/cxgn/sgn/R_libs".
+
+#Set the env variable R_LIBS_USER in your system (/etc/R/Renviron) to \"~/cxgn/R_libs\".
 #This will ensure deps you manually install in R will be in the same place as sgn R libraries
 #and avoid installation of the same R packages in multiple places.
-
+#It will also add packages in the \"~/cxgn/R_libs\" to the search path";
 
 rLibsUser <- unlist(strsplit(Sys.getenv("R_LIBS_USER"), .Platform$path.sep))
 rLibsSite <- unlist(strsplit(Sys.getenv("R_LIBS_SITE"), .Platform$path.sep))
-rLibsSgn  <- "~/cxgn/sgn/R_libs"
-cranSite  <- 'http://lib.stat.cmu.edu/R/CRAN'
+rLibsSgn  <- "~/cxgn/R_libs"
+cranSite  <-  'http://mirror.las.iastate.edu/CRAN/'
 cranFile  <- "~/cxgn/sgn/R_files/cran"
 gitFile   <- "~/cxgn/sgn/R_files/github"
 bioCFile  <- "~/cxgn/sgn/R_files/bioconductor"
 
 preRLibsSgn <- grep(rLibsSgn, rLibsUser, perl=TRUE, value=TRUE)
 
-if (!file.exists(preRLibsSgn) && !dir.create(rLibsSgn, recursive = TRUE, showWarnings = TRUE)) { 
-    stop("SGN R Libs dir ", rLibsSgn, ' Does not exist and failed to create it.')
-    
+if (!is.null(preRLibsSgn) || !file.exists(preRLibsSgn)) {
+  dir.create(rLibsSgn, recursive = TRUE, showWarnings = TRUE)
+}
+
+if(!dir.exists(rLibsSgn))
+{ 
+    stop("SGN R Libs dir ", rLibsSgn, ' Does not exist and failed to create it.')   
 } else {
   Sys.setenv(R_LIBS_USER=rLibsSgn) 
 }
 
 .libPaths(c(rLibsSgn, .libPaths()))
 
-if (!require(dplyr, lib.loc=rLibsSgn, quietly=TRUE, warn.conflicts=FALSE)) {
-  install.packages('dplyr', repos=cranSite)
-}
-
 if (!require(stringr, lib.loc=rLibsSgn, quietly=TRUE, warn.conflicts=FALSE)) {
   install.packages('stringr', repos=cranSite)
+  library(stringr)
+}
+
+if (!require(dplyr, lib.loc=rLibsSgn, quietly=TRUE, warn.conflicts=FALSE)) {  
+  install.packages('dplyr', repos=cranSite)
+  library(dplyr)
 }
 
 if (!require(devtools, lib.loc=rLibsSgn, quietly=TRUE, warn.conflicts=FALSE)) {
   install.packages('devtools', repos=cranSite)
+  library(devtools)
 }
 
 
@@ -202,6 +210,8 @@ if (length(newBioc) > 0 ) {
              suppressUpdates=TRUE,
              suppressAutoUpdate=TRUE,
              ask=FALSE,
+             quiet=TRUE,
+             verbose=FALSE,
              siteRepos=cranSite)
 } else {
   message('No new bioconductor packages to install.')
