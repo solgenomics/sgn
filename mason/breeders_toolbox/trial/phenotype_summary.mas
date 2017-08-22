@@ -233,7 +233,7 @@ function trait_summary_hist_change(value) {
 
 function draw_histogram(data,loc){
   var layout = {
-    "width":800,
+    "width":700,
     "height":300,
     "margin":{
       "top":24,
@@ -303,19 +303,33 @@ function draw_histogram(data,loc){
     .offset(d3.stackOffsetNone);
   
   var series = stacker(bins);
+  series.forEach(function(s){
+    var count = 0;
+    s.sortVal = 0;
+    s.forEach(function(b,i){
+      b.key = s.key;
+      count += b[1]-b[0];
+      s.sortVal += (i+1)*(b[1]-b[0]);
+    });
+    s.sortVal = s.sortVal/count;
+  });
+  series.sort(function(a,b){
+    return d3.ascending(a.sortVal,b.sortVal);
+  });
   
   var color = d3.scaleSequential(d3.interpolateViridis)
     .domain([0,series.length]);
   
   console.log(bins,series);
   
-  histLoc.style("overflow-x","scroll");
+  histLoc.style("overflow-x","auto");
   var hist = histLoc.selectAll(".histogram").data([series]);
   newHist = hist.enter()
     .append("svg")
     .classed("histogram",true)
-    .style("width","100%")
+    .style("width",layout.width+"px")
     .style("min-width",layout.width)
+    .style("margin","auto")
     .attr("viewBox","0 0 "+layout.width+" "+layout.height)
     .style("background","#fff");
   newHist.append("g").classed("series-groups",true);
@@ -336,9 +350,17 @@ function draw_histogram(data,loc){
     .data(function(d){return d;},function(d){return d.key;});
   groups.exit().remove();
   var newGroups = groups.enter().append("g").classed("series",true);
-  var allGroups = newGroups.merge(groups).style("fill",function(d){
-    return color(d.index);
-  });
+  var allGroups = newGroups.merge(groups).style("fill",function(d,i){
+      return color(i);
+    }).on("mouseover",function(d,i){
+      var c = d3.rgb(color(i));
+      d3.select(this).raise()
+        .style("fill",c.brighter(2));
+    }).on("mouseout",function(d,i){
+      var c = d3.rgb(color(i));
+      d3.select(this)
+        .style("fill",c);
+    });
   
   var bits = allGroups.selectAll(".bit").data(function(d){return d;});
   bits.exit().remove()
@@ -347,8 +369,13 @@ function draw_histogram(data,loc){
     .attr("x",function(d){return x(d.data.bin.x0)+1})
     .attr("width",function(d){return x(d.data.bin.x1)-x(d.data.bin.x0)-1})
     .attr("y",function(d){return y(d[1])})
-    .attr("height",function(d){return y(d[0])-y(d[1])});
-  
+    .attr("height",function(d){return y(d[0])-y(d[1])})
+    .on("mouseover",function(d){
+      drawToolTip(hist,x,y,accessions,d);
+    })
+    .on("mouseout",function(d){
+      drawToolTip(hist,x,y,accessions);
+    });
   
   
 }
@@ -359,6 +386,37 @@ draw_histogram.accNest = d3.nest().key(function(d){
     return d.value;
   });
 });
+
+function drawToolTip(field,x,y,accessions,d){
+  var tt = field.selectAll(".ttip").data(d?[d]:[]);
+  var newtt = tt.enter().append("g").classed("ttip",true);
+  newtt.append("rect").attr("fill","black");
+  newtt.append("text").attr("fill","white")
+    .attr("text-anchor","middle")
+    .attr("y","-4");
+  tt.exit().remove();
+  var alltt = newtt.merge(tt);
+  alltt.attr('transform', function(d){
+    return 'translate(' + ((x(d.data.bin.x1)+x(d.data.bin.x0))/2) + ',' + y(d[1]) + ')'
+  });
+  alltt.select("text").text(function(d){
+    return accessions[d.key];
+  }).each(function(d){
+    d.ttbbox = this.getBBox();
+  });
+  alltt.select("rect").attr("width",function(d){
+      return d.ttbbox.width+4;
+    })
+    .attr("height",function(d){
+      return d.ttbbox.height+2;
+    })
+    .attr("y",function(d){
+      return -(d.ttbbox.height+2);
+    })
+    .attr("x",function(d){
+      return -d.ttbbox.width/2-2;
+    })
+}
 
 //end of immediately inoked function
 })();
