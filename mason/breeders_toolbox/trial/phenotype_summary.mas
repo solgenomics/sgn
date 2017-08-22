@@ -299,19 +299,29 @@ function draw_histogram(data,loc){
   
   var stacker = d3.stack()
     .keys(Object.keys(accessions))
-    .order(d3.stackOrderNone)
+    .order(function(series){
+      var sort1 = series.map(function(s,i){
+        var count = 0;
+        var totVal = 0;
+        s.forEach(function(b,i){
+          count += b[1]-b[0];
+          totVal += (i+1)*(b[1]-b[0]);
+        });
+        s.sortVal = totVal/count;
+        return [s.sortVal,i];
+      });
+      sort1.sort(function(a,b){
+        return d3.ascending(a[0],b[0]);
+      })
+      return sort1.map(function(d){return d[1];});
+    })
     .offset(d3.stackOffsetNone);
   
   var series = stacker(bins);
   series.forEach(function(s){
-    var count = 0;
-    s.sortVal = 0;
     s.forEach(function(b,i){
       b.key = s.key;
-      count += b[1]-b[0];
-      s.sortVal += (i+1)*(b[1]-b[0]);
     });
-    s.sortVal = s.sortVal/count;
   });
   series.sort(function(a,b){
     return d3.ascending(a.sortVal,b.sortVal);
