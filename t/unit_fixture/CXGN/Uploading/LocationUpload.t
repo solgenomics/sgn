@@ -12,9 +12,9 @@ use Data::Dumper;
 use DateTime;
 
 my $f = SGN::Test::Fixture->new();
-
+my $schema = $f->bcs_schema();
 my $c = SimulateC->new( { dbh => $f->dbh(),
-			  bcs_schema => $f->bcs_schema(),
+			  bcs_schema => $schema,
 			  metadata_schema => $f->metadata_schema(),
 			  phenome_schema => $f->phenome_schema(),
 			  sp_person_id => 41 });
@@ -53,12 +53,24 @@ my $parser = CXGN::Location::ParseUpload->new();
 my $parse_result = $parser->parse($type, $archived_filename_with_path, $schema);
 
 ok($parse_result, "Check if parse excel file works");
-ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
+ok(!$parse_result->{'error'}, "Check that parse returns no errors");
 
-print STDERR "Dump of parsed result:\t" . Dumper($parse_result) . "\n";
+print STDERR "Dump of parsed result:\t" . Dumper($parse_result->{'success'}) . "\n";
 
-my $parsed_data_check = {'test'};
-is_deeply($parse_result, $parsed_data_check, 'check location excel parse data' );
+my $parsed_data_check =  [
+          [
+            'Cortland',
+            'COR',
+            'USA',
+            'United States',
+            'test',
+            'Field',
+            42,
+            -76,
+            123
+          ]
+        ];
+is_deeply($parse_result->{'success'}, $parsed_data_check, 'check location excel parse data' );
 
 foreach my $row (@{$parse_result->{'success'}}) {
 #get data from rows one at a time
@@ -80,18 +92,20 @@ foreach my $row (@{$parse_result->{'success'}}) {
 }
 
 my $location_name = $c->bcs_schema()->resultset('NaturalDiversity::NdGeolocation')->search({}, {order_by => { -desc => 'nd_geolocation_id' }})->first()->description();
-ok($location_name == "Location name test", "check that location name upload really worked");
+ok($location_name == "Cortland", "check that location name upload really worked");
 
 my $location_latitude = $c->bcs_schema()->resultset('NaturalDiversity::NdGeolocation')->search({}, {order_by => { -desc => 'nd_geolocation_id' }})->first()->latitude();
-ok($location_latitude == "Location latitude test", "check that location latitude upload really worked");
+ok($location_latitude == 42, "check that location latitude upload really worked");
 
 my $location_longitude = $c->bcs_schema()->resultset('NaturalDiversity::NdGeolocation')->search({}, {order_by => { -desc => 'nd_geolocation_id' }})->first()->longitude();
-ok($location_longitude == "Location longitude test", "check that location longitude upload really worked");
+ok($location_longitude == -76, "check that location longitude upload really worked");
 
 my $location_altitude = $c->bcs_schema()->resultset('NaturalDiversity::NdGeolocation')->search({}, {order_by => { -desc => 'nd_geolocation_id' }})->first()->altitude();
-ok($location_altitude == "Location altitude test", "check that location altitude upload really worked");
+ok($location_altitude == 123, "check that location altitude upload really worked");
 
 my $post_locationprop_count = $c->bcs_schema->resultset('NaturalDiversity::NdGeolocationprop')->search({})->count();
 my $post1_locationprop_diff = $post_locationprop_count - $pre_locationprop_count;
 print STDERR "Locationprop: ".$post1_locationprop_diff."\n";
 ok($post1_locationprop_diff == 4, "check locationprop table after upload excel location");
+
+done_testing();
