@@ -380,7 +380,6 @@ sub _get_p_rep_design {
     my %prep_design;
     my $rbase = R::YapRI::Base->new();
     my @stock_list;
-    my $number_of_blocks;
     my $stock_data_matrix;
     my $r_block;
     my $result_matrix;
@@ -388,7 +387,6 @@ sub _get_p_rep_design {
     my @stock_names;
     my @block_numbers;
     my @converted_plot_numbers;
-    my $stock_name_iter;
     my $number_of_replicated_accession;
     my $number_of_unreplicated_accession;
     my $num_of_replicated_times;
@@ -402,38 +400,28 @@ sub _get_p_rep_design {
     } else {
       die "No stock list specified\n";
     }
-    
     if ($self->has_replicated_accession_no()) {
       $number_of_replicated_accession = $self->get_replicated_accession_no();
     } 
-    
     if ($self->has_unreplicated_accession_no()) {
       $number_of_unreplicated_accession = $self->get_unreplicated_accession_no();
     } 
-    
     if ($self->has_num_of_replicated_times()) {
       $num_of_replicated_times = $self->get_num_of_replicated_times();
     } 
-    
     if ($self->has_sub_block_sequence()) {
       $sub_block_sequence = $self->get_sub_block_sequence();
     }
-    
     if ($self->has_block_sequence()) {
       $block_sequence = $self->get_block_sequence();
     }
-    
     if ($self->has_col_in_design_number()) {
       $col_in_design_number = $self->get_col_in_design_number();
     }   
-    
     if ($self->has_row_in_design_number()) {
       $row_in_design_number = $self->get_row_in_design_number();
     }
-    my $treatGV1 = '1, 2'; 
-    my $rngSeeds = '156, 444';
-    my $stock_num = scalar(@stock_list);
-    print "PARAMETER: 1: $row_in_design_number, 2: $col_in_design_number, 3: $block_sequence,  4: $sub_block_sequence, 5: $num_of_replicated_times, 6: $number_of_unreplicated_accession, 7: $number_of_replicated_accession, 8: $treatGV1, 9: $rngSeeds\n";
+    
     $stock_data_matrix =  R::YapRI::Data::Matrix->new(
   						       {
   							name => 'stock_data_matrix',
@@ -442,9 +430,7 @@ sub _get_p_rep_design {
   							data => \@stock_list,
   						       }
   						      );
-    print STDERR Dumper %$stock_data_matrix->{coln};
-    print STDERR Dumper($stock_data_matrix);  
-    
+                              
     my %stock_data_hash;
     my $count = 0;
     my @counts;
@@ -455,31 +441,21 @@ sub _get_p_rep_design {
     for (my $n=0; $n<scalar(@stock_list); $n++) {
         $stock_data_hash{$counts[$n]} = $stock_list[$n];
     }
-    print STDERR Dumper(\%stock_data_hash);
     
     $r_block = $rbase->create_block('r_block');
-    print "PARAMETER: 1\n";
-    #print STDERR Dumper $r_block;
-    $stock_data_matrix->send_rbase($rbase, 'r_block'); print "PARAMETER: 2\n"; 
-    #print STDERR Dumper $r_block;
-    $r_block->add_command('library(DiGGer)'); print "PARAMETER: 3\n";
-    #print STDERR  Dumper $r_block;
-    $r_block->add_command('library(R.methodsS3)'); print "PARAMETER: 4\n";
+    $stock_data_matrix->send_rbase($rbase, 'r_block'); 
+    $r_block->add_command('library(DiGGer)');
+    $r_block->add_command('library(R.methodsS3)'); 
     $r_block->add_command('library(reshape)');
-    #print STDERR Dumper $r_block;
-    $r_block->add_command('library(R.oo)'); print "PARAMETER: 5\n";
-    #print STDERR  Dumper $r_block;
-    #$r_block->add_command('library(MASS)');
-    $r_block->add_command('numberOfTreatments <- ' .%$stock_data_matrix->{coln});  print "PARAMETER: 6\n";
-    #$r_block->add_command('numberOfTreatments <- '.$stock_num); 
-    $r_block->add_command('rowsInDesign <- '.$row_in_design_number);  print "PARAMETER: 7\n";
-    $r_block->add_command('columnsInDesign <- '.$col_in_design_number);  print "PARAMETER: 8\n";
-    $r_block->add_command('blockSequence <- list(c('.$block_sequence.'), c('.$sub_block_sequence.'))');  print "PARAMETER: 9\n";
+    $r_block->add_command('library(R.oo)');
+    $r_block->add_command('numberOfTreatments <- ' .%$stock_data_matrix->{coln}); 
+    $r_block->add_command('rowsInDesign <- '.$row_in_design_number); 
+    $r_block->add_command('columnsInDesign <- '.$col_in_design_number);
+    $r_block->add_command('blockSequence <- list(c('.$block_sequence.'), c('.$sub_block_sequence.'))'); 
     $r_block->add_command('treatRepPerRep <- rep(c(1,'.$num_of_replicated_times.'), c('.$number_of_unreplicated_accession.', '.$number_of_replicated_accession.'))');
-    $r_block->add_command('treatGroup <- rep(c('.$treatGV1.'), c('.$number_of_unreplicated_accession.', '.$number_of_replicated_accession.'))');
-    $r_block->add_command('rngSeeds <- c('.$rngSeeds.')');  print "PARAMETER: 10\n";
-    $r_block->add_command('runSearch <- TRUE'); print "PARAMETER: 11\n";
-    #print STDERR  Dumper $r_block;
+    $r_block->add_command('treatGroup <- rep(c(1, 2), c('.$number_of_unreplicated_accession.', '.$number_of_replicated_accession.'))');
+    $r_block->add_command('rngSeeds <- c(156, 444)');
+    $r_block->add_command('runSearch <- TRUE');
     $r_block->add_command('pRepDesign <- prDiGGer(numberOfTreatments = numberOfTreatments,
                                                 rowsInDesign = rowsInDesign,
                                                 columnsInDesign = columnsInDesign,
@@ -487,10 +463,10 @@ sub _get_p_rep_design {
                                                 treatRepPerRep = treatRepPerRep, 
                                                 treatGroup = treatGroup, 
                                                 rngSeeds = rngSeeds, 
-                                                runSearch = runSearch )');  print "PARAMETER: 12\n";
+                                                runSearch = runSearch )');
     #$r_block->add_command('pRepDesign <- run(pRepDesign)');                                            
     #$r_block->add_command('designBlock <- desTab(getDesign(pRepDesign), '.$block_sequence.')');  print "PARAMETER: 13\n";
-    $r_block->add_command('field_map <- getDesign(pRepDesign)');  print "PARAMETER: 14\n";
+    $r_block->add_command('field_map <- getDesign(pRepDesign)');
     $r_block->add_command('field_map_t <- t(field_map)');
     $r_block->add_command('field_map_melt <- melt(field_map_t)');
     $r_block->add_command('colnames(field_map_melt) <- c("col_number","row_number","trt")');
@@ -501,19 +477,13 @@ sub _get_p_rep_design {
     $r_block->add_command('plot_num <- melt(plot_num)');
     $r_block->add_command('colnames(plot_num) <- c("p2","p1","plots")');
     $r_block->add_command('rownames(plot_num) <- rownames(plot_num, do.NULL = FALSE, prefix = "Obs.")');
-    #$r_block->add_command('plot_num <- subset(plot_num, select = plots)');
     $r_block->add_command('layout_merge <- match(rownames(field_map_melt), rownames(plot_num) )');
     $r_block->add_command('layout_merge <- cbind( field_map_melt, plot_num[layout_merge,] )');
     $r_block->add_command('layout <- subset(layout_merge, select = c(plots, row_number, col_number, trt))');
-    #$r_block->add_command('plot_num <- melt(plot_num)');
-    #$r_block->add_command('pRepDesign <- as.matrix(field_map_melt)');  print "PARAMETER: 15\n";
     $r_block->add_command('pRepDesign <- as.matrix(layout)');
-    #$r_block->run_block();  print "PARAMETER: 16\n";
+    #$r_block->run_block();
     
-    $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','pRepDesign');  print "PARAMETER: 17\n";
-    #my $design_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','designBlock');  print "PARAMETER: 18\n";
-    #print STDERR Dumper($design_matrix);
-    print STDERR Dumper($result_matrix);
+    $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','pRepDesign');
      @plot_numbers = $result_matrix->get_column("plots");
      @stock_names = $result_matrix->get_column("trt");
      my @row_numbers = $result_matrix->get_column("row_number");
@@ -524,8 +494,6 @@ sub _get_p_rep_design {
      for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
        my %plot_info;
        $counting++;
-       #$plot_info{'stock_name'} = $stock_names[$i];
-       #$plot_info{'block_number'} = '1';
        foreach my $key (keys %stock_data_hash){
            if ($stock_names[$i] == $key && $plot_numbers[$i] eq $counting){
                $plot_info{'stock_name'} = $stock_data_hash{$key};
@@ -539,22 +507,8 @@ sub _get_p_rep_design {
        $prep_design{$converted_plot_numbers[$i]} = \%plot_info;
      }
      %prep_design = %{_build_plot_names($self,\%prep_design)};
-     #return \%prep_design;
-     
-     
-     my @stock_names_new;
-     foreach my $key (keys %stock_data_hash){
-         for (my $y=0; $y<scalar(@stock_names); $y++){
-             if ($stock_names[$y] == $key){
-                 push @stock_names_new, $stock_data_hash{$key};
-             }
-    #         print "I SEE YOU :".$stock_data_hash{$trt}."\n";
-    #         push @stock_names_new, $stock_data_hash{$trt};
-         }
-     }
-    
-     print STDERR Dumper(\@stock_names_new);
      return \%prep_design;
+
 }
 
 sub _get_rcbd_design {
