@@ -212,7 +212,8 @@ sub _is_valid_type {
         Greenhouse => 1,
         Screenhouse => 1,
         Lab => 1,
-        Storage => 1
+        Storage => 1,
+        Other => 1
     );
     if (!$valid_types{$type}) {
         return 0;

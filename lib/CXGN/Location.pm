@@ -113,6 +113,7 @@ sub store_location {
     my $latitude = $self->latitude();
     my $longitude = $self->longitude();
     my $altitude = $self->altitude();
+    my $location_type = $self->location_type();
     my ($new_row, $error);
 
     my $exists = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
@@ -131,6 +132,20 @@ sub store_location {
 
     if ( ($altitude && $altitude !~ /^-?[0-9.]+$/) || ($altitude && $altitude < -418) || ($altitude && $altitude > 8848) ) {
         return { error => "Altitude (in meters) must be a number between -418 (Dead Sea) and 8,848 (Mt. Everest)." };
+    }
+
+    my %valid_types = (
+        Farm => 1,
+        Field => 1,
+        Greenhouse => 1,
+        Screenhouse => 1,
+        Lab => 1,
+        Storage => 1,
+        Other => 1
+    );
+
+    if (!$valid_types{$location_type}) {
+        return { error => "Location type $location_type must be must be one of the following: Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other." };
     }
 
     if (!$nd_geolocation_id && !$exists) { # adding new location

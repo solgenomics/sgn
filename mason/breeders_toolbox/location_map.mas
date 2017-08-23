@@ -296,6 +296,7 @@ $user_id => undef
                       <option value="Screenhouse">Screenhouse</option>
                       <option value="Lab">Lab</option>
                       <option value="Storage">Storage</option>
+                      <option value="Other">Other</option>
                   </select>
               </div>
 	    </div>
@@ -525,6 +526,14 @@ function style(feature) {
         prefix: ''
     });
 
+    var otherMarker = L.ExtraMarkers.icon({
+        icon: 'fa-number',
+        number: feature.properties.Id,
+        markerColor: 'pink',
+        shape: 'circle',
+        prefix: ''
+    });
+
     switch (feature.properties.Type) {
         case 'Farm':   return { icon: farmMarker };
         case 'Field': return { icon: fieldMarker };
@@ -532,6 +541,7 @@ function style(feature) {
         case 'Screenhouse':   return { icon: screenhouseMarker };
         case 'Lab':   return { icon: labMarker };
         case 'Storage':   return { icon: storageMarker };
+        case 'Other':   return { icon: otherMarker };
         default:    return { icon: defaultMarker };
     }
 }
