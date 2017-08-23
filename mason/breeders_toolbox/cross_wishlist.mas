@@ -316,7 +316,10 @@ jQuery(document).ready(function($) {
         e.preventDefault();
         var active_tab = jQuery('ul#cross_wishlist_tab_select li.active').attr('id');
         //console.log(active_tab);
-
+        cross_data = [];
+        female_male_tracker = {};
+        selected_plot_ids = [];
+        trial_id;
 
         var male_accession_limit = 10;
         if (active_tab == 'cross_wishlist_no_list_tab'){
@@ -390,7 +393,8 @@ jQuery(document).ready(function($) {
     
     jQuery('#cross_wishlist_select_submits').click(function(){
         var male_plot_limit = 10;
-        female_male_tracker = [];
+        female_male_tracker = {};
+        selected_plot_ids = [];
 
         jQuery('input[name="cross_wishlist_plot_select_female_input"]').each(function() {
             if (this.checked){
