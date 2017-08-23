@@ -109,7 +109,8 @@ $breeding_programs
                                         <!--<option value=MADIII>MADIII</option>-->
                                         <!--<option value=MADIV>MADIV</option>-->
                                         <!--<option value=MADV>MADV</option>-->
-                                    </select>
+                                    </select> 
+                                    <div id="prephelp" style="display: none"> <button type="button" class="btn btn-link" data-toggle="modal" data-target="#partial_rep_help_dialog">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button> </div>
                                 </div>
                             </div>
                         </div>
@@ -433,12 +434,21 @@ $breeding_programs
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="partialRepHelpDialog">Trial Saved</h4>
+                <h4 class="modal-title" id="partialRepHelpDialog">Partially Replicated Design Usage Help</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        <h4>
+                          Background:
+                        </h4>
+                          <center><p> </p></center>
+
+                        <h4>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        Design Parameters:
+                        </h4>
                         List of unreplicated accession
                         List of replicated accession
                         Number of rows in design
