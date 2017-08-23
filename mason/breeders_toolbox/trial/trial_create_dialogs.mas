@@ -427,3 +427,31 @@ $breeding_programs
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="partial_rep_help_dialog" name="partial_rep_help_dialog" tabindex="-1" role="dialog" aria-labelledby="partialRepHelpDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="partialRepHelpDialog">Trial Saved</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        List of unreplicated accession
+                        List of replicated accession
+                        Number of rows in design
+                        Number of columns in design
+                        Number of times replicated accessions are replicated
+                        Block sequence
+                        Sub-block sequence
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="partial_rep_usage_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
