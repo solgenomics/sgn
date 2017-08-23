@@ -443,7 +443,20 @@ sub _get_p_rep_design {
   						       }
   						      );
     print STDERR Dumper %$stock_data_matrix->{coln};
-    print STDERR Dumper($stock_data_matrix);                          
+    print STDERR Dumper($stock_data_matrix);  
+    
+    my %stock_data_hash;
+    my $count = 0;
+    my @counts;
+    foreach my $x (@stock_list){
+        $count ++;
+        push @counts, $count;
+    }
+    for (my $n=0; $n<scalar(@stock_list); $n++) {
+        $stock_data_hash{$counts[$n]} = $stock_list[$n];
+    }
+    print STDERR Dumper(\%stock_data_hash);
+    
     $r_block = $rbase->create_block('r_block');
     print "PARAMETER: 1\n";
     #print STDERR Dumper $r_block;
@@ -501,6 +514,47 @@ sub _get_p_rep_design {
     #my $design_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','designBlock');  print "PARAMETER: 18\n";
     #print STDERR Dumper($design_matrix);
     print STDERR Dumper($result_matrix);
+     @plot_numbers = $result_matrix->get_column("plots");
+     @stock_names = $result_matrix->get_column("trt");
+     my @row_numbers = $result_matrix->get_column("row_number");
+     my @col_numbers = $result_matrix->get_column("col_number");
+     @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+     
+     my $counting = 0;
+     for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
+       my %plot_info;
+       $counting++;
+       #$plot_info{'stock_name'} = $stock_names[$i];
+       #$plot_info{'block_number'} = '1';
+       foreach my $key (keys %stock_data_hash){
+           if ($stock_names[$i] == $key && $plot_numbers[$i] eq $counting){
+               $plot_info{'stock_name'} = $stock_data_hash{$key};
+           }
+       }
+       $plot_info{'block_number'} = $row_numbers[$i];
+       $plot_info{'plot_name'} = $converted_plot_numbers[$i];
+       $plot_info{'row_number'} = $row_numbers[$i];
+       $plot_info{'col_number'} = $col_numbers[$i];
+
+       $prep_design{$converted_plot_numbers[$i]} = \%plot_info;
+     }
+     %prep_design = %{_build_plot_names($self,\%prep_design)};
+     #return \%prep_design;
+     
+     
+     my @stock_names_new;
+     foreach my $key (keys %stock_data_hash){
+         for (my $y=0; $y<scalar(@stock_names); $y++){
+             if ($stock_names[$y] == $key){
+                 push @stock_names_new, $stock_data_hash{$key};
+             }
+    #         print "I SEE YOU :".$stock_data_hash{$trt}."\n";
+    #         push @stock_names_new, $stock_data_hash{$trt};
+         }
+     }
+    
+     print STDERR Dumper(\@stock_names_new);
+     return \%prep_design;
 }
 
 sub _get_rcbd_design {
