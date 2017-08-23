@@ -408,6 +408,25 @@ function initialize_map(id, locationJSON, table) {
         layers: [streetmap, location_layer]
     });
 
+    var locateUser = L.Control.extend({
+        onAdd: function (map) {
+            var container = L.DomUtil.create('button', 'leaflet-bar leaflet-control leaflet-control-custom glyphicon glyphicon-map-marker');
+
+            container.style.backgroundColor = 'white';
+            container.style.cursor = "pointer";
+            container.title = 'Zoom to my location';
+            container.style.width = '30px';
+            container.style.height = '30px';
+
+            container.onclick = function(){
+              map.locate({setView: true});
+            }
+            return container;
+        }
+    });
+
+    mymap.addControl(new locateUser({ position: 'topleft' }));
+
     mymap.fitBounds(location_layer.getBounds());
     var layerControl = L.control.layers(baseMaps, overlayMaps, {position: 'bottomright'}).addTo(mymap);
 
@@ -418,8 +437,6 @@ function initialize_map(id, locationJSON, table) {
             .setLatLng(e.latlng)
             .setContent(
                 'Add a new location here?<br><center><a href="javascript:;" onclick="add_from_map(\''+e.latlng.lat+','+e.latlng.lng+'\')">Add Location</a></center>'
-                //
-                // <button id="map_add" class="btn btn-secondary btn-sm" type="button" value="'+e.latlng.lat+','+e.latlng.lng+'" onclick="add_from_map()">Add Location</button></center>'
             )
             .openOn(mymap);
     }
@@ -635,6 +652,5 @@ function onEachFeature(feature, layer) {
         $('#location_altitude').val(loc_data.properties.Altitude);
         $('#store_location_dialog').modal("show");
     }
-
 
 </script>
