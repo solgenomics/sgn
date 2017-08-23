@@ -35,6 +35,7 @@ geolocations_property	local_name	From BrAPI	03/27/2017	nm529	00076
 geolocations_property	region	From BrAPI	03/27/2017	nm529	00076	
 geolocations_property	alternative_name	From BrAPI	03/27/2017	nm529	00076	
 list_types	seedlots		07/20/2017	nm529	00081	
+list_types	subplots		08/23/2017	nm529	00084	
 list_types	accessions					
 list_types	crosses				00067	
 list_types	dataset				00067	
@@ -134,6 +135,7 @@ stock_property	is a control				00052
 stock_property	location_code				00052	
 stock_property	organization				00052	
 stock_property	plant_index_number				00054	
+stock_property	subplot_index_number				00084	
 stock_property	plot number				00052	
 stock_property	range				00052	
 stock_property	replicate				00052	
@@ -165,6 +167,7 @@ stock_relationship	member_of				00052
 stock_relationship	offspring_of				00052	
 stock_relationship	plant_of				00052	
 stock_relationship	plot_of				00052	
+stock_relationship	subplot_of				00084	
 stock_relationship	tissue_sample_of				00052	
 stock_relationship	collection_of				00077	
 stock_relationship	seed transaction				00077	
@@ -182,6 +185,7 @@ stock_type	tissue_sample				00052
 stock_type	training population				00052	
 stock_type	vector_construct				00052	
 stock_type	seedlot				00077	
+stock_type	subplot				00084	
 stock_type	grafted_accession		00079
 trait_property	trait_categories					
 trait_property	trait_default_value					

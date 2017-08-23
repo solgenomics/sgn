@@ -247,7 +247,7 @@ sub store {
 
 		#print STDERR Dumper \%design;
         my %new_stock_ids_hash;
-		foreach my $key (sort { $a cmp $b} keys %design) {
+		foreach my $key (keys %design) {
 
             if ($key eq 'treatments'){
                 next;
@@ -270,6 +270,10 @@ sub store {
 			my $subplot_names;
 			if ($design{$key}->{subplots_names}) {
 				$subplot_names = $design{$key}->{subplots_names};
+			}
+			my $subplots_plant_names;
+			if ($design{$key}->{subplots_plant_names}) {
+				$subplots_plant_names = $design{$key}->{subplots_plant_names};
 			}
 			my $stock_name;
 			if ($design{$key}->{stock_name}) {
@@ -458,6 +462,18 @@ sub store {
 						type_id => $nd_experiment_type_id,
 						stock_id => $subplot->stock_id(),
 					});
+
+					if ($subplots_plant_names){
+						my $subplot_plants = $subplots_plant_names->{$subplot_name};
+						foreach (@$subplot_plants) {
+							my $plant_stock_id = $new_stock_ids_hash{$_};
+							my $plant_to_subplot = $chado_schema->resultset("Stock::StockRelationship")->create({
+								object_id => $subplot->stock_id(),
+								type_id => $plant_of->cvterm_id(),
+								subject_id => $plant_stock_id
+							});
+						}
+					}
 				}
 			}
 		}
