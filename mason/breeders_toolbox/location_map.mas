@@ -409,7 +409,7 @@ function initialize_map(id, locationJSON, table) {
     });
 
     mymap.fitBounds(location_layer.getBounds());
-    var layerControl = L.control.layers(baseMaps, overlayMaps).addTo(mymap);
+    var layerControl = L.control.layers(baseMaps, overlayMaps, {position: 'bottomright'}).addTo(mymap);
 
     var popup = L.popup();
 
@@ -440,7 +440,9 @@ function initialize_map(id, locationJSON, table) {
               return feature.properties.Name + ' - ' + feature.properties.Organization;
             }
           })
-        ]
+      ],
+      position: 'topright',
+      expanded: true
     }).addTo(mymap);
 
     table.on( 'draw.dt', function () {  // recreate location layer based on filtered table contents
