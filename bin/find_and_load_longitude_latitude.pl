@@ -48,7 +48,7 @@ if (!$opt_H || !$opt_D || !$opt_O) {
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
 
-my $dbh = CXGN::DB::InsertDBH->new({ 
+my $dbh = CXGN::DB::InsertDBH->new({
 	dbhost=>$dbhost,
 	dbname=>$dbname,
 	dbargs => {AutoCommit => 1, RaiseError => 1}
@@ -78,12 +78,12 @@ while(my$r = $geolocation_rs->next){
     if ($resp->is_success) {
         my $message = $resp->decoded_content;
         my $message_hash = decode_json $message;
-        print STDERR Dumper $message_hash;
-        
+        #print STDERR Dumper $message_hash;
+
         my $result = $message_hash->{'results'}->[0];
         my $address_components = $result->{'address_components'};
         my $formatted_address = $result->{'formatted_address'};
-        
+
         my $country = "";
         my $country_code = "";
         foreach my $a (@$address_components){
@@ -98,15 +98,15 @@ while(my$r = $geolocation_rs->next){
                 }
             }
         }
-        
-        
+
+
         my $location = $result->{'geometry'}->{'location'};
         my $latitude = $location->{'lat'};
         my $longitude = $location->{'lng'};
         print STDERR "Lat: $latitude Long: $longitude\n";
-        
+
         print $F $r->description()."\t".$r->longitude()."\t".$r->latitude()."\t".$longitude."\t".$latitude."\t".$country."\t".$country_code."\t".$formatted_address."\n";
-        
+
         if ($opt_s){
             if($longitude && $latitude){
                 my %update = (longitude=>$longitude, latitude=>$latitude);
@@ -162,4 +162,3 @@ while(my$r = $geolocation_rs->next){
 }
 
 close($F);
-

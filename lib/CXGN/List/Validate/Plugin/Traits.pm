@@ -16,7 +16,7 @@ sub validate {
 
 #    print STDERR "LIST: ".Data::Dumper::Dumper($list);
 
-# Expects $terms to be full trait names e.g. root weight|CO:0000012
+# Expects $terms to be full trait names e.g. root weight|CO_334:0000012
 # For postcomposed terms expects full trait names e.g. tissue metabolite unit time|COMP:0000015
 
     foreach my $term (@$list) {

@@ -110,7 +110,7 @@ sub get_cross_info {
     while (my ($female_parent_id, $male_parent_id, $cross_entry_id, $female_parent_name, $male_parent_name, $cross_name, $cross_type) = $h->fetchrow_array()){
       push @cross_info, [$female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_entry_id, $cross_name, $cross_type]
     }
-    print STDERR Dumper(\@cross_info);
+    #print STDERR Dumper(\@cross_info);
     return \@cross_info;
 }
 
@@ -177,7 +177,7 @@ sub get_progeny_info {
 
     push @progeny_info, [$female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $progeny_id, $progeny_name, $cross_type]
     }
-      print STDERR Dumper(\@progeny_info);
+      #print STDERR Dumper(\@progeny_info);
       return \@progeny_info;
     }
 

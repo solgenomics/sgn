@@ -156,7 +156,7 @@ sub upload_seedlots_POST : Args(0) {
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
-        $user_role = $c->user()->roles;
+        $user_role = $c->user->get_object->get_user_type();
     }
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema");

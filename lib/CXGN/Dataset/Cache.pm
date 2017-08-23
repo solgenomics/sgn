@@ -23,7 +23,7 @@ has 'cache_expiry' => (isa => 'Int',
 		       default => 0, # never expires?
     );
 
-sub key { 
+sub key {
     my $self = shift;
     my $datatype = shift;
 
@@ -41,16 +41,16 @@ after('BUILD', sub {
       });
 
 
-override('retrieve_genotypes', 
-	 sub { 
+override('retrieve_genotypes',
+	 sub {
 	     my $self = shift;
 	     my $protocol_id = shift;
-	     if ($self->cache()->exists($self->key("genotype"))) { 
+	     if ($self->cache()->exists($self->key("genotype"))) {
 		 my $genotype_json = $self->cache()->get($self->key("genotype"));
 		 my $genotypes = JSON::Any->decode($genotype_json);
 		 return $genotypes;
 	     }
-	     else { 
+	     else {
 		 my $genotypes = $self->SUPER::retrieve_genotypes($protocol_id);
 		 my $genotype_json = JSON::Any->encode($genotypes);
 		 $self->cache()->set($self->key("genotype"), $genotype_json, $self->cache_expiry());
@@ -61,65 +61,65 @@ override('retrieve_genotypes',
 override('retrieve_phenotypes',
 	 sub {
 	     my $self = shift;
-	     if ($self->cache()->exists($self->key("phenotype"))) { 
+	     if ($self->cache()->exists($self->key("phenotype"))) {
 		 my $phenotype_json = $self->cache()->get($self->key("phenotype"));
 		 my $phenotypes = JSON::Any->decode($phenotype_json);
 		 return $phenotypes;
 	     }
-	     else { 
+	     else {
 		 my $phenotypes = $self->SUPER::retrieve_phenotypes();
 		 my $phenotype_json = JSON::Any->encode($phenotypes);
 		 $self->cache()->set($self->key("phenotype"), $phenotype_json, $self->cache_expiry());
 		 return $phenotypes;
-	     }	     
+	     }
 	 });
 
 override('retrieve_accessions',
-	 sub { 
+	 sub {
 	     my $self = shift;
-	     if ($self->cache()->exists($self->key("accessions"))) { 
+	     if ($self->cache()->exists($self->key("accessions"))) {
 		 my $accession_json = $self->cache()->get($self->key("accessions"));
 		 my $accessions = JSON::Any->decode($accession_json);
 		 return $accessions;
 	     }
-	     else { 
+	     else {
 		 my $accessions = $self->SUPER::retrieve_accessions();
 		 my $accession_json = JSON::Any->encode($accessions);
 		 $self->cache()->set($self->key("accessions"), $accession_json, $self->cache_expiry());
 		 return $accessions;
-	     }	     
+	     }
 	 });
 
 override('retrieve_plots',
-	 sub { 
+	 sub {
 	     my $self = shift;
-	     
-	     if ($self->cache()->exists($self->key("plots"))) { 
+
+	     if ($self->cache()->exists($self->key("plots"))) {
 		 print STDERR "Retrieving plots from cache...\n";
 		 my $plot_json = $self->cache()->get($self->key("plots"));
 		 my $plots = JSON::Any->decode($plot_json);
 		 return $plots;
 	     }
-	     else { 
+	     else {
 		 print STDERR "Retrieving plots and caching them...\n";
 		 my $plots = $self->SUPER::retrieve_plots();
-		 print STDERR Dumper($plots);
+		 #print STDERR Dumper($plots);
 		 my $plot_json = JSON::Any->encode($plots);
 		 $self->cache()->set($self->key("plots"), $plot_json, $self->cache_expiry());
 		 return $plots;
-	     }	     
+	     }
 	 });
 
 override('retrieve_trials',
-	 sub { 
+	 sub {
 	     my $self = shift;
 
-	     if ($self->cache()->exists($self->key("trials"))) { 
+	     if ($self->cache()->exists($self->key("trials"))) {
 		 my $trial_json = $self->cache()->get($self->key("trials"));
 		 my $trials = JSON::Any->decode($trial_json);
 		 return $trials;
 	     }
-	     else { 
+	     else {
 		 my $trials = $self->SUPER::retrieve_trials();
 		 my $trial_json = JSON::Any->encode($trials);
 		 $self->cache()->set(
@@ -130,14 +130,14 @@ override('retrieve_trials',
 	 });
 
 override('retrieve_traits',
-	 sub { 
+	 sub {
 	     my $self = shift;
-	     if ($self->cache()->exists($self->key("traits"))) { 
+	     if ($self->cache()->exists($self->key("traits"))) {
 		 my $traits_json = $self->cache()->get($self->key("traits"));
 		 my $traits = JSON::Any->decode($traits_json);
 		 return $traits;
 	     }
-	     else { 
+	     else {
 		 my $traits = $self->SUPER::retrieve_traits();
 		 my $trait_json = JSON::Any->encode($traits);
 		 $self->cache()->set(
@@ -148,14 +148,14 @@ override('retrieve_traits',
 	 });
 
 override('retrieve_years',
-	 sub { 
+	 sub {
 	     my $self = shift;
-	     if ($self->cache()->exists($self->key("years"))) { 
-		 my $year_json = $self->cache()->get($self->key("years")); 
+	     if ($self->cache()->exists($self->key("years"))) {
+		 my $year_json = $self->cache()->get($self->key("years"));
 		 my $years = JSON::Any->decode($year_json);
 		 return $years;
 	     }
-	     else { 
+	     else {
 		 my $years = $self->SUPER::retrieve_years();
 		 my $year_json = JSON::Any->encode($years);
 		 $self->cache()->set(
@@ -164,7 +164,7 @@ override('retrieve_years',
 		 return $years;
 	     }
 	 });
-      
+
 
 
 1;
