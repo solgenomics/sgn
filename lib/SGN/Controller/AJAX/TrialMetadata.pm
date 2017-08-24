@@ -243,7 +243,10 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
         );
     }
     my @data = $phenotypes_search->get_phenotype_matrix();
-    $c->stash->{rest} = { data => \@data };
+    $c->stash->{rest} = { 
+      status => "success",
+      data => \@data 
+   };
 }
 
 sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {

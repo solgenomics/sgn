@@ -182,6 +182,9 @@ function trait_summary_hist_display_change(value) {
                         jQuery("#working_modal").modal("hide");
                         if (response.error) {
                             alert(response.error);
+                        } 
+                        else if (response.status!="success"){
+                            alert("Problem loading plant/plot data: "+response.status);
                         }
                         else {
                             draw_histogram(response.data, d3.select("#trial_summary_hist").node());
@@ -219,6 +222,9 @@ function trait_summary_hist_change(value) {
             jQuery("#working_modal").modal("hide");
             if (response.error) {
                 alert(response.error);
+            }
+            else if (response.status!="success"){
+                alert("Problem loading plant/plot data: "+response.status);
             }
             else {
                 draw_histogram(response.data, d3.select("#trial_summary_hist").node());
