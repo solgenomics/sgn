@@ -467,7 +467,8 @@ sub save_experimental_design_POST : Args(0) {
         trial_name => $trial_name,
         design_type => $c->req->param('design_type'),
         trial_type => $trial_type,
-        trial_has_plant_entries => $c->req->param('has_plant_entries')
+        trial_has_plant_entries => $c->req->param('has_plant_entries'),
+        trial_has_subplot_entries => $c->req->param('has_subplot_entries'),
 	  });
 
   #$trial_create->set_user($c->user()->id());

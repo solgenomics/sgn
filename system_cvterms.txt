@@ -103,6 +103,7 @@ project_property	project sown plants
 project_property	project transplanting date					sgn database
 project_property	project year					
 project_property	project_has_plant_entries				00054	
+project_property	project_has_subplot_entries				00084	
 project_property	trial_folder					
 project_property	folder_for_trials	For determining if a folder appears on manage trials page	12/6/16	nm529	00071	
 project_property	folder_for_crosses	For determining if a folder appears on manage crosses page	12/6/16	nm529	00071	
@@ -168,6 +169,7 @@ stock_relationship	offspring_of				00052
 stock_relationship	plant_of				00052	
 stock_relationship	plot_of				00052	
 stock_relationship	subplot_of				00084	
+stock_relationship	plant_of_subplot				00084	
 stock_relationship	tissue_sample_of				00052	
 stock_relationship	collection_of				00077	
 stock_relationship	seed transaction				00077	

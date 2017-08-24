@@ -27,6 +27,7 @@ $harvest_date => undef
 $trial_description => undef
 $user_can_modify => undef
 $has_plant_entries => undef
+$has_subplot_entries => undef
 $hidap_enabled => undef
 $folder_name => undef
 $folder_id => undef
@@ -299,11 +300,15 @@ my $start_time = time();
 
 </&>
 
+% if ($has_subplot_entries) {
+
 <&| /page/info_section.mas, id => "trial_subplots", title=>"Subplots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
 <& /breeders_toolbox/trial/trial_subplots.mas, trial_id => $trial_id &>
 
 </&>
+
+% }
 
 <&| /page/info_section.mas, id => "trial_plants", title=>"Plant Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
 

@@ -97,8 +97,8 @@ sub validate_design {
 		$error .= "The design_type 'genotyping_plate' requires is_genotyping to be true";
 		return $error;
 	}
-	if ($design_type ne 'genotyping_plate' && $design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type && 'Augmented' && $design_type ne 'RCBD'){
-		$error .= "Design type must be either: genotyping_plate, CRD, Alpha, Augmented, or RCBD";
+	if ($design_type ne 'genotyping_plate' && $design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type && 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'splitplot'){
+		$error .= "Design $design_type type must be either: genotyping_plate, CRD, Alpha, Augmented, or RCBD";
 		return $error;
 	}
 	my @valid_properties;
@@ -121,6 +121,22 @@ sub validate_design {
 			'col_number',
 			'plant_names'
 		);
+	} elsif ($design_type eq 'splitplot'){
+		@valid_properties = (
+			'stock_name',
+			'plot_name',
+			'plot_number',
+			'block_number',
+			'rep_number',
+			'is_a_control',
+			'range_number',
+			'row_number',
+			'col_number',
+			'plant_names',
+			'subplots_names',
+			'treatments',
+			'subplots_plant_names'
+		);
 	}
 	my %allowed_properties = map {$_ => 1} @valid_properties;
 
@@ -134,6 +150,9 @@ sub validate_design {
 	}
 
 	foreach my $stock (keys %design){
+		if ($stock eq 'treatments'){
+			next;
+		}
 		foreach my $property (keys %{$design{$stock}}){
 			if (!exists($allowed_properties{$property})) {
 				$error .= "Property: $property not allowed! ";
@@ -169,6 +188,7 @@ sub store {
 	my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
 	my $subplot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type');
 	my $subplot_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot_of', 'stock_relationship');
+	my $plant_of_subplot = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of_subplot', 'stock_relationship');
 	my $subplot_index_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot_index_number', 'stock_property');
 	my $plant_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type');
 	my $plant_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of', 'stock_relationship');
@@ -469,7 +489,7 @@ sub store {
 							my $plant_stock_id = $new_stock_ids_hash{$_};
 							my $plant_to_subplot = $chado_schema->resultset("Stock::StockRelationship")->create({
 								object_id => $subplot->stock_id(),
-								type_id => $plant_of->cvterm_id(),
+								type_id => $plant_of_subplot->cvterm_id(),
 								subject_id => $plant_stock_id
 							});
 						}

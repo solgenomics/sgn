@@ -98,6 +98,7 @@ has 'design' => (isa => 'HashRef[HashRef[Str|ArrayRef|HashRef]]|Undef', is => 'r
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 1);
 has 'trial_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_type', required => 0);
 has 'trial_has_plant_entries' => (isa => 'Int', is => 'rw', predicate => 'has_trial_has_plant_entries', required => 0);
+has 'trial_has_subplot_entries' => (isa => 'Int', is => 'rw', predicate => 'has_trial_has_subplot_entries', required => 0);
 
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
 has 'genotyping_user_id' => (isa => 'Str', is => 'rw');
@@ -167,6 +168,7 @@ sub save_trial {
 	my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project year', 'project_property');
 	my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
 	my $has_plant_entries_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property');
+	my $has_subplot_entries_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property');
 	my $genotyping_user_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_user_id', 'nd_experiment_property');
 	my $genotyping_project_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'genotyping_project_name', 'nd_experiment_property');
 
@@ -219,6 +221,11 @@ sub save_trial {
 			$has_plant_entries_cvterm->name() => $self->get_trial_has_plant_entries
 		});
 	}
+	if ($self->has_trial_has_subplot_entries && $self->get_trial_has_subplot_entries){
+		$project->create_projectprops({
+			$has_subplot_entries_cvterm->name() => $self->get_trial_has_subplot_entries
+		});
+	}
 
 	my $design_type = $self->get_design_type();
 	if ($design_type eq 'greenhouse') {
@@ -237,7 +244,7 @@ sub save_trial {
 		is_genotyping => $self->get_is_genotyping
 	});
 	my $error;
-	my $validate_design_error => $trial_design_store->validate_design();
+	my $validate_design_error = $trial_design_store->validate_design();
 	if ($validate_design_error) {
 		print STDERR "ERROR: $validate_design_error\n";
 		return ( error => "Error validating trial design: $validate_design_error." );

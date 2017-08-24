@@ -70,9 +70,13 @@ sub patch {
 		],
 		'stock_relationship' => [
 			'subplot_of',
+			'plant_of_subplot'
 		],
 		'list_types' => [
 			'subplots'
+		],
+		'project_property' => [
+			'project_has_subplot_entries'
 		]
 	};
 

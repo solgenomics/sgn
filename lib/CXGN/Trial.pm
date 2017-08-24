@@ -1645,6 +1645,35 @@ sub has_plant_entries {
 
 }
 
+=head2 function has_subplot_entries()
+
+	Usage:        $trial->has_subplot_entries();
+	Desc:         Some trials require subplot-level data (splitplot designs). This function will determine if a trial has subplots associated with it.
+	Ret:          Returns 1 if trial has subplots, 0 if the trial does not.
+	Args:
+	Side Effects:
+	Example:
+
+=cut
+
+sub has_subplot_entries {
+	my $self = shift;
+	my $chado_schema = $self->bcs_schema();
+	my $has_subplots_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property' );
+
+	my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+		type_id => $has_subplots_cvterm->cvterm_id(),
+		project_id => $self->get_trial_id(),
+	});
+
+	if ($rs) {
+		return 1;
+	} else {
+		return 0;
+	}
+
+}
+
  sub get_planting_date_cvterm_id {
      my $self = shift;
      my $planting_date =  SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'project_planting_date', 'project_property');
