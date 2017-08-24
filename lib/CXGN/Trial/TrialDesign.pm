@@ -441,6 +441,8 @@ sub _get_p_rep_design {
     for (my $n=0; $n<scalar(@stock_list); $n++) {
         $stock_data_hash{$counts[$n]} = $stock_list[$n];
     }
+    my ($no_row_in_block,$no_block_in_design) = split(',', $block_sequence);
+    $no_row_in_block = $no_row_in_block * $col_in_design_number;
     
     $r_block = $rbase->create_block('r_block');
     $stock_data_matrix->send_rbase($rbase, 'r_block'); 
@@ -472,14 +474,29 @@ sub _get_p_rep_design {
     $r_block->add_command('colnames(field_map_melt) <- c("col_number","row_number","trt")');
     $r_block->add_command('rownames(field_map_melt) <- rownames(field_map_melt, do.NULL = FALSE, prefix = "Obs.")');
     $r_block->add_command('dim_trt <- dim(field_map_melt)[1]');
+    $r_block->add_command('blockNo <- rep(1:'.$no_block_in_design.', each='.$no_row_in_block.')');
+    $r_block->add_command('blockNo <- melt(blockNo)');
+    $r_block->add_command('colnames(blockNo) <- c("block")');
+    $r_block->add_command('rownames(blockNo) <- rownames(blockNo, do.NULL = FALSE, prefix = "Obs.")');
+    
+    $r_block->add_command('blockNo_merge <- match(rownames(field_map_melt), rownames(blockNo) )');
+    $r_block->add_command('blockNo_merge <- cbind( field_map_melt, blockNo[blockNo_merge,] )');
+    
+    $r_block->add_command('colnames(blockNo_merge) <- c("col_number","row_number","trt","block")');
+    $r_block->add_command('rownames(blockNo_merge) <- rownames(blockNo_merge, do.NULL = FALSE, prefix = "Obs.")');
+    
     $r_block->add_command('plot_num <- c(1:dim_trt)');
     $r_block->add_command('plot_num <- t(plot_num)');
     $r_block->add_command('plot_num <- melt(plot_num)');
     $r_block->add_command('colnames(plot_num) <- c("p2","p1","plots")');
     $r_block->add_command('rownames(plot_num) <- rownames(plot_num, do.NULL = FALSE, prefix = "Obs.")');
-    $r_block->add_command('layout_merge <- match(rownames(field_map_melt), rownames(plot_num) )');
-    $r_block->add_command('layout_merge <- cbind( field_map_melt, plot_num[layout_merge,] )');
-    $r_block->add_command('layout <- subset(layout_merge, select = c(plots, row_number, col_number, trt))');
+    
+    #$r_block->add_command('layout_merge <- match(rownames(field_map_melt), rownames(plot_num) )');
+    #$r_block->add_command('layout_merge <- cbind( field_map_melt, plot_num[layout_merge,] )');
+    $r_block->add_command('layout_merge <- match(rownames(blockNo_merge), rownames(plot_num) )');
+    $r_block->add_command('layout_merge <- cbind( blockNo_merge, plot_num[layout_merge,] )');
+    
+    $r_block->add_command('layout <- subset(layout_merge, select = c(plots, block, row_number, col_number, trt))');
     $r_block->add_command('pRepDesign <- as.matrix(layout)');
     #$r_block->run_block();
     
@@ -488,6 +505,7 @@ sub _get_p_rep_design {
      @stock_names = $result_matrix->get_column("trt");
      my @row_numbers = $result_matrix->get_column("row_number");
      my @col_numbers = $result_matrix->get_column("col_number");
+     @block_numbers = $result_matrix->get_column("block");
      @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
      
      my $counting = 0;
@@ -499,7 +517,7 @@ sub _get_p_rep_design {
                $plot_info{'stock_name'} = $stock_data_hash{$key};
            }
        }
-       $plot_info{'block_number'} = $row_numbers[$i];
+       $plot_info{'block_number'} = $block_numbers[$i];
        $plot_info{'plot_name'} = $converted_plot_numbers[$i];
        $plot_info{'row_number'} = $row_numbers[$i];
        $plot_info{'col_number'} = $col_numbers[$i];
