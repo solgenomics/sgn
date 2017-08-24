@@ -342,7 +342,7 @@ jQuery(document).ready(function() {
       $('#add_location_dialog').modal("show");
    });
 
-   get_select_box("breeding_programs", "breeding_program", {'empty':1});
+   get_select_box("breeding_programs", "breeding_program", {'empty':1, 'default':'please select'});
 
    $('#store_location_submit').click( function(event) {
        event.preventDefault();
@@ -352,7 +352,7 @@ jQuery(document).ready(function() {
        var country_code = $('#location_country').val();
        var country_text = $('#location_country option:selected').text();
        var country_name = country_text.replace(/^[^\s]+(.*)/, '$1').trim();
-       var program = $('#breeding_program_list_select').text();
+       var program = $('#breeding_program_select option:selected').text();
        var type = $('#location_type').val();
        var latitude = $('#location_latitude').val();
        var longitude = $('#location_longitude').val();
@@ -648,13 +648,15 @@ function onEachFeature(feature, layer) {
            all_rows.push(data[i]);
        }
        var loc_data = all_rows.shift();
-       console.log("Data for location to edit: "+JSON.stringify(loc_data));
+       //console.log("Data for location to edit: "+JSON.stringify(loc_data));
         // console.log("Id for location to edit is "+table_data.properties.Id);
         $('#location_id').val(loc_data.properties.Id);
         $('#location_name').val(loc_data.properties.Name);
         $('#location_abbreviation').val(loc_data.properties.Abbreviation);
         $('#location_country').val(loc_data.properties.Country);
-        $('#breeding_program_list_select').val(loc_data.properties.Program);
+        $("#breeding_program_select option").filter(function() {
+            return this.text == loc_data.properties.Program;
+        }).attr('selected', true);
         $('#location_type').val(loc_data.properties.Type);
         $('#location_latitude').val(loc_data.properties.Latitude);
         $('#location_longitude').val(loc_data.properties.Longitude);

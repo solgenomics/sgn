@@ -291,7 +291,7 @@ LEFT JOIN nd_geolocationprop AS abbreviation ON (geo.nd_geolocation_id = abbrevi
 LEFT JOIN nd_geolocationprop AS country_code ON (geo.nd_geolocation_id = country_code.nd_geolocation_id AND country_code.type_id = (SELECT cvterm_id from cvterm where name = 'country_code') )
 LEFT JOIN nd_geolocationprop AS location_type ON (geo.nd_geolocation_id = location_type.nd_geolocation_id AND location_type.type_id = (SELECT cvterm_id from cvterm where name = 'location_type') )
 LEFT JOIN nd_geolocationprop AS breeding_program_id ON (geo.nd_geolocation_id = breeding_program_id.nd_geolocation_id AND breeding_program_id.type_id = (SELECT cvterm_id from cvterm where name = 'breeding_program') )
-LEFT JOIN project breeding_program ON (breeding_program.project_id=breeding_program_id.value)
+LEFT JOIN project breeding_program ON (breeding_program.project_id=breeding_program_id.value::INT)
 LEFT JOIN projectprop ON (projectprop.value::INT = geo.nd_geolocation_id AND projectprop.type_id=?)
 GROUP BY 1,2,3,4,5,6
 ORDER BY 8,2";

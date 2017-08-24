@@ -127,9 +127,12 @@ sub store_location {
 
     my $breeding_program_type_id = $schema->resultset('Cv::Cvterm')->find( { name => 'breeding_program' } )->cvterm_id();
 
-    my $breeding_program_exists = $self->bcs_schema->resultset("Project::Project")->search({ 'me.name' => $breeding_program })->search_related('projectprops', { type_id => $breeding_program_type_id });
+    my $breeding_program_rs = $self->bcs_schema->resultset("Project::Project")->search({ name => $breeding_program });
+    my $breeding_program_exists = $breeding_program_rs->search_related('projectprops', {'projectprops.type_id'=>$breeding_program_type_id});
 
-    my $program_id = $breeding_program_exists->project_id();
+    # $self->bcs_schema->resultset("Project::Projectprop")->search({ 'me.type_id' => $breeding_program_type_id })->search_related('project', { 'project.name' => $breeding_program });
+
+    my $program_id = $breeding_program_exists->first->project_id();
 
     if (!$nd_geolocation_id && $nd_geolocation_exists > 0) { # can't add a new location with name that already exists
 	    return { error => "The location - $name - already exists. Please choose another name, or use the exisiting location" };
@@ -298,7 +301,7 @@ sub _store_ndgeolocationprop {
         $row->value($value);
         $row->update();
     } else {
-        my $stored_ndgeolocationprop = $self->location->create_geolocationprops({ $type => $value});
+        my $stored_ndgeolocationprop = $self->location->create_geolocationprops({ $type => $value}, {cv_name => $cv });
     }
 }
 
