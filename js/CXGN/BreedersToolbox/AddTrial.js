@@ -104,6 +104,7 @@ jQuery(document).ready(function ($) {
        });
     }
 
+    var num_plants_per_plot = 0;
     function generate_experimental_design() {
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
@@ -157,7 +158,11 @@ jQuery(document).ready(function ($) {
             }
         }
         //console.log(treatments);
-        var num_plants_per_plot = $('#num_plants_per_plot').val();
+        var num_plants_per_treatment = $('#num_plants_per_treatment').val();
+        num_plants_per_plot = 0;
+        if (num_plants_per_treatment){
+            num_plants_per_plot = num_plants_per_treatment*treatments.length;
+        }
 
         var greenhouse_num_plants = [];
         if (stock_list_id != "" && design_type == 'greenhouse') {
@@ -609,6 +614,7 @@ jQuery(document).ready(function ($) {
                 'fieldmap_col_number': fieldmap_col_number,
                 'fieldmap_row_number': fieldmap_row_number,
                 'plot_layout_format': plot_layout_format,
+                'has_plant_entries': num_plants_per_plot
             },
             success: function (response) {
                 if (response.error) {

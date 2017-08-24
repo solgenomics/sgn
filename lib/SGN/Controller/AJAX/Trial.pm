@@ -134,24 +134,28 @@ sub generate_experimental_design_POST : Args(0) {
   my $fieldmap_row_number = $c->req->param('fieldmap_row_number');
   my $plot_layout_format = $c->req->param('plot_layout_format');
   my @treatments = $c->req->param('treatments[]');
-  my $num_plants_per_treatment = $c->req->param('num_plants_per_plot');
-  if (scalar(@treatments)<1){
-      $c->stash->{rest} = { error => "You need to provide at least one treatment for a splitplot design."};
-      return;
+  my $num_plants_per_plot = $c->req->param('num_plants_per_plot');
+  print STDERR "NUMPLANTSPERPLOT: $num_plants_per_plot\n";
+
+  if ($design_type eq 'splitplot'){
+      if (scalar(@treatments)<1){
+          $c->stash->{rest} = { error => "You need to provide at least one treatment for a splitplot design."};
+          return;
+      }
+      if (!$num_plants_per_plot){
+          $c->stash->{rest} = { error => "You need to provide number of plants per treatment for a splitplot design."};
+          return;
+      }
+      if ($num_plants_per_plot <1){
+          $c->stash->{rest} = { error => "You need to provide number of plants per treatment for a splitplot design."};
+          return;
+      }
+      if (($num_plants_per_plot%(scalar(@treatments)))!=0){
+          $c->stash->{rest} = {error => "Number of plants per plot needs to divide evenly by the number of treatments. For example: if you have two treatments and there are 3 plants per treatment, that means you have 6 plants per plot." };
+          return;
+      }
   }
-  if (!$num_plants_per_treatment){
-      $c->stash->{rest} = { error => "You need to provide number of plants per treatment for a splitplot design."};
-      return;
-  }
-  if ($num_plants_per_treatment <1){
-      $c->stash->{rest} = { error => "You need to provide number of plants per treatment for a splitplot design."};
-      return;
-  }
-  my $num_plants_per_plot = $num_plants_per_treatment*scalar(@treatments);
-  if (($num_plants_per_plot%(scalar(@treatments)))!=0){
-      $c->stash->{rest} = {error => "Number of plants per plot needs to divide evenly by the number of treatments. For example: if you have two treatments and there are 3 plants per treatment, that means you have 6 plants per plot." };
-      return;
-  }
+
   #my $trial_name = $c->req->param('project_name');
   my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
   my $use_same_layout = $c->req->param('use_same_layout');
@@ -462,7 +466,8 @@ sub save_experimental_design_POST : Args(0) {
         trial_location => $trial_location,
         trial_name => $trial_name,
         design_type => $c->req->param('design_type'),
-        trial_type => $trial_type
+        trial_type => $trial_type,
+        trial_has_plant_entries => $c->req->param('has_plant_entries')
 	  });
 
   #$trial_create->set_user($c->user()->id());

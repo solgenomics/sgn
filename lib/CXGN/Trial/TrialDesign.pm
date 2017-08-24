@@ -1891,7 +1891,6 @@ sub _get_splitplot_design {
 
     if ($plot_layout_format eq "zigzag") {
         if (!$fieldmap_col_number){
-            print STDERR "NUMREP: $number_of_reps\n";
             for (1..$number_of_reps){
                 for my $s (1..(scalar(@stock_list))){
                     for (1..scalar(@$treatments)){
@@ -1900,32 +1899,52 @@ sub _get_splitplot_design {
                 }
             }
         } else {
-            print STDERR "ROWNUM: $fieldmap_row_number\n";
-            @col_number_fieldmaps = ((1..$fieldmap_col_number*scalar(@$treatments)) x $fieldmap_row_number);
+            for (1..$fieldmap_row_number){
+                for my $s (1..$fieldmap_col_number){
+                    for (1..scalar(@$treatments)){
+                        push @col_number_fieldmaps, $s;
+                    }
+                }
+            }
         }
     }
     elsif ($plot_layout_format eq "serpentine") {
         if (!$fieldmap_row_number)  {
             for my $rep (1 .. $number_of_reps){
                 if ($rep % 2){
-                    push @col_number_fieldmaps, (1..(scalar(@stock_list)*scalar(@$treatments)));
+                    for my $s (1..(scalar(@stock_list))){
+                        for (1..scalar(@$treatments)){
+                            push @col_number_fieldmaps, $s;
+                        }
+                    }
                 } else {
-                    push @col_number_fieldmaps, (reverse 1..(scalar(@stock_list)*scalar(@$treatments)));
+                    for my $s (reverse 1..(scalar(@stock_list))){
+                        for (1..scalar(@$treatments)){
+                            push @col_number_fieldmaps, $s;
+                        }
+                    }
                 }
             }
         } else {
             for my $rep (1 .. $fieldmap_row_number){
                 if ($rep % 2){
-                    push @col_number_fieldmaps, (1..$fieldmap_col_number*scalar(@$treatments));
+                    for my $s (1..$fieldmap_col_number){
+                        for (1..scalar(@$treatments)){
+                            push @col_number_fieldmaps, $s;
+                        }
+                    }
                 } else {
-                    push @col_number_fieldmaps, (reverse 1..$fieldmap_col_number*scalar(@$treatments));
+                    for my $s (reverse 1..$fieldmap_col_number){
+                        for (1..scalar(@$treatments)){
+                            push @col_number_fieldmaps, $s;
+                        }
+                    }
                 }
             }
         }
     }
 
     if ($plot_layout_format && !$fieldmap_col_number && !$fieldmap_row_number){
-        print STDERR "HERE\n";
         @fieldmap_row_numbers = sort(@rep_numbers);
     }
     elsif ($plot_layout_format && $fieldmap_row_number){

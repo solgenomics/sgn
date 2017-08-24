@@ -11,7 +11,7 @@ $breeding_programs
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addProjectDialog">Add New Trial</h4>
+                <h4 class="modal-title" id="addProjectDialog">Design New Trial</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -200,7 +200,7 @@ $breeding_programs
                                 <div class="form-group form-group-sm" id="num_plants_per_plot_section" style="display: none">
                                     <label class="col-sm-7 control-label">Number of Plants Per Treatment (required): </label>
                                     <div class="col-sm-5" >
-                                        <input class="form-control" id="num_plants_per_plot" name="num_plants_per_plot" />
+                                        <input class="form-control" id="num_plants_per_treatment" name="num_plants_per_treatment" />
                                     </div>
                                 </div>
 
@@ -310,7 +310,7 @@ $breeding_programs
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="new_trial_submit" id="new_trial_submit">Add Trial</button>
+                <button type="button" class="btn btn-primary" name="new_trial_submit" id="new_trial_submit">Design Trial (Saving Occurs In Next Step)</button>
             </div>
         </div>
     </div>
@@ -356,7 +356,7 @@ $breeding_programs
             <div class="modal-footer">
                 <button type="button" class="btn btn-info" name="new_trial_add_treatments" >Add Treatments to Design</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="new_trial_confirm_submit" id="new_trial_confirm_submit">Confirm</button>
+                <button type="button" class="btn btn-primary" name="new_trial_confirm_submit" id="new_trial_confirm_submit">Confirm (Saves Trial In Database)</button>
             </div>
         </div>
     </div>
