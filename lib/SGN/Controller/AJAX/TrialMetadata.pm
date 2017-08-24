@@ -10,6 +10,7 @@ use Math::Round::Var;
 use List::MoreUtils qw(uniq);
 use CXGN::Trial::FieldMap;
 use JSON;
+use CXGN::Phenotypes::PhenotypeMatrix;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -204,6 +205,49 @@ sub traits_assayed : Chained('trial') PathPart('traits_assayed') Args(0) {
     $c->stash->{rest} = { traits_assayed => \@traits_assayed };
 }
 
+sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    #get userinfo from db
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $user = $c->user();
+    if (! $c->user) {
+      $c->stash->{rest} = {
+        status => "not logged in"
+      };
+      return;
+    }
+    my $display = $c->req->param('display');
+    my $trait = $c->req->param('trait');
+    my @trait_list = ($trait);
+    print STDERR 'DUMP'.Dumper( @trait_list).'\n';
+    my $phenotypes_search;
+    if ($display eq 'plot') {
+        my @items = map {@{$_}[0]} @{$c->stash->{trial}->get_plots()};
+        $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+            bcs_schema=> $schema,
+            search_type => "Native",
+            data_level => $display,
+            trait_list=> \@trait_list,
+            plot_list=>  \@items
+        );
+    }
+    if ($display eq 'plant') {
+        my @items = map {@{$_}[0]} @{$c->stash->{trial}->get_plants()};
+        $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+            bcs_schema=> $schema,
+            search_type => "Native",
+            data_level => $display,
+            trait_list=> \@trait_list,
+            plant_list=>  \@items
+        );
+    }
+    my @data = $phenotypes_search->get_phenotype_matrix();
+    $c->stash->{rest} = { 
+      status => "success",
+      data => \@data 
+   };
+}
 
 sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $self = shift;
