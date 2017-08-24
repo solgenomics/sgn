@@ -443,7 +443,8 @@ $breeding_programs
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                           <b>Background:</b>
                         </h4>
-                          <center><p>Partially replicated designs have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. Partially replicated design were described in Cullis et al. (2006). It is recommended that at least 20% of the experimental units are occupied by replicated treatments. The aim of these experiments is usually to select promising treatments from a set of replicated and unreplicated test treatments, with check and quality standard treatments providing the necessary replication overall to give a valid experiment. </p></center>
+                          <center><p>Partially replicated designs have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. The design were described in Cullis et al. (2006). It is recommended that at least 20% of the experimental units are occupied by replicated treatments. The aim of these experiments is usually to select promising treatments from a set of replicated and unreplicated test treatments, with check and quality standard treatments providing the necessary replication overall to give a valid experiment. DiGGer (Coombes, 2002) was used to implement this design. DiGGer is a flexible tool for creating experimental designs that are efficient for specified blocking and correlation patterns. DiGGer package (http://www.austatgen.org/files/software/downloads) is an add-on for the statistical computing language and environment R (R
+Development Core Team, 2009).</p></center>
                         <h4>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                         <b>Design Parameters:</b>
