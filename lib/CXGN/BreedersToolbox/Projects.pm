@@ -271,7 +271,7 @@ ORDER BY 8,2";
     return \@locations;
 }
 
-sub get_location_json {
+sub get_location_geojson {
     my $self = shift;
 
     my $project_location_type_id = $self ->schema->resultset('Cv::Cvterm')->search( { 'name' => 'project location' })->first->cvterm_id();
@@ -290,10 +290,9 @@ FROM nd_geolocation AS geo
 LEFT JOIN nd_geolocationprop AS abbreviation ON (geo.nd_geolocation_id = abbreviation.nd_geolocation_id AND abbreviation.type_id = (SELECT cvterm_id from cvterm where name = 'abbreviation') )
 LEFT JOIN nd_geolocationprop AS country_code ON (geo.nd_geolocation_id = country_code.nd_geolocation_id AND country_code.type_id = (SELECT cvterm_id from cvterm where name = 'country_code') )
 LEFT JOIN nd_geolocationprop AS location_type ON (geo.nd_geolocation_id = location_type.nd_geolocation_id AND location_type.type_id = (SELECT cvterm_id from cvterm where name = 'location_type') )
+LEFT JOIN nd_geolocationprop AS breeding_program_id ON (geo.nd_geolocation_id = breeding_program_id.nd_geolocation_id AND breeding_program_id.type_id = (SELECT cvterm_id from cvterm where name = 'breeding_program') )
+LEFT JOIN project breeding_program ON (breeding_program.project_id=breeding_program_id.value)
 LEFT JOIN projectprop ON (projectprop.value::INT = geo.nd_geolocation_id AND projectprop.type_id=?)
-LEFT JOIN project AS trial ON (trial.project_id=projectprop.project_id)
-LEFT JOIN project_relationship ON (subject_project_id=trial.project_id AND project_relationship.type_id = (SELECT cvterm_id from cvterm where name = 'breeding_program_trial_relationship'))
-LEFT JOIN project breeding_program ON (breeding_program.project_id=object_project_id)
 GROUP BY 1,2,3,4,5,6
 ORDER BY 8,2";
 

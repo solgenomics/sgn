@@ -34,7 +34,7 @@ __PACKAGE__->config(
 
        my $location = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
 
-       my $all_locations = $location->get_location_json();
+       my $all_locations = $location->get_location_geojson();
        #print STDERR "Returning with all locations: ".$all_locations."\n";
        $c->stash->{rest} = { data => $all_locations };
 
@@ -49,6 +49,7 @@ __PACKAGE__->config(
        my $abbreviation =  $params->{abbreviation};
        my $country_name =  $params->{country_name};
        my $country_code =  $params->{country_code};
+       my $program =  $params->{program};
        my $type =  $params->{type};
        my $latitude    = $params->{latitude};
        my $longitude   = $params->{longitude};
@@ -71,6 +72,7 @@ __PACKAGE__->config(
            abbreviation => $abbreviation,
            country_name => $country_name,
            country_code => $country_code,
+           breeding_program => $program,
            location_type => $type,
            latitude => $latitude,
            longitude => $longitude,
@@ -189,6 +191,7 @@ __PACKAGE__->config(
              abbreviation => $data[1],
              country_code => $data[2],
              country_name => $data[3],
+             breeding_program => $data[4],
              location_type => $data[5],
              latitude => $data[6],
              longitude => $data[7],

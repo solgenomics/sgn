@@ -60,6 +60,11 @@ has 'country_code' => (
 	is => 'rw',
 );
 
+has 'breeding_program' => (
+    isa => 'Maybe[Str]',
+	is => 'rw',
+);
+
 has 'location_type' => (
     isa => 'Maybe[Str]',
 	is => 'rw',
@@ -96,10 +101,11 @@ sub BUILD {
         $self->latitude( $self->latitude || $location->latitude );
         $self->longitude( $self->longitude || $location->longitude );
         $self->altitude( $self->altitude || $location->altitude );
-        $self->abbreviation( $self->abbreviation || $self->_get_ndgeolocationprop('abbreviation') );
-        $self->country_name( $self->country_name || $self->_get_ndgeolocationprop('country_name') );
-        $self->country_code( $self->country_code || $self->_get_ndgeolocationprop('country_code') );
-        $self->location_type( $self->location_type || $self->_get_ndgeolocationprop('location_type') );
+        $self->abbreviation( $self->abbreviation || $self->_get_ndgeolocationprop('abbreviation', 'geolocation_property') );
+        $self->country_name( $self->country_name || $self->_get_ndgeolocationprop('country_name', 'geolocation_property') );
+        $self->country_code( $self->country_code || $self->_get_ndgeolocationprop('country_code', 'geolocation_property') );
+        $self->breeding_program( $self->breeding_program || $self->bcs_schema()->resultset("Project::Project")->find( { project_id => $self->_get_ndgeolocationprop('breeding_program', 'project_property') } )->first->name());
+        $self->location_type( $self->location_type || $self->_get_ndgeolocationprop('location_type', 'geolocation_property') );
     }
 
     return $self;
@@ -113,13 +119,24 @@ sub store_location {
     my $latitude = $self->latitude();
     my $longitude = $self->longitude();
     my $altitude = $self->altitude();
+    my $breeding_program = $self->breeding_program();
     my $location_type = $self->location_type();
     my ($new_row, $error);
 
-    my $exists = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
+    my $nd_geolocation_exists = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
 
-    if (!$nd_geolocation_id && $exists > 0) { # can't add a new location with name that already exists
+    my $breeding_program_type_id = $schema->resultset('Cv::Cvterm')->find( { name => 'breeding_program' } )->cvterm_id();
+
+    my $breeding_program_exists = $self->bcs_schema->resultset("Project::Project")->search({ 'me.name' => $breeding_program })->search_related('projectprops', { type_id => $breeding_program_type_id });
+
+    my $program_id = $breeding_program_exists->project_id();
+
+    if (!$nd_geolocation_id && $nd_geolocation_exists > 0) { # can't add a new location with name that already exists
 	    return { error => "The location - $name - already exists. Please choose another name, or use the exisiting location" };
+    }
+
+    if ($breeding_program && !$breeding_program_exists) { # can't add a new location with a breeding program that doesn't exist
+	    return { error => "Breeding program $breeding_program doesn't exist in the database. Please store this location with an existing program" };
     }
 
     if ( ($latitude && $latitude !~ /^-?[0-9.]+$/) || ($latitude && $latitude < -90) || ($latitude && $latitude > 90)) {
@@ -148,7 +165,7 @@ sub store_location {
         return { error => "Location type $location_type must be must be one of the following: Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other." };
     }
 
-    if (!$nd_geolocation_id && !$exists) { # adding new location
+    if (!$nd_geolocation_id && !$nd_geolocation_exists) { # adding new location
         print STDERR "Checks completed, adding new location $name\n";
     	try {
             $new_row = $schema->resultset('NaturalDiversity::NdGeolocation')
@@ -165,16 +182,19 @@ sub store_location {
             $self->location($new_row);
 
             if ($self->abbreviation){
-                $self->_store_ndgeolocationprop('abbreviation', $self->abbreviation());
+                $self->_store_ndgeolocationprop('abbreviation', 'geolocation_property', $self->abbreviation());
             }
             if ($self->country_name){
-                $self->_store_ndgeolocationprop('country_name', $self->country_name());
+                $self->_store_ndgeolocationprop('country_name', 'geolocation_property', $self->country_name());
             }
             if ($self->country_code){
-                $self->_store_ndgeolocationprop('country_code', $self->country_code());
+                $self->_store_ndgeolocationprop('country_code', 'geolocation_property', $self->country_code());
+            }
+            if ($self->breeding_program){
+                $self->_store_ndgeolocationprop('breeding_program', 'project_property', $program_id);
             }
             if ($self->location_type){
-                $self->_store_ndgeolocationprop('location_type', $self->location_type());
+                $self->_store_ndgeolocationprop('location_type', 'geolocation_property', $self->location_type());
             }
 
         }
@@ -201,16 +221,19 @@ sub store_location {
             $row->update();
 
             if ($self->abbreviation){
-                $self->_store_ndgeolocationprop('abbreviation', $self->abbreviation());
+                $self->_store_ndgeolocationprop('abbreviation', 'geolocation_property', $self->abbreviation());
             }
             if ($self->country_name){
-                $self->_store_ndgeolocationprop('country_name', $self->country_name());
+                $self->_store_ndgeolocationprop('country_name', 'geolocation_property', $self->country_name());
             }
             if ($self->country_code){
-                $self->_store_ndgeolocationprop('country_code', $self->country_code());
+                $self->_store_ndgeolocationprop('country_code', 'geolocation_property', $self->country_code());
+            }
+            if ($self->breeding_program){
+                $self->_store_ndgeolocationprop('breeding_program', 'project_property', $program_id);
             }
             if ($self->location_type){
-                $self->_store_ndgeolocationprop('location_type', $self->location_type());
+                $self->_store_ndgeolocationprop('location_type', 'geolocation_property', $self->location_type());
             }
         }
         catch {
@@ -249,8 +272,9 @@ sub delete_location {
 sub _get_ndgeolocationprop {
     my $self = shift;
     my $type = shift;
+    my $cv = shift;
 
-    my $ndgeolocationprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, 'geolocation_property')->cvterm_id();
+    my $ndgeolocationprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, $cv)->cvterm_id();
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdGeolocationprop")->search({ nd_geolocation_id=> $self->nd_geolocation_id(), type_id => $ndgeolocationprop_type_id }, { order_by => {-asc => 'nd_geolocationprop_id'} });
 
     my @results;
@@ -264,9 +288,10 @@ sub _get_ndgeolocationprop {
 sub _store_ndgeolocationprop {
     my $self = shift;
     my $type = shift;
+    my $cv = shift;
     my $value = shift;
     print STDERR " Storing value $value with type $type\n";
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, 'geolocation_property')->cvterm_id();
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, $cv)->cvterm_id();
     my $row = $self->bcs_schema()->resultset("NaturalDiversity::NdGeolocationprop")->find( { type_id=>$type_id, nd_geolocation_id=> $self->nd_geolocation_id() } );
 
     if (defined $row) {
@@ -280,8 +305,9 @@ sub _store_ndgeolocationprop {
 sub _remove_ndgeolocationprop {
     my $self = shift;
     my $type = shift;
+    my $cv = shift;
     my $value = shift;
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, 'geolocation_property')->cvterm_id();
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, $cv)->cvterm_id();
     my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdGeolocationprop")->search( { type_id=>$type_id, nd_geolocation_id=> $self->nd_geolocation_id(), value=>$value } );
 
     if ($rs->count() == 1) {
