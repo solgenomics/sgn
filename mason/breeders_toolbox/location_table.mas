@@ -125,9 +125,22 @@ jQuery(document).ready(function() {
                     { "data": "properties.Altitude" },
                     { "data": "properties.Trials" },
                 ],
-                buttons: [ 'copy','print']
-
+                buttons: [ 'copy','print'],
+                drawCallback: function( settings ) {
+                   var api = this.api();
+                   var name_data = api.column(1, { search:'applied' } ).data();
+                   var names = [];
+                   for (var i = 0; i < name_data.length; i++) { //extract names from data object
+                       names.push(name_data[i]+'\n');
+                   }
+                   //console.log("Names are: "+JSON.stringify(names));
+                   $('#location_names').html(names);
+                   addToListMenu('locations_to_list_menu', 'location_names', {
+                     listType: 'locations'
+                   });
+                }
             });
+
             var map = initialize_map('location_map', locationJSON, table);
 
     	},
