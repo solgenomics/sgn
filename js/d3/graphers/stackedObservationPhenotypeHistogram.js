@@ -31,12 +31,6 @@
       }
     }
     var histLoc = d3.select(loc);
-    if (data.length<3){
-      histLoc.html("<center><h4>There is not enough data to plot.</h4></center>");
-      return;
-    } else {
-      histLoc.selectAll("*:not(.histogram)").remove();
-    }
     var header = data[0];
     var traitName = header[header.length-1];
     
@@ -46,7 +40,16 @@
         o[h==traitName?"value":h] = h==traitName?parseFloat(d[i]):d[i];
       });
       return o;
+    }).filter(function(o){
+      return (!!o.value || o.value === 0 || o.value === -0.0) && (!isNaN(o.value));
     });
+    if (observations.length<3){
+      histLoc.html("<center><h4>There is not enough numeric data to plot.</h4></center>");
+      return;
+    } else {
+      histLoc.selectAll(function(s){return this.children;})
+        .filter("*:not(.histogram)").remove();
+    }
     var allValues = observations.map(function(d){
       return d.value;
     });
@@ -58,14 +61,12 @@
     })
     
     var extent = d3.extent(allValues);
-    console.log(d3.version);
     var x = d3.scaleLinear()
       .domain(extent)
       .range([layout.margin.left, layout.width-layout.margin.right])
       .nice(11);
     var boundaries = x.ticks(11);
     var xaxis = d3.axisBottom(x).tickValues(boundaries);
-    console.log(boundaries);
     var binner = d3.histogram()
       .domain(x.domain())
       .thresholds(boundaries.slice(0,boundaries.length-1))
@@ -88,9 +89,7 @@
       .domain([0,ymax])
       .range([layout.height-layout.margin.bottom, layout.margin.top]);
     var yaxis = d3.axisLeft(y).ticks(ymax<6?ymax:6);
-    
-    console.log("ymax",ymax);
-    
+        
     var stacker = d3.stack()
       .keys(Object.keys(accessions))
       .order(function(series){
@@ -123,9 +122,7 @@
     
     var color = d3.scaleSequential(d3.interpolateViridis)
       .domain([0,series.length]);
-    
-    console.log(bins,series);
-    
+        
     histLoc.style("overflow-x","auto");
     var hist = histLoc.selectAll(".histogram").data([series]);
     newHist = hist.enter()
