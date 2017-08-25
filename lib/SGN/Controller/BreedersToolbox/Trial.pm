@@ -186,11 +186,18 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $trait_list = $c->req->param("trait_list");
     my $search_type = $c->req->param("search_type") || 'fast';
 
+    my $trial = $c->stash->{trial};
     if ($data_level eq 'plants') {
-        my $trial = $c->stash->{trial};
         if (!$trial->has_plant_entries()) {
             $c->stash->{template} = 'generic_message.mas';
             $c->stash->{message} = "The requested trial (".$trial->get_name().") does not have plant entries. Please create the plant entries first.";
+            return;
+        }
+    }
+    if ($data_level eq 'subplots') {
+        if (!$trial->has_subplot_entries()) {
+            $c->stash->{template} = 'generic_message.mas';
+            $c->stash->{message} = "The requested trial (".$trial->get_name().") does not have subplot entries.";
             return;
         }
     }

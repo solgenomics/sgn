@@ -1979,7 +1979,6 @@ sub _get_splitplot_design {
     #print STDERR Dumper \%splitplot_design;
     %splitplot_design = %{_build_plot_names($self,\%splitplot_design)};
 
-    my %seen_plot_treatment;
     while(my($plot,$val) = each(%splitplot_design)){
         my $subplots = $val->{'subplots_names'};
         my $treatments = $val->{'treatments'};
@@ -1988,10 +1987,6 @@ sub _get_splitplot_design {
         my @plant_names;
         my $plant_index = 1;
         for(my $i=0; $i<scalar(@$subplots); $i++){
-            if (!exists($seen_plot_treatment{$plot}->{$treatments->[$i]})){
-                push @{$treatment_subplot_hash{$treatments->[$i]}}, $val->{'plot_name'};
-                $seen_plot_treatment{$plot}->{$treatments->[$i]}++;
-            }
             push @{$treatment_subplot_hash{$treatments->[$i]}}, $subplots->[$i];
             for(my $j=0; $j<$num_plants_per_subplot; $j++){
                 my $plant_name = $subplots->[$i]."_plant_$plant_index";

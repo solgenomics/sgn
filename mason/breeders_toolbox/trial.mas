@@ -274,7 +274,7 @@ my $start_time = time();
 </style> -->
 
 
-<& /breeders_toolbox/trial/download_layout_dialog.mas, trial_id => $trial_id, trial_name => $trial_name &>
+<& /breeders_toolbox/trial/download_layout_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, design_type => $design_name &>
 
 <&| /page/info_section.mas, id => "trial_design_section", title=>"Design", collapsible=>1, collapsed=>0, subtitle=>"[<a id='trial_download_layout_button'>Download Layout</a>]"  &>
 
