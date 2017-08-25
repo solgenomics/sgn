@@ -5,6 +5,7 @@ use Moose::Role;
 use Data::Dumper;
 use Spreadsheet::WriteExcel;
 use CXGN::Trial::TrialLayout;
+use CXGN::Trial;
 
 sub verify { 
     return 1;
