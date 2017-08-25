@@ -104,7 +104,7 @@ sub BUILD {
         $self->abbreviation( $self->abbreviation || $self->_get_ndgeolocationprop('abbreviation', 'geolocation_property') );
         $self->country_name( $self->country_name || $self->_get_ndgeolocationprop('country_name', 'geolocation_property') );
         $self->country_code( $self->country_code || $self->_get_ndgeolocationprop('country_code', 'geolocation_property') );
-        $self->breeding_program( $self->breeding_program || $self->bcs_schema()->resultset("Project::Project")->find( { project_id => $self->_get_ndgeolocationprop('breeding_program', 'project_property') } )->first->name());
+        $self->breeding_program( $self->breeding_program || $self->_get_ndgeolocationprop('breeding_program', 'project_property') );
         $self->location_type( $self->location_type || $self->_get_ndgeolocationprop('location_type', 'geolocation_property') );
     }
 
