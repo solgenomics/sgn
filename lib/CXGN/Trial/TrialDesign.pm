@@ -478,24 +478,19 @@ sub _get_p_rep_design {
     $r_block->add_command('blockNo <- melt(blockNo)');
     $r_block->add_command('colnames(blockNo) <- c("block")');
     $r_block->add_command('rownames(blockNo) <- rownames(blockNo, do.NULL = FALSE, prefix = "Obs.")');
-    
     $r_block->add_command('blockNo_merge <- match(rownames(field_map_melt), rownames(blockNo) )');
     $r_block->add_command('blockNo_merge <- cbind( field_map_melt, blockNo[blockNo_merge,] )');
-    
     $r_block->add_command('colnames(blockNo_merge) <- c("col_number","row_number","trt","block")');
     $r_block->add_command('rownames(blockNo_merge) <- rownames(blockNo_merge, do.NULL = FALSE, prefix = "Obs.")');
-    
     $r_block->add_command('plot_num <- c(1:dim_trt)');
     $r_block->add_command('plot_num <- t(plot_num)');
     $r_block->add_command('plot_num <- melt(plot_num)');
     $r_block->add_command('colnames(plot_num) <- c("p2","p1","plots")');
     $r_block->add_command('rownames(plot_num) <- rownames(plot_num, do.NULL = FALSE, prefix = "Obs.")');
-    
     #$r_block->add_command('layout_merge <- match(rownames(field_map_melt), rownames(plot_num) )');
     #$r_block->add_command('layout_merge <- cbind( field_map_melt, plot_num[layout_merge,] )');
     $r_block->add_command('layout_merge <- match(rownames(blockNo_merge), rownames(plot_num) )');
     $r_block->add_command('layout_merge <- cbind( blockNo_merge, plot_num[layout_merge,] )');
-    
     $r_block->add_command('layout <- subset(layout_merge, select = c(plots, block, row_number, col_number, trt))');
     $r_block->add_command('pRepDesign <- as.matrix(layout)');
     #$r_block->run_block();
