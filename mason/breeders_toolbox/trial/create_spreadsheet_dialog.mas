@@ -61,7 +61,7 @@ $trial_name => undef
                 <div class="form-group">
                     <label class="col-sm-5 control-label "><small>Sample Number: </small></label>
                     <div class="col-sm-7" >
-                        <input type="text" class="form-control" id="create_spreadsheet_sample_number" placeholder="All Plants"/>
+                        <input type="text" class="form-control" id="create_spreadsheet_sample_number" placeholder="Leave blank for all"/>
                     </div>
                 </div>
             </div>
@@ -98,10 +98,10 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#create_spreadsheet_data_level').change(function() {
-        if ( jQuery('#create_spreadsheet_data_level').val() == 'plants' ) {
+        jQuery("#create_spreadsheet_sample_number").val('');
+        if ( jQuery('#create_spreadsheet_data_level').val() == 'plants' || jQuery('#create_spreadsheet_data_level').val() == 'subplots' ) {
             jQuery('#create_spreadsheet_plant_options').show();
         } else {
-            jQuery("#create_spreadsheet_sample_number").val('');
             jQuery('#create_spreadsheet_plant_options').hide();
         }
     });
