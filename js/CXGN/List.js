@@ -236,7 +236,7 @@ CXGN.List.prototype = {
 	    async: false,
 	    success: function(response) {
 		if (response.error) {
-		    alert(response.error);
+		    //alert(response.error); //do not alert here
 		}
 		lists = response;
 	    },
