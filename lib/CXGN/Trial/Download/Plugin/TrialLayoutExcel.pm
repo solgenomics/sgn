@@ -150,10 +150,10 @@ sub download {
 
         my $line = 1;
         foreach my $n (sort { $a <=> $b } keys(%$design)) { 
-            my $subplot_names = $design->{$n}->{subplot_names};
-            foreach my $s (@$subplot_names){
-                my $plant_names = $design->{$n}->{plant_names};
-                foreach my $p (@$plant_names) {
+            my $subplots_plant_names = $design->{$n}->{subplots_plant_names};
+            foreach my $s (sort keys %$subplots_plant_names){
+                my $plant_names = $subplots_plant_names->{$s};
+                foreach my $p (sort @$plant_names) {
                     $ws->write($line, 0, $p);
                     $ws->write($line, 1, $s);
                     $ws->write($line, 2, $design->{$n}->{plot_name});
