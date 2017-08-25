@@ -72,6 +72,13 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
           return;
       }
   }
+  if ($data_level eq 'subplots' || $data_level eq 'plants_subplots') {
+      my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+      if (!$trial->has_subplot_entries()) {
+          $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have subplot entries." };
+          return;
+      }
+  }
 
   my @trait_list = @{_parse_list_from_json($c->req->param('trait_list'))};
   my $dir = $c->tempfiles_subdir('/download');

@@ -194,7 +194,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
             return;
         }
     }
-    if ($data_level eq 'subplots') {
+    if ($data_level eq 'subplots' || $data_level eq 'plants_subplots') {
         if (!$trial->has_subplot_entries()) {
             $c->stash->{template} = 'generic_message.mas';
             $c->stash->{message} = "The requested trial (".$trial->get_name().") does not have subplot entries.";

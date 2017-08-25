@@ -50,6 +50,8 @@ $trial_name => undef
                         <select class="form-control" id="create_spreadsheet_data_level">
                             <option value="plots">Plots</option>
                             <option value="plants">Plants</option>
+                            <option value="subplots">Subplots</option>
+                            <option value="plants_subplots">Plants and Subplots</option>
                         </select>
                     </div>
                 </div>
