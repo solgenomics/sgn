@@ -84,6 +84,13 @@ sub create_fieldbook_from_trial_POST : Args(0) {
             return;
         }
     }
+    if ($data_level eq 'subplots' || $data_level eq 'plants_subplots') {
+        my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+        if (!$trial->has_subplot_entries()) {
+            $c->stash->{rest} = {error =>  "Trial does not have subplot entries." };
+            return;
+        }
+    }
 
   my $dir = $c->tempfiles_subdir('/other');
   my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'other/excelXXXX');

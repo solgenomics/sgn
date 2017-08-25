@@ -27,6 +27,7 @@
                     <select class="form-control" id="download_trials_phenotypes_level_option">
                         <option value="plot">Plots</option>
                         <option value="plant">Plants</option>
+                        <option value="subplot">Subplots</option>
                         <option value="all">All</option>
                     </select>
                 </div>
