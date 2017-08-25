@@ -2,7 +2,7 @@
 <%args>
 $trial_id
 $trial_name => undef
-$design_type => undef
+$has_subplot_entries => undef
 </%args>
 
 
@@ -31,7 +31,7 @@ $design_type => undef
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_trial_layout_data_level">
                         <option value="plots">Plots</option>
-% if ($design_type eq 'splitplot'){
+% if ($has_subplot_entries){
                         <option value="subplots">Subplots</option>
                         <option value="plants_subplots">Plants and Subplots</option>
 % }
