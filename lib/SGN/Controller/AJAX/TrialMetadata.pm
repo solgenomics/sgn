@@ -285,6 +285,12 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         my $plants = $c->stash->{trial}->get_plants();
         $total_complete_number = scalar (@$plants);
     }
+    if ($display eq 'subplots') {
+        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
+        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_of', 'stock_relationship')->cvterm_id();
+        my $subplots = $c->stash->{trial}->get_subplots();
+        $total_complete_number = scalar (@$subplots);
+    }
     my $stocks_per_accession;
     if ($display eq 'plots_accession') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
