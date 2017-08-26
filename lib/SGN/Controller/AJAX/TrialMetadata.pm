@@ -242,6 +242,16 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
             plant_list=>  \@items
         );
     }
+    if ($display eq 'subplot') {
+        my @items = map {@{$_}[0]} @{$c->stash->{trial}->get_subplots()};
+        $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+            bcs_schema=> $schema,
+            search_type => "Native",
+            data_level => $display,
+            trait_list=> \@trait_list,
+            plant_list=>  \@items
+        );
+    }
     my @data = $phenotypes_search->get_phenotype_matrix();
     $c->stash->{rest} = { 
       status => "success",

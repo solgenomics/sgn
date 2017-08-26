@@ -19,6 +19,7 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         accession_list=>$accession_list,
         plot_list=>$plot_list,
         plant_list=>$plant_list,
+        subplot_list=>$subplot_list,
         include_timestamp=>$include_timestamp,
         trait_contains=>$trait_contains,
         phenotype_min_value=>$phenotype_min_value,
