@@ -627,6 +627,11 @@ function onEachFeature(feature, layer) {
             var elevation = c2s_result[0].statistics.elevation.value;
             var code= c2p_result[0].politics[0].code.toUpperCase();
             //console.log("elevation is "+elevation+" and code is "+code);
+            $('#location_id').val('');
+            $('#location_name').val('');
+            $('#location_abbreviation').val('');
+            $('#breeding_program_select').val('');
+            $('#location_type').val('');
             $('#location_country').val(code);
             $('#location_altitude').val(elevation);
             $('#location_latitude').val(coordinates[0]);
@@ -653,7 +658,7 @@ function onEachFeature(feature, layer) {
         $('#location_id').val(loc_data.properties.Id);
         $('#location_name').val(loc_data.properties.Name);
         $('#location_abbreviation').val(loc_data.properties.Abbreviation);
-        $('#location_country').val(loc_data.properties.Country);
+        $('#location_country').val(loc_data.properties.Code);
         $("#breeding_program_select option").filter(function() {
             return this.text == loc_data.properties.Program;
         }).attr('selected', true);

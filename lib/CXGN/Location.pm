@@ -114,32 +114,46 @@ sub BUILD {
 sub store_location {
 	my $self = shift;
     my $schema = $self->bcs_schema();
+    my $error;
+
     my $nd_geolocation_id = $self->nd_geolocation_id();
     my $name = $self->name();
+    my $abbreviation = $self->abbreviation();
+    my $country_name = $self->country_name();
+    my $country_code = $self->country_code();
+    my $breeding_program = $self->breeding_program();
+    my $location_type = $self->location_type();
     my $latitude = $self->latitude();
     my $longitude = $self->longitude();
     my $altitude = $self->altitude();
-    my $breeding_program = $self->breeding_program();
-    my $location_type = $self->location_type();
-    my ($new_row, $error);
 
-    my $nd_geolocation_exists = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
+    # Validate properties
 
-    my $breeding_program_type_id = $schema->resultset('Cv::Cvterm')->find( { name => 'breeding_program' } )->cvterm_id();
-
-    my $breeding_program_rs = $self->bcs_schema->resultset("Project::Project")->search({ name => $breeding_program });
-    my $breeding_program_exists = $breeding_program_rs->search_related('projectprops', {'projectprops.type_id'=>$breeding_program_type_id});
-
-    # $self->bcs_schema->resultset("Project::Projectprop")->search({ 'me.type_id' => $breeding_program_type_id })->search_related('project', { 'project.name' => $breeding_program });
-
-    my $program_id = $breeding_program_exists->first->project_id();
-
-    if (!$nd_geolocation_id && $nd_geolocation_exists > 0) { # can't add a new location with name that already exists
-	    return { error => "The location - $name - already exists. Please choose another name, or use the exisiting location" };
+    if (!$nd_geolocation_id && !$name) {
+        return { error => "Cannot add a new location with an undefined name. A location name is required" };
+    }
+    elsif (!$nd_geolocation_id && !$self->_is_valid_name($name)) { # can't add a new location with name that already exists
+        return { error => "The location - $name - already exists. Please choose another name, or use the existing location" };
     }
 
-    if ($breeding_program && !$breeding_program_exists) { # can't add a new location with a breeding program that doesn't exist
-	    return { error => "Breeding program $breeding_program doesn't exist in the database. Please store this location with an existing program" };
+    if ($abbreviation && !$self->_is_valid_abbreviation($abbreviation)) {
+       return { error => "Abbreviation $abbreviation already exists in the database. Please choose another abbreviation" };
+    }
+
+    if ($country_name && $country_name =~ m/[0-9]/) {
+       return { error => "Country name $country_name is not a valid ISO standard country name." };
+    }
+
+    if ($country_code && ($country_code !~ m/^[^a-z]*$/) || (length($country_code) != 3 )) {
+       return { error => "Country code $country_code is not a valid ISO Alpha-3 code." };
+    }
+
+    if ($breeding_program && !$self->_is_valid_program($breeding_program)) { # can't use a breeding program that doesn't exist
+	    return { error => "Breeding program $breeding_program doesn't exist in the database." };
+    }
+
+    if ($location_type && !$self->_is_valid_type($location_type)) {
+        return { error => "Location type $location_type must be must be one of the following: Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other." };
     }
 
     if ( ($latitude && $latitude !~ /^-?[0-9.]+$/) || ($latitude && $latitude < -90) || ($latitude && $latitude > 90)) {
@@ -154,24 +168,11 @@ sub store_location {
         return { error => "Altitude (in meters) must be a number between -418 (Dead Sea) and 8,848 (Mt. Everest)." };
     }
 
-    my %valid_types = (
-        Farm => 1,
-        Field => 1,
-        Greenhouse => 1,
-        Screenhouse => 1,
-        Lab => 1,
-        Storage => 1,
-        Other => 1
-    );
-
-    if (!$valid_types{$location_type}) {
-        return { error => "Location type $location_type must be must be one of the following: Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other." };
-    }
-
-    if (!$nd_geolocation_id && !$nd_geolocation_exists) { # adding new location
+    # Add new location if no id supplied
+    if (!$nd_geolocation_id) {
         print STDERR "Checks completed, adding new location $name\n";
     	try {
-            $new_row = $schema->resultset('NaturalDiversity::NdGeolocation')
+            my $new_row = $schema->resultset('NaturalDiversity::NdGeolocation')
               ->new({
         	     description => $name,
         	    });
@@ -184,20 +185,21 @@ sub store_location {
             #$self->ndgeolocation_id($new_row->ndgeolocation_id());
             $self->location($new_row);
 
-            if ($self->abbreviation){
-                $self->_store_ndgeolocationprop('abbreviation', 'geolocation_property', $self->abbreviation());
+            if ($abbreviation){
+                $self->_store_ndgeolocationprop('abbreviation', 'geolocation_property', $abbreviation);
             }
-            if ($self->country_name){
-                $self->_store_ndgeolocationprop('country_name', 'geolocation_property', $self->country_name());
+            if ($country_name){
+                $self->_store_ndgeolocationprop('country_name', 'geolocation_property', $country_name);
             }
-            if ($self->country_code){
-                $self->_store_ndgeolocationprop('country_code', 'geolocation_property', $self->country_code());
+            if ($country_code){
+                $self->_store_ndgeolocationprop('country_code', 'geolocation_property', $country_code);
             }
-            if ($self->breeding_program){
-                $self->_store_ndgeolocationprop('breeding_program', 'project_property', $program_id);
+            if ($breeding_program){
+                my $id = $self->bcs_schema->resultset("Project::Project")->search({ name => $breeding_program })->first->project_id();
+                $self->_store_ndgeolocationprop('breeding_program', 'project_property', $id);
             }
-            if ($self->location_type){
-                $self->_store_ndgeolocationprop('location_type', 'geolocation_property', $self->location_type());
+            if ($location_type){
+                $self->_store_ndgeolocationprop('location_type', 'geolocation_property', $location_type);
             }
 
         }
@@ -213,30 +215,32 @@ sub store_location {
             return { success => "Location $name added successfully\n" };
         }
     }
-    elsif ($nd_geolocation_id) { # editing location
+    # Edit existing location if id supplied
+    elsif ($nd_geolocation_id) {
         print STDERR "Checks completed, editing existing location $name\n";
         try {
             my $row = $schema->resultset("NaturalDiversity::NdGeolocation")->find({ nd_geolocation_id => $nd_geolocation_id });
-            $row->description($self->name);
-            $row->latitude($self->latitude);
-            $row->longitude($self->longitude);
-            $row->altitude($self->altitude);
+            $row->description($name);
+            $row->latitude($latitude);
+            $row->longitude($longitude);
+            $row->altitude($altitude);
             $row->update();
 
-            if ($self->abbreviation){
-                $self->_store_ndgeolocationprop('abbreviation', 'geolocation_property', $self->abbreviation());
+            if ($abbreviation){
+                $self->_store_ndgeolocationprop('abbreviation', 'geolocation_property', $abbreviation);
             }
-            if ($self->country_name){
-                $self->_store_ndgeolocationprop('country_name', 'geolocation_property', $self->country_name());
+            if ($country_name){
+                $self->_store_ndgeolocationprop('country_name', 'geolocation_property', $country_name);
             }
-            if ($self->country_code){
-                $self->_store_ndgeolocationprop('country_code', 'geolocation_property', $self->country_code());
+            if ($country_code){
+                $self->_store_ndgeolocationprop('country_code', 'geolocation_property', $country_code);
             }
-            if ($self->breeding_program){
-                $self->_store_ndgeolocationprop('breeding_program', 'project_property', $program_id);
+            if ($breeding_program){
+                my $id = $self->bcs_schema->resultset("Project::Project")->search({ name => $breeding_program })->first->project_id();
+                $self->_store_ndgeolocationprop('breeding_program', 'project_property', $id);
             }
-            if ($self->location_type){
-                $self->_store_ndgeolocationprop('location_type', 'geolocation_property', $self->location_type());
+            if ($location_type){
+                $self->_store_ndgeolocationprop('location_type', 'geolocation_property', $location_type);
             }
         }
         catch {
@@ -293,7 +297,7 @@ sub _store_ndgeolocationprop {
     my $type = shift;
     my $cv = shift;
     my $value = shift;
-    print STDERR " Storing value $value with type $type\n";
+    #print STDERR " Storing value $value with type $type\n";
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, $type, $cv)->cvterm_id();
     my $row = $self->bcs_schema()->resultset("NaturalDiversity::NdGeolocationprop")->find( { type_id=>$type_id, nd_geolocation_id=> $self->nd_geolocation_id() } );
 
@@ -325,6 +329,76 @@ sub _remove_ndgeolocationprop {
         return 0;
     }
 
+}
+
+sub _is_valid_name {
+    my $self = shift;
+    my $name = shift;
+    my $schema = $self->bcs_schema();
+    my $existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
+    if ($existing_name_count > 0) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
+
+sub _is_valid_abbreviation {
+    my $self = shift;
+    my $abbreviation = shift;
+    my $schema = $self->bcs_schema();
+    my $existing_abbreviation_count = $schema->resultset('NaturalDiversity::NdGeolocationprop')->search( { value => $abbreviation } )->count();
+    if ($existing_abbreviation_count > 0) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
+
+sub _is_valid_program {
+    my $self = shift;
+    my $program = shift;
+    my $schema = $self->bcs_schema();
+    my $existing_program_count = $schema->resultset('Project::Project')->search(
+        {
+            'type.name'=> 'breeding_program',
+            'me.name' => $program
+        },
+        {
+            join => {
+                'projectprops' =>
+                'type'
+            }
+        }
+    )->count();
+    if ($existing_program_count < 1) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
+
+sub _is_valid_type {
+    my $self = shift;
+    my $type = shift;
+    my %valid_types = (
+        Farm => 1,
+        Field => 1,
+        Greenhouse => 1,
+        Screenhouse => 1,
+        Lab => 1,
+        Storage => 1,
+        Other => 1
+    );
+    if (!$valid_types{$type}) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
 }
 
 1;

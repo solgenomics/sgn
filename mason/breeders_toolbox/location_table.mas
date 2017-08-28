@@ -119,7 +119,11 @@ jQuery(document).ready(function() {
                     { "data": "properties.Id" },
                     { "data": "properties.Name" },
                     { "data": "properties.Abbreviation" },
-                    { "data": "properties.Country" },
+                    { "data": "properties.Code",
+                        "render":function(data, type, full, meta){
+                           return full.properties.Code + ' ' + full.properties.Country;
+                        }
+                    },
                     { "data": "properties.Program" },
                     { "data": "properties.Type" },
                     { "data": "properties.Altitude" },

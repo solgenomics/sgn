@@ -279,6 +279,7 @@ sub get_location_geojson {
 	my $q = "SELECT geo.nd_geolocation_id,
 	geo.description,
 	abbreviation.value,
+    country_name.value,
 	country_code.value,
 	breeding_program.name,
 	location_type.value,
@@ -288,26 +289,28 @@ sub get_location_geojson {
     count(distinct(projectprop.project_id))
 FROM nd_geolocation AS geo
 LEFT JOIN nd_geolocationprop AS abbreviation ON (geo.nd_geolocation_id = abbreviation.nd_geolocation_id AND abbreviation.type_id = (SELECT cvterm_id from cvterm where name = 'abbreviation') )
+LEFT JOIN nd_geolocationprop AS country_name ON (geo.nd_geolocation_id = country_name.nd_geolocation_id AND country_name.type_id = (SELECT cvterm_id from cvterm where name = 'country_name') )
 LEFT JOIN nd_geolocationprop AS country_code ON (geo.nd_geolocation_id = country_code.nd_geolocation_id AND country_code.type_id = (SELECT cvterm_id from cvterm where name = 'country_code') )
 LEFT JOIN nd_geolocationprop AS location_type ON (geo.nd_geolocation_id = location_type.nd_geolocation_id AND location_type.type_id = (SELECT cvterm_id from cvterm where name = 'location_type') )
 LEFT JOIN nd_geolocationprop AS breeding_program_id ON (geo.nd_geolocation_id = breeding_program_id.nd_geolocation_id AND breeding_program_id.type_id = (SELECT cvterm_id from cvterm where name = 'breeding_program') )
 LEFT JOIN project breeding_program ON (breeding_program.project_id=breeding_program_id.value::INT)
 LEFT JOIN projectprop ON (projectprop.value::INT = geo.nd_geolocation_id AND projectprop.type_id=?)
-GROUP BY 1,2,3,4,5,6
-ORDER BY 8,2";
+GROUP BY 1,2,3,4,5,6,7
+ORDER BY 2";
 
 
 	my $h = $self->schema()->storage()->dbh()->prepare($q);
 	$h->execute($project_location_type_id);
     my @locations;
-    while (my ($id, $name, $abbrev, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count) = $h->fetchrow_array()) {
+    while (my ($id, $name, $abbrev, $country_name, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count) = $h->fetchrow_array()) {
         push(@locations, {
             type => "Feature",
             properties => {
                 Id => $id,
                 Name => $name,
                 Abbreviation => $abbrev,
-                Country => $country_code,
+                Country => $country_name,
+                Code => $country_code,
                 Program => $prog,
                 Type => $type,
                 Latitude => $latitude,

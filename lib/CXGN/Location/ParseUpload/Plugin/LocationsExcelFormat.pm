@@ -1,7 +1,7 @@
 package CXGN::Location::ParseUpload::Plugin::LocationsExcelFormat;
 
 use Moose;
-#use File::Slurp;
+use CXGN::Location;
 use Spreadsheet::ParseExcel;
 use JSON;
 use Data::Dumper;
@@ -15,6 +15,7 @@ sub parse {
     my $filename = shift;
     my $schema = shift;
     my $parser   = Spreadsheet::ParseExcel->new();
+    my $check = CXGN::Location->new({ bcs_schema => $schema });
     my (@errors, @rows, %parse_result);
 
     #try to open the excel file and report any errors
@@ -47,7 +48,7 @@ sub parse {
         if (!$name) {
             push @errors, "Row $row_num, column A: Name is undefined.\n";
         }
-        elsif (!_is_valid_name($name, $schema)) {
+        elsif (!$check->_is_valid_name($name)) {
             push @errors, "Row $row_num, column A: Name $name already exists in the database.\n";
         }
 
@@ -58,7 +59,7 @@ sub parse {
         if (!$abbreviation) {
             push @errors, "Row $row_num, column B: Abbreviation is undefined.\n";
         }
-        elsif (!_is_valid_abbreviation($abbreviation, $schema)) {
+        elsif (!$check->_is_valid_abbreviation($abbreviation)) {
             push @errors, "Row $row_num, column B: Abbreviation $abbreviation already exists in the database.\n";
         }
 
@@ -91,7 +92,7 @@ sub parse {
         if (!$program) {
             push @errors, "Row $row_num, column E: Program is undefined.\n";
         }
-        elsif (!_is_valid_program($program, $schema)) {
+        elsif (!$check->_is_valid_program($program)) {
             push @errors, "Row $row_num, column E: Program $program does not exist in the database.\n";
         }
 
@@ -102,7 +103,7 @@ sub parse {
         if (!$type) {
             push @errors, "Row $row_num, column F: Type is undefined.\n";
         }
-        elsif(!_is_valid_type($type)) {
+        elsif(!$check->_is_valid_type($type)) {
             push @errors, "Row $row_num, column F: Type $type is is not a valid location type.\n";
         }
 
@@ -152,75 +153,75 @@ sub parse {
     }
     return \%parse_result;
 }
-
-sub _is_valid_name {
-    # my $self = shift;
-    my $name = shift;
-    my $schema = shift;
-    my $existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
-    if ($existing_name_count > 0) {
-        return 0;
-    }
-    else {
-        return 1;
-    }
-}
-
-sub _is_valid_abbreviation {
-    # my $self = shift;
-    my $abbreviation = shift;
-    my $schema = shift;
-    my $existing_abbreviation_count = $schema->resultset('NaturalDiversity::NdGeolocationprop')->search( { value => $abbreviation } )->count();
-    if ($existing_abbreviation_count > 0) {
-        return 0;
-    }
-    else {
-        return 1;
-    }
-}
-
-sub _is_valid_program {
-    # my $self = shift;
-    my $program = shift;
-    my $schema = shift;
-    my $existing_program_count = $schema->resultset('Project::Project')->search(
-        {
-            'type.name'=> 'breeding_program',
-            'me.name' => $program
-        },
-        {
-            join => {
-                'projectprops' =>
-                'type'
-            }
-        }
-    )->count();
-    if ($existing_program_count < 1) {
-        return 0;
-    }
-    else {
-        return 1;
-    }
-}
-
-sub _is_valid_type {
-    # my $self = shift;
-    my $type = shift;
-    my %valid_types = (
-        Farm => 1,
-        Field => 1,
-        Greenhouse => 1,
-        Screenhouse => 1,
-        Lab => 1,
-        Storage => 1,
-        Other => 1
-    );
-    if (!$valid_types{$type}) {
-        return 0;
-    }
-    else {
-        return 1;
-    }
-}
+#
+# sub _is_valid_name {
+#     # my $self = shift;
+#     my $name = shift;
+#     my $schema = shift;
+#     my $existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $name } )->count();
+#     if ($existing_name_count > 0) {
+#         return 0;
+#     }
+#     else {
+#         return 1;
+#     }
+# }
+#
+# sub _is_valid_abbreviation {
+#     # my $self = shift;
+#     my $abbreviation = shift;
+#     my $schema = shift;
+#     my $existing_abbreviation_count = $schema->resultset('NaturalDiversity::NdGeolocationprop')->search( { value => $abbreviation } )->count();
+#     if ($existing_abbreviation_count > 0) {
+#         return 0;
+#     }
+#     else {
+#         return 1;
+#     }
+# }
+#
+# sub _is_valid_program {
+#     # my $self = shift;
+#     my $program = shift;
+#     my $schema = shift;
+#     my $existing_program_count = $schema->resultset('Project::Project')->search(
+#         {
+#             'type.name'=> 'breeding_program',
+#             'me.name' => $program
+#         },
+#         {
+#             join => {
+#                 'projectprops' =>
+#                 'type'
+#             }
+#         }
+#     )->count();
+#     if ($existing_program_count < 1) {
+#         return 0;
+#     }
+#     else {
+#         return 1;
+#     }
+# }
+#
+# sub _is_valid_type {
+#     # my $self = shift;
+#     my $type = shift;
+#     my %valid_types = (
+#         Farm => 1,
+#         Field => 1,
+#         Greenhouse => 1,
+#         Screenhouse => 1,
+#         Lab => 1,
+#         Storage => 1,
+#         Other => 1
+#     );
+#     if (!$valid_types{$type}) {
+#         return 0;
+#     }
+#     else {
+#         return 1;
+#     }
+# }
 
 1;
