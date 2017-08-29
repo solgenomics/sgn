@@ -1155,13 +1155,14 @@ sub _create_genotype_row {
         my $genotype =  $genotype_hash->{$marker};
 	$genotype =  $genotype_hash->{$marker};
 
-        $geno_values .= $self->round_allele_dosage_values($genotype);       
+        #$geno_values .= $self->round_allele_dosage_values($genotype);       
         $geno_values .= "\t" unless $marker eq $markers[-1];
     }
 
     return $geno_values;
 
 }
+
 
 sub round_allele_dosage_values {
     my ($self, $geno_values) = @_;
