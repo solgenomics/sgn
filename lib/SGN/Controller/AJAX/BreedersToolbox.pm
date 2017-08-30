@@ -13,6 +13,7 @@ use CXGN::BreedersToolbox::Delete;
 use CXGN::Trial::TrialDesign;
 use CXGN::Trial::TrialCreate;
 use CXGN::Stock::StockLookup;
+use CXGN::Location;
 use Try::Tiny;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -58,101 +59,6 @@ sub insert_new_project : Path("/ajax/breeders/project/insert") Args(0) {
 
 
     $c->stash->{rest} = { error => '' };
-}
-
-sub get_all_locations :Path("/ajax/breeders/location/all") Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    my $bp = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
-
-    my $all_locations = $bp->get_all_locations();
-
-    $c->stash->{rest} = { locations => $all_locations };
-
-}
-
-sub insert_new_location :Path("/ajax/breeders/location/insert") Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    my $params = $c->request->parameters();
-
-    my $description = $params->{description};
-    my $longitude   = $params->{longitude};
-    my $latitude    = $params->{latitude};
-    my $altitude    = $params->{altitude};
-
-    if (! $c->user()) { # redirect
-	$c->stash->{rest} = { error => 'You must be logged in to add a location.' };
-	return;
-    }
-
-    if (! $c->user->check_roles("submitter") && !$c->user->check_roles("curator")) {
-	$c->stash->{rest} = { error => 'You do not have the necessary privileges to add locations.' };
-	return;
-    }
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-
-    my $exists = $schema->resultset('NaturalDiversity::NdGeolocation')->search( { description => $description } )->count();
-
-    if ($exists > 0) {
-	$c->stash->{rest} = { error => "The location - $description - already exists. Please choose another name." };
-	return;
-    }
-
-    if ( ($longitude && $longitude !~ /^-?[0-9.]+$/) || ($latitude && $latitude !~ /^-?[0-9.]+$/) || ($altitude && $altitude !~ /^[0-9.]+$/) ) {
-	$c->stash->{rest} = { error => "Longitude, latitude and altitude must be numbers." };
-	return;
-    }
-
-    my $new_row;
-    $new_row = $schema->resultset('NaturalDiversity::NdGeolocation')
-      ->new({
-	     description => $description,
-	    });
-    if ($longitude) {
-      $new_row->longitude($longitude);
-    }
-    if ($latitude) {
-      $new_row->latitude($latitude);
-    }
-    if ($altitude) {
-      $new_row->altitude($altitude);
-    }
-    $new_row->insert();
-    $c->stash->{rest} = { success => 1, error => '' };
-}
-
-sub delete_location :Path('/ajax/breeders/location/delete') Args(1) {
-    my $self = shift;
-    my $c = shift;
-    my $location_id = shift;
-
-    if (!$c->user) {  # require login
-	$c->stash->{rest} = { error => "You need to be logged in to delete a location." };
-	return;
-    }
-    # require curator or submitter roles
-    if (! ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))) {
-	$c->stash->{rest} = { error => "You don't have the privileges to delete a location." };
-	return;
-    }
-    my $del = CXGN::BreedersToolbox::Delete->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema") } );
-    if ($del->can_delete_location($location_id)) {
-	my $success = $del->delete_location($location_id);
-
-	if ($success) {
-	    $c->stash->{rest} = { success => 1 };
-	}
-	else {
-	    $c->stash->{rest} = { error => "Could not delete location $location_id" };
-	}
-    }
-    else {
-	$c->stash->{rest} = { error => "This location cannot be deleted because it has associated data." }
-    }
-
 }
 
 sub get_breeding_programs : Path('/ajax/breeders/all_programs') Args(0) {

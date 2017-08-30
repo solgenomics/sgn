@@ -5,6 +5,7 @@ use Moose;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::People::Roles;
+use JSON;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -220,52 +221,112 @@ sub get_genotyping_trials_by_breeding_program {
 
 }
 
-sub get_locations_by_breeding_program {
+sub get_all_locations {
     my $self = shift;
-    my $breeding_program_id = shift;
-
-    my $h;
-
-    my $type_id = $self->schema->resultset('Cv::Cvterm')->search( { 'name'=>'plot' })->first->cvterm_id;
 
     my $project_location_type_id = $self ->schema->resultset('Cv::Cvterm')->search( { 'name' => 'project location' })->first->cvterm_id();
 
-    if ($breeding_program_id) {
-	#my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description, count(distinct(stock.stock_id)) FROM project JOIN project_relationship on (project_id=object_project_id) JOIN project as trial ON (subject_project_id=trial.project_id) JOIN nd_experiment_project ON (trial.project_id=nd_experiment_project.project_id) JOIN nd_experiment USING (nd_experiment_id) JOIN nd_experiment_stock ON (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id) JOIN stock ON (nd_experiment_stock.stock_id=stock.stock_id) JOIN nd_geolocation USING (nd_geolocation_id) WHERE project.project_id=? and stock.type_id=? GROUP BY nd_geolocation.nd_geolocation_id, nd_experiment.nd_geolocation_id, nd_geolocation.description";
+	my $q = "SELECT geo.nd_geolocation_id,
+	geo.description,
+	abbreviation.value,
+	country_code.value,
+	breeding_program.name,
+	location_type.value,
+	latitude,
+    longitude,
+	altitude,
+    count(distinct(projectprop.project_id))
+FROM nd_geolocation AS geo
+LEFT JOIN nd_geolocationprop AS abbreviation ON (geo.nd_geolocation_id = abbreviation.nd_geolocation_id AND abbreviation.type_id = (SELECT cvterm_id from cvterm where name = 'abbreviation') )
+LEFT JOIN nd_geolocationprop AS country_code ON (geo.nd_geolocation_id = country_code.nd_geolocation_id AND country_code.type_id = (SELECT cvterm_id from cvterm where name = 'country_code') )
+LEFT JOIN nd_geolocationprop AS location_type ON (geo.nd_geolocation_id = location_type.nd_geolocation_id AND location_type.type_id = (SELECT cvterm_id from cvterm where name = 'location_type') )
+LEFT JOIN projectprop ON (projectprop.value::INT = geo.nd_geolocation_id AND projectprop.type_id=?)
+LEFT JOIN project AS trial ON (trial.project_id=projectprop.project_id)
+LEFT JOIN project_relationship ON (subject_project_id=trial.project_id)
+LEFT JOIN project breeding_program ON (breeding_program.project_id=object_project_id)
+GROUP BY 1,2,3,4,5,6
+ORDER BY 8,2";
 
-	my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description, count(distinct(trial.project_id)) FROM project JOIN project_relationship on (project_id=object_project_id) JOIN project as trial ON (subject_project_id=trial.project_id) LEFT JOIN projectprop ON (trial.project_id=projectprop.project_id) LEFT JOIN nd_geolocation ON (projectprop.value::INT = nd_geolocation.nd_geolocation_id) WHERE project.project_id =? AND projectprop.type_id=$project_location_type_id  GROUP BY nd_geolocation.nd_geolocation_id,  nd_geolocation.description";
 
-
-	$h = $self->schema()->storage()->dbh()->prepare($q);
-	$h->execute($breeding_program_id);
-
-    }
-    else {
-	my $q = "SELECT distinct(nd_geolocation_id), nd_geolocation.description FROM nd_geolocation LEFT JOIN nd_experiment USING(nd_geolocation_id) where nd_experiment_id IS NULL";
-
-	$h = $self->schema()->storage()->dbh()->prepare($q);
-	$h->execute();
-    }
-
+	my $h = $self->schema()->storage()->dbh()->prepare($q);
+	$h->execute($project_location_type_id);
+#
     my @locations;
-    while (my ($id, $name, $plot_count) = $h->fetchrow_array()) {
-	push @locations, [ $id, $name, $plot_count ];
+    while (my ($id, $name, $abbrev, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count) = $h->fetchrow_array()) {
+        # my @location = (
+        #     Id => $id,
+        #     Name => $name,
+        #     Abbreviation => $abbrev,
+        #     Country => $country_code,
+        #     Program => $prog,
+        #     Type => $type,
+        #     Latitude => $latitude,
+        #     Longitude => $longitude,
+        #     Altitude => $altitude,
+        #     Trials => '<a href="/search/trials?nd_geolocation='.$name.'">'.$trial_count.' trials</a>'
+        # );
+         push @locations, [$id, $name, $abbrev, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count];
+        # push @locations, %location;
     }
     return \@locations;
 }
 
-sub get_all_locations {
+sub get_location_geojson {
     my $self = shift;
-    my $c = shift;
 
-    my $rs = $self->schema() -> resultset("NaturalDiversity::NdGeolocation")->search( {}, { order_by => 'description' } );
+    my $project_location_type_id = $self ->schema->resultset('Cv::Cvterm')->search( { 'name' => 'project location' })->first->cvterm_id();
 
-    my @locations = ();
-    foreach my $loc ($rs->all()) {
-        push @locations, [ $loc->nd_geolocation_id(), $loc->description() ];
+	my $q = "SELECT geo.nd_geolocation_id,
+	geo.description,
+	abbreviation.value,
+    country_name.value,
+	country_code.value,
+	breeding_program.name,
+	location_type.value,
+	latitude,
+    longitude,
+	altitude,
+    count(distinct(projectprop.project_id))
+FROM nd_geolocation AS geo
+LEFT JOIN nd_geolocationprop AS abbreviation ON (geo.nd_geolocation_id = abbreviation.nd_geolocation_id AND abbreviation.type_id = (SELECT cvterm_id from cvterm where name = 'abbreviation') )
+LEFT JOIN nd_geolocationprop AS country_name ON (geo.nd_geolocation_id = country_name.nd_geolocation_id AND country_name.type_id = (SELECT cvterm_id from cvterm where name = 'country_name') )
+LEFT JOIN nd_geolocationprop AS country_code ON (geo.nd_geolocation_id = country_code.nd_geolocation_id AND country_code.type_id = (SELECT cvterm_id from cvterm where name = 'country_code') )
+LEFT JOIN nd_geolocationprop AS location_type ON (geo.nd_geolocation_id = location_type.nd_geolocation_id AND location_type.type_id = (SELECT cvterm_id from cvterm where name = 'location_type') )
+LEFT JOIN nd_geolocationprop AS breeding_program_id ON (geo.nd_geolocation_id = breeding_program_id.nd_geolocation_id AND breeding_program_id.type_id = (SELECT cvterm_id from cvterm where name = 'breeding_program') )
+LEFT JOIN project breeding_program ON (breeding_program.project_id=breeding_program_id.value::INT)
+LEFT JOIN projectprop ON (projectprop.value::INT = geo.nd_geolocation_id AND projectprop.type_id=?)
+GROUP BY 1,2,3,4,5,6,7
+ORDER BY 2";
+
+
+	my $h = $self->schema()->storage()->dbh()->prepare($q);
+	$h->execute($project_location_type_id);
+    my @locations;
+    while (my ($id, $name, $abbrev, $country_name, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count) = $h->fetchrow_array()) {
+        push(@locations, {
+            type => "Feature",
+            properties => {
+                Id => $id,
+                Name => $name,
+                Abbreviation => $abbrev,
+                Country => $country_name,
+                Code => $country_code,
+                Program => $prog,
+                Type => $type,
+                Latitude => $latitude,
+                Longitude => $longitude,
+                Altitude => $altitude,
+                Trials => '<a href="/search/trials?nd_geolocation='.$name.'">'.$trial_count.' trials</a>'
+            },
+            geometry => {
+                type => "Point",
+                coordinates => [$longitude, $latitude]
+            }
+        });
     }
-    return \@locations;
-
+    my $json = JSON->new();
+    $json->canonical(); # output sorted JSON
+    return $json->encode(\@locations);
 }
 
 sub get_locations {
