@@ -133,20 +133,11 @@ sub manage_locations : Path("/breeders/locations") Args(0) {
 	return;
     }
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
-    my $breeding_programs = $bp->get_breeding_programs();
-    my $locations = {};
-    foreach my $b (@$breeding_programs) {
-	$locations->{$b->[1]} = $bp->get_locations_by_breeding_program($b->[0]);
-    }
-    $locations->{'Other'} = $bp->get_locations_by_breeding_program();
+    $c->assets->include('/static/css/leaflet.css');
+    $c->assets->include('/static/css/leaflet.extra-markers.min.css');
+    $c->assets->include('/static/css/esri-leaflet-geocoder.css');
 
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
-
-    print STDERR "Locations: " . Dumper($locations);
-
-    $c->stash->{locations} = $locations;
 
     $c->stash->{template} = '/breeders_toolbox/manage_locations.mas';
 }
