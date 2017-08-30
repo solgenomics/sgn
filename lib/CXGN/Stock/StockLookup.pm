@@ -185,6 +185,52 @@ sub _get_stock_resultset_exact {
   return $stock_rs;
 }
 
+sub get_stock_synonyms {
+	my $self = shift;
+    my $type = shift; # 'stock_id' | 'uniquename' | 'any_name'
+    my $to_get = shift; # array ref
+	
+	my $schema = $self->get_schema();
+	
+	my $table_joins = {
+		join => { 'stockprops' => 'type'},
+		'+select' => ['stockprops.value','type.name'],
+		'+as' => ['stockprop_value','cvterm_name']
+		# join_type => 'FULL_OUTER'
+ 	};
+	my $query = {
+		'me.is_obsolete' => { '!=' => 't' }
+	};
+    if ($type eq 'stock_id'){
+		$query->{'me.stock_id'} = {-in=>$to_get};
+    } elsif ($type eq 'uniquename'){
+		$query->{'me.uniquename'} = {-in=>$to_get};
+    } elsif ($type eq 'any_name'){
+		$query->{'-or'} = [
+			'me.uniquename' => {-in=>$to_get},
+			-and => [
+				'type.name' => 'stock_synonym',
+				'stockprops.value' => {-in=>$to_get}
+			]
+		];
+    } else {
+		die;
+	}
+	my $stock_rs = $schema->resultset("Stock::Stock")
+	  ->search($query,$table_joins);
+    my $synonym_hash = {};
+	while( my $row = $stock_rs->next) {
+  	    my $uname = $row->uniquename;
+		if (not defined $synonym_hash->{$uname}){
+			$synonym_hash->{$uname} = [];
+		}
+		if ($row->get_column('cvterm_name') eq 'stock_synonym'){
+			push $synonym_hash->{$uname}, $row->get_column('stockprop_value');
+		}
+  	}
+	return $synonym_hash;
+}
+
 #######
 1;
 #######
