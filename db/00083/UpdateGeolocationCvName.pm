@@ -59,13 +59,29 @@ sub patch {
 
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
-    my $row = $schema->resultset("Cv::Cv")->find( { name => 'geolocations_property' } );
+    my $plural_row = $schema->resultset("Cv::Cv")->find( { name => 'geolocations_property' } );
+    my $singular_row = $schema->resultset("Cv::Cv")->find( { name => 'geolocation_property' } );
 
-    if (defined $row) {
-        $row->name('geolocation_property');
-        $row->update();
-    } else {
-        print STDOUT "No geolocation property cv found. No update necessary.\n";
+    if (defined $plural_row && defined $singular_row) {
+        my $old_id = $plural_row->cv_id();
+        my $new_id = $singular_row->cv_id();
+        my $rows_to_update = $schema->resultset("Cv::Cvterm")->search( { cv_id => $old_id } );
+        foreach my $row ($rows_to_update->all()) {
+            $row->cv_id($new_id);
+            $row->update();
+        }
+        $plural_row->delete();
+    }
+    elsif (defined $plural_row) {
+        print STDOUT "Fixing cv name...\n";
+        $plural_row->name('geolocation_property');
+        $plural_row->update();
+    }
+    elsif (defined $singular_row) {
+        print STDOUT "Cv name is already correct, no changes necessary.\n";
+    }
+    else {
+        print STDOUT "No geolocation property cv found. Run patch 00076/AddBrAPIPropertyCvterms.pm to add geolocation props.\n";
     }
 
     print "You're done!\n";
