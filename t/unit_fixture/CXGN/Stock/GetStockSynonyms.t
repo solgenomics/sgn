@@ -6,7 +6,6 @@ use lib 't/lib';
 
 use Test::More;
 use SGN::Test::Fixture;
-use CXGN::People::Person;
 
 use Data::Dumper;
 
