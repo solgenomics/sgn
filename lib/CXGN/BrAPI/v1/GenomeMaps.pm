@@ -215,6 +215,35 @@ sub positions {
 	my $page_size = $self->page_size;
 	my $page = $self->page;
 	my $status = $self->status;
+
+	my $map_factory = CXGN::Cview::MapFactory->new($self->bcs_schema->storage()->dbh());
+	my $map = $map_factory->create( { map_id => $map_id }); 
+	
+	my @data = ();
+	
+	foreach my $chr ($map->get_chromosomes()) { 
+	    foreach my $m ($chr->get_markers()) { 
+		push @data, { 
+		    markerDbId => $m->get_name(),
+		    markerName => $m->get_name(),
+		    position => $m->get_offset(),
+		    linkageGroup => $chr->get_name(),
+		};
+	    }
+	}
+	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@data,$page_size,$page);
+
+	my %result = (
+		mapDbId =>  $map->get_id(),
+		name => $map->get_short_name(),
+		type => "genotype",
+		unit => "bp",
+		linkageGroups => $data_window,
+	);
+	my @data_files;
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Maps detail result constructed');
+
+
 	# my %linkage_groups;
 	# if (scalar(@linkage_group_ids)>0) {
 	# 	%linkage_groups = map { $_ => 1 } @linkage_group_ids;
