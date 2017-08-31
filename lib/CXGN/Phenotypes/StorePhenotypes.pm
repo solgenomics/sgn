@@ -72,9 +72,9 @@ has 'stock_list' => (isa => "ArrayRef",
     required => 1
 );
 
-has 'stock_id_list' => (isa => "ArrayRef[Int]",
+has 'stock_id_list' => (isa => "ArrayRef[Int]|Undef",
     is => 'rw',
-    required => 0
+    required => 0,
 );
 
 has 'trait_list' => (isa => "ArrayRef",
@@ -134,6 +134,12 @@ sub create_hash_lookups {
     $self->stock_id_list($stock_id_list->{'transform'});
 
     my @cvterm_ids;
+    my @stock_list = @{$self->stock_list};
+
+    my $t = CXGN::List::Transform->new();
+    my $stock_id_list = $t->transform($schema, 'stocks_2_stock_ids', \@stock_list);
+    $self->stock_id_list($stock_id_list->{'transform'});
+
     foreach my $trait_name (@trait_list) {
         #print STDERR "trait: $trait_name\n";
         my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name);
