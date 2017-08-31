@@ -125,7 +125,7 @@ sub download {
         $ws->write(0, 7, 'is_a_control');
 
         if($treatment_trial){
-            $ws->write(0, 8, $treatment_name);
+            $ws->write(0, 8, "Treatment:".$treatment_name);
             my $treatment_plots = $treatment_trial->get_plots();
             foreach (@$treatment_plots){
                 $treatment_stock_hash{$_->[1]}++;
@@ -145,7 +145,7 @@ sub download {
         $ws->write(0, 9, 'is_a_control');
 
         if($treatment_trial){
-            $ws->write(0, 10, $treatment_name);
+            $ws->write(0, 10, "Treatment:".$treatment_name);
             my $treatment_plots = $treatment_trial->get_plants();
             foreach (@$treatment_plots){
                 $treatment_stock_hash{$_->[1]}++;
@@ -164,7 +164,7 @@ sub download {
         $ws->write(0, 9, 'is_a_control');
 
         if($treatment_trial){
-            $ws->write(0, 10, $treatment_name);
+            $ws->write(0, 10, "Treatment:".$treatment_name);
             my $treatment_subplots = $treatment_trial->get_subplots();
             foreach (@$treatment_subplots){
                 $treatment_stock_hash{$_->[1]}++;
@@ -185,7 +185,7 @@ sub download {
         $ws->write(0, 11, 'is_a_control');
 
         if($treatment_trial){
-            $ws->write(0, 12, $treatment_name);
+            $ws->write(0, 12, "Treatment:".$treatment_name);
             my $treatment_plants = $treatment_trial->get_plants();
             foreach (@$treatment_plants){
                 $treatment_stock_hash{$_->[1]}++;
