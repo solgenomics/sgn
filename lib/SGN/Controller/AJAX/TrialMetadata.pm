@@ -9,6 +9,7 @@ use CXGN::Trial;
 use Math::Round::Var;
 use List::MoreUtils qw(uniq);
 use CXGN::Trial::FieldMap;
+#use Sort::Maker;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -447,6 +448,81 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
     my $return = $fieldmap->display_fieldmap();
 
     $c->stash->{rest} = $return;
+}
+
+sub retrieve_trial_info :  Path('/ajax/breeders/trial_phenotyping_info') : ActionClass('REST') { }
+sub retrieve_trial_info_POST : Args(0) {
+#sub retrieve_trial_info : chained('trial') Pathpart("trial_phenotyping_info") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->req->param('trial_id');
+
+    my $layout = CXGN::Trial::TrialLayout->new({
+  		schema => $schema,
+  		trial_id => $trial_id
+  	});
+
+  	my $design = $layout-> get_design();
+    #print STDERR Dumper($design);
+
+    my @layout_info;
+  	foreach my $plot_number (keys %{$design}) {
+  		push @layout_info, {
+        plot_id => $design->{$plot_number}->{plot_id},
+  		plot_number => $plot_number,
+  		row_number => $design->{$plot_number}->{row_number},
+  		col_number => $design->{$plot_number}->{col_number},
+  		block_number=> $design->{$plot_number}-> {block_number},
+  		rep_number =>  $design->{$plot_number}-> {rep_number},
+  		plot_name => $design->{$plot_number}-> {plot_name},
+  		accession_name => $design->{$plot_number}-> {accession_name},
+  		plant_names => $design->{$plot_number}-> {plant_names},
+  		};
+        @layout_info = sort { $a->{plot_number} <=> $b->{plot_number} } @layout_info;
+  	}
+
+    #print STDERR Dumper(@layout_info);
+    $c->stash->{rest} = {trial_info => \@layout_info};
+    #$c->stash->{layout_info} = \@layout_info;
+}
+
+
+sub trial_completion_layout_section : Chained('trial') PathPart('trial_completion_layout_section') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $layout_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $plot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property')->cvterm_id();
+    my $block_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'block', 'stock_property')->cvterm_id();
+    my $has_plot_number_check = $schema->resultset('Stock::Stock')->search({'me.type_id'=>$plot_type_id, 'stockprops.type_id'=>$plot_number_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}, 'nd_experiment.type_id'=>$layout_experiment_type_id}, {join=>['stockprops', {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'} } } ], rows=>1 });
+    my $has_block_check = $schema->resultset('Stock::Stock')->search({'me.type_id'=>$plot_type_id, 'stockprops.type_id'=>$block_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}, 'nd_experiment.type_id'=>$layout_experiment_type_id}, {join=>['stockprops', {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'} } } ], rows=>1 });
+    my $has_layout_check = $has_plot_number_check->first && $has_block_check->first ? 1 : 0;
+
+    my $row_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property')->cvterm_id();
+    my $col_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property')->cvterm_id();
+    my $has_row_check = $schema->resultset('Stock::Stock')->search({'me.type_id'=>$plot_type_id, 'stockprops.type_id'=>$row_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}, 'nd_experiment.type_id'=>$layout_experiment_type_id}, {join=>['stockprops', {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'} } } ], rows=>1 });
+    my $has_col_check = $schema->resultset('Stock::Stock')->search({'me.type_id'=>$plot_type_id, 'stockprops.type_id'=>$col_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}, 'nd_experiment.type_id'=>$layout_experiment_type_id}, {join=>['stockprops', {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'} } } ], rows=>1 });
+    my $has_physical_map_check = $has_row_check->first && $has_col_check->first ? 1 : 0;
+
+    $c->stash->{rest} = {has_layout => $has_layout_check, has_physical_map => $has_physical_map_check};
+}
+
+sub trial_completion_phenotype_section : Chained('trial') PathPart('trial_completion_phenotype_section') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $phenotyping_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+    my $has_phenotype_check = $schema->resultset('Phenotype::Phenotype')->search({'stock.type_id'=> [$plot_type_id, $plant_type_id], 'nd_experiment.type_id'=>$phenotyping_experiment_type_id, 'me.value' => { '!=' => ''}, 'project.project_id'=>$c->stash->{trial_id}}, {join=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>[{'nd_experiment_stocks'=>'stock' }, {'nd_experiment_projects'=>'project'}] } }, rows=>1 });
+    my $has_phenotypes = $has_phenotype_check->first ? 1 : 0;
+
+    $c->stash->{rest} = {has_phenotypes => $has_phenotypes};
 }
 
 #sub compute_derive_traits : Path('/ajax/phenotype/delete_field_coords') Args(0) {

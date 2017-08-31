@@ -641,7 +641,7 @@ sub _get_alpha_lattice_design {
   if ($plot_layout_format eq "zigzag") {
     if (!$fieldmap_col_number){
       @col_number_fieldmaps = ((1..$number_of_blocks) x ($number_of_blocks * $number_of_reps));
-      print STDERR Dumper(\@col_number_fieldmaps);
+      #print STDERR Dumper(\@col_number_fieldmaps);
     } else {
         @col_number_fieldmaps = ((1..$fieldmap_col_number) x $fieldmap_row_number);
       }
@@ -794,7 +794,7 @@ sub _get_lattice_design {
 
   $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','lattice_book');
   @plot_numbers = $result_matrix->get_column("plots");
-  print STDERR Dumper(@plot_numbers);
+  #print STDERR Dumper(@plot_numbers);
   @block_numbers = $result_matrix->get_column("block");
   my $max = max( @block_numbers );
   @rep_numbers = $result_matrix->get_column("r");
@@ -804,7 +804,7 @@ sub _get_lattice_design {
   if ($plot_layout_format eq "zigzag") {
     if (!$fieldmap_col_number){
       @col_number_fieldmaps = ((1..$number_of_blocks) x ($number_of_blocks * $number_of_reps));
-      print STDERR Dumper(\@col_number_fieldmaps);
+      #print STDERR Dumper(\@col_number_fieldmaps);
     } else {
         @col_number_fieldmaps = ((1..$fieldmap_col_number) x $fieldmap_row_number);
       }
@@ -1712,7 +1712,8 @@ sub _build_plot_names {
 	if ($self->get_design_type() eq "RCBD") { # as requested by IITA (Prasad)
       my $plot_num_per_block = $design{$key}->{plot_num_per_block};
       $design{$key}->{plot_number} = $design{$key}->{plot_num_per_block};
-	    $design{$key}->{plot_name} = $prefix.$trial_name."_rep_".$rep_number."_".$stock_name."_".$block_number."_".$plot_num_per_block."".$suffix;
+	    #$design{$key}->{plot_name} = $prefix.$trial_name."_rep_".$rep_number."_".$stock_name."_".$block_number."_".$plot_num_per_block."".$suffix;
+        $design{$key}->{plot_name} = $prefix.$trial_name."_rep".$rep_number."_".$stock_name."_".$plot_num_per_block."".$suffix;
 	}
 	elsif ($self->get_design_type() eq "Augmented") {
 	    $design{$key}->{plot_name} = $prefix.$trial_name."_plotno".$key."_".$stock_name."_".$suffix;

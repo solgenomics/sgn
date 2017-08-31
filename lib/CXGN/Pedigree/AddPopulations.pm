@@ -21,7 +21,7 @@ use Moose;
 use MooseX::FollowPBP;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
-
+use SGN::Model::Cvterm;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -39,9 +39,9 @@ sub add_population {
 	my @members = @{$self->get_members()};
 	my $error;
 
-	my $cvterm_rs = $schema->resultset("Cv::Cvterm");
-	my $population_cvterm_id = $cvterm_rs->search({name => 'population'})->first()->cvterm_id();
-	my $member_of_cvterm_id = $cvterm_rs->search({name => 'member_of'})->first()->cvterm_id();
+    my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
+    my $member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
+    my $population_id;
 
 	# create population stock entry
 	try {
@@ -51,6 +51,7 @@ sub add_population {
 		uniquename => $population_name,
 		type_id => $population_cvterm_id,
 });
+    $population_id = $pop_rs->stock_id();
 
 	 # generate population connections to the members
 	foreach my $m (@members) {
@@ -68,12 +69,50 @@ catch {
 };
 if ($error) {
 	print STDERR "Error creating population $population_name: $error\n";
-	return 0;
+	return { error => "Error creating population $population_name: $error" };
 } else {
 	print STDERR "population $population_name added successfully\n";
-	return { success => 1 };
+	return { success => "Success! Population $population_name created", population_id=>$population_id };
 }
 }
+
+sub add_accessions {
+    my $self = shift;
+    my $schema = $self->get_schema();
+    my $population_name = $self->get_name();
+    my @members = @{$self->get_members()};
+    my $error;
+
+    my $population_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
+    my $member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of', 'stock_relationship')->cvterm_id();
+
+    try {
+        my $population = $schema->resultset("Stock::Stock")->find({
+            uniquename => $population_name,
+            type_id => $population_cvterm_id,
+        });
+
+        foreach my $m (@members) {
+            my $m_row = $schema->resultset("Stock::Stock")->find({ uniquename => $m });
+            my $connection = $schema->resultset("Stock::StockRelationship")->find_or_create({
+                subject_id => $m_row->stock_id,
+                object_id => $population->stock_id,
+                type_id => $member_of_cvterm_id,
+            });
+        }
+    }
+    catch {
+        $error =  $_;
+    };
+    if ($error) {
+        print STDERR "Error adding accessions to population $population_name: $error\n";
+        return { error => "Error adding accessions to population $population_name: $error" };
+    } else {
+        print STDERR "Accession added to population $population_name successfully\n";
+        return { success => "Accession added to population $population_name successfully!" };
+    }
+}
+
 
 #######
 1;

@@ -5,7 +5,82 @@
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<& /page/page_title.mas, title=>'Cross Search' &>
+<& /page/page_title.mas, title=>'Search Progenies and Crosses' &>
+
+<&| /page/info_section.mas, title => 'Search Progenies'&>
+
+<div class="row" id="pedigree_search_form" >
+  <div class="col-sm-1">
+  </div>
+  <div class="col-sm-12 well">
+    <div class="row">
+     <div class="col-sm-11">
+       <div class="form-horizontal">
+        <div class="form-group">
+          <label class="control-label col-sm-4">Female Parent/Population:</label>
+            <div class="col-sm-8">
+             <div class="input-group">
+               <input type="text" class="form-control" id="pedigree_female_parent" placeholder="Enter female parent/population">
+                <div class="input-group-btn">
+                 <button class="btn btn-info" id="search_pedigree_male_parents"><i class="glyphicon glyphicon-search"></i> Male Parent </button>
+                 <button class="btn btn-primary" id="search_all_progenies"><i class="glyphicon glyphicon-search"></i> All Progenies </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        <div class="form-group">
+         <label class="control-label col-sm-4">Male Parent/Population:</label>
+          <div class="col-sm-8" >
+           <div class="input-group">
+            <select class="form-control" id="pedigree_male_parent">
+            <option value="">Choose female parent/population first</option>
+            </select>
+           </select>
+          <div class="input-group-btn">
+           <button class="btn btn-info" id="search_pedigree"><i class="glyphicon glyphicon-search"></i> Progenies </button>
+          </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+ <div class="col-sm-1">
+ </div>
+ </&>
+
+
+<&| /page/info_section.mas, title => 'Search Results' , collapsible=>1, collapsed=>0 &>
+
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<table id="pedigree_search_results" width="100%" class="table table-hover table-striped">
+<thead>
+  <tr>
+    <th>Female Parent</th>
+    <th>Male Parent</th>
+    <th>Progeny</th>
+    <th>Cross Type</th>
+  </tr>
+</thead>
+
+</table>
+<br>
+<&| /page/info_section.mas, title => 'Copy Progenies to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the progeny names showing in table to a new or exisiting list</i>'&>
+<br>
+<div style="text-align:right" id="progenies_to_list_menu"></div>
+<div id="progeny_names" style="display: none;"></div>
+</&>
+</&>
+
+</div>
+</div>
+
+<br/>
+<br/>
+
+
+<&| /page/info_section.mas, title => 'Search Crosses'&>
 
 <div class="row" id="cross_search_form" >
   <div class="col-sm-1">
@@ -20,7 +95,7 @@
              <div class="input-group">
                <input type="text" class="form-control" id="female_parent" placeholder="Enter female parent/population">
                 <div class="input-group-btn">
-                 <button class="btn btn-info" id="search_male_parents"><i class="glyphicon glyphicon-search"></i> Male Parent </button>
+                 <button class="btn btn-info" id="search_cross_male_parents"><i class="glyphicon glyphicon-search"></i> Male Parent </button>
                  <button class="btn btn-primary" id="search_all_crosses"><i class="glyphicon glyphicon-search"></i> All Crosses </button>
                 </div>
               </div>
@@ -30,7 +105,7 @@
          <label class="control-label col-sm-4">Male Parent/Population:</label>
           <div class="col-sm-8" >
            <div class="input-group">
-            <select class="form-control" id="male_parent">
+            <select class="form-control" id="cross_male_parent">
             <option value="">Choose female parent/population first</option>
             </select>
            </select>
@@ -44,11 +119,10 @@
     </div>
    </div>
   </div>
-</div>
  <div class="col-sm-1">
+ </&>
   </div>
 
-<br />
 
 <&| /page/info_section.mas, title => 'Search Results' , collapsible=>1, collapsed=>0 &>
 
@@ -65,9 +139,15 @@
 </thead>
 
 </table>
+<br>
+<&| /page/info_section.mas, title => 'Copy crosses to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the cross names showing in table to a new or exisiting list</i>'&>
+<br>
+<div style="text-align:right" id="crosses_to_list_menu"></div>
+<div id="cross_names" style="display: none;"></div>
+</&>
 </&>
 </div>
-
+</div>
 
 
 <script>
@@ -75,75 +155,189 @@
 
 jQuery(document).ready(function () {
 
-  jQuery("#female_parent").autocomplete({
-    source:'/ajax/stock/accession_population_autocomplete',
-  });
+    jQuery("#pedigree_female_parent").autocomplete({
+      source:'/ajax/stock/pedigree_female_parent_autocomplete',
+    });
 
-  $("#search_male_parents").click(function(){
+    $("#search_pedigree_male_parents").click(function(){
 
-  jQuery.ajax({
-    url:'/ajax/search/male_parents',
-    data:{'female_parent':$('#female_parent').val()},
-    success: function(response){
-    console.log(response);
-    var html = '<select id = "male_parent" >';
-    for (var i=0; i<response.data.length; i++) {
-    html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][0] + "</option>";
+    jQuery.ajax({
+      url:'/ajax/search/pedigree_male_parents',
+      data:{'pedigree_female_parent':$('#pedigree_female_parent').val()},
+      success: function(response){
+      console.log(response);
+      var html = '<select id = "pedigree_male_parent" >';
+      for (var i=0; i<response.data.length; i++) {
+      html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][0] + "</option>";
+      }
+      html = html + "</select>";
+      console.log(html);
+
+      if(i ==''){
+        alert("No male parent");
+        return;
     }
-    html = html + "</select>";
-    console.log(html);
 
-    if(i ==''){
-      alert("No male parent");
-      return;
-    }
-
-    jQuery('#male_parent').html(html);
+    jQuery('#pedigree_male_parent').html(html);
     },
     error:function(response){
     alert("An error occurred");
            }
          });
        });
-     });
 
-jQuery(document).ready(function(){
 
-  $('#search_crosses').click(function(){
+    $('#search_pedigree').click(function(){
 
-  var table = jQuery('#cross_search_results').DataTable({
-
-    'searching'  : false,
-    'paging'     : false,
+    var table = jQuery('#pedigree_search_results').DataTable({
+    'searching'  : true,
+    'paging'     : true,
     'ordering'   : false,
-    'processing' : true,
-    'serverSide' : false,
     'destroy'    : true,
-    'ajax':{'url':'/ajax/search/cross_info',
-      data:{'female_parent':$('#female_parent').val(),
-           'male_parent':$('#male_parent').val()},
+    'ajax':{'url':'/ajax/search/progenies',
+      data:{'pedigree_female_parent':$('#pedigree_female_parent').val(),
+           'pedigree_male_parent':$('#pedigree_male_parent').val()},
            }
         });
+
+    jQuery('#pedigree_search_results').on( 'draw.dt', function (){
+            var name_links = table.column(2).data();
+            var names = [];
+            //console.log("name links are: "+JSON.stringify(name_links));
+            for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
+              names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+            }
+
+            jQuery('#progeny_names').html(names);
+            addToListMenu('progenies_to_list_menu', 'progeny_names',{
+            listType:'accessions'
+            });
+        });
      });
-  });
 
-  jQuery(document).ready(function(){
 
-    $('#search_all_crosses').click(function(){
+    $('#search_all_progenies').click(function(){
 
-    var table = jQuery('#cross_search_results').DataTable({
+    var table = jQuery('#pedigree_search_results').DataTable({
 
       'searching'  : true,
-      'paging'     : false,
+      'paging'     : true,
       'ordering'   : false,
-      'processing' : true,
-      'serverSide' : false,
       'destroy'    : true,
-      'ajax':{'url':'/ajax/search/all_crosses',
-        data:{'female_parent':$('#female_parent').val()},
+      'ajax':{'url':'/ajax/search/all_progenies',
+        data:{'pedigree_female_parent':$('#pedigree_female_parent').val()},
              }
           });
+
+
+      jQuery('#pedigree_search_results').on( 'draw.dt', function (){
+        var name_links = table.column(2).data();
+              var names = [];
+              //console.log("name links are: "+JSON.stringify(name_links));
+              for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
+                names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+              }
+
+              jQuery('#progeny_names').html(names);
+              addToListMenu('progenies_to_list_menu', 'progeny_names',{
+              listType:'accessions'
+              });
+          });
        });
+
+
+    jQuery("#female_parent").autocomplete({
+        source:'/ajax/stock/cross_female_parent_autocomplete',
+      });
+
+    $("#search_cross_male_parents").click(function(){
+
+      jQuery.ajax({
+        url:'/ajax/search/cross_male_parents',
+        data:{'female_parent':$('#female_parent').val()},
+        success: function(response){
+        console.log(response);
+        var html = '<select id = "cross_male_parent" >';
+        for (var i=0; i<response.data.length; i++) {
+        html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][0] + "</option>";
+        }
+        html = html + "</select>";
+        console.log(html);
+
+        if(i ==''){
+          alert("No male parent");
+          return;
+        }
+
+        jQuery('#cross_male_parent').html(html);
+        },
+        error:function(response){
+        alert("An error occurred");
+               }
+             });
+           });
+
+
+    $('#search_crosses').click(function(){
+
+      var table = jQuery('#cross_search_results').DataTable({
+
+        'searching'  : true,
+        'paging'     : true,
+        'ordering'   : false,
+        'destroy'    : true,
+        'ajax':{'url':'/ajax/search/cross_info',
+          data:{'female_parent':$('#female_parent').val(),
+               'male_parent':$('#cross_male_parent').val()},
+               }
+            });
+
+
+      jQuery('#cross_search_results').on( 'draw.dt', function (){
+              var name_links = table.column(2).data();
+                    var names = [];
+                    //console.log("name links are: "+JSON.stringify(name_links));
+                    for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
+                      names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+                    }
+
+                    jQuery('#cross_names').html(names);
+                    addToListMenu('crosses_to_list_menu', 'cross_names',{
+                    listType:'crosses'
+                    });
+                });
+         });
+
+
+      $('#search_all_crosses').click(function(){
+
+        var table = jQuery('#cross_search_results').DataTable({
+
+          'searching'  : true,
+          'paging'     : true,
+          'ordering'   : false,
+          'destroy'    : true,
+          'ajax':{'url':'/ajax/search/all_crosses',
+            data:{'female_parent':$('#female_parent').val()},
+                 }
+              });
+
+
+        jQuery('#cross_search_results').on( 'draw.dt', function (){
+             var name_links = table.column(2).data();
+                   var names = [];
+                   //console.log("name links are: "+JSON.stringify(name_links));
+                   for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
+                     names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+                   }
+
+                   jQuery('#cross_names').html(names);
+                   addToListMenu('crosses_to_list_menu', 'cross_names',{
+                   listType:'crosses'
+                   });
+            });
+        });
     });
+
 
 </script>

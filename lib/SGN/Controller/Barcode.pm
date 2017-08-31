@@ -129,7 +129,8 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
          $file_location,
          $text,
     );
-
+    
+   close($barcode_file);
    return $barcode_file;
  }
 
@@ -164,7 +165,6 @@ sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
      if ($format eq "stock_qrcode"){
         $text =  $trial_id;
      }
-
 
       $c->tempfiles_subdir('barcode');
       my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
@@ -206,6 +206,7 @@ sub barcode {
     $barcode_object->border(2);
     $barcode_object->scale($scale);
     $barcode_object->top_margin($top);
+    #$barcode_object->show_text($show_text);
     $barcode_object->font_align("center");
     my  $barcode = $barcode_object ->gd_image();
     my $text_width = gdLargeFont->width()*length($text);

@@ -29,6 +29,20 @@
                             <hr>
                             <form class="form-horizontal" >
                                 <div class="form-group">
+                                    <label class="col-sm-3 control-label">Location Name (Optional): </label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_location_select_list_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Trial Name(s): </label>
+                                    <div class="col-sm-9" >
+                                        <div id="cross_wishlist_trial_select_list_div">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
                                     <label class="col-sm-3 control-label">Female Accession List: </label>
                                     <div class="col-sm-9" id="female_accession_list_div" name="female_accession_list_div">
                                     </div>
@@ -50,7 +64,7 @@
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Trial Name(s): </label>
                                     <div class="col-sm-9" >
-                                        <div id="cross_wishlist_trial_select_div">
+                                        <div id="cross_wishlist_trial_select_no_list_div">
                                         </div>
                                     </div>
                                 </div>
@@ -72,6 +86,7 @@
             </div>
 
             <div class="modal-footer">
+                <button class="btn btn-info" id="show_cross_wishlists_select_submits" name="show_cross_wishlists_select_submits">Previous Cross Wishlists</button>
                 <button class="btn btn-primary" id="cross_wishlist_submit" name="cross_wishlist_submits">Next</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
@@ -102,6 +117,48 @@
     </div>
 </div>
 
+<div class="modal fade" id="create_cross_wishlist_response_dialog" name="create_cross_wishlist_response_dialog" tabindex="-1" role="dialog" aria-labelledby="createCrossWishlistResponseDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="createCrossWishlistResponseDialog">Cross Wishlist</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="cross_wishlist_response_div"></div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="show_cross_wishlists_response_dialog" name="show_cross_wishlists_response_dialog" tabindex="-1" role="dialog" aria-labelledby="showCrossWishlistsResponseDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="showCrossWishlistsResponseDialog">Cross Wishlists Previously Created</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="show_cross_wishlists_response_div"></div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 
 var lo = new CXGN.List();
@@ -125,14 +182,44 @@ function draw_cross_grid(female_accessions, male_accessions){
 
 jQuery(document).ready(function($) {
 
+    jQuery('#show_cross_wishlists_select_submits').click(function(){
+        jQuery('#show_cross_wishlists_response_dialog').modal('show');
+
+        jQuery.ajax({
+            url: '/ajax/cross/list_cross_wishlists',
+            dataType:'json',
+            beforeSend: function() {
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                //console.log(response);
+                jQuery('#working_modal').modal('hide');
+                var html = '';
+                if(response.success){
+                    html += "<table class='table table-bordered table-hover'><thead><tr><th>File</th><th>Created By</th><th>Date</th></tr></thead><tbody>";
+                    for(var i=0; i<response.files.length; i++){
+                        html += "<tr><td><a href='/breeders/phenotyping/download/"+response.files[i][0]+"' >"+response.files[i][1]+"</a></td><td><a href='/solpeople/personal-info.pl?sp_person_id="+response.files[i][6]+"' >"+response.files[i][7]+" "+response.files[i][8]+"</a></td><td>"+response.files[i][5]+"</td></tr>";
+                    }
+                    html += "</tbody></table>";
+                } else {
+                    html = 'Something went wrong here.'
+                }
+                jQuery('#show_cross_wishlists_response_div').html(html);
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal('hide');
+                alert("An error occurred getting cross wishlists");
+            }
+        });
+
+    });
+
     jQuery("#create_cross_wishlist").click(function() {
         jQuery("#create_cross_wishlist_dialog").modal("show");
         jQuery("#female_accession_list_div").html(lo.listSelect('female_accession_list_div', ["accessions"] ));
         jQuery("#male_accession_list_div").html(lo.listSelect('male_accession_list_div', ["accessions"] ));
         var female_accessions = lo.getList(jQuery('#female_accession_list_div_list_select').val());
         var male_accessions = lo.getList(jQuery('#male_accession_list_div_list_select').val());
-        //console.log(female_accessions);
-        //console.log(male_accessions);
         draw_cross_grid(female_accessions, male_accessions);
     });
 
@@ -147,7 +234,10 @@ jQuery(document).ready(function($) {
         draw_cross_grid(female_accessions, male_accessions);
     });
 
-    get_select_box('trials', 'cross_wishlist_trial_select_div', { 'name' : 'cross_wishlist_trial_id', 'id' : 'cross_wishlist_trial_id', 'empty':1 });
+    get_select_box('locations', 'cross_wishlist_location_select_list_div', { 'name' : 'cross_wishlist_location_id', 'id' : 'cross_wishlist_location_id', 'empty':1 });
+    get_select_box('trials', 'cross_wishlist_trial_select_no_list_div', { 'name' : 'cross_wishlist_trial_id', 'id' : 'cross_wishlist_trial_id', 'empty':1, 'multiple':0 });
+
+    get_select_box('trials', 'cross_wishlist_trial_select_list_div', { 'name' : 'cross_wishlist_list_trial_id', 'id' : 'cross_wishlist_list_trial_id', 'empty':1, 'multiple':0 });
 
     jQuery(document).on('change', "#cross_wishlist_trial_id", function() {
         cross_wishlist_change_trials();
@@ -235,8 +325,10 @@ jQuery(document).ready(function($) {
                     cross_data.push({ 'female_id':female_id, 'male_id':male_id, 'priority':value });
                 }
             });
+            trial_id = jQuery('#cross_wishlist_list_trial_id').val();
         }
         //console.log(cross_data);
+        //console.log(trial_id);
         jQuery.ajax({
             url: '/ajax/cross/create_cross_wishlist',
             method: 'POST',
@@ -249,7 +341,7 @@ jQuery(document).ready(function($) {
                 jQuery('#working_modal').modal('show');
             },
             success: function(response) {
-                console.log(response);
+                //console.log(response);
                 jQuery('#working_modal').modal('hide');
                 jQuery('#cross_wishlist_cross_select_div').html(response.data);
                 jQuery('#create_cross_wishlist_select_dialog').modal('show');
@@ -291,7 +383,16 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 //console.log(response);
                 jQuery('#working_modal').modal('hide');
-                window.location.href = "/download/"+response.filename;
+                if (response.filename) {
+                    window.location.href = "/download/"+response.filename;
+                }
+                if (response.error) {
+                    jQuery('#cross_wishlist_response_div').html(response.error);
+                }
+                if (response.success){
+                    jQuery('#cross_wishlist_response_div').html(response.success);
+                }
+                jQuery('#create_cross_wishlist_response_dialog').modal('show');
             },
             error: function(response) {
                 jQuery('#working_modal').modal('hide');
