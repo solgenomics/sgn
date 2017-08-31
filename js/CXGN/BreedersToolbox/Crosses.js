@@ -23,9 +23,47 @@ jQuery(document).ready(function($) {
 
         var lo = new CXGN.List();
 
+        get_select_box('years', 'add_project_year', {'auto_generate':1});
+
+        get_select_box('folders', 'cross_folder_select_div', {
+            'name': 'crossingtrial_folder_id',
+            'id': 'crossingtrial_folder_id',
+            'folder_for_crosses' : 1,
+            'empty': 1
+        });
+
         $("#create_crossingtrial_dialog").modal("show");
 
-  });
+      });
+
+      $('#create_crossingtrial_submit').click(function() {
+
+          var crossingTrialName = $("#crossingtrial_name").val();
+          if (!crossingTrialName) {
+              alert("A crossing trial name is required");
+              return;
+          }
+
+          var breeding_program_id = $("#program").val();
+          if (!breeding_program_id) {
+              alert("A breeding program is required");
+              return;
+          }
+
+          var visibleToRole = $("#visible_to_role").val();
+          var location = $("#location").val();
+          var folder_name = $("#crossingtrial_folder_name").val();
+          var folder_id;
+          if (folder_name) {  // get id if folder with this name already exisits
+              folder_id = $('#crossingtrial_folder_id option').filter(function () { return $(this).html() == folder_name; }).val();
+          }
+          else {
+              folder_id = $("#crossingtrial_folder_id").val();
+          }
+          add_crossingtrial(crossingTrialName, breeding_program_id, visibleToRole, location, folder_name, folder_id);
+
+      });
+
 
 
     $("#create_cross_link").click(function() {
@@ -275,9 +313,9 @@ jQuery(document).ready(function($) {
             timeout: 3000000,
             dataType: "json",
             type: 'POST',
-            data: 'cross_name=' + crossName + '&cross_type=' + crossType + '&maternal=' + maternal + '&paternal=' + paternal + '&maternal_parents=' + maternal_parents + '&paternal_parents=' + paternal_parents + '&progeny_number=' + progenyNumber + '&flower_number=' + flowerNumber + '&fruit_number=' + fruitNumber + '&seed_number=' + seedNumber + '&prefix=' + prefix + '&suffix=' + suffix + '&visible_to_role' + visibleToRole + '&breeding_program_id=' + breeding_program_id + '&location=' + location + '&folder_name=' + folder_name + '&folder_id=' + folder_id,
+            data: 'crossingTrialName=' + crossingTrialName + '&visible_to_role=' + visibleToRole + '&breeding_program_id=' + breeding_program_id + '&location=' + location + '&folder_name=' + folder_name + '&folder_id=' + folder_id,
             beforeSend: function() {
-                jQuery("#create_cross").modal("hide");
+                jQuery("#create_crossingtrial").modal("hide");
                 jQuery("#working_modal").modal("show");
             },
             error: function(response) {
@@ -335,4 +373,34 @@ jQuery(document).ready(function($) {
         }
         return names;
     }
+
+    function add_crossingtrial(crossingTrialName, breeding_program_id, visibleToRole, location, folder_name, folder_id) {
+        $.ajax({
+            url: '/ajax/cross/add_crossingtrial',
+          timeout: 3000000,
+          dataType: "json",
+          type: 'POST',
+          data: 'crossingTrialName=' + crossingtrial_name +  '&paternal=' + paternal + '&maternal_parents=' + maternal_parents + '&paternal_parents=' + paternal_parents + '&progeny_number=' + progenyNumber + '&flower_number=' + flowerNumber + '&fruit_number=' + fruitNumber + '&seed_number=' + seedNumber + '&prefix=' + prefix + '&suffix=' + suffix + '&visible_to_role' + visibleToRole + '&breeding_program_id=' + breeding_program_id + '&location=' + location + '&folder_name=' + folder_name + '&folder_id=' + folder_id,
+          beforeSend: function() {
+              jQuery("#create_cross").modal("hide");
+              jQuery("#working_modal").modal("show");
+          },
+          error: function(response) {
+              alert("An error occurred. Please try again later!" + JSON.stringify(response));
+          },
+          parseerror: function(response) {
+              alert("A parse error occurred. Please try again." + response);
+          },
+          success: function(response) {
+              if (response.error) {
+                  alert(response.error);
+              } else {
+                  jQuery("#working_modal").modal("hide");
+                  $('#cross_saved_dialog_message').modal("show");
+              }
+          },
+      });
+
+  }
+
 });
