@@ -289,9 +289,11 @@ sub _get_design_from_trial {
 			push @subplot_names, $subplot_name;
 			push @subplot_ids, $subplot_id;
 		}
-		$design_info{"subplot_names"}=\@subplot_names;
-		$design_info{"subplot_ids"}=\@subplot_ids;
-		$design_info{"subplots_plant_names"}=\%subplots_plants_hash;
+		if (scalar(@subplot_names)>0){
+			$design_info{"subplot_names"}=\@subplot_names;
+			$design_info{"subplot_ids"}=\@subplot_ids;
+			$design_info{"subplots_plant_names"}=\%subplots_plants_hash;
+		}
 	}
     $design{$plot_number_prop}=\%design_info;
   }
