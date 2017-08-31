@@ -26,7 +26,8 @@ my @name_list = map {@{$_}[1]} @{$flat_list};
 print STDERR Dumper @name_list;
 my $dsyner = CXGN::List::Desynonymize->new();
 print STDERR Dumper $list->type();
-my $results = $dsyner->desynonymize($schema,$list->type(),\@name_list);
+ok(my $results = $dsyner->desynonymize($schema,$list->type(),\@name_list),
+"run list desynonymize");
 print STDERR Dumper $results;
 
 
