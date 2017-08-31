@@ -18,6 +18,16 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function($) {
 
+    $("#create_crossingtrial_link").click(function() {
+
+
+        var lo = new CXGN.List();
+
+        $("#create_crossingtrial_dialog").modal("show");
+
+  });
+
+
     $("#create_cross_link").click(function() {
 
         $("#cross_type_info").click(function() {
@@ -195,6 +205,9 @@ jQuery(document).ready(function($) {
             }
         });
     });
+
+
+
 
     function add_cross(crossType, crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id) {
 
