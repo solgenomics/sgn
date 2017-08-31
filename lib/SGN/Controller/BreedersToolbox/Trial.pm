@@ -225,7 +225,6 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
     my $trial_name = $trial->get_name();
     my $trial_id = $trial->get_trial_id();
     my $dir = $c->tempfiles_subdir('download');
