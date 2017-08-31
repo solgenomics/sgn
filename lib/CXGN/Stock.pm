@@ -945,7 +945,7 @@ sub _retrieve_populations {
         subject_id => $self->stock_id(),
     });
     if ($rs->count == 0) {
-        print STDERR "No population saved for this stock!\n";
+        #print STDERR "No population saved for this stock!\n";
     }
     else {
         my @population_names;

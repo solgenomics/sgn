@@ -128,13 +128,7 @@ sub create_hash_lookups {
     my %trait_objs;
     my @trait_list = @{$self->trait_list};
     my @stock_list = @{$self->stock_list};
-
-    my $t = CXGN::List::Transform->new();
-    my $stock_id_list = $t->transform($schema, 'stocks_2_stock_ids', \@stock_list);
-    $self->stock_id_list($stock_id_list->{'transform'});
-
     my @cvterm_ids;
-    my @stock_list = @{$self->stock_list};
 
     my $t = CXGN::List::Transform->new();
     my $stock_id_list = $t->transform($schema, 'stocks_2_stock_ids', \@stock_list);

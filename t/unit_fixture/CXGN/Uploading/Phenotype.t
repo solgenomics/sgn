@@ -718,6 +718,7 @@ ok($validate_file != 1, "Check if parse validate fieldbook fails for datacollect
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/fieldbook/fieldbook_phenotype_file.csv";
 $validate_file = $parser->validate('field book', $filename, 1, 'plots', $f->bcs_schema);
+print STDERR Dumper $validate_file;
 ok($validate_file == 1, "Check if parse validate works for fieldbook");
 
 $parsed_file = $parser->parse('field book', $filename, 1, 'plots', $f->bcs_schema);
@@ -3106,7 +3107,7 @@ while (my $rs = $exp_md_files_table_tail->next() ) {
 $parser = CXGN::Phenotypes::ParseUpload->new();
 $filename = "t/data/fieldbook/fieldbook_phenotype_plants_file.csv";
 
-$validate_file = $parser->validate('field book', $filename, 1, 'plots', $f->bcs_schema);
+$validate_file = $parser->validate('field book', $filename, 1, 'plants', $f->bcs_schema);
 ok($validate_file == 1, "Check if parse validate works for plant fieldbook file");
 
 $parsed_file = $parser->parse('field book', $filename, 1, 'plots', $f->bcs_schema);

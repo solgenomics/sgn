@@ -119,7 +119,8 @@ sub validate_design {
 			'range_number',
 			'row_number',
 			'col_number',
-			'plant_names'
+			'plant_names',
+			'plot_num_per_block'
 		);
 	} elsif ($design_type eq 'splitplot'){
 		@valid_properties = (

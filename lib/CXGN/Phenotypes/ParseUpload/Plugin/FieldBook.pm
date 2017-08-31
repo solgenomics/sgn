@@ -44,8 +44,23 @@ sub validate {
     }
 
     #  Check header row contents
-    if ($header_row[0] ne "\"plot_id\"" || $header_row[0] ne "\"plot_name\"" || $header_row[0] ne "\"plant_name\"" || $header_row[0] ne "\"subplot_name\""){
+    if ($header_row[0] ne "\"plot_id\"" && $header_row[0] ne "\"plot_name\"" && $header_row[0] ne "\"plant_name\"" && $header_row[0] ne "\"subplot_name\""){
         $parse_result{'error'} = "File contents incorrect. First column in header must be plot_id, plot_name, plant_name, or subplot_name.";
+        return \%parse_result;
+    }
+
+    if($data_level ne 'plots' && $data_level ne 'plants' && $data_level ne 'subplots'){
+        $parse_result{'error'} = "You must specify if you are uploading plot, plant, or subplot level phenotypes.";
+        return \%parse_result;
+    }
+    if($data_level eq 'plots' && ($header_row[0] ne "\"plot_id\"" && $header_row[0] ne "\"plot_name\"")){
+        $parse_result{'error'} = "File contents incorrect. First column in header must be plot_id or plot_name if you are uploading plot level phenotypes.";
+        return \%parse_result;
+    } elsif ($data_level eq 'plants' && $header_row[0] ne "\"plant_name\""){
+        $parse_result{'error'} = "File contents incorrect. First column in header must be plot_id or plot_name if you are uploading plant level phenotypes.";
+        return \%parse_result;
+    } elsif ($data_level eq 'subplots' && $header_row[0] ne "\"subplot_name\""){
+        $parse_result{'error'} = "File contents incorrect. First column in header must be plot_id or plot_name if you are uploading subplot level phenotypes.";
         return \%parse_result;
     }
 
