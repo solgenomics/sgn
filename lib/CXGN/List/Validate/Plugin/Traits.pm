@@ -12,7 +12,7 @@ sub validate {
     my $self = shift;
     my $schema = shift;
     my $list = shift;
-    my @missing = ();
+    my @missing;
 
 #    print STDERR "LIST: ".Data::Dumper::Dumper($list);
 
@@ -21,26 +21,13 @@ sub validate {
 
     foreach my $term (@$list) {
         print STDERR $term."\n";
-        my $delim = "|";
-        my $full_accession = substr $term, rindex( $term, $delim ) + length($delim);
-        my $full_accession_length = length($full_accession) + length($delim);
-        $term = substr($term, 0, -$full_accession_length);
-        #print STDERR $full_accession."\n";
-        #print STDERR $term."\n";
-        my ($db_name, $accession) = split ":", $full_accession;
 
-        if ($accession) {
-            $accession =~ s/\s+$//;
-            $accession =~ s/^\s+//;
-        }
-        if ($db_name) {
-            $db_name  =~ s/\s+$//;
-            $db_name  =~ s/^\s+//;
-        }
+        my ($trait_name, $full_accession) = split (/\|/ , $term);
+    	my ($db_name, $accession) = split ":", $full_accession;
 
         my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
         if ($db_rs->count() == 0) {
-            push @missing, $_;
+            push @missing, $term;
         } else {
             my $db = $db_rs->first();
             my $rs = $schema->resultset("Cv::Cvterm")->search( {
@@ -96,7 +83,7 @@ sub validate {
         }
 
     }
-    #print STDERR Dumper \@missing;
+    # print STDERR Dumper \@missing;
     return { missing => \@missing };
 }
 
