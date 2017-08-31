@@ -82,6 +82,7 @@ $identifier => ''
                                        <option selected disabled>select printing format</option>
                                        <option value="CASS">CASS printing format</option>
                                        <option value="MUSA">MUSA printing format</option>
+                                       <option value="24A4">32 A4 Size Sticker Paper</option>
                                      </select>
                                  </div>
                                </div>
