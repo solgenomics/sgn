@@ -159,9 +159,11 @@ sub create_trait_file_for_field_book_POST : Args(0) {
 
   foreach my $term (@trait_list) {
       #print STDERR "term is $term\n";
-      my ($trait_name, $full_cvterm_accession) = split (/\|/, $term);
+      my @parts = split (/\|/ , $term);
+      my ($db_name, $accession) = split ":", pop @parts;
+      my $trait_name = join ("|", @parts);
       #print STDERR "trait name is $trait_name, full cvterm accession is $full_cvterm_accession\n";
-      my ( $db_name , $accession ) = split (/:/ , $full_cvterm_accession);
+      #my ( $db_name , $accession ) = split (/:/ , $full_cvterm_accession);
 
       $accession =~ s/\s+$//;
       $accession =~ s/^\s+//;
