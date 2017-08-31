@@ -186,11 +186,9 @@ sub detail {
 
 	my @data = ();
 
-	print STDERR Dumper($map->get_chromosomes());
-
 	foreach my $chr ($map->get_chromosomes()) { 
 	    push @data, { linkageGroupId => $chr->get_name(),
-			  numberMarkers => $chr->get_marker_count(),
+			  numberMarkers => scalar($chr->get_markers()),
 			  maxPosition => $chr->get_length()
 	    };
 	}
