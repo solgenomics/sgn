@@ -4,6 +4,7 @@ package CXGN::Trial::Download::Plugin::TrialLayoutCSV;
 use Moose::Role;
 use CXGN::Trial::TrialLayout;
 use CXGN::Trial;
+use Data::Dumper;
 
 sub validate { 
     return 1;
@@ -12,8 +13,8 @@ sub validate {
 sub download { 
     my $self = shift;
     
-    my $trial = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $self->trial_id() });
-    my $design = $trial->get_design();
+    my $trial_layout = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $self->trial_id() });
+    my $design = $trial_layout->get_design();
 
     my $trial = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $self->trial_id() });
     my $treatments = $trial->get_treatments();
@@ -52,6 +53,8 @@ sub download {
                 my $treatment_hash = $treatment_lookup[$_];
                 if (exists($treatment_hash->{$design->{$n}->{plot_name}})){
                     push @line_col, 1;
+                } else {
+                    push @line_col, '';
                 }
             }
             print $F join ",", @line_col;
