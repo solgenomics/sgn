@@ -185,19 +185,21 @@ jQuery(document).ready(function ($) {
         }
 
         var treatments = []
-        for(var i=1; i<5; i++){
-            var treatment_value = $('#create_trial_with_treatment_name_input'+i).val();
-            if(treatment_value != ''){
-                treatments.push(treatment_value);
+        if (design_type == 'splitplot'){
+            for(var i=1; i<5; i++){
+                var treatment_value = $('#create_trial_with_treatment_name_input'+i).val();
+                if(treatment_value != ''){
+                    treatments.push(treatment_value);
+                }
             }
+            //console.log(treatments);
+            var num_plants_per_treatment = $('#num_plants_per_treatment').val();
+            num_plants_per_plot = 0;
+            if (num_plants_per_treatment){
+                num_plants_per_plot = num_plants_per_treatment*treatments.length;
+            }
+            num_subplots_per_plot = treatments.length;
         }
-        //console.log(treatments);
-        var num_plants_per_treatment = $('#num_plants_per_treatment').val();
-        num_plants_per_plot = 0;
-        if (num_plants_per_treatment){
-            num_plants_per_plot = num_plants_per_treatment*treatments.length;
-        }
-        num_subplots_per_plot = treatments.length;
 
         var greenhouse_num_plants = [];
         if (stock_list_id != "" && design_type == 'greenhouse') {

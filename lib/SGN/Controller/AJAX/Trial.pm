@@ -135,7 +135,6 @@ sub generate_experimental_design_POST : Args(0) {
   my $plot_layout_format = $c->req->param('plot_layout_format');
   my @treatments = $c->req->param('treatments[]');
   my $num_plants_per_plot = $c->req->param('num_plants_per_plot');
-  print STDERR "NUMPLANTSPERPLOT: $num_plants_per_plot\n";
 
   if ($design_type eq 'splitplot'){
       if (scalar(@treatments)<1){
@@ -508,7 +507,7 @@ sub save_experimental_design_POST : Args(0) {
     }
 
     my $trial_location_design = decode_json($design->[$design_index]);
-    print STDERR Dumper $trial_location_design;
+    #print STDERR Dumper $trial_location_design;
 
       my $trial_create = CXGN::Trial::TrialCreate->new({
         chado_schema => $chado_schema,

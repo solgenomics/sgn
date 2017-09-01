@@ -122,6 +122,7 @@ sub parse {
             $header_column_info{'timestamp'} = $header_column_number;
         }
         if (index($header_cell, "Treatment:") != -1) {
+            $header_cell =~ s/Treatment\://;
             $header_column_info{'treatment'} = [$header_column_number, $header_cell];
         }
         $header_column_number++;

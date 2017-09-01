@@ -241,7 +241,9 @@ sub save_trial {
         nd_experiment_id => $nd_experiment->nd_experiment_id(),
 		design_type => $design_type,
 		design => \%design,
-		is_genotyping => $self->get_is_genotyping
+		is_genotyping => $self->get_is_genotyping,
+		new_treatment_has_plant_entries => $self->get_trial_has_plant_entries,
+		new_treatment_has_subplot_entries => $self->get_trial_has_subplot_entries,
 	});
 	my $error;
 	my $validate_design_error = $trial_design_store->validate_design();

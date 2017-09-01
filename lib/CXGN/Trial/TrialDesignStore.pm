@@ -80,6 +80,7 @@ has 'design' => (isa => 'HashRef[HashRef[Str|ArrayRef|HashRef]]|Undef', is => 'r
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 has 'stocks_exist' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 has 'new_treatment_has_plant_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
+has 'new_treatment_has_subplot_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
 
 sub validate_design {
 	print STDERR "validating design\n";
@@ -205,6 +206,7 @@ sub store {
     my $project_design_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property');
     my $trial_treatment_relationship_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
     my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
+    my $has_subplots_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property')->cvterm_id();
 
 	my $nd_experiment_type_id;
 	my $stock_type_id;
@@ -523,6 +525,13 @@ sub store {
                     my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
                         type_id => $has_plants_cvterm,
                         value => $self->get_new_treatment_has_plant_entries,
+                        project_id => $treatment_project->project_id(),
+                    });
+                }
+				if ($self->get_new_treatment_has_subplot_entries){
+                    my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                        type_id => $has_subplots_cvterm,
+                        value => $self->get_new_treatment_has_subplot_entries,
                         project_id => $treatment_project->project_id(),
                     });
                 }
