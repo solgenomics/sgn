@@ -882,6 +882,7 @@ sub desynonymize_list: Path('/list/desynonymize') Args(0) {
     my $dsyner = CXGN::List::Desynonymize->new();
     my $results = $dsyner
       ->desynonymize($schema,$list->type(),\@name_list);
+    $results->{'previous_list'} = \@name_list;
 
     $c->stash->{rest} = $results;
 }

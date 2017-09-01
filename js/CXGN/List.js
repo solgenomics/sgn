@@ -763,7 +763,31 @@ CXGN.List.prototype = {
 							jQuery('#working_modal').modal('hide');
 							console.log(response);
 							if (response.success) {
-									jQuery('#synonym_search_result_display').modal('show');
+								html = "";
+								jQuery('#synonym_search_result_display').modal('show');
+								html += "<table class='table table-hover table-bordered'><thead><tr><th>Name in List</th><th>Unique Name</th></tr></thead><tbody>";
+								for (var i = 0; i < response.previous_list.length; i++) {
+									if (response.previous_list[i] in response.synonyms){
+										html+="<tr><td>"+response.previous_list[i]+"</td><td>&harr; "+response.previous_list[i]+"</td></tr>";
+									} else {
+										var match = false;
+										for (var uniquename in response.synonyms) {
+									    if (!match && response.synonyms.hasOwnProperty(uniquename)) {
+									      if (response.synonyms[uniquename].indexOf(response.previous_list[i])>=0){
+													match = true;
+													html+="<tr><td><span style='color:blue'>"+response.previous_list[i]+"</span></td>";
+													html+="<td><span style='color:blue'>&rarr; "+uniquename+"</span></td></tr>";
+												}
+									    }
+										}
+										if (!match){
+											html+="<tr><td><span style='color:red'>"+response.previous_list[i]+"</span></td>";
+											html+="<td><span style='color:red'>&times; Invalid Accession</span></td></tr>";
+										}
+									}
+								}
+								html += "</tbody></table>";
+								jQuery('#synonym_search_result_display_html').html(html);
 							} else {
 									alert("An error occurred while desynonymizing list ID:"+list_id);
 							}

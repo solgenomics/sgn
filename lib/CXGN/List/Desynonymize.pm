@@ -30,33 +30,34 @@ sub desynonymize {
     else{
         my $stocklookup = CXGN::Stock::StockLookup->new({ schema => $schema});
         my $unique = $stocklookup->get_stock_synonyms('any_name',$list);
-        my @already_unique = ();
-        my @changed = ();
-        my @missing = ();
-        foreach my $old_name (@{$list}){
-            if (defined $unique->{$old_name}){
-                push @already_unique, $old_name;
-            } else {
-                UNFOUND: {
-                    while (my ($uniq_name, $synonyms) = each %{$unique}){
-                        foreach my $synonym (@{$synonyms}){
-                            if ($old_name eq $synonym){
-                                push @changed, [$old_name,$uniq_name];
-                                last UNFOUND;
-                            }
-                        }
-                    }
-                    push @missing, $old_name;
-                }
-            }
-        }
+        # my @already_unique = ();
+        # my @changed = ();
+        # my @missing = ();
+        # foreach my $old_name (@{$list}){
+        #     if (defined $unique->{$old_name}){
+        #         push @already_unique, $old_name;
+        #     } else {
+        #         UNFOUND: {
+        #             while (my ($uniq_name, $synonyms) = each %{$unique}){
+        #                 foreach my $synonym (@{$synonyms}){
+        #                     if ($old_name eq $synonym){
+        #                         push @changed, [$old_name,$uniq_name];
+        #                         last UNFOUND;
+        #                     }
+        #                 }
+        #             }
+        #             push @missing, $old_name;
+        #         }
+        #     }
+        # }
         my @unique_list = keys %{$unique};
         return {
             success => "1",
             list => \@unique_list,
-            unchanged => \@already_unique, 
-            changed => \@changed, 
-            absent => \@missing
+            synonyms => $unique
+            # unchanged => \@already_unique, 
+            # changed => \@changed, 
+            # absent => \@missing
         };
     }
 }
