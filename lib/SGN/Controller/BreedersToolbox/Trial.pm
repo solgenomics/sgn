@@ -121,8 +121,11 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 	}
 
     }
+    elsif ($design_type eq "treatment"){
+        $c->stash->{template} = '/breeders_toolbox/treatment.mas';
+    }
     else {
-	$c->stash->{template} = '/breeders_toolbox/trial.mas';
+        $c->stash->{template} = '/breeders_toolbox/trial.mas';
     }
 
     print STDERR "End Load Trial Detail Page: ".localtime()."\n";
