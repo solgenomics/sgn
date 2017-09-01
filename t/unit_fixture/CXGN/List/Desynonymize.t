@@ -20,8 +20,8 @@ BEGIN {use_ok('CXGN::List');}
 BEGIN {use_ok('CXGN::List::Desynonymize');}
 BEGIN {require_ok('Moose');}
 
-my $list = CXGN::List->new( { dbh => $dbh, list_id => 11 } );
-my $flat_list = $list->retrieve_elements_with_ids(11);
+my $list = CXGN::List->new( { dbh => $dbh, list_id => 12 } );
+my $flat_list = $list->retrieve_elements_with_ids(12);
 my @name_list = map {@{$_}[1]} @{$flat_list};
 print STDERR Dumper @name_list;
 my $dsyner = CXGN::List::Desynonymize->new();

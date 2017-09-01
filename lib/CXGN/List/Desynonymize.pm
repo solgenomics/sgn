@@ -50,7 +50,7 @@ sub desynonymize {
                 }
             }
         }
-        my @unique_list = keys $unique;
+        my @unique_list = keys %{$unique};
         return {
             success => "1",
             list => \@unique_list,
