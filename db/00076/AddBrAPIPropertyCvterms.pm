@@ -87,7 +87,7 @@ sub patch {
 			'datatype',
 			'code'
 		],
-		'geolocations_property' => [
+		'geolocation_property' => [
 			'country_name',
 			'country_code',
 			'abbreviation',

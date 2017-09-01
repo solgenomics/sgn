@@ -18,21 +18,21 @@ experiment_type	grafting_experiment				00079
 genotype_property	igd number					
 genotype_property	infinium array					sgn database
 genotype_property	snp genotyping					
-geolocations_property	geolocation address				00052	
-geolocations_property	geolocation year				00052	
-geolocations_property	country_name	From BrAPI	03/27/2017	nm529	00076	
-geolocations_property	country_code	From BrAPI	03/27/2017	nm529	00076	
-geolocations_property	abbreviation	From BrAPI	03/27/2017	nm529	00076	
-geolocations_property	location_type	From BrAPI	03/27/2017	nm529	00076	
-geolocations_property	annual_total_precipitation	From BrAPI	03/27/2017	nm529	00076	
-geolocations_property	continent	From BrAPI	03/27/2017	nm529	00076	
-geolocations_property	annual_mean_temperature	From BrAPI	03/27/2017	nm529	00076	
-geolocations_property	adm1	From BrAPI	03/27/2017	nm529	00076	
-geolocations_property	adm2	From BrAPI	03/27/2017	nm529	00076	
-geolocations_property	adm3	From BrAPI	03/27/2017	nm529	00076	
-geolocations_property	local_name	From BrAPI	03/27/2017	nm529	00076	
-geolocations_property	region	From BrAPI	03/27/2017	nm529	00076	
-geolocations_property	alternative_name	From BrAPI	03/27/2017	nm529	00076	
+geolocation_property	geolocation address				00052	
+geolocation_property	geolocation year				00052	
+geolocation_property	country_name	From BrAPI	03/27/2017	nm529	00076	
+geolocation_property	country_code	From BrAPI	03/27/2017	nm529	00076	
+geolocation_property	abbreviation	From BrAPI	03/27/2017	nm529	00076	
+geolocation_property	location_type	From BrAPI	03/27/2017	nm529	00076	
+geolocation_property	annual_total_precipitation	From BrAPI	03/27/2017	nm529	00076	
+geolocation_property	continent	From BrAPI	03/27/2017	nm529	00076	
+geolocation_property	annual_mean_temperature	From BrAPI	03/27/2017	nm529	00076	
+geolocation_property	adm1	From BrAPI	03/27/2017	nm529	00076	
+geolocation_property	adm2	From BrAPI	03/27/2017	nm529	00076	
+geolocation_property	adm3	From BrAPI	03/27/2017	nm529	00076	
+geolocation_property	local_name	From BrAPI	03/27/2017	nm529	00076	
+geolocation_property	region	From BrAPI	03/27/2017	nm529	00076	
+geolocation_property	alternative_name	From BrAPI	03/27/2017	nm529	00076	
 list_types	seedlots		07/20/2017	nm529	00081	
 list_types	accessions					
 list_types	crosses				00067	
