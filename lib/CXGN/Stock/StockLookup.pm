@@ -225,7 +225,7 @@ sub get_stock_synonyms {
 			$synonym_hash->{$uname} = [];
 		}
 		if ($row->get_column('cvterm_name') eq 'stock_synonym'){
-			push $synonym_hash->{$uname}, $row->get_column('stockprop_value');
+			push @{$synonym_hash->{$uname}}, $row->get_column('stockprop_value');
 		}
   	}
 	return $synonym_hash;
