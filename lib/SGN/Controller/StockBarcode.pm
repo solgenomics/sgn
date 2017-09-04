@@ -107,7 +107,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     # convert mm into pixels
     #
-     if ($cass_print_format eq 'NCSU') {$left_margin_mm = 12, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 12, $labels_per_page = 10, $labels_per_row = 3, $barcode_type = "2D"; }
+     if ($cass_print_format eq 'NCSU') {$left_margin_mm = 50, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 12, $labels_per_page = 10, $labels_per_row = 3, $barcode_type = "2D"; }
      my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } (
              $top_margin_mm,
      		$left_margin_mm,
@@ -128,7 +128,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
      my @not_found;
      my @found;
  
-     my ($row, $stockprop_name, $value, $fdata, $accession_id, $accession_name, $parents, $tract_type_id, $label_text_5, $plot_name, $label_text_6, $musa_row_col_number, $label_text_7);
+     my ($row, $stockprop_name, $value, $fdata_block, $fdata_rep, $fdata_plot, $fdata, $accession_id, $accession_name, $parents, $tract_type_id, $label_text_5, $plot_name, $label_text_6, $musa_row_col_number, $label_text_7);
  
      foreach my $name (@names) {
  
@@ -166,6 +166,9 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                  }
                  $row = $stockprop_hash{$stock_id}->{'replicate'};
                  $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."blk:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
+                 $fdata_block = "blk:".$stockprop_hash{$stock_id}->{'block'};
+                 $fdata_rep = "rep:".$stockprop_hash{$stock_id}->{'replicate'};
+                 $fdata_plot = "plot:".$stockprop_hash{$stock_id}->{'plot number'};
                  $musa_row_col_number = "row:".$stockprop_hash{$stock_id}->{'row_number'}.' '."col:".$stockprop_hash{$stock_id}->{'col_number'};
                  
                  my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;"); 
@@ -185,6 +188,9 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
            }
            $row = $stockprop_hash{$stock_id}->{'replicate'};
            $fdata = "rep:".$stockprop_hash{$stock_id}->{'replicate'}.' '."blk:".$stockprop_hash{$stock_id}->{'block'}.' '."plot:".$stockprop_hash{$stock_id}->{'plot number'};
+           $fdata_block = "blk:".$stockprop_hash{$stock_id}->{'block'};
+           $fdata_rep = "rep:".$stockprop_hash{$stock_id}->{'replicate'};
+           $fdata_plot = "plot:".$stockprop_hash{$stock_id}->{'plot number'};
            $musa_row_col_number = "row:".$stockprop_hash{$stock_id}->{'row_number'}.' '."col:".$stockprop_hash{$stock_id}->{'col_number'};
            
            my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =? and stock.type_id=?;");
@@ -208,7 +214,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
            $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
        }
  
-       push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name, $synonym_string, $musa_row_col_number];
+       push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name, $synonym_string, $musa_row_col_number, $fdata_block, $fdata_rep, $fdata_plot];
      }
  
      my $dir = $c->tempfiles_subdir('pdfs');
@@ -226,12 +232,12 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
      my ($page_width, $page_height) = @{$pdf->get_page_size($page_format)}[2,3];     
      
      ## for 10 labels per page
-     #my $label_height = 40;
-     my $label_height = int( (($page_height - $top_margin - $bottom_margin) / $labels_per_page) - 0.05 );
+     my $label_height = 40;
+     #my $label_height = int( (($page_height - $top_margin - $bottom_margin) / $labels_per_page) - 0.05 );
     #  if ($labels_per_page == '10'){
     #      $label_height = int( (($page_height - $top_margin - $bottom_margin) / $labels_per_page) - 30 );
     #  }
-    #  print "LABEL HEIGHT: $label_height\n";
+      print "LABEL HEIGHT: $label_height\n";
 # 
      my @pages;
      foreach my $page (1..$self->label_to_page($labels_per_page, scalar(@found))) {
@@ -283,61 +289,78 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
  
      	if ($scalex < $scaley) { $scaley = $scalex; }
      	else { $scalex = $scaley; }
+        
+        my $label_height_10_per_page = 72;
+     	my $label_boundary = $page_height - ($label_on_page * $label_height_10_per_page) - $top_margin;
  
-     	my $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
- 
-     	my $ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
+     	my $ypos = $label_boundary - int( ($label_height_10_per_page - $image->{height} * $scaley) /2);
      	$pages[$page_nr-1]->line($page_width -100, $label_boundary, $page_width, $label_boundary);
  
        # my $lebel_number = scalar($#{$found[$i]});
+       my ($year_text,$location_text) = split ',', $added_text;
        my $font = $pdf->font('BaseFont' => 'Courier');
          foreach my $label_count (1..$labels_per_row) {
-           my $xposition = $left_margin + ($label_count -1) * $final_barcode_width + 20;
+           my $xposition = $left_margin + ($label_count -1) * $final_barcode_width - 50;
            my $yposition = $ypos -7;
            my $label_text = $found[$i]->[1];
            my $label_size =  7;
+           my $label_size_stock =  10;
+           my $yposition_8 = $ypos + 2;
+           my $yposition_2 = $ypos - 10;
+           my $yposition_3 = $ypos - 20;
+           my $yposition_4 = $ypos - 30;
+           my $yposition_5 = $ypos - 40;
+           my $yposition_6 = $ypos - 50;
+           my $yposition_7 = $ypos - 60;
+           $label_text_6 = $found[$i]->[2];
+           $label_text_5 = $found[$i]->[11];
+           $label_text_4 = $found[$i]->[10];
+           $pages[$page_nr-1]->string($font, $label_size_stock, $xposition, $yposition_8, $label_text_6);
+           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $year_text);
+           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $location_text);
+           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text_5);
+           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $label_text_4);
+           $pages[$page_nr-1]->string($font, $label_size_stock, $xposition, $yposition_6, $label_text);
+           
            $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
  
-           my $yposition_2 = $ypos - 20;
-           my $yposition_3 = $ypos - 30;
-           my $yposition_4 = $ypos - 40;
-           my $yposition_5 = $ypos - 50;
+           
 
-           my $plot_pedigree_text;
-# 
-               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
-                   if ($found[$i]->[5] eq 'plot'){
-                       $label_text_5 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
-                       if ($parents eq ''){
-                           $label_text_4 = "No pedigree for ".$found[$i]->[2];
-                       }else{
-                           $label_text_4 = "pedigree: ".$parents;
-                       }
-                   }
-                   elsif ($found[$i]->[5] eq 'accession'){
-                       if ($parents eq ''){
-                           $label_text_4 = "No pedigree for ".$found[$i]->[1];
-                       }else{
-                           $label_text_4 = "pedigree: ".$parents;
-                       }
-                     $label_text_5 = $found[$i]->[7];
-                   }
-                   elsif ($found[$i]->[5] eq 'plant'){
-                       $label_text_6 = "plot:".$found[$i]->[6];
-                       $label_text_5 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
-                       if ($parents eq ''){
-                           $label_text_4 = "No pedigree for ".$found[$i]->[2];
-                       }else{
-                           $label_text_4 = "pedigree: ".$parents;
-                       }
-                   }
-                   else{
-                       $label_text_4 = '';
-                   }
- 
-               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
-               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $label_text_6);
-               $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_5);
+        #    my $plot_pedigree_text;
+           # 
+        #        $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text);
+        #            if ($found[$i]->[5] eq 'plot'){
+        #                $label_text_5 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
+        #                if ($parents eq ''){
+        #                    $label_text_4 = "No pedigree for ".$found[$i]->[2];
+        #                }else{
+        #                    $label_text_4 = "pedigree: ".$parents;
+        #                }
+        #            }
+        #            elsif ($found[$i]->[5] eq 'accession'){
+        #                if ($parents eq ''){
+        #                    $label_text_4 = "No pedigree for ".$found[$i]->[1];
+        #                }else{
+        #                    $label_text_4 = "pedigree: ".$parents;
+        #                }
+        #              $label_text_5 = $found[$i]->[7];
+        #            }
+        #            elsif ($found[$i]->[5] eq 'plant'){
+        #                $label_text_6 = "plot:".$found[$i]->[6];
+        #                $label_text_5 = "accession:".$found[$i]->[2]." ".$found[$i]->[3];
+        #                if ($parents eq ''){
+        #                    $label_text_4 = "No pedigree for ".$found[$i]->[2];
+        #                }else{
+        #                    $label_text_4 = "pedigree: ".$parents;
+        #                }
+        #            }
+        #            else{
+        #                $label_text_4 = '';
+        #            }
+           # 
+        #        $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
+        #        $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $label_text_6);
+        #        $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_5);
 
          }
 
