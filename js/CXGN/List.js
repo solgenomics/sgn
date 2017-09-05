@@ -753,6 +753,7 @@ CXGN.List.prototype = {
     },
 		
 		synonymSearch: function(list_id){
+      var self = this;
 			jQuery.ajax( {
 					url: '/list/desynonymize?list_id='+list_id,
 					async: false,
@@ -800,7 +801,8 @@ CXGN.List.prototype = {
                     if (!newListID) throw "List creation failed.";
                     var count = list.addBulk(newListID,response.list);
                     if (!count) throw "Added nothing to list or addition failed.";
-                    alert("List \""+form["name"]+"\" created with "+count+" entries.")
+                    alert("List \""+form["name"]+"\" created with "+count+" entries.");
+                    self.renderLists('list_dialog');
                   }
                   catch(err) {
                     setTimeout(function(){throw err;});
