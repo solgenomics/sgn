@@ -800,6 +800,7 @@ CXGN.List.prototype = {
                     var list = new CXGN.List();
                     var newListID = list.newList(form["name"]);
                     if (!newListID) throw "List creation failed.";
+										list.setListType(newListID,response.list_type);
                     var count = list.addBulk(newListID,response.list);
                     if (!count) throw "Added nothing to list or addition failed.";
 										jQuery('#working_modal').modal('hide');

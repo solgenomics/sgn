@@ -883,6 +883,7 @@ sub desynonymize_list: Path('/list/desynonymize') Args(0) {
     my $results = $dsyner
       ->desynonymize($schema,$list->type(),\@name_list);
     $results->{'previous_list'} = \@name_list;
+    $results->{'list_type'} = $list->type();
 
     $c->stash->{rest} = $results;
 }
