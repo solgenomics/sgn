@@ -58,6 +58,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
   my $format = $c->req->param('format') || "ExcelBasic";
   my $data_level = $c->req->param('data_level') || "plots";
   my $sample_number = $c->req->param('sample_number');
+  my $treatment_project_id = $c->req->param('treatment_project_id');
   if ($sample_number eq '') {$sample_number = undef};
   my $predefined_columns = $c->req->param('predefined_columns') ? decode_json $c->req->param('predefined_columns') : [];
 
@@ -68,6 +69,13 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
       my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
       if (!$trial->has_plant_entries()) {
           $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have plant entries. Please create the plant entries first." };
+          return;
+      }
+  }
+  if ($data_level eq 'subplots' || $data_level eq 'plants_subplots') {
+      my $trial = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
+      if (!$trial->has_subplot_entries()) {
+          $c->stash->{rest} = { error => "The requested trial (".$trial->get_name().") does not have subplot entries." };
           return;
       }
   }
@@ -87,6 +95,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
       data_level => $data_level,
       sample_number => $sample_number,
       predefined_columns => $predefined_columns,
+      treatment_project_id => $treatment_project_id
       });
 
      $create_spreadsheet->download();

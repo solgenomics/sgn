@@ -133,6 +133,48 @@ sub generate_experimental_design_POST : Args(0) {
   my $fieldmap_col_number = $c->req->param('fieldmap_col_number');
   my $fieldmap_row_number = $c->req->param('fieldmap_row_number');
   my $plot_layout_format = $c->req->param('plot_layout_format');
+  my @treatments = $c->req->param('treatments[]');
+  my $num_plants_per_plot = $c->req->param('num_plants_per_plot');
+
+  if ($design_type eq 'splitplot'){
+      if (scalar(@treatments)<1){
+          $c->stash->{rest} = { error => "You need to provide at least one treatment for a splitplot design."};
+          return;
+      }
+      if (!$num_plants_per_plot){
+          $c->stash->{rest} = { error => "You need to provide number of plants per treatment for a splitplot design."};
+          return;
+      }
+      if ($num_plants_per_plot <1){
+          $c->stash->{rest} = { error => "You need to provide number of plants per treatment for a splitplot design."};
+          return;
+      }
+      if (($num_plants_per_plot%(scalar(@treatments)))!=0){
+          $c->stash->{rest} = {error => "Number of plants per plot needs to divide evenly by the number of treatments. For example: if you have two treatments and there are 3 plants per treatment, that means you have 6 plants per plot." };
+          return;
+      }
+  }
+
+  my $row_in_design_number = $c->req->param('row_in_design_number');
+  my $col_in_design_number = $c->req->param('col_in_design_number');
+  my $no_of_rep_times = $c->req->param('no_of_rep_times');
+  my $no_of_block_sequence = $c->req->param('no_of_block_sequence');      
+  my $unreplicated_accession_list = $c->req->param('unreplicated_accession_list');
+  my $replicated_accession_list = $c->req->param('replicated_accession_list');
+  my $no_of_sub_block_sequence = $c->req->param('no_of_sub_block_sequence');
+  
+  my @replicated_accession; 
+  if ($c->req->param('replicated_accession_list')) {
+    @replicated_accession = @{_parse_list_from_json($c->req->param('replicated_accession_list'))};
+  }
+  my $number_of_replicated_accession = scalar(@replicated_accession);
+  
+  my @unreplicated_accession;
+  if ($c->req->param('unreplicated_accession_list')) {
+    @unreplicated_accession = @{_parse_list_from_json($c->req->param('unreplicated_accession_list'))};
+  }
+  my $number_of_unreplicated_accession = scalar(@unreplicated_accession);
+  
   #my $trial_name = $c->req->param('project_name');
   my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
   my $use_same_layout = $c->req->param('use_same_layout');
@@ -143,6 +185,15 @@ sub generate_experimental_design_POST : Args(0) {
         @stock_names = (@stock_names, @control_names_crbd);
     }
   }
+  if($design_type eq "p-rep"){
+      @stock_names = (@replicated_accession, @unreplicated_accession);
+  }
+  #print STDERR Dumper(\@stock_names);
+  my $number_of_prep_accession = scalar(@stock_names);
+  my $p_rep_total_plots = $row_in_design_number * $col_in_design_number;
+  my $replicated_plots = $no_of_rep_times * $number_of_replicated_accession;
+  my $unreplicated_plots = scalar(@unreplicated_accession);
+  my $calculated_total_plot = $replicated_plots + $unreplicated_plots;
 
 my @locations;
 my $trial_locations;
@@ -171,6 +222,11 @@ my $location_number = scalar(@locations);
   if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {  #user must have privileges to add a trial
     $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
     return;
+  }
+  print "TOTAL PLOTS $p_rep_total_plots AND CALCULATED PLOTS $calculated_total_plot\n";
+  if($p_rep_total_plots != $calculated_total_plot){
+      $c->stash->{rest} = {error => "Treatment repeats do not equal number of plots in design" };
+      return;
   }
 
   my @design_array;
@@ -230,12 +286,12 @@ my $location_number = scalar(@locations);
   if ($start_number) {
     $trial_design->set_plot_start_number($start_number);
   } else {
-    $trial_design->set_plot_start_number(1);
+    $trial_design->clear_plot_start_number();
   }
   if ($increment) {
     $trial_design->set_plot_number_increment($increment);
   } else {
-    $trial_design->set_plot_number_increment(1);
+    $trial_design->clear_plot_number_increment();
   }
   if ($plot_prefix) {
     $trial_design->set_plot_name_prefix($plot_prefix);
@@ -299,6 +355,34 @@ my $location_number = scalar(@locations);
   if ($plot_layout_format) {
     $trial_design->set_plot_layout_format($plot_layout_format);
   }
+  if ($number_of_replicated_accession) {
+    $trial_design->set_replicated_accession_no($number_of_replicated_accession);
+  }
+  if ($number_of_unreplicated_accession) {
+    $trial_design->set_unreplicated_accession_no($number_of_unreplicated_accession);
+  }
+  if ($row_in_design_number) {
+    $trial_design->set_row_in_design_number($row_in_design_number);
+  }
+  if ($col_in_design_number) {
+    $trial_design->set_col_in_design_number($col_in_design_number);
+  }
+  if ($no_of_rep_times) {
+    $trial_design->set_num_of_replicated_times($no_of_rep_times);
+  }
+  if ($no_of_block_sequence) {
+    $trial_design->set_block_sequence($no_of_block_sequence);
+  }
+  if ($no_of_sub_block_sequence) {
+    $trial_design->set_sub_block_sequence($no_of_sub_block_sequence);
+  }
+
+  if (scalar(@treatments)>0) {
+    $trial_design->set_treatments(\@treatments);
+  }
+  if($num_plants_per_plot){
+      $trial_design->set_num_plants_per_plot($num_plants_per_plot);
+  }
 
   try {
     $trial_design->calculate_design();
@@ -317,6 +401,8 @@ my $location_number = scalar(@locations);
   my $design_level;
   if ($design_type eq 'greenhouse'){
       $design_level = 'plants';
+  } elsif ($design_type eq 'splitplot') {
+      $design_level = 'subplots';
   } else {
       $design_level = 'plots';
   }
@@ -434,7 +520,9 @@ sub save_experimental_design_POST : Args(0) {
         trial_location => $trial_location,
         trial_name => $trial_name,
         design_type => $c->req->param('design_type'),
-        trial_type => $trial_type
+        trial_type => $trial_type,
+        trial_has_plant_entries => $c->req->param('has_plant_entries'),
+        trial_has_subplot_entries => $c->req->param('has_subplot_entries'),
 	  });
 
   #$trial_create->set_user($c->user()->id());

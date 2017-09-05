@@ -3,7 +3,7 @@
 $trial_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'd3.d3Min', 'SGN.Histogram' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'd3.d3v4Min', 'd3.graphers.stackedObservationPhenotypeHistogram'] &>
 
 <style>
 
@@ -36,6 +36,7 @@ $trial_id
                 <select class="form-control" id="display_trial_phenosummary">
                     <option value="plots">Trait Values for Plots in this Trial</option>
                     <option value="plants">Trait Values for Plants in this Trial</option>
+                    <option value="subplots">Trait Values for Subplots in this Trial</option>
                     <option value="plots_accession">Trait Values for Plots in this Trial grouped by Accession</option>
                     <option value="plants_accession">Trait Values for Plants in this Trial grouped by Accession</option>
                 </select>
@@ -81,9 +82,10 @@ $trial_id
                     <div class="form-group form-group-sm">
                         <label class="col-sm-2 control-label">Display: </label>
                         <div class="col-sm-10" >
-                            <select class="form-control" id="display_trial_phenosummary_hist" onchange='trait_summary_hist_display_change(this.value)'>
+                            <select class="form-control" id="display_trial_phenosummary_hist">
                                 <option value="plot">Values for Plots in this Trial</option>
                                 <option value="plant">Values for Plants in this Trial</option>
+                                <option value="subplot">Values for Subplots in this Trial</option>
                             </select>
                         </div>
                     </div>
@@ -105,9 +107,14 @@ $trial_id
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
 <script>
-
+// wrap code in an immediately invoked function, so we can use d3v4 as d3;
+(function(){
+var d3 = d3v4;
+var draw_histogram = stackedObservationPhenotypeHistogram.draw;
 jQuery(document).ready(function () {
-
+    jQuery("#display_trial_phenosummary_hist").change(function(){
+      trait_summary_hist_display_change(this.value);
+    });
     jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
 
         datatables_display_phenosummary();
@@ -115,7 +122,7 @@ jQuery(document).ready(function () {
         jQuery(document).on('change', '#display_trial_phenosummary', function() {
             var html = '';
             var display = jQuery('#display_trial_phenosummary').val();
-            if (display == 'plots' || display == 'plants') {
+            if (display == 'plots' || display == 'plants' || display == 'subplots') {
                 html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
             }
             if (display == 'plots_accession' || display == 'plants_accession') {
@@ -159,26 +166,31 @@ function trait_summary_hist_display_change(value) {
         success: function(response){
             //console.log(response);
             if (response.traits_assayed[0][0]) {
-                var traits_assayed_html = "<select class='form-control' id='trial_summary_hist_dropdown' onchange='trait_summary_hist_change(this.value)'>";
+                var traits_assayed_html = "<select class='form-control' id='trial_summary_hist_dropdown'>";
                 for (i=0; i<response.traits_assayed[0].length; i++) {
                     traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
                 }
                 traits_assayed_html = traits_assayed_html +"</select>";
                 jQuery("#traits_assayed_dropdown").html(traits_assayed_html);
+                jQuery("#traits_assayed_dropdown>select").change(function(){
+                  trait_summary_hist_change(this.value);
+                });
 
                 jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+"/view'>Definition</a>");
 
                 jQuery.ajax( {
-                    url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_histogram/'+jQuery("#trial_summary_hist_dropdown").val()+'?stock_type='+value,
+                    url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_phenotypes/?trait='+jQuery("#trial_summary_hist_dropdown").val()+'&display='+value,
                     type: 'POST',
                     success: function(response){
                         jQuery("#working_modal").modal("hide");
                         if (response.error) {
                             alert(response.error);
+                        } 
+                        else if (response.status!="success"){
+                            alert("Problem loading plant/plot data: "+response.status);
                         }
                         else {
-                            d3.select("#trial_summary_hist").selectAll("*").remove();
-                            plot_histogram(response.data, 'trial_summary_hist');
+                            draw_histogram(response.data, d3.select("#trial_summary_hist").node());
                         }
                     },
                     error: function(response) {
@@ -202,9 +214,9 @@ function trait_summary_hist_display_change(value) {
 function trait_summary_hist_change(value) {
     jQuery("#trial_summary_hist_dropdown").val(value);
     jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+value+"/view'>Definition</a>");
-
+    console.log("value",value);
     jQuery.ajax( {
-        url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_histogram/'+value+'?stock_type='+jQuery('#display_trial_phenosummary_hist').val(),
+        url : '/ajax/breeders/trial/'+ <% $trial_id %> +'/trait_phenotypes/?trait='+value+'&display='+jQuery('#display_trial_phenosummary_hist').val(),
         type: 'POST',
         beforeSend: function() {
             jQuery("#working_modal").modal("show");
@@ -214,9 +226,11 @@ function trait_summary_hist_change(value) {
             if (response.error) {
                 alert(response.error);
             }
+            else if (response.status!="success"){
+                alert("Problem loading plant/plot data: "+response.status);
+            }
             else {
-                d3.select("#trial_summary_hist").selectAll("*").remove();
-                plot_histogram(response.data, 'trial_summary_hist');
+                draw_histogram(response.data, d3.select("#trial_summary_hist").node());
             }
         },
         error: function(response) {
@@ -226,5 +240,7 @@ function trait_summary_hist_change(value) {
     });
 }
 
+//end of immediately inoked function
+})();
 
 </script>

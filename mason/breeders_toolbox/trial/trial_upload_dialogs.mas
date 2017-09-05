@@ -135,6 +135,7 @@ $locations
                                 <td>range_number</td>
                                 <td>row_number</td>
                                 <td>col_number</td>
+                                <td>temperature_high</td>
                             </tr>
                         </tbody>
                     </table>
@@ -161,6 +162,8 @@ $locations
                     row_number (row number, numeric, required for field map generation)
                     <br />
                     col_number (column number, numeric, required for field map generation)
+                    <br/>
+                    treatment columns (additional column(s). the value for each plot should be 1 or empty.)
                 </div>
             </div>
             <div class="modal-footer">

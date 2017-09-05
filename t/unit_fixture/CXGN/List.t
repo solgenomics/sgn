@@ -15,6 +15,7 @@ my $lists = CXGN::List::available_lists($t->dbh(), 41);
 
 my @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
 
+print STDERR Dumper \@lists_sorted;
  is_deeply(\@lists_sorted,  [
 	       [
             '3',
@@ -51,6 +52,15 @@ my @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
             undef,
             undef,
 	    '0'
+          ],
+          [
+            12,
+            'desynonymize_test_list',
+            undef,
+            6,
+            76451,
+            'accessions',
+            0
           ],
 	  [
             '809',
@@ -126,7 +136,7 @@ my $lists = CXGN::List::available_lists($t->dbh(), 41);
 
 #print STDERR Dumper($lists);
 @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
-#print STDERR Dumper \@lists_sorted;
+print STDERR Dumper \@lists_sorted;
 is_deeply(\@lists_sorted, [
           [
             3,
@@ -166,6 +176,15 @@ is_deeply(\@lists_sorted, [
           ],
           [
             12,
+            'desynonymize_test_list',
+            undef,
+            6,
+            76451,
+            'accessions',
+            0
+          ],
+          [
+            13,
             'new_test_name',
             'new description',
             1,
@@ -203,7 +222,7 @@ my $lists = CXGN::List::available_lists($t->dbh(), 41);
 #print STDERR Dumper($lists);
 
 @lists_sorted = sort { $a->[0] <=> $b->[0] } @$lists;
-#print STDERR Dumper \@lists_sorted;
+print STDERR Dumper \@lists_sorted;
 
 is_deeply(\@lists_sorted, [
           [
@@ -235,6 +254,15 @@ is_deeply(\@lists_sorted, [
           ],
           [
             12,
+            'desynonymize_test_list',
+            undef,
+            6,
+            76451,
+            'accessions',
+            0
+          ],
+          [
+            13,
             'new_test_name',
             'new description',
             1,

@@ -2,6 +2,7 @@
 <%args>
 $trial_id
 $trial_name => undef
+$has_subplot_entries => undef
 </%args>
 
 
@@ -30,6 +31,10 @@ $trial_name => undef
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_trial_layout_data_level">
                         <option value="plots">Plots</option>
+% if ($has_subplot_entries){
+                        <option value="subplots">Subplots</option>
+                        <option value="plants_subplots">Plants and Subplots</option>
+% }
                         <option value="plants">Plants</option>
                     </select>
                 </div>
