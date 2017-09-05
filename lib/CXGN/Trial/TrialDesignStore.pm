@@ -64,6 +64,7 @@ use CXGN::Stock::StockLookup;
 use CXGN::Trial;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use CXGN::List::Validate;
 
 has 'bcs_schema' => (
 	is       => 'rw',
@@ -143,6 +144,7 @@ sub validate_design {
 	my %allowed_properties = map {$_ => 1} @valid_properties;
 
 	my %seen_stock_names;
+	my %seen_source_names;
 	foreach my $stock (keys %design){
 		if ($stock eq 'treatments'){
 			next;
@@ -150,6 +152,10 @@ sub validate_design {
 		foreach my $property (keys %{$design{$stock}}){
 			if (!exists($allowed_properties{$property})) {
 				$error .= "Property: $property not allowed! ";
+			}
+			if ($property eq 'stock_name') {
+				my $stock_name = $design{$stock}->{$property};
+				$seen_source_names{$stock_name}++;
 			}
 			if ($property eq 'plot_name') {
 				my $plot_name = $design{$stock}->{$property};
@@ -171,6 +177,7 @@ sub validate_design {
 	}
 
 	my @stock_names = keys %seen_stock_names;
+	my @source_names = keys %seen_source_names;
 	my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type')->cvterm_id();
 	my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
 	my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
@@ -181,6 +188,13 @@ sub validate_design {
 	});
 	while (my $s = $stocks->next()) {
 		$error .= "Name $_ already exists in the database.";
+	}
+
+	my $seedlot_validator = CXGN::List::Validate->new();
+	my @seedlots_missing = @{$seedlot_validator->validate($chado_schema,'seedlots',\@source_names)->{'missing'}};
+
+	if (scalar(@seedlots_missing) > 0) {
+		$error .=  "The following seedlots are not in the database as uniquenames or synonyms: ".join(',',@seedlots_missing);
 	}
 
 	return $error;
@@ -195,7 +209,7 @@ sub store {
 	my $trial_id = $self->get_trial_id;
 	my $nd_geolocation_id = $self->get_nd_geolocation_id;
 
-	my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
+	my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'seedlot', 'stock_type')->cvterm_id();
 	my $subplot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type');
 	my $subplot_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot_of', 'stock_relationship');
 	my $plant_of_subplot = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of_subplot', 'stock_relationship');
@@ -263,7 +277,7 @@ sub store {
 	}
 
 	my $rs = $chado_schema->resultset('Stock::Stock')->search(
-		{ 'is_obsolete' => { '!=' => 't' }, 'type_id' => $accession_cvterm->cvterm_id },
+		{ 'is_obsolete' => { '!=' => 't' }, 'type_id' => $seedlot_cvterm_id },
 	);
 
 	my %stock_data;
@@ -397,7 +411,7 @@ sub store {
 				});
 			}
 
-			#Create plant entry if given. Currently this is for the greenhouse trial creation.
+			#Create plant entry if given. Currently this is for the greenhouse trial creation and splitplot trial creation.
 			if ($plant_names) {
 				my $plant_index_number = 1;
 				foreach my $plant_name (@$plant_names) {
