@@ -276,10 +276,20 @@ sub store {
 		}
 	}
 
-	my $rs = $chado_schema->resultset('Stock::Stock')->search(
-		{ 'is_obsolete' => { '!=' => 't' }, 'type_id' => $seedlot_cvterm_id },
-	);
+	my %seen_stocks_hash;
+	foreach my $key (keys %design) {
+		if ($design{$key}->{stock_name}) {
+			my $stock_name = $design{$key}->{stock_name};
+			$seen_stocks_hash{$stock_name}++;
+		}
+	}
+	my @seen_stocks = keys %seen_stocks_hash;
 
+	my $rs = $chado_schema->resultset('Stock::Stock')->search({
+		'is_obsolete' => { '!=' => 't' },
+		'type_id' => $seedlot_cvterm_id,
+		'uniquename' => {-in=>\@seen_stocks}
+	});
 	my %stock_data;
 	while (my $s = $rs->next()) {
 		$stock_data{$s->uniquename} = [$s->stock_id, $s->organism_id];
