@@ -325,7 +325,7 @@ sub parse {
     $parse_result{'data'} = \%data;
     $parse_result{'plots'} = \@plots;
     $parse_result{'traits'} = \@traits;
-    print STDERR Dumper \%parse_result;
+    #print STDERR Dumper \%parse_result;
 
     return \%parse_result;
 }

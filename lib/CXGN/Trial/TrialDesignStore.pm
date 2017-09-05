@@ -142,15 +142,7 @@ sub validate_design {
 	}
 	my %allowed_properties = map {$_ => 1} @valid_properties;
 
-	my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
-	my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
-	my $tissue_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
-	my %saved_stocks;
-	my $stocks = $chado_schema->resultset('Stock::Stock')->search({type_id=>[$plot_type_id, $plant_type_id, $tissue_type_id]});
-	while (my $s = $stocks->next()) {
-		$saved_stocks{$s->uniquename} = 1;
-	}
-
+	my %seen_stock_names;
 	foreach my $stock (keys %design){
 		if ($stock eq 'treatments'){
 			next;
@@ -161,20 +153,36 @@ sub validate_design {
 			}
 			if ($property eq 'plot_name') {
 				my $plot_name = $design{$stock}->{$property};
-				 if (exists($saved_stocks{$plot_name}) && $self->get_stocks_exist() == 0) {
-				 	$error .= "Plot or tissue $plot_name already exists in the database.";
-				 }
+				$seen_stock_names{$plot_name}++;
 			}
 			if ($property eq 'plant_names') {
 				my $plant_names = $design{$stock}->{$property};
 				foreach (@$plant_names) {
-					if (exists($saved_stocks{$_})) {
-						$error .= "Plant $_ already exists in the database.";
-					}
+					$seen_stock_names{$_}++;
+				}
+			}
+			if ($property eq 'subplots_names') {
+				my $subplot_names = $design{$stock}->{$property};
+				foreach (@$subplot_names) {
+					$seen_stock_names{$_}++;
 				}
 			}
 		}
 	}
+
+	my @stock_names = keys %seen_stock_names;
+	my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type')->cvterm_id();
+	my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
+	my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
+	my $tissue_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
+	my $stocks = $chado_schema->resultset('Stock::Stock')->search({
+		type_id=>[$subplot_type_id, $plot_type_id, $plant_type_id, $tissue_type_id],
+		uniquename=>{-in=>\@stock_names}
+	});
+	while (my $s = $stocks->next()) {
+		$error .= "Name $_ already exists in the database.";
+	}
+
 	return $error;
 }
 
