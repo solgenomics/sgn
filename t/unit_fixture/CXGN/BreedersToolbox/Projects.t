@@ -179,6 +179,7 @@ is($locations,'[{"geometry":{"coordinates":["-76.4735","42.4534"],"type":"Point"
 
 my $all_locations = $p->get_all_locations();
 print STDERR Dumper $all_locations;
+is(scalar(@$all_locations), 2);
 is_deeply($all_locations,[
           [
             23,
@@ -223,7 +224,7 @@ is_deeply($all_locations, [
             '32.6136',
             '-115.864',
             '109',
-            5456
+            5458
           ]
         ], 'get all locations');
 

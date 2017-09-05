@@ -29,11 +29,20 @@ $trial_name => undef
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="col-sm-3 control-label">Treatment: </label>
+                    <div class="col-sm-9" >
+                        <div id="create_fieldbook_treatment">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label class="col-sm-3 control-label">Data Level: </label>
                     <div class="col-sm-9" >
                         <select class="form-control" id="create_fieldbook_data_level">
                             <option value="plots">Plots</option>
                             <option value="plants">Plants</option>
+                            <option value="subplots">Subplots</option>
+                            <option value="plants_subplots">Plants and Subplots</option>
                         </select>
                     </div>
                 </div>
@@ -82,8 +91,13 @@ jQuery(document).ready(function() {
         get_select_box('trials', 'select_trial_for_create_fieldbook', { 'name' : 'html_select_trial_for_create_fieldbook', 'id' : 'html_select_trial_for_create_fieldbook' });
     }
 
+    jQuery(document).on('change', '#html_select_trial_for_create_fieldbook', function() {
+        show_fieldbook_treatments();
+    });
+
     jQuery("[name='create_fieldbook_link']").click( function () {
         jQuery('#create_fieldbook_dialog').modal('show');
+        show_fieldbook_treatments();
     });
     
     jQuery('#create_fieldbook_ok_button').on('click', function() {
@@ -92,6 +106,10 @@ jQuery(document).ready(function() {
 
 });
 
+function show_fieldbook_treatments(){
+    var selected_trial_id = parseInt(jQuery("#html_select_trial_for_create_fieldbook").val());
+    get_select_box('treatments', 'create_fieldbook_treatment', { 'name':'html_select_treatment_create_fieldbook', 'id':'html_select_treatment_create_fieldbook', 'trial_id':selected_trial_id, 'empty':1 });
+}
 
 function open_create_fieldbook_dialog() {
     new jQuery.ajax({
@@ -101,6 +119,7 @@ function open_create_fieldbook_dialog() {
         data: {
             'trial_id': parseInt(jQuery('#html_select_trial_for_create_fieldbook').val()),
             'data_level': jQuery('#create_fieldbook_data_level').val(),
+            'treatment_project_id': jQuery("#html_select_treatment_create_fieldbook").val(),
         },
         beforeSend: function() {
             jQuery("#working_modal").modal("show");

@@ -141,7 +141,7 @@ has 'populations' => (
 sub BUILD {
     my $self = shift;
 
-    print STDERR "RUNNING BUILD FOR STOCK.PM...\n";
+    #print STDERR "RUNNING BUILD FOR STOCK.PM...\n";
     my $stock;
     if ($self->stock_id){
         $stock = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
@@ -945,7 +945,7 @@ sub _retrieve_populations {
         subject_id => $self->stock_id(),
     });
     if ($rs->count == 0) {
-        print STDERR "No population saved for this stock!\n";
+        #print STDERR "No population saved for this stock!\n";
     }
     else {
         my @population_names;

@@ -193,6 +193,10 @@ sub _get_design_from_trial {
   my $plot_of_cv = $schema->resultset("Cv::Cvterm")->find({name => 'plot_of'});
   my $tissue_sample_of_cv = $schema->resultset("Cv::Cvterm")->find({ name=>'tissue_sample_of' });
   my $plant_rel_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_of', 'stock_relationship' );
+  my $subplot_rel_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'subplot_of', 'stock_relationship' );
+  my $plant_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_of', 'stock_relationship' )->cvterm_id();
+  my $subplot_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'subplot_of', 'stock_relationship' )->cvterm_id();
+  my $plant_of_subplot_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_of_subplot', 'stock_relationship' )->cvterm_id();
 
   @plots = @{$plots_ref};
   foreach my $plot (@plots) {
@@ -219,7 +223,8 @@ sub _get_design_from_trial {
     my $row_number_prop = $stockprop_hash->{'row_number'} ? join ',', @{$stockprop_hash->{'row_number'}} : undef;
     my $col_number_prop = $stockprop_hash->{'col_number'} ? join ',', @{$stockprop_hash->{'col_number'}} : undef;
     my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id() ] } })->object;
-    my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm->cvterm_id() })->search_related('object');
+    my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm_id })->search_related('object');
+	my $subplots = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $subplot_rel_cvterm_id })->search_related('object');
 
     my $accession_name = $accession->uniquename;
     my $accession_id = $accession->stock_id;
@@ -269,6 +274,26 @@ sub _get_design_from_trial {
 		}
 		$design_info{"plant_names"}=\@plant_names;
 		$design_info{"plant_ids"}=\@plant_ids;
+	}
+	if ($subplots) {
+		my @subplot_names;
+		my @subplot_ids;
+		my %subplots_plants_hash;
+		while (my $p = $subplots->next()) {
+			my $subplot_name = $p->uniquename();
+			my $subplot_id = $p->stock_id();
+			my $plants_of_subplot = $p->search_related('stock_relationship_objects', { 'me.type_id' => $plant_of_subplot_rel_cvterm_id })->search_related('subject');
+			while (my $pp = $plants_of_subplot->next()){
+				push @{$subplots_plants_hash{$subplot_name}}, $pp->uniquename();
+			}
+			push @subplot_names, $subplot_name;
+			push @subplot_ids, $subplot_id;
+		}
+		if (scalar(@subplot_names)>0){
+			$design_info{"subplot_names"}=\@subplot_names;
+			$design_info{"subplot_ids"}=\@subplot_ids;
+			$design_info{"subplots_plant_names"}=\%subplots_plants_hash;
+		}
 	}
     $design{$plot_number_prop}=\%design_info;
   }

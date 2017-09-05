@@ -35,6 +35,7 @@
                         <select class="form-control" id="upload_spreadsheet_phenotype_data_level" name="upload_spreadsheet_phenotype_data_level">
                             <option value="plots">Plots</option>
                             <option value="plants">Plants</option>
+                            <option value="subplots">Subplots</option>
                         </select>
                     </div>
                 </div>
