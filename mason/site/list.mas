@@ -124,7 +124,14 @@
                 </div>
             </div>
             <div class="modal-footer">
+              <form id="new-list-form" class="form-inline" style="float:left">
+                <label>Create a New List from Unique Names:</label>
+                <input name="name" type="text" class="form-control" placeholder="List Name...">
+                <button class="btn btn-primary" type="submit">Save</button>
+              </form>
+              <form class="form-inline" style="float:right">
                 <button id="close_fuzzy_search_result_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              </form>
             </div>
         </div>
     </div>

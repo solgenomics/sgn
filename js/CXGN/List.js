@@ -782,12 +782,33 @@ CXGN.List.prototype = {
 										}
 										if (!match){
 											html+="<tr><td><span style='color:red'>"+response.previous_list[i]+"</span></td>";
-											html+="<td><span style='color:red'>&times; Invalid Accession</span></td></tr>";
+											html+="<td><span style='color:red'>&times; Not a Name or Synonym</span></td></tr>";
 										}
 									}
 								}
 								html += "</tbody></table>";
 								jQuery('#synonym_search_result_display_html').html(html);
+                $('#new-list-form').submit(function () {
+                  try {
+                    var form = jQuery(this).serializeArray().reduce(function(map,obj){
+											map[obj.name] = obj.value;
+											return map;
+										}, {});
+										console.log(form);
+                    var list = new CXGN.List();
+                    var newListID = list.newList(form["name"]);
+                    if (!newListID) throw "List creation failed.";
+                    var count = list.addBulk(newListID,response.list);
+                    if (!count) throw "Added nothing to list or addition failed.";
+                    alert("List \""+form["name"]+"\" created with "+count+" entries.")
+                  }
+                  catch(err) {
+                    setTimeout(function(){throw err;});
+                  }
+                  finally {
+                    return false;
+                  }
+                });
 							} else {
 									alert("An error occurred while desynonymizing list ID:"+list_id);
 							}

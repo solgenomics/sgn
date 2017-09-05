@@ -5,6 +5,16 @@ use CXGN::Stock::StockLookup;
 
 use Module::Pluggable require => 1;
 
+my %stock_list_type_hash = (
+    'seedlots'=>'seedlot',
+    'plots'=>'plot',
+    'accessions'=>'accession',
+    'vector_constructs'=>'vector_construct',
+    'crosses'=>'cross',
+    'populations'=>'population',
+    'plants'=>'plant'
+);
+
 sub desynonymize {
     my $self = shift;
     my $schema = shift; # dbschema
@@ -29,7 +39,7 @@ sub desynonymize {
     }
     else{
         my $stocklookup = CXGN::Stock::StockLookup->new({ schema => $schema});
-        my $unique = $stocklookup->get_stock_synonyms('any_name',$list);
+        my $unique = $stocklookup->get_stock_synonyms('any_name',$stock_list_type_hash{$type},$list);
         # my @already_unique = ();
         # my @changed = ();
         # my @missing = ();
