@@ -790,6 +790,7 @@ CXGN.List.prototype = {
 								html += "</tbody></table>";
 								jQuery('#synonym_search_result_display_html').html(html);
                 $('#new-list-form').submit(function () {
+                  jQuery('#working_modal').modal('show');
                   try {
                     var form = jQuery(this).serializeArray().reduce(function(map,obj){
 											map[obj.name] = obj.value;
@@ -801,6 +802,7 @@ CXGN.List.prototype = {
                     if (!newListID) throw "List creation failed.";
                     var count = list.addBulk(newListID,response.list);
                     if (!count) throw "Added nothing to list or addition failed.";
+										jQuery('#working_modal').modal('hide');
                     alert("List \""+form["name"]+"\" created with "+count+" entries.");
                     self.renderLists('list_dialog');
                   }
@@ -808,6 +810,7 @@ CXGN.List.prototype = {
                     setTimeout(function(){throw err;});
                   }
                   finally {
+                    jQuery('#working_modal').modal('hide');
                     return false;
                   }
                 });
