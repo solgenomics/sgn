@@ -44,34 +44,40 @@ sub validate {
     }
 
     #  Check header row contents
-    if ( ($header_row[0] ne "\"plot_id\"" &&
-        $header_row[1] ne "\"range\"" &&
-        $header_row[2] ne "\"plot\"" &&
-        $header_row[3] ne "\"rep\"" &&
-        $header_row[4] ne "\"accession\"" &&
-        $header_row[5] ne "\"is_a_control\"" &&
-        $header_row[6] ne "\"trait\"" &&
-        $header_row[7] ne "\"value\"" &&
-        $header_row[8] ne "\"timestamp\"" &&
-        $header_row[9] ne "\"person\"" &&
-        $header_row[10] ne "\"location\"" &&
-        $header_row[11] ne "\"number\""
-        ) || ($header_row[0] ne "\"plot_id\"" &&
-            $header_row[1] ne "\"range\"" &&
-            $header_row[2] ne "\"plant\"" &&
-            $header_row[3] ne "\"plot\"" &&
-            $header_row[4] ne "\"rep\"" &&
-            $header_row[5] ne "\"accession\"" &&
-            $header_row[6] ne "\"is_a_control\"" &&
-            $header_row[7] ne "\"trait\"" &&
-            $header_row[8] ne "\"value\"" &&
-            $header_row[9] ne "\"timestamp\"" &&
-            $header_row[10] ne "\"person\"" &&
-            $header_row[11] ne "\"location\"" &&
-            $header_row[12] ne "\"number\""
-            )) {
-        $parse_result{'error'} = "File contents incorrect. For uploading plot phenotypes, header needs to be plot_id, range, plot, rep, accession, is_a_control, trait, value, timestamp, person, location, number. For uploading plant phenotypes, header needs to be plot_id, range, plant, plot, rep, accession, is_a_control, trait, value, timestamp, person, location, number";
-        print STDERR "File contents incorrect.\n";
+    if ($header_row[0] ne "\"plot_id\"" && $header_row[0] ne "\"plot_name\"" && $header_row[0] ne "\"plant_name\"" && $header_row[0] ne "\"subplot_name\""){
+        $parse_result{'error'} = "File contents incorrect. First column in header must be plot_id, plot_name, plant_name, or subplot_name.";
+        return \%parse_result;
+    }
+
+    if($data_level ne 'plots' && $data_level ne 'plants' && $data_level ne 'subplots'){
+        $parse_result{'error'} = "You must specify if you are uploading plot, plant, or subplot level phenotypes.";
+        return \%parse_result;
+    }
+    if($data_level eq 'plots' && ($header_row[0] ne "\"plot_id\"" && $header_row[0] ne "\"plot_name\"")){
+        $parse_result{'error'} = "File contents incorrect. First column in header must be plot_id or plot_name if you are uploading plot level phenotypes.";
+        return \%parse_result;
+    } elsif ($data_level eq 'plants' && $header_row[0] ne "\"plant_name\""){
+        $parse_result{'error'} = "File contents incorrect. First column in header must be plot_id or plot_name if you are uploading plant level phenotypes.";
+        return \%parse_result;
+    } elsif ($data_level eq 'subplots' && $header_row[0] ne "\"subplot_name\""){
+        $parse_result{'error'} = "File contents incorrect. First column in header must be plot_id or plot_name if you are uploading subplot level phenotypes.";
+        return \%parse_result;
+    }
+
+    my %header_column_info;
+    foreach my $header_cell (@header_row) {
+        $header_cell =~ s/\"//g; #substr($header_cell,1,-1);  #remove double quotes
+
+        if ($header_cell eq "trait") {
+            $header_column_info{'trait'}++;
+        }
+        if ($header_cell eq "value") {
+            $header_column_info{'value'}++;
+        }
+    }
+    if (!defined($header_column_info{'trait'}) || !defined($header_column_info{'value'})) {
+        $parse_result{'error'} = "trait or value column not found. Make sure to use the database Fieldbook format.";
+        print STDERR "trait or value column not found. Make sure to use the database Fieldbook format.";
         return \%parse_result;
     }
 
@@ -97,13 +103,6 @@ sub parse {
     my @traits;
     my %data;
 
-    #validate first
-    if (!$self->validate($filename)) {
-	$parse_result{'error'} = "File not valid";
-	print STDERR "File not valid\n";
-	return \%parse_result;
-    }
-
     @file_lines = read_file($filename);
     $header = shift(@file_lines);
     chomp($header);
@@ -111,31 +110,33 @@ sub parse {
 
     ## Get column numbers (indexed from 1) of the plot_id, trait, and value.
     foreach my $header_cell (@header_row) {
-	$header_cell =~ s/\"//g; #substr($header_cell,1,-1);  #remove double quotes
-	if ($header_cell eq "plot_id") {
-	    $header_column_info{'plot_id'} = $header_column_number;
-	}
-	if ($header_cell eq "trait") {
-	    $header_column_info{'trait'} = $header_column_number;
-	}
-	if ($header_cell eq "value") {
-	    $header_column_info{'value'} = $header_column_number;
-	}
-  if ($header_cell eq "timestamp") {
-	    $header_column_info{'timestamp'} = $header_column_number;
-	}
-	$header_column_number++;
+        $header_cell =~ s/\"//g; #substr($header_cell,1,-1);  #remove double quotes
+
+        if ($header_cell eq "trait") {
+            $header_column_info{'trait'} = $header_column_number;
+        }
+        if ($header_cell eq "value") {
+            $header_column_info{'value'} = $header_column_number;
+        }
+        if ($header_cell eq "timestamp") {
+            $header_column_info{'timestamp'} = $header_column_number;
+        }
+        if (index($header_cell, "Treatment:") != -1) {
+            $header_cell =~ s/Treatment\://;
+            $header_column_info{'treatment'} = [$header_column_number, $header_cell];
+        }
+        $header_column_number++;
     }
-    if (!defined($header_column_info{'plot_id'}) || !defined($header_column_info{'trait'}) || !defined($header_column_info{'value'})) {
-	$parse_result{'error'} = "plot_id and/or trait columns not found";
-	print STDERR "plot_id and/or trait columns not found";
-	return \%parse_result;
+    if (!defined($header_column_info{'trait'}) || !defined($header_column_info{'value'})) {
+        $parse_result{'error'} = "trait or value column not found. Make sure to use the database Fieldbook format.";
+        print STDERR "trait or value column not found. Make sure to use the database Fieldbook format.";
+        return \%parse_result;
     }
 
     foreach my $line (sort @file_lines) {
         chomp($line);
         my @row =  split($delimiter, $line);
-        my $plot_id = $row[$header_column_info{'plot_id'}];
+        my $plot_id = $row[0];
         $plot_id =~ s/\"//g;
         #substr($row[$header_column_info{'plot_id'}],1,-1);
         my $trait = $row[$header_column_info{'trait'}];
@@ -146,7 +147,16 @@ sub parse {
         #substr($row[$header_column_info{'value'}],1,-1);
         my $timestamp = $row[$header_column_info{'timestamp'}];
         $timestamp =~ s/\"//g;
-        
+
+        my @treatments;
+        if(exists($header_column_info{'treatment'})){
+            my $treatment_val = $row[$header_column_info{'treatment'}->[0]];
+            $treatment_val =~ s/\"//g;
+            if($treatment_val eq "1"){
+                push @treatments, $header_column_info{'treatment'}->[1];
+            }
+        }
+
         if (!defined($plot_id) || !defined($trait) || !defined($value) || !defined($timestamp)) {
             $parse_result{'error'} = "Error getting value from file";
             print STDERR "value: $value\n";
@@ -160,7 +170,7 @@ sub parse {
         $plots_seen{$plot_id} = 1;
         $traits_seen{$trait} = 1;
         if (defined($value) && defined($timestamp)) {
-            $data{$plot_id}->{$trait} = [$value, $timestamp];
+            $data{$plot_id}->{$trait} = [$value, $timestamp, \@treatments];
         }
     }
 

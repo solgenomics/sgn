@@ -51,6 +51,8 @@ has 'blank' => ( isa => 'Str', is => 'rw', predicate=> 'has_blank' );
 has 'fieldmap_col_number' => (isa => 'Int',is => 'rw',predicate => 'has_fieldmap_col_number',clearer => 'clear_fieldmap_col_number');
 has 'fieldmap_row_number' => (isa => 'Int',is => 'rw',predicate => 'has_fieldmap_row_number',clearer => 'clear_fieldmap_row_number');
 has 'plot_layout_format' => (isa => 'Str', is => 'rw', predicate => 'has_plot_layout_format', clearer => 'clear_plot_layout_format');
+has 'treatments' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_treatments', clearer => 'clear_treatments');
+has 'num_plants_per_plot' => (isa => 'Int',is => 'rw',predicate => 'has_num_plants_per_plot',clearer => 'clear_num_plants_per_plot');
 has 'replicated_accession_no' => (isa => 'Int',is => 'rw',predicate => 'has_replicated_accession_no',clearer => 'clear_replicated_accession_no');
 has 'unreplicated_accession_no' => (isa => 'Int',is => 'rw',predicate => 'has_unreplicated_accession_no',clearer => 'clear_unreplicated_accession_no');
 has 'num_of_replicated_times' => (isa => 'Int',is => 'rw',predicate => 'has_num_of_replicated_times',clearer => 'clear_num_of_replicated_times');
@@ -69,7 +71,7 @@ has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', def
 
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep"},
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" },
   message { "The string, $_, was not a valid design type" };
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
@@ -121,6 +123,9 @@ sub calculate_design {
 #    }
     elsif($self->get_design_type() eq "greenhouse") {
         $design = _get_greenhouse_design($self);
+    }
+    elsif($self->get_design_type() eq "splitplot") {
+        $design = _get_splitplot_design($self);
     }
     else {
       die "Trial design" . $self->get_design_type() ." not supported\n";
@@ -450,7 +455,7 @@ sub _get_p_rep_design {
     $r_block->add_command('library(R.methodsS3)'); 
     $r_block->add_command('library(reshape)');
     $r_block->add_command('library(R.oo)');
-    $r_block->add_command('numberOfTreatments <- ' .%$stock_data_matrix->{coln}); 
+    $r_block->add_command('numberOfTreatments <- ' .$stock_data_matrix->{coln}); 
     $r_block->add_command('rowsInDesign <- '.$row_in_design_number); 
     $r_block->add_command('columnsInDesign <- '.$col_in_design_number);
     $r_block->add_command('blockSequence <- list(c('.$block_sequence.'), c('.$sub_block_sequence.'))'); 
@@ -1830,16 +1835,21 @@ sub _convert_plot_numbers {
   for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
     my $plot_number;
     my $first_plot_number;
-    if ($self->has_plot_start_number()){
-      $first_plot_number = $self->get_plot_start_number();
-    } else {
-      $first_plot_number = 1;
-    }
-    if ($self->has_plot_number_increment()){
-      $plot_number = $first_plot_number + ($i * $self->get_plot_number_increment());
+    if($self->has_plot_start_number || $self->has_plot_number_increment){
+        if ($self->has_plot_start_number()){
+          $first_plot_number = $self->get_plot_start_number();
+        } else {
+          $first_plot_number = 1;
+        }
+        if ($self->has_plot_number_increment()){
+          $plot_number = $first_plot_number + ($i * $self->get_plot_number_increment());
+        }
+        else {
+          $plot_number = $first_plot_number + $i;
+        }
     }
     else {
-      $plot_number = $first_plot_number + $i;
+        $plot_number = $plot_numbers[$i];
     }
     $plot_numbers[$i] = $plot_number;
   }
@@ -1881,6 +1891,14 @@ sub _build_plot_names {
 	    $design{$key}->{plot_name} = $prefix.$trial_name."_".$key.$suffix;
 	}
 
+        if($design{$key}->{subplots_names}){
+            my $nums = $design{$key}->{subplots_names};
+            my @named_subplots;
+            foreach (@$nums){
+                push @named_subplots, $design{$key}->{plot_name}."_subplot_".$_;
+            }
+            $design{$key}->{subplots_names} = \@named_subplots;
+        }
     }
 
     #print STDERR Dumper(\%design);
@@ -1922,6 +1940,227 @@ sub _get_greenhouse_design {
 
     #print STDERR Dumper \%greenhouse_design;
     return \%greenhouse_design;
+}
+
+sub _get_splitplot_design {
+    my $self = shift;
+    my %splitplot_design;
+    my $rbase = R::YapRI::Base->new();
+    my @stock_list;
+    my $number_of_blocks;
+    my $number_of_reps;
+    my $stock_data_matrix;
+    my $r_block;
+    my $result_matrix;
+    my @plot_numbers;
+    my @subplots_numbers;
+    my @treatments;
+    my @stock_names;
+    my @block_numbers;
+    my @rep_numbers;
+    my @converted_plot_numbers;
+    my $number_of_stocks;
+    my $stock_name_iter;
+    my $fieldmap_row_number;
+    my @fieldmap_row_numbers;
+    my $fieldmap_col_number;
+    my $plot_layout_format;
+    my @col_number_fieldmaps;
+    my $treatments;
+    my $num_plants_per_plot;
+    if ($self->has_stock_list()) {
+        @stock_list = @{$self->get_stock_list()};
+        $number_of_stocks = scalar(@stock_list);
+    } else {
+        die "No stock list specified\n";
+    }
+    if ($self->has_treatments()) {
+        $treatments = $self->get_treatments();
+    } else {
+        die "treatments not specified\n";
+    }
+    if ($self->has_number_of_blocks()) {
+        $number_of_blocks = $self->get_number_of_blocks();
+        $number_of_reps = $number_of_blocks;
+    } else {
+        die "Number of blocks not specified\n";
+    }
+
+    if ($self->has_fieldmap_col_number()) {
+        $fieldmap_col_number = $self->get_fieldmap_col_number();
+    }
+    if ($self->has_fieldmap_row_number()) {
+        $fieldmap_row_number = $self->get_fieldmap_row_number();
+        my $colNumber = ((scalar(@stock_list) * $number_of_reps)/$fieldmap_row_number);
+        $fieldmap_col_number = _validate_field_colNumber($colNumber);
+    }
+
+    if ($self->has_plot_layout_format()) {
+        $plot_layout_format = $self->get_plot_layout_format();
+    }
+    if($self->has_num_plants_per_plot()){
+        $num_plants_per_plot = $self->get_num_plants_per_plot();
+    }
+
+    $stock_data_matrix =  R::YapRI::Data::Matrix->new({
+        name => 'stock_data_matrix',
+        rown => 1,
+        coln => scalar(@stock_list),
+        data => \@stock_list,
+    });
+    #print STDERR Dumper $stock_data_matrix;
+    my $treatment_data_matrix =  R::YapRI::Data::Matrix->new({
+        name => 'treatment_data_matrix',
+        rown => 1,
+        coln => scalar(@$treatments),
+        data => $treatments,
+    });
+    #print STDERR Dumper $treatment_data_matrix;
+
+    $r_block = $rbase->create_block('r_block');
+    $stock_data_matrix->send_rbase($rbase, 'r_block');
+    $treatment_data_matrix->send_rbase($rbase, 'r_block');
+
+    $r_block->add_command('library(agricolae)');
+    $r_block->add_command('accessions <- stock_data_matrix[1,]');
+    $r_block->add_command('treatments <- treatment_data_matrix[1,]');
+    $r_block->add_command('r <- '.$number_of_reps);
+    $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
+
+    if ($self->has_randomization_seed()){
+        $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
+        $r_block->add_command('splitplot<-design.split(accessions,treatments,r=r,serie=2,kinds=randomization_method, seed=randomization_seed)');
+    }
+    else {
+        $r_block->add_command('splitplot<-design.split(accessions,treatments,r=r,serie=2,kinds=randomization_method)');
+    }
+    $r_block->add_command('split<-splitplot$book'); #added for agricolae 1.1-8 changes in output
+    $r_block->add_command('split<-as.matrix(split)');
+    $r_block->run_block();
+    $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','split');
+    #print STDERR Dumper $result_matrix;
+
+    @plot_numbers = $result_matrix->get_column("plots");
+    @subplots_numbers = $result_matrix->get_column("splots");
+    @rep_numbers = $result_matrix->get_column("block");
+    @stock_names = $result_matrix->get_column("accessions");
+    @treatments = $result_matrix->get_column("treatments");
+    @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
+    #print STDERR Dumper \@converted_plot_numbers;
+
+    if ($plot_layout_format eq "zigzag") {
+        if (!$fieldmap_col_number){
+            for (1..$number_of_reps){
+                for my $s (1..(scalar(@stock_list))){
+                    for (1..scalar(@$treatments)){
+                        push @col_number_fieldmaps, $s;
+                    }
+                }
+            }
+        } else {
+            for (1..$fieldmap_row_number){
+                for my $s (1..$fieldmap_col_number){
+                    for (1..scalar(@$treatments)){
+                        push @col_number_fieldmaps, $s;
+                    }
+                }
+            }
+        }
+    }
+    elsif ($plot_layout_format eq "serpentine") {
+        if (!$fieldmap_row_number)  {
+            for my $rep (1 .. $number_of_reps){
+                if ($rep % 2){
+                    for my $s (1..(scalar(@stock_list))){
+                        for (1..scalar(@$treatments)){
+                            push @col_number_fieldmaps, $s;
+                        }
+                    }
+                } else {
+                    for my $s (reverse 1..(scalar(@stock_list))){
+                        for (1..scalar(@$treatments)){
+                            push @col_number_fieldmaps, $s;
+                        }
+                    }
+                }
+            }
+        } else {
+            for my $rep (1 .. $fieldmap_row_number){
+                if ($rep % 2){
+                    for my $s (1..$fieldmap_col_number){
+                        for (1..scalar(@$treatments)){
+                            push @col_number_fieldmaps, $s;
+                        }
+                    }
+                } else {
+                    for my $s (reverse 1..$fieldmap_col_number){
+                        for (1..scalar(@$treatments)){
+                            push @col_number_fieldmaps, $s;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if ($plot_layout_format && !$fieldmap_col_number && !$fieldmap_row_number){
+        @fieldmap_row_numbers = sort(@rep_numbers);
+    }
+    elsif ($plot_layout_format && $fieldmap_row_number){
+        @fieldmap_row_numbers = ((1..$fieldmap_row_number) x $fieldmap_col_number);
+        @fieldmap_row_numbers = sort {$a <=> $b} @fieldmap_row_numbers;
+    }
+    #print STDERR Dumper \@fieldmap_row_numbers;
+    #print STDERR Dumper \@col_number_fieldmaps;
+
+    my %subplot_plots;
+    my %treatment_plots;
+    my %treatment_subplot_hash;
+    #print STDERR Dumper \@treatments;
+    for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
+        my %plot_info;
+
+        $plot_info{'stock_name'} = $stock_names[$i];
+        $plot_info{'block_number'} = 1;
+        $plot_info{'rep_number'} = $rep_numbers[$i];
+        $plot_info{'plot_name'} = $converted_plot_numbers[$i];
+        $plot_info{'plot_number'} = $converted_plot_numbers[$i];
+        if ($fieldmap_row_numbers[$i]){
+            $plot_info{'row_number'} = $fieldmap_row_numbers[$i];
+            $plot_info{'col_number'} = $col_number_fieldmaps[$i];
+        }
+        push @{$subplot_plots{$converted_plot_numbers[$i]}}, $subplots_numbers[$i];
+        $plot_info{'subplots_names'} = $subplot_plots{$converted_plot_numbers[$i]};
+        push @{$treatment_plots{$converted_plot_numbers[$i]}}, $treatments[$i];
+        $plot_info{'treatments'} = $treatment_plots{$converted_plot_numbers[$i]};
+        $splitplot_design{$converted_plot_numbers[$i]} = \%plot_info;
+    }
+    #print STDERR Dumper \%splitplot_design;
+    %splitplot_design = %{_build_plot_names($self,\%splitplot_design)};
+
+    while(my($plot,$val) = each(%splitplot_design)){
+        my $subplots = $val->{'subplots_names'};
+        my $treatments = $val->{'treatments'};
+        my $num_plants_per_subplot = $num_plants_per_plot/scalar(@$subplots);
+        my %subplot_plants_hash;
+        my @plant_names;
+        my $plant_index = 1;
+        for(my $i=0; $i<scalar(@$subplots); $i++){
+            push @{$treatment_subplot_hash{$treatments->[$i]}}, $subplots->[$i];
+            for(my $j=0; $j<$num_plants_per_subplot; $j++){
+                my $plant_name = $subplots->[$i]."_plant_$plant_index";
+                push @{$subplot_plants_hash{$subplots->[$i]}}, $plant_name;
+                push @{$treatment_subplot_hash{$treatments->[$i]}}, $plant_name;
+                push @plant_names, $plant_name;
+                $plant_index++;
+            }
+        }
+        $val->{plant_names} = \@plant_names;
+        $val->{subplots_plant_names} = \%subplot_plants_hash;
+    }
+    $splitplot_design{'treatments'} = \%treatment_subplot_hash;
+    #print STDERR Dumper \%splitplot_design;
+    return \%splitplot_design;
 }
 
 1;

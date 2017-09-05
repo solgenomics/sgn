@@ -32,6 +32,8 @@ use SGN::Model::Cvterm;
 has 'owner_sp_person' => (
     isa => 'ArrayRef',
     is => 'rw',
+    lazy    => 1,
+    builder => '_build_owner_sp_person',
 );
 
 has 'main_production_site_url' => (

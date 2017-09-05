@@ -55,6 +55,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $trial_id = $c->req->param('trial_id');
   my $data_level = $c->req->param('data_level') || 'plots';
+  my $treatment_project_id = $c->req->param('treatment_project_id');
   my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
   my $phenome_schema = $c->dbic_schema('CXGN::Phenome::Schema');
 
@@ -83,6 +84,13 @@ sub create_fieldbook_from_trial_POST : Args(0) {
             return;
         }
     }
+    if ($data_level eq 'subplots' || $data_level eq 'plants_subplots') {
+        my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+        if (!$trial->has_subplot_entries()) {
+            $c->stash->{rest} = {error =>  "Trial does not have subplot entries." };
+            return;
+        }
+    }
 
   my $dir = $c->tempfiles_subdir('/other');
   my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'other/excelXXXX');
@@ -97,6 +105,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         user_id => $c->user()->get_object()->get_sp_person_id(),
         user_name => $c->user()->get_object()->get_username(),
         data_level => $data_level,
+        treatment_project_id => $treatment_project_id
     });
 
     my $create_fieldbook_return = $create_fieldbook->download();
