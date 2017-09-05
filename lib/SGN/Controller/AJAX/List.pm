@@ -10,6 +10,7 @@ use CXGN::List;
 use CXGN::List::Validate;
 use CXGN::List::Transform;
 use CXGN::List::FuzzySearch;
+use CXGN::List::Desynonymize;
 use CXGN::Cross;
 use JSON;
 
@@ -859,4 +860,30 @@ sub check_user : Private {
 	$error = "You have insufficient privileges to manipulate this list.";
     }
     return $error;
+}
+
+sub desynonymize_list: Path('/list/desynonymize') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $list_id = $c->req->param("list_id");
+
+    my $user_id = $self->get_user($c);
+    if (!$user_id) {
+    	$c->stash->{rest} = { error => 'You must be logged in to use lists.', };
+    	return;
+    }
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $schema->storage->dbh;
+    
+    my $list = CXGN::List->new( { dbh => $dbh, list_id => $list_id } );
+    my $flat_list = $list->retrieve_elements_with_ids($list_id);
+    my @name_list = map {@{$_}[1]} @{$flat_list};
+    my $dsyner = CXGN::List::Desynonymize->new();
+    my $results = $dsyner
+      ->desynonymize($schema,$list->type(),\@name_list);
+    $results->{'previous_list'} = \@name_list;
+    $results->{'list_type'} = $list->type();
+
+    $c->stash->{rest} = $results;
 }

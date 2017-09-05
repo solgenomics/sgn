@@ -32,6 +32,7 @@ use CXGN::Stock::StockLookup;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Genotype::Search;
 use CXGN::Login;
+use CXGN::Stock::StockLookup;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -718,9 +719,27 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     $c->res->body($error);
     return;
   }
+  
+  # find accession synonyms
+  my $stocklookup = CXGN::Stock::StockLookup->new({ schema => $schema});
+  my $synonym_hash = $stocklookup->get_stock_synonyms('stock_id',\@accession_ids);
+  my $synonym_string = "";
+  while( my( $uniquename, $synonym_list ) = each %{$synonym_hash}){
+      if(scalar(@{$synonym_list})>0){
+          if(not length($synonym_string)<1){
+              $synonym_string.=" ";
+          }
+          $synonym_string.=$uniquename."=(";
+          $synonym_string.= (join ", ", @{$synonym_list}).")";
+      }
+  }
+  
 
   print $TEMP "# Downloaded from ".$c->config->{project_name}.": ".localtime()."\n"; # print header info
   print $TEMP "# Protocol Id=$protocol_id, Accession List: ".join(',',@accession_list).", Accession Ids: $id_string, Trial Ids: $trial_id_string\n";
+  if (length($synonym_string)>0){
+      print $TEMP "# Synonyms: ".$synonym_string."\n";
+  }
   print $TEMP "Marker\t";
 
   print STDERR "Decoding genotype data ...".localtime()."\n";
