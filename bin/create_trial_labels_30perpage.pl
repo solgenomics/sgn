@@ -47,7 +47,7 @@ my $schema = Bio::Chado::Schema->connect( sub { $dbh->get_actual_dbh() } );
 
 my $trial_rs = $schema->resultset("Project::Project")->search({name=> $opt_T });
 my $trial_id = $trial_rs->first->project_id();
-# print STDERR "Trial id is $trial_id\n";
+print STDERR "Trial id is $trial_id\n";
 
 my ($trial_layout, %errors, @error_messages);
 try {
