@@ -23,22 +23,38 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $list = CXGN::Stock::Seedlot->list_seedlots($c->dbic_schema("Bio::Chado::Schema"));
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), "seedlot", "stock_property");
+    my $params = $c->req->params() || {};
+    my $rows = $params->{length} || 10;
+    my $offset = $params->{start} || 0;
+    my $limit = ($offset+$rows)-1;
+    my $draw = $params->{draw};
+    $draw =~ s/\D//g; # cast to int
+
+    my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots($c->dbic_schema("Bio::Chado::Schema"), $offset, $limit);
     my @seedlots;
-    foreach my $sl (@$list) { 
-	my $sl_obj = CXGN::Stock::Seedlot->new(schema => $c->dbic_schema("Bio::Chado::Schema"), seedlot_id=>$sl->[0]);
-    my $accessions = $sl_obj->accessions();
-    my $accessions_html = '';
-    foreach (@$accessions){
-        $accessions_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> ';
-    }
-	push @seedlots, [ $sl_obj->breeding_program_name, '<a href="/breeders/seedlot/'.$sl->[0].'">'.$sl->[1].'</a>', $accessions_html, $sl_obj->location_code, $sl_obj->current_count() ];
+    my %unique_seedlots;
+    foreach my $sl (@$list) {
+        my $source_stocks = $sl->{source_stocks};
+        my $contents_html = '';
+        foreach (@$source_stocks){
+            $contents_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> ';
+        }
+        push @seedlots, {
+            breeding_program_id => $sl->{breeding_program_id},
+            breeding_program_name => $sl->{breeding_program_name},
+            seedlot_stock_id => $sl->{seedlot_stock_id},
+            seedlot_stock_uniquename => $sl->{seedlot_stock_uniquename},
+            contents_html => $contents_html,
+            location => $sl->{location},
+            location_id => $sl->{location_id},
+            #count => $sl->current_count(),
+            count => '1'
+        };
     }
 
     #print STDERR Dumper(\@seedlots);
 
-    $c->stash->{rest} = { data => \@seedlots };
+    $c->stash->{rest} = { data => \@seedlots, draw => $draw, recordsTotal => $records_total,  recordsFiltered => $records_total };
 }
 
 sub seedlot_base : Chained('/') PathPart('ajax/breeders/seedlot') CaptureArgs(1) { 

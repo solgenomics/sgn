@@ -161,6 +161,7 @@ stock_property	country of origin	From BrAPI	03/27/2017	nm529	00076
 stock_property	type of germplasm storage code	From BrAPI	03/27/2017	nm529	00076	
 stock_property	entry number	From BrAPI	03/27/2017	nm529	00076	
 stock_property	acquisition date	From BrAPI	03/27/2017	nm529	00076	
+stock_property	current_count	For keeping current count of seedlot	09/06/2017	nm529	00086	
 stock_relationship	cross_relationship				00052	
 stock_relationship	female_parent				00052	
 stock_relationship	male_parent				00052	

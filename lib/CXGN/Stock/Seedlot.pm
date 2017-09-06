@@ -38,9 +38,10 @@ the database id of the seedlot. Is equivalent to stock_id.
 
 =cut
 
-has 'seedlot_id' => ( isa => 'Maybe[Int]',
-		      is => 'rw',
-    );
+has 'seedlot_id' => (
+    isa => 'Maybe[Int]',
+    is => 'rw',
+);
 
 =head2 Accessor location_code()
 
@@ -65,13 +66,15 @@ The cross this seedlot is associated with. Not yet implemented.
 
 =cut
 
-has 'cross' => ( isa => 'CXGN::Cross',
-		 is => 'rw',
-    );
+has 'cross' => (
+    isa => 'CXGN::Cross',
+    is => 'rw',
+);
 
-has 'cross_stock_id' =>   ( isa => 'Int',
-			    is => 'rw',
-    );
+has 'cross_stock_id' =>   (
+    isa => 'Int',
+    is => 'rw',
+);
 
 =head2 Accessor accessions()
 
@@ -95,10 +98,11 @@ a ArrayRef of CXGN::Stock::Seedlot::Transaction objects
 
 =cut
 
-has 'transactions' =>     ( isa => 'ArrayRef',
-			    is => 'rw',
-			    default => sub { [] },
-    );
+has 'transactions' =>     (
+    isa => 'ArrayRef',
+    is => 'rw',
+    default => sub { [] },
+);
 
 =head2 Accessor breeding_program
 
@@ -139,16 +143,41 @@ after 'stock_id' => sub {
 sub list_seedlots {
     my $class = shift;
     my $schema = shift;
+    my $offset = shift;
+    my $limit = shift;
 
-    my $seedlots;
+    my %unique_seedlots;
 
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
-    print STDERR "TYPE_ID = $type_id\n";
-    my $rs = $schema->resultset("Stock::Stock")->search( { type_id => $type_id });
-    while (my $row = $rs->next()) {
-	push @$seedlots, [ $row->stock_id, $row->uniquename, $row->description];
+    my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+    #my $current_count = SGN::Model::Cvterm->get_cvterm_row($schema, "current_count", "stock_property")->cvterm_id();
+
+    my $rs = $schema->resultset("Stock::Stock")->search(
+        {'me.type_id' => $type_id, 'stock_relationship_objects.type_id'=>$collection_of_cvterm_id },
+        {
+            join => [ {'nd_experiment_stocks' => {'nd_experiment' => [ {'nd_experiment_projects' => 'project' }, 'nd_geolocation' ] }}, {'stock_relationship_objects' => 'subject'} ],
+            '+select'=>['project.name', 'project.project_id', 'subject.stock_id', 'subject.uniquename', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id'],
+            '+as'=>['breeding_program_name', 'breeding_program_id', 'source_stock_id', 'source_uniquename', 'location', 'location_id'],
+            order_by => 'me.uniquename'
+        }
+    );
+    my $records_total = $rs->count();
+    if (defined($limit) && defined($offset)){
+        $rs = $rs->slice($offset, $limit);
     }
-    return $seedlots;
+    while (my $row = $rs->next()) {
+        $unique_seedlots{$row->uniquename}->{seedlot_stock_id} = $row->stock_id;
+        $unique_seedlots{$row->uniquename}->{seedlot_stock_uniquename} = $row->uniquename;
+        $unique_seedlots{$row->uniquename}->{seedlot_stock_description} = $row->description;
+        $unique_seedlots{$row->uniquename}->{breeding_program_name} = $row->get_column('breeding_program_name');
+        $unique_seedlots{$row->uniquename}->{breeding_program_id} = $row->get_column('breeding_program_id');
+        $unique_seedlots{$row->uniquename}->{location} = $row->get_column('location');
+        $unique_seedlots{$row->uniquename}->{location_id} = $row->get_column('location_id');
+        push @{$unique_seedlots{$row->uniquename}->{source_stocks}}, [$row->get_column('source_stock_id'), $row->get_column('source_uniquename')];
+    }
+    my @seedlots = values %unique_seedlots;
+    #print STDERR Dumper \@seedlots;
+    return (\@seedlots, $records_total);
 }
 
 sub BUILDARGS {
