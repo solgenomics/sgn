@@ -2,7 +2,7 @@
 
 =head1
 
-create_trial_labels_30perpage.pl - create a variable number of plot labels for a given trial
+create_trial_labels_30perpage.pl - create a variable number of plot labels in 3x10 label format for a given trial
 
 =head1 SYNOPSIS
 
@@ -47,16 +47,14 @@ my $schema = Bio::Chado::Schema->connect( sub { $dbh->get_actual_dbh() } );
 
 my $trial_rs = $schema->resultset("Project::Project")->search({name=> $opt_T });
 my $trial_id = $trial_rs->first->project_id();
-print STDERR "Trial id is $trial_id\n";
+# print STDERR "Trial id is $trial_id\n";
 
 my ($trial_layout, %errors, @error_messages);
 try {
     $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
 };
 if (!$trial_layout) {
-    push @error_messages, "Trial does not have valid field design.";
-    $errors{'error_messages'} = \@error_messages;
-    return \%errors;
+    print STDERR "Trial does not have a valid field design. Can't create labels.\n";
 }
 
 my $zpl_file = $opt_T . ".zpl";
@@ -67,22 +65,22 @@ my $starting_x = 20;
 my $x_increment = 600;
 my $starting_y = 80;
 my $y_increment = 220;
-
 my $number_of_columns = 2; #zero index
 my $number_of_rows = 9; #zero index
+my $labels_per_plot = $opt_n || 3;
 
 #fixed data
 my $trial_name =  $trial_layout->get_trial_name();
-print STDERR "Trial name is $trial_name\n";
+# print STDERR "Trial name is $trial_name\n";
 my $year_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'project year' })->first->cvterm_id();
 my $year = $trial_rs->search_related('projectprops', { type_id => $year_cvterm_id } )->first->value();
-print STDERR "Year is $year\n";
+# print STDERR "Year is $year\n";
 my %design = %{$trial_layout->get_design()};
 
 #loop through plot data, creating and saving zpl to file
 my $col_num = 0;
 my $row_num = 0;
-print $F "^XA";
+print $F "^XA\n";
 foreach my $key (sort { $a <=> $b} keys %design) {
     my %design_info = %{$design{$key}};
     
@@ -91,36 +89,37 @@ foreach my $key (sort { $a <=> $b} keys %design) {
     my $rep_number = $design_info{'rep_number'};
     my $accession_name = $design_info{'accession_name'};
     
-    my $x = $starting_x + ($col_num * $x_increment);
-    my $y = $starting_y + ($row_num * $y_increment);
-    
-    my $label_zpl = "^LH$x,$y
-    ^FO10,10^AB,33^FD$accession_name^FS
-    ^FO10,60^BQ,,4^FD   $plot_name^FS
-    ^FO200,70^AD^FDPlot: $plot_number^AF4^FS
-    ^FO200,100^AD^FDRep: $rep_number^AF1^FS
-    ^FO200, 140^AD^FD$trial_name^FS
-    ^FO200,160^AD^FD$year^FS
-    ^FO400,60^BQ,,4^FD   $plot_name^FS";
-    print "ZPL is $label_zpl\n";
-    print $F $label_zpl;
-    
-    if ($col_num < $number_of_columns) { #next column
-        $col_num++;
-    } else { #new row, reset col num
-        $col_num = 0;
-        $row_num++;
+    for (my $i=0; $i < $labels_per_plot; $i++) {
+        # print STDERR "Working on label num $i\n";     
+        my $x = $starting_x + ($col_num * $x_increment);
+        my $y = $starting_y + ($row_num * $y_increment);
+        
+        my $label_zpl = "^LH$x,$y
+        ^FO10,10^AB,33^FD$accession_name^FS
+        ^FO10,60^BQ,,4^FD   $plot_name^FS
+        ^FO200,70^AD^FDPlot: $plot_number^AF4^FS
+        ^FO200,100^AD^FDRep: $rep_number^AF1^FS
+        ^FO200, 140^AD^FD$trial_name^FS
+        ^FO200,160^AD^FD$year^FS
+        ^FO400,60^BQ,,4^FD   $plot_name^FS";
+        # print STDERR "ZPL is $label_zpl\n";
+        print $F $label_zpl;
+        
+        if ($col_num < $number_of_columns) { #next column
+            $col_num++;
+        } else { #new row, reset col num
+            $col_num = 0;
+            $row_num++;
+        }
+        
+        if ($row_num > $number_of_rows) { #new oage, reset row and col num
+            print $F "\n^XZ\n^XA";
+            $col_num = 0;
+            $row_num = 0;
+        }
     }
-    
-    if ($row_num > $number_of_rows) { #new oage, reset row and col num
-        print $F "^XZ
-        ^XA";
-        $col_num = 0;
-        $row_num = 0;
-    }
-
 }
-print $F "^XZ\n"; # end file
+print $F "\n^XZ"; # end file
 close($F);
 
 #convert zpl to pdf
