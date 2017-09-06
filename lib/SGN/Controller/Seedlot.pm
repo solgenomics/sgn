@@ -36,7 +36,7 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     $c->stash->{organization_name} = $sl->organization_name();
     $c->stash->{population_name} = $sl->population_name();
     $c->stash->{accessions} = $accessions_html;
-    $c->stash->{current_count} = $sl->current_count();
+    $c->stash->{current_count} = $sl->get_current_count_property();
     $c->stash->{timestamp} = localtime();
     $c->stash->{breeding_program_name} = $sl->breeding_program_name();
     $c->stash->{template} = '/breeders_toolbox/seedlot_details.mas';

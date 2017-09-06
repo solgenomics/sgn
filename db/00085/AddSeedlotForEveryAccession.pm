@@ -101,12 +101,13 @@ sub patch {
 		#$sl->cross_id($cross_id);
 		my $seedlot_id = $sl->store();
 
+		my $timestamp = localtime();
 		my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
 		$transaction->factor(1);
 		$transaction->from_stock([$accession_stock_id, $accession_uniquename]);
 		$transaction->to_stock([$seedlot_id, $seedlot_uniquename]);
 		$transaction->amount("1");
-		$transaction->timestamp(localtime);
+		$transaction->timestamp($timestamp);
 		$transaction->description("Auto generated seedlot from accession");
 		$transaction->operator('nmorales');
 		$transaction->store();

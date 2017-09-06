@@ -53,6 +53,8 @@ this is stored the nd_geolocation description field.
 has 'location_code' => (
     isa => 'Str',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_location',
 );
 
 has 'nd_geolocation_id' => (
@@ -79,12 +81,15 @@ has 'cross_stock_id' =>   (
 =head2 Accessor accessions()
 
 The accessions this seedlot is associated with.
+# for setter, use accession_stock_id
 
 =cut
 
 has 'accessions' => (
     isa => 'ArrayRef[ArrayRef]',
-    is => 'rw',  # for setter, use accession_stock_id
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_accessions',
 );
 
 has 'accession_stock_ids' => (
@@ -101,7 +106,8 @@ a ArrayRef of CXGN::Stock::Seedlot::Transaction objects
 has 'transactions' =>     (
     isa => 'ArrayRef',
     is => 'rw',
-    default => sub { [] },
+    lazy     => 1,
+    builder  => '_build_transactions',
 );
 
 =head2 Accessor breeding_program
@@ -114,6 +120,8 @@ Use breeding_program_id as setter (to save and update seedlots).
 has 'breeding_program_name' => (
     isa => 'Str',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_breeding_program',
 );
 
 has 'breeding_program_id' => (
@@ -150,15 +158,20 @@ sub list_seedlots {
 
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
     my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
-    #my $current_count = SGN::Model::Cvterm->get_cvterm_row($schema, "current_count", "stock_property")->cvterm_id();
+    my $current_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_count", "stock_property")->cvterm_id();
 
     my $rs = $schema->resultset("Stock::Stock")->search(
-        {'me.type_id' => $type_id, 'stock_relationship_objects.type_id'=>$collection_of_cvterm_id },
+        {'me.type_id' => $type_id, 'stock_relationship_objects.type_id'=>$collection_of_cvterm_id, 'stockprops.type_id'=>$current_count_cvterm_id },
         {
-            join => [ {'nd_experiment_stocks' => {'nd_experiment' => [ {'nd_experiment_projects' => 'project' }, 'nd_geolocation' ] }}, {'stock_relationship_objects' => 'subject'} ],
-            '+select'=>['project.name', 'project.project_id', 'subject.stock_id', 'subject.uniquename', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id'],
-            '+as'=>['breeding_program_name', 'breeding_program_id', 'source_stock_id', 'source_uniquename', 'location', 'location_id'],
-            order_by => {-desc=>'me.stock_id'}
+            join => [
+                {'nd_experiment_stocks' => {'nd_experiment' => [ {'nd_experiment_projects' => 'project' }, 'nd_geolocation' ] }},
+                {'stock_relationship_objects' => 'subject'},
+                'stockprops'
+            ],
+            '+select'=>['project.name', 'project.project_id', 'subject.stock_id', 'subject.uniquename', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id', 'stockprops.value'],
+            '+as'=>['breeding_program_name', 'breeding_program_id', 'source_stock_id', 'source_uniquename', 'location', 'location_id', 'current_count'],
+            order_by => {-desc=>'me.stock_id'},
+            distinct => 1
         }
     );
     my $records_total = $rs->count();
@@ -173,6 +186,7 @@ sub list_seedlots {
         $unique_seedlots{$row->uniquename}->{breeding_program_id} = $row->get_column('breeding_program_id');
         $unique_seedlots{$row->uniquename}->{location} = $row->get_column('location');
         $unique_seedlots{$row->uniquename}->{location_id} = $row->get_column('location_id');
+        $unique_seedlots{$row->uniquename}->{current_count} = $row->get_column('current_count');
         push @{$unique_seedlots{$row->uniquename}->{source_stocks}}, [$row->get_column('source_stock_id'), $row->get_column('source_uniquename')];
     }
     my @seedlots = values %unique_seedlots;
@@ -191,19 +205,19 @@ sub BUILD {
     my $self = shift;
     if ($self->stock_id()) {
         $self->seedlot_id($self->stock_id);
-        my $transactions = CXGN::Stock::Seedlot::Transaction->get_transactions_by_seedlot_id($self->schema(), $self->seedlot_id());
-        #print STDERR Dumper($transactions);
-        $self->transactions($transactions);
         $self->name($self->uniquename());
-        $self->_retrieve_location();
         $self->seedlot_id($self->stock_id());
-        $self->_retrieve_accessions();
-        $self->_retrieve_breeding_program();
         #$self->cross($self->_retrieve_cross());
     }
     #print STDERR Dumper $self->seedlot_id;
 }
 
+sub _build_transactions {
+    my $self = shift;
+    my $transactions = CXGN::Stock::Seedlot::Transaction->get_transactions_by_seedlot_id($self->schema(), $self->seedlot_id());
+    #print STDERR Dumper($transactions);
+    $self->transactions($transactions);
+}
 
 sub _store_cross {
     my $self = shift;
@@ -347,9 +361,33 @@ sub current_count {
 
     my $count = 0;
     foreach my $t (@$transactions) {
-	$count += $t->amount() * $t->factor();
+        $count += $t->amount() * $t->factor();
     }
     return $count;
+}
+
+sub set_current_count_property {
+    my $self = shift;
+    my $transactions = CXGN::Stock::Seedlot::Transaction->get_transactions_by_seedlot_id($self->schema(), $self->seedlot_id());
+    #print STDERR Dumper($transactions);
+    $self->transactions($transactions);
+    my $current_count = $self->current_count();
+    my $current_count_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_count', 'stock_property');
+    my $stock = $self->stock();
+    my $recorded_current_count = $stock->find_related('stockprops', {'me.type_id'=>$current_count_cvterm->cvterm_id});
+    if($recorded_current_count){
+        $recorded_current_count->update({'value'=>$current_count});
+    } else {
+        $stock->create_stockprops({$current_count_cvterm->name() => $current_count});
+    }
+    return $current_count;
+}
+
+sub get_current_count_property {
+    my $self = shift;
+    my $current_count_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_count', 'stock_property');
+    my $recorded_current_count = $self->stock()->find_related('stockprops', {'me.type_id'=>$current_count_cvterm->cvterm_id});
+    return $recorded_current_count->value();
 }
 
 sub _add_transaction {
@@ -396,6 +434,9 @@ sub store {
 	#print STDERR Dumper($self->transactions());
 	$t->store();
     }
+
+    $self->set_current_count_property();
+
     return $self->seedlot_id();
 }
 

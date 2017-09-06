@@ -70,23 +70,20 @@ sub get_transactions_by_seedlot_id {
 
     print STDERR "Get transactions by seedlot...$seedlot_id\n";
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seed transaction", "stock_relationship")->cvterm_id();
-    my $rs = $schema->resultset("Stock::StockRelationship")->search({ subject_id => $seedlot_id , type_id => $type_id }, {'order_by'=>'stock_relationship_id'});
-    print STDERR "Found ".$rs->count()." transactions...\n";    
+    my $rs = $schema->resultset("Stock::StockRelationship")->search(
+        { '-or' => [subject_id => $seedlot_id, object_id => $seedlot_id] , type_id => $type_id }, {'order_by'=>'stock_relationship_id'});
+    print STDERR "Found ".$rs->count()." transactions...\n";
     my @transactions;
-    while (my $row = $rs->next()) { 
+    while (my $row = $rs->next()) {
+        my $t_obj = CXGN::Stock::Seedlot::Transaction->new( schema => $schema, transaction_id => $row->stock_relationship_id() );
+        if ($row->subject_id == $seedlot_id){
+            $t_obj->factor(1);
+        }
+        if($row->object_id == $seedlot_id){
+            $t_obj->factor(-1);
+        }
 
-	my $t_obj = CXGN::Stock::Seedlot::Transaction->new( schema => $schema, transaction_id => $row->stock_relationship_id() );
-
-	push @transactions, $t_obj;
-    }
-
-    $rs = $schema->resultset("Stock::StockRelationship")->search({ object_id => $seedlot_id, type_id => $type_id }, {'order_by'=>'stock_relationship_id'});
-
-    while (my $row = $rs->next()) { 
-	my $t_obj = CXGN::Stock::Seedlot::Transaction->new( schema => $schema, transaction_id => $row->stock_relationship_id() );
-	print STDERR "Found negative transaction...\n";
-	$t_obj->factor(-1);
-	push @transactions, $t_obj;
+        push @transactions, $t_obj;
     }
 
     return \@transactions;

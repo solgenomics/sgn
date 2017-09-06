@@ -47,8 +47,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
             contents_html => $contents_html,
             location => $sl->{location},
             location_id => $sl->{location_id},
-            #count => $sl->current_count(),
-            count => '1'
+            count => $sl->{current_count}
         };
     }
 
@@ -132,6 +131,8 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $transaction->description($description);
         $transaction->operator($operator);
         $transaction->store();
+
+        $sl->set_current_count_property();
     };
 
     if ($@) { 
@@ -249,6 +250,8 @@ sub upload_seedlots_POST : Args(0) {
             $transaction->description($val->{description});
             $transaction->operator($user_name);
             $transaction->store();
+
+            $sl->set_current_count_property();
         }
     };
     if ($@) {
@@ -342,6 +345,8 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             $transaction->description($description);
             $transaction->operator($operator);
             $transaction->store();
+
+            $sl->set_current_count_property();
         };
 
         if ($@) { 
@@ -350,15 +355,24 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             $c->detach();
         }
     }
+    my $existing_sl;
     my $from_existing_seedlot_id = $c->req->param('from_existing_seedlot_id');
     if ($from_existing_seedlot_id){
         $stock_id = $from_existing_seedlot_id;
         $stock_uniquename = $schema->resultset('Stock::Stock')->find({stock_id=>$stock_id})->uniquename();
+        $existing_sl = CXGN::Stock::Seedlot->new(
+            schema => $c->stash->{schema},
+            seedlot_id => $stock_id,
+        );
     }
     my $to_existing_seedlot_id = $c->req->param('to_existing_seedlot_id');
     if ($to_existing_seedlot_id){
         $stock_id = $to_existing_seedlot_id;
         $stock_uniquename = $schema->resultset('Stock::Stock')->find({stock_id=>$stock_id})->uniquename();
+        $existing_sl = CXGN::Stock::Seedlot->new(
+            schema => $c->stash->{schema},
+            seedlot_id => $stock_id,
+        );
     }
 
     my $amount = $c->req->param("amount");
@@ -382,7 +396,12 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     $transaction->operator($c->user->get_object->get_username);
 
     my $transaction_id = $transaction->store();
-    
+    $c->stash->{seedlot}->set_current_count_property();
+
+    if ($existing_sl){
+        $existing_sl->set_current_count_property();
+    }
+
     $c->stash->{rest} = { success => 1, transaction_id => $transaction_id };
 }
 
