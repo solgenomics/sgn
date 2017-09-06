@@ -158,7 +158,7 @@ sub list_seedlots {
             join => [ {'nd_experiment_stocks' => {'nd_experiment' => [ {'nd_experiment_projects' => 'project' }, 'nd_geolocation' ] }}, {'stock_relationship_objects' => 'subject'} ],
             '+select'=>['project.name', 'project.project_id', 'subject.stock_id', 'subject.uniquename', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id'],
             '+as'=>['breeding_program_name', 'breeding_program_id', 'source_stock_id', 'source_uniquename', 'location', 'location_id'],
-            order_by => 'me.uniquename'
+            order_by => {-desc=>'me.stock_id'}
         }
     );
     my $records_total = $rs->count();
