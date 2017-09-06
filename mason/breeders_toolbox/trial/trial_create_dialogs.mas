@@ -7,11 +7,11 @@ $breeding_programs
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
 
 <div class="modal fade" id="add_project_dialog" name="add_project_dialog" tabindex="-1" role="dialog" aria-labelledby="addProjectDialog">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addProjectDialog">Add New Trial</h4>
+                <h4 class="modal-title" id="addProjectDialog">Design New Trial</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -105,6 +105,7 @@ $breeding_programs
                                         <option title="some  treatments  (checks)  are  replicate  r  times  and  other  treatments  (new)  are replicated once." value=Augmented>Augmented</option>
                                         <option title="Adjustments are calculated using data from all checks" value=MAD>Modified Augmented Design </option>
                                         <option title="A greenhouse/nursery houses plants in no particular layout design." value="greenhouse" >Nursery/Greenhouse </option>
+                                        <option title="Split plot designs are useful for applying treatments to subplots of a plot. If you give three treatments, there will be three subplots with the treatment distributed randomly among them." value="splitplot">Split Plot</option>
                                         <option title="Have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments." value=p-rep>Partially Replicated</option>
                                         <!--<option value=MADIII>MADIII</option>-->
                                         <!--<option value=MADIV>MADIV</option>-->
@@ -228,6 +229,40 @@ $breeding_programs
                                     </div>
                                 </div>
 
+                                <div id="create_trial_with_treatment_section" style="display: none">
+                                    <div class="form-group form-group-sm" >
+                                        <label class="col-sm-7 control-label">Treatment Name: </label>
+                                        <div class="col-sm-5" >
+                                            <input class="form-control" id="create_trial_with_treatment_name_input1" name="create_trial_with_treatment_name_input1" type="text" value="Control" placeholder="Required Treatment 1"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" >
+                                        <label class="col-sm-7 control-label">Treatment Name: </label>
+                                        <div class="col-sm-5" >
+                                            <input class="form-control" id="create_trial_with_treatment_name_input2" name="create_trial_with_treatment_name_input2" type="text" placeholder="Optional Treatment 2"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" >
+                                        <label class="col-sm-7 control-label">Treatment Name: </label>
+                                        <div class="col-sm-5" >
+                                            <input class="form-control" id="create_trial_with_treatment_name_input3" name="create_trial_with_treatment_name_input3" type="text" placeholder="Optional Treatment 3"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" >
+                                        <label class="col-sm-7 control-label">Treatment Name: </label>
+                                        <div class="col-sm-5" >
+                                            <input class="form-control" id="create_trial_with_treatment_name_input4" name="create_trial_with_treatment_name_input4" type="text" placeholder="Optional Treatment 4"/>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group form-group-sm" id="num_plants_per_plot_section" style="display: none">
+                                    <label class="col-sm-7 control-label">Number of Plants Per Treatment (required): </label>
+                                    <div class="col-sm-5" >
+                                        <input class="form-control" id="num_plants_per_treatment" name="num_plants_per_treatment" />
+                                    </div>
+                                </div>
+
                                 <div id="other_parameter_section" style="display:none">
                                     <hr>
                                     <div class="form-group">
@@ -334,7 +369,7 @@ $breeding_programs
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="new_trial_submit" id="new_trial_submit">Add Trial</button>
+                <button type="button" class="btn btn-primary" name="new_trial_submit" id="new_trial_submit">Design Trial (Saving Occurs In Next Step)</button>
             </div>
         </div>
     </div>
@@ -378,8 +413,9 @@ $breeding_programs
                 </div>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-info" name="new_trial_add_treatments" >Add Treatments to Design</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="new_trial_confirm_submit" id="new_trial_confirm_submit">Confirm</button>
+                <button type="button" class="btn btn-primary" name="new_trial_confirm_submit" id="new_trial_confirm_submit">Confirm (Saves Trial In Database)</button>
             </div>
         </div>
     </div>
@@ -405,6 +441,10 @@ $breeding_programs
         </div>
     </div>
 </div>
+
+
+<& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas &>
+
 
 <div class="modal fade" id="trial_saved_dialog_message" name="trial_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addTrialSavedDialog">
     <div class="modal-dialog modal-lg" role="document">

@@ -133,6 +133,28 @@ sub generate_experimental_design_POST : Args(0) {
   my $fieldmap_col_number = $c->req->param('fieldmap_col_number');
   my $fieldmap_row_number = $c->req->param('fieldmap_row_number');
   my $plot_layout_format = $c->req->param('plot_layout_format');
+  my @treatments = $c->req->param('treatments[]');
+  my $num_plants_per_plot = $c->req->param('num_plants_per_plot');
+
+  if ($design_type eq 'splitplot'){
+      if (scalar(@treatments)<1){
+          $c->stash->{rest} = { error => "You need to provide at least one treatment for a splitplot design."};
+          return;
+      }
+      if (!$num_plants_per_plot){
+          $c->stash->{rest} = { error => "You need to provide number of plants per treatment for a splitplot design."};
+          return;
+      }
+      if ($num_plants_per_plot <1){
+          $c->stash->{rest} = { error => "You need to provide number of plants per treatment for a splitplot design."};
+          return;
+      }
+      if (($num_plants_per_plot%(scalar(@treatments)))!=0){
+          $c->stash->{rest} = {error => "Number of plants per plot needs to divide evenly by the number of treatments. For example: if you have two treatments and there are 3 plants per treatment, that means you have 6 plants per plot." };
+          return;
+      }
+  }
+
   my $row_in_design_number = $c->req->param('row_in_design_number');
   my $col_in_design_number = $c->req->param('col_in_design_number');
   my $no_of_rep_times = $c->req->param('no_of_rep_times');
@@ -264,12 +286,12 @@ my $location_number = scalar(@locations);
   if ($start_number) {
     $trial_design->set_plot_start_number($start_number);
   } else {
-    $trial_design->set_plot_start_number(1);
+    $trial_design->clear_plot_start_number();
   }
   if ($increment) {
     $trial_design->set_plot_number_increment($increment);
   } else {
-    $trial_design->set_plot_number_increment(1);
+    $trial_design->clear_plot_number_increment();
   }
   if ($plot_prefix) {
     $trial_design->set_plot_name_prefix($plot_prefix);
@@ -355,6 +377,13 @@ my $location_number = scalar(@locations);
     $trial_design->set_sub_block_sequence($no_of_sub_block_sequence);
   }
 
+  if (scalar(@treatments)>0) {
+    $trial_design->set_treatments(\@treatments);
+  }
+  if($num_plants_per_plot){
+      $trial_design->set_num_plants_per_plot($num_plants_per_plot);
+  }
+
   try {
     $trial_design->calculate_design();
   } catch {
@@ -372,6 +401,8 @@ my $location_number = scalar(@locations);
   my $design_level;
   if ($design_type eq 'greenhouse'){
       $design_level = 'plants';
+  } elsif ($design_type eq 'splitplot') {
+      $design_level = 'subplots';
   } else {
       $design_level = 'plots';
   }
@@ -489,7 +520,9 @@ sub save_experimental_design_POST : Args(0) {
         trial_location => $trial_location,
         trial_name => $trial_name,
         design_type => $c->req->param('design_type'),
-        trial_type => $trial_type
+        trial_type => $trial_type,
+        trial_has_plant_entries => $c->req->param('has_plant_entries'),
+        trial_has_subplot_entries => $c->req->param('has_subplot_entries'),
 	  });
 
   #$trial_create->set_user($c->user()->id());

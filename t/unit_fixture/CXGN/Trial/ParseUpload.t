@@ -43,8 +43,7 @@ $p->load_plugin("TrialExcelFormat");
 $results = $p->parse();
 $errors = $p->get_parse_errors();
 #print STDERR Dumper $errors;
-
-ok(scalar(@{$errors->{'error_messages'}}) == 8, 'check that accessions not in db');
+ok(scalar(@{$errors->{'error_messages'}}) == 1, 'check that accessions not in db');
 ok(scalar(@{$errors->{'missing_accessions'}}) == 8, 'check that accessions not in db');
 
 $p = CXGN::Trial::ParseUpload->new( { filename => "t/data/genotype_trial_upload/CASSAVA_GS_74Template_messed_up_trial_name", chado_schema=> $f->bcs_schema() });

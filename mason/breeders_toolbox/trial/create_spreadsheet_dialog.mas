@@ -38,11 +38,20 @@ $trial_name => undef
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="col-sm-3 control-label">Treatment: </label>
+                    <div class="col-sm-9" >
+                        <div id="create_spreadsheet_treatment">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label class="col-sm-3 control-label">Data Level: </label>
                     <div class="col-sm-9" >
                         <select class="form-control" id="create_spreadsheet_data_level">
                             <option value="plots">Plots</option>
                             <option value="plants">Plants</option>
+                            <option value="subplots">Subplots</option>
+                            <option value="plants_subplots">Plants and Subplots</option>
                         </select>
                     </div>
                 </div>
@@ -52,7 +61,7 @@ $trial_name => undef
                 <div class="form-group">
                     <label class="col-sm-5 control-label "><small>Sample Number: </small></label>
                     <div class="col-sm-7" >
-                        <input type="text" class="form-control" id="create_spreadsheet_sample_number" placeholder="All Plants"/>
+                        <input type="text" class="form-control" id="create_spreadsheet_sample_number" placeholder="Leave blank for all"/>
                     </div>
                 </div>
             </div>
@@ -81,14 +90,19 @@ jQuery(document).ready(function() {
         jQuery('#create_spreadsheet_dialog').modal("show");
         var list = new CXGN.List();
         jQuery("#trait_list_spreadsheet").html(list.listSelect("trait_list_spreadsheet", [ 'traits' ]));
+        show_spreadsheet_treatments();
     });
 
+    jQuery(document).on('change', '#html_select_trial_for_create_spreadsheet', function() {
+        show_spreadsheet_treatments();
+    });
 
     jQuery('#create_spreadsheet_data_level').change(function() {
-        if ( jQuery('#create_spreadsheet_data_level').val() == 'plants' ) {
+        jQuery("#create_spreadsheet_sample_number").val('');
+        if ( jQuery('#create_spreadsheet_data_level').val() == 'plants' || jQuery('#create_spreadsheet_data_level').val() == 'subplots' ) {
             jQuery('#create_spreadsheet_plant_options').show();
         } else {
-            jQuery("#create_spreadsheet_sample_number").val('');
+            jQuery('#create_spreadsheet_plant_options').hide();
         }
     });
 
@@ -97,6 +111,11 @@ jQuery(document).ready(function() {
     });
 
 });
+
+function show_spreadsheet_treatments(){
+    var selected_trial_id = parseInt(jQuery("#html_select_trial_for_create_spreadsheet").val());
+    get_select_box('treatments', 'create_spreadsheet_treatment', { 'name':'html_select_treatment_create_spreadsheet', 'id':'html_select_treatment_create_spreadsheet', 'trial_id':selected_trial_id, 'empty':1 });
+}
 
 
 function create_phenotype_spreadsheet() {
@@ -114,6 +133,7 @@ function create_phenotype_spreadsheet() {
             'trial_id': parseInt(jQuery("#html_select_trial_for_create_spreadsheet").val()),
             'trait_list': trait_list,
             'data_level': jQuery("#create_spreadsheet_data_level").val(),
+            'treatment_project_id': jQuery("#html_select_treatment_create_spreadsheet").val(),
             'sample_number': jQuery("#create_spreadsheet_sample_number").val(),
         },
         beforeSend: function() {

@@ -61,6 +61,7 @@ has 'trait_contains' => (isa => 'ArrayRef[Str]|Undef', is => 'rw');
 has 'phenotype_min_value' => (isa => 'Str', is => 'rw');
 has 'phenotype_max_value' => (isa => 'Str', is => 'rw');
 has 'search_type' => (isa => 'Str', is => 'rw');
+has 'treatment_project_id' => (isa => 'Int|Undef', is => 'rw');
 
 has 'filename' => (isa => 'Str', is => 'ro',
 		   predicate => 'has_filename',

@@ -1,0 +1,59 @@
+<%args>
+</%args>
+
+<div class="modal fade" id="trial_design_add_treatments" name="trial_design_add_treatments" tabindex="-1" role="dialog" aria-labelledby="addTrialDesignTreatmentsDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addTrialDesignTreatmentsDialog">Add Treatments to Design</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Treatment Name: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Treatment Unit: </label>
+                            <div class="col-sm-9">
+                                <select class="form-control" id="new_treatment_unit" name="new_treatment_unit">
+                                    <option value='plot'>Plots</option>
+                                    <!--option value='subplot'>Subplots</option-->
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="new_trial_add_treatments_continue" >Continue</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="trial_design_add_treatment_select" name="trial_design_add_treatment_select" tabindex="-1" role="dialog" aria-labelledby="addTrialDesignTreatmentSelectDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addTrialDesignTreatmentSelectDialog">Add Treatments to Design</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="trial_design_add_treatment_select_html"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                Apply Treatment to Plants (if available): <input type="checkbox" id="new_trial_add_treatments_apply_to_plants" checked disabled />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button type="button" class="btn btn-info" id="new_trial_add_treatments_submit" >Continue</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

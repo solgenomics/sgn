@@ -127,8 +127,8 @@ sub create_hash_lookups {
     #Find trait cvterm objects and put them in a hash
     my %trait_objs;
     my @trait_list = @{$self->trait_list};
-    my @cvterm_ids;
     my @stock_list = @{$self->stock_list};
+    my @cvterm_ids;
 
     my $t = CXGN::List::Transform->new();
     my $stock_id_list = $t->transform($schema, 'stocks_2_stock_ids', \@stock_list);
@@ -173,7 +173,7 @@ sub verify {
     #print STDERR Dumper \%plot_trait_value;
     my $plot_validator = CXGN::List::Validate->new();
     my $trait_validator = CXGN::List::Validate->new();
-    my @plots_missing = @{$plot_validator->validate($schema,'plots_or_plants',\@plot_list)->{'missing'}};
+    my @plots_missing = @{$plot_validator->validate($schema,'plots_or_subplots_or_plants',\@plot_list)->{'missing'}};
     my @traits_missing = @{$trait_validator->validate($schema,'traits',\@trait_list)->{'missing'}};
     @trait_list = @{$self->trait_list};
     my $error_message;
@@ -354,6 +354,7 @@ sub store {
     my $phenotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
 
     ## Track experiments seen to allow for multiple trials and experiments to exist in an uploaded file.
     ## Used later to attach file metadata.
@@ -365,7 +366,7 @@ sub store {
     my $rs;
     my %data;
     $rs = $schema->resultset('Stock::Stock')->search(
-        {'type.name' => 'field_layout', 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id], 'me.stock_id' => {-in=>$self->stock_id_list } },
+        {'type.name' => 'field_layout', 'me.type_id' => [$plot_cvterm_id, $plant_cvterm_id, $subplot_cvterm_id], 'me.stock_id' => {-in=>$self->stock_id_list } },
         {join=> {'nd_experiment_stocks' => {'nd_experiment' => ['type', 'nd_experiment_projects'  ] } } ,
             '+select'=> ['me.stock_id', 'me.uniquename', 'nd_experiment.nd_geolocation_id', 'nd_experiment_projects.project_id'],
             '+as'=> ['stock_id', 'uniquename', 'nd_geolocation_id', 'project_id']
@@ -397,6 +398,7 @@ sub store {
                 if (!$timestamp) {
                     $timestamp = 'NA'.$upload_date;
                 }
+                my $treatments = $value_array->[2];
 
                 if (defined($trait_value) && length($trait_value)) {
 
@@ -439,6 +441,12 @@ sub store {
 
                         ## Link the experiment to the project
                         $experiment->create_related('nd_experiment_projects', {project_id => $project_id});
+
+                        #Link the experiment to the treatments
+                        foreach my $treatment (@$treatments){
+                            my $treatment_project_id = $schema->resultset('Project::Project')->find({name=>$treatment})->project_id();
+                            $experiment->create_related('nd_experiment_projects', {project_id => $treatment_project_id});
+                        }
 
                         # Link the experiment to the stock
                         $experiment->create_related('nd_experiment_stocks', { stock_id => $stock_id, type_id => $phenotyping_experiment_cvterm_id });
