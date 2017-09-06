@@ -64,7 +64,7 @@ open(my $F, ">", $zpl_file) || die "Can't open temp zpl file ".$zpl_file;
 my $starting_x = 20;
 my $x_increment = 600;
 my $starting_y = 80;
-my $y_increment = 220;
+my $y_increment = 212;
 my $number_of_columns = 2; #zero index
 my $number_of_rows = 9; #zero index
 my $labels_per_plot = $opt_n || 3;
