@@ -27,6 +27,7 @@ use Getopt::Std;
 use CXGN::DB::InsertDBH;
 use Bio::Chado::Schema;
 use Data::Dumper;
+use Try::Tiny;
 use CXGN::Trial::TrialLayout;
 
 our ($opt_H, $opt_D, $opt_T, $opt_O, $opt_n);
@@ -45,9 +46,9 @@ my $dbh = CXGN::DB::InsertDBH->new( {
 my $schema = Bio::Chado::Schema->connect( sub { $dbh->get_actual_dbh() } );
 
 my $trial_rs = $schema->resultset("Project::Project")->search({name=> $opt_T });
-my $trial_id = $trial_rs->project_id();
-my $year_cvterm = $schema->resultset("Cv::Cvterm")->search({name=> 'project year' });
-my $year = $trial_rs->search_related('projectprops', { type_id => $year_cvterm } )->first->value();
+my $trial_id = $trial_rs->first->project_id();
+print STDERR "Trial id is $trial_id\n";
+
 my ($trial_layout, %errors, @error_messages);
 try {
     $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
@@ -58,37 +59,71 @@ if (!$trial_layout) {
     return \%errors;
 }
 
-open(my $F, ">", $opt_O) || die "Can't open file ".$opt_O;
-#print $F
+my $zpl_file = $opt_T . ".zpl";
+open(my $F, ">", $zpl_file) || die "Can't open temp zpl file ".$zpl_file;
 
 # Zebra design params
 my $starting_x = 20;
 my $x_increment = 600;
 my $starting_y = 80;
 my $y_increment = 220;
-my $page_break_after = 2060;
-# ^XA
-# ^FO10,10^AB,33^FD05-0198_G2^FS
-# ^FO10,60^BQ,,4^FD   4*05-0198_G2*KELYT*2017*1^FS
-# ^FO200,70^AD^FDPlot: 1^AF4^FS
-# ^FO200,100^AD^FDRep: 1^AF1^FS
-# ^FO200, 140^AD^FDKIN-ELYT^FS
-# ^FO200,160^AD^FD2017^FS
-# ^FO400,60^BQ,,4^FD   4*05-0198_G2*KELYT*2017*1^FS
-# ^XZ
 
+my $number_of_columns = 2; #zero index
+my $number_of_rows = 9; #zero index
 
+#fixed data
 my $trial_name =  $trial_layout->get_trial_name();
+print STDERR "Trial name is $trial_name\n";
+my $year_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'project year' })->first->cvterm_id();
+my $year = $trial_rs->search_related('projectprops', { type_id => $year_cvterm_id } )->first->value();
+print STDERR "Year is $year\n";
 my %design = %{$trial_layout->get_design()};
-my $row_num = 1;
+
+#loop through plot data, creating and saving zpl to file
+my $col_num = 0;
+my $row_num = 0;
+print $F "^XA";
 foreach my $key (sort { $a <=> $b} keys %design) {
     my %design_info = %{$design{$key}};
-    $design_info{'plot_name'});
-    #$design_info{'block_number'});
-    $design_info{'plot_number'});
-    $design_info{'rep_number'});
-    $design_info{'accession_name'});
-    $design_info{'is_a_control'});
-    $row_num++;
-} 
+    
+    my $plot_name = $design_info{'plot_name'};
+    my $plot_number = $design_info{'plot_number'};
+    my $rep_number = $design_info{'rep_number'};
+    my $accession_name = $design_info{'accession_name'};
+    
+    my $x = $starting_x + ($col_num * $x_increment);
+    my $y = $starting_y + ($row_num * $y_increment);
+    
+    my $label_zpl = "^LH$x,$y
+    ^FO10,10^AB,33^FD$accession_name^FS
+    ^FO10,60^BQ,,4^FD   $plot_name^FS
+    ^FO200,70^AD^FDPlot: $plot_number^AF4^FS
+    ^FO200,100^AD^FDRep: $rep_number^AF1^FS
+    ^FO200, 140^AD^FD$trial_name^FS
+    ^FO200,160^AD^FD$year^FS
+    ^FO400,60^BQ,,4^FD   $plot_name^FS";
+    print "ZPL is $label_zpl\n";
+    print $F $label_zpl;
+    
+    if ($col_num < $number_of_columns) { #next column
+        $col_num++;
+    } else { #new row, reset col num
+        $col_num = 0;
+        $row_num++;
+    }
+    
+    if ($row_num > $number_of_rows) { #new oage, reset row and col num
+        print $F "^XZ
+        ^XA";
+        $col_num = 0;
+        $row_num = 0;
+    }
+
+}
+print $F "^XZ\n"; # end file
 close($F);
+
+#convert zpl to pdf
+`curl --request POST http://api.labelary.com/v1/printers/8dpmm/labels/8.5x11/ --form file=\@$zpl_file --header "Accept: application/pdf" > $opt_O`;
+
+print STDERR "Label file $opt_O for trial $opt_T created!\n";
