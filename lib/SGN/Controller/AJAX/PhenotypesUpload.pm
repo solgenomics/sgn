@@ -331,12 +331,12 @@ sub update_plot_phenotype_POST : Args(0) {
   my $plot_type_id = $plot->type_id();
   
   if (!$c->user()) {
-    print STDERR "User not logged in... not uploading a trial.\n";
-    $c->stash->{rest} = {error => "You need to be logged in to upload a trial." };
+    print STDERR "User not logged in... not uploading phenotype.\n";
+    $c->stash->{rest} = {error => "You need to be logged in to upload phenotype." };
     return;
   }
   if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
-    $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a trial." };
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to upload phenotype." };
     return;
   }
 
