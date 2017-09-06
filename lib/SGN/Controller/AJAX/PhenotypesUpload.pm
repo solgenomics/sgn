@@ -28,6 +28,7 @@ use File::Copy;
 use Data::Dumper;
 use CXGN::Phenotypes::ParseUpload;
 use CXGN::Phenotypes::StorePhenotypes;
+use List::MoreUtils qw /any /;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -206,7 +207,7 @@ sub _prep_upload {
 
     my $overwrite_values = $c->req->param('phenotype_upload_overwrite_values');
     if ($overwrite_values) {
-        #print STDERR $user_type."\n";
+        #print STDERR $user_type."\n"; 
         if ($user_type ne 'curator') {
             push @error_status, 'Must be a curator to overwrite values! Please contact us!';
             return (\@success_status, \@error_status);
@@ -328,6 +329,16 @@ sub update_plot_phenotype_POST : Args(0) {
   print "MY LIST OPTION:  $trait_list_option\n";
   my $plot = $schema->resultset("Stock::Stock")->find( { uniquename=>$plot_name });
   my $plot_type_id = $plot->type_id();
+  
+  if (!$c->user()) {
+    print STDERR "User not logged in... not uploading phenotype.\n";
+    $c->stash->{rest} = {error => "You need to be logged in to upload phenotype." };
+    return;
+  }
+  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+    $c->stash->{rest} = {error =>  "You have insufficient privileges to upload phenotype." };
+    return;
+  }
 
   if ($plot_type_id == $accession_cvterm_id) {
     print "You are using accessions\n";
