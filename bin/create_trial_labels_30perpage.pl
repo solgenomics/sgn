@@ -6,7 +6,7 @@ create_trial_labels_30perpage.pl - create a variable number of plot labels in 3x
 
 =head1 SYNOPSIS
 
-    create_trial_labels_30perpage.pl -H localhost -D cxgn -T trial_name -O outfile -n number per plot (defaults to 3)
+    create_trial_labels_30perpage.pl -H localhost -D cxgn -T trial_name -O outfile -c custom text -n number per plot (defaults to 3)
 
 =head1 COMMAND-LINE OPTIONS
   ARGUMENTS
@@ -15,6 +15,7 @@ create_trial_labels_30perpage.pl - create a variable number of plot labels in 3x
   -T trial name
   -O outfile name
   -n number of identical labels to print per plot
+  -c custom text
 =head1 DESCRIPTION
 
 =head1 AUTHOR
@@ -30,9 +31,9 @@ use Data::Dumper;
 use Try::Tiny;
 use CXGN::Trial::TrialLayout;
 
-our ($opt_H, $opt_D, $opt_T, $opt_O, $opt_n);
+our ($opt_H, $opt_D, $opt_T, $opt_O, $opt_c, $opt_n);
 
-getopts('H:D:T:O:n:');
+getopts('H:D:T:O:c:n:');
 
 if (!$opt_H || !$opt_D || !$opt_T || !$opt_O) {
     pod2usage(-verbose => 2, -message => "Must provide options -H, -D, -T, and -O \n");
@@ -68,6 +69,7 @@ my $y_increment = 212;
 my $number_of_columns = 2; #zero index
 my $number_of_rows = 9; #zero index
 my $labels_per_plot = $opt_n || 3;
+my $custom_text = $opt_c || '';
 
 #fixed data
 my $trial_name =  $trial_layout->get_trial_name();
@@ -95,12 +97,12 @@ foreach my $key (sort { $a <=> $b} keys %design) {
         my $y = $starting_y + ($row_num * $y_increment);
         
         my $label_zpl = "^LH$x,$y
-        ^FO10,10^AB,33^FD$accession_name^FS
+        ^FO10,10^AA,42^FD$accession_name^FS
         ^FO10,60^BQ,,4^FD   $plot_name^FS
-        ^FO200,70^AD^FDPlot: $plot_number^AF4^FS
-        ^FO200,100^AD^FDRep: $rep_number^AF1^FS
-        ^FO200, 140^AD^FD$trial_name^FS
-        ^FO200,160^AD^FD$year^FS
+        ^FO150,70^AA,28^FDPlot: $plot_number^AF4^FS
+        ^FO150,100^AA,28^FDRep: $rep_number^AF1^FS
+        ^FO150,140^AA,28^FD$custom_text^FS
+        ^FO150, 170^AA,22^FD$trial_name $year^FS
         ^FO400,60^BQ,,4^FD   $plot_name^FS";
         # print STDERR "ZPL is $label_zpl\n";
         print $F $label_zpl;
