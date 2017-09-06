@@ -57,7 +57,7 @@ if (!$trial_layout) {
     print STDERR "Trial does not have a valid field design. Can't create labels.\n";
 }
 
-my $zpl_file = $opt_T . ".zpl";
+my $zpl_file = "label_zpl.tmp";
 open(my $F, ">", $zpl_file) || die "Can't open temp zpl file ".$zpl_file;
 
 # Zebra design params
