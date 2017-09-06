@@ -65,9 +65,18 @@ sub patch {
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
 
 	my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+	my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
     my $accession_rs = $schema->resultset("Stock::Stock")->search({
 		type_id=>$accession_type_id
 	});
+	
+	my $seedlot_rs = $schema->resultset("Stock::Stock")->search({
+		type_id=>$seedlot_type_id
+	});
+	my %existing_seedlots;
+	while(my $r=$seedlot_rs->next){
+		$existing_seedlots{$r->uniquename}++;
+	}
 
 	my $breeding_program_id = $schema->resultset("Project::Project")->find({name=>'IITA'})->project_id();
 
@@ -75,6 +84,10 @@ sub patch {
 		my $accession_uniquename = $r->uniquename;
 		my $accession_stock_id = $r->stock_id;
 		my $seedlot_uniquename = $accession_uniquename."_001";
+		
+		if(exists($existing_seedlots{$seedlot_uniquename})){
+			next;
+		}
 	
 		my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
 		$sl->uniquename($seedlot_uniquename);
@@ -83,6 +96,7 @@ sub patch {
 		#$sl->organization_name();
 		#$sl->population_name($population_name);
 		$sl->breeding_program_id($breeding_program_id);
+		$sl->check_name_exists(0);
 		#TO DO
 		#$sl->cross_id($cross_id);
 		my $seedlot_id = $sl->store();

@@ -348,7 +348,7 @@ sub _add_transaction {
 sub store {
     my $self = shift;
 
-    print STDERR "storing: UNIQUENAME=".$self->uniquename()."\n";
+    print STDERR "storing: UNIQUENAME=".$self->uniquename()." ".localtime." \n";
     $self->name($self->uniquename());
 
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'seedlot', 'stock_type')->cvterm_id();
@@ -356,7 +356,7 @@ sub store {
 
     my $id = $self->SUPER::store();
 
-    print STDERR "Saving seedlot returned ID $id.\n";
+    print STDERR "Saving seedlot returned ID $id.".localtime."\n";
     $self->seedlot_id($id);
 
     $self->_store_seedlot_location();
