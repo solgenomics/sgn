@@ -194,7 +194,7 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
           <option value="">select printing format</option>
           <option value="CASS">CASS printing format</option>
           <option value="MUSA">MUSA printing format</option>
-          <!--<option value="24A4">32 A4 Size Sticker Paper</option>-->
+          <option value="24A4">32 A4 Size Sticker Paper</option>
           <option value="NCSU">NCSU printing format</option>
         </select>
     </div>
