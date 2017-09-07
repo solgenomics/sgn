@@ -104,13 +104,13 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type' )->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type' )->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type' )->cvterm_id();
-
+    my $xlabel_margin = 8;
     # convert mm into pixels
     #
     if ($cass_print_format eq 'NCSU') {$left_margin_mm = 50, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 12, $labels_per_page = 10, $labels_per_row = 3, $barcode_type = "2D"; }
     if ($cass_print_format eq 'CASS') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
     if ($cass_print_format eq 'MUSA') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
-    if ($cass_print_format eq '32A4') {$left_margin_mm = 35, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 12, $labels_per_page = 8, $labels_per_row = 4, $barcode_type = "2D"; }
+    if ($cass_print_format eq '32A4') {$left_margin_mm = 17, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 8, $labels_per_row = 4, $barcode_type = "2D"; }
     my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } (
             $top_margin_mm,
     		$left_margin_mm,
@@ -330,8 +330,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     	# note: pdf coord system zero is lower left corner
     	#
-        
-        my $final_barcode_width = ($page_width - $right_margin - $left_margin) / $labels_per_row;
+        print "PAGE WIDTH: $page_width\n";
+        my $final_barcode_width = ($page_width - $right_margin - $left_margin ) / $labels_per_row;
         my $scalex = $final_barcode_width / $image->{width};
         my $scaley = $label_height / $image->{height};
         
@@ -350,13 +350,18 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             my $label_height_8_per_page = 90;
      	    $label_boundary = $page_height - ($label_on_page * $label_height_8_per_page) - $top_margin;
             $ypos = $label_boundary - int( ($label_height_8_per_page - $image->{height} * $scaley) /2);
+            $final_barcode_width = ($page_width - $right_margin - $left_margin + (3 * $xlabel_margin)) / $labels_per_row;
+            
+            #$label_boundary_x = $page_width - (4 * $image->{width}) - $right_margin - $left_margin;
+            #$xpos_x = $label_boundary - int( ($label_height_8_per_page - $image->{height} * $scaley) /2);
         }
         else{
             $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
         	$ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
         }
 
-    	$pages[$page_nr-1]->line($page_width -100, $label_boundary, $page_width, $label_boundary);
+    	#$pages[$page_nr-1]->line($page_width -30, $label_boundary, $page_width, $label_boundary);
+        #$pages[$page_nr-1]->line($page_width -100, $label_boundary, $page_width, $label_boundary);
 
       # my $lebel_number = scalar($#{$found[$i]});
       my $font = $pdf->font('BaseFont' => 'Courier');
@@ -527,7 +532,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
      
      elsif ($cass_print_format eq '32A4' && $barcode_type eq "2D") {
          foreach my $label_count (1..$labels_per_row) {
-           my $xposition = $left_margin + ($label_count -1) * $final_barcode_width - 50;
+           my $xposition = $left_margin + ($label_count -1) * $final_barcode_width ;
            my $yposition = $ypos -7;
            my $label_text = $found[$i]->[1];
            my $label_size =  7;
