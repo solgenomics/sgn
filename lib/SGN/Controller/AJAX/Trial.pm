@@ -244,13 +244,6 @@ my $location_number = scalar(@locations);
       return;
     }
 
-  # my $trial_create = CXGN::Trial::TrialCreate->new(chado_schema => $schema);
-  # $trial_create->set_trial_year($c->req->param('year'));
-  # $trial_create->set_trial_location($c->req->param('trial_location'));
-  # if ($trial_create->trial_name_already_exists()) {
-  #   $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
-  #   return;
-  # }
 
   if (scalar(@locations) > 1) {
     $trial_name = $trial_name."_".$trial_locations;
@@ -438,7 +431,6 @@ sub save_experimental_design_POST : Args(0) {
 
   print STDERR "Saving trial... :-)\n";
 
-  #my $trial_create = new CXGN::Trial::TrialCreate(chado_schema => $schema);
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
     return;
@@ -523,19 +515,9 @@ sub save_experimental_design_POST : Args(0) {
         trial_type => $trial_type,
         trial_has_plant_entries => $c->req->param('has_plant_entries'),
         trial_has_subplot_entries => $c->req->param('has_subplot_entries'),
+        operator => $user_name
 	  });
 
-  #$trial_create->set_user($c->user()->id());
-  #$trial_create->set_trial_year($c->req->param('year'));
-  #$trial_create->set_trial_location($c->req->param('trial_location'));
-  #$trial_create->set_trial_description($c->req->param('project_description'));
-  #$trial_create->set_design_type($c->req->param('design_type'));
-  #$trial_create->set_breeding_program_id($c->req->param('breeding_program_name'));
-  #$trial_create->set_design(_parse_design_from_json($c->req->param('design_json')));
-  #$trial_create->set_stock_list(_parse_list_from_json($c->req->param('stock_list')));
-  # if ($c->req->param('control_list')) {
-  #   $trial_create->set_control_list(_parse_list_from_json($c->req->param('control_list')));
-  # }
     if ($trial_create->trial_name_already_exists()) {
       $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
       return;
@@ -704,7 +686,7 @@ sub upload_trial_file_POST : Args(0) {
       archive_filename => $upload_original_name,
       timestamp => $timestamp,
       user_id => $user_id,
-      user_role => $c->user()->roles
+      user_role => $c->user->get_object->get_user_type()
   });
   $archived_filename_with_path = $uploader->archive();
   $md5 = $uploader->get_md5($archived_filename_with_path);
@@ -767,6 +749,7 @@ sub upload_trial_file_POST : Args(0) {
 	   design => $parsed_data,
 	   program => $program,
 	   upload_trial_file => $upload,
+       operator => $c->user()->get_object()->get_username()
 	  });
 
   try {

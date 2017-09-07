@@ -65,6 +65,7 @@ use CXGN::Trial;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
+use CXGN::Stock::Seedlot::Transaction;
 
 has 'bcs_schema' => (
 	is       => 'rw',
@@ -82,6 +83,7 @@ has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 has 'stocks_exist' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 has 'new_treatment_has_plant_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
 has 'new_treatment_has_subplot_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
+has 'operator' => (isa => 'Str', is => 'rw', required => 1);
 
 sub validate_design {
 	print STDERR "validating design\n";
@@ -296,7 +298,9 @@ sub store {
 	}
 
 	my $stock_id_checked;
+	my $stock_name_checked;
 	my $organism_id_checked;
+	my $timestamp = localtime();
 
 	my $coderef = sub {
 
@@ -367,6 +371,7 @@ sub store {
 			if ($stock_data{$stock_name}) {
 				$stock_id_checked = $stock_data{$stock_name}[0];
 				$organism_id_checked = $stock_data{$stock_name}[1];
+				$stock_name_checked = $stock_name;
 			} else {
 				my $parent_stock;
 				my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
@@ -378,6 +383,7 @@ sub store {
 				}
 
 				$stock_id_checked = $parent_stock->stock_id();
+				$stock_name_checked = $parent_stock->uniquename;
 				$organism_id_checked = $parent_stock->organism_id();
 			}
 
@@ -419,6 +425,16 @@ sub store {
 					type_id => $nd_experiment_type_id,
 					stock_id => $plot->stock_id(),
 				});
+
+				my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $chado_schema);
+				$transaction->from_stock([$stock_id_checked, $stock_name_checked]);
+				$transaction->to_stock([$plot->stock_id(), $plot->uniquename()]);
+				$transaction->amount(1);
+				$transaction->timestamp($timestamp);
+				my $description = "Created Trial: ".$self->get_trial_name." Plot: ".$plot->uniquename;
+				$transaction->description($description);
+				$transaction->operator($self->get_operator);
+				my $transaction_id = $transaction->store();
 			}
 
 			#Create plant entry if given. Currently this is for the greenhouse trial creation and splitplot trial creation.
@@ -468,6 +484,16 @@ sub store {
 						type_id => $nd_experiment_type_id,
 						stock_id => $plant->stock_id(),
 					});
+
+					my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $chado_schema);
+					$transaction->from_stock([$stock_id_checked, $stock_name_checked]);
+					$transaction->to_stock([$plant->stock_id(), $plant->uniquename()]);
+					$transaction->amount(1);
+					$transaction->timestamp($timestamp);
+					my $description = "Created Trial: ".$self->get_trial_name." Plant: ".$plot->uniquename;
+					$transaction->description($description);
+					$transaction->operator($self->get_operator);
+					my $transaction_id = $transaction->store();
 				}
 			}
 			#Create subplot entry if given. Currently this is for the splitplot trial creation.
@@ -529,6 +555,16 @@ sub store {
 							});
 						}
 					}
+
+					my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $chado_schema);
+					$transaction->from_stock([$stock_id_checked, $stock_name_checked]);
+					$transaction->to_stock([$subplot->stock_id(), $subplot->uniquename()]);
+					$transaction->amount(1);
+					$transaction->timestamp($timestamp);
+					my $description = "Created Trial: ".$self->get_trial_name." Subplot: ".$plot->uniquename;
+					$transaction->description($description);
+					$transaction->operator($self->get_operator);
+					my $transaction_id = $transaction->store();
 				}
 			}
 		}

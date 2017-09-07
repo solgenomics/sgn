@@ -312,6 +312,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     my $to_new_seedlot_name = $c->req->param('to_new_seedlot_name');
     my $stock_id;
     my $stock_uniquename;
+    my $newly_created_seedlot;
     if ($to_new_seedlot_name){
         $stock_uniquename = $to_new_seedlot_name;
         eval { 
@@ -347,6 +348,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             $transaction->store();
 
             $sl->set_current_count_property();
+            $newly_created_seedlot = $sl;
         };
 
         if ($@) { 
@@ -400,6 +402,9 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
 
     if ($existing_sl){
         $existing_sl->set_current_count_property();
+    }
+    if($newly_created_seedlot){
+        $newly_created_seedlot->set_current_count_property();
     }
 
     $c->stash->{rest} = { success => 1, transaction_id => $transaction_id };
