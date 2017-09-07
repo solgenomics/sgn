@@ -91,19 +91,34 @@ foreach my $key (sort { $a <=> $b} keys %design) {
     my $rep_number = $design_info{'rep_number'};
     my $accession_name = $design_info{'accession_name'};
     
+    my $font_size = 42;
+    if ($accession_name > 18) {
+        $font_size = 21;
+    } elsif ($accession_name > 13) {
+        $font_size = 28;
+    } elsif ($accession_name > 10) {
+        $font_size = 35;
+    }
+    
+    my $qr_size = 7;
+    if ($plot_name > 30) {
+        $qr_size = 5;
+    } elsif ($accession_name > 15) {
+        $qr_size = 6;
+    }
+    
     for (my $i=0; $i < $labels_per_plot; $i++) {
         # print STDERR "Working on label num $i\n";     
         my $x = $starting_x + ($col_num * $x_increment);
         my $y = $starting_y + ($row_num * $y_increment);
         
         my $label_zpl = "^LH$x,$y
-        ^FO10,10^AA,42^FD$accession_name^FS
-        ^FO10,60^BQ,,4^FD   $plot_name^FS
+        ^FO10,10^AA,$font_size^FB350,5^FD$accession_name^FS
         ^FO150,70^AA,28^FDPlot: $plot_number^AF4^FS
         ^FO150,100^AA,28^FDRep: $rep_number^AF1^FS
-        ^FO150,140^AA,28^FD$custom_text^FS
-        ^FO150, 170^AA,22^FD$trial_name $year^FS
-        ^FO400,60^BQ,,4^FD   $plot_name^FS";
+        ^FO25,140^AA,28^FD$custom_text^FS
+        ^FO25,170^AA,22^FD$trial_name $year^FS
+        ^FO350,20^BQ,,$qr_size^FD   $plot_name^FS";
         # print STDERR "ZPL is $label_zpl\n";
         print $F $label_zpl;
         
