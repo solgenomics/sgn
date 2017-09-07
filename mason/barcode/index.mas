@@ -190,9 +190,12 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
     <label class="col-sm-4 control-label">Printing Format (Optional): </label>
     <div class="col-sm-8">
         <select class="form-control" id="select_print_format" name="select_print_format">
-          <option selected disabled>select printing format</option>
+          <!--<option selected disabled>select printing format</option>-->
+          <option value="">select printing format</option>
           <option value="CASS">CASS printing format</option>
           <option value="MUSA">MUSA printing format</option>
+          <!--<option value="24A4">32 A4 Size Sticker Paper</option>-->
+          <option value="NCSU">NCSU printing format</option>
         </select>
     </div>
   </div>
