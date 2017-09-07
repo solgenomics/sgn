@@ -117,27 +117,43 @@ $breeding_programs
                         </div>
 
                         <div id="trial_design_more_info" style="display: none">
-                            <div class="form-group form-group-sm" id="show_list_of_accession_section" >
-                                <label class="col-sm-7 control-label">List of accessions to include (required): <br/><button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></label>
-                                <div class="col-sm-5" id="select_list" name="select_list">
+                            <div class="well well-sm">
+                                <div class="form-group form-group-sm" id="show_list_of_accession_section" >
+                                    <label class="col-sm-7 control-label">List of accessions to include (required): <br/><button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></label>
+                                    <div class="col-sm-5" id="select_list" name="select_list">
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm" id="show_list_of_checks_section" style="display: none" >
+                                    <label class="col-sm-7 control-label">List of checks to include (required): </label>
+                                    <div class="col-sm-5" id="list_of_checks_section" >
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm" id="crbd_show_list_of_checks_section" style="display: none" >
+                                    <label class="col-sm-7 control-label">List of checks to include (optional): </label>
+                                    <div class="col-sm-5" id="crbd_list_of_checks_section" >
+                                    </div>
+                                </div>
+
+                                <div class="form-group form-group-sm" id="show_list_of_unrep_accession" style="display: none" >
+                                    <label class="col-sm-7 control-label">List of unreplicated accession (required): <br/><button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></label>
+                                    <div class="col-sm-5" id="list_of_unrep_accession"  >
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm" id="show_list_of_rep_accession" style="display: none" >
+                                    <label class="col-sm-7 control-label">List of replicated accession (required): </label>
+                                    <div class="col-sm-5" id="list_of_rep_accession" >
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="well well-sm">
+                                <div class="form-group form-group-sm" id="show_list_of_seedlots_section" >
+                                    <label class="col-sm-7 control-label">List of seedlots to include (required): <br/><button name="convert_accessions_to_seedlots" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Convert Accessions to Seedlots</button></label>
+                                    <div class="col-sm-5" id="select_seedlot_list" name="select_seedlot_list">
+                                    </div>
                                 </div>
                             </div>
-                            <div class="form-group form-group-sm" id="show_list_of_checks_section" style="display: none" >
-                                <label class="col-sm-7 control-label">List of checks to include (required): </label>
-                                <div class="col-sm-5" id="list_of_checks_section" >
-                                </div>
-                            </div>
-                            
-                            <div class="form-group form-group-sm" id="show_list_of_unrep_accession" style="display: none" >
-                                <label class="col-sm-7 control-label">List of unreplicated accession: <br/><button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></label>
-                                <div class="col-sm-5" id="list_of_unrep_accession"  >
-                                </div>
-                            </div>
-                            <div class="form-group form-group-sm" id="show_list_of_rep_accession" style="display: none" >
-                                <label class="col-sm-7 control-label">List of replicated accession: </label>
-                                <div class="col-sm-5" id="list_of_rep_accession" >
-                                </div>
-                            </div>
+
                             <div class="form-group form-group-sm" id="show_no_of_row_in_design" style="display: none" >
                                 <label class="col-sm-7 control-label">Number of rows in design: </label>
                                 <div class="col-sm-5"  >
@@ -194,12 +210,6 @@ $breeding_programs
                                 <hr>
                                 <center><h4>Number of Plants:</h4></center>
                                 <div id="greenhouse_num_plants_per_accession" >
-                                </div>
-                            </div>
-
-                            <div class="form-group form-group-sm" id="crbd_show_list_of_checks_section" style="display: none" >
-                                <label class="col-sm-7 control-label">List of checks to include(optional): </label>
-                                <div class="col-sm-5" id="crbd_list_of_checks_section" >
                                 </div>
                             </div>
 
