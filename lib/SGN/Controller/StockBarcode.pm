@@ -351,9 +351,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
      	    $label_boundary = $page_height - ($label_on_page * $label_height_8_per_page) - $top_margin;
             $ypos = $label_boundary - int( ($label_height_8_per_page - $image->{height} * $scaley) /2);
             $final_barcode_width = ($page_width - $right_margin - $left_margin + (3 * $xlabel_margin)) / $labels_per_row;
-            
-            #$label_boundary_x = $page_width - (4 * $image->{width}) - $right_margin - $left_margin;
-            #$xpos_x = $label_boundary - int( ($label_height_8_per_page - $image->{height} * $scaley) /2);
         }
         else{
             $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
