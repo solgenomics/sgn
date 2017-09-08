@@ -30,7 +30,7 @@ $timestamp
         </div>
     </div>
     <div class="form-group form-group-sm">
-        <label class="col-sm-3 control-label">Contents: </label>
+        <label class="col-sm-3 control-label">Contents (Accession, Cross): </label>
         <div class="col-sm-9" >
             <input class="form-control" id="search_seedlot_form_contents" type="text" />
         </div>
@@ -61,6 +61,8 @@ $timestamp
 
 <table id="available_seedlots_table" class="table table-hover table-striped table-bordered">
 </table>
+
+<hr>
 
 <div id="available_seedlots_to_list" style="display:none">
 </div>

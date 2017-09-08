@@ -24,6 +24,7 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $c = shift;
 
     my $params = $c->req->params() || {};
+    #print STDERR Dumper $params;
     my $seedlot_name = $params->{seedlot_name} || '';
     my $breeding_program = $params->{breeding_program} || '';
     my $location = $params->{location} || '';

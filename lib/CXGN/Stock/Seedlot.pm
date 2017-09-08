@@ -195,7 +195,7 @@ sub list_seedlots {
             ],
             '+select'=>['project.name', 'project.project_id', 'subject.stock_id', 'subject.uniquename', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id', 'stockprops.value'],
             '+as'=>['breeding_program_name', 'breeding_program_id', 'source_stock_id', 'source_uniquename', 'location', 'location_id', 'current_count'],
-            order_by => {-desc=>'me.stock_id'},
+            order_by => {-asc=>'project.name'},
             distinct => 1
         }
     );
@@ -214,7 +214,10 @@ sub list_seedlots {
         $unique_seedlots{$row->uniquename}->{current_count} = $row->get_column('current_count');
         push @{$unique_seedlots{$row->uniquename}->{source_stocks}}, [$row->get_column('source_stock_id'), $row->get_column('source_uniquename')];
     }
-    my @seedlots = values %unique_seedlots;
+    my @seedlots;
+    foreach (sort keys %unique_seedlots){
+        push @seedlots, $unique_seedlots{$_};
+    }
     #print STDERR Dumper \@seedlots;
     return (\@seedlots, $records_total);
 }
