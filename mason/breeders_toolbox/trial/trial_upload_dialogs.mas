@@ -128,6 +128,7 @@ $locations
                             <tr>
                                 <td>plot_name</td>
                                 <td>accession_name</td>
+                                <td>seedlot_name</td>
                                 <td>plot_number</td>
                                 <td>block_number</td>
                                 <td>is_a_control</td>
@@ -145,6 +146,8 @@ $locations
                     plot_name (must be unique)
                     <br />
                     accession_name (must exist in the database)
+                    <br />
+                    seedlot_name (must exist in the database)
                     <br />
                     plot_number
                     <br />
