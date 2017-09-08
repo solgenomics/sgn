@@ -346,7 +346,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             $ypos = $label_boundary - int( ($label_height_10_per_page - $image->{height} * $scaley) /2);
         }
         elsif ($cass_print_format eq '32A4'){
-            ($year_text,$location_text) = split ',', $added_text;
             my $label_height_8_per_page = 90;
      	    $label_boundary = $page_height - ($label_on_page * $label_height_8_per_page) - $top_margin;
             $ypos = $label_boundary - int( ($label_height_8_per_page - $image->{height} * $scaley) /2);
