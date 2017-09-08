@@ -360,8 +360,12 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
         	$ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
         }
 
-    	#$pages[$page_nr-1]->line($page_width -30, $label_boundary, $page_width, $label_boundary);
-        #$pages[$page_nr-1]->line($page_width -100, $label_boundary, $page_width, $label_boundary);
+        if ($cass_print_format eq '32A4' || $cass_print_format eq 'NCSU'){
+            
+        }else{
+            $pages[$page_nr-1]->line($page_width -100, $label_boundary, $page_width, $label_boundary);
+        }
+        
 
       # my $lebel_number = scalar($#{$found[$i]});
       my $font = $pdf->font('BaseFont' => 'Courier');
