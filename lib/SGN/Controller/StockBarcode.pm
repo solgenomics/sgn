@@ -331,7 +331,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     	# note: pdf coord system zero is lower left corner
     	#
         print "PAGE WIDTH: $page_width\n";
-        my $final_barcode_width = ($page_width - $right_margin - $left_margin ) / $labels_per_row;
+        my $final_barcode_width = ($page_width - $right_margin - $left_margin) / $labels_per_row;
         my $scalex = $final_barcode_width / $image->{width};
         my $scaley = $label_height / $image->{height};
         
@@ -357,8 +357,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
         }
 
         if ($cass_print_format eq '32A4' || $cass_print_format eq 'NCSU'){
-            
-        }else{
+        }
+        else{
             $pages[$page_nr-1]->line($page_width -100, $label_boundary, $page_width, $label_boundary);
         }
         
