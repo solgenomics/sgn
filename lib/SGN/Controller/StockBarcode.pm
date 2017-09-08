@@ -131,7 +131,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my @not_found;
     my @found;
 
-    my ($row, $stockprop_name, $value, $fdata_block, $fdata_rep, $fdata_plot, $fdata, $accession_id, $accession_name, $parents, $tract_type_id, $label_text_5, $plot_name, $label_text_6, $musa_row_col_number, $label_text_7);
+    my ($row, $stockprop_name, $value, $fdata_block, $fdata_rep, $fdata_plot, $fdata, $accession_id, $accession_name, $parents, $tract_type_id, $label_text_5, $plot_name, $label_text_6, $musa_row_col_number, $label_text_7, $row_col_number, $label_text_8);
 
     foreach my $name (@names) {
 
@@ -200,7 +200,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $fdata_rep = "rep:".$stockprop_hash{$stock_id}->{'replicate'};
           $fdata_plot = "plot:".$stockprop_hash{$stock_id}->{'plot number'};
           $musa_row_col_number = "row:".$stockprop_hash{$stock_id}->{'row_number'}.' '."col:".$stockprop_hash{$stock_id}->{'col_number'};
-          
+          $row_col_number = "rw/cl:".$stockprop_hash{$stock_id}->{'row_number'}."/".$stockprop_hash{$stock_id}->{'col_number'};
           my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =? and stock.type_id=?;");
 
           $h_acc->execute($stock_id,$accession_cvterm_id);
@@ -223,7 +223,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
           $parents = CXGN::Stock->new ( schema => $schema, stock_id => $accession_id )->get_pedigree_string('Parents');
       }
 
-      push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name, $synonym_string, $musa_row_col_number, $fdata_block, $fdata_rep, $fdata_plot];
+      push @found, [ $c->config->{identifier_prefix}.$stock_id, $name, $accession_name, $fdata, $parents, $tract_type_id, $plot_name, $synonym_string, $musa_row_col_number, $fdata_block, $fdata_rep, $fdata_plot, $row_col_number];
     }
 
     my $dir = $c->tempfiles_subdir('pdfs');
@@ -547,13 +547,15 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
            my $yposition_7 = $ypos - 60;
            $label_text_6 = $found[$i]->[2];
            $label_text_5 = $found[$i]->[11];
-           $label_text_4 = $found[$i]->[10];
-           $pages[$page_nr-1]->string($font, $label_size_stock, $xposition, $yposition_8, $label_text_6);
-           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $year_text);
+           $label_text_4 = $found[$i]->[12];
+           $label_text_8 = $found[$i]->[10];
+           $pages[$page_nr-1]->string($font, $label_size_stock, $xposition, $yposition_8, $label_text);
+           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_8);
            $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
            $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text_5);
-           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $location_text);
-           $pages[$page_nr-1]->string($font, $label_size_stock, $xposition, $yposition_6, $label_text);
+           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $added_text);
+           $pages[$page_nr-1]->string($font, $label_size_stock, $xposition, $yposition_6, $label_text_6);
+           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_7, $parents);
            
            $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + 50 + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
  
