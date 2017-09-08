@@ -24,13 +24,27 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $c = shift;
 
     my $params = $c->req->params() || {};
+    my $seedlot_name = $params->{seedlot_name} || '';
+    my $breeding_program = $params->{breeding_program} || '';
+    my $location = $params->{location} || '';
+    my $minimum_count = $params->{minimum_count} || '';
+    my $contents = $params->{contents} || '';
     my $rows = $params->{length} || 10;
     my $offset = $params->{start} || 0;
     my $limit = ($offset+$rows)-1;
     my $draw = $params->{draw};
     $draw =~ s/\D//g; # cast to int
 
-    my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots($c->dbic_schema("Bio::Chado::Schema"), $offset, $limit);
+    my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
+        $c->dbic_schema("Bio::Chado::Schema"),
+        $offset,
+        $limit,
+        $seedlot_name,
+        $breeding_program,
+        $location,
+        $minimum_count,
+        $contents
+    );
     my @seedlots;
     my %unique_seedlots;
     foreach my $sl (@$list) {
@@ -237,6 +251,7 @@ sub upload_seedlots_POST : Args(0) {
             $sl->organization_name($organization);
             $sl->population_name($population);
             $sl->breeding_program_id($breeding_program_id);
+            $sl->check_name_exists(0); #already validated
             #TO DO
             #$sl->cross_id($cross_id);
             my $seedlot_id = $sl->store();

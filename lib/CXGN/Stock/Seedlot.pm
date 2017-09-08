@@ -153,6 +153,11 @@ sub list_seedlots {
     my $schema = shift;
     my $offset = shift;
     my $limit = shift;
+    my $seedlot_name = shift;
+    my $breeding_program = shift;
+    my $location = shift;
+    my $minimum_count = shift;
+    my $contents = shift;
 
     my %unique_seedlots;
 
@@ -160,8 +165,28 @@ sub list_seedlots {
     my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
     my $current_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_count", "stock_property")->cvterm_id();
 
+    my %search_criteria;
+    $search_criteria{'me.type_id'} = $type_id;
+    $search_criteria{'stock_relationship_objects.type_id'} = $collection_of_cvterm_id;
+    $search_criteria{'stockprops.type_id'} = $current_count_cvterm_id;
+    if ($seedlot_name) {
+        $search_criteria{'me.uniquename'} = { 'ilike' => '%'.$seedlot_name.'%' };
+    }
+    if ($breeding_program) {
+        $search_criteria{'project.name'} = { 'ilike' => '%'.$breeding_program.'%' };
+    }
+    if ($location) {
+        $search_criteria{'nd_geolocation.description'} = { 'ilike' => '%'.$location.'%' };
+    }
+    if ($contents) {
+        $search_criteria{'subject.uniquename'} = { 'ilike' => '%'.$contents.'%' };
+    }
+    if ($minimum_count) {
+        $search_criteria{'stockprops.value' }  = { '>' => $minimum_count };
+    }
+
     my $rs = $schema->resultset("Stock::Stock")->search(
-        {'me.type_id' => $type_id, 'stock_relationship_objects.type_id'=>$collection_of_cvterm_id, 'stockprops.type_id'=>$current_count_cvterm_id },
+        \%search_criteria,
         {
             join => [
                 {'nd_experiment_stocks' => {'nd_experiment' => [ {'nd_experiment_projects' => 'project' }, 'nd_geolocation' ] }},
@@ -368,9 +393,6 @@ sub current_count {
 
 sub set_current_count_property {
     my $self = shift;
-    my $transactions = CXGN::Stock::Seedlot::Transaction->get_transactions_by_seedlot_id($self->schema(), $self->seedlot_id());
-    #print STDERR Dumper($transactions);
-    $self->transactions($transactions);
     my $current_count = $self->current_count();
     my $current_count_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'current_count', 'stock_property');
     my $stock = $self->stock();
@@ -428,14 +450,6 @@ sub store {
 
     $self->_store_seedlot_location();
     $self->_store_seedlot_relationships();
-
-    foreach my $t (@{$self->transactions()}) {
-
-	#print STDERR Dumper($self->transactions());
-	$t->store();
-    }
-
-    $self->set_current_count_property();
 
     return $self->seedlot_id();
 }

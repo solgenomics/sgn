@@ -14,6 +14,47 @@ $timestamp
   <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
 
 
+<&| /page/info_section.mas, title=>"Search Seedlots",  collapsible => 1, collapsed=>1 &>
+
+<form class="form-horizontal" id="search_seedlot_form" name="search_seedlot_form">
+    <div class="form-group form-group-sm">
+        <label class="col-sm-3 control-label">Seedlot Name: </label>
+        <div class="col-sm-9" >
+            <input class="form-control" id="search_seedlot_form_seedlot_name" type="text" />
+        </div>
+    </div>
+    <div class="form-group form-group-sm">
+        <label class="col-sm-3 control-label">Breeding Program: </label>
+        <div class="col-sm-9" >
+            <input class="form-control" id="search_seedlot_form_breeding_program" type="text" />
+        </div>
+    </div>
+    <div class="form-group form-group-sm">
+        <label class="col-sm-3 control-label">Contents: </label>
+        <div class="col-sm-9" >
+            <input class="form-control" id="search_seedlot_form_contents" type="text" />
+        </div>
+    </div>
+    <div class="form-group form-group-sm">
+        <label class="col-sm-3 control-label">Location: </label>
+        <div class="col-sm-9" >
+            <input class="form-control" id="search_seedlot_form_location" type="text" />
+        </div>
+    </div>
+    <div class="form-group form-group-sm">
+        <label class="col-sm-3 control-label">Minimum Count: </label>
+        <div class="col-sm-9" >
+            <input class="form-control" id="search_seedlot_form_minimum_count" type="number" />
+        </div>
+    </div>
+</form>
+<center>
+<button class="btn btn-primary" id="submit_seedlot_search" />Search</button>
+</center>
+
+</&>
+
+
 <&| /page/info_section.mas, title=>"Seedlots",  collapsible => 1, subtitle => '[<a id="add_seedlot_button">Add Seedlot</a>]  [<a id="seedlot_bulk_upload">Upload Seedlots</a>]'&>
 
 <br/>
@@ -233,7 +274,15 @@ jQuery(document).ready(function(){
         'processing': true,
         'serverSide': true,
         'lengthMenu': [10,20,50,100,1000],
-        'ajax': '/ajax/breeders/seedlots',
+        'ajax': { 'url': '/ajax/breeders/seedlots',
+                  'data': function(d) {
+                     d.seedlot_name  = jQuery('#search_seedlot_form_seedlot_name').val();
+                     d.breeding_program = jQuery('#search_seedlot_form_breeding_program').val();
+                     d.minimum_count   = jQuery('#search_seedlot_form_minimum_count').val();
+                     d.location     = jQuery('#search_seedlot_form_location').val();
+                     d.contents       = jQuery('#search_seedlot_form_contents').val();
+                }
+        },
         columns: [
             { title: "Breeding Program", "data": "breeding_program_name" },
             { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/seedlot/"+row.seedlot_stock_id+"'>"+row.seedlot_stock_uniquename+"</a>"; } },
@@ -306,9 +355,8 @@ jQuery(document).ready(function(){
             console.log(response);
             jQuery('#working_modal').modal("hide");
 
-            if (response.error) {
-                console.log(response);
-                alert(response.error);
+            if (response.error_string) {
+                alert(response.error_string);
                 return;
             }
             if (response.success) {
@@ -367,6 +415,17 @@ jQuery(document).ready(function(){
 
     }
   });
+
+  jQuery('#submit_seedlot_search').click( function() {
+       seedlots_table.search("available_seedlots_table").draw();
+  });
+
+  jQuery('#search_seedlot_form').keypress( function( e ) {
+          var code = e.keyCode || e.which;
+          if( code == 13 ) {
+               jQuery('#submit_seedlot_search').click();
+          }
+   } );
 
 });
 </script>
