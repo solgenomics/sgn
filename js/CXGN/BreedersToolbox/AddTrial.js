@@ -88,6 +88,16 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    $(document).on('focusout', '#select_seedlot_list_list_select', function() {
+        if ($('#select_seedlot_list_list_select').val()) {
+            var seedlot_list_id = $('#select_seedlot_list_list_select').val();
+            var seedlot_list = JSON.stringify(list.getList(seedlot_list_id));
+            var stock_list_id = $('#select_list_list_select').val();
+            var stock_list = JSON.stringify(list.getList(stock_list_id));
+            verify_seedlot_list(stock_list, seedlot_list);
+        }
+    });
+
     var stock_list_verified = 0;
     function verify_stock_list(stock_list) {
         $.ajax({
@@ -117,7 +127,43 @@ jQuery(document).ready(function ($) {
                 alert('An error occurred. sorry');
                 stock_list_verified = 0;
             }
-       });
+        });
+    }
+
+    var seedlot_list_verified = 0;
+    var seedlot_hash = {};
+    function verify_seedlot_list(stock_list, seedlot_list) {
+        $.ajax({
+            type: 'POST',
+            timeout: 3000000,
+            url: '/ajax/trial/verify_seedlot_list',
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            dataType: "json",
+            data: {
+                'stock_list': stock_list,
+                'seedlot_list': seedlot_list,
+            },
+            success: function (response) {
+                //console.log(response);
+                jQuery('#working_modal').modal('hide');
+                if (response.error) {
+                    alert(response.error);
+                    seedlot_list_verified = 0;
+                }
+                if (response.success){
+                    seedlot_list_verified = 1;
+                    
+                    //ADD SEEDLOT LIST TO SEEDLOT HASH CONVERSION HERE
+                }
+            },
+            error: function () {
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred. sorry');
+                seedlot_list_verified = 0;
+            }
+        });
     }
 
     var num_plants_per_plot = 0;
@@ -144,7 +190,6 @@ jQuery(document).ready(function ($) {
         }
         var stock_list;
         if (stock_list_id != "") {
-            stock_list_array = list.getList(stock_list_id);
             stock_list = JSON.stringify(list.getList(stock_list_id));
         }
         var control_list;
@@ -256,6 +301,7 @@ jQuery(document).ready(function ($) {
                 'unreplicated_accession_list': unreplicated_accession_list,
                 'replicated_accession_list': replicated_accession_list,
                 'no_of_sub_block_sequence': no_of_sub_block_sequence,
+                'seedlot_hash': JSON.stringify(seedlot_hash),
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
@@ -300,7 +346,7 @@ jQuery(document).ready(function ($) {
             alert('Year and description are required.');
             return;
         }
-        if (stock_list_verified == 1){
+        if (stock_list_verified == 1 && seedlot_list_verified == 1){
             if (method_to_use == "empty") {
                 alert('adding a project');
                 save_project_info(name, year, desc);
@@ -309,7 +355,7 @@ jQuery(document).ready(function ($) {
                 generate_experimental_design();
             }
         } else {
-            alert('Accession list is not valid!');
+            alert('Accession list or seedlot list is not valid!');
             return;
         }
     });
@@ -816,6 +862,7 @@ jQuery(document).ready(function ($) {
 
 	//add lists to the list select and list of checks select dropdowns.
 	$("#select_list").append(list.listSelect("select_list", [ 'accessions' ], '', 'refresh'));
+	$("#select_seedlot_list").append(list.listSelect("select_seedlot_list", [ 'seedlots' ], '', 'refresh'));
 	$("#list_of_checks_section").append(list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh'));
 
   //add lists to the list select and list of checks select dropdowns for CRBD.

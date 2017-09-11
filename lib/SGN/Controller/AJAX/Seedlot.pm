@@ -23,22 +23,52 @@ sub list_seedlots :Path('/ajax/breeders/seedlots') :Args(0) {
     my $self = shift;
     my $c = shift;
 
-    my $list = CXGN::Stock::Seedlot->list_seedlots($c->dbic_schema("Bio::Chado::Schema"));
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), "seedlot", "stock_property");
+    my $params = $c->req->params() || {};
+    #print STDERR Dumper $params;
+    my $seedlot_name = $params->{seedlot_name} || '';
+    my $breeding_program = $params->{breeding_program} || '';
+    my $location = $params->{location} || '';
+    my $minimum_count = $params->{minimum_count} || '';
+    my $contents = $params->{contents} || '';
+    my $rows = $params->{length} || 10;
+    my $offset = $params->{start} || 0;
+    my $limit = ($offset+$rows)-1;
+    my $draw = $params->{draw};
+    $draw =~ s/\D//g; # cast to int
+
+    my ($list, $records_total) = CXGN::Stock::Seedlot->list_seedlots(
+        $c->dbic_schema("Bio::Chado::Schema"),
+        $offset,
+        $limit,
+        $seedlot_name,
+        $breeding_program,
+        $location,
+        $minimum_count,
+        $contents
+    );
     my @seedlots;
-    foreach my $sl (@$list) { 
-	my $sl_obj = CXGN::Stock::Seedlot->new(schema => $c->dbic_schema("Bio::Chado::Schema"), seedlot_id=>$sl->[0]);
-    my $accessions = $sl_obj->accessions();
-    my $accessions_html = '';
-    foreach (@$accessions){
-        $accessions_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> ';
-    }
-	push @seedlots, [ $sl_obj->breeding_program_name, '<a href="/breeders/seedlot/'.$sl->[0].'">'.$sl->[1].'</a>', $accessions_html, $sl_obj->location_code, $sl_obj->current_count() ];
+    my %unique_seedlots;
+    foreach my $sl (@$list) {
+        my $source_stocks = $sl->{source_stocks};
+        my $contents_html = '';
+        foreach (@$source_stocks){
+            $contents_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> ';
+        }
+        push @seedlots, {
+            breeding_program_id => $sl->{breeding_program_id},
+            breeding_program_name => $sl->{breeding_program_name},
+            seedlot_stock_id => $sl->{seedlot_stock_id},
+            seedlot_stock_uniquename => $sl->{seedlot_stock_uniquename},
+            contents_html => $contents_html,
+            location => $sl->{location},
+            location_id => $sl->{location_id},
+            count => $sl->{current_count}
+        };
     }
 
     #print STDERR Dumper(\@seedlots);
 
-    $c->stash->{rest} = { data => \@seedlots };
+    $c->stash->{rest} = { data => \@seedlots, draw => $draw, recordsTotal => $records_total,  recordsFiltered => $records_total };
 }
 
 sub seedlot_base : Chained('/') PathPart('ajax/breeders/seedlot') CaptureArgs(1) { 
@@ -116,6 +146,8 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $transaction->description($description);
         $transaction->operator($operator);
         $transaction->store();
+
+        $sl->set_current_count_property();
     };
 
     if ($@) { 
@@ -220,6 +252,7 @@ sub upload_seedlots_POST : Args(0) {
             $sl->organization_name($organization);
             $sl->population_name($population);
             $sl->breeding_program_id($breeding_program_id);
+            $sl->check_name_exists(0); #already validated
             #TO DO
             #$sl->cross_id($cross_id);
             my $seedlot_id = $sl->store();
@@ -233,6 +266,8 @@ sub upload_seedlots_POST : Args(0) {
             $transaction->description($val->{description});
             $transaction->operator($user_name);
             $transaction->store();
+
+            $sl->set_current_count_property();
         }
     };
     if ($@) {
@@ -293,6 +328,7 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     my $to_new_seedlot_name = $c->req->param('to_new_seedlot_name');
     my $stock_id;
     my $stock_uniquename;
+    my $newly_created_seedlot;
     if ($to_new_seedlot_name){
         $stock_uniquename = $to_new_seedlot_name;
         eval { 
@@ -326,6 +362,9 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             $transaction->description($description);
             $transaction->operator($operator);
             $transaction->store();
+
+            $sl->set_current_count_property();
+            $newly_created_seedlot = $sl;
         };
 
         if ($@) { 
@@ -334,15 +373,24 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             $c->detach();
         }
     }
+    my $existing_sl;
     my $from_existing_seedlot_id = $c->req->param('from_existing_seedlot_id');
     if ($from_existing_seedlot_id){
         $stock_id = $from_existing_seedlot_id;
         $stock_uniquename = $schema->resultset('Stock::Stock')->find({stock_id=>$stock_id})->uniquename();
+        $existing_sl = CXGN::Stock::Seedlot->new(
+            schema => $c->stash->{schema},
+            seedlot_id => $stock_id,
+        );
     }
     my $to_existing_seedlot_id = $c->req->param('to_existing_seedlot_id');
     if ($to_existing_seedlot_id){
         $stock_id = $to_existing_seedlot_id;
         $stock_uniquename = $schema->resultset('Stock::Stock')->find({stock_id=>$stock_id})->uniquename();
+        $existing_sl = CXGN::Stock::Seedlot->new(
+            schema => $c->stash->{schema},
+            seedlot_id => $stock_id,
+        );
     }
 
     my $amount = $c->req->param("amount");
@@ -366,7 +414,15 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
     $transaction->operator($c->user->get_object->get_username);
 
     my $transaction_id = $transaction->store();
-    
+    $c->stash->{seedlot}->set_current_count_property();
+
+    if ($existing_sl){
+        $existing_sl->set_current_count_property();
+    }
+    if($newly_created_seedlot){
+        $newly_created_seedlot->set_current_count_property();
+    }
+
     $c->stash->{rest} = { success => 1, transaction_id => $transaction_id };
 }
 

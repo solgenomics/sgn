@@ -193,6 +193,7 @@ my $trial_create = CXGN::Trial::TrialCreate
 	   design => $parsed_data,
 	   program => "test",
 	   upload_trial_file => $archived_filename_with_path,
+	   operator => "janedoe"
 	  });
 
 $trial_create->save_trial();
@@ -376,6 +377,7 @@ my $trial_create = CXGN::Trial::TrialCreate
 	is_genotyping => 1,
 	genotyping_user_id => $meta->{user_id} || "unknown",
 	genotyping_project_name => $meta->{project_name} || "unknown",
+	operator => "janedoe"
 	  });
 
 $trial_create->save_trial();

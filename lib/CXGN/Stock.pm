@@ -176,6 +176,7 @@ sub BUILD {
 =cut
 
 sub store {
+    print STDERR "Storing Stock ".localtime."\n";
     my $self = shift;
     my %return;
 

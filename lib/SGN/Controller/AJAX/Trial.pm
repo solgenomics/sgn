@@ -96,15 +96,8 @@ sub generate_experimental_design_POST : Args(0) {
   my $design_info_view_html;
   if ($c->req->param('stock_list')) {
       @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
-#       my $data = $self->transform_stock_list($c, \@raw_stock_names);
-#    if (exists($data->{missing}) && ref($data->{missing}) && @{$data->{missing}} >0) {
-#	$c->stash->{rest} = { error => "Some stocks were not found. Please edit the list and try again." };
-#	return;
-#    }
-#    if ($data->{transform} && @{$data->{transform}}>0) {
-#	@stock_names = @{$data->{transform}};
-#    }
   }
+  my $seedlot_hash_json = $c->req->param('seedlot_hash');
   my @control_names;
   if ($c->req->param('control_list')) {
     @control_names = @{_parse_list_from_json($c->req->param('control_list'))};
@@ -244,13 +237,6 @@ my $location_number = scalar(@locations);
       return;
     }
 
-  # my $trial_create = CXGN::Trial::TrialCreate->new(chado_schema => $schema);
-  # $trial_create->set_trial_year($c->req->param('year'));
-  # $trial_create->set_trial_location($c->req->param('trial_location'));
-  # if ($trial_create->trial_name_already_exists()) {
-  #   $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
-  #   return;
-  # }
 
   if (scalar(@locations) > 1) {
     $trial_name = $trial_name."_".$trial_locations;
@@ -274,6 +260,10 @@ my $location_number = scalar(@locations);
   } else {
     $c->stash->{rest} = {error => "No list of stocks supplied." };
     return;
+  }
+  if ($seedlot_hash_json){
+      my $json = JSON->new();
+      $trial_design->set_seedlot_hash($json->decode($seedlot_hash_json));
   }
   if (@control_names) {
     $trial_design->set_control_list(\@control_names);
@@ -438,7 +428,6 @@ sub save_experimental_design_POST : Args(0) {
 
   print STDERR "Saving trial... :-)\n";
 
-  #my $trial_create = new CXGN::Trial::TrialCreate(chado_schema => $schema);
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
     return;
@@ -523,19 +512,9 @@ sub save_experimental_design_POST : Args(0) {
         trial_type => $trial_type,
         trial_has_plant_entries => $c->req->param('has_plant_entries'),
         trial_has_subplot_entries => $c->req->param('has_subplot_entries'),
+        operator => $user_name
 	  });
 
-  #$trial_create->set_user($c->user()->id());
-  #$trial_create->set_trial_year($c->req->param('year'));
-  #$trial_create->set_trial_location($c->req->param('trial_location'));
-  #$trial_create->set_trial_description($c->req->param('project_description'));
-  #$trial_create->set_design_type($c->req->param('design_type'));
-  #$trial_create->set_breeding_program_id($c->req->param('breeding_program_name'));
-  #$trial_create->set_design(_parse_design_from_json($c->req->param('design_json')));
-  #$trial_create->set_stock_list(_parse_list_from_json($c->req->param('stock_list')));
-  # if ($c->req->param('control_list')) {
-  #   $trial_create->set_control_list(_parse_list_from_json($c->req->param('control_list')));
-  # }
     if ($trial_create->trial_name_already_exists()) {
       $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
       return;
@@ -605,6 +584,53 @@ sub verify_stock_list_POST : Args(0) {
             success => "1",
         };
     }
+}
+
+sub verify_seedlot_list : Path('/ajax/trial/verify_seedlot_list') : ActionClass('REST') { }
+
+sub verify_seedlot_list_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my @stock_names;
+    my @seedlot_names;
+    my $error;
+    my %errors;
+    my $error_alert;
+    if ($c->req->param('stock_list')) {
+        @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
+    }
+    if ($c->req->param('seedlot_list')) {
+        @seedlot_names = @{_parse_list_from_json($c->req->param('seedlot_list'))};
+    }
+
+    if (!@stock_names) {
+        $c->stash->{rest} = {error => "No accession list selected!"};
+        $c->detach;
+    }
+    if (!@seedlot_names) {
+        $c->stash->{rest} = {error => "No seedlot list supplied!"};
+        $c->detach;
+    }
+
+    my $lv = CXGN::List::Validate->new();
+    my @accessions_missing = @{$lv->validate($schema,'accessions',\@stock_names)->{'missing'}};
+    my $lv_seedlots = CXGN::List::Validate->new();
+    my @seedlots_missing = @{$lv_seedlots->validate($schema,'seedlots',\@seedlot_names)->{'missing'}};
+
+    if (scalar(@accessions_missing) > 0){
+        my $error = 'The following accessions are not valid in the database, so you must add them first: '.join ',', @accessions_missing;
+        $c->stash->{rest} = {error => $error};
+        $c->detach();
+    }
+    if (scalar(@seedlots_missing) > 0){
+        my $error = 'The following seedlots are not valid in the database, so you must add them first: '.join ',', @seedlots_missing;
+        $c->stash->{rest} = {error => $error};
+        $c->detach();
+    }
+
+    $c->stash->{rest} = {
+        success => "1",
+    };
 }
 
 sub _parse_list_from_json {
@@ -704,7 +730,7 @@ sub upload_trial_file_POST : Args(0) {
       archive_filename => $upload_original_name,
       timestamp => $timestamp,
       user_id => $user_id,
-      user_role => $c->user()->roles
+      user_role => $c->user->get_object->get_user_type()
   });
   $archived_filename_with_path = $uploader->archive();
   $md5 = $uploader->get_md5($archived_filename_with_path);
@@ -767,6 +793,7 @@ sub upload_trial_file_POST : Args(0) {
 	   design => $parsed_data,
 	   program => $program,
 	   upload_trial_file => $upload,
+       operator => $c->user()->get_object()->get_username()
 	  });
 
   try {
