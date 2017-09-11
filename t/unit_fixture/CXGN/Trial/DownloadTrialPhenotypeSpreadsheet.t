@@ -103,7 +103,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
           'Operator',
           'Date',
           'Design Type',
-          undef,
+          'Treatment',
           undef,
           'plot_number',
           '1',

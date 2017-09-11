@@ -26,14 +26,14 @@
     	      <!--<td>male parent accession(s) (if more than one, separate using commas)</td>-->
               <td>male parent accession</td>
               <td>type</td>
-	      
+
   	    </tr>
 	  </body>
 	  </table>
 
 	  <h4>Required fields:</h4>
 	  <ul>
-	    <li>progreny name (must exist in the database and can be accession uniquename or accession synonym)</li>
+	    <li>progeny name (must exist in the database and can be accession uniquename or accession synonym)</li>
 	    <li>female parent accession (must exist in the database)</li>
         <li>type (biparental, open, self)</li>
 	  </ul>

@@ -86,6 +86,11 @@ has 'plant_list' => (
 	is => 'rw',
 );
 
+has 'subplot_list' => (
+	isa => 'ArrayRef[Int]|Undef',
+	is => 'rw',
+);
+
 has 'location_list' => (
 	isa => 'ArrayRef[Int]|Undef',
 	is => 'rw',
@@ -142,6 +147,7 @@ sub get_phenotype_matrix {
 			accession_list=>$self->accession_list,
 			plot_list=>$self->plot_list,
 			plant_list=>$self->plant_list,
+			subplot_list=>$self->subplot_list,
 			include_timestamp=>$self->include_timestamp,
 			trait_contains=>$self->trait_contains,
 			phenotype_min_value=>$self->phenotype_min_value,

@@ -28,7 +28,7 @@
                         <div id="with_lists" class="tab-pane fade in active">
                             <hr>
                             <form class="form-horizontal" >
-                                <div class="form-group">
+                                <div class="form-group" style="display:none" <!-- location name is coming from the trial they select --> >
                                     <label class="col-sm-3 control-label">Location Name (Optional): </label>
                                     <div class="col-sm-9" >
                                         <div id="cross_wishlist_location_select_list_div">
@@ -243,6 +243,17 @@ jQuery(document).ready(function($) {
         cross_wishlist_change_trials();
     });
 
+    var trial_id;
+    var cross_data = [];
+    var female_male_tracker = {};
+    var selected_plot_ids = [];
+    jQuery('.nav-pills a').on('shown.bs.tab', function(event){
+        cross_data = [];
+        female_male_tracker = {};
+        selected_plot_ids = [];
+        trial_id;
+    });
+
     var trial_ids_array = [];
     function cross_wishlist_change_trials () {
         var trial_ids = jQuery('#cross_wishlist_trial_id').val();
@@ -299,20 +310,29 @@ jQuery(document).ready(function($) {
         html = html + '</tbody></table>';
         jQuery(select_id).html(html);
     };
-    
-    var trial_id;
-    var cross_data = [];
+
+
     jQuery('#cross_wishlist_submit').click(function(e){
         e.preventDefault();
         var active_tab = jQuery('ul#cross_wishlist_tab_select li.active').attr('id');
         //console.log(active_tab);
+        cross_data = [];
+        female_male_tracker = {};
+        selected_plot_ids = [];
+        trial_id;
 
+        var male_accession_limit = 10;
         if (active_tab == 'cross_wishlist_no_list_tab'){
             jQuery('input[name="cross_wishlist_final_priority"]').each(function() {
                 value = this.value;
                 var male_id = jQuery(this).attr('male_id');
                 var female_id = jQuery(this).attr('female_id');
                 cross_data.push({ 'female_id':female_id, 'male_id':male_id, 'priority':value });
+                if (female_id in female_male_tracker){
+                    female_male_tracker[female_id].push(male_id);
+                } else {
+                    female_male_tracker[female_id] = [male_id];
+                }
             });
             trial_id = jQuery('#cross_wishlist_trial_id').val();
         }
@@ -323,12 +343,29 @@ jQuery(document).ready(function($) {
                     var male_id = jQuery(this).data('male');
                     var female_id = jQuery(this).data('female');
                     cross_data.push({ 'female_id':female_id, 'male_id':male_id, 'priority':value });
+                    if (female_id in female_male_tracker){
+                        female_male_tracker[female_id].push(male_id);
+                    } else {
+                        female_male_tracker[female_id] = [male_id];
+                    }
                 }
             });
             trial_id = jQuery('#cross_wishlist_list_trial_id').val();
         }
         //console.log(cross_data);
         //console.log(trial_id);
+        //console.log(female_male_tracker);
+        if(!trial_id){
+            alert('You must select a trial!');
+            return;
+        }
+        for (f in female_male_tracker){
+            var male_array = female_male_tracker[f];
+            if (male_array.length > male_accession_limit){
+                alert('A maximum of 10 male accessions can be selected for each cross!');
+                return;
+            }
+        }
         jQuery.ajax({
             url: '/ajax/cross/create_cross_wishlist',
             method: 'POST',
@@ -355,7 +392,10 @@ jQuery(document).ready(function($) {
     });
     
     jQuery('#cross_wishlist_select_submits').click(function(){
-        var selected_plot_ids = [];
+        var male_plot_limit = 10;
+        female_male_tracker = {};
+        selected_plot_ids = [];
+
         jQuery('input[name="cross_wishlist_plot_select_female_input"]').each(function() {
             if (this.checked){
                 selected_plot_ids.push({ 'cross_female_accession_name' : jQuery(this).data('female_accession_name'), 'female_plot_id' : jQuery(this).val() });
@@ -364,9 +404,22 @@ jQuery(document).ready(function($) {
         jQuery('input[name="cross_wishlist_plot_select_male_input"]').each(function() {
             if (this.checked){
                 selected_plot_ids.push({ 'cross_female_accession_name' : jQuery(this).data('female_accession_name'), 'male_plot_id' : jQuery(this).val() });
+                if (jQuery(this).data('female_accession_name') in female_male_tracker){
+                    female_male_tracker[jQuery(this).data('female_accession_name')].push(jQuery(this).val());
+                } else {
+                    female_male_tracker[jQuery(this).data('female_accession_name')] = [jQuery(this).val()];
+                }
             }
         });
         //console.log(selected_plot_ids);
+        //console.log(female_male_tracker);
+        for (f in female_male_tracker){
+            var male_array = female_male_tracker[f];
+            if (male_array.length > male_plot_limit){
+                alert('A maximum of 10 male plots can be selected for each cross!');
+                return;
+            }
+        }
 
         jQuery.ajax({
             url: '/ajax/cross/create_cross_wishlist_submit',

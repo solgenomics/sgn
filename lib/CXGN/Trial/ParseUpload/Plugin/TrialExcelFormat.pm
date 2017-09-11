@@ -5,6 +5,7 @@ use Spreadsheet::ParseExcel;
 use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use CXGN::List::Validate;
 
 sub _validate_with_plugin {
     print STDERR "Check 3.1.1 ".localtime();
@@ -19,6 +20,7 @@ sub _validate_with_plugin {
   my $excel_obj;
   my $worksheet;
   my %seen_plot_names;
+  my %seen_accession_names;
 
   #currently supported trial types
   $supported_trial_types{'biparental'} = 1; #both parents required
@@ -107,23 +109,6 @@ sub _validate_with_plugin {
     push @error_messages, "Cell E1: Column E should contain the header \"is_a_control\"";
   }
 
-  my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type');
-
-  my $rs = $schema->resultset('Stock::Stock')->search(
-      { 'me.is_obsolete' => { '!=' => 't' } },
-      {
-       '+select'=> ['me.uniquename', 'me.type_id'],
-       '+as'=> ['uniquename', 'stock_type_id']
-      }
-  );
-
-  my %plot_check;
-  my %accession_check;
-  while (my $s = $rs->next()) {
-      $plot_check{$s->get_column('uniquename')} = 1;
-      $accession_check{$s->get_column('uniquename'), $s->get_column('stock_type_id')} = 1;
-  }
-
   for my $row ( 1 .. $row_max ) {
       #print STDERR "Check 01 ".localtime();
     my $row_name = $row+1;
@@ -180,11 +165,6 @@ sub _validate_with_plugin {
         push @error_messages, "Cell A$row_name: plot name must not contain spaces or slashes.";
     }
     else {
-        #plot must not already exist in the database
-        if ($plot_check{$plot_name} ) {
-            push @error_messages, "Cell A$row_name: plot name already exists: $plot_name";
-        }
-
         #file must not contain duplicate plot names
         if ($seen_plot_names{$plot_name}) {
             push @error_messages, "Cell A$row_name: duplicate plot name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
@@ -199,12 +179,7 @@ sub _validate_with_plugin {
       push @error_messages, "Cell B$row_name: accession name missing";
     } else {
       #accession name must exist in the database
-      if (!$accession_check{$accession_name, $accession_cvterm->cvterm_id()}) {
-	  if (!$self->_get_accession($accession_name)) {
-	      push @error_messages, "Cell B$row_name: accession name does not exist as a stock or as synonym: $accession_name";
-          $missing_accessions{$accession_name} = 1;
-	  }
-      }
+      $seen_accession_names{$accession_name}++;
     }
 
       #print STDERR "Check 04 ".localtime();
@@ -233,12 +208,22 @@ sub _validate_with_plugin {
     }
   }
 
-    if (scalar( keys %missing_accessions) > 0) {
-        my @missing_accessions_list;
-        foreach (keys %missing_accessions){
-            push @missing_accessions_list, $_;
-        }
-        $errors{'missing_accessions'} = \@missing_accessions_list;
+    my @accessions = keys %seen_accession_names;
+    my $accession_validator = CXGN::List::Validate->new();
+    my @accessions_missing = @{$accession_validator->validate($schema,'accessions',\@accessions)->{'missing'}};
+
+    if (scalar(@accessions_missing) > 0) {
+        $errors{'missing_accessions'} = \@accessions_missing;
+        push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
+    }
+
+    my @plots = keys %seen_plot_names;
+    my $rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'uniquename' => { -in => \@plots }
+    });
+    while (my $r=$rs->next){
+        push @error_messages, "Cell A".$seen_plot_names{$r->uniquename}.": plot name already exists: ".$r->uniquename;
     }
 
     #store any errors found in the parsed file to parse_errors accessor
@@ -272,6 +257,13 @@ sub _parse_with_plugin {
   $worksheet = ( $excel_obj->worksheets() )[0];
   my ( $row_min, $row_max ) = $worksheet->row_range();
   my ( $col_min, $col_max ) = $worksheet->col_range();
+
+  my @treatment_names;
+  for (9 .. $col_max){
+      if ($worksheet->get_cell(0,$_)){
+          push @treatment_names, $worksheet->get_cell(0,$_)->value();
+      }
+  }
 
   for my $row ( 1 .. $row_max ) {
     my $plot_name;
@@ -316,6 +308,14 @@ sub _parse_with_plugin {
       next;
     }
 
+    my $treatment_col = 9;
+    foreach my $treatment_name (@treatment_names){
+        if($worksheet->get_cell($row,$treatment_col)){
+            push @{$design{treatments}->{$treatment_name}}, $plot_name;
+        }
+        $treatment_col++;
+    }
+
     my $key = $row;
     $design{$key}->{plot_name} = $plot_name;
     $design{$key}->{stock_name} = $accession_name;
@@ -340,53 +340,11 @@ sub _parse_with_plugin {
     }
   
   }
-
+  #print STDERR Dumper \%design;
   $self->_set_parsed_data(\%design);
 
   return 1;
 
-}
-
-
-sub _get_accession {
-  my $self = shift;
-  my $accession_name = shift;
-  my $chado_schema = $self->get_chado_schema();
-  my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-  my $stock;
-  my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession' , 'stock_type');
-
-  $stock_lookup->set_stock_name($accession_name);
-  $stock = $stock_lookup->get_stock();
-
-  if (!$stock) {
-    return;
-  }
-
-  if ($stock->type_id() != $accession_cvterm->cvterm_id()) {
-    return;
-   }
-
-  return $stock;
-
-}
-
-
-sub _get_stock {
-  my $self = shift;
-  my $stock_name = shift;
-  my $chado_schema = $self->get_chado_schema();
-  my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
-  my $stock;
-
-  $stock_lookup->set_stock_name($stock_name);
-  $stock = $stock_lookup->get_stock();
-
-  if (!$stock) {
-    return;
-  }
-
-  return $stock;
 }
 
 
