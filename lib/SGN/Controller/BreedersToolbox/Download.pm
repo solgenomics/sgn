@@ -722,7 +722,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   
   # find accession synonyms
   my $stocklookup = CXGN::Stock::StockLookup->new({ schema => $schema});
-  my $synonym_hash = $stocklookup->get_stock_synonyms('stock_id',\@accession_ids);
+  my $synonym_hash = $stocklookup->get_stock_synonyms('stock_id', 'accession', \@accession_ids);
   my $synonym_string = "";
   while( my( $uniquename, $synonym_list ) = each %{$synonym_hash}){
       if(scalar(@{$synonym_list})>0){
