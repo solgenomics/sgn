@@ -726,7 +726,7 @@ sub _get_alpha_lattice_design {
   if ($self->has_fieldmap_col_number()) {
     $fieldmap_col_number = $self->get_fieldmap_col_number();
   }
-print STDERR Dumper(\@stock_list);
+
   if ($self->has_block_size()) {
     $block_size = $self->get_block_size();
     print STDERR "block size = $block_size\n";
