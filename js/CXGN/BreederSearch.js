@@ -80,6 +80,7 @@ window.onload = function initialize() {
 	  case "locations":
 	      window.open("../../breeders/locations");
 	      break;
+    case "trait_components":
 	  case "traits":
 	      window.open("../../cvterm/"+this.value+"/view");
 	      break;
@@ -108,6 +109,7 @@ window.onload = function initialize() {
         var selected_locations = get_selected_results('locations');
         var selected_accessions = get_selected_results('accessions');
         var selected_traits = get_selected_results('traits');
+        var selected_trait_components = get_selected_results('trait_components');
         var selected_plots = get_selected_results('plots');
         var selected_plants = get_selected_results('plants');
         var selected_years = get_selected_results('years');
@@ -121,8 +123,8 @@ window.onload = function initialize() {
         var search_type = jQuery('input[name=search_type]:checked').val();
         console.log("plot list="+JSON.stringify(selected_plots));
 
-        if (selected_trials.length !== 0 || selected_locations.length !== 0 || selected_accessions.length !== 0 || selected_traits.length !== 0 || selected_plots.length !== 0 || selected_plants.length !== 0 || selected_years.length !== 0) {
-            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(selected_trials)+"&format="+format+"&trait_list="+JSON.stringify(selected_traits)+"&accession_list="+JSON.stringify(selected_accessions)+"&plot_list="+JSON.stringify(selected_plots)+"&plant_list="+JSON.stringify(selected_plants)+"&location_list="+JSON.stringify(selected_locations)+"&year_list="+JSON.stringify(selected_years)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&search_type="+search_type);
+        if (selected_trials.length !== 0 || selected_locations.length !== 0 || selected_accessions.length !== 0 || selected_traits.length !== 0 || selected_trait_components.length !== 0 || selected_plots.length !== 0 || selected_plants.length !== 0 || selected_years.length !== 0) {
+            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(selected_trials)+"&format="+format+"&trait_list="+JSON.stringify(selected_traits)+"&trait_component_list="+JSON.stringify(selected_trait_components)+"&accession_list="+JSON.stringify(selected_accessions)+"&plot_list="+JSON.stringify(selected_plots)+"&plant_list="+JSON.stringify(selected_plants)+"&location_list="+JSON.stringify(selected_locations)+"&year_list="+JSON.stringify(selected_years)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&search_type="+search_type);
         } else {
             alert("No filters selected for download.");
         }
@@ -137,7 +139,7 @@ window.onload = function initialize() {
         ladda.start();
         var token = new Date().getTime(); //use the current timestamp as the token name and value
         manage_dl_with_cookie(token, ladda);
-        window.location.href = '/breeders/download_gbs_action/?ids='+accession_ids.join(",")+'&protocol_id='+protocol_id+'&token='+token+'&format=accession_ids&trial_ids='+trial_ids.join(",");
+        window.location.href = '/breeders/download_gbs_action/?ids='+accession_ids.join(",")+'&protocol_id='+protocol_id+'&gbs_download_token='+token+'&format=accession_ids&trial_ids='+trial_ids.join(",");
     });
 }
 
@@ -150,9 +152,9 @@ function addToggleIds () {
 }
 
 function retrieve_and_display_set(categories, data, this_section) {
-    //if (window.console) console.log("categories = "+categories);
-    //if (window.console) console.log("data = "+JSON.stringify(data));
-    //if (window.console) console.log("querytypes="+get_querytypes(this_section));
+    if (window.console) console.log("categories = "+categories);
+    if (window.console) console.log("data = "+JSON.stringify(data));
+    if (window.console) console.log("querytypes="+get_querytypes(this_section));
     jQuery.ajax( {
 	url: '/ajax/breeder/search',
 	timeout: 60000,
@@ -277,7 +279,7 @@ function get_selected_genotyping_protocols () {
 function update_select_categories(this_section, selected_categories) {
     //console.log("selected_categories="+selected_categories);
     if (selected_categories === undefined) var selected_categories = get_selected_categories(this_section);
-    var categories = { '': 'please select', accessions : 'accessions', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', plants : 'plants', plots : 'plots', traits : 'traits', trials : 'trials', trial_designs : 'trial_designs', trial_types : 'trial_types', years : 'years'};
+    var categories = { '': 'please select', accessions : 'accessions', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', plants : 'plants', plots : 'plots', trait_components : 'trait_components', traits : 'traits', trials : 'trials', trial_designs : 'trial_designs', trial_types : 'trial_types', years : 'years'};
     var all_categories = copy_hash(categories);
 
     for (i=0; i < this_section; i++) {
@@ -502,6 +504,13 @@ function selectAllOptions(obj) {
     }
 }
 
+function clearAllOptions(obj) {
+    if (!obj || obj.options.length ==0) { return; }
+    for (var i=0; i<obj.options.length; i++) {
+      obj.options[i].selected = false;
+    }
+}
+
 function check_missing_criteria(categories, data, this_section) {
     var test = data.length + 1;
     if (categories.length > test) {
@@ -533,7 +542,7 @@ function get_querytypes(this_section) {
 }
 
 function initialize_first_select() {
-  var starting_categories = { '': 'Select a starting category', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', traits : 'traits', trials : 'trials', trial_designs : 'trial_designs', trial_types : 'trial_types', years : 'years'};
+  var starting_categories = { '': 'Select a starting category', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', trait_components : 'trait_components', traits : 'traits', trials : 'trials', trial_designs : 'trial_designs', trial_types : 'trial_types', years : 'years'};
   var start = format_options(starting_categories);
   jQuery('#select1').html(start);
 }
@@ -559,7 +568,7 @@ function refresh_matviews() {
 		    var error_html = '<div class="well well-sm" id="update_wizard_error"><font color="red">'+response.error+'</font></div>';
 		    jQuery('#update_wizard_error').replaceWith(error_html);
 		} else {
-		    var success_html = '<div class="well well-sm" id="update_wizard_error"><font color="green">Success! Update initiated.</font></div>';
+		    var success_html = '<div class="well well-sm" id="update_wizard_error"><font color="green">'+response.message+'</font></div>';
 		    jQuery('#update_wizard_error').replaceWith(success_html);
 		    matviews_update_options();
 		}

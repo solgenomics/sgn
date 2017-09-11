@@ -3,78 +3,82 @@
 function delete_phenotype_data_by_trial_id(trial_id) {
     var yes = confirm("Are you sure you want to delete all phenotypic data associated with trial "+trial_id+" ? This action cannot be undone.");
     if (yes) {
-	jQuery('#working').dialog("open");
+
 	jQuery.ajax( {
-            url: '/ajax/breeders/trial/'+trial_id+'/delete/phenotypes',
-            success: function(response) {
-		if (response.error) {
-		    jQuery('#working').dialog("close");
-		    alert(response.error);
-		}
-		else {
-		    jQuery('#working').dialog("close");
-		    alert('The phenotypic data has been deleted.'); // to do: give some idea how many items were deleted.
+      url: '/ajax/breeders/trial/'+trial_id+'/delete/phenotypes',
+      beforeSend: function(){
+        jQuery('#working_modal').modal('show');
+      },
+      success: function(response) {
+        jQuery('#working_modal').modal('hide');
+        if (response.error) {
+           alert(response.error);
+		       }
+		    else {
+		       alert('The phenotypic data has been deleted.'); // to do: give some idea how many items were deleted.
 		    window.location.href="/breeders/trial/"+trial_id;
 		}
             },
-            error: function(response) {
-		jQuery('#working').dialog("close");
-		alert("An error occurred.");
+      error: function(response) {
+		    jQuery('#working_modal').modal('hide');
+		    alert("An error occurred.");
             }
 	});
-    }
+ }
 }
 
 
 function delete_layout_data_by_trial_id(trial_id) {
     var yes = confirm("Are you sure you want to delete the layout data associated with trial "+trial_id+" ? This action cannot be undone.");
     if (yes) {
-	jQuery('#working').dialog("open");
 
 	jQuery.ajax( {
-            url: '/ajax/breeders/trial/'+trial_id+'/delete/layout',
-            success: function(response) {
-		if (response.error) {
-		    jQuery('#working').dialog("close");
+      url: '/ajax/breeders/trial/'+trial_id+'/delete/layout',
+      beforeSend: function(){
+        jQuery('#working_modal').modal('show');
+      },
+      success: function(response) {
+        jQuery('#working_modal').modal('hide');
+		    if (response.error) {
 		    alert(response.error);
-		}
-		else {
-		    jQuery('#working').dialog("close");
+		    }
+		    else {
 		    alert('The layout data has been deleted.'); // to do: give some idea how many items were deleted.
 		    window.location.href="/breeders/trial/"+trial_id;
-		}
-            },
-            error: function(response) {
-		jQuery('#working').dialog("close");
-		alert("An error occurred.");
-            }
-	});
-    }
+		    }
+       },
+      error: function(response) {
+		    jQuery('#working_modal').modal('hide');
+		    alert("An error occurred.");
+       }
+	 });
+  }
 }
 
 function delete_project_entry_by_trial_id(trial_id) {
        var yes = confirm("Are you sure you want to delete the trial entry for trial "+trial_id+" ? This action cannot be undone.");
     if (yes) {
-	jQuery('#working').dialog("open");
 
 	jQuery.ajax( {
-            url: '/ajax/breeders/trial/'+trial_id+'/delete/entry',
-            success: function(response) {
-		if (response.error) {
-		    jQuery('#working').dialog("close");
-		    alert(response.error);
-		}
-		else {
-		    jQuery('#working').dialog("close");
-		    alert('The project entry has been deleted.'); // to do: give some idea how many items were deleted.
-		    window.location.href="/breeders/trial/"+trial_id;
-		}
-            },
-            error: function(response) {
-		jQuery('#working').dialog("close");
-		alert("An error occurred.");
-            }
-	});
+      url: '/ajax/breeders/trial/'+trial_id+'/delete/entry',
+      beforeSend: function(){
+        jQuery('#working_modal').modal('show');
+        },
+        success: function(response) {
+          jQuery('#working_modal').modal('hide');
+		      if (response.error) {
+		      alert(response.error);
+		      }
+		      else {
+		      alert('The project entry has been deleted.'); // to do: give some idea how many items were deleted.
+		      window.location.href="/breeders/trial/"+trial_id;
+		      }
+        },
+        error: function(response) {
+		      jQuery('#working_modal').modal('hide');
+		      alert("An error occurred.");
+        }
+	    });
     }
 
 }
@@ -728,17 +732,9 @@ jQuery(document).ready(function ($) {
     }
 
     function open_upload_trial_coord_dialog() {
-	$('#upload_trial_coord_dialog').dialog("open");
+	     $('#upload_trial_coord_dialog').dialog("open");
 
     }
-
-    function open_edit_field_map_dialog() {
-      jQuery('#edit_field_map_dialog').modal('show');
-    }
-
-    $('#edit_field_map_link').click(function () {
-      open_edit_field_map_dialog();
-    });
 
     function open_replace_trial_accession_dialog() {
       jQuery('#replace_trial_accessions_dialog').modal('show');
@@ -756,5 +752,24 @@ jQuery(document).ready(function ($) {
     $('#substitute_accession_submit').click(function () {
       jQuery('#edit_field_map_dialog').modal('hide');
       open_subtitute_plot_accession_dialog();
+    });
+
+    jQuery('#generate_trial_barcode_link').click(function () {
+        $('#generate_trial_barcode_button_dialog').modal("show");
+    });
+
+    jQuery('#trial_plot_barcode').click(function () {
+        $('#generate_trial_barcode_button_dialog').modal("hide");
+        $('#generate_trial_barcode_dialog').modal("show");
+    });
+
+    jQuery('#trial_accession_barcode').click(function () {
+        $('#generate_trial_barcode_button_dialog').modal("hide");
+        $('#generate_trial_barcode_dialog').modal("show");
+    });
+
+    jQuery('#trial_plant_barcode').click(function () {
+        $('#generate_trial_barcode_button_dialog').modal("hide");
+        $('#generate_trial_barcode_dialog').modal("show");
     });
 });

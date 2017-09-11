@@ -1220,7 +1220,7 @@ sub run_r
 
     #copy our R commands into a cluster-accessible tempfile
     {
-        my $r_cmd_file = $c->path_to('R/qtl_analysis.r');
+        my $r_cmd_file = $c->path_to('R/solGS/qtl_analysis.r');
         copy( $r_cmd_file, $r_in_temp )
           or die "could not copy '$r_cmd_file' to '$r_in_temp'";
     }

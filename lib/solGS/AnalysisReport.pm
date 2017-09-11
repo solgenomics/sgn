@@ -268,7 +268,8 @@ sub check_selection_prediction {
 	    { 
 		if ($output_details->{$k}->{trait_id})
 		{
-		    $gebv_file = $output_details->{$k}->{gebv_file}; 
+		    my $trait = $output_details->{$k}->{trait_id};
+		    $gebv_file = $output_details->{$k}->{gebv_file};
 		}
 
 		if ($gebv_file) 
@@ -399,27 +400,45 @@ sub check_population_download {
 		{ 
 		    $pheno_file = $output_details->{$k}->{phenotype_file}; 
 		    $geno_file  = $output_details->{$k}->{genotype_file}; 
+		   
+		    if (!$pheno_file) 
+		    {
+			$output_details->{$k}->{pheno_message} = 'Could not find the phenotype file for this dataset.';
+		    }
+		    
+		    if (!$geno_file) 
+		    {
+			$output_details->{$k}->{geno_message} = 'Could not find the genotype file for this dataset.';
+		    }
 
 		    if ($pheno_file && $geno_file) 
 		    {
 			my $pheno_size;
 			my $geno_size;
 			my $died_file;
-			
+		
 			while (1) 
 			{
 			    sleep 60;
 			    $pheno_size = -s $pheno_file;
 			    $geno_size  = -s $geno_file;
 
-			    unless (!$pheno_size) 
+			    if ($pheno_size) 
 			    {
-				$output_details->{$k}->{pheno_success} = 1;	
+				$output_details->{$k}->{pheno_success} = 1;
+			    } 
+			    else 
+			    {
+				$output_details->{$k}->{pheno_message} = 'There is no phenotype data for this dataset.';
 			    }
 
-			    unless (!$geno_size) 
+			    if ($geno_size) 
 			    {
 				$output_details->{$k}->{geno_success} = 1;		
+			    }
+			    else 
+			    {
+				$output_details->{$k}->{geno_message} = 'There is no genotype data for this dataset.';
 			    }
 
 			    if ($pheno_size && $geno_size) 
@@ -439,10 +458,11 @@ sub check_population_download {
 					$output_details->{$k}->{geno_success}    = 0;
 					$output_details->{$k}->{success} = 0;
 					$output_details->{status} = 'Failed';
+					
 					last;
 				    }
 				}
-			    }	    
+			    }
 			}	   	    
 		    }
 		    else 
@@ -661,20 +681,21 @@ sub selection_prediction_message {
     		{
     		    my $trait_name          = uc($output_details->{$k}->{trait_name});
     		    my $training_pop_page   = $output_details->{$k}->{training_pop_page};
-    		    my $model_page          = $output_details->{$k}->{model_page};
+    		    my $prediction_pop_page = $output_details->{$k}->{prediction_pop_page};
     		    my $prediction_pop_name = $output_details->{$k}->{prediction_pop_name};
-		    
+		    $prediction_pop_name =~ s/^\s+|\s+$//g;
+
     		    if ($output_details->{$k}->{success})		
-    		    {		
+    		    {	
+			
     			$cnt++;	
     			if($cnt == 1) 
     			{
     			    $message .= "The prediction of selection population $prediction_pop_name is done."
-    				. "\nYou can view the prediction output by clicking the trait name "
-    				. "\nat the bottom of the model page(s):\n\n";
+    				. "\nYou can view the prediction output here:\n\n"
     			}
-       
-    			$message .= "$model_page\n\n";
+		
+    			$message .= "$prediction_pop_page\n\n";
     		    }
     		    else 
     		    {  
@@ -721,8 +742,13 @@ sub population_download_message {
 			    ."\n$pop_page.\n\n";
 		    }
 		    else 
-		    {  
-			$message = "Downloading phenotype and genotype data for $pop_name failed."
+		    {   
+			no warnings 'uninitialized';
+			my $msg_geno  = $output_details->{$k}->{geno_message};
+			my $msg_pheno = $output_details->{$k}->{pheno_message};
+
+			$message = "Downloading phenotype and genotype data for $pop_name failed.\n"
+			    ."\nPossible causes are:\n$msg_geno\n$msg_pheno\n"
 			    ."\nWe are troubleshooting the cause. " 
 			    . "We will contact you when we find out more.";	 
 		    }

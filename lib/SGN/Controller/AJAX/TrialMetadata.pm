@@ -9,6 +9,7 @@ use CXGN::Trial;
 use Math::Round::Var;
 use List::MoreUtils qw(uniq);
 use CXGN::Trial::FieldMap;
+#use Sort::Maker;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -85,6 +86,31 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
 	return;
     }
     $c->stash->{rest} = { message => "Successfully deleted trial data.", success => 1 };
+}
+
+sub trial_phenotypes_fully_uploaded : Chained('trial') PathPart('phenotypes_fully_uploaded') Args(0) ActionClass('REST') {};
+
+sub trial_phenotypes_fully_uploaded_GET   {
+    my $self = shift;
+    my $c = shift;
+    my $trial = $c->stash->{trial};
+    $c->stash->{rest} = { phenotypes_fully_uploaded => $trial->get_phenotypes_fully_uploaded() };
+}
+
+sub trial_phenotypes_fully_uploaded_POST  {
+    my $self = shift;
+    my $c = shift;
+    my $value = $c->req->param("phenotypes_fully_uploaded");
+    my $trial = $c->stash->{trial};
+    eval {
+        $trial->set_phenotypes_fully_uploaded($value);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => "An error occurred setting phenotypes_fully_uploaded: $@" };
+    }
+    else {
+        $c->stash->{rest} = { success => 1 };
+    }
 }
 
 sub trial_details : Chained('trial') PathPart('details') Args(0) ActionClass('REST') {};
@@ -192,25 +218,33 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $group_by_additional = '';
     my $stock_type_id;
     my $rel_type_id;
+    my $total_complete_number;
     if ($display eq 'plots') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+        my $plots = $c->stash->{trial}->get_plots();
+        $total_complete_number = scalar (@$plots);
     }
     if ($display eq 'plants') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+        my $plants = $c->stash->{trial}->get_plants();
+        $total_complete_number = scalar (@$plants);
     }
+    my $stocks_per_accession;
     if ($display eq 'plots_accession') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
         $select_clause_additional = ', accession.uniquename, accession.stock_id';
         $group_by_additional = ', accession.stock_id, accession.uniquename';
+        $stocks_per_accession = $c->stash->{trial}->get_plots_per_accession();
     }
     if ($display eq 'plants_accession') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
         $select_clause_additional = ', accession.uniquename, accession.stock_id';
         $group_by_additional = ', accession.stock_id, accession.uniquename';
+        $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
     }
     my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
@@ -236,7 +270,8 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             AND stock_relationship.type_id=?
             AND plot.type_id=?
             AND accession.type_id=?
-        GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional;");
+        GROUP BY (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, cvterm.cvterm_id $group_by_additional
+        ORDER BY cvterm.name ASC;");
 
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
     $h->execute($c->stash->{trial_id}, $numeric_regex, $rel_type_id, $stock_type_id, $accesion_type_id);
@@ -257,9 +292,15 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
         my @return_array;
         if ($stock_name && $stock_id) {
+            $total_complete_number = scalar (@{$stocks_per_accession->{$stock_id}});
             push @return_array, qq{<a href="/stock/$stock_id/view">$stock_name</a>};
         }
-        push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
+        my $percent_missing = '';
+        if ($total_complete_number){
+            $percent_missing = 100 - sprintf("%.2f", ($count/$total_complete_number)*100)."%";
+        }
+
+        push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, $percent_missing, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
         push @phenotype_data, \@return_array;
     }
 
@@ -409,6 +450,81 @@ sub get_spatial_layout : Chained('trial') PathPart('coords') Args(0) {
     $c->stash->{rest} = $return;
 }
 
+sub retrieve_trial_info :  Path('/ajax/breeders/trial_phenotyping_info') : ActionClass('REST') { }
+sub retrieve_trial_info_POST : Args(0) {
+#sub retrieve_trial_info : chained('trial') Pathpart("trial_phenotyping_info") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->req->param('trial_id');
+
+    my $layout = CXGN::Trial::TrialLayout->new({
+  		schema => $schema,
+  		trial_id => $trial_id
+  	});
+
+  	my $design = $layout-> get_design();
+    #print STDERR Dumper($design);
+
+    my @layout_info;
+  	foreach my $plot_number (keys %{$design}) {
+  		push @layout_info, {
+        plot_id => $design->{$plot_number}->{plot_id},
+  		plot_number => $plot_number,
+  		row_number => $design->{$plot_number}->{row_number},
+  		col_number => $design->{$plot_number}->{col_number},
+  		block_number=> $design->{$plot_number}-> {block_number},
+  		rep_number =>  $design->{$plot_number}-> {rep_number},
+  		plot_name => $design->{$plot_number}-> {plot_name},
+  		accession_name => $design->{$plot_number}-> {accession_name},
+  		plant_names => $design->{$plot_number}-> {plant_names},
+  		};
+        @layout_info = sort { $a->{plot_number} <=> $b->{plot_number} } @layout_info;
+  	}
+
+    #print STDERR Dumper(@layout_info);
+    $c->stash->{rest} = {trial_info => \@layout_info};
+    #$c->stash->{layout_info} = \@layout_info;
+}
+
+
+sub trial_completion_layout_section : Chained('trial') PathPart('trial_completion_layout_section') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $layout_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $plot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property')->cvterm_id();
+    my $block_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'block', 'stock_property')->cvterm_id();
+    my $has_plot_number_check = $schema->resultset('Stock::Stock')->search({'me.type_id'=>$plot_type_id, 'stockprops.type_id'=>$plot_number_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}, 'nd_experiment.type_id'=>$layout_experiment_type_id}, {join=>['stockprops', {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'} } } ], rows=>1 });
+    my $has_block_check = $schema->resultset('Stock::Stock')->search({'me.type_id'=>$plot_type_id, 'stockprops.type_id'=>$block_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}, 'nd_experiment.type_id'=>$layout_experiment_type_id}, {join=>['stockprops', {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'} } } ], rows=>1 });
+    my $has_layout_check = $has_plot_number_check->first && $has_block_check->first ? 1 : 0;
+
+    my $row_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property')->cvterm_id();
+    my $col_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property')->cvterm_id();
+    my $has_row_check = $schema->resultset('Stock::Stock')->search({'me.type_id'=>$plot_type_id, 'stockprops.type_id'=>$row_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}, 'nd_experiment.type_id'=>$layout_experiment_type_id}, {join=>['stockprops', {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'} } } ], rows=>1 });
+    my $has_col_check = $schema->resultset('Stock::Stock')->search({'me.type_id'=>$plot_type_id, 'stockprops.type_id'=>$col_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}, 'nd_experiment.type_id'=>$layout_experiment_type_id}, {join=>['stockprops', {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'} } } ], rows=>1 });
+    my $has_physical_map_check = $has_row_check->first && $has_col_check->first ? 1 : 0;
+
+    $c->stash->{rest} = {has_layout => $has_layout_check, has_physical_map => $has_physical_map_check};
+}
+
+sub trial_completion_phenotype_section : Chained('trial') PathPart('trial_completion_phenotype_section') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $phenotyping_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+    my $has_phenotype_check = $schema->resultset('Phenotype::Phenotype')->search({'stock.type_id'=> [$plot_type_id, $plant_type_id], 'nd_experiment.type_id'=>$phenotyping_experiment_type_id, 'me.value' => { '!=' => ''}, 'project.project_id'=>$c->stash->{trial_id}}, {join=>{'nd_experiment_phenotypes'=>{'nd_experiment'=>[{'nd_experiment_stocks'=>'stock' }, {'nd_experiment_projects'=>'project'}] } }, rows=>1 });
+    my $has_phenotypes = $has_phenotype_check->first ? 1 : 0;
+
+    $c->stash->{rest} = {has_phenotypes => $has_phenotypes};
+}
+
 #sub compute_derive_traits : Path('/ajax/phenotype/delete_field_coords') Args(0) {
 sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
   my $self = shift;
@@ -541,6 +657,10 @@ sub substitute_accession : Chained('trial') PathPart('substitute_accession') Arg
     return;
   }
 
+  my @controls;
+  my @ids, $plot_1_id;
+	@ids, $plot_2_id;
+
   my $fieldmap = CXGN::Trial::FieldMap->new({
     bcs_schema => $schema,
     trial_id => $trial_id,
@@ -551,10 +671,16 @@ sub substitute_accession : Chained('trial') PathPart('substitute_accession') Arg
   });
 
   my $return_error = $fieldmap->update_fieldmap_precheck();
-     if ($return_error) {
-       $c->stash->{rest} = { error => $return_error };
-       return;
-     }
+  if ($return_error) {
+    $c->stash->{rest} = { error => $return_error };
+    return;
+  }
+
+  my $return_check_error = $fieldmap->substitute_accession_precheck();
+  if ($return_check_error) {
+    $c->stash->{rest} = { error => $return_check_error };
+    return;
+  }
 
   my $update_return_error = $fieldmap->substitute_accession_fieldmap();
   if ($update_return_error) {
@@ -576,7 +702,7 @@ sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0)
     }
 
     if (!$plants_per_plot || $plants_per_plot > 50) {
-	$c->stash->{rest} = { error => "Plants per plot number is required and must be smaller than 20." };
+	$c->stash->{rest} = { error => "Plants per plot number is required and must be smaller than 50." };
 	return;
     }
 
@@ -639,12 +765,20 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     my $upload_tempfile  = $upload->tempname;
     my $upload_original_name  = $upload->filename();
     my $md5;
-    my $uploader = CXGN::UploadFile->new();
     my %upload_metadata;
 
     # Store uploaded temporary file in archive
     print STDERR "TEMP FILE: $upload_tempfile\n";
-    my $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $c->user()->roles
+    });
+    my $archived_filename_with_path = $uploader->archive();
 
     if (!$archived_filename_with_path) {
     	$c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};

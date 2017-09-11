@@ -1,0 +1,207 @@
+
+<%args>
+$files
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form' ] &>
+
+<& /page/page_title.mas, title=>'Document Browser' &>
+
+<button class="btn btn-default" id="upload_document_browser_file_link">Upload TSV Document</button>
+<hr>
+
+<table class="table table-bordered" alt="">
+<thead>
+  <tr><th>Select</th><th>Filename</th><th>Date Uploaded</th><th>Uploaded By</th><th>File Type</th><th>Options</th></tr>
+</thead>
+<tbody>
+% foreach my $f (@$files) {
+  <tr>
+    <td><input type="checkbox" name="document_browser_file_select" value="<% $f->[0] %>" /></td>
+    <td><% $f->[4] %></td>
+    <td><% $f->[1] %></td>
+    <td><a href="/solpeople/profile/<% $f->[2] %>"><% $f->[3] %></a></td>
+    <td><% $f->[6] %></td>
+    <td><a href="/breeders/phenotyping/download/<% $f->[0] %>">Download</a></td>
+  </tr>
+% }
+</tbody>
+</table>
+
+<div class="input-group">
+  <input type="text" class="form-control" id="document_browser_search_input" placeholder="Type Search...">
+   <div class="input-group-btn">
+    <button class="btn btn-info" id="document_browser_search_submit"><i class="glyphicon glyphicon-search"></i>Search</button>
+   </div>
+ </div>
+
+<br/>
+<div id="document_browser_search_results"></div>
+
+<div id="document_browser_search_results_selected" style="display:none"></div>
+
+<br/>
+<div id="document_browser_search_results_to_list"></div>
+
+
+
+<div class="modal fade" id="upload_document_browser_file_dialog" name="upload_document_browser_file_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadDocumentDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadDocumentDialog">Upload New Document</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_document_browser_file_form" name="upload_document_browser_file_form">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Select TSV Document: </label>
+                    <div class="col-sm-9" >
+                        <input type="file" id="upload_document_browser_file_input" name="upload_document_browser_file_input" encoding="multipart/form-data" />
+                    </div>
+                </div>
+
+            </form><br/>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" name="upload_document_browser_file_submit" id="upload_document_browser_file_submit" title="Save new document">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="upload_document_browser_file_status_dialog" name="upload_document_browser_file_status_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadDocumentStatusDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadDocumentStatusDialog">Status</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <div id="upload_document_browser_file_status"></div><br/>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+jQuery(document).ready(function() {
+
+    jQuery('#document_browser_search_submit').click( function() {
+        var file_ids = [];
+        jQuery.each(jQuery("input[name='document_browser_file_select']:checked"), function(){
+            file_ids.push(jQuery(this).val());
+        });
+        var search = jQuery('#document_browser_search_input').val();
+        //console.log(file_ids);
+
+        jQuery.ajax({
+            url:'/ajax/tools/documents/search',
+            type: 'POST',
+            data: {
+                'search':search,
+                'file_ids': JSON.stringify(file_ids)
+            },
+            success: function(response){
+                //console.log(response);
+                var html = "<div class='well'><table class='table table-hover table-bordered'><thead><tr><th>Select All<br/><input type='checkbox' id='document_browser_select_all_results' /></th><th>Search Result</th></tr></thead><tbody>";
+                for (var i=0; i<response.found_lines.length; i++){
+                    html = html + "<tr><td><input type='checkbox' name='document_browser_search_result_select' value='"+response.list_elements[i]+"' /></td><td>"+response.found_lines[i]+"</td></tr>";
+                }
+                html = html + "</tbody></table></div>";
+                jQuery('#document_browser_search_results').html(html);
+            },
+            error: function(response){
+                alert("An error occurred "+response);
+            }
+        });
+
+    });
+
+    jQuery(document).on('change', 'input[name="document_browser_search_result_select"]', function() {
+        updateListAdditions();
+    });
+
+    addToListMenu('document_browser_search_results_to_list', 'document_browser_search_results_selected', {
+        listType: 'traits'
+    });
+
+    jQuery('#upload_document_browser_file_link').click( function() {
+        jQuery('#upload_document_browser_file_dialog').modal("show");
+    });
+
+    jQuery('#upload_document_browser_file_submit').click( function() {
+        initializeUpload();
+    });
+    jQuery("#upload_document_browser_file_form").iframePostForm({
+        json: true,
+        post: function () { },
+        timeout: 7200000,
+        complete: function (response) {
+            //console.log(response);
+            hideWorkingModal();
+            if (response.error){
+                jQuery('#upload_document_browser_file_status').html(response.error);
+            } else {
+                jQuery('#upload_document_browser_file_status').html(response.success);
+            }
+            jQuery("#upload_document_browser_file_status_dialog").modal('show');
+        }
+    });
+
+    jQuery(document).on('change', '#document_browser_select_all_results', function(){
+        jQuery('input[name="document_browser_search_result_select"]').each(function(){
+            this.checked = true;
+        });
+        updateListAdditions();
+    });
+
+    jQuery('#upload_document_browser_file_status_dialog').on('hidden.bs.modal', function () {
+        location.reload();
+    });
+
+});
+
+function showWorkingModal(message) {
+    jQuery('#working_msg').html(message);
+    jQuery('#working_modal').modal("show");
+}
+
+function hideWorkingModal() {
+    jQuery('#working_modal').modal("hide");
+}
+
+function initializeUpload() {
+    var uploadFile = jQuery("#upload_document_browser_file_input").val();
+    if (uploadFile === '') {
+        alert("Please select a file");
+    } else {
+        showWorkingModal("Storing File");
+        jQuery("#upload_document_browser_file_form").attr("action", '/ajax/tools/documents/upload');
+        jQuery("#upload_document_browser_file_form").submit();
+    }
+}
+
+function updateListAdditions() {
+    var html = '';
+    jQuery.each(jQuery("input[name='document_browser_search_result_select']:checked"), function(){
+        html = html + jQuery(this).val() + "\n";
+    });
+    //console.log(html);
+    jQuery('#document_browser_search_results_selected').html(html);
+}
+
+</script>

@@ -219,32 +219,49 @@ sub run_dependent_job {
   { 
       my $combine_job = $self->combine_populations();
 
-      sleep 120;
+      sleep 30;
       while (1) 
       {	 
 	  last if !$combine_job->alive();
-	  sleep 120 if $combine_job->alive();
+	  sleep 30 if $combine_job->alive();
       }
      
       $combine_done = 1;
   }
  
- 
   my $modeling_done;
   if ($combine_done || $dependency_type =~ /combine_populations/)
   {
-      sleep 120;
+      sleep 30;
       my $model_job = $self->run_model();
      
       while (1) 
       {	 
 	  last if !$model_job->alive();
-	  sleep 120 if $model_job->alive();
+	  sleep 30 if $model_job->alive();
       } 
       
       $modeling_done = 1;          
-  }  
-  
+  } 
+  elsif ($dependency_type =~ /download_data/)
+  {
+      sleep 30;
+      my $model_job = $self->run_model();
+     
+      while (1) 
+      {	 
+	  last if !$model_job->alive();
+	  sleep 30 if $model_job->alive();
+      } 
+      
+      $modeling_done = 1;          
+  } 
+  else
+  {
+      print STDERR "\nNo depedent job provided. Exiting program.\n";
+      exit();
+  }
+    
    return $modeling_done;
 
 }

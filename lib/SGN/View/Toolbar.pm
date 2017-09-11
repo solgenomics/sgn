@@ -446,7 +446,11 @@ sub default_toolbar_data {
                     link => '/tools/insilicopcr',
                     desc => 'In Silico PCR tool based on BLAST'
                 },
-
+		{
+		    name => 'Tomato Expression Atlas (TEA)',
+		    link =>'http://tea.solgenomics.net/',
+		    desc => 'The Tomato Expression Atlas',
+		},
 		{
 		    name => 'Tomato Expression Database (TED)',
 		    link => '/ted',

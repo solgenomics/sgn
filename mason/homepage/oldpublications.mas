@@ -6,7 +6,7 @@ use CXGN::Tools::File;
 use CXGN::Page;
 
 my $file=File::Spec->catfile($c->get_conf('homepage_files_dir'), 'publications.txt');
-my $page=CXGN::Page->new('SOL Publications','john');
+my $page=CXGN::Page->new('Publications','john');
 
 
 my $publications = qq { <p class="boxbgcolor5"><br />Publications are not available at the moment due to a server problem. We apologize for the inconvenience. Please check back later.<br /><br /></p><br /><br /><br /><br /> };

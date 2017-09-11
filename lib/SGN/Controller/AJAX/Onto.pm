@@ -27,7 +27,11 @@ Lukas Mueller <lam87@cornell.edu>
 package SGN::Controller::AJAX::Onto;
 
 use Moose;
+use SGN::Model::Cvterm;
 use CXGN::Chado::Cvterm;
+use CXGN::Onto;
+use Data::Dumper;
+use JSON;
 
 use namespace::autoclean;
 
@@ -38,6 +42,112 @@ __PACKAGE__->config(
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
    );
+
+=head2 compose_trait
+
+Creates a new term in the designated composed trait cv and links it to component terms through cvterm_relationship
+
+=cut
+
+sub compose_trait: Path('/ajax/onto/store_composed_term') Args(0) {
+
+  my $self = shift;
+  my $c = shift;
+
+  #my @ids = $c->req->param("ids[]");
+  #print STDERR "Ids array for composing in AJAX Onto = @ids\n";
+
+  my $new_trait_names = decode_json $c->req->param("new_trait_names");
+  #print STDERR Dumper $new_trait_names;
+  my $new_terms;
+  eval {
+      my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') } );
+      $new_terms = $onto->store_composed_term($new_trait_names);
+  };
+  if ($@) {
+      $c->stash->{rest} = { error => "An error occurred saving the new trait details: $@" };
+  }
+  else {
+      my $message = '';
+      my @names;
+      foreach (@$new_terms){
+          $message .= 'Saved new trait <a href="/cvterm/'.$_->[0].'/view">'.$_->[1].'</a><br>';
+          push @names, $_->[1];
+      }
+      $c->stash->{rest} = { success => $message,
+                            names => \@names };
+  }
+
+}
+
+=head2 get_trait_from_exact_components
+
+searches for and returns (if found) a composed trait that contains the exact components supplied
+
+=cut
+
+sub get_trait_from_exact_components: Path('/ajax/onto/get_trait_from_exact_components') Args(0) {
+
+  my $self = shift;
+  my $c = shift;
+  my @component_ids = $c->req->param("ids[]");
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+  my $trait_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@component_ids);
+  if (!$trait_id) {
+    $c->stash->{rest} = { error => "No exact matches found."};
+  }
+  else {
+    $c->stash->{rest} = { trait_id => $trait_id };
+  }
+}
+
+=head2 get_trait_from_component_categories
+
+searches for and returns traits that contain one of the ids from each id category supplied
+
+=cut
+
+sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_component_categories') Args(0) {
+
+  my $self = shift;
+  my $c = shift;
+  my @allowed_composed_cvs = split ',', $c->config->{composable_cvs};
+  my $composable_cvterm_delimiter = $c->config->{composable_cvterm_delimiter};
+  my $composable_cvterm_format = $c->config->{composable_cvterm_format};
+  my @object_ids = $c->req->param("object_ids[]");
+  my @attribute_ids = $c->req->param("attribute_ids[]");
+  my @method_ids = $c->req->param("method_ids[]");
+  my @unit_ids = $c->req->param("unit_ids[]");
+  my @trait_ids = $c->req->param("trait_ids[]");
+  my @tod_ids = $c->req->param("tod_ids[]");
+  my @toy_ids = $c->req->param("toy_ids[]");
+  my @gen_ids = $c->req->param("gen_ids[]");
+
+  print STDERR "Obj ids are @object_ids\n Attr ids are @attribute_ids\n Method ids are @method_ids\n unit ids are @unit_ids\n trait ids are @trait_ids\n tod ids are @tod_ids\n toy ids are @toy_ids\n gen ids are @gen_ids\n";
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+  my $traits = SGN::Model::Cvterm->get_traits_from_component_categories($schema, \@allowed_composed_cvs, $composable_cvterm_delimiter, $composable_cvterm_format, {
+      object => \@object_ids,
+      attribute => \@attribute_ids,
+      method => \@method_ids,
+      unit => \@unit_ids,
+      trait => \@trait_ids,
+      tod => \@tod_ids,
+      toy => \@toy_ids,
+      gen => \@gen_ids,
+  });
+
+  if (!$traits) {
+    $c->stash->{rest} = { error => "No matches found."};
+  }
+  else {
+    $c->stash->{rest} = {
+      existing_traits => $traits->{existing_traits},
+      new_traits => $traits->{new_traits}
+    };
+  }
+}
 
 
 =head2 children
@@ -73,9 +183,9 @@ sub children_GET {
         my $child_node = $cvrel_row->subject();
 
         #only report back children of the same cv namespace
-        if ($child_node->cv_id() != $cvterm->cv_id()) {
-            next();
-        }
+      #  if ($child_node->cv_id() != $cvterm->cv_id()) {
+      #      next();
+      #  }
 
         my $responsehash = $self->flatten_node($child_node, $relationship_node);
         push @response_list, $responsehash;

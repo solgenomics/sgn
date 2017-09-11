@@ -19,7 +19,7 @@ jQuery(document).ready(function() {
     jQuery("#brapi_home_trial_search_submit").click(function() {
 
         jQuery.ajax( {
-          'url':  jQuery('#brapi_home_url_select').val()+'/brapi/v1/trials?locationDbId='+jQuery('#brapi_home_trials_locationid').val()+'&programDbId='+jQuery('#brapi_home_trials_programid').val(),
+          'url':  jQuery('#brapi_home_url_select').val()+'/brapi/v1/trials?locationDbIds='+jQuery('#brapi_home_trials_locationid').val()+'&programDbIds='+jQuery('#brapi_home_trials_programid').val(),
           'method': 'GET',
           'success': function(response) {
             console.log(response);

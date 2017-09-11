@@ -27,6 +27,8 @@ sub download {
         $ws->write(0,3,"block_number");
         $ws->write(0,4,"is_a_control");
         $ws->write(0,5,"rep_number");
+        $ws->write(0,6,"row_number");
+        $ws->write(0,7,"col_number");
         
         my $line = 1;
         foreach my $n (sort { $a <=> $b } keys(%$design)) { 
@@ -36,6 +38,8 @@ sub download {
             $ws->write($line, 3, $design->{$n}->{block_number});
             $ws->write($line, 4, $design->{$n}->{is_a_control});
             $ws->write($line, 5, $design->{$n}->{rep_number});
+            $ws->write($line, 6, $design->{$n}->{row_number});
+            $ws->write($line, 7, $design->{$n}->{col_number});
             $line++;
         }    
         $ss->close();
@@ -48,6 +52,8 @@ sub download {
         $ws->write(0,4,"block_number");
         $ws->write(0,5,"is_a_control");
         $ws->write(0,6,"rep_number");
+        $ws->write(0,7,"row_number");
+        $ws->write(0,8,"col_number");
         
         my $line = 1;
         foreach my $n (sort { $a <=> $b } keys(%$design)) { 
@@ -60,6 +66,8 @@ sub download {
                 $ws->write($line, 4, $design->{$n}->{block_number});
                 $ws->write($line, 5, $design->{$n}->{is_a_control});
                 $ws->write($line, 6, $design->{$n}->{rep_number});
+                $ws->write($line, 7, $design->{$n}->{row_number});
+                $ws->write($line, 8, $design->{$n}->{col_number});
                 $line++;
             }
         }    

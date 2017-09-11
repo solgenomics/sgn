@@ -56,7 +56,7 @@ use Data::Dumper;
 use JSON::Any;
 use CXGN::BreederSearch;
 use CXGN::People::Schema;
-use CXGN::Phenotypes::Search;
+use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Genotype::Search;
 
 =head2 people_schema()
@@ -353,20 +353,16 @@ retrieves phenotypes as a listref of listrefs
 
 sub retrieve_phenotypes { 
     my $self = shift;
-    my $phenotypes_search = CXGN::Phenotypes::Search->new({
-        bcs_schema => $self->schema(),
-        trait_list => $self->traits(),
-        trial_list => $self->trials(),
-        accession_list => $self->accessions(),
-        data_level => $self->data_level(),
-	search_type => 'fast',
-    });
-
-    my @data =
-	$phenotypes_search->get_extended_phenotype_info_matrix();
-
+	my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+		search_type=>'MaterializedView',
+		bcs_schema=>$self->schema(),
+		data_level=>$self->data_level(),
+		trait_list=>$self->traits(),
+		trial_list=>$self->trials(),
+		accession_list=>$self->accessions(),
+	);
+	my @data = $phenotypes_search->get_phenotype_matrix();
     return \@data;
-
 }
 
 =head2 retrieve_accessions()

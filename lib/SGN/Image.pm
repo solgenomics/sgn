@@ -315,14 +315,18 @@ sub upload_fieldbook_zipfile {
     my $image_zip = shift;
     my $user_id = shift;
     my $c = $self->config();
+    my $error_status;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $dbh = $schema->storage->dbh;
     my $archived_zip = CXGN::ZipFile->new(archived_zipfile_path=>$image_zip);
     my $file_members = $archived_zip->file_members();
+    if (!$file_members){
+        $error_status = 'Could not read your zipfile. Is is .zip format?</br></br>';
+        return $error_status;
+    }
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
-    my $error_status;
 
     foreach (@$file_members) {
         my $image = SGN::Image->new( $dbh, undef, $c );

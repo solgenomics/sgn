@@ -172,7 +172,7 @@ sub download {
     foreach my $t (@trait_ids) {
         my $trait = CXGN::Trait->new( { bcs_schema=> $schema, cvterm_id => $t });
         $cvinfo{$trait->display_name()} = $trait;
-        print STDERR "**** Trait = " . $trait->display_name . "\n\n";
+        #print STDERR "**** Trait = " . $trait->display_name . "\n\n";
     }
 
     for (my $i = 0; $i < @trait_list; $i++) {

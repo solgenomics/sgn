@@ -7,7 +7,7 @@ use File::Spec;
 
 my $file =File::Spec->catfile($c->get_conf('homepage_files_dir'), "events.txt");
 
-my $news = qq { <p class="boxbgcolor5"><br />The past and present SOL events are currently unavailable due to a server problem. We apologize for any inconvenience. Please check back later.<br /><br /></p><br /><br /> };
+my $news = qq { <p class="boxbgcolor5"><br />The past and present events are currently unavailable due to a server problem. We apologize for any inconvenience. Please check back later.<br /><br /></p><br /><br /> };
 
 eval {
   $news = $m->file($file);
@@ -16,6 +16,6 @@ eval {
 
 </%perl>
 
-<& /page/page_title.mas, title=>'Past and present SOL Events' &>
+<& /page/page_title.mas, title=>'Past and Present Events' &>
 
 <% $news %>

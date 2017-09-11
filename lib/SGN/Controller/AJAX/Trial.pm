@@ -138,7 +138,7 @@ sub generate_experimental_design_POST : Args(0) {
   my $use_same_layout = $c->req->param('use_same_layout');
   my $number_of_checks = scalar(@control_names_crbd);
   #my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
-  if ($design_type eq "RCBD" || $design_type eq "Alpha" || $design_type eq "CRD") {
+  if ($design_type eq "RCBD" || $design_type eq "Alpha" || $design_type eq "CRD" || $design_type eq "Lattice") {
     if (@control_names_crbd) {
         @stock_names = (@stock_names, @control_names_crbd);
     }
@@ -314,7 +314,13 @@ my $location_number = scalar(@locations);
     $c->stash->{rest} = {error => "Could not generate design" };
     return;
   }
-  $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_type);
+  my $design_level;
+  if ($design_type eq 'greenhouse'){
+      $design_level = 'plants';
+  } else {
+      $design_level = 'plots';
+  }
+  $design_layout_view_html = design_layout_view(\%design, \%design_info, $design_level);
   $design_info_view_html = design_info_view(\%design, \%design_info);
   my $design_json = encode_json(\%design);
   push @design_array,  $design_json;
@@ -548,7 +554,7 @@ sub upload_trial_file : Path('/ajax/trial/upload_trial_file') : ActionClass('RES
 sub upload_trial_file_POST : Args(0) {
   my ($self, $c) = @_;
 
-  print STDERR "Check 1: ".localtime();
+  print STDERR "Check 1: ".localtime()."\n";
 
   my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
@@ -562,7 +568,6 @@ sub upload_trial_file_POST : Args(0) {
   my $trial_description = $c->req->param('trial_upload_description');
   my $trial_design_method = $c->req->param('trial_upload_design_method');
   my $upload = $c->req->upload('trial_uploaded_file');
-  my $uploader = CXGN::UploadFile->new();
   my $parser;
   my $parsed_data;
   my $upload_original_name = $upload->filename();
@@ -581,7 +586,7 @@ sub upload_trial_file_POST : Args(0) {
   my $user_name;
   my $error;
 
-  print STDERR "Check 2: ".localtime();
+  print STDERR "Check 2: ".localtime()."\n";
 
   if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
       print STDERR "File name must not have spaces or slashes.\n";
@@ -604,7 +609,16 @@ sub upload_trial_file_POST : Args(0) {
   $user_name = $c->user()->get_object()->get_username();
 
   ## Store uploaded temporary file in archive
-  $archived_filename_with_path = $uploader->archive($c, $subdirectory, $upload_tempfile, $upload_original_name, $timestamp);
+  my $uploader = CXGN::UploadFile->new({
+      tempfile => $upload_tempfile,
+      subdirectory => $subdirectory,
+      archive_path => $c->config->{archive_path},
+      archive_filename => $upload_original_name,
+      timestamp => $timestamp,
+      user_id => $user_id,
+      user_role => $c->user()->roles
+  });
+  $archived_filename_with_path = $uploader->archive();
   $md5 = $uploader->get_md5($archived_filename_with_path);
   if (!$archived_filename_with_path) {
       $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
@@ -612,7 +626,7 @@ sub upload_trial_file_POST : Args(0) {
   }
   unlink $upload_tempfile;
 
-  print STDERR "Check 3: ".localtime();
+  print STDERR "Check 3: ".localtime()."\n";
 
   $upload_metadata{'archived_file'} = $archived_filename_with_path;
   $upload_metadata{'archived_file_type'}="trial upload file";
@@ -647,7 +661,7 @@ sub upload_trial_file_POST : Args(0) {
     return;
   }
 
-  print STDERR "Check 4: ".localtime();
+  print STDERR "Check 4: ".localtime()."\n";
 
   #print STDERR Dumper $parsed_data;
 
@@ -674,7 +688,7 @@ sub upload_trial_file_POST : Args(0) {
       $error = 1;
   };
 
-  print STDERR "Check 5: ".localtime();
+  print STDERR "Check 5: ".localtime()."\n";
 
   if ($error) {return;}
   $c->stash->{rest} = {success => "1",};

@@ -15,32 +15,42 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
 <%args>
 
-$pop_id
+
 $trait_abbr
 $trait_name
-$project_name
-$project_desc
-$stocks_no
-$markers_no
-$traits_no => ''
 $trait_id
-$prediction_pop_id
-$prediction_pop_name => ''
-$owner=>''
+
+$traits_no => ''
+
+$training_pop_id
+$training_pop_name
+$training_pop_desc
+$training_pop_owner
+$training_stocks_cnt => ''
+$training_markers_cnt => ''
+
+$selection_pop_id => ''
+$selection_pop_name => ''
+$selection_pop_desc => ''
+$selection_pop_owner => ''
+$selection_stocks_cnt => ''
+$selection_markers_cnt => ''
+
+$owner => ''
 $protocol
 $top_blups
 $blups_download_url
 $combined_populations => ''
+
+$data_set_type => ''
+
+
 </%args>
 
 <%perl>
 
-$project_name = "<a href=\"/solgs/trait/$trait_id/population/$pop_id\">$project_name</a>";
+my $model_link = "<a href=\"/solgs/trait/$trait_id/population/$training_pop_id\">$training_pop_name</a>";
 
-my $selection_pop_id   = $prediction_pop_id;
-my $selection_pop_name = $prediction_pop_name;
-my $training_pop_id    = $pop_id;
-my $training_pop_name =  $project_name;
 
 </%perl>
 
@@ -55,24 +65,26 @@ my $training_pop_name =  $project_name;
 <link rel="stylesheet" href="/static/css/solgs/solgs.css" type="text/css" />
 
 <& /page/page_title.mas, 
-   title => "GEBVs for $trait_name ($trait_abbr) in $prediction_pop_name"
+   title => "GEBVs for $trait_name ($trait_abbr) in $selection_pop_name"
 &>
 
 <&| /page/info_section.mas, 
   collapsible => 1, 
   collapsed   => 0, 
-  title       => "Training population summary",
+  title       => "Selection population summary",
   &>
 
  <& summary.mas,
-    project_id   => $pop_id,
-    project_name => $project_name,
-    project_desc => $project_desc,
-    stocks_no    => $stocks_no,
-    markers_no   => $markers_no,
+    project_id   => $selection_pop_id,
+    project_name => $selection_pop_name,
+    project_desc => $selection_pop_desc,
+    model_link   => $model_link,
+    stocks_no    => $selection_stocks_cnt,
+    markers_no   => $selection_markers_cnt,
     traits_no    => $traits_no,
+    trait_name   => $trait_name,
     protocol     => $protocol,
-    owner        => $owner,
+    owner        => $selection_pop_owner,
    combined_populations => $combined_populations,
  &>
 
@@ -83,19 +95,17 @@ my $training_pop_name =  $project_name;
 <& /solgs/model/top_blups.mas, 
    top_blups          => $top_blups,
    blups_download_url => $blups_download_url,
-   pop_id             => $pop_id,
-   trait_id           => $trait_id
 &>
 
 
 <& /solgs/population/gebvs_comparison.mas,
    trait_id         => $trait_id,
-   training_pop_id  => $pop_id,
+   training_pop_id  => $training_pop_id,
    selection_pop_id => $selection_pop_id,
 &>
 
 
- <input type="hidden"  id="model_id" value="<% $pop_id %>" /> 
- <input type="hidden"  id="training_pop_id" value="<% $pop_id %>" />
+ <input type="hidden"  id="model_id" value="<% $training_pop_id %>" /> 
+ <input type="hidden"  id="training_pop_id" value="<% $training_pop_id %>" />
  <input type="hidden"  id="trait_id" value="<% $trait_id %>" />
  <input type="hidden"  id="selection_pop_id" value="<% $selection_pop_id %>" />

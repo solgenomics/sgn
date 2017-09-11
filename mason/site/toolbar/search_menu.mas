@@ -1,4 +1,4 @@
-<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown" href="/search/">Search</a>
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown" >Search</a>
   <ul class="dropdown-menu">
     <li><a href="/search/organisms">Organisms</a></li>
     <li><a href="/search/locus">Loci &amp; Genes</a></li>

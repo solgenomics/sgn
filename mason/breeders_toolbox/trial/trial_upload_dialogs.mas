@@ -140,6 +140,7 @@ $locations
                     </table>
 
                     <b>Required fields:</b>
+                    <br/>
                     plot_name (must be unique)
                     <br />
                     accession_name (must exist in the database)

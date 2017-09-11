@@ -1,5 +1,6 @@
 <%args>
 $schema
+$phenotype_files => undef
 </%args>
 
 <& homepage/carousel.mas &>
@@ -71,3 +72,9 @@ $schema
       
   </div>
 </div>
+
+% if ($phenotype_files) {
+     <& homepage/phenotype_uploads.mas, phenotype_files=>$phenotype_files &>
+% }
+
+<& homepage/github_pullrequests.mas &>

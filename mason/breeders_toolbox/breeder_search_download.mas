@@ -19,20 +19,11 @@
                 <label class="col-sm-3 control-label">Format: </label>
                 <div class="col-sm-9" >
                     <select class="form-control" id="download_wizard_phenotypes_format">
-                        <option value="xls">Excel (xls)</option>
                         <option value="csv">CSV</option>
+                        <option value="xls">Excel (xls)</option>
                     </select>
                 </div>
 	        </div>
-            <div class="form-group">
-                <label class="col-sm-3 control-label">Include Timestamps: </label>
-                <div class="col-sm-9" >
-                    <select class="form-control" id="download_wizard_phenotypes_timestamp_option">
-                        <option value="0">No</option>
-                        <option value="1">Yes</option>
-                    </select>
-                </div>
-            </div>
             <div class="form-group">
                 <label class="col-sm-3 control-label">Data Level: </label>
                 <div class="col-sm-9" >
@@ -43,6 +34,19 @@
                     </select>
                 </div>
             </div>
+
+<&| /page/info_section.mas, title=>"Additional Search Options",  collapsible => 1, collapsed=>1 &>
+
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Include Timestamps: </label>
+                <div class="col-sm-9" >
+                    <select class="form-control" id="download_wizard_phenotypes_timestamp_option">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label class="col-sm-3 control-label">Trait Name Contains: </label>
                 <div class="col-sm-9" >
@@ -68,13 +72,16 @@
                     </div>
                 </div>
             </div>
+</&>
+<&| /page/info_section.mas, title=>"Data Not Showing?",  collapsible => 1, collapsed=>1 &>
             <div class="form-group">
                 <label class="col-sm-3 control-label">Download Type: </label>
                 <div class="col-sm-9" >
-                    <label class="radio-inline" title="Optimizes speed using the database cache. May exclude most recently uploaded data."><input type="radio" name="search_type" id="search_type" value="fast" checked>Fast (plots only)</label>
                     <label class="radio-inline" title="Optimizes completeness using an exhaustive search. May result in longer download times."><input type="radio" name="search_type" id="search_type" value="complete">Complete</label>
+                    <label class="radio-inline" title="Optimizes speed using the database cache. May exclude most recently uploaded data."><input type="radio" name="search_type" id="search_type" value="fast" checked>Fast (plots only)</label>
                 </div>
             </div>
+</&>
 
         </form><br/>
 

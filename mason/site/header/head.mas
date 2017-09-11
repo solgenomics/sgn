@@ -17,6 +17,9 @@
   <link rel="stylesheet" type="text/css" href="/css/daterangepicker.css">
   <!-- <link rel="stylesheet" type="text/css" href="/css/dataTables.bootstrap.min.css"> -->
   <link rel="stylesheet" type="text/css" href="/css/buttons/buttons.bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="/css/bootstrap3-xl-class.css">
+
+  <% $c->assets->export() %>
 
 <script language="javascript" type="text/javascript">
    JSAN = {};

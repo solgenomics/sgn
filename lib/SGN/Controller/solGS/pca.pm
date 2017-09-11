@@ -31,11 +31,11 @@ sub check_result :Path('/pca/check/result/') Args(1) {
     $self->pca_scores_file($c);
     my $pca_scores_file = $c->stash->{pca_scores_file};
  
-    my $ret->{result} ='No';
+    my $ret->{result} = undef;
    
     if (-s $pca_scores_file && $pop_id =~ /\d+/) 
     {
-	$ret->{result} = 'yes';                
+	$ret->{result} = 1;                
     }    
 
     $ret = to_json($ret);
@@ -49,20 +49,17 @@ sub check_result :Path('/pca/check/result/') Args(1) {
 sub pca_result :Path('/pca/result/') Args(1) {
     my ($self, $c, $pop_id) = @_;
     
-    $c->stash->{pop_id}   = $pop_id;
-    $c->stash->{model_id} = $pop_id;
-        
+    $c->stash->{pop_id} = $pop_id || $c->req->param('population_id');
+
     my $list_id     = $c->req->param('list_id');
     my $list_type   = $c->req->param('list_type');
     my $list_name   = $c->req->param('list_name');
-    my $pop_list_id = $c->req->param('population_id');
-    print STDERR "\n list id: $list_id -- type: $list_type -- name: $list_name -- pop_list_id: $pop_list_id\n";
+
     if ($list_id) 
     {
-	$c->stash->{pop_id}   = $list_id;
 	$c->stash->{data_set_type} = 'list';
-	$c->stash->{list_id} = $list_id;
-	$c->stash->{list_type} = $list_type;
+	$c->stash->{list_id}       = $list_id;
+	$c->stash->{list_type}     = $list_type;
     }
    
     $self->create_pca_genotype_data($c);
@@ -94,8 +91,7 @@ sub pca_result :Path('/pca/result/') Args(1) {
 	}
 	else 
 	{
-	    $self->run_pca($c);
-	
+	    $self->run_pca($c);	
 	}
     }
     
@@ -152,17 +148,19 @@ sub pca_genotypes_list :Path('/pca/genotypes/list') Args(0) {
     my $list_id   = $c->req->param('list_id');
     my $list_name = $c->req->param('list_name');   
     my $list_type = $c->req->param('list_type');
-
+    my $pop_id    = $c->req->param('population_id');
+   
     $c->stash->{list_name} = $list_name;
     $c->stash->{list_id}   = $list_id;
-    $c->stash->{pop_id}    = $list_id;
+    $c->stash->{pop_id}    = $pop_id;
     $c->stash->{list_type} = $list_type;
 
     $c->stash->{data_set_type} = 'list';
     $self->create_pca_genotype_data($c);
-     
-    my $ret->{status} = 'failed';
+
     my $geno_file = $c->stash->{genotype_file};
+
+    my $ret->{status} = 'failed';
     if (-s $geno_file ) 
     {
         $ret->{status} = 'success';
@@ -189,61 +187,63 @@ sub format_pca_scores {
 
 sub create_pca_genotype_data {    
     my ($self, $c) = @_;
-    
-    my $page = $c->req->referer;
-    my $data_set_type = $c->stash->{data_set_type};
    
-    my $dir = $c->stash->{solgs_cache_dir};
-    
-    if ($page =~ /combined/ ) 
+    my $data_set_type = $c->stash->{data_set_type};
+
+    if ($data_set_type =~ /list/) 
     {
-	my $model_id = $c->req->param('population_id');
-     
-	my $exp = "genotype_data_${model_id}_"; 
-	my ($geno_file) = $c->controller("solGS::solGS")->grep_file($dir, $exp);
+	$self->_pca_list_genotype_data($c);
 	
-	$c->stash->{genotype_file}  = $geno_file;
     }
-    elsif ($data_set_type eq 'list') 
+    else 
     {
-	my $list_id = $c->stash->{list_id};
-	my $list_type = $c->stash->{list_type};
+	$self->_pca_trial_genotype_data($c);
+    }
 
-	my $referer = $c->req->referer;
-	if ($referer =~ /solgs\/trait\/\d+\/population\//) 
+}
+
+
+sub _pca_list_genotype_data {
+    my ($self, $c) = @_;
+    
+    my $list_id = $c->stash->{list_id};
+    my $list_type = $c->stash->{list_type};
+    my $pop_id = $c->stash->{pop_id};
+
+    my $referer = $c->req->referer;
+    my $geno_file;
+    
+    if ($referer =~ /solgs\/trait\/\d+\/population\/|solgs\/selection\//) 
+    {
+	$c->controller('solGS::solGS')->genotype_file_name($c, $pop_id);
+	$geno_file  = $c->stash->{genotype_file_name};
+	$c->stash->{genotype_file} = $geno_file;
+ 
+    }	   
+    else
+    {
+	if ($list_type eq 'accessions') 
 	{
-		my $user_id = $c->user->id;
-       	
-		my $exp = "genotype_data_${user_id}_uploaded_${list_id}";
-		my $dir = $c->stash->{solgs_prediction_upload_dir};
-	
-		my ($geno_file) = $c->controller("solGS::solGS")->grep_file($dir, $exp);
-	
-		$c->stash->{genotype_file} = $geno_file;
-	} 	   
-	elsif ($list_type eq 'accessions') 
-	{
+
+	    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
+	    my @genotypes_list = @{$list->elements};
+
+	    $c->stash->{genotypes_list} = \@genotypes_list;	   
+	    my $geno_data = $c->model('solGS::solGS')->genotypes_list_genotype_data(\@genotypes_list);
 	    
-		my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
-		my @genotypes_list = @{$list->elements};
-
-		$c->stash->{genotypes_list} = \@genotypes_list;
-		$c->model("solGS::solGS")->format_user_list_genotype_data;
-		my $geno_data = $c->stash->{user_selection_list_genotype_data};
-
-		my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
-		my $file = "genotype_data_${list_id}";     
-		$file = $c->controller("solGS::solGS")->create_tempfile($tmp_dir, $file);    
-            
-		write_file($file, $geno_data);
-		$c->stash->{genotype_file} = $file; 
+	    my $tmp_dir = $c->stash->{solgs_prediction_upload_dir};
+	    my $file = "genotype_data_uploaded_${list_id}";     
+	    $file = $c->controller("solGS::solGS")->create_tempfile($tmp_dir, $file);    
+	    
+	    write_file($file, $geno_data);
+	    $c->stash->{genotype_file} = $file; 
 	    
 	} 
 	elsif ( $list_type eq 'trials') 
 	{
 	    my $list = CXGN::List->new( { dbh => $c->dbc()->dbh(), list_id => $list_id });
 	    my @trials_list = @{$list->elements};
-	   
+	
 	    my @genotype_files;
 	    foreach (@trials_list) 
 	    {
@@ -253,37 +253,54 @@ sub create_pca_genotype_data {
 		    ->project_id;
 
 		$c->stash->{pop_id} = $trial_id; 
-	  
-		#$c->controller("solGS::solGS")->genotype_file($c);
-		$self->_pca_genotype_data($c);
+		$self->_pca_trial_genotype_data($c);
 		push @genotype_files, $c->stash->{genotype_file};
 	    }
+
 	    $c->stash->{genotype_files_list} = \@genotype_files;
 	}
-    }
-    else 
-    {
-	$self->_pca_genotype_data($c);
-	#$c->controller("solGS::solGS")->genotype_file($c);
     }
 
 }
 
-sub _pca_genotype_data {
-    my ($self, $c) = @_;
-  	
-    $c->controller("solGS::solGS")->filtered_training_genotype_file($c);
-    my $filtered_geno_file = $c->stash->{filtered_training_genotype_file};
 
-    if (!-s $filtered_geno_file) 
+sub _pca_trial_genotype_data {
+    my ($self, $c) = @_;
+  
+    my $referer = $c->req->referer;
+    my $pop_id = $c->stash->{pop_id};
+
+    my $geno_file;
+ 
+    if ($referer =~ /solgs\/selection\//) 
+    {
+	$c->stash->{selection_pop_id} = $c->stash->{pop_id};	   
+	$c->controller('solGS::solGS')->filtered_selection_genotype_file($c, $pop_id);
+	$geno_file = $c->stash->{filtered_selection_genotype_file};
+    }
+    else
+    {
+	$c->stash->{training_pop_id} = $c->stash->{pop_id};	   
+	$c->controller('solGS::solGS')->filtered_training_genotype_file($c, $pop_id);
+	$geno_file = $c->stash->{filtered_training_genotype_file};
+
+    }
+
+    if (!-s $geno_file) 
+    {
+	$c->controller('solGS::solGS')->genotype_file_name($c, $pop_id);
+	$geno_file = $c->stash->{genotype_file_name};
+    }
+
+    if (-s $geno_file)
+    {    
+	$c->stash->{genotype_file} = $geno_file;
+    }
+    else
     {	
 	$c->controller("solGS::solGS")->genotype_file($c);
     }
-    else 
-    {
-	$c->stash->{genotype_file} = $filtered_geno_file;
-    }
-    
+   
 }
 
 sub create_pca_dir {
@@ -389,7 +406,7 @@ sub run_pca {
     $c->stash->{input_files}  = $geno_file;
     $c->stash->{output_files} = $pca_output_file;
     $c->stash->{r_temp_file}  = "pca-${pop_id}";
-    $c->stash->{r_script}     = 'R/pca.r';
+    $c->stash->{r_script}     = 'R/solGS/pca.r';
 
     $c->controller("solGS::solGS")->run_r_script($c);
     

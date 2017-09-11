@@ -101,6 +101,7 @@ $breeding_programs
                                         <option title="generates completely a randomized design with equal or different repetition, using the methods of random number generation in R." value=CRD>Completely Randomized</option>
                                         <option title="generates Randomized Complete Block Design, using the methods of random number generation in R." value=RCBD>Complete Block</option>
                                         <option title="creates alpha designs starting from the alpha design fixing under the 4 series formulated by Patterson and Williams." value=Alpha>Alpha Lattice</option>
+                                        <option title="SIMPLE and TRIPLE lattice designs. It randomizes treatments in K x K lattice." value=Lattice>Lattice</option>
                                         <option title="some  treatments  (checks)  are  replicate  r  times  and  other  treatments  (new)  are replicated once." value=Augmented>Augmented</option>
                                         <option title="Adjustments are calculated using data from all checks" value=MAD>Modified Augmented Design </option>
                                         <option title="A greenhouse/nursery houses plants in no particular layout design." value="greenhouse" >Nursery/Greenhouse </option>

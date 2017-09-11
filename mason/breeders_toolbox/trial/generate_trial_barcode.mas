@@ -1,0 +1,241 @@
+
+<%args>
+$trial_id => ''
+$trial_name => ''
+$identifier => ''
+</%args>
+
+
+ <& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js'] &>
+
+<div class="modal fade" id="generate_trial_barcode_dialog" name="generate_trial_barcode_dialog" tabindex="-1" role="dialog" aria-labelledby="generateTrialBarcodeDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="generateTrialBarcodeDialog">Generate Stock Barcode</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        Generate barcode for plots and accessions.
+                    </p>
+                        <center>
+                        <div class="well">
+                        <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+                        </div>
+                    <p>
+
+                    <div class="well well-sm">
+                        <div class="row">
+                          <div class="col-md-1 col-lg-1">
+                          </div>
+                          <div class="col-md-10 col-lg-10">
+
+                            <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/stock/download/pdf" >
+
+                             <div class="form-group form-group-sm" >
+                               <label class="col-sm-4 control-label">List of Stock Names: </label>
+                               <div class="col-sm-8" id="trial_accessions">
+                               </div>
+                             </div>
+
+                             <div class="form-group form-group-sm">
+                              <label class="col-sm-4 control-label">Barcode Type: </label>
+                              <div class="col-sm-8">
+                                  <select class="form-control" id="select_barcode_type" name="select_barcode_type">
+                                    <option value="1D">1D Barcode</option>
+                                    <option value="2D">2D Barcode</option>
+                                  </select>
+                              </div>
+                             </div>
+
+                               <div id="2D_fieldbook_option" style="display: none">
+                               <div class="form-group form-group-sm" >
+                                 <label class="col-sm-4 control-label">Enable 2D Barcode For FieldBook: </label>
+                                 <div class="col-sm-8">
+                                   <input type="checkbox" id="enable_fieldbook_2d_barcode" name="enable_fieldbook_2d_barcode" value="enable_fieldbook_2d_barcode" />
+                                 </div>
+                               </div>
+                               </div>
+
+                               <script defer="defer">
+                                jQuery(document).ready(function() {
+
+                                   jQuery(document).on('change', '#select_barcode_type', function () {
+                                       var barcode_type = jQuery("#select_barcode_type").val();
+                                       if (barcode_type == "2D") {
+                                           jQuery("#2D_fieldbook_option").show();
+                                       }
+                                       else if (barcode_type == "1D") {
+                                         jQuery("#2D_fieldbook_option").hide();
+                                       }
+                                   });
+                                });
+                               </script>
+                               
+                               <div class="form-group form-group-sm">
+                                 <label class="col-sm-4 control-label">Printing Format (Optional): </label>
+                                 <div class="col-sm-8">
+                                     <select class="form-control" id="select_print_format" name="select_print_format">
+                                       <option selected disabled>select printing format</option>
+                                       <option value="CASS">CASS printing format</option>
+                                       <option value="MUSA">MUSA printing format</option>
+                                     </select>
+                                 </div>
+                               </div>
+
+                                <div class="form-group form-group-sm">
+                                  <label class="col-sm-4 control-label">Print Duplicate Labels Per Row: </label>
+                                  <div class="col-sm-8">
+                                    <input type="checkbox" name="duplicate_labels_per_row" checked="1" disabled="1" />
+                                  </div>
+                                  </div>
+                                  <!-- <div class="form-group form-group-sm">
+                                    <label class="col-sm-4 control-label">Print Field Information For Plots: </label>
+                                    <div class="col-sm-8">
+                                        <input type="checkbox" name="plots" value="plots" />
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <label class="col-sm-4 control-label">Print Parents For Nurseries: </label>
+                                    <div class="col-sm-8">
+                                        <input type="checkbox" name="nursery" value="nursery" />
+                                    </div>
+                                </div> -->
+                            </div>
+                        </div>
+                        <div class="col-md-1 col-lg-1">
+                        </div>
+                      </div>
+
+                    </p>
+
+                            <& /barcode/printer_settings.mas &>
+                        </center>
+             </div>
+            </div>
+            <div class="modal-footer">
+
+                <button class="btn btn-primary type="submit" type="submit" value="Download Barcodes">Download Barcodes</button>
+                <button id="trial_barcode_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+            </div>
+        </form>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="generate_trial_barcode_button_dialog" name="generate_trial_barcode_button_dialog" tabindex="-1" role="dialog" aria-labelledby="generateTrialBarcodeButtonDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="generateTrialBarcodeButtonDialog">Generate Stock Barcode</h4>
+            </div>
+            <div class="modal-body">
+            <div class="container-fluid">
+                <p>
+                    <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                    Generate barcode for plots and accessions.
+                </p>
+                    <center>
+                    <div class="well">
+                    <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
+                    </div>
+                <p>
+                    <button type="button" class="btn btn-primary" name="trial_plot_barcode" id="trial_plot_barcode">Plots Barcode</button>
+                    <button type="button" class="btn btn-primary" name="trial_plant_barcode" id="trial_plant_barcode">Plants Barcode</button>
+                    <button type="button" class="btn btn-primary" name="trial_accession_barcode" id="trial_accession_barcode">Accessions Barcode</button>
+                </p>
+
+                      </center>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button id="trial_barcode_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+
+          </div>
+      </div>
+  </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#trial_accession_barcode').click(function() {
+
+    	jQuery.ajax ( {
+                url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
+
+    		    success: function(response){
+
+        		var trial_accessions_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
+
+        		for (i=0; i<response.accessions[0].length; i++) {
+        		    trial_accessions_html = trial_accessions_html + response.accessions[0][i].accession_name + "\n";
+        		}
+                trial_accessions_html = trial_accessions_html + "</textarea>";
+        		jQuery('#trial_accessions').empty();
+        		jQuery('#trial_accessions').html(trial_accessions_html);
+        	    },
+        	    error: function(response){
+        		      alert("Error retrieving accessions.");
+        	    }
+        	});
+        });
+
+        jQuery('#trial_plot_barcode').click(function() {
+
+            jQuery.ajax ( {
+                url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plots',
+
+                success: function(response){
+
+                    var trial_plots_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
+                    for (i=0; i<response.plots[0].length; i++) {
+            		    trial_plots_html = trial_plots_html + response.plots[0][i][1] + "\n";
+            		}
+                    trial_plots_html = trial_plots_html + "</textarea>";
+                    jQuery('#trial_accessions').empty();
+            		jQuery('#trial_accessions').html(trial_plots_html);
+            	    },
+            	    error: function(response){
+            		      alert("Error retrieving plots.");
+                }
+            });
+        });
+
+        jQuery('#trial_plant_barcode').click(function() {
+
+            jQuery.ajax ( {
+                url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plants',
+
+                success: function(response){
+
+                if (response.plants == '') {
+                    alert("Trial has no plant entries.");
+                }
+                var trial_plants_html = '<textarea class="form-control" id="stock_names" name="stock_names" >';
+                for (i=0; i<response.plants[0].length; i++) {
+                    trial_plants_html = trial_plants_html + response.plants[0][i][1] + "\n";
+                }
+                trial_plants_html = trial_plants_html + "</textarea>";
+                jQuery('#trial_accessions').empty();
+                jQuery('#trial_accessions').html(trial_plants_html);
+                },
+                error: function(response){
+                    alert("Error retrieving plants.");
+                }
+
+            });
+
+        });
+
+    });
+
+</script>

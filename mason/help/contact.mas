@@ -1,6 +1,8 @@
 <%args>
+$contact_form_human_answer => ''
+$contact_form_human_question => ''
 $website_name => ''
-$captcha_public_key
+$email_address_to_display => ''
 </%args>
 
 <& "/page/page_title.mas", title => "Contact $website_name" &>
@@ -8,56 +10,36 @@ $captcha_public_key
 <div class="container-fluid">
     <div class="well">
 
+    <div id="contact_form_return_message">
+    </div>
+
 % #The form
-<% $ENV{REMOTE_ADDR} %>
-<% ##$captcha_public_key %>
-  <form class="form-horizontal" role="form" method="POST" action="/contact/submit" name="contactForm">
+  <form class="form-horizontal" name="contactForm">
 
 % #Uses Perl to print out the fields with similar HTML tags
 <%perl>
 my $infoNeeded = ["name", "email", "subject", ];
-my $defaultVal = {"name" => $name, "email" => $email, "subject" => $subject};
 </%perl>
 
 % foreach my $info_category (@$infoNeeded) {
     <div class="form-group">
       <label class="col-sm-2 control-label"><% ucfirst $info_category %>* : 
-
-% # If user did not fill out a field and submitted the form, then it will 
-% # show in red letters above the field this field is needed above it. 
-% # Otherwise, the form is filled out normally.
-% unless ($filled{$info_category}) {
-      <p style = "color:red; font-size: 10px;"><% ucfirst $info_category %> is required.</p> 
-% }
       </label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" value="<% $$defaultVal{$info_category} |h%>" name="<% $info_category %>"></input>
+        <input type="text" class="form-control" value="" name="<% $info_category %>"></input>
       </div>
     </div>
 % }
 
     <div class="form-group">
       <label class="col-sm-2 control-label">Body* : 
-
-% unless ($filled{body}) {
-      <p style = "color:red; font-size: 10px;">Message body is required.</p>
-% }
       </label>
       <div class="col-sm-10">
-        <textarea rows="12" class="form-control" name="body"><% $body |h%></textarea>
+        <textarea rows="12" class="form-control" name="body"></textarea>
       </div>
     </div>
     <div class="form-group">
       <label class="col-sm-2 control-label">What is <br/><% $contact_form_human_question %>?* : 
-
-% if (!$contact_form_human_answer_correct) { 
-<font style = "color:red; font-size: 10px;" ><br/>
-% if (!$contact_form_human_answer) { 
-Proving that you are a human being is required.<br /></font>
-% } else { 
-Either you are not human - or you are not very good at math! ;-)<br /></font>
-%    }
-% }
       </label>
       <div class="col-sm-10">
         <input type="text" class="form-control" value="" name="contact_form_human_answer"></input>
@@ -69,21 +51,8 @@ Either you are not human - or you are not very good at math! ;-)<br /></font>
         <h5 valign="middle" style="color:red; font-size:90%; font-style:italic;">Fields Marked With <% '"*"' |h %> Are Required.</h5>
       </div>
     </div>
-    <div class="form-group">
-      <label class="col-sm-2 control-label"></label>
-      <div class="col-sm-10">
-        <script type="text/javascript"
-     	  src="https://www.google.com/recaptcha/api/challenge?k=<% $captcha_public_key %>">
-        </script>
-  	<noscript>
-     	  <iframe src="https://www.google.com/recaptcha/api/noscript?k=<% $captcha_public_key %>" height="300" width="500" frameborder="0"></iframe><br>
-     	  <textarea name="recaptcha_challenge_field" rows="3" cols="40"></textarea>
-     	  <input type="hidden" name="recaptcha_response_field" value="manual_challenge">
-  	</noscript>
-      </div>
-    </div>
     <hr>
-    <button style="float:right" type="submit" class="btn btn-primary btn-lg">Submit</button>
+    <button style="float:right" type="submit" class="btn btn-primary btn-lg" id="contact_form_submit">Submit</button>
     <br/><br/>
 
   </form>
@@ -121,18 +90,94 @@ Either you are not human - or you are not very good at math! ;-)<br /></font>
   </div>   
 </div>
 
+<div class="modal fade" id="submit_contact_form_response" name="submit_contact_form_response" tabindex="-1" role="dialog" aria-labelledby="submitContactResponseDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="submitContactResponseDialog">Contact Form</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="submit_contact_form_response_message">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-<%args>
-  $name                     => ''
-  $email                    => ''
-  $subject                  => ''
-  $body                     => ''
-  %filled                   => (name => 1, email => 1, subject => 1, body => 1)
-  $email_address_to_display => ''
-  $contact_form_human_answer => ''
-  $contact_form_human_question => ''
-  $contact_form_human_answer_correct => 0
-</%args>
-<%once>
-  use CXGN::Page::FormattingHelpers 'info_table_html';
-</%once>
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery('#contact_form_submit').on('click',function (e){ 
+        var subject = jQuery('input[name="subject"]').val();
+        var name = jQuery('input[name="name"]').val();
+        var email = jQuery('input[name="email"]').val();
+        var body = jQuery('textarea[name="body"]').val();
+        var challenge_answer = jQuery('input[name="contact_form_human_answer"]').val();
+        if (challenge_answer != <% $contact_form_human_answer %>){
+            jQuery('#submit_contact_form_response_message').html("Please prove you are a human by answering the simple math question.");
+            jQuery('#submit_contact_form_response').modal('show');
+        } else if (subject == '' || !subject){
+            jQuery('#submit_contact_form_response_message').html("Subject is required. Please fill in this field.");
+            jQuery('#submit_contact_form_response').modal('show');
+        } else if (name == '' || !name){
+            jQuery('#submit_contact_form_response_message').html("Name is required. Please fill in this field.");
+            jQuery('#submit_contact_form_response').modal('show');
+        } else if (email == '' || !email){
+            jQuery('#submit_contact_form_response_message').html("Email is required. Please fill in this field.");
+            jQuery('#submit_contact_form_response').modal('show');
+        } else if (body == '' || !body){
+            jQuery('#submit_contact_form_response_message').html("Body is required. Please fill in this field.");
+            jQuery('#submit_contact_form_response').modal('show');
+        } else {
+            jQuery.ajax ( {
+                url : '/ajax/contact/submit',
+                type: "POST",
+                beforeSend: function(){
+                    jQuery('#working_modal').modal('show');
+                },
+                data: {
+                    "title": subject,
+                    "body": body + '\n\nFrom: ' + name + '\nEmail: ' + email,
+                    "security_answer": <% $contact_form_human_answer %>,
+                    "security_attempt": challenge_answer
+                },
+                success: function(response){
+                    //console.log(response);
+                    jQuery('#working_modal').modal('hide');
+                    var html = '';
+                    var html_return;
+                    if (response.error){
+                        html = response.error;
+                        html_return = '<div class="panel panel-danger"><div class="panel-heading">Error</div><div class="panel-body">'+html+'</div></div>';
+                    } else {
+                        html = "Thank you for your message. We will reply as soon as possible.";
+                        html_return = '<div class="panel panel-success"><div class="panel-heading">Success</div><div class="panel-body">'+html+'</div></div>';
+                    }
+                    jQuery('#contact_form_return_message').html(html_return);
+                    jQuery('#submit_contact_form_response_message').html(html);
+                    jQuery('#submit_contact_form_response').modal('show');
+                },
+                error: function(response){
+                    console.log(response);
+                    jQuery('#working_modal').modal('hide');
+                    var html = "Error posting message! Please contact us. : "+response;
+                    var html_return = '<div class="panel panel-danger"><div class="panel-heading">Error</div><div class="panel-body">'+html+'</div></div>';
+                    jQuery('#contact_form_return_message').html(html_return);
+                    jQuery('#submit_contact_form_response_message').html(html);
+                    jQuery('#submit_contact_form_response').modal('show');
+                }
+            });
+        }
+        e.preventDefault();
+    });
+
+});
+
+</script>

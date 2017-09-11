@@ -15,6 +15,7 @@ sub validate {
     my $filename = shift;
     my $timestamp_included = shift;
     my $data_level = shift;
+    my $schema = shift;
     my @file_lines;
     my $delimiter = ',';
     my $header;
@@ -139,6 +140,10 @@ sub validate {
 sub parse {
     my $self = shift;
     my $filename = shift;
+    my $timestamp_included = shift;
+    my $data_level = shift;
+    my $schema = shift;
+    my $composable_cvterm_format = shift // 'extended';
     my %parse_result;
     my @file_lines;
     my $delimiter = ',';
@@ -193,48 +198,57 @@ sub parse {
 
         if ($worksheet->get_cell($row,0)) {
             $plot_name = $worksheet->get_cell($row,0)->value();
-            $plots_seen{$plot_name} = 1;
-        }
+            if (defined($plot_name)){
+                if ($plot_name ne ''){
+                    $plots_seen{$plot_name} = 1;
 
-        for my $col ($num_col_before_traits .. $col_max) {
-            my $trait_name;
-            if ($worksheet->get_cell(6,$col)) {
-                $trait_name = $worksheet->get_cell(6,$col)->value();
-            }
-            if ($trait_name) {
-                if ($num_predef_col > 0) {
-                    for my $predef_col ($num_fixed_col .. $num_col_before_traits-1) {
-                        #print STDERR $predef_col."\n";
-                        $trait_name = $trait_name.'||'.$worksheet->get_cell($row, $predef_col)->value();
+                    for my $col ($num_col_before_traits .. $col_max) {
+                        my $trait_name;
+                        if ($worksheet->get_cell(6,$col)) {
+                            $trait_name = $worksheet->get_cell(6,$col)->value();
+                            if (defined($trait_name)) {
+                                if ($trait_name ne ''){
+
+                                    if ($num_predef_col > 0) {
+                                        my @component_cvterm_ids;
+                                        for my $predef_col ($num_fixed_col .. $num_col_before_traits-1) {
+                                            if ($worksheet->get_cell($row,$predef_col)){
+                                                my $component_term = $worksheet->get_cell($row, $predef_col)->value();
+                                                #print STDERR $component_term."\n";
+                                                my $component_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $component_term)->cvterm_id();
+                                                push @component_cvterm_ids, $component_cvterm_id;
+                                            }
+                                        }
+                                        my $trait_cvterm_id = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name)->cvterm_id();
+                                        push @component_cvterm_ids, $trait_cvterm_id;
+                                        my $trait_name_cvterm_id = SGN::Model::Cvterm->get_trait_from_exact_components($schema, \@component_cvterm_ids);
+                                        $trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id($schema, $trait_name_cvterm_id, $composable_cvterm_format);
+                                    }
+
+                                    $traits_seen{$trait_name} = 1;
+                                    my $value_string = '';
+
+                                    if ($worksheet->get_cell($row, $col)){
+                                        $value_string = $worksheet->get_cell($row, $col)->value();
+                                    }
+                                    my ($trait_value, $timestamp) = split /,/, $value_string;
+                                    if (!$timestamp) {
+                                        $timestamp = '';
+                                    }
+                                    #print STDERR $trait_value." : ".$timestamp."\n";
+
+                                    if ( defined($trait_value) && defined($timestamp) ) {
+                                        if ($trait_value ne '.'){
+                                            $data{$plot_name}->{$trait_name} = [$trait_value, $timestamp];
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-
-                $traits_seen{$trait_name} = 1;
-                my $value_string = '';
-
-                if ($worksheet->get_cell($row, $col)){
-                    $value_string = $worksheet->get_cell($row, $col)->value();
-                }
-                my ($trait_value, $timestamp) = split /,/, $value_string;
-                if (!$timestamp) {
-                    $timestamp = '';
-                }
-                if (!defined($trait_value)) {
-                    $trait_value = '';
-                }
-                #print STDERR $trait_value." : ".$timestamp."\n";
-
-                if ( defined($trait_value) && defined($timestamp) ) {
-                    if ($trait_value ne '.'){
-                        $data{$plot_name}->{$trait_name} = [$trait_value, $timestamp];
-                    }
-                } else {
-                    $parse_result{'error'} = "Value or timestamp missing.";
-                    return \%parse_result;
-                }
             }
         }
-
     }
 
     foreach my $plot (sort keys %plots_seen) {

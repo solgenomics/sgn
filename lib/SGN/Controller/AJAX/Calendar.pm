@@ -277,7 +277,7 @@ sub day_click_personal_GET {
 	}
     }
 
-    my @calendar_projectprop_names = (['planting_date', 'project_property'], ['harvest_date', 'project_property'], ['Fertilizer Event', 'calendar'], ['Meeting Event', 'calendar'], ['Planning Event', 'calendar'], ['Presentation Event', 'calendar'], ['Phenotyping Event', 'calendar'], ['Genotyping Event', 'calendar'] );
+    my @calendar_projectprop_names = (['project_planting_date', 'project_property'], ['project_harvest_date', 'project_property'], ['Fertilizer Event', 'calendar'], ['Meeting Event', 'calendar'], ['Planning Event', 'calendar'], ['Presentation Event', 'calendar'], ['Phenotyping Event', 'calendar'], ['Genotyping Event', 'calendar'] );
  
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my @projectprop_types;

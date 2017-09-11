@@ -9,7 +9,8 @@ CXGN::Trial::Search - an object to handle searching for trials given criteria
 my $trial_search = CXGN::Trial::Search->new({
     bcs_schema=>$schema,
     location_list=>\@locations,
-    program_list=>\@breeding_programs,
+    program_list=>\@breeding_program_names,
+    program_id_list=>\@breeding_programs_ids,
     year_list=>\@years,
     trial_type_list=>\@trial_types,
     trial_id_list=>\@trial_ids,
@@ -45,8 +46,18 @@ has 'program_list' => (
     is => 'rw',
 );
 
+has 'program_id_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
 has 'location_list' => (
     isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
+has 'location_id_list' => (
+    isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
 
@@ -104,9 +115,17 @@ sub search {
     if ($self->program_list){
         %program_list = map { $_ => 1} @{$self->program_list};
     }
+	my %program_id_list;
+    if ($self->program_id_list){
+        %program_id_list = map { $_ => 1} @{$self->program_id_list};
+    }
     my %location_list;
     if ($self->location_list){
         %location_list = map { $_ => 1} @{$self->location_list};
+    }
+	my %location_id_list;
+    if ($self->location_id_list){
+        %location_id_list = map { $_ => 1} @{$self->location_id_list};
     }
     my %year_list;
     if ($self->year_list){
@@ -142,8 +161,8 @@ sub search {
     my $location_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
     my $year_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id();
     my $design_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')->cvterm_id();
-    my $harvest_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'harvest_date', 'project_property')->cvterm_id();
-    my $planting_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'planting_date', 'project_property')->cvterm_id();
+    my $harvest_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_harvest_date', 'project_property')->cvterm_id();
+    my $planting_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_planting_date', 'project_property')->cvterm_id();
     my $calendar_funcs = CXGN::Calendar->new({});
 
     my $project_type_cv_id = $schema->resultset("Cv::Cv")->find( { name => "project_type" } )->cv_id();
@@ -239,14 +258,15 @@ sub search {
                 $trials{$trial_name}->{design} = $value;
             }
             if ( $type_id == $planting_cvterm_id ) {
-                $trials{$trial_name}->{planting_date} = $calendar_funcs->display_start_date($value);
+                $trials{$trial_name}->{project_planting_date} = $calendar_funcs->display_start_date($value);
             }
             if ( $type_id == $harvest_cvterm_id ) {
-                $trials{$trial_name}->{harvest_date} = $calendar_funcs->display_start_date($value);
+                $trials{$trial_name}->{project_harvest_date} = $calendar_funcs->display_start_date($value);
             }
 
-            #print "$type_id corresponds to project type $trial_types{$type_id}\n";
-            $trials{$trial_name}->{trial_type} = $trial_types{$type_id};
+            if (exists($trial_types{$type_id})){
+                $trials{$trial_name}->{trial_type} = $trial_types{$type_id};
+            }
         }
 
         $trials{$trial_name}->{breeding_program} = $breeding_programs{$trial_id};
@@ -254,14 +274,23 @@ sub search {
     }
 
     foreach my $t ( sort( keys(%trials) ) ) {
+		no warnings 'uninitialized';
 
         if (scalar(keys %location_list)>0){
             next
                 unless ( exists( $location_list{$trials{$t}->{location}->[1]} ) );
         }
+		if (scalar(keys %location_id_list)>0){
+            next
+                unless ( exists( $location_id_list{$trials{$t}->{location}->[0]} ) );
+        }
         if (scalar(keys %program_list)>0){
             next
                 unless ( exists( $program_list{$trials{$t}->{breeding_program}->[1]} ) );
+        }
+		if (scalar(keys %program_id_list)>0){
+            next
+                unless ( exists( $program_id_list{$trials{$t}->{breeding_program}->[0]} ) );
         }
         if (scalar(keys %year_list)>0){
             next
@@ -296,8 +325,8 @@ sub search {
             location_name => $trials{$t}->{location}->[1],
             breeding_program_id => $trials{$t}->{breeding_program}->[0],
             breeding_program_name => $trials{$t}->{breeding_program}->[1],
-            harvest_date => $trials{$t}->{harvest_date},
-            planting_date => $trials{$t}->{planting_date},
+            project_harvest_date => $trials{$t}->{project_harvest_date},
+            project_planting_date => $trials{$t}->{project_planting_date},
             description => $trials{$t}->{trial_description},
             design => $trials{$t}->{design}
         };

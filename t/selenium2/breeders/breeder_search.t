@@ -29,7 +29,7 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-    $t->find_element_ok("c1_data", "id", "select specific trait")->send_keys('dry matter content|CO:0000092');
+    $t->find_element_ok("c1_data", "id", "select specific trait")->send_keys('dry matter content|CO_334:0000092');
 
     sleep(1);
 

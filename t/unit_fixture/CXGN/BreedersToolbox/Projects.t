@@ -32,7 +32,7 @@ ok($bp_project_id);
 
 my ($field_trials, $cross_trials, $genotyping_trials) = $p->get_trials_by_breeding_program($bp_project_id->project_id);
 my @sorted_field_trials = sort {$a->[0] cmp $b->[0]} @$field_trials;
-#print STDERR Dumper \@sorted_field_trials;
+print STDERR Dumper \@sorted_field_trials;
 is_deeply(\@sorted_field_trials, [
           [
             '137',
@@ -53,6 +53,11 @@ is_deeply(\@sorted_field_trials, [
             '144',
             'test_t',
             'test tets'
+          ],
+          [
+            '165',
+            'CASS_6Genotypes_Sampling_2015',
+            'Copy of trial with postcomposed phenotypes from cassbase.'
           ]
         ], 'test get trials');
 #print STDERR Dumper $cross_trials;
@@ -93,18 +98,88 @@ is_deeply(\@sorted_cross_trials, [
             '150',
             'cross_test3',
             'cross_test3'
+          ],
+          [
+            '151',
+            'TestCross1',
+            'TestCross1'
+          ],
+          [
+            '152',
+            'TestCross2',
+            'TestCross2'
+          ],
+          [
+            '153',
+            'TestCross3',
+            'TestCross3'
+          ],
+          [
+            '154',
+            'TestCross4',
+            'TestCross4'
+          ],
+          [
+            '155',
+            'TestCross5',
+            'TestCross5'
+          ],
+          [
+            '156',
+            'TestCross6',
+            'TestCross6'
+          ],
+          [
+            '157',
+            'TestCross7',
+            'TestCross7'
+          ],
+          [
+            '158',
+            'TestCross8',
+            'TestCross8'
+          ],
+          [
+            '159',
+            'TestCross9',
+            'TestCross9'
+          ],
+          [
+            '160',
+            'TestCross10',
+            'TestCross10'
+          ],
+          [
+            '161',
+            'TestCross11',
+            'TestCross11'
+          ],
+          [
+            '162',
+            'TestCross12',
+            'TestCross12'
+          ],
+          [
+            '163',
+            'TestCross13',
+            'TestCross13'
+          ],
+          [
+            '164',
+            'TestCross14',
+            'TestCross14'
           ]
         ], 'test get crosses');
 #print STDERR Dumper $genotyping_trials;
 is_deeply($genotyping_trials, undef, 'test get geno trials');
 
 my $locations = $p->get_locations_by_breeding_program($bp_project_id->project_id);
-#print STDERR Dumper $locations;
+print STDERR Dumper $locations;
 is_deeply($locations,[
           [
             23,
             'test_location',
-            4
+            5
           ]
         ], 'get locations by bp');
 
@@ -122,7 +197,7 @@ is_deeply($all_locations,[
         ], 'get all locations');
 
 my $all_locations = $p->get_locations();
-#print STDERR Dumper $all_locations;
+print STDERR Dumper $all_locations;
 is_deeply($all_locations, [
           [
             23,
@@ -130,7 +205,7 @@ is_deeply($all_locations, [
             undef,
             undef,
             undef,
-            5239
+            5456
           ],
           [
             24,
@@ -143,8 +218,9 @@ is_deeply($all_locations, [
         ], 'get all locations');
 
 my @all_years = $p->get_all_years();
-#print STDERR Dumper \@all_years;
+print STDERR Dumper \@all_years;
 is_deeply(\@all_years, [
+          '2017',
           '2016',
           '2015',
           '2014'

@@ -8,14 +8,16 @@
 <div id="brapi_studies_search_home_div">
 
 <input name="brapi_studies_programDbId" id="brapi_studies_programDbId" class="form-control" type="text" placeholder="ProgramDbId" />
+<input name="brapi_studies_programName" id="brapi_studies_programName" class="form-control" type="text" placeholder="ProgramName" />
 <input name="brapi_studies_locationDbId" id="brapi_studies_locationDbId" class="form-control" type="text" placeholder="LocationDbId" />
-<input name="brapi_studies_seasonDbId" id="brapi_studies_seasonDbId" class="form-control" type="text" placeholder="SeasonDbId" />
-<input name="brapi_studies_studyTypeDbId" id="brapi_studies_studyTypeDbId" class="form-control" type="text" placeholder="StudyTypeDbId" />
+<input name="brapi_studies_locationName" id="brapi_studies_locationName" class="form-control" type="text" placeholder="LocationName" />
+<input name="brapi_studies_studyTypeName" id="brapi_studies_studyTypeName" class="form-control" type="text" placeholder="StudyTypeName" />
 <input name="brapi_studies_studyDbId" id="brapi_studies_studyDbId" class="form-control" type="text" placeholder="StudyDbId" />
-<!--
+<input name="brapi_studies_studyName" id="brapi_studies_studyName" class="form-control" type="text" placeholder="StudyName" />
 <input name="brapi_studies_germplasmDbId" id="brapi_studies_germplasmDbId" class="form-control" type="text" placeholder="GermplasmDbId" />
+<input name="brapi_studies_germplasmName" id="brapi_studies_germplasmName" class="form-control" type="text" placeholder="GermplasmName" />
 <input name="brapi_studies_variableDbId" id="brapi_studies_variableDbId" class="form-control" type="text" placeholder="ObservationVariableDbId" />
--->
+<input name="brapi_studies_variableName" id="brapi_studies_variableName" class="form-control" type="text" placeholder="ObservationVariableName" />
 <button class="btn btn-primary" name="brapi_studies_search_submit" id="brapi_studies_search_submit">Search</button>
 
 <br/><br/>
@@ -34,13 +36,17 @@ jQuery(document).ready(function() {
           'url': jQuery('#brapi_home_url_select').val()+'/brapi/v1/studies-search',
           'method': 'POST',
           'data': { 
-            'programDbId' :  jQuery("#brapi_studies_programDbId").val(),
+            'programDbIds' :  jQuery("#brapi_studies_programDbId").val(),
+            'programNames' :  jQuery("#brapi_studies_programName").val(),
             'locationDbId' : jQuery("#brapi_studies_locationDbId").val(),
-            'seasonDbId' : jQuery("#brapi_studies_seasonDbId").val(),
-            'studyTypeDbId' : jQuery("#brapi_studies_studyTypeDbId").val(),
-            'studyDbId' : jQuery("#brapi_studies_studyDbId").val(),
-            'germplasmDbId' : jQuery("#brapi_studies_germplasmDbId").val(),
-            'observationVariableDbId' : jQuery("#brapi_studies_variableDbId").val(),
+            'locationNames' : jQuery("#brapi_studies_locationName").val(),
+            'studyTypeName' : jQuery("#brapi_studies_studyTypeName").val(),
+            'studyDbIds' : jQuery("#brapi_studies_studyDbId").val(),
+            'studyNames' : jQuery("#brapi_studies_studyName").val(),
+            'germplasmDbIds' : jQuery("#brapi_studies_germplasmDbId").val(),
+            'germplasmNames' : jQuery("#brapi_studies_germplasmName").val(),
+            'observationVariableDbIds' : jQuery("#brapi_studies_variableDbId").val(),
+            'observationVariableNames' : jQuery("#brapi_studies_variableName").val(),
           },
           'success': function(response) {
             console.log(response);

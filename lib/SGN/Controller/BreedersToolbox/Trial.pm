@@ -94,9 +94,14 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{trial_id} = $c->stash->{trial_id};
 
     $c->stash->{has_plant_entries} = $trial->has_plant_entries();
+    $c->stash->{phenotypes_fully_uploaded} = $trial->get_phenotypes_fully_uploaded();
 
     $c->stash->{hidap_enabled} = $c->config->{hidap_enabled};
-    $c->stash->{cassbase_to_cea} = $c->config->{cassbase_to_cea};
+    $c->stash->{has_expression_atlas} = $c->config->{has_expression_atlas};
+    $c->stash->{expression_atlas_url} = $c->config->{expression_atlas_url};
+    $c->stash->{site_project_name} = $c->config->{project_name};
+    $c->stash->{sgn_session_id} = $c->req->cookie('sgn_session_id');
+    $c->stash->{user_name} = $c->user->get_object->get_username;
 
     if ($trial->get_folder) {
       $c->stash->{folder_id} = $trial->get_folder()->project_id();
@@ -104,6 +109,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     }
 
     my $design_type = $trial->get_design_type();
+    $c->stash->{design_name} = $design_type;
 
     if ($design_type eq "genotyping_plate") {
 	if ($format eq "as_table") {

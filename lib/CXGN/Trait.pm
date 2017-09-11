@@ -84,16 +84,31 @@ has 'db'   => ( isa => 'Str',
 		    my $rs = $self->bcs_schema()->resultset("Cv::Cvterm")->search( { cvterm_id => $self->cvterm_id()})->search_related("dbxref")->search_related("db");
 		    if ($rs->count() == 1) { 
 			my $db_name =  $rs->first()->get_column("name");
-			print STDERR "DBNAME = $db_name\n";
+			#print STDERR "DBNAME = $db_name\n";
 			return $db_name;
 		    }
 		    return "";
 			
 		}
     );
-			
 
-has 'definition' => (isa => 'Str',
+has 'db_id'   => (
+	isa => 'Int',
+	is => 'ro',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $rs = $self->cvterm->search_related("dbxref");
+		if ($rs->count() == 1) {
+			my $db_id =  $rs->first()->get_column("db_id");
+			#print STDERR "DBID = $db_id\n";
+			return $db_id;
+		}
+		return "";
+	}
+);
+
+has 'definition' => (isa => 'Maybe[Str]',
 		     is => 'ro',
 		     lazy => 1,
 		     default => sub { 
@@ -123,6 +138,78 @@ has 'format' => (isa => 'Str',
 		 }
     );
 
+has 'default_value' => (
+	isa => 'Str',
+	is => 'ro',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $row = $self->bcs_schema()->resultset("Cv::Cvtermprop")->find(
+			{ cvterm_id => $self->cvterm_id(), 'type.name' => 'trait_default_value' },
+			{ join => 'type'}
+		);
+
+		if ($row) {
+			return $row->value();
+		}
+		return "";
+	}
+);
+
+has 'minimum' => (
+	isa => 'Str',
+	is => 'ro',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $row = $self->bcs_schema()->resultset("Cv::Cvtermprop")->find(
+			{ cvterm_id => $self->cvterm_id(), 'type.name' => 'trait_minimum' },
+			{ join => 'type'}
+		);
+
+		if ($row) {
+			return $row->value();
+		}
+		return "";
+	}
+);
+
+has 'maximum' => (
+	isa => 'Str',
+	is => 'ro',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $row = $self->bcs_schema()->resultset("Cv::Cvtermprop")->find(
+			{ cvterm_id => $self->cvterm_id(), 'type.name' => 'trait_maximum' },
+			{ join => 'type'}
+		);
+
+		if ($row) {
+			return $row->value();
+		}
+		return "";
+	}
+);
+
+has 'categories' => (
+	isa => 'Str',
+	is => 'ro',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $row = $self->bcs_schema()->resultset("Cv::Cvtermprop")->find(
+			{ cvterm_id => $self->cvterm_id(), 'type.name' => 'trait_categories' },
+			{ join => 'type'}
+		);
+
+		if ($row) {
+			return $row->value();
+		}
+		return "";
+	}
+);
+
 has 'associated_plots' => ( isa => 'Str',
 			    is => 'ro',
 			    lazy => 1,
@@ -137,11 +224,11 @@ has 'associated_accessions' =>  ( isa => 'Str',
 
 
 sub BUILD { 
-    print STDERR "BUILDING...\n";
+    #print STDERR "BUILDING...\n";
     my $self = shift;
     my $cvterm = $self->bcs_schema()->resultset("Cv::Cvterm")->find( { cvterm_id => $self->cvterm_id() });
     if ($cvterm) { 
-	print STDERR "Cvterm with ID ".$self->cvterm_id()." was found!\n";
+	#print STDERR "Cvterm with ID ".$self->cvterm_id()." was found!\n";
     }
     $self->cvterm($cvterm);
 }

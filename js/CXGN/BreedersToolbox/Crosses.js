@@ -120,7 +120,13 @@ jQuery(document).ready(function($) {
         var visibleToRole = $("#visible_to_role").val();
         var location = $("#location").val();
         var folder_name = $("#add_cross_folder_name").val();
-        var folder_id = $("#add_cross_folder_id").val();
+        var folder_id;
+        if (folder_name) {  // get id if folder with this name already exisits
+            folder_id = $('#add_cross_folder_id option').filter(function () { return $(this).html() == folder_name; }).val();
+        }
+        else {
+            folder_id = $("#add_cross_folder_id").val();
+        }
         add_cross(crossType, crossName, breeding_program_id, visibleToRole, location, folder_name, folder_id);
 
     });

@@ -4,9 +4,11 @@
 
 This is the SGN test suite, which helps us verify that code is working as it should.
 
-To launch tests: perl t/test_fixture.pl t/selenium2
+Active Testing:
 
-
+perl t/test_fixture.pl t/unit/
+perl t/test_fixture.pl t/unit_fixture/
+perl t/test_fixture.pl t/selenium2/
 
 -----------------------------------------------------------------------------
 #Active Tests
@@ -20,21 +22,42 @@ Unit tests in the Bio::SecreTary::* namespace. These tests do not require a data
 
 Unit tests in the CXGN::* namespace. These tests do not require a database to run.
 
+## t/unit/pod
+
+Tests related to POD documentation. These tests do not require a database to run.
+
 ## t/unit_fixture/CXGN
 
 Unit fixture tests in the CXGN::* namespace. These test run against the fixture database.
+These tests run directly against backend CXGN modules (most often Moose objects).
+
+## t/unit_fixture/SGN
+
+Unit fixture tests in the SGN::* namespace. These test run against the fixture database.
+These tests run directly against backend SGN modules (most often Moose objects).
+
+## t/unit_fixture/Controller
+
+Unit fixture tests in the SGN::Controller::* namespace. These test run against the fixture database.
+These tests run through URL requests to Catalyst::Controller modules.
+
+## t/unit_fixture/AJAX
+
+Unit fixture tests in the SGN::Controller::AJAX::* namespace. These test run against the fixture database.
+These tests run through URL requests to Catalyst::Controller::REST modules.
+
+## t/unit_fixture/Static
+
+These tests check that static files are accessible from web services.
 
 ## t/selenium2
 
 Integration tests, which use selenium2 to launch a web browser.
+These tests are useful for testing client side javascript, but use of these tests has fallen short lately because of the slowness of selenium.
 
 ## t/live
 
 Tests which run tests against live websites.
-
-## t/pod
-
-Tests related to POD documentation.
 
 
 

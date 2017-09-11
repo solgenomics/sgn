@@ -1,0 +1,68 @@
+
+<%args>
+$trial_id => undef
+$trial_name => undef
+</%args>
+
+<div class="modal fade" id="trial_set_phenotypes_fully_loaded_modal" name="trial_set_phenotypes_fully_loaded_modal" tabindex="-1" role="dialog" aria-labelledby="setPhenotypesFullyUploadedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="setPhenotypesFullyUploadedDialog"><% $trial_name %> Phenotypes Fully Uploaded</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">Phenotypes Fully Uploaded?: </label>
+                            <div class="col-sm-6" >
+                                <select class="form-control" id="trial_set_phenotypes_fully_loaded_select">
+                                    <option value="1">Yes</option>
+                                    <option value="0">No</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_trial_set_phenotypes_fully_loaded_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="trial_set_phenotypes_fully_loaded_submit" id="trial_set_phenotypes_fully_loaded_submit" >Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script defer="defer">
+
+jQuery(document).ready(function() {
+    jQuery('#trial_set_phenotypes_fully_link').click(function(){
+        jQuery('#trial_set_phenotypes_fully_loaded_modal').modal('show');
+    });
+    
+    jQuery('#trial_set_phenotypes_fully_loaded_submit').click(function(){
+        var value = jQuery('#trial_set_phenotypes_fully_loaded_select').val();
+        jQuery.ajax( {
+            url: '/ajax/breeders/trial/<% $trial_id %>/phenotypes_fully_uploaded',
+            method: 'POST',
+            data: {
+                'phenotypes_fully_uploaded':value
+            },
+            success: function(response) {
+                if (response.error) {
+                    alert(response.error);
+                }
+                else {
+                    alert('Successfully saved');
+                    location.reload();
+                }
+            },
+            error: function(response) {
+                alert('An error occurred trying to set phenotypes fully uploaded.');
+            }
+        });
+    });
+});
+
+</script>

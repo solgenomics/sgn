@@ -10,6 +10,7 @@ use lib 't/lib';
 use SGN::Test::Fixture;
 
 use Test::More;
+use Data::Dumper;
 #use SGN::Test::WWW::Mechanize;
 
 BEGIN {use_ok('CXGN::Pedigree::AddPedigrees');}
@@ -52,7 +53,9 @@ for my $p ($pedigree, $pedigree2, $pedigree3) {
 
 ok(my $add_pedigrees = CXGN::Pedigree::AddPedigrees->new(schema => $schema, pedigrees => \@pedigrees),"Create object to add pedigrees");
 ok(my $validate_pedigrees = $add_pedigrees->validate_pedigrees(), "Can do validation of pedigrees"); #won't work unless accessions are in the database
-
+ok(!exists($validate_pedigrees->{error}));
+ok(my $add_return = $add_pedigrees->add_pedigrees(), "Can save pedigrees");
+ok(!exists($add_return->{error}));
 
 print STDERR "Now trying a population as a parent... \n";
 
@@ -65,16 +68,22 @@ my $population_row = $test->bcs_schema()->resultset("Stock::Stock")->create(
 	type_id => $population_type_id,
     });
 
-my $open_parent = Bio::GeneticRelationships::Population->new(name => 'test_population');
-my @members = ( 'test_accession3', 'test_accession4');
-$open_parent->set_members(\@members);
+#my $open_parent = Bio::GeneticRelationships::Population->new(name => 'test_population');
+#my @members = ( 'test_accession3', 'test_accession4');
+#$open_parent->set_members(\@members);
+ok(my $open_parent = Bio::GeneticRelationships::Individual->new(name => 'test_population'),"Create individual for pop");
 
-my $open_pedigree = Bio::GeneticRelationships::Pedigree->new(name => 'test_population', cross_type => 'open');
+my $open_pedigree = Bio::GeneticRelationships::Pedigree->new(name => 'test_accession5', cross_type => 'open');
 $open_pedigree->set_female_parent($female_parent3);
 $open_pedigree->set_male_parent($open_parent);
 my $add_open_pedigree = CXGN::Pedigree::AddPedigrees->new(schema=>$schema, pedigrees => [ $open_pedigree ]);
-$add_open_pedigree->validate_pedigrees();
-$add_open_pedigree->add_pedigrees();
-print STDERR "result: $add_open_pedigree\n";
+my $validate_return = $add_open_pedigree->validate_pedigrees();
+print STDERR Dumper $validate_return;
+ok($validate_return);
+ok(!exists($validate_return->{error}));
+my $add_return = $add_open_pedigree->add_pedigrees();
+print STDERR Dumper $add_return;
+ok($add_return);
+ok(!exists($add_return->{error}));
 
 done_testing();

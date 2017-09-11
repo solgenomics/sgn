@@ -9,7 +9,7 @@ use POSIX;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
-use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::Login;
 use CXGN::Trial::TrialCreate;
 use CXGN::Trial::Search;
@@ -17,67 +17,119 @@ use CXGN::Location::LocationLookup;
 use JSON qw( decode_json );
 use Data::Dumper;
 use Try::Tiny;
-use CXGN::Phenotypes::Search;
 use File::Slurp qw | read_file |;
 use Spreadsheet::WriteExcel;
 use Time::Piece;
 
+use CXGN::BrAPI;
+
 BEGIN { extends 'Catalyst::Controller::REST' };
 
 __PACKAGE__->config(
-    default   => 'application/json',
-    stash_key => 'rest',
-    map       => { 'application/json' => 'JSON' },
-   );
+	default   => 'application/json',
+	stash_key => 'rest',
+	map       => { 'application/json' => 'JSON' },
+);
 
-has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
-		      is => 'rw',
-    );
+has 'brapi_module' => (
+	isa => 'CXGN::BrAPI',
+	is => 'rw',
+);
 
-my $DEFAULT_PAGE_SIZE=20;
+has 'bcs_schema' => (
+	isa => 'Bio::Chado::Schema',
+	is => 'rw',
+);
 
-sub pagination_response {
-    my $data_count = shift;
-    my $page_size = shift;
-    my $page = shift;
-    my $total_pages_decimal = $data_count/$page_size;
-    my $total_pages = ($total_pages_decimal == int $total_pages_decimal) ? $total_pages_decimal : int($total_pages_decimal + 1);
-    my %pagination = (pageSize=>$page_size, currentPage=>$page, totalCount=>$data_count, totalPages=>$total_pages);
-    return \%pagination;
-}
+my $DEFAULT_PAGE_SIZE=10;
 
 sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
-    my $self = shift;
-    my $c = shift;
-    my $version = shift;
-    my %status;
+	my $self = shift;
+	my $c = shift;
+	my $version = shift;
+	my @status;
 
-    $self->bcs_schema( $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado') );
-    $c->stash->{api_version} = $version;
-    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
-    $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
-    $c->stash->{status} = \%status;
-    $c->stash->{session_token} = $c->req->param("session_token");
-    $c->stash->{current_page} = $c->req->param("page") || 0;
-    $c->stash->{page_size} = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
+	my $page = $c->req->param("page") || 0;
+	my $page_size = $c->req->param("pageSize") || $DEFAULT_PAGE_SIZE;
+	my $session_token = $c->req->param("session_token");
+	my $bcs_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+	my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+	my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+	my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+	push @status, { 'info' => "BrAPI base call found with page=$page, pageSize=$page_size" };
 
+	my $brapi = CXGN::BrAPI->new({
+		version => $version,
+		brapi_module_inst => {
+			bcs_schema => $bcs_schema,
+			metadata_schema => $metadata_schema,
+			phenome_schema => $phenome_schema,
+			people_schema => $people_schema,
+			page_size => $page_size,
+			page => $page,
+			status => \@status
+		}
+	});
+	$self->brapi_module($brapi);
+	$self->bcs_schema($bcs_schema);
+
+	$c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+	$c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
+	$c->stash->{session_token} = $session_token;
+
+	$c->stash->{clean_inputs} = _clean_inputs($c->req->params);
+}
+
+#useful because javascript can pass 'undef' as an empty value, and also standardizes all inputs as arrayrefs
+sub _clean_inputs {
+	no warnings 'uninitialized';
+	my $params = shift;
+	foreach (keys %$params){
+		my $values = $params->{$_};
+		my $ret_val;
+		if (ref \$values eq 'SCALAR'){
+			push @$ret_val, $values;
+		} elsif (ref $values eq 'ARRAY'){
+			$ret_val = $values;
+		} else {
+			die "Input is not a scalar or an arrayref\n";
+		}
+		@$ret_val = grep {$_ ne undef} @$ret_val;
+		@$ret_val = grep {$_ ne ''} @$ret_val;
+        $_ =~ s/\[\]$//; #ajax POST with arrays adds [] to the end of the name e.g. germplasmName[]. since all inputs are arrays now we can remove the [].
+		$params->{$_} = $ret_val;
+	}
+	return $params;
 }
 
 sub _authenticate_user {
-    my $c = shift;
-    my $status = $c->stash->{status};
+	my $c = shift;
+	my $status = $c->stash->{status};
 
-    my ($person_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
-    #print STDERR $person_id." : ".$user_type." : ".$expired;
+	my ($person_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
+	#print STDERR $person_id." : ".$user_type." : ".$expired;
 
-    if (!$person_id || $expired || $user_type ne 'curator') {
-        $status->{'message'} = 'You must login and have permission to access this BrAPI call.';
-        my %metadata = (status=>$status);
-        $c->stash->{rest} = \%metadata;
-        $c->detach;
-    }
+	if (!$person_id || $expired || $user_type ne 'curator') {
+		$status->{'message'} = 'You must login and have permission to access this BrAPI call.';
+		my %metadata = (status=>$status);
+		$c->stash->{rest} = \%metadata;
+		$c->detach;
+	}
 
-    return 1;
+	return 1;
+}
+
+sub _standard_response_construction {
+	my $c = shift;
+	my $brapi_package_result = shift;
+	my $status = $brapi_package_result->{status};
+	my $pagination = $brapi_package_result->{pagination};
+	my $result = $brapi_package_result->{result};
+	my $datafiles = $brapi_package_result->{datafiles};
+
+	my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
+	my %response = (metadata=>\%metadata, result=>$result);
+	$c->stash->{rest} = \%response;
 }
 
 =head2 /brapi/v1/token
@@ -128,22 +180,12 @@ DELETE Response:
 sub authenticate_token : Chained('brapi') PathPart('token') Args(0) : ActionClass('REST') { }
 
 sub authenticate_token_DELETE {
-    my $self = shift;
-    my $c = shift;
-
-    my $login_controller = CXGN::Login->new($c->dbc->dbh);
-
-    my $status = $c->stash->{status};
-
-    $login_controller->logout_user();
-
-    my %pagination = ();
-    my %result;
-    my @data_files;
-    $status->{'message'} = 'Successfully logged out.';
-    my %metadata = (pagination=>\%pagination, status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Authentication');
+	my $brapi_package_result = $brapi_module->logout();
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 #sub authenticate_token_GET {
@@ -153,56 +195,34 @@ sub authenticate_token_DELETE {
 #}
 
 sub authenticate_token_POST {
-    my $self = shift;
-    my $c = shift;
-    process_authenticate_token($self,$c);
+	my $self = shift;
+	my $c = shift;
+	process_authenticate_token($self,$c);
 }
 
 sub process_authenticate_token {
-    my $self = shift;
-    my $c = shift;
-    my $login_controller = CXGN::Login->new($c->dbc->dbh);
-    my $params = $c->req->params();
+	my $self = shift;
+	my $c = shift;
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Authentication');
+	my $brapi_package_result = $brapi_module->login(
+		$clean_inputs->{grant_type}->[0],
+		$clean_inputs->{password}->[0],
+		$clean_inputs->{username}->[0],
+		$clean_inputs->{client_id}->[0],
+	);
+	my $status = $brapi_package_result->{status};
+	my $pagination = $brapi_package_result->{pagination};
+	my $result = $brapi_package_result->{result};
+	my $datafiles = $brapi_package_result->{datafiles};
 
-    my $status = $c->stash->{status};
-    my $message = '';
-    my $cookie = '';
-    my $first_name = '';
-    my $last_name = '';
-
-    if ( $login_controller->login_allowed() ) {
-        if ($params->{grant_type} eq 'password' || !$params->{grant_type}) {
-            my $login_info = $login_controller->login_user( $params->{username}, $params->{password} );
-            if ($login_info->{account_disabled}) {
-                $message .= 'Account Disabled';
-            }
-            if ($login_info->{incorrect_password}) {
-                $message .= 'Incorrect Password';
-            }
-            if ($login_info->{duplicate_cookie_string}) {
-                $message .= 'Duplicate Cookie String';
-            }
-            if ($login_info->{logins_disabled}) {
-                $message .= 'Logins Disabled';
-            }
-            if ($login_info->{person_id}) {
-                $message .= 'Login Successfull';
-                $cookie = $login_info->{cookie_string};
-                $first_name = $login_info->{first_name};
-                $last_name = $login_info->{last_name};
-            }
-        } else {
-            $message .= 'Grant Type Not Supported. Valid grant type: password';
-        }
-    } else {
-        $message .= 'Login Not Allowed At This Time.';
-    }
-    my %pagination = ();
-    my @data_files;
-    $status->{'message'} = $message;
-    my %metadata = (pagination=>\%pagination, status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, access_token=>$cookie, userDisplayName=>"$first_name $last_name", expires_in=>$CXGN::Login::LOGIN_TIMEOUT);
-    $c->stash->{rest} = \%response;
+	my $first_name = $result->{first_name};
+	my $last_name = $result->{last_name};
+	my $cookie = $result->{cookie};
+	my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
+	my %response = (metadata=>\%metadata, access_token=>$cookie, userDisplayName=>"$first_name $last_name", expires_in=>$CXGN::Login::LOGIN_TIMEOUT);
+	$c->stash->{rest} = \%response;
 }
 
 =head2 /brapi/v1/calls
@@ -265,140 +285,61 @@ sub process_authenticate_token {
 sub calls : Chained('brapi') PathPart('calls') Args(0) : ActionClass('REST') { }
 
 sub calls_GET {
-    my $self = shift;
-    my $c = shift;
-    my $datatype_param = $c->req->param('datatype');
-
-    my $status = $c->stash->{status};
-    my @available = (
-        ['token', ['json'], ['POST','DELETE'] ],
-        ['calls', ['json'], ['GET'] ],
-        ['observationLevels', ['json'], ['GET'] ],
-        ['germplasm-search', ['json'], ['GET','POST'] ],
-        ['germplasm/id', ['json'], ['GET'] ],
-        ['germplasm/id/pedigree', ['json'], ['GET'] ],
-        ['germplasm/id/markerprofiles', ['json'], ['GET'] ],
-        ['germplasm/id/attributes', ['json'], ['GET'] ],
-        ['attributes', ['json'], ['GET'] ],
-        ['attributes/categories', ['json'], ['GET'] ],
-        ['markerprofiles', ['json'], ['GET'] ],
-        ['markerprofiles/id', ['json'], ['GET'] ],
-        ['allelematrix-search', ['json','tsv','csv'], ['GET','POST'] ],
-        ['programs', ['json'], ['GET'] ],
-        ['crops', ['json'], ['GET'] ],
-        ['seasons', ['json'], ['GET','POST'] ],
-        ['studyTypes', ['json'], ['GET','POST'] ],
-        ['trials', ['json'], ['GET','POST'] ],
-        ['trials/id', ['json'], ['GET'] ],
-        ['studies-search', ['json'], ['GET','POST'] ],
-        ['studies/id', ['json'], ['GET'] ],
-        ['studies/id/germplasm', ['json'], ['GET'] ],
-        ['studies/id/table', ['json','csv','xls'], ['GET'] ],
-        ['studies/id/layout', ['json'], ['GET'] ],
-        ['studies/id/observations', ['json'], ['GET'] ],
-        ['phenotypes-search', ['json'], ['GET','POST'] ],
-        ['traits', ['json'], ['GET'] ],
-        ['traits/id', ['json'], ['GET'] ],
-        ['maps', ['json'], ['GET'] ],
-        ['maps/id', ['json'], ['GET'] ],
-        ['maps/id/positions', ['json'], ['GET'] ],
-        ['locations', ['json'], ['GET'] ],
-    );
-
-    my @data;
-    my $start = $c->stash->{page_size}*$c->stash->{current_page};
-    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-    for( my $i = $start; $i <= $end; $i++ ) {
-        if ($available[$i]) {
-            if ($datatype_param) {
-                if( $datatype_param ~~ @{$available[$i]->[1]} ){
-                    push @data, {call=>$available[$i]->[0], datatypes=>$available[$i]->[1], methods=>$available[$i]->[2]};
-                }
-            }
-            else {
-                push @data, {call=>$available[$i]->[0], datatypes=>$available[$i]->[1], methods=>$available[$i]->[2]};
-            }
-        }
-    }
-
-    my $total_count = scalar(@available);
-    my %result = (data=>\@data);
-    my @data_files;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Calls');
+	my $brapi_package_result = $brapi_module->calls(
+		$clean_inputs->{datatype}->[0],
+	);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 sub crops : Chained('brapi') PathPart('crops') Args(0) : ActionClass('REST') { }
 
 sub crops_GET {
-    my $self = shift;
-    my $c = shift;
-    my $status = $c->stash->{status};
-
-    my %pagination = ();
-    my %result = (data=>
-        [$c->config->{'supportedCrop'}]
-    );
-    my @data_files;
-    my %metadata = (pagination=>\%pagination, status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	my $supported_crop = $c->config->{'supportedCrop'};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Crops');
+	my $brapi_package_result = $brapi_module->crops($supported_crop);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 sub observation_levels : Chained('brapi') PathPart('observationLevels') Args(0) : ActionClass('REST') { }
 
 sub observation_levels_GET {
-    my $self = shift;
-    my $c = shift;
-    my $status = $c->stash->{status};
-
-    my %pagination = ();
-    my %result = (data=>
-        ['plant','plot','all']
-    );
-    my @data_files;
-    my %metadata = (pagination=>\%pagination, status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
+	my $brapi_package_result = $brapi_module->observation_levels();
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 sub seasons : Chained('brapi') PathPart('seasons') Args(0) : ActionClass('REST') { }
 
 sub seasons_POST {
-    my $self = shift;
-    my $c = shift;
-    seasons_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	seasons_process($self, $c);
 }
 
 sub seasons_GET {
-    my $self = shift;
-    my $c = shift;
-    seasons_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	seasons_process($self, $c);
 }
 
 sub seasons_process {
-    my $self = shift;
-    my $c = shift;
-    my $status = $c->stash->{status};
-    my @data;
-    my $total_count = 0;
-    my $year_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'project year', 'project_property')->cvterm_id();
-    my $project_years_rs = $self->bcs_schema()->resultset("Project::Project")->search_related('projectprops', {'projectprops.type_id'=>$year_cvterm_id}, {order_by=>'projectprops.projectprop_id'});
-    my $rs_slice = $project_years_rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
-    while (my $p_year = $rs_slice->next()) {
-        push @data, {
-            seasonsDbId=>$p_year->projectprop_id(),
-            season=>'',
-            year=>$p_year->value()
-        }
-    }
-    my %result = (data=>\@data);
-    $total_count = $project_years_rs->count();
-    my @data_files;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+	my $brapi_package_result = $brapi_module->seasons();
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -438,38 +379,24 @@ sub seasons_process {
 sub study_types : Chained('brapi') PathPart('studyTypes') Args(0) : ActionClass('REST') { }
 
 sub study_types_POST {
-    my $self = shift;
-    my $c = shift;
-    study_types_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	study_types_process($self, $c);
 }
 
 sub study_types_GET {
-    my $self = shift;
-    my $c = shift;
-    study_types_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	study_types_process($self, $c);
 }
 
 sub study_types_process {
-    my $self = shift;
-    my $c = shift;
-    my $status = $c->stash->{status};
-    my @data;
-    my $total_count = 0;
-    my $project_rs = $self->bcs_schema()->resultset("Cv::Cv")->search_related('cvterms', {'me.name'=>'project_type'}, {order_by=>'cvterms.cvterm_id'});
-    my $rs_slice = $project_rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
-    while (my $pp = $rs_slice->next()) {
-        push @data, {
-            studyTypeDbId=>$pp->cvterm_id(),
-            name=>$pp->name(),
-            description=>$pp->definition(),
-        }
-    }
-    my %result = (data=>\@data);
-    $total_count = $project_rs->count();
-    my @data_files;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+	my $brapi_package_result = $brapi_module->study_types();
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -544,155 +471,38 @@ POST Response:
 
 =cut
 
-sub germplasm_synonyms {
-    my $schema = shift;
-    my $stock_id = shift;
-    my $synonym_id = shift;
-    my @synonyms;
-    my $rsp = $schema->resultset("Stock::Stockprop")->search({type_id => $synonym_id, stock_id=>$stock_id });
-    while (my $stockprop = $rsp->next()) {
-        push( @synonyms, $stockprop->value() );
-    }
-    return \@synonyms;
-}
-
-sub germplasm_pedigree_string {
-    my $schema = shift;
-    my $stock_id = shift;
-    my $s = CXGN::Chado::Stock->new($schema, $stock_id);
-    my $pedigree_root = $s->get_parents('1');
-    my $pedigree_string = $pedigree_root->get_pedigree_string('1');
-    return $pedigree_string;
-}
-
 sub germplasm_list  : Chained('brapi') PathPart('germplasm-search') Args(0) : ActionClass('REST') { }
 
 sub germplasm_list_GET {
-    my $self = shift;
-    my $c = shift;
-    germplasm_search_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	germplasm_search_process($self, $c);
 }
 
 sub germplasm_list_POST {
-    my $self = shift;
-    my $c = shift;
-    germplasm_search_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	germplasm_search_process($self, $c);
 }
 
 sub germplasm_search_process {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $params = $c->req->params();
-
-    my $status = $c->stash->{status};
-    my $message = '';
-
-    my @germplasm_names = $params->{germplasmName};
-    @germplasm_names = grep {$_ ne undef} @germplasm_names;
-    my @accession_numbers = $params->{accessionNumber};
-    @accession_numbers = grep {$_ ne undef} @accession_numbers;
-    my $genus = $params->{germplasmGenus};
-    my $subtaxa = $params->{germplasmSubTaxa};
-    my $species = $params->{germplasmSpecies};
-    my @germplasm_ids = $params->{germplasmDbId};
-    @germplasm_ids = grep {$_ ne undef} @germplasm_ids;
-    my $permplasm_pui = $params->{germplasmPUI};
-    my $match_method = $params->{matchMethod};
-    my %result;
-
-    if ($match_method && ($match_method ne 'exact' && $match_method ne 'wildcard')) {
-        $message .= "matchMethod '$match_method' not recognized. Allowed matchMethods: wildcard, exact. Wildcard allows % or * for multiple characters and ? for single characters.";
-        $status->{'message'} = $message;
-        $c->stash->{rest} = {
-            metadata => { pagination=>{}, status => $status, datafiles=>[] },
-            result => \%result,
-        };
-        $c->detach;
-    }
-    my $total_count = 0;
-
-    my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
-    my %search_params;
-    my %order_params;
-
-    $search_params{'me.type_id'} = $accession_type_cvterm_id;
-    $order_params{'-asc'} = 'me.stock_id';
-
-    if (@germplasm_names && scalar(@germplasm_names)>0){
-        if (!$match_method || $match_method eq 'exact') {
-            $search_params{'me.uniquename'} = \@germplasm_names;
-        } elsif ($match_method eq 'wildcard') {
-            my @wildcard_names;
-            foreach (@germplasm_names) {
-                $_ =~ tr/*?/%_/;
-                push @wildcard_names, $_;
-            }
-            $search_params{'me.uniquename'} = { 'ilike' => \@wildcard_names };
-        }
-    }
-
-    if (@germplasm_ids && scalar(@germplasm_ids)>0){
-        if (!$match_method || $match_method eq 'exact') {
-            $search_params{'me.stock_id'} = \@germplasm_ids;
-        } elsif ($match_method eq 'wildcard') {
-            my @wildcard_ids;
-            foreach (@germplasm_ids) {
-                $_ =~ tr/*?/%_/;
-                push @wildcard_ids, $_;
-            }
-            $search_params{'me.stock_id::varchar(255)'} = { 'ilike' => \@wildcard_ids };
-        }
-    }
-
-    #print STDERR Dumper \%search_params;
-    #$self->bcs_schema->storage->debug(1);
-    my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'stock_synonym', 'stock_property')->cvterm_id();
-    my %extra_params = ('+select'=>['me.uniquename'], '+as'=>['accession_number'], 'order_by'=> \%order_params);
-    if (@accession_numbers && scalar(@accession_numbers)>0) {
-        $search_params{'stockprops.type_id'} = $synonym_id;
-        $search_params{'stockprops.value'} = \@accession_numbers;
-        %extra_params = ('join'=>{'stockprops'}, '+select'=>['stockprops.value'], '+as'=>['accession_number'], 'order_by'=> \%order_params);
-    }
-    my $rs = $self->bcs_schema()->resultset("Stock::Stock")->search( \%search_params, \%extra_params );
-
-    my @data;
-    if ($rs) {
-        $total_count = $rs->count();
-        my $rs_slice = $rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
-        while (my $stock = $rs_slice->next()) {
-            push @data, {
-                germplasmDbId=>$stock->stock_id,
-                defaultDisplayName=>$stock->uniquename,
-                germplasmName=>$stock->uniquename,
-                accessionNumber=>$stock->get_column('accession_number'),
-                germplasmPUI=>$c->config->{main_production_site_url}."/stock/".$stock->stock_id."/view",
-                pedigree=>germplasm_pedigree_string($self->bcs_schema(), $stock->stock_id),
-                germplasmSeedSource=>'',
-                synonyms=>germplasm_synonyms($self->bcs_schema(), $stock->stock_id, $synonym_id),
-                commonCropName=>$stock->search_related('organism')->first()->common_name(),
-                instituteCode=>'',
-                instituteName=>'',
-                biologicalStatusOfAccessionCode=>'',
-                countryOfOriginCode=>'',
-                typeOfGermplasmStorageCode=>'Not Stored',
-                genus=>$stock->search_related('organism')->first()->genus(),
-                species=>$stock->search_related('organism')->first()->species(),
-                speciesAuthority=>'',
-                subtaxa=>'',
-                subtaxaAuthority=>'',
-                donors=>[],
-                acquisitionDate=>'',
-            };
-        }
-    }
-
-    %result = (data => \@data);
-    $status->{'message'} = $message;
-    my @data_files;
-    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+	my $brapi_package_result = $brapi_module->germplasm_search({
+		germplasmName => $clean_inputs->{germplasmName},
+		accessionNumber => $clean_inputs->{accessionNumber},
+		germplasmGenus => $clean_inputs->{germplasmGenus},
+		germplasmSubTaxa => $clean_inputs->{germplasmSubTaxa},
+		germplasmSpecies => $clean_inputs->{germplasmSpecies},
+		germplasmDbId => $clean_inputs->{germplasmDbId},
+		germplasmPUI => $clean_inputs->{germplasmPUI},
+		matchMethod => $clean_inputs->{matchMethod},
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -723,70 +533,33 @@ sub germplasm_search_process {
 =cut
 
 sub germplasm_single  : Chained('brapi') PathPart('germplasm') CaptureArgs(1) {
-    my $self = shift;
-    my $c = shift;
-    my $stock_id = shift;
+	my $self = shift;
+	my $c = shift;
+	my $stock_id = shift;
 
-    $c->stash->{stock_id} = $stock_id;
-    $c->stash->{stock} = CXGN::Chado::Stock->new($self->bcs_schema(), $stock_id);
+	$c->stash->{stock_id} = $stock_id;
 }
 
 
 sub germplasm_detail  : Chained('germplasm_single') PathPart('') Args(0) : ActionClass('REST') { }
 
 sub germplasm_detail_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status=>$status};
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 }
 
 sub germplasm_detail_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $rs = $c->stash->{stock};
-    my $schema = $self->bcs_schema();
-    my $status = $c->stash->{status};
-
-    my $total_count = 0;
-    if ($c->stash->{stock}) {
-        $total_count = 1;
-    }
-
-    my %result;
-    my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'stock_synonym', 'stock_property')->cvterm_id();
-
-    %result = (
-        germplasmDbId=>$c->stash->{stock_id},
-        defaultDisplayName=>$c->stash->{stock}->get_name(),
-        germplasmName=>$c->stash->{stock}->get_uniquename(),
-        accessionNumber=>$c->stash->{stock}->get_uniquename(),
-        germplasmPUI=>$c->stash->{stock}->get_uniquename(),
-        pedigree=>germplasm_pedigree_string($self->bcs_schema(), $c->stash->{stock_id}),
-        germplasmSeedSource=>'',
-        synonyms=>germplasm_synonyms($schema, $c->stash->{stock_id}, $synonym_id),
-        commonCropName=>$c->stash->{stock}->get_organism->common_name(),
-        instituteCode=>'',
-        instituteName=>'',
-        biologicalStatusOfAccessionCode=>'',
-        countryOfOriginCode=>'',
-        typeOfGermplasmStorageCode=>'Not Stored',
-        genus=>$c->stash->{stock}->get_organism->genus(),
-        species=>$c->stash->{stock}->get_organism->species(),
-        speciesAuthority=>'',
-        subtaxa=>'',
-        subtaxaAuthority=>'',
-        donors=>[],
-        acquisitionDate=>'',
-    );
-
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+	my $brapi_package_result = $brapi_module->germplasm_detail(
+		$c->stash->{stock_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 =head2 brapi/v1/germplasm/{id}/MCPD
@@ -1014,253 +787,98 @@ sub studies_search  : Chained('brapi') PathPart('studies-search') Args(0) : Acti
 #}
 
 sub studies_search_POST {
-    my $self = shift;
-    my $c = shift;
-    studies_search_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	studies_search_process($self, $c);
 }
 
 sub studies_search_GET {
-    my $self = shift;
-    my $c = shift;
-    studies_search_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	studies_search_process($self, $c);
 }
 
 sub studies_search_process {
-    my $self = shift;
-    my $c = shift;
-    my $schema = $self->bcs_schema;
-    #my $auth = _authenticate_user($c);
-    my @program_names = $c->req->param("programNames");
-    @program_names = grep {$_ ne undef} @program_names;
-    my @study_names = $c->req->param("studyNames");
-    @study_names = grep {$_ ne undef} @study_names;
-    my @location_names = $c->req->param("studyLocations");
-    @location_names = grep {$_ ne undef} @location_names;
-    my $study_type = $c->req->param("studyType");
-    my @study_type_list;
-    if ($study_type && $study_type ne 'undef'){
-        push @study_type_list, $study_type;
-    }
-    #my @germplasm_ids = $c->req->param("germplasmDbIds");
-    #my @variable_ids = $c->req->param("observationVariableDbIds");
-    #my $sort_by = $c->req->param("sortBy");
-    #my $sort_order = $c->req->param("sortOrder");
-    my $status = $c->stash->{status};
-    #$self->bcs_schema->storage->debug(1);
-
-    my $trial_search = CXGN::Trial::Search->new({
-        bcs_schema=>$schema,
-        location_list=>\@location_names,
-        trial_type_list=>\@study_type_list,
-        trial_name_list=>\@study_names,
-        trial_name_is_exact=>1,
-        program_list=>\@program_names
-    });
-    my $data = $trial_search->search();
-    my @data_window;
-    my $start = $c->stash->{page_size}*$c->stash->{current_page};
-    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-    for( my $i = $start; $i <= $end; $i++ ) {
-        if (@$data[$i]) {
-            my %additional_info = (
-                design => @$data[$i]->{design},
-                description => @$data[$i]->{description},
-            );
-            my %data_obj = (
-                studyDbId => @$data[$i]->{trial_id},
-                studyName => @$data[$i]->{trial_name},
-                trialDbId => @$data[$i]->{folder_id},
-                trialName => @$data[$i]->{folder_name},
-                studyType => @$data[$i]->{trial_type},
-                seasons => [@$data[$i]->{year}],
-                locationDbId => @$data[$i]->{location_id},
-                locationName => @$data[$i]->{location_name},
-                programDbId => @$data[$i]->{breeding_program_id},
-                programName => @$data[$i]->{breeding_program_name},
-                startDate => @$data[$i]->{harvest_date},
-                endDate => @$data[$i]->{planting_date},
-                active=>'',
-                additionalInfo=>\%additional_info
-            );
-            push @data_window, \%data_obj;
-        }
-    }
-    #print STDERR Dumper \@data_window;
-
-    my %result = (data=>\@data_window);
-    my $total_count = scalar(@$data);
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+	my $brapi_package_result = $brapi_module->studies_search({
+		programDbIds => $clean_inputs->{programDbId},
+		programNames => $clean_inputs->{programName},
+		studyDbIds => $clean_inputs->{studyDbId},
+		studyNames => $clean_inputs->{studyName},
+		studyLocationDbIds => $clean_inputs->{locationDbId},
+		studyLocationNames => $clean_inputs->{locationName},
+		studyTypeName => $clean_inputs->{studyType},
+		germplasmDbIds => $clean_inputs->{germplasmDbId},
+		germplasmNames => $clean_inputs->{germplasmName},
+		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
+		observationVariableNames => $clean_inputs->{observationVariableName},
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 #BrAPI Trials are modeled as Folders
 sub trials_list  : Chained('brapi') PathPart('trials') Args(0) : ActionClass('REST') { }
 
 sub trials_list_GET {
-    my $self = shift;
-    my $c = shift;
-    trials_search_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	trials_search_process($self, $c);
 }
 
 sub trials_list_POST {
-    my $self = shift;
-    my $c = shift;
-    trials_search_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	trials_search_process($self, $c);
 }
 
 sub trials_search_process {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $params = $c->req->params();
-
-    my $status = $c->stash->{status};
-    my $message = '';
-
-    my $location_id = $params->{locationDbId};
-    my $program_id = $params->{programDbId};
-    my $active = $params->{active};
-    my %result;
-    my $total_count = 0;
-
-    my $folder_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'trial_folder', 'project_property')->cvterm_id();
-    my $folder_rs = $self->bcs_schema()->resultset("Project::Project")->search_related('projectprops', {'projectprops.type_id'=>$folder_cvterm_id});
-
-    my @folder_studies;
-    my %additional_info;
-    my @data;
-    if ($folder_rs) {
-        $total_count = $folder_rs->count();
-        my $rs_slice = $folder_rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
-        while (my $p = $rs_slice->next()) {
-            my $folder = CXGN::Trial::Folder->new({bcs_schema=>$self->bcs_schema, folder_id=>$p->project_id});
-            if ($folder->is_folder) {
-                my $children = $folder->children();
-                foreach (@$children) {
-                    if ($location_id) {
-                        if ($location_id == $_->location_id) {
-                            push @folder_studies, {
-                                studyDbId=>$_->folder_id,
-                                studyName=>$_->name,
-                                locationDbId=>$_->location_id
-                            };
-                        }
-                    } else {
-                        push @folder_studies, {
-                            studyDbId=>$_->folder_id,
-                            studyName=>$_->name,
-                            locationDbId=>$_->location_id
-                        };
-                    }
-                }
-
-                if ($program_id) {
-                    if ($program_id == $folder->breeding_program->project_id) {
-                        push @data, {
-                            trialDbId=>$folder->folder_id,
-                            trialName=>$folder->name,
-                            programDbId=>$folder->breeding_program->project_id(),
-                            programName=>$folder->breeding_program->name(),
-                            startDate=>'',
-                            endDate=>'',
-                            active=>'',
-                            studies=>\@folder_studies,
-                            additionalInfo=>\%additional_info
-                        };
-                    }
-                } else {
-                    push @data, {
-                        trialDbId=>$folder->folder_id,
-                        trialName=>$folder->name,
-                        programDbId=>$folder->breeding_program->project_id(),
-                        programName=>$folder->breeding_program->name(),
-                        startDate=>'',
-                        endDate=>'',
-                        active=>'',
-                        studies=>\@folder_studies,
-                        additionalInfo=>\%additional_info
-                    };
-                }
-            }
-        }
-    }
-
-    %result = (data => \@data);
-    $status->{'message'} = $message;
-    my @data_files;
-    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Trials');
+	my $brapi_package_result = $brapi_module->trials_search({
+		locationDbIds => $clean_inputs->{locationDbId},
+		programDbIds => $clean_inputs->{programDbId},
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
 sub trials_single  : Chained('brapi') PathPart('trials') CaptureArgs(1) {
-    my $self = shift;
-    my $c = shift;
-    my $folder_id = shift;
+	my $self = shift;
+	my $c = shift;
+	my $folder_id = shift;
 
-    $c->stash->{trial_id} = $folder_id;
-    $c->stash->{trial} = CXGN::Trial::Folder->new(bcs_schema=>$self->bcs_schema(), folder_id=>$folder_id);
+	$c->stash->{trial_id} = $folder_id;
 }
 
 
 sub trials_detail  : Chained('trials_single') PathPart('') Args(0) : ActionClass('REST') { }
 
 sub trials_detail_POST {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status=>$status};
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 }
 
 sub trials_detail_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $folder = $c->stash->{trial};
-    my $schema = $self->bcs_schema();
-    my $status = $c->stash->{status};
-    my $message = '';
-
-    my $total_count = 0;
-
-    my %result;
-    if ($folder->is_folder) {
-        $total_count = 1;
-        my @folder_studies;
-        my %additional_info;
-        my $children = $folder->children();
-        foreach (@$children) {
-            push @folder_studies, {
-                studyDbId=>$_->folder_id,
-                studyName=>$_->name,
-                locationDbId=>$_->location_id
-            };
-        }
-        %result = (
-            trialDbId=>$folder->folder_id,
-            trialName=>$folder->name,
-            programDbId=>$folder->breeding_program->project_id(),
-            programName=>$folder->breeding_program->name(),
-            startDate=>'',
-            endDate=>'',
-            active=>'',
-            studies=>\@folder_studies,
-            additionalInfo=>\%additional_info
-        );
-    } else {
-        $message .= 'The given trialDbId does not match an actual trial.';
-    }
-
-    my @datafiles;
-    $status->{'message'} = $message;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Trials');
+	my $brapi_package_result = $brapi_module->trial_details(
+		$c->stash->{trial_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 =head2 brapi/v1/studies/{studyId}/germplasm?pageSize=20&page=1
@@ -1313,80 +931,42 @@ sub trials_detail_GET {
 =cut
 
 sub studies_single  : Chained('brapi') PathPart('studies') CaptureArgs(1) {
-    my $self = shift;
-    my $c = shift;
-    my $study_id = shift;
+	my $self = shift;
+	my $c = shift;
+	my $study_id = shift;
 
-    $c->stash->{study_id} = $study_id;
-    my $t = CXGN::Trial->new( { trial_id => $study_id, bcs_schema => $self->bcs_schema } );
-    $c->stash->{study} = $t;
-    $c->stash->{studyName} = $t->get_name();
+	$c->stash->{study_id} = $study_id;
 }
 
 
 sub studies_germplasm : Chained('studies_single') PathPart('germplasm') Args(0) : ActionClass('REST') { }
 
 sub studies_germplasm_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
+	my $self = shift;
+	my $c = shift;
+	my $auth = _authenticate_user($c);
 
-    my $metadata = $c->req->params("metadata");
-    my $result = $c->req->params("result");
-    my %metadata_hash = %$metadata;
-    my %result_hash = %$result;
+	my $metadata = $c->req->params("metadata");
+	my $result = $c->req->params("result");
+	my %metadata_hash = %$metadata;
+	my %result_hash = %$result;
 
-    print STDERR Dumper($metadata);
-    print STDERR Dumper($result);
+	#print STDERR Dumper($metadata);
+	#print STDERR Dumper($result);
 
-    my $pagintation = $metadata_hash{"pagination"};
-
-    $c->stash->{rest} = {status=>$status};
+	my $pagintation = $metadata_hash{"pagination"};
 }
 
 sub studies_germplasm_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my %result;
-    my $status = $c->stash->{status};
-    my $total_count = 0;
-
-    my $synonym_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'stock_synonym', 'stock_property')->cvterm_id();
-    my $tl = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $c->stash->{study_id} });
-    my $accessions = $tl->get_accessions();
-    my @germplasm_data;
-
-    if ($accessions) {
-        $total_count = scalar(@$accessions);
-        my $start = $c->stash->{page_size}*$c->stash->{current_page};
-        my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-        for( my $i = $start; $i <= $end; $i++ ) {
-            if (@$accessions[$i]) {
-                push @germplasm_data, {
-                    germplasmDbId=>@$accessions[$i]->{stock_id},
-                    germplasmName=>@$accessions[$i]->{accession_name},
-                    entryNumber=>'',
-                    accessionNumber=>@$accessions[$i]->{accession_name},
-                    germplasmPUI=>@$accessions[$i]->{accession_name},
-                    pedigree=>germplasm_pedigree_string($self->bcs_schema, @$accessions[$i]->{stock_id}),
-                    seedSource=>'',
-                    synonyms=>germplasm_synonyms($self->bcs_schema, @$accessions[$i]->{stock_id}, $synonym_id)
-                };
-            }
-        }
-    }
-
-    %result = (
-        studyDbId=>$c->stash->{study_id},
-        studyName=>$c->stash->{studyName},
-        data =>\@germplasm_data
-    );
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+	my $brapi_package_result = $brapi_module->studies_germplasm(
+		$c->stash->{study_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -1415,51 +995,23 @@ sub studies_germplasm_GET {
 sub germplasm_pedigree : Chained('germplasm_single') PathPart('pedigree') Args(0) : ActionClass('REST') { }
 
 sub germplasm_pedigree_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status=>$status};
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 }
 
 sub germplasm_pedigree_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $schema = $self->bcs_schema();
-    my %result;
-    my $status = $c->stash->{status};
-    my $message = '';
-    my $total_count = 0;
-
-    if ($c->req->param('notation')) {
-        $message .= 'Notation not yet implemented. Returns a simple parent1/parent2 string.';
-        if ($c->req->param('notation') ne 'purdy') {
-            $message .= 'Unsupported notation code. Allowed notation: purdy';
-        }
-    }
-
-    my $s = $c->stash->{stock};
-    if ($s) {
-        $total_count = 1;
-    }
-
-    my @direct_parents = $s->get_direct_parents();
-
-    %result = (
-        germplasmDbId=>$c->stash->{stock_id},
-        pedigree=>germplasm_pedigree_string($schema, $c->stash->{stock_id}),
-        parent1Id=>$direct_parents[0][0],
-        parent2Id=>$direct_parents[1][0]
-    );
-
-    my %pagination;
-    my @datafiles;
-    $status->{'message'} = $message;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+	my $brapi_package_result = $brapi_module->germplasm_pedigree({
+		stock_id => $c->stash->{stock_id},
+		notation => $clean_inputs->{notation}->[0]
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -1468,46 +1020,17 @@ sub germplasm_pedigree_GET {
 sub germplasm_attributes_detail  : Chained('germplasm_single') PathPart('attributes') Args(0) : ActionClass('REST') { }
 
 sub germplasm_attributes_detail_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $stock_id = $c->stash->{stock_id};
-    my $status = $c->stash->{status};
-
-    my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
-    my $q = "SELECT cv.cv_id, cv.name, cv.definition, b.cvterm_id, b.name, b.definition, stockprop.value, stockprop.stockprop_id
-        FROM stockprop
-        JOIN stock using(stock_id)
-        JOIN cvterm as b on (stockprop.type_id=b.cvterm_id)
-        JOIN cv on (b.cv_id=cv.cv_id)
-        WHERE stock.type_id=? and stock.stock_id=?
-        ORDER BY cv.cv_id;";
-
-    my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
-    $h->execute($accession_type_cvterm_id, $stock_id);
-    my @data;
-    while (my ($attributeCategoryDbId, $attributeCategoryName, $attributeCategoryDesc, $attributeDbId, $name, $description, $value, $stockprop_id) = $h->fetchrow_array()) {
-        push @data, {
-            attributeDbId => $stockprop_id,
-            attributeName => $name,
-            attributeCode => $name,
-            value => $value,
-            dateDetermined => ''
-        };
-    }
-    my $start = $c->stash->{page_size}*$c->stash->{current_page};
-    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-    my @data_window = splice @data, $start, $end;
-    my $total_count = scalar(@data);
-    my %result = (
-        germplasmDbId=>$stock_id,
-        data => \@data_window
-    );
-
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('GermplasmAttributes');
+	my $brapi_package_result = $brapi_module->germplasm_attributes_germplasm_detail({
+		stock_id => $c->stash->{stock_id},
+		attribute_dbids => $clean_inputs->{attributeDbId}
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 =head2 brapi/v1/germplasm/{id}/markerprofiles
@@ -1536,44 +1059,22 @@ sub germplasm_attributes_detail_GET {
 sub germplasm_markerprofile : Chained('germplasm_single') PathPart('markerprofiles') Args(0) : ActionClass('REST') { }
 
 sub germplasm_markerprofile_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status=>$status};
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 }
 
 sub germplasm_markerprofile_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $schema = $self->bcs_schema();
-    my %result;
-    my $status = $c->stash->{status};
-    my @marker_profiles;
-
-    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
-
-    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search(
-  	    {'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'stock.stock_id'=>$c->stash->{stock_id}},
-  	    {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-  	     select=> ['genotypeprops.genotypeprop_id'],
-  	     as=> ['genotypeprop_id'],
-  	     order_by=>{ -asc=>'genotypeprops.genotypeprop_id' }
-  	    }
-  	);
-
-    my $rs_slice = $rs->slice($c->stash->{page_size}*$c->stash->{current_page}, $c->stash->{page_size}*($c->stash->{current_page}+1)-1);
-    while (my $gt = $rs_slice->next()) {
-      push @marker_profiles, $gt->get_column('genotypeprop_id');
-    }
-    %result = (germplasmDbId=>$c->stash->{stock_id}, markerProfiles=>\@marker_profiles);
-    my $total_count = scalar(@marker_profiles);
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
+	my $brapi_package_result = $brapi_module->germplasm_markerprofiles(
+		$c->stash->{stock_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -1584,118 +1085,41 @@ sub germplasm_markerprofile_GET {
 sub germplasm_attributes_list  : Chained('brapi') PathPart('attributes') Args(0) : ActionClass('REST') { }
 
 sub germplasm_attributes_list_GET {
-    my $self = shift;
-    my $c = shift;
-    germplasm_attributes_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	germplasm_attributes_process($self, $c);
 }
 
 sub germplasm_attributes_process {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-
-    my $status = $c->stash->{status};
-    my $message = '';
-
-    my $attribute_category_id = $c->req->param('attributeCategoryDbId');
-    my @data;
-    my $where_clause = '';
-    if ($attribute_category_id) {
-        $where_clause .= "AND cv.cv_id = $attribute_category_id ";
-    }
-    my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
-    my $q = "SELECT cv.cv_id, cv.name, cv.definition, b.cvterm_id, b.name, b.definition, stockprop.value
-        FROM stockprop
-        JOIN stock using(stock_id)
-        JOIN cvterm as b on (stockprop.type_id=b.cvterm_id)
-        JOIN cv on (b.cv_id=cv.cv_id)
-        WHERE stock.type_id=?
-        $where_clause
-        ORDER BY cv.cv_id;";
-
-    my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
-    $h->execute($accession_type_cvterm_id);
-    my %attribute_hash;
-    while (my ($attributeCategoryDbId, $attributeCategoryName, $attributeCategoryDesc, $attributeDbId, $name, $description, $value) = $h->fetchrow_array()) {
-        if (exists($attribute_hash{$attributeDbId})) {
-            my $values = $attribute_hash{$attributeDbId}->[5];
-            push @$values, $value;
-            $attribute_hash{$attributeDbId}->[5] = $values;
-        } else {
-            $attribute_hash{$attributeDbId} = [$attributeCategoryDbId, $attributeCategoryName, $attributeCategoryDesc, $name, $description, [$value]];
-        }
-    }
-    foreach (keys %attribute_hash) {
-        push @data, {
-            attributeDbId => $_,
-            code => $attribute_hash{$_}->[3],
-            uri => '',
-            name => $attribute_hash{$_}->[3],
-            description => $attribute_hash{$_}->[4],
-            attributeCategoryDbId => $attribute_hash{$_}->[0],
-            attributeCategoryName => $attribute_hash{$_}->[1],
-            datatype => '',
-            values => $attribute_hash{$_}->[5]
-        };
-    }
-    my $start = $c->stash->{page_size}*$c->stash->{current_page};
-    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-    my @data_window = splice @data, $start, $end;
-    my $total_count = scalar(@data);
-    my %result = (data => \@data_window);
-    $status->{'message'} = $message;
-    my @data_files;
-    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('GermplasmAttributes');
+	my $brapi_package_result = $brapi_module->germplasm_attributes_list({
+		attribute_category_dbids => $clean_inputs->{attributeCategoryDbId}
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
 sub germplasm_attribute_categories_list  : Chained('brapi') PathPart('attributes/categories') Args(0) : ActionClass('REST') { }
 
 sub germplasm_attribute_categories_list_GET {
-    my $self = shift;
-    my $c = shift;
-    germplasm_attributes_categories_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	germplasm_attributes_categories_process($self, $c);
 }
 
 sub germplasm_attributes_categories_process {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-
-    my $status = $c->stash->{status};
-    my $message = '';
-
-    my $accession_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
-    my $q = "SELECT distinct(cv.cv_id), cv.name, cv.definition
-        FROM stockprop
-        JOIN stock using(stock_id)
-        JOIN cvterm as b on (stockprop.type_id=b.cvterm_id)
-        JOIN cv on (b.cv_id=cv.cv_id)
-        WHERE stock.type_id=?
-        GROUP BY (cv.cv_id)
-        ORDER BY cv.cv_id;";
-
-    my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
-    $h->execute($accession_type_cvterm_id);
-    my @data;
-    while (my ($attributeCategoryDbId, $attributeCategoryName, $attributeCategoryDesc) = $h->fetchrow_array()) {
-        push @data, {
-            attributeCategoryDbId => $attributeCategoryDbId,
-            attributeCategoryName => $attributeCategoryName,
-        };
-    }
-    my $start = $c->stash->{page_size}*$c->stash->{current_page};
-    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-    my @data_window = splice @data, $start, $end;
-    my $total_count = scalar(@data);
-    my %result = (data => \@data_window);
-    $status->{'message'} = $message;
-    my @data_files;
-    my %metadata = (pagination=> pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@data_files);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('GermplasmAttributes');
+	my $brapi_package_result = $brapi_module->germplasm_attributes_categories_list();
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -1740,78 +1164,36 @@ sub germplasm_attributes_categories_process {
 =cut
 
 sub markerprofile_search_process {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my @germplasm_ids;
-    my @study_ids;
-    my $germplasm = $c->req->param("germplasmDbId");
-    if ($germplasm){
-        push @germplasm_ids, $germplasm;
-    }
-    my $study = $c->req->param("studyDbId");
-    if ($study){
-        push @study_ids, $study;
-    }
-    my $extract = $c->req->param("extract");
-    my $method = $c->req->param("methodDbId");
-    if (!$method){
-        my $default_genotyping_protocol = $c->config->{default_genotyping_protocol};
-        $method = $self->bcs_schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
-    }
-
-    my $status = $c->stash->{status};
-    my $message = '';
-    my @data;
-    my %result;
-
-    if ($extract) {
-        $message .= 'Extract not supported';
-    }
-
-    my $genotypes_search = CXGN::Genotype::Search->new({
-        bcs_schema=>$self->bcs_schema,
-        accession_list=>\@germplasm_ids,
-        trial_list=>\@study_ids,
-        protocol_id=>$method,
-        offset=>$c->stash->{page_size}*$c->stash->{current_page},
-        limit=>$c->stash->{page_size}*($c->stash->{current_page}+1)-1
-    });
-    my ($total_count, $genotypes) = $genotypes_search->get_genotype_info();
-
-    foreach (@$genotypes){
-        push @data, {
-            markerProfileDbId => $_->{markerProfileDbId},
-            germplasmDbId => $_->{germplasmDbId},
-            uniqueDisplayName => $_->{genotypeUniquename},
-            extractDbId => "",
-            sampleDbId => "",
-            analysisMethod => $_->{analysisMethod},
-            resultCount => $_->{resultCount}
-        };
-    }
-
-    %result = (data => \@data);
-    $status->{'code'} = 'message';
-    $status->{'message'} = $message;
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $default_protocol = $self->bcs_schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$c->config->{default_genotyping_protocol}});
+	my $default_protocol_id = $default_protocol ? $default_protocol->nd_protocol_id : 0;
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
+	my $brapi_package_result = $brapi_module->markerprofiles_search({
+		study_ids => $clean_inputs->{studyDbId},
+		stock_ids => $clean_inputs->{germplasmDbId},
+		extract_ids => $clean_inputs->{extractDbId},
+		sample_ids => $clean_inputs->{sampleDbId},
+		protocol_id => $clean_inputs->{methodDbId}->[0] ? $clean_inputs->{methodDbId}->[0] : $default_protocol_id
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 sub markerprofiles_list : Chained('brapi') PathPart('markerprofiles') Args(0) : ActionClass('REST') { }
 
 sub markerprofiles_list_POST {
-    my $self = shift;
-    my $c = shift;
-    markerprofile_search_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	markerprofile_search_process($self, $c);
 }
 
 sub markerprofiles_list_GET {
-    my $self = shift;
-    my $c = shift;
-    markerprofile_search_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	markerprofile_search_process($self, $c);
 }
 
 
@@ -1846,134 +1228,48 @@ sub markerprofiles_list_GET {
 =cut
 
 sub markerprofiles_single : Chained('brapi') PathPart('markerprofiles') CaptureArgs(1) {
-    my $self = shift;
-    my $c = shift;
-    my $id = shift;
-    $c->stash->{markerprofile_id} = $id; # this is genotypeprop_id
+	my $self = shift;
+	my $c = shift;
+	my $id = shift;
+	$c->stash->{markerprofile_id} = $id; # this is genotypeprop_id
 }
 
 sub genotype_fetch : Chained('markerprofiles_single') PathPart('') Args(0) : ActionClass('REST') { }
 
 sub genotype_fetch_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status=>$status};
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 }
 
 sub genotype_fetch_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my $unknown_string = $c->req->param('unknownString') || '';
-    my $expand_homozygotes = $c->req->param('expandHomozygotes') || '';
-    my $sep_phased = $c->req->param('sepPhased') || '|';
-    my $sep_unphased = $c->req->param('sepUnphased') || '/';
-    my @data;
-    my %result;
-
-    my $total_count = 0;
-    my $rs = $self->bcs_schema->resultset('NaturalDiversity::NdExperiment')->find(
-        {'genotypeprops.genotypeprop_id' => $c->stash->{markerprofile_id} },
-        {join=> [{'nd_experiment_genotypes' => {'genotype' => 'genotypeprops'} }, {'nd_experiment_protocols' => 'nd_protocol' }, {'nd_experiment_stocks' => 'stock'} ],
-         select=> ['genotypeprops.value', 'nd_protocol.name', 'stock.stock_id', 'stock.uniquename'],
-         as=> ['value', 'protocol_name', 'stock_id', 'uniquename'],
-        }
-    );
-
-    if ($rs) {
-        my $genotype_json = $rs->get_column('value');
-        my $genotype = JSON::Any->decode($genotype_json);
-        $total_count = scalar keys %$genotype;
-
-        foreach my $m (sort genosort keys %$genotype) {
-            push @data, { $m=>$self->convert_dosage_to_genotype($genotype->{$m}) };
-        }
-
-        my $start = $c->stash->{page_size}*$c->stash->{current_page};
-        my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-        my @data_window = splice @data, $start, $end;
-
-        %result = (
-            germplasmDbId=>$rs->get_column('stock_id'),
-            uniqueDisplayName=>$rs->get_column('uniquename'),
-            extractDbId=>'',
-            markerprofileDbId=>$c->stash->{markerprofile_id},
-            analysisMethod=>$rs->get_column('protocol_name'),
-            #encoding=>"AA,BB,AB",
-            data => \@data_window
-        );
-    }
-
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
+	my $brapi_package_result = $brapi_module->markerprofiles_detail({
+		markerprofile_id => $c->stash->{markerprofile_id},
+		unknown_string => $clean_inputs->{unknownString}->[0],
+		sep_phased => $clean_inputs->{sepPhased}->[0],
+		sep_unphased => $clean_inputs->{sepUnphased}->[0],
+		expand_homozygotes => $clean_inputs->{expandHomozygotes}->[0],
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
 sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods') Args(0) {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
-    my @response;
-    while (my $row = $rs->next()) {
-	push @response, [ $row->nd_protocol_id(), $row->name() ];
-    }
-    $c->stash->{rest} = \@response;
-
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
+	my $brapi_package_result = $brapi_module->markerprofiles_methods();
+	_standard_response_construction($c, $brapi_package_result);
 }
 
-
-sub genosort {
-    my ($a_chr, $a_pos, $b_chr, $b_pos);
-    if ($a =~ m/S(\d+)\_(.*)/) {
-	$a_chr = $1;
-	$a_pos = $2;
-    }
-    if ($b =~ m/S(\d+)\_(.*)/) {
-	$b_chr = $1;
-	$b_pos = $2;
-    }
-
-    if ($a_chr && $b_chr) {
-      if ($a_chr == $b_chr) {
-          return $a_pos <=> $b_pos;
-      }
-      return $a_chr <=> $b_chr;
-    } else {
-      return -1;
-    }
-}
-
-
-sub convert_dosage_to_genotype {
-    my $self = shift;
-    my $dosage = shift;
-
-    my $genotype;
-    if ($dosage eq "NA") {
-	return "NA";
-    }
-    if ($dosage == 1) {
-	return "AA";
-    }
-    elsif ($dosage == 0) {
-	return "BB";
-    }
-    elsif ($dosage == 2) {
-	return "AB";
-    }
-    else {
-	return "NA";
-    }
-}
 
 
 =head2 brapi/v1/allelematrix?markerprofileDbId=100&markerprofileDbId=101
@@ -2008,143 +1304,45 @@ sub convert_dosage_to_genotype {
 sub allelematrix : Chained('brapi') PathPart('allelematrix-search') Args(0) : ActionClass('REST') { }
 
 sub allelematrix_POST {
-    my $self = shift;
-    my $c = shift;
-    allelematrix_search_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	allelematrix_search_process($self, $c);
 }
 
 sub allelematrix_GET {
-    my $self = shift;
-    my $c = shift;
-    allelematrix_search_process($self, $c);
+	my $self = shift;
+	my $c = shift;
+	allelematrix_search_process($self, $c);
 }
 
 sub allelematrix_search_process {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my $message = '';
-    my @profile_ids = $c->req->param('markerprofileDbId');
-    my @marker_ids = $c->req->param('markerDbId');
-    my $unknown_string = $c->req->param('unknownString') || '';
-    my $sep_phased = $c->req->param('sepPhased') || '|';
-    my $sep_unphased = $c->req->param('sepUnphased') || '/';
-    my $data_format = $c->req->param('format') || 'json';
-    my %metadata;
-    my $data_file_path;
-    my %result;
-    #print STDERR Dumper \@profile_ids;
-    #my @profile_ids = split ",", $markerprofile_ids;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 
-    if ($data_format ne 'json' && $data_format ne 'tsv' && $data_format ne 'csv') {
-        $message .= 'Unsupported Format Given. Supported values are: json, tsv, csv';
-        $status->{'message'} = $message;
-        $c->stash->{rest} = {
-            metadata => { pagination=>{}, status => [$status], datafiles=>[$data_file_path] },
-            result => \%result,
-        };
-        $c->detach;
-    }
-
-    my $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
-
-    my @scores;
-    my $total_pages;
-    my $total_count;
-    my @ordered_refmarkers;
-    my $markers;
-    if ($rs->count() > 0) {
-        while (my $profile = $rs->next()) {
-            my $profile_json = $profile->value();
-            my $refmarkers = JSON::Any->decode($profile_json);
-            #print STDERR Dumper($refmarkers);
-            push @ordered_refmarkers, sort genosort keys(%$refmarkers);
-        }
-        #print Dumper(\@ordered_refmarkers);
-        my %unique_markers;
-        foreach (@ordered_refmarkers) {
-            $unique_markers{$_} = 1;
-        }
-
-        my $json = JSON->new();
-        $rs = $self->bcs_schema()->resultset("Genetic::Genotypeprop")->search( { genotypeprop_id => { -in => \@profile_ids }});
-        while (my $profile = $rs->next()) {
-            my $markers_json = $profile->value();
-            $markers = $json->decode($markers_json);
-            my $genotypeprop_id = $profile->genotypeprop_id();
-            foreach my $m (sort keys %unique_markers) {
-                push @scores, [$m, $genotypeprop_id, $self->convert_dosage_to_genotype($markers->{$m})];
-            }
-        }
-    }
-
-    #print STDERR Dumper \@scores;
-
-    my $file_path;
-    my @scores_seen;
-    if (!$data_format || $data_format eq 'json' ){
-
-        for (my $n = $c->stash->{page_size}*$c->stash->{current_page}; $n< ($c->stash->{page_size}*($c->stash->{current_page}+1)-1); $n++) {
-            push @scores_seen, $scores[$n];
-        }
-
-    } elsif ($data_format eq 'tsv' || $data_format eq 'csv') {
-
-        my @header_row;
-        push @header_row, 'markerprofileDbIds';
-        foreach (@profile_ids){
-            push @header_row, $_;
-        }
-
-        my %markers;
-        foreach (@scores){
-            $markers{$_->[0]}->{$_->[1]} = $_->[2];
-        }
-        #print STDERR Dumper \%markers;
-
-        my $delim;
-        if ($data_format eq 'tsv') {
-            $delim = "\t";
-        } elsif ($data_format eq 'csv') {
-            $delim = ",";
-        }
-        my $dir = $c->tempfiles_subdir('download');
-        my ($file_path, $uri) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$data_format.'_'.'XXXXX');
-        #$file_path = $c->config->{main_production_sitae_url}.":".$c->config->{basepath}."/".$tempfile.".$data_format";
-        open(my $fh, ">", $file_path);
-            print STDERR $file_path."\n";
-            print $fh join("$delim", @header_row),"\n";
-            #print $fh "markerprofileDbIds\t", join($delim, @lines), "\n";
-            foreach (keys %markers) {
-                print $fh $_.$delim;
-                my $count = 1;
-                foreach my $profile_id (@profile_ids) {
-                    print $fh $markers{$_}->{$profile_id};
-                    if ($count < scalar(@profile_ids)){
-                        print $fh $delim;
-                    }
-                    #print $fh .join("$delim", @{$_}),"\n";
-                    $count++;
-                }
-                print $fh "\n";
-            }
-
-        close $fh;
-        $data_file_path = $c->config->{main_production_site_url}.$uri;
-        #$c->res->content_type('Application/'.$data_format);
-        #$c->res->header('Content-Disposition', qq[attachment; filename="$data_file_path"]);
-        #my $output = read_file($data_file_path);
-        #$c->res->body($output);
-    }
-
-    $total_count = scalar(@scores);
-
-    $c->stash->{rest} = {
-        metadata => { pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status => [$status], datafiles=>[$data_file_path] },
-        result => {data => \@scores_seen},
-    };
-
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $format = $clean_inputs->{format}->[0];
+	my $file_path;
+	my $uri;
+	if ($format eq 'tsv' || $format eq 'csv' || $format eq 'xls'){
+		my $dir = $c->tempfiles_subdir('download');
+		($file_path, $uri) = $c->tempfile( TEMPLATE => 'download/allelematrix_'.$format.'_'.'XXXXX');
+	}
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
+	my $brapi_package_result = $brapi_module->markerprofiles_allelematrix({
+		markerprofile_ids => $clean_inputs->{markerprofileDbId},
+		marker_ids => $clean_inputs->{markerDbId},
+		unknown_string => $clean_inputs->{unknownString}->[0],
+		sep_phased => $clean_inputs->{sepPhased}->[0],
+		sep_unphased => $clean_inputs->{sepUnphased}->[0],
+		expand_homozygotes => $clean_inputs->{expandHomozygotes}->[0],
+		format => $format,
+		main_production_site_url => $c->config->{main_production_site_url},
+		file_path => $file_path,
+		file_uri => $uri
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -2188,171 +1386,47 @@ sub allelematrix_search_process {
 sub programs_list : Chained('brapi') PathPart('programs') Args(0) : ActionClass('REST') { }
 
 sub programs_list_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status=>$status};
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 }
 
 sub programs_list_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my $program_name = $c->req->param('programName');
-    my $abbreviation = $c->req->param('abbreviation');
-    my %result;
-    my @data;
-
-    my $ps = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
-
-    my $programs = $ps -> get_breeding_programs();
-    my $total_count = scalar(@$programs);
-
-    my $start = $c->stash->{page_size}*$c->stash->{current_page};
-    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-    for( my $i = $start; $i <= $end; $i++ ) {
-        if (@$programs[$i]) {
-            if ($program_name) {
-                if ($program_name eq @$programs[$i]->[1]) {
-                    push @data, {
-                        programDbId=>@$programs[$i]->[0],
-                        name=>@$programs[$i]->[1],
-                        abbreviation=>@$programs[$i]->[1],
-                        objective=>@$programs[$i]->[2],
-                        leadPerson=>''
-                    };
-                }
-            } else {
-                push @data, {
-                    programDbId=>@$programs[$i]->[0],
-                    name=>@$programs[$i]->[1],
-                    abbreviation=>@$programs[$i]->[1],
-                    objective=>@$programs[$i]->[2],
-                    leadPerson=>''
-                };
-            }
-        }
-    }
-
-    %result = (data=>\@data);
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Programs');
+	my $brapi_package_result = $brapi_module->programs_list({
+		program_names => $clean_inputs->{programName},
+		abbreviations => $clean_inputs->{abbreviation},
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
-
-sub studies_instances  : Chained('studies_single') PathPart('instances') Args(0) : ActionClass('REST') { }
-
-sub studies_instances_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status=>$status};
-}
-
-sub studies_instances_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my %result;
-    my $status = $c->stash->{status};
-    my $total_count = 0;
-
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status]);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
-}
 
 
 sub studies_info  : Chained('studies_single') PathPart('') Args(0) : ActionClass('REST') { }
 
 sub studies_info_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 }
 
 sub studies_info_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my %result;
-    my $status = $c->stash->{status};
-    my $message = '';
-    my $total_count = 0;
-    my $study_id = $c->stash->{study_id};
-    my $t = $c->stash->{study};
-    if ($t) {
-        $total_count = 1;
-        my $folder = CXGN::Trial::Folder->new( { folder_id => $study_id, bcs_schema => $self->bcs_schema } );
-        if ($folder->folder_type eq 'trial') {
-
-            my @years = ($t->get_year());
-            my %additional_info = (
-                studyPUI=>'',
-            );
-            my $project_type = '';
-            if ($t->get_project_type()) {
-               $project_type = $t->get_project_type()->[1];
-            }
-            my $location_id = '';
-            my $location_name = '';
-            if ($t->get_location()) {
-               $location_id = $t->get_location()->[0];
-               $location_name = $t->get_location()->[1];
-            }
-            my $planting_date = '';
-            if ($t->get_planting_date()) {
-                $planting_date = $t->get_planting_date();
-                my $t = Time::Piece->strptime($planting_date, "%Y-%B-%d");
-                $planting_date = $t->strftime("%Y-%m-%d");
-            }
-            my $harvest_date = '';
-            if ($t->get_harvest_date()) {
-                $harvest_date = $t->get_harvest_date();
-                my $t = Time::Piece->strptime($harvest_date, "%Y-%B-%d");
-                $harvest_date = $t->strftime("%Y-%m-%d");
-            }
-            %result = (
-                studyDbId=>$t->get_trial_id(),
-                name=>$t->get_name(),
-                trialDbId=>$folder->project_parent->project_id(),
-                trialName=>$folder->project_parent->name(),
-                studyType=>$project_type,
-                seasons=>\@years,
-                locationDbId=>$location_id,
-                locationName=>$location_name,
-                programDbId=>$folder->breeding_program->project_id(),
-                programName=>$folder->breeding_program->name(),
-                startDate => $planting_date,
-                endDate => $harvest_date,
-                additionalInfo=>\%additional_info,
-                active=>'',
-                observationVariables=>"/brapi/v1/studies/$study_id/observationVariables",
-                germplasm=>"/brapi/v1/studies/$study_id/germplasm",
-                observationUnits=>"/brapi/v1/studies/$study_id/observationUnits",
-                layout=>"/brapi/v1/studies/$study_id/layout",
-                location=>"/brapi/v1/locations/$location_id",
-            );
-        }
-    } else {
-        $message .= "StudyDbId not found.";
-    }
-    $status->{'message'} = $message;
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+	my $brapi_package_result = $brapi_module->studies_detail(
+		$c->stash->{study_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -2430,30 +1504,21 @@ sub studies_info_GET {
 sub studies_observation_variables : Chained('studies_single') PathPart('observationVariables') Args(0) : ActionClass('REST') { }
 
 sub studies_observation_variables_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 }
 
 sub studies_observation_variables_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my %result;
-    my $total_count = 0;
-
-    my $t = CXGN::Trial->new( { schema => $self->bcs_schema, trial_id => $c->stash->{study_id} });
-    my @data;
-
-    %result = (data=>\@data);
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+	my $brapi_package_result = $brapi_module->studies_observation_variables(
+		$c->stash->{study_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -2461,63 +1526,40 @@ sub studies_observation_variables_GET {
 sub studies_layout : Chained('studies_single') PathPart('layout') Args(0) : ActionClass('REST') { }
 
 sub studies_layout_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 }
 
 sub studies_layout_GET {
     my $self = shift;
     my $c = shift;
+    my $clean_inputs = $c->stash->{clean_inputs};
     #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my %result;
-    my $total_count = 0;
-
-    my $tl = CXGN::Trial::TrialLayout->new( { schema => $self->bcs_schema, trial_id => $c->stash->{study_id} });
-    my $design = $tl->get_design();
-
-    my $plot_data = [];
-    my $formatted_plot = {};
-    my %optional_info;
-    my $check_id;
-    my $type;
-
-    foreach my $plot_number (keys %$design) {
-	$check_id = $design->{$plot_number}->{is_a_control} ? 1 : 0;
-	if ($check_id == 1) {
-	    $type = 'Check';
-	} else {
-	    $type = 'Test';
-	}
-	$formatted_plot = {
-	    studyDbId => $c->stash->{study_id},
-	    observationUnitDbId => $design->{$plot_number}->{plot_id},
-	    observationUnitName => $design->{$plot_number}->{plot_name},
-        observationLevel => 'plot',
-	    replicate => $design->{$plot_number}->{replicate} ? $design->{$plot_number}->{replicate} : '',
-        blockNumber => $design->{$plot_number}->{block_number} ? $design->{$plot_number}->{block_number} : '',
-        X => $design->{$plot_number}->{row_number} ? $design->{$plot_number}->{row_number} : '',
-        Y => $design->{$plot_number}->{col_number} ? $design->{$plot_number}->{col_number} : '',
-        entryType => $type,
-        germplasmName => $design->{$plot_number}->{accession_name},
-	    germplasmDbId => $design->{$plot_number}->{accession_id},
-	    optionalInfo => \%optional_info
-	};
-	push @$plot_data, $formatted_plot;
-	$total_count += 1;
+    my $format = $clean_inputs->{format}->[0] || 'json';
+    my $file_path;
+    my $uri;
+    if ($format eq 'tsv' || $format eq 'csv' || $format eq 'xls'){
+        my $dir = $c->tempfiles_subdir('download');
+        my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
+        my $temp_file_name = $time_stamp . "phenotype_download_$format"."_XXXX";
+        ($file_path, $uri) = $c->tempfile( TEMPLATE => "download/$temp_file_name");
     }
-    %result = (data=>$plot_data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status]);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+    my $brapi_package_result = $brapi_module->studies_layout({
+        study_id => $c->stash->{study_id},
+        format => $format,
+        main_production_site_url => $c->config->{main_production_site_url},
+        file_path => $file_path,
+        file_uri => $uri
+    });
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 
-=head2 brapi/v1/studies/<studyDbId>/observations?observationVariableDbId=2
+=head2 brapi/v1/studies/<studyDbId>/observationUnits?observationVariableDbId=2
 
  Usage: To retrieve phenotypic values on a the plot level for an entire trial
  Desc:
@@ -2552,78 +1594,27 @@ sub studies_layout_GET {
 
 =cut
 
-sub studies_observations : Chained('studies_single') PathPart('observations') Args(0) : ActionClass('REST') { }
+sub studies_observations : Chained('studies_single') PathPart('observationunits') Args(0) : ActionClass('REST') { }
 
 sub studies_observations_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 }
 
 sub studies_observations_GET {
-    my $self = shift;
-    my $c = shift;
-    my @trait_ids_array = $c->req->param('observationVariableDbId');
-    my $data_level = $c->req->param('observationLevel') || 'plot';
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my %result;
-    #my @trait_ids_array;
-    #if(ref($trait_ids) eq 'ARRAY') {
-    #    @trait_ids_array = @{$trait_ids};
-    #} elsif(ref($trait_ids) eq 'SCALAR') {
-    #    @trait_ids_array = ($trait_ids);
-    #}
-    #print STDERR Dumper $trait_ids;
-    #print STDERR Dumper \@trait_ids_array;
-    my $t = $c->stash->{study};
-    my $phenotype_data;
-    if ($data_level eq 'all') {
-        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'all', ['plot_of','plant_of'], 'accession', 'subject');
-    } elsif ($data_level eq 'plot') {
-        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plot', ['plot_of'], 'accession', 'subject');
-    } elsif ($data_level eq 'plant') {
-        $phenotype_data = $t->get_stock_phenotypes_for_traits(\@trait_ids_array, 'plant', ['plant_of'], 'accession', 'subject');
-    }
-
-    #print STDERR Dumper $phenotype_data;
-
-    my @data;
-    my $total_count = scalar(@$phenotype_data);
-    my $start = $c->stash->{page_size}*$c->stash->{current_page};
-    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-    for( my $i = $start; $i <= $end; $i++ ) {
-        if (@$phenotype_data[$i]) {
-            my $pheno_uniquename = @$phenotype_data[$i]->[5];
-            my ($part1 , $part2) = split( /date: /, $pheno_uniquename);
-            my ($timestamp , $operator) = split( /\ \ operator = /, $part2);
-
-            my %data_hash = (
-                studyDbId => $c->stash->{study_id},
-                observationDbId=>@$phenotype_data[$i]->[4],
-                observationVariableDbId => @$phenotype_data[$i]->[2],
-                observationVariableName => @$phenotype_data[$i]->[3],
-                observationUnitDbId => @$phenotype_data[$i]->[0],
-                observationUnitName => @$phenotype_data[$i]->[1],
-                observationLevel => @$phenotype_data[$i]->[10],
-                observationTimestamp => $timestamp,
-                uploadedBy => @$phenotype_data[$i]->[6],
-                operator => $operator,
-                germplasmDbId => @$phenotype_data[$i]->[8],
-                germplasmName => @$phenotype_data[$i]->[9],
-                value => @$phenotype_data[$i]->[7]
-            );
-            push @data, \%data_hash;
-        }
-    }
-
-    %result = (data=>\@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	my $clean_inputs = $c->stash->{clean_inputs};
+	#my $auth = _authenticate_user($c);
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+	my $brapi_package_result = $brapi_module->observation_units({
+		study_id => $c->stash->{study_id},
+		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
+		data_level => $clean_inputs->{observationLevel}->[0]
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -2662,128 +1653,102 @@ sub studies_observations_GET {
 sub studies_table : Chained('studies_single') PathPart('table') Args(0) : ActionClass('REST') { }
 
 sub studies_table_POST {
-    my $self = shift;
-    my $c = shift;
-    my $trait_id = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
+	my $self = shift;
+	my $c = shift;
+	my $trait_id = shift;
+	#my $auth = _authenticate_user($c);
 }
 
 sub studies_table_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my $data_level = $c->req->param('observationLevel') || 'plot';
-    my $format = $c->req->param('format') || 'json';
-    my %result;
-    my $search_type = $c->req->param("search_type") || 'complete';
-    my $include_timestamp = $c->req->param("timestamp") || 0;
-    my $trial_id = $c->stash->{study_id};
-    my $phenotypes_search = CXGN::Phenotypes::Search->new({
-        bcs_schema=>$self->bcs_schema,
-        data_level=>$data_level,
-        trial_list=>[$trial_id],
-        search_type=>$search_type,
-        include_timestamp=>$include_timestamp,
-    });
-    my @data = $phenotypes_search->get_extended_phenotype_info_matrix();
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 
-    #print STDERR Dumper \@data;
-
-    if ($format eq 'json') {
-        my $total_count = scalar(@data)-1;
-        my @header_names = split /\t/, $data[0];
-        #print STDERR Dumper \@header_names;
-        my @trait_names = @header_names[15 .. $#header_names];
-        #print STDERR Dumper \@trait_names;
-        my @header_ids;
-        foreach my $t (@trait_names) {
-            push @header_ids, SGN::Model::Cvterm->get_cvterm_row_from_trait_name($self->bcs_schema, $t)->cvterm_id();
-        }
-
-        my $start = $c->stash->{page_size}*$c->stash->{current_page};
-        my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-        my @data_window;
-        for (my $line = $start; $line < $end; $line++) {
-            if ($data[$line]) {
-                my @columns = split /\t/, $data[$line], -1;
-
-                push @data_window, \@columns;
-            }
-        }
-
-        #print STDERR Dumper \@data_window;
-
-        %result = (
-            studyDbId => $c->stash->{study_id},
-            headerRow => ['studyYear', 'studyDbId', 'studyName', 'studyDesign', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber'],
-            observationVariableDbIds => \@header_ids,
-            observationVariableNames => \@trait_names,
-            data=>\@data_window
-        );
-        my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
-        my %response = (metadata=>\%metadata, result=>\%result);
-        $c->stash->{rest} = \%response;
-
-    } else {
-        # if xls or csv, create tempfile name and place to save it
-        my $what = "phenotype_download";
-        my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
-        my $dir = $c->tempfiles_subdir('download');
-        my $temp_file_name = $time_stamp . "$what" . "XXXX";
-        my $rel_file = $c->tempfile( TEMPLATE => "download/$temp_file_name");
-        my $tempfile = $c->config->{basepath}."/".$rel_file;
-
-        if ($format eq "csv") {
-
-            #build csv with column names
-            open(CSV, ">", $tempfile) || die "Can't open file $tempfile\n";
-                my @header = split /\t/, $data[0];
-                my $num_col = scalar(@header);
-                for (my $line =0; $line< @data; $line++) {
-                    my @columns = split /\t/, $data[$line];
-                    my $step = 1;
-                    for(my $i=0; $i<$num_col; $i++) {
-                        if ($columns[$i]) {
-                            print CSV "\"$columns[$i]\"";
-                        } else {
-                            print CSV "\"\"";
-                        }
-                        if ($step < $num_col) {
-                            print CSV ",";
-                        }
-                        $step++;
-                    }
-                    print CSV "\n";
-                }
-            close CSV;
-
-        } elsif ($format = 'xls') {
-            my $ss = Spreadsheet::WriteExcel->new($tempfile);
-            my $ws = $ss->add_worksheet();
-
-            for (my $line =0; $line< @data; $line++) {
-                my @columns = split /\t/, $data[$line];
-                for(my $col = 0; $col<@columns; $col++) {
-                    $ws->write($line, $col, $columns[$col]);
-                }
-            }
-            #$ws->write(0, 0, "$program_name, $location ($year)");
-            $ss ->close();
-        }
-
-        #Using tempfile and new filename,send file to client
-        my $file_name = $time_stamp . "$what" . ".$format";
-        $c->res->content_type('Application/'.$format);
-        $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
-        my $output = read_file($tempfile);
-        $c->res->body($output);
-    }
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $format = $clean_inputs->{format}->[0];
+	my $file_path;
+	my $uri;
+	if ($format eq 'tsv' || $format eq 'csv' || $format eq 'xls'){
+		my $dir = $c->tempfiles_subdir('download');
+		my $time_stamp = strftime "%Y-%m-%dT%H%M%S", localtime();
+		my $temp_file_name = $time_stamp . "phenotype_download_$format"."_XXXX";
+		($file_path, $uri) = $c->tempfile( TEMPLATE => "download/$temp_file_name");
+	}
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+	my $brapi_package_result = $brapi_module->studies_table({
+		study_id => $c->stash->{study_id},
+		data_level => $clean_inputs->{observationLevel}->[0],
+		search_type => $clean_inputs->{search_type}->[0],
+		trait_ids => $clean_inputs->{observationVariableDbId},
+		trial_ids => $clean_inputs->{studyDbId},
+		format => $format,
+		main_production_site_url => $c->config->{main_production_site_url},
+		file_path => $file_path,
+		file_uri => $uri
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
+
+=head2 brapi/v1/studies/<studyDbId>/observations?observationVariableDbId=2
+
+ Usage: To retrieve phenotypic values on a the plot level for an entire trial
+ Desc:
+ Return JSON example:
+        {
+            "metadata" : "status": [],
+                "pagination": {
+                    "pageSize": 1,
+                    "currentPage": 1,
+                    "totalCount": 1,
+                    "totalPages": 1
+                },
+            "result" : {
+                "data" : [
+                    {
+                        "studyDbId": 1,
+                        "plotDbId": 11,
+                        "observationVariableDbId" : 393939,
+                        "observationVariableName" : "Yield",
+                        "plotName": "ZIPA_68_Ibadan_2014",
+                        "timestamp" : "2015-11-05 15:12",
+                        "uploadedBy" : {dbUserId},
+                        "operator" : "Jane Doe",
+                        "germplasmName": 143,
+                        "value" : 5,
+                    }
+                ]
+            }
+        }
+ Args:
+ Side Effects:
+
+=cut
+
+sub studies_observations_granular : Chained('studies_single') PathPart('observations') Args(0) : ActionClass('REST') { }
+
+sub studies_observations_granular_POST {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+}
+
+sub studies_observations_granular_GET {
+	my $self = shift;
+	my $c = shift;
+	my $clean_inputs = $c->stash->{clean_inputs};
+	#my $auth = _authenticate_user($c);
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Studies');
+	my $brapi_package_result = $brapi_module->observation_units_granular({
+		study_id => $c->stash->{study_id},
+		observationVariableDbIds => $clean_inputs->{observationVariableDbId},
+		data_level => $clean_inputs->{observationLevel}->[0],
+		search_type => $clean_inputs->{search_type}->[0],
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
 
 =head2 brapi/v1/phenotypes?observationUnitLevel=plot&studyDbId=876&studyPUI=&studyLocation=&studySet=&studyProject=&treatmentFactor=lowInput&germplasmGenus=&germplasmSubTaxa=&germplasmDbId&germplasmPUI=http://data.inra.fr/accession/234Col342&germplasmSpecies=Triticum&panel=diversitypanel1&collection=none&observationVariables=CO_321:000034,CO_321:000025&location=bergheim&season=2005,2006&pageSize={pageSize}&page={page}
 
@@ -2867,198 +1832,81 @@ sub studies_table_GET {
 sub phenotypes_search : Chained('brapi') PathPart('phenotypes-search') Args(0) : ActionClass('REST') { }
 
 sub phenotypes_search_POST {
-    my $self = shift;
-    my $c = shift;
-    process_phenotypes_search($self, $c);
+	my $self = shift;
+	my $c = shift;
+	process_phenotypes_search($self, $c);
 }
 
 sub phenotypes_search_GET {
-    my $self = shift;
-    my $c = shift;
-    process_phenotypes_search($self, $c);
+	my $self = shift;
+	my $c = shift;
+	process_phenotypes_search($self, $c);
 }
 
 sub process_phenotypes_search {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my @data;
-    my $stock_ids = $c->req->param('germplasmDbIds');
-    my $trait_ids = $c->req->param('observationVariableDbIds');
-    my $trial_ids = $c->req->param('studyDbIds');
-    my $location_ids = $c->req->param('locationDbIds');
-    my $year_ids = $c->req->param('seasonDbIds');
-    my $data_level = $c->req->param('observationLevel') || 'plot';
-    my $search_type = $c->req->param("search_type") || 'complete';
-    my @stocks_array = split /,/, $stock_ids;
-    my @traits_array = split /,/, $trait_ids;
-    my @trials_array = split /,/, $trial_ids;
-    my @locations_array = split /,/, $location_ids;
-    my @years_array = split /,/, $year_ids;
-    my $offset = $c->stash->{current_page}*$c->stash->{page_size};
-    my $phenotypes_search = CXGN::Phenotypes::Search->new({
-        bcs_schema=>$self->bcs_schema,
-        data_level=>$data_level,
-        stock_list=>\@stocks_array,
-        trial_list=>\@trials_array,
-        location_list=>\@locations_array,
-        trait_list=>\@traits_array,
-        year_list=>\@years_array,
-        search_type=>$search_type,
-        include_timestamp=>1,
-        limit=>$c->stash->{page_size},
-        offset=>$offset
-    });
-    my $search_result = $phenotypes_search->search();
-    #print STDERR Dumper $search_result;
-    my $total_count = 0;
-    if (scalar(@$search_result)>0){
-        $total_count = $search_result->[0]->[21];
-    }
-    foreach my $result (@$search_result){
-            my %data_entry = (
-                observationDbId=>$result->[20],
-                observationUnitDbId=>$result->[15],
-                observationUnitName=>$result->[6],
-                studyDbId=>$result->[12],
-                studyName=>$result->[1],
-                studyLocationDbId=>$result->[13],
-                studyLocation=>$result->[3],
-                programName=>'',
-                observationLevel=>$result->[19],
-                germplasmDbId=>$result->[14],
-                germplasmName=>$result->[2],
-                observationVariableName=>$result->[4]."|".$result->[7],
-                observationVariableDbId=>$result->[11],
-                season=>$result->[0],
-                value=>$result->[5],
-                observationTimeStamp=>$result->[16],
-                collector=>'',
-                uploadedBy=>'',
-                additionalInfo=>{
-                    'block'=>$result->[9],
-                    'replicate'=>$result->[8],
-                    'plotNumber'=>$result->[10],
-                    'germplasmSynonyms'=>$result->[17],
-                    'design'=>$result->[18],
-                }
-            );
-            push @data, \%data_entry;
-        #}
-    }
-
-    my %result = (data => \@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Phenotypes');
+	my $brapi_package_result = $brapi_module->search({
+		trait_ids => $clean_inputs->{observationVariableDbId},
+		accession_ids => $clean_inputs->{germplasmDbId},
+		study_ids => $clean_inputs->{studyDbId},
+		location_ids => $clean_inputs->{locationDbId},
+		years => $clean_inputs->{seasonDbId},
+		data_level => $clean_inputs->{observationLevel}->[0],
+		search_type => $clean_inputs->{search_type}->[0],
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 sub traits_list : Chained('brapi') PathPart('traits') Args(0) : ActionClass('REST') { }
 
 sub traits_list_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 }
 
 sub traits_list_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    #my $db_rs = $self->bcs_schema()->resultset("General::Db")->search( { name => $c->config->{trait_ontology_db_name} } );
-    #if ($db_rs->count ==0) { return undef; }
-    #my $db_id = $db_rs->first()->db_id();
-
-    #my $q = "SELECT cvterm.cvterm_id, cvterm.name, cvterm.definition, cvtermprop.value, dbxref.accession FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) WHERE dbxref.db_id=?";
-    #my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
-    #$h->execute($db_id);
-
-    my @trait_ids;
-    my $q = "SELECT trait_id FROM traitsxtrials ORDER BY trait_id;";
-    my $p = $self->bcs_schema()->storage->dbh()->prepare($q);
-    $p->execute();
-    while (my ($cvterm_id) = $p->fetchrow_array()) {
-        push @trait_ids, $cvterm_id;
-    }
-
-    my @data;
-    foreach my $cvterm_id (@trait_ids){
-        my $q2 = "SELECT cvterm.definition, cvtermprop.value, dbxref.accession, db.name, cvterm.name FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) JOIN db using(db_id) WHERE cvterm.cvterm_id=?";
-        my $h = $self->bcs_schema()->storage->dbh()->prepare($q2);
-        $h->execute($cvterm_id);
-
-        while (my ($description, $scale, $accession, $db, $name) = $h->fetchrow_array()) {
-            my @observation_vars = ();
-            push @observation_vars, $name.'|'.$db.":".$accession;
-            push @data, {
-                traitDbId => $cvterm_id,
-                traitId => $db.':'.$accession,
-                name => $name,
-                description => $description,
-                observationVariables => \@observation_vars,
-                defaultValue => '',
-                #scale =>$scale
-            };
-        }
-    }
-
-    my $total_count = $p->rows;
-    my %result = (data => \@data);
-    my @datafiles;
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>\@datafiles);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
-
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Traits');
+	my $brapi_package_result = $brapi_module->list({
+        trait_ids => $clean_inputs->{traitDbIds},
+        names => $clean_inputs->{names}
+    });
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
 sub traits_single  : Chained('brapi') PathPart('traits') CaptureArgs(1) {
-    my $self = shift;
-    my $c = shift;
-    my $trait_id = shift;
+	my $self = shift;
+	my $c = shift;
+	my $trait_id = shift;
 
-    $c->stash->{trait_id} = $trait_id;
+	$c->stash->{trait_id} = $trait_id;
 }
 
 
 sub trait_detail  : Chained('traits_single') PathPart('') Args(0) : ActionClass('REST') { }
 
 sub trait_detail_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $cvterm_id = $c->stash->{trait_id};
-    my $status = $c->stash->{status};
-    my %result;
-
-    my $q = "SELECT cvterm.definition, cvtermprop.value, dbxref.accession, db.name, cvterm.name FROM cvterm LEFT JOIN cvtermprop using(cvterm_id) JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) WHERE cvterm.cvterm_id=?";
-    my $h = $self->bcs_schema()->storage->dbh()->prepare($q);
-    $h->execute($cvterm_id);
-    my $total_count = 0;
-    while (my ($description, $scale, $accession, $db, $name) = $h->fetchrow_array()) {
-        $total_count++;
-        my @observation_vars = ();
-        push @observation_vars, $name.'|'.$db.':'.$accession;
-        %result = (
-            traitDbId => $cvterm_id,
-            traitId => $db.':'.$accession,
-            name => $name,
-            description => $description,
-            observationVariables => \@observation_vars,
-            defaultValue => '',
-            scale =>$scale
-        );
-    }
-
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Traits');
+	my $brapi_package_result = $brapi_module->detail(
+		$c->stash->{trait_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -3112,72 +1960,20 @@ sub trait_detail_GET {
 sub maps_list : Chained('brapi') PathPart('maps') Args(0) : ActionClass('REST') { }
 
 sub maps_list_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 }
 
 sub maps_list_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
-    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { } );
-
-    my @data;
-    while (my $row = $rs->next()) {
-        my %map_info;
-        print STDERR "Retrieving map info for ".$row->name()." ID:".$row->nd_protocol_id()."\n";
-        #$self->bcs_schema->storage->debug(1);
-        my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'me.nd_protocol_id' => $row->nd_protocol_id() } )->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {select=>['genotype.description', 'genotypeprops.value'], as=>['description', 'value'], rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
-
-        my $lg_row = $lg_rs->first();
-
-        if (!$lg_row) {
-            die "This was never supposed to happen :-(";
-        }
-
-        my $scores = JSON::Any->decode($lg_row->get_column('value'));
-        my %chrs;
-
-        my $marker_count =0;
-        foreach my $m (sort genosort (keys %$scores)) {
-            my ($chr, $pos) = split "_", $m;
-            #print STDERR "CHR: $chr. POS: $pos\n";
-            $chrs{$chr} = $pos;
-            $marker_count++;
-        }
-        my $lg_count = scalar(keys(%chrs));
-
-        %map_info = (
-            mapDbId =>  $row->nd_protocol_id(),
-            name => $row->name(),
-            species => $lg_row->get_column('description'),
-            type => "physical",
-            unit => "bp",
-            markerCount => $marker_count,
-            publishedDate => undef,
-            comments => "",
-            linkageGroupCount => $lg_count,
-        );
-
-        push @data, \%map_info;
-    }
-
-    my $total_count = scalar(@data);
-    my $start = $c->stash->{page_size}*$c->stash->{current_page};
-    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-    my @data_window = splice @data, $start, $end;
-
-    my %result = (data => \@data_window);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('GenomeMaps');
+	my $brapi_package_result = $brapi_module->list();
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -3222,103 +2018,33 @@ sub maps_list_GET {
 =cut
 
 sub maps_single : Chained('brapi') PathPart('maps') CaptureArgs(1) {
-    my $self = shift;
-    my $c = shift;
-    my $map_id = shift;
+	my $self = shift;
+	my $c = shift;
+	my $map_id = shift;
 
-    $c->stash->{map_id} = $map_id;
+	$c->stash->{map_id} = $map_id;
 }
 
 
 sub maps_details : Chained('maps_single') PathPart('') Args(0) : ActionClass('REST') { }
 
 sub maps_details_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 }
 
 sub maps_details_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my $params = $c->req->params();
-    my $total_count = 0;
-
-    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
-
-    # maps are just marker lists associated with specific protocols
-    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->find( { nd_protocol_id => $c->stash->{map_id} } );
-    my %map_info;
-    my @data;
-
-    print STDERR "Retrieving map info for ".$rs->name()."\n";
-    #$self->bcs_schema->storage->debug(1);
-    my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperimentProtocol")->search( { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'me.nd_protocol_id' => $rs->nd_protocol_id() })->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
-
-    if (!$lg_rs) {
-        die "This was never supposed to happen :-(";
-    }
-
-    my %chrs;
-    my %markers;
-    my @ordered_refmarkers;
-    while (my $profile = $lg_rs->next()) {
-        my $profile_json = $profile->value();
-        my $refmarkers = JSON::Any->decode($profile_json);
-        #print STDERR Dumper($refmarkers);
-        push @ordered_refmarkers, sort genosort keys(%$refmarkers);
-
-    }
-
-    foreach my $m (@ordered_refmarkers) {
-
-        my ($chr, $pos) = split "_", $m;
-        #print STDERR "CHR: $chr. POS: $pos\n";
-
-        $markers{$chr}->{$m} = 1;
-        if ($pos) {
-            if ($chrs{$chr}) {
-                if ($pos > $chrs{$chr}) {
-                    $chrs{$chr} = $pos;
-                }
-            } else {
-                $chrs{$chr} = $pos;
-            }
-        }
-
-    }
-
-    foreach my $ci (sort (keys %chrs)) {
-        my $num_markers = scalar keys %{ $markers{$ci} };
-        my %linkage_groups_data = (
-            linkageGroupId => $ci,
-            numberMarkers => $num_markers,
-            maxPosition => $chrs{$ci}
-        );
-        push @data, \%linkage_groups_data;
-    }
-
-    $total_count = scalar(@data);
-    my $start = $c->stash->{page_size}*$c->stash->{current_page};
-    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-    my @data_window = splice @data, $start, $end;
-
-    %map_info = (
-        mapDbId =>  $rs->nd_protocol_id(),
-        name => $rs->name(),
-        type => "physical",
-        unit => "bp",
-        linkageGroups => \@data_window,
-    );
-
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
-    my %response = (metadata=>\%metadata, result=>\%map_info);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('GenomeMaps');
+	my $brapi_package_result = $brapi_module->detail(
+		$c->stash->{map_id}
+	);
+	_standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -3356,147 +2082,178 @@ sub maps_details_GET {
 sub maps_marker_detail : Chained('maps_single') PathPart('positions') Args(0) : ActionClass('REST') { }
 
 sub maps_marker_detail_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 }
 
 sub maps_marker_detail_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my $params = $c->req->params();
-
-    my %linkage_groups;
-    if ($params->{linkageGroupIdList}) {
-        my $linkage_groups_list = $params->{linkageGroupIdList};
-        my @linkage_groups_array = split /,/, $linkage_groups_list;
-        %linkage_groups = map { $_ => 1 } @linkage_groups_array;
-    }
-
-    my $snp_genotyping_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'snp genotyping', 'genotype_property')->cvterm_id();
-    my $rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->find( { nd_protocol_id => $c->stash->{map_id} } );
-
-    my @markers;
-    print STDERR "Retrieving map info for ".$rs->name()."\n";
-      #$self->bcs_schema->storage->debug(1);
-    my $lg_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdProtocol")->search( { 'genotypeprops.type_id' => $snp_genotyping_cvterm_id, 'me.nd_protocol_id' => $rs->nd_protocol_id()})->search_related('nd_experiment_protocols')->search_related('nd_experiment')->search_related('nd_experiment_genotypes')->search_related('genotype')->search_related('genotypeprops', {}, {rows=>1, order_by=>{ -asc => 'genotypeprops.genotypeprop_id' }} );
-
-    if (!$lg_rs) {
-        die "This was never supposed to happen :-(";
-    }
-
-    my @ordered_refmarkers;
-    while (my $profile = $lg_rs->next()) {
-      my $profile_json = $profile->value();
-      my $refmarkers = JSON::Any->decode($profile_json);
-      #print STDERR Dumper($refmarkers);
-      push @ordered_refmarkers, sort genosort keys(%$refmarkers);
-    }
-
-  	my %chrs;
-
-    	foreach my $m (@ordered_refmarkers) {
-    	    my ($chr, $pos) = split "_", $m;
-    	    #print STDERR "CHR: $chr. POS: $pos\n";
-           $chrs{$chr} = $pos;
-            #   "markerDbId": 1,
-            #   "markerName": "marker1",
-            #   "location": "1000",
-            #   "linkageGroup": "1A"
-
-            if (%linkage_groups) {
-                if (exists $linkage_groups{$chr} ) {
-                    if ($params->{min} && $params->{max}) {
-                        if ($pos >= $params->{min} && $pos <= $params->{max}) {
-                            push @markers, { markerDbId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
-                        }
-                    } elsif ($params->{min}) {
-                        if ($pos >= $params->{min}) {
-                            push @markers, { markerDbId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
-                        }
-                    } elsif ($params->{max}) {
-                        if ($pos <= $params->{max}) {
-                            push @markers, { markerDbId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
-                        }
-                    } else {
-                        push @markers, { markerDbId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
-                    }
-                }
-            } else {
-                push @markers, { markerDbId => $m, markerName => $m, location => $pos, linkageGroup => $chr };
-            }
-
-        }
-
-    my $total_count = scalar(@markers);
-    my $page_size = $c->stash->{page_size};
-    if ($page_size == $DEFAULT_PAGE_SIZE) {
-        $page_size = 100000;
-    }
-    my $start = $page_size*$c->stash->{current_page};
-    my $end = $page_size*($c->stash->{current_page}+1)-1;
-    my @data_window = splice @markers, $start, $end;
-
-    my %result = (data => \@data_window);
-    my %metadata = (pagination=>pagination_response($total_count, $page_size, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('GenomeMaps');
+	my $brapi_package_result = $brapi_module->positions({
+		map_id => $c->stash->{map_id},
+		linkage_group_ids => $clean_inputs->{linkageGroupId},
+		min => $clean_inputs->{min}->[0],
+		max => $clean_inputs->{max}->[0],
+	});
+	_standard_response_construction($c, $brapi_package_result);
 }
 
+sub maps_marker_linkagegroup_detail : Chained('maps_single') PathPart('positions') Args(1) : ActionClass('REST') { }
+
+sub maps_marker_linkagegroup_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my $linkage_group_id = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('GenomeMaps');
+	my $brapi_package_result = $brapi_module->positions({
+		map_id => $c->stash->{map_id},
+		linkage_group_ids => [$linkage_group_id],
+		min => $clean_inputs->{min}->[0],
+		max => $clean_inputs->{max}->[0],
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
 
 sub locations_list : Chained('brapi') PathPart('locations') Args(0) : ActionClass('REST') { }
 
 sub locations_list_POST {
-    my $self = shift;
-    my $c = shift;
-    my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-
-    $c->stash->{rest} = {status => $status};
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
 }
 
 sub locations_list_GET {
-    my $self = shift;
-    my $c = shift;
-    #my $auth = _authenticate_user($c);
-    my $status = $c->stash->{status};
-    my @data;
-    my @attributes;
-
-    my $locations = CXGN::Trial::get_all_locations($self->bcs_schema);
-
-    my $total_count = scalar(@$locations);
-    my $start = $c->stash->{page_size}*$c->stash->{current_page};
-    my $end = $c->stash->{page_size}*($c->stash->{current_page}+1)-1;
-    for( my $i = $start; $i <= $end; $i++ ) {
-        if (@$locations[$i]) {
-            push @data, {
-                locationDbId => @$locations[$i]->[0],
-                locationType=>'',
-                name=> @$locations[$i]->[1],
-                abbreviation=>'',
-                countryCode=> @$locations[$i]->[6],
-                countryName=> @$locations[$i]->[5],
-                latitude=>@$locations[$i]->[2],
-                longitude=>@$locations[$i]->[3],
-                altitude=>@$locations[$i]->[4],
-                additionalInfo=> @$locations[$i]->[7]
-            };
-        }
-    }
-
-    my %result = (data=>\@data);
-    my %metadata = (pagination=>pagination_response($total_count, $c->stash->{page_size}, $c->stash->{current_page}), status=>[$status], datafiles=>[]);
-    my %response = (metadata=>\%metadata, result=>\%result);
-    $c->stash->{rest} = \%response;
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Locations');
+	my $brapi_package_result = $brapi_module->locations_list();
+	_standard_response_construction($c, $brapi_package_result);
 }
 
+sub observationvariable_data_type_list : Chained('brapi') PathPart('variables/datatypes') Args(0) : ActionClass('REST') { }
 
+sub observationvariable_data_type_list_POST {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+}
+
+sub observationvariable_data_type_list_GET {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
+	my $brapi_package_result = $brapi_module->observation_variable_data_types();
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub observationvariable_ontologies : Chained('brapi') PathPart('ontologies') Args(0) : ActionClass('REST') { }
+
+sub observationvariable_ontologies_POST {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+}
+
+sub observationvariable_ontologies_GET {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+
+	#Using code pattern found in SGN::Controller::Ontology->onto_browser
+	my $onto_root_namespaces = $c->config->{onto_root_namespaces};
+	my @namespaces = split ", ", $onto_root_namespaces;
+	foreach my $n (@namespaces) {
+		$n =~ s/\s*(\w+)\s*\(.*\)/$1/g;
+	}
+	#print STDERR Dumper \@namespaces;
+
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
+	my $brapi_package_result = $brapi_module->observation_variable_ontologies({
+		name_spaces => \@namespaces
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub observationvariable_search : Chained('brapi') PathPart('variables-search') Args(0) : ActionClass('REST') { }
+
+sub observationvariable_search_POST {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	_observationvariable_search_process($self, $c);
+}
+
+sub observationvariable_search_GET {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	_observationvariable_search_process($self, $c);
+}
+
+sub _observationvariable_search_process {
+	my $self = shift;
+	my $c = shift;
+
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
+	my $brapi_package_result = $brapi_module->observation_variable_search({
+		observationvariable_db_ids => $clean_inputs->{observationVariableDbId},
+		ontology_db_names => $clean_inputs->{ontologyXref},
+		ontology_dbxref_terms => $clean_inputs->{ontologyDbId},
+		method_db_ids => $clean_inputs->{methodDbId},
+		scale_db_ids => $clean_inputs->{scaleDbId},
+		observationvariable_names => $clean_inputs->{name},
+		observationvariable_datatypes => $clean_inputs->{datatype},
+		observationvariable_classes => $clean_inputs->{traitClass},
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub observationvariable_list : Chained('brapi') PathPart('variables') Args(0) : ActionClass('REST') { }
+
+sub observationvariable_list_GET {
+	my $self = shift;
+	my $c = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
+	my $brapi_package_result = $brapi_module->observation_variable_search();
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub observationvariable_detail : Chained('brapi') PathPart('variables') Args(1) : ActionClass('REST') { }
+
+sub observationvariable_detail_GET {
+	my $self = shift;
+	my $c = shift;
+	my $trait_id = shift;
+	#my $auth = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('ObservationVariables');
+	my $brapi_package_result = $brapi_module->observation_variable_detail(
+		$trait_id
+	);
+	_standard_response_construction($c, $brapi_package_result);
+}
 
 sub authenticate : Chained('brapi') PathPart('authenticate/oauth') Args(0) {
     my $self = shift;

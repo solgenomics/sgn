@@ -21,19 +21,20 @@ var $j = jQuery.noConflict();
 
 jQuery(document).ready(function($) {
 
-    var list = new CXGN.List();
-    var trait_lists = list.listSelect('select_list', ['traits'], 'Select a list');
-    jQuery('#select_list_div').html(trait_lists);
-
     get_select_box('traits', 'select_traits_for_trait_file', {
         'name': 'html_select_traits_for_trait_file',
         'id': 'html_select_traits_for_trait_file',
-        'empty': 1
+        'empty': 1,
+        'size':10
     });
 
     jQuery('#create_new_trait_file_link').click(function() {
-        jQuery('#html_select_traits_for_trait_file').attr('size', 10);
-        show_list_counts('trait_select_count', document.getElementById("html_select_traits_for_trait_file").length);
+        var list = new CXGN.List();
+        var trait_lists = list.listSelect('select_list', ['traits'], 'Select a list');
+        jQuery('#select_list_div').html(trait_lists);
+        if (document.getElementById("html_select_traits_for_trait_file")) {
+            show_list_counts('trait_select_count', document.getElementById("html_select_traits_for_trait_file").length);
+        }
 
         jQuery('#html_select_traits_for_trait_file').change(
             function() {

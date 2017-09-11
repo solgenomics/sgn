@@ -23,6 +23,8 @@ my $nocleanup;
 my $noserver;
 my $noparallel = 0;
 my $fixture_path = '../fixture/cxgn_fixture.sql';
+my $use_brapi_fixture;
+my $brapi_fixture = '../fixture/brapi_fixture.sql';
 
 GetOptions(
     "carpalways" => \( my $carpalways = 0 ),
@@ -31,6 +33,7 @@ GetOptions(
     "noserver" => \$noserver,
     "noparallel" => \$noparallel,
     "fixture_path" => \$fixture_path,
+    "brapi_fixture" => \$use_brapi_fixture,
     );
 
 require Carp::Always if $carpalways;
@@ -81,8 +84,9 @@ close($PGPASS);
 system("chmod 0600 $ENV{HOME}/.pgpass");
 print STDERR "Done.\n";
 
-print STDERR "# Loading database fixture... ";
-my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || $fixture_path;
+my $dump_path = $use_brapi_fixture ? $brapi_fixture : $fixture_path;
+my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || $dump_path;
+print STDERR "# Loading database fixture... $database_fixture_dump ... ";
 system("createdb -h $config->{dbhost} -U postgres -T template0 -E SQL_ASCII --no-password $dbname");
 system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbname > /dev/null");
 

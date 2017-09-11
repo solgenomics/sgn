@@ -23,10 +23,9 @@
 	    <tr>
     	      <td>progeny name</td>
     	      <td>female parent accession</td>
-    	      <td>male parent accession(s) (if more than one, separate using commas)</td>
-	      <td>
-		type (biparental, open, self)
-		</td>
+    	      <!--<td>male parent accession(s) (if more than one, separate using commas)</td>-->
+              <td>male parent accession</td>
+              <td>type</td>
 	      
   	    </tr>
 	  </body>
@@ -34,13 +33,15 @@
 
 	  <h4>Required fields:</h4>
 	  <ul>
-	    <li>progreny name (must exist in the database)</li>
+	    <li>progreny name (must exist in the database and can be accession uniquename or accession synonym)</li>
 	    <li>female parent accession (must exist in the database)</li>
+        <li>type (biparental, open, self)</li>
 	  </ul>
 
 	  <h4>Optional fields</h4>
 	  <ul>
-	    <li>male parent accession (if provided, must exist in the database). Several potential male parents can be given separated by commas. A population entry will be generated in that case, with the listed male parents associated to the population.</li>
+	    <!--li>male parent accession (if provided, must exist in the database). Several potential male parents can be given separated by commas. A population entry will be generated in that case, with the listed male parents associated to the population.</li-->
+        <li>male parent accession (can be accession uniquename or accession synonym or population name).</li>
 	  </ul>
 
 	  <h4>Notes</h4>

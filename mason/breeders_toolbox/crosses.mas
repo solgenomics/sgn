@@ -36,6 +36,7 @@ $user_id => undef
 </table>
 -->
 
+<& /breeders_toolbox/cross_wishlist.mas &>
 <& /breeders_toolbox/folder/folder_set.mas, project_type=>'Cross' &>
 <& /breeders_toolbox/folder/folder_new.mas &>
 <& /breeders_toolbox/folder/folder_move.mas &>
@@ -167,13 +168,13 @@ $user_id => undef
               </div>
 	    </div>
 	    <div class="form-group" id="get_maternal_parent" style="display: none">
-      	      <label class="col-sm-2 control-label">Maternal Parent: </label>
+      	      <label class="col-sm-2 control-label">Female Parent: </label>
       	      <div class="col-sm-10">
 	        <input class="form-control" id="maternal_parent" type="text" name="maternal" />
               </div>
 	    </div>
 	    <div class="form-group" id="get_paternal_parent" style="display: none">
-      	      <label class="col-sm-2 control-label">Paternal Parent: </label>
+      	      <label class="col-sm-2 control-label">Male Parent: </label>
       	      <div class="col-sm-10">
 	        <input class="form-control" id="paternal_parent" type="text" name="paternal" />
               </div>
@@ -185,25 +186,25 @@ $user_id => undef
               </div>
       </div>
       <div class="form-group" id="get_open_maternal_parent" style="display: none">
-              <label class="col-sm-2 control-label">Maternal Parent: </label>
+              <label class="col-sm-2 control-label">Female Parent: </label>
               <div class="col-sm-10">
           <input class="form-control" id="open_maternal_parent" type="text" name="open maternal" />
               </div>
       </div>
       <div class="form-group" id="get_open_paternal_population" style="display: none">
-              <div class="col-sm-2"><center><label class="control-label">Paternal Population: </label><i>(optional)</i></center></div>
+              <div class="col-sm-2"><center><label class="control-label">Male Population: </label><i>(optional)</i></center></div>
               <div class="col-sm-10">
           <input class="form-control" id="open_paternal_population" type="text" name="open paternal" />
               </div>
       </div>
       <div class="form-group" id="get_bulk_maternal_population" style="display: none">
-              <label class="col-sm-2 control-label">Maternal Population: </label>
+              <label class="col-sm-2 control-label">Female Population: </label>
               <div class="col-sm-10">
           <input class="form-control" id="bulk_maternal_population" type="text" name="bulk maternal" />
               </div>
       </div>
       <div class="form-group" id="get_bulk_paternal_parent" style="display: none">
-              <label class="col-sm-2 control-label">Paternal Parent: </label>
+              <label class="col-sm-2 control-label">Male Parent: </label>
               <div class="col-sm-10">
           <input class="form-control" id="bulk_paternal_parent" type="text" name="bulk paternal" />
               </div>
@@ -215,13 +216,13 @@ $user_id => undef
               </div>
       </div>
       <div class="form-group" id="get_bulk_open_maternal_population" style="display: none">
-              <label class="col-sm-2 control-label">Maternal Population: </label>
+              <label class="col-sm-2 control-label">Female Population: </label>
               <div class="col-sm-10">
           <input class="form-control" id="bulk_open_maternal_population" type="text" name="bulk open maternal" />
               </div>
       </div>
       <div class="form-group" id="get_bulk_open_paternal_population" style="display: none">
-              <div class="col-sm-2"><center><label class="control-label">Paternal Population: </label><i>(optional)</i></center></div>
+              <div class="col-sm-2"><center><label class="control-label">Male Population: </label><i>(optional)</i></center></div>
               <div class="col-sm-10">
           <input class="form-control" id="bulk_open_paternal_population" type="text" name="bulk open paternal" />
               </div>
@@ -245,13 +246,13 @@ $user_id => undef
             </div>
       </div>
       <div class="form-group" id="maternal_accessions" style="display: none">
-            <label class="col-sm-2 control-label">Multicross Maternal Parents: </label>
+            <label class="col-sm-2 control-label">Multicross Female Parents: </label>
             <div class="col-sm-10">
             <div id="maternal_accession_list"></div>
             </div>
       </div>
       <div class="form-group" id="paternal_accessions" style="display: none">
-            <label class="col-sm-2 control-label">Multicross Paternal Parents: </label>
+            <label class="col-sm-2 control-label">Multicross Male Parents: </label>
             <div class="col-sm-10">
             <div id="paternal_accession_list"></div>
             </div>

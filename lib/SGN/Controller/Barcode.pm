@@ -7,24 +7,26 @@ use GD;
 use DateTime;
 use File::Slurp;
 use Barcode::Code128;
-#use GD::Barcode::QRcode;
+use GD::Barcode::QRcode;
 use Tie::UrlEncoder;
 use PDF::LabelPage;
 use Math::Base36 ':all';
+use CXGN::QRcode;
+use Data::Dumper;
 
 our %urlencode;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
-sub index : Path('/barcode') Args(0) { 
+sub index : Path('/barcode') Args(0) {
     my $self =shift;
     my $c = shift;
-    
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     # get projects
     my @rows = $schema->resultset('Project::Project')->all();
     my @projects = ();
-    foreach my $row (@rows) { 
+    foreach my $row (@rows) {
 	push @projects, [ $row->project_id, $row->name, $row->description ];
     }
     $c->stash->{projects} = \@projects;
@@ -41,7 +43,7 @@ sub index : Path('/barcode') Args(0) {
     print STDERR join "\n", @tools_def;
 
     $c->stash->{tools_def} = \@tools_def;
-    $c->stash->{locations} = \@locations;   
+    $c->stash->{locations} = \@locations;
     $c->stash->{template} = '/barcode/index.mas';
 }
 
@@ -50,10 +52,10 @@ sub index : Path('/barcode') Args(0) {
 
  URL:          mapped to URL /barcode/image
  Params:       code : the code to represent in the barcode
-               text : human readable text 
+               text : human readable text
                size : either small, large
                top  : pixels from the top
- Desc:         creates the barcode image, sets the content type to 
+ Desc:         creates the barcode image, sets the content type to
                image/png and returns the barcode image to the browser
  Ret:
  Side Effects:
@@ -61,27 +63,27 @@ sub index : Path('/barcode') Args(0) {
 
 =cut
 
-sub barcode_image : Path('/barcode/image') Args(0) { 
+sub barcode_image : Path('/barcode/image') Args(0) {
     my $self = shift;
     my $c = shift;
-    
+
     my $code = $c->req->param("code");
     my $text = $c->req->param("text");
     my $size = $c->req->param("size");
     my $top  = $c->req->param("top");
 
     my $barcode = $self->barcode($code, $text, $size, $top);
-    
+
     $c->res->headers->content_type('image/png');
-    
-    $c->res->body($barcode->png());    
+
+    $c->res->body($barcode->png());
 }
 
 
-sub barcode_tempfile_jpg : Path('/barcode/tempfile') Args(4) { 
+sub barcode_tempfile_jpg : Path('/barcode/tempfile') Args(4) {
     my $self = shift;
     my $c = shift;
-    
+
     my $code = shift;
     my $text = shift;
     my $size = shift;
@@ -92,7 +94,7 @@ sub barcode_tempfile_jpg : Path('/barcode/tempfile') Args(4) {
 				 $size,
 				 $top,
 	);
-    
+
     $c->tempfiles_subdir('barcode');
     my ($file, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
 
@@ -103,6 +105,79 @@ sub barcode_tempfile_jpg : Path('/barcode/tempfile') Args(4) {
     return $file;
 }
 
+sub barcode_qrcode_jpg : Path('/barcode/tempfile') Args(2){
+   my $self = shift;
+   my $c = shift;
+   my $stock_id = shift;
+   my $stock_name = shift;
+   my $field_info = shift;
+   my $fieldbook_enabled = shift;
+   my $text;
+   if ($fieldbook_enabled eq "enable_fieldbook_2d_barcode"){
+       $text = $stock_name;
+   }
+   else {
+       $text = "stock name: ".$stock_name. "\n stock id: ". $stock_id. "\n".$field_info;
+   }
+
+
+   $c->tempfiles_subdir('barcode');
+   my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+
+   my $barcode_generator = CXGN::QRcode->new();
+   my $barcode_file = $barcode_generator->get_barcode_file(
+         $file_location,
+         $text,
+    );
+    
+   close($barcode_file);
+   return $barcode_file;
+ }
+
+ sub phenotyping_qrcode_jpg : Path('/barcode/tempfile') Args(2){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = shift;
+    my $stock_name = shift;
+    my $field_info = shift;
+    my $base_url = $c->config->{main_production_site_url};
+    my $text = "$base_url/breeders/plot_phenotyping?stock_id=$stock_id";
+
+    $c->tempfiles_subdir('barcode');
+    my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+
+    my $barcode_generator = CXGN::QRcode->new();
+    my $barcode_file = $barcode_generator->get_barcode_file(
+          $file_location,
+          $text,
+     );
+
+    return $barcode_file;
+  }
+
+  sub trial_qrcode_jpg : Path('/barcode/trial') Args(2){
+     my $self = shift;
+     my $c = shift;
+     my $trial_id = shift;
+     my $format = shift;
+     my $base_url = $c->config->{main_production_site_url};
+     my $text = "$base_url/breeders/direct_phenotyping?trial_id=$trial_id";
+     if ($format eq "stock_qrcode"){
+        $text =  $trial_id;
+     }
+
+      $c->tempfiles_subdir('barcode');
+      my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+
+       my $barcode_generator = CXGN::QRcode->new();
+       my $barcode_file = $barcode_generator->get_barcode_file(
+             $file_location,
+             $text,
+        );
+
+       $c->res->headers->content_type('image/jpg');
+       $c->res->body($barcode_file);
+   }
 
 =head2 barcode
 
@@ -115,7 +190,7 @@ sub barcode_tempfile_jpg : Path('/barcode/tempfile') Args(4) {
 
 =cut
 
-sub barcode { 
+sub barcode {
     my $self = shift;
     my $code = shift;
     my $text = shift;
@@ -131,20 +206,21 @@ sub barcode {
     $barcode_object->border(2);
     $barcode_object->scale($scale);
     $barcode_object->top_margin($top);
+    #$barcode_object->show_text($show_text);
     $barcode_object->font_align("center");
     my  $barcode = $barcode_object ->gd_image();
     my $text_width = gdLargeFont->width()*length($text);
     $barcode->string(gdLargeFont,int(($barcode->width()-$text_width)/2),10,$text, $barcode->colorAllocate(0, 0, 0));
     return $barcode;
 }
-    
+
 #deprecated
-sub code128_png :Path('/barcode/code128png') :Args(2) { 
+sub code128_png :Path('/barcode/code128png') :Args(2) {
     my $self = shift;
     my $c = shift;
     my $identifier = shift;
     my $text = shift;
-     
+
     $text =~ s/\+/ /g;
     $identifier =~ s/\+/ /g;
 
@@ -158,22 +234,22 @@ sub code128_png :Path('/barcode/code128png') :Args(2) {
     my $text_width = gdLargeFont->width()*length($text);
     $barcode->string(gdLargeFont,int(($barcode->width()-$text_width)/2),10,$text, $barcode->colorAllocate(0, 0, 0));
     $c->res->headers->content_type('image/png');
-    
-    $c->res->body($barcode->png());    
+
+    $c->res->body($barcode->png());
 }
 
 # a barcode element for a continuous barcode
 
-sub barcode_element : Path('/barcode/element/') :Args(2) { 
+sub barcode_element : Path('/barcode/element/') :Args(2) {
     my $self = shift;
     my $c = shift;
     my $text = shift;
     my $height = shift;
-    
+
     my $size = $c->req->param("size");
 
     my $scale = 1;
-    if ($size eq "large") { 
+    if ($size eq "large") {
 	$scale = 2;
     }
 
@@ -193,13 +269,13 @@ sub barcode_element : Path('/barcode/element/') :Args(2) {
 
     print STDERR "Creating barcode with width ".($barcode->width)." and height $height\n";
     $barcode_slice->copy($barcode, 0, 0, 0, 0, $barcode->width, $height);
-    
+
     $c->res->headers->content_type('image/png');
-    
-    $c->res->body($barcode_slice->png());    
+
+    $c->res->body($barcode_slice->png());
 }
 
-sub qrcode_png :Path('/barcode/qrcodepng') :Args(2) { 
+sub qrcode_png :Path('/barcode/qrcodepng') :Args(2) {
     my $self = shift;
     my $c = shift;
     my $link = shift;
@@ -210,12 +286,12 @@ sub qrcode_png :Path('/barcode/qrcodepng') :Args(2) {
 
     my $bc = GD::Barcode::QRcode->new($link, { Ecc => 'L', Version=>2, ModuleSize => 2 });
     my $image = $bc->plot();
-    
-    $c->res->headers->content_type('image/png');    
-    $c->res->body($image->png());			      
+
+    $c->res->headers->content_type('image/png');
+    $c->res->body($image->png());
 }
 
-sub barcode_tool :Path('/barcode/tool') Args(3) { 
+sub barcode_tool :Path('/barcode/tool') Args(3) {
     my $self = shift;
     my $c = shift;
     my $cvterm = shift;
@@ -232,12 +308,12 @@ sub barcode_tool :Path('/barcode/tool') Args(3) {
 
 
     my $dbxref_rs = $c->dbic_schema('Bio::Chado::Schema')->resultset('General::Dbxref')->search_rs( { accession=>$accession, db_id=>$db_row->db_id } );
-    
+
     my $cvterm_rs = $c->dbic_schema('Bio::Chado::Schema')->resultset('Cv::Cvterm')->search( { dbxref_id => $dbxref_rs->first->dbxref_id });
 
     my $cvterm_id = $cvterm_rs->first()->cvterm_id();
     my $cvterm_synonym_rs = ""; #$c->dbic_schema('Bio::Chado::Schema')->resultset('Cv::Cvtermsynonym')->search->( { cvterm_id=>$cvterm_id });
-    
+
     $c->stash->{cvterm} = $cvterm;
     $c->stash->{cvterm_name} = $cvterm_rs->first()->name();
     $c->stash->{cvterm_definition} = $cvterm_rs->first()->definition();
@@ -249,11 +325,11 @@ sub barcode_tool :Path('/barcode/tool') Args(3) {
 }
 
 
-sub barcode_multitool :Path('/barcode/multitool') Args(0) { 
+sub barcode_multitool :Path('/barcode/multitool') Args(0) {
 
     my $self  =shift;
     my $c = shift;
-  
+
     $c->stash->{operator} = $c->req->param('operator');
     $c->stash->{date}     = $c->req->param('date');
     $c->stash->{project}  = $c->req->param('project');
@@ -263,21 +339,21 @@ sub barcode_multitool :Path('/barcode/multitool') Args(0) {
 
     my $cvterm_data = [];
 
-    foreach my $cvterm (@cvterms) { 
+    foreach my $cvterm (@cvterms) {
 
 	my ($db, $accession) = split ":", $cvterm;
 
 	print STDERR "Searching $cvterm, DB $db...\n";
 	my ($db_row) = $c->dbic_schema('Bio::Chado::Schema')->resultset('General::Db')->search( { name => $db } );
-	
+
 	print STDERR $db_row->db_id;
 	print STDERR "DB_ID for $db: $\n";
-	
-	
+
+
 	my $dbxref_rs = $c->dbic_schema('Bio::Chado::Schema')->resultset('General::Dbxref')->search_rs( { accession=>$accession, db_id=>$db_row->db_id } );
-	
+
 	my $cvterm_rs = $c->dbic_schema('Bio::Chado::Schema')->resultset('Cv::Cvterm')->search( { dbxref_id => $dbxref_rs->first->dbxref_id });
-	
+
 	my $cvterm_id = $cvterm_rs->first()->cvterm_id();
 	my $cvterm_synonym_rs = ""; #$c->dbic_schema('Bio::Chado::Schema')->resultset('Cv::Cvtermsynonym')->search->( { cvterm_id=>$cvterm_id });
 
@@ -291,11 +367,11 @@ sub barcode_multitool :Path('/barcode/multitool') Args(0) {
     $c->stash->{cvterms} = $cvterm_data;
 
     $c->stash->{template} = '/barcode/tool/multi_tool.mas';
-    
-    
+
+
 }
 
-sub continuous_scale : Path('/barcode/continuous_scale') Args(0) { 
+sub continuous_scale : Path('/barcode/continuous_scale') Args(0) {
     my $self = shift;
     my $c = shift;
     my $start = $c->req->param("start");
@@ -306,9 +382,9 @@ sub continuous_scale : Path('/barcode/continuous_scale') Args(0) {
     my @barcodes = ();
 
     # barcodes all have to have the same with - use with of end value
-    my $text_width = length($end); 
+    my $text_width = length($end);
 
-    for(my $i = $start; $i <= $end; $i += $step) { 
+    for(my $i = $start; $i <= $end; $i += $step) {
 	my $text = $urlencode{sprintf "%".$text_width."d", $i};
 	print STDERR "TEXT: $text\n";
 	push @barcodes, qq { <img src="/barcode/element/$i/$height" align="right" /> };
@@ -317,13 +393,13 @@ sub continuous_scale : Path('/barcode/continuous_scale') Args(0) {
 
     $c->res->body("<table cellpadding=\"0\" cellspacing=\"0\">". (join "\n", (map { "<tr><td>$_</td></tr>"}  @barcodes)). "</table>");
 
-    
+
 }
 
-sub continuous_scale_form : Path('/barcode/continuous_scale/input') :Args(0) { 
+sub continuous_scale_form : Path('/barcode/continuous_scale/input') :Args(0) {
     my $self = shift;
     my $c = shift;
-    
+
     my $form = <<HTML;
 <h1>Create continuous barcode</h1>
 
@@ -342,10 +418,10 @@ $c->res->body($form);
 
 }
 
-sub generate_barcode : Path('/barcode/generate') Args(0) { 
+sub generate_barcode : Path('/barcode/generate') Args(0) {
     my $self = shift;
     my $c = shift;
-    
+
     my $text = $c->req->param("text");
     my $size = $c->req->param("size");
 
@@ -356,12 +432,12 @@ sub generate_barcode : Path('/barcode/generate') Args(0) {
 
 }
 
-sub metadata_barcodes : Path('/barcode/metadata') Args(0) { 
+sub metadata_barcodes : Path('/barcode/metadata') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    
-    
+
+
     $c->stash->{operator} = $c->req->param("operator");
     $c->stash->{date}     = $c->req->param("date");
     $c->stash->{size}     = $c->req->param("size");
@@ -371,38 +447,38 @@ sub metadata_barcodes : Path('/barcode/metadata') Args(0) {
     $c->stash->{template} = '/barcode/tool/metadata.mas';
 }
 
-sub new_barcode_tool : Path('/barcode/tool/') Args(1) { 
+sub new_barcode_tool : Path('/barcode/tool/') Args(1) {
     my $self = shift;
     my $c = shift;
-    
+
     my $term = shift;
 
     $c->stash->{template} = '/barcode/tool/'.$term.'.mas';
 }
 
-sub cross_tool : Path('/barcode/tool/cross') { 
+sub cross_tool : Path('/barcode/tool/cross') {
     my $self = shift;
     my $c = shift;
 
     $c->stash->{template} = '/barcode/tool/cross.mas';
 }
 
-sub dna_tool   : Path('/barcode/tool/dna/') { 
+sub dna_tool   : Path('/barcode/tool/dna/') {
     my $self =shift;
     my $c = shift;
     $c->stash->{template} = '/barcode/tool/dna.mas';
 }
 
-sub generate_unique_barcode_labels : Path('/barcode/unique') Args(0) { 
+sub generate_unique_barcode_labels : Path('/barcode/unique') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    if (! $c->user()) { 	
+    if (! $c->user()) {
 	$c->stash->{template} = 'generic_message.mas';
 	$c->stash->{message} = 'You must be logged in to use the unique barcode tool.';
 	return;
     }
-    
+
     my $label_pages = $c->req->param("label_pages");
     my $label_rows = $c->req->param("label_rows") || 10;
     my $label_cols  = $c->req->param("label_cols") || 1;
@@ -414,20 +490,20 @@ sub generate_unique_barcode_labels : Path('/barcode/unique') Args(0) {
 
     # convert mm into pixels
     #
-    my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { int($_ * 2.846) } ($top_margin_mm, 
-											$left_margin_mm, 
-											$bottom_margin_mm, 
-											$right_margin_mm); 
+    my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { int($_ * 2.846) } ($top_margin_mm,
+											$left_margin_mm,
+											$bottom_margin_mm,
+											$right_margin_mm);
     my $total_labels = $label_pages * $label_cols * $label_rows;
 
 
     my $dir = $c->tempfiles_subdir('pdfs');
     my ($FH, $filename) = $c->tempfile(TEMPLATE=>"pdfs/pdf-XXXXX", SUFFIX=>".pdf", UNLINK=>0);
     print STDERR "FILENAME: $filename \n\n\n";
-    my $pdf = PDF::Create->new(filename=>$c->path_to($filename), 
+    my $pdf = PDF::Create->new(filename=>$c->path_to($filename),
 			       Author=>$c->config->{project_name},
 			       Title=>'Labels',
-			       CreationDate => [ localtime ], 
+			       CreationDate => [ localtime ],
 			       Version=>1.2,
 	);
 
@@ -438,7 +514,7 @@ sub generate_unique_barcode_labels : Path('/barcode/unique') Args(0) {
     my @pages = ();
     push @pages, PDF::LabelPage->new( { top_margin=>$top_margin, bottom_margin=>$bottom_margin, left_margin=>$left_margin, right_margin=>$right_margin, pdf=>$pdf, cols => $label_cols, rows => $label_rows });
 
-    foreach my $label_count (1..$total_labels) { 
+    foreach my $label_count (1..$total_labels) {
 	my $label_code = $self->generate_label_code($c);
 
 	print STDERR "LABEL CODE: $label_code\n";
@@ -452,14 +528,14 @@ sub generate_unique_barcode_labels : Path('/barcode/unique') Args(0) {
 	# note: pdf coord system zero is lower left corner
 	#
 
-	if ($pages[-1]->need_more_labels()) { 
+	if ($pages[-1]->need_more_labels()) {
 	    print STDERR "ADDING LABEL...\n";
 	    $pages[-1]->add_label($image);
 	}
-	
-	else { 
+
+	else {
 	    print STDERR "CREATING NEW PAGE...\n";
-	
+
 	    push @pages, PDF::LabelPage->new({ top_margin=>$top_margin, bottom_margin=>$bottom_margin, left_margin=>$left_margin, right_margin=>$right_margin, pdf=>$pdf, cols => $label_cols, rows => $label_rows });
 
 	    $pages[-1]->add_label($image);
@@ -467,7 +543,7 @@ sub generate_unique_barcode_labels : Path('/barcode/unique') Args(0) {
 
     }
 
-    foreach my $p (@pages) { 
+    foreach my $p (@pages) {
 	$p->render();
     }
 
@@ -482,7 +558,7 @@ sub generate_unique_barcode_labels : Path('/barcode/unique') Args(0) {
 
 
 
-sub generate_label_code { 
+sub generate_label_code {
     my $self = shift;
     my $c = shift;
 
@@ -493,14 +569,12 @@ sub generate_label_code {
     my ($next_val) = $h->fetchrow_array();
 
     print STDERR "nextval is $next_val\n";
-    
+
     my $encoded = Math::Base36::encode_base36($next_val, 7);
 
     return $encoded;
-    
+
 }
 
 
 1;
-
-
