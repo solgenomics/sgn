@@ -129,6 +129,10 @@ has 'breeding_program_id' => (
     is => 'rw',
 );
 
+has 'nd_experiment' => (
+    isa => 'Bio::Chado::Schema::Result::NaturalDiversity::NdExperiment',
+    is => 'rw',
+);
 
 after 'stock_id' => sub {
     my $self = shift;
@@ -164,9 +168,12 @@ sub list_seedlots {
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
     my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
     my $current_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_count", "stock_property")->cvterm_id();
+    my $experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_experiment", "experiment_type")->cvterm_id();
 
     my %search_criteria;
     $search_criteria{'me.type_id'} = $type_id;
+    #$search_criteria{'nd_experiment.type_id'} = $experiment_cvterm_id;
+    #$search_criteria{'nd_experiment_stocks.type_id'} = $experiment_cvterm_id;
     $search_criteria{'stock_relationship_objects.type_id'} = $collection_of_cvterm_id;
     $search_criteria{'stockprops.type_id'} = $current_count_cvterm_id;
     if ($seedlot_name) {
@@ -196,7 +203,7 @@ sub list_seedlots {
             '+select'=>['project.name', 'project.project_id', 'subject.stock_id', 'subject.uniquename', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id', 'stockprops.value'],
             '+as'=>['breeding_program_name', 'breeding_program_id', 'source_stock_id', 'source_uniquename', 'location', 'location_id', 'current_count'],
             order_by => {-asc=>'project.name'},
-            distinct => 1
+            #distinct => 1
         }
     );
     my $records_total = $rs->count();
@@ -278,14 +285,20 @@ sub _store_seedlot_location {
 sub _retrieve_location {
     my $self = shift;
     my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
-    my $nd_geolocation_rs = $self->schema()->resultset('Stock::Stock')->search({'me.stock_id'=>$self->seedlot_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id})->search_related('nd_geolocation');
+    my $nd_experiment_rs = $self->schema()->resultset('Stock::Stock')->search({'me.stock_id'=>$self->seedlot_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id});
+    if ($nd_experiment_rs->count != 1){
+        die "Seedlot does not have 1 nd_experiment associated!\n";
+    }
+    my $nd_experiment = $nd_experiment_rs->first();
+    my $nd_geolocation_rs = $nd_experiment->search_related('nd_geolocation', {}, {'+select'=>['description'], '+as'=>['description']});
     if ($nd_geolocation_rs->count != 1){
         die "Seedlot does not have 1 nd_geolocation associated!\n";
     }
-    my $nd_geolocation_id = $nd_geolocation_rs->first()->nd_geolocation_id();
-    my $location_code = $nd_geolocation_rs->first()->description();
+    my $nd_geolocation_id = $nd_geolocation_rs->nd_geolocation_id();
+    my $location_code = $nd_geolocation_rs->get_column('description');
     $self->nd_geolocation_id($nd_geolocation_id);
     $self->location_code($location_code);
+	$self->nd_experiment($nd_experiment);
 }
 
 sub _retrieve_breeding_program {
@@ -428,7 +441,7 @@ sub _add_transaction {
 =head2 store()
 
  Usage:        my $seedlot_id = $sl->store();
- Desc:         stores the current state of the object to the db
+ Desc:         stores the current state of the object to the db. uses CXGN::Stock store as well.
  Ret:          the seedlot id.
  Args:         none
  Side Effects: accesses the db. Creates a new seedlot ID if not
@@ -455,6 +468,34 @@ sub store {
     $self->_store_seedlot_relationships();
 
     return $self->seedlot_id();
+}
+
+=head2 delete()
+
+ Usage:        my $error_message = $sl->delete();
+ Desc:         delete the seedlot from the database. only possible to delete a seedlot that has not been used in any transactions other than the transaction that initiated it.
+ Ret:          any error message. undef if no errors
+ Args:         none
+ Side Effects: accesses the db. Deletes seedlot
+ Example:
+
+=cut
+
+sub delete {
+	my $self = shift;
+	my $error = '';
+	my $transactions = $self->transactions();
+	if (scalar(@$transactions)>1){
+		$error = "This seedlot has been used in transactions and so cannot be deleted!";
+	} else {
+		my $stock = $self->stock();
+        $self->location_code();
+		my $nd_experiment = $self->nd_experiment();
+		$nd_experiment->delete();
+		$stock->delete();
+	}
+
+	return $error;
 }
 
 1;
