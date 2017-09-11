@@ -85,90 +85,98 @@ $parsed_data = $parser->parse();
 ok($parsed_data, "Check if parse validate excel file works");
 ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
 
-#print STDERR Dumper $parsed_data;
+print STDERR Dumper $parsed_data;
 
 my $parsed_data_check = {
-          '6' => {
-                   'block_number' => '2',
-                   'is_a_control' => 0,
-                   'stock_name' => 'test_accession3',
-                   'plot_number' => '6',
-                   'rep_number' => '2',
-                   'range_number' => '2',
-                   'row_number' => '2',
-                   'plot_name' => 'plot_name6'
-                 },
-          '3' => {
-                   'block_number' => '1',
-                   'is_a_control' => 0,
-                   'stock_name' => 'test_accession2',
-                   'plot_number' => '3',
-                   'rep_number' => '1',
-                   'range_number' => '1',
-                   'row_number' => '3',
-                   'plot_name' => 'plot_name3'
-                 },
-          '7' => {
-                   'block_number' => '2',
-                   'is_a_control' => 0,
-                   'stock_name' => 'test_accession4',
-                   'plot_number' => '7',
-                   'rep_number' => '1',
-                   'range_number' => '2',
-                   'row_number' => '3',
-                   'plot_name' => 'plot_name7'
-                 },
-          '2' => {
-                   'block_number' => '1',
-                   'is_a_control' => 0,
-                   'stock_name' => 'test_accession1',
-                   'plot_number' => '2',
-                   'rep_number' => '2',
-                   'range_number' => '1',
-                   'row_number' => '2',
-                   'plot_name' => 'plot_name2'
-                 },
-          '8' => {
-                   'block_number' => '2',
-                   'is_a_control' => 0,
-                   'stock_name' => 'test_accession4',
-                   'plot_number' => '8',
-                   'rep_number' => '2',
-                   'range_number' => '2',
-                   'row_number' => '4',
-                   'plot_name' => 'plot_name8'
-                 },
-          '1' => {
-                   'block_number' => '1',
-                   'is_a_control' => 0,
-                   'stock_name' => 'test_accession1',
-                   'plot_number' => '1',
-                   'rep_number' => '1',
-                   'range_number' => '1',
-                   'row_number' => '1',
-                   'plot_name' => 'plot_name1'
-                 },
-          '4' => {
-                   'block_number' => '1',
-                   'is_a_control' => 0,
-                   'stock_name' => 'test_accession2',
-                   'plot_number' => '4',
-                   'rep_number' => '2',
-                   'range_number' => '1',
-                   'row_number' => '4',
-                   'plot_name' => 'plot_name4'
-                 },
-          '5' => {
-                   'block_number' => '2',
-                   'is_a_control' => 0,
-                   'stock_name' => 'test_accession3',
-                   'plot_number' => '5',
-                   'rep_number' => '1',
-                   'range_number' => '2',
-                   'row_number' => '1',
-                   'plot_name' => 'plot_name5'
-                 }
-        };
+	'1' => {
+			  'plot_name' => 'plot_name1',
+			  'stock_name' => 'test_accession1',
+			  'col_number' => '1',
+			  'is_a_control' => 0,
+			  'rep_number' => '1',
+			  'block_number' => '1',
+			  'range_number' => '1',
+			  'row_number' => '1',
+			  'plot_number' => '1'
+			},
+	 '6' => {
+			  'rep_number' => '2',
+			  'is_a_control' => 0,
+			  'block_number' => '2',
+			  'plot_name' => 'plot_name6',
+			  'stock_name' => 'test_accession3',
+			  'col_number' => '2',
+			  'range_number' => '2',
+			  'row_number' => '2',
+			  'plot_number' => '6'
+			},
+	 '7' => {
+			  'range_number' => '2',
+			  'row_number' => '3',
+			  'plot_number' => '7',
+			  'plot_name' => 'plot_name7',
+			  'stock_name' => 'test_accession4',
+			  'col_number' => '2',
+			  'rep_number' => '1',
+			  'is_a_control' => 0,
+			  'block_number' => '2'
+			},
+	 '4' => {
+			  'range_number' => '1',
+			  'plot_number' => '4',
+			  'row_number' => '4',
+			  'is_a_control' => 0,
+			  'rep_number' => '2',
+			  'block_number' => '1',
+			  'plot_name' => 'plot_name4',
+			  'col_number' => '1',
+			  'stock_name' => 'test_accession2'
+			},
+	 '8' => {
+			  'range_number' => '2',
+			  'row_number' => '4',
+			  'plot_number' => '8',
+			  'plot_name' => 'plot_name8',
+			  'stock_name' => 'test_accession4',
+			  'col_number' => '2',
+			  'rep_number' => '2',
+			  'is_a_control' => 0,
+			  'block_number' => '2'
+			},
+	 '2' => {
+			  'range_number' => '1',
+			  'plot_number' => '2',
+			  'row_number' => '2',
+			  'plot_name' => 'plot_name2',
+			  'col_number' => '1',
+			  'stock_name' => 'test_accession1',
+			  'is_a_control' => 0,
+			  'rep_number' => '2',
+			  'block_number' => '1'
+			},
+	 '5' => {
+			  'range_number' => '2',
+			  'row_number' => '1',
+			  'plot_number' => '5',
+			  'plot_name' => 'plot_name5',
+			  'stock_name' => 'test_accession3',
+			  'col_number' => '2',
+			  'is_a_control' => 0,
+			  'rep_number' => '1',
+			  'block_number' => '2'
+			},
+	 '3' => {
+			  'stock_name' => 'test_accession2',
+			  'col_number' => '1',
+			  'plot_name' => 'plot_name3',
+			  'block_number' => '1',
+			  'is_a_control' => 0,
+			  'rep_number' => '1',
+			  'row_number' => '3',
+			  'plot_number' => '3',
+			  'range_number' => '1'
+			}
+   };
 
 is_deeply($parsed_data, $parsed_data_check, 'check trial excel parse data' );
 
@@ -230,7 +238,7 @@ ok($post1_stock_diff == 8, "check stock table after upload excel trial");
 my $post_stock_prop_count = $c->bcs_schema->resultset('Stock::Stockprop')->search({})->count();
 my $post1_stock_prop_diff = $post_stock_prop_count - $pre_stock_prop_count;
 print STDERR "Stockprop: ".$post1_stock_prop_diff."\n";
-ok($post1_stock_prop_diff == 40, "check stockprop table after upload excel trial");
+ok($post1_stock_prop_diff == 48, "check stockprop table after upload excel trial");
 
 my $post_stock_relationship_count = $c->bcs_schema->resultset('Stock::StockRelationship')->search({})->count();
 my $post1_stock_relationship_diff = $post_stock_relationship_count - $pre_stock_relationship_count;
@@ -413,7 +421,7 @@ ok($post2_stock_diff == 14, "check stock table after upload igd trial");
 $post_stock_prop_count = $c->bcs_schema->resultset('Stock::Stockprop')->search({})->count();
 my $post2_stock_prop_diff = $post_stock_prop_count - $pre_stock_prop_count;
 print STDERR "Stockprop: ".$post2_stock_prop_diff."\n";
-ok($post2_stock_prop_diff == 63, "check stockprop table after upload igd trial");
+ok($post2_stock_prop_diff == 71, "check stockprop table after upload igd trial");
 
 $post_stock_relationship_count = $c->bcs_schema->resultset('Stock::StockRelationship')->search({})->count();
 my $post2_stock_relationship_diff = $post_stock_relationship_count - $pre_stock_relationship_count;

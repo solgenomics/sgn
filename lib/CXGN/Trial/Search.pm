@@ -314,6 +314,10 @@ sub search {
             }
         }
 
+        if ($trials{$t}->{design} eq 'treatment'){
+            next();
+        }
+
         push @result, {
             trial_id => $trials{$t}->{trial_id},
             trial_name => $t,

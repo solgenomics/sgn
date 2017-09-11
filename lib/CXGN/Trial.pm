@@ -1469,6 +1469,7 @@ sub get_harvest_date_cvterm_id {
 sub create_plant_entities {
 	my $self = shift;
 	my $plants_per_plot = shift || 30;
+    my $inherits_plot_treatments = shift;
 
 	my $create_plant_entities_txn = sub {
 		my $chado_schema = $self->bcs_schema();
@@ -1485,7 +1486,32 @@ sub create_plant_entities {
 		my $replicate_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'replicate', 'stock_property')->cvterm_id();
 		my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
 		my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
+		my $treatment_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
 		#my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
+
+        my $treatments;
+        my %treatment_experiments;
+        my %treatment_plots;
+        if ($inherits_plot_treatments){
+            $treatments = $self->get_treatments();
+            foreach (@$treatments){
+
+                my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                    type_id => $has_plants_cvterm,
+                    value => $plants_per_plot,
+                    project_id => $_->[0],
+                });
+
+                my $treatment_nd_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $_->[0] }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $treatment_cvterm })->single();
+                $treatment_experiments{$_->[0]} = $treatment_nd_experiment->nd_experiment_id();
+
+                my $treatment_trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $_->[0]});
+                my $plots = $treatment_trial->get_plots();
+                foreach my $plot (@$plots){
+                    $treatment_plots{$_->[0]}->{$plot->[0]} = 1;
+                }
+            }
+        }
 
 		my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
 			type_id => $has_plants_cvterm,
@@ -1493,6 +1519,8 @@ sub create_plant_entities {
 			project_id => $self->get_trial_id(),
 		});
 
+
+        my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $field_layout_cvterm })->single();
 
 		foreach my $plot (keys %$design) {
 			print STDERR " ... creating plants for plot $plot...\n";
@@ -1511,14 +1539,14 @@ sub create_plant_entities {
 				my $plant_name = $parent_plot_name."_plant_$number";
 				#print STDERR "... ... creating plant $plant_name...\n";
 
-				my $plant = $chado_schema->resultset("Stock::Stock")->find_or_create({
+				my $plant = $chado_schema->resultset("Stock::Stock")->create({
 					organism_id => $parent_plot_organism,
 					name       => $plant_name,
 					uniquename => $plant_name,
 					type_id => $plant_cvterm,
 				});
 
-				my $plantprop = $chado_schema->resultset("Stock::Stockprop")->find_or_create( {
+				my $plantprop = $chado_schema->resultset("Stock::Stockprop")->create( {
 					stock_id => $plant->stock_id(),
 					type_id => $plant_index_number_cvterm,
 					value => $number,
@@ -1528,7 +1556,7 @@ sub create_plant_entities {
 				my $plot_props = $chado_schema->resultset("Stock::Stockprop")->search({ stock_id => $parent_plot, type_id => [$block_cvterm, $plot_number_cvterm, $replicate_cvterm] });
 				while (my $prop = $plot_props->next() ) {
 					#print STDERR $plant->uniquename()." ".$prop->type_id()."\n";
-					$plantprop = $chado_schema->resultset("Stock::Stockprop")->find_or_create( {
+					$plantprop = $chado_schema->resultset("Stock::Stockprop")->create( {
 						stock_id => $plant->stock_id(),
 						type_id => $prop->type_id(),
 						value => $prop->value(),
@@ -1551,12 +1579,26 @@ sub create_plant_entities {
 				});
 
 				#link plant to project through nd_experiment. also add nd_genolocation_id of plot to nd_experiment for the plant
-				my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { type_id => $field_layout_cvterm })->single();
 				my $plant_nd_experiment_stock = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
 					nd_experiment_id => $field_layout_experiment->nd_experiment_id(),
 					type_id => $field_layout_cvterm,
 					stock_id => $plant->stock_id(),
 				});
+
+                if ($inherits_plot_treatments){
+                    if($treatments){
+                        foreach (@$treatments){
+                            my $plots = $treatment_plots{$_->[0]};
+                            if (exists($plots->{$parent_plot})){
+                                my $plant_nd_experiment_stock = $chado_schema->resultset("NaturalDiversity::NdExperimentStock")->create({
+                                    nd_experiment_id => $treatment_experiments{$_->[0]},
+                                    type_id => $treatment_cvterm,
+                                    stock_id => $plant->stock_id(),
+                                });
+                            }
+                        }
+                    }
+                }
 			}
 		}
 	};
@@ -1592,6 +1634,35 @@ sub has_plant_entries {
 
 	my $rs = $chado_schema->resultset("Project::Projectprop")->find({
 		type_id => $has_plants_cvterm->cvterm_id(),
+		project_id => $self->get_trial_id(),
+	});
+
+	if ($rs) {
+		return 1;
+	} else {
+		return 0;
+	}
+
+}
+
+=head2 function has_subplot_entries()
+
+	Usage:        $trial->has_subplot_entries();
+	Desc:         Some trials require subplot-level data (splitplot designs). This function will determine if a trial has subplots associated with it.
+	Ret:          Returns 1 if trial has subplots, 0 if the trial does not.
+	Args:
+	Side Effects:
+	Example:
+
+=cut
+
+sub has_subplot_entries {
+	my $self = shift;
+	my $chado_schema = $self->bcs_schema();
+	my $has_subplots_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_subplot_entries', 'project_property' );
+
+	my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+		type_id => $has_subplots_cvterm->cvterm_id(),
 		project_id => $self->get_trial_id(),
 	});
 
@@ -1668,6 +1739,7 @@ sub get_accessions {
 	my $genotyping_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "genotyping_layout", "experiment_type")->cvterm_id();
 	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
 	my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
+	my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "subplot_of", "stock_relationship")->cvterm_id();
 	my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
 
 	my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename
@@ -1679,7 +1751,7 @@ sub get_accessions {
 		JOIN nd_experiment_project using(nd_experiment_id)
 		JOIN project using(project_id)
 		WHERE accession.type_id = $accession_cvterm_id
-		AND stock_relationship.type_id IN ($plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id)
+		AND stock_relationship.type_id IN ($plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id)
 		AND project.project_id = ?
 		GROUP BY accession.stock_id
 		ORDER BY accession.stock_id;";
@@ -1844,6 +1916,50 @@ sub get_plots_per_accession {
     return \%return;
 }
 
+=head2 get_subplots
+
+ Usage:         my $subplots = $trial->get_subplots();
+ Desc:          returns a list of subplots that are defined for the trial.
+ Ret:           an array ref of elements that contain
+                [ subplot_name, subplot_stock_id ]
+ Args:          none
+ Side Effects:  db access
+ Example:
+
+=cut
+
+sub get_subplots {
+	my $self = shift;
+	my @plots;
+
+	# note: this function also retrieves stocks of type tissue_sample (for genotyping trials).
+	my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'subplot', 'stock_type' )->cvterm_id();
+	my $tissue_sample_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type');
+	my $tissue_sample_cvterm_id = $tissue_sample_cvterm ? $tissue_sample_cvterm->cvterm_id() : '';
+
+	my @type_ids;
+	push @type_ids, $plot_cvterm_id if $plot_cvterm_id;
+	push @type_ids, $tissue_sample_cvterm_id if $tissue_sample_cvterm_id;
+
+	print STDERR "TYPE IDS: ".join(", ", @type_ids);
+	my $trial_plot_rs = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $self->get_trial_id(), })->search_related("nd_experiment_projects")->search_related("nd_experiment")->search_related("nd_experiment_stocks")->search_related("stock", {'stock.type_id'=> { in => [@type_ids]}});
+
+	# removed "project.type_id" => [$field_trial_cvterm_id, $genotyping_trial_cvterm_id]
+
+	my %unique_plots;
+	while(my $rs = $trial_plot_rs->next()) {
+		$unique_plots{$rs->uniquename} = $rs->stock_id;
+	}
+	foreach (sort keys %unique_plots) {
+		#push @plots, {plot_name=> $_, plot_id=>$unique_plots{$_} } ;
+		my $combine = [$unique_plots{$_}, $_ ];
+		push @plots, $combine;
+	}
+
+	return \@plots;
+
+}
+
 =head2 get_controls
 
  Usage:        my $controls = $t->get_controls();
@@ -1923,6 +2039,31 @@ sub get_controls_by_plot {
 	}
 
 	return \@controls;
+}
+
+=head2 get_treatments
+
+ Usage:        $plants = $t->get_treatments();
+ Desc:         retrieves the treatments that are part of this trial
+ Ret:          an array ref containing from project table [ treatment_name, treatment_id ]
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_treatments {
+    my $self = shift;
+    my @plants;
+    my $treatment_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "trial_treatment_relationship", "project_relationship")->cvterm_id();
+
+    my $treatment_rs = $self->bcs_schema->resultset("Project::ProjectRelationship")->search({type_id=>$treatment_rel_cvterm_id, object_project_id=>$self->get_trial_id()})->search_related('subject_project');
+
+    my @treatments;
+    while(my $rs = $treatment_rs->next()) {
+        push @treatments, [$rs->project_id, $rs->name];
+    }
+    return \@treatments;
 }
 
 =head2 get_trial_contacts

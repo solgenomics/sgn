@@ -9,7 +9,8 @@ use CXGN::Trial;
 use Math::Round::Var;
 use List::MoreUtils qw(uniq);
 use CXGN::Trial::FieldMap;
-#use Sort::Maker;
+use JSON;
+use CXGN::Phenotypes::PhenotypeMatrix;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -204,6 +205,59 @@ sub traits_assayed : Chained('trial') PathPart('traits_assayed') Args(0) {
     $c->stash->{rest} = { traits_assayed => \@traits_assayed };
 }
 
+sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    #get userinfo from db
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $user = $c->user();
+    if (! $c->user) {
+      $c->stash->{rest} = {
+        status => "not logged in"
+      };
+      return;
+    }
+    my $display = $c->req->param('display');
+    my $trait = $c->req->param('trait');
+    my @trait_list = ($trait);
+    print STDERR 'DUMP'.Dumper( @trait_list).'\n';
+    my $phenotypes_search;
+    if ($display eq 'plot') {
+        my @items = map {@{$_}[0]} @{$c->stash->{trial}->get_plots()};
+        $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+            bcs_schema=> $schema,
+            search_type => "Native",
+            data_level => $display,
+            trait_list=> \@trait_list,
+            plot_list=>  \@items
+        );
+    }
+    if ($display eq 'plant') {
+        my @items = map {@{$_}[0]} @{$c->stash->{trial}->get_plants()};
+        $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+            bcs_schema=> $schema,
+            search_type => "Native",
+            data_level => $display,
+            trait_list=> \@trait_list,
+            plant_list=>  \@items
+        );
+    }
+    if ($display eq 'subplot') {
+        my @items = map {@{$_}[0]} @{$c->stash->{trial}->get_subplots()};
+        $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+            bcs_schema=> $schema,
+            search_type => "Native",
+            data_level => $display,
+            trait_list=> \@trait_list,
+            plant_list=>  \@items
+        );
+    }
+    my @data = $phenotypes_search->get_phenotype_matrix();
+    $c->stash->{rest} = { 
+      status => "success",
+      data => \@data 
+   };
+}
 
 sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $self = shift;
@@ -230,6 +284,12 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
         my $plants = $c->stash->{trial}->get_plants();
         $total_complete_number = scalar (@$plants);
+    }
+    if ($display eq 'subplots') {
+        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
+        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_of', 'stock_relationship')->cvterm_id();
+        my $subplots = $c->stash->{trial}->get_subplots();
+        $total_complete_number = scalar (@$subplots);
     }
     my $stocks_per_accession;
     if ($display eq 'plots_accession') {
@@ -375,11 +435,23 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+    my $trial = $c->stash->{trial};
 
     my @data = $trial->get_plots();
 
     $c->stash->{rest} = { plots => \@data };
+}
+
+sub trial_subplots : Chained('trial') PathPart('subplots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = $c->stash->{trial};
+
+    my @data = $trial->get_subplots();
+
+    $c->stash->{rest} = { subplots => \@data };
 }
 
 sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
@@ -387,11 +459,60 @@ sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+    my $trial = $c->stash->{trial};
 
     my @data = $trial->get_plants();
 
     $c->stash->{rest} = { plants => \@data };
+}
+
+sub trial_treatments : Chained('trial') PathPart('treatments') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = $c->stash->{trial};
+
+    my $data = $trial->get_treatments();
+
+    $c->stash->{rest} = { treatments => $data };
+}
+
+sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = $c->stash->{trial};
+    my $design = decode_json $c->req->param('design');
+    my $new_treatment_has_plant_entries = $c->req->param('has_plant_entries');
+
+    my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
+		bcs_schema => $schema,
+		trial_id => $trial_id,
+        trial_name => $trial->get_name(),
+		nd_geolocation_id => $trial->get_location()->[0],
+		design_type => $trial->get_design_type(),
+		design => $design,
+        new_treatment_has_plant_entries => $new_treatment_has_plant_entries
+	});
+    my $error = $trial_design_store->store();
+    if ($error){
+        $c->stash->{rest} = {error => "Treatment not added: ".$error};
+    } else {
+        $c->stash->{rest} = {success => 1};
+    }
+}
+
+sub trial_layout : Chained('trial') PathPart('layout') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id =>$c->stash->{trial_id} });
+
+    my $design = $layout->get_design();
+    $c->stash->{rest} = {design => $design};
 }
 
 sub trial_design : Chained('trial') PathPart('design') Args(0) {
@@ -658,8 +779,7 @@ sub substitute_accession : Chained('trial') PathPart('substitute_accession') Arg
   }
 
   my @controls;
-  my @ids, $plot_1_id;
-	@ids, $plot_2_id;
+  my @ids;
 
   my $fieldmap = CXGN::Trial::FieldMap->new({
     bcs_schema => $schema,
@@ -695,6 +815,11 @@ sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0)
     my $self = shift;
     my $c = shift;
     my $plants_per_plot = $c->req->param("plants_per_plot") || 8;
+    my $inherits_plot_treatments = $c->req->param("inherits_plot_treatments");
+    my $plants_with_treatments;
+    if($inherits_plot_treatments eq '1'){
+        $plants_with_treatments = 1;
+    }
 
     if (my $error = $self->privileges_denied($c)) {
 	$c->stash->{rest} = { error => $error };
@@ -708,7 +833,7 @@ sub create_plant_subplots : Chained('trial') PathPart('create_subplots') Args(0)
 
     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $c->stash->{trial_id} });
 
-    if ($t->create_plant_entities($plants_per_plot)) {
+    if ($t->create_plant_entities($plants_per_plot, $plants_with_treatments)) {
         $c->stash->{rest} = {success => 1};
         return;
     } else {

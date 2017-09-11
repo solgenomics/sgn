@@ -7,11 +7,11 @@ $breeding_programs
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
 
 <div class="modal fade" id="add_project_dialog" name="add_project_dialog" tabindex="-1" role="dialog" aria-labelledby="addProjectDialog">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addProjectDialog">Add New Trial</h4>
+                <h4 class="modal-title" id="addProjectDialog">Design New Trial</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -105,16 +105,19 @@ $breeding_programs
                                         <option title="some  treatments  (checks)  are  replicate  r  times  and  other  treatments  (new)  are replicated once." value=Augmented>Augmented</option>
                                         <option title="Adjustments are calculated using data from all checks" value=MAD>Modified Augmented Design </option>
                                         <option title="A greenhouse/nursery houses plants in no particular layout design." value="greenhouse" >Nursery/Greenhouse </option>
+                                        <option title="Split plot designs are useful for applying treatments to subplots of a plot. If you give three treatments, there will be three subplots with the treatment distributed randomly among them." value="splitplot">Split Plot</option>
+                                        <option title="Have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments." value=p-rep>Partially Replicated</option>
                                         <!--<option value=MADIII>MADIII</option>-->
                                         <!--<option value=MADIV>MADIV</option>-->
                                         <!--<option value=MADV>MADV</option>-->
-                                    </select>
+                                    </select> 
+                                    <div id="prephelp" style="display: none"> <button type="button" class="btn btn-link" data-toggle="modal" data-target="#partial_rep_help_dialog">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button> </div>
                                 </div>
                             </div>
                         </div>
 
                         <div id="trial_design_more_info" style="display: none">
-                            <div class="form-group form-group-sm" >
+                            <div class="form-group form-group-sm" id="show_list_of_accession_section" >
                                 <label class="col-sm-7 control-label">List of accessions to include (required): <br/><button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></label>
                                 <div class="col-sm-5" id="select_list" name="select_list">
                                 </div>
@@ -124,6 +127,63 @@ $breeding_programs
                                 <div class="col-sm-5" id="list_of_checks_section" >
                                 </div>
                             </div>
+                            
+                            <div class="form-group form-group-sm" id="show_list_of_unrep_accession" style="display: none" >
+                                <label class="col-sm-7 control-label">List of unreplicated accession: <br/><button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></label>
+                                <div class="col-sm-5" id="list_of_unrep_accession"  >
+                                </div>
+                            </div>
+                            <div class="form-group form-group-sm" id="show_list_of_rep_accession" style="display: none" >
+                                <label class="col-sm-7 control-label">List of replicated accession: </label>
+                                <div class="col-sm-5" id="list_of_rep_accession" >
+                                </div>
+                            </div>
+                            <div class="form-group form-group-sm" id="show_no_of_row_in_design" style="display: none" >
+                                <label class="col-sm-7 control-label">Number of rows in design: </label>
+                                <div class="col-sm-5"  >
+                                    <div class="input-group">
+                                        <span class="input-group-addon"><i class="glyphicon glyphicon-qrcode"></i></span>
+                                        <input class="form-control" id="no_of_row_in_design" name="no_of_row_in_design" placeholder="26"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group form-group-sm" id="show_no_of_col_in_design" style="display: none" >
+                                <label class="col-sm-7 control-label">Number of columns in design : </label>
+                                <div class="col-sm-5"  >
+                                    <div class="input-group">
+                                        <span class="input-group-addon"><i class="glyphicon glyphicon-qrcode"></i></span>
+                                        <input class="form-control" id="no_of_col_in_design" name="no_of_col_in_design" placeholder="26"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group form-group-sm" id="show_no_of_rep_times" style="display: none" >
+                                <label class="col-sm-7 control-label">Number of times replicated accessions are replicated: </label>
+                                <div class="col-sm-5"  >
+                                    <div class="input-group">
+                                        <span class="input-group-addon"><i class="glyphicon glyphicon-qrcode"></i></span>
+                                        <input class="form-control" id="no_of_rep_times" name="no_of_rep_times" placeholder="4"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group form-group-sm" id="show_no_of_block_sequence" style="display: none" >
+                                <label class="col-sm-7 control-label">Block sequence: </label>
+                                <div class="col-sm-5" >
+                                    <div class="input-group">
+                                        <span class="input-group-addon"><i class="glyphicon glyphicon-qrcode"></i></span>
+                                        <input class="form-control" id="no_of_block_sequence" name="no_of_block_sequence" placeholder="13, 2"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group form-group-sm" id="show_no_of_sub_block_sequence" style="display: none" >
+                                <label class="col-sm-7 control-label">Sub-block sequence: </label>
+                                <div class="col-sm-5" >
+                                    <div class="input-group">
+                                        <span class="input-group-addon"><i class="glyphicon glyphicon-qrcode"></i></span>
+                                        <input class="form-control" id="no_of_sub_block_sequence" name="no_of_sub-block_sequence" placeholder="13, 1"/>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="form-group form-group-sm" id="greenhouse_default_num_plants_per_accession" style="display: none">
                                 <label class="col-sm-7 control-label">Default Number of Plants: </label>
                                 <div class="col-sm-5" >
@@ -166,6 +226,40 @@ $breeding_programs
                                     <label class="col-sm-7 control-label">Number of Rows Per Block (Optional): </label>
                                     <div class="col-sm-5" >
                                         <input class="form-control" id="row_number_per_block" name="row_number_per_block" />
+                                    </div>
+                                </div>
+
+                                <div id="create_trial_with_treatment_section" style="display: none">
+                                    <div class="form-group form-group-sm" >
+                                        <label class="col-sm-7 control-label">Treatment Name: </label>
+                                        <div class="col-sm-5" >
+                                            <input class="form-control" id="create_trial_with_treatment_name_input1" name="create_trial_with_treatment_name_input1" type="text" value="Control" placeholder="Required Treatment 1"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" >
+                                        <label class="col-sm-7 control-label">Treatment Name: </label>
+                                        <div class="col-sm-5" >
+                                            <input class="form-control" id="create_trial_with_treatment_name_input2" name="create_trial_with_treatment_name_input2" type="text" placeholder="Optional Treatment 2"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" >
+                                        <label class="col-sm-7 control-label">Treatment Name: </label>
+                                        <div class="col-sm-5" >
+                                            <input class="form-control" id="create_trial_with_treatment_name_input3" name="create_trial_with_treatment_name_input3" type="text" placeholder="Optional Treatment 3"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-group-sm" >
+                                        <label class="col-sm-7 control-label">Treatment Name: </label>
+                                        <div class="col-sm-5" >
+                                            <input class="form-control" id="create_trial_with_treatment_name_input4" name="create_trial_with_treatment_name_input4" type="text" placeholder="Optional Treatment 4"/>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group form-group-sm" id="num_plants_per_plot_section" style="display: none">
+                                    <label class="col-sm-7 control-label">Number of Plants Per Treatment (required): </label>
+                                    <div class="col-sm-5" >
+                                        <input class="form-control" id="num_plants_per_treatment" name="num_plants_per_treatment" />
                                     </div>
                                 </div>
 
@@ -275,7 +369,7 @@ $breeding_programs
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="new_trial_submit" id="new_trial_submit">Add Trial</button>
+                <button type="button" class="btn btn-primary" name="new_trial_submit" id="new_trial_submit">Design Trial (Saving Occurs In Next Step)</button>
             </div>
         </div>
     </div>
@@ -319,8 +413,9 @@ $breeding_programs
                 </div>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-info" name="new_trial_add_treatments" >Add Treatments to Design</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="new_trial_confirm_submit" id="new_trial_confirm_submit">Confirm</button>
+                <button type="button" class="btn btn-primary" name="new_trial_confirm_submit" id="new_trial_confirm_submit">Confirm (Saves Trial In Database)</button>
             </div>
         </div>
     </div>
@@ -347,6 +442,10 @@ $breeding_programs
     </div>
 </div>
 
+
+<& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas &>
+
+
 <div class="modal fade" id="trial_saved_dialog_message" name="trial_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addTrialSavedDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -365,6 +464,97 @@ $breeding_programs
             </div>
             <div class="modal-footer">
                 <button id="trial_saved_dialog_message_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="partial_rep_help_dialog" name="partial_rep_help_dialog" tabindex="-1" role="dialog" aria-labelledby="partialRepHelpDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="partialRepHelpDialog">Partially Replicated Design Usage Help</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <h4>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                          <b>Background:</b>
+                        </h4>
+                          <center><p>Partially replicated designs have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. The design were described in Cullis et al. (2006). It is recommended that at least 20% of the experimental units are occupied by replicated treatments. The aim of these experiments is usually to select promising treatments from a set of replicated and unreplicated test treatments, with check and quality standard treatments providing the necessary replication overall to give a valid experiment. DiGGer (Coombes, 2002) was used to implement this design. DiGGer is a flexible tool for creating experimental designs that are efficient for specified blocking and correlation patterns. DiGGer package (http://www.austatgen.org/files/software/downloads) is an add-on for the statistical computing language and environment R (R
+Development Core Team, 2009).</p></center>
+                        <h4>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        <b>Design Parameters:</b>
+                        </h4>
+                            <center><p> The parameters will consider a sample partially replicated design trial with 200 unreplicated accessions, 119 accessions replicated 4 times, 26 rows in design, 26 columns in design, bock sequence of 13 by 2 (13, 2) i.e 2 blocks with each having 13 rows; sub-block sequence of block of 13 by 1 (13, 1) i.e 1 sub-block with each having 13 rows in each block. </p></center>
+                        
+                        <dl>
+                            <dt>List of Unreplicated Accession</dt>
+                            <ul>
+                                <li>
+                                    <dd> You're expected to provide the list of unreplicated accessions in this selectbox. E.g. is a list of 200 accessions.</dd>
+                                </li>
+                            </ul>
+                            <dt>List of Replicated Accession</dt>
+                            <ul>
+                                <li>
+                                    <dd>List of replicated accessions should be provided in this selectbox. E.g. is a list of 119 accessions.</dd>
+                                </li>
+                            </ul>
+                            <dt>Number of rows in design</dt>
+                            <ul>
+                                <li>
+                                    <dd> Provide the number of rows you want to have in the design. E.g. 26 number of rows. </dd>
+                                </li>
+                            </ul>
+                            <dt>Number of Columns in Design</dt>
+                            <ul>
+                                <li>
+                                    <dd> Provide the number of columns you want to have in the design. E.g. 26 number of columns. </dd>
+                                </li>
+                            </ul>
+                            <dt>Number of Times Replicated Accessions are Replicated</dt>
+                            <ul>
+                                <li>
+                                    <dd>Provide the number of times you want the replicated accessions to be replicated. E.g. 4</dd>
+                                </li>
+                            </ul>
+                            <dt>Block Sequence</dt>
+                            <ul>
+                                <li>
+                                    <dd>The block sequence should reflect the blocking structure of your design. E.g. (13, 2), meaning the design has 2 blocks and each block has 13 rows.</dd>
+                                </li>
+                            </ul>
+                            <dt>Sub-block Sequence</dt>
+                            <ul>
+                                <li>
+                                    <dd>The sub-block sequence should reflect the sub-blocking structure of your design. E.g. (13, 1), meaning the design has 1 sub-block (column) and each sub-block has 13 rows.</dd>
+                                </li>
+                            </ul>
+                        </dl>
+                        <h4>
+                            <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                            <b>NOTE:</b>
+                        </h4>
+                        <dl><dt>
+                        <ul>
+                            <li>
+                                <dd>The product of the number of rows and columns in the design should equal the total number of plots.</dd>
+                            </li>
+                            <li>
+                                <dd>The sum of the unreplicated accessions and the replicated accessions (given the number of times it was replicated) should equal the total number of plots. </dd>
+                            </li>
+                        </ul>
+                        </dt></dl>    
+                        
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="partial_rep_usage_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

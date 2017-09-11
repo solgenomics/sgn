@@ -18,6 +18,7 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         accession_list=>$accession_list,
         plot_list=>$plot_list,
         plant_list=>$plant_list,
+        subplot_list=>$subplot_list,
         include_timestamp=>$include_timestamp,
         trait_contains=>$trait_contains,
         phenotype_min_value=>$phenotype_min_value,
@@ -80,6 +81,11 @@ has 'plant_list' => (
     is => 'rw',
 );
 
+has 'subplot_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
 has 'location_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
@@ -133,6 +139,7 @@ sub search {
     my $project_location_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project location', 'project_property')->cvterm_id();
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $include_timestamp = $self->include_timestamp;
     my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
@@ -189,15 +196,27 @@ sub search {
         push @where_clause, $columns{'accession_id'}." in ($accession_sql)";
     }
 
-    if (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->plant_list && scalar(@{$self->plant_list})>0)) {
+    if (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->plant_list && scalar(@{$self->plant_list})>0) && ($self->subplot_list && scalar(@{$self->subplot_list})>0)) {
+        my $plot_and_plant_and_subplot_sql = _sql_from_arrayref($self->plot_list) .",". _sql_from_arrayref($self->plant_list) .",". _sql_from_arrayref($self->subplot_list);
+        push @where_clause, $columns{'plot_id'}." in ($plot_and_plant_and_subplot_sql)";
+    } elsif (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->plant_list && scalar(@{$self->plant_list})>0)) {
         my $plot_and_plant_sql = _sql_from_arrayref($self->plot_list) .",". _sql_from_arrayref($self->plant_list);
         push @where_clause, $columns{'plot_id'}." in ($plot_and_plant_sql)";
+    } elsif (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->subplot_list && scalar(@{$self->subplot_list})>0)) {
+        my $plot_and_subplot_sql = _sql_from_arrayref($self->plot_list) .",". _sql_from_arrayref($self->subplot_list);
+        push @where_clause, $columns{'plot_id'}." in ($plot_and_subplot_sql)";
+    } elsif (($self->plant_list && scalar(@{$self->plant_list})>0) && ($self->subplot_list && scalar(@{$self->subplot_list})>0)) {
+        my $plant_and_subplot_sql = _sql_from_arrayref($self->plant_list) .",". _sql_from_arrayref($self->subplot_list);
+        push @where_clause, $columns{'plot_id'}." in ($plant_and_subplot_sql)";
     } elsif ($self->plot_list && scalar(@{$self->plot_list})>0) {
         my $plot_sql = _sql_from_arrayref($self->plot_list);
         push @where_clause, $columns{'plot_id'}." in ($plot_sql)";
     } elsif ($self->plant_list && scalar(@{$self->plant_list})>0) {
         my $plant_sql = _sql_from_arrayref($self->plant_list);
         push @where_clause, $columns{'plot_id'}." in ($plant_sql)";
+    } elsif ($self->subplot_list && scalar(@{$self->subplot_list})>0) {
+        my $subplot_sql = _sql_from_arrayref($self->subplot_list);
+        push @where_clause, $columns{'plot_id'}." in ($subplot_sql)";
     }
 
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
@@ -240,9 +259,9 @@ sub search {
 
     if ($self->data_level ne 'all') {
       my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $self->data_level, 'stock_type')->cvterm_id();
-      push @where_clause, "plot.type_id = $stock_type_id"; #ONLY plots or plants
+      push @where_clause, "plot.type_id = $stock_type_id"; #ONLY plots or plants or subplots
     } else {
-      push @where_clause, "(plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id)"; #plots AND plants
+      push @where_clause, "(plot.type_id = $plot_type_id OR plot.type_id = $plant_type_id OR plot.type_id = $subplot_type_id)"; #plots AND plants AND subplots
     }
 
     my $where_clause = " WHERE " . (join (" AND " , @where_clause));

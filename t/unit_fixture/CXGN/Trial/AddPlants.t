@@ -308,14 +308,14 @@ is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
 
 my $columns = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
-ok(scalar(@$columns) == 7, "check number of col in created file.");
+ok(scalar(@$columns) == 9, "check number of col in created file.");
 
 #print STDERR Dumper $columns;
 is_deeply($columns, [
           [],
           [
             undef,
-            'plot_id',
+            'plot_name',
             'test_trial21',
             'test_trial22',
             'test_trial23',
@@ -334,7 +334,7 @@ is_deeply($columns, [
           ],
           [
             undef,
-            'range',
+            'block_number',
             '1',
             '1',
             '1',
@@ -353,7 +353,7 @@ is_deeply($columns, [
           ],
           [
             undef,
-            'plot',
+            'plot_number',
             '1',
             '2',
             '3',
@@ -372,7 +372,7 @@ is_deeply($columns, [
           ],
           [
             undef,
-            'rep',
+            'rep_number',
             '1',
             '1',
             '1',
@@ -391,7 +391,15 @@ is_deeply($columns, [
           ],
           [
             undef,
-            'accession',
+            'row_number'
+          ],
+          [
+            undef,
+            'col_number'
+          ],
+          [
+            undef,
+            'accession_name',
             'test_accession4',
             'test_accession5',
             'test_accession3',
@@ -442,13 +450,13 @@ is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
 
 my $columns = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
-ok(scalar(@$columns) == 8, "check number of col in created file.");
+ok(scalar(@$columns) == 11, "check number of col in created file.");
 
 #print STDERR Dumper $columns;
 
 is_deeply($columns->[1], [
             undef,
-            'plot_id',
+            'plant_name',
             'test_trial21_plant_1',
             'test_trial21_plant_2',
             'test_trial22_plant_1',
@@ -483,7 +491,42 @@ is_deeply($columns->[1], [
 
 is_deeply($columns->[2], [
             undef,
-            'range',
+            'plot_name',
+            'test_trial21',
+            'test_trial21',
+            'test_trial22',
+            'test_trial22',
+            'test_trial23',
+            'test_trial23',
+            'test_trial24',
+            'test_trial24',
+            'test_trial25',
+            'test_trial25',
+            'test_trial26',
+            'test_trial26',
+            'test_trial27',
+            'test_trial27',
+            'test_trial28',
+            'test_trial28',
+            'test_trial29',
+            'test_trial29',
+            'test_trial210',
+            'test_trial210',
+            'test_trial211',
+            'test_trial211',
+            'test_trial212',
+            'test_trial212',
+            'test_trial213',
+            'test_trial213',
+            'test_trial214',
+            'test_trial214',
+            'test_trial215',
+            'test_trial215'
+          ], "check 2nd col");
+
+is_deeply($columns->[3], [
+            undef,
+            'block_number',
             '1',
             '1',
             '1',
@@ -516,9 +559,9 @@ is_deeply($columns->[2], [
             '1'
           ], "check contents of second col");
 
-is_deeply($columns->[3],[
+is_deeply($columns->[4],[
             undef,
-            'plant',
+            'plant_number',
             '1',
             '2',
             '1',
@@ -551,9 +594,9 @@ is_deeply($columns->[3],[
             '2'
           ], "check contents of third col");
 
-is_deeply($columns->[4], [
+is_deeply($columns->[5], [
             undef,
-            'plot',
+            'plot_number',
             '1',
             '1',
             '2',
@@ -586,9 +629,9 @@ is_deeply($columns->[4], [
             '15'
           ], "check contents of fourth col");
 
-is_deeply($columns->[5], [
+is_deeply($columns->[6], [
             undef,
-            'rep',
+            'rep_number',
             '1',
             '1',
             '1',
@@ -621,9 +664,19 @@ is_deeply($columns->[5], [
             '3'
           ], "check contents of fifth col");
 
-is_deeply($columns->[6],[
+is_deeply($columns->[7], [
             undef,
-            'accession',
+            'row_number'
+          ], "check contents");
+
+is_deeply($columns->[8], [
+          undef,
+          'col_number'
+        ], "check contents");
+    
+is_deeply($columns->[9],[
+            undef,
+            'accession_name',
             'test_accession4',
             'test_accession4',
             'test_accession5',
@@ -656,13 +709,13 @@ is_deeply($columns->[6],[
             'test_accession2'
           ], "check contents of sixth col");
 
-is_deeply($columns->[7],[
+is_deeply($columns->[10],[
             undef,
             'is_a_control'
           ], "check contents of 7th col");
 
 
-my @trait_list = ("dry matter content percentage|CO:0000092", "fresh root weight|CO:0000012");
+my @trait_list = ("dry matter content percentage|CO_334:0000092", "fresh root weight|CO_334:0000012");
 my $tempfile = "/tmp/test_create_pheno_spreadsheet_plots_after_plants.xls";
 my $format = 'ExcelBasic';
 my $create_spreadsheet = CXGN::Trial::Download->new( 
@@ -746,7 +799,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
                             'Operator',
                             'Date',
                             'Design Type',
-                            undef,
+                            'Treatment',
                             undef,
                             'plot_number',
                             '1',
@@ -837,7 +890,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
                             undef,
                             undef,
                             undef,
-                            'dry matter content percentage|CO:0000092'
+                            'dry matter content percentage|CO_334:0000092'
                           ], "check 7th col");
 
 is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
@@ -848,11 +901,11 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
                             undef,
                             undef,
                             undef,
-                            'fresh root weight|CO:0000012'
+                            'fresh root weight|CO_334:0000012'
                           ], "check 8th col");
 
 
-my @trait_list = ("dry matter content percentage|CO:0000092", "fresh root weight|CO:0000012");
+my @trait_list = ("dry matter content percentage|CO_334:0000092", "fresh root weight|CO_334:0000012");
 my $tempfile = "/tmp/test_create_pheno_spreadsheet_plots_after_plants.xls";
 my $format = 'ExcelBasic';
 my $create_spreadsheet = CXGN::Trial::Download->new( 
@@ -968,7 +1021,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
                           'Operator',
                           'Date',
                           'Design Type',
-                          undef,
+                          'Treatment',
                           undef,
                           'accession_name',
                           'test_accession4',
@@ -1186,7 +1239,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[9], [
                           undef,
                           undef,
                           undef,
-                          'dry matter content percentage|CO:0000092'
+                          'dry matter content percentage|CO_334:0000092'
                         ], "check col9");
 
 is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
@@ -1197,7 +1250,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[10], [
                           undef,
                           undef,
                           undef,
-                          'fresh root weight|CO:0000012'
+                          'fresh root weight|CO_334:0000012'
                         ], "check col10");
 
 done_testing();
