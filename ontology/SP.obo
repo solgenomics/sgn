@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 24:04:2017 15:19
+date: 07:09:2017 15:22
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -175,7 +175,7 @@ xref: PATO:0000969
 xref: PO:0000003
 xref: PO:0007130
 xref: PO:0007134
-is_a: SP:0000002 ! plant size
+is_a: SP:0000401 ! qualitative plant size
 
 [Term]
 id: SP:0000022
@@ -184,7 +184,7 @@ xref: PATO:0000587
 xref: PO:0000003
 xref: PO:0007130
 xref: PO:0007134
-is_a: SP:0000002 ! plant size
+is_a: SP:0000401 ! qualitative plant size
 
 [Term]
 id: SP:0000023
@@ -193,7 +193,7 @@ xref: PATO:0000586
 xref: PO:0000003
 xref: PO:0007130
 xref: PO:0007134
-is_a: SP:0000002 ! plant size
+is_a: SP:0000401 ! qualitative plant size
 
 [Term]
 id: SP:0000024
@@ -858,22 +858,22 @@ creation_date: 2008-02-13T10:05:00Z
 [Term]
 id: SP:0000095
 name: pericarp area
-def: "The area of the pericarp." [SGN:EVDK]
+def: "The area of the pericarp (mm^2)." [SGN:EVDK]
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009084
-relationship: part_of SP:0000371 ! pericarp
+relationship: variable_of SP:0000371 ! pericarp
 created_by: naama
 creation_date: 2008-02-12T03:36:00Z
 
 [Term]
 id: SP:0000096
-name: septum area
-def: "The sum of the areas of the septum and the pericarp." [SGN:EVDK]
+name: septum + pericarp area
+def: "The sum of the areas of the septum and the pericarp in mm^2." [SGN:EVDK]
 xref: PO:0005008
 xref: PO:0007010
 xref: PO:0007042
-is_a: SP:0000010 ! fruit size
+relationship: variable_of SP:0000010 ! fruit size
 created_by: naama
 creation_date: 2008-02-12T03:36:00Z
 
@@ -1046,7 +1046,7 @@ name: number of leaves to 1st inflorescence
 xref: PATO:0000053
 xref: PO:0007047
 xref: PO:0009025
-is_a: SP:0000109 ! leaf number
+relationship: variable_of SP:0000109 ! leaf number
 created_by: naama
 creation_date: 2008-02-22T10:30:00Z
 
@@ -3351,8 +3351,9 @@ creation_date: 2010-07-19T01:12:38Z
 [Term]
 id: SP:0000372
 name: pericarp thickness
+def: "Pericarp thickness in mm." [SGN:EVDK]
 synonym: "pericarp width" RELATED []
-relationship: part_of SP:0000371 ! pericarp
+relationship: variable_of SP:0000371 ! pericarp
 created_by: Naama
 creation_date: 2010-07-19T01:14:10Z
 
@@ -3530,6 +3531,86 @@ synonym: "fruit solids percentage" EXACT []
 relationship: variable_of SP:0000080 ! fruit mass
 created_by: naama
 creation_date: 2017-02-06T15:17:20Z
+
+[Term]
+id: SP:0000395
+name: columella area
+def: "The area of the fruit columella in mm^2." [SGN:EVDK]
+relationship: variable_of SP:0000010 ! fruit size
+created_by: naama
+creation_date: 2017-09-07T14:56:35Z
+
+[Term]
+id: SP:0000396
+name: pericarp cell number
+relationship: variable_of SP:0000397 ! pericarp cells
+created_by: naama
+creation_date: 2017-09-07T14:58:51Z
+
+[Term]
+id: SP:0000397
+name: pericarp cells
+is_a: SP:0000371 ! pericarp
+created_by: naama
+creation_date: 2017-09-07T15:00:10Z
+
+[Term]
+id: SP:0000398
+name: pericarp max cell size
+relationship: variable_of SP:0000397 ! pericarp cells
+created_by: naama
+creation_date: 2017-09-07T15:00:56Z
+
+[Term]
+id: SP:0000399
+name: number of leaves between 2nd and 3rd inflorescence
+xref: PATO:0000053
+xref: PO:0007047
+xref: PO:0009025
+relationship: variable_of SP:0000109 ! leaf number
+created_by: naama
+creation_date: 2017-09-07T15:16:39Z
+
+[Term]
+id: SP:0000400
+name: number of leaves between 3rd and 4th inflorescence
+xref: PATO:0000053
+xref: PO:0007047
+xref: PO:0009025
+relationship: variable_of SP:0000109 ! leaf number
+created_by: naama
+creation_date: 2017-09-07T15:17:08Z
+
+[Term]
+id: SP:0000401
+name: qualitative plant size
+is_a: SP:0000002 ! plant size
+created_by: naama
+creation_date: 2017-09-07T15:18:54Z
+
+[Term]
+id: SP:0000402
+name: plant height
+def: "The height of the full grown plant in cm." [SGN:NM]
+relationship: variable_of SP:0000002 ! plant size
+created_by: naama
+creation_date: 2017-09-07T15:19:52Z
+
+[Term]
+id: SP:0000403
+name: plant height until first inflorescence
+def: "The height of the plant until the first inflorescence in cm" [SGN:NM]
+relationship: variable_of SP:0000002 ! plant size
+created_by: naama
+creation_date: 2017-09-07T15:20:37Z
+
+[Term]
+id: SP:0000404
+name: plant height until last inflorescence
+def: "The height of the plant until the last inflorescence in cm" [SGN:NM]
+relationship: variable_of SP:0000002 ! plant size
+created_by: naama
+creation_date: 2017-09-07T15:21:24Z
 
 [Term]
 id: SP:0000706
