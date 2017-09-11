@@ -1227,6 +1227,97 @@ sub list_cross_wishlists_GET : Args(0) {
     $c->stash->{rest} = {"success" => 1, "files"=>\@files};
 }
 
+
+sub add_crossingtrial : Path('/ajax/cross/add_crossingtrial') : ActionClass('REST') {}
+
+sub add_crossingtrial_POST :Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbh = $c->dbc->dbh;
+    my $crossingtrial_name = $c->req->param('crossingtrial_name');
+    my $breeding_program_id = $c->req->param('breeding_program_id');
+    my $location = $c->req->param('location');
+    my $year = $c->req->param('year');
+    my $project_description = $c->req->param('project_description');
+    my $folder_name = $c->req->param('folder_name');
+    my $folder_id = $c->req->param('folder_id');
+    my $folder;
+
+    if ($folder_name && !$folder_id) {
+      eval {
+        $folder = CXGN::Trial::Folder->create({
+          bcs_schema => $schema,
+          parent_folder_id => '',
+          name => $folder_name,
+          breeding_program_id => $breeding_program_id,
+          folder_for_crosses =>1
+        });
+      };
+
+      if ($@) {
+        $c->stash->{rest} = {error => $@ };
+        return;
+      }
+
+      $folder_id = $folder->folder_id();
+    }
+
+    my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
+    my $program = $breeding_program->name();
+
+    my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
+    $geolocation_lookup->set_location_name($location);
+    if(!$geolocation_lookup->get_location()){
+        $c->stash->{rest}={error => "Location not found"};
+        return;
+    }
+
+    my $existing_crossingtrial = $schema->resultset("Project::Project")->find({name => $crossingtrial_name});
+    if ($existing_crossingtrial){
+        $c->stash->{rest} = {error => "That crossing trial name already exists in the database. Please select another name."};
+        return;
+    }
+
+    if($folder_name){
+        my $folder = CXGN::Trial::Folder->create({
+          bcs_schema => $schema,
+          parent_folder_id => '',
+          name => $folder_name,
+          breeding_program_id  => $breeding_program_id,
+          folder_for_crosses => 1
+        });
+        $folder_id = $folder->folder_id();
+    }
+
+    if (!$c->user()) {
+  print STDERR "User not logged in... not adding a crossingtrial.\n";
+  $c->stash->{rest} = {error => "You need to be logged in to add a crossingtrial." };
+  return;
+    }
+
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {
+  print STDERR "User does not have sufficient privileges.\n";
+  $c->stash->{rest} = {error =>  "you have insufficient privileges to add a crossingtrial." };
+  return;
+    }
+
+    my $add_crossingtrial = CXGN::Pedigree::AddCrossingtrial->new({
+        chado_schema => $schema,
+        dbh => $dbh,
+        program => $breeding_program,
+        year => $c->req->param('year'),
+        project_description => $c->req->param('project_description'),
+        location => $location,
+        crossingtrial_name => $crossingtrial_name
+    });
+
+    if (!$add_crossingtrial) {
+          return;
+        }
+    $c->stash->{rest} = {success => "1",};
+  }
+
+
 ###
 1;#
 ###
