@@ -291,6 +291,7 @@ jQuery(document).ready(function(){
             { title: "Contents", "data": "contents_html" },
             { title: "Seedlot Location", "data": "location" },
             { title: "Count", "data": "count" },
+            { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeSeedlot("+row.seedlot_stock_id+")' >X</a>"; } },
         ],
         "fnInitComplete": function(oSettings, json) {
             //console.log(json);
@@ -369,65 +370,89 @@ jQuery(document).ready(function(){
         }
     });
 
-  jQuery('#create_new_seedlot_button').click( function() {
-    var name = jQuery('#seedlot_name').val();
-    var location = jQuery('#seedlot_location').val();
-    var accession_uniquename = jQuery('#seedlot_accession_uniquename').val();
-    var population_name = jQuery('#seedlot_population_name').val();
-    var organization = jQuery('#seedlot_organization').val();
-    var amount = jQuery('#seedlot_amount').val();
-    var timestamp = jQuery('#seedlot_timestamp').val();
-    var description = jQuery('#seedlot_description').val();
-    var breeding_program_id = jQuery('#seedlot_breeding_program_id').val();
+    jQuery('#create_new_seedlot_button').click( function() {
+        var name = jQuery('#seedlot_name').val();
+        var location = jQuery('#seedlot_location').val();
+        var accession_uniquename = jQuery('#seedlot_accession_uniquename').val();
+        var population_name = jQuery('#seedlot_population_name').val();
+        var organization = jQuery('#seedlot_organization').val();
+        var amount = jQuery('#seedlot_amount').val();
+        var timestamp = jQuery('#seedlot_timestamp').val();
+        var description = jQuery('#seedlot_description').val();
+        var breeding_program_id = jQuery('#seedlot_breeding_program_id').val();
 
-    if (name == '') { alert("Please provide a name"); return; }
-    else if (location == '') { alert("Please provide a location"); return; }
-    else if (amount == '') { alert("Please provide an amount"); return; }
-    else if (breeding_program_id == '') { alert("Please select a breeding program"); return; }
-    else if (accession_uniquename == '') { alert("Please provide an accession name"); return; }
-    else {
+        if (name == '') { alert("Please provide a name"); return; }
+        else if (location == '') { alert("Please provide a location"); return; }
+        else if (amount == '') { alert("Please provide an amount"); return; }
+        else if (breeding_program_id == '') { alert("Please select a breeding program"); return; }
+        else if (accession_uniquename == '') { alert("Please provide an accession name"); return; }
+        else {
 
-    jQuery.ajax( { 
-      url: '/ajax/breeders/seedlot-create',
-      data : {
-        'seedlot_name' : name,
-        'seedlot_location': location,
-        'seedlot_accession_uniquename': accession_uniquename,
-        'seedlot_organization': organization,
-        'seedlot_population_name': population_name,
-        'seedlot_amount':amount,
-        'seedlot_timestamp':timestamp,
-        'seedlot_description':description,
-        'seedlot_breeding_program_id':breeding_program_id
-      },
-      success: function(response) { 
-        if (response.success == 1) { 
-           alert("The seedlot has been created.");
-           jQuery('#add_seedlot_dialog').modal('hide');
-           seedlots_table.ajax.reload();
+            jQuery.ajax({
+                url: '/ajax/breeders/seedlot-create',
+                data : {
+                    'seedlot_name' : name,
+                    'seedlot_location': location,
+                    'seedlot_accession_uniquename': accession_uniquename,
+                    'seedlot_organization': organization,
+                    'seedlot_population_name': population_name,
+                    'seedlot_amount':amount,
+                    'seedlot_timestamp':timestamp,
+                    'seedlot_description':description,
+                    'seedlot_breeding_program_id':breeding_program_id
+                },
+                success: function(response) { 
+                    if (response.success == 1) { 
+                        alert("The seedlot has been created.");
+                        jQuery('#add_seedlot_dialog').modal('hide');
+                        seedlots_table.ajax.reload();
+                    }
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response){
+                    alert('An error occurred creating seed lot');
+                }
+            });
         }
-        if (response.error) {
-           alert(response.error);
+
+    });
+
+    jQuery('#submit_seedlot_search').click( function() {
+        seedlots_table.search("available_seedlots_table").draw();
+    });
+
+    jQuery('#search_seedlot_form').keypress( function( e ) {
+        var code = e.keyCode || e.which;
+        if( code == 13 ) {
+            jQuery('#submit_seedlot_search').click();
         }
-      },
-      error: function(response){
-        alert('An error occurred creating seed lot');
-      }
-     });
-
-    }
-  });
-
-  jQuery('#submit_seedlot_search').click( function() {
-       seedlots_table.search("available_seedlots_table").draw();
-  });
-
-  jQuery('#search_seedlot_form').keypress( function( e ) {
-          var code = e.keyCode || e.which;
-          if( code == 13 ) {
-               jQuery('#submit_seedlot_search').click();
-          }
-   } );
+    });
 
 });
+
+function removeSeedlot(seedlot_stock_id){
+    jQuery.ajax({
+        url: '/ajax/breeders/seedlot/'+seedlot_stock_id+'/delete',
+        beforeSend: function(){
+            jQuery('#working_modal').modal('show');
+        },
+        success: function(response) { 
+            jQuery('#working_modal').modal('hide');
+            if (response.success == 1) { 
+                alert("The seedlot has been deleted.");
+                location.reload();
+            }
+            if (response.error) {
+                alert(response.error);
+            }
+        },
+        error: function(response){
+            jQuery('#working_modal').modal('hide');
+            alert('An error occurred deleting seed lot');
+        }
+    });
+}
+
 </script>

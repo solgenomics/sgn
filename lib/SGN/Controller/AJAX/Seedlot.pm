@@ -98,6 +98,19 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
     
 }
 
+sub seedlot_delete :Chained('seedlot_base') PathPart('delete') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    my $error = $c->stash->{seedlot}->delete();
+    if (!$error){
+        $c->stash->{rest} = { success => 1 };
+    }
+    else {
+        $c->stash->{rest} = { error => $error };
+    }
+}
+
 sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
     my $self = shift;
     my $c = shift;
