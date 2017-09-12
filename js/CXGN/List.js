@@ -438,7 +438,7 @@ CXGN.List.prototype = {
 	html += '<table class="table"><tr><td>List ID</td><td id="list_id_div">'+list_id+'</td></tr>';
 	html += '<tr><td>List name:<br/><input type="button" class="btn btn-primary btn-xs" id="updateNameButton" value="Update" /></td>';
 	html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td></tr>';
-	html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" /><div id="fuzzySearchAccessionListDiv"></div><div id="synonymListButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
+	html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" /><div id="fuzzySearchAccessionListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
 	html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /></textarea></td></tr></table>';
 
 	html += '<table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
@@ -459,6 +459,7 @@ CXGN.List.prototype = {
 
     if (list_type == 'accessions'){
         jQuery('#fuzzySearchAccessionListDiv').html('<br/><button id="fuzzySearchAccessionListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>');
+        jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')">See Availible Seedlots</button>');
     }
     if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants'].indexOf(list_type) >= 0){
         jQuery('#synonymListButtonDiv').html('<br/><button id="synonymListButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).synonymSearch('+list_id+')">Find Synonyms</button>');
@@ -751,7 +752,28 @@ CXGN.List.prototype = {
             return;
         }
     },
-		
+		seedlotSearch: function(list_id){
+			jQuery('#working_modal').modal('show');
+			var data = this.getListData(list_id);
+			var accessions = data.elements.map(function(d){return d[1];})
+			console.log(accessions);
+			if (window.available_seedlots){
+				window.available_seedlots.build_table(accessions);
+			} else {
+				throw "avalilible_seedlots.mas not included";
+			}
+			jQuery('#working_modal').modal('hide');
+			jQuery('#availible_seedlots_modal').modal('show');
+			jQuery("#new-list-from-seedlots").submit(function(){
+				try {
+					console.log(window.available_seedlots.get_selected());
+				} catch (e) {
+					setTimeout(function(){throw e;},0);
+				} finally {
+					return false;
+				}
+			});
+		},
 		synonymSearch: function(list_id){
       var self = this;
 			jQuery.ajax( {

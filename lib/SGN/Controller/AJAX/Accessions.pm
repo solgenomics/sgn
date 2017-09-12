@@ -327,14 +327,17 @@ sub possible_seedlots_GET : Args(0) {
   my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
   my $accession_manager = CXGN::BreedersToolbox::Accessions->new(schema=>$schema);
   
-  my @uniquenames = keys %{$stock_lookup->get_stock_synonyms('any_name','accession',$names)};
+  my $synonyms = $stock_lookup->get_stock_synonyms('any_name','accession',$names);
+  
+  my @uniquenames = keys %{$synonyms};
   
   my $seedlots = $accession_manager->get_possible_seedlots(\@uniquenames);
     
   print STDERR $names;
   $c->stash->{rest} = {
       success => "1",
-      seedlots=> $seedlots
+      seedlots=> $seedlots,
+      synonyms=>$synonyms
   };
   return;
 }
