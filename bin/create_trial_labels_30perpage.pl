@@ -30,6 +30,7 @@ use Bio::Chado::Schema;
 use Data::Dumper;
 use Try::Tiny;
 use CXGN::Trial::TrialLayout;
+use CXGN::Stock;
 
 our ($opt_H, $opt_D, $opt_T, $opt_O, $opt_c, $opt_n);
 
@@ -42,7 +43,7 @@ if (!$opt_H || !$opt_D || !$opt_T || !$opt_O) {
 my $dbh = CXGN::DB::InsertDBH->new( {
     dbhost => $opt_H,
     dbname => $opt_D,
-    } );
+				    } );
 
 my $schema = Bio::Chado::Schema->connect( sub { $dbh->get_actual_dbh() } );
 
@@ -63,9 +64,9 @@ open(my $F, ">", $zpl_file) || die "Can't open temp zpl file ".$zpl_file;
 
 # Zebra design params
 my $starting_x = 20;
-my $x_increment = 600;
-my $starting_y = 70;
-my $y_increment = 212;
+my $x_increment = 590;
+my $starting_y = 60;
+my $y_increment = 213;
 my $number_of_columns = 2; #zero index
 my $number_of_rows = 9; #zero index
 my $labels_per_plot = $opt_n || 3;
@@ -89,21 +90,24 @@ foreach my $key (sort { $a <=> $b} keys %design) {
     my $plot_name = $design_info{'plot_name'};
     my $plot_number = $design_info{'plot_number'};
     my $rep_number = $design_info{'rep_number'};
+    #if ($rep_number != 1) { next; }
     my $accession_name = $design_info{'accession_name'};
     
+    $custom_text = CXGN::Stock->new ( schema => $schema, stock_id => $design_info{'accession_id'} )->get_pedigree_string('Parents');
+    
     my $font_size = 42;
-    if ($accession_name > 18) {
+    if (length($accession_name) > 18) {
         $font_size = 21;
-    } elsif ($accession_name > 13) {
+    } elsif (length($accession_name) > 13) {
         $font_size = 28;
-    } elsif ($accession_name > 10) {
+    } elsif (length($accession_name) > 10) {
         $font_size = 35;
     }
     
     my $qr_size = 7;
-    if ($plot_name > 30) {
+    if (length($plot_name) > 30) {
         $qr_size = 5;
-    } elsif ($accession_name > 15) {
+    } elsif (length($plot_name) > 15) {
         $qr_size = 6;
     }
     
@@ -113,12 +117,12 @@ foreach my $key (sort { $a <=> $b} keys %design) {
         my $y = $starting_y + ($row_num * $y_increment);
         
         my $label_zpl = "^LH$x,$y
-        ^FO10,10^AA,$font_size^FB350,5^FD$accession_name^FS
-        ^FO150,70^AA,28^FDPlot: $plot_number^AF4^FS
-        ^FO150,100^AA,28^FDRep: $rep_number^AF1^FS
-        ^FO25,140^AA,28^FD$custom_text^FS
-        ^FO25,170^AA,22^FD$trial_name $year^FS
-        ^FO350,20^BQ,,$qr_size^FD   $plot_name^FS";
+        ^FO5,10^AA,$font_size^FB325,5^FD$accession_name^FS
+        ^FO125,70^AA,28^FDPlot: $plot_number^AF4^FS
+        ^FO125,100^AA,28^FDRep: $rep_number^AF1^FS
+        ^FO20,140^AA,28^FD$custom_text^FS
+        ^FO20,170^AA,22^FD$trial_name $year^FS
+        ^FO325,5^BQ,,$qr_size^FD   $plot_name^FS";
         # print STDERR "ZPL is $label_zpl\n";
         print $F $label_zpl;
         
