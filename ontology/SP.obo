@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 07:09:2017 15:22
+date: 12:09:2017 14:11
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -316,13 +316,13 @@ is_a: SP:0000038 ! fruit shape
 
 [Term]
 id: SP:0000040
-name: fruit shape index external
-def: "Maximum height/maximum width ratio." [SGN:EVDK]
+name: fruit shape index external 1
+def: "The ratio of the Maximum Height to Maximum Width." [SGN:EVDK]
 synonym: "fruit shape index 1" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000039 ! fruit shape index
+relationship: variable_of SP:0000039 ! fruit shape index
 
 [Term]
 id: SP:0000041
@@ -363,12 +363,12 @@ is_a: SP:0000004 ! leaf morphology
 [Term]
 id: SP:0000046
 name: fruit shape index external 2
-def: "Midheight/midwidth ratio." [SGN:EVDK]
+def: "The ratio of Height Mid-width to Width Mid-height." [SGN:EVDK]
 synonym: "fruit shape index 2" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000039 ! fruit shape index
+relationship: variable_of SP:0000039 ! fruit shape index
 
 [Term]
 id: SP:0000047
@@ -684,13 +684,13 @@ is_a: SP:0000070 ! distal fruit end shape
 [Term]
 id: SP:0000078
 name: proximal fruit end blockiness
-def: "Proximal fruit end proximal end width/mid width ratio." [SGN:EVDK]
+def: "The ratio of the fruit width at the proximal end to the width mid-height." [SGN:EVDK]
 synonym: "pblk" RELATED []
 xref: PATO:0001195
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0008002
-is_a: SP:0000072 ! proximal fruit end shape
+relationship: variable_of SP:0000072 ! proximal fruit end shape
 
 [Term]
 id: SP:0000079
@@ -749,12 +749,12 @@ is_obsolete: true
 [Term]
 id: SP:0000085
 name: fruit area
-def: "The area of the fruit." [SGN:EVDK]
+def: "The area of the fruit in cm^2." [SGN:EVDK]
 xref: PATO:0001323
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000010 ! fruit size
+relationship: variable_of SP:0000010 ! fruit size
 created_by: naama
 creation_date: 2008-02-12T03:11:00Z
 
@@ -773,14 +773,14 @@ creation_date: 2008-02-12T03:11:00Z
 [Term]
 id: SP:0000087
 name: fruit perimeter
-def: "The maximum perimeter of the fruit." [SGN:EVDK]
+def: "The maximum perimeter of the fruit in cm." [SGN:EVDK]
 synonym: "fruit circumference" RELATED []
 synonym: "per" RELATED []
 xref: PATO:0001711
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000010 ! fruit size
+relationship: variable_of SP:0000010 ! fruit size
 created_by: naama
 creation_date: 2008-02-12T03:11:00Z
 
@@ -1067,8 +1067,8 @@ def: "Count of the number of flowers per one inflorescence." []
 xref: PATO:0000053
 xref: PO:0007615
 xref: PO:0009046
-is_a: SP:0000007 ! inflorescence
-relationship: part_of SP:0000117 ! flower number
+relationship: variable_of SP:0000007 ! inflorescence
+relationship: variable_of SP:0000117 ! flower number
 created_by: naama
 creation_date: 2008-02-22T10:47:00Z
 
@@ -1226,46 +1226,51 @@ is_a: SP:0000365 ! fruit ripening timing
 [Term]
 id: SP:0000133
 name: fruit mid-height width
+def: "The width measured at half of the fruits height in cm." [SGN:EVDK]
 xref: PATO:0000921
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000088 ! fruit width
+relationship: variable_of SP:0000088 ! fruit width
 created_by: naama
 creation_date: 2008-03-12T01:08:00Z
 
 [Term]
 id: SP:0000134
 name: fruit widest width
+def: "The maximum width of the fruit in cm." [SGN:EVDK]
 synonym: "fruit maximum width" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:9001
-is_a: SP:0000088 ! fruit width
+relationship: variable_of SP:0000088 ! fruit width
 created_by: naama
 creation_date: 2008-03-12T01:08:00Z
 
 [Term]
 id: SP:0000135
 name: fruit length mid-width
+def: "The height measured at half of the fruit width in cm." [SGN:EVDK]
 synonym: "height mid-width" EXACT []
 xref: PATO:0000122
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000086 ! fruit length
+relationship: variable_of SP:0000086 ! fruit length
 created_by: naama
 creation_date: 2008-03-12T01:11:00Z
 
 [Term]
 id: SP:0000136
 name: fruit longest length
+def: "The maximum length of the fruit in cm." [SGN:EVDK]
 synonym: "fruit highest height" EXACT []
+synonym: "fruit maximum height" EXACT []
 xref: PATO:0000122
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000086 ! fruit length
+relationship: variable_of SP:0000086 ! fruit length
 created_by: naama
 creation_date: 2008-03-12T01:11:00Z
 
@@ -3611,6 +3616,185 @@ def: "The height of the plant until the last inflorescence in cm" [SGN:NM]
 relationship: variable_of SP:0000002 ! plant size
 created_by: naama
 creation_date: 2017-09-07T15:21:24Z
+
+[Term]
+id: SP:0000405
+name: total number of inflorescences
+def: "Count of the number of inflorescences." [SGN:EVDK]
+relationship: variable_of SP:0000007 ! inflorescence
+created_by: naama
+creation_date: 2017-09-07T15:23:57Z
+
+[Term]
+id: SP:0000406
+name: stem width
+def: "The width of the stem in mm" []
+is_a: SP:0000193 ! stem
+created_by: naama
+creation_date: 2017-09-12T12:19:16Z
+
+[Term]
+id: SP:0000407
+name: Stem width between 2nd and 3rd inflorescence (mm)
+def: "Stem width between 2nd and 3rd inflorescence, measured in mm at complete developmental stage." [SGn:EVDK]
+relationship: variable_of SP:0000406 ! stem width
+created_by: naama
+creation_date: 2017-09-12T12:23:15Z
+
+[Term]
+id: SP:0000408
+name: Stem width between 3rd and 4th inflorescence (mm)
+def: "Stem width between 3rd and 4th inflorescence, measured in mm at complete developmental stage." [SGn:EVDK]
+relationship: variable_of SP:0000406 ! stem width
+created_by: naama
+creation_date: 2017-09-12T12:24:40Z
+
+[Term]
+id: SP:0000409
+name: number of flowers in second inflorescence
+def: "Count the number of flowers in the second inflorescence." [SGN:EVDK]
+relationship: variable_of SP:0000117 ! flower number
+created_by: naama
+creation_date: 2017-09-12T12:43:06Z
+
+[Term]
+id: SP:0000410
+name: number of flowers in third inflorescence
+def: "Count the number of flowers in the third inflorescence." [SGN:EVDK]
+relationship: variable_of SP:0000117 ! flower number
+created_by: naama
+creation_date: 2017-09-12T12:44:18Z
+
+[Term]
+id: SP:0000411
+name: sepal
+is_a: SP:0000008 ! flower morphology
+created_by: naama
+creation_date: 2017-09-12T12:57:55Z
+
+[Term]
+id: SP:0000412
+name: petal
+is_a: SP:0000008 ! flower morphology
+created_by: naama
+creation_date: 2017-09-12T12:58:14Z
+
+[Term]
+id: SP:0000413
+name: number of sepals
+def: "Count sepals per flower." [SGN:EVDK]
+relationship: variable_of SP:0000411 ! sepal
+created_by: naama
+creation_date: 2017-09-12T12:58:24Z
+
+[Term]
+id: SP:0000414
+name: number of petals
+def: "Count petals per flower." [SGN:EVDK]
+relationship: variable_of SP:0000412 ! petal
+created_by: naama
+creation_date: 2017-09-12T12:59:11Z
+
+[Term]
+id: SP:0000415
+name: petal lengh
+def: "Average length of petals from a representative flower per plant. Length measured in cm. from the centre of the flower to the end of the petal." [SGN:EVDK]
+relationship: variable_of SP:0000412 ! petal
+created_by: naama
+creation_date: 2017-09-12T13:00:12Z
+
+[Term]
+id: SP:0000416
+name: petal width
+def: "Average width of petals from a representative flower per plant. Width measured in cm. between the join point of the petals." [SGN:EVDK]
+relationship: variable_of SP:0000412 ! petal
+created_by: naama
+creation_date: 2017-09-12T13:01:44Z
+
+[Term]
+id: SP:0000417
+name: sepal lengh
+def: "Average lenght of sepals from a representative flower per plant. Length was measured in cm. from the pedicel to the end of the sepal." [SGN:EVDK]
+relationship: variable_of SP:0000411 ! sepal
+created_by: naama
+creation_date: 2017-09-12T13:03:58Z
+
+[Term]
+id: SP:0000418
+name: sepal width
+def: "Average width of sepals from a representative flower per plant. Width was measured in cm. between the join point of the sepals." [SGN:EVDK]
+relationship: variable_of SP:0000411 ! sepal
+created_by: naama
+creation_date: 2017-09-12T13:04:04Z
+
+[Term]
+id: SP:0000419
+name: anther
+is_a: SP:0000008 ! flower morphology
+created_by: naama
+creation_date: 2017-09-12T13:35:52Z
+
+[Term]
+id: SP:0000420
+name: pistil
+is_a: SP:0000008 ! flower morphology
+created_by: naama
+creation_date: 2017-09-12T13:36:04Z
+
+[Term]
+id: SP:0000421
+name: ovary
+is_a: SP:0000008 ! flower morphology
+created_by: naama
+creation_date: 2017-09-12T13:36:21Z
+
+[Term]
+id: SP:0000422
+name: anther length
+def: "Length of the anthers in cm." [SGN:EVDK]
+relationship: variable_of SP:0000419 ! anther
+created_by: naama
+creation_date: 2017-09-12T13:36:34Z
+
+[Term]
+id: SP:0000423
+name: pistil length
+def: "Length of the pistil in cm." [SGN:EVDK]
+relationship: variable_of SP:0000420 ! pistil
+created_by: naama
+creation_date: 2017-09-12T13:37:40Z
+
+[Term]
+id: SP:0000424
+name: ovary length
+def: "Length of the ovary in cm." [SGN:EVDK]
+relationship: variable_of SP:0000421 ! ovary
+created_by: naama
+creation_date: 2017-09-12T13:38:20Z
+
+[Term]
+id: SP:0000425
+name: fruit curved height
+def: "The height measured along a curved line through the fruit, passing through the midpoints of opposing pairs of points on either side of the distal and proximal points. cm." [SGN:EVDK]
+xref: PATO:0000122
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+relationship: variable_of SP:0000086 ! fruit length
+created_by: naama
+creation_date: 2017-09-12T13:58:59Z
+
+[Term]
+id: SP:0000426
+name: CLONE OF fruit shape index external 1
+def: "The ratio of the Maximum Height to Maximum Width." [SGN:EVDK]
+synonym: "fruit shape index 1" RELATED []
+xref: PO:0007010
+xref: PO:0007042
+xref: PO:0009001
+relationship: variable_of SP:0000039 ! fruit shape index
+created_by: naama
+creation_date: 2017-09-12T14:03:15Z
 
 [Term]
 id: SP:0000706
