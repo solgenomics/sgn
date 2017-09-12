@@ -30,6 +30,7 @@ use List::MoreUtils qw /any /;
 use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 use CXGN::UploadFile;
+use CXGN::Pedigree::AddCrossingtrial;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddProgeny;
 use CXGN::Pedigree::AddCrossInfo;
@@ -1301,20 +1302,22 @@ sub add_crossingtrial_POST :Args(0) {
   return;
     }
 
-    my $add_crossingtrial = CXGN::Pedigree::AddCrossingtrial->new({
-        chado_schema => $schema,
-        dbh => $dbh,
-        program => $breeding_program,
-        year => $c->req->param('year'),
-        project_description => $c->req->param('project_description'),
-        location => $location,
-        crossingtrial_name => $crossingtrial_name
-    });
+    eval{
+        my $add_crossingtrial = CXGN::Pedigree::AddCrossingtrial->new({
+            chado_schema => $schema,
+            dbh => $dbh,
+            program => $breeding_program,
+            year => $c->req->param('year'),
+            project_description => $c->req->param('project_description'),
+            location => $location,
+            crossingtrial_name => $crossingtrial_name
+        });
+    };
 
-    if (!$add_crossingtrial) {
-          return;
-        }
-    $c->stash->{rest} = {success => "1",};
+    if ($@) {
+        $c->stash->{rest} = {error => $@};
+        return;
+      };
   }
 
 
