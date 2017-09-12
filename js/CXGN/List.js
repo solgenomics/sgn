@@ -753,7 +753,7 @@ CXGN.List.prototype = {
         }
     },
 		seedlotSearch: function(list_id){
-			$('#working_modal').modal('show');
+			jQuery('#working_modal').modal('show');
 			var data = this.getListData(list_id);
 			var accessions = data.elements.map(function(d){return d[1];})
 			console.log(accessions);
@@ -762,8 +762,17 @@ CXGN.List.prototype = {
 			} else {
 				throw "avalilible_seedlots.mas not included";
 			}
-			$('#working_modal').modal('hide');
+			jQuery('#working_modal').modal('hide');
 			jQuery('#availible_seedlots_modal').modal('show');
+			jQuery("#new-list-from-seedlots").submit(function(){
+				try {
+					console.log(window.available_seedlots.get_selected());
+				} catch (e) {
+					setTimeout(function(){throw e;},0);
+				} finally {
+					return false;
+				}
+			});
 		},
 		synonymSearch: function(list_id){
       var self = this;
