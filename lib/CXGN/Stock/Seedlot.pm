@@ -129,10 +129,6 @@ has 'breeding_program_id' => (
     is => 'rw',
 );
 
-has 'nd_experiment' => (
-    isa => 'Bio::Chado::Schema::Result::NaturalDiversity::NdExperiment',
-    is => 'rw',
-);
 
 after 'stock_id' => sub {
     my $self = shift;
@@ -285,20 +281,14 @@ sub _store_seedlot_location {
 sub _retrieve_location {
     my $self = shift;
     my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
-    my $nd_experiment_rs = $self->schema()->resultset('Stock::Stock')->search({'me.stock_id'=>$self->seedlot_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id});
-    if ($nd_experiment_rs->count != 1){
-        die "Seedlot does not have 1 nd_experiment associated!\n";
-    }
-    my $nd_experiment = $nd_experiment_rs->first();
-    my $nd_geolocation_rs = $nd_experiment->search_related('nd_geolocation', {}, {'+select'=>['description'], '+as'=>['description']});
+    my $nd_geolocation_rs = $self->schema()->resultset('Stock::Stock')->search({'me.stock_id'=>$self->seedlot_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id})->search_related('nd_geolocation');
     if ($nd_geolocation_rs->count != 1){
         die "Seedlot does not have 1 nd_geolocation associated!\n";
     }
-    my $nd_geolocation_id = $nd_geolocation_rs->nd_geolocation_id();
-    my $location_code = $nd_geolocation_rs->get_column('description');
+    my $nd_geolocation_id = $nd_geolocation_rs->first()->nd_geolocation_id();
+    my $location_code = $nd_geolocation_rs->first()->description();
     $self->nd_geolocation_id($nd_geolocation_id);
     $self->location_code($location_code);
-	$self->nd_experiment($nd_experiment);
 }
 
 sub _retrieve_breeding_program {
@@ -482,20 +472,25 @@ sub store {
 =cut
 
 sub delete {
-	my $self = shift;
-	my $error = '';
-	my $transactions = $self->transactions();
-	if (scalar(@$transactions)>1){
-		$error = "This seedlot has been used in transactions and so cannot be deleted!";
-	} else {
-		my $stock = $self->stock();
-        $self->location_code();
-		my $nd_experiment = $self->nd_experiment();
-		$nd_experiment->delete();
-		$stock->delete();
-	}
+    my $self = shift;
+    my $error = '';
+    my $transactions = $self->transactions();
+    if (scalar(@$transactions)>1){
+        $error = "This seedlot has been used in transactions and so cannot be deleted!";
+    } else {
+        my $stock = $self->stock();
+        my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
+        my $nd_experiment_rs = $self->schema()->resultset('Stock::Stock')->search({'me.stock_id'=>$self->seedlot_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id});
+        if ($nd_experiment_rs->count != 1){
+            $error = "Seedlot does not have 1 nd_experiment associated!";
+        } else {
+            my $nd_experiment = $nd_experiment_rs->first();
+            $nd_experiment->delete();
+            $stock->delete();
+        }
+    }
 
-	return $error;
+    return $error;
 }
 
 1;
