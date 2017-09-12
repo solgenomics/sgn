@@ -10,6 +10,7 @@ use Data::Dumper;
 use CXGN::Stock;
 use SGN::Model::Cvterm;
 use Text::Template;
+use Try::Tiny;
 
 BEGIN { extends "Catalyst::Controller"; }
 
@@ -19,11 +20,12 @@ use CXGN::ZPL;
 sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
     
     # Zebra design params, hard coded to 3x10 labels for now
     my $starting_x = 20;
     my $starting_y = 60;
-    my $x_increment = 600;
+    my $x_increment = 590;
     my $y_increment = 213;
     my $number_of_columns = 2; #zero index
     my $number_of_rows = 9; #zero index
@@ -32,18 +34,20 @@ sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
     my $zpl_template = Text::Template->new(
         type => 'STRING',
         source => "^LH,<X>,<Y>
-        ^FO10,10^AA,<FONT_SIZE>^FB350,5^FD<ACCESSION_NAME>^FS
-        ^FO150,70^AA,28^FDPlot: <PLOT_NUMBER>^AF4^FS
-        ^FO150,100^AA,28^FDRep: <REP_NUMBER>^AF1^FS
-        ^FO25,140^AA,28^FD<CUSTOM_TEXT>^FS
-        ^FO25,170^AA,22^FD<TRIAL_NAME> <YEAR>^FS
-        ^FO350,20^BQ,,<QR_SIZE>^FD   <PLOT_NAME>^FS";,
+        ^FO5,10^AA,<FONT_SIZE>^FB325,5^FD<ACCESSION_NAME>^FS
+        ^FO125,70^AA,28^FDPlot: <PLOT_NUMBER>^AF4^FS
+        ^FO125,100^AA,28^FDRep: <REP_NUMBER>^AF1^FS
+        ^FO20,140^AA,28^FD<CUSTOM_TEXT>^FS
+        ^FO20,170^AA,22^FD<TRIAL_NAME> <YEAR>^FS
+        ^FO325,5^BQ,,<QR_SIZE>^FD   <PLOT_NAME>^FS",
     );
     
     # retrieve variable params
     my $trial_id = $c->req->param("trial_id");
-    my $labels_per_stock = $c->req->param("labels_per_stock") || 3;
+    my $labels_per_stock = $c->req->param("num_labels") || 1;
     my $custom_text = $c->req->param("custom_text") || '';
+    print STDERR "trial id is $trial_id\n num labels is $labels_per_stock\n custom text is $custom_text\n";
+    #my $order_by = $c->req->param("custom_text") || 'plot_number';
     
     my $trial_rs = $schema->resultset("Project::Project")->search({ project_id => $trial_id });
     if (!$trial_rs) {
@@ -68,7 +72,7 @@ sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
     my %design = %{$trial_layout->get_design()};
     
     my $year_cvterm_id = $schema->resultset("Cv::Cvterm")->search({name=> 'project year' })->first->cvterm_id();
-    my $year = $trial_rs->search_related('projectprops', { type_id => $year_cvterm_id } )->first->value();
+    my $year = $schema->resultset("Project::Projectprop")->search({ project_id => $trial_id, type_id => $year_cvterm_id } )->first->value();
 
     #loop through plot data, creating and saving zpl to file
     my $zpl_dir = $c->tempfiles_subdir('zpl');
@@ -77,6 +81,7 @@ sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
     my $row_num = 0;
     print $ZPL "^XA\n";
     foreach my $key (sort { $a <=> $b} keys %design) {
+        print STDERR "Design key is $key\n";
         my %design_info = %{$design{$key}};
         
         my $plot_name = $design_info{'plot_name'};
@@ -95,14 +100,14 @@ sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
         }
         #Scale QR code size based on plot name
         my $qr_size = 7;
-        if ($plot_name > 30) {
+        if (length($plot_name) > 30) {
             $qr_size = 5;
-        } elsif ($accession_name > 15) {
+        } elsif (length($plot_name) > 15) {
             $qr_size = 6;
         }
         
         for (my $i=0; $i < $labels_per_stock; $i++) {
-            # print STDERR "Working on label num $i\n";     
+            print STDERR "Working on label num $i\n";     
             my $x = $starting_x + ($col_num * $x_increment);
             my $y = $starting_y + ($row_num * $y_increment);
             
@@ -121,7 +126,7 @@ sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
                         '<QR_SIZE>' => $qr_size,
                     },
                 );
-            # print STDERR "ZPL is $label_zpl\n";
+            print STDERR "ZPL is $label_zpl\n";
             print $ZPL $label_zpl;
             
             if ($col_num < $number_of_columns) { #next column
@@ -151,7 +156,7 @@ sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
 
      $c->stash->{file} = $pdf_filename;
      $c->stash->{filetype} = "PDF";
-     $c->stash->{template} = '/barcode/stock_download_result.mas';
+     $c->stash->{template} = '/barcode/trial_barcodes_download_result.mas';
 
 }
 
