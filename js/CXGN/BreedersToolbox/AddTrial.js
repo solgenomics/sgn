@@ -48,11 +48,19 @@ jQuery(document).ready(function ($) {
         });
     }
 
+    var stock_list_id;
+    var stock_list;
+    var seedlot_list_id;
+    var seedlot_list;
+
     $(document).on('focusout', '#select_list_list_select', function() {
         if ($('#select_list_list_select').val()) {
-            var stock_list_id = $('#select_list_list_select').val();
-            var stock_list = JSON.stringify(list.getList(stock_list_id));
+            stock_list_id = $('#select_list_list_select').val();
+            stock_list = JSON.stringify(list.getList(stock_list_id));
             verify_stock_list(stock_list);
+            if(stock_list && seedlot_list){
+                verify_seedlot_list(stock_list, seedlot_list);
+            }
         }
     });
 
@@ -90,11 +98,22 @@ jQuery(document).ready(function ($) {
 
     $(document).on('focusout', '#select_seedlot_list_list_select', function() {
         if ($('#select_seedlot_list_list_select').val()) {
-            var seedlot_list_id = $('#select_seedlot_list_list_select').val();
-            var seedlot_list = JSON.stringify(list.getList(seedlot_list_id));
-            var stock_list_id = $('#select_list_list_select').val();
-            var stock_list = JSON.stringify(list.getList(stock_list_id));
-            verify_seedlot_list(stock_list, seedlot_list);
+            seedlot_list_id = $('#select_seedlot_list_list_select').val();
+            seedlot_list = JSON.stringify(list.getList(seedlot_list_id));
+            if(stock_list && seedlot_list){
+                verify_seedlot_list(stock_list, seedlot_list);
+            } else {
+                alert('Please make sure to select an accession list above!');
+            }
+        }
+    });
+
+    $(document).on('click', '#convert_accessions_to_seedlots', function(){
+        if (!stock_list_id){
+            alert('Please first select a list of accessions above!');
+        } else {
+            var list = new CXGN.List();
+            list.seedlotSearch(stock_list_id);
         }
     });
 
@@ -146,7 +165,7 @@ jQuery(document).ready(function ($) {
                 'seedlot_list': seedlot_list,
             },
             success: function (response) {
-                //console.log(response);
+                console.log(response);
                 jQuery('#working_modal').modal('hide');
                 if (response.error) {
                     alert(response.error);
@@ -154,8 +173,7 @@ jQuery(document).ready(function ($) {
                 }
                 if (response.success){
                     seedlot_list_verified = 1;
-                    
-                    //ADD SEEDLOT LIST TO SEEDLOT HASH CONVERSION HERE
+                    seedlot_hash = response.seedlot_hash;
                 }
             },
             error: function () {

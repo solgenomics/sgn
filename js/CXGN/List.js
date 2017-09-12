@@ -754,8 +754,7 @@ CXGN.List.prototype = {
     },
 		seedlotSearch: function(list_id){
 			jQuery('#working_modal').modal('show');
-			var data = this.getListData(list_id);
-			var accessions = data.elements.map(function(d){return d[1];})
+			var accessions = this.getList(list_id);
 			console.log(accessions);
 			if (window.available_seedlots){
 				window.available_seedlots.build_table(accessions);
