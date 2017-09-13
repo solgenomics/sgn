@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 12:09:2017 14:11
+date: 13:09:2017 15:49
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -651,13 +651,13 @@ is_a: SP:0000072 ! proximal fruit end shape
 [Term]
 id: SP:0000075
 name: distal fruit end blockiness
-def: "Distal fruit end width/mid width ratio." [SGN:EVDK]
+def: "Distal fruit end width/mid width ratio.\nThe ratio of the width at the distal fruit end to the mid-fruit width." [SGN:EVDK]
 synonym: "dblk" RELATED []
 xref: PATO:0001234
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0008001
-is_a: SP:0000070 ! distal fruit end shape
+relationship: variable_of SP:0000070 ! distal fruit end shape
 
 [Term]
 id: SP:0000076
