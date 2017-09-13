@@ -152,7 +152,7 @@ $breeding_programs
                                     <div class="col-sm-5" id="select_seedlot_list" name="select_seedlot_list">
                                     </div>
                                 </div>
-                                <center>Need a list of seedlots for the selected accessions?&nbsp;&nbsp;&nbsp;&nbsp;<button id="convert_accessions_to_seedlots" class="btn btn-default btn-sm" style="margin:6px 0px 0px 0px" type="button" >Search Seedlots for Accessions</button></center>
+                                <center>Need a list of seedlots for the selected accessions?&nbsp;&nbsp;&nbsp;&nbsp;<button name="convert_accessions_to_seedlots" class="btn btn-default btn-sm" style="margin:6px 0px 0px 0px" type="button" >Search Seedlots for Accessions</button></center>
                             </div>
 
                             <div class="form-group form-group-sm" id="show_no_of_row_in_design" style="display: none" >

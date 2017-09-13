@@ -392,11 +392,12 @@ jQuery(document).ready(function ($) {
   function open_multilocation_project_dialog() {
     $('#add_multilocation_project_dialog').modal("show");
     $("#select_list_multi_list_select").remove();
+    $("#select_seedlot_list_multi_list_select").remove();
     $("#list_of_checks_section_multi_list_select").remove();
-    $("#select_list_multi_list_select").remove();
     $("#crbd_list_of_checks_section_multi_list_select").remove();
     $("#select_list_locations_multi").append(list.listSelect("select_list_locations_multi", [ 'locations' ], "select location list" ));
     $("#select_list_multi").append(list.listSelect("select_list_multi", [ 'accessions' ], '', 'refresh' ));
+    $("#select_seedlot_list_multi").append(list.listSelect("select_seedlot_list_multi", [ 'seedlots' ], '', 'refresh'));
     $("#list_of_checks_section_multi").append(list.listSelect("list_of_checks_section_multi", [ 'accessions' ], '', 'refresh'));
     $("#crbd_list_of_checks_section_multi").append(list.listSelect("crbd_list_of_checks_section_multi", [ 'accessions' ], "select optional check list", 'refresh'));
 
@@ -409,6 +410,12 @@ jQuery(document).ready(function ($) {
     //add a blank line to list select dropdown that dissappears when dropdown is opened
     $("#select_list_multi_list_select").prepend("<option value=''></option>").val('');
     $("#select_list_multi_list_select").one('mousedown', function () {
+              $("option:first", this).remove();
+    });
+
+    //add a blank line to list select dropdown that dissappears when dropdown is opened
+    $("#select_seedlot_list_multi_list_select").prepend("<option value=''></option>").val('');
+    $("#select_seedlot_list_multi_list_select").one('mousedown', function () {
               $("option:first", this).remove();
     });
 
