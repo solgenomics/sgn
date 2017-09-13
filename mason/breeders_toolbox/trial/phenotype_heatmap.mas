@@ -1,0 +1,9 @@
+
+<%args>
+$trial_id
+</%args>
+
+
+<& /util/import_javascript.mas, classes => [ 'kinetics.kinetic.js', 'jqueryui.js', 'jquery.js' ] &>
+
+    
