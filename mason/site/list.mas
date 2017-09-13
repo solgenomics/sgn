@@ -156,6 +156,7 @@
                 <button class="btn btn-primary" type="submit">Save</button>
               </form>
               <form class="form-inline" style="float:right">
+                <a href="/breeders/seedlots/" class="btn btn-primary">Manage Seedlots</a>
                 <button id="close_availible_seedlots_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
               </form>
             </div>
