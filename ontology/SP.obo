@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 13:09:2017 15:57
+date: 13:09:2017 15:59
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -1439,13 +1439,14 @@ is_obsolete: true
 [Term]
 id: SP:0000154
 name: proximal fruit end height
+def: "The ratio of the average height of the shoulder points above the proximal end point to Maximum Height. The height of the shoulder points (H_sl and H_sr) is measured against a line through the proximal point that is perpendicular to the line between the proximal point and the fruit center of weight (assuming all pixels have equal mass)." [SGN:EVDK]
 synonym: "shoulder height" RELATED []
 xref: PATO:0001195
 xref: PATO:f0000119
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0008002
-is_a: SP:0000072 ! proximal fruit end shape
+relationship: variable_of SP:0000072 ! proximal fruit end shape
 created_by: naama
 creation_date: 2008-03-17T01:50:00Z
 
