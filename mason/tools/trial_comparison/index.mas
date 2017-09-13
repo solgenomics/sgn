@@ -4,7 +4,7 @@
 
 </%doc>
 
-<%args>
+<%args> 
 
 </%args>
 
@@ -45,6 +45,9 @@
     <div hidden="true" class="tc-histogram col-lg-6 col-md-6 col-sm-12"></div>
   </div>
 </div>
+
+<&| /page/info_section.mas, title=>"Phenotype Heatmap", collaspible=>1 &>
+</&>
 
 <script>
 
