@@ -18,7 +18,7 @@
 </form>
 <script type="text/javascript">
   (function(global){
-    var mainDivSelector = "#available-seedlots";
+    var mainFormSelector = "#available-seedlots";
     var d3 = global.d3v4;
     var ex = {};
     ex.build_table = function(accession_names){
@@ -41,17 +41,7 @@
       });
     };
     ex.get_selected = function(){
-      var main = d3.select(mainDivSelector);
-      var body = main.select("tbody");
-      var rows = body.selectAll("tr");
-      var selected = [];
-      rows.select("select").each(function(d){
-        var val = this.options[this.selectedIndex].value;
-        if(val!="NO-AVAIL"){
-          selected.push(val);
-        }
-      });
-      return selected;
+      return jQuery(mainFormSelector).serializeArray();
     };
     var empty_placeholder = new Object();
     function _build_table(accession_list,seedlot_obj,synonyms){
@@ -76,7 +66,7 @@
       var row_data = accession_list.map(function(acc){
         return {'name':acc,'seedlots':synonymized[acc]?synonymized[acc]:[]};
       });
-      var table = d3.select(mainDivSelector).select("table");
+      var table = d3.select(mainFormSelector).select("table");
       var groups = table.selectAll("tbody").data(row_data,function(d){return d.name;});
       groups.exit().remove();
       var newGroups = groups.enter().append("tbody");
@@ -85,9 +75,7 @@
         .style("text-align","center")
         .style("vertical-align","middle");
       var allGroups = newGroups.merge(groups);
-      allGroups.style("background",function(d,i){
-        return i%2 ? "#eee" : "#fff";
-      })
+      allGroups.style("border-top","2px solid #999")
       allGroups.select(".as-acc-name")
         .attr("rowspan",function(d){return Math.max(1,d.seedlots.length);})
         .text(function(d){return d.name;});
@@ -103,8 +91,7 @@
             return ['<input disabled type="checkbox">'," ","No Availible Seedlots"," "," "," "]
           }
           var cells = [];
-          console.log(d);
-          cells.push('<input value="'+d.seedlot[0]+'" type="checkbox">');
+          cells.push('<input value="'+d.seedlot[0]+'" name="'+d.seedlot[0]+'" type="checkbox">');
           cells.push(d.program);
           cells.push('<a href="/breeders/seedlot/'+d.seedlot[1]+'">'+d.seedlot[0]+'</a>');
           cells.push('<a href="/stock/'+d.contents[1]+'/view">'+d.contents[0]+'</a>');
