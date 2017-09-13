@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 13:09:2017 15:54
+date: 13:09:2017 15:55
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -402,12 +402,12 @@ relationship: variable_of SP:0000038 ! fruit shape
 [Term]
 id: SP:0000050
 name: fruit shape circular
-def: "Fitting precision R2. How well the boundary of a perfect circle fits the boundary of a fruit." [SGN:EVDK]
+def: "Fitting precision R2. How well the boundary of a perfect circle fits the boundary of a fruit.\n\nThe ratio of the error resulting from a best-fit circle to the area of the fruit. Error is the average magnitude of residuals (Res) along the fruit perimeter, divided by the radius of the circle. Smaller values indicate that the fruit is more Circular." [SGN:EVDK]
 synonym: "cir" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000038 ! fruit shape
+relationship: variable_of SP:0000038 ! fruit shape
 
 [Term]
 id: SP:0000051
