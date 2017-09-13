@@ -111,6 +111,7 @@ sub patch {
 		$transaction->description("Auto generated seedlot from accession");
 		$transaction->operator('nmorales');
 		$transaction->store();
+        $sl->set_current_count_property();
 	}
 	
 
