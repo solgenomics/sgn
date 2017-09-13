@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 13:09:2017 15:49
+date: 13:09:2017 15:51
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -391,13 +391,13 @@ is_a: SP:0000039 ! fruit shape index
 [Term]
 id: SP:0000049
 name: fruit shape triangle
-def: "Proximal/distal width ratio." [SGN:EVDK]
+def: "Proximal/distal width ratio.\nThe ratio of the width at fruit proximal end to the width at the fruit distal end." [SGN:EVDK]
 synonym: "tri" RELATED []
 xref: PATO:0001875
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000038 ! fruit shape
+relationship: variable_of SP:0000038 ! fruit shape
 
 [Term]
 id: SP:0000050
