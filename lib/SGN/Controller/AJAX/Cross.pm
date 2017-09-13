@@ -1279,16 +1279,16 @@ sub add_crossingtrial_POST :Args(0) {
         return;
     }
 
-    if($folder_name){
-        my $folder = CXGN::Trial::Folder->create({
-          bcs_schema => $schema,
-          parent_folder_id => '',
-          name => $folder_name,
-          breeding_program_id  => $breeding_program_id,
-          folder_for_crosses => 1
-        });
-        $folder_id = $folder->folder_id();
-    }
+  #  if($folder_name){
+  #      my $folder = CXGN::Trial::Folder->create({
+  #        bcs_schema => $schema,
+  #        parent_folder_id => '',
+  #        name => $folder_name,
+  #        breeding_program_id  => $breeding_program_id,
+  #        folder_for_crosses => 1
+  #      });
+  #      $folder_id = $folder->folder_id();
+  #  }
 
     if (!$c->user()) {
   print STDERR "User not logged in... not adding a crossingtrial.\n";

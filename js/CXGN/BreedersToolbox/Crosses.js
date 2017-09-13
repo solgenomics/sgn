@@ -25,7 +25,7 @@ jQuery(document).ready(function($) {
 
         get_select_box('years', 'add_project_year', {'auto_generate':1});
 
-        get_select_box('folders', 'cross_folder_select_div', {
+        get_select_box('folders', 'crossingtrial_folder_select_div', {
             'name': 'crossingtrial_folder_id',
             'id': 'crossingtrial_folder_id',
             'folder_for_crosses' : 1,
@@ -400,7 +400,7 @@ jQuery(document).ready(function($) {
             type: 'POST',
             data: 'crossingtrial_name=' + crossingTrialName + '&program=' + breeding_program_id + '&visible_to_role=' + visibleToRole
             + '&location=' + location + '&add_project_year=' + year + '&add_project_description=' + project_description
-            + '&add_cross_folder_name=' + folder_name +'&add_cross_folder_id=' + folder_id,
+            + '&folder_name=' + folder_name +'&folder_id=' + folder_id,
             beforeSend: function() {
               jQuery("#create_crossingtrial").modal("hide");
               jQuery("#working_modal").modal("show");
