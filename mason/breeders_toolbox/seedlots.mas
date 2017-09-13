@@ -295,16 +295,20 @@ jQuery(document).ready(function(){
         ],
         "fnInitComplete": function(oSettings, json) {
             //console.log(json);
-            var html = "";
-            for(var i=0; i<json.data.length; i++){
-                html += json.data[i].seedlot_stock_uniquename+"\n";
+            if (!isLoggedIn()) {
+                jQuery('#available_seedlots_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+            } else {
+                var html = "";
+                for(var i=0; i<json.data.length; i++){
+                    html += json.data[i].seedlot_stock_uniquename+"\n";
+                }
+                jQuery("#available_seedlots_to_list").html(html);
+                addToListMenu("available_seedlots_add_to_list", "available_seedlots_to_list", {
+                    selectText: true,
+                    listType: 'seedlots',
+                    listName: 'seedlots'
+                });
             }
-            jQuery("#available_seedlots_to_list").html(html);
-            addToListMenu("available_seedlots_add_to_list", "available_seedlots_to_list", {
-                selectText: true,
-                listType: 'seedlots',
-                listName: 'seedlots'
-            });
         }
     });
 
