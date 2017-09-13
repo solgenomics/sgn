@@ -46,9 +46,6 @@
   </div>
 </div>
 
-<&| /page/info_section.mas, title=>"Phenotype Heatmap", collaspible=>1 &>
-</&>
-
 <script>
 
 $(document).ready(function(){
