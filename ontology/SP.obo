@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 13:09:2017 15:55
+date: 13:09:2017 15:57
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -574,13 +574,13 @@ relationship: variable_of SP:0000038 ! fruit shape
 [Term]
 id: SP:0000068
 name: fruit shape rectangular
-def: "Sin/Sout. The ratio of maximum area inscribing the rectangle to the minimum area of the enclosing rectangle." [PMID:16684933]
+def: ".The ratio of the area of the rectangle bounding the fruit to the area of the rectangle bounded by the fruit." [PMID:16684933]
 synonym: "rec" RELATED []
 xref: PATO:0001867
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000038 ! fruit shape
+relationship: variable_of SP:0000038 ! fruit shape
 
 [Term]
 id: SP:0000069
