@@ -273,7 +273,7 @@ my $start_time = time();
 
 <&| /page/info_section.mas, id => "pheno_heatmap", title=>"Phenotype Heatmap", collapsible=>1, collapsed => 1 &>
 
-    <!--<& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id &>-->
+    <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id &>
 
 </&>
 
