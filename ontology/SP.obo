@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 13:09:2017 16:02
+date: 13:09:2017 16:03
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -3344,7 +3344,8 @@ creation_date: 2010-07-19T12:39:49Z
 [Term]
 id: SP:0000370
 name: proximal angle macro 20%
-is_a: SP:0000074 ! proximal fruit end angle
+def: "The angle between best-fit lines drawn through the fruit perimeter on either side of the proximal end point. The Macro Distance setting determines the percentage of the perimeter from the proximal end point at which to center the linear regression points used to find the best-fit line. The points comprising 5% of the perimeter on either side of that center point are used in the regression." [SGN:EVDK]
+relationship: variable_of SP:0000074 ! proximal fruit end angle
 created_by: Naama
 creation_date: 2010-07-19T12:40:13Z
 
