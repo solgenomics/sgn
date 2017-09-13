@@ -50,8 +50,6 @@ jQuery(document).ready(function($) {
               return;
           }
 
-          var visibleToRole = $("#visible_to_role").val();
-
           var location = $("#location").val();
           if (!location) {
               alert ("Location is required");
@@ -78,7 +76,7 @@ jQuery(document).ready(function($) {
           else {
               folder_id = $("#crossingtrial_folder_id").val();
           }
-          add_crossingtrial(crossingTrialName, breeding_program_id, visibleToRole, location, year, project_description, folder_name, folder_id);
+          add_crossingtrial(crossingTrialName, breeding_program_id, location, year, project_description, folder_name, folder_id);
 
       });
 
@@ -392,13 +390,13 @@ jQuery(document).ready(function($) {
         return names;
     }
 
-    function add_crossingtrial(crossingTrialName, breeding_program_id, visibleToRole, location, year, project_description, folder_name, folder_id) {
+    function add_crossingtrial(crossingTrialName, breeding_program_id, location, year, project_description, folder_name, folder_id) {
         $.ajax({
             url: '/ajax/cross/add_crossingtrial',
             timeout: 3000000,
             dataType: "json",
             type: 'POST',
-            data: 'crossingtrial_name=' + crossingTrialName + '&program=' + breeding_program_id + '&visible_to_role=' + visibleToRole
+            data: 'crossingtrial_name=' + crossingTrialName + '&program=' + breeding_program_id +
             + '&location=' + location + '&add_project_year=' + year + '&add_project_description=' + project_description
             + '&folder_name=' + folder_name +'&folder_id=' + folder_id,
             beforeSend: function() {
