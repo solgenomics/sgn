@@ -753,9 +753,10 @@ CXGN.List.prototype = {
         }
     },
 		seedlotSearch: function(list_id){
+			var self = this;
 			jQuery('#working_modal').modal('show');
-			var accessions = this.getList(list_id);
-			console.log(accessions);
+			var data = this.getListData(list_id);
+			var accessions = data.elements.map(function(d){return d[1];})
 			if (window.available_seedlots){
 				window.available_seedlots.build_table(accessions);
 			} else {
@@ -764,11 +765,31 @@ CXGN.List.prototype = {
 			jQuery('#working_modal').modal('hide');
 			jQuery('#availible_seedlots_modal').modal('show');
 			jQuery("#new-list-from-seedlots").submit(function(){
+				jQuery('#working_modal').modal('show');
 				try {
-					console.log(window.available_seedlots.get_selected());
-				} catch (e) {
-					setTimeout(function(){throw e;},0);
-				} finally {
+					var form = jQuery(this).serializeArray().reduce(function(map,obj){
+						map[obj.name] = obj.value;
+						return map;
+					}, {});
+					console.log(form);
+					var list = new CXGN.List();
+					var names = window.available_seedlots.get_selected().map(function(d){
+						return d.name;
+					});
+					var newListID = list.newList(form["name"]);
+					if (!newListID) throw "List creation failed.";
+					list.setListType(newListID,"seedlots");
+					var count = list.addBulk(newListID, names);
+					if (!count) throw "Added nothing to list or addition failed.";
+					jQuery('#working_modal').modal('hide');
+					alert("List \""+form["name"]+"\" created with "+count+" entries.");
+					self.renderLists('list_dialog');
+				}
+				catch(err) {
+					setTimeout(function(){throw err;});
+				}
+				finally {
+					jQuery('#working_modal').modal('hide');
 					return false;
 				}
 			});
