@@ -236,6 +236,7 @@ jQuery(document).ready(function ($) {
         var no_of_rep_times = $('#no_of_rep_times').val();
         var no_of_block_sequence = $('#no_of_block_sequence').val();
         var no_of_sub_block_sequence = $('#no_of_sub_block_sequence').val();
+        var num_seed_per_plot = $('#num_seed_per_plot').val();
         
         var unreplicated_accession_list;
         if (unreplicated_accession_list_id != "") {
@@ -320,6 +321,7 @@ jQuery(document).ready(function ($) {
                 'replicated_accession_list': replicated_accession_list,
                 'no_of_sub_block_sequence': no_of_sub_block_sequence,
                 'seedlot_hash': JSON.stringify(seedlot_hash),
+                'num_seed_per_plot': num_seed_per_plot,
             },
             success: function (response) {
                 $('#working_modal').modal("hide");

@@ -405,6 +405,18 @@ sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
     $c->stash->{rest} = { accessions => \@data };
 }
 
+sub trial_seedlots : Chained('trial') PathPart('seedlots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_seedlots();
+
+    $c->stash->{rest} = { seedlots => \@data };
+}
+
 sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     my $self = shift;
     my $c = shift;

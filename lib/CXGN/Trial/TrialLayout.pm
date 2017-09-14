@@ -197,6 +197,7 @@ sub _get_design_from_trial {
   my $plant_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_of', 'stock_relationship' )->cvterm_id();
   my $subplot_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'subplot_of', 'stock_relationship' )->cvterm_id();
   my $plant_of_subplot_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_of_subplot', 'stock_relationship' )->cvterm_id();
+  my $seed_transaction_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'seed transaction', 'stock_relationship' )->cvterm_id();
 
   @plots = @{$plots_ref};
   foreach my $plot (@plots) {
@@ -225,6 +226,7 @@ sub _get_design_from_trial {
     my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id() ] } })->object;
     my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm_id })->search_related('object');
 	my $subplots = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $subplot_rel_cvterm_id })->search_related('object');
+	my $seedlot = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $seed_transaction_cvterm_id })->search_related('object');
 
     my $accession_name = $accession->uniquename;
     my $accession_id = $accession->stock_id;
@@ -263,6 +265,10 @@ sub _get_design_from_trial {
     if ($accession_id) {
       $design_info{"accession_id"}=$accession_id;
     }
+	if ($seedlot){
+		$design_info{"seedlot_name"} = $seedlot->first->uniquename;
+		$design_info{"seedlot_stock_id"} = $seedlot->first->stock_id;
+	}
 	if ($plants) {
 		my @plant_names;
 		my @plant_ids;
