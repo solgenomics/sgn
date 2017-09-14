@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 14:09:2017 16:01
+date: 14:09:2017 16:04
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -1495,7 +1495,8 @@ creation_date: 2008-03-25T11:13:00Z
 [Term]
 id: SP:0000161
 name: horizontal asymmetry obovoid
-is_a: SP:0000065 ! horizontal asymmetry
+def: "If the area of the fruit is greater below mid-height than above it, horizontal asymmetry obovoid is the average distance (Res_h) between a horizontal line through the fruit at mid-height and the midpoint of the fruit height at each width. Otherwise, it is 0." [SGN:EVDK]
+relationship: variable_of SP:0000065 ! horizontal asymmetry
 created_by: naama
 creation_date: 2008-03-25T11:17:00Z
 
