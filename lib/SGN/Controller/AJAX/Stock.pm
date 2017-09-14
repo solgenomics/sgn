@@ -1591,7 +1591,7 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
     my @stocks;
     foreach my $r (@$result){
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
-      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
+      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name, $stock_name];
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -1608,7 +1608,7 @@ sub get_progenies:Chained('/stock/get_stock') PathPart('datatables/progenies') A
     my @stocks;
     foreach my $r (@$result){
       my ($cvterm_name, $stock_id, $stock_name) = @$r;
-      push @stocks, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}];
+      push @stocks, [$cvterm_name, qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $stock_name];
     }
 
     $c->stash->{rest}={data=>\@stocks};
@@ -1628,7 +1628,7 @@ sub get_group_and_member:Chained('/stock/get_stock') PathPart('datatables/group_
 
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
 
-      push @group, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
+      push @group, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name, $stock_name];
     }
 
     $c->stash->{rest}={data=>\@group};
@@ -1649,7 +1649,7 @@ sub get_stock_for_tissue:Chained('/stock/get_stock') PathPart('datatables/stock_
 
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
 
-      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
+      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name, $stock_name];
     }
 
     $c->stash->{rest}={data=>\@stocks};
