@@ -939,9 +939,8 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $trial_id = $c->req->param("trial_id");
     
-    print "MY TRIAL ID: $trial_id\n";
+    
     
     $c->stash->{rest} = {success => 1};
     
