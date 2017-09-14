@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 13:09:2017 16:07
+date: 14:09:2017 15:58
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -480,14 +480,14 @@ is_a: SP:0000038 ! fruit shape
 [Term]
 id: SP:0000059
 name: obovoid
-def: "1/2fOb(y) x Tob. The degree of pear-shapeness." [SGN:EVDK]
+def: "1/2fOb(y) x Tob. The degree of pear-shapeness.\n\nIf the area of the fruit is greater below mid-height than above it, then Obovoid is calculated from the maximum width (W), the height at which the maximum width occurs (y), the average width above that height (w1), and the\n average width below that height (w2), and a scaling function scale_ob as: Obovoid = 1/2 * scale_ob(y) * (1- w1/W + w2/W) If Obovoid > 0, subtract 0.4. Otherwise, Obovoid is 0." [SGN:EVDK]
 synonym: "obo" RELATED []
 synonym: "obovate" RELATED []
 synonym: "pear shape" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000058 ! fruit shape eccentric
+relationship: variable_of SP:0000058 ! fruit shape eccentric
 
 [Term]
 id: SP:0000060
@@ -695,7 +695,7 @@ relationship: variable_of SP:0000072 ! proximal fruit end shape
 [Term]
 id: SP:0000079
 name: proximal fruit end indentation
-def: "The ratio of the area of the proximal indentation (bounded by the proximal shoulder points, P_sl and P_sr) to the total area of the fruit, multiplied by 10." [SGN:EVDK]
+def: "Proximal fruit end indented area/total fruit area." [SGN:EVDK]
 xref: PATO:0001195
 xref: PO:0007010
 xref: PO:0007042
