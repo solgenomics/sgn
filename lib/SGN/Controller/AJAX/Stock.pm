@@ -1557,7 +1557,7 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
     my @stocks;
     foreach my $r (@$result){
       my ($stock_id, $stock_name, $cvterm_name) = @$r;
-      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name];
+      push @stocks, [qq{<a href = "/stock/$stock_id/view">$stock_name</a>}, $cvterm_name, $stock_name];
     }
 
     $c->stash->{rest}={data=>\@stocks};
