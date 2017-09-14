@@ -7,6 +7,47 @@ $trial_id
 <& /util/import_javascript.mas, classes => [ 'kinetics.kinetic.js', 'jqueryui.js', 'jquery.js' ] &>
 
 <style>
+    #trait_heatmap {display: inline; }
+    #trial_no_phenoMSG {display: none; }
+</style>
+
+<div id="trait_heatmap" >loading...</div>
+<div id="trial_no_phenoMSG" >Upload physical field coordinates for this trial</div>
+
+<script defer="defer">
+var trial_id = <% $trial_id %>;
+jQuery(document).ready( function() {
+
+    jQuery('#pheno_heatmap_onswitch').click( function() {
+
+         jQuery.ajax( {
+              url: '/breeders/trials/phenotype/'+trial_id+'/heatmap', 
+              beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+              },
+              success: function(response) {
+                 jQuery("#working_modal").modal("hide");
+                 if (response.pheno){
+                    alert("HELLO");
+                 }
+                 else  {
+                        jQuery("#trait_heatmap").css("display", "none");
+                        jQuery("#trial_no_phenoMSG").css("display", "inline-block");
+                 }
+
+              },
+              error: function(reponse) {
+                    jQuery("#working_modal").modal("hide");
+              }
+         });
+    });
+});
+
+</script>
+
+<%doc>
+
+<style>
 
 #container_heatmap {
     //border:2px dashed #000;
@@ -53,7 +94,7 @@ var trial_id = <% $trial_id %>;
 //alert("trial_id: "+trial_id)
   jQuery(document).ready( function() {
 
- jQuery('#pheno_heatmap_onswitch').click( function() {
+  jQuery('#pheno_heatmap_onswitch').click( function() {
 
    jQuery.ajax( {
         url: '/ajax/breeders/trial/'+trial_id+'/coords', 
@@ -292,3 +333,5 @@ document.getElementById('download_heatmap').addEventListener('click', function()
 .legend .rep_even_number { background-color: #f4d03f; height: 4px; width: 16px;}
 .legend .rep_odd_number { background-color: black; height: 4px; width: 16px;}
 </style>
+
+</%doc>
