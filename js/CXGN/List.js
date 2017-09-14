@@ -789,7 +789,8 @@ CXGN.List.prototype = {
 								}
 								html += "</tbody></table>";
 								jQuery('#synonym_search_result_display_html').html(html);
-                $('#new-list-form').submit(function () {
+								jQuery('#new-list-from-unames').unbind('submit');
+                jQuery('#new-list-from-unames').submit(function () {
                   jQuery('#working_modal').modal('show');
                   try {
                     var form = jQuery(this).serializeArray().reduce(function(map,obj){
