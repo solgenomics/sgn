@@ -22,7 +22,7 @@ sub download {
     open(my $F, ">", $self->filename()) || die "Can't open file ".$self->filename();
 
     if ($self->data_level eq 'plots') {
-        my @header_cols = ("plot_name", "accession_name", "plot_number","block_number", "is_a_control", "rep_number", "row_number", "col_number");
+        my @header_cols = ("plot_name", "accession_name", "plot_number","block_number", "is_a_control", "rep_number", "row_number", "col_number", "seedlot_name", "operator", "num_seed_per_plot");
         my @treatment_lookup;
         foreach (@$treatments){
             push @header_cols, $_->[1];
@@ -47,7 +47,10 @@ sub download {
                 $design->{$n}->{is_a_control} || '',
                 $design->{$n}->{rep_number},
                 $design->{$n}->{row_number},
-                $design->{$n}->{col_number}
+                $design->{$n}->{col_number},
+                $design->{$n}->{seedlot_name},
+                $design->{$n}->{seed_transaction_operator},
+                $design->{$n}->{num_seed_per_plot},
             );
             for (0..scalar(@$treatments)-1){
                 my $treatment_hash = $treatment_lookup[$_];
@@ -63,7 +66,7 @@ sub download {
         close($F);
         
     } elsif ($self->data_level eq 'plants') {
-        my @header_cols = ("plant_name", "plot_name", "accession_name", "plot_number","block_number", "is_a_control", "rep_number", "row_number", "col_number");
+        my @header_cols = ("plant_name", "plot_name", "accession_name", "plot_number","block_number", "is_a_control", "rep_number", "row_number", "col_number", "seedlot_name", "operator", "num_seed_per_plot");
         my @treatment_lookup;
         foreach (@$treatments){
             push @header_cols, $_->[1];
@@ -92,7 +95,10 @@ sub download {
                     $design->{$n}->{is_a_control} || '',
                     $design->{$n}->{rep_number},
                     $design->{$n}->{row_number},
-                    $design->{$n}->{col_number}
+                    $design->{$n}->{col_number},
+                    $design->{$n}->{seedlot_name},
+                    $design->{$n}->{seed_transaction_operator},
+                    $design->{$n}->{num_seed_per_plot},
                 );
                 for (0..scalar(@$treatments)-1){
                     my $treatment_hash = $treatment_lookup[$_];
@@ -108,7 +114,7 @@ sub download {
         }
         close($F);
     } elsif ($self->data_level eq 'subplots') {
-        my @header_cols = ("subplot_name", "plot_name", "accession_name", "plot_number","block_number", "is_a_control", "rep_number", "row_number", "col_number");
+        my @header_cols = ("subplot_name", "plot_name", "accession_name", "plot_number","block_number", "is_a_control", "rep_number", "row_number", "col_number", "seedlot_name", "operator", "num_seed_per_plot");
         my @treatment_lookup;
         foreach (@$treatments){
             push @header_cols, $_->[1];
@@ -137,7 +143,10 @@ sub download {
                     $design->{$n}->{is_a_control} || '',
                     $design->{$n}->{rep_number},
                     $design->{$n}->{row_number},
-                    $design->{$n}->{col_number}
+                    $design->{$n}->{col_number},
+                    $design->{$n}->{seedlot_name},
+                    $design->{$n}->{seed_transaction_operator},
+                    $design->{$n}->{num_seed_per_plot},
                 );
                 for (0..scalar(@$treatments)-1){
                     my $treatment_hash = $treatment_lookup[$_];
@@ -153,7 +162,7 @@ sub download {
         }
         close($F);
     } elsif ($self->data_level eq 'plants_subplots') {
-        my @header_cols = ("plant_name", "subplot_name", "plot_name", "accession_name", "plot_number","block_number", "is_a_control", "rep_number", "row_number", "col_number");
+        my @header_cols = ("plant_name", "subplot_name", "plot_name", "accession_name", "plot_number","block_number", "is_a_control", "rep_number", "row_number", "col_number", "seedlot_name", "operator", "num_seed_per_plot");
         my @treatment_lookup;
         foreach (@$treatments){
             push @header_cols, $_->[1];
@@ -185,7 +194,10 @@ sub download {
                         $design->{$n}->{is_a_control} || '',
                         $design->{$n}->{rep_number},
                         $design->{$n}->{row_number},
-                        $design->{$n}->{col_number}
+                        $design->{$n}->{col_number},
+                        $design->{$n}->{seedlot_name},
+                        $design->{$n}->{seed_transaction_operator},
+                        $design->{$n}->{num_seed_per_plot},
                     );
                     for (0..scalar(@$treatments)-1){
                         my $treatment_hash = $treatment_lookup[$_];

@@ -34,8 +34,11 @@ sub download {
         $ws->write(0,5,"rep_number");
         $ws->write(0,6,"row_number");
         $ws->write(0,7,"col_number");
+        $ws->write(0,8,"seedlot_name");
+        $ws->write(0,9,"operator");
+        $ws->write(0,10,"num_seed_per_plot");
 
-        my $col = 8;
+        my $col = 11;
         my @treatment_lookup;
         foreach (@$treatments){
             $ws->write(0,$col,$_->[1]);
@@ -59,8 +62,11 @@ sub download {
             $ws->write($line, 5, $design->{$n}->{rep_number});
             $ws->write($line, 6, $design->{$n}->{row_number});
             $ws->write($line, 7, $design->{$n}->{col_number});
+            $ws->write($line, 8, $design->{$n}->{seedlot_name});
+            $ws->write($line, 9, $design->{$n}->{seed_transaction_operator});
+            $ws->write($line, 10, $design->{$n}->{num_seed_per_plot});
 
-            my $col = 8;
+            my $col = 11;
             for (0..scalar(@$treatments)-1){
                 my $treatment_hash = $treatment_lookup[$_];
                 if (exists($treatment_hash->{$design->{$n}->{plot_name}})){
@@ -82,8 +88,11 @@ sub download {
         $ws->write(0,6,"rep_number");
         $ws->write(0,7,"row_number");
         $ws->write(0,8,"col_number");
+        $ws->write(0,9,"seedlot_name");
+        $ws->write(0,10,"operator");
+        $ws->write(0,11,"num_seed_per_plot");
 
-        my $col = 9;
+        my $col = 12;
         my @treatment_lookup;
         foreach (@$treatments){
             $ws->write(0,$col,$_->[1]);
@@ -110,8 +119,11 @@ sub download {
                 $ws->write($line, 6, $design->{$n}->{rep_number});
                 $ws->write($line, 7, $design->{$n}->{row_number});
                 $ws->write($line, 8, $design->{$n}->{col_number});
+                $ws->write($line, 9, $design->{$n}->{seedlot_name});
+                $ws->write($line, 10, $design->{$n}->{seed_transaction_operator});
+                $ws->write($line, 11, $design->{$n}->{num_seed_per_plot});
 
-                my $col = 9;
+                my $col = 12;
                 for (0..scalar(@$treatments)-1){
                     my $treatment_hash = $treatment_lookup[$_];
                     if (exists($treatment_hash->{$p})){
@@ -134,8 +146,11 @@ sub download {
         $ws->write(0,7,"rep_number");
         $ws->write(0,8,"row_number");
         $ws->write(0,9,"col_number");
+        $ws->write(0,10,"seedlot_name");
+        $ws->write(0,11,"operator");
+        $ws->write(0,12,"num_seed_per_plot");
 
-        my $col = 10;
+        my $col = 13;
         my @treatment_lookup;
         foreach (@$treatments){
             $ws->write(0,$col,$_->[1]);
@@ -165,8 +180,11 @@ sub download {
                     $ws->write($line, 7, $design->{$n}->{rep_number});
                     $ws->write($line, 8, $design->{$n}->{row_number});
                     $ws->write($line, 9, $design->{$n}->{col_number});
+                    $ws->write($line, 10, $design->{$n}->{seedlot_name});
+                    $ws->write($line, 11, $design->{$n}->{seed_transaction_operator});
+                    $ws->write($line, 12, $design->{$n}->{num_seed_per_plot});
 
-                    my $col = 10;
+                    my $col = 13;
                     for (0..scalar(@$treatments)-1){
                         my $treatment_hash = $treatment_lookup[$_];
                         if (exists($treatment_hash->{$p})){
@@ -189,8 +207,11 @@ sub download {
         $ws->write(0,6,"rep_number");
         $ws->write(0,7,"row_number");
         $ws->write(0,8,"col_number");
+        $ws->write(0,9,"seedlot_name");
+        $ws->write(0,10,"operator");
+        $ws->write(0,11,"num_seed_per_plot");
 
-        my $col = 9;
+        my $col = 12;
         my @treatment_lookup;
         foreach (@$treatments){
             $ws->write(0,$col,$_->[1]);
@@ -217,8 +238,11 @@ sub download {
                 $ws->write($line, 6, $design->{$n}->{rep_number});
                 $ws->write($line, 7, $design->{$n}->{row_number});
                 $ws->write($line, 8, $design->{$n}->{col_number});
+                $ws->write($line, 9, $design->{$n}->{seedlot_name});
+                $ws->write($line, 10, $design->{$n}->{seed_transaction_operator});
+                $ws->write($line, 11, $design->{$n}->{num_seed_per_plot});
 
-                my $col = 9;
+                my $col = 12;
                 for (0..scalar(@$treatments)-1){
                     my $treatment_hash = $treatment_lookup[$_];
                     if (exists($treatment_hash->{$s})){

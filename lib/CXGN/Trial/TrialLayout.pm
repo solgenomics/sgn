@@ -198,6 +198,7 @@ sub _get_design_from_trial {
   my $subplot_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'subplot_of', 'stock_relationship' )->cvterm_id();
   my $plant_of_subplot_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_of_subplot', 'stock_relationship' )->cvterm_id();
   my $seed_transaction_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'seed transaction', 'stock_relationship' )->cvterm_id();
+  my $json = JSON->new();
 
   @plots = @{$plots_ref};
   foreach my $plot (@plots) {
@@ -226,7 +227,7 @@ sub _get_design_from_trial {
     my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id() ] } })->object;
     my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm_id })->search_related('object');
 	my $subplots = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $subplot_rel_cvterm_id })->search_related('object');
-	my $seedlot = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $seed_transaction_cvterm_id })->search_related('object');
+	my $seedlot_transaction = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $seed_transaction_cvterm_id });
 
     my $accession_name = $accession->uniquename;
     my $accession_id = $accession->stock_id;
@@ -265,9 +266,13 @@ sub _get_design_from_trial {
     if ($accession_id) {
       $design_info{"accession_id"}=$accession_id;
     }
-	if ($seedlot){
+	if ($seedlot_transaction){
+        my $val = $json->decode($seedlot_transaction->first()->value());
+        my $seedlot = $seedlot_transaction->search_related('object');
 		$design_info{"seedlot_name"} = $seedlot->first->uniquename;
 		$design_info{"seedlot_stock_id"} = $seedlot->first->stock_id;
+		$design_info{"num_seed_per_plot"} = $val->{amount};
+		$design_info{"seed_transaction_operator"} = $val->{operator};
 	}
 	if ($plants) {
 		my @plant_names;
