@@ -124,7 +124,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-              <form id="new-list-form" class="form-inline" style="float:left">
+              <form id="new-list-from-unames" class="form-inline" style="float:left">
                 <label>Create a New List from Unique Names:</label>
                 <input name="name" type="text" class="form-control" placeholder="List Name...">
                 <button class="btn btn-primary" type="submit">Save</button>
