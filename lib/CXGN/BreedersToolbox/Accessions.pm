@@ -147,9 +147,7 @@ sub get_possible_seedlots {
         ->search($query,$table_joins);
     my $seedlot_hash = {};
     while( my $row = $stock_rs->next) {
-        #print STDERR "row\n";
         my $uname = $row->get_column('accession_name');
-        #print STDERR Dumper($uname)."\n";
         if (not defined $seedlot_hash->{$uname}){
             $seedlot_hash->{$uname} = [];
         }

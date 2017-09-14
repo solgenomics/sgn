@@ -466,9 +466,11 @@ CXGN.List.prototype = {
     }
     jQuery(document).on("change", "#type_select", function(){
         if (jQuery('#type_select').val() == 'accessions'){
+            jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')">See Availible Seedlots</button>');
             jQuery('#fuzzySearchAccessionListDiv').html('<br/><button id="fuzzySearchAccessionListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>');
         } else {
             jQuery('#fuzzySearchAccessionListDiv').html('');
+            jQuery('#availableSeedlotButtonDiv').html('')
         }
 				if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants'].indexOf(jQuery('#type_select').val()) >= 0){
 		        jQuery('#synonymListButtonDiv').html('<br/><button id="synonymListButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).synonymSearch('+list_id+')">Find Synonyms</button>');
@@ -754,16 +756,14 @@ CXGN.List.prototype = {
     },
 		seedlotSearch: function(list_id){
 			var self = this;
-			jQuery('#working_modal').modal('show');
-			var data = this.getListData(list_id);
-			var accessions = data.elements.map(function(d){return d[1];})
+			jQuery('#availible_seedlots_modal').modal('show');
+			var accessions = this.getList(list_id);
 			if (window.available_seedlots){
 				window.available_seedlots.build_table(accessions);
 			} else {
 				throw "avalilible_seedlots.mas not included";
 			}
-			jQuery('#working_modal').modal('hide');
-			jQuery('#availible_seedlots_modal').modal('show');
+			jQuery('#new-list-from-seedlots').unbind('submit');
 			jQuery("#new-list-from-seedlots").submit(function(){
 				jQuery('#working_modal').modal('show');
 				try {

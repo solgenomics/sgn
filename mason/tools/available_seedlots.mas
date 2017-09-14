@@ -24,11 +24,9 @@
     ex.build_table = function(accession_names){
       var callURL = '/ajax/accessions/possible_seedlots';
       callURL+= "?name="+accession_names.join("&name=");
+      jQuery('#working_modal').modal('show');
       jQuery.ajax({
         url: callURL,
-        beforeSend: function(){
-          jQuery('#working_modal').modal('show');
-        },
         success: function(response) {
           _build_table(accession_names,response.seedlots,response.synonyms);
           jQuery('#working_modal').modal('hide');
