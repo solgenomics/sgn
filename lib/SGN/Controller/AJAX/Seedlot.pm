@@ -89,11 +89,14 @@ sub seedlot_base : Chained('/') PathPart('ajax/breeders/seedlot') CaptureArgs(1)
 sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) { 
     my $self = shift;
     my $c = shift;
-    
-    $c->stash->{rest} = { 
-	uniquename => $c->stash->{seedlot}->uniquename(),
-	seedlot_id => $c->stash->{seedlot}->seedlot_id(),
-	current_count => $c->stash->{seedlot}->current_count(),
+
+    $c->stash->{rest} = {
+        success => 1,
+        uniquename => $c->stash->{seedlot}->uniquename(),
+        seedlot_id => $c->stash->{seedlot}->seedlot_id(),
+        current_count => $c->stash->{seedlot}->current_count(),
+        location_code => $c->stash->{seedlot}->location_code(),
+        breeding_program => $c->stash->{seedlot}->breeding_program_name(),
     };
     
 }
@@ -320,7 +323,7 @@ sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions')
         } else {
             $to_url = '<a href="/stock/'.$t->to_stock()->[0].'/view" >'.$t->to_stock()->[1].'</a>';
         }
-        push @transactions, [ $t->transaction_id(), $t->timestamp(), $from_url, $to_url, $value_field, $t->operator, $t->description() ];
+        push @transactions, { "transaction_id"=>$t->transaction_id(), "timestamp"=>$t->timestamp(), "from"=>$from_url, "to"=>$to_url, "value"=>$value_field, "operator"=>$t->operator, "description"=>$t->description() };
     }
 
     $c->stash->{rest} = { data => \@transactions };

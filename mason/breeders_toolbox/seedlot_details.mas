@@ -2,13 +2,11 @@
 <%args>
 $seedlot_id
 $uniquename
-$location_code => ''
 $current_count => 0
 $accessions
 $organization_name
 $population_name
 $timestamp
-$breeding_program_name
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'jquery', 'jquery.dataTables' ] &>
@@ -22,10 +20,10 @@ $breeding_program_name
 <& /page/page_title.mas, title => 'Seedlot '.$uniquename &>
 
 <table class="table table-bordered table-hover">
-<tr><td><b>Breeding Program</b></td><td><% $breeding_program_name %></td></tr>
+<tr><td><b>Breeding Program</b></td><td><div id="seedlot_breeding_program_div">[LOADING...]</div></td></tr>
 <tr><td><b>Name</b></td><td><a href="/stock/<% $seedlot_id %>/view"><% $uniquename %></a></td></tr>
 <tr><td><b>Organization</b></td><td><% $organization_name %></td></tr>
-<tr><td><b>Location Code</b><td><% $location_code %></td></tr>
+<tr><td><b>Location Code</b><td><div id="seedlot_location_code_div">[LOADING...]</div></td></tr>
 <tr><td><b>Accession</b></td><td><% $accessions %></td></tr>
 <tr><td><b>Population</b></td><td><% $population_name %></td></tr>
 <tr><td><b>Current count</b></td><td><% $current_count %></td></tr>
@@ -36,18 +34,6 @@ $breeding_program_name
 </center>
 
 <table id="available_seedlot_transactions_table" class="table table-hover table-bordered">
-<thead>
-  <tr>
-    <th>Transaction Id</th>
-    <th>Transaction Date</th>
-    <th>From</th>
-    <th>To</th>
-    <th>Transaction Count</th>
-    <th>Operator</th>
-    <th>Description</th>
-  </tr>
-</thead>
-
 </table>
 
 <button class="btn btn-primary" id="add_seedlot_transaction_button">Add new seedlot transaction</button>
@@ -198,7 +184,12 @@ $breeding_program_name
 <script>
   jQuery(document).ready(function () {
   
-    jQuery('#add_seedlot_transaction_button').click( function() { jQuery('#add_seedlot_transaction_dialog').modal('show') });
+    jQuery('#add_seedlot_transaction_button').click( function() {
+        get_select_box('stocks', 'seedlot_transaction_seedlot_div', { 'name' : 'seedlot_transaction_seedlot_id', 'id' : 'seedlot_transaction_seedlot_id', 'stock_type_name':'seedlot', 'multiple':'0' });
+        get_select_box('stocks', 'seedlot_transaction_to_seedlot_existing', { 'name' : 'seedlot_transaction_to_seedlot_existing_id', 'id' : 'seedlot_transaction_to_seedlot_existing_id', 'stock_type_name':'seedlot', 'multiple':'0' });
+        get_select_box('breeding_programs', 'transaction_new_seedlot_breeding_program_div', { 'name' : 'transaction_new_seedlot_breeding_program_id', 'id' : 'transaction_new_seedlot_breeding_program_id' });
+        jQuery('#add_seedlot_transaction_dialog').modal('show')
+    });
 
     jQuery("#transaction_new_seedlot_location").autocomplete({
        source: '/ajax/stock/geolocation_autocomplete',
@@ -207,12 +198,33 @@ $breeding_program_name
        source: '/ajax/stock/accession_autocomplete',
     });
 
-    get_select_box('stocks', 'seedlot_transaction_seedlot_div', { 'name' : 'seedlot_transaction_seedlot_id', 'id' : 'seedlot_transaction_seedlot_id', 'stock_type_name':'seedlot', 'multiple':'0' });
-    get_select_box('stocks', 'seedlot_transaction_to_seedlot_existing', { 'name' : 'seedlot_transaction_to_seedlot_existing_id', 'id' : 'seedlot_transaction_to_seedlot_existing_id', 'stock_type_name':'seedlot', 'multiple':'0' });
-    get_select_box('breeding_programs', 'transaction_new_seedlot_breeding_program_div', { 'name' : 'transaction_new_seedlot_breeding_program_id', 'id' : 'transaction_new_seedlot_breeding_program_id' });
-
     var seedlot_transactions_table = jQuery('#available_seedlot_transactions_table').DataTable( {
-      'ajax': '/ajax/breeders/seedlot/<% $seedlot_id %>/transactions',
+        'ajax': '/ajax/breeders/seedlot/<% $seedlot_id %>/transactions',
+        columns: [
+            { title: "Transaction Id", "data": "transaction_id" },
+            { title: "Transaction Date", "data": "timestamp" },
+            { title: "From", "data": "from" },
+            { title: "To", "data": "to" },
+            { title: "Transaction Count", "data": "value" },
+            { title: "Operator", "data": "operator" },
+            { title: "Description", "data": "description" },
+        ],
+    });
+
+    jQuery.ajax({
+        url: '/ajax/breeders/seedlot/<% $seedlot_id %>',
+        success: function(response) {
+            if (response.success == 1) {
+                jQuery('#seedlot_location_code_div').html(response.location_code);
+                jQuery('#seedlot_breeding_program_div').html(response.breeding_program);
+            }
+            if (response.error) {
+                alert(response.error);
+            }
+        },
+        error: function(response) {
+            alert('An error occurred retrieving seedlot details');
+        }
     });
 
     jQuery('#create_new_seedlot_transaction_button').click( function() {
@@ -279,7 +291,11 @@ $breeding_program_name
             'to_new_seedlot_timestamp': to_new_seedlot_timestamp,
             'to_new_seedlot_description': to_new_seedlot_description
         },
+        beforeSend: function(){
+            jQuery('#working_modal').modal('show');
+        },
         success: function(response) {
+            jQuery('#working_modal').modal('hide');
           if (response.success == 1) {
              alert("The seedlot transaction has been created.");
              jQuery('#add_seedlot_transaction_dialog').modal('hide');
@@ -290,7 +306,8 @@ $breeding_program_name
           }
         },
         error: function(response) {
-          alert('An error occurred creating seedlot transaction');
+            jQuery('#working_modal').modal('hide');
+            alert('An error occurred creating seedlot transaction');
         }
        });
 

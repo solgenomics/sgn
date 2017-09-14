@@ -461,7 +461,7 @@ sub store {
 					stock_id => $plot->stock_id(),
 				});
 
-				if ($seedlot_stock_id && $seedlot_name && $num_seed_per_plot){
+				if ($seedlot_stock_id && $seedlot_name && defined($num_seed_per_plot)){
 					my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $chado_schema);
 					$transaction->from_stock([$seedlot_stock_id, $seedlot_name]);
 					$transaction->to_stock([$plot->stock_id(), $plot->uniquename()]);
