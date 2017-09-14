@@ -756,15 +756,13 @@ CXGN.List.prototype = {
     },
 		seedlotSearch: function(list_id){
 			var self = this;
-			jQuery('#working_modal').modal('show');
+			jQuery('#availible_seedlots_modal').modal('show');
 			var accessions = this.getList(list_id);
 			if (window.available_seedlots){
 				window.available_seedlots.build_table(accessions);
 			} else {
 				throw "avalilible_seedlots.mas not included";
 			}
-			jQuery('#working_modal').modal('hide');
-			jQuery('#availible_seedlots_modal').modal('show');
 			jQuery('#new-list-from-seedlots').unbind('submit');
 			jQuery("#new-list-from-seedlots").submit(function(){
 				jQuery('#working_modal').modal('show');
