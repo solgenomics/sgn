@@ -7,7 +7,7 @@ $locations
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
 
 <div class="modal fade" id="upload_trial_dialog" name="upload_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialDialog">
-    <div class="modal-dialog " role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -128,7 +128,6 @@ $locations
                             <tr>
                                 <td>plot_name</td>
                                 <td>accession_name</td>
-                                <td>seedlot_name</td>
                                 <td>plot_number</td>
                                 <td>block_number</td>
                                 <td>is_a_control</td>
@@ -136,7 +135,9 @@ $locations
                                 <td>range_number</td>
                                 <td>row_number</td>
                                 <td>col_number</td>
-                                <td>temperature_high</td>
+                                <td>seedlot_name</td>
+                                <td>num_seed_per_plot</td>
+                                <td>treatment_name (e.g. inoculated)</td>
                             </tr>
                         </tbody>
                     </table>
@@ -146,9 +147,6 @@ $locations
                     plot_name (must be unique)
                     <br />
                     accession_name (must exist in the database)
-                    <br />
-                    seedlot_name (must exist in the database)
-                    <br />
                     plot_number
                     <br />
                     block_number
@@ -165,6 +163,10 @@ $locations
                     row_number (row number, numeric, required for field map generation)
                     <br />
                     col_number (column number, numeric, required for field map generation)
+                    <br />
+                    seedlot_name (must exist in the database)
+                    <br />
+                    num_seed_per_plot
                     <br/>
                     treatment columns (additional column(s). the value for each plot should be 1 or empty.)
                 </div>

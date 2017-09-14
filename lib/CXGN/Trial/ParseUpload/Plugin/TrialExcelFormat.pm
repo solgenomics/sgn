@@ -21,6 +21,7 @@ sub _validate_with_plugin {
   my $worksheet;
   my %seen_plot_names;
   my %seen_accession_names;
+  my %seen_seedlot_names;
 
   #currently supported trial types
   $supported_trial_types{'biparental'} = 1; #both parents required
@@ -58,6 +59,7 @@ sub _validate_with_plugin {
   my $plot_name_head;
   my $accession_name_head;
   my $seedlot_name_head;
+  my $num_seed_per_plot_head;
   my $plot_number_head;
   my $block_number_head;
   my $is_a_control_head;
@@ -73,32 +75,35 @@ sub _validate_with_plugin {
     $accession_name_head  = $worksheet->get_cell(0,1)->value();
   }
   if ($worksheet->get_cell(0,2)) {
-    $seedlot_name_head  = $worksheet->get_cell(0,2)->value();
+    $plot_number_head  = $worksheet->get_cell(0,2)->value();
   }
   if ($worksheet->get_cell(0,3)) {
-    $plot_number_head  = $worksheet->get_cell(0,3)->value();
+    $block_number_head  = $worksheet->get_cell(0,3)->value();
   }
   if ($worksheet->get_cell(0,4)) {
-    $block_number_head  = $worksheet->get_cell(0,4)->value();
+    $is_a_control_head  = $worksheet->get_cell(0,4)->value();
   }
   if ($worksheet->get_cell(0,5)) {
-    $is_a_control_head  = $worksheet->get_cell(0,5)->value();
+    $rep_number_head  = $worksheet->get_cell(0,5)->value();
   }
   if ($worksheet->get_cell(0,6)) {
-    $rep_number_head  = $worksheet->get_cell(0,6)->value();
+    $range_number_head  = $worksheet->get_cell(0,6)->value();
   }
   if ($worksheet->get_cell(0,7)) {
-    $range_number_head  = $worksheet->get_cell(0,7)->value();
+      $row_number_head  = $worksheet->get_cell(0,7)->value();
   }
   if ($worksheet->get_cell(0,8)) {
-      $row_number_head  = $worksheet->get_cell(0,8)->value();
+      $col_number_head  = $worksheet->get_cell(0,8)->value();
   }
   if ($worksheet->get_cell(0,9)) {
-      $col_number_head  = $worksheet->get_cell(0,9)->value();
+    $seedlot_name_head  = $worksheet->get_cell(0,9)->value();
+  }
+  if ($worksheet->get_cell(0,10)) {
+    $num_seed_per_plot_head = $worksheet->get_cell(0,10)->value();
   }
 
   my @treatment_names;
-  for (10 .. $col_max){
+  for (11 .. $col_max){
       if ($worksheet->get_cell(0,$_)){
           push @treatment_names, $worksheet->get_cell(0,$_)->value();
       }
@@ -110,29 +115,32 @@ sub _validate_with_plugin {
   if (!$accession_name_head || $accession_name_head ne 'accession_name') {
     push @error_messages, "Cell B1: accession_name is missing from the header";
   }
-  if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name') {
-    push @error_messages, "Cell C1: seedlot_name is missing from the header";
-  }
   if (!$plot_number_head || $plot_number_head ne 'plot_number') {
-    push @error_messages, "Cell D1: plot_number is missing from the header";
+    push @error_messages, "Cell C1: plot_number is missing from the header";
   }
   if (!$block_number_head || $block_number_head ne 'block_number') {
-    push @error_messages, "Cell E1: block_number is missing from the header";
+    push @error_messages, "Cell D1: block_number is missing from the header";
   }
   if (!$is_a_control_head || $is_a_control_head ne 'is_a_control') {
-    push @error_messages, "Cell F1: is_a_control is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell E1: is_a_control is missing from the header. (Header is required, but values are optional)";
   }
   if (!$rep_number_head || $rep_number_head ne 'rep_number') {
-    push @error_messages, "Cell G1: rep_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell F1: rep_number is missing from the header. (Header is required, but values are optional)";
   }
   if (!$range_number_head || $range_number_head ne 'range_number') {
-    push @error_messages, "Cell H1: range_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell G1: range_number is missing from the header. (Header is required, but values are optional)";
   }
   if (!$row_number_head || $row_number_head ne 'row_number') {
-    push @error_messages, "Cell I1: row_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell H1: row_number is missing from the header. (Header is required, but values are optional)";
   }
   if (!$col_number_head || $col_number_head ne 'col_number') {
-    push @error_messages, "Cell J1: col_number is missing from the header. (Header is required, but values are optional)";
+    push @error_messages, "Cell I1: col_number is missing from the header. (Header is required, but values are optional)";
+  }
+  if (!$seedlot_name_head || $seedlot_name_head ne 'seedlot_name') {
+    push @error_messages, "Cell J1: seedlot_name is missing from the header. (Header is required, but values are optional)";
+  }
+  if (!$num_seed_per_plot_head || $num_seed_per_plot_head ne 'num_seed_per_plot') {
+    push @error_messages, "Cell K1: num_seed_per_plot is missing from the header. (Header is required, but values are optional)";
   }
 
   for my $row ( 1 .. $row_max ) {
@@ -141,6 +149,7 @@ sub _validate_with_plugin {
     my $plot_name;
     my $accession_name;
     my $seedlot_name;
+    my $num_seed_per_plot = 0;
     my $plot_number;
     my $block_number;
     my $is_a_control;
@@ -156,28 +165,31 @@ sub _validate_with_plugin {
       $accession_name = $worksheet->get_cell($row,1)->value();
     }
     if ($worksheet->get_cell($row,2)) {
-      $seedlot_name = $worksheet->get_cell($row,2)->value();
+      $plot_number =  $worksheet->get_cell($row,2)->value();
     }
     if ($worksheet->get_cell($row,3)) {
-      $plot_number =  $worksheet->get_cell($row,3)->value();
+      $block_number =  $worksheet->get_cell($row,3)->value();
     }
     if ($worksheet->get_cell($row,4)) {
-      $block_number =  $worksheet->get_cell($row,4)->value();
+      $is_a_control =  $worksheet->get_cell($row,4)->value();
     }
     if ($worksheet->get_cell($row,5)) {
-      $is_a_control =  $worksheet->get_cell($row,5)->value();
+      $rep_number =  $worksheet->get_cell($row,5)->value();
     }
     if ($worksheet->get_cell($row,6)) {
-      $rep_number =  $worksheet->get_cell($row,6)->value();
+      $range_number =  $worksheet->get_cell($row,6)->value();
     }
-    if ($worksheet->get_cell($row,7)) {
-      $range_number =  $worksheet->get_cell($row,7)->value();
+    if ($worksheet->get_cell($row, 7)) {
+	     $row_number = $worksheet->get_cell($row, 7)->value();
     }
     if ($worksheet->get_cell($row, 8)) {
-	     $row_number = $worksheet->get_cell($row, 8)->value();
+	     $col_number = $worksheet->get_cell($row, 8)->value();
     }
-    if ($worksheet->get_cell($row, 9)) {
-	     $col_number = $worksheet->get_cell($row, 9)->value();
+    if ($worksheet->get_cell($row,9)) {
+      $seedlot_name = $worksheet->get_cell($row,9)->value();
+    }
+    if ($worksheet->get_cell($row,10)) {
+      $num_seed_per_plot = $worksheet->get_cell($row,10)->value();
     }
 
     #skip blank lines
@@ -216,37 +228,44 @@ sub _validate_with_plugin {
 
     #plot number must not be blank
     if (!$plot_number || $plot_number eq '') {
-        push @error_messages, "Cell D$row_name: plot number missing";
+        push @error_messages, "Cell C$row_name: plot number missing";
     }
     #plot number must be a positive integer
     if (!($plot_number =~ /^\d+?$/)) {
-        push @error_messages, "Cell D$row_name: plot number is not a positive integer: $plot_number";
+        push @error_messages, "Cell C$row_name: plot number is not a positive integer: $plot_number";
     }
     #block number must not be blank
     if (!$block_number || $block_number eq '') {
-        push @error_messages, "Cell E$row_name: block number missing";
+        push @error_messages, "Cell D$row_name: block number missing";
     }
     #block number must be a positive integer
     if (!($block_number =~ /^\d+?$/)) {
-        push @error_messages, "Cell E$row_name: block number is not a positive integer: $block_number";
+        push @error_messages, "Cell D$row_name: block number is not a positive integer: $block_number";
     }
     if ($is_a_control) {
       #is_a_control must be either yes, no 1, 0, or blank
       if (!($is_a_control eq "yes" || $is_a_control eq "no" || $is_a_control eq "1" ||$is_a_control eq "0" || $is_a_control eq '')) {
-          push @error_messages, "Cell F$row_name: is_a_control is not either yes, no 1, 0, or blank: $is_a_control";
+          push @error_messages, "Cell E$row_name: is_a_control is not either yes, no 1, 0, or blank: $is_a_control";
       }
     }
     if ($rep_number && !($rep_number =~ /^\d+?$/)){
-        push @error_messages, "Cell G$row_name: rep_number must be a positive integer: $rep_number";
+        push @error_messages, "Cell F$row_name: rep_number must be a positive integer: $rep_number";
     }
     if ($range_number && !($range_number =~ /^\d+?$/)){
-        push @error_messages, "Cell H$row_name: range_number must be a positive integer: $range_number";
+        push @error_messages, "Cell G$row_name: range_number must be a positive integer: $range_number";
     }
     if ($row_number && !($row_number =~ /^\d+?$/)){
-        push @error_messages, "Cell I$row_name: row_number must be a positive integer: $row_number";
+        push @error_messages, "Cell H$row_name: row_number must be a positive integer: $row_number";
     }
     if ($col_number && !($col_number =~ /^\d+?$/)){
-        push @error_messages, "Cell J$row_name: col_number must be a positive integer: $col_number";
+        push @error_messages, "Cell I$row_name: col_number must be a positive integer: $col_number";
+    }
+
+    if ($seedlot_name){
+        $seen_seedlot_names{$seedlot_name}++;
+    }
+    if (defined($num_seed_per_plot) && !($num_seed_per_plot =~ /^\d+?$/)){
+        push @error_messages, "Cell K$row_name: num_seed_per_plot must be a positive integer: $num_seed_per_plot";
     }
 
     my $treatment_col = 10;
@@ -269,6 +288,17 @@ sub _validate_with_plugin {
     if (scalar(@accessions_missing) > 0) {
         $errors{'missing_accessions'} = \@accessions_missing;
         push @error_messages, "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
+    }
+
+    my @seedlot_names = keys %seen_seedlot_names;
+    if (scalar(@seedlot_names)>0){
+        my $seedlot_validator = CXGN::List::Validate->new();
+        my @seedlots_missing = @{$seedlot_validator->validate($schema,'seedlots',\@seedlot_names)->{'missing'}};
+
+        if (scalar(@seedlots_missing) > 0) {
+            $errors{'missing_seedlots'} = \@seedlots_missing;
+            push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
+        }
     }
 
     my @plots = keys %seen_plot_names;
@@ -329,6 +359,8 @@ sub _parse_with_plugin {
     my $range_number;
     my $row_number;
     my $col_number;
+    my $seedlot_name;
+    my $num_seed_per_plot = 0;
 
     if ($worksheet->get_cell($row,0)) {
       $plot_name = $worksheet->get_cell($row,0)->value();
@@ -357,6 +389,13 @@ sub _parse_with_plugin {
     if ($worksheet->get_cell($row,8)) {
 	     $col_number = $worksheet->get_cell($row, 8)->value();
     }
+    if ($worksheet->get_cell($row,9)) {
+        $seedlot_name = $worksheet->get_cell($row, 9)->value();
+    }
+    if ($worksheet->get_cell($row,10)) {
+        $num_seed_per_plot = $worksheet->get_cell($row, 10)->value();
+    }
+
     #skip blank lines
     if (!$plot_name && !$accession_name && !$plot_number && !$block_number) {
       next;
@@ -391,6 +430,10 @@ sub _parse_with_plugin {
     }
     if ($col_number) {
 	     $design{$key}->{col_number} = $col_number;
+    }
+    if ($seedlot_name){
+        $design{$key}->{seedlot_name} = $seedlot_name;
+        $design{$key}->{num_seed_per_plot} = $num_seed_per_plot;
     }
   
   }
