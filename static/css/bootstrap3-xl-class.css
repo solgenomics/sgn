@@ -13,6 +13,12 @@
     }
 }
 
+@media (min-width: 768px) {
+  .modal-xl {
+    width: 90%;
+   max-width:1200px;
+  }
+}
 
 .visible-xl-block,
 .visible-xl-inline,

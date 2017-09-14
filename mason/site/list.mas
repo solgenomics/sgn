@@ -138,7 +138,7 @@
 </div>
 
 <div class="modal fade" id="availible_seedlots_modal" name="availible_seedlots_modal" tabindex="-1" role="dialog" aria-labelledby="availible_seedlots_modal">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>

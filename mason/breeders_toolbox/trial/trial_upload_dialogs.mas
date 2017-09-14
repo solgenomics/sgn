@@ -7,7 +7,7 @@ $locations
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
 
 <div class="modal fade" id="upload_trial_dialog" name="upload_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialDialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -105,7 +105,7 @@ $locations
 </div>
 
 <div class="modal fade" id="trial_upload_spreadsheet_info_dialog" name="trial_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialInfoDialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -166,7 +166,7 @@ $locations
                     <br />
                     seedlot_name (must exist in the database)
                     <br />
-                    num_seed_per_plot
+                    num_seed_per_plot (number seeds per plot, numeric)
                     <br/>
                     treatment columns (additional column(s). the value for each plot should be 1 or empty.)
                 </div>
