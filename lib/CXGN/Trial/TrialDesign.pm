@@ -312,9 +312,7 @@ sub _get_crd_design {
 
         @rep_numbers = $result_matrix->get_column("r");
         @stock_names = $result_matrix->get_column("trt");
-        print STDERR Dumper \@plot_numbers;
         @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
-        print STDERR Dumper \@converted_plot_numbers;
         #print STDERR Dumper \@converted_plot_numbers;
 
         #generate col_number
