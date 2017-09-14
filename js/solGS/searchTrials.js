@@ -19,7 +19,7 @@ jQuery(document).ready(function(){
 	url = '/solgs/search/trials/';
     }
 
-    searchAllTrials(url);               
+  //  searchAllTrials(url);               
 });
 
 
@@ -114,18 +114,19 @@ function checkTrainingPopulation (popId) {
             if (response.is_training_population) {
 		jQuery("#searched_trials_message").hide();
 		jQuery("#searched_trials_div").show();
-		
+	
 		var divId   = 'searched_trials_div';
 		var tableId = 'searched_trials_table'; 
 		var data    = response.training_pop_data;
-		
+	
 		var tableDetails = {
 		    'divId'  : divId, 
 		    'tableId': tableId, 
 		    'data'   : data
 		};
 		
-		displayTrainingPopulations(tableDetails);					
+		displayTrainingPopulations(tableDetails);	
+                jQuery('#done_selecting_div').show();
             } else {
 		jQuery("#searched_trials_message").html('<p> Population ' + popId + ' can not be used as a training population.');
 		jQuery("#search_all_training_pops").show();
@@ -200,11 +201,13 @@ function checkPopulationExists (name) {
             success: function(res) {
             
 		if (res.population_id) {
+		   
 		    checkTrainingPopulation(res.population_id);
 		    
 		    jQuery('#searched_trials_message').html(
 			'<p>Checking if the trial or population can be used <br />' 
 			    + 'as a training population...please wait...</p>');	
+
 		} else { 		
 		    jQuery('#searched_trials_message')
 			.html('<p>' + name + ' is not in the database.</p>');
@@ -212,7 +215,7 @@ function checkPopulationExists (name) {
 		    jQuery("#searched_trials_message")
 			.delay(4000)
 			.fadeOut('slow', function () {
-			    searchAllTrials('/solgs/search/trials');   
+			   // searchAllTrials('/solgs/search/trials');   
 			});		   		    
 		}
 	    }
@@ -244,7 +247,7 @@ function displayTrainingPopulations (tableDetails) {
     if (data) {
 
 	var tableRows = jQuery('#' + tableId + ' tr').length;
-	
+
 	if (tableRows > 1) {
 	    jQuery('#' + tableId).dataTable().fnAddData(data);	
 	} else {
@@ -254,17 +257,18 @@ function displayTrainingPopulations (tableDetails) {
 	    jQuery('#' + divId).html(table).show();
 	   
 	    jQuery('#' + tableId).dataTable({
-                    'order'       : [[1, "desc"], [4, "desc"]],
-		    'searching'   : true,
-		    'ordering'    : true,
-		    'processing'  : true,
-		    'paging'      : true,
-		    'lengthChange': false,
-                    'oLanguage'   : {
+                    'order'        : [[1, "desc"], [4, "desc"]],
+		    'searching'    : true,
+		    'ordering'     : true,
+		    'processing'   : true,
+		    'lengthChange' : false,
+                    "bInfo"        : false,
+                    "paging"       : false,
+                    'oLanguage'    : {
 		                     "sSearch": "Filter result by: "
 		                    },
-		    'data'        : data,
-	    }).draw();
+		    'data'         : data,
+	    });
 	}
     }
    

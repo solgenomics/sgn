@@ -826,10 +826,13 @@ sub structure_genotype_data {
 	$cnt++;
 	
 	my $stock = $dg->{germplasmName};
-	
+	print STDERR "\n stock: $stock\n";
+	my $genotypeUnique = $dg->{genotypeUniqueName};
+	print STDERR "\n genotypUNiqueName: $genotypeUnique\n";
 	if ($cnt > 1)
 	{
 	    ($duplicate_stock) = grep(/^$stock$/, @stocks);
+	    	print STDERR "\n duplicate_stock: $duplicate_stock\n";
 	}
 	
 	if ($cnt == 1 ||  (($cnt > 1) && (!$duplicate_stock)) )
