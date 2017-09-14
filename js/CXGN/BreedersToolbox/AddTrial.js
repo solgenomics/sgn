@@ -108,7 +108,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $(document).on('click', '#convert_accessions_to_seedlots', function(){
+    $(document).on('click', 'button[name="convert_accessions_to_seedlots"]', function(){
         if (!stock_list_id){
             alert('Please first select a list of accessions above!');
         } else {
@@ -236,6 +236,7 @@ jQuery(document).ready(function ($) {
         var no_of_rep_times = $('#no_of_rep_times').val();
         var no_of_block_sequence = $('#no_of_block_sequence').val();
         var no_of_sub_block_sequence = $('#no_of_sub_block_sequence').val();
+        var num_seed_per_plot = $('#num_seed_per_plot').val();
         
         var unreplicated_accession_list;
         if (unreplicated_accession_list_id != "") {
@@ -320,6 +321,7 @@ jQuery(document).ready(function ($) {
                 'replicated_accession_list': replicated_accession_list,
                 'no_of_sub_block_sequence': no_of_sub_block_sequence,
                 'seedlot_hash': JSON.stringify(seedlot_hash),
+                'num_seed_per_plot': num_seed_per_plot,
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
@@ -871,9 +873,9 @@ jQuery(document).ready(function ($) {
 	//removes any old list selects before adding current ones.
 	//his is important so that lists that are added and will appear without page refresh
 	$("#select_list_list_select").remove();
+	$("#select_seedlot_list_list_select").remove();
 	$("#list_of_checks_section_list_select").remove();
 
-    $("#select_list_list_select").remove();
 	$("#crbd_list_of_checks_section_list_select").remove();
     $("#list_of_unrep_accession_list_select").remove();
     $("#list_of_rep_accession_list_select").remove();
@@ -899,6 +901,13 @@ jQuery(document).ready(function ($) {
 	$("#select_list_list_select").one('mousedown', function () {
             $("option:first", this).remove();
 	});
+
+    //add a blank line to list select dropdown that dissappears when dropdown is opened
+	$("#select_seedlot_list_list_select").prepend("<option value=''></option>").val('');
+	$("#select_seedlot_list_list_select").one('mousedown', function () {
+            $("option:first", this).remove();
+	});
+
 
 	//add a blank line to list of checks select dropdown that dissappears when dropdown is opened
 	$("#list_of_checks_section_list_select").prepend("<option value=''></option>").val('');

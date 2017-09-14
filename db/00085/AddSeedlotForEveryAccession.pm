@@ -108,7 +108,7 @@ sub patch {
 		$transaction->to_stock([$seedlot_id, $seedlot_uniquename]);
 		$transaction->amount("1");
 		$transaction->timestamp($timestamp);
-		$transaction->description("Auto generated seedlot from accession");
+		$transaction->description("Auto generated seedlot from accession. DbPatch 00085");
 		$transaction->operator('nmorales');
 		$transaction->store();
         $sl->set_current_count_property();

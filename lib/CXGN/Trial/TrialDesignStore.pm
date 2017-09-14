@@ -115,6 +115,7 @@ sub validate_design {
 	} elsif ($design_type eq 'CRD' || $design_type eq 'Alpha' || $design_type eq 'Augmented' || $design_type eq 'RCBD' || $design_type eq 'p-rep' || $design_type eq 'splitplot'){
 		@valid_properties = (
 			'seedlot_name',
+			'num_seed_per_plot',
 			'stock_name',
 			'plot_name',
 			'plot_number',
@@ -368,6 +369,10 @@ sub store {
 				$seedlot_name = $design{$key}->{seedlot_name};
 				$seedlot_stock_id = $seedlot_data{$seedlot_name};
 			}
+			my $num_seed_per_plot;
+			if($design{$key}->{num_seed_per_plot}){
+				$num_seed_per_plot = $design{$key}->{num_seed_per_plot};
+			}
 			my $block_number;
 			if ($design{$key}->{block_number}) { #set block number to 1 if no blocks are specified
 				$block_number = $design{$key}->{block_number};
@@ -456,15 +461,19 @@ sub store {
 					stock_id => $plot->stock_id(),
 				});
 
-				my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $chado_schema);
-				$transaction->from_stock([$seedlot_stock_id, $seedlot_name]);
-				$transaction->to_stock([$plot->stock_id(), $plot->uniquename()]);
-				$transaction->amount(1);
-				$transaction->timestamp($timestamp);
-				my $description = "Created Trial: ".$self->get_trial_name." Plot: ".$plot->uniquename;
-				$transaction->description($description);
-				$transaction->operator($self->get_operator);
-				my $transaction_id = $transaction->store();
+				if ($seedlot_stock_id && $seedlot_name && $num_seed_per_plot){
+					my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $chado_schema);
+					$transaction->from_stock([$seedlot_stock_id, $seedlot_name]);
+					$transaction->to_stock([$plot->stock_id(), $plot->uniquename()]);
+					$transaction->amount($num_seed_per_plot);
+					$transaction->timestamp($timestamp);
+					my $description = "Created Trial: ".$self->get_trial_name." Plot: ".$plot->uniquename;
+					$transaction->description($description);
+					$transaction->operator($self->get_operator);
+					my $transaction_id = $transaction->store();
+					my $sl = CXGN::Stock::Seedlot->new(schema=>$chado_schema, seedlot_id=>$seedlot_stock_id);
+					$sl->set_current_count_property();
+				}
 			}
 
 			#Create plant entry if given. Currently this is for the greenhouse trial creation and splitplot trial creation.

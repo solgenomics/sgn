@@ -129,6 +129,12 @@ sub generate_experimental_design_POST : Args(0) {
   my $plot_layout_format = $c->req->param('plot_layout_format');
   my @treatments = $c->req->param('treatments[]');
   my $num_plants_per_plot = $c->req->param('num_plants_per_plot');
+  my $num_seed_per_plot = $c->req->param('num_seed_per_plot');
+
+  if (!$num_seed_per_plot){
+      $c->stash->{rest} = { error => "You need to provide number of seeds per plot so that your breeding material can be tracked."};
+      return;
+  }
 
   if ($design_type eq 'splitplot'){
       if (scalar(@treatments)<1){
@@ -217,7 +223,7 @@ my $location_number = scalar(@locations);
     $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
     return;
   }
-  print "TOTAL PLOTS $p_rep_total_plots AND CALCULATED PLOTS $calculated_total_plot\n";
+  #print "TOTAL PLOTS $p_rep_total_plots AND CALCULATED PLOTS $calculated_total_plot\n";
   if($p_rep_total_plots != $calculated_total_plot){
       $c->stash->{rest} = {error => "Treatment repeats do not equal number of plots in design" };
       return;
@@ -265,6 +271,9 @@ my $location_number = scalar(@locations);
   if ($seedlot_hash_json){
       my $json = JSON->new();
       $trial_design->set_seedlot_hash($json->decode($seedlot_hash_json));
+  }
+  if ($num_seed_per_plot){
+      $trial_design->set_num_seed_per_plot($num_seed_per_plot);
   }
   if (@control_names) {
     $trial_design->set_control_list(\@control_names);
@@ -646,19 +655,13 @@ sub verify_seedlot_list_POST : Args(0) {
     while (my($key,$val) = each %$possible_seedlots){
         foreach my $seedlot (@$val){
             my $seedlot_name = $seedlot->{seedlot}->[0];
-            $allowed_seedlots{$seedlot_name}++;
             if (exists($selected_accessions{$key}) && exists($selected_seedlots{$seedlot_name})){
                 $seedlot_hash{$key} = $seedlot_name;
             }
         }
     }
-    foreach (@seedlot_names){
-        if(!exists($allowed_seedlots{$_})){
-            $error .= "The seedlot $_ is not a seedlot for any of the accessions in your list. ";
-        }
-    }
     if(scalar(keys %seedlot_hash) != scalar(@stock_names)){
-        $error .= "The seedlots you select must be for the accessions you have selected. ";
+        $error .= "Error: The seedlot list you select must include seedlots for the accessions you have selected. ";
     }
     if ($error){
         $c->stash->{rest} = {error => $error};

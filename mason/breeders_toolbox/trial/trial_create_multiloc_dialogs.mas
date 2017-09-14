@@ -8,7 +8,7 @@ $breeding_programs
 
 
 <div class="modal fade" id="add_multilocation_project_dialog" name="add_multilocation_project_dialog" tabindex="-1" role="dialog" aria-labelledby="addMultilocationProjectDialog">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -131,26 +131,38 @@ $breeding_programs
                         </div>
 
                         <div id="trial_multi-design_more_info" style="display: none">
-                            <div class="form-group form-group-sm" >
-                                <label class="col-sm-7 control-label">List of accessions to include (required): <br/><button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></label>
-                                <div class="col-sm-5" id="select_list_multi" name="select_list_multi">
+                            <div class="well well-sm">
+                                <div class="form-group form-group-sm" >
+                                    <label class="col-sm-7 control-label">List of accessions to include (required): </label>
+                                    <div class="col-sm-5" id="select_list_multi" name="select_list_multi">
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="form-group form-group-sm" id="show_list_of_checks_section_multi" style="display: none" >
-                                <label class="col-sm-7 control-label">List of checks to include (required): </label>
-                                <div class="col-sm-5" id="list_of_checks_section_multi" >
+                                <div class="form-group form-group-sm" id="show_list_of_checks_section_multi" style="display: none" >
+                                    <label class="col-sm-7 control-label">List of checks to include (required): </label>
+                                    <div class="col-sm-5" id="list_of_checks_section_multi" >
+                                    </div>
                                 </div>
+                                <div class="form-group form-group-sm" id="crbd_show_list_of_checks_section_multi" style="display: none" >
+                                    <label class="col-sm-7 control-label">List of checks to include(optional): </label>
+                                    <div class="col-sm-5" id="crbd_list_of_checks_section_multi" >
+                                    </div>
+                                </div>
+                                <center>Need to create a list of accessions?&nbsp;&nbsp;&nbsp;&nbsp;<button name="lists_link" class="btn btn-default btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button></center>
                             </div>
+
+                            <div class="well well-sm">
+                                <div class="form-group form-group-sm" id="show_list_of_seedlots_section_multi" >
+                                    <label class="col-sm-7 control-label">List of seedlots for selected accessions (required):</label>
+                                    <div class="col-sm-5" id="select_seedlot_list_multi" name="select_seedlot_list_multi">
+                                    </div>
+                                </div>
+                                <center>Need a list of seedlots for the selected accessions?&nbsp;&nbsp;&nbsp;&nbsp;<button name="convert_accessions_to_seedlots" class="btn btn-default btn-sm" style="margin:6px 0px 0px 0px" type="button" >Search Seedlots for Accessions</button></center>
+                            </div>
+
                             <div class="form-group form-group-sm" id="greenhouse_num_plants_per_accession_section_multi" style="display: none" >
                                 <hr>
                                 <label class="col-sm-3 control-label">Number of Plants: </label>
                                 <div class="col-sm-9" id="greenhouse_num_plants_per_accession_multi" >
-                                </div>
-                            </div>
-
-                            <div class="form-group form-group-sm" id="crbd_show_list_of_checks_section_multi" style="display: none" >
-                                <label class="col-sm-7 control-label">List of checks to include(optional): </label>
-                                <div class="col-sm-5" id="crbd_list_of_checks_section_multi" >
                                 </div>
                             </div>
 
