@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 14:09:2017 15:58
+date: 14:09:2017 15:59
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -492,13 +492,13 @@ relationship: variable_of SP:0000058 ! fruit shape eccentric
 [Term]
 id: SP:0000060
 name: ovoid
-def: "1/2fOv(y) x Tov. The opposite of pear-shapeness." [SGN:EVDK]
+def: "1/2fOv(y) x Tov. The opposite of pear-shapeness.\n\nIf the area of the fruit is greater above mid-height than below it, then Ovoid is calculated from the maximum width (W), the height at which the maximum width occurs (y), the average width above that height (w1), and the\n average width below that height (w2), and a scaling function scale_ov as:Ovoid = 1/2 *scale_ov(y) * (1 - w2/W + w1/W). If Ovoid > 0, subtract 0.4. Otherwise, Ovoid is 0." [SGN:EVDK]
 synonym: "ovate" RELATED []
 synonym: "ovo" RELATED []
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
-is_a: SP:0000058 ! fruit shape eccentric
+relationship: variable_of SP:0000058 ! fruit shape eccentric
 
 [Term]
 id: SP:0000061
