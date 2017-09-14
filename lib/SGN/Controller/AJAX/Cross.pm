@@ -1236,12 +1236,12 @@ sub add_crossingtrial_POST :Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
     my $crossingtrial_name = $c->req->param('crossingtrial_name');
-    my $breeding_program_id = $c->req->param('breeding_program_id');
-    my $location = $c->req->param('location');
+    my $breeding_program_id = $c->req->param('crossingtrial_program_id');
+    my $location = $c->req->param('crossingtrial_location');
     my $year = $c->req->param('year');
     my $project_description = $c->req->param('project_description');
-    my $folder_name = $c->req->param('folder_name');
-    my $folder_id = $c->req->param('folder_id');
+    my $folder_name = $c->req->param('crossingtrial_folder_name');
+    my $folder_id = $c->req->param('crossingtrial_folder_id');
     my $folder;
 
     if ($folder_name && !$folder_id) {

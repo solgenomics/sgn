@@ -588,7 +588,7 @@ $user_id => undef
       <div class="form-group">
             <label class="col-sm-2 control-label">Breeding Program: </label>
             <div class="col-sm-10">
-        <select class="form-control" id="program" name="program">
+        <select class="form-control" id="crossingtrial_program" name="crossingtrial_program">
     <%perl>
         foreach my $program (@programs) {
           print "<option value=".'"'.@$program[0].'"'.">".@$program[1]."</option>";
@@ -600,7 +600,7 @@ $user_id => undef
     <div class="form-group">
             <label class="col-sm-2 control-label">Location: </label>
             <div class="col-sm-10">
-        <select class="form-control" id="location" name="location">
+        <select class="form-control" id="crossingtrial_location" name="crossingtrial_location">
     <%perl>
         foreach my $location (@locations) {
             print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";

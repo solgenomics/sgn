@@ -38,20 +38,20 @@ jQuery(document).ready(function($) {
 
       $('#create_crossingtrial_submit').click(function() {
 
-          var crossingTrialName = $("#crossingtrial_name").val();
-          if (!crossingTrialName) {
+          var crossingtrial_name = $("#crossingtrial_name").val();
+          if (!crossingtrial_name) {
               alert("Crossing trial name is required");
               return;
           }
 
-          var breeding_program_id = $("#program").val();
-          if (!breeding_program_id) {
+          var crossingtrial_program_id = $("#crossingtrial_program").val();
+          if (!crossingtrial_program_id) {
               alert("Breeding program is required");
               return;
           }
 
-          var location = $("#location").val();
-          if (!location) {
+          var crossingtrial_location = $("#crossingtrial_location").val();
+          if (!crossingtrial_location) {
               alert ("Location is required");
               return;
           }
@@ -68,15 +68,15 @@ jQuery(document).ready(function($) {
               return;
           }
 
-          var folder_name = $("#crossingtrial_folder_name").val();
-          var folder_id;
-          if (folder_name) {  // get id if folder with this name already exisits
-              folder_id = $('#crossingtrial_folder_id option').filter(function () { return $(this).html() == folder_name; }).val();
+          var crossingtrial_folder_name = $("#crossingtrial_folder_name").val();
+          var crossingtrial_folder_id;
+          if (crossingtrial_folder_name) {  // get id if folder with this name already exisits
+              crossingtrial_folder_id = $('#crossingtrial_folder_id option').filter(function () { return $(this).html() == crossingtrial_folder_name; }).val();
           }
           else {
-              folder_id = $("#crossingtrial_folder_id").val();
+              crossingtrial_folder_id = $("#crossingtrial_folder_id").val();
           }
-          add_crossingtrial(crossingTrialName, breeding_program_id, location, year, project_description, folder_name, folder_id);
+          add_crossingtrial(crossingtrial_name, crossingtrial_program_id, crossingtrial_location, year, project_description, crossingtrial_folder_name, crossingtrial_folder_id);
 
       });
 
@@ -329,9 +329,11 @@ jQuery(document).ready(function($) {
             timeout: 3000000,
             dataType: "json",
             type: 'POST',
-            data: 'crossingTrialName=' + crossingTrialName + '&visible_to_role=' + visibleToRole + '&breeding_program_id=' + breeding_program_id + '&location=' + location + '&folder_name=' + folder_name + '&folder_id=' + folder_id,
+            data: 'cross_name=' + crossName + '&cross_type='+ crossType + '&maternal=' + maternal + '&paternal=' + paternal + '&maternal_parents=' + maternal_parents + '&paternal_parents=' + paternal_parents +
+            '&progeny_number=' + progenyNumber + '&flower_number=' + flowerNumber + '&fruit_number=' + fruitNumber + '&seed_number=' + seedNumber +'&prefix=' + prefix + '&suffix=' + suffix +
+            '&visible_to_role=' + visibleToRole + '&breeding_program_id=' + breeding_program_id + '&location=' + location + '&folder_name=' + folder_name + '&folder_id=' + folder_id,
             beforeSend: function() {
-                jQuery("#create_crossingtrial").modal("hide");
+                jQuery("#create_cross").modal("hide");
                 jQuery("#working_modal").modal("show");
             },
             error: function(response) {
@@ -390,15 +392,15 @@ jQuery(document).ready(function($) {
         return names;
     }
 
-    function add_crossingtrial(crossingTrialName, breeding_program_id, location, year, project_description, folder_name, folder_id) {
+    function add_crossingtrial(crossingtrial_name, crossingtrial_program_id, crossingtrial_location, year, project_description, crossingtrial_folder_name, crossingtrial_folder_id) {
         $.ajax({
             url: '/ajax/cross/add_crossingtrial',
             timeout: 3000000,
             dataType: "json",
             type: 'POST',
-            data: 'crossingtrial_name=' + crossingTrialName + '&program=' + breeding_program_id +
-            + '&location=' + location + '&add_project_year=' + year + '&add_project_description=' + project_description
-            + '&folder_name=' + folder_name +'&folder_id=' + folder_id,
+            data: 'crossingtrial_name=' + crossingtrial_name + '&crossingtrial_program_id=' + crossingtrial_program_id +
+            + '&crossingtrial_location=' + crossingtrial_location + '&year=' + year + '&project_description=' + project_description
+            + '&crossingtrial_folder_name=' + crossingtrial_folder_name +'&crossingtrial_folder_id=' + crossingtrial_folder_id,
             beforeSend: function() {
               jQuery("#create_crossingtrial").modal("hide");
               jQuery("#working_modal").modal("show");
