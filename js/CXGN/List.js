@@ -766,6 +766,7 @@ CXGN.List.prototype = {
 			}
 			jQuery('#working_modal').modal('hide');
 			jQuery('#availible_seedlots_modal').modal('show');
+			jQuery('#new-list-from-seedlots').unbind('submit');
 			jQuery("#new-list-from-seedlots").submit(function(){
 				jQuery('#working_modal').modal('show');
 				try {
