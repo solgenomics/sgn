@@ -25,7 +25,7 @@ sub download {
         my @header_cols = ("plot_name", "accession_name", "plot_number","block_number", "is_a_control", "rep_number", "row_number", "col_number", "seedlot_name", "operator", "num_seed_per_plot");
         my @treatment_lookup;
         foreach (@$treatments){
-            push @header_cols, $_->[1];
+            push @header_cols, "Treatment:".$_->[1];
             my $treatment = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $_->[0] });
             my $treatment_plots = $treatment->get_plots();
             my %treatment_hash;
@@ -69,7 +69,7 @@ sub download {
         my @header_cols = ("plant_name", "plot_name", "accession_name", "plot_number","block_number", "is_a_control", "rep_number", "row_number", "col_number", "seedlot_name", "operator", "num_seed_per_plot");
         my @treatment_lookup;
         foreach (@$treatments){
-            push @header_cols, $_->[1];
+            push @header_cols, "Treatment:".$_->[1];
             my $treatment = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $_->[0] });
             my $treatment_plots = $treatment->get_plants();
             my %treatment_hash;
@@ -117,7 +117,7 @@ sub download {
         my @header_cols = ("subplot_name", "plot_name", "accession_name", "plot_number","block_number", "is_a_control", "rep_number", "row_number", "col_number", "seedlot_name", "operator", "num_seed_per_plot");
         my @treatment_lookup;
         foreach (@$treatments){
-            push @header_cols, $_->[1];
+            push @header_cols, "Treatment:".$_->[1];
             my $treatment = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $_->[0] });
             my $treatment_plots = $treatment->get_subplots();
             my %treatment_hash;
@@ -165,7 +165,7 @@ sub download {
         my @header_cols = ("plant_name", "subplot_name", "plot_name", "accession_name", "plot_number","block_number", "is_a_control", "rep_number", "row_number", "col_number", "seedlot_name", "operator", "num_seed_per_plot");
         my @treatment_lookup;
         foreach (@$treatments){
-            push @header_cols, $_->[1];
+            push @header_cols, "Treatment:".$_->[1];
             my $treatment = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $_->[0] });
             my $treatment_plots = $treatment->get_plants();
             my %treatment_hash;
