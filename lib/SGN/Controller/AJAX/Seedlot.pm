@@ -105,6 +105,15 @@ sub seedlot_delete :Chained('seedlot_base') PathPart('delete') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in the delete seedlots" };
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to delete seedlots" };
+        $c->detach();
+    }
+
     my $error = $c->stash->{seedlot}->delete();
     if (!$error){
         $c->stash->{rest} = { success => 1 };

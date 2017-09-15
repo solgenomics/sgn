@@ -437,26 +437,28 @@ jQuery(document).ready(function(){
 });
 
 function removeSeedlot(seedlot_stock_id){
-    jQuery.ajax({
-        url: '/ajax/breeders/seedlot/'+seedlot_stock_id+'/delete',
-        beforeSend: function(){
-            jQuery('#working_modal').modal('show');
-        },
-        success: function(response) { 
-            jQuery('#working_modal').modal('hide');
-            if (response.success == 1) { 
-                alert("The seedlot has been deleted.");
-                location.reload();
+    if (confirm("Are you sure you want to delete this seedlot?")){
+        jQuery.ajax({
+            url: '/ajax/breeders/seedlot/'+seedlot_stock_id+'/delete',
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    alert("The seedlot has been deleted.");
+                    location.reload();
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred deleting seed lot');
             }
-            if (response.error) {
-                alert(response.error);
-            }
-        },
-        error: function(response){
-            jQuery('#working_modal').modal('hide');
-            alert('An error occurred deleting seed lot');
-        }
-    });
+        });
+    }
 }
 
 </script>
