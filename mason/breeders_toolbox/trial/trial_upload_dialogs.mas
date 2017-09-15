@@ -154,7 +154,7 @@ $locations
                     <br/>
                     <b>Optional fields:</b>
                     <br />
-                    is_a_control (type 1 or yes in this field if the plot is a control)
+                    is_a_control (type 1 in this field if the plot is a control)
                     <br />
                     rep_number (replicate number, numeric)
                     <br />
@@ -164,11 +164,11 @@ $locations
                     <br />
                     col_number (column number, numeric, required for field map generation)
                     <br />
-                    seedlot_name (must exist in the database)
+                    seedlot_name (the seedlot from where the planted seed originated. must exist in the database)
                     <br />
-                    num_seed_per_plot (number seeds per plot, numeric)
+                    num_seed_per_plot (number seeds per plot. seed comes from seedlot_name. numeric)
                     <br/>
-                    treatment columns (additional column(s). the value for each plot should be 1 or empty.)
+                    treatment columns (additional column(s) (e.g. inoculated and drought). the value for each plot should be 1 or empty.)
                 </div>
             </div>
             <div class="modal-footer">
