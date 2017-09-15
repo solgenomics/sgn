@@ -11,6 +11,7 @@ use List::MoreUtils qw(uniq);
 use CXGN::Trial::FieldMap;
 use JSON;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::Phenotypes::TrialPhenotype;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -939,10 +940,15 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->stash->{trial_id};
     
+    my $phenotypes_heatmap = CXGN::Phenotypes::TrialPhenotype->new({
+    	bcs_schema=>$schema,
+    	trial_id=>$trial_id
+    });
+    my @phenotype = $phenotypes_heatmap->get_trial_phenotypes_heatmap();
     
-    
-    $c->stash->{rest} = {success => 1};
+    $c->stash->{rest} = {phenotypes => \@phenotype};
     
 }
 
