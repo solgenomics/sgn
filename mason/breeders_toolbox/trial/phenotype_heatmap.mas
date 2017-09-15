@@ -12,7 +12,14 @@ $trial_id
 </style>
 
 <div id="trait_heatmap" >loading...</div>
-<div id="trial_no_phenoMSG" >Upload physical field coordinates for this trial</div>
+<div id="trial_no_phenoMSG" >Upload trial phenotypes to view trait assayed heatmap</div>
+
+<div class="form-group" id="traitdiv" style="display:none">
+  <label class="col-sm-3 control-label">Select Trait: </label>
+  <div class="col-sm-9" >
+
+  </div>
+</div>
 
 <script defer="defer">
 var trial_id = <% $trial_id %>;
@@ -28,11 +35,13 @@ jQuery(document).ready( function() {
               success: function(response) {
                  jQuery("#working_modal").modal("hide");
                  if (response.pheno){
+                    jQuery("#traitdiv").css("display", "inline-block");
                     alert("HELLO");
                  }
                  else  {
                         jQuery("#trait_heatmap").css("display", "none");
                         jQuery("#trial_no_phenoMSG").css("display", "inline-block");
+                        
                  }
 
               },
