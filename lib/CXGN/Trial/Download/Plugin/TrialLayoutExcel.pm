@@ -41,7 +41,7 @@ sub download {
         my $col = 11;
         my @treatment_lookup;
         foreach (@$treatments){
-            $ws->write(0,$col,$_->[1]);
+            $ws->write(0,$col,"Treatment:".$_->[1]);
             $col++;
             my $treatment = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $_->[0] });
             my $treatment_plots = $treatment->get_plots();
@@ -95,7 +95,7 @@ sub download {
         my $col = 12;
         my @treatment_lookup;
         foreach (@$treatments){
-            $ws->write(0,$col,$_->[1]);
+            $ws->write(0,$col,"Treatment:".$_->[1]);
             $col++;
             my $treatment = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $_->[0] });
             my $treatment_plants = $treatment->get_plants();
@@ -153,7 +153,7 @@ sub download {
         my $col = 13;
         my @treatment_lookup;
         foreach (@$treatments){
-            $ws->write(0,$col,$_->[1]);
+            $ws->write(0,$col,"Treatment:".$_->[1]);
             $col++;
             my $treatment = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $_->[0] });
             my $treatment_plants = $treatment->get_plants();
@@ -214,7 +214,7 @@ sub download {
         my $col = 12;
         my @treatment_lookup;
         foreach (@$treatments){
-            $ws->write(0,$col,$_->[1]);
+            $ws->write(0,$col,"Treatment:".$_->[1]);
             $col++;
             my $treatment = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $_->[0] });
             my $treatment_subplots = $treatment->get_subplots();

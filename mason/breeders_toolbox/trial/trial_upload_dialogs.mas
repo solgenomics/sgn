@@ -147,6 +147,7 @@ $locations
                     plot_name (must be unique)
                     <br />
                     accession_name (must exist in the database)
+                    <br/>
                     plot_number
                     <br />
                     block_number

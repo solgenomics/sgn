@@ -493,6 +493,12 @@ sub trial_treatments : Chained('trial') PathPart('treatments') Args(0) {
 sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()){
+        $c->stash->{rest} = {error => "You must be logged in to add a treatment"};
+        $c->detach();
+    }
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $trial_id = $c->stash->{trial_id};
     my $trial = $c->stash->{trial};
@@ -506,7 +512,8 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
 		nd_geolocation_id => $trial->get_location()->[0],
 		design_type => $trial->get_design_type(),
 		design => $design,
-        new_treatment_has_plant_entries => $new_treatment_has_plant_entries
+        new_treatment_has_plant_entries => $new_treatment_has_plant_entries,
+        operator => $c->user()->get_object()->get_username()
 	});
     my $error = $trial_design_store->store();
     if ($error){
