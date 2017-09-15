@@ -1235,6 +1235,7 @@ sub add_crossingtrial_POST :Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
+    print STDERR Dumper $c->req->params();
     my $crossingtrial_name = $c->req->param('crossingtrial_name');
     my $breeding_program_id = $c->req->param('crossingtrial_program_id');
     my $location = $c->req->param('crossingtrial_location');
@@ -1268,7 +1269,7 @@ sub add_crossingtrial_POST :Args(0) {
 
     my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
     $geolocation_lookup->set_location_name($location);
-    if(!$geolocation_lookup->get_location()){
+    if(!$geolocation_lookup->get_geolocation()){
         $c->stash->{rest}={error => "Location not found"};
         return;
     }
@@ -1302,22 +1303,34 @@ sub add_crossingtrial_POST :Args(0) {
   return;
     }
 
+    my $error;
     eval{
         my $add_crossingtrial = CXGN::Pedigree::AddCrossingtrial->new({
             chado_schema => $schema,
             dbh => $dbh,
-            program => $breeding_program,
+            program => $program,
             year => $c->req->param('year'),
             project_description => $c->req->param('project_description'),
             location => $location,
-            crossingtrial_name => $crossingtrial_name
+            crossingtrial_name => $crossingtrial_name,
+            nd_geolocation_id => $geolocation_lookup->get_geolocation()->nd_geolocation_id()
         });
+        my $store_return = $add_crossingtrial->save_crossingtrial();
+        if ($store_return->{error}){
+          $error = $store_return->{error};
+        }
     };
 
     if ($@) {
         $c->stash->{rest} = {error => $@};
         return;
       };
+
+    if ($error){
+      $c->stash->{rest} = {error => $error};
+    } else {
+      $c->stash->{rest} = {success => 1};
+    }
   }
 
 

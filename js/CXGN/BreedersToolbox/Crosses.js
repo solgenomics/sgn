@@ -398,18 +398,20 @@ jQuery(document).ready(function($) {
             timeout: 3000000,
             dataType: "json",
             type: 'POST',
-            data: 'crossingtrial_name=' + crossingtrial_name + '&crossingtrial_program_id=' + crossingtrial_program_id +
+            data: 'crossingtrial_name=' + crossingtrial_name + '&crossingtrial_program_id=' + crossingtrial_program_id
             + '&crossingtrial_location=' + crossingtrial_location + '&year=' + year + '&project_description=' + project_description
-            + '&crossingtrial_folder_name=' + crossingtrial_folder_name +'&crossingtrial_folder_id=' + crossingtrial_folder_id,
+            + '&crossingtrial_folder_name=' + crossingtrial_folder_name + '&crossingtrial_folder_id=' + crossingtrial_folder_id,
             beforeSend: function() {
-              jQuery("#create_crossingtrial").modal("hide");
+              jQuery("#create_crossingtrial_dialog").modal("hide");
               jQuery("#working_modal").modal("show");
           },
           error: function(response) {
               alert("An error occurred!" + JSON.stringify(response));
+              return;
           },
           parseerror: function(response) {
               alert("A parse error occurred!" + response);
+              return;
           },
           success: function(response) {
               if (response.error) {

@@ -41,17 +41,12 @@ has 'project_description' => (isa => 'Str',
     required => 1,
     );
 
-has 'location' => (isa => 'Str',
+has 'nd_geolocation_id' => (isa => 'Int',
     is => 'rw',
     required => 1,
     );
 
 has 'crossingtrial_name' => (isa => 'Str',
-    is => 'rw',
-    required => 1,
-    );
-
-has 'project_type' => (isa => 'Str',
     is => 'rw',
     required => 1,
     );
@@ -88,50 +83,37 @@ sub get_breeding_program_id {
 sub save_crossingtrial {
     print STDERR "Check 4.1:".localtime();
     my $self = shift;
-    my $chado_schema = $self->get_chado_schema();
+    my $schema = $self->get_chado_schema();
 
     if ($self->existing_crossingtrials()){
         print STDERR "Can't create crossing trial: Crossing trial name already exists\n";
-        return (error => "Crossing trial not saved: Crossing trial name already exists");
+        return {error => "Crossing trial not saved: Crossing trial name already exists"};
     }
 
     if (!$self->get_breeding_program_id()){
         print STDERR "Can't create crossing trial: Breeding program does not exist\n";
-        return (error => "Crossing trial not saved: Breeding program does not exist");
+        return {error => "Crossing trial not saved: Breeding program does not exist"};
     }
 
-    my $geolocation;
-  	my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $chado_schema);
-  	$geolocation_lookup->set_location_name($self->get_location());
-  	$geolocation = $geolocation_lookup->get_geolocation();
-  	if (!$geolocation) {
-  		print STDERR "Can't create crossing trial: Location not found\n";
-  		return ( error => "Crossing trial not saved: location not found" );
-  	}
+    my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'project year', 'project_property');
+    my $project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial', 'project_type')->cvterm_id();
 
-    my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema,'project year', 'project_property');
-    my $project_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'crossing_trial', 'project_type');
-
-    my $project = $chado_schema->resultset('Project::Project')
+    my $project = $schema->resultset('Project::Project')
         ->create({
               name => $self->get_crossingtrial_name(),
               description => $self->get_project_description(),
         });
 
-    $project->create_projectprops({
-        $project_year_cvterm->name() => $self->get_project_year(),
-        $project_type_cvterm->name() => 'crossing_trial'
-
-    });
-
     my $crossing_trial = CXGN::Trial->new({
-        bcs_schema => $chado_schema,
+        bcs_schema => $schema,
         trial_id => $project->project_id()
     });
 
-    $crossing_trial->set_location($geolocation->nd_geolocation_id());
+    $crossing_trial->set_location($self->get_nd_geolocation_id());
+    $crossing_trial->set_project_type($project_type_cvterm_id);
+    $crossing_trial->set_year($self->get_year());
     $crossing_trial->set_breeding_program($self->get_breeding_program_id);
-
+    return {success=>1};
 }
 
 
