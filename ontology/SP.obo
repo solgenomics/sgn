@@ -317,7 +317,7 @@ is_a: SP:0000038 ! fruit shape
 [Term]
 id: SP:0000040
 name: fruit shape index external 1
-def: "The ratio of the Maximum Height to Maximum Width." [SGN:EVDK]
+def: "The ratio of the maximum fruit height to maximum fruit width." [SGN:EVDK]
 synonym: "fruit shape index 1" RELATED []
 xref: PO:0007010
 xref: PO:0007042
@@ -364,7 +364,7 @@ is_a: SP:0000004 ! leaf morphology
 [Term]
 id: SP:0000046
 name: fruit shape index external 2
-def: "The ratio of Height Mid-width to Width Mid-height." [SGN:EVDK]
+def: "The ratio of fruit height mid-width to fruit width mid-height." [SGN:EVDK]
 synonym: "fruit shape index 2" RELATED []
 xref: PO:0007010
 xref: PO:0007042
@@ -1440,7 +1440,7 @@ is_obsolete: true
 [Term]
 id: SP:0000154
 name: proximal fruit end height
-def: "The ratio of the average height of the shoulder points above the proximal end point to Maximum Height. The height of the shoulder points (H_sl and H_sr) is measured against a line through the proximal point that is perpendicular to the line between the proximal point and the fruit center of weight (assuming all pixels have equal mass)." [SGN:EVDK]
+def: "The ratio of the average height of the shoulder points above the proximal end point to maximum height. The height of the shoulder points (H_sl and H_sr) is measured against a line through the proximal point that is perpendicular to the line between the proximal point and the fruit center of weight (assuming all pixels have equal mass)." [SGN:EVDK]
 synonym: "shoulder height" RELATED []
 xref: PATO:0001195
 xref: PATO:f0000119
@@ -3793,9 +3793,8 @@ creation_date: 2017-09-12T13:58:59Z
 
 [Term]
 id: SP:0000426
-name: CLONE OF fruit shape index external 1
-def: "The ratio of the Maximum Height to Maximum Width." [SGN:EVDK]
-synonym: "fruit shape index 1" RELATED []
+name: curved fruit shape index
+def: "The ratio of curved height to the width of the fruit at mid-curved-height, as measured perpendicular to the curved height line." [SGN:EVDK]
 xref: PO:0007010
 xref: PO:0007042
 xref: PO:0009001
