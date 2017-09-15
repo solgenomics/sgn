@@ -33,20 +33,23 @@ sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
     # hard coded for now, but could be generated from a user interface like a drag and drop grid
     my $zpl_template = Text::Template->new(
         type => 'STRING',
-        source => "^LH,<X>,<Y>
-        ^FO5,10^AA,<FONT_SIZE>^FB325,5^FD<ACCESSION_NAME>^FS
-        ^FO125,70^AA,28^FDPlot: <PLOT_NUMBER>^AF4^FS
-        ^FO125,100^AA,28^FDRep: <REP_NUMBER>^AF1^FS
-        ^FO20,140^AA,28^FD<CUSTOM_TEXT>^FS
-        ^FO20,170^AA,22^FD<TRIAL_NAME> <YEAR>^FS
-        ^FO325,5^BQ,,<QR_SIZE>^FD   <PLOT_NAME>^FS",
+        source => '^LH{ $X },{ $Y }
+^FO5,10^AA,{ $FONT_SIZE }^FB320,5^FD{ $ACCESSION_NAME }^FS
+^FO20,70^AA,28^FDPlot { $PLOT_NUMBER }, Rep { $REP_NUMBER }^AF4^FS
+^FO22,70^AA,28^FD     { $PLOT_NUMBER }      { $REP_NUMBER }^AF4^FS
+^FO20,72^AA,28^FD     { $PLOT_NUMBER }      { $REP_NUMBER }^AF4^FS
+^FO20,105^AA,22^FD{ $TRIAL_NAME } { $YEAR }^FS
+^FO10,140^AA,28^FB300,5^FD{ $CUSTOM_TEXT }^FS
+^FO325,5^BQ,,{ $QR_SIZE }^FD   { $PLOT_NAME }^FS
+',
     );
     
     # retrieve variable params
     my $trial_id = $c->req->param("trial_id");
     my $labels_per_stock = $c->req->param("num_labels") || 1;
     my $custom_text = $c->req->param("custom_text") || '';
-    print STDERR "trial id is $trial_id\n num labels is $labels_per_stock\n custom text is $custom_text\n";
+    my $include_pedigree = $c->req->param("include_pedigree");
+    print STDERR "trial id is $trial_id\n num labels is $labels_per_stock\n custom text is $custom_text\ninclude_pedigree is $include_pedigree\n";
     #my $order_by = $c->req->param("custom_text") || 'plot_number';
     
     my $trial_rs = $schema->resultset("Project::Project")->search({ project_id => $trial_id });
@@ -89,6 +92,11 @@ sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
         my $rep_number = $design_info{'rep_number'};
         my $accession_name = $design_info{'accession_name'};
         
+        if ($include_pedigree) {
+            $custom_text = CXGN::Stock->new ( schema => $schema, stock_id => $design_info{'accession_id'} )->get_pedigree_string('Parents');
+            print STDERR "Pedigree for $accession_name is $custom_text\n";
+        }
+        
         #Scale font size based on accession name
         my $font_size = 42;
         if (length($accession_name) > 18) {
@@ -113,17 +121,17 @@ sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
             
             my $label_zpl = $zpl_template->fill_in(
                     hash => {
-                        '<X>' => $x,
-                        '<Y>' => $y,
-                        '<ACCESSION_NAME>' => $accession_name,
-                        '<PLOT_NAME>' => $plot_name,
-                        '<PLOT_NUMBER>' => $plot_number,
-                        '<REP_NUMBER>' => $rep_number,
-                        '<CUSTOM_TEXT>' => $custom_text,
-                        '<TRIAL_NAME>' => $trial_name,
-                        '<YEAR>' => $year,  
-                        '<FONT_SIZE>' => $font_size,
-                        '<QR_SIZE>' => $qr_size,
+                        X => $x,
+                        Y => $y,
+                        ACCESSION_NAME => $accession_name,
+                        PLOT_NAME => $plot_name,
+                        PLOT_NUMBER => $plot_number,
+                        REP_NUMBER => $rep_number,
+                        CUSTOM_TEXT => $custom_text,
+                        TRIAL_NAME => $trial_name,
+                        YEAR => $year,  
+                        FONT_SIZE => $font_size,
+                        QR_SIZE => $qr_size,
                     },
                 );
             print STDERR "ZPL is $label_zpl\n";

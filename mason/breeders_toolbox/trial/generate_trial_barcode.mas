@@ -63,6 +63,13 @@ $identifier => ''
                                 </div>
                                 
                                 <div class="form-group form-group-sm">
+                                  <label class="col-sm-4 control-label">Pedigree?</label>
+                                  <div class="col-sm-8">
+                                    <input id="include_pedigree" name="include_pedigree" type="checkbox" value="true">Include pedigree</label>
+                                  </div>
+                                </div>
+                                
+                                <div class="form-group form-group-sm">
                                   <label class="col-sm-4 control-label">Custom Text: </label>
                                   <div class="col-sm-8">
                                     <textarea class="form-control" id="custom_text" name="custom_text" ></textarea>
