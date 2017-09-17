@@ -19,13 +19,13 @@
             <div class="modal-body">
                 <div class="container-fluid">
                     <ul class="nav nav-pills nav-justified" id="cross_wishlist_tab_select">
-                        <li class="active" id="cross_wishlist_list_tab"><a data-toggle="tab" href="#with_lists">Using Lists</a></li>
-                        <li id="cross_wishlist_no_list_tab"><a data-toggle="tab" href="#not_with_lists">Not Using Lists</a></li>
+                        <li id="cross_wishlist_list_tab"><a data-toggle="tab" href="#with_lists">Using Lists</a></li>
+                        <li class="active" id="cross_wishlist_no_list_tab"><a data-toggle="tab" href="#not_with_lists">Not Using Lists</a></li>
                     </ul>
 
                     <div class="tab-content">
 
-                        <div id="with_lists" class="tab-pane fade in active">
+                        <div id="with_lists" class="tab-pane fade">
                             <hr>
                             <form class="form-horizontal" >
                                 <div class="form-group" style="display:none" <!-- location name is coming from the trial they select --> >
@@ -57,7 +57,7 @@
                             <div id="cross_wishlist_cross_grid_div"></div>
                         </div>
 
-                        <div id="not_with_lists" class="tab-pane fade">
+                        <div id="not_with_lists" class="tab-pane fade in active">
                             <hr>
 
                             <form class="form-horizontal" >
@@ -100,7 +100,7 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="createCrossWishlistSelectDialog">Select Plots for Cross Wishlist</h4>
-                <h4>Female Plots are in <span class="bg-primary">Blue</span> and Male Plots are in <span class="bg-success">Green</span>.</h4>
+                <h4>Female Plots are in <span class="bg-primary">Blue</span><!-- and Male Plots are in <span class="bg-success">Green</span>.--></h4>
             </div>
 
             <div class="modal-body">
@@ -276,7 +276,7 @@ jQuery(document).ready(function($) {
         var female_accession_ids = jQuery('#cross_wishlist_female_accession_ids').val();
         var html = '<table class="table table-bordered" id="cross_wishlist_male_select_table"><thead><tr><th>Female Parent</th><th>Select Male Parent</th><th>Priority ( 1 : highest, 10 : lowest )</th></tr></thead><tbody>';
         for(var i=0; i<female_accession_ids.length; i++){
-            html = html + '<tr><td>' + female_accession_ids[i] + '</td><td><div name="cross_wishlist_male_selects" id="cross_wishlist_male_select_' +i+ '"></div></td><td><span id="cross_wishlist_male_accession_id_'+ i +'_priority" data-related="'+female_accession_ids[i]+'" >Select Male(s)</span></td></tr>';
+            html = html + '<tr><td>' + female_accession_ids[i] + '</td><td><div name="cross_wishlist_male_selects" id="cross_wishlist_male_select_' +i+ '"></div></td><td><span id="cross_wishlist_male_accession_id_'+ i +'_priority" data-related="'+encodeURI(female_accession_ids[i])+'" >Select Male(s)</span></td></tr>';
         };
         html = html + '</tbody></table>';
         jQuery('#cross_wishlist_male_parent_div').html(html);
@@ -398,7 +398,7 @@ jQuery(document).ready(function($) {
 
         jQuery('input[name="cross_wishlist_plot_select_female_input"]').each(function() {
             if (this.checked){
-                selected_plot_ids.push({ 'cross_female_accession_name' : jQuery(this).data('female_accession_name'), 'female_plot_id' : jQuery(this).val() });
+                selected_plot_ids.push({ 'cross_female_accession_name' : jQuery(this).data('female_accession_name'), 'female_plot_id' : jQuery(this).val(), 'male_genotypes_string' : jQuery(this).data('male_genotypes_string') });
             }
         });
         jQuery('input[name="cross_wishlist_plot_select_male_input"]').each(function() {
