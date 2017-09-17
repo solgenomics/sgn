@@ -36,6 +36,12 @@ jQuery(document).ready(function($) {
 
       });
 
+
+      $("#folder_checkbox").change(function() {
+          $("#crossingtrial_folder_section").toggle(this.checked); // show if it is checked, otherwise hide
+      });
+
+
       $('#create_crossingtrial_submit').click(function() {
 
           var crossingtrial_name = $("#crossingtrial_name").val();

@@ -622,15 +622,27 @@ $user_id => undef
         </div>
     </div>
     <br>
-    <h3> Specify a Folder (optional):</h3>
-    <p>Add crossing trial in a new folder</p>
+    <h3> Optional:</h3>
+        <table>
+    <tr>
+     <td>
+     <div class="form-group">
+          <label class="col-sm-9 control-label">Specify a Folder:</label>
+          <div class="col-sm-3">
+           <input id= "folder_checkbox" type="checkbox" />
+          </div>
+    </div>
+    </td>
+   </tr>
+   <tr id="crossingtrial_folder_section" style="display:none">
+    <td><p>Add crossing trial in a new folder:</p>
         <div class="form-group">
             <label class="col-sm-2 control-label">Folder Name:</label>
             <div class="col-sm-10">
                 <input class="form-control" type="text" id="crossingtrial_folder_name" name="crossingtrial_folder_name"/>
             </div>
         </div>
-    <p>Or add crossing trial in an existing folder:</p>
+        <p>Or add to an existing folder:</p>
         <div class="form-group">
             <label class="col-sm-2 control-label">Folder:</label>
                 <div class="col-sm-10">
@@ -638,7 +650,10 @@ $user_id => undef
                     [Loading...]
                     </div>
                 </div>
-        </div>
+         </div>
+        </td>
+      </tr>
+      </table>
 
     <div class="modal-footer">
       <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
