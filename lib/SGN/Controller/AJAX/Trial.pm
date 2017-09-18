@@ -12,7 +12,6 @@ Creating, viewing and deleting trials
 
 Jeremy Edwards <jde22@cornell.edu>
 
-Deletion by Lukas
 
 =cut
 
@@ -60,24 +59,6 @@ has 'schema' => (
 		 lazy_build => 1,
 		);
 
-#DEPRECATED by lack of use. below functions handle saving an uploaded trial and generating/saving a new trial.
-#sub get_trial_layout : Path('/ajax/trial/layout') : ActionClass('REST') { }
-
-#sub get_trial_layout_POST : Args(0) {
-#  my ($self, $c) = @_;
-#  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-#  my $project;
-#  print STDERR "\n\ntrial layout controller\n";
-#  my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, project => $project} );
-
-  #my $trial_id = $c->req->parm('trial_id');
-  # my $project = $schema->resultset('Project::Project')->find(
-  # 							     {
-  # 							      id => $trial_id,
-  # 							     }
-  # 							    );
-#}
-
 
 sub generate_experimental_design : Path('/ajax/trial/generate_experimental_design') : ActionClass('REST') { }
 
@@ -96,14 +77,7 @@ sub generate_experimental_design_POST : Args(0) {
   my $design_info_view_html;
   if ($c->req->param('stock_list')) {
       @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
-#       my $data = $self->transform_stock_list($c, \@raw_stock_names);
-#    if (exists($data->{missing}) && ref($data->{missing}) && @{$data->{missing}} >0) {
-#	$c->stash->{rest} = { error => "Some stocks were not found. Please edit the list and try again." };
-#	return;
-#    }
-#    if ($data->{transform} && @{$data->{transform}}>0) {
-#	@stock_names = @{$data->{transform}};
-#    }
+
   }
   my @control_names;
   if ($c->req->param('control_list')) {
@@ -158,28 +132,28 @@ sub generate_experimental_design_POST : Args(0) {
   my $row_in_design_number = $c->req->param('row_in_design_number');
   my $col_in_design_number = $c->req->param('col_in_design_number');
   my $no_of_rep_times = $c->req->param('no_of_rep_times');
-  my $no_of_block_sequence = $c->req->param('no_of_block_sequence');      
+  my $no_of_block_sequence = $c->req->param('no_of_block_sequence');
   my $unreplicated_accession_list = $c->req->param('unreplicated_accession_list');
   my $replicated_accession_list = $c->req->param('replicated_accession_list');
   my $no_of_sub_block_sequence = $c->req->param('no_of_sub_block_sequence');
-  
-  my @replicated_accession; 
+
+  my @replicated_accession;
   if ($c->req->param('replicated_accession_list')) {
     @replicated_accession = @{_parse_list_from_json($c->req->param('replicated_accession_list'))};
   }
   my $number_of_replicated_accession = scalar(@replicated_accession);
-  
+
   my @unreplicated_accession;
   if ($c->req->param('unreplicated_accession_list')) {
     @unreplicated_accession = @{_parse_list_from_json($c->req->param('unreplicated_accession_list'))};
   }
   my $number_of_unreplicated_accession = scalar(@unreplicated_accession);
-  
-  #my $trial_name = $c->req->param('project_name');
+
+
   my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
   my $use_same_layout = $c->req->param('use_same_layout');
   my $number_of_checks = scalar(@control_names_crbd);
-  #my $trial_name = "Trial $trial_location $year"; #need to add something to make unique in case of multiple trials in location per year?
+
   if ($design_type eq "RCBD" || $design_type eq "Alpha" || $design_type eq "CRD" || $design_type eq "Lattice") {
     if (@control_names_crbd) {
         @stock_names = (@stock_names, @control_names_crbd);
@@ -236,7 +210,7 @@ my $location_number = scalar(@locations);
 
     my $trial_name = $c->req->param('project_name');
     my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema => $schema);
-    #$geolocation_lookup->set_location_name($c->req->param('trial_location'));
+
     $geolocation_lookup->set_location_name($trial_locations);
     #print STDERR Dumper(\$geolocation_lookup);
     if (!$geolocation_lookup->get_geolocation()){
@@ -244,13 +218,7 @@ my $location_number = scalar(@locations);
       return;
     }
 
-  # my $trial_create = CXGN::Trial::TrialCreate->new(chado_schema => $schema);
-  # $trial_create->set_trial_year($c->req->param('year'));
-  # $trial_create->set_trial_location($c->req->param('trial_location'));
-  # if ($trial_create->trial_name_already_exists()) {
-  #   $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
-  #   return;
-  # }
+
 
   if (scalar(@locations) > 1) {
     $trial_name = $trial_name."_".$trial_locations;
@@ -430,7 +398,6 @@ sub save_experimental_design : Path('/ajax/trial/save_experimental_design') : Ac
 
 sub save_experimental_design_POST : Args(0) {
   my ($self, $c) = @_;
-  #my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
   my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
@@ -438,7 +405,7 @@ sub save_experimental_design_POST : Args(0) {
 
   print STDERR "Saving trial... :-)\n";
 
-  #my $trial_create = new CXGN::Trial::TrialCreate(chado_schema => $schema);
+
   if (!$c->user()) {
     $c->stash->{rest} = {error => "You need to be logged in to add a trial" };
     return;
@@ -525,17 +492,7 @@ sub save_experimental_design_POST : Args(0) {
         trial_has_subplot_entries => $c->req->param('has_subplot_entries'),
 	  });
 
-  #$trial_create->set_user($c->user()->id());
-  #$trial_create->set_trial_year($c->req->param('year'));
-  #$trial_create->set_trial_location($c->req->param('trial_location'));
-  #$trial_create->set_trial_description($c->req->param('project_description'));
-  #$trial_create->set_design_type($c->req->param('design_type'));
-  #$trial_create->set_breeding_program_id($c->req->param('breeding_program_name'));
-  #$trial_create->set_design(_parse_design_from_json($c->req->param('design_json')));
-  #$trial_create->set_stock_list(_parse_list_from_json($c->req->param('stock_list')));
-  # if ($c->req->param('control_list')) {
-  #   $trial_create->set_control_list(_parse_list_from_json($c->req->param('control_list')));
-  # }
+
     if ($trial_create->trial_name_already_exists()) {
       $c->stash->{rest} = {error => "Trial name \"".$trial_create->get_trial_name()."\" already exists" };
       return;
@@ -783,730 +740,6 @@ sub upload_trial_file_POST : Args(0) {
   return;
 
 }
-
-
-
-
-###################################################################################
-##remove this soon.  using above instead
-##DEPRECATED: use upload_trial_file above
-#sub upload_trial_layout :  Path('/trial/upload_trial_layout') : ActionClass('REST') { }
-
-#sub upload_trial_layout_POST : Args(0) {
-#  my ($self, $c) = @_;
-#  my @contents;
-#  my $error = 0;
-#  my $upload = $c->req->upload('trial_upload_file');
-#  my $header_line;
-#  my @header_contents;
-#  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-#  if (!$c->user()) {  #user must be logged in
-#    $c->stash->{rest} = {error => "You need to be logged in to upload a file." };
-#    return;
-#  }
-#  if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)  ) {  #user must have privileges to add a trial
-#    $c->stash->{rest} = {error =>  "You have insufficient privileges to upload a file." };
-#    return;
-#  }
-#  if (!$upload) { #upload file required
-#    $c->stash->{rest} = {error => "File upload failed: no file name received"};
-#    return;
-#  }
-#  try { #get file contents
-#    @contents = split /\n/, $upload->slurp;
-#  } catch {
-#    $c->stash->{rest} = {error => "File upload failed: $_"};
-#    $error = 1;
-#  };
-#  if ($error) {return;}
-#  if (@contents < 2) { #upload file must contain at least one line of data plus a header
-#    $c->stash->{rest} = {error => "File upload failed: contains less than two lines"};
-#    return;
-#  }
-#  $header_line = shift(@contents);
-#  @header_contents = split /\t/, $header_line;
-#  try { #verify header contents
-#  _verify_trial_layout_header(\@header_contents);
-#  } catch {
-#    $c->stash->{rest} = {error => "File upload failed: $_"};
-#    $error = 1;
-#  };
-#  if ($error) {return;}
-
-  #verify location
-#  if (! $schema->resultset("NaturalDiversity::NdGeolocation")->find({description=>$c->req->param('add_project_location'),})){
-#    $c->stash->{rest} = {error => "File upload failed: location not found"};
-#    return;
-#  }
-
-#  try { #verify contents of file
-#  _verify_trial_layout_contents($self, $c, \@contents);
-#  } catch {
-#    my %error_hash = %{$_};
-    #my $error_string = Dumper(%error_hash);
-#    my $error_string = _formatted_string_from_error_hash(\%error_hash);
-#    $c->stash->{rest} = {error => "File upload failed: missing or invalid content (see details that follow..)", error_string => "$error_string"};
-#    $error = 1;
-#  };
-#  if ($error) {return;}
-
-#  try { #add file contents to the database
-#    _add_trial_layout_to_database($self,$c,\@contents);
-#  } catch {
-#    $c->stash->{rest} = {error => "File upload failed: $_"};
-#  };
-
-#  if ($error) {
-#    return;
-#  } else {
-#     $c->stash->{rest} = {success => "1"};
-#  }
-#}
-
-#DEPRECATED by deprecation of above function. saving layout to database handled in CXGN::Trial::TrialCreate
-#sub _add_trial_layout_to_database {
-#  my $self = shift;
-#  my $c = shift;
-#  my $contents_ref = shift;
-#  my @contents = @{$contents_ref};
-#  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-#  my $year = $c->req->param('add_project_year');
-#  my $location = $c->req->param('add_project_location');
-#  my $project_name = $c->req->param('add_project_name');
-#  my $project_description = $c->req->param('add_project_description');
-#  my $plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type');
-#  my $geolocation = $schema->resultset("NaturalDiversity::NdGeolocation")
-#    ->find_or_create({
-#		      description => $location, #add this as an option
-#		     });
-#  my $organism = $schema->resultset("Organism::Organism")
-#    ->find_or_create({
-#		      genus   => 'Manihot',
-#		      species => 'Manihot esculenta',
-#		     });
-
-  #this is wrong.  Does not seem to be used in the database !!
-#  my $plot_exp_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_experiment', 'experiment_type');
-
-
-  #create project
-#  my $project = $schema->resultset('Project::Project')
-#    ->find_or_create({
-#		      name => $project_name,
-#		      description => $location,
-#		     }
-#		    );
-
-#  my $projectprop_year = $project->create_projectprops( { 'project year' => $year,}, {autocreate=>1});
-#  my $organism_id = $organism->organism_id();
-
-#  foreach my $content_line (@contents) {
-#    my @line_contents = split /\t/, $content_line;
-#    my $plot_name = $line_contents[0];
-#    my $block_number = $line_contents[1];
-#    my $rep_number = $line_contents[2];
-#    my $stock_name = $line_contents[3];
-#    my $stock;
-#    my $stock_rs = $schema->resultset("Stock::Stock")
-#      ->search({
-#		-or => [
-#			'lower(me.uniquename)' => { like => lc($stock_name) },
-#			-and => [
-#				 'lower(type.name)'       => { like => '%synonym%' },
-#				 'lower(stockprops.value)' => { like => lc($stock_name) },
-#				],
-#		       ],
-#	       },
-#	       {
-#		join => { 'stockprops' => 'type'} ,
-#		distinct => 1
-#	       }
-#	      );
-#    if ($stock_rs->count >1 ) {
-#      die ("multiple stocks found matching $stock_name");
-#    } elsif ($stock_rs->count == 1) {
-#      $stock = $stock_rs->first;
-#    } else {
-#      die ("no stocks found matching $stock_name");
-#    }
-#    my $unique_plot_name =
-#      $project_name."_".$stock_name."_plot_".$plot_name."_block_".$block_number."_rep_".$rep_number."_".$year."_".$location;
-#    my $plot = $schema->resultset("Stock::Stock")
-#      ->find_or_create({
-#			organism_id => $stock->organism_id(),
-#			name       => $unique_plot_name,
-#			uniquename => $unique_plot_name,
-#			type_id => $plot_cvterm->cvterm_id,
-#		       });
-#    my $experiment = $schema->resultset('NaturalDiversity::NdExperiment')
-#      ->create({
-#                nd_geolocation_id => $geolocation->nd_geolocation_id(),
-#                type_id => $plot_exp_cvterm->cvterm_id(),
-#	       });
-#    #link to the project
-#    $experiment
-#      ->find_or_create_related('nd_experiment_projects',{
-#							 project_id => $project->project_id()
-#							});
-#    #link the experiment to the stock
-#    $experiment
-#      ->find_or_create_related('nd_experiment_stocks' ,{
-#							stock_id => $plot->stock_id(),
-#							type_id  =>  $plot_exp_cvterm->cvterm_id(),
-#						       });
-#    }
-#}
-
-#DEPRECATED by deprecation of above function
-#sub _verify_trial_layout_header {
-#  my $header_content_ref = shift;
-#  my @header_contents = @{$header_content_ref};
-#  if ($header_contents[0] ne 'plot_name' ||
-#      $header_contents[1] ne 'block_number' ||
-#      $header_contents[2] ne 'rep_number' ||
-#      $header_contents[3] ne 'stock_name') {
-#    die ("Wrong column names in header\n");
-#  }
-#  if (@header_contents != 4) {
-#    die ("Wrong number of columns in header\n");
-#  }
-#  return;
-#}
-
-#DEPRECATED by deprecation of above function
-#sub _verify_trial_layout_contents {
-#  my $self = shift;
-#  my $c = shift;
-#  my $contents_ref = shift;
-#  my @contents = @{$contents_ref};
-#  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-#  my $year = $c->req->param('add_project_year');
-#  my $location = $c->req->param('add_project_location');
-#  my $project_name = $c->req->param('add_project_name');
-#  my $line_number = 1;
-#  my %error_hash;
-#  my %plot_name_errors;
-#  my %block_number_errors;
-#  my %rep_number_errors;
-#  my %stock_name_errors;
-#  my %column_number_errors;
-#  foreach my $content_line (@contents) {
-#    my @line_contents = split /\t/, $content_line;
-#    if (@line_contents != 4) {
-#      my $column_count = scalar(@line_contents);
-#      $column_number_errors{$line_number} = "Line $line_number: wrong number of columns, expected 4, found $column_count";
-#      $line_number++;
-#      next;
-#    }
-#    my $plot_name = $line_contents[0];
-#    my $block_number = $line_contents[1];
-#    my $rep_number = $line_contents[2];
-#    my $stock_name = $line_contents[3];
-#    if (!$stock_name) {
-#      $stock_name_errors{$line_number} = "Line $line_number: stock name is missing";
-#    } else {
-#      #make sure stock name exists and returns a unique result
-#      my $stock_rs = $schema->resultset("Stock::Stock")
-#	->search({
-#		  -or => [
-#			  'lower(me.uniquename)' => { like => lc($stock_name) },
-#			  -and => [
-#				   'lower(type.name)'       => { like => '%synonym%' },
-#				   'lower(stockprops.value)' => { like => lc($stock_name) },
-#				  ],
-#			 ],
-#		 },
-#		 {
-#		  join => { 'stockprops' => 'type'} ,
-#		  distinct => 1
-#		 }
-#		);
-#      if ($stock_rs->count >1 ) {
-#	my $error_string = "Line $line_number:  multiple accessions found for stock name $stock_name (";
-#	while ( my $st = $stock_rs->next) {
-#	  my $error_string .= $st->uniquename.",";
-#	}
-#	$stock_name_errors{$line_number} = $error_string;
-#      } elsif ($stock_rs->count == 1) {
-#      } else {
-#	$stock_name_errors{$line_number} = "Line $line_number: stock name $stock_name not found";
-#      }
-#    }
-
-#    if (!$plot_name) {
-#      $plot_name_errors{$line_number} = "Line $line_number: plot name is missing";
-#    } else {
-#      my $unique_plot_name = $project_name."_".$stock_name."_plot_".$plot_name."_block_".$block_number."_rep_".$rep_number."_".$year."_".$location;
-#      if ($schema->resultset("Stock::Stock")->find({uniquename=>$unique_plot_name,})) {
-#	$plot_name_errors{$line_number} = "Line $line_number: plot name $unique_plot_name is not unique";
-#      }
-#    }
-
-    #check for valid block number
-#    if (!$block_number) {
-#      $block_number_errors{$line_number} = "Line $line_number: block number is missing";
-#    } else {
-#      if (!($block_number =~ /^\d+?$/)) {
-#	$block_number_errors{$line_number} = "Line $line_number: block number $block_number is not an integer";
-#      } elsif ($block_number < 1 || $block_number > 1000000) {
-#	$block_number_errors{$line_number} = "Line $line_number: block number $block_number is out of range";
-#      }
-#    }
-
-    #check for valid rep number
-#    if (!$rep_number) {
-#      $rep_number_errors{$line_number} = "Line $line_number: rep number is missing";
-#    } else {
-#      if (!($rep_number =~ /^\d+?$/)) {
-#	$rep_number_errors{$line_number} = "Line $line_number: rep number $rep_number is not an integer";
-#      } elsif ($rep_number < 1 || $rep_number > 1000000) {
-#	$rep_number_errors{$line_number} = "Line $line_number: rep number $block_number is out of range";
-#      }
-#    }
-#    $line_number++;
- # }
-
-#  if (%plot_name_errors) {$error_hash{'plot_name_errors'}=\%plot_name_errors;}
-# if (%block_number_errors) {$error_hash{'block_number_errors'}=\%block_number_errors;}
-#  if (%rep_number_errors) {$error_hash{'rep_number_errors'}=\%rep_number_errors;}
-#  if (%stock_name_errors) {$error_hash{'stock_name_errors'}=\%stock_name_errors;}
-# if (%column_number_errors) {$error_hash{'column_number_errors'}=\%column_number_errors;}
-#  if (%error_hash) {
-#    die (\%error_hash);
-#  }
-#  return;
-#}
-
-#DEPRECATED by deprecation of above function
-#sub _formatted_string_from_error_hash {
-#  my $error_hash_ref = shift;
-#  my %error_hash = %{$error_hash_ref};
-#  my $error_string ;
-#  if ($error_hash{column_number_errors}) {
-#    $error_string .= "<b>Column number errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{column_number_errors}})."<br><br>";
-#  }
-#  if ($error_hash{stock_name_errors}) {
-#    $error_string .= "<b>Stock name errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{stock_name_errors}})."<br><br>";
-#  }
-#  if ($error_hash{'plot_name_errors'}) {
-#    $error_string .= "<b>Plot name errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{'plot_name_errors'}})."<br><br>";
-#  }
-#  if ($error_hash{'block_number_errors'}) {
-#    $error_string .= "<b>Block number errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{'block_number_errors'}})."<br><br>";
-#  }
-#  if ($error_hash{'rep_number_errors'}) {
-#    $error_string .= "<b>Rep number errors</b><br><br>"._formatted_string_from_error_hash_by_type(\%{$error_hash{'rep_number_errors'}})."<br><br>";
-#  }
-#  return $error_string;
-#}
-
-#DEPRECATED by deprecation of above function
-#sub _formatted_string_from_error_hash_by_type {
-#  my $error_hash_ref = shift;
-#  my %error_hash = %{$error_hash_ref};
-#  my $error_string;
-#  foreach my $key (sort { $a <=> $b} keys %error_hash) {
-#    $error_string .= $error_hash{$key} . "<br>";
-#  }
-#  return $error_string;
-#}
-
-
-### The following was moved to TrialMetadata.
-# sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
-#     my $self = shift;
-#     my $c = shift;
-#     my $trial_id = shift;
-
-#     print STDERR "TRIAL ID: $trial_id\n";
-#     $c->stash->{trial_id} = $trial_id;
-#     $c->stash->{trial} = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
-
-#     if (!$c->stash->{trial}) {
-# 	$c->stash->{rest} = { error => "The specified trial with id $trial_id does not exist" };
-# 	return;
-#     }
-
-# }
-
-
-# =head2 delete_trial_by_file
-
-#  Usage:
-#  Desc:
-#  Ret:
-#  Args:
-#  Side Effects:
-#  Example:
-
-# =cut
-
-# sub delete_trial_by_file : Path('/breeders/trial/delete/file') Args(1) {
-#     my $self = shift;
-#     my $c = shift;
-
-#     my $file_id = shift;
-
-#     if (!$c->user()) {
-# 	$c->stash->{rest} = { error => 'You must be logged in to delete a trial' };
-# 	return;
-#     }
-
-#     if (! ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))) {
-# 	$c->stash->{rest} = { error => 'You do not have sufficient privileges to delete a trial.' };
-#     }
-
-#     my $del = CXGN::BreedersToolbox::Delete->new(
-# 	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-# 	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
-# 	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
-# 	);
-
-#     if ($del->delete_experiments_by_file($c->user->get_object()->get_sp_person_id(), $file_id)) {
-# 	$c->stash->{rest} = { success => 1 };
-#     }
-#     else {
-# 	$c->stash->{rest} = { error => "The trial information could not be removed from the database." };
-#     }
-# }
-
-
-# =head2 delete_trial_by_trial_id
-
-#  Usage:
-#  Desc:         Deletes plots associated with a phenotyping experiment
-#  Ret:
-#  Args:
-#  Side Effects:
-#  Example:
-
-# =cut
-
-# sub delete_trial_by_trial_id : Path('/breeders/trial/delete/id') Args(1) {
-#     my $self = shift;
-#     my $c = shift;
-
-#     my $trial_id = shift;
-
-#     print STDERR "DELETING trial $trial_id\n";
-
-#     if (!$c->user()) {
-# 	$c->stash->{rest} = { error => 'You must be logged in to delete a trial' };
-# 	return;
-#     }
-
-#     my $user_id = $c->user->get_object()->get_sp_person_id();
-
-#     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-
-#     my $breeding_program_rs = $schema->resultset("Cv::Cvterm")->search( { name => "breeding_program" });
-
-#     my $breeding_program_id = $breeding_program_rs->first()->cvterm_id();
-
-#     my $breeding_program_name = $breeding_program_rs->first()->name();
-
-#     my $trial_organization_id = $schema->resultset("Project::Projectprop")->search(
-# 	{
-# 	    project_id => $trial_id,
-# 	    type_id=>$breeding_program_id
-# 	});
-
-#     if (! ($c->user->check_roles('curator') || ( $c->user->check_roles('submitter') && $c->roles($breeding_program_name) ))) {
-# 	$c->stash->{rest} = { error => 'You do not have sufficient privileges to delete a trial.' };
-#     }
-
-# #    my $del = CXGN::BreedersToolbox::Delete->new(
-# #	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-# #	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
-# #	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
-# #	);
-
-#     my $t = CXGN::Trial->new( { trial_id=> $trial_id, bcs_schema => $c->dbic_schema("Bio::Chado::Schema") });
-
-#     my $hash = $t->delete_experiments($user_id, $trial_id);
-
-#     $c->stash->{rest} = $hash;
-# }
-
-
-# =head2 delete_phenotype_data_by_trial_id
-
-#  Usage:
-#  Desc:
-#  Ret:
-#  Args:
-#  Side Effects:
-#  Example:
-
-# =cut
-
-# sub delete_phenotype_data_by_trial_id : Path('/breeders/trial/phenotype/delete/id') Args(1) {
-#     my $self = shift;
-#     my $c = shift;
-
-#     my $trial_id = shift;
-
-#     print STDERR "DELETING phenotypes of trial $trial_id\n";
-
-#     if (!$c->user()) {
-# 	$c->stash->{rest} = { error => 'You must be logged in to delete a trial' };
-# 	return;
-#     }
-
-#     my $user_id = $c->user->get_object()->get_sp_person_id();
-
-#     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-
-#     my $breeding_program_rs = $schema->resultset("Cv::Cvterm")->search( { name => "breeding_program" });
-
-#     my $breeding_program_id = $breeding_program_rs->first()->cvterm_id();
-
-#     my $breeding_program_name = $breeding_program_rs->first()->name();
-
-#     my $trial_organization_id = $schema->resultset("Project::Projectprop")->search(
-# 	{
-# 	    project_id => $trial_id,
-# 	    type_id=>$breeding_program_id
-# 	});
-
-#     if (! ($c->user->check_roles('curator') || ( $c->user->check_roles('submitter') && $c->roles($breeding_program_name) ))) {
-# 	$c->stash->{rest} = { error => 'You do not have sufficient privileges to delete a trial.' };
-#     }
-
-#     my $t = CXGN::Trial->new( { trial_id => $trial_id, bcs_schema => $c->dbic_schema("Bio::Chado::Schema") });
-
-#     my $error = $t->delete_metadata($c->dbic_schema("CXGN::Metadata::Schema"), $c->dbic_schema("CXGN::Phenome::Schema"));
-
-#     print STDERR "ERROR DELETING METADATA: $error\n";
-#     my $error = $t->delete_phenotype_data($trial_id);
-
-#     print STDERR "ERROR DELETING PHENOTYPES: $error\n";
-#     if ($error) {
-# 	$c->stash->{rest} = { error => $error };
-#     }
-#     else {
-# 	$c->stash->{rest} = { success => "1" };
-#     }
-# }
-
-# =head2 delete_trial_layout_by_trial_id
-
-#  Usage:
-#  Desc:
-#  Ret:
-#  Args:
-#  Side Effects:
-#  Example:
-
-# =cut
-
-# sub delete_trial_layout_by_trial_id : Path('/breeders/trial/layout/delete/id') Args(1) {
-#     my $self = shift;
-#     my $c = shift;
-
-#     my $trial_id = shift;
-
-#     print STDERR "DELETING trial layout $trial_id\n";
-
-#     if (!$c->user()) {
-# 	$c->stash->{rest} = { error => 'You must be logged in to delete a trial layout' };
-# 	return;
-#     }
-
-#     my $user_id = $c->user->get_object()->get_sp_person_id();
-
-#     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-
-#     my $breeding_program_rs = $schema->resultset("Cv::Cvterm")->search( { name => "breeding_program" });
-
-#     my $breeding_program_id = $breeding_program_rs->first()->cvterm_id();
-
-#     my $breeding_program_name = $breeding_program_rs->first()->name();
-
-#     my $trial_organization_id = $schema->resultset("Project::Projectprop")->search(
-# 	{
-# 	    project_id => $trial_id,
-# 	    type_id=>$breeding_program_id
-# 	});
-
-#     if (! ($c->user->check_roles('curator') || ( $c->user->check_roles('submitter') && $c->roles($breeding_program_name) ))) {
-# 	$c->stash->{rest} = { error => 'You do not have sufficient privileges to delete a trial.' };
-#     }
-
-#     #my $del = CXGN::BreedersToolbox::Delete->new(
-# #	bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-# #	metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
-# #	phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema"),
-# #	);
-
-#     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id });
-#     #my $error =  $del->delete_field_layout_by_trial($trial_id);
-
-#     my $error = $t->delete_field_layout();
-#     if ($error) {
-# 	$c->stash->{rest} = { error => $error };
-#     }
-#     $c->stash->{rest} = { success => 1 };
-
-# }
-
-
-
-# sub trial_description : Local() ActionClass('REST');
-
-# sub trial_description_GET : Chained('trial') PathPart('description') Args(0) {
-#     my $self = shift;
-#     my $c = shift;
-
-#     my $trial = $c->stash->{trial};
-
-#     print STDERR "TRIAL: ".$trial->get_description()."\n";
-
-#     $c->stash->{rest} = { description => $trial->get_description() };
-
-# }
-
-# sub trial_description_POST : Chained('trial') PathPart('description') Args(1) {
-#     my $self = shift;
-#     my $c = shift;
-#     my $description = shift;
-
-#     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-# 	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
-# 	return;
-#     }
-
-#     my $trial_id = $c->stash->{trial_id};
-#     my $trial = $c->stash->{trial};
-
-#     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") });
-
-#     my $breeding_program = $p->get_breeding_programs_by_trial($trial_id);
-
-#     if (! ($c->user() &&  ($c->user->check_roles("curator") || $c->user->check_roles($breeding_program)))) {
-# 	$c->stash->{rest} = { error => "You need to be logged in with sufficient privileges to change the description of a trial." };
-# 	return;
-#     }
-
-#     $trial->set_description($description);
-
-#     $c->stash->{rest} = { success => 1 };
-# }
-
-# # sub get_trial_type :Path('/ajax/breeders/trial/type') Args(1) {
-# #     my $self = shift;
-# #     my $c = shift;
-# #     my $trial_id = shift;
-
-# #     my $t = CXGN::Trial->new( { bcs_schema => $c->dbic_schema("Bio::Chado::Schema"), trial_id => $trial_id } );
-
-# #     $c->stash->{rest} = { type => $t->get_project_type() };
-
-# # }
-
-
-# sub trial_location : Local() ActionClass('REST');
-
-# sub trial_location_GET : Chained('trial') PathPart('location') Args(0) {
-#     my $self = shift;
-#     my $c = shift;
-
-#     my $t = $c->stash->{trial};
-
-#     $c->stash->{rest} = { location => [ $t->get_location()->[0], $t->get_location()->[1] ] };
-
-# }
-
-# sub trial_location_POST : Chained('trial') PathPart('location') Args(1) {
-#     my $self = shift;
-#     my $c = shift;
-#     my $location_id = shift;
-
-#     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-# 	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
-# 	return;
-#     }
-
-#     print STDERR "trial location POST!\n";
-
-#     #my $location_id = $c->req->param("location_id");
-
-#     my $t = $c->stash->{trial};
-#     my $trial_id = $c->stash->{trial_id};
-
-#     # remove old location
-#     #
-#     $t->remove_location($t->get_location()->[0]);
-
-#     # add new one
-#     #
-#     $t->set_location($location_id);
-
-#     $c->stash->{rest} =  { message => "Successfully stored location for trial $trial_id",
-# 			   trial_id => $trial_id };
-
-# }
-
-# sub trial_year : Local()  ActionClass('REST');
-
-# sub trial_year_GET : Chained('trial') PathPart('year') Args(0) {
-#     my $self = shift;
-#     my $c = shift;
-
-#     my $t = $c->stash->{trial};
-
-#     $c->stash->{rest} = { year => $t->get_year() };
-
-# }
-
-# sub trial_year_POST : Chained('trial') PathPart('year') Args(1) {
-#     my $self = shift;
-#     my $c = shift;
-#     my $year = shift;
-
-#     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-# 	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
-# 	return;
-#     }
-
-#     my $t = $c->stash->{trial};
-
-#     $t->set_year($year);
-
-#     $c->stash->{rest} = { message => "Year set successfully" };
-# }
-
-# sub trial_type : Local() ActionClass('REST');
-
-# sub trial_type_GET : Chained('trial') PathPart('type') Args(0) {
-#     my $self = shift;
-#     my $c = shift;
-
-#     my $t = $c->stash->{trial};
-
-#     my $type = $t->get_project_type();
-#     $c->stash->{rest} = { type => $type };
-# }
-
-# sub trial_type_POST : Chained('trial') PathPart('type') Args(1) {
-#     my $self = shift;
-#     my $c = shift;
-#     my $type = shift;
-
-#     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
-# 	$c->stash->{rest} = { error => 'You do not have the required privileges to edit the trial type of this trial.' };
-# 	return;
-#     }
-
-#     my $t = $c->stash->{trial};
-#     my $trial_id = $c->stash->{trial_id};
-
-#     # set the new trial type
-#     #
-#     $t->set_project_type($type);
-
-#     $c->stash->{rest} = { success => 1 };
-# }
 
 
  1;
