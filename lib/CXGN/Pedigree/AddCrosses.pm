@@ -93,22 +93,22 @@ sub add_crosses {
       my $progeny_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'offspring_of', 'stock_relationship');
 
       #get cvterm for cross_name or create if not found
-      my $cross_name_cvterm = $chado_schema->resultset("Cv::Cvterm")
-	  ->find({
-	      name   => 'cross_name',
-		 });
-      if (!$cross_name_cvterm) {
-	  $cross_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_name', 'nd_experiment_property');
-      }
+  #    my $cross_name_cvterm = $chado_schema->resultset("Cv::Cvterm")
+	#  ->find({
+	#      name   => 'cross_name',
+	#	 });
+  #    if (!$cross_name_cvterm) {
+	#  $cross_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_name', 'nd_experiment_property');
+  #    }
       #get cvterm for cross_type or create if not found
-      my $cross_type_cvterm = $chado_schema->resultset("Cv::Cvterm")
-	  ->find({
-	      name   => 'cross_type',
-		 });
+  #    my $cross_type_cvterm = $chado_schema->resultset("Cv::Cvterm")
+	#  ->find({
+	#      name   => 'cross_type',
+	#	 });
 
-      if (!$cross_type_cvterm) {
-	  $cross_type_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_type', 'nd_experiment_property');
-      }
+  #    if (!$cross_type_cvterm) {
+	#  $cross_type_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_type', 'nd_experiment_property');
+  #    }
 
       #get cvterm for cross_experiment
       my $cross_experiment_type_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_experiment', 'experiment_type');
@@ -179,12 +179,12 @@ sub add_crosses {
 		}
 
 	  #set projectprop so that projects corresponding to crosses can be identified
-	  my $prop_row = $chado_schema->resultset("Project::Projectprop")
-	      ->create({
-		  type_id => $cross_stock_type_cvterm->cvterm_id,
-		  project_id => $project->project_id(),
-		       });
-	  $prop_row->insert();
+	  #my $prop_row = $chado_schema->resultset("Project::Projectprop")
+	  #    ->create({
+		#  type_id => $cross_stock_type_cvterm->cvterm_id,
+		#  project_id => $project->project_id(),
+		#       });
+	  #$prop_row->insert();
 
 	  #create cross experiment
 	  $experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')->create(
@@ -194,38 +194,38 @@ sub add_crosses {
 	      } );
 
 	  #store the cross name as an experiment prop
-	  $experiment->find_or_create_related('nd_experimentprops' , {
-	      nd_experiment_id => $experiment->nd_experiment_id(),
-	      type_id  =>  $cross_name_cvterm->cvterm_id(),
-	      value  =>  $cross_name,
-					  });
+	  #$experiment->find_or_create_related('nd_experimentprops' , {
+	  #    nd_experiment_id => $experiment->nd_experiment_id(),
+	  #    type_id  =>  $cross_name_cvterm->cvterm_id(),
+	  #    value  =>  $cross_name,
+		#			  });
 
 	  #store the cross type as an experiment prop
-	  $experiment->find_or_create_related('nd_experimentprops' , {
-	      nd_experiment_id => $experiment->nd_experiment_id(),
-	      type_id  =>  $cross_type_cvterm->cvterm_id(),
-	      value  =>  $cross_type,
-					      });
+	  #$experiment->find_or_create_related('nd_experimentprops' , {
+	  #    nd_experiment_id => $experiment->nd_experiment_id(),
+	  #    type_id  =>  $cross_type_cvterm->cvterm_id(),
+	  #    value  =>  $cross_type,
+		#			      });
 
       #link the parents to the experiment
-      if ($female_parent) {
-	  $experiment->find_or_create_related('nd_experiment_stocks' , {
-	      stock_id => $female_parent->stock_id(),
-	      type_id  =>  $female_parent_cvterm->cvterm_id(),
-					      });
-      }
-      if ($male_parent) {
-	  $experiment->find_or_create_related('nd_experiment_stocks' , {
-	      stock_id => $male_parent->stock_id(),
-	      type_id  =>  $male_parent_cvterm->cvterm_id(),
-					      });
-      }
-      if ($cross_type eq "self" && $female_parent) {
-	  $experiment->find_or_create_related('nd_experiment_stocks' , {
-	      stock_id => $female_parent->stock_id(),
-	      type_id  =>  $male_parent_cvterm->cvterm_id(),
-					      });
-      }
+    #  if ($female_parent) {
+	  #$experiment->find_or_create_related('nd_experiment_stocks' , {
+	  #    stock_id => $female_parent->stock_id(),
+	  #    type_id  =>  $female_parent_cvterm->cvterm_id(),
+		#			      });
+    #  }
+    #  if ($male_parent) {
+	  #$experiment->find_or_create_related('nd_experiment_stocks' , {
+	  #    stock_id => $male_parent->stock_id(),
+	  #    type_id  =>  $male_parent_cvterm->cvterm_id(),
+		#			      });
+    #  }
+    #  if ($cross_type eq "self" && $female_parent) {
+	  #$experiment->find_or_create_related('nd_experiment_stocks' , {
+	  #    stock_id => $female_parent->stock_id(),
+	  #    type_id  =>  $male_parent_cvterm->cvterm_id(),
+		#			      });
+    #  }
 
       #create a stock of type cross
       $cross_stock = $chado_schema->resultset("Stock::Stock")->find_or_create(
@@ -269,27 +269,27 @@ sub add_crosses {
       }
 
 
-      #link the stock of type cross to the experiment
-      $experiment->find_or_create_related('nd_experiment_stocks' , {
-	  stock_id => $cross_stock->stock_id(),
-	  type_id  =>  $progeny_cvterm->cvterm_id(),
+    #link the stock of type cross to the experiment
+    $experiment->find_or_create_related('nd_experiment_stocks' , {
+	      stock_id => $cross_stock->stock_id(),
+	      type_id  =>  $cross_experiment_type_cvterm->cvterm_id(),
 					  });
       #link the experiment to the project
-      $experiment->find_or_create_related('nd_experiment_projects', {
-	  project_id => $project->project_id()
+    $experiment->find_or_create_related('nd_experiment_projects', {
+	     project_id => $project->project_id()
 					  } );
 
       #link the cross program to the breeding program
 			my $trial_object = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $project->project_id() });
-			$trial_object->set_breeding_program($program->project_id());
+			   $trial_object->set_breeding_program($program->project_id());
 
       #add the cross type to the experiment as an experimentprop
-      $experiment
-	  ->find_or_create_related('nd_experimentprops' , {
-	      nd_experiment_id => $experiment->nd_experiment_id(),
-	      type_id  =>  $cross_type_cvterm->cvterm_id(),
-	      value  =>  $cross_type,
-				   });
+      #experiment
+	  #->find_or_create_related('nd_experimentprops' , {
+	  #    nd_experiment_id => $experiment->nd_experiment_id(),
+	  #    type_id  =>  $cross_type_cvterm->cvterm_id(),
+	  #    value  =>  $cross_type,
+		#		   });
 
     }
 
