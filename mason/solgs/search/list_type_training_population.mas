@@ -21,7 +21,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 <&| /page/info_section.mas, 
     collapsible => 1, 
   collapsed   => 1,
-  title       => "Select a list-based training population or create a new one",
+  title       => "Or select a list-based training population or create a new one",
 &>
 
   <div class="fileupload-buttonbar">

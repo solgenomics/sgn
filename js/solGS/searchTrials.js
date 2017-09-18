@@ -15,6 +15,7 @@ jQuery(document).ready(function(){
     if (url.match(/solgs\/search\/trials\/trait\//) != null) {
 	var traitId = jQuery("input[name='trait_id']").val();
 	url = '/solgs/search/result/populations/' + traitId;
+	searchAllTrials(url);   
     } else {
 	url = '/solgs/search/trials/';
     }
@@ -105,7 +106,7 @@ function listAllTrials (trials)  {
 
 
 function checkTrainingPopulation (popId) {
-
+ 
     jQuery.ajax({
         type: 'POST',
         dataType: 'json',
@@ -127,6 +128,7 @@ function checkTrainingPopulation (popId) {
 		
 		displayTrainingPopulations(tableDetails);	
                 jQuery('#done_selecting_div').show();
+	
             } else {
 		jQuery("#searched_trials_message").html('<p> Population ' + popId + ' can not be used as a training population.');
 		jQuery("#search_all_training_pops").show();
@@ -186,7 +188,6 @@ jQuery(document).ready( function () {
 
 
 function checkPopulationExists (name) {
-    
     jQuery("#searched_trials_message")
 	.html("Checking if trial or training population " + name + " exists...please wait...")
 	.show();

@@ -24,7 +24,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 
   <div   style="padding:40px 0px 20px 0px" align="center" class="form-inline">
     <input  type="text" class="form-control" placeholder="search for a trial or training population" size="50" id="population_search_entry"/>   
-    <button type="submit" class="btn btn-primary" id="search_training_pop">
+    <button type="submit" class="btn btn-success" id="search_training_pop">
       <span class="glyphicon glyphicon-search"></span>
     </button>
     
