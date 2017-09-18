@@ -156,16 +156,16 @@ is_deeply(\@transactions, [
           [
             'test seedlot 2',
             'test seedlot',
-            -5,
+            -7,
             'janedoe',
-            'Moving 5 seed from seedlot 2 to seedlot 1'
+            'Moving 7 seed from seedlot 2 to seedlot 1'
           ],
           [
             'test seedlot 2',
             'test seedlot',
-            -7,
+            -5,
             'janedoe',
-            'Moving 7 seed from seedlot 2 to seedlot 1'
+            'Moving 5 seed from seedlot 2 to seedlot 1'
           ]
         ], "check source seedlot transactions");
 
@@ -191,11 +191,11 @@ foreach my $t (@{$dest_seedlot_after_trans3->transactions()}) {
 print STDERR Dumper \@transactions2;
 is_deeply(\@transactions2, [
           [
-            'test seedlot 2',
             'test seedlot',
-            5,
+            'test seedlot 2',
+            -3,
             'janedoe',
-            'Moving 5 seed from seedlot 2 to seedlot 1'
+            'Moving 3 seed from seedlot 1 to seedlot 2'
           ],
           [
             'test seedlot 2',
@@ -205,11 +205,11 @@ is_deeply(\@transactions2, [
             'Moving 7 seed from seedlot 2 to seedlot 1'
           ],
           [
-            'test seedlot',
             'test seedlot 2',
-            -3,
+            'test seedlot',
+            5,
             'janedoe',
-            'Moving 3 seed from seedlot 1 to seedlot 2'
+            'Moving 5 seed from seedlot 2 to seedlot 1'
           ]
         ], 'check transactions of dest_seedlot');
 

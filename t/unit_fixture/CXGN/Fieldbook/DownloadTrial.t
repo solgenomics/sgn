@@ -35,10 +35,10 @@ my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
 });
 
 my $create_fieldbook_return = $create_fieldbook->download();
+print STDERR Dumper $create_fieldbook_return;
 ok($create_fieldbook_return, "check that download trial fieldbook returns something.");
 
 my @contents = ReadData ($create_fieldbook_return->{'file'});
-
 #print STDERR Dumper @contents->[0]->[0];
 is(@contents->[0]->[0]->{'type'}, 'xls', "check that type of file is correct");
 is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");

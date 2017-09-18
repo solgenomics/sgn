@@ -37,6 +37,7 @@ is($s->uniquename, $seedlot_uniquename);
 is($s->location_code, $seedlot_location);
 is($s->organization_name, $seedlot_organization);
 is($s->populations->[0], $seedlot_population_name);
+is_deeply($s->accessions, [ [ $seedlot_accession_id->[0], $seedlot_accession_uniquename] ]);
 is_deeply($s->accession_stock_ids, $seedlot_accession_id);
 is($s->breeding_program_name, $seedlot_breeding_program_name);
 is($s->breeding_program_id, $seedlot_breeding_program_id);

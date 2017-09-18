@@ -28,6 +28,7 @@ use CXGN::Location::LocationLookup;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Stock;
+use JSON;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -266,7 +267,7 @@ sub _get_design_from_trial {
     if ($accession_id) {
       $design_info{"accession_id"}=$accession_id;
     }
-	if ($seedlot_transaction){
+	if ($seedlot_transaction->first()){
         my $val = $json->decode($seedlot_transaction->first()->value());
         my $seedlot = $seedlot_transaction->search_related('object');
 		$design_info{"seedlot_name"} = $seedlot->first->uniquename;

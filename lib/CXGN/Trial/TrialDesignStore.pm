@@ -65,6 +65,7 @@ use CXGN::Trial;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
+use CXGN::Stock::Seedlot;
 use CXGN::Stock::Seedlot::Transaction;
 
 has 'bcs_schema' => (
@@ -78,7 +79,7 @@ has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', re
 has 'nd_experiment_id' => (isa => 'Int', is => 'rw', predicate => 'has_nd_experiment_id', required => 0);
 has 'nd_geolocation_id' => (isa => 'Int', is => 'rw', predicate => 'has_nd_geolocation_id', required => 1);
 has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', required => 1);
-has 'design' => (isa => 'HashRef[HashRef[Str|ArrayRef|HashRef]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
+has 'design' => (isa => 'HashRef[HashRef]|Undef', is => 'rw', predicate => 'has_design', required => 1);
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 has 'stocks_exist' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 has 'new_treatment_has_plant_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
@@ -151,7 +152,9 @@ sub validate_design {
 			}
 			if ($property eq 'seedlot_name') {
 				my $stock_name = $design{$stock}->{$property};
-				$seen_source_names{$stock_name}++;
+				if ($stock_name){
+					$seen_source_names{$stock_name}++;
+				}
 			}
 			if ($property eq 'plot_name') {
 				my $plot_name = $design{$stock}->{$property};
@@ -178,9 +181,9 @@ sub validate_design {
 	if(scalar(@stock_names)<1){
 		$error .= "You cannot create a trial with less than one plot.";
 	}
-	if(scalar(@source_names)<1){
-		$error .= "You cannot create a trial with less than one seedlot.";
-	}
+	#if(scalar(@source_names)<1){
+	#	$error .= "You cannot create a trial with less than one seedlot.";
+	#}
 	if(scalar(@accession_names)<1){
 		$error .= "You cannot create a trial with less than one accession.";
 	}
@@ -189,7 +192,7 @@ sub validate_design {
 	my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
 	my $tissue_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
 	my $stocks = $chado_schema->resultset('Stock::Stock')->search({
-		type_id=>[$subplot_type_id, $plot_type_id, $plant_type_id, $tissue_type_id],
+		#type_id=>[$subplot_type_id, $plot_type_id, $plant_type_id, $tissue_type_id],
 		uniquename=>{-in=>\@stock_names}
 	});
 	while (my $s = $stocks->next()) {

@@ -212,7 +212,7 @@ sub store_location {
             return { error => $error };
         } else {
             print STDERR "Location $name added successfully\n";
-            return { success => "Location $name added successfully\n" };
+            return { success => "Location $name added successfully\n", nd_geolocation_id=>$self->location()->nd_geolocation_id() };
         }
     }
     # Edit existing location if id supplied

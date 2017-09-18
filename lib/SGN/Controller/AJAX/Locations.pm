@@ -85,7 +85,7 @@ __PACKAGE__->config(
            $c->stash->{rest} = { error => $store->{'error'} };
        }
        else {
-           $c->stash->{rest} = { success => $store->{'success'} };
+           $c->stash->{rest} = { success => $store->{'success'}, nd_geolocation_id => $store->{'nd_geolocation_id'} };
        }
 
    }

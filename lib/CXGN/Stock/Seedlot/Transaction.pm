@@ -82,7 +82,7 @@ sub get_transactions_by_seedlot_id {
             'join' => ['subject', 'object'],
             '+select' => ['subject.uniquename', 'subject.type_id', 'object.uniquename', 'object.type_id'],
             '+as' => ['subject_uniquename', 'subject_type_id', 'object_uniquename', 'object_type_id'],
-            'order_by'=>'stock_relationship_id'
+            'order_by'=>{'-desc'=>'me.stock_relationship_id'}
         }
     );
 
@@ -90,6 +90,7 @@ sub get_transactions_by_seedlot_id {
     my @transactions;
     while (my $row = $rs->next()) {
         my $t_obj = CXGN::Stock::Seedlot::Transaction->new( schema => $schema );
+        $t_obj->transaction_id($row->stock_relationship_id);
         $t_obj->from_stock([$row->object_id(), $row->get_column('object_uniquename'), $row->get_column('object_type_id')]);
         $t_obj->to_stock([$row->subject_id(), $row->get_column('subject_uniquename'), $row->get_column('subject_type_id')]);
         my $data = JSON::Any->decode($row->value());

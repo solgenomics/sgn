@@ -401,7 +401,7 @@ sub _parse_with_plugin {
       next;
     }
 
-    my $treatment_col = 10;
+    my $treatment_col = 11;
     foreach my $treatment_name (@treatment_names){
         if($worksheet->get_cell($row,$treatment_col)){
             push @{$design{treatments}->{$treatment_name}}, $plot_name;
