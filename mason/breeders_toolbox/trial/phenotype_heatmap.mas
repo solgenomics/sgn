@@ -27,6 +27,7 @@ $trial_id
 <script defer="defer">
 var trial_id = <% $trial_id %>;
 var value = 'plot';
+var selected_trait;
 jQuery(document).ready( function() {
 
     jQuery('#pheno_heatmap_onswitch').click( function() {
@@ -38,6 +39,7 @@ jQuery(document).ready( function() {
             success: function(response){
                 if (response.traits_assayed[0][0]) {
                     var traits_assayed_html = "<select class='form-control' id='trial_summary_hist_dropdown'>";
+                    traits_assayed_html = traits_assayed_html + "<option value=''>select trait to show heatmap</option>";
                     for (i=0; i<response.traits_assayed[0].length; i++) {
                         traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
                     }
@@ -61,6 +63,7 @@ jQuery(document).ready( function() {
 
         });
         
+        
          jQuery.ajax( {
               url: '/ajax/breeders/trial/'+trial_id+'/heatmap', 
               success: function(response) {
@@ -79,6 +82,12 @@ jQuery(document).ready( function() {
               }
          });
     });
+    
+    selected_trait = jQuery("#trial_summary_hist_dropdown").val();
+    if (selected_trait){
+        alert(selected_trait);
+    }
+    
 });
 
 </script>
