@@ -2196,7 +2196,7 @@ sub check_training_population :Path('/solgs/check/training/population/') Args(1)
 
     $self->check_population_is_training_population($c);
     my $is_training_pop = $c->stash->{is_training_population};
- print STDERR "\n training pop id: $pop_id is tr pop data: $is_training_pop\n";
+
     my $training_pop_data;
     if ($is_training_pop) 
     {
@@ -2204,7 +2204,7 @@ sub check_training_population :Path('/solgs/check/training/population/') Args(1)
 	$self->projects_links($c, $pr_rs);
 	$training_pop_data = $c->stash->{projects_pages};
     }
-    print STDERR "\n training pop id: $pop_id tr pop data: $@training_pop_data\n";
+   
     my $ret->{is_training_population} =  $is_training_pop; 
     $ret->{training_pop_data} = $training_pop_data; 
     $ret = to_json($ret);     
