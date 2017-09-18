@@ -1,5 +1,5 @@
 package CXGN::Trial::TrialDesign;
-
+ 
 =head1 NAME
 
 CXGN::Trial::TrialDesign - a module to create a trial design using the R CRAN package Agricolae.
@@ -296,10 +296,10 @@ sub _get_crd_design {
 
         if ($self->has_randomization_seed()){
             $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
-            $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=1,kinds=randomization_method, seed=randomization_seed)');
+            $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=3,kinds=randomization_method, seed=randomization_seed)');
         }
         else {
-            $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=1,kinds=randomization_method)');
+            $r_block->add_command('crd<-design.crd(trt,rep_vector,serie=3,kinds=randomization_method)');
         }
         $r_block->add_command('crd<-crd$book'); #added for agricolae 1.1-8 changes in output
         $r_block->add_command('crd<-as.matrix(crd)');
@@ -601,10 +601,10 @@ sub _get_rcbd_design {
   $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
   if ($self->has_randomization_seed()){
     $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
-    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,serie=2,kinds=randomization_method, seed=randomization_seed)');
+    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,serie=3,kinds=randomization_method, seed=randomization_seed)');
   }
   else {
-    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,serie=2,kinds=randomization_method)');
+    $r_block->add_command('rcbd<-design.rcbd(trt,number_of_blocks,serie=3,kinds=randomization_method)');
   }
   $r_block->add_command('rcbd<-rcbd$book'); #added for agricolae 1.1-8 changes in output
   $r_block->add_command('rcbd<-as.matrix(rcbd)');
@@ -733,25 +733,26 @@ sub _get_alpha_lattice_design {
     }
     #	print "stock_list: ".scalar(@stock_list)."block_size: $block_size\n";
     if (scalar(@stock_list) % $block_size != 0) {
-      #die "Number of stocks (".scalar(@stock_list).") for alpha lattice design is not divisible by the block size ($block_size)\n";
+      die "Number of stocks (".scalar(@stock_list).") for alpha lattice design is not divisible by the block size ($block_size)\n";
 	}
-    else {
-		my $dummy_var = scalar(@stock_list) % $block_size;
-		my $stocks_to_add = $block_size - $dummy_var;
-#		print "$stock_list\n";
-		foreach my $stock_list_rep(1..$stocks_to_add) {
-			push(@stock_list, $stock_list[0]);
-		}
-		$self->set_stock_list(\@stock_list);
-	}
+#     else {
+# 		my $dummy_var = scalar(@stock_list) % $block_size;
+# 		my $stocks_to_add = $block_size - $dummy_var;
+# #		print "$stock_list\n";
+# 		foreach my $stock_list_rep(1..$stocks_to_add) {
+# 			push(@stock_list, $stock_list[0]);
+# 		}
+#         print STDERR Dumper(\@stock_list);
+# 		$self->set_stock_list(\@stock_list);
+# 	}
 
     $number_of_blocks = scalar(@stock_list)/$block_size;
-    if ($number_of_blocks < $block_size) {
-      die "The number of blocks ($number_of_blocks) for alpha lattice design must not be less than the block size ($block_size)\n";
-    }
-  } else {
-    die "No block size specified\n";
-  }
+     if ($number_of_blocks < $block_size) {
+       die "The number of blocks ($number_of_blocks) for alpha lattice design must not be less than the block size ($block_size)\n";
+     }
+    } else {
+     die "No block size specified\n";
+   }
 
   if ($self->has_fieldmap_row_number()) {
     $fieldmap_row_number = $self->get_fieldmap_row_number();
@@ -780,10 +781,10 @@ sub _get_alpha_lattice_design {
   $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
   if ($self->has_randomization_seed()){
     $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
-    $r_block->add_command('alpha<-design.alpha(trt,block_size,number_of_reps,serie=1,kinds=randomization_method, seed=randomization_seed)');
+    $r_block->add_command('alpha<-design.alpha(trt,block_size,number_of_reps,serie=3,kinds=randomization_method, seed=randomization_seed)');
   }
   else {
-    $r_block->add_command('alpha<-design.alpha(trt,block_size,number_of_reps,serie=1,kinds=randomization_method)');
+    $r_block->add_command('alpha<-design.alpha(trt,block_size,number_of_reps,serie=3,kinds=randomization_method)');
   }
   $r_block->add_command('alpha_book<-alpha$book');
   $r_block->add_command('alpha_book<-as.matrix(alpha_book)');
@@ -941,10 +942,10 @@ sub _get_lattice_design {
   #$r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
   if ($self->has_randomization_seed()){
     $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
-    $r_block->add_command('lattice<-design.lattice(trt,r=number_of_reps,serie=2,kinds="Super-Duper", seed=randomization_seed)');
+    $r_block->add_command('lattice<-design.lattice(trt,r=number_of_reps,serie=3,kinds="Super-Duper", seed=randomization_seed)');
   }
   else {
-    $r_block->add_command('lattice<-design.lattice(trt,r=number_of_reps,serie=2,kinds="Super-Duper")');
+    $r_block->add_command('lattice<-design.lattice(trt,r=number_of_reps,serie=3,kinds="Super-Duper")');
   }
   $r_block->add_command('lattice_book<-lattice$book');
   $r_block->add_command('lattice_book<-as.matrix(lattice_book)');
@@ -1095,10 +1096,10 @@ sub _get_augmented_design {
   $r_block->add_command('randomization_method <- "'.$self->get_randomization_method().'"');
   if ($self->has_randomization_seed()){
     $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
-    $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method, seed=randomization_seed)');
+    $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=3,kinds=randomization_method, seed=randomization_seed)');
   }
   else {
-    $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=1,kinds=randomization_method)');
+    $r_block->add_command('augmented<-design.dau(control_trt,trt,number_of_blocks,serie=3,kinds=randomization_method)');
   }
   $r_block->add_command('augmented<-augmented$book'); #added for agricolae 1.1-8 changes in output
   $r_block->add_command('augmented<-as.matrix(augmented)');
@@ -2029,10 +2030,10 @@ sub _get_splitplot_design {
 
     if ($self->has_randomization_seed()){
         $r_block->add_command('randomization_seed <- '.$self->get_randomization_seed());
-        $r_block->add_command('splitplot<-design.split(accessions,treatments,r=r,serie=2,kinds=randomization_method, seed=randomization_seed)');
+        $r_block->add_command('splitplot<-design.split(accessions,treatments,r=r,serie=3,kinds=randomization_method, seed=randomization_seed)');
     }
     else {
-        $r_block->add_command('splitplot<-design.split(accessions,treatments,r=r,serie=2,kinds=randomization_method)');
+        $r_block->add_command('splitplot<-design.split(accessions,treatments,r=r,serie=3,kinds=randomization_method)');
     }
     $r_block->add_command('split<-splitplot$book'); #added for agricolae 1.1-8 changes in output
     $r_block->add_command('split<-as.matrix(split)');
