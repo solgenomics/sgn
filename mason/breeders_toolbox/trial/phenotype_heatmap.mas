@@ -64,33 +64,46 @@ jQuery(document).ready( function() {
         });
         
         
-         jQuery.ajax( {
-              url: '/ajax/breeders/trial/'+trial_id+'/heatmap', 
-              success: function(response) {
+//         jQuery.ajax( {
+//              url: '/ajax/breeders/trial/'+trial_id+'/heatmap', 
+//              success: function(response) {
                 
-                 if (response.phenotypes){
-                    //jQuery("#trait_heatmap").css("display", "none");
-                    //jQuery("#traitdiv").css("display", "inline-block");
-                 }
-                 else  {
-                        //jQuery("#trait_heatmap").css("display", "none");
-                        //jQuery("#trial_no_phenoMSG").css("display", "inline-block");    
-                 }
-              },
-              error: function(reponse) {
-                 alert('Error displaying traits assayed heatmap');   
-              }
-         });
+//                 if (response.phenotypes){
+//                    //jQuery("#trait_heatmap").css("display", "none");
+//                    //jQuery("#traitdiv").css("display", "inline-block");
+//                 }
+//                 else  {
+//                        //jQuery("#trait_heatmap").css("display", "none");
+//                        //jQuery("#trial_no_phenoMSG").css("display", "inline-block");    
+//                 }
+//              },
+//              error: function(reponse) {
+//                 alert('Error displaying traits assayed heatmap');   
+//              }
+//         });
     });
     
 
   jQuery(document).on('change', '#trial_list_dropdown', function () {
     var selected = jQuery("#trial_list_dropdown").val();
-    if (selected == ''){
-    
-    }
+    if (selected == ''){ }
     else {
         alert(selected);
+        jQuery.ajax( {
+             url: '/ajax/breeders/trial/'+trial_id+'/heatmap?selected='+selected, 
+             success: function(response) {
+               
+                if (response.phenotypes){
+
+                }
+                else  {
+                
+                }
+             },
+             error: function(reponse) {
+                alert('Error displaying traits assayed heatmap');   
+             }
+        });
     }
     
   });

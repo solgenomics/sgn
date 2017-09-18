@@ -941,10 +941,12 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial_id = $c->stash->{trial_id};
+    my $trait_id = $c->req->param("selected");
     
     my $phenotypes_heatmap = CXGN::Phenotypes::TrialPhenotype->new({
     	bcs_schema=>$schema,
-    	trial_id=>$trial_id
+    	trial_id=>$trial_id,
+        trait_id=>$trait_id
     });
     my @phenotype = $phenotypes_heatmap->get_trial_phenotypes_heatmap();
     

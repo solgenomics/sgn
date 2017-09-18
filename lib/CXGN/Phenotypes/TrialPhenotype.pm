@@ -46,11 +46,23 @@ has 'trial_id' => (
     required => 1,
 );
 
+has 'trait_id' => (
+	isa => 'Int',
+	is => 'rw',
+    required => 1,
+);
+
 
 sub get_trial_phenotypes_heatmap {
     my $self = shift;
     my $schema = $self->bcs_schema;
     my $trial_id = $self->trial_id;
+    my $trait_id = $self->trait_id;
+    
+    print "MY TRIAL ID: $trial_id and TRAIT ID: $trait_id\n";
+    
+    
+    
     
     return ;
 }
