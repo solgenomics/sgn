@@ -64,7 +64,8 @@
     </div>
     <div class="well">
       <button id="d3-save-button" class="btn btn-primary">Save</button>
-      <a id="link" target="_blank" class="btn button btn-primary"> Download </a>
+      <a id="link" target="_blank" class="btn button btn-primary"> Download image</a>
+      <button id="d3-pdf-button" class="btn btn-primary">Download pdf</button>
     </div>
   </div>
 </div>
@@ -99,10 +100,15 @@ var barcode_types = [
   {name:"barc_type C",width:1*72,height:0.25*72}
 ];
 var text_placeholders = [
-{key:"plot_id",   name:"Plot"},
-{key:"replicate", name:"Replicate"},
-{key:"block",     name:"Block"},
-{key:"accession", name:"Accession"}
+{key:"$ACCESSION_NAME", name:"Accession Name"},
+{key:"$PLOT_NAME",   name:"Plot Name"},
+{key:"$PLOT_NUMBER",     name:"Plot Number"},
+{key:"$REP_NUMBER", name:"Rep Number"},
+{key:"$ROW NUMBER", name:"Row Number"},
+{key:"$COL_NUMBER", name:"Col Number"},
+{key:"$TRIAL_NAME", name:"Trial Name"},
+{key:"$YEAR", name:"Year"},
+{key:"$FEMALE_PARENT/MALE_PARENT", name:"Pedigree"}
 ]
 
 //set up drag behaviour
@@ -249,7 +255,7 @@ function getTransGroupBounds(node){
 
 $(document).ready(function($) {
   var input_width = 400; //label width (pts)
-  var input_height = 220; //label height (pts)
+  var input_height = 154; //label height (pts)
 
   var width = 400; //fixed svg width;
   var height = width/input_width*input_height; //scaled height.
@@ -362,7 +368,7 @@ $(document).ready(function($) {
   //set up text options
   text_adders.on("click",function(){
     var th = d3.select(this);
-    var text = th.text()+": <"+"%"+th.attr("key")+"%"+">";
+    var text = th.attr("key"); //+": <"+"%"+th.attr("key")+"%"+">";
     var fontSize = _x.invert(d3.select("#d3-font-size-input").node().value);
     addText(text,fontSize);
   })
@@ -374,7 +380,7 @@ $(document).ready(function($) {
     var text_content = d3.select("#d3-text-content")
     text_content.selectAll(".d3-text-placeholder").each(function(d,i){
       var th = d3.select(this)
-      th.html("").text("<"+"%"+th.attr("key")+"%"+">")
+      th.html("").text(th.attr("key"))
     });
     var text = text_content.text();
     text_content.html("");
@@ -520,4 +526,24 @@ $("#d3-save-button").on("click",function(event) {
   //you can download svg file by right click menu.
   img.remove();
 });
+
+$("#d3-pdf-button").on("click",function(event) {
+    console.log("You clicked the download pdf button.");
+    var svg = document.getElementById("d3-to-save");
+    var serializer = new XMLSerializer();
+    var source = serializer.serializeToString(svg);
+    //get coordinates and content of each text element
+    console.log("Creating zpl...");
+    
+    
+    //print zpl
+    console.log("Zpl is"+zpl);
+    
+    //Get label size, labels per sheet
+    
+    //send to server to build
+    
+    
+});
+
 </script>
