@@ -9,12 +9,14 @@ $trial_id
 <style>
     #trait_heatmap {display: inline; }
     #trial_no_phenoMSG {display: none; }
+    #traitdiv {display: none; }
 </style>
 
 <div id="trait_heatmap" >loading...</div>
 <div id="trial_no_phenoMSG" >Upload trial phenotypes to view trait assayed heatmap</div>
 
-<div class="form-group form-group-sm" id="traitdiv" style="display:none">
+
+<div class="form-group form-group-sm" id="traitdiv" >
     <label for="trial_summary_hist_dropdown" class="col-sm-2 control-label">Select:</label>
     <div class="col-sm-10">
         <div id="traits_assayed_dropdown">
@@ -24,14 +26,15 @@ $trial_id
 
 <script defer="defer">
 var trial_id = <% $trial_id %>;
+var value = 'plot';
 jQuery(document).ready( function() {
 
     jQuery('#pheno_heatmap_onswitch').click( function() {
-    
-        var value = 'plot';
         jQuery.ajax ( {
-            
             url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type='+value,
+            beforeSend: function() {
+              jQuery("#working_modal").modal("show");
+            },
             success: function(response){
                 if (response.traits_assayed[0][0]) {
                     var traits_assayed_html = "<select class='form-control' id='trial_summary_hist_dropdown'>";
@@ -39,8 +42,18 @@ jQuery(document).ready( function() {
                         traits_assayed_html = traits_assayed_html + "<option value="+ response.traits_assayed[0][i][0] + " >" + response.traits_assayed[0][i][1] + "</option>";
                     }
                     traits_assayed_html = traits_assayed_html +"</select>";
+                    jQuery("#trait_heatmap").css("display", "none");                    
                     jQuery("#traits_assayed_dropdown").html(traits_assayed_html);
+                    jQuery("#traitdiv").css("display", "inline-block");
+                    jQuery("#working_modal").modal("hide");
                 } 
+                else {
+                    jQuery("#working_modal").modal("hide");
+                    jQuery("#trait_heatmap").css("display", "none"); 
+                    jQuery("#traitdiv").css("display", "none");
+                    jQuery("#trial_no_phenoMSG").css("display", "inline-block");
+                    
+                }
             },
             error: function(response){
                 alert('Error retrieving traits assayed in this trial');
@@ -50,22 +63,19 @@ jQuery(document).ready( function() {
         
          jQuery.ajax( {
               url: '/ajax/breeders/trial/'+trial_id+'/heatmap', 
-              beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-              },
               success: function(response) {
-                 jQuery("#working_modal").modal("hide");
+                
                  if (response.phenotypes){
-                    jQuery("#trait_heatmap").css("display", "none");
-                    jQuery("#traitdiv").css("display", "inline-block");
+                    //jQuery("#trait_heatmap").css("display", "none");
+                    //jQuery("#traitdiv").css("display", "inline-block");
                  }
                  else  {
-                        jQuery("#trait_heatmap").css("display", "none");
-                        jQuery("#trial_no_phenoMSG").css("display", "inline-block");    
+                        //jQuery("#trait_heatmap").css("display", "none");
+                        //jQuery("#trial_no_phenoMSG").css("display", "inline-block");    
                  }
               },
               error: function(reponse) {
-                    jQuery("#working_modal").modal("hide");
+                 alert('Error displaying traits assayed heatmap');   
               }
          });
     });
