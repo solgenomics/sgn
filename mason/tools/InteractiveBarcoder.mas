@@ -329,8 +329,9 @@ $(document).ready(function($) {
     clearSelection();
     var val = d3.select(this).node().value;
     if (val>=0){
-      var cur_barcode = barcode_g.html("").append('g')
+      var cur_barcode = barcode_g.html("")//.append('g')
       cur_barcode
+      .classed("barcode",true)
       .classed("draggable",true)
       .classed("selectable",true)
       .call(draggable)
@@ -346,7 +347,11 @@ $(document).ready(function($) {
         y:0,
         width:_x.invert(barcode_types[val].width),
         height:_y.invert(barcode_types[val].height),
-        fill:"#333"
+        value:"$PLOT_NAME",
+        type:"BQ",
+        size:",7",
+        fill:"#333",
+        class:"label-element",
       });
       cur_barcode.call(doTransform,doSnap);
     }
@@ -426,6 +431,9 @@ function addText(text,fontSize){
     .attr({
       "font-size":fontSize,
       "dominant-baseline": "mathematical",
+      type:"AA",
+      size:"28",
+      class:"label-element",
     })
     .text(text);
   newTB.classed("draggable",true)
@@ -505,7 +513,7 @@ $("#d3-save-button").on("click",function(event) {
   //get svg source.
   var serializer = new XMLSerializer();
   var source = serializer.serializeToString(svg);
-
+console.log("SVG is "+source);
   //add name spaces.
   if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
       source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
@@ -529,15 +537,46 @@ $("#d3-save-button").on("click",function(event) {
 
 $("#d3-pdf-button").on("click",function(event) {
     console.log("You clicked the download pdf button.");
-    var svg = document.getElementById("d3-to-save");
-    var serializer = new XMLSerializer();
-    var source = serializer.serializeToString(svg);
-    //get coordinates and content of each text element
-    console.log("Creating zpl...");
+    // var svg = document.getElementById("d3-to-save");
+    // // var serializer = new XMLSerializer();
+    // // var source = serializer.serializeToString(svg);
+    // // console.log("SVG is "+source);
+    // var parser = new DOMParser();
+    // var xmlDoc = parser.parseFromString(svg,"text/xml");
+    var label_zpl = '^LH{ $X },{ $Y }';
+    d3.select(".d3-draw-area").selectAll(".label-element").each(function(d,i){
+        var node = d3.select(this);
+        //console.log("Getbox coords = "+JSON.stringify(coords));
+        var x = node.getBoundingClientRect().left(); //node.getBoundingClientRect().left();
+        var y = node.getBoundingClientRect().top();
+        console.log("x is "+x+"and y is"+y);
+        var value = node.attr("value");
+        var type = node.attr("type");
+        var size = node.attr("size");
+            // var child = parent.children[0];
+            // var value = child.getAttribute('value');
+            // var type = child.getAttribute('type');
+            // var size = child.getAttribute('size');
+            var zpl = '^F'+x+','+y+'^'+type+','+size+'^FD{'+value+'}^FS';
+            label_zpl = label_zpl + zpl;
+        });
     
-    
+    // var elements = document.getElementsByClassName("text-box draggable selectable");
+    // console.log("num elements is "+elements.length);
+    // var label_zpl = '^LH{ $X },{ $Y }';
+    // for (i=0; i<elements.length; i++) {
+    //     var parent = elements[i];
+    //     var x = parent.getBBox().left();
+    //     var y = parent.node().getBoundingClientRect().top();
+    //     var child = parent.children[0];
+    //     var value = child.getAttribute('value');
+    //     var type = child.getAttribute('type');
+    //     var size = child.getAttribute('size');
+    //     var zpl = '^F'+x+','+y+'^'+type+','+size+'^FD{'+value+'}^FS';
+    //     label_zpl = label_zpl + zpl;
+    // }
     //print zpl
-    console.log("Zpl is"+zpl);
+    console.log("zpl is:\n "+label_zpl);
     
     //Get label size, labels per sheet
     
