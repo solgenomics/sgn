@@ -15,7 +15,7 @@ my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
 
 my $trial_id = $schema->resultset("Project::Project")->find({ name => 'test_trial'})->project_id();
-my @trait_list = ("dry matter content percentage|CO:0000092", "fresh root weight|CO:0000012");
+my @trait_list = ("dry matter content percentage|CO_334:0000092", "fresh root weight|CO_334:0000012");
 my $tempfile = "/tmp/test_create_pheno_spreadsheet.xls";
 my $format = 'ExcelBasic';
 
@@ -103,7 +103,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[3], [
           'Operator',
           'Date',
           'Design Type',
-          undef,
+          'Treatment',
           undef,
           'plot_number',
           '1',
@@ -202,7 +202,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[7], [
           undef,
           undef,
           undef,
-          'dry matter content percentage|CO:0000092'
+          'dry matter content percentage|CO_334:0000092'
         ], "check contents of seventh column in created pheno spreadsheet."
 );
 
@@ -215,7 +215,7 @@ is_deeply(@contents->[0]->[1]->{'cell'}->[8], [
           undef,
           undef,
           undef,
-          'fresh root weight|CO:0000012'
+          'fresh root weight|CO_334:0000012'
         ], "check contents of eighth column in created pheno spreadsheet."
 );
 

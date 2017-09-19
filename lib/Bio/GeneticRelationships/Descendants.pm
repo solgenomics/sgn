@@ -21,7 +21,7 @@ use Bio::GeneticRelationships::Individual;
 
 =head2 Methods
 
-=over 
+=over
 
 =cut
 
@@ -30,18 +30,6 @@ use Bio::GeneticRelationships::Individual;
 
 has 'name' => (isa => 'Str',is => 'rw', predicate => 'has_name', required => 1,);
 has 'offspring' => (isa => 'ArrayRef[Bio::GeneticRelationships::Individual]', is => 'rw', predicate => 'has_offspring');
-
-#change to hash????
-sub add_offspring {
-    my $self = shift;
-    my $offspring_to_add = shift;
-    my @offspring_array;
-    if ($self->has_offspring()){
-	@offspring_array = @{$self->get_offspring()};
-    }
-    push (@offspring_array, $offspring_to_add);
-    $self->set_offspring([@offspring_array]);
-}
 
 
 ###
@@ -58,6 +46,6 @@ sub add_offspring {
 
 =head1 AUTHORS
 
-    Jeremy D. Edwards <jde22@cornell.edu>   
+    Jeremy D. Edwards <jde22@cornell.edu>
 
 =cut

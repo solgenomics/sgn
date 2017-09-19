@@ -94,7 +94,7 @@ sub do_fuzzy_search {
     #remove all trailing and ending spaces from accessions and organisms
     s/^\s+|\s+$//g for @accession_list;
     s/^\s+|\s+$//g for @organism_list;
-   
+
     my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
     #print STDERR "\n\nAccessionFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
 
@@ -309,7 +309,7 @@ sub add_accession_list_POST : Args(0) {
         print STDERR "Transaction error storing stocks: $transaction_error $transaction_error_phenome\n";
         return;
     }
-    print STDERR Dumper \@added_fullinfo_stocks;
+    #print STDERR Dumper \@added_fullinfo_stocks;
     $c->stash->{rest} = {
         success => "1",
         added => \@added_fullinfo_stocks
@@ -362,9 +362,23 @@ sub populations_GET : Args(0) {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
-    my $populations = $ac->get_all_populations($c);
+    my $populations = $ac->get_all_populations();
 
     $c->stash->{rest} = { populations => $populations };
+}
+
+sub population_members : Path('/ajax/manage_accessions/population_members') : ActionClass('REST') { }
+
+sub population_members_GET : Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = shift;
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $ac = CXGN::BreedersToolbox::Accessions->new( { schema=>$schema });
+    my $members = $ac->get_population_members($stock_id);
+
+    $c->stash->{rest} = { data => $members };
 }
 
 sub _parse_list_from_json {

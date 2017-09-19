@@ -32,6 +32,8 @@ use SGN::Model::Cvterm;
 has 'owner_sp_person' => (
     isa => 'ArrayRef',
     is => 'rw',
+    lazy    => 1,
+    builder => '_build_owner_sp_person',
 );
 
 has 'main_production_site_url' => (
@@ -99,6 +101,25 @@ has 'acquisitionDate' => (
     is => 'rw',
 );
 
+has 'entryNumber' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'variety' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'state' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'notes' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
 
 sub BUILD {
     my $self = shift;
@@ -107,13 +128,17 @@ sub BUILD {
         $self->accessionNumber($self->_retrieve_stockprop('accession number'));
         $self->germplasmPUI($self->_retrieve_stockprop('PUI'));
         $self->germplasmSeedSource($self->_retrieve_stockprop('seed source'));
-        my @synonyms = $self->_retrieve_stockprop('stock_synonym') ? split ',', $self->_retrieve_stockprop('stock_synonym') : [];
-        my @donor_accessions = $self->_retrieve_stockprop('donor') ? split ',', $self->_retrieve_stockprop('donor') : [];
-        my @donor_institutes = $self->_retrieve_stockprop('donor institute') ? split ',', $self->_retrieve_stockprop('donor institute') : [];
-        my @donor_puis = $self->_retrieve_stockprop('donor PUI') ? split ',', $self->_retrieve_stockprop('donor PUI') : [];
+        my @synonyms = $self->_retrieve_stockprop('stock_synonym') ? split ',', $self->_retrieve_stockprop('stock_synonym') : ();
+        my @donor_accessions = $self->_retrieve_stockprop('donor') ? split ',', $self->_retrieve_stockprop('donor') : ();
+        my @donor_institutes = $self->_retrieve_stockprop('donor institute') ? split ',', $self->_retrieve_stockprop('donor institute') : ();
+        my @donor_puis = $self->_retrieve_stockprop('donor PUI') ? split ',', $self->_retrieve_stockprop('donor PUI') : ();
         $self->synonyms(\@synonyms);
         $self->instituteCode($self->_retrieve_stockprop('institute code'));
         $self->instituteName($self->_retrieve_stockprop('institute name'));
+        $self->entryNumber($self->_retrieve_stockprop('entry number'));
+        $self->variety($self->_retrieve_stockprop('variety'));
+        $self->state($self->_retrieve_stockprop('state'));
+        $self->notes($self->_retrieve_stockprop('notes'));
         $self->biologicalStatusOfAccessionCode($self->_retrieve_stockprop('biological status of accession code'));
         $self->countryOfOriginCode($self->_retrieve_stockprop('country of origin'));
         $self->typeOfGermplasmStorageCode($self->_retrieve_stockprop('type of germplasm storage code'));
@@ -199,6 +224,7 @@ sub store {
 
     return $self->stock_id();
 }
+
 
 no Moose;
 __PACKAGE__->meta->make_immutable;

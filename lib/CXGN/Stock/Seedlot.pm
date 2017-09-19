@@ -17,7 +17,7 @@ Seed transactions can be added using CXGN::Stock::Seedlot::Transaction.
 
 Lukas Mueller <lam87@cornell.edu>
 
-=head1 ACCESSORS & METHODS 
+=head1 ACCESSORS & METHODS
 
 =cut
 
@@ -118,7 +118,7 @@ has 'breeding_program_id' => (
 );
 
 
-after 'stock_id' => sub { 
+after 'stock_id' => sub {
     my $self = shift;
     my $id = shift;
     return $self->seedlot_id($id);
@@ -128,30 +128,30 @@ after 'stock_id' => sub {
 =head2 Class method: list_seedlots()
 
  Usage:        my $seedlots = CXGN::Stock::Seedlot->list_seedlots($schema);
- Desc:         Class method that returns information on all seedlots 
+ Desc:         Class method that returns information on all seedlots
                available in the system
- Ret:          ArrayRef of [ seedlot_id, seedlot name, location_code] 
+ Ret:          ArrayRef of [ seedlot_id, seedlot name, location_code]
  Args:         $schema - Bio::Chado::Schema object
  Side Effects: accesses the database
 
 =cut
 
-sub list_seedlots { 
+sub list_seedlots {
     my $class = shift;
     my $schema = shift;
-    
+
     my $seedlots;
-    
+
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
     print STDERR "TYPE_ID = $type_id\n";
     my $rs = $schema->resultset("Stock::Stock")->search( { type_id => $type_id });
-    while (my $row = $rs->next()) { 
+    while (my $row = $rs->next()) {
 	push @$seedlots, [ $row->stock_id, $row->uniquename, $row->description];
     }
     return $seedlots;
 }
 
-sub BUILDARGS { 
+sub BUILDARGS {
     my $orig = shift;
     my %args = @_;
     $args{stock_id} = $args{seedlot_id};
@@ -172,14 +172,14 @@ sub BUILD {
         $self->_retrieve_breeding_program();
         #$self->cross($self->_retrieve_cross());
     }
-    print STDERR Dumper $self->seedlot_id;
+    #print STDERR Dumper $self->seedlot_id;
 }
 
 
-sub _store_cross { 
+sub _store_cross {
     my $self = shift;
-    
-    
+
+
 
 
 }
@@ -191,9 +191,9 @@ sub _retrieve_cross {
 
 sub _remove_cross {
     my $self = shift;
-    
-    
-    
+
+
+
 }
 
 sub _store_seedlot_location {
@@ -233,7 +233,7 @@ sub _retrieve_breeding_program {
 sub _store_seedlot_relationships {
     my $self = shift;
 
-    foreach my $a (@{$self->accession_stock_ids()}) { 
+    foreach my $a (@{$self->accession_stock_ids()}) {
         my $organism_id = $self->schema->resultset('Stock::Stock')->find({stock_id => $a})->organism_id();
         if ($self->organism_id){
             if ($self->organism_id != $organism_id){
@@ -243,15 +243,15 @@ sub _store_seedlot_relationships {
         $self->organism_id($organism_id);
     }
 
-    eval { 
+    eval {
         #Save seedlot to accession relationship as collection_of
         my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
-        foreach my $a (@{$self->accession_stock_ids()}) { 
+        foreach my $a (@{$self->accession_stock_ids()}) {
             my $already_exists = $self->schema()->resultset("Stock::StockRelationship")->find({ object_id => $self->seedlot_id(), type_id => $type_id, subject_id=>$a });
 
-            if ($already_exists) { 
+            if ($already_exists) {
                 print STDERR "Accession with id $a is already associated with seedlot id ".$self->seedlot_id()."\n";
-                next; 
+                next;
             }
             my $row = $self->schema()->resultset("Stock::StockRelationship")->create({
                 object_id => $self->seedlot_id(),
@@ -270,9 +270,9 @@ sub _store_seedlot_relationships {
         $experiment->create_related('nd_experiment_projects', { project_id => $self->breeding_program_id });
     };
 
-    if ($@) { 
+    if ($@) {
 	die $@;
-    }    
+    }
 }
 
 sub _retrieve_accessions {
@@ -283,7 +283,7 @@ sub _retrieve_accessions {
     my $rs = $self->schema()->resultset("Stock::StockRelationship")->search( { type_id => $type_id, object_id => $self->seedlot_id() } );
 
     my @accession_ids;
-    while (my $row = $rs->next()) { 
+    while (my $row = $rs->next()) {
 	push @accession_ids, $row->subject_id();
     }
 
@@ -291,7 +291,7 @@ sub _retrieve_accessions {
 
     $rs = $self->schema()->resultset("Stock::Stock")->search( { stock_id => { in => \@accession_ids }});
     my @names;
-    while (my $s = $rs->next()) { 
+    while (my $s = $rs->next()) {
         push @names, [ $s->stock_id(), $s->uniquename() ];
     }
     $self->accessions(\@names);
@@ -312,18 +312,18 @@ sub _remove_accession {
 
 =cut
 
-sub current_count { 
+sub current_count {
     my $self = shift;
     my $transactions = $self->transactions();
-    
+
     my $count = 0;
-    foreach my $t (@$transactions) { 
+    foreach my $t (@$transactions) {
 	$count += $t->amount() * $t->factor();
     }
     return $count;
 }
 
-sub _add_transaction { 
+sub _add_transaction {
     my $self = shift;
     my $transaction = shift;
 
@@ -345,7 +345,7 @@ sub _add_transaction {
 
 =cut
 
-sub store { 
+sub store {
     my $self = shift;
 
     print STDERR "storing: UNIQUENAME=".$self->uniquename()."\n";
@@ -362,11 +362,11 @@ sub store {
     $self->_store_seedlot_location();
     $self->_store_seedlot_relationships();
 
-    foreach my $t (@{$self->transactions()}) { 
-	
-	print STDERR Dumper($self->transactions());
+    foreach my $t (@{$self->transactions()}) {
+
+	#print STDERR Dumper($self->transactions());
 	$t->store();
-    }    
+    }
     return $self->seedlot_id();
 }
 

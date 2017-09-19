@@ -75,6 +75,13 @@ has 'user_role' => (isa => "Str",
     required => 0
 );
 
+has 'include_timestamp' => (
+    isa => "Bool",
+    is => 'rw',
+    required => 0,
+    default => 1
+);
+
 sub archive {
     my $self = shift;
     my $subdirectory = $self->subdirectory;
@@ -90,13 +97,18 @@ sub archive {
         die "To archive a tempfile you need to provide: tempfile, subdirectory, archive_filename, timestamp, archive_path, and user_id\n";
     }
 
-    if (!any { $_ eq "curator" || $_ eq "submitter" } ($self->user_role)  ) {
+    if (!any { $_ eq "curator" || $_ eq "submitter" || $_ eq "sequencer" } ($self->user_role)  ) {
 	die  "You have insufficient privileges to archive a file.\n";
     }
     if (!$subdirectory || !$tempfile || !$archive_filename ) {
 	die "File archive failed: incomplete information to archive file.\n";
     }
-    $file_destination =  catfile($archive_path, $user_id, $subdirectory,$timestamp."_".$archive_filename);
+    if ($self->include_timestamp){
+        $file_destination =  catfile($archive_path, $user_id, $subdirectory,$timestamp."_".$archive_filename);
+    }
+    else {
+        $file_destination =  catfile($archive_path, $user_id, $subdirectory,$archive_filename);
+    }
     try {
 	if (!-d $archive_path) {
 	    mkdir $archive_path;

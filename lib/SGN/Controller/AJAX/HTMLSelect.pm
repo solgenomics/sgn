@@ -51,7 +51,7 @@ sub get_location_select : Path('/ajax/html/select/locations') Args(0) {
 
     my $locations = CXGN::BreedersToolbox::Projects->new( { schema => $c->dbic_schema("Bio::Chado::Schema") } )->get_all_locations();
 
-    if ($empty) { unshift @$locations, [ "", "please select" ] }
+    if ($empty) { unshift @$locations, [ "", "Select Location" ] }
 
     my $default = $c->req->param("default") || @$locations[0]->[0];
 
@@ -169,6 +169,30 @@ sub get_trial_type_select : Path('/ajax/html/select/trial_types') Args(0) {
       id => $id,
       choices => \@types,
       selected => $default
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_treatments_select : Path('/ajax/html/select/treatments') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $trial_id = $c->req->param("trial_id");
+
+    my $id = $c->req->param("id") || "treatment_select";
+    my $name = $c->req->param("name") || "treatment_select";
+    my $empty = $c->req->param("empty") || ""; # set if an empty selection should be present
+
+    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+    my $data = $trial->get_treatments();
+
+    if ($empty) {
+        unshift @$data, [ 0, "None" ];
+    }
+    my $html = simple_selectbox_html(
+      name => $name,
+      id => $id,
+      choices => $data,
     );
     $c->stash->{rest} = { select => $html };
 }
@@ -297,9 +321,9 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
     if (($trial_ids eq 'all') && ($stock_id eq 'all')) {
       my $bs = CXGN::BreederSearch->new( { dbh=> $c->dbc->dbh() } );
       my $status = $bs->test_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass});
-      if ($status->{'error'}) {
-        $c->stash->{rest} = { error => $status->{'error'}};
-        return;
+      unless ($status->{'success'}) {
+          $c->stash->{rest} = { select => '<center><p>Direct trait select is not currently available</p></center>'};
+          return;
       }
       my $query = $bs->metadata_query([ 'traits' ], {}, {});
       @traits = @{$query->{results}};

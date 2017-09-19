@@ -55,7 +55,7 @@ sub calls {
 		['studies/id', ['json'], ['GET'] ],
 		['studies/id/germplasm', ['json'], ['GET'] ],
 		['studies/id/observationVariables', ['json'], ['GET'] ],
-		['studies/id/observationUnits', ['json'], ['GET'] ],
+		['studies/id/observationunits', ['json'], ['GET'] ],
 		['studies/id/table', ['json','csv','xls','tsv'], ['GET'] ],
 		['studies/id/layout', ['json'], ['GET'] ],
 		['studies/id/observations', ['json'], ['GET'] ],

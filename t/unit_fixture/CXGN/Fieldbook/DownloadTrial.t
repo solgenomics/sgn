@@ -45,13 +45,13 @@ is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
 
 my $columns = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
-ok(scalar(@$columns) == 7, "check number of col in created file.");
+ok(scalar(@$columns) == 9, "check number of col in created file.");
 
 #print STDERR Dumper $columns;
 
 is_deeply($columns->[1], [
     undef,
-    'plot_id',
+    'plot_name',
     'test_trial21',
     'test_trial22',
     'test_trial23',
@@ -71,7 +71,7 @@ is_deeply($columns->[1], [
 
 is_deeply($columns->[2], [
     undef,
-    'range',
+    'block_number',
     '1',
     '1',
     '1',
@@ -91,7 +91,7 @@ is_deeply($columns->[2], [
     
 is_deeply($columns->[3], [
     undef,
-    'plot',
+    'plot_number',
     '1',
     '2',
     '3',
@@ -111,7 +111,7 @@ is_deeply($columns->[3], [
       
 is_deeply($columns->[4], [
     undef,
-    'rep',
+    'rep_number',
     '1',
     '1',
     '1',
@@ -128,10 +128,20 @@ is_deeply($columns->[4], [
     '3',
     '3'
 ], "check contents of fourth col.");
-        
+
 is_deeply($columns->[5], [
+            undef,
+            'row_number'
+          ], "check contents of fifth col");
+
+is_deeply($columns->[6], [
+          undef,
+          'col_number'
+        ], "check contents of sixth col");
+
+is_deeply($columns->[7], [
     undef,
-    'accession',
+    'accession_name',
     'test_accession4',
     'test_accession5',
     'test_accession3',
@@ -147,12 +157,12 @@ is_deeply($columns->[5], [
     'test_accession2',
     'test_accession4',
     'test_accession2'
-], "check contents of fifth col.");
+], "check contents of seventh col.");
 
-is_deeply($columns->[6], [
+is_deeply($columns->[8], [
     undef,
     'is_a_control'
-], "check contents of sixth col.");
+], "check contents of eighth col.");
 
 
 

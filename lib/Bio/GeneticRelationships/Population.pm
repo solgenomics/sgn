@@ -16,14 +16,9 @@ use Moose;
 
 extends 'Bio::GeneticRelationships::Individual';
 
-has 'members' => ( 
+has 'members' => (
     isa => 'ArrayRef',
     is => 'rw',
     );
-
-sub recursive_parent_levels { 
-    # has no parents
-}
-
 
 1;

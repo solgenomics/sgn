@@ -257,64 +257,57 @@ else {
 });
 
 jQuery('#compose_trait').on('click', function () {
-    disable_ui();
+
     //console.log("just disabled ui");
-var new_traits = jQuery("#new_traits").val();
-var new_trait_names = {};
-jQuery("#new_traits option:selected").each(function () {
-   if (jQuery(this).length) {
-        new_trait_names[jQuery.trim(jQuery(this).text())] = jQuery(this).val();
-   }
-});
-//console.log(new_trait_names);
-var successes = [];
-var errors = [];
-var names = [];
-    jQuery.ajax( {
-      url: '/ajax/onto/store_composed_term',
-      timeout: 60000,
-      async: false,
-      method: 'POST',
-      data: {'new_trait_names': JSON.stringify(new_trait_names)},
-      success: function(response) {
-      if (response.success) {
-        //console.log(response);
-        successes.push("<li class='list-group-item list-group-item-success'>"+response.success+"</li>");
-        //console.log("Names are "+response.names);
-        for(var i=0; i<response.names.length; i++){
-            names.push(response.names[i]+"\n");
+    var new_traits = jQuery("#new_traits").val();
+    var new_trait_names = {};
+    jQuery("#new_traits option:selected").each(function () {
+        if (jQuery(this).length) {
+            new_trait_names[jQuery.trim(jQuery(this).text())] = jQuery(this).val();
         }
-        return;
-      }
-      else {
-        errors.push("<li class='list-group-item list-group-item-danger'>"+new_trait_names[i]+": "+response.error+"</li>");
-        return;
-      }
-      },
-      error: function(request, status, err) {
-        errors.push("<li class='list-group-item list-group-item-danger'>"+new_trait_names[i]+": Save trait AJAX request failed. This trait was not saved.</li>");
-        return;
+    });
+    //console.log(new_trait_names);
+
+    jQuery.ajax( {
+        url: '/ajax/onto/store_composed_term',
+        timeout: 60000,
+        method: 'POST',
+        beforeSend : function() {
+            disable_ui();
+        },
+        data: {'new_trait_names': JSON.stringify(new_trait_names)},
+        success: function(response) {
+            //console.log(response);
+            var results_html = '';
+            var names = [];
+            enable_ui();
+            if (response.success) {
+                results_html += '<div class="modal-body col-sm-12" id="traits_saved"><label id="success_label" class="control-label">Traits saved</label><ul class="list-group" id="traits_saved_message"><li class="list-group-item list-group-item-success">'+response.success+'</li></ul></div><label id="list_label" class="control-label">Copy new traits to a list</label><div class="modal-body col-sm-12" id="results_to_list_menu"></div><div id="new_trait_names" style="display: none;"></div>';
+                for(var i=0; i<response.names.length; i++){
+                    names.push(response.names[i]+"\n");
+                }
+            }
+            if (response.error){
+                results_html += '<div class="modal-body col-sm-12" id="traits_error"><label id="error_label" class="control-label">Traits Not Saved</label><ul class="list-group" id="traits_error_message"><li class="list-group-item list-group-item-danger">'+response.error+'</li></ul></div>';
+            }
+
+            document.getElementById('traits_saved_body').innerHTML = results_html;
+            jQuery('#new_trait_names').html(names);
+            addToListMenu('results_to_list_menu', 'new_trait_names', {
+                listType: 'traits'
+            });
+
+            jQuery('#traits_saved_dialog').modal("show");
+            refresh_matviews();
+
+        },
+        error: function(request, status, err) {
+            enable_ui();
+            var results_html = '<div class="modal-body col-sm-12" id="traits_error"><label id="error_label" class="control-label">Traits Not Saved</label><ul class="list-group" id="traits_error_message"><li class="list-group-item list-group-item-danger">There was an error storing the composed terms. None were saved.</li></ul></div>';
+            document.getElementById('traits_saved_body').innerHTML = results_html;
       }
     });
-// display results
-var results_html = '';
-if (successes.length > 0) {
-    results_html += '<div class="modal-body col-sm-12" id="traits_saved"><label id="success_label" class="control-label">Traits saved</label><ul class="list-group" id="traits_saved_message">'+successes+'</ul></div>';
-}
-if (errors.length > 0) {
-    results_html += '<div class="modal-body col-sm-12" id="traits_errors"><label id="error_label" class="control-label">Errors</label><ul class="list-group" id="traits_saved_message">'+errors+'</ul></div>';
-}
 
-if (successes.length > 0) {
-    results_html += '<label id="list_label" class="control-label">Copy new traits to a list</label><div class="modal-body col-sm-12" id="results_to_list_menu"></div><div id="new_trait_names" style="display: none;"></div>';
-}
-document.getElementById('traits_saved_body').innerHTML = results_html;
-jQuery('#new_trait_names').html(names);
-addToListMenu('results_to_list_menu', 'new_trait_names', {
-  listType: 'traits'
-});
-enable_ui();
-jQuery('#traits_saved_dialog').modal("show");
 });
 
 function create_multi_selects(allowed_names) {

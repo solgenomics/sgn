@@ -10,6 +10,9 @@ $email_address_to_display => ''
 <div class="container-fluid">
     <div class="well">
 
+    <div id="contact_form_return_message">
+    </div>
+
 % #The form
   <form class="form-horizontal" name="contactForm">
 
@@ -149,11 +152,15 @@ jQuery(document).ready(function () {
                     //console.log(response);
                     jQuery('#working_modal').modal('hide');
                     var html = '';
+                    var html_return;
                     if (response.error){
                         html = response.error;
+                        html_return = '<div class="panel panel-danger"><div class="panel-heading">Error</div><div class="panel-body">'+html+'</div></div>';
                     } else {
                         html = "Thank you for your message. We will reply as soon as possible.";
+                        html_return = '<div class="panel panel-success"><div class="panel-heading">Success</div><div class="panel-body">'+html+'</div></div>';
                     }
+                    jQuery('#contact_form_return_message').html(html_return);
                     jQuery('#submit_contact_form_response_message').html(html);
                     jQuery('#submit_contact_form_response').modal('show');
                 },
@@ -161,6 +168,8 @@ jQuery(document).ready(function () {
                     console.log(response);
                     jQuery('#working_modal').modal('hide');
                     var html = "Error posting message! Please contact us. : "+response;
+                    var html_return = '<div class="panel panel-danger"><div class="panel-heading">Error</div><div class="panel-body">'+html+'</div></div>';
+                    jQuery('#contact_form_return_message').html(html_return);
                     jQuery('#submit_contact_form_response_message').html(html);
                     jQuery('#submit_contact_form_response').modal('show');
                 }

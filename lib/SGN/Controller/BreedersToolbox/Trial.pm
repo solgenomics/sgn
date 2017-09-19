@@ -94,6 +94,8 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{trial_id} = $c->stash->{trial_id};
 
     $c->stash->{has_plant_entries} = $trial->has_plant_entries();
+    $c->stash->{has_subplot_entries} = $trial->has_subplot_entries();
+    $c->stash->{phenotypes_fully_uploaded} = $trial->get_phenotypes_fully_uploaded();
 
     $c->stash->{hidap_enabled} = $c->config->{hidap_enabled};
     $c->stash->{has_expression_atlas} = $c->config->{has_expression_atlas};
@@ -108,6 +110,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     }
 
     my $design_type = $trial->get_design_type();
+    $c->stash->{design_name} = $design_type;
 
     if ($design_type eq "genotyping_plate") {
 	if ($format eq "as_table") {
@@ -118,8 +121,11 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 	}
 
     }
+    elsif ($design_type eq "treatment"){
+        $c->stash->{template} = '/breeders_toolbox/treatment.mas';
+    }
     else {
-	$c->stash->{template} = '/breeders_toolbox/trial.mas';
+        $c->stash->{template} = '/breeders_toolbox/trial.mas';
     }
 
     print STDERR "End Load Trial Detail Page: ".localtime()."\n";
@@ -183,11 +189,18 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $trait_list = $c->req->param("trait_list");
     my $search_type = $c->req->param("search_type") || 'fast';
 
+    my $trial = $c->stash->{trial};
     if ($data_level eq 'plants') {
-        my $trial = $c->stash->{trial};
         if (!$trial->has_plant_entries()) {
             $c->stash->{template} = 'generic_message.mas';
             $c->stash->{message} = "The requested trial (".$trial->get_name().") does not have plant entries. Please create the plant entries first.";
+            return;
+        }
+    }
+    if ($data_level eq 'subplots' || $data_level eq 'plants_subplots') {
+        if (!$trial->has_subplot_entries()) {
+            $c->stash->{template} = 'generic_message.mas';
+            $c->stash->{message} = "The requested trial (".$trial->get_name().") does not have subplot entries.";
             return;
         }
     }
@@ -215,7 +228,6 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     }
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
     my $trial_name = $trial->get_name();
     my $trial_id = $trial->get_trial_id();
     my $dir = $c->tempfiles_subdir('download');

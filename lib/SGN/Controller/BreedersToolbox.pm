@@ -19,6 +19,7 @@ use Try::Tiny;
 use File::Basename qw | basename dirname|;
 use File::Spec::Functions;
 use CXGN::People::Roles;
+use CXGN::Trial::TrialLayout;
 
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -132,20 +133,11 @@ sub manage_locations : Path("/breeders/locations") Args(0) {
 	return;
     }
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    my $bp = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
-    my $breeding_programs = $bp->get_breeding_programs();
-    my $locations = {};
-    foreach my $b (@$breeding_programs) {
-	$locations->{$b->[1]} = $bp->get_locations_by_breeding_program($b->[0]);
-    }
-    $locations->{'Other'} = $bp->get_locations_by_breeding_program();
+    $c->assets->include('/static/css/leaflet.css');
+    $c->assets->include('/static/css/leaflet.extra-markers.min.css');
+    $c->assets->include('/static/css/esri-leaflet-geocoder.css');
 
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
-
-    print STDERR "Locations: " . Dumper($locations);
-
-    $c->stash->{locations} = $locations;
 
     $c->stash->{template} = '/breeders_toolbox/manage_locations.mas';
 }
@@ -246,6 +238,23 @@ sub manage_plot_phenotyping :Path("/breeders/plot_phenotyping") Args(0) {
     $c->stash->{stock_id} = $stock_id;
     $c->stash->{template} = '/breeders_toolbox/manage_plot_phenotyping.mas';
 
+}
+
+sub manage_trial_phenotyping :Path("/breeders/trial_phenotyping") Args(0) {
+    my $self =shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $trial_id = $c->req->param('trial_id');
+
+    if (!$c->user()) {
+	     $c->res->redirect( uri( path => '/solpeople/login.pl', query => { goto_url => $c->req->uri->path_query } ) );
+	      return;
+    }
+    my $project_name = $schema->resultset("Project::Project")->find( { project_id=>$trial_id })->name();
+
+    $c->stash->{trial_name} = $project_name;
+    $c->stash->{trial_id} = $trial_id;
+    $c->stash->{template} = '/breeders_toolbox/manage_trial_phenotyping.mas';
 }
 
 sub manage_phenotyping_download : Path("/breeders/phenotyping/download") Args(1) {

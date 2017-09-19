@@ -79,19 +79,19 @@ foreach my $ds (@datasets) {
     is_deeply($traits, [
 		  [
 		   70741,
-		   'dry matter content percentage|CO:0000092'
+		   'dry matter content percentage|CO_334:0000092'
 		  ],
 		  [
 		   70666,
-		   'fresh root weight|CO:0000012'
+		   'fresh root weight|CO_334:0000012'
 		  ],
 		  [
 		   70773,
-		   'fresh shoot weight measurement in kg|CO:0000016'
+		   'fresh shoot weight measurement in kg|CO_334:0000016'
 		  ],
 		  [
 		   70668,
-		   'harvest index variable|CO:0000015'
+		   'harvest index variable|CO_334:0000015'
 		  ]
 	      ]
 	);

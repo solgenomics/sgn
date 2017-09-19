@@ -32,6 +32,7 @@ use CXGN::Stock::StockLookup;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Genotype::Search;
 use CXGN::Login;
+use CXGN::Stock::StockLookup;
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -431,8 +432,10 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $format            = $c->req->param("format");
     my $datalevel         = $c->req->param("phenotype_datalevel");
     my $timestamp_included = $c->req->param("timestamp") || 0;
-    my $cookie_value      = $c->req->param("download_token_value");
     my $search_type        = $c->req->param("search_type") || 'complete';
+    my $dl_token = $c->req->param("phenotype_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+    print STDERR "Token is: $dl_token\n";
 
     my $accession_data;
     if ($accession_list_id) {
@@ -571,7 +574,10 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         #Using tempfile and new filename,send file to client
         my $file_name = $time_stamp . "$what" . "$format";
         $c->res->content_type('Application/'.$format);
-        $c->res->cookies->{fileDownloadToken} = { value => $cookie_value};
+        $c->res->cookies->{$dl_cookie} = {
+          value => $dl_token,
+          expires => '+1m',
+        };
         $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
         $output = read_file($tempfile);
         $c->res->body($output);
@@ -582,77 +588,62 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 # pedigree download -- begin
 
 sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
-my $self = shift;
-my $c = shift;
-my ($accession_list_id, $accession_data, @accession_list, @accession_ids, $pedigree_stock_id, $accession_name);
-my $female_parent = '';
-my $male_parent = '';
-my $cross_type = '';
-
-    $accession_list_id = $c->req->param("pedigree_accession_list_list_select");
-    $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
-    @accession_list = map { $_->[1] } @$accession_data;
-
-
+    my $self = shift;
+    my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-    my $t = CXGN::List::Transform->new();
-    my $acc_t = $t->can_transform("accessions", "accession_ids");
-    my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
+    my $input_format = $c->req->param("input_format") || 'list_id';
+    my @accession_ids = [];
+    if ($input_format eq 'accession_ids') {       #use accession ids supplied directly
+      my $id_string = $c->req->param("ids");
+      @accession_ids = split(',',$id_string);
+    }
+    elsif ($input_format eq 'list_id') {        #get accession names from list and tranform them to ids
+        my$accession_list_id = $c->req->param("pedigree_accession_list_list_select");
+        my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+        my @accession_list = map { $_->[1] } @$accession_data;
 
-    @accession_ids = @{$accession_id_hash->{transform}};
+        my $t = CXGN::List::Transform->new();
+        my $acc_t = $t->can_transform("accessions", "accession_ids");
+        my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
+        @accession_ids = @{$accession_id_hash->{transform}};
+    }
+
+    my $ped_format = $c->req->param("ped_format");
+    my $dl_token = $c->req->param("pedigree_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+    print STDERR "Token is: $dl_token\n";
 
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
 
-    open my $TEMP, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
+    open my $FILE, '>', $tempfile or die "Cannot open tempfile $tempfile: $!";
 
-	print $TEMP "Accession\tFemale_Parent\tMale_Parent\tCross_Type";
- 	print $TEMP "\n";
-       my $check_pedigree = "FALSE";
-       my $len;
+	print $FILE "Accession\tFemale_Parent\tMale_Parent\tCross_Type\n";
+    my $pedigrees_found = 0;
+    my $stock = CXGN::Stock->new ( schema => $schema);
+    my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, $ped_format);
 
-
-	for (my $i=0 ; $i<scalar(@accession_ids); $i++)
-	{
-
-	$accession_name = $accession_list[$i];
-	my $pedigree_stock_id = $accession_ids[$i];
-	my @pedigree_parents = CXGN::Stock->new ( schema => $schema, stock_id => $pedigree_stock_id)->get_direct_parents();
-	$len = scalar(@pedigree_parents);
-	if($len > 0)
-	{
-      		$check_pedigree = "TRUE";
-	}
-    foreach my $parent (@pedigree_parents) {
-        my $type = @$parent[2];
-        if ($type eq 'female') {
-            $female_parent = @$parent[1];
-            $cross_type = @$parent[3];
-        } elsif ($type eq 'male') {
-            $male_parent = @$parent[1];
-        }
+    foreach my $row (@$pedigree_rows) {
+        print $FILE $row;
+        $pedigrees_found++;
     }
-    print $TEMP "$accession_name\t$female_parent\t$male_parent\t$cross_type\n";
 
-  	}
+    unless ($pedigrees_found > 0) {
+        print $FILE "$pedigrees_found pedigrees found in the database for the accessions searched. \n";
+    }
+    close $FILE;
 
-if ($check_pedigree eq "FALSE")
-{
-print $TEMP "\n";
-print $TEMP "No pedigrees found in the Database for the accessions searched. \n";
+    my $filename = "pedigree.txt";
+
+    $c->res->content_type("application/text");
+    $c->res->cookies->{$dl_cookie} = {
+      value => $dl_token,
+      expires => '+1m',
+    };
+    $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
+    my $output = read_file($tempfile);
+
+    $c->res->body($output);
 }
-
- close $TEMP;
-
- my $filename = "pedigree.txt";
-
- $c->res->content_type("application/text");
- $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
-  my $output = read_file($tempfile);
-
-  $c->res->body($output);
-
-}
-
 
 # pedigree download -- end
 
@@ -666,7 +657,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
   print STDERR "Collecting download parameters ...  ".localtime()."\n";
   my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
   my $format = $c->req->param("format") || "list_id";
-  my $dl_token = $c->req->param("token") || "no_token";
+  my $dl_token = $c->req->param("gbs_download_token") || "no_token";
   my $dl_cookie = "download".$dl_token;
 
   my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $trial_id_string, @trial_ids);
@@ -728,9 +719,27 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     $c->res->body($error);
     return;
   }
+  
+  # find accession synonyms
+  my $stocklookup = CXGN::Stock::StockLookup->new({ schema => $schema});
+  my $synonym_hash = $stocklookup->get_stock_synonyms('stock_id', 'accession', \@accession_ids);
+  my $synonym_string = "";
+  while( my( $uniquename, $synonym_list ) = each %{$synonym_hash}){
+      if(scalar(@{$synonym_list})>0){
+          if(not length($synonym_string)<1){
+              $synonym_string.=" ";
+          }
+          $synonym_string.=$uniquename."=(";
+          $synonym_string.= (join ", ", @{$synonym_list}).")";
+      }
+  }
+  
 
   print $TEMP "# Downloaded from ".$c->config->{project_name}.": ".localtime()."\n"; # print header info
-  print $TEMP "# Protocol Id=$protocol_id, Accession List: ".join(',',@accession_list).", Accession Ids: $id_string, Trial Ids: $trial_id_string \n";
+  print $TEMP "# Protocol Id=$protocol_id, Accession List: ".join(',',@accession_list).", Accession Ids: $id_string, Trial Ids: $trial_id_string\n";
+  if (length($synonym_string)>0){
+      print $TEMP "# Synonyms: ".$synonym_string."\n";
+  }
   print $TEMP "Marker\t";
 
   print STDERR "Decoding genotype data ...".localtime()."\n";
@@ -790,7 +799,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     $filename = scalar(@$genotypes) . "genotypes-p" . $protocol_id . ".txt";
   }
   else { #name file with acesssion name and protocol id if there's just one
-    $filename = $genotypes->[0][0] . "genotype-p" . $protocol_id . ".txt";
+    $filename = $genotypes->[0]->{germplasmName} . "genotype-p" . $protocol_id . ".txt";
   }
 
   $c->res->content_type("application/text");
@@ -818,6 +827,8 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     my $protocol_id     = $c->req->param("protocol_list2_select");
     my $data_type         = $c->req->param("data_type") || "genotype";
     my $format            = $c->req->param("format");
+    my $dl_token = $c->req->param("qc_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
 
     my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
     my $trial_data = SGN::Controller::AJAX::List->retrieve_list($c, $trial_list_id);
@@ -906,7 +917,10 @@ sub gbs_qc_action : Path('/breeders/gbs_qc_action') Args(0) {
     my $contents = $tempfile_out;
 
     $c->res->content_type("text/plain");
-
+    $c->res->cookies->{$dl_cookie} = {
+      value => $dl_token,
+      expires => '+1m',
+    };
     $c->res->body($contents);
 
 

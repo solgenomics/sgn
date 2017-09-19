@@ -30,6 +30,7 @@ use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 use base qw / CXGN::DB::Object / ;
 use CXGN::Stock::StockLookup;
+use Try::Tiny;
 
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
@@ -131,11 +132,16 @@ has 'population_name' => (
     is => 'rw',
 );
 
+has 'populations' => (
+    isa => 'Maybe[ArrayRef[Str]]',
+    is => 'rw'
+);
+
 
 sub BUILD {
     my $self = shift;
 
-    print STDERR "RUNNING BUILD FOR STOCK.PM...\n";
+    #print STDERR "RUNNING BUILD FOR STOCK.PM...\n";
     my $stock;
     if ($self->stock_id){
         $stock = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
@@ -150,7 +156,7 @@ sub BUILD {
         $self->type($self->schema()->resultset("Cv::Cvterm")->find({ cvterm_id=>$self->type_id() })->name());
         $self->is_obsolete($stock->is_obsolete);
         $self->organization_name($self->_retrieve_stockprop('organization'));
-        $self->_retrieve_population();
+        $self->_retrieve_populations();
     }
 
     return $self;
@@ -348,6 +354,76 @@ sub get_species {
     }
 }
 
+=head2 get_genus
+
+ Usage: $self->get_genus
+ Desc:  find the genus name of this stock , if one exists
+ Ret:   string
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_genus {
+    my $self = shift;
+    my $organism = $self->get_organism;
+    if ($organism) {
+        return $organism->genus;
+    }
+    else {
+	return undef;
+    }
+}
+
+=head2 get_species_authority
+
+ Usage: $self->get_species_authority
+ Desc:  find the species_authority of this stock , if one exists
+ Ret:   string
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_species_authority {
+    my $self = shift;
+    return $self->_retrieve_organismprop('species authority');
+}
+
+=head2 get_subtaxa
+
+ Usage: $self->get_subtaxa
+ Desc:  find the subtaxa of this stock , if one exists
+ Ret:   string
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_subtaxa {
+    my $self = shift;
+    return $self->_retrieve_organismprop('subtaxa');
+}
+
+=head2 get_subtaxa_authority
+
+ Usage: $self->get_subtaxa_authority
+ Desc:  find the subtaxa_authority of this stock , if one exists
+ Ret:   string
+ Args:  none
+ Side Effects: none
+ Example:
+
+=cut
+
+sub get_subtaxa_authority {
+    my $self = shift;
+    return $self->_retrieve_organismprop('subtaxa authority');
+}
+
 =head2 set_species
 
 Usage: $self->set_species
@@ -540,90 +616,235 @@ sub get_trials {
     return @trials;
 }
 
-sub get_direct_parents {
-    my $self = shift;
-    my $stock_id = shift || $self->stock_id();
+=head2 get_ancestor_hash
 
-    print STDERR "get_direct_parents with $stock_id...\n";
+ Usage:
+ Desc:          gets a multi-dimensional hash of this stock's ancestors
+ Ret:
+ Args:
+ Side Effects:
+ Example:
 
-    my ($female_parent_id, $male_parent_id, @parents);
+=cut
 
-    eval {
-	$female_parent_id = $self->schema()->resultset("Cv::Cvterm")->find( { name => 'female_parent' })->cvterm_id();
-	$male_parent_id = $self->schema()->resultset("Cv::Cvterm")->find( { name => 'male_parent' }) ->cvterm_id();
-    };
-    if ($@) {
-	die "Cvterm for female_parent and/or male_parent seem to be missing in the database\n";
-    }
+sub get_ancestor_hash {
+  my ($self, $stock_id, $direct_descendant_ids) = @_;
 
-    my $stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
+  if (!$stock_id) { $stock_id = $self->stock_id(); }
+  push @$direct_descendant_ids, $stock_id; #excluded in parent retrieval to prevent loops
 
-    my $female_rs = $stock->search_related('stock_relationship_objects', { 'type_id' =>$female_parent_id});
-    #print STDERR "Found ".$female_rs->count()." rows when searching for female parent.\n";
-    if ($female_rs->first()) {
-        my $female_stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $female_rs->first->subject_id() } );
-        push @parents, [ $female_rs->first->subject_id(), $female_stock->uniquename(), 'female', $female_rs->first->value() ];
-    }
+  my $stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $stock_id});
+  #print STDERR "Stock ".$stock->uniquename()." decendants are: ".Dumper($direct_descendant_ids)."\n";
+  my %pedigree;
+  $pedigree{'id'} = $stock_id;
+  $pedigree{'name'} = $stock->uniquename();
+  $pedigree{'female_parent'} = undef;
+  $pedigree{'male_parent'} = undef;
+  $pedigree{'link'} = "/stock/$stock_id/view";
 
-    my $male_rs = $stock->search_related('stock_relationship_objects', { 'me.type_id' =>$male_parent_id});
-    #print STDERR "Found ".$male_rs->count()." rows when searching for male parent\n";
-    if ($male_rs->first()) {
-        my $male_stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $male_rs->first->subject_id() } );
-        push @parents, [ $male_rs->first->subject_id(), $male_stock->uniquename(), 'male'];
-    }
+  #get cvterms for parent relationships
+  my $cvterm_female_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'female_parent', 'stock_relationship');
+  my $cvterm_male_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'male_parent', 'stock_relationship');
 
-    return @parents;
+  #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
+  my $stock_relationships = $stock->search_related("stock_relationship_objects",undef,{ prefetch => ['type','subject'] });
+  my $female_parent_relationship = $stock_relationships->find({type_id => $cvterm_female_parent->cvterm_id(), subject_id => {'not_in' => $direct_descendant_ids}});
+  if ($female_parent_relationship) {
+    my $female_parent_stock_id = $female_parent_relationship->subject_id();
+    $pedigree{'cross_type'} = $female_parent_relationship->value();
+	$pedigree{'female_parent'} = get_ancestor_hash( $self, $female_parent_stock_id, $direct_descendant_ids );
+  }
+  my $male_parent_relationship = $stock_relationships->find({type_id => $cvterm_male_parent->cvterm_id(), subject_id => {'not_in' => $direct_descendant_ids}});
+  if ($male_parent_relationship) {
+    my $male_parent_stock_id = $male_parent_relationship->subject_id();
+	$pedigree{'male_parent'} = get_ancestor_hash( $self, $male_parent_stock_id, $direct_descendant_ids );
+  }
+  pop @$direct_descendant_ids; # falling back a level while recursing pedigree tree
+  return \%pedigree;
 }
 
-sub get_recursive_parents {
-    my $self = shift;
-    my $individual = shift;
-    my $max_level = shift || 1;
-    my $current_level = shift;
+=head2 get_descendant_hash
 
-    if (!defined($individual)) { return; }
+ Usage:
+ Desc:          gets a multi-dimensional hash of this stock's descendants
+ Ret:
+ Args:
+ Side Effects:
+ Example:
 
-    if ($current_level > $max_level) {
-	print STDERR "Reached level $current_level of $max_level... we are done!\n";
-	return;
+=cut
+
+sub get_descendant_hash {
+  my ($self, $stock_id, $direct_ancestor_ids) = @_;
+
+  if (!$stock_id) { $stock_id = $self->stock_id(); }
+  push @$direct_ancestor_ids, $stock_id; #excluded in child retrieval to prevent loops
+
+  my $stock = $self->schema->resultset("Stock::Stock")->find({stock_id => $stock_id});
+  #print STDERR "Stock ".$stock->uniquename()." ancestors are: ".Dumper($direct_ancestor_ids)."\n";
+  my %descendants;
+  my %progeny;
+  $descendants{'id'} = $stock_id;
+  $descendants{'name'} = $stock->uniquename();
+  $descendants{'link'} = "/stock/$stock_id/view";
+  #get cvterms for parent relationships
+  my $cvterm_female_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'female_parent','stock_relationship');
+  my $cvterm_male_parent = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'male_parent', 'stock_relationship');
+
+  #get the stock relationships for the stock, find stock relationships for types "female_parent" and "male_parent", and get the corresponding subject stock IDs and stocks.
+  my $descendant_relationships = $stock->search_related("stock_relationship_subjects",{ object_id => {'not_in' => $direct_ancestor_ids}},{ prefetch => ['type','object'] });
+  if ($descendant_relationships) {
+    while (my $descendant_relationship = $descendant_relationships->next) {
+      my $descendant_stock_id = $descendant_relationship->object_id();
+      if (($descendant_relationship->type_id() == $cvterm_female_parent->cvterm_id()) || ($descendant_relationship->type_id() == $cvterm_male_parent->cvterm_id())) {
+          $progeny{$descendant_stock_id} = get_descendant_hash($self, $descendant_stock_id, $direct_ancestor_ids);
+      }
+    }
+    $descendants{'descendants'} = \%progeny;
+    pop @$direct_ancestor_ids; # falling back a level while recursing descendant tree
+    return \%descendants;
+  }
+}
+
+=head2 get_pedigree_rows
+
+ Usage:
+ Desc:          get an array of pedigree rows from an array of stock ids, conatining female parent, male parent, and cross type if defined
+ Ret:
+ Args: $accession_ids, $format (either 'parents_only' or 'full')
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_pedigree_rows {
+    my ($self, $accession_ids, $format) = @_;
+    #print STDERR "Accession ids are: ".Dumper(@$accession_ids)."\n";
+
+    my $placeholders = join ( ',', ('?') x @$accession_ids );
+    my ($query, $pedigree_rows);
+
+    if ($format eq 'parents_only') {
+        $query = "
+        SELECT child.uniquename AS Accession,
+            mother.uniquename AS Female_Parent,
+            father.uniquename AS Male_Parent,
+            m_rel.value AS cross_type
+        FROM stock child
+        LEFT JOIN stock_relationship m_rel ON(child.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+        LEFT JOIN stock mother ON(m_rel.subject_id = mother.stock_id)
+        LEFT JOIN stock_relationship f_rel ON(child.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+        LEFT JOIN stock father ON(f_rel.subject_id = father.stock_id)
+        WHERE child.stock_id IN ($placeholders)
+        GROUP BY 1,2,3,4
+        ORDER BY 1";
+    }
+    elsif ($format eq 'full') {
+        $query = "
+        WITH RECURSIVE included_rows(child, child_id, mother, mother_id, father, father_id, type, depth, path, cycle) AS (
+                SELECT c.uniquename AS child,
+                c.stock_id AS child_id,
+                m.uniquename AS mother,
+                m.stock_id AS mother_id,
+                f.uniquename AS father,
+                f.stock_id AS father_id,
+                m_rel.value AS type,
+                1,
+                ARRAY[c.stock_id],
+                false
+                FROM stock c
+                LEFT JOIN stock_relationship m_rel ON(c.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+                LEFT JOIN stock m ON(m_rel.subject_id = m.stock_id)
+                LEFT JOIN stock_relationship f_rel ON(c.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+                LEFT JOIN stock f ON(f_rel.subject_id = f.stock_id)
+                WHERE c.stock_id IN ($placeholders)
+                GROUP BY 1,2,3,4,5,6,7,8,9,10
+            UNION
+                SELECT c.uniquename AS child,
+                c.stock_id AS child_id,
+                m.uniquename AS mother,
+                m.stock_id AS mother_id,
+                f.uniquename AS father,
+                f.stock_id AS father_id,
+                m_rel.value AS type,
+                included_rows.depth + 1,
+                path || c.stock_id,
+                c.stock_id = ANY(path)
+                FROM included_rows, stock c
+                LEFT JOIN stock_relationship m_rel ON(c.stock_id = m_rel.object_id and m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
+                LEFT JOIN stock m ON(m_rel.subject_id = m.stock_id)
+                LEFT JOIN stock_relationship f_rel ON(c.stock_id = f_rel.object_id and f_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent'))
+                LEFT JOIN stock f ON(f_rel.subject_id = f.stock_id)
+                WHERE c.stock_id IN (included_rows.mother_id, included_rows.father_id) AND NOT cycle
+                GROUP BY 1,2,3,4,5,6,7,8,9,10
+        )
+        SELECT child, mother, father, type, depth
+        FROM included_rows
+        GROUP BY 1,2,3,4,5
+        ORDER BY 5,1;";
     }
 
-    $current_level++;
-    my @parents = $self->get_direct_parents($individual->get_id());
+    my $sth = $self->schema()->storage()->dbh()->prepare($query);
+    $sth->execute(@$accession_ids);
 
-    my $pedigree = Bio::GeneticRelationships::Pedigree->new( { name => $individual->get_name()."_pedigree", cross_type=>"unknown"} );
-
-    foreach my $p (@parents) {
-	my ($parent_id, $parent_name, $relationship) = @$p;
-
-	my ($female_parent, $male_parent, $attributes);
-	my $parent = Bio::GeneticRelationships::Individual->new( { name => $parent_name, id=> $parent_id });
-	if ($relationship eq "female") {
-	    $pedigree->set_female_parent($parent);
-	}
-
-	if ($relationship eq "male") {
-	    print STDERR "Adding male parent...\n";
-	    $pedigree->set_male_parent($parent);
-	}
-	$self->get_recursive_parents($parent, $max_level, $current_level);
+    no warnings 'uninitialized';
+    while (my ($name, $mother, $father, $cross_type, $depth) = $sth->fetchrow_array()) {
+        #print STDERR "For child $name:\n\tMother:$mother\n\tFather:$father\n\tCross Type:$cross_type\n\tDepth:$depth\n\n";
+	    push @$pedigree_rows, "$name\t$mother\t$father\t$cross_type\n";
     }
-    $individual->set_pedigree($pedigree);
+    return $pedigree_rows;
+}
+
+=head2 get_pedigree_string
+
+ Usage:
+ Desc:          get the properly formatted pedigree string of the given level (Parents, Grandparents, or Great-Grandparents) for this stock
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_pedigree_string {
+    my ($self, $level) = @_;
+
+    my $pedigree_hashref = $self->get_ancestor_hash();
+
+    #print STDERR "Getting string of level $level from pedigree hashref ".Dumper($pedigree_hashref)."\n";
+    if ($level eq "Parents") {
+        return $self->_get_parent_string($pedigree_hashref);
+    }
+    elsif ($level eq "Grandparents") {
+        my $maternal_parent_string = $self->_get_parent_string($pedigree_hashref->{'female_parent'});
+        my $paternal_parent_string = $self->_get_parent_string($pedigree_hashref->{'male_parent'});
+        return "$maternal_parent_string//$paternal_parent_string";
+    }
+    elsif ($level eq "Great-Grandparents") {
+        my $mm_parent_string = $self->_get_parent_string($pedigree_hashref->{'female_parent'}->{'female_parent'});
+        my $mf_parent_string = $self->_get_parent_string($pedigree_hashref->{'female_parent'}->{'male_parent'});
+        my $pm_parent_string = $self->_get_parent_string($pedigree_hashref->{'male_parent'}->{'female_parent'});
+        my $pf_parent_string = $self->_get_parent_string($pedigree_hashref->{'male_parent'}->{'male_parent'});
+        return "$mm_parent_string//$mf_parent_string///$pm_parent_string//$pf_parent_string";
+    }
+}
+
+sub _get_parent_string {
+    my ($self, $pedigree_hashref) = @_;
+    my $mother = $pedigree_hashref->{'female_parent'}->{'name'} || 'NA';
+    my $father = $pedigree_hashref->{'male_parent'}->{'name'} || 'NA';
+    return "$mother/$father";
 }
 
 sub get_parents {
-    my $self = shift;
-    my $max_level = shift || 1;
-
-    my $root = Bio::GeneticRelationships::Individual->new(
-	{
-	    name => $self->uniquename(),
-	    id => $self->stock_id(),
-	});
-
-    $self->get_recursive_parents($root, $max_level, 0);
-
-    return $root;
+    my $self =  shift;
+    my $pedigree_hashref = $self->get_ancestor_hash();
+    my %parents;
+    $parents{'mother'} = $pedigree_hashref->{'female_parent'}->{'name'};
+    $parents{'mother_id'} = $pedigree_hashref->{'female_parent'}->{'id'};
+    $parents{'father'} = $pedigree_hashref->{'male_parent'}->{'name'};
+    $parents{'father_id'} = $pedigree_hashref->{'male_parent'}->{'id'};
+    return \%parents;
 }
 
 sub _store_stockprop {
@@ -637,14 +858,19 @@ sub _store_stockprop {
 sub _retrieve_stockprop {
     my $self = shift;
     my $type = shift;
-
-    my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
-    my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id(), type_id => $stockprop_type_id }, { order_by => {-asc => 'stockprop_id'} });
-
     my @results;
-    while (my $r = $rs->next()){
-        push @results, $r->value;
-    }
+
+    try {
+        my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+        my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id(), type_id => $stockprop_type_id }, { order_by => {-asc => 'stockprop_id'} });
+
+        while (my $r = $rs->next()){
+            push @results, $r->value;
+        }
+    } catch {
+        #print STDERR "Cvterm $type does not exist in this database\n";
+    };
+
     my $res = join ',', @results;
     return $res;
 }
@@ -670,6 +896,26 @@ sub _remove_stockprop {
 
 }
 
+sub _retrieve_organismprop {
+    my $self = shift;
+    my $type = shift;
+    my @results;
+
+    try {
+        my $organismprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'organism_property')->cvterm_id();
+        my $rs = $self->schema()->resultset("Organism::Organismprop")->search({ organism_id => $self->stock->organism_id, type_id => $organismprop_type_id }, { order_by => {-asc => 'organismprop_id'} });
+
+        while (my $r = $rs->next()){
+            push @results, $r->value;
+        }
+    } catch {
+        #print STDERR "Cvterm $type does not exist in this database\n";
+    };
+
+    my $res = join ',', @results;
+    return $res;
+}
+
 sub _store_population_relationship {
     my $self = shift;
     my $schema = $self->schema;
@@ -689,7 +935,7 @@ sub _store_population_relationship {
     });
 }
 
-sub _retrieve_population {
+sub _retrieve_populations {
     my $self = shift;
     my $schema = $self->schema;
     my $population_member_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'member_of','stock_relationship')->cvterm_id();
@@ -698,15 +944,17 @@ sub _retrieve_population {
         type_id => $population_member_cvterm_id,
         subject_id => $self->stock_id(),
     });
-    if ($rs->count == 1) {
-        my $population = $rs->first->object;
-        $self->population_name($population->uniquename);
+    if ($rs->count == 0) {
+        #print STDERR "No population saved for this stock!\n";
     }
-    elsif ($rs->count > 1) {
-        die "More than one population saved for this stock!\n";
-    }
-    elsif ($rs->count == 0) {
-        print STDERR "No population saved for this stock!\n";
+    else {
+        my @population_names;
+        while (my $row = $rs->next) {
+            my $population = $row->object;
+            push @population_names, $population->uniquename();
+        }
+        $self->populations(\@population_names);
+        #print STDERR "This stock is a member of the following populations: ".Dumper($self->populations())."\n";
     }
 }
 

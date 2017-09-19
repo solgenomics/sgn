@@ -28,7 +28,7 @@ $list_id => undef
 
 </&>
 
-<&| /page/info_section.mas, title=>"Populations", id=> "manage_accessions_populations", collapsible=>1, collapsed=>1, subtitle=>"<i>Maximize to see population info</i>"&>
+<&| /page/info_section.mas, title=>"Populations", id=> "manage_accessions_populations", collapsible=>1, collapsed=>1, subtitle=>"<a id='manage_accessions_populations_new'>[Create Population]</a>"&>
 <div class="panel-group" id="accordion"></div>
 </&>
 
@@ -41,6 +41,94 @@ $list_id => undef
 </form>
 
 <!-- Modal Dialogs Below Here -->
+
+<div class="modal fade" id="manage_populations_add_population_dialog" name="manage_populations_add_population_dialog" tabindex="-1" role="dialog" aria-labelledby="addPopulationDialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addPopulationDialog">Create A Population</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" name="create_population_form" id="create_population_form">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Population Name: </label>
+                            <div class="col-sm-8" >
+                                <input class="form-control" id="create_population_name" name="create_population_name" type="text" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Choose a List of Accessions to Add: </label>
+                            <div class="col-sm-8" id="create_population_list_div" name="create_population_list_div">
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="create_population_submit" id="create_population_submit">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="manage_populations_add_accessions_dialog" name="manage_populations_add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsToPopulationsDialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addAccessionsToPopulationsDialog">Add Accessions to Population <div id="add_accession_population_name"></div></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" name="add_accession_to_population_form" id="add_accession_to_population_form">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">Choose a List of Accessions to Add: </label>
+                            <div class="col-sm-6" id="add_accession_to_population_list_div" name="list_div">
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="add_accessions_to_population_submit" id="add_accessions_to_population_submit">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="manage_populations_delete_dialog" name="manage_populations_delete_dialog" tabindex="-1" role="dialog" aria-labelledby="deletePopulationsDialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="deletePopulationsDialog">Delete Population <div id="delete_population_name"></div></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">Are You Sure?</label>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="delete_population_submit" id="delete_population_submit">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="modal fade" id="add_accessions_dialog" name="add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsDialog" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog" role="document">
@@ -193,12 +281,12 @@ $list_id => undef
 </div>
 -->
 
-<div class="modal fade" id="upload_pedigrees_error_display" name="upload_pedigrees_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesErrorDialog">
+<div class="modal fade" id="upload_pedigrees_validate_display" name="upload_pedigrees_validate_display" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesValidateDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadPedigreesErrorDialog">Errors During Upload</h4>
+        <h4 class="modal-title" id="uploadPedigreesValidateDialog">Results From Validation</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -209,18 +297,12 @@ $list_id => undef
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="upload_pedigrees_store" id="upload_pedigrees_store" data-dismiss="modal">Store</button>
       </div>
     </div>
   </div>
 </div>
 
-<!--
-<div id="upload_pedigrees_error_display" class="ui-widget">
-  <table>
-    <tbody></tbody>
-  </table>
-</div>
--->
 
 <div class="modal fade" id="pedigrees_upload_success_dialog_message" name="pedigrees_upload_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesSuccessDialog">
   <div class="modal-dialog" role="document">
@@ -241,11 +323,6 @@ $list_id => undef
   </div>
 </div>
 
-<!--
-<div id="pedigrees_upload_success_dialog_message" class="ui-widget">
-  The pedigree upload finished.
-</div>
--->
 
 <div class="modal fade" id="upload_pedigrees_dialog" name="upload_pedigrees_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesDialog">
   <div class="modal-dialog" role="document">
@@ -272,31 +349,12 @@ $list_id => undef
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	<button type="button" class="btn btn-primary" name="upload_pedigrees_dialog_submit" id="upload_pedigrees_dialog_submit">Submit File</button>
+	<button type="button" class="btn btn-primary" name="upload_pedigrees_dialog_submit" id="upload_pedigrees_dialog_submit">Validate</button>
       </div>
     </div>
   </div>
 </div>
 
-<!--
-<div id="upload_pedigrees_dialog" title="Upload pedigrees">
-
-  <&| /page/explanation.mas, title=>'Template information' &>
-    <p>
-      <b>File format information</b>
-      <br>
-      <a id="pedigrees_upload_spreadsheet_format_info">Spreadsheet format</a>
-    </p>
-  </&>
-
-  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_pedigrees_form" name="upload_pedigrees_form">
-
-    <label for="pedigrees_uploaded_file" style="display: inline-block; width: 100px;">Upload pedigree file:</label>
-    <input type="file" name="pedigrees_uploaded_file" id="pedigrees_uploaded_file" encoding="multipart/form-data" />
-
-    </form>
-</div>
--->
 
 <div class="modal fade" id="add_accessions_saved_message_modal" name="add_accessions_saved_message_modal" tabindex="-1" role="dialog" aria-labelledby="addAccessionsSavedDialog">
     <div class="modal-dialog" role="document">

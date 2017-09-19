@@ -17,6 +17,7 @@
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Molecular Biology</li>
     <li><a href="/tools/in_silico_pcr">In Silico PCR</a></li>
+    <li><a href="http://tea.solgenomics.net/">Tomato Expression Atlas (TEA)</a></li>    
     <li><a href="http://ted.bti.cornell.edu/">Tomato Expression Database (TED)</a></li>
 
     <li role="separator" class="divider"></li>

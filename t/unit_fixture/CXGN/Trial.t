@@ -35,21 +35,21 @@ is_deeply($result, [
             'location_id' => '23',
             'trial_id' => 165,
             'year' => '2017',
-            'harvest_date' => undef,
+            'project_harvest_date' => undef,
             'breeding_program_id' => 134,
             'design' => 'RCBD',
             'location_name' => 'test_location',
             'folder_id' => undef,
-            'trial_type' => undef,
-            'planting_date' => undef
+            'trial_type' => 'Preliminary Yield Trial',
+            'project_planting_date' => undef
           },
           {
             'design' => 'Alpha',
             'location_name' => 'test_location',
             'folder_id' => undef,
-            'planting_date' => undef,
+            'project_planting_date' => undef,
             'trial_type' => 'Clonal Evaluation',
-            'harvest_date' => undef,
+            'project_harvest_date' => undef,
             'breeding_program_id' => 134,
             'trial_name' => 'Kasese solgs trial',
             'location_id' => '23',
@@ -71,15 +71,15 @@ is_deeply($result, [
             'design' => undef,
             'folder_id' => undef,
             'trial_type' => undef,
-            'planting_date' => undef,
-            'harvest_date' => undef,
+            'project_planting_date' => undef,
+            'project_harvest_date' => undef,
             'breeding_program_id' => 134
           },
           {
             'breeding_program_id' => undef,
-            'harvest_date' => undef,
+            'project_harvest_date' => undef,
             'trial_type' => undef,
-            'planting_date' => undef,
+            'project_planting_date' => undef,
             'folder_id' => undef,
             'location_name' => undef,
             'design' => undef,
@@ -99,22 +99,22 @@ is_deeply($result, [
             'description' => 'test_genotyping_project',
             'folder_name' => undef,
             'breeding_program_name' => undef,
-            'planting_date' => undef,
+            'project_planting_date' => undef,
             'trial_type' => undef,
             'location_name' => undef,
             'design' => undef,
             'folder_id' => undef,
             'breeding_program_id' => undef,
-            'harvest_date' => undef
+            'project_harvest_date' => undef
           },
           {
             'trial_type' => undef,
-            'planting_date' => undef,
+            'project_planting_date' => undef,
             'location_name' => undef,
             'design' => undef,
             'folder_id' => undef,
             'breeding_program_id' => undef,
-            'harvest_date' => undef,
+            'project_harvest_date' => undef,
             'trial_id' => 142,
             'location_id' => undef,
             'year' => '2015',
@@ -131,12 +131,12 @@ is_deeply($result, [
             'year' => '2016',
             'location_id' => '23',
             'trial_id' => 144,
-            'harvest_date' => undef,
+            'project_harvest_date' => undef,
             'breeding_program_id' => 134,
             'folder_id' => undef,
             'design' => 'CRD',
             'location_name' => 'test_location',
-            'planting_date' => undef,
+            'project_planting_date' => undef,
             'trial_type' => undef
           },
           {
@@ -148,17 +148,17 @@ is_deeply($result, [
             'breeding_program_name' => 'test',
             'folder_name' => undef,
             'trial_type' => undef,
-            'planting_date' => undef,
+            'project_planting_date' => '2017-July-04',
             'folder_id' => undef,
             'location_name' => 'test_location',
             'design' => 'CRD',
             'breeding_program_id' => 134,
-            'harvest_date' => undef
+            'project_harvest_date' => '2017-July-21'
           },
           {
             'breeding_program_id' => 134,
-            'harvest_date' => undef,
-            'planting_date' => undef,
+            'project_harvest_date' => undef,
+            'project_planting_date' => undef,
             'trial_type' => undef,
             'folder_id' => undef,
             'design' => 'CRD',
@@ -185,9 +185,9 @@ is_deeply($result, [
             'location_name' => 'test_location',
             'design' => 'RCBD',
             'folder_id' => undef,
-            'planting_date' => undef,
-            'trial_type' => undef,
-            'harvest_date' => undef,
+            'project_planting_date' => undef,
+            'trial_type' => 'Preliminary Yield Trial',
+            'project_harvest_date' => undef,
             'breeding_program_id' => 134,
             'trial_name' => 'CASS_6Genotypes_Sampling_2015',
             'trial_id' => 165,
@@ -209,18 +209,18 @@ is_deeply($result, [
             'location_name' => 'test_location',
             'design' => 'Alpha',
             'trial_type' => 'Clonal Evaluation',
-            'planting_date' => undef,
-            'harvest_date' => undef,
+            'project_planting_date' => undef,
+            'project_harvest_date' => undef,
             'breeding_program_id' => 134
           },
           {
             'trial_type' => undef,
-            'planting_date' => undef,
+            'project_planting_date' => undef,
             'design' => 'CRD',
             'location_name' => 'test_location',
             'folder_id' => undef,
             'breeding_program_id' => 134,
-            'harvest_date' => undef,
+            'project_harvest_date' => undef,
             'location_id' => '23',
             'trial_id' => 144,
             'year' => '2016',
@@ -231,8 +231,8 @@ is_deeply($result, [
           },
           {
             'breeding_program_id' => 134,
-            'harvest_date' => undef,
-            'planting_date' => undef,
+            'project_harvest_date' => '2017-July-21',
+            'project_planting_date' => '2017-July-04',
             'trial_type' => undef,
             'design' => 'CRD',
             'location_name' => 'test_location',
@@ -250,8 +250,8 @@ is_deeply($result, [
             'design' => 'CRD',
             'location_name' => 'test_location',
             'trial_type' => undef,
-            'planting_date' => undef,
-            'harvest_date' => undef,
+            'project_planting_date' => undef,
+            'project_harvest_date' => undef,
             'breeding_program_id' => 134,
             'trial_name' => 'trial2 NaCRRI',
             'year' => '2014',
@@ -274,10 +274,9 @@ foreach (@$locations) {
 }
 @all_location_names = sort @all_location_names;
 #print STDERR Dumper \@all_location_names;
-is_deeply(\@all_location_names, [
-          'Cornell Biotech',
-          'test_location'
-        ], "check get_all_locations");
+my %all_location_names = map {$_=>1} @all_location_names;
+ok(exists($all_location_names{'Cornell Biotech'}));
+ok(exists($all_location_names{'test_location'}));
 
 my @project_types = CXGN::Trial::get_all_project_types($f->bcs_schema());
 my @all_project_types;
@@ -289,8 +288,12 @@ foreach (@project_types) {
 is_deeply(\@all_project_types, [
           'Advanced Yield Trial',
           'Clonal Evaluation',
+          'Genetic Gain',
+          'Health Status',
+          'Heterosis',
           'Preliminary Yield Trial',
           'Seedling Nursery',
+          'Storage',
           'Uniform Yield Trial',
           'Variety Release Trial'
         ], "check get_all_project_types");
@@ -387,11 +390,11 @@ ok($trial->phenotype_count() == 0, "trial has no phenotype data");
 
 my $plotlist_ref = [ $trial_design->{1}->{plot_name}, $trial_design->{2}->{plot_name}, $trial_design->{3}->{plot_name} ];
 
-my $traitlist_ref = [ 'root number|CO:0000011', 'dry yield|CO:0000014' ];
+my $traitlist_ref = [ 'root number|CO_334:0000011', 'dry yield|CO_334:0000014' ];
 
-my %plot_trait_value = ( $trial_design->{1}->{plot_name} => { 'root number|CO:0000011'  => [0,''], 'dry yield|CO:0000014' => [30,''] },
-			   $trial_design->{2}->{plot_name} => { 'root number|CO:0000011'  => [10,''], 'dry yield|CO:0000014' => [40,''] },
-			   $trial_design->{3}->{plot_name} => { 'root number|CO:0000011'  => [20,''], 'dry yield|CO:0000014' => [50,''] },
+my %plot_trait_value = ( $trial_design->{1}->{plot_name} => { 'root number|CO_334:0000011'  => [0,''], 'dry yield|CO_334:0000014' => [30,''] },
+			   $trial_design->{2}->{plot_name} => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''] },
+			   $trial_design->{3}->{plot_name} => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''] },
     );
 
 
@@ -432,7 +435,7 @@ foreach (@$traits_assayed) {
 }
 @traits_assayed_names = sort @traits_assayed_names;
 #print STDERR Dumper \@traits_assayed_names;
-is_deeply(\@traits_assayed_names, ['dry yield|CO:0000014', 'root number counting|CO:0000011'], 'check traits assayed' );
+is_deeply(\@traits_assayed_names, ['dry yield|CO_334:0000014', 'root number counting|CO_334:0000011'], 'check traits assayed' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70727);
 my @pheno_for_trait_sorted = sort {$a <=> $b} @pheno_for_trait;
@@ -551,11 +554,11 @@ is(scalar(@$plants), $number_of_plots*3, "check if the right number of plants wa
 
 my $plantlist_ref = [ $trial_design->{1}->{plot_name}.'_plant_2', $trial_design->{2}->{plot_name}.'_plant_2', $trial_design->{3}->{plot_name}.'_plant_1' ];
 
-my $traitlist_ref = [ 'root number|CO:0000011', 'dry yield|CO:0000014', 'harvest index|CO:0000015' ];
+my $traitlist_ref = [ 'root number|CO_334:0000011', 'dry yield|CO_334:0000014', 'harvest index|CO_334:0000015' ];
 
-my %plant_trait_value = ( $trial_design->{1}->{plot_name}.'_plant_2' => { 'root number|CO:0000011'  => [12,''], 'dry yield|CO:0000014' => [30,''], 'harvest index|CO:0000015' => [2,''] },
-    $trial_design->{2}->{plot_name}.'_plant_2' => { 'root number|CO:0000011'  => [10,''], 'dry yield|CO:0000014' => [40,''], 'harvest index|CO:0000015' => [3,''] },
-    $trial_design->{3}->{plot_name}.'_plant_1' => { 'root number|CO:0000011'  => [20,''], 'dry yield|CO:0000014' => [50,''], 'harvest index|CO:0000015' => [7,''] },
+my %plant_trait_value = ( $trial_design->{1}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [12,''], 'dry yield|CO_334:0000014' => [30,''], 'harvest index|CO_334:0000015' => [2,''] },
+    $trial_design->{2}->{plot_name}.'_plant_2' => { 'root number|CO_334:0000011'  => [10,''], 'dry yield|CO_334:0000014' => [40,''], 'harvest index|CO_334:0000015' => [3,''] },
+    $trial_design->{3}->{plot_name}.'_plant_1' => { 'root number|CO_334:0000011'  => [20,''], 'dry yield|CO_334:0000014' => [50,''], 'harvest index|CO_334:0000015' => [7,''] },
 );
 
 my %metadata = ( operator => 'johndoe', date => '20141225' );

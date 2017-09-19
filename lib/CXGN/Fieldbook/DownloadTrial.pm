@@ -70,6 +70,11 @@ has 'data_level' => (
   
 has 'file_metadata' => (isa => 'Str', is => 'rw', predicate => 'has_file_metadata');
 
+has 'treatment_project_id' => (
+    isa => 'Maybe[Int]',
+    is => 'rw'
+);
+
 
 sub download { 
     my $self = shift;
@@ -97,24 +102,95 @@ sub download {
         $errors{'error_messages'} = \@error_messages;
         return \%errors;
     }
+    
+    my $treatment = $self->treatment_project_id();
+    my $treatment_trial;
+    my $treatment_name = "";
+    if ($treatment){
+        $treatment_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $treatment});
+        $treatment_name = $treatment_trial->get_name();
+    }
 
     my $trial_name =  $trial_layout->get_trial_name();
 
+    my %treatment_stock_hash;
     if ($self->data_level eq 'plots') {
-        $ws->write(0, 0, 'plot_id');
-        $ws->write(0, 1, 'range');
-        $ws->write(0, 2, 'plot');
-        $ws->write(0, 3, 'rep');
-        $ws->write(0, 4, 'accession');
-        $ws->write(0, 5, 'is_a_control');
+        $ws->write(0, 0, 'plot_name');
+        $ws->write(0, 1, 'block_number');
+        $ws->write(0, 2, 'plot_number');
+        $ws->write(0, 3, 'rep_number');
+        $ws->write(0, 4, 'row_number');
+        $ws->write(0, 5, 'col_number');
+        $ws->write(0, 6, 'accession_name');
+        $ws->write(0, 7, 'is_a_control');
+
+        if($treatment_trial){
+            $ws->write(0, 8, "Treatment:".$treatment_name);
+            my $treatment_plots = $treatment_trial->get_plots();
+            foreach (@$treatment_plots){
+                $treatment_stock_hash{$_->[1]}++;
+            }
+        }
+
     } elsif ($self->data_level eq 'plants') {
-        $ws->write(0, 0, 'plot_id');
-        $ws->write(0, 1, 'range');
-        $ws->write(0, 2, 'plant');
-        $ws->write(0, 3, 'plot');
-        $ws->write(0, 4, 'rep');
-        $ws->write(0, 5, 'accession');
-        $ws->write(0, 6, 'is_a_control');
+        $ws->write(0, 0, 'plant_name');
+        $ws->write(0, 1, 'plot_name');
+        $ws->write(0, 2, 'block_number');
+        $ws->write(0, 3, 'plant_number');
+        $ws->write(0, 4, 'plot_number');
+        $ws->write(0, 5, 'rep_number');
+        $ws->write(0, 6, 'row_number');
+        $ws->write(0, 7, 'col_number');
+        $ws->write(0, 8, 'accession_name');
+        $ws->write(0, 9, 'is_a_control');
+
+        if($treatment_trial){
+            $ws->write(0, 10, "Treatment:".$treatment_name);
+            my $treatment_plots = $treatment_trial->get_plants();
+            foreach (@$treatment_plots){
+                $treatment_stock_hash{$_->[1]}++;
+            }
+        }
+    } elsif ($self->data_level eq 'subplots') {
+        $ws->write(0, 0, 'subplot_name');
+        $ws->write(0, 1, 'plot_name');
+        $ws->write(0, 2, 'block_number');
+        $ws->write(0, 3, 'subplot_number');
+        $ws->write(0, 4, 'plot_number');
+        $ws->write(0, 5, 'rep_number');
+        $ws->write(0, 6, 'row_number');
+        $ws->write(0, 7, 'col_number');
+        $ws->write(0, 8, 'accession_name');
+        $ws->write(0, 9, 'is_a_control');
+
+        if($treatment_trial){
+            $ws->write(0, 10, "Treatment:".$treatment_name);
+            my $treatment_subplots = $treatment_trial->get_subplots();
+            foreach (@$treatment_subplots){
+                $treatment_stock_hash{$_->[1]}++;
+            }
+        }
+    } elsif ($self->data_level eq 'plants_subplots') {
+        $ws->write(0, 0, 'plant_name');
+        $ws->write(0, 1, 'subplot_name');
+        $ws->write(0, 2, 'plot_name');
+        $ws->write(0, 3, 'block_number');
+        $ws->write(0, 4, 'subplot_number');
+        $ws->write(0, 5, 'plant_number');
+        $ws->write(0, 6, 'plot_number');
+        $ws->write(0, 7, 'rep_number');
+        $ws->write(0, 8, 'row_number');
+        $ws->write(0, 9, 'col_number');
+        $ws->write(0, 10, 'accession_name');
+        $ws->write(0, 11, 'is_a_control');
+
+        if($treatment_trial){
+            $ws->write(0, 12, "Treatment:".$treatment_name);
+            my $treatment_plants = $treatment_trial->get_plants();
+            foreach (@$treatment_plants){
+                $treatment_stock_hash{$_->[1]}++;
+            }
+        }
     }
 
     my %design = %{$trial_layout->get_design()};
@@ -126,22 +202,87 @@ sub download {
             $ws->write($row_num,1,$design_info{'block_number'});
             $ws->write($row_num,2,$design_info{'plot_number'});
             $ws->write($row_num,3,$design_info{'rep_number'});
-            $ws->write($row_num,4,$design_info{'accession_name'});
-            $ws->write($row_num,5,$design_info{'is_a_control'});
+            $ws->write($row_num,4,$design_info{'row_number'});
+            $ws->write($row_num,5,$design_info{'col_number'});
+            $ws->write($row_num,6,$design_info{'accession_name'});
+            $ws->write($row_num,7,$design_info{'is_a_control'});
+
+            if(exists($treatment_stock_hash{$design_info{'plot_name'}})){
+                $ws->write($row_num,8,1);
+            }
+
             $row_num++;
         } elsif ($self->data_level eq 'plants'){
             my $plant_names = $design_info{'plant_names'};
             my $plant_num = 1;
-            foreach (@$plant_names) {
+            foreach (sort @$plant_names) {
                 $ws->write($row_num,0,$_);
-                $ws->write($row_num,1,$design_info{'block_number'});
-                $ws->write($row_num,2,$plant_num);
-                $ws->write($row_num,3,$design_info{'plot_number'});
-                $ws->write($row_num,4,$design_info{'rep_number'});
-                $ws->write($row_num,5,$design_info{'accession_name'});
-                $ws->write($row_num,6,$design_info{'is_a_control'});
+                $ws->write($row_num,1,$design_info{'plot_name'});
+                $ws->write($row_num,2,$design_info{'block_number'});
+                $ws->write($row_num,3,$plant_num);
+                $ws->write($row_num,4,$design_info{'plot_number'});
+                $ws->write($row_num,5,$design_info{'rep_number'});
+                $ws->write($row_num,6,$design_info{'row_number'});
+                $ws->write($row_num,7,$design_info{'col_number'});
+                $ws->write($row_num,8,$design_info{'accession_name'});
+                $ws->write($row_num,9,$design_info{'is_a_control'});
+
+                if(exists($treatment_stock_hash{$_})){
+                    $ws->write($row_num,10,1);
+                }
+
                 $plant_num++;
                 $row_num++;
+            }
+        } elsif ($self->data_level eq 'subplots'){
+            my $subplot_names = $design_info{'subplot_names'};
+            my $subplot_num = 1;
+            foreach (sort @$subplot_names) {
+                $ws->write($row_num,0,$_);
+                $ws->write($row_num,1,$design_info{'plot_name'});
+                $ws->write($row_num,2,$design_info{'block_number'});
+                $ws->write($row_num,3,$subplot_num);
+                $ws->write($row_num,4,$design_info{'plot_number'});
+                $ws->write($row_num,5,$design_info{'rep_number'});
+                $ws->write($row_num,6,$design_info{'row_number'});
+                $ws->write($row_num,7,$design_info{'col_number'});
+                $ws->write($row_num,8,$design_info{'accession_name'});
+                $ws->write($row_num,9,$design_info{'is_a_control'});
+
+                if(exists($treatment_stock_hash{$_})){
+                    $ws->write($row_num,10,1);
+                }
+
+                $subplot_num++;
+                $row_num++;
+            }
+        } elsif ($self->data_level eq 'plants_subplots'){
+            my $subplot_plant_names = $design_info{'subplots_plant_names'};
+            my $subplot_num = 1;
+            foreach my $s (sort keys %$subplot_plant_names) {
+                my $plants = $subplot_plant_names->{$s};
+                my $plant_num = 1;
+                foreach my $p (sort @$plants){
+                    $ws->write($row_num,0,$p);
+                    $ws->write($row_num,1,$s);
+                    $ws->write($row_num,2,$design_info{'plot_name'});
+                    $ws->write($row_num,3,$design_info{'block_number'});
+                    $ws->write($row_num,4,$subplot_num);
+                    $ws->write($row_num,5,$plant_num);
+                    $ws->write($row_num,6,$design_info{'plot_number'});
+                    $ws->write($row_num,7,$design_info{'rep_number'});
+                    $ws->write($row_num,8,$design_info{'row_number'});
+                    $ws->write($row_num,9,$design_info{'col_number'});
+                    $ws->write($row_num,10,$design_info{'accession_name'});
+                    $ws->write($row_num,11,$design_info{'is_a_control'});
+
+                    if(exists($treatment_stock_hash{$p})){
+                        $ws->write($row_num,12,1);
+                    }
+                    $plant_num++;
+                    $row_num++;
+                }
+                $subplot_num++;
             }
         }
     }

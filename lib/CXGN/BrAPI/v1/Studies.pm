@@ -71,7 +71,7 @@ sub seasons {
 
 	my ($data_window, $pagination) = CXGN::BrAPI::Pagination->paginate_array(\@sorted_years, $page_size, $page);
 	foreach (@$data_window){
-		my ($year, $season) = split '|', $_->[0];
+		my ($year, $season) = split '\|', $_->[0];
 		push @data, {
 			seasonsDbId=>$_->[1],
 			season=>$season,
@@ -159,8 +159,8 @@ sub studies_search {
 			locationName => $_->{location_name},
 			programDbId => $_->{breeding_program_id},
 			programName => $_->{breeding_program_name},
-			startDate => $_->{harvest_date},
-			endDate => $_->{planting_date},
+			startDate => $_->{project_harvest_date},
+			endDate => $_->{project_planting_date},
 			active=>'',
 			additionalInfo=>\%additional_info
 		);
@@ -188,16 +188,16 @@ sub studies_germplasm {
 	my @germplasm_data;
 
 	foreach (@$data_window){
-		my $stockprop_hash = CXGN::Chado::Stock->new($self->bcs_schema, $_->{stock_id})->get_stockprop_hash();
+		my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$_->{stock_id}});
 		push @germplasm_data, {
 			germplasmDbId=>$_->{stock_id},
 			germplasmName=>$_->{accession_name},
-			entryNumber=>$stockprop_hash->{'entry number'} ? join ',', @{$stockprop_hash->{'entry number'}} : '',
-			accessionNumber=>$stockprop_hash->{'accession number'} ? join ',', @{$stockprop_hash->{'accession number'}} : '',
-			germplasmPUI=>$stockprop_hash->{'PUI'} ? join ',', @{$stockprop_hash->{'PUI'}} : '',
-			pedigree=>$self->germplasm_pedigree_string($_->{stock_id}),
-			seedSource=>$stockprop_hash->{'seed source'} ? join ',', @{$stockprop_hash->{'seed source'}} : '',
-			synonyms=>$stockprop_hash->{'stock_synonym'} ? join ',', @{$stockprop_hash->{'stock_synonym'}} : '',
+			entryNumber=>$stock_object->entryNumber,
+			accessionNumber=>$stock_object->accessionNumber,
+			germplasmPUI=>$stock_object->germplasmPUI,
+			pedigree=>$stock_object->get_pedigree_string,
+			seedSource=>$stock_object->germplasmSeedSource,
+			synonyms=>$stock_object->synonyms,
 		};
 	}
 
@@ -675,8 +675,7 @@ sub germplasm_pedigree_string {
 	my $self = shift;
 	my $stock_id = shift;
 	my $s = CXGN::Stock->new( schema => $self->bcs_schema, stock_id => $stock_id);
-	my $pedigree_root = $s->get_parents('1');
-	my $pedigree_string = $pedigree_root ? $pedigree_root->get_pedigree_string('1') : '';
+	my $pedigree_string = $s->get_pedigree_string('Parents');
 	return $pedigree_string;
 }
 

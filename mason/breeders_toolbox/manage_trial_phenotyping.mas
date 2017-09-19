@@ -1,0 +1,372 @@
+<%args>
+$trial_id
+$trial_name
+</%args>
+
+<& /page/page_title.mas, title=>"Manage Phenotyping for $trial_name" &>
+<& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $trial_id &>
+
+<div class="well well-sm">
+  <div class="row">
+    <div class="col-md-1 col-lg-1">
+    </div>
+    <div class="col-md-10 col-lg-10">
+
+        <form class="form-horizontal" role="form" action="/barcode/direct_trial_phenotyping">
+            <div class="form-group form-group-sm">
+                <label class="col-sm-4 control-label">Plot Name: </label>
+                <div class="col-sm-8" id="plot_name_1">
+
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <label class="col-sm-4 control-label">Accession Name: </label>
+                <div class="col-sm-8" id="accession_name">
+
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <label class="col-sm-4 control-label">Plot No: </label>
+                <div class="col-sm-8" id="plot_no">
+
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <label class="col-sm-4 control-label">Block No: </label>
+                <div class="col-sm-8" id="block_no">
+
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <label class="col-sm-4 control-label">Rep No: </label>
+                <div class="col-sm-8" id="rep_no">
+
+                </div>
+            </div>
+
+    </div>
+  <div class="col-md-1 col-lg-1">
+  </div>
+  </div>
+</div>
+
+
+<div class="well well-sm">
+  <div class="row">
+    <div class="col-md-1 col-lg-1">
+    </div>
+    <div class="col-md-10 col-lg-10">
+
+        <div class="form-group form-group-sm" id="all_traits">
+          <label class="col-sm-4 control-label" for="select_traits_for_trait_file">Select trait: </label>
+          <div class="col-sm-8">
+            <select class="form-control" id="select_traits_for_trait_file"></select>
+          </div>
+        </div>
+
+        <div class="form-group form-group-sm">
+          <label class="col-sm-4 control-label">Or Use Trait List: </label>
+            <div class="col-sm-8">
+              <input type="checkbox"  id="use_trait_list" value="use_trait_list"/>
+          </div>
+        </div>
+
+        <br />
+
+        <div id="show_trait_textbox" style="display: none">
+          <div class="form-group form-group-sm" >
+              <label class="col-sm-4 control-label">Enter a List of Trait Names: </label>
+              <div class="col-sm-8" id="show_trait_selectbox">
+
+              </div>
+          </div>
+          <br /><br />
+        </div>
+
+        <div id="show_trait_list_box" style="display: none">
+            <div class="form-group form-group-sm">
+              <label class="col-sm-4 control-label">Or Paste From a List: </label>
+              <div class="col-sm-8">
+                  <div id="list_menu_traits"></div>
+                  <script defer="defer">
+                    jQuery(document).ready(function() {
+                        pasteTraitListMenu('show_trait_selectbox', 'list_menu_traits', 'Paste Trait List');
+
+                        function pasteTraitListMenu (div_name, menu_div, button_name) {
+                            var list = new CXGN.List();
+                            var html='';
+                            html = list.listSelect(div_name, ['traits']);
+                            html = html + '<button class="btn btn-info btn-sm" type="button" id="paste_button_id" value="'+button_name+'" onclick="javascript:pasteTraitList(\''+div_name+'\')" >'+button_name+'</button>';
+                            jQuery('#'+menu_div).html(html);
+                        }
+
+                    });
+                  </script>
+              </div>
+            </div>
+        </div>
+
+        <br /><br />
+
+        <div class="form-group form-group-sm">
+          <label class="col-sm-4 control-label">Enter trait value: </label>
+          <div class="col-sm-3">
+              <input type="number" class="form-control" id="select_pheno_value" name="select_pheno_value"></input>
+          </div>
+        </div>
+
+    </div>
+    <div class="col-md-1 col-lg-1">
+    </div>
+  </div>
+</div>
+
+</form>
+<!--<div id="main" class="container">
+    <div id="virtualKeyboard"></div>
+    <hr>
+</div>-->
+<&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='trial_download_phenotypes_button'>Download Trial Data</a>]" &>
+
+    <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id &>
+
+
+</&>
+
+<script>
+
+var trial_info_object = [];
+
+  jQuery(document).ready(function($) {
+
+      var  trial_id = <% $trial_id %>;
+
+      new jQuery.ajax( {
+           type: 'POST',
+           url: '/ajax/breeders/trial_phenotyping_info',
+           dataType: "json",
+           data: {
+            'trial_id' : trial_id,
+           },
+
+           success: function(response) {
+                trial_info_object = response.trial_info;
+               if (response.error){
+                 alert("Error Retrieving Trial Information: "+response.error);
+               }
+
+               var trial_plot_name_html = "<select class='form-control' id='plot_name' >";
+               var trial_accession_html = "<select class='form-control' id='trial_accession_table' disabled>";
+               var trial_plot_number_html = "<select class='form-control' id='trial_plot_number_table'>";
+               var trial_block_number_html = "<select class='form-control' id='trial_block_number_table' disabled>";
+               var trial_rep_number_html = "<select class='form-control' id='trial_rep_number_table' disabled>";
+
+                for (n=0; n<response.trial_info.length; n++){
+                //console.log(response.trial_info[n]);
+
+                      trial_plot_name_html = trial_plot_name_html + "<option value=" + response.trial_info[n].plot_name + ">" + response.trial_info[n].plot_name + "</option>";
+                      trial_accession_html = trial_accession_html + "<option value=" + response.trial_info[n].accession_name + ">" + response.trial_info[n].accession_name + "</option>";
+                      trial_plot_number_html = trial_plot_number_html + "<option value=" + response.trial_info[n].plot_number + ">" + response.trial_info[n].plot_number + "</option>";
+                      trial_block_number_html = trial_block_number_html + "<option value=" + response.trial_info[n].block_number + ">" + response.trial_info[n].block_number + "</option>";
+                      trial_rep_number_html = trial_rep_number_html + "<option value=" + response.trial_info[n].rep_number + ">" + response.trial_info[n].rep_number + "</option>";
+
+                  }
+                  trial_plot_name_html = trial_plot_name_html + "</select>";
+                  jQuery('#plot_name_1').empty();
+                  jQuery('#plot_name_1').html(trial_plot_name_html);
+
+                  trial_accession_html = trial_accession_html + "</select>";
+                  jQuery('#accession_name').empty();
+                  jQuery('#accession_name').html(trial_accession_html);
+
+                  trial_plot_number_html = trial_plot_number_html + "</select>";
+                  jQuery('#plot_no').empty();
+                  jQuery('#plot_no').html(trial_plot_number_html);
+
+                  trial_block_number_html = trial_block_number_html + "</select>";
+                  jQuery('#block_no').empty();
+                  jQuery('#block_no').html(trial_block_number_html);
+
+                  trial_rep_number_html = trial_rep_number_html + "</select>";
+                  jQuery('#rep_no').empty();
+                  jQuery('#rep_no').html(trial_rep_number_html);
+
+              },
+              error: function() {
+                alert('An error occurred retrieving trial information');
+              }
+
+      });
+
+  var null_trait_value = '';
+
+  $("#use_trait_list").click(function () {
+    if ($('#use_trait_list').is(':checked')) {
+      $('#all_traits').hide();
+      jQuery('#select_traits_for_trait_file').empty();
+      $('#show_trait_textbox').show();
+      $('#show_trait_list_box').show();
+      jQuery("#select_pheno_value").val(null_trait_value);
+    }
+    else {
+        $('#all_traits').show();
+        $('#show_trait_textbox').hide();
+        $('#show_trait_list_box').hide();
+        jQuery('#select_traits_for_trait_file_2').empty();
+        jQuery("#select_pheno_value").val(null_trait_value);
+        jQuery('#select_pheno_value').empty();
+        get_select_box('traits', 'select_traits_for_trait_file', {
+            'name': 'html_select_traits_for_trait_file',
+            'id': 'html_select_traits_for_trait_file',
+            'empty': 1
+        });
+    }
+  });
+
+    get_select_box('traits', 'select_traits_for_trait_file', {
+        'name': 'html_select_traits_for_trait_file',
+        'id': 'html_select_traits_for_trait_file',
+        'empty': 1
+    });
+
+    var plot_focusin;
+    var trait_focusin;
+    var trait_list_option_focusin;
+    jQuery( "#select_pheno_value" ).focusin(function() {
+        plot_focusin = jQuery("#plot_name").val();
+        trait_focusin = jQuery("#select_traits_for_trait_file").val();
+        //var trait_list_option = '';
+        if ($('#use_trait_list').is(':checked')) {
+           //trait_list_option = jQuery('#use_trait_list').val();
+           trait_list_option_focusin = jQuery('#use_trait_list').val();
+        }
+        if (trait_focusin === null){
+          trait_focusin = jQuery("#select_traits_for_trait_file_2").val();
+        }
+        console.log(plot_focusin +" and "+trait_focusin);
+    });
+
+    jQuery( "#select_pheno_value" ).focusout(function() {
+    //jQuery('input[name=select_pheno_value]').change(function() {
+      var trait_value = jQuery("#select_pheno_value").val();
+      var plot_name = plot_focusin;
+      var trait = trait_focusin;
+      var trait_list_option = trait_list_option_focusin;
+
+      new jQuery.ajax ( {
+        type: 'POST',
+        url : '/ajax/phenotype/plot_phenotype_upload',
+        dataType: "json",
+        data: {
+                'plot_name' : plot_name,
+                'trait' : trait,
+                'trait_value' : trait_value,
+                'trait_list_option' : trait_list_option,
+        },
+
+        success: function (response) {
+          if (response.error){
+            alert("Error Saving Trait Value: "+response.error);
+          }
+        },
+          error: function() {
+            alert('An error occurred saving trait value');
+          }
+
+      });
+
+    });
+
+    function Retrieve_pheno(){
+        var plot_name = jQuery("#plot_name").val();
+        var trait = '';
+        trait = jQuery("#select_traits_for_trait_file").val();
+        if (trait === null){
+            trait = jQuery("#select_traits_for_trait_file_2").val();
+        }
+
+        var trait_list_option = '';
+        if ($('#use_trait_list').is(':checked')) {
+           trait_list_option = jQuery('#use_trait_list').val();
+        }
+
+        new jQuery.ajax ( {
+          type: 'POST',
+          url : '/ajax/phenotype/plot_phenotype_retrieve',
+          dataType: "json",
+          data: {
+                  'plot_name' : plot_name,
+                  'trait' : trait,
+                  'trait_list_option' : trait_list_option,
+          },
+
+          success: function (response) {
+            var value = response.trait_value;
+            var black = {'color': 'red'};
+
+            if (response.error){
+              alert("Error Retrieving Trait Value: "+response.error);
+            }else{
+              if (value){
+                jQuery("#select_pheno_value").css(black);
+              }
+                jQuery("#select_pheno_value").val(value);
+            }
+          },
+            error: function() {
+              alert('An error occurred retrieving trait value');
+            }
+
+        });
+
+    }
+
+    jQuery(document).on('change', '#select_traits_for_trait_file_2', function(){
+        jQuery("#select_traits_for_trait_file").empty();
+        Retrieve_pheno();
+    });
+
+    jQuery("#select_traits_for_trait_file").on('change', function() {
+        jQuery("#select_traits_for_trait_file_2").empty();
+        Retrieve_pheno();
+    });
+
+  jQuery(document).on('change', '#plot_name', function(){
+      var plot_infor = jQuery('#plot_name').val();
+      for (i=0; i<trial_info_object.length; i++){
+          if (trial_info_object[i].plot_name == plot_infor){
+              var plotNo = trial_info_object[i].plot_number;
+              var accessionName = trial_info_object[i].accession_name;
+              var blockNo = trial_info_object[i].block_number;
+              var repNo = trial_info_object[i].rep_number;
+
+              jQuery('#trial_accession_table').val(accessionName);
+              jQuery('#trial_plot_number_table').val(plotNo);
+              jQuery('#trial_block_number_table').val(blockNo);
+              jQuery('#trial_rep_number_table').val(repNo);
+              Retrieve_pheno();
+          }
+      }
+
+  });
+
+  jQuery(document).on('change', '#trial_plot_number_table', function(){
+      var plot_infor = jQuery('#trial_plot_number_table').val();
+      for (i=0; i<trial_info_object.length; i++){
+          if (trial_info_object[i].plot_number == plot_infor){
+              var accessionName = trial_info_object[i].accession_name;
+              var plotName = trial_info_object[i].plot_name;
+              var blockNo = trial_info_object[i].block_number;
+              var repNo = trial_info_object[i].rep_number;
+
+              jQuery('#plot_name').val(plotName);
+              jQuery('#trial_accession_table').val(accessionName);
+              jQuery('#trial_block_number_table').val(blockNo);
+              jQuery('#trial_rep_number_table').val(repNo);
+              Retrieve_pheno();
+          }
+      }
+
+  });
+});
+</script>

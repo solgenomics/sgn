@@ -35,6 +35,7 @@
                         <select class="form-control" id="upload_spreadsheet_phenotype_data_level" name="upload_spreadsheet_phenotype_data_level">
                             <option value="plots">Plots</option>
                             <option value="plants">Plants</option>
+                            <option value="subplots">Subplots</option>
                         </select>
                     </div>
                 </div>
@@ -87,7 +88,7 @@
 
             <h4>Notes:</h4>
             <ul>
-                <li>For <i>"sprouting proportion"</i>, <i>"trait name|trait id"</i><br> should be written as <i>"sprouting proportion|CO:0000008"</i>.</li>
+                <li>For <i>"sprouting proportion"</i>, <i>"trait name|trait id"</i><br> should be written as <i>"sprouting proportion|CO_334:0000008"</i>.</li>
                 <li>If spreadsheet file was not generated from the database, </br>consult the <i>Trait Ontology</i> to ensure you have the correct trait id.</li>
                 <li>Two or more traits can be uploaded at the same time.</li>
             </ul>
@@ -102,7 +103,7 @@
                     <thead>
                         <tr>
                             <th>plot_name</th>
-                            <th>sprouting proportion|CO:0000008</th>
+                            <th>sprouting proportion|CO_334:0000008</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -118,7 +119,7 @@
                     <thead>
                         <tr>
                             <th>plot_name</th>
-                            <th>sprouting proportion|CO:0000008</th>
+                            <th>sprouting proportion|CO_334:0000008</th>
                         </tr>
                     </thead>
                     <tbody>
