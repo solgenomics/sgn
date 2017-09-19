@@ -84,11 +84,11 @@ sub design_layout_view {
     $design_result_html .= '<table class="table table-bordered table-hover">';
 
     if ($design_level eq 'plants') {
-        $design_result_html .= qq{<tr><th>Plant Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds</th></tr>};
+        $design_result_html .= qq{<tr><th>Plant Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
     } elsif ($design_level eq 'subplots') {
-        $design_result_html .= qq{<tr><th>Plant Name</th><th>Subplot Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds</th></tr>};
+        $design_result_html .= qq{<tr><th>Plant Name</th><th>Subplot Name</th><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
     } else {
-        $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds</th></tr>};
+        $design_result_html .= qq{<tr><th>Plot Name</th><th>Accession Name</th><th>Check Name</th><th>Plot Number</th><th>Row number</th><th>Col number</th><th>Block Number</th><th>Block Row Number</th><th>Block Col Number</th><th>Rep Number</th><th>Seedlot Name</th><th>Num Seeds Per Plot</th></tr>};
     }
 
     foreach my $key (sort { $a <=> $b} keys %design) {

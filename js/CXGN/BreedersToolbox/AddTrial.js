@@ -207,8 +207,10 @@ jQuery(document).ready(function ($) {
             control_list_crbd = JSON.stringify(list.getList(control_list_id_crbd));
         }
         var stock_list;
+        var stock_list_array;
         if (stock_list_id != "") {
-            stock_list = JSON.stringify(list.getList(stock_list_id));
+            stock_list_array = list.getList(stock_list_id);
+            stock_list = JSON.stringify(stock_list_array);
         }
         var control_list;
         if (control_list_id != "") {

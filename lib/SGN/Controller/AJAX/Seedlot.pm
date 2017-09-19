@@ -310,6 +310,10 @@ sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions')
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $transactions = $c->stash->{seedlot}->transactions();
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot", "stock_type")->cvterm_id();
+    my %types_hash = ( $type_id => 'seedlot', $accession_type_id => 'accession', $plot_type_id => 'plot' );
+
     #print STDERR Dumper $transactions;
     my @transactions;
     foreach my $t (@$transactions) {
@@ -323,14 +327,14 @@ sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions')
         my $from_url;
         my $to_url;
         if ($t->from_stock()->[2] == $type_id){
-            $from_url = '<a href="/breeders/seedlot/'.$t->from_stock()->[0].'" >'.$t->from_stock()->[1].'</a>';
+            $from_url = '<a href="/breeders/seedlot/'.$t->from_stock()->[0].'" >'.$t->from_stock()->[1].'</a> ('.$types_hash{$t->from_stock()->[2]}.')';
         } else {
-            $from_url = '<a href="/stock/'.$t->from_stock()->[0].'/view" >'.$t->from_stock()->[1].'</a>';
+            $from_url = '<a href="/stock/'.$t->from_stock()->[0].'/view" >'.$t->from_stock()->[1].'</a> ('.$types_hash{$t->from_stock()->[2]}.')';
         }
         if ($t->to_stock()->[2] == $type_id){
-            $to_url = '<a href="/breeders/seedlot/'.$t->to_stock()->[0].'" >'.$t->to_stock()->[1].'</a>';
+            $to_url = '<a href="/breeders/seedlot/'.$t->to_stock()->[0].'" >'.$t->to_stock()->[1].'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
         } else {
-            $to_url = '<a href="/stock/'.$t->to_stock()->[0].'/view" >'.$t->to_stock()->[1].'</a>';
+            $to_url = '<a href="/stock/'.$t->to_stock()->[0].'/view" >'.$t->to_stock()->[1].'</a> ('.$types_hash{$t->to_stock()->[2]}.')';
         }
         push @transactions, { "transaction_id"=>$t->transaction_id(), "timestamp"=>$t->timestamp(), "from"=>$from_url, "to"=>$to_url, "value"=>$value_field, "operator"=>$t->operator, "description"=>$t->description() };
     }
