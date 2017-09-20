@@ -95,6 +95,10 @@ sub save_crossingtrial {
         return {error => "Crossing trial not saved: Breeding program does not exist"};
     }
 
+    my $parent_folder_id;
+    $parent_folder_id = $self->get_parent_folder_id() || 0;
+
+
     my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'project year', 'project_property');
     my $project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial', 'project_type')->cvterm_id();
 
@@ -103,6 +107,17 @@ sub save_crossingtrial {
               name => $self->get_crossingtrial_name(),
               description => $self->get_project_description(),
         });
+
+    #add crossing trial to folder if one was specified
+    		if ($parent_folder_id) {
+    		my $folder = CXGN::Trial::Folder->new(
+    			{
+    				bcs_schema => $chado_schema,
+    				folder_id => $project->project_id(),
+    			});
+
+    			$folder->associate_parent($parent_folder_id);
+    		}
 
     my $crossing_trial = CXGN::Trial->new({
         bcs_schema => $schema,

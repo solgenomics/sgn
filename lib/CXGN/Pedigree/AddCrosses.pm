@@ -27,7 +27,7 @@ use Try::Tiny;
 use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 use CXGN::Stock::StockLookup;
-use CXGN::Location::LocationLookup;
+#use CXGN::Location::LocationLookup;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial;
 use CXGN::Trial::Folder;
@@ -54,10 +54,10 @@ has 'metadata_schema' => (
 		);
 has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 has 'crosses' => (isa =>'ArrayRef[Pedigree]', is => 'rw', predicate => 'has_crosses', required => 1,);
-has 'location' => (isa =>'Str', is => 'rw', predicate => 'has_location', required => 1,);
+#has 'location' => (isa =>'Str', is => 'rw', predicate => 'has_location', required => 1,);
 #has 'program' => (isa =>'Str', is => 'rw', predicate => 'has_program', required =>1,);
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
-has 'parent_folder_id' => (isa => 'Str', is => 'rw', predicate => 'has_parent_folder_id', required => 0,);
+#has 'parent_folder_id' => (isa => 'Str', is => 'rw', predicate => 'has_parent_folder_id', required => 0,);
 has 'crossing_trial' =>(isa =>'Str', is=>'rw', predicate => 'has_crossing_trial', required =>1);
 
 sub get_crossing_trial_id {
@@ -73,17 +73,17 @@ sub add_crosses {
   my $chado_schema = $self->get_chado_schema();
   my $phenome_schema = $self->get_phenome_schema();
   my @crosses;
-  my $location_lookup;
-  my $geolocation;
+  #my $location_lookup;
+  #my $geolocation;
   #my $program;
   #my $program_lookup;
   my $transaction_error;
   my @added_stock_ids;
-	my $parent_folder_id;
+	#my $parent_folder_id;
 
   #lookup user by name
   my $owner_name = $self->get_owner_name();
-  $parent_folder_id = $self->get_parent_folder_id() || 0;
+  #$parent_folder_id = $self->get_parent_folder_id() || 0;
   my $dbh = $self->get_dbh();
   my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name); #add person id as an option.
 
@@ -111,8 +111,8 @@ sub add_crosses {
       print STDERR "\n\ncvterm from addcrosses: ".$cross_stock_type_cvterm->cvterm_id()."\n\n";
 
       #lookup location by name
-      $location_lookup = CXGN::Location::LocationLookup->new({ schema => $chado_schema, location_name => $self->get_location });
-      $geolocation = $location_lookup->get_geolocation();
+      #$location_lookup = CXGN::Location::LocationLookup->new({ schema => $chado_schema, location_name => $self->get_location });
+      #$geolocation = $location_lookup->get_geolocation();
 
       #lookup program by name
       #$program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema});
@@ -181,7 +181,7 @@ sub add_crosses {
 	  #create cross experiment
 	  $experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')->create(
 	      {
-		  nd_geolocation_id => $geolocation->nd_geolocation_id(),
+		  #nd_geolocation_id => $geolocation->nd_geolocation_id(),
 		  type_id => $cross_experiment_type_cvterm->cvterm_id(),
 	      } );
 
@@ -320,18 +320,18 @@ sub validate_crosses {
   #my $program;
   my $crossing_trial_lookup;
   my $crossing_trial;
-  my $location_lookup;
+  #my $location_lookup;
   my $trial_lookup;
   #my $program_lookup;
-  my $geolocation;
+  my $geolocation = '';
 
-  $location_lookup = CXGN::Location::LocationLookup->new({ schema => $chado_schema, location_name => $self->get_location() });
-  $geolocation = $location_lookup->get_geolocation();
+  #$location_lookup = CXGN::Location::LocationLookup->new({ schema => $chado_schema, location_name => $self->get_location() });
+  #$geolocation = $location_lookup->get_geolocation();
 
-  if (!$geolocation) {
-    print STDERR "Location ".$self->get_location()." not found\n";
-    return;
-  }
+  #if (!$geolocation) {
+  #  print STDERR "Location ".$self->get_location()." not found\n";
+  #  return;
+  #}
 
   #$program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema});
   #$program = $program_lookup->get_breeding_program_by_name($self->get_program());
