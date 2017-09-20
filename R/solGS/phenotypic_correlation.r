@@ -9,13 +9,14 @@
 
 options(echo = FALSE)
 
-library(gplots)
+#library(gplots)
 library(ltm)
-library(plyr)
+#library(plyr)
 library(rjson)
-library(lme4)
+#library(lme4)
 library(data.table)
-library(phenoAnalysis)
+#library(phenoAnalysis)
+library(dplyr)
 #library(rbenchmark)
 
 
@@ -95,7 +96,7 @@ if (length(refererQtl) != 0) {
   nonTraitNames <- c(nonTraitNames, 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber')
   
   allTraitNames <- allNames[! allNames %in% nonTraitNames]
- 
+
 }
 
 if (!is.null(phenoData) && length(refererQtl) == 0) {
@@ -122,34 +123,27 @@ filteredTraits <- allTraitNames[!allTraitNames %in% naTraitNames]
 
 ###############################
 if (length(refererQtl) == 0  ) {
-  cnt   <- 0
  
-  for (trait in filteredTraits) {
 
-    cnt   <- cnt + 1
-    adjMeans <- getAdjMeans(phenoData, trait)
-
-    if (cnt == 1 ) {
-      formattedPhenoData <- adjMeans
-    } else {
-      formattedPhenoData <-  merge(formattedPhenoData, adjMeans,  all=TRUE)
-    }
-  }
+  formattedPhenoData <- phenoData %>%
+                        select(germplasmName, allTraitNames) %>%
+                        group_by(germplasmName) %>%
+                        summarise_at(allTraitNames, mean, na.rm=TRUE) %>%
+                        select(-germplasmName) %>%
+                        round(., 2) %>%
+                        data.frame
 
 } else {
   message("qtl stuff")
-  formattedPhenoData <- ddply(phenoData,
-                              "ID",
-                              colwise(mean, na.rm=TRUE)
-                              )  
+  formattedPhenoData <- phenoData %>%
+                        group_by(ID) %>%
+                        summarise_if(is.numeric, mean, na.rm=TRUE) %>%
+                        select(-ID) %>%
+                        round(., 2) %>%
+                        data.frame
+                             
 }
  
-formattedPhenoData            <- data.frame(formattedPhenoData)
-row.names(formattedPhenoData) <- formattedPhenoData[, 1]
-formattedPhenoData[, 1]       <- NULL
-formattedPhenoData            <- round(formattedPhenoData, 2)
-
-
 coefpvalues <- rcor.test(formattedPhenoData,
                          method="pearson",
                          use="pairwise"
@@ -163,40 +157,19 @@ diag(allcordata) <- 1.00
 
 pvalues <- as.matrix(allcordata)
 
-pvalues <- round(pvalues,
-                 digits=2
-                 )
+pvalues <- round(pvalues, 2)
 
-coefficients <- round(coefficients,
-                      digits=3
-                      )
+coefficients <- round(coefficients, 3)
  
-allcordata   <- round(allcordata,
-                    digits=3
-                    )
+allcordata   <- round(allcordata, 3)
 
 #remove rows and columns that are all "NA"
-if ( apply(coefficients,
-           1,
-           function(x)any(is.na(x))
-           )
-    ||
-    apply(coefficients,
-          2,
-          function(x)any(is.na(x))
-          )
-    )
+if (apply(coefficients, 1, function(x)any(is.na(x))) ||
+    apply(coefficients, 2, function(x)any(is.na(x))))
   {
                                                             
-    coefficients<-coefficients[-which(apply(coefficients,
-                                            1,
-                                            function(x)all(is.na(x)))
-                                      ),
-                               -which(apply(coefficients,
-                                            2,
-                                            function(x)all(is.na(x)))
-                                      )
-                               ]
+    coefficients<-coefficients[-which(apply(coefficients, 1, function(x)all(is.na(x)))),
+                               -which(apply(coefficients, 2, function(x)all(is.na(x))))]
   }
 
 
@@ -235,14 +208,14 @@ fwrite(correlationJson,
        qmethod   = "escape"
        )
 
-if (file.info(formattedPhenoFile)$size == 0 && !is.null(formattedPhenoData) ) {
-  fwrite(formattedPhenoData,
-         file      = formattedPhenoFile,
-         sep       = "\t",
-         row.names = TRUE,
-         quote     = FALSE,
-         )
-}
+## if (file.info(formattedPhenoFile)$size == 0 && !is.null(formattedPhenoData) ) {
+##   fwrite(formattedPhenoData,
+##          file      = formattedPhenoFile,
+##          sep       = "\t",
+##          row.names = TRUE,
+##          quote     = FALSE,
+##          )
+## }
 
 
 q(save = "no", runLast = FALSE)
