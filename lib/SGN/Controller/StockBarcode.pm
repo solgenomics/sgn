@@ -17,7 +17,7 @@ BEGIN { extends "Catalyst::Controller"; }
 use CXGN::ZPL;
 
 
-sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
+sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') {
     my $self = shift;
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
@@ -31,25 +31,26 @@ sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
     my $number_of_rows = 9; #zero index
     
     # hard coded for now, but could be generated from a user interface like a drag and drop grid
+     my $zpl = $c->req->param("zpl_template"); #|| '^LH{ $X },{ $Y }
+# ^FO5,10^AA,{ $FONT_SIZE }^FB320,5^FD{ $ACCESSION_NAME }^FS
+# ^FO20,70^AA,28^FDPlot { $PLOT_NUMBER }, Rep { $REP_NUMBER }^AF4^FS
+# ^FO22,70^AA,28^FD     { $PLOT_NUMBER }      { $REP_NUMBER }^AF4^FS
+# ^FO20,72^AA,28^FD     { $PLOT_NUMBER }      { $REP_NUMBER }^AF4^FS
+# ^FO20,105^AA,22^FD{ $TRIAL_NAME } { $YEAR }^FS
+# ^FO10,140^AA,28^FB300,5^FD{ $CUSTOM_TEXT }^FS
+# ^FO325,5^BQ,,{ $QR_SIZE }^FD   { $PLOT_NAME }^FS
+# ';
     my $zpl_template = Text::Template->new(
         type => 'STRING',
-        source => '^LH{ $X },{ $Y }
-^FO5,10^AA,{ $FONT_SIZE }^FB320,5^FD{ $ACCESSION_NAME }^FS
-^FO20,70^AA,28^FDPlot { $PLOT_NUMBER }, Rep { $REP_NUMBER }^AF4^FS
-^FO22,70^AA,28^FD     { $PLOT_NUMBER }      { $REP_NUMBER }^AF4^FS
-^FO20,72^AA,28^FD     { $PLOT_NUMBER }      { $REP_NUMBER }^AF4^FS
-^FO20,105^AA,22^FD{ $TRIAL_NAME } { $YEAR }^FS
-^FO10,140^AA,28^FB300,5^FD{ $CUSTOM_TEXT }^FS
-^FO325,5^BQ,,{ $QR_SIZE }^FD   { $PLOT_NAME }^FS
-',
+        source => $zpl,
     );
     
     # retrieve variable params
     my $trial_id = $c->req->param("trial_id");
-    my $labels_per_stock = $c->req->param("num_labels") || 1;
+    my $labels_per_stock = $c->req->param("num_labels");# || 1;
     my $custom_text = $c->req->param("custom_text") || '';
     my $include_pedigree = $c->req->param("include_pedigree");
-    print STDERR "trial id is $trial_id\n num labels is $labels_per_stock\n custom text is $custom_text\ninclude_pedigree is $include_pedigree\n";
+    print STDERR "trial id is $trial_id\n num labels is $labels_per_stock\n zpl is $zpl\n";
     #my $order_by = $c->req->param("custom_text") || 'plot_number';
     
     my $trial_rs = $schema->resultset("Project::Project")->search({ project_id => $trial_id });
@@ -162,9 +163,14 @@ sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') :Args(0) {
     
     `curl --request POST http://api.labelary.com/v1/printers/8dpmm/labels/8.5x11/ --form file=\@$zpl_path --header "Accept: application/pdf" > $pdf_path`;
 
-     $c->stash->{file} = $pdf_filename;
-     $c->stash->{filetype} = "PDF";
-     $c->stash->{template} = '/barcode/trial_barcodes_download_result.mas';
+    #  $c->stash->{file} = $pdf_filename;
+    #  $c->stash->{filetype} = "PDF";
+    #  $c->stash->{template} = '/barcode/trial_barcodes_download_result.mas';
+     # from geno download
+     $c->res->content_type("application/text");
+     $c->res->header('Content-Disposition', qq[attachment; filename="$pdf_filename"]);
+     my $output = read_file($pdf_path);
+     $c->res->body($output);
 
 }
 

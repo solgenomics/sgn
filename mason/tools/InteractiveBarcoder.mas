@@ -577,16 +577,45 @@ $("#d3-pdf-button").on("click",function(event) {
     console.log("zpl is:\n "+zpl_template+"\ntrial_id is: "+trial_id+"\nnum_labels is: "+num_labels);
     
     //send to server to build pdf file
+    //window.location.href = '/barcode/stock/download/zpl/trial_id='+trial_id+'&num_labels='+num_labels+'&zpl_template='+zpl_template;
+    // jQuery.ajax({
+    //     type: 'POST',
+    //     url: '/ajax/fieldbook/traitfile/create',
+    //     dataType: "json",
+    //     data: {
+    //         'trait_list': trait_list,
+    //         'trait_ids': trait_ids,
+    //         'trait_file_name': trait_file_name,
+    //     },
+    //     beforeSend: function() {
+    //         jQuery("#working_modal").modal("show");
+    //     },
+    //     success: function(response) {
+    //         jQuery("#working_modal").modal("hide");
+    //         if (response.error) {
+    //             alert(response.error);
+    //         } else {
+    //             jQuery('#trait_file_download_link').attr('href', "/fieldbook/trait_file_download/" + response.file_id);
+    //             jQuery("#trait_file_saved_dialog_message").modal("show");
+    //             jQuery('#create_trait_file_dialog').modal("hide");
+    //         }
+    //     },
+    //     error: function() {
+    //         jQuery("#working_modal").modal("hide");
+    //         alert('An error occurred creating the trait file.');
+    //         jQuery('#create_trait_file_dialog').modal("hide");
+    //     },
+    // });
+    // 
     jQuery.ajax( {
-        url: '/barcode/stock/download/zpl',
+        url: '/barcode/download/zpl',
         timeout: 60000,
         method: 'POST',
         data: {'trial_id': trial_id, 'num_labels': num_labels, 'zpl_template': zpl_template},
-        beforeSend: function() {
-        },
         success: function(response) {
             if (response.error) {
             } else {
+                window.location.href = "/download/"+response.filename;
             }
         },
         error: function(request, status, err) {
