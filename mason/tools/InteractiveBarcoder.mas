@@ -431,6 +431,7 @@ function addText(text,fontSize){
     .attr({
       "font-size":fontSize,
       "dominant-baseline": "mathematical",
+      value:text,
       type:"AA",
       size:"28",
       class:"label-element",
@@ -537,44 +538,26 @@ console.log("SVG is "+source);
 
 $("#d3-pdf-button").on("click",function(event) {
     console.log("You clicked the download pdf button.");
-    // var svg = document.getElementById("d3-to-save");
-    // // var serializer = new XMLSerializer();
-    // // var source = serializer.serializeToString(svg);
-    // // console.log("SVG is "+source);
-    // var parser = new DOMParser();
-    // var xmlDoc = parser.parseFromString(svg,"text/xml");
+
     var label_zpl = '^LH{ $X },{ $Y }';
-    d3.select(".d3-draw-area").selectAll(".label-element").each(function(d,i){
-        var node = d3.select(this);
-        //console.log("Getbox coords = "+JSON.stringify(coords));
-        var x = node.getBoundingClientRect().left(); //node.getBoundingClientRect().left();
-        var y = node.getBoundingClientRect().top();
-        console.log("x is "+x+"and y is"+y);
-        var value = node.attr("value");
-        var type = node.attr("type");
-        var size = node.attr("size");
-            // var child = parent.children[0];
-            // var value = child.getAttribute('value');
-            // var type = child.getAttribute('type');
-            // var size = child.getAttribute('size');
-            var zpl = '^F'+x+','+y+'^'+type+','+size+'^FD{'+value+'}^FS';
-            label_zpl = label_zpl + zpl;
-        });
+    var label_elements = d3.selectAll(".label-element");
+
+    console.log("Selected "+label_elements.size()+" label elements");
     
-    // var elements = document.getElementsByClassName("text-box draggable selectable");
-    // console.log("num elements is "+elements.length);
-    // var label_zpl = '^LH{ $X },{ $Y }';
-    // for (i=0; i<elements.length; i++) {
-    //     var parent = elements[i];
-    //     var x = parent.getBBox().left();
-    //     var y = parent.node().getBoundingClientRect().top();
-    //     var child = parent.children[0];
-    //     var value = child.getAttribute('value');
-    //     var type = child.getAttribute('type');
-    //     var size = child.getAttribute('size');
-    //     var zpl = '^F'+x+','+y+'^'+type+','+size+'^FD{'+value+'}^FS';
-    //     label_zpl = label_zpl + zpl;
-    // }
+    label_elements.each(function(d,i){
+        
+        var x = d3.select(this).attr("x");
+        var y = d3.select(this).attr("y");
+        var value = d3.select(this).attr("value");
+        var type = d3.select(this).attr("type");
+        var size = d3.select(this).attr("size");
+        console.log("Label element #" + i + " has attributes:\n x: " + x + "\ny: " + y + "\nvalue: " + value + "\ntype: " + type + "\nsize: " + size);
+    
+        var zpl = '^F'+x+','+y+'^'+type+','+size+'^FD{'+value+'}^FS';
+        label_zpl = label_zpl + zpl;
+        
+    });
+
     //print zpl
     console.log("zpl is:\n "+label_zpl);
     
