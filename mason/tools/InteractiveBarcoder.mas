@@ -45,6 +45,18 @@
         <button class="btn btn-primary d3-add-custom-text" data-toggle="modal" data-target="#customTextModal">Custom</button>
       </center>
     </div>
+    <div class="well">
+        <label class="col-sm-4 ">Trial: </label>
+        <div id="trial_select_div"></div>
+        <label class="col-sm-4 ">Number of Labels per Plot: </label>
+        <div>
+            <select class="form-control" id="num_labels" name="num_labels">
+                <option value="1">One</option>
+                <option value="2">Two</option>
+                <option value="3">Three</option>
+            </select>
+        </div>		                                   
+    </div>
   </div>
   <div class="col-md-3">
     <div class="well">
@@ -263,6 +275,8 @@ $(document).ready(function($) {
   //scales to allow for conversion between "real" pts and SVG pts
   var _x = d3.scale.linear().domain([0,width]).range([0,input_width]);
   var _y = d3.scale.linear().domain([0,height]).range([0,input_height]);
+  
+  get_select_box('trials', 'trial_select_div', { 'name' : 'trial_select', 'id' : 'trial_select' });
   
   //create svg canvas
   var svg = d3.select(".d3-draw-area")
@@ -539,32 +553,46 @@ console.log("SVG is "+source);
 $("#d3-pdf-button").on("click",function(event) {
     console.log("You clicked the download pdf button.");
 
-    var label_zpl = '^LH{ $X },{ $Y }';
-    var label_elements = d3.selectAll(".label-element");
-
-    console.log("Selected "+label_elements.size()+" label elements");
+    var zpl_template = '^LH{ $X },{ $Y }';
+    var label_elements = document.getElementsByClassName('label-element');
+    //console.log("Selected "+label_elements.length+" label elements");
     
-    label_elements.each(function(d,i){
-        
-        var x = d3.select(this).attr("x");
-        var y = d3.select(this).attr("y");
-        var value = d3.select(this).attr("value");
-        var type = d3.select(this).attr("type");
-        var size = d3.select(this).attr("size");
-        console.log("Label element #" + i + " has attributes:\n x: " + x + "\ny: " + y + "\nvalue: " + value + "\ntype: " + type + "\nsize: " + size);
+    for (var i = 0; i < label_elements.length; i++) {
+        element = label_elements[i];
+        var transform = element.parentNode.getAttribute('transform');
+        var coords = transform.split(')')[0].substring(10, transform.length); // extract x,y coords from translate(10,10)rotate(0)skewX(0)scale(1,1) format
+        var value = element.getAttribute("value");
+        var type = element.getAttribute("type");
+        var size = element.getAttribute("size");
+        console.log("Label element #" + i + " has attributes:\ncoords:" + coords + "\nvalue: " + value + "\ntype: " + type + "\nsize: " + size);
+        var zpl = '^F'+coords+'^'+type+','+size+'^FD{'+value+'}^FS';
+        zpl_template = zpl_template + zpl;
+    }
     
-        var zpl = '^F'+x+','+y+'^'+type+','+size+'^FD{'+value+'}^FS';
-        label_zpl = label_zpl + zpl;
+    //Get additional Params
+    
+    var trial_id = document.getElementById("trial_select").value;
+    var num_labels = document.getElementById("num_labels").value;
+    
+    console.log("zpl is:\n "+zpl_template+"\ntrial_id is: "+trial_id+"\nnum_labels is: "+num_labels);
+    
+    //send to server to build pdf file
+    jQuery.ajax( {
+        url: '/barcode/stock/download/zpl',
+        timeout: 60000,
+        method: 'POST',
+        data: {'trial_id': trial_id, 'num_labels': num_labels, 'zpl_template': zpl_template},
+        beforeSend: function() {
+        },
+        success: function(response) {
+            if (response.error) {
+            } else {
+            }
+        },
+        error: function(request, status, err) {
         
+        }
     });
-
-    //print zpl
-    console.log("zpl is:\n "+label_zpl);
-    
-    //Get label size, labels per sheet
-    
-    //send to server to build
-    
     
 });
 
