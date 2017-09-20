@@ -55,9 +55,18 @@ has 'metadata_schema' => (
 has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 has 'crosses' => (isa =>'ArrayRef[Pedigree]', is => 'rw', predicate => 'has_crosses', required => 1,);
 has 'location' => (isa =>'Str', is => 'rw', predicate => 'has_location', required => 1,);
-has 'program' => (isa =>'Str', is => 'rw', predicate => 'has_program', required => 1,);
+#has 'program' => (isa =>'Str', is => 'rw', predicate => 'has_program', required =>1,);
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
 has 'parent_folder_id' => (isa => 'Str', is => 'rw', predicate => 'has_parent_folder_id', required => 0,);
+has 'crossing_trial' =>(isa =>'Str', is=>'rw', predicate => 'has_crossing_trial', required =>1);
+
+sub get_crossing_trial_id {
+  my $self = shift;
+  my $crossing_trial_ref = $self->get_chado_schema->resultset('Project::Project')->find({name=>$self->get_crossing_trial});
+  my $crossing_trial_id = $crossing_trial_ref->project_id();
+  #print STDERR "get_crossing_trial_id returning $crossing_trial_id";
+  return $crossing_trial_id;
+}
 
 sub add_crosses {
   my $self = shift;
@@ -66,8 +75,8 @@ sub add_crosses {
   my @crosses;
   my $location_lookup;
   my $geolocation;
-  my $program;
-  my $program_lookup;
+  #my $program;
+  #my $program_lookup;
   my $transaction_error;
   my @added_stock_ids;
 	my $parent_folder_id;
@@ -90,25 +99,8 @@ sub add_crosses {
       my $female_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_parent', 'stock_relationship');
 
       my $male_parent_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'male_parent', 'stock_relationship');
-      my $progeny_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'offspring_of', 'stock_relationship');
+      #my $progeny_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'offspring_of', 'stock_relationship');
 
-      #get cvterm for cross_name or create if not found
-  #    my $cross_name_cvterm = $chado_schema->resultset("Cv::Cvterm")
-	#  ->find({
-	#      name   => 'cross_name',
-	#	 });
-  #    if (!$cross_name_cvterm) {
-	#  $cross_name_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_name', 'nd_experiment_property');
-  #    }
-      #get cvterm for cross_type or create if not found
-  #    my $cross_type_cvterm = $chado_schema->resultset("Cv::Cvterm")
-	#  ->find({
-	#      name   => 'cross_type',
-	#	 });
-
-  #    if (!$cross_type_cvterm) {
-	#  $cross_type_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_type', 'nd_experiment_property');
-  #    }
 
       #get cvterm for cross_experiment
       my $cross_experiment_type_cvterm =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross_experiment', 'experiment_type');
@@ -123,8 +115,8 @@ sub add_crosses {
       $geolocation = $location_lookup->get_geolocation();
 
       #lookup program by name
-      $program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema});
-      $program = $program_lookup->get_breeding_program_by_name($self->get_program());
+      #$program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema});
+      #$program = $program_lookup->get_breeding_program_by_name($self->get_program());
 
       @crosses = @{$self->get_crosses()};
 
@@ -137,7 +129,7 @@ sub add_crosses {
 	  my $female_parent;
 	  my $male_parent;
 	  my $population_stock;
-	  my $project;
+	  #my $project;
 	  my $cross_type = $pedigree->get_cross_type();
 	  my $cross_name = $pedigree->get_name();
 
@@ -159,24 +151,24 @@ sub add_crosses {
 	  }
 
 	  #create cross project
-	  $project = $chado_schema->resultset('Project::Project')
-	      ->create({
-		  name => $cross_name,
-		  description => $cross_name,
-		       });
+	  #$project = $chado_schema->resultset('Project::Project')
+	  #    ->create({
+		#  name => $cross_name,
+		#  description => $cross_name,
+		#       });
 
 	  #add error if cross name exists
 
 		#add cross to folder if one was specified
-		if ($parent_folder_id) {
-			my $folder = CXGN::Trial::Folder->new(
-			{
-				bcs_schema => $chado_schema,
-				folder_id => $project->project_id(),
-			});
+		#if ($parent_folder_id) {
+		#	my $folder = CXGN::Trial::Folder->new(
+		#	{
+		#		bcs_schema => $chado_schema,
+		#		folder_id => $project->project_id(),
+		#	});
 
-			$folder->associate_parent($parent_folder_id);
-		}
+		#	$folder->associate_parent($parent_folder_id);
+		#}
 
 	  #set projectprop so that projects corresponding to crosses can be identified
 	  #my $prop_row = $chado_schema->resultset("Project::Projectprop")
@@ -276,12 +268,12 @@ sub add_crosses {
 					  });
       #link the experiment to the project
     $experiment->find_or_create_related('nd_experiment_projects', {
-	     project_id => $project->project_id()
+	     project_id => $crossing_trial_id->project_id()
 					  } );
 
       #link the cross program to the breeding program
-			my $trial_object = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $project->project_id() });
-			   $trial_object->set_breeding_program($program->project_id());
+			#my $trial_object = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $project->project_id() });
+			#   $trial_object->set_breeding_program($program->project_id());
 
       #add the cross type to the experiment as an experimentprop
       #experiment
@@ -325,10 +317,12 @@ sub validate_crosses {
   my $chado_schema = $self->get_chado_schema();
   my @crosses = @{$self->get_crosses()};
   my $invalid_cross_count = 0;
-  my $program;
+  #my $program;
+  my $crossing_trial_lookup;
+  my $crossing_trial;
   my $location_lookup;
   my $trial_lookup;
-  my $program_lookup;
+  #my $program_lookup;
   my $geolocation;
 
   $location_lookup = CXGN::Location::LocationLookup->new({ schema => $chado_schema, location_name => $self->get_location() });
@@ -339,10 +333,17 @@ sub validate_crosses {
     return;
   }
 
-  $program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema});
-  $program = $program_lookup->get_breeding_program_by_name($self->get_program());
-  if (!$program) {
-    print STDERR "Breeding program ". $self->get_program() ." not found\n";
+  #$program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema});
+  #$program = $program_lookup->get_breeding_program_by_name($self->get_program());
+  #if (!$program) {
+  #  print STDERR "Breeding program ". $self->get_program() ." not found\n";
+  #  return;
+  #}
+
+  $crossing_trial_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema});
+  $crossing_trial = $crossing_trial_lookup->get_crossing_trial_by_name($self->get_crossing_trial());
+  if (!$crossing_trial) {
+    print STDERR "Crossing trial ". $self->get_crossing_trial() ." not found\n";
     return;
   }
 
