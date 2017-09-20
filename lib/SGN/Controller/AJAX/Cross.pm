@@ -249,32 +249,36 @@ sub add_cross_POST :Args(0) {
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $cross_name = $c->req->param('cross_name');
     my $cross_type = $c->req->param('cross_type');
-    my $breeding_program_id = $c->req->param('breeding_program_id');
-    my $folder_name = $c->req->param('folder_name');
-    my $folder_id = $c->req->param('folder_id');
-    my $folder;
+    my $crossing_trial_id = $c->req->param('crossing_trial_id');
+    #my $breeding_program_id = $c->req->param('breeding_program_id');
+    #my $folder_name = $c->req->param('folder_name');
+    #my $folder_id = $c->req->param('folder_id');
+    #my $folder;
 
-    if ($folder_name && !$folder_id) {
-      eval {
-        $folder = CXGN::Trial::Folder->create({
-          bcs_schema => $chado_schema,
-          parent_folder_id => '',
-          name => $folder_name,
-          breeding_program_id => $breeding_program_id,
-          folder_for_crosses =>1
-        });
-      };
+  #  my $crossing_trial_ref = $chado_schema->resultset("Project::Project")->find( { project_id => $crossing_trial_id });
+  #  my $crossing_trial = $crossing_trial_ref->name();
 
-      if ($@) {
-        $c->stash->{rest} = {error => $@ };
-        return;
-      }
+    #if ($folder_name && !$folder_id) {
+    #  eval {
+    #    $folder = CXGN::Trial::Folder->create({
+    #      bcs_schema => $chado_schema,
+    #      parent_folder_id => '',
+    #      name => $folder_name,
+    #      breeding_program_id => $breeding_program_id,
+    #      folder_for_crosses =>1
+    #    });
+    #  };
 
-      $folder_id = $folder->folder_id();
-    }
+    #  if ($@) {
+    #    $c->stash->{rest} = {error => $@ };
+    #    return;
+    #  }
 
-    my $breeding_program = $chado_schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
-    my $program = $breeding_program->name();
+    #  $folder_id = $folder->folder_id();
+    #}
+
+    #my $breeding_program = $chado_schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
+    #my $program = $breeding_program->name();
 
     if (!$c->user()) {
   print STDERR "User not logged in... not adding a cross.\n";
@@ -301,7 +305,7 @@ sub add_cross_POST :Args(0) {
           my $maternal = $maternal_parents[$i];
           my $polycross_name = $cross_name . '_' . $maternal . '_polycross';
           print STDERR "First polycross to add is $polycross_name with amternal $maternal and paternal $paternal\n";
-          my $success = $self->add_individual_cross($c, $chado_schema, $polycross_name, $cross_type, $program, $maternal, $paternal, $folder_id);
+          my $success = $self->add_individual_cross($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $maternal, $paternal);
           if (!$success) {
             return;
           }
@@ -319,7 +323,7 @@ sub add_cross_POST :Args(0) {
               next;
             }
             my $reciprocal_cross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_reciprocalcross';
-            my $success = $self->add_individual_cross($c, $chado_schema, $reciprocal_cross_name, $cross_type, $program, $maternal, $paternal, $folder_id);
+            my $success = $self->add_individual_cross($c, $chado_schema, $reciprocal_cross_name, $cross_type, $crossing_trial_id, $maternal, $paternal);
             if (!$success) {
               return;
             }
@@ -334,7 +338,7 @@ sub add_cross_POST :Args(0) {
             my $maternal = $maternal_parents[$i];
             my $paternal = $paternal_parents[$i];
             my $multicross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_multicross';
-            my $success = $self->add_individual_cross($c, $chado_schema, $multicross_name, $cross_type, $program, $maternal, $paternal, $folder_id);
+            my $success = $self->add_individual_cross($c, $chado_schema, $multicross_name, $cross_type, $crossing_trial_id, $maternal, $paternal);
             if (!$success) {
               return;
             }
@@ -343,7 +347,7 @@ sub add_cross_POST :Args(0) {
       else {
         my $maternal = $c->req->param('maternal');
         my $paternal = $c->req->param('paternal');
-        my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $program, $maternal, $paternal, $folder_id);
+        my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $maternal, $paternal);
         if (!$success) {
           return;
         }
@@ -608,17 +612,18 @@ sub add_individual_cross {
   my $chado_schema = shift;
   my $cross_name = shift;
   my $cross_type = shift;
-  my $program = shift;
+  #my $program = shift;
+  my $crossing_trial_id = shift;
   my $maternal = shift;
   my $paternal = shift;
-  my $folder_id = shift;
+  #my $folder_id = shift;
   my $owner_name = $c->user()->get_object()->get_username();
   my @progeny_names;
   my $progeny_increment = 1;
   my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
   my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
   my $dbh = $c->dbc->dbh;
-  my $location = $c->req->param('location');
+  #my $location = $c->req->param('location');
   my $prefix = $c->req->param('prefix');
   my $suffix = $c->req->param('suffix');
   my $progeny_number = $c->req->param('progeny_number');
@@ -697,11 +702,12 @@ my $cross_add = CXGN::Pedigree::AddCrosses
   chado_schema => $chado_schema,
   phenome_schema => $phenome_schema,
   dbh => $dbh,
-  location => $location,
-  program => $program,
+#  location => $location,
+#  program => $program,
+  crossing_trial_id => $crossing_trial_id,
   crosses =>  \@array_of_pedigree_objects,
   owner_name => $owner_name,
-  parent_folder_id => $folder_id
+  #parent_folder_id => $folder_id
     });
 
 
@@ -1278,8 +1284,8 @@ sub add_crossingtrial_POST :Args(0) {
       $folder_id = $folder->folder_id();
     }
 
-    my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
-    my $program = $breeding_program->name();
+  #  my $breeding_program = $schema->resultset("Project::Project")->find( { project_id => $breeding_program_id });
+  #  my $program = $breeding_program->name();
 
     my $geolocation_lookup = CXGN::Location::LocationLookup->new(schema =>$schema);
     $geolocation_lookup->set_location_name($location);
@@ -1287,23 +1293,6 @@ sub add_crossingtrial_POST :Args(0) {
         $c->stash->{rest}={error => "Location not found"};
         return;
     }
-
-    my $existing_crossingtrial = $schema->resultset("Project::Project")->find({name => $crossingtrial_name});
-    if ($existing_crossingtrial){
-        $c->stash->{rest} = {error => "That crossing trial name already exists in the database. Please select another name."};
-        return;
-    }
-
-  #  if($folder_name){
-  #      my $folder = CXGN::Trial::Folder->create({
-  #        bcs_schema => $schema,
-  #        parent_folder_id => '',
-  #        name => $folder_name,
-  #        breeding_program_id  => $breeding_program_id,
-  #        folder_for_crosses => 1
-  #      });
-  #      $folder_id = $folder->folder_id();
-  #  }
 
     if (!$c->user()) {
   print STDERR "User not logged in... not adding a crossingtrial.\n";

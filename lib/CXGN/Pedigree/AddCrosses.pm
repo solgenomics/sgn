@@ -58,15 +58,15 @@ has 'crosses' => (isa =>'ArrayRef[Pedigree]', is => 'rw', predicate => 'has_cros
 #has 'program' => (isa =>'Str', is => 'rw', predicate => 'has_program', required =>1,);
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
 #has 'parent_folder_id' => (isa => 'Str', is => 'rw', predicate => 'has_parent_folder_id', required => 0,);
-has 'crossing_trial' =>(isa =>'Str', is=>'rw', predicate => 'has_crossing_trial', required =>1);
+has 'crossing_trial_id' =>(isa =>'Int', is=>'rw', predicate => 'has_crossing_trial_id', required =>1);
 
-sub get_crossing_trial_id {
-  my $self = shift;
-  my $crossing_trial_ref = $self->get_chado_schema->resultset('Project::Project')->find({name=>$self->get_crossing_trial});
-  my $crossing_trial_id = $crossing_trial_ref->project_id();
+#sub get_crossing_trial_id {
+#  my $self = shift;
+#  my $crossing_trial_ref = $self->get_chado_schema->resultset('Project::Project')->find({name=>$self->get_crossing_trial});
+#  my $crossing_trial_id = $crossing_trial_ref->project_id();
   #print STDERR "get_crossing_trial_id returning $crossing_trial_id";
-  return $crossing_trial_id;
-}
+#  return $crossing_trial_id;
+#}
 
 sub add_crosses {
   my $self = shift;
@@ -79,6 +79,7 @@ sub add_crosses {
   #my $program_lookup;
   my $transaction_error;
   my @added_stock_ids;
+  my $crossing_trial_id
 	#my $parent_folder_id;
 
   #lookup user by name
@@ -132,6 +133,7 @@ sub add_crosses {
 	  #my $project;
 	  my $cross_type = $pedigree->get_cross_type();
 	  my $cross_name = $pedigree->get_name();
+    my $crossing_trial_id;
 
 	  if ($pedigree->has_female_parent()) {
 	      $female_parent_name = $pedigree->get_female_parent()->get_name();
