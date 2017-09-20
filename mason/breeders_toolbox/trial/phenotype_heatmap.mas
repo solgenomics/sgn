@@ -63,24 +63,6 @@ jQuery(document).ready( function() {
 
         });
         
-        
-//         jQuery.ajax( {
-//              url: '/ajax/breeders/trial/'+trial_id+'/heatmap', 
-//              success: function(response) {
-                
-//                 if (response.phenotypes){
-//                    //jQuery("#trait_heatmap").css("display", "none");
-//                    //jQuery("#traitdiv").css("display", "inline-block");
-//                 }
-//                 else  {
-//                        //jQuery("#trait_heatmap").css("display", "none");
-//                        //jQuery("#trial_no_phenoMSG").css("display", "inline-block");    
-//                 }
-//              },
-//              error: function(reponse) {
-//                 alert('Error displaying traits assayed heatmap');   
-//              }
-//         });
     });
     
 
@@ -88,13 +70,12 @@ jQuery(document).ready( function() {
     var selected = jQuery("#trial_list_dropdown").val();
     if (selected == ''){ }
     else {
-        alert(selected);
         jQuery.ajax( {
              url: '/ajax/breeders/trial/'+trial_id+'/heatmap?selected='+selected, 
              success: function(response) {
                
                 if (response.phenotypes){
-
+                    alert("I'm IN");
                 }
                 else  {
                 

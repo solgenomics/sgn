@@ -30,8 +30,6 @@ use warnings;
 use Moose;
 use Data::Dumper;
 use SGN::Model::Cvterm;
-use CXGN::Stock::StockLookup;
-use CXGN::Phenotypes::SearchFactory;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -66,14 +64,12 @@ sub get_trial_phenotypes_heatmap {
 	my $col_number_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property')->cvterm_id();
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-    my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
 
-    my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
 	my %columns = (
 	  trial_id=> 'project.project_id',
 	  trait_id=> 'cvterm.cvterm_id',
-      row_number=> 'row_number.value',
-      col_number=> 'col_number.value',
+      row_number=> 'row_number.value::int',
+      col_number=> 'col_number.value::int',
       rep=> 'rep.value',
 	  plot_number=> 'plot_number.value',
 	  block_number=> 'block_number.value',
@@ -93,23 +89,26 @@ sub get_trial_phenotypes_heatmap {
       LEFT JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment.nd_experiment_id)
       LEFT JOIN phenotype USING(phenotype_id)
       LEFT JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
-      JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
-      JOIN db USING(db_id)
+      LEFT JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
+      LEFT JOIN db USING(db_id)
       JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)
       JOIN project USING(project_id)",
     );
 
-	my $select_clause = "SELECT  ".$columns{'plot_name'}.", ".$columns{'accession_name'}.", ".$columns{'plot_number'}.", ".$columns{'block_number'}.", ".$columns{'rep'}.", ".$columns{'row_number'}.", ".$columns{'col_number'}.", ".$columns{'phenotype_value'}."";
+	my $select_clause = "SELECT  DISTINCT (plot.stock_id) , ".$columns{'plot_name'}.", ".$columns{'accession_name'}.", ".$columns{'plot_number'}.", ".$columns{'block_number'}.", ".$columns{'rep'}.", ".$columns{'row_number'}.", ".$columns{'col_number'}.", ".$columns{'phenotype_value'}."";
 
 	my $from_clause = $columns{'from_clause'};
 
-	my $order_clause = " ORDER BY 3";
+	my $order_clause = " ORDER BY 7, 8";
+	my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
 
 	my @where_clause;
 	
 	if ($trial_id && $trait_id){
-		push @where_clause, $columns{'trait_id'}." in ($trait_id)";
+		push @where_clause, " (". $columns{'trait_id'}." in ($trait_id) OR ". $columns{'trait_id'}." is NULL )";	
+		push @where_clause, "plot.type_id in ($plot_type_id)";
 		push @where_clause, $columns{'trial_id'}." in ($trial_id)";	
+		push @where_clause, " (". $columns{'phenotype_value'}." ~\'$numeric_regex\' OR ". $columns{'phenotype_value'}." is NULL )";	
 	}
     
     my $where_clause = " WHERE " . (join (" AND " , @where_clause));
@@ -119,8 +118,8 @@ sub get_trial_phenotypes_heatmap {
     $h->execute();
     my $result = [];
 	
-	while (my ($plot_name, $stock_name, $plot_number, $block_number, $rep, $row_number, $col_number, $value) = $h->fetchrow_array()) {
-        push @$result, [ $plot_name, $stock_name, $plot_number, $block_number, $rep, $row_number, $col_number, $value ];
+	while (my ($id, $plot_name, $stock_name, $plot_number, $block_number, $rep, $row_number, $col_number, $value) = $h->fetchrow_array()) {
+        push @$result, [$plot_name, $stock_name, $plot_number, $block_number, $rep, $row_number, $col_number, $value ];
     }
 
     print STDERR "Search End:".localtime."\n";
