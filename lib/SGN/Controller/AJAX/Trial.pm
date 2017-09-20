@@ -131,10 +131,10 @@ sub generate_experimental_design_POST : Args(0) {
   my $num_plants_per_plot = $c->req->param('num_plants_per_plot');
   my $num_seed_per_plot = $c->req->param('num_seed_per_plot');
 
-  if (!$num_seed_per_plot){
-      $c->stash->{rest} = { error => "You need to provide number of seeds per plot so that your breeding material can be tracked."};
-      return;
-  }
+  #if (!$num_seed_per_plot){
+#      $c->stash->{rest} = { error => "You need to provide number of seeds per plot so that your breeding material can be tracked."};
+#      return;
+  #}
 
   if ($design_type eq 'splitplot'){
       if (scalar(@treatments)<1){

@@ -149,7 +149,7 @@ jQuery(document).ready(function ($) {
         });
     }
 
-    var seedlot_list_verified = 0;
+    var seedlot_list_verified = 1;
     var seedlot_hash = {};
     function verify_seedlot_list(stock_list, seedlot_list) {
         $.ajax({
@@ -239,7 +239,15 @@ jQuery(document).ready(function ($) {
         var no_of_block_sequence = $('#no_of_block_sequence').val();
         var no_of_sub_block_sequence = $('#no_of_sub_block_sequence').val();
         var num_seed_per_plot = $('#num_seed_per_plot').val();
-        
+        console.log(num_seed_per_plot);
+
+        if (!jQuery.isEmptyObject(seedlot_hash)){
+            if (num_seed_per_plot == ''){
+                alert('Number of seeds per plot is required if you have selected a seedlot list!');
+                return;
+            }
+        }
+
         var unreplicated_accession_list;
         if (unreplicated_accession_list_id != "") {
             unreplicated_accession_list = JSON.stringify(list.getList(unreplicated_accession_list_id));
