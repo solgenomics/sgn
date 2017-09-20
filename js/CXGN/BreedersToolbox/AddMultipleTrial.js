@@ -388,6 +388,7 @@ jQuery(document).ready(function ($) {
       }
   });
 
+  $("#select_list_locations_multi").append(list.listSelect("select_list_locations_multi", [ 'locations' ], "select location list", 'refresh' ));
 
   function open_multilocation_project_dialog() {
     $('#add_multilocation_project_dialog').modal("show");
@@ -395,7 +396,6 @@ jQuery(document).ready(function ($) {
     $("#select_seedlot_list_multi_list_select").remove();
     $("#list_of_checks_section_multi_list_select").remove();
     $("#crbd_list_of_checks_section_multi_list_select").remove();
-    $("#select_list_locations_multi").append(list.listSelect("select_list_locations_multi", [ 'locations' ], "select location list" ));
     $("#select_list_multi").append(list.listSelect("select_list_multi", [ 'accessions' ], '', 'refresh' ));
     $("#select_seedlot_list_multi").append(list.listSelect("select_seedlot_list_multi", [ 'seedlots' ], '', 'refresh'));
     $("#list_of_checks_section_multi").append(list.listSelect("list_of_checks_section_multi", [ 'accessions' ], '', 'refresh'));

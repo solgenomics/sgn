@@ -13,6 +13,10 @@ $trial_id
 
 jQuery(document).ready(function () {
 
+    jQuery("#trial_seedlot_used_upload_spreadsheet_info_format").click( function () {
+        jQuery("#trial_seedlot_used_upload_spreadsheet_info_dialog" ).modal("show");
+    });
+
     jQuery('#trial_seedlots_onswitch').one("click", function() {
 
         jQuery.ajax ( {
@@ -75,6 +79,7 @@ jQuery(document).ready(function () {
             }
         });
     });
+
 });
 
 </script>

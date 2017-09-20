@@ -288,7 +288,8 @@ my $start_time = time();
 
 </&>
 
-<&| /page/info_section.mas, id => "trial_seedlots", title=>"Seedlots", is_subsection => 1, collapsible=>1, collapsed=>1 &>
+<& /breeders_toolbox/trial/add_trial_used_seedlots.mas, trial_id => $trial_id &>
+<&| /page/info_section.mas, id => "trial_seedlots", title=>"Seedlots", is_subsection => 1, collapsible=>1, collapsed=>1, subtitle=>"[<a id='trial_upload_seedlot_button' >Upload Seedlots Planted In Trial</a>]" &>
 
 <& /breeders_toolbox/trial/trial_seedlots.mas, trial_id => $trial_id &>
 
