@@ -31,6 +31,7 @@ use Data::Dumper;
 use CXGN::Stock::Seedlot::Transaction;
 use CXGN::BreedersToolbox::Projects;
 use SGN::Model::Cvterm;
+use CXGN::List::Validate;
 
 =head2 Accessor seedlot_id()
 
@@ -223,6 +224,127 @@ sub list_seedlots {
     }
     #print STDERR Dumper \@seedlots;
     return (\@seedlots, $records_total);
+}
+
+sub verify_seedlot_stock_lists {
+    my $class = shift;
+    my $schema = shift;
+    my $stock_names = shift;
+    my $seedlot_names = shift;
+    my $error = '';
+    my %return;
+
+    if (!$stock_names) {
+        $error .= "No accession list selected!";
+    }
+    if (!$seedlot_names) {
+        $error .= "No seedlot list supplied!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my @stock_names = @$stock_names;
+    my @seedlot_names = @$seedlot_names;
+    if (scalar(@stock_names)<1){
+        $error .= "Your accession list is empty!";
+    }
+    if (scalar(@seedlot_names)<1){
+        $error .= "Your seedlot list is empty!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my $lv = CXGN::List::Validate->new();
+    my @accessions_missing = @{$lv->validate($schema,'accessions',\@stock_names)->{'missing'}};
+    my $lv_seedlots = CXGN::List::Validate->new();
+    my @seedlots_missing = @{$lv_seedlots->validate($schema,'seedlots',\@seedlot_names)->{'missing'}};
+
+    if (scalar(@accessions_missing) > 0){
+        $error .= 'The following accessions are not valid in the database, so you must add them first: '.join ',', @accessions_missing;
+    }
+    if (scalar(@seedlots_missing) > 0){
+        $error .= 'The following seedlots are not valid in the database, so you must add them first: '.join ',', @seedlots_missing;
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my %selected_seedlots = map {$_=>1} @seedlot_names;
+    my %selected_accessions = map {$_=>1} @stock_names;
+    my %seedlot_hash;
+
+    my $ac = CXGN::BreedersToolbox::Accessions->new({schema=>$schema});
+    my $possible_seedlots = $ac->get_possible_seedlots(\@stock_names);
+    my %allowed_seedlots;
+    while (my($key,$val) = each %$possible_seedlots){
+        foreach my $seedlot (@$val){
+            my $seedlot_name = $seedlot->{seedlot}->[0];
+            if (exists($selected_accessions{$key}) && exists($selected_seedlots{$seedlot_name})){
+                push @{$seedlot_hash{$key}}, $seedlot_name;
+            }
+        }
+    }
+    if(scalar(keys %seedlot_hash) != scalar(@stock_names)){
+        $error .= "Error: The seedlot list you select must include seedlots for all the accessions you have selected. ";
+    }
+    if ($error){
+        $return{error} = $error;
+    } else {
+        $return{success} = 1;
+        $return{seedlot_hash} = \%seedlot_hash;
+    }
+    return \%return;
+}
+
+sub verify_seedlot_plot_compatibility {
+    my $class = shift;
+    my $schema = shift;
+    my $pairs = shift; #arrayref of [ [seedlot_name, plot_name] ]
+    my $error = '';
+    my %return;
+
+    if (!$pairs){
+        $error .= "No pair array passed!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my @pairs = @$pairs;
+    if (scalar(@pairs)<1){
+        $error .= "Your pairs list is empty!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot", "stock_type")->cvterm_id();
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot_of", "stock_relationship")->cvterm_id();
+    my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+    foreach (@pairs){
+        my $seedlot_name = $_->[0];
+        my $plot_name = $_->[1];
+
+        #The plot is linked to one accession via 'plot_of'. That accession is then linked to many seedlots via 'collection_of'. Here we can check if the provided seedlot is one of the seedlots linked to the plot's accession.
+        my $seedlot_rs = $schema->resultset("Stock::Stock")->search({'me.uniquename'=>$plot_name, 'me.type_id'=>$plot_cvterm_id})->search_related('stock_relationship_subjects', {'stock_relationship_subjects.type_id'=>$plot_of_cvterm_id})->search_related('object')->search_related('stock_relationship_subjects', {'stock_relationship_subjects_2.type_id'=>$collection_of_cvterm_id})->search_related('object', {'object_2.uniquename'=>$seedlot_name, 'object_2.type_id'=>$seedlot_cvterm_id});
+        if (!$seedlot_rs->first){
+            $error .= "The seedlot: $seedlot_name is not linked to the same accession as the plot: $plot_name . ";
+        }
+    }
+    if ($error){
+        $return{error} = $error;
+    } else {
+        $return{success} = 1;
+    }
+    return \%return;
 }
 
 sub BUILDARGS {

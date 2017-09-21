@@ -76,6 +76,7 @@ sub _validate_with_plugin {
 
     my %seen_seedlot_names;
     my %seen_plot_names;
+    my @pairs;
     for my $row ( 1 .. $row_max ) {
         my $row_name = $row+1;
         my $seedlot_name;
@@ -103,27 +104,29 @@ sub _validate_with_plugin {
             push @error_messages, "Cell A$row_name: seedlot_name must not contain spaces or slashes.";
         }
         else {
-            #file must not contain duplicate plot names
-            if ($seen_seedlot_names{$seedlot_name}) {
-                push @error_messages, "Cell A$row_name: duplicate seedlot_name at cell A".$seen_seedlot_names{$seedlot_name}.": $seedlot_name";
-            }
             $seen_seedlot_names{$seedlot_name}=$row_name;
         }
 
         if (!$plot_name || $plot_name eq '') {
             push @error_messages, "Cell B$row_name: plot_name missing";
         } else {
+            #file must not contain duplicate plot names
+            if ($seen_plot_names{$plot_name}) {
+                push @error_messages, "Cell B$row_name: duplicate plot_name at cell A".$seen_plot_names{$plot_name}.": $plot_name";
+            }
             $seen_plot_names{$plot_name}++;
         }
 
         if (!defined($amount) || $amount eq '') {
-            push @error_messages, "Cell C$row_name: amount missing";
+            push @error_messages, "Cell C$row_name: num_seed_per_plot missing";
         }
+
+        push @pairs, [$seedlot_name, $plot_name];
     }
 
     my @plots = keys %seen_plot_names;
     my $plots_validator = CXGN::List::Validate->new();
-    my @plots_missing = @{$plots_validator->validate($schema,'plots',\@accessions)->{'missing'}};
+    my @plots_missing = @{$plots_validator->validate($schema,'plots',\@plots)->{'missing'}};
 
     if (scalar(@plots_missing) > 0) {
         push @error_messages, "The following plot_name are not in the database: ".join(',',@plots_missing);
@@ -132,11 +135,16 @@ sub _validate_with_plugin {
 
     my @seedlots = keys %seen_seedlot_names;
     my $seedlots_validator = CXGN::List::Validate->new();
-    my @seedlots_missing = @{$seedlots_validator->validate($schema,'seedlots',\@accessions)->{'missing'}};
+    my @seedlots_missing = @{$seedlots_validator->validate($schema,'seedlots',\@seedlots)->{'missing'}};
 
     if (scalar(@seedlots_missing) > 0) {
         push @error_messages, "The following seedlot_name are not in the database: ".join(',',@seedlots_missing);
         $errors{'missing_seedlots'} = \@seedlots_missing;
+    }
+
+    my $return = CXGN::Stock::Seedlot->verify_seedlot_plot_compatibility($schema, \@pairs);
+    if (exists($return->{error})){
+        push @error_messages, $return->{error};
     }
 
     #store any errors found in the parsed file to parse_errors accessor
@@ -192,12 +200,12 @@ sub _parse_with_plugin {
         $seedlot_lookup{$r->uniquename} = $r->stock_id;
     }
     my @plots = keys %seen_plot_names;
-    my $rs = $schema->resultset("Stock::Stock")->search({
+    my $p_rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => \@plots }
     });
     my %plot_lookup;
-    while (my $r=$rs->next){
+    while (my $r=$p_rs->next){
         $plot_lookup{$r->uniquename} = $r->stock_id;
     }
 
@@ -236,7 +244,7 @@ sub _parse_with_plugin {
         };
     }
 
-    $self->_set_parsed_data(\%parsed_seedlots);
+    $self->_set_parsed_data(\%parsed_entries);
     return 1;
 }
 

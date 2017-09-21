@@ -13,6 +13,8 @@ use JSON;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Login;
 use CXGN::UploadFile;
+use CXGN::Stock::Seedlot;
+use CXGN::Stock::Seedlot::Transaction;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -419,7 +421,7 @@ sub trial_seedlots : Chained('trial') PathPart('seedlots') Args(0) {
     $c->stash->{rest} = { seedlots => \@data };
 }
 
-sub trial_seedlots : Chained('trial') PathPart('upload_used_seedlots') Args(0) {
+sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots') Args(0) {
     my $self = shift;
     my $c = shift;
     my $user_id;

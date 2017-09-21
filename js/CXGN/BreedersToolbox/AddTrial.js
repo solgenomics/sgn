@@ -239,7 +239,6 @@ jQuery(document).ready(function ($) {
         var no_of_block_sequence = $('#no_of_block_sequence').val();
         var no_of_sub_block_sequence = $('#no_of_sub_block_sequence').val();
         var num_seed_per_plot = $('#num_seed_per_plot').val();
-        console.log(num_seed_per_plot);
 
         if (!jQuery.isEmptyObject(seedlot_hash)){
             if (num_seed_per_plot == ''){

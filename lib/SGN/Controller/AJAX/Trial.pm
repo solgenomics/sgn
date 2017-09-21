@@ -573,7 +573,6 @@ sub verify_stock_list_POST : Args(0) {
     my @stock_names;
     my $error;
     my %errors;
-    my $error_alert;
     if ($c->req->param('stock_list')) {
         @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
     }
@@ -603,75 +602,24 @@ sub verify_seedlot_list_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my @stock_names;
     my @seedlot_names;
-    my $error = '';
-    my $error_alert;
     if ($c->req->param('stock_list')) {
         @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
     }
     if ($c->req->param('seedlot_list')) {
         @seedlot_names = @{_parse_list_from_json($c->req->param('seedlot_list'))};
     }
+    my $return = CXGN::Stock::Seedlot->verify_seedlot_stock_lists($schema, \@stock_names, \@seedlot_names);
 
-    if (!@stock_names) {
-        $error .= "No accession list selected!";
-    }
-    if (!@seedlot_names) {
-        $error .= "No seedlot list supplied!";
-    }
-    if (scalar(@stock_names)<1){
-        $error .= "Your accession list is empty!";
-    }
-    if (scalar(@seedlot_names)<1){
-        $error .= "Your seedlot list is empty!";
-    }
-    if ($error){
-        $c->stash->{rest} = {error => $error};
+    if (exists($return->{error})){
+        $c->stash->{rest} = { error => $return->{error} };
         $c->detach();
     }
-
-    my $lv = CXGN::List::Validate->new();
-    my @accessions_missing = @{$lv->validate($schema,'accessions',\@stock_names)->{'missing'}};
-    my $lv_seedlots = CXGN::List::Validate->new();
-    my @seedlots_missing = @{$lv_seedlots->validate($schema,'seedlots',\@seedlot_names)->{'missing'}};
-
-    if (scalar(@accessions_missing) > 0){
-        $error .= 'The following accessions are not valid in the database, so you must add them first: '.join ',', @accessions_missing;
+    if (exists($return->{success})){
+        $c->stash->{rest} = {
+            success => "1",
+            seedlot_hash => $return->{seedlot_hash}
+        };
     }
-    if (scalar(@seedlots_missing) > 0){
-        $error .= 'The following seedlots are not valid in the database, so you must add them first: '.join ',', @seedlots_missing;
-    }
-    if ($error){
-        $c->stash->{rest} = {error => $error};
-        $c->detach();
-    }
-
-    my %selected_seedlots = map {$_=>1} @seedlot_names;
-    my %selected_accessions = map {$_=>1} @stock_names;
-    my %seedlot_hash;
-
-    my $ac = CXGN::BreedersToolbox::Accessions->new({schema=>$schema});
-    my $possible_seedlots = $ac->get_possible_seedlots(\@stock_names);
-    my %allowed_seedlots;
-    while (my($key,$val) = each %$possible_seedlots){
-        foreach my $seedlot (@$val){
-            my $seedlot_name = $seedlot->{seedlot}->[0];
-            if (exists($selected_accessions{$key}) && exists($selected_seedlots{$seedlot_name})){
-                $seedlot_hash{$key} = $seedlot_name;
-            }
-        }
-    }
-    if(scalar(keys %seedlot_hash) != scalar(@stock_names)){
-        $error .= "Error: The seedlot list you select must include seedlots for the accessions you have selected. ";
-    }
-    if ($error){
-        $c->stash->{rest} = {error => $error};
-        $c->detach();
-    }
-
-    $c->stash->{rest} = {
-        success => "1",
-        seedlot_hash => \%seedlot_hash
-    };
 }
 
 sub _parse_list_from_json {
