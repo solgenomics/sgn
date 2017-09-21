@@ -6,6 +6,7 @@ use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
+use CXGN::Stock::Seedlot;
 
 sub _validate_with_plugin {
     print STDERR "Check 3.1.1 ".localtime();
@@ -143,6 +144,7 @@ sub _validate_with_plugin {
     push @error_messages, "Cell K1: num_seed_per_plot is missing from the header. (Header is required, but values are optional)";
   }
 
+  my @pairs;
   for my $row ( 1 .. $row_max ) {
       #print STDERR "Check 01 ".localtime();
     my $row_name = $row+1;
@@ -263,6 +265,7 @@ sub _validate_with_plugin {
 
     if ($seedlot_name){
         $seen_seedlot_names{$seedlot_name}++;
+        push @pairs, [$seedlot_name, $accession_name];
     }
     if (defined($num_seed_per_plot) && !($num_seed_per_plot =~ /^\d+?$/)){
         push @error_messages, "Cell K$row_name: num_seed_per_plot must be a positive integer: $num_seed_per_plot";
@@ -298,6 +301,11 @@ sub _validate_with_plugin {
         if (scalar(@seedlots_missing) > 0) {
             $errors{'missing_seedlots'} = \@seedlots_missing;
             push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
+        }
+    
+        my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions($schema, \@pairs);
+        if (exists($return->{error})){
+            push @error_messages, $return->{error};
         }
     }
 

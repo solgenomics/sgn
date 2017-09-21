@@ -347,6 +347,50 @@ sub verify_seedlot_plot_compatibility {
     return \%return;
 }
 
+sub verify_seedlot_accessions {
+    my $class = shift;
+    my $schema = shift;
+    my $pairs = shift; #arrayref of [ [seedlot_name, accession_name] ]
+    my $error = '';
+    my %return;
+
+    if (!$pairs){
+        $error .= "No pair array passed!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my @pairs = @$pairs;
+    if (scalar(@pairs)<1){
+        $error .= "Your pairs list is empty!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+    my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+    foreach (@pairs){
+        my $seedlot_name = $_->[0];
+        my $accession_name = $_->[1];
+
+        my $seedlot_rs = $schema->resultset("Stock::Stock")->search({'me.uniquename'=>$seedlot_name, 'me.type_id'=>$seedlot_cvterm_id})->search_related('stock_relationship_objects', {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id})->search_related('subject', {'subject.uniquename'=>$accession_name, 'subject.type_id'=>$accession_cvterm_id});
+        if (!$seedlot_rs->first){
+            $error .= "The seedlot: $seedlot_name is not linked to the accession: $accession_name.";
+        }
+    }
+    if ($error){
+        $return{error} = $error;
+    } else {
+        $return{success} = 1;
+    }
+    return \%return;
+}
+
 sub BUILDARGS {
     my $orig = shift;
     my %args = @_;

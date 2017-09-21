@@ -305,7 +305,7 @@ sub _get_design_from_trial {
         if ($self->get_verify_layout){
             my $seedlot_accession_check = $seedlot->search_related('stock_relationship_objects', {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id})->search_related('subject', {'subject.stock_id'=>$accession_id});
             if (!$seedlot_accession_check->first){
-                push @{$verify_errors{errors}->{seedlot_errors}}, "Seedlot: ".$seedlot->first->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
+                push @{$verify_errors{errors}->{layout_errors}}, "Seedlot: ".$seedlot->first->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
             }
         }
 		$design_info{"seedlot_name"} = $seedlot->first->uniquename;
@@ -320,7 +320,7 @@ sub _get_design_from_trial {
             if ($self->get_verify_layout){
                 my $plant_accession_check = $p->search_related('stock_relationship_subjects', {'stock_relationship_subjects_2.type_id'=>$plant_rel_cvterm_id})->search_related('object', {'object_2.stock_id'=>$accession_id});
                 if (!$plant_accession_check->first){
-                    push @{$verify_errors{errors}->{accession_sync_errors}}, "Plant: ".$p->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
+                    push @{$verify_errors{errors}->{layout_errors}}, "Plant: ".$p->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
                 }
             }
 			my $plant_name = $p->uniquename();
@@ -339,7 +339,7 @@ sub _get_design_from_trial {
             if ($self->get_verify_layout){
                 my $subplot_accession_check = $p->search_related('stock_relationship_subjects', {'stock_relationship_subjects_2.type_id'=>$subplot_rel_cvterm_id})->search_related('object', {'object_2.stock_id'=>$accession_id});
                 if (!$subplot_accession_check->first){
-                    push @{$verify_errors{errors}->{accession_sync_errors}}, "Subplot: ".$p->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
+                    push @{$verify_errors{errors}->{layout_errors}}, "Subplot: ".$p->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
                 }
             }
 			my $subplot_name = $p->uniquename();
