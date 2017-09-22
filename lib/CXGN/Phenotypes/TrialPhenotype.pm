@@ -30,6 +30,7 @@ use warnings;
 use Moose;
 use Data::Dumper;
 use SGN::Model::Cvterm;
+use List::MoreUtils qw(uniq);
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -66,6 +67,7 @@ sub get_trial_phenotypes_heatmap {
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
 	my %columns = (
+	  stock_id => 'plot.stock_id',
 	  trial_id=> 'project.project_id',
 	  trait_id=> 'cvterm.cvterm_id',
       row_number=> 'row_number.value::int',
@@ -95,20 +97,23 @@ sub get_trial_phenotypes_heatmap {
       JOIN project USING(project_id)",
     );
 
-	my $select_clause = "SELECT  DISTINCT (plot.stock_id) , ".$columns{'plot_name'}.", ".$columns{'accession_name'}.", ".$columns{'plot_number'}.", ".$columns{'block_number'}.", ".$columns{'rep'}.", ".$columns{'row_number'}.", ".$columns{'col_number'}.", ".$columns{'phenotype_value'}."";
+	my $select_clause = "SELECT  DISTINCT ".$columns{'stock_id'}.", ".$columns{'plot_name'}.", ".$columns{'accession_name'}.", ".$columns{'plot_number'}.", ".$columns{'block_number'}.", ".$columns{'rep'}.", ".$columns{'row_number'}.", ".$columns{'col_number'}.", ".$columns{'phenotype_value'}."";
 
 	my $from_clause = $columns{'from_clause'};
 
-	my $order_clause = " ORDER BY 7, 8";
+	my $order_clause = " ORDER BY 7, 8 ASC";
 	my $numeric_regex = '^[0-9]+([,.][0-9]+)?$';
+	my $numeric_regex_2 = '/^\s*$/';
 
 	my @where_clause;
 	
 	if ($trial_id && $trait_id){
-		push @where_clause, " (". $columns{'trait_id'}." in ($trait_id) OR ". $columns{'trait_id'}." is NULL )";	
+		push @where_clause, " (". $columns{'trait_id'}." in ($trait_id) OR ". $columns{'trait_id'}." is NULL )";
+		#push @where_clause, $columns{'trait_id'}." in ($trait_id)";	
 		push @where_clause, "plot.type_id in ($plot_type_id)";
 		push @where_clause, $columns{'trial_id'}." in ($trial_id)";	
-		push @where_clause, " (". $columns{'phenotype_value'}." ~\'$numeric_regex\' OR ". $columns{'phenotype_value'}." is NULL )";	
+		#push @where_clause, " (". $columns{'phenotype_value'}." ~\'$numeric_regex\' OR ". $columns{'phenotype_value'}." is NULL )";	
+		push @where_clause, $columns{'phenotype_value'}." ~\'$numeric_regex\' ";	
 	}
     
     my $where_clause = " WHERE " . (join (" AND " , @where_clause));
@@ -117,14 +122,35 @@ sub get_trial_phenotypes_heatmap {
 	my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my $result = [];
+	my (@col_No, @row_No, @pheno_val, @plot_Name, @stock_Name, @plot_No, @block_No, @rep_No, @msg, %results);
 	
 	while (my ($id, $plot_name, $stock_name, $plot_number, $block_number, $rep, $row_number, $col_number, $value) = $h->fetchrow_array()) {
         push @$result, [$plot_name, $stock_name, $plot_number, $block_number, $rep, $row_number, $col_number, $value ];
+		push @col_No, $col_number;
+		push @row_No, $row_number;
+		push @pheno_val, $value;
+		push @plot_Name, $plot_name;
+		push @stock_Name, $stock_name;
+		push @plot_No, $plot_number;
+		push @block_No, $block_number;
+		push @rep_No, $rep;
+		push @msg, "plot_No:".$plot_number."\nblock_No:".$block_number."\nrep_No:".$rep."\nstock:".$stock_name."\nvalue:".$value;
     }
 
+	%results = (
+	col => \@col_No,
+	row => \@row_No,
+	pheno => \@pheno_val,
+	plotName => \@plot_Name,
+	stock => \@stock_Name,
+	plot => \@plot_No,
+	block => \@block_No,
+	rep => \@rep_No,
+	result => $result
+	);
     print STDERR "Search End:".localtime."\n";
 	print STDERR Dumper($result);
-    return $result;
+    return \%results;
 }
 
 

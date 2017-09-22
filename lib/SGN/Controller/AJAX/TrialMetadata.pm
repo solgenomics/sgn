@@ -948,9 +948,9 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
     	trial_id=>$trial_id,
         trait_id=>$trait_id
     });
-    my @phenotype = $phenotypes_heatmap->get_trial_phenotypes_heatmap();
+    my $phenotype = $phenotypes_heatmap->get_trial_phenotypes_heatmap();
     
-    $c->stash->{rest} = {phenotypes => \@phenotype};
+    $c->stash->{rest} = { phenotypes => $phenotype };
     
 }
 
