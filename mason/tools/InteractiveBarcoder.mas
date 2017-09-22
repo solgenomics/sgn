@@ -112,15 +112,15 @@ var barcode_types = [
   {name:"barc_type C",width:1*72,height:0.25*72}
 ];
 var text_placeholders = [
-{key:"$ACCESSION_NAME", name:"Accession Name"},
-{key:"$PLOT_NAME",   name:"Plot Name"},
-{key:"$PLOT_NUMBER",     name:"Plot Number"},
-{key:"$REP_NUMBER", name:"Rep Number"},
-{key:"$ROW NUMBER", name:"Row Number"},
-{key:"$COL_NUMBER", name:"Col Number"},
-{key:"$TRIAL_NAME", name:"Trial Name"},
-{key:"$YEAR", name:"Year"},
-{key:"$FEMALE_PARENT/MALE_PARENT", name:"Pedigree"}
+{key:"{$ACCESSION_NAME}", name:"Accession Name"},
+{key:"{$PLOT_NAME}",   name:"Plot Name"},
+{key:"{$PLOT_NUMBER}",     name:"Plot Number"},
+{key:"{$REP_NUMBER}", name:"Rep Number"},
+{key:"{$ROW_NUMBER}", name:"Row Number"},
+{key:"{$COL_NUMBER}", name:"Col Number"},
+{key:"{$TRIAL_NAME}", name:"Trial Name"},
+{key:"{$YEAR}", name:"Year"},
+{key:"{$PEDIGREE}", name:"Pedigree"}
 ]
 
 //set up drag behaviour
@@ -361,7 +361,7 @@ $(document).ready(function($) {
         y:0,
         width:_x.invert(barcode_types[val].width),
         height:_y.invert(barcode_types[val].height),
-        value:"$PLOT_NAME",
+        value:"{$PLOT_NAME}",
         type:"BQ",
         size:",7",
         fill:"#333",
@@ -400,9 +400,9 @@ $(document).ready(function($) {
     text_content.selectAll(".d3-text-placeholder").each(function(d,i){
       var th = d3.select(this)
       th.html("").text(th.attr("key"))
+      
     });
     var text = text_content.text();
-    text_content.html("");
     var fontSize = _x.invert(d3.select("#d3-font-size-input").node().value);
     addText(text,fontSize)
   })
@@ -565,7 +565,7 @@ $("#d3-pdf-button").on("click",function(event) {
         var type = element.getAttribute("type");
         var size = element.getAttribute("size");
         console.log("Label element #" + i + " has attributes:\ncoords:" + coords + "\nvalue: " + value + "\ntype: " + type + "\nsize: " + size);
-        var zpl = '^F'+coords+'^'+type+','+size+'^FD{'+value+'}^FS';
+        var zpl = '^FO'+coords+'^'+type+','+size+'^FD'+value+'^FS';
         zpl_template = zpl_template + zpl;
     }
     
