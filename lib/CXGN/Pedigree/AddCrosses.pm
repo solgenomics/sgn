@@ -343,9 +343,9 @@ sub validate_crosses {
   #}
 
   $crossing_trial_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema});
-  $crossing_trial = $crossing_trial_lookup->get_crossing_trial_by_name($self->get_crossing_trial());
+  $crossing_trial = $crossing_trial_lookup->get_crossing_trials($self->get_crossing_trial_id());
   if (!$crossing_trial) {
-    print STDERR "Crossing trial ". $self->get_crossing_trial() ." not found\n";
+    print STDERR "Crossing trial ". $self->get_crossing_trials() ." not found\n";
     return;
   }
 
