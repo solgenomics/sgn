@@ -23,24 +23,14 @@
         <label>Add Text</label>
         <br>
         <select id="d3-font-size-input" class="form-control input" min="5" max="72" style="width:15%;float:left;">
-          <option value="7.5">7.5pt</option>
-          <option value="8">8pt</option>
-          <option value="9">9pt</option>
-          <option value="10">10pt</option>
-          <option value="10.5">10.5pt</option>
-          <option value="11">11pt</option>
-          <option value="12" selected>12pt</option>
-          <option value="14">14pt</option>
-          <option value="16">16pt</option>
-          <option value="18">18pt</option>
-          <option value="20">20pt</option>
-          <option value="22">22pt</option>
-          <option value="24">24pt</option>
-          <option value="26">26pt</option>
-          <option value="28">28pt</option>
-          <option value="36">36pt</option>
-          <option value="48">48pt</option>
-          <option value="72">72pt</option>
+          <option value="7">7</option>
+          <option value="14">14</option>
+          <option value="21">21</option>
+          <option value="28" selected>28</option>
+          <option value="35">35</option>
+          <option value="42">42</option>
+          <option value="49">49</option>
+          <option value="56">56</option>
         </select>
         <button class="btn btn-primary d3-add-custom-text" data-toggle="modal" data-target="#customTextModal">Custom</button>
       </center>
@@ -107,9 +97,9 @@
 
 <script>
 var barcode_types = [
-  {name:"barc_type A",width:1*72,height:0.5*72},
-  {name:"barc_type B",width:1*72,height:72},
-  {name:"barc_type C",width:1*72,height:0.25*72}
+  {name:"Large QR Code (2D)",width:180,height:180,code:"BQ",size:",7"},
+  {name:"Medium QR Code (2D)",width:154,height:154,code:"BQ",size:",6"},
+  {name:"Small QR Code (2D)",width:128,height:128,code:"BQ",size:",5"},
 ];
 var text_placeholders = [
 {key:"{$ACCESSION_NAME}", name:"Accession Name"},
@@ -266,10 +256,10 @@ function getTransGroupBounds(node){
 }
 
 $(document).ready(function($) {
-  var input_width = 400; //label width (pts)
-  var input_height = 154; //label height (pts)
+  var input_width = 520; //label width (pts)
+  var input_height = 200; //label height (pts)
 
-  var width = 400; //fixed svg width;
+  var width = 520; //fixed svg width;
   var height = width/input_width*input_height; //scaled height.
 
   //scales to allow for conversion between "real" pts and SVG pts
@@ -343,17 +333,17 @@ $(document).ready(function($) {
     clearSelection();
     var val = d3.select(this).node().value;
     if (val>=0){
-      var cur_barcode = barcode_g.html("")//.append('g')
-      cur_barcode
+      var cur_barcode = svg.append("g")//barcode_g.html("")//.append('g')
+//      cur_barcode
       .classed("barcode",true)
       .classed("draggable",true)
       .classed("selectable",true)
       .call(draggable)
-      .call(selectable,true)
-      .call(doTransform,function(state,selection){
-        state.translate[0] += (width/2)-(barcode_types[val].width/2)
-        state.translate[1] += (height/2)-(barcode_types[val].height/2)
-      })
+      .call(selectable,false)
+    //   .call(doTransform,function(state,selection){
+    //     state.translate[0] += (width/2)-(barcode_types[val].width/2)
+    //     state.translate[1] += (height/2)-(barcode_types[val].height/2)
+    //   })
       .on("mouseup", dragSnap)
       .append('rect')
       .attr({
@@ -362,12 +352,12 @@ $(document).ready(function($) {
         width:_x.invert(barcode_types[val].width),
         height:_y.invert(barcode_types[val].height),
         value:"{$PLOT_NAME}",
-        type:"BQ",
-        size:",7",
+        type: barcode_types[val].code,
+        size: barcode_types[val].size,
         fill:"#333",
         class:"label-element",
       });
-      cur_barcode.call(doTransform,doSnap);
+     // cur_barcode.call(doSnap);//doTransform,doSnap);
     }
   });
 
@@ -447,7 +437,7 @@ function addText(text,fontSize){
       "dominant-baseline": "mathematical",
       value:text,
       type:"AA",
-      size:"28",
+      size:fontSize,
       class:"label-element",
     })
     .text(text);
@@ -577,36 +567,7 @@ $("#d3-pdf-button").on("click",function(event) {
     console.log("zpl is:\n "+zpl_template+"\ntrial_id is: "+trial_id+"\nnum_labels is: "+num_labels);
     
     //send to server to build pdf file
-    //window.location.href = '/barcode/stock/download/zpl/trial_id='+trial_id+'&num_labels='+num_labels+'&zpl_template='+zpl_template;
-    // jQuery.ajax({
-    //     type: 'POST',
-    //     url: '/ajax/fieldbook/traitfile/create',
-    //     dataType: "json",
-    //     data: {
-    //         'trait_list': trait_list,
-    //         'trait_ids': trait_ids,
-    //         'trait_file_name': trait_file_name,
-    //     },
-    //     beforeSend: function() {
-    //         jQuery("#working_modal").modal("show");
-    //     },
-    //     success: function(response) {
-    //         jQuery("#working_modal").modal("hide");
-    //         if (response.error) {
-    //             alert(response.error);
-    //         } else {
-    //             jQuery('#trait_file_download_link').attr('href', "/fieldbook/trait_file_download/" + response.file_id);
-    //             jQuery("#trait_file_saved_dialog_message").modal("show");
-    //             jQuery('#create_trait_file_dialog').modal("hide");
-    //         }
-    //     },
-    //     error: function() {
-    //         jQuery("#working_modal").modal("hide");
-    //         alert('An error occurred creating the trait file.');
-    //         jQuery('#create_trait_file_dialog').modal("hide");
-    //     },
-    // });
-    // 
+
     jQuery.ajax( {
         url: '/barcode/download/zpl',
         timeout: 60000,
