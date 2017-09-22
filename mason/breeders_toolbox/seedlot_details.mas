@@ -179,6 +179,25 @@ $timestamp
   </div>
 </div>
 
+<div class="modal fade" id="edit_seedlot_transaction_dialog" name="edit_seedlot_transaction_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_edit_transaction_dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="seedlot_edit_transaction_dialog">Edit Seedlot Transaction</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div id="edit_seedlot_transaction_div">
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="edit_seedlot_transaction_button" type="button" class="btn btn-default" >Save</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <script>
@@ -208,6 +227,7 @@ $timestamp
             { title: "Transaction Count", "data": "value" },
             { title: "Operator", "data": "operator" },
             { title: "Description", "data": "description" },
+            { title: "Options", "data": "null", "render" : function ( data, type, row ) { return "<a onclick='editSeedlotTransaction("+row.transaction_id+")' >[Edit]</a>"; } },
         ],
     });
 
@@ -339,6 +359,31 @@ $timestamp
     });
 
   });
+
+function editSeedlotTransaction(transaction_id){
+    jQuery.ajax({
+        url: '/ajax/breeders/seedlot/<% $seedlot_id %>/transaction/'+transaction_id,
+        beforeSend: function(){
+            jQuery('#working_modal').modal('show');
+        },
+        success: function(response) {
+            jQuery('#working_modal').modal('hide');
+            if (response.success == 1) {
+                html = '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Transaction ID: </label><div class="col-sm-9" ><input type="text" class="form-control" value="'+response.transaction_id+'" disabled /></div></div><div class="form-group"><label class="col-sm-3 control-label">Operator: </label><div class="col-sm-9" ><input type="text" class="form-control" value="'+response.operator+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Amount: </label><div class="col-sm-9" ><input type="text" class="form-control" value="'+response.amount+'" /></div></div><div class="form-group"><label class="col-sm-3 control-label">Timestamp: </label><div class="col-sm-9" ><input type="text" class="form-control" value="'+response.timestamp+'" disabled /></div></div><div class="form-group"><label class="col-sm-3 control-label">Description: </label><div class="col-sm-9" ><input type="text" class="form-control" value="'+response.description+'" /></div></div></form>';
+                jQuery('#edit_seedlot_transaction_div').html(html);
+                jQuery('#edit_seedlot_transaction_dialog').modal('show');
+            }
+            if (response.error) {
+                alert(response.error);
+            }
+        },
+        error: function(response){
+            jQuery('#working_modal').modal('hide');
+            alert('An error occurred getting seedlot transaction');
+        }
+    });
+}
+
 </script>
 
 

@@ -11,6 +11,7 @@ use CXGN::Stock::Seedlot::Transaction;
 use SGN::Model::Cvterm;
 use CXGN::Stock::Seedlot::ParseUpload;
 use CXGN::Login;
+use JSON;
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -302,6 +303,18 @@ sub upload_seedlots_POST : Args(0) {
     }
 
     $c->stash->{rest} = { success => 1 };
+}
+
+sub get_seedlot_transaction :Chained('seedlot_base') PathPart('transaction') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $transaction_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $t = $schema->resultset("Stock::StockRelationship")->find({stock_relationship_id=>$transaction_id});
+    my $val = $t->value();
+    my $json = JSON->new();
+    my $d = $json->decode($val);
+    $c->stash->{rest} = { success => 1, transaction_id => $transaction_id, description=>$d->{description}, amount=>$d->{amount}, operator=>$d->{operator}, timestamp=>$d->{timestamp} };
 }
 
 sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions') Args(0) { 
