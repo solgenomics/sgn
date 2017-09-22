@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 14:09:2017 16:16
+date: 22:09:2017 12:45
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -3801,6 +3801,29 @@ xref: PO:0009001
 relationship: variable_of SP:0000039 ! fruit shape index
 created_by: naama
 creation_date: 2017-09-12T14:03:15Z
+
+[Term]
+id: SP:0000427
+name: stem length
+is_a: SP:0000193 ! stem
+created_by: naama
+creation_date: 2017-09-22T12:03:07Z
+
+[Term]
+id: SP:0000428
+name: stem length between 1st and 10th true leaves (cm)
+def: "The distance between the 1st and the 10th leaf in cm.\nRecorded at complete developmental stage." [SGn:EVDK]
+relationship: variable_of SP:0000427 ! stem length
+created_by: naama
+creation_date: 2017-09-22T12:03:26Z
+
+[Term]
+id: SP:0000429
+name: inflorescence length
+def: "The distance from the stem to the last flower along the rachis of the inflorescence." [SGN:EVDK]
+relationship: variable_of SP:0000007 ! inflorescence
+created_by: naama
+creation_date: 2017-09-22T12:06:11Z
 
 [Term]
 id: SP:0000706
