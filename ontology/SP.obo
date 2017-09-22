@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 22:09:2017 13:33
+date: 22:09:2017 13:43
 saved-by: naama
 auto-generated-by: OBO-Edit 2.3.1
 default-namespace: solanaceae_phenotype
@@ -3869,6 +3869,29 @@ def: "Epicarp 'b' color value was recorded in a point close to pistil scar. Colo
 relationship: variable_of SP:0000432 ! epicarp Lab-scale color
 created_by: naama
 creation_date: 2017-09-22T13:27:50Z
+
+[Term]
+id: SP:0000436
+name: leaflets number
+is_a: SP:0000109 ! leaf number
+created_by: naama
+creation_date: 2017-09-22T13:40:25Z
+
+[Term]
+id: SP:0000437
+name: number of primary leaflets per leaf
+def: "Number of primary leaflets per leaf. Counting\nin fully opened leaves when the plant is completely developed." [SGN:EVDK]
+relationship: variable_of SP:0000436 ! leaflets number
+created_by: naama
+creation_date: 2017-09-22T13:40:46Z
+
+[Term]
+id: SP:0000438
+name: number of secondary leaflets per leaf
+def: "Number of secondary leaflets per leaf. Counting\nin fully opened leaves when the plant is completely developed." [SGN:EVDK]
+relationship: variable_of SP:0000436 ! leaflets number
+created_by: naama
+creation_date: 2017-09-22T13:41:28Z
 
 [Term]
 id: SP:0000706
