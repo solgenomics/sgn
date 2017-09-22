@@ -194,7 +194,7 @@ jQuery(document).ready(function($) {
     //    }
 
         var visibleToRole = $("#visible_to_role").val();
-    //    var location = $("#location").val();
+        var location = $("#location").val();
     //    var folder_name = $("#add_cross_folder_name").val();
     //    var folder_id;
     //    if (folder_name) {  // get id if folder with this name already exisits
@@ -203,7 +203,7 @@ jQuery(document).ready(function($) {
     //    else {
     //        folder_id = $("#add_cross_folder_id").val();
     //    }
-        add_cross(crossType, crossName, crossing_trial_id, visibleToRole);
+        add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location);
 
     });
 
@@ -275,7 +275,7 @@ jQuery(document).ready(function($) {
 
 
 
-    function add_cross(crossType, crossName, crossing_trial_id, visibleToRole) {
+    function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location) {
 
         var progenyNumber = $("#progeny_number").val();
         var flowerNumber = $("#flower_number").val();
@@ -355,6 +355,7 @@ jQuery(document).ready(function($) {
               'prefix': prefix,
               'suffix': suffix,
               'visible_to_role': visibleToRole,
+              'location': location,
               'crossing_trial_id': crossing_trial_id,
             },
             beforeSend: function() {

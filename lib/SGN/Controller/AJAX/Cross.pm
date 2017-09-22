@@ -305,7 +305,8 @@ sub add_cross_POST :Args(0) {
           my $maternal = $maternal_parents[$i];
           my $polycross_name = $cross_name . '_' . $maternal . '_polycross';
           print STDERR "First polycross to add is $polycross_name with amternal $maternal and paternal $paternal\n";
-          my $success = $self->add_individual_cross($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $maternal, $paternal);
+          my $success = $self->
+          ($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $maternal, $paternal);
           if (!$success) {
             return;
           }
@@ -623,7 +624,7 @@ sub add_individual_cross {
   my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
   my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
   my $dbh = $c->dbc->dbh;
-  #my $location = $c->req->param('location');
+  my $location = $c->req->param('location');
   my $prefix = $c->req->param('prefix');
   my $suffix = $c->req->param('suffix');
   my $progeny_number = $c->req->param('progeny_number');
@@ -702,7 +703,7 @@ my $cross_add = CXGN::Pedigree::AddCrosses
   chado_schema => $chado_schema,
   phenome_schema => $phenome_schema,
   dbh => $dbh,
-#  location => $location,
+  location => $location,
 #  program => $program,
   crossing_trial_id => $crossing_trial_id,
   crosses =>  \@array_of_pedigree_objects,

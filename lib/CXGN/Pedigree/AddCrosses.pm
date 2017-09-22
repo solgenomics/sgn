@@ -54,7 +54,7 @@ has 'metadata_schema' => (
 		);
 has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 has 'crosses' => (isa =>'ArrayRef[Pedigree]', is => 'rw', predicate => 'has_crosses', required => 1,);
-#has 'location' => (isa =>'Str', is => 'rw', predicate => 'has_location', required => 1,);
+has 'location' => (isa =>'Str', is => 'rw', predicate => 'has_location', required => 1,);
 #has 'program' => (isa =>'Str', is => 'rw', predicate => 'has_program', required =>1,);
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
 #has 'parent_folder_id' => (isa => 'Str', is => 'rw', predicate => 'has_parent_folder_id', required => 0,);
@@ -73,8 +73,8 @@ sub add_crosses {
   my $chado_schema = $self->get_chado_schema();
   my $phenome_schema = $self->get_phenome_schema();
   my @crosses;
-  #my $location_lookup;
-  #my $geolocation;
+  my $location_lookup;
+  my $geolocation;
   #my $program;
   #my $program_lookup;
   my $transaction_error;
@@ -112,8 +112,8 @@ sub add_crosses {
       print STDERR "\n\ncvterm from addcrosses: ".$cross_stock_type_cvterm->cvterm_id()."\n\n";
 
       #lookup location by name
-      #$location_lookup = CXGN::Location::LocationLookup->new({ schema => $chado_schema, location_name => $self->get_location });
-      #$geolocation = $location_lookup->get_geolocation();
+      $location_lookup = CXGN::Location::LocationLookup->new({ schema => $chado_schema, location_name => $self->get_location });
+      $geolocation = $location_lookup->get_geolocation();
 
       #lookup program by name
       #$program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema});
@@ -183,7 +183,7 @@ sub add_crosses {
 	  #create cross experiment
 	  $experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')->create(
 	      {
-		  #nd_geolocation_id => $geolocation->nd_geolocation_id(),
+		  nd_geolocation_id => $geolocation->nd_geolocation_id(),
 		  type_id => $cross_experiment_type_cvterm->cvterm_id(),
 	      } );
 
@@ -270,7 +270,7 @@ sub add_crosses {
 					  });
       #link the experiment to the project
     $experiment->find_or_create_related('nd_experiment_projects', {
-	     project_id => $crossing_trial_id->project_id()
+	     project_id => $self->get_crossing_trial_id,
 					  } );
 
       #link the cross program to the breeding program
