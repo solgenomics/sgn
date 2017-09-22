@@ -480,6 +480,21 @@ sub get_breeding_program_with_trial {
     return $breeding_projects;
 }
 
+sub get_crossing_trials {
+    my $self = shift;
+
+    my $crossing_trial_cvterm_id = $self->get_crossing_trial_cvterm_id();
+
+    my $rs = $self->schema->resultset('Project::Project')->search( { 'projectprops.type_id'=>$crossing_trial_cvterm_id }, { join => 'projectprops' }  );
+
+    my @crossing_trials;
+    while (my $row = $rs->next()) {
+	push @crossing_trials, [ $row->project_id, $row->name, $row->description ];
+    }
+
+    return \@crossing_trials;
+}
+
 sub get_breeding_program_cvterm_id {
     my $self = shift;
 
@@ -513,6 +528,14 @@ sub get_cross_cvterm_id {
     my $cross_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'cross',  'stock_type');
     return $cross_cvterm->cvterm_id();
 }
+
+sub get_crossing_trial_cvterm_id {
+  my $self = shift;
+
+  my $crossing_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'crossing_trial',  'project_type');
+  return $crossing_trial_cvterm_id->cvterm_id();
+}
+
 
 sub _get_design_trial_cvterm_id {
     my $self = shift;

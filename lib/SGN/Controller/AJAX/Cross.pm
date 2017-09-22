@@ -1311,7 +1311,7 @@ sub add_crossingtrial_POST :Args(0) {
         my $add_crossingtrial = CXGN::Pedigree::AddCrossingtrial->new({
             chado_schema => $schema,
             dbh => $dbh,
-            program => $program,
+            breeding_program_id => $breeding_program_id,
             year => $c->req->param('year'),
             project_description => $c->req->param('project_description'),
             location => $location,

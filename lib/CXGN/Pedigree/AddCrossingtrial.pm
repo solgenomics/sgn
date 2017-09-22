@@ -26,7 +26,7 @@ has 'dbh' => (
     required => 1,
     );
 
-has 'program' => (isa =>'Str',
+has 'breeding_program_id' => (isa =>'Int',
     is => 'rw',
     required => 1,
     );
@@ -68,17 +68,6 @@ sub existing_crossingtrials {
     }
 }
 
-sub get_breeding_program_id {
-  my $self = shift;
-  my $breeding_program_ref = $self->get_chado_schema->resultset('Project::Project')->find({name=>$self->get_program});
-  if (!$breeding_program_ref ) {
-      print STDERR "UNDEF breeding program " . $self->get_program . "\n\n";
-      return ;
-  }
-  my $breeding_program_id = $breeding_program_ref->project_id();
-  #print STDERR "get_breeding_program _id returning $breeding_program_id";
-  return $breeding_program_id;
-}
 
 sub save_crossingtrial {
     print STDERR "Check 4.1:".localtime();
@@ -90,6 +79,7 @@ sub save_crossingtrial {
         return {error => "Crossing trial not saved: Crossing trial name already exists"};
     }
 
+
     if (!$self->get_breeding_program_id()){
         print STDERR "Can't create crossing trial: Breeding program does not exist\n";
         return {error => "Crossing trial not saved: Breeding program does not exist"};
@@ -97,8 +87,6 @@ sub save_crossingtrial {
 
     my $parent_folder_id;
     $parent_folder_id = $self->get_parent_folder_id() || 0;
-
-
     my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema,'project year', 'project_property');
     my $project_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'crossing_trial', 'project_type')->cvterm_id();
 
@@ -112,7 +100,7 @@ sub save_crossingtrial {
     		if ($parent_folder_id) {
     		my $folder = CXGN::Trial::Folder->new(
     			{
-    				bcs_schema => $chado_schema,
+    				bcs_schema => $schema,
     				folder_id => $project->project_id(),
     			});
 

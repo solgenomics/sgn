@@ -79,7 +79,7 @@ sub add_crosses {
   #my $program_lookup;
   my $transaction_error;
   my @added_stock_ids;
-  my $crossing_trial_id
+  my $crossing_trial_id;
 	#my $parent_folder_id;
 
   #lookup user by name
