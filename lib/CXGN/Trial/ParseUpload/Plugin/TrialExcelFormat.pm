@@ -271,10 +271,10 @@ sub _validate_with_plugin {
         push @error_messages, "Cell K$row_name: num_seed_per_plot must be a positive integer: $num_seed_per_plot";
     }
 
-    my $treatment_col = 10;
+    my $treatment_col = 11;
     foreach my $treatment_name (@treatment_names){
         if($worksheet->get_cell($row,$treatment_col)){
-            my $apply_treatment = $worksheet->get_cell($row,$treatment_col);
+            my $apply_treatment = $worksheet->get_cell($row,$treatment_col)->value();
             if (defined($apply_treatment) && $apply_treatment ne '1'){
                 push @error_messages, "Treatment value in row $row_name should be either 1 or empty";
             }
@@ -351,7 +351,7 @@ sub _parse_with_plugin {
   my ( $col_min, $col_max ) = $worksheet->col_range();
 
   my @treatment_names;
-  for (10 .. $col_max){
+  for (11 .. $col_max){
       if ($worksheet->get_cell(0,$_)){
           push @treatment_names, $worksheet->get_cell(0,$_)->value();
       }
@@ -412,7 +412,9 @@ sub _parse_with_plugin {
     my $treatment_col = 11;
     foreach my $treatment_name (@treatment_names){
         if($worksheet->get_cell($row,$treatment_col)){
-            push @{$design{treatments}->{$treatment_name}}, $plot_name;
+            if($worksheet->get_cell($row,$treatment_col)->value()){
+                push @{$design{treatments}->{$treatment_name}}, $plot_name;
+            }
         }
         $treatment_col++;
     }
