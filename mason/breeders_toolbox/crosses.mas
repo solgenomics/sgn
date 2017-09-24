@@ -5,6 +5,7 @@ $user_id => undef
 @programs => ()
 @crossing_trials => ()
 @locations => ()
+@all_trials => ()
 @roles => ()
 </%args>
 
@@ -140,6 +141,18 @@ $user_id => undef
         <%perl>
     foreach my $location (@locations) {
       print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
+    }
+        </%perl>
+        </select>
+            </div>
+    </div>
+    <div class="form-group">
+            <label class="col-sm-2 control-label">Field Trial: </label>
+            <div class="col-sm-10">
+        <select class="form-control" id="field_trial" name="field_trial">
+        <%perl>
+    foreach my $all_trial (@all_trials) {
+      print "<option value=".'"'.@$all_trial[0].'"'.">".@$all_trial[1]."</option>";
     }
         </%perl>
         </select>
@@ -395,6 +408,8 @@ $user_id => undef
 </div>
 
 
+
+
 <div class="modal fade" id="upload_crosses_dialog" name="upload_crosses_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -571,6 +586,8 @@ $user_id => undef
 </div>
 
 
+
+
 <div class="modal fade" id="create_crossingtrial_dialog" name="create_crossingtrial_dialog" tabindex="-1" role="dialog" aria-labelledby="createCrossingTrialDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content ui-front">
@@ -664,6 +681,8 @@ $user_id => undef
     </div>
    </div>
   </div>
+
+
 
 
 <script>

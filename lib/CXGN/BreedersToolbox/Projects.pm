@@ -495,6 +495,28 @@ sub get_crossing_trials {
     return \@crossing_trials;
 }
 
+sub get_all_trials {
+    my $self = shift;
+
+    my $all_trials_cvterm_id = $self->get_trial_cvterm_id();
+    my $rs = $self->schema->resultset('Project::Project')->search( { 'projectprops.type_id'=>$all_trials_cvterm_id }, { join => 'projectprops' }  );
+
+    my @all_trials;
+    while (my $row = $rs->next()) {
+	push @all_trials, [ $row->project_id, $row->name, $row->description ];
+    }
+
+    return \@all_trials;
+}
+
+sub get_trial_cvterm_id {
+  my $self = shift;
+
+  my $trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'Uniform Yield Trial',  'project_type');
+  return $trial_cvterm_id->cvterm_id();
+}
+
+
 sub get_breeding_program_cvterm_id {
     my $self = shift;
 
@@ -578,11 +600,6 @@ sub get_crossing_trial_by_name {
 
 }
 
-sub get_crossing_trial_cvterm_id {
-    my $self = shift;
-    my $crossing_trial_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'crossing_trial',  'project_type');
-    return $crossing_trial_cvterm->cvterm_id();
-}
 
 
 

@@ -187,6 +187,7 @@ jQuery(document).ready(function($) {
                 return;
             }
 
+
     //    var breeding_program_id = $("#program").val();
     //    if (!breeding_program_id) {
     //        alert("A breeding program is required");
@@ -195,6 +196,7 @@ jQuery(document).ready(function($) {
 
         var visibleToRole = $("#visible_to_role").val();
         var location = $("#location").val();
+
     //    var folder_name = $("#add_cross_folder_name").val();
     //    var folder_id;
     //    if (folder_name) {  // get id if folder with this name already exisits

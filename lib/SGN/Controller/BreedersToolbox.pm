@@ -191,6 +191,9 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
     my $crossingtrial = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
     my $crossing_trials = $crossingtrial->get_crossing_trials();
 
+    my $trials = CXGN::BreedersToolbox::Projects->new( { schema=>$schema });
+    my $all_trials = $trials->get_all_trials();
+
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
 
     $c->stash->{locations} = $bp->get_all_locations($c);
@@ -200,6 +203,8 @@ sub manage_crosses : Path("/breeders/crosses") Args(0) {
     $c->stash->{programs} = $breeding_programs;
 
     $c->stash->{crossing_trials} = $crossing_trials;
+
+    $c->stash->{all_trials} = $all_trials;
 
     $c->stash->{roles} = $c->user()->roles();
 
