@@ -222,6 +222,21 @@ sub get_genotyping_trials_by_breeding_program {
 }
 
 sub get_all_locations {
+     my $self = shift;
+     my $c = shift;
+ 		 
+     my $rs = $self->schema() -> resultset("NaturalDiversity::NdGeolocation")->search( {}, { order_by => 'description' } );
+     my @locations = ();
+     
+     foreach my $loc ($rs->all()) {
+         push @locations, [ $loc->nd_geolocation_id(), $loc->description() ];
+     }
+     
+     return \@locations;
+ 		 
+ }
+
+sub get_all_locations {
     my $self = shift;
 
     my $project_location_type_id = $self ->schema->resultset('Cv::Cvterm')->search( { 'name' => 'project location' })->first->cvterm_id();
