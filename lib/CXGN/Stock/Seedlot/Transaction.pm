@@ -142,10 +142,19 @@ sub store {
             });
         return $row->stock_relationship_id();
     }
-    
+
     else { 
-        # update not implemented yet.
-    }	
+        my $row = $self->schema()->resultset("Stock::StockRelationship")->find({ stock_relationship_id => $self->transaction_id });
+        $row->update({
+            value => JSON::Any->encode({
+                amount => $self->amount(),
+                timestamp => $self->timestamp(),
+                operator => $self->operator(),
+                description => $self->description()
+            })
+        });
+        return $row->stock_relationship_id();
+    }
 }
 
 sub delete {

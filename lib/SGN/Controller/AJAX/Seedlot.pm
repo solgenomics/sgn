@@ -305,16 +305,49 @@ sub upload_seedlots_POST : Args(0) {
     $c->stash->{rest} = { success => 1 };
 }
 
-sub get_seedlot_transaction :Chained('seedlot_base') PathPart('transaction') Args(1) {
+sub seedlot_transaction_base :Chained('seedlot_base') PathPart('transaction') CaptureArgs(1) {
     my $self = shift;
     my $c = shift;
-    my $transaction_id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
-    my $t = $schema->resultset("Stock::StockRelationship")->find({stock_relationship_id=>$transaction_id});
-    my $val = $t->value();
-    my $json = JSON->new();
-    my $d = $json->decode($val);
-    $c->stash->{rest} = { success => 1, transaction_id => $transaction_id, description=>$d->{description}, amount=>$d->{amount}, operator=>$d->{operator}, timestamp=>$d->{timestamp} };
+    my $transaction_id = shift;
+    my $t_obj = CXGN::Stock::Seedlot::Transaction->new(schema=>$schema, transaction_id=>$transaction_id);
+    $c->stash->{transaction_id} = $transaction_id;
+    $c->stash->{transaction_object} = $t_obj;
+}
+
+sub seedlot_transaction_details :Chained('seedlot_transaction_base') PathPart('') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $t = $c->stash->{transaction_object};
+    $c->stash->{rest} = {
+        success => 1,
+        transaction_id => $t->transaction_id,
+        description=>$t->description,
+        amount=>$t->amount,
+        operator=>$t->operator,
+        timestamp=>$t->timestamp
+    };
+}
+
+sub edit_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('edit') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $t = $c->stash->{transaction_object};
+    my $edit_operator = $c->req->param('operator');
+    my $edit_amount = $c->req->param('amount');
+    my $edit_desc = $c->req->param('description');
+    my $edit_timestamp = $c->req->param('timestamp');
+    $t->operator($edit_operator);
+    $t->amount($edit_amount);
+    $t->description($edit_desc);
+    $t->timestamp($edit_timestamp);
+    my $transaction_id = $t->store();
+    $c->stash->{seedlot}->set_current_count_property();
+    if ($transaction_id){
+        $c->stash->{rest} = { success => 1 };
+    } else {
+        $c->stash->{rest} = { error => "Something went wrong with the transaction update" };
+    }
 }
 
 sub list_seedlot_transactions :Chained('seedlot_base') :PathPart('transactions') Args(0) { 
