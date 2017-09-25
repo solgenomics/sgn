@@ -26,7 +26,7 @@
       <td>Top Margin (mm):</td>
       <td><input type="number" class="form-control" id"top_margin" name="top_margin" value="12" /></td>
       <td>Left Margin (mm):</td>
-      <td><input type="text" class="form-control" id="left_margin" name="left_margin" value="70" /></td>
+      <td><input type="number" class="form-control" id="left_margin" name="left_margin" value="70" /></td>
     </tr>
     <tr>
       <td>Bottom Margin (mm):</td>
