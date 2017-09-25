@@ -535,6 +535,9 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
            my $xposition = $left_margin + ($label_count -1) * $final_barcode_width;
            my $yposition = $ypos -7;
            my $label_text = $found[$i]->[1];
+           if ($found[$i]->[5] eq 'plot'){
+               $label_text = $found[$i]->[2];
+           }
            my $label_size =  7;
            my $label_size_stock =  10;
            my $yposition_8 = $ypos + 2;
@@ -548,14 +551,14 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
            $label_text_5 = $found[$i]->[11];
            $label_text_4 = $found[$i]->[12];
            $label_text_8 = $found[$i]->[10];
-           $pages[$page_nr-1]->string($font, $label_size_stock, $xposition, $yposition_8, $label_text_6);
+           $pages[$page_nr-1]->string($font, $label_size_stock, $xposition, $yposition_8, $label_text);
            $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_4, $label_text_8);
            $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
            $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text_5);
            if ($found[$i]->[5] eq 'accession'){
                $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_6, $parents);
            }else{
-                $pages[$page_nr-1]->string($font, $label_size_stock, $xposition, $yposition_6, $parents);
+                $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_6, $parents);
                 #$pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_7, $parents);
                 $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $added_text);
            }
