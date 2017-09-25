@@ -44,11 +44,15 @@ has 'main_production_site_url' => (
 has 'accessionNumber' => (
     isa => 'Maybe[Str]',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_accessionNumber',
 );
 
 has 'germplasmPUI' => (
     isa => 'Maybe[Str]',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_germplasmPUI',
 );
 
 has 'pedigree' => (
@@ -59,100 +63,183 @@ has 'pedigree' => (
 has 'germplasmSeedSource' => (
     isa => 'Maybe[Str]',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_germplasmSeedSource',
 );
 
 has 'synonyms' => (
     isa => 'Maybe[ArrayRef[Str]]',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_synonyms',
 );
 
 has 'instituteCode' => (
     isa => 'Maybe[Str]',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_instituteCode',
 );
 
 has 'instituteName' => (
     isa => 'Maybe[Str]',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_instituteName',
 );
 
 has 'biologicalStatusOfAccessionCode' => (
     isa => 'Maybe[Str]',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_biologicalStatusOfAccessionCode',
 );
 
 has 'countryOfOriginCode' => (
     isa => 'Maybe[Str]',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_countryOfOriginCode',
 );
 
 has 'typeOfGermplasmStorageCode' => (
     isa => 'Maybe[Str]',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_typeOfGermplasmStorageCode',
 );
 
 has 'donors' => (
     isa => 'Maybe[ArrayRef[HashRef]]',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_donors',
 );
 
 has 'acquisitionDate' => (
     isa => 'Maybe[Str]',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_acquisitionDate',
 );
 
 has 'entryNumber' => (
     isa => 'Maybe[Str]',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_entryNumber',
 );
 
 has 'variety' => (
     isa => 'Maybe[Str]',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_variety',
 );
 
 has 'state' => (
     isa => 'Maybe[Str]',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_state',
 );
 
 has 'notes' => (
     isa => 'Maybe[Str]',
     is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_notes',
 );
 
 sub BUILD {
     my $self = shift;
 
-    if ($self->stock_id()) {
-        $self->accessionNumber($self->_retrieve_stockprop('accession number'));
-        $self->germplasmPUI($self->_retrieve_stockprop('PUI'));
-        $self->germplasmSeedSource($self->_retrieve_stockprop('seed source'));
-        my @synonyms = $self->_retrieve_stockprop('stock_synonym') ? split ',', $self->_retrieve_stockprop('stock_synonym') : ();
-        my @donor_accessions = $self->_retrieve_stockprop('donor') ? split ',', $self->_retrieve_stockprop('donor') : ();
-        my @donor_institutes = $self->_retrieve_stockprop('donor institute') ? split ',', $self->_retrieve_stockprop('donor institute') : ();
-        my @donor_puis = $self->_retrieve_stockprop('donor PUI') ? split ',', $self->_retrieve_stockprop('donor PUI') : ();
-        $self->synonyms(\@synonyms);
-        $self->instituteCode($self->_retrieve_stockprop('institute code'));
-        $self->instituteName($self->_retrieve_stockprop('institute name'));
-        $self->entryNumber($self->_retrieve_stockprop('entry number'));
-        $self->variety($self->_retrieve_stockprop('variety'));
-        $self->state($self->_retrieve_stockprop('state'));
-        $self->notes($self->_retrieve_stockprop('notes'));
-        $self->biologicalStatusOfAccessionCode($self->_retrieve_stockprop('biological status of accession code'));
-        $self->countryOfOriginCode($self->_retrieve_stockprop('country of origin'));
-        $self->typeOfGermplasmStorageCode($self->_retrieve_stockprop('type of germplasm storage code'));
-        $self->acquisitionDate($self->_retrieve_stockprop('acquisition date'));
-        my @donor_array;
-        if (scalar(@donor_accessions)>0 && scalar(@donor_institutes)>0 && scalar(@donor_puis)>0 && scalar(@donor_accessions) == scalar(@donor_institutes) && scalar(@donor_accessions) == scalar(@donor_puis)){
-            for (0 .. scalar(@donor_accessions)-1){
-                push @donor_array, { 'donorGermplasmName'=>$donor_accessions[$_], 'donorAccessionNumber'=>$donor_accessions[$_], 'donorInstituteCode'=>$donor_institutes[$_], 'germplasmPUI'=>$donor_puis[$_] };
-            }
-        }
-        $self->donors(\@donor_array);
-    }
 }
 
+sub _retrieve_germplasmPUI {
+    my $self = shift;
+    $self->germplasmPUI($self->_retrieve_stockprop('PUI'));
+}
+
+sub _retrieve_accessionNumber {
+    my $self = shift;
+    $self->accessionNumber($self->_retrieve_stockprop('accession number'));
+}
+
+sub _retrieve_germplasmSeedSource {
+    my $self = shift;
+    $self->germplasmSeedSource($self->_retrieve_stockprop('seed source'));
+}
+
+sub _retrieve_synonyms {
+    my $self = shift;
+    my @synonyms = $self->_retrieve_stockprop('stock_synonym') ? split ',', $self->_retrieve_stockprop('stock_synonym') : ();
+    $self->synonyms(\@synonyms);
+}
+
+sub _retrieve_instituteCode {
+    my $self = shift;
+    $self->instituteCode($self->_retrieve_stockprop('institute code'));
+}
+
+sub _retrieve_instituteName {
+    my $self = shift;
+    $self->instituteName($self->_retrieve_stockprop('institute name'));
+}
+
+sub _retrieve_entryNumber {
+    my $self = shift;
+    $self->entryNumber($self->_retrieve_stockprop('entry number'));
+}
+
+sub _retrieve_variety {
+    my $self = shift;
+    $self->variety($self->_retrieve_stockprop('variety'));
+}
+
+sub _retrieve_state {
+    my $self = shift;
+    $self->state($self->_retrieve_stockprop('state'));
+}
+
+sub _retrieve_biologicalStatusOfAccessionCode {
+    my $self = shift;
+    $self->biologicalStatusOfAccessionCode($self->_retrieve_stockprop('biological status of accession code'));
+}
+
+sub _retrieve_countryOfOriginCode {
+    my $self = shift;
+    $self->countryOfOriginCode($self->_retrieve_stockprop('country of origin'));
+}
+
+sub _retrieve_typeOfGermplasmStorageCode {
+    my $self = shift;
+    $self->typeOfGermplasmStorageCode($self->_retrieve_stockprop('type of germplasm storage code'));
+}
+
+sub _retrieve_acquisitionDate {
+    my $self = shift;
+    $self->acquisitionDate($self->_retrieve_stockprop('acquisition date'));
+}
+
+sub _retrieve_donors {
+    my $self = shift;
+    my @donor_accessions = $self->_retrieve_stockprop('donor') ? split ',', $self->_retrieve_stockprop('donor') : ();
+    my @donor_institutes = $self->_retrieve_stockprop('donor institute') ? split ',', $self->_retrieve_stockprop('donor institute') : ();
+    my @donor_puis = $self->_retrieve_stockprop('donor PUI') ? split ',', $self->_retrieve_stockprop('donor PUI') : ();
+    my @donor_array;
+    if (scalar(@donor_accessions)>0 && scalar(@donor_institutes)>0 && scalar(@donor_puis)>0 && scalar(@donor_accessions) == scalar(@donor_institutes) && scalar(@donor_accessions) == scalar(@donor_puis)){
+        for (0 .. scalar(@donor_accessions)-1){
+            push @donor_array, { 'donorGermplasmName'=>$donor_accessions[$_], 'donorAccessionNumber'=>$donor_accessions[$_], 'donorInstituteCode'=>$donor_institutes[$_], 'germplasmPUI'=>$donor_puis[$_] };
+        }
+    }
+    $self->donors(\@donor_array);
+}
+
+sub _retrieve_notes {
+    my $self = shift;
+    $self->notes($self->_retrieve_stockprop('notes'));
+}
 
 =head2 store()
 
