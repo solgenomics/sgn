@@ -17,11 +17,15 @@ $timestamp
 }
 </style>
 
+
+
 <& /page/page_title.mas, title => 'Seedlot '.$uniquename &>
+
+<&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0, subtitle=>"[<a id='edit_seedlot_details_link' >Edit Seedlot Details</a>]" &>
 
 <table class="table table-bordered table-hover">
 <tr><td><b>Breeding Program</b></td><td><div id="seedlot_breeding_program_div">[LOADING...]</div></td></tr>
-<tr><td><b>Name</b></td><td><a href="/stock/<% $seedlot_id %>/view"><% $uniquename %></a></td></tr>
+<tr><td><b>Seedlot Name</b></td><td><a href="/stock/<% $seedlot_id %>/view"><% $uniquename %></a></td></tr>
 <tr><td><b>Organization</b></td><td><% $organization_name %></td></tr>
 <tr><td><b>Location Code</b><td><div id="seedlot_location_code_div">[LOADING...]</div></td></tr>
 <tr><td><b>Accession</b></td><td><% $accessions %></td></tr>
@@ -29,14 +33,18 @@ $timestamp
 <tr><td><b>Current count</b></td><td><% $current_count %></td></tr>
 </table>
 
+</&>
+
 <center>
 <h3>Transactions</h3>
 </center>
 
+<&| /page/info_section.mas, title=>"Transactions Table",  collapsible => 1, collapsed=>0, subtitle=>"[<a id='add_seedlot_transaction_button' >Add New Transaction</a>]" &>
+
 <table id="available_seedlot_transactions_table" class="table table-hover table-bordered">
 </table>
 
-<button class="btn btn-primary" id="add_seedlot_transaction_button">Add new seedlot transaction</button>
+</&>
 
 <div class="modal fade" id="add_seedlot_transaction_dialog" name="add_seedlot_transaction_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_transaction_dialog">
   <div class="modal-dialog modal-lg" role="document">
@@ -199,6 +207,62 @@ $timestamp
   </div>
 </div>
 
+<div class="modal fade" id="edit_seedlot_details_dialog" name="edit_seedlot_details_dialog" tabindex="-1" role="dialog" aria-labelledby="seedlot_edit_details_dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="seedlot_edit_details_dialog">Edit Seedlot Details</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <form class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Seedlot Name: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" type="text" id="edit_seedlot_details_uniquename" value="LOADING..."/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Breeding Program: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" type="text" id="edit_seedlot_details_breeding_program" value="LOADING..."/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Organization: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" type="text" id="edit_seedlot_details_organization" value="LOADING..."/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Location Code: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" type="text" id="edit_seedlot_details_location" value="LOADING..."/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Accession: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" type="text" id="edit_seedlot_details_accession" value="LOADING..."/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Population: </label>
+                    <div class="col-sm-9" >
+                        <input class="form-control" type="text" id="edit_seedlot_details_population" value="LOADING..."/>
+                    </div>
+                </div>
+            </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="edit_seedlot_details_button" type="button" class="btn btn-default" >Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <script>
   jQuery(document).ready(function () {
@@ -234,9 +298,16 @@ $timestamp
     jQuery.ajax({
         url: '/ajax/breeders/seedlot/<% $seedlot_id %>',
         success: function(response) {
+            //console.log(response);
             if (response.success == 1) {
                 jQuery('#seedlot_location_code_div').html(response.location_code);
                 jQuery('#seedlot_breeding_program_div').html(response.breeding_program);
+                jQuery('#edit_seedlot_details_uniquename').val(response.uniquename);
+                jQuery('#edit_seedlot_details_breeding_program').val(response.breeding_program);
+                jQuery('#edit_seedlot_details_organization').val(response.organization_name);
+                jQuery('#edit_seedlot_details_population').val(response.population_name);
+                jQuery('#edit_seedlot_details_location').val(response.location_code);
+                jQuery('#edit_seedlot_details_accession').val(response.accessions[0][1]);
             }
             if (response.error) {
                 alert(response.error);
@@ -397,6 +468,14 @@ $timestamp
                 }
             });
         }
+    });
+
+    jQuery('#edit_seedlot_details_link').click(function(){
+        jQuery('#edit_seedlot_details_dialog').modal('show');
+    });
+
+    jQuery('#edit_seedlot_details_button').click(function(){
+        
     });
 
 });

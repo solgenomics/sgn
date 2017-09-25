@@ -98,8 +98,10 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
         current_count => $c->stash->{seedlot}->current_count(),
         location_code => $c->stash->{seedlot}->location_code(),
         breeding_program => $c->stash->{seedlot}->breeding_program_name(),
+        organization_name => $c->stash->{seedlot}->organization_name(),
+        population_name => $c->stash->{seedlot}->population_name(),
+        accessions => $c->stash->{seedlot}->accessions(),
     };
-    
 }
 
 sub seedlot_delete :Chained('seedlot_base') PathPart('delete') Args(0) { 
