@@ -187,8 +187,27 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
             jQuery("#right_margin").empty();
             jQuery("#right_margin").val(right_margin);
           }
-          else if (format == "NCSU") {
-            jQuery("#2D_fieldbook_option").hide();
+          else if (format == "CASS") {
+          var label_row = 10;
+          var label_cols = 2; 
+          var top_margin = 10;
+          var left_margin = 112;
+          var bottom_margin = 13;
+          var right_margin = 20;
+          jQuery("#label_rows").empty();
+          jQuery("#label_rows").val(label_row);
+          jQuery("#label_cols").empty();
+          jQuery("#label_cols").val(label_cols);
+          jQuery("#select_barcode_type").prop('selectedIndex',1);
+          jQuery("#page_format").prop('selectedIndex',0);
+          jQuery("#top_margin").empty();
+          jQuery("#top_margin").val(top_margin);
+          jQuery("#left_margin").empty();
+          jQuery("#left_margin").val(left_margin);
+          jQuery("#bottom_margin").empty();
+          jQuery("#bottom_margin").val(bottom_margin);
+          jQuery("#right_margin").empty();
+          jQuery("#right_margin").val(right_margin);
           }
           else if (format == "NCSU") {
             jQuery("#2D_fieldbook_option").hide();
