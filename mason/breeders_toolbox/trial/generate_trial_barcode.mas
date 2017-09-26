@@ -82,20 +82,7 @@ $identifier => ''
                                          var left_margin = 17;
                                          var bottom_margin = 12;
                                          var right_margin = 10;
-                                         jQuery("#label_rows").empty();
-                                         jQuery("#label_rows").val(label_row);
-                                         jQuery("#label_cols").empty();
-                                         jQuery("#label_cols").val(label_cols);
-                                         jQuery("#select_barcode_type").prop('selectedIndex',1);
-                                         jQuery("#page_format").prop('selectedIndex',0);
-                                         jQuery("#top_margin").empty();
-                                         jQuery("#top_margin").val(top_margin);
-                                         jQuery("#left_margin").empty();
-                                         jQuery("#left_margin").val(left_margin);
-                                         jQuery("#bottom_margin").empty();
-                                         jQuery("#bottom_margin").val(bottom_margin);
-                                         jQuery("#right_margin").empty();
-                                         jQuery("#right_margin").val(right_margin);
+
                                        }
                                        else if (format == "CASS") {
                                        var label_row = 10;
@@ -104,20 +91,7 @@ $identifier => ''
                                        var left_margin = 112;
                                        var bottom_margin = 13;
                                        var right_margin = 20;
-                                       jQuery("#label_rows").empty();
-                                       jQuery("#label_rows").val(label_row);
-                                       jQuery("#label_cols").empty();
-                                       jQuery("#label_cols").val(label_cols);
-                                       jQuery("#select_barcode_type").prop('selectedIndex',1);
-                                       jQuery("#page_format").prop('selectedIndex',0);
-                                       jQuery("#top_margin").empty();
-                                       jQuery("#top_margin").val(top_margin);
-                                       jQuery("#left_margin").empty();
-                                       jQuery("#left_margin").val(left_margin);
-                                       jQuery("#bottom_margin").empty();
-                                       jQuery("#bottom_margin").val(bottom_margin);
-                                       jQuery("#right_margin").empty();
-                                       jQuery("#right_margin").val(right_margin);
+                                       
                                        }
                                        else if (format == "MUSA") {
                                        var label_row = 10;
@@ -126,20 +100,7 @@ $identifier => ''
                                        var left_margin = 112;
                                        var bottom_margin = 13;
                                        var right_margin = 20;
-                                       jQuery("#label_rows").empty();
-                                       jQuery("#label_rows").val(label_row);
-                                       jQuery("#label_cols").empty();
-                                       jQuery("#label_cols").val(label_cols);
-                                       jQuery("#select_barcode_type").prop('selectedIndex',1);
-                                       jQuery("#page_format").prop('selectedIndex',0);
-                                       jQuery("#top_margin").empty();
-                                       jQuery("#top_margin").val(top_margin);
-                                       jQuery("#left_margin").empty();
-                                       jQuery("#left_margin").val(left_margin);
-                                       jQuery("#bottom_margin").empty();
-                                       jQuery("#bottom_margin").val(bottom_margin);
-                                       jQuery("#right_margin").empty();
-                                       jQuery("#right_margin").val(right_margin);
+
                                        }
                                        else if (format == "NCSU") {
                                        var label_row = 10;
@@ -148,6 +109,8 @@ $identifier => ''
                                        var left_margin = 50;
                                        var bottom_margin = 12;
                                        var right_margin = 12;
+
+                                       }
                                        jQuery("#label_rows").empty();
                                        jQuery("#label_rows").val(label_row);
                                        jQuery("#label_cols").empty();
@@ -162,7 +125,6 @@ $identifier => ''
                                        jQuery("#bottom_margin").val(bottom_margin);
                                        jQuery("#right_margin").empty();
                                        jQuery("#right_margin").val(right_margin);
-                                       }
                                    });
                                 });
                                </script>
