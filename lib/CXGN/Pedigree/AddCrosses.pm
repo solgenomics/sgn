@@ -58,7 +58,8 @@ has 'location' => (isa =>'Str', is => 'rw', predicate => 'has_location', require
 #has 'program' => (isa =>'Str', is => 'rw', predicate => 'has_program', required =>1,);
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
 #has 'parent_folder_id' => (isa => 'Str', is => 'rw', predicate => 'has_parent_folder_id', required => 0,);
-has 'crossing_trial_id' =>(isa =>'Int', is=>'rw', predicate => 'has_crossing_trial_id', required =>1);
+has 'crossing_trial_id' =>(isa =>'Int', is => 'rw', predicate => 'has_crossing_trial_id', required => 1,);
+has 'plot' => (isa => 'Str', is => 'rw', predicate => 'has_plot', required => 0,);
 
 #sub get_crossing_trial_id {
 #  my $self = shift;
@@ -80,6 +81,8 @@ sub add_crosses {
   my $transaction_error;
   my @added_stock_ids;
   my $crossing_trial_id;
+  my $plot;
+
 	#my $parent_folder_id;
 
   #lookup user by name
@@ -109,6 +112,9 @@ sub add_crosses {
       #get cvterm for stock type cross
       my $cross_stock_type_cvterm  =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type');
 
+      #get cvterm for plot_of
+      my $plot_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship');
+
       print STDERR "\n\ncvterm from addcrosses: ".$cross_stock_type_cvterm->cvterm_id()."\n\n";
 
       #lookup location by name
@@ -134,6 +140,7 @@ sub add_crosses {
 	  my $cross_type = $pedigree->get_cross_type();
 	  my $cross_name = $pedigree->get_name();
     my $crossing_trial_id;
+    my $plot;
 
 	  if ($pedigree->has_female_parent()) {
 	      $female_parent_name = $pedigree->get_female_parent()->get_name();
@@ -260,6 +267,17 @@ sub add_crosses {
 		  object_id => $cross_stock->stock_id(),
 		  subject_id => $female_parent->stock_id(),
 				       } );
+      }
+
+    #link cross to plot
+    $plot = $self->get_plot() || 0;
+      if ($plot) {
+    $cross_stock
+        ->find_or_create_related('stock_relationship_objects', {
+      type_id => $plot_of_cvterm->cvterm_id(),
+      object_id => $cross_stock->stock_id(),
+      subject_id => $plot,
+               } );
       }
 
 

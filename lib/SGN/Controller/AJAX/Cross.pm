@@ -250,6 +250,8 @@ sub add_cross_POST :Args(0) {
     my $cross_name = $c->req->param('cross_name');
     my $cross_type = $c->req->param('cross_type');
     my $crossing_trial_id = $c->req->param('crossing_trial_id');
+    my $plot = $c->req->param('plot');
+    #print STDERR "Plot=".Dumper($plot)."\n";
     #my $breeding_program_id = $c->req->param('breeding_program_id');
     #my $folder_name = $c->req->param('folder_name');
     #my $folder_id = $c->req->param('folder_id');
@@ -306,7 +308,7 @@ sub add_cross_POST :Args(0) {
           my $polycross_name = $cross_name . '_' . $maternal . '_polycross';
           print STDERR "First polycross to add is $polycross_name with amternal $maternal and paternal $paternal\n";
           my $success = $self->
-          ($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $maternal, $paternal);
+          ($c, $chado_schema, $polycross_name, $cross_type, $crossing_trial_id, $plot, $maternal, $paternal);
           if (!$success) {
             return;
           }
@@ -324,7 +326,7 @@ sub add_cross_POST :Args(0) {
               next;
             }
             my $reciprocal_cross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_reciprocalcross';
-            my $success = $self->add_individual_cross($c, $chado_schema, $reciprocal_cross_name, $cross_type, $crossing_trial_id, $maternal, $paternal);
+            my $success = $self->add_individual_cross($c, $chado_schema, $reciprocal_cross_name, $cross_type, $crossing_trial_id, $plot, $maternal, $paternal);
             if (!$success) {
               return;
             }
@@ -339,7 +341,7 @@ sub add_cross_POST :Args(0) {
             my $maternal = $maternal_parents[$i];
             my $paternal = $paternal_parents[$i];
             my $multicross_name = $cross_name . '_' . $maternal . 'x' . $paternal . '_multicross';
-            my $success = $self->add_individual_cross($c, $chado_schema, $multicross_name, $cross_type, $crossing_trial_id, $maternal, $paternal);
+            my $success = $self->add_individual_cross($c, $chado_schema, $multicross_name, $cross_type, $crossing_trial_id, $plot, $maternal, $paternal);
             if (!$success) {
               return;
             }
@@ -348,7 +350,7 @@ sub add_cross_POST :Args(0) {
       else {
         my $maternal = $c->req->param('maternal');
         my $paternal = $c->req->param('paternal');
-        my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $maternal, $paternal);
+        my $success = $self->add_individual_cross($c, $chado_schema, $cross_name, $cross_type, $crossing_trial_id, $plot, $maternal, $paternal);
         if (!$success) {
           return;
         }
@@ -615,6 +617,7 @@ sub add_individual_cross {
   my $cross_type = shift;
   #my $program = shift;
   my $crossing_trial_id = shift;
+  my $plot = shift;
   my $maternal = shift;
   my $paternal = shift;
   #my $folder_id = shift;
@@ -706,6 +709,7 @@ my $cross_add = CXGN::Pedigree::AddCrosses
   location => $location,
 #  program => $program,
   crossing_trial_id => $crossing_trial_id,
+  plot => $plot,
   crosses =>  \@array_of_pedigree_objects,
   owner_name => $owner_name,
   #parent_folder_id => $folder_id

@@ -200,6 +200,7 @@ jQuery(document).ready(function($) {
 
         var visibleToRole = $("#visible_to_role").val();
         var location = $("#location").val();
+        var plot = $("#plots").val();
 
     //    var folder_name = $("#add_cross_folder_name").val();
     //    var folder_id;
@@ -209,7 +210,7 @@ jQuery(document).ready(function($) {
     //    else {
     //        folder_id = $("#add_cross_folder_id").val();
     //    }
-        add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location);
+        add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location, plot);
 
     });
 
@@ -281,7 +282,7 @@ jQuery(document).ready(function($) {
 
 
 
-    function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location) {
+    function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location, plot) {
 
         var progenyNumber = $("#progeny_number").val();
         var flowerNumber = $("#flower_number").val();
@@ -363,6 +364,7 @@ jQuery(document).ready(function($) {
               'visible_to_role': visibleToRole,
               'location': location,
               'crossing_trial_id': crossing_trial_id,
+              'plot': plot,
             },
             beforeSend: function() {
                 jQuery("#create_cross").modal("hide");

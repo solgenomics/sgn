@@ -553,7 +553,7 @@ sub get_plots :Path('/ajax/breeders/get_plots') Args(0) {
     my @plots=();
     while(my ($plot_id, $plot_name) = $h->fetchrow_array()){
 
-      push @plots, [$plot_name];
+      push @plots, [$plot_id, $plot_name];
     }
 
     $c->stash->{rest} = {data=>\@plots};

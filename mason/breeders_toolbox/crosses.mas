@@ -807,7 +807,7 @@ jQuery(document).ready(function($) {
       console.log(response);
       var html = '<select id = "plots" >';
       for (var i=0; i<response.data.length; i++) {
-      html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][0] + "</option>";
+      html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][1] + "</option>";
       }
       html = html + "</select>";
       console.log(html);
