@@ -127,6 +127,10 @@ jQuery(document).ready(function($) {
             $("#paternal_accessions").toggle($("#cross_type").val() == "multicross");
         });
 
+        $("#field_trial").change(function() {
+            $("#get_plots").toggle($("#field_trial").val());
+        });
+
         $('input[id*="_parent"]').autocomplete({
             source: '/ajax/stock/accession_autocomplete'
         });

@@ -589,19 +589,5 @@ sub get_gt_protocols {
     return \@protocols;
 }
 
-sub get_crossing_trial_by_name {
-  my $self = shift;
-  my $crossing_trial_name = shift;
-  my $crossing_trial_cvterm_id = $self->get_crossing_trial_cvterm_id();
-
-  my $rs = $self->schema->resultset('Project::Project')->find( { 'name'=>$crossing_trial_name, 'projectprops.type_id'=>$crossing_trial_cvterm_id }, { join => 'projectprops' }  );
-
-  return $rs;
-
-}
-
-
-
-
 
 1;

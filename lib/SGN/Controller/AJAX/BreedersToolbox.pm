@@ -533,5 +533,32 @@ sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') Args(0) {
     #print STDERR Dumper(%message);
 }
 
+sub get_plots :Path('/ajax/breeders/get_plots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $field_trial= $c->req->param("field_trial");
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $field_layout_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "field_layout", "experiment_type")->cvterm_id();
+    my $dbh = $schema->storage->dbh();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename from nd_experiment_project join nd_experiment on (nd_experiment_project.nd_experiment_id=nd_experiment.nd_experiment_id)
+            LEFT JOIN nd_experiment_stock on (nd_experiment.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
+            LEFT JOIN stock on (nd_experiment_stock.stock_id=stock.stock_id)
+            WHERE nd_experiment_project.project_id= ? AND nd_experiment.type_id= ?";
+
+    my $h = $dbh->prepare($q);
+    $h->execute($field_trial, $field_layout_typeid );
+
+    my @plots=();
+    while(my ($plot_id, $plot_name) = $h->fetchrow_array()){
+
+      push @plots, [$plot_name];
+    }
+
+    $c->stash->{rest} = {data=>\@plots};
+
+}
+
 
 1;

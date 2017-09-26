@@ -109,7 +109,7 @@ $user_id => undef
     <div class="modal-content ui-front">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="createNewCrosses">Create Crossing Experiments</h4>
+        <h4 class="modal-title" id="createNewCrosses">Create Crosses</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -126,11 +126,13 @@ $user_id => undef
             <label class="col-sm-2 control-label">Crossing Trial: </label>
             <div class="col-sm-10">
         <select class="form-control" id="crossing_trial" name="crossing_trial">
+        <option value="">Select Crossing Trial</option>
     <%perl>
         foreach my $crossing_trial (@crossing_trials) {
           print "<option value=".'"'.@$crossing_trial[0].'"'.">".@$crossing_trial[1]."</option>";
         }
           </%perl>
+        </select>
         </select>
             </div>
     </div>
@@ -138,14 +140,17 @@ $user_id => undef
             <label class="col-sm-2 control-label">Location: </label>
             <div class="col-sm-10">
         <select class="form-control" id="location" name="location">
+        <option value="">Select Location</option>
         <%perl>
     foreach my $location (@locations) {
       print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
     }
         </%perl>
         </select>
+        </select>
             </div>
     </div>
+    <!--
     <div class="form-group">
             <label class="col-sm-2 control-label">Field Trial: </label>
             <div class="col-sm-10">
@@ -158,7 +163,7 @@ $user_id => undef
         </select>
             </div>
     </div>
-
+    -->
 
 	  <div class="form-group">
       	      <label class="col-sm-2 control-label">Cross Name: </label>
@@ -277,6 +282,32 @@ $user_id => undef
       <br>
       <h3>Optional:</h3>
 	    <table>
+
+      <div class="form-group">
+              <label class="col-sm-2 control-label">Field Trial: </label>
+              <div class="col-sm-10">
+          <select class="form-control" id="field_trial" name="field_trial">
+          <option value="">Select Trial</option>
+          <%perl>
+      foreach my $all_trial (@all_trials) {
+        print "<option value=".'"'.@$all_trial[0].'"'.">".@$all_trial[1]."</option>";
+      }
+          </%perl>
+          </select>
+          </select>
+              </div>
+      </div>
+      <div class="form-group" id="get_plots" style="display:none">
+              <label class="col-sm-2 control-label">Plot Name: </label>
+              <div class="col-sm-10">
+          <select class="form-control" id="plots" name="plots">
+          <option value="">Select Plot</option>
+
+          </select>
+          </select>
+              </div>
+      </div>
+
       <tr>
         <td>
         <div class="form-group">
@@ -305,6 +336,7 @@ $user_id => undef
             </div>
             </td>
             </tr>
+        <!--
 	      <tr>
 	        <td>
 	    	  <div class="form-group">
@@ -395,6 +427,7 @@ $user_id => undef
 	    	  </div>
 	    	</td>
 	      </tr>
+      -->
 	    </table>
 	  </form>
         </div>
@@ -609,11 +642,13 @@ $user_id => undef
             <label class="col-sm-2 control-label">Breeding Program: </label>
             <div class="col-sm-10">
         <select class="form-control" id="crossingtrial_program" name="crossingtrial_program">
+        <option value="">Select Breeding Program</option>
     <%perl>
         foreach my $program (@programs) {
           print "<option value=".'"'.@$program[0].'"'.">".@$program[1]."</option>";
         }
           </%perl>
+        </select>
         </select>
             </div>
     </div>
@@ -621,11 +656,13 @@ $user_id => undef
             <label class="col-sm-2 control-label">Location: </label>
             <div class="col-sm-10">
         <select class="form-control" id="crossingtrial_location" name="crossingtrial_location">
+        <option value="">Select Location</option>
     <%perl>
         foreach my $location (@locations) {
             print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
         }
         </%perl>
+        </select>
         </select>
             </div>
     </div>
@@ -760,6 +797,33 @@ jQuery(document).ready(function($) {
             }
         }
     });
+
+    $("#field_trial").change(function(){
+
+    jQuery.ajax({
+      url:'/ajax/breeders/get_plots',
+      data:{'field_trial':$('#field_trial').val()},
+      success: function(response){
+      console.log(response);
+      var html = '<select id = "plots" >';
+      for (var i=0; i<response.data.length; i++) {
+      html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][0] + "</option>";
+      }
+      html = html + "</select>";
+      console.log(html);
+
+      if(i ==''){
+        alert("No plot");
+        return;
+    }
+
+    jQuery('#plots').html(html);
+    },
+    error:function(response){
+    alert("An error occurred");
+           }
+         });
+       });
 
 });
 
