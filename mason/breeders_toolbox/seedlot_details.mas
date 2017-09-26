@@ -280,6 +280,9 @@ $timestamp
     jQuery("#transaction_new_seedlot_accession_uniquename").autocomplete({
        source: '/ajax/stock/accession_autocomplete',
     });
+    jQuery("#edit_seedlot_details_accession").autocomplete({
+       source: '/ajax/stock/accession_autocomplete',
+    });
 
     var seedlot_transactions_table = jQuery('#available_seedlot_transactions_table').DataTable( {
         'ajax': '/ajax/breeders/seedlot/<% $seedlot_id %>/transactions',

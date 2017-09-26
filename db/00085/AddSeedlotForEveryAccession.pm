@@ -99,7 +99,8 @@ sub patch {
 		$sl->check_name_exists(0);
 		#TO DO
 		#$sl->cross_id($cross_id);
-		my $seedlot_id = $sl->store();
+		my $return = $sl->store();
+		my $seedlot_id = $return->{seedlot_id};
 
 		my $timestamp = localtime();
 		my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);

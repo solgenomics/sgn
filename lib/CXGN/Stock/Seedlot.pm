@@ -32,6 +32,7 @@ use CXGN::Stock::Seedlot::Transaction;
 use CXGN::BreedersToolbox::Projects;
 use SGN::Model::Cvterm;
 use CXGN::List::Validate;
+use Try::Tiny;
 
 =head2 Accessor seedlot_id()
 
@@ -472,21 +473,25 @@ sub _retrieve_breeding_program {
 
 sub _store_seedlot_relationships {
     my $self = shift;
+    my $error;
 
     eval {
-        $self->_store_seedlot_accessions();
-        my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
-        my $experiment = $self->schema->resultset('NaturalDiversity::NdExperiment')->create({
-            nd_geolocation_id => $self->nd_geolocation_id,
-            type_id => $experiment_type_id
-        });
-        $experiment->create_related('nd_experiment_stocks', { stock_id => $self->seedlot_id(), type_id => $experiment_type_id  });
-        $experiment->create_related('nd_experiment_projects', { project_id => $self->breeding_program_id });
+        $error = $self->_store_seedlot_accessions();
+        if (!$error){
+            my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
+            my $experiment = $self->schema->resultset('NaturalDiversity::NdExperiment')->create({
+                nd_geolocation_id => $self->nd_geolocation_id,
+                type_id => $experiment_type_id
+            });
+            $experiment->create_related('nd_experiment_stocks', { stock_id => $self->seedlot_id(), type_id => $experiment_type_id  });
+            $experiment->create_related('nd_experiment_projects', { project_id => $self->breeding_program_id });
+        }
     };
 
     if ($@) {
-        die $@;
+        $error = $@;
     }
+    return $error;
 }
 
 sub _store_seedlot_accessions {
@@ -495,7 +500,7 @@ sub _store_seedlot_accessions {
         my $organism_id = $self->schema->resultset('Stock::Stock')->find({stock_id => $a})->organism_id();
         if ($self->organism_id){
             if ($self->organism_id != $organism_id){
-                die "Accessions must all be the same organism, so that a population can group the seed lots.\n";
+                return "Accessions must all be the same organism, so that a population can group the seed lots.\n";
             }
         }
         $self->organism_id($organism_id);
@@ -548,7 +553,8 @@ sub _update_accession_stock_ids {
     while (my $r=$acc_rs->next){
         $r->delete();
     }
-    $self->_store_seedlot_accessions();
+    my $error = $self->_store_seedlot_accessions();
+    return $error;
 }
 
 sub _retrieve_accessions {
@@ -644,34 +650,61 @@ sub _add_transaction {
 
 sub store {
     my $self = shift;
+    my $error;
 
-    #Creating new seedlot
-    if(!$self->stock){
-        $self->name($self->uniquename());
-        my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'seedlot', 'stock_type')->cvterm_id();
-        $self->type_id($type_id);
-        my $id = $self->SUPER::store();
-        print STDERR "Saving seedlot returned ID $id.".localtime."\n";
-        $self->seedlot_id($id);
-        $self->_store_seedlot_relationships();
-
-    } else { #Updating seedlot
-        my $id = $self->SUPER::store();
-        print STDERR "Updating seedlot returned ID $id.".localtime."\n";
-        $self->seedlot_id($id);
-        if($self->breeding_program_id){
-            $self->_update_seedlot_breeding_program();
-        }
-        if($self->location_code){
+    my $coderef = sub {
+        #Creating new seedlot
+        if(!$self->stock){
+            $self->name($self->uniquename());
+            my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'seedlot', 'stock_type')->cvterm_id();
+            $self->type_id($type_id);
+            my $id = $self->SUPER::store();
+            print STDERR "Saving seedlot returned ID $id.".localtime."\n";
+            $self->seedlot_id($id);
             $self->_store_seedlot_location();
-            $self->_update_seedlot_location();
-        }
-        if($self->accession_stock_ids){
-            $self->_update_accession_stock_ids();
-        }
-    }
+            $error = $self->_store_seedlot_relationships();
+            if ($error){
+                die $error;
+            }
 
-    return $self->seedlot_id();
+        } else { #Updating seedlot
+            if($self->accession_stock_ids){
+                my $transactions = $self->transactions();
+                if (scalar(@$transactions)>1){
+                    $error = "This seedlot ".$self->uniquename." has been used in transactions, so the accessions cannot be changed now!";
+                } else {
+                    $error = $self->_update_accession_stock_ids();
+                }
+                if ($error){
+                    die $error;
+                }
+            }
+
+            my $id = $self->SUPER::store();
+            print STDERR "Updating seedlot returned ID $id.".localtime."\n";
+            $self->seedlot_id($id);
+            if($self->breeding_program_id){
+                $self->_update_seedlot_breeding_program();
+            }
+            if($self->location_code){
+                $self->_store_seedlot_location();
+                $self->_update_seedlot_location();
+            }
+        }
+    };
+
+    my $transaction_error;
+	try {
+		$self->schema->txn_do($coderef);
+	} catch {
+		print STDERR "Transaction Error: $_\n";
+		$transaction_error =  $_;
+	};
+	if ($transaction_error){
+        return { error=>$transaction_error };
+    } else {
+        return { success=>1, seedlot_id=>$self->seedlot_id() };
+    }
 }
 
 =head2 delete()

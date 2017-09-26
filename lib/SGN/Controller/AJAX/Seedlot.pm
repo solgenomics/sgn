@@ -147,8 +147,12 @@ sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) {
     $seedlot->location_code($location);
     $seedlot->accession_stock_ids([$accession_id]);
     $seedlot->population_name($population);
-    $seedlot->store();
-    $c->stash->{rest} = { success => 1 };
+    my $return = $seedlot->store();
+    if (exists($return->{error})){
+        $c->stash->{rest} = { error => $return->{error} };
+    } else {
+        $c->stash->{rest} = { success => 1 };
+    }
 }
 
 sub seedlot_delete :Chained('seedlot_base') PathPart('delete') Args(0) { 
@@ -210,7 +214,8 @@ sub create_seedlot :Path('/ajax/breeders/seedlot-create/') :Args(0) {
         $sl->breeding_program_id($breeding_program_id);
         #TO DO
         #$sl->cross_id($cross_id);
-        $seedlot_id = $sl->store();
+        my $return = $sl->store();
+        my $seedlot_id = $return->{seedlot_id};
 
         my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
         $transaction->factor(1);
@@ -330,7 +335,8 @@ sub upload_seedlots_POST : Args(0) {
             $sl->check_name_exists(0); #already validated
             #TO DO
             #$sl->cross_id($cross_id);
-            my $seedlot_id = $sl->store();
+            my $return = $sl->store();
+            my $seedlot_id = $return->{seedlot_id};
 
             my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
             $transaction->factor(1);
@@ -484,7 +490,8 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
             $sl->breeding_program_id($breeding_program_id);
             #TO DO
             #$sl->cross_id($cross_id);
-            my $seedlot_id = $sl->store();
+            my $return = $sl->store();
+            my $seedlot_id = $return->{seedlot_id};
             $stock_id = $seedlot_id;
 
             my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);

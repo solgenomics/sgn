@@ -186,6 +186,10 @@ is_deeply($all_locations,[
             'Cornell Biotech'
           ],
           [
+            25,
+            'NA'
+          ],
+          [
             23,
             'test_location'
           ]
