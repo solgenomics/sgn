@@ -104,6 +104,53 @@ sub seedlot_details :Chained('seedlot_base') PathPart('') Args(0) {
     };
 }
 
+sub seedlot_edit :Chained('seedlot_base') PathPart('edit') Args(0) { 
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in to edit seedlot details" };
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to edit seedlot detail. Please contact us." };
+        $c->detach();
+    }
+
+    my $seedlot_name = $c->req->param('uniquename');
+    my $breeding_program_name = $c->req->param('breeding_program');
+    my $organization = $c->req->param('organization');
+    my $population = $c->req->param('population');
+    my $location = $c->req->param('location');
+    my $accession = $c->req->param('accession');
+    my $schema = $c->stash->{schema};
+    my $breeding_program = $schema->resultset('Project::Project')->find({name=>$breeding_program_name});
+    if (!$breeding_program){
+        $c->stash->{rest} = { error => "The breeding program $breeding_program_name does not exist in the database. Please add it first or choose another." };
+        $c->detach();
+    }
+    my $breeding_program_id = $breeding_program->project_id();
+
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $accession_row = $schema->resultset('Stock::Stock')->find({uniquename=>$accession, type_id=>$accession_cvterm_id});
+    if (!$accession_row){
+        $c->stash->{rest} = { error => "The accession $accession does not exist in the database. Please add it first or choose another." };
+        $c->detach();
+    }
+    my $accession_id = $accession_row->stock_id();
+
+    my $seedlot = $c->stash->{seedlot};
+    $seedlot->name($seedlot_name);
+    $seedlot->uniquename($seedlot_name);
+    $seedlot->breeding_program_id($breeding_program_id);
+    $seedlot->organization_name($organization);
+    $seedlot->location_code($location);
+    $seedlot->accession_stock_ids([$accession_id]);
+    $seedlot->population_name($population);
+    $seedlot->store();
+    $c->stash->{rest} = { success => 1 };
+}
+
 sub seedlot_delete :Chained('seedlot_base') PathPart('delete') Args(0) { 
     my $self = shift;
     my $c = shift;
@@ -113,7 +160,7 @@ sub seedlot_delete :Chained('seedlot_base') PathPart('delete') Args(0) {
         $c->detach();
     }
     if (!$c->user()->check_roles("curator")) {
-        $c->stash->{rest} = { error => "You do not have the correct role to delete seedlots" };
+        $c->stash->{rest} = { error => "You do not have the correct role to delete seedlots. Please contact us." };
         $c->detach();
     }
 
@@ -334,6 +381,16 @@ sub seedlot_transaction_details :Chained('seedlot_transaction_base') PathPart(''
 sub edit_seedlot_transaction :Chained('seedlot_transaction_base') PathPart('edit') Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in to edit seedlot transactions" };
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to edit seedlot transactions. Please contact us." };
+        $c->detach();
+    }
+
     my $t = $c->stash->{transaction_object};
     my $edit_operator = $c->req->param('operator');
     my $edit_amount = $c->req->param('amount');

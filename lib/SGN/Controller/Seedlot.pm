@@ -30,10 +30,15 @@ sub seedlot_detail :Path('/breeders/seedlot') Args(1) {
     foreach (@$accessions){
         $accessions_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> ';
     }
+    my $populations = $sl->populations();
+    my $populations_html = '';
+    foreach (@$populations){
+        $populations_html .= '<a href="/stock/'.$_->[0].'/view">'.$_->[1].'</a> ';
+    }
     $c->stash->{seedlot_id} = $seedlot_id;
     $c->stash->{uniquename} = $sl->uniquename();
     $c->stash->{organization_name} = $sl->organization_name();
-    $c->stash->{population_name} = $sl->population_name();
+    $c->stash->{population_name} = $populations_html;
     $c->stash->{accessions} = $accessions_html;
     $c->stash->{current_count} = $sl->get_current_count_property();
     $c->stash->{timestamp} = localtime();

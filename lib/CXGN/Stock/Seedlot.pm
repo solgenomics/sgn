@@ -473,34 +473,8 @@ sub _retrieve_breeding_program {
 sub _store_seedlot_relationships {
     my $self = shift;
 
-    foreach my $a (@{$self->accession_stock_ids()}) {
-        my $organism_id = $self->schema->resultset('Stock::Stock')->find({stock_id => $a})->organism_id();
-        if ($self->organism_id){
-            if ($self->organism_id != $organism_id){
-                die "Accessions must all be the same organism, so that a population can group the seed lots.\n";
-            }
-        }
-        $self->organism_id($organism_id);
-    }
-
     eval {
-        #Save seedlot to accession relationship as collection_of
-        my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
-        foreach my $a (@{$self->accession_stock_ids()}) {
-            my $already_exists = $self->schema()->resultset("Stock::StockRelationship")->find({ object_id => $self->seedlot_id(), type_id => $type_id, subject_id=>$a });
-
-            if ($already_exists) {
-                print STDERR "Accession with id $a is already associated with seedlot id ".$self->seedlot_id()."\n";
-                next;
-            }
-            my $row = $self->schema()->resultset("Stock::StockRelationship")->create({
-                object_id => $self->seedlot_id(),
-                subject_id => $a,
-                type_id => $type_id,
-            });
-        }
-
-        #Create nd_experiment of type seedlot_experiment and link the breeding program and seedlot
+        $self->_store_seedlot_accessions();
         my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
         my $experiment = $self->schema->resultset('NaturalDiversity::NdExperiment')->create({
             nd_geolocation_id => $self->nd_geolocation_id,
@@ -511,8 +485,70 @@ sub _store_seedlot_relationships {
     };
 
     if ($@) {
-	die $@;
+        die $@;
     }
+}
+
+sub _store_seedlot_accessions {
+    my $self = shift;
+    foreach my $a (@{$self->accession_stock_ids()}) {
+        my $organism_id = $self->schema->resultset('Stock::Stock')->find({stock_id => $a})->organism_id();
+        if ($self->organism_id){
+            if ($self->organism_id != $organism_id){
+                die "Accessions must all be the same organism, so that a population can group the seed lots.\n";
+            }
+        }
+        $self->organism_id($organism_id);
+    }
+
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
+    foreach my $a (@{$self->accession_stock_ids()}) {
+        my $already_exists = $self->schema()->resultset("Stock::StockRelationship")->find({ object_id => $self->seedlot_id(), type_id => $type_id, subject_id=>$a });
+
+        if ($already_exists) {
+            print STDERR "Accession with id $a is already associated with seedlot id ".$self->seedlot_id()."\n";
+            next;
+        }
+        my $row = $self->schema()->resultset("Stock::StockRelationship")->create({
+            object_id => $self->seedlot_id(),
+            subject_id => $a,
+            type_id => $type_id,
+        });
+    }
+}
+
+sub _update_seedlot_breeding_program {
+    my $self = shift;
+    my $stock = $self->stock;
+    my $seedlot_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'seedlot_experiment', 'experiment_type')->cvterm_id();
+    my $nd_exp_project = $stock->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$seedlot_experiment_cvterm_id})->search_related('nd_experiment_projects');
+    if($nd_exp_project->count != 1){
+        die "There should be exactly one nd_experiment_project for any single seedlot!";
+    }
+    my $nd_exp_proj = $nd_exp_project->first();
+    $nd_exp_proj->update({project_id=>$self->breeding_program_id});
+}
+
+sub _update_seedlot_location {
+    my $self = shift;
+    my $stock = $self->stock;
+    my $seedlot_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'seedlot_experiment', 'experiment_type')->cvterm_id();
+    my $nd_exp = $stock->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$seedlot_experiment_cvterm_id});
+    if($nd_exp->count != 1){
+        die "There should be exactly one nd_experiment for any single seedlot!";
+    }
+    my $nd = $nd_exp->first();
+    $nd->update({nd_geolocation_id=>$self->nd_geolocation_id});
+}
+
+sub _update_accession_stock_ids {
+    my $self = shift;
+    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "collection_of", "stock_relationship")->cvterm_id();
+    my $acc_rs = $self->stock->search_related('stock_relationship_objects', {'type_id'=>$type_id});
+    while (my $r=$acc_rs->next){
+        $r->delete();
+    }
+    $self->_store_seedlot_accessions();
 }
 
 sub _retrieve_accessions {
@@ -609,19 +645,31 @@ sub _add_transaction {
 sub store {
     my $self = shift;
 
-    print STDERR "storing: UNIQUENAME=".$self->uniquename()." ".localtime." \n";
-    $self->name($self->uniquename());
+    #Creating new seedlot
+    if(!$self->stock){
+        $self->name($self->uniquename());
+        my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'seedlot', 'stock_type')->cvterm_id();
+        $self->type_id($type_id);
+        my $id = $self->SUPER::store();
+        print STDERR "Saving seedlot returned ID $id.".localtime."\n";
+        $self->seedlot_id($id);
+        $self->_store_seedlot_relationships();
 
-    my $type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'seedlot', 'stock_type')->cvterm_id();
-    $self->type_id($type_id);
-
-    my $id = $self->SUPER::store();
-
-    print STDERR "Saving seedlot returned ID $id.".localtime."\n";
-    $self->seedlot_id($id);
-
-    $self->_store_seedlot_location();
-    $self->_store_seedlot_relationships();
+    } else { #Updating seedlot
+        my $id = $self->SUPER::store();
+        print STDERR "Updating seedlot returned ID $id.".localtime."\n";
+        $self->seedlot_id($id);
+        if($self->breeding_program_id){
+            $self->_update_seedlot_breeding_program();
+        }
+        if($self->location_code){
+            $self->_store_seedlot_location();
+            $self->_update_seedlot_location();
+        }
+        if($self->accession_stock_ids){
+            $self->_update_accession_stock_ids();
+        }
+    }
 
     return $self->seedlot_id();
 }

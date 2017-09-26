@@ -454,7 +454,11 @@ $timestamp
                     'description':description,
                     'timestamp':timestamp
                 },
+                beforeSend: function(){
+                    jQuery('#working_modal').modal('show');
+                },
                 success: function(response) {
+                    jQuery('#working_modal').modal('hide');
                     if (response.success == 1) {
                         alert('Transaction updated!');
                         seedlot_transactions_table.ajax.reload();
@@ -464,6 +468,7 @@ $timestamp
                     }
                 },
                 error: function(response) {
+                    jQuery('#working_modal').modal('hide');
                     alert('An error occurred editing seedlot transaction details');
                 }
             });
@@ -475,7 +480,50 @@ $timestamp
     });
 
     jQuery('#edit_seedlot_details_button').click(function(){
-        
+        var uniquename = jQuery('#edit_seedlot_details_uniquename').val();
+        var breeding_program = jQuery('#edit_seedlot_details_breeding_program').val();
+        var organization = jQuery('#edit_seedlot_details_organization').val();
+        var population = jQuery('#edit_seedlot_details_population').val();
+        var location = jQuery('#edit_seedlot_details_location').val();
+        var accession = jQuery('#edit_seedlot_details_accession').val();
+        if (uniquename == ''){
+            alert('Seedlot name must not be blank');
+        } else if (breeding_program == ''){
+            alert('Breeding program must not be blank');
+        } else if (location == ''){
+            alert('Location must not be blank');
+        } else if (accession == ''){
+            alert('Accession must not be blank');
+        } else {
+            jQuery.ajax({
+                url: '/ajax/breeders/seedlot/<% $seedlot_id %>/edit',
+                data: {
+                    'uniquename':uniquename,
+                    'breeding_program':breeding_program,
+                    'organization':organization,
+                    'population':population,
+                    'location':location,
+                    'accession':accession
+                },
+                beforeSend: function(){
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.success == 1) {
+                        alert('Seedlot updated!');
+                        document.location.reload();
+                    }
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred editing seedlot details');
+                }
+            });
+        }
     });
 
 });
