@@ -768,19 +768,24 @@ sub upload_trial_file_POST : Args(0) {
 	   program => $program,
 	   upload_trial_file => $upload,
 	  });
+      
+    my $save;
+    try {
+        $save = $trial_create->save_trial();
+    } catch {
+        $c->stash->{rest} = {error => "Error saving trial in the database $_"};
+        return;
+    };
 
-  try {
-      $trial_create->save_trial();
-  } catch {
-      $c->stash->{rest} = {error => "Error saving trial in the database $_"};
-      $error = 1;
-  };
-
-  print STDERR "Check 5: ".localtime()."\n";
-
-  if ($error) {return;}
-  $c->stash->{rest} = {success => "1",};
-  return;
+    print STDERR "Check 5: ".localtime()."\n";
+    if ($save->{'error'}) {
+        print STDERR "Error saving trial: ".$save->{'error'};
+        $c->stash->{rest} = {error => $save->{'error'}};
+        return;
+    } elsif ($save->{'trial_id'}) {
+        $c->stash->{rest} = {success => "1",};
+        return;
+    }
 
 }
 

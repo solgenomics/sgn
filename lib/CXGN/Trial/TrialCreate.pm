@@ -135,15 +135,22 @@ sub save_trial {
 	my $self = shift;
 	my $chado_schema = $self->get_chado_schema();
 	my %design = %{$self->get_design()};
-
-	if ($self->trial_name_already_exists()) {
+    my $trial_name = $self->get_trial_name();
+    $trial_name =~ s/^\s+|\s+$//g; #trim whitespace from both ends
+    
+	if (!$trial_name) {
+		print STDERR "Trial not saved: Can't create trial without a trial name\n";
+		return { error => "Trial not saved: Can't create trial without a trial name" };
+	}
+    
+    if ($self->trial_name_already_exists()) {
 		print STDERR "Can't create trial: Trial name already exists\n";
-		return ( error => "Trial not saved: Trial name already exists" );
+		return { error => "Trial not saved: Trial name already exists" };
 	}
 
 	if (!$self->get_breeding_program_id()) {
 		print STDERR "Can't create trial: Breeding program does not exist\n";
-		return ( error => "Trial not saved: breeding program does not exist" );
+		return { error => "Trial not saved: breeding program does not exist" };
 	}
 
 	#lookup user by name
@@ -162,7 +169,7 @@ sub save_trial {
 	$geolocation = $geolocation_lookup->get_geolocation();
 	if (!$geolocation) {
 		print STDERR "Can't create trial: Location not found\n";
-		return ( error => "Trial not saved: location not found" );
+		return { error => "Trial not saved: location not found" };
 	}
 
 	my $project_year_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project year', 'project_property');
@@ -174,7 +181,7 @@ sub save_trial {
 
 	my $project = $chado_schema->resultset('Project::Project')
 	->create({
-		name => $self->get_trial_name(),
+		name => $trial_name,
 		description => $self->get_trial_description(),
 	});
 
@@ -236,7 +243,7 @@ sub save_trial {
 	my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
 		bcs_schema => $chado_schema,
 		trial_id => $project->project_id(),
-        trial_name => $self->get_trial_name(),
+        trial_name => $trial_name,
 		nd_geolocation_id => $geolocation->nd_geolocation_id(),
         nd_experiment_id => $nd_experiment->nd_experiment_id(),
 		design_type => $design_type,
@@ -249,7 +256,7 @@ sub save_trial {
 	my $validate_design_error = $trial_design_store->validate_design();
 	if ($validate_design_error) {
 		print STDERR "ERROR: $validate_design_error\n";
-		return ( error => "Error validating trial design: $validate_design_error." );
+		return { error => "Error validating trial design: $validate_design_error." };
 	} else {
 		try {
 			$error = $trial_design_store->store();
@@ -259,9 +266,9 @@ sub save_trial {
 		};
 	}
 	if ($error) {
-		return ( error => $error );
+		return { error => $error };
 	}
-	return ( trial_id => $project->project_id );
+	return { trial_id => $project->project_id };
 }
 
 
