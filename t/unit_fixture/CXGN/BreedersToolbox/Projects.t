@@ -182,28 +182,12 @@ print STDERR Dumper $all_locations;
 is(scalar(@$all_locations), 2);
 is_deeply($all_locations,[
           [
-            23,
-            'test_location',
-            undef,
-            'USA',
-            'test',
-            undef,
-            '32.6136',
-            '-115.864',
-            '109',
-            5
+            24,
+            'Cornell Biotech'
           ],
           [
-            24,
-            'Cornell Biotech',
-            undef,
-            'USA',
-            undef,
-            undef,
-            '42.4534',
-            '-76.4735',
-            '274',
-            0
+            23,
+            'test_location'
           ]
         ], 'get all locations');
 
