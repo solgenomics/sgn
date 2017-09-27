@@ -40,6 +40,7 @@ use Try::Tiny;
 use SGN::Model::Cvterm;
 use CXGN::Stock::Seedlot;
 use CXGN::Stock::Seedlot::Transaction;
+use Data::Dumper;
 
 extends 'CXGN::Metadata::Dbpatch';
 
@@ -66,11 +67,10 @@ sub patch {
 
 	my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 	my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
-    my $accession_rs = $schema->resultset("Stock::Stock")->search({
-		type_id=>$accession_type_id
-	});
-	
-	my $seedlot_rs = $schema->resultset("Stock::Stock")->search({
+	my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+	my $exp_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
+	my $bp_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'breeding_program_trial_relationship', 'project_relationship')->cvterm_id();
+    my $seedlot_rs = $schema->resultset("Stock::Stock")->search({
 		type_id=>$seedlot_type_id
 	});
 	my %existing_seedlots;
@@ -78,11 +78,38 @@ sub patch {
 		$existing_seedlots{$r->uniquename}++;
 	}
 
-	my $breeding_program_id = $schema->resultset("Project::Project")->find({name=>'IITA'})->project_id();
+	my $accession_rs = $schema->resultset("Stock::Stock")->search(
+		{
+			'me.type_id'=>$accession_type_id,
+			'stock_relationship_objects.type_id'=>$plot_of_type_id,
+			'nd_experiment.type_id'=>$exp_type_id,
+			'project_relationship_subject_projects.type_id'=>$bp_rel_type_id
+		},
+		{
+			join=>{'stock_relationship_objects'=>{'subject'=>{'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>{'project'=>{'project_relationship_subject_projects'=>'object_project'}}}}}}},
+			'+select'=>['object_project.project_id', 'object_project.name'],
+			'+as'=>['bp_id', 'bp_name']
+		}
+	);
+	my %accession_bp_hash;
+	my %accession_hash;
+	while(my $r=$accession_rs->next){
+		$accession_bp_hash{$r->uniquename}->{$r->get_column('bp_id')}++;
+		$accession_hash{$r->uniquename} = $r->stock_id;
+	}
+	my %highest_accession_bp_hash;
+	while(my($k,$v) = each %accession_bp_hash){
+		my %v = %$v;
+		my @bp_ids = sort { $v{$a} <=> $v{$b} } keys %v;
+		my $most_used = $bp_ids[-1];
+		$highest_accession_bp_hash{$k} = $most_used;
+	}
+	#print STDERR Dumper \%highest_accession_bp_hash;
+	
 
-	while (my $r = $accession_rs->next()){
-		my $accession_uniquename = $r->uniquename;
-		my $accession_stock_id = $r->stock_id;
+	while (my ($k,$v) = each %accession_hash){
+		my $accession_uniquename = $k;
+		my $accession_stock_id = $v;
 		my $seedlot_uniquename = $accession_uniquename."_001";
 		
 		if(exists($existing_seedlots{$seedlot_uniquename})){
@@ -95,7 +122,7 @@ sub patch {
 		$sl->accession_stock_ids([$accession_stock_id]);
 		#$sl->organization_name();
 		#$sl->population_name($population_name);
-		$sl->breeding_program_id($breeding_program_id);
+		$sl->breeding_program_id($highest_accession_bp_hash{$accession_uniquename});
 		$sl->check_name_exists(0);
 		#TO DO
 		#$sl->cross_id($cross_id);
