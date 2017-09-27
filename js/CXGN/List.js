@@ -663,7 +663,7 @@ CXGN.List.prototype = {
 
   if (refresh) {
     if (types.length > 1) { types = types.join(',') };
-	  html = '<div class="input-group">'+html+'</select><span class="input-group-btn"><button class="btn btn-default" type="button" id="'+div_name+'_list_refresh" title="Refresh lists" onclick="refreshListSelect(\''+div_name+'_list_select\',\''+types+'\',\'Options refreshed.\')"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></span></div>';
+	  html = '<div class="input-group" id="'+div_name+'_list_select_div">'+html+'</select><span class="input-group-btn"><button class="btn btn-default" type="button" id="'+div_name+'_list_refresh" title="Refresh lists" onclick="refreshListSelect(\''+div_name+'\',\''+types+'\')"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></span></div>';
     return html;
   }
   else {
@@ -985,39 +985,13 @@ function pasteList(div_name) {
      Parameters:
        div_name: The div_name where the select should appear
        types: a list of list types that should be listed in the menu
-       add_empty_element: text. if present, add an empty element with the
-         provided text as description
   */
 
-  function refreshListSelect(div_name, types, empty_element) {
+  function refreshListSelect(div_name, types) {
     var lo = new CXGN.List();
-    var lists = new Array();
     var types = types.split(",");
-    //console.log("types = "+types);
-    if (types.length > 0) {
-        for (var n=0; n<types.length; n++) {
-          //console.log("retrieving lists of type: "+types[n]+"\n");
-          var more = lo.availableLists(types[n]);
-          if (more) {
-            for (var i=0; i<more.length; i++) {
-              lists.push(more[i]);
-            }
-          }
-        }
-    }
-    else {
-        lists = lo.availableLists();
-    }
-
-    var html;
-    if (empty_element) {
-        html += '<option value="">'+empty_element+'</option>\n';
-          }
-    for (var n=0; n<lists.length; n++) {
-        html += '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
-    }
-    jQuery('#'+div_name).html(html);
-
+    document.getElementById(div_name).innerHTML = (lo.listSelect(div_name, types, 'Options refreshed.', 'refresh')); 
+    //console.log("List options refreshed!");
   }
 
 /*
