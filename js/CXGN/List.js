@@ -305,10 +305,11 @@ CXGN.List.prototype = {
     },
 
     updateItem: function(list_id, item_id, content) {
+        var trimmed_content = content.trim();
         jQuery.ajax( {
             async: false,
             url: '/list/item/update',
-            data: { 'list_id': list_id, 'item_id': item_id, 'content':content }
+            data: { 'list_id': list_id, 'item_id': item_id, 'content': trimmed_content }
         });
     },
 
