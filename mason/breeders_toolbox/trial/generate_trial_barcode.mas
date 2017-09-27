@@ -73,7 +73,7 @@ $identifier => ''
                                        }
                                    });
                                    
-                                   $(document).on('change', '#select_print_format', function () {
+                                   jQuery(document).on('change', '#select_print_format', function () {
                                        var format = jQuery("#select_print_format").val();
                                        if (format == "32A4") {
                                          var label_row = 10;
