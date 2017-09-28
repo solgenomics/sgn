@@ -228,10 +228,15 @@ sub update_fieldmap_precheck {
 		trial_id => $trial_id
 	});
 	my $triat_name = $trial->get_traits_assayed();
-	print STDERR Dumper($triat_name);
+	#print STDERR Dumper($triat_name);
 
 	if (scalar(@{$triat_name}) != 0)  {
-	 $error = "One or more traits have been assayed for this trial; Map/Layout can not be modified.";
+	 $error = "One or more traits have been assayed for this trial; Map/Layout can not be modified. Please contact us.";
+	 return $error;
+	}
+	my $seedlots = $trial->get_seedlots();
+	if (scalar(@$seedlots) != 0){
+		$error = "Seedlots have already been saved as the source material for the plots in this trial. Map/Layout can not be modified. Please contact us.";
 	}
 	return $error;
 }
@@ -335,8 +340,9 @@ sub replace_trial_accession_fieldMap {
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
 	my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
+	my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "subplot_of", "stock_relationship")->cvterm_id();
 
-	my $h_update = $dbh->prepare("update stock_relationship set object_id=? where stock_relationship_id in (SELECT stock_relationship.stock_relationship_id FROM stock as accession JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id) JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id) JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment using(nd_experiment_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE accession.type_id =? AND stock_relationship.type_id IN ($plot_of_cvterm_id, $plant_of_cvterm_id) AND project.project_id =? and nd_experiment.type_id=?) and object_id=?;");
+	my $h_update = $dbh->prepare("update stock_relationship set object_id=? where stock_relationship_id in (SELECT stock_relationship.stock_relationship_id FROM stock as accession JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id) JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id) JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment using(nd_experiment_id) JOIN nd_experiment_project using(nd_experiment_id) JOIN project using(project_id) WHERE accession.type_id =? AND stock_relationship.type_id IN ($plot_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id) AND project.project_id =? and nd_experiment.type_id=?) and object_id=?;");
 	$h_update->execute($new_accession_id,$accession_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_accession_id);
 
 	return $error;
