@@ -59,7 +59,7 @@ has 'location' => (isa =>'Str', is => 'rw', predicate => 'has_location', require
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
 #has 'parent_folder_id' => (isa => 'Str', is => 'rw', predicate => 'has_parent_folder_id', required => 0,);
 has 'crossing_trial_id' =>(isa =>'Int', is => 'rw', predicate => 'has_crossing_trial_id', required => 1,);
-has 'plot' => (isa => 'Str', is => 'rw', predicate => 'has_plot', required => 0,);
+has 'plot' => (isa => 'Int|Undef', is => 'rw', predicate => 'has_plot',);
 
 #sub get_crossing_trial_id {
 #  my $self = shift;

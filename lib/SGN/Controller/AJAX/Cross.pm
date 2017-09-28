@@ -250,8 +250,8 @@ sub add_cross_POST :Args(0) {
     my $cross_name = $c->req->param('cross_name');
     my $cross_type = $c->req->param('cross_type');
     my $crossing_trial_id = $c->req->param('crossing_trial_id');
-    my $plot = $c->req->param('plot');
-    #print STDERR "Plot=".Dumper($plot)."\n";
+    my $plot = $c->req->param('plot') || 0;
+    print STDERR "Plot=".Dumper($plot)."\n";
     #my $breeding_program_id = $c->req->param('breeding_program_id');
     #my $folder_name = $c->req->param('folder_name');
     #my $folder_id = $c->req->param('folder_id');
