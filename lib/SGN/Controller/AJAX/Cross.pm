@@ -46,7 +46,6 @@ use Tie::UrlEncoder; our(%urlencode);
 use LWP::UserAgent;
 use HTML::Entities;
 use URI::Encode qw(uri_encode uri_decode);
-use Text::CSV;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
