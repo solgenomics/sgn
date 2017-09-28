@@ -107,10 +107,10 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $xlabel_margin = 8;
     # convert mm into pixels
     #
-    if ($cass_print_format eq 'NCSU') {$left_margin_mm = 50, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 12, $labels_per_page = 10, $labels_per_row = 3, $barcode_type = "2D"; }
+    if ($cass_print_format eq 'NCSU') {$left_margin_mm = 50, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 12, $labels_per_page = 10, $labels_per_row = 3, $barcode_type = "2D", $page_format = "letter"; }
     if ($cass_print_format eq 'CASS') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
     if ($cass_print_format eq 'MUSA') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
-    if ($cass_print_format eq '32A4') {$left_margin_mm = 17, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 8, $labels_per_row = 4, $barcode_type = "2D"; }
+    if ($cass_print_format eq '32A4') {$left_margin_mm = 17, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 8, $labels_per_row = 4, $barcode_type = "2D", $page_format = "letter"; }
     my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } (
             $top_margin_mm,
     		$left_margin_mm,
@@ -535,6 +535,9 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
            my $xposition = $left_margin + ($label_count -1) * $final_barcode_width;
            my $yposition = $ypos -7;
            my $label_text = $found[$i]->[1];
+           if ($found[$i]->[5] eq 'plot'){
+               $label_text = $found[$i]->[2];
+           }
            my $label_size =  7;
            my $label_size_stock =  10;
            my $yposition_8 = $ypos + 2;
@@ -555,8 +558,8 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
            if ($found[$i]->[5] eq 'accession'){
                $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_6, $parents);
            }else{
-                $pages[$page_nr-1]->string($font, $label_size_stock, $xposition, $yposition_6, $label_text_6);
-                $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_7, $parents);
+                $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_6, $parents);
+                #$pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_7, $parents);
                 $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $added_text);
            }
            

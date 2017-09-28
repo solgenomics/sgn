@@ -40,6 +40,7 @@ $sgn_session_id => undef
 $user_name => undef
 $design_name => undef
 $phenotypes_fully_uploaded => undef
+$assayed_traits => undef
 $identifier_prefix => 'SGN'
 </%args>
 
@@ -222,9 +223,7 @@ my $start_time = time();
 <& /breeders_toolbox/trial/edit_fieldMap.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <&| /page/info_section.mas, id => "physical_layout", title=>"Physical Trial Layout", collapsible=>1, collapsed => 1, subtitle=>'[<a id="upload_trial_coords_link">Upload trial coordinates</a>] [<a id="edit_field_map_link">Edit Field Map</a>] [<button type="button" class="btn btn-link" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>]' &>
 
-
   <& /breeders_toolbox/trial/trial_coords.mas, trial_id => $trial_id &>
-
 
 </&>
 
@@ -358,7 +357,15 @@ my $start_time = time();
 
 </&>
 
-<&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=>"[<a id='trial_download_phenotypes_button'>Download Trial Data</a>]" &>
+% my $download_pheno_subtitle;
+% if (scalar(@$assayed_traits) > 0){
+%   $download_pheno_subtitle = "[<a id='trial_download_phenotypes_button'>Download Trial Data</a>]"
+% }
+% else {
+%   $download_pheno_subtitle = "Trial has no phenotype for download";
+% }
+
+<&| /page/info_section.mas, id=> "trial_detail_traits_assayed", title => "Traits assayed", collapsible=>1, collapsed=>1, hide_if_empty=>1, subtitle=> $download_pheno_subtitle &>
 
 % if ($has_expression_atlas) {
     <& /breeders_toolbox/trial/export_trial_to_expression_atlas.mas, trial_id => $trial_id, trial_name=>$trial_name, expression_atlas_url=>$expression_atlas_url, site_project_name=>$site_project_name, sgn_session_id=>$sgn_session_id, user_name=>$user_name &>
