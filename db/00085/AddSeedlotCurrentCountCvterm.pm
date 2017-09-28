@@ -35,6 +35,8 @@ package AddSeedlotCurrentCountCvterm;
 use Moose;
 use Bio::Chado::Schema;
 use Try::Tiny;
+use CXGN::Stock::Seedlot;
+use SGN::Model::Cvterm;
 extends 'CXGN::Metadata::Dbpatch';
 
 
@@ -76,6 +78,15 @@ sub patch {
 		}
 	}
 
+	# Applies current_count to all existing seedlots in database
+	my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+	my $seedlot_rs = $schema->resultset("Stock::Stock")->search({
+		type_id=>$seedlot_type_id
+	});
+	while(my $r=$seedlot_rs->next){
+		my $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id=>$r->stock_id);
+		$sl->set_current_count_property();
+	}
 
 print "You're done!\n";
 }
