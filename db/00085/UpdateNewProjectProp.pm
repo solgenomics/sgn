@@ -14,7 +14,11 @@ see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This patch updates cvterm name from Genetic Gain to genetic_gain and Health Status to health_status
+This patch updates cvterm name from 
+Genetic Gain to genetic_gain_trial, 
+Health Status to health_status_trial,
+Heterosis to heterosis_trial
+Storage to storage_trial
 
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
@@ -70,6 +74,24 @@ has '+prereq' => (
   	       my $cv_rs = $schema->resultset("Cv::Cv");
   	       my $project_type_cv = $cv_rs->find( { name => 'project_type' });
            
+          my %cvterm_hash = { 
+           'Genetic Gain' => 'genetic_gain_trial'
+           'Health Status' => 'health_status_trial',
+           'heterosis'     => 'heterosis_trial',
+           'Storage'       => 'storage_trial'
+        }
+        
+        foreach my $key ( %cvterm_hash) { 
+         my $cvterm = $cvterm_rs->search( { name => $key ,  cv_id => $project_type_cv->cv_id , });
+         if ($cvterm) {
+          print STDERR "Updating cvterm $key to " . $cvterm_hash{$key} . "\n";
+          my $cvterm_row = $cvterm->first;
+          $cvterm->update( { name => $vcterm_hash{$key} } ) ;
+         }
+         else { print "Cannot find cvterm $key in the database \n" ; } 
+        }
+        
+        ###### #############
     	   my $genetic_gain_cvterm = $cvterm_rs->search( { name => 'Genetic Gain', } )->single;
   	       print "Updating existing cvterm 'Genetic Gain' \n";
   	       if ($genetic_gain_cvterm) {
@@ -101,7 +123,8 @@ has '+prereq' => (
    	        } else { 
    	             $heterosis_trial_cvterm = $cvterm_rs->search( { name => 'heterosis_trial' } )->single;
    	        }
-  	    
+  	        #################################
+           
           	if ($self->trial) {
                 print "Trial mode! Rolling back transaction\n\n";
                 $schema->txn_rollback;
@@ -121,7 +144,7 @@ has '+prereq' => (
       print "You're done!\n";
   }
    
-
   ####
   1; #
   ####
+  
