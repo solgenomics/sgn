@@ -55,7 +55,7 @@ Storage -> storage_trial
 
 has '+prereq' => (
     default => sub {
-        [],
+        ['AddNewProjectType'],
     },
   );
 
