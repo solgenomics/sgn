@@ -1,0 +1,117 @@
+
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/cross/crossing_trial.mas - a mason component to display a crossing trial detail page
+
+=head1
+
+
+=cut
+
+</%doc>
+
+<%args>
+
+</%args>
+
+<style>
+
+@media (min-width: 1200px) {
+    .affix {
+        top:100px;
+        right:0;
+        position:fixed;
+    }
+}
+
+</style>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
+
+<%perl>
+  use Data::Dumper;
+my $start_time = time();
+
+#print STDERR "Check 7 (mason) : ".(time() - $start_time)."\n";
+
+</%perl>
+
+<br/>
+
+
+<& /page/page_title.mas, title=>"Crossing Trial Details for " &>
+
+<&| /page/info_section.mas, title=>"Crossing Trial details",  collapsible => 1, subtitle => '[<a id="edit_crossing_trial_details">Edit Crossing Trial Details</a>]'&>
+
+
+<div class="panel panel-default">
+<table class="table table-hover" >
+
+<tr>
+<td><b>Crossing Trial Name</b></td>
+<td>
+
+</td>
+</tr>
+
+<tr>
+<td><b>Breeding Program </b></td>
+<td>
+<span id="breeding_program">
+
+</span>
+</td>
+</tr>
+
+<tr>
+<td><b>Location</b></td>
+<td>
+<div id="crossing_trial_location">
+
+</div>
+</td>
+</tr>
+
+<tr>
+<td><b>Year</b></td>
+<td>
+<div id="crossing_trial_year">
+
+</div>
+</td>
+</tr>
+
+<tr>
+<td><b>Planting Date</b></td>
+<td>
+<div id="planting_date">
+
+</div>
+</td>
+</tr>
+
+<tr>
+<td><b>Harvest Date</b></td>
+<td>
+<div id="harvest_date">
+
+</div>
+</td>
+</tr>
+
+<tr><td><b>Description</b></td>
+<td>
+<div id="trial_description">
+
+</div>
+</td>
+</tr>
+</table>
+</div>
+
+
+
+
+</&>
