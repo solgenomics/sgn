@@ -303,10 +303,7 @@ sub search {
             }
         }
         my $synonyms = $synonym_hash_lookup{$stock_name};
-        my $location_name = '';
-        if ($location_id){
-            $location_name = $location_id_lookup{$location_id};
-        }
+        my $location_name = $location_id ? $location_id_lookup{$location_id} : '';
         push @$result, [ $year, $project_name, $stock_name, $location_name, $trait, $value, $plot_name, $rep, $block_number, $plot_number, $trait_id, $project_id, $location_id, $stock_id, $plot_id, $timestamp_value, $synonyms, $design, $stock_type_name, $phenotype_id, $full_count ];
     }
 
