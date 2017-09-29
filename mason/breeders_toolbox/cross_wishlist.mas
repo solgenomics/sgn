@@ -380,9 +380,12 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 //console.log(response);
                 jQuery('#working_modal').modal('hide');
-                jQuery('#cross_wishlist_cross_select_div').html(response.data);
-                jQuery('#create_cross_wishlist_select_dialog').modal('show');
-                //window.location.href = "/download/"+response.filename;
+                if (response.error){
+                    alert(response.error);
+                } else {
+                    jQuery('#cross_wishlist_cross_select_div').html(response.data);
+                    jQuery('#create_cross_wishlist_select_dialog').modal('show');
+                }
             },
             error: function(response) {
                 jQuery('#working_modal').modal('hide');
