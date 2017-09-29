@@ -26,12 +26,10 @@ Bryan Ellerbrock bje24@cornell.edu
 use strict;
 
 use Getopt::Std;
-use Data::Dumper;
-use Carp qw /croak/ ;
-use Pod::Usage;
 use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
-use SGN::Model::Cvterm;
+use CXGN::Stock;
+use SGN::Schema;
 
 our ($opt_H, $opt_D, $opt_s);
 
@@ -57,7 +55,7 @@ print STDERR "Found the following entries with leading or trailing whitespace:\n
 print STDERR "Name:\tType:\n";
 
 #stocks
-my $stock_query = 'SELECT format( '"\%s"', uniquename ) AS name, cvterm.name AS type FROM stock JOIN cvterm ON(type_id = cvterm_id) WHERE trim(uniquename) != uniquename';
+my $stock_query = 'SELECT format( \'"%s"\', uniquename ) AS name, cvterm.name AS type FROM stock JOIN cvterm ON(type_id = cvterm_id) WHERE trim(uniquename) != uniquename';
 my $stocks = $dbh->prepare($stock_query);
 $stocks->execute();
 
@@ -66,7 +64,7 @@ while (my ($name, $type) = $stocks->fetchrow_array()) {
 }
 
 #synonyms
-my $synonym_query = 'SELECT format( '"\%s"', value ) AS name, cvterm.name AS type FROM stockprop JOIN cvterm ON(type_id = cvterm_id) WHERE cvterm.name = 'stock_synonym' AND trim(value) != value';
+my $synonym_query = 'SELECT format( \'"%s"\', value ) AS name, cvterm.name AS type FROM stockprop JOIN cvterm ON(type_id = cvterm_id) WHERE cvterm.name = \'stock_synonym\' AND trim(value) != value';
 my $synonyms = $dbh->prepare($synonym_query);
 $synonyms->execute();
 
@@ -75,7 +73,7 @@ while (my ($name, $type) = $synonyms->fetchrow_array()) {
 }
 
 #projects
-my $project_query = 'SELECT format( '"\%s"', name ) AS name FROM project WHERE trim(name) != name';
+my $project_query = 'SELECT format( \'"%s"\', name ) AS name FROM project WHERE trim(name) != name';
 my $projects = $dbh->prepare($project_query);
 $projects->execute();
 
@@ -84,7 +82,7 @@ while (my $name = $projects->fetchrow_array()) {
 }
 
 #locations
-my $location_query = 'SELECT format( '"\%s"', description) AS name FROM nd_geolocation WHERE trim(description) != description';
+my $location_query = 'SELECT format( \'"%s"\', description) AS name FROM nd_geolocation WHERE trim(description) != description';
 my $locations = $dbh->prepare($location_query);
 $locations->execute();
 
@@ -92,25 +90,32 @@ while (my $name = $locations->fetchrow_array()) {
     print STDERR $name . "\tlocation\n";
 }
 
-    if ($opt_s){
-        
-        my $stock_query = 'UPDATE stock SET uniquename = trim(uniquename) WHERE trim(uniquename) != uniquename';
-        my $stocks = $dbh->prepare($stock_query);
-        $stocks->execute();
-        
-        my $synonym_query = 'UPDATE stockprop SET value = trim(value) WHERE type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'stock_synonym') AND trim(value) != value';
-        my $synonyms = $dbh->prepare($synonym_query);
-        $synonyms->execute();
-        
-        my $project_query = 'UPDATE project SET name = trim(name) WHERE trim(name) != name';
-        my $projects = $dbh->prepare($project_query);
-        $projects->execute();
-        
-        my $location_query = 'UPDATE nd_geolocation SET description = trim(description) WHERE trim(description) != description';
-        my $locations = $dbh->prepare($location_query);
-        $locations->execute();
-
+if ($opt_s){
+    
+    # handle merge_stock
+    my $merge_query = 'SELECT stock_id, trim(uniquename) FROM stock JOIN cvterm ON(type_id = cvterm_id) WHERE trim(uniquename) != uniquename AND trim(uniquename) IN (SELECT uniquename FROM stock)';
+    my $merges = $dbh->prepare($merge_query);
+    $merges->execute();
+    while (my ($merge_id, $trimmed_name) = $merges->fetchrow_array()) {
+        my $correct_stock = $schema->resultset("Stock::Stock")->find({ uniquename=> $trimmed_name });
+        my $s = CXGN::Stock->new( schema => $schema, stock_id => $correct_stock->stock_id());
+        $s->merge($merge_id, 1);
     }
-}
+    
+    my $stock_query = 'UPDATE stock SET uniquename = trim(uniquename) WHERE trim(uniquename) != uniquename';
+    my $stocks = $dbh->prepare($stock_query);
+    $stocks->execute();
+    
+    my $synonym_query = 'UPDATE stockprop SET value = trim(value) WHERE type_id = (SELECT cvterm_id from cvterm where cvterm.name = \'stock_synonym\') AND trim(value) != value';
+    my $synonyms = $dbh->prepare($synonym_query);
+    $synonyms->execute();
+    
+    my $project_query = 'UPDATE project SET name = trim(name) WHERE trim(name) != name';
+    my $projects = $dbh->prepare($project_query);
+    $projects->execute();
+    
+    my $location_query = 'UPDATE nd_geolocation SET description = trim(description) WHERE trim(description) != description';
+    my $locations = $dbh->prepare($location_query);
+    $locations->execute();
 
-close($F);
+}
