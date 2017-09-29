@@ -83,7 +83,7 @@ has '+prereq' => (
 
         foreach my $key (keys %cvterm_hash) { 
              my $cvterm = $cvterm_rs->search( { name => $key ,  cv_id => $project_type_cv->cv_id() });
-             if ($cvterm) {
+             if ( $cvterm != 0 ) {
               print STDERR "Updating cvterm $key to " . $cvterm_hash{$key} . "\n";
               my $cvterm_row = $cvterm->first();
               $cvterm->update( { name => $cvterm_hash{$key} } ) ;
