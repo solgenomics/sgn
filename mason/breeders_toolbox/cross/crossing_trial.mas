@@ -12,8 +12,21 @@
 
 </%doc>
 
-<%args>
 
+<%args>
+$trial_id
+$trial_name
+$breeding_program_id
+$breeding_program_name
+$location_id
+$location_name
+$year => undef
+$trial_type => undef
+$planting_date => undef
+$harvest_date => undef
+$trial_description => undef
+$folder_name => undef
+$folder_id => undef
 </%args>
 
 <style>
@@ -41,9 +54,9 @@ my $start_time = time();
 <br/>
 
 
-<& /page/page_title.mas, title=>"Crossing Trial Details for " &>
+<& /page/page_title.mas, title=>"Crossing Trial Details for ".$trial_name &>
 
-<&| /page/info_section.mas, title=>"Crossing Trial details",  collapsible => 1, subtitle => '[<a id="edit_crossing_trial_details">Edit Crossing Trial Details</a>]'&>
+<&| /page/info_section.mas, title=>"Crossing Trial details",  collapsible => 1, subtitle => '[<a id="edit_details">Edit Crossing Trial Details</a>]'&>
 
 
 <div class="panel panel-default">
@@ -52,7 +65,13 @@ my $start_time = time();
 <tr>
 <td><b>Crossing Trial Name</b></td>
 <td>
-
+<div id="trial_name">
+% if ($trial_name) {
+%   print "$trial_name";
+% } else {
+%   print "[No Trial Name]";
+% }
+</div>
 </td>
 </tr>
 
@@ -60,7 +79,12 @@ my $start_time = time();
 <td><b>Breeding Program </b></td>
 <td>
 <span id="breeding_program">
-
+% if ($breeding_program_name) {
+%  print "$breeding_program_name";
+% }
+% else {
+%  print "No Breeding Program";
+% }
 </span>
 </td>
 </tr>
@@ -68,8 +92,12 @@ my $start_time = time();
 <tr>
 <td><b>Location</b></td>
 <td>
-<div id="crossing_trial_location">
-
+<div id="trial_location">
+% if ($location_name) {
+%  print "$location_name";
+% } else {
+%  print "[No Location]";
+% }
 </div>
 </td>
 </tr>
@@ -77,8 +105,25 @@ my $start_time = time();
 <tr>
 <td><b>Year</b></td>
 <td>
-<div id="crossing_trial_year">
+<div id="trial_year">
+% if ($year) {
+%  print "$year";
+% } else {
+%  print "[No Year]";
+% }
+</div>
+</td>
+</tr>
 
+<tr>
+<td><b>Trial Type</b></td>
+<td>
+<div id="trial_type">
+% if ($trial_type) {
+%  print "$trial_type";
+% } else {
+% print "[Type not set]";
+% }
 </div>
 </td>
 </tr>
@@ -87,7 +132,11 @@ my $start_time = time();
 <td><b>Planting Date</b></td>
 <td>
 <div id="planting_date">
-
+% if ($planting_date) {
+  <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $planting_date %>" ><% $planting_date %></a>
+% } else {
+%  print "[No Planting Date]";
+% }
 </div>
 </td>
 </tr>
@@ -96,7 +145,11 @@ my $start_time = time();
 <td><b>Harvest Date</b></td>
 <td>
 <div id="harvest_date">
-
+% if ($harvest_date) {
+  <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $harvest_date %>" ><% $harvest_date %></a>
+% } else {
+%  print "[No Harvest Date]";
+% }
 </div>
 </td>
 </tr>
@@ -104,14 +157,35 @@ my $start_time = time();
 <tr><td><b>Description</b></td>
 <td>
 <div id="trial_description">
-
+% if ($trial_description) {
+%  print "$trial_description";
+% } else {
+%  print "[No Description]";
+% }
 </div>
 </td>
 </tr>
 </table>
 </div>
 
+% my $folder_collapsed = 1;
+% if ($folder_id) {
+% $folder_collapsed = 0;
+% }
 
+<div class="well well-sm">
+
+<&| /page/info_section.mas, title=>"Folder", collaspible=>1, collapsed=>$folder_collapsed,
+  subtitle => '[<a id="new_folder_dialog_link">New Folder</a>] | [<a id="open_folder_dialog_link">Change</a>]' &>
+
+  <& /breeders_toolbox/folder/folder_set.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name, trial_id => $trial_id, trial_name =>$trial_name &>
+  <& /breeders_toolbox/folder/folder_new.mas, breeding_program_id => $breeding_program_id, breeding_program_name =>$breeding_program_name &>
+
+  <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
+
+</&>
+
+</div><!--closes well-->
 
 
 </&>

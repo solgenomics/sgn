@@ -56,5 +56,3 @@ sub search : Path('/ajax/search/trials') Args(0) {
 
     $c->stash->{rest} = { data => \@result };
 }
-
-
