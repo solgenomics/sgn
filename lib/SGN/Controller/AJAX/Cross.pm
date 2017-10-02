@@ -778,6 +778,14 @@ sub create_cross_wishlist_POST : Args(0) {
     my $trial_id = $c->req->param('trial_id');
     #print STDERR Dumper $data;
 
+    my $t = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+    my $location = $t->get_location();
+    my $location_name = $location->[1];
+    if ($location_name ne 'Arusha'){
+        $c->stash->{rest} = { error => "Cross wishlist currently limited to trials in the location(s): Arusha. This is because currently there is only the ODK form for Arusha. In the future there will be others." };
+        $c->detach();
+    }
+
     my %selected_cross_hash;
     my %selected_females;
     my %selected_males;
@@ -883,6 +891,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         $c->detach();
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
 
     my $timestamp = $time->ymd()."_".$time->hms();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
@@ -943,19 +952,18 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $design_layout = $trial_layout->get_design();
     #print STDERR Dumper $design_layout;
 
-    #my %accession_plot_hash;
+    my %accession_plot_hash;
     my %plot_id_hash;
     while ( my ($key,$value) = each %$design_layout){
-    #    push @{$accession_plot_hash{$value->{accession_name}}}, $value;
+        push @{$accession_plot_hash{$value->{accession_name}}}, $value;
         $plot_id_hash{$value->{plot_id}} = $value;
     }
     #print STDERR Dumper \%accession_plot_hash;
 
-    my $plot_info_file_header = '"PlotName","PlotID","TrialName","TrialID","LocationName","LocationID","PlantingDate","AccessionName","AccessionID","AccessionSynonyms","Pedigree","Genus","Species","Variety","Donors","CountryOfOrigin","State","InstituteCode","InstituteName","BiologicalStatusOfAccessionCode","Notes","AccessionNumber","PUI","SeedSource","TypeOfGermplasmStorageCode","AcquisitionDate","Organization","PopulationName","ProgenyAccessionNames","PlotImageFileNames","AccessionImageFileNames"';
+    my $plot_info_file_header = '"PlotName","PlotID","TrialName","TrialID","LocationName","LocationID","PlantingDate","AccessionName","AccessionID","AccessionSynonyms","Pedigree","Genus","Species","Variety","Donors","CountryOfOrigin","State","InstituteCode","InstituteName","BiologicalStatusOfAccessionCode","Notes","AccessionNumber","PUI","SeedSource","TypeOfGermplasmStorageCode","AcquisitionDate","Organization","PopulationName","ProgenyAccessionNames","PlotImageFileNames","AccessionImageFileNames","Timestamp","CrossWishlistCreatedByUsername"';
     my @plot_info_lines;
-    push @plot_info_lines, $plot_info_file_header;
 
-    my $header = '"FemalePlotID","FemalePlotName","FemaleAccessionName","FemaleAccessionId","FemalePlotNumber","FemaleBlockNumber","FemaleRepNumber","NumberMales"';
+    my $header = '"FemalePlotID","FemalePlotName","FemaleAccessionName","FemaleAccessionId","FemalePlotNumber","FemaleBlockNumber","FemaleRepNumber","Timestamp","CrossWishlistCreatedByUsername","NumberMales"';
     my @lines;
     my $max_male_num = 0;
     my %seen_info_plots;
@@ -970,32 +978,28 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         foreach my $female_plot_id (@$female_plot_ids){
             my $female = $plot_id_hash{$female_plot_id};
             my $num_males = 0;
-            my $line = '"'.$female->{plot_id}.'","'.$female->{plot_name}.'","'.$female->{accession_name}.'","'.$female->{accession_id}.'","'.$female->{plot_number}.'","'.$female->{block_number}.'","'.$female->{rep_number}.'","';
+            my $line = '"'.$female->{plot_id}.'","'.$female->{plot_name}.'","'.$female->{accession_name}.'","'.$female->{accession_id}.'","'.$female->{plot_number}.'","'.$female->{block_number}.'","'.$female->{rep_number}.'","'.localtime().'","'.$user_name.'","';
 
             if (!exists($seen_info_plots{$female->{plot_id}})){
                 my $female_accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$female->{accession_id}});
-                push @plot_info_lines, '"'.$female->{plot_name}.'","'.$female->{plot_id}.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$female->{accession_name}.'","'.$female->{accession_id}.'","'.join(',',@{$female_accession_stock->synonyms()}).'","'.$female_accession_stock->get_pedigree_string("Parents").'","'.$female_accession_stock->get_genus.'","'.$female_accession_stock->get_species.'","'.$female_accession_stock->variety.'","'.encode_json($female_accession_stock->donors).'","'.$female_accession_stock->countryOfOriginCode.'","'.$female_accession_stock->state.'","'.$female_accession_stock->instituteCode.'","'.$female_accession_stock->instituteName.'","'.$female_accession_stock->biologicalStatusOfAccessionCode.'","'.$female_accession_stock->notes.'","'.$female_accession_stock->accessionNumber.'","'.$female_accession_stock->germplasmPUI.'","'.$female_accession_stock->germplasmSeedSource.'","'.$female_accession_stock->typeOfGermplasmStorageCode.'","'.$female_accession_stock->acquisitionDate.'","'.$female_accession_stock->organization_name.'","'.$female_accession_stock->population_name.'","NA","NA","NA"';
+                push @plot_info_lines, '"'.$female->{plot_name}.'","'.$female->{plot_id}.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$female->{accession_name}.'","'.$female->{accession_id}.'","'.join(',',@{$female_accession_stock->synonyms()}).'","'.$female_accession_stock->get_pedigree_string("Parents").'","'.$female_accession_stock->get_genus.'","'.$female_accession_stock->get_species.'","'.$female_accession_stock->variety.'","'.encode_json($female_accession_stock->donors).'","'.$female_accession_stock->countryOfOriginCode.'","'.$female_accession_stock->state.'","'.$female_accession_stock->instituteCode.'","'.$female_accession_stock->instituteName.'","'.$female_accession_stock->biologicalStatusOfAccessionCode.'","'.$female_accession_stock->notes.'","'.$female_accession_stock->accessionNumber.'","'.$female_accession_stock->germplasmPUI.'","'.$female_accession_stock->germplasmSeedSource.'","'.$female_accession_stock->typeOfGermplasmStorageCode.'","'.$female_accession_stock->acquisitionDate.'","'.$female_accession_stock->organization_name.'","'.$female_accession_stock->population_name.'","NA","NA","NA","'.localtime().'","'.$user_name.'"';
                 $seen_info_plots{$female->{plot_id}}++;
             }
 
             my @male_segments;
             foreach my $male_id (@$male_ids){
-                #my $male_plots = $accession_plot_hash{$male_id};
-                #foreach my $male (@$male_plots){
-                #    if (exists($allowed_male_plot_ids{$male->{plot_id}})){
+                my $male_plots = $accession_plot_hash{$male_id};
+                push @male_segments, ',"'.$male_id.'"';
+                $num_males++;
+                foreach my $male (@$male_plots){
                     if (exists($allowed_male_genotypes{$male_id})){
-                        #push @male_segments, ',"'.$male->{plot_id}.'","'.$male->{plot_name}.'","'.$male->{accession_name}.'","'.$male->{accession_id}.'","'.$male->{plot_number}.'","'.$male->{block_number}.'","'.$male->{rep_number}.'"';
-                        push @male_segments, ',"'.$male_id.'"';
-
-                        #if (!exists($seen_info_plots{$male_id})){
-                        #    my $male_accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$male_id});
-                        #    push @plot_info_lines, '"'.$male->{plot_name}.'","'.$male->{plot_id}.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$male->{accession_name}.'","'.$male->{accession_id}.'","'.join(',',@{$male_accession_stock->synonyms()}).'","'.$male_accession_stock->get_pedigree_string("Parents").'","'.$male_accession_stock->get_genus.'","'.$male_accession_stock->get_species.'","'.$male_accession_stock->variety.'","'.encode_json($male_accession_stock->donors).'","'.$male_accession_stock->countryOfOriginCode.'","'.$male_accession_stock->state.'","'.$male_accession_stock->instituteCode.'","'.$male_accession_stock->instituteName.'","'.$male_accession_stock->biologicalStatusOfAccessionCode.'","'.$male_accession_stock->notes.'","'.$male_accession_stock->accessionNumber.'","'.$male_accession_stock->germplasmPUI.'","'.$male_accession_stock->germplasmSeedSource.'","'.$male_accession_stock->typeOfGermplasmStorageCode.'","'.$male_accession_stock->acquisitionDate.'","'.$male_accession_stock->organization_name.'","'.$male_accession_stock->population_name.'","NA","NA","NA"';
-                        #    $seen_info_plots{$male->{plot_id}}++;
-                        #}
-
-                        $num_males++;
+                        if (!exists($seen_info_plots{$male->{plot_id}})){
+                            my $male_accession_stock = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$male->{accession_id}});
+                            push @plot_info_lines, '"'.$male->{plot_name}.'","'.$male->{plot_id}.'","'.$trial_name.'","'.$trial_id.'","'.$location_name.'","'.$location_id.'","'.$planting_date.'","'.$male->{accession_name}.'","'.$male->{accession_id}.'","'.join(',',@{$male_accession_stock->synonyms()}).'","'.$male_accession_stock->get_pedigree_string("Parents").'","'.$male_accession_stock->get_genus.'","'.$male_accession_stock->get_species.'","'.$male_accession_stock->variety.'","'.encode_json($male_accession_stock->donors).'","'.$male_accession_stock->countryOfOriginCode.'","'.$male_accession_stock->state.'","'.$male_accession_stock->instituteCode.'","'.$male_accession_stock->instituteName.'","'.$male_accession_stock->biologicalStatusOfAccessionCode.'","'.$male_accession_stock->notes.'","'.$male_accession_stock->accessionNumber.'","'.$male_accession_stock->germplasmPUI.'","'.$male_accession_stock->germplasmSeedSource.'","'.$male_accession_stock->typeOfGermplasmStorageCode.'","'.$male_accession_stock->acquisitionDate.'","'.$male_accession_stock->organization_name.'","'.$male_accession_stock->population_name.'","NA","NA","NA","'.localtime().'","'.$user_name.'"';
+                            $seen_info_plots{$male->{plot_id}}++;
+                        }
                     }
-                #}
+                }
             }
             $line .= $num_males.'"';
             foreach (@male_segments){
@@ -1016,7 +1020,10 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     foreach (@$data){
         push @{$priority_order_hash{$_->{priority}}}, [$_->{female_id}, $_->{male_id}];
     }
+    my @new_header_row = split ',', $header;
     #print STDERR Dumper \%priority_order_hash;
+    #print STDERR Dumper \@lines;
+    #print STDERR Dumper \@plot_info_lines;
 
     my $dir = $c->tempfiles_subdir('download');
     my ($file_path1, $uri1) = $c->tempfile( TEMPLATE => 'download/cross_wishlist_downloadXXXXX');
@@ -1040,14 +1047,50 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     #$c->stash->{rest}->{filename} = $urlencoded_filename1;
 
 
+    my $file_type = 'cross_wishlist_'.$location_name;
+    my $previously_saved_metadata_id;
+    my $previous_wishlist_md_file = $metadata_schema->resultset("MdFiles")->find({filetype=> $file_type});
+    my @previous_file_lines;
+    if ($previous_wishlist_md_file){
+        my $previous_file_path = $previous_wishlist_md_file->dirname."/".$previous_wishlist_md_file->basename;
+        print STDERR "Previous cross_wishlist $previous_file_path\n";
+        open(my $fh, '<', $previous_file_path)
+            or die "Could not open file '$previous_file_path' $!";
+        my $header_row = <$fh>;
+        my @old_header_row = split ',', $header_row;
+        if (scalar(@old_header_row)>scalar(@new_header_row)){
+            $header = $header_row;
+        }
+        while ( my $row = <$fh> ){
+            push @previous_file_lines, $row;
+        }
+        $previously_saved_metadata_id = $previous_wishlist_md_file->comment;
+        $previous_wishlist_md_file->delete;
+    }
+    #print STDERR Dumper \@previous_file_lines;
+
     my ($file_path2, $uri2) = $c->tempfile( TEMPLATE => "download/cross_wishlist_XXXXX");
     $file_path2 .= '.csv';
     $uri2 .= '.csv';
+    my %unique_female_plots;
     open(my $F, ">", $file_path2) || die "Can't open file ".$file_path2;
         print $F $header;
         print $F "\n";
+        foreach (@previous_file_lines){
+            my @line_cols = split ',', $_;
+            my $female_plot_id = $line_cols[0];
+            if (!exists($unique_female_plots{$female_plot_id})){
+                print $F $_;
+                $unique_female_plots{$female_plot_id}++;
+            }
+        }
         foreach (@lines){
-            print $F $_;
+            my @line_cols = split ',', $_;
+            my $female_plot_id = $line_cols[0];
+            if (!exists($unique_female_plots{$female_plot_id})){
+                print $F $_;
+                $unique_female_plots{$female_plot_id}++;
+            }
         }
     close($F);
     print STDERR Dumper $file_path2;
@@ -1069,20 +1112,44 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $uploaded_file = $uploader->archive();
     my $md5 = $uploader->get_md5($uploaded_file);
 
-    my $file_type = 'cross_wishlist_'.$location_name;
-    my $previously_saved_metadata_id;
-    my $previous_wishlist_md_file = $metadata_schema->resultset("MdFiles")->find({filetype=> $file_type});
-    if ($previous_wishlist_md_file){
-        $previously_saved_metadata_id = $previous_wishlist_md_file->comment;
-        $previous_wishlist_md_file->delete;
+    my $germplasm_info_file_type = 'cross_wishlist_germplasm_info_'.$location_name;
+    my $previously_saved_germplasm_info_metadata_id;
+    my $previous_germplasm_info_md_file = $metadata_schema->resultset("MdFiles")->find({filetype=> $germplasm_info_file_type});
+    my @previous_germplasm_info_lines;
+    if ($previous_germplasm_info_md_file){
+        my $previous_file_path = $previous_germplasm_info_md_file->dirname."/".$previous_germplasm_info_md_file->basename;
+        print STDERR "PREVIOUS germplasm_info $previous_file_path\n";
+        open(my $fh, '<', $previous_file_path)
+            or die "Could not open file '$previous_file_path' $!";
+        my $header_row = <$fh>;
+        while ( my $row = <$fh> ){
+            push @previous_germplasm_info_lines, $row;
+        }
+        $previously_saved_germplasm_info_metadata_id = $previous_germplasm_info_md_file->comment;
+        $previous_germplasm_info_md_file->delete;
     }
 
     my ($file_path3, $uri3) = $c->tempfile( TEMPLATE => "download/cross_wishlist_accession_info_XXXXX");
     $file_path3 .= '.csv';
     $uri3 .= '.csv';
+    my %unique_germplasm_info_plots;
     open(my $F3, ">", $file_path3) || die "Can't open file ".$file_path3;
+        print $F3 $plot_info_file_header."\n";
+        foreach (@previous_germplasm_info_lines){
+            my @line_cols = split ',', $_;
+            my $plot_id = $line_cols[0];
+            if (!exists($unique_germplasm_info_plots{$plot_id})){
+                print $F3 $_."\n";
+                $unique_germplasm_info_plots{$plot_id}++;
+            }
+        }
         foreach (@plot_info_lines){
-            print $F3 $_."\n";
+            my @line_cols = split ',', $_;
+            my $plot_id = $line_cols[0];
+            if (!exists($unique_germplasm_info_plots{$plot_id})){
+                print $F3 $_."\n";
+                $unique_germplasm_info_plots{$plot_id}++;
+            }
         }
     close($F3);
     print STDERR Dumper $file_path3;
@@ -1103,14 +1170,6 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     });
     my $germplasm_info_uploaded_file = $uploader->archive();
     my $germplasm_info_md5 = $uploader->get_md5($germplasm_info_uploaded_file);
-
-    my $germplasm_info_file_type = 'cross_wishlist_germplasm_info_'.$location_name;
-    my $previously_saved_germplasm_info_metadata_id;
-    my $previous_germplasm_info_md_file = $metadata_schema->resultset("MdFiles")->find({filetype=> $germplasm_info_file_type});
-    if ($previous_germplasm_info_md_file){
-        $previously_saved_germplasm_info_metadata_id = $previous_germplasm_info_md_file->comment;
-        $previous_germplasm_info_md_file->delete;
-    }
 
     my $ona_form_id = $c->config->{ona_form_id};
     my $ua = LWP::UserAgent->new;
