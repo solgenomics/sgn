@@ -287,6 +287,14 @@ my $start_time = time();
 
 </&>
 
+<& /breeders_toolbox/trial/add_trial_used_seedlots.mas, trial_id => $trial_id &>
+<&| /page/info_section.mas, id => "trial_seedlots", title=>"Seedlots", is_subsection => 1, collapsible=>1, collapsed=>1, subtitle=>"[<a id='trial_upload_seedlot_button' >Upload Seedlots Planted In Trial</a>]" &>
+
+<& /breeders_toolbox/trial/trial_seedlots.mas, trial_id => $trial_id &>
+
+</&>
+
+
 <&| /page/info_section.mas, id => "trial_controls", title=>"Controls",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
 <& /breeders_toolbox/trial/trial_controls.mas, trial_id => $trial_id &>
@@ -586,15 +594,29 @@ jQuery(document).ready(function () {
             success: function(response){
                 var html = '';
                 if (response.has_layout == 1){
-                    html += '<p class="text-success" title="This trial has plots and their layout information saved in the database. You can view and download this information in the Design section on this page."><small>Has Field Layout&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>';
+                    html += '<p class="text-success" title="This trial has plots and their layout information saved in the database. All relationships between accessions, plots, seedlots, plants, and subplots are consistent. You can view and download this information in the Design section on this page."><small>Has Field Layout&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>';
                 } else {
-                    html += '<p class="text-danger" title="This trial does not have any plot layout info saved in the trial! If this occurs please contact us because this should not occur!"><small>No Field Layout&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></p>';
+                    html += '<p class="text-danger" title="There is something wrong with the layout! If this occurs please contact us because this should not occur! (click here for more info)"><span id="layout_error_button"><small>Bad Field Layout&nbsp;&nbsp;</small><span class="glyphicon glyphicon-remove-sign"></span></span></p>';
                 }
                 if (response.has_physical_map == 1){
                     html += '<p class="text-success" title="This trial has a physical map saved. You can view and edit the physical map in the Physical Trial Layout section on this page."><small>Has Physial Map&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>';
                 } else {
-                    html += '<p class="text-info" title="This trial does not have physical map information. This means the map will not appear in the Physical Trial Layout section. You can add physical map info by clicking [Upload Trial Coordinates] in the Physical Trial Layout section on this page."><small>No Physical Map&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></p>';
+                    html += '<p class="text-info" title="This trial does not have physical map information. This means the map will not appear in the Physical Trial Layout section. You can add physical map info by clicking [Upload Trial Coordinates] in the Physical Trial Layout section on this page. (click here for more info)"><span id="physical_map_error_button"><small>No Physical Map&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></span></p>';
                 }
+                if (response.has_seedlots == 1){
+                    html += '<p class="text-success" title="This trial has seedlots linked to plots (and the accessions are in sync). This allows us to track breeding material on the seedlots detail page. You can view this data and navigate to the seedlots on the Design section of this page."><small>Has Seedlots&nbsp;&nbsp;</small><span class="glyphicon glyphicon-ok-sign"></span></p>';
+                } else {
+                    html += '<p class="text-info" title="This trial does not have seedlots saved. This means we cannot track your breeding material using seedlots. You can upload this information by clicking [Upload Seedlots Planted in Trial] in the Design section on this page. (click here for more info)"><span id="seedlot_error_button"><small>No Seedlot Info&nbsp;&nbsp;</small><span class="glyphicon glyphicon-info-sign"></span></span></p>';
+                }
+                jQuery(document).on('click', 'span[id="layout_error_button"]', function(){
+                    alert(response.layout_errors);
+                });
+                jQuery(document).on('click', 'span[id="physical_map_error_button"]', function(){
+                    alert(response.physical_map_errors);
+                });
+                jQuery(document).on('click', 'span[id="seedlot_error_button"]', function(){
+                    alert(response.seedlot_errors);
+                });
                 jQuery('#trial_completion_layout_section_div').html(html);
             },
             error: function(response){

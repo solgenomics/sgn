@@ -339,6 +339,7 @@ my $new_trial = CXGN::Trial::TrialCreate->new(
 	trial_location => 'test_location',
 	trial_name => "anothertrial",
 	design => $trial_design,
+    operator => 'janedoe'
     });
 
 my $message = $new_trial->save_trial();

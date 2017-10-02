@@ -11,6 +11,10 @@ use List::MoreUtils qw(uniq);
 use CXGN::Trial::FieldMap;
 use JSON;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::Login;
+use CXGN::UploadFile;
+use CXGN::Stock::Seedlot;
+use CXGN::Stock::Seedlot::Transaction;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -405,6 +409,121 @@ sub trial_accessions : Chained('trial') PathPart('accessions') Args(0) {
     $c->stash->{rest} = { accessions => \@data };
 }
 
+sub trial_seedlots : Chained('trial') PathPart('seedlots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $c->stash->{trial_id} });
+
+    my @data = $trial->get_seedlots();
+
+    $c->stash->{rest} = { seedlots => \@data };
+}
+
+sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $user_id;
+    my $user_name;
+    my $user_role;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $upload = $c->req->upload('trial_upload_used_seedlot_file');
+    my $subdirectory = "trial_used_seedlot_upload";
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        $c->detach();
+    }
+    unlink $upload_tempfile;
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('TrialUsedSeedlotsXLS');
+    my $parsed_data = $parser->parse();
+    #print STDERR Dumper $parsed_data;
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $c->detach();
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error, missing_seedlots => $parse_errors->{'missing_seedlots'}, missing_plots => $parse_errors->{'missing_plots'}};
+        $c->detach();
+    }
+
+    eval {
+        while (my ($key, $val) = each(%$parsed_data)){
+            my $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_stock_id});
+
+            my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
+            $transaction->factor(1);
+            $transaction->from_stock([$val->{seedlot_stock_id}, $val->{seedlot_name}]);
+            $transaction->to_stock([$val->{plot_stock_id}, $val->{plot_name}]);
+            $transaction->amount($val->{amount});
+            $transaction->timestamp($timestamp);
+            $transaction->description($val->{description});
+            $transaction->operator($user_name);
+            $transaction->store();
+
+            $sl->set_current_count_property();
+        }
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => $@ };
+        print STDERR "An error condition occurred, was not able to upload trial used seedlots. ($@).\n";
+        $c->detach();
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
+
 sub trial_controls : Chained('trial') PathPart('controls') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -481,6 +600,12 @@ sub trial_treatments : Chained('trial') PathPart('treatments') Args(0) {
 sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()){
+        $c->stash->{rest} = {error => "You must be logged in to add a treatment"};
+        $c->detach();
+    }
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $trial_id = $c->stash->{trial_id};
     my $trial = $c->stash->{trial};
@@ -494,7 +619,8 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) {
 		nd_geolocation_id => $trial->get_location()->[0],
 		design_type => $trial->get_design_type(),
 		design => $design,
-        new_treatment_has_plant_entries => $new_treatment_has_plant_entries
+        new_treatment_has_plant_entries => $new_treatment_has_plant_entries,
+        operator => $c->user()->get_object()->get_username()
 	});
     my $error = $trial_design_store->store();
     if ($error){
@@ -614,22 +740,20 @@ sub trial_completion_layout_section : Chained('trial') PathPart('trial_completio
     my $c = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    my $layout_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
-    my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
-    my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
-    my $plot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property')->cvterm_id();
-    my $block_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'block', 'stock_property')->cvterm_id();
-    my $has_plot_number_check = $schema->resultset('Stock::Stock')->search({'me.type_id'=>$plot_type_id, 'stockprops.type_id'=>$plot_number_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}, 'nd_experiment.type_id'=>$layout_experiment_type_id}, {join=>['stockprops', {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'} } } ], rows=>1 });
-    my $has_block_check = $schema->resultset('Stock::Stock')->search({'me.type_id'=>$plot_type_id, 'stockprops.type_id'=>$block_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}, 'nd_experiment.type_id'=>$layout_experiment_type_id}, {join=>['stockprops', {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'} } } ], rows=>1 });
-    my $has_layout_check = $has_plot_number_check->first && $has_block_check->first ? 1 : 0;
+    my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id}, verify_layout=>1, verify_physical_map=>1});
+    my $trial_errors = $trial_layout->get_design();
+    my $has_layout_check = $trial_errors->{errors}->{layout_errors} ? 0 : 1;
+    my $has_physical_map_check = $trial_errors->{errors}->{physical_map_errors} ? 0 : 1;
+    my $has_seedlots = $trial_errors->{errors}->{seedlot_errors} ? 0 : 1;
 
-    my $row_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property')->cvterm_id();
-    my $col_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property')->cvterm_id();
-    my $has_row_check = $schema->resultset('Stock::Stock')->search({'me.type_id'=>$plot_type_id, 'stockprops.type_id'=>$row_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}, 'nd_experiment.type_id'=>$layout_experiment_type_id}, {join=>['stockprops', {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'} } } ], rows=>1 });
-    my $has_col_check = $schema->resultset('Stock::Stock')->search({'me.type_id'=>$plot_type_id, 'stockprops.type_id'=>$col_cvterm_id, 'project.project_id'=>$c->stash->{trial_id}, 'nd_experiment.type_id'=>$layout_experiment_type_id}, {join=>['stockprops', {'nd_experiment_stocks'=>{'nd_experiment'=>{'nd_experiment_projects'=>'project'} } } ], rows=>1 });
-    my $has_physical_map_check = $has_row_check->first && $has_col_check->first ? 1 : 0;
-
-    $c->stash->{rest} = {has_layout => $has_layout_check, has_physical_map => $has_physical_map_check};
+    $c->stash->{rest} = {
+        has_layout => $has_layout_check,
+        layout_errors => $trial_errors->{errors}->{layout_errors} ? join ', ', @{$trial_errors->{errors}->{layout_errors}} : '',
+        has_physical_map => $has_physical_map_check,
+        physical_map_errors => $trial_errors->{errors}->{physical_map_errors} ? join ', ', @{$trial_errors->{errors}->{physical_map_errors}} : '',
+        has_seedlots => $has_seedlots,
+        seedlot_errors => $trial_errors->{errors}->{seedlot_errors} ? join ', ', @{$trial_errors->{errors}->{seedlot_errors}} : ''
+    };
 }
 
 sub trial_completion_phenotype_section : Chained('trial') PathPart('trial_completion_phenotype_section') Args(0) {

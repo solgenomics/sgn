@@ -1,0 +1,85 @@
+
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch" ] &>
+
+
+<div id="trial_seedlots_html">
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+    jQuery("#trial_seedlot_used_upload_spreadsheet_info_format").click( function () {
+        jQuery("#trial_seedlot_used_upload_spreadsheet_info_dialog" ).modal("show");
+    });
+
+    jQuery('#trial_seedlots_onswitch').one("click", function() {
+
+        jQuery.ajax ( {
+            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/seedlots',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response){
+
+                //console.log(response);
+                jQuery("#working_modal").modal("hide");
+
+                html = '<table class="table borderless" alt="breeder search" border="0" ><tr><td><select multiple class="form-control" id="seedlot_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select></td></tr>'
+
+                html += '<tr><td><button class="btn btn-default btn-sm" id="seedlot_select_all" name="1">Select All</button><br><br>'
+                html += '<div class="well well-sm"><div id="seedlot_data_count" name="1">No Selection</div></div>'
+                html += '<div id="seedlot_to_list_menu"></div><td><tr></table>'
+
+                jQuery('#trial_seedlots_html').html(html);
+
+                var seedlot = response.seedlots[0].sort() || [];
+
+                var seedlot_html = format_options_list(seedlot);
+                jQuery('#seedlot_data').html(seedlot_html);
+ 
+                var data = jQuery('#seedlot_data').val() || [];
+                show_list_counts('seedlot_data_count', response.seedlots[0].length, data.length);
+ 
+                if (jQuery('#seedlot_data').length) {
+                      addToListMenu('seedlot_to_list_menu', 'seedlot_data', {
+                      selectText: true,
+                      listType: 'seedlots'
+                    });
+                }
+
+                jQuery('#seedlot_select_all').click( function() { // select all
+                    var data_id = "seedlot_data";
+                    selectAllOptions(document.getElementById(data_id));
+
+                    var data = jQuery("#"+data_id).val() || [];
+                    var count_id = "seedlot_data_count";
+                    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+                });
+
+                jQuery('#seedlot_data').change( function() { // update count when data selections change
+                    var data_id = jQuery(this).attr('id');
+                    var data = jQuery('#'+data_id).val() || [];
+                    var count_id = "seedlot_data_count";
+                    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
+                });
+
+                jQuery('select').dblclick( function() { // open detail page
+                    window.open("../../breeders/seedlot/"+this.value);
+                });
+
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving plots.");
+            }
+        });
+    });
+
+});
+
+</script>

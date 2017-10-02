@@ -70,23 +70,41 @@ sub get_transactions_by_seedlot_id {
 
     print STDERR "Get transactions by seedlot...$seedlot_id\n";
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seed transaction", "stock_relationship")->cvterm_id();
-    my $rs = $schema->resultset("Stock::StockRelationship")->search({ subject_id => $seedlot_id , type_id => $type_id }, {'order_by'=>'stock_relationship_id'});
-    print STDERR "Found ".$rs->count()." transactions...\n";    
+    my $rs = $schema->resultset("Stock::StockRelationship")->search(
+        { '-or' => 
+            [
+                subject_id => $seedlot_id,
+                object_id => $seedlot_id
+            ],
+            'me.type_id' => $type_id
+        },
+        {
+            'join' => ['subject', 'object'],
+            '+select' => ['subject.uniquename', 'subject.type_id', 'object.uniquename', 'object.type_id'],
+            '+as' => ['subject_uniquename', 'subject_type_id', 'object_uniquename', 'object_type_id'],
+            'order_by'=>{'-desc'=>'me.stock_relationship_id'}
+        }
+    );
+
+    print STDERR "Found ".$rs->count()." transactions...\n";
     my @transactions;
-    while (my $row = $rs->next()) { 
-
-	my $t_obj = CXGN::Stock::Seedlot::Transaction->new( schema => $schema, transaction_id => $row->stock_relationship_id() );
-
-	push @transactions, $t_obj;
-    }
-
-    $rs = $schema->resultset("Stock::StockRelationship")->search({ object_id => $seedlot_id, type_id => $type_id }, {'order_by'=>'stock_relationship_id'});
-
-    while (my $row = $rs->next()) { 
-	my $t_obj = CXGN::Stock::Seedlot::Transaction->new( schema => $schema, transaction_id => $row->stock_relationship_id() );
-	print STDERR "Found negative transaction...\n";
-	$t_obj->factor(-1);
-	push @transactions, $t_obj;
+    while (my $row = $rs->next()) {
+        my $t_obj = CXGN::Stock::Seedlot::Transaction->new( schema => $schema );
+        $t_obj->transaction_id($row->stock_relationship_id);
+        $t_obj->from_stock([$row->object_id(), $row->get_column('object_uniquename'), $row->get_column('object_type_id')]);
+        $t_obj->to_stock([$row->subject_id(), $row->get_column('subject_uniquename'), $row->get_column('subject_type_id')]);
+        my $data = JSON::Any->decode($row->value());
+        $t_obj->amount($data->{amount});
+        $t_obj->timestamp($data->{timestamp});
+        $t_obj->operator($data->{operator});
+        $t_obj->description($data->{description});
+        if ($row->subject_id == $seedlot_id){
+            $t_obj->factor(1);
+        }
+        if($row->object_id == $seedlot_id){
+            $t_obj->factor(-1);
+        }
+        push @transactions, $t_obj;
     }
 
     return \@transactions;
@@ -124,10 +142,19 @@ sub store {
             });
         return $row->stock_relationship_id();
     }
-    
+
     else { 
-        # update not implemented yet.
-    }	
+        my $row = $self->schema()->resultset("Stock::StockRelationship")->find({ stock_relationship_id => $self->transaction_id });
+        $row->update({
+            value => JSON::Any->encode({
+                amount => $self->amount(),
+                timestamp => $self->timestamp(),
+                operator => $self->operator(),
+                description => $self->description()
+            })
+        });
+        return $row->stock_relationship_id();
+    }
 }
 
 sub delete {

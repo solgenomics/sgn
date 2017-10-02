@@ -48,11 +48,19 @@ jQuery(document).ready(function ($) {
         });
     }
 
+    var stock_list_id;
+    var stock_list;
+    var seedlot_list_id;
+    var seedlot_list;
+
     $(document).on('focusout', '#select_list_list_select', function() {
         if ($('#select_list_list_select').val()) {
-            var stock_list_id = $('#select_list_list_select').val();
-            var stock_list = JSON.stringify(list.getList(stock_list_id));
+            stock_list_id = $('#select_list_list_select').val();
+            stock_list = JSON.stringify(list.getList(stock_list_id));
             verify_stock_list(stock_list);
+            if(stock_list && seedlot_list){
+                verify_seedlot_list(stock_list, seedlot_list);
+            }
         }
     });
 
@@ -88,6 +96,27 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    $(document).on('focusout', '#select_seedlot_list_list_select', function() {
+        if ($('#select_seedlot_list_list_select').val()) {
+            seedlot_list_id = $('#select_seedlot_list_list_select').val();
+            seedlot_list = JSON.stringify(list.getList(seedlot_list_id));
+            if(stock_list && seedlot_list){
+                verify_seedlot_list(stock_list, seedlot_list);
+            } else {
+                alert('Please make sure to select an accession list above!');
+            }
+        }
+    });
+
+    $(document).on('click', 'button[name="convert_accessions_to_seedlots"]', function(){
+        if (!stock_list_id){
+            alert('Please first select a list of accessions above!');
+        } else {
+            var list = new CXGN.List();
+            list.seedlotSearch(stock_list_id);
+        }
+    });
+
     var stock_list_verified = 0;
     function verify_stock_list(stock_list) {
         $.ajax({
@@ -117,7 +146,42 @@ jQuery(document).ready(function ($) {
                 alert('An error occurred. sorry');
                 stock_list_verified = 0;
             }
-       });
+        });
+    }
+
+    var seedlot_list_verified = 1;
+    var seedlot_hash = {};
+    function verify_seedlot_list(stock_list, seedlot_list) {
+        $.ajax({
+            type: 'POST',
+            timeout: 3000000,
+            url: '/ajax/trial/verify_seedlot_list',
+            beforeSend: function(){
+                jQuery('#working_modal').modal('show');
+            },
+            dataType: "json",
+            data: {
+                'stock_list': stock_list,
+                'seedlot_list': seedlot_list,
+            },
+            success: function (response) {
+                console.log(response);
+                jQuery('#working_modal').modal('hide');
+                if (response.error) {
+                    alert(response.error);
+                    seedlot_list_verified = 0;
+                }
+                if (response.success){
+                    seedlot_list_verified = 1;
+                    seedlot_hash = response.seedlot_hash;
+                }
+            },
+            error: function () {
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred. sorry');
+                seedlot_list_verified = 0;
+            }
+        });
     }
 
     var num_plants_per_plot = 0;
@@ -143,9 +207,10 @@ jQuery(document).ready(function ($) {
             control_list_crbd = JSON.stringify(list.getList(control_list_id_crbd));
         }
         var stock_list;
+        var stock_list_array;
         if (stock_list_id != "") {
             stock_list_array = list.getList(stock_list_id);
-            stock_list = JSON.stringify(list.getList(stock_list_id));
+            stock_list = JSON.stringify(stock_list_array);
         }
         var control_list;
         if (control_list_id != "") {
@@ -173,7 +238,15 @@ jQuery(document).ready(function ($) {
         var no_of_rep_times = $('#no_of_rep_times').val();
         var no_of_block_sequence = $('#no_of_block_sequence').val();
         var no_of_sub_block_sequence = $('#no_of_sub_block_sequence').val();
-        
+        var num_seed_per_plot = $('#num_seed_per_plot').val();
+
+        if (!jQuery.isEmptyObject(seedlot_hash)){
+            if (num_seed_per_plot == ''){
+                alert('Number of seeds per plot is required if you have selected a seedlot list!');
+                return;
+            }
+        }
+
         var unreplicated_accession_list;
         if (unreplicated_accession_list_id != "") {
             unreplicated_accession_list = JSON.stringify(list.getList(unreplicated_accession_list_id));
@@ -256,6 +329,8 @@ jQuery(document).ready(function ($) {
                 'unreplicated_accession_list': unreplicated_accession_list,
                 'replicated_accession_list': replicated_accession_list,
                 'no_of_sub_block_sequence': no_of_sub_block_sequence,
+                'seedlot_hash': JSON.stringify(seedlot_hash),
+                'num_seed_per_plot': num_seed_per_plot,
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
@@ -300,7 +375,7 @@ jQuery(document).ready(function ($) {
             alert('Year and description are required.');
             return;
         }
-        if (stock_list_verified == 1){
+        if (stock_list_verified == 1 && seedlot_list_verified == 1){
             if (method_to_use == "empty") {
                 alert('adding a project');
                 save_project_info(name, year, desc);
@@ -309,7 +384,7 @@ jQuery(document).ready(function ($) {
                 generate_experimental_design();
             }
         } else {
-            alert('Accession list is not valid!');
+            alert('Accession list or seedlot list is not valid!');
             return;
         }
     });
@@ -806,8 +881,9 @@ jQuery(document).ready(function ($) {
 
 	//add lists to the list select and list of checks select dropdowns.
     document.getElementById("select_list").innerHTML = list.listSelect("select_list", [ 'accessions' ], '', 'refresh');
+    document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], '', 'refresh');
     document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh');
-    
+
     //add lists to the list select and list of checks select dropdowns for CRBD.
     document.getElementById("crbd_list_of_checks_section").innerHTML = list.listSelect("crbd_list_of_checks_section", [ 'accessions' ], "select optional check list", 'refresh');
     document.getElementById("list_of_unrep_accession").innerHTML = list.listSelect("list_of_unrep_accession", [ 'accessions' ], "Required: e.g. 200", 'refresh');
@@ -824,6 +900,13 @@ jQuery(document).ready(function ($) {
 	$("#select_list_list_select").one('mousedown', function () {
             $("option:first", this).remove();
 	});
+
+    //add a blank line to list select dropdown that dissappears when dropdown is opened
+	$("#select_seedlot_list_list_select").prepend("<option value=''></option>").val('');
+	$("#select_seedlot_list_list_select").one('mousedown', function () {
+            $("option:first", this).remove();
+	});
+
 
 	//add a blank line to list of checks select dropdown that dissappears when dropdown is opened
 	$("#list_of_checks_section_list_select").prepend("<option value=''></option>").val('');

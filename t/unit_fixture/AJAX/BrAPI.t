@@ -147,7 +147,7 @@ is_deeply($response, {'metadata' => {'status' => [{'info' => 'BrAPI base call fo
 $mech->get_ok('http://localhost:3010/brapi/v1/locations?pageSize=1&page=1' );
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
-is_deeply($response, {'result' => {'data' => [{'locationType' => '','longitude' => '-76.4735','additionalInfo' => {'geodetic datum' => undef},'countryCode' => 'USA','latitude' => '42.4534','countryName' => 'United States','altitude' => '274','locationDbId' => 24,'abbreviation' => '','name' => 'Cornell Biotech'}]},'metadata' => {'pagination' => {'totalCount' => 2,'totalPages' => 2,'currentPage' => 1,'pageSize' => 1},'status' => [{'info' => 'BrAPI base call found with page=1, pageSize=1'},{'info' => 'Loading CXGN::BrAPI::v1::Locations'},{'success' => 'Locations list result constructed'}],'datafiles' => []}}, 'location');
+is_deeply($response, {'result' => {'data' => [{'locationType' => '','longitude' => '-76.4735','additionalInfo' => {'geodetic datum' => undef},'countryCode' => 'USA','latitude' => '42.4534','countryName' => 'United States','altitude' => '274','locationDbId' => 24,'abbreviation' => '','name' => 'Cornell Biotech'}]},'metadata' => {'pagination' => {'totalCount' => 3,'totalPages' => 3,'currentPage' => 1,'pageSize' => 1},'status' => [{'info' => 'BrAPI base call found with page=1, pageSize=1'},{'info' => 'Loading CXGN::BrAPI::v1::Locations'},{'success' => 'Locations list result constructed'}],'datafiles' => []}}, 'location');
 
 
 done_testing();

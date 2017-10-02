@@ -64,6 +64,9 @@ use CXGN::Stock::StockLookup;
 use CXGN::Trial;
 use SGN::Model::Cvterm;
 use Data::Dumper;
+use CXGN::List::Validate;
+use CXGN::Stock::Seedlot;
+use CXGN::Stock::Seedlot::Transaction;
 
 has 'bcs_schema' => (
 	is       => 'rw',
@@ -76,11 +79,12 @@ has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', re
 has 'nd_experiment_id' => (isa => 'Int', is => 'rw', predicate => 'has_nd_experiment_id', required => 0);
 has 'nd_geolocation_id' => (isa => 'Int', is => 'rw', predicate => 'has_nd_geolocation_id', required => 1);
 has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', required => 1);
-has 'design' => (isa => 'HashRef[HashRef[Str|ArrayRef|HashRef]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
+has 'design' => (isa => 'HashRef[HashRef]|Undef', is => 'rw', predicate => 'has_design', required => 1);
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 has 'stocks_exist' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 has 'new_treatment_has_plant_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
 has 'new_treatment_has_subplot_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
+has 'operator' => (isa => 'Str', is => 'rw', required => 1);
 
 sub validate_design {
 	print STDERR "validating design\n";
@@ -99,7 +103,7 @@ sub validate_design {
 		return $error;
 	}
 	if ($design_type ne 'genotyping_plate' && $design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type && 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'p-rep' && $design_type ne 'splitplot'){
-		$error .= "Design $design_type type must be either: genotyping_plate, CRD, Alpha, Augmented, or RCBD";
+		$error .= "Design $design_type type must be either: genotyping_plate, CRD, Alpha, Augmented, RCBD, p-rep, or splitplot";
 		return $error;
 	}
 	my @valid_properties;
@@ -109,8 +113,10 @@ sub validate_design {
 			'plot_name'
 		);
 		#plot_name is tissue sample name in well. during store, the stock is saved as stock_type 'tissue_sample' with uniquename = plot_name
-	} elsif ($design_type eq 'CRD' || $design_type eq 'Alpha' || $design_type eq 'Augmented' || $design_type eq 'RCBD'){
+	} elsif ($design_type eq 'CRD' || $design_type eq 'Alpha' || $design_type eq 'Augmented' || $design_type eq 'RCBD' || $design_type eq 'p-rep' || $design_type eq 'splitplot'){
 		@valid_properties = (
+			'seedlot_name',
+			'num_seed_per_plot',
 			'stock_name',
 			'plot_name',
 			'plot_number',
@@ -121,28 +127,17 @@ sub validate_design {
 			'row_number',
 			'col_number',
 			'plant_names',
-			'plot_num_per_block'
-		);
-	} elsif ($design_type eq 'splitplot'){
-		@valid_properties = (
-			'stock_name',
-			'plot_name',
-			'plot_number',
-			'block_number',
-			'rep_number',
-			'is_a_control',
-			'range_number',
-			'row_number',
-			'col_number',
-			'plant_names',
-			'subplots_names',
-			'treatments',
-			'subplots_plant_names'
+			'plot_num_per_block',
+			'subplots_names', #For splotplot
+			'treatments', #For splitplot
+			'subplots_plant_names', #For splitplot
 		);
 	}
 	my %allowed_properties = map {$_ => 1} @valid_properties;
 
 	my %seen_stock_names;
+	my %seen_source_names;
+	my %seen_accession_names;
 	foreach my $stock (keys %design){
 		if ($stock eq 'treatments'){
 			next;
@@ -150,6 +145,16 @@ sub validate_design {
 		foreach my $property (keys %{$design{$stock}}){
 			if (!exists($allowed_properties{$property})) {
 				$error .= "Property: $property not allowed! ";
+			}
+			if ($property eq 'stock_name') {
+				my $stock_name = $design{$stock}->{$property};
+				$seen_accession_names{$stock_name}++;
+			}
+			if ($property eq 'seedlot_name') {
+				my $stock_name = $design{$stock}->{$property};
+				if ($stock_name){
+					$seen_source_names{$stock_name}++;
+				}
 			}
 			if ($property eq 'plot_name') {
 				my $plot_name = $design{$stock}->{$property};
@@ -171,16 +176,38 @@ sub validate_design {
 	}
 
 	my @stock_names = keys %seen_stock_names;
+	my @source_names = keys %seen_source_names;
+	my @accession_names = keys %seen_accession_names;
+	if(scalar(@stock_names)<1){
+		$error .= "You cannot create a trial with less than one plot.";
+	}
+	#if(scalar(@source_names)<1){
+	#	$error .= "You cannot create a trial with less than one seedlot.";
+	#}
+	if(scalar(@accession_names)<1){
+		$error .= "You cannot create a trial with less than one accession.";
+	}
 	my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type')->cvterm_id();
 	my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id();
 	my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant', 'stock_type')->cvterm_id();
 	my $tissue_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id();
 	my $stocks = $chado_schema->resultset('Stock::Stock')->search({
-		type_id=>[$subplot_type_id, $plot_type_id, $plant_type_id, $tissue_type_id],
+		#type_id=>[$subplot_type_id, $plot_type_id, $plant_type_id, $tissue_type_id],
 		uniquename=>{-in=>\@stock_names}
 	});
 	while (my $s = $stocks->next()) {
 		$error .= "Name $_ already exists in the database.";
+	}
+
+	my $seedlot_validator = CXGN::List::Validate->new();
+	my @seedlots_missing = @{$seedlot_validator->validate($chado_schema,'seedlots',\@source_names)->{'missing'}};
+	if (scalar(@seedlots_missing) > 0) {
+		$error .=  "The following seedlots are not in the database as uniquenames or synonyms: ".join(',',@seedlots_missing);
+	}
+	my $accession_validator = CXGN::List::Validate->new();
+	my @accessions_missing = @{$accession_validator->validate($chado_schema,'accessions',\@accession_names)->{'missing'}};
+	if (scalar(@accessions_missing) > 0) {
+		$error .=  "The following accessions are not in the database as uniquenames or synonyms: ".join(',',@accessions_missing);
 	}
 
 	return $error;
@@ -195,7 +222,8 @@ sub store {
 	my $trial_id = $self->get_trial_id;
 	my $nd_geolocation_id = $self->get_nd_geolocation_id;
 
-	my $accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type');
+	my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'seedlot', 'stock_type')->cvterm_id();
+	my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id();
 	my $subplot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot', 'stock_type');
 	my $subplot_of = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplot_of', 'stock_relationship');
 	my $plant_of_subplot = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plant_of_subplot', 'stock_relationship');
@@ -262,17 +290,45 @@ sub store {
 		}
 	}
 
-	my $rs = $chado_schema->resultset('Stock::Stock')->search(
-		{ 'is_obsolete' => { '!=' => 't' }, 'type_id' => $accession_cvterm->cvterm_id },
-	);
+	my %seen_accessions_hash;
+	my %seen_seedlots_hash;
+	foreach my $key (keys %design) {
+		if ($design{$key}->{stock_name}) {
+			my $stock_name = $design{$key}->{stock_name};
+			$seen_accessions_hash{$stock_name}++;
+		}
+		if ($design{$key}->{seedlot_name}) {
+			my $stock_name = $design{$key}->{seedlot_name};
+			$seen_seedlots_hash{$stock_name}++;
+		}
+	}
+	my @seen_accessions = keys %seen_accessions_hash;
+	my @seen_seedlots = keys %seen_seedlots_hash;
 
+	my $seedlot_rs = $chado_schema->resultset('Stock::Stock')->search({
+		'is_obsolete' => { '!=' => 't' },
+		'type_id' => $seedlot_cvterm_id,
+		'uniquename' => {-in=>\@seen_seedlots}
+	});
+	my %seedlot_data;
+	while (my $s = $seedlot_rs->next()) {
+		$seedlot_data{$s->uniquename} = $s->stock_id;
+	}
+
+	my $rs = $chado_schema->resultset('Stock::Stock')->search({
+		'is_obsolete' => { '!=' => 't' },
+		'type_id' => $accession_cvterm_id,
+		'uniquename' => {-in=>\@seen_accessions}
+	});
 	my %stock_data;
 	while (my $s = $rs->next()) {
 		$stock_data{$s->uniquename} = [$s->stock_id, $s->organism_id];
 	}
 
 	my $stock_id_checked;
+	my $stock_name_checked;
 	my $organism_id_checked;
+	my $timestamp = localtime();
 
 	my $coderef = sub {
 
@@ -310,6 +366,16 @@ sub store {
 			if ($design{$key}->{stock_name}) {
 				$stock_name = $design{$key}->{stock_name};
 			}
+			my $seedlot_name;
+			my $seedlot_stock_id;
+			if ($design{$key}->{seedlot_name}) {
+				$seedlot_name = $design{$key}->{seedlot_name};
+				$seedlot_stock_id = $seedlot_data{$seedlot_name};
+			}
+			my $num_seed_per_plot;
+			if($design{$key}->{num_seed_per_plot}){
+				$num_seed_per_plot = $design{$key}->{num_seed_per_plot};
+			}
 			my $block_number;
 			if ($design{$key}->{block_number}) { #set block number to 1 if no blocks are specified
 				$block_number = $design{$key}->{block_number};
@@ -343,6 +409,7 @@ sub store {
 			if ($stock_data{$stock_name}) {
 				$stock_id_checked = $stock_data{$stock_name}[0];
 				$organism_id_checked = $stock_data{$stock_name}[1];
+				$stock_name_checked = $stock_name;
 			} else {
 				my $parent_stock;
 				my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
@@ -354,6 +421,7 @@ sub store {
 				}
 
 				$stock_id_checked = $parent_stock->stock_id();
+				$stock_name_checked = $parent_stock->uniquename;
 				$organism_id_checked = $parent_stock->organism_id();
 			}
 
@@ -395,9 +463,23 @@ sub store {
 					type_id => $nd_experiment_type_id,
 					stock_id => $plot->stock_id(),
 				});
+
+				if ($seedlot_stock_id && $seedlot_name && defined($num_seed_per_plot)){
+					my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $chado_schema);
+					$transaction->from_stock([$seedlot_stock_id, $seedlot_name]);
+					$transaction->to_stock([$plot->stock_id(), $plot->uniquename()]);
+					$transaction->amount($num_seed_per_plot);
+					$transaction->timestamp($timestamp);
+					my $description = "Created Trial: ".$self->get_trial_name." Plot: ".$plot->uniquename;
+					$transaction->description($description);
+					$transaction->operator($self->get_operator);
+					my $transaction_id = $transaction->store();
+					my $sl = CXGN::Stock::Seedlot->new(schema=>$chado_schema, seedlot_id=>$seedlot_stock_id);
+					$sl->set_current_count_property();
+				}
 			}
 
-			#Create plant entry if given. Currently this is for the greenhouse trial creation.
+			#Create plant entry if given. Currently this is for the greenhouse trial creation and splitplot trial creation.
 			if ($plant_names) {
 				my $plant_index_number = 1;
 				foreach my $plant_name (@$plant_names) {
@@ -444,6 +526,7 @@ sub store {
 						type_id => $nd_experiment_type_id,
 						stock_id => $plant->stock_id(),
 					});
+
 				}
 			}
 			#Create subplot entry if given. Currently this is for the splitplot trial creation.
@@ -505,6 +588,7 @@ sub store {
 							});
 						}
 					}
+
 				}
 			}
 		}
