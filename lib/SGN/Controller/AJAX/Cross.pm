@@ -778,6 +778,14 @@ sub create_cross_wishlist_POST : Args(0) {
     my $trial_id = $c->req->param('trial_id');
     #print STDERR Dumper $data;
 
+    my $t = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+    my $location = $t->get_location();
+    my $location_name = $location->[1];
+    if ($location_name ne 'Arusha'){
+        $c->stash->{rest} = { error => "Cross wishlist currently limited to trials in the location(s): Arusha. This is because currently there is only the ODK form for Arusha. In the future there will be others." };
+        $c->detach();
+    }
+
     my %selected_cross_hash;
     my %selected_females;
     my %selected_males;
