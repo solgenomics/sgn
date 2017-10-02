@@ -124,8 +124,41 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#create_fieldbook_data_level').on('change', function(){
+        var selected_trial_id = parseInt(jQuery('#html_select_trial_for_create_fieldbook').val());
         var level = jQuery('#create_fieldbook_data_level').val();
-        show_available_columns(level);
+        var url = '';
+        if (level == 'plants'){
+            url = 'has_plants';
+        }
+        if (level == 'subplots' || level == 'plants_subplots'){
+            url = 'has_subplots';
+        }
+        if (level == 'plants' || level == 'subplots' || level == 'plants_subplots'){
+            new jQuery.ajax({
+                type: 'POST',
+                url: '/ajax/breeders/trial/'+selected_trial_id+'/'+url,
+                dataType: "json",
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function (response) {
+                    //console.log(response);
+                    jQuery("#working_modal").modal("hide");
+                    if(response.has_plants == 0 || response.has_subplots == 0){
+                        alert('This trial does not have '+level);
+                        jQuery('#create_fieldbook_data_level').val('plots');
+                    } else {
+                        show_available_columns(level);
+                    }
+                },
+                error: function () {
+                    jQuery("#working_modal").modal("hide");
+                    alert('An error occurred checking trial for plants or subplots.');
+                }
+            });
+        } else {
+            show_available_columns('plots');
+        }
     });
 
 });
