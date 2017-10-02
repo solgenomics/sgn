@@ -187,5 +187,32 @@ my $start_time = time();
 
 </div><!--closes well-->
 
-
 </&>
+
+<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+
+<&| /page/info_section.mas, title => 'Crosses in this trial', collapsible=>1, collapsed=>0 &>
+<table id = "crosses_in_trial" class="table table-hover table-striped">
+<thead>
+ <tr>
+  <th>Cross Name</th>
+  <th>Female Parent</th>
+  <th>Male Parent</th>
+  <th>Cross Type</th>
+  <th>Plot Name</th>
+</tr>
+</thead>
+</table>
+ </&>
+
+ <script>
+
+ jQuery(document).ready(function(){
+
+    jQuery('#crosses_in_trial').DataTable({
+     'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/crosses_in_trial',
+     });
+ });
+
+ </script>

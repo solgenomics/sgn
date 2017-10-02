@@ -11,6 +11,7 @@ use List::MoreUtils qw(uniq);
 use CXGN::Trial::FieldMap;
 use JSON;
 use CXGN::Phenotypes::PhenotypeMatrix;
+use CXGN::Cross;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -253,9 +254,9 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
         );
     }
     my @data = $phenotypes_search->get_phenotype_matrix();
-    $c->stash->{rest} = { 
+    $c->stash->{rest} = {
       status => "success",
-      data => \@data 
+      data => \@data
    };
 }
 
@@ -934,5 +935,27 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
 
     $c->stash->{rest} = {success => 1};
 }
+
+sub crosses_in_trial : Chained('trial') PathPart('crosses_in_trial') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial_id = $c->stash->{trial_id};
+    my $trial = CXGN::Cross->new({bcs_schema => $schema, trial_id => $trial_id});
+
+    my $result = $trial->get_crosses_in_trial();
+    my @crosses;
+    foreach my $r (@$result){
+        my ($cross_id, $cross_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $plot_id, $plot_name) =@$r;
+        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>},
+        qq{<a href = "/stock/$female_parent_id/view">$female_parent_name</a>},
+        qq{<a href = "/stock/$male_parent_id/view">$male_parent_name</a>}, $cross_type,
+        qq{<a href = "/stock/$plot_id/view">$plot_name</a>}];
+    }
+
+    $c->stash->{rest} = { data => \@crosses };
+}
+
 
 1;
