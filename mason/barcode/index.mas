@@ -320,7 +320,7 @@ my $date = join "/", ($dt->year, $dt->month, $dt->day);
       <div id="list_menu_location_2"></div>
 <script defer="defer">
   jQuery(document).ready(function() {
-      pasteListMenu('stock_names_2', 'list_menu_location_2');
+      pasteListMenu('stock_names_2', 'list_menu_location_2', 'paste', 'plots');
   });
 
 </script>
