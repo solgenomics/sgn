@@ -92,6 +92,8 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         }
     }
 
+    my $selected_columns = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
+
   my $dir = $c->tempfiles_subdir('/other');
   my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'other/excelXXXX');
 
@@ -105,7 +107,8 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         user_id => $c->user()->get_object()->get_sp_person_id(),
         user_name => $c->user()->get_object()->get_username(),
         data_level => $data_level,
-        treatment_project_id => $treatment_project_id
+        treatment_project_id => $treatment_project_id,
+        selected_columns => $selected_columns
     });
 
     my $create_fieldbook_return = $create_fieldbook->download();

@@ -231,6 +231,7 @@ function open_create_fieldbook_dialog() {
             'trial_id': parseInt(jQuery('#html_select_trial_for_create_fieldbook').val()),
             'data_level': jQuery('#create_fieldbook_data_level').val(),
             'treatment_project_id': jQuery("#html_select_treatment_create_fieldbook").val(),
+            'selected_columns':JSON.stringify(selected_columns)
         },
         beforeSend: function() {
             jQuery("#working_modal").modal("show");
