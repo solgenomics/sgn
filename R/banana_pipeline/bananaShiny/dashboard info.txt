@@ -1,0 +1,10 @@
+1. How many pollinators have been made om any given day
+2. Which pollinations have been made
+3. How many bunches in the ripening shed
+4. How many seeds in TC lab and what stage are they in
+5. How many plants rooted
+6. How many in screen house
+7. How many made it to the field
+8. Identify where we are losing seeds
+9. Immediately notify appropriate people if disease symptoms 
+	are observed

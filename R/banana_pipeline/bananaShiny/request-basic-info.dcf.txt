@@ -1,0 +1,4 @@
+name: request-basic-info
+account: daattali
+bundleId: 108957
+url: http://daattali.shinyapps.io/request-basic-info
