@@ -112,12 +112,17 @@ sub create_fieldbook_from_trial_POST : Args(0) {
     });
 
     my $create_fieldbook_return = $create_fieldbook->download();
+    my $error;
+    if ($create_fieldbook_return->{'error_messages'}){
+        $error = join ',', @{$create_fieldbook_return->{'error_messages'}};
+    }
 
     $c->stash->{rest} = {
-        error_string => $create_fieldbook_return->{'error_messages'},
+        error_string => $error,
         success => 1,
         result => $create_fieldbook_return->{'result'},
         file => $create_fieldbook_return->{'file'},
+        file_id => $create_fieldbook_return->{'file_id'},
     };
 }
 
