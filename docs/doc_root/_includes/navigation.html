@@ -17,6 +17,7 @@
         {% if current == include.context %}
             <li>
                 {% if page.url == entry.url %}<strong>{% elsif page.url contains entry.url %}<em>{% endif %}
+                    <span>{{pg.url}}, {{ site.baseurl }}</span>
                     <a href="{{ site.baseurl }}{{ entry.url }}">{{ entry.title }}</a>
                 {% if page.url == entry.url %}</strong>{% elsif page.url contains entry.url %}</em>{% endif %}
                 {% include navigation.html context=entry.url %}
