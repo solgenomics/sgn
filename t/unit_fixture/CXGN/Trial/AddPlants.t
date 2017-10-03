@@ -295,6 +295,7 @@ my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
     user_id => 41,
     user_name => "janedoe",
     data_level => 'plots',
+    selected_columns=> {'plot_name'=>1,'block_number'=>1,'plot_number'=>1,'rep_number'=>1,'row_number'=>1,'col_number'=>1,'accession_name'=>1,'is_a_control'=>1}
 });
 
 my $create_fieldbook_return = $create_fieldbook->download();
@@ -437,6 +438,7 @@ my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
     user_id => 41,
     user_name => "janedoe",
     data_level => 'plants',
+    selected_columns=> {'plant_name'=>1,'plot_name'=>1,'block_number'=>1,'plant_number'=>1,'plot_number'=>1,'rep_number'=>1,'row_number'=>1,'col_number'=>1,'accession_name'=>1,'is_a_control'=>1}
 });
 
 my $create_fieldbook_return = $create_fieldbook->download();
