@@ -111,7 +111,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     if ($cass_print_format eq 'CASS') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
     if ($cass_print_format eq 'MUSA') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
     if ($cass_print_format eq '32A4') {$left_margin_mm = 17, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 8, $labels_per_row = 4, $barcode_type = "2D", $page_format = "letter"; }
-    if ($cass_print_format eq '20A4') {$left_margin_mm = 6, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 10, $labels_per_row = 2, $barcode_type = "2D", $page_format = "letter"; }
+    if ($cass_print_format eq '20A4') {$left_margin_mm = 10, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 10, $labels_per_row = 2, $barcode_type = "2D", $page_format = "letter"; }
     my ($top_margin, $left_margin, $bottom_margin, $right_margin) = map { $_ * 2.846 } (
             $top_margin_mm,
     		$left_margin_mm,
@@ -352,10 +352,11 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
             $ypos = $label_boundary - int( ($label_height_8_per_page - $image->{height} * $scaley) /2);
             $final_barcode_width = ($page_width - $right_margin - $left_margin + (3 * $xlabel_margin)) / $labels_per_row;
         }
-        # elsif ($cass_print_format eq '20A4'){
-     # 	    $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
-        #     $ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
-        # }
+        elsif ($cass_print_format eq '20A4'){
+     	    $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
+            $ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
+            $final_barcode_width = ($page_width - $right_margin - $left_margin + (4 * $xlabel_margin)) / $labels_per_row;
+        }
         else{
             $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
         	$ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
