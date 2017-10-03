@@ -6,7 +6,7 @@
   <span>
     {% for pg in entries %}
       {% if parentURL contains pg.url %}
-        <a href="{{pg.url}}">{{pg.title}}</a>
+        <a href="{{ site.baseurl }}{{pg.url}}">{{pg.title}}</a>
         {% if pg.url!=parentURL %}&nbsp;&larr;{% endif %}
       {% endif %}
     {% endfor %}
