@@ -1,0 +1,31 @@
+<!-- modifed from https://gist.github.com/kasperisager/9416313 -->
+{% capture html %}
+<ul class="nav-tree">
+    <!-- {% if include.context == "/" %}
+        <li class="{% if page.url == "/" %}active{% endif %}">
+            {% if page.url == "/" %}<strong>{% else %}<em>{% endif %}
+            <a href="{{ site.baseurl }}/">{{ site.title }}</a>
+            {% if page.url == "/" %}</strong>{% else %}</em>{% endif %}
+            <ul>
+    {% endif %} -->
+
+    {% assign entries = site.pages | sort: "path" %}
+    {% for entry in entries %}
+        {% capture slug    %}{{ entry.url | split: "/"   | last                       }}{% endcapture %}
+        {% capture current %}{{ entry.url | remove: slug | replace: "//", "/" }}{% endcapture %}
+        {% if current==entry.url %} {% assign current = "_ROOT" %} {% endif %}
+        {% if current == include.context %}
+            <li>
+                {% if page.url == entry.url %}<strong>{% elsif page.url contains entry.url %}<em>{% endif %}
+                    <a href="{{ entry.url | relative_url}}">{{ entry.title }}</a>
+                {% if page.url == entry.url %}</strong>{% elsif page.url contains entry.url %}</em>{% endif %}
+                {% include navigation.html context=entry.url %}
+            </li>
+        {% endif %}
+    {% endfor %}
+    {% if include.context == "/" %}
+            </ul>
+        </li>
+    {% endif %}    
+</ul>
+{% endcapture %}{{ html | strip_newlines | replace:'    ','' | replace:'    ','' | replace:'  ',' ' }}
