@@ -958,7 +958,7 @@ CXGN.List.prototype = {
 	      break;
 	  case "trials":
 	  case "breeding_programs":
-	      new_type = 'projects_2_project_ids';
+	      new_type = 'projects_2_project_ids'; 
 	      break;
 	  case "accessions":
 	      new_type = 'accessions_2_accession_ids';
@@ -992,7 +992,7 @@ function show_lists() {
 }
 
 /* deprecated */
-function pasteListMenu (div_name, menu_div, button_name) {
+function pasteListMenu (div_name, menu_div, button_name, list_type) {
     var lo = new CXGN.List();
 
     var html='';
@@ -1000,8 +1000,11 @@ function pasteListMenu (div_name, menu_div, button_name) {
     if (button_name === undefined) {
 	button_name = 'paste';
     }
-
-    html = lo.listSelect(div_name);
+    if (list_type){
+        html = lo.listSelect(div_name, [list_type]);
+    }else {
+        html = lo.listSelect(div_name);
+    }
     html = html + '<button class="btn btn-info btn-sm" type="button" value="'+button_name+'" onclick="javascript:pasteList(\''+div_name+'\')" >'+button_name+'</button>';
 
     jQuery('#'+menu_div).html(html);
