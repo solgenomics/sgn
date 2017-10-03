@@ -133,13 +133,13 @@ sub download {
         @possible_cols = ('plot_name','block_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier');
         $treatment_units = $treatment ? $treatment_trial->get_plots() : [];
     } elsif ($self->data_level eq 'plants') {
-        @possible_cols = ('plant_name','plot_name','block_number','plant_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','ssynonyms','tier');
+        @possible_cols = ('plant_name','plot_name','block_number','plant_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier');
         $treatment_units = $treatment ? $treatment_trial->get_plants() : [];
     } elsif ($self->data_level eq 'subplots') {
-        @possible_cols = ('subplot_name','plot_name','block_number','subplot_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','ssynonyms','tier');
+        @possible_cols = ('subplot_name','plot_name','block_number','subplot_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier');
         $treatment_units = $treatment ? $treatment_trial->get_subplots() : [];
     } elsif ($self->data_level eq 'plants_subplots') {
-        @possible_cols = ('plant_name','subplot_name','plot_name','block_number','subplot_number','plant_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','ssynonyms','tier');
+        @possible_cols = ('plant_name','subplot_name','plot_name','block_number','subplot_number','plant_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier');
         $treatment_units = $treatment ? $treatment_trial->get_plants() : [];
     }
 
