@@ -64,7 +64,7 @@ To use the genomic selection tool, on [*cassavabase.org,*](http://cassavabase.or
 
 There are three ways to build a model for a trait.
 
-### Method 1:
+#### Method 1:
 
 One way to build a model is, using a trait name, to search for trials in which the trait was phenotyped and use a trial or a combination of trials to build a model for the trait. For example, if you search for 'mosaic disease severity, you will get a list of trials you can use as training populations.
 
@@ -107,7 +107,7 @@ The breeding values of the individuals used in the training population are displ
 <img src='{{"assets/images/image147.png" | relative_url }}' width="578" />
 
 
-#### Estimating breeding values in a selection population
+##### Estimating breeding values in a selection population
 
 If you already have a selection population (in the database), from the same model page, you can apply the model to the selection population and estimate breeding values for all the clones in the population. You can search for a selection population of clones in the database using the search interface or you can make a custom list of clones using the [*list interface*](http://cassavabase.wikispaces.com/Lists). if you click the 'search for all relevant selection populations', you will see all relevant selection populations for that model. However, this option takes long time decause of the large set of populations in the database and the filtering. Therefore, the fastest way is to search for each of your selection populations by name. If you are logged in to the website you will also see a list of your custom set of genotyped clones.
 
@@ -117,7 +117,7 @@ To apply the model to a selection population, simply click your population name 
 
 <img src='{{"assets/images/image334.png" | relative_url }}' width="512" />
 
-### Method 2
+#### Method 2
 
 Another way to build a model is by selecting a trial, instead of selecting and searching for a specific trait. This approach is useful when you know a particular trial that is relevant to the environment you are targeting to breed material for. This method allows you to build models and predict genomic estimated breeding values (GEBVs) for several traits within a single trial at once. You can also calculate selection index for your clones when GEBVs are estimated for multiple traits.
 
@@ -155,7 +155,7 @@ In this example we will be using the "Cassava Ibadan 2002/03" population and ass
 
 <img src='{{"assets/images/image81.png" | relative_url }}' width="463" />
 
-### Method 3
+#### Method 3
 
 In addition to creating a model by searching for pre-existing traits or by preexisting trial name, models can also be created by using your own list of clones. This creates a model by using or creating a training population.
 
