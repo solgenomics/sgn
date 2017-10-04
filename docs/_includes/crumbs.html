@@ -2,12 +2,12 @@
 {% capture parentURL %}{{ page.url | remove: slug | replace: "//", "/" }}{% endcapture %}
 {% assign entries = site.pages | sort: "path" %}
 {% if parentURL!=page.url %}
+  <a href="{{ site.baseurl }}/">{{ site.title }}</a>&nbsp;&nbsp;
   {% capture the_crumbs %}
   <span>
     {% for pg in entries %}
-      {% if parentURL contains pg.url %}
-        <a href="{{ site.baseurl }}{{pg.url}}">{{pg.title}}</a>
-        {% if pg.url!=parentURL %}&nbsp;&larr;{% endif %}
+      {% if parentURL contains pg.url and pg.url!="/" %}
+        &larr;<a href="{{ site.baseurl }}{{pg.url}}">{{pg.title}}</a>&nbsp;&nbsp;
       {% endif %}
     {% endfor %}
   </span>
