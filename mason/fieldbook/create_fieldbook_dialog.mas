@@ -57,7 +57,13 @@ $trial_name => undef
                     <label class="col-sm-3 control-label">Not Included Columns: </label>
                     <div class="col-sm-9" >
                         <div id="create_fieldbook_not_included_columns">
-                        
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Average performance of accessions for list of traits: </label>
+                    <div class="col-sm-9" >
+                        <div id="create_fieldbook_with_trait_list">
                         </div>
                     </div>
                 </div>
@@ -114,6 +120,8 @@ jQuery(document).ready(function() {
 
     jQuery("[name='create_fieldbook_link']").click( function () {
         show_available_columns('plots');
+        var lo = new CXGN.List();
+        jQuery('#create_fieldbook_with_trait_list').html(lo.listSelect('create_fieldbook_with_trait_list_select', [ 'traits' ], 'select'));
         jQuery('#create_fieldbook_dialog').modal('show');
         show_fieldbook_treatments();
     });
@@ -233,7 +241,8 @@ function open_create_fieldbook_dialog() {
             'trial_id': parseInt(jQuery('#html_select_trial_for_create_fieldbook').val()),
             'data_level': jQuery('#create_fieldbook_data_level').val(),
             'treatment_project_id': jQuery("#html_select_treatment_create_fieldbook").val(),
-            'selected_columns':JSON.stringify(selected_columns)
+            'selected_columns':JSON.stringify(selected_columns),
+            'trait_list':jQuery('#create_fieldbook_with_trait_list_select_list_select').val()
         },
         beforeSend: function() {
             jQuery("#working_modal").modal("show");

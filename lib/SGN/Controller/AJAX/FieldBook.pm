@@ -36,6 +36,9 @@ use CXGN::UploadFile;
 use CXGN::Fieldbook::TraitInfo;
 use CXGN::Fieldbook::DownloadTrial;
 use SGN::Model::Cvterm;
+use CXGN::List;
+use CXGN::List::Validate;
+use CXGN::List::Transform;
 
 #use Data::Dumper;
 
@@ -93,6 +96,21 @@ sub create_fieldbook_from_trial_POST : Args(0) {
     }
 
     my $selected_columns = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
+    my $selected_trait_list_id = $c->req->param('trait_list');
+    my @selected_traits;
+    my $trait_list;
+    if ($selected_trait_list_id){
+        my $list = CXGN::List->new({ dbh => $c->dbc->dbh, list_id => $selected_trait_list_id });
+        $trait_list = $list->elements();
+        my $validator = CXGN::List::Validate->new();
+        my @absent_traits = @{$validator->validate($schema, 'traits', $trait_list)->{'missing'}};
+        if (scalar(@absent_traits)>0){
+            $c->stash->{rest} = {error =>  "Trait list is not valid because of these terms: ".join ',',@absent_traits };
+            $c->detach();
+        }
+        my $lt = CXGN::List::Transform->new();
+        @selected_traits = @{$lt->transform($schema, "traits_2_trait_ids", $trait_list)->{transform}};
+    }
 
   my $dir = $c->tempfiles_subdir('/other');
   my $tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'other/excelXXXX');
@@ -108,7 +126,9 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         user_name => $c->user()->get_object()->get_username(),
         data_level => $data_level,
         treatment_project_id => $treatment_project_id,
-        selected_columns => $selected_columns
+        selected_columns => $selected_columns,
+        selected_trait_ids => \@selected_traits,
+        selected_trait_names => $trait_list
     });
 
     my $create_fieldbook_return = $create_fieldbook->download();

@@ -17,6 +17,7 @@ use CXGN::People::Person;
 use DateTime;
 use CXGN::Stock::Accession;
 use CXGN::Stock;
+use CXGN::Phenotypes::Summary;
 
 has 'bcs_schema' => (
     isa => "Bio::Chado::Schema",
@@ -82,6 +83,16 @@ has 'selected_columns' => (
     isa => 'HashRef',
 );
 
+has 'selected_trait_ids'=> (
+    is => 'ro',
+    isa => 'ArrayRef[Int]',
+);
+
+has 'selected_trait_names'=> (
+    is => 'ro',
+    isa => 'ArrayRef[Str]',
+);
+
 sub download { 
     my $self = shift;
     my %errors;
@@ -112,6 +123,11 @@ sub download {
     my $selected_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $trial_id});
     my $location_name = $selected_trial->get_location ? $selected_trial->get_location->[1] : '';
     my $trial_year = $selected_trial->get_year ? $selected_trial->get_year : '';
+    my $accessions = $selected_trial->get_accessions();
+    my @accession_ids;
+    foreach (@$accessions){
+        push @accession_ids, $_->{stock_id};
+    }
 
     my $treatment = $self->treatment_project_id();
     my $treatment_trial;
@@ -125,6 +141,18 @@ sub download {
     my $trial_name =  $trial_layout->get_trial_name();
 
     my %selected_cols = %{$self->selected_columns};
+    my $selected_traits = $self->selected_trait_ids();
+    my $summary = CXGN::Phenotypes::Summary->new({
+        bcs_schema=>$schema,
+        trait_list=>$selected_traits,
+        accession_list=>\@accession_ids
+    });
+    my $summary_values = $summary->search();
+    my %fieldbook_trait_hash;
+    foreach (@$summary_values){
+        $fieldbook_trait_hash{$_->[0]}->{$_->[8]} = $_;
+    }
+    #print STDERR Dumper \%fieldbook_trait_hash;
 
     my %treatment_stock_hash;
     my $current_col_num = 0;
@@ -151,9 +179,15 @@ sub download {
     }
     if($treatment_trial){
         $ws->write(0, $current_col_num, "Treatment:".$treatment_name);
+        $current_col_num++;
         foreach (@$treatment_units){
             $treatment_stock_hash{$_->[1]}++;
         }
+    }
+
+    foreach ($self->selected_trait_names){
+        $ws->write(0, $current_col_num, $_);
+        $current_col_num++;
     }
 
     my $tl = $trial_layout->get_design();
@@ -193,6 +227,14 @@ sub download {
             }
             if(exists($treatment_stock_hash{$design_info{'plot_name'}})){
                 $ws->write($row_num, $current_col_num, 1);
+                $current_col_num++;
+            }
+            foreach my $t (@{$self->selected_trait_names}){
+                my $perf = $fieldbook_trait_hash{$t}->{$design_info{"accession_id"}};
+                if($perf){
+                    $ws->write($row_num,$current_col_num,"Avg: ".$perf->[3]." Min: ".$perf->[5]." Max: ".$perf->[4]." Count: ".$perf->[2]." StdDev: ".$perf->[6]);
+                }
+                $current_col_num++;
             }
 
             $row_num++;
@@ -229,6 +271,14 @@ sub download {
                 }
                 if(exists($treatment_stock_hash{$_})){
                     $ws->write($row_num,$current_col_num,1);
+                    $current_col_num++;
+                }
+                foreach my $t ($self->selected_trait_names){
+                    my $perf = $fieldbook_trait_hash{$t}->{$design_info{"accession_id"}};
+                    if ($perf){
+                        $ws->write($row_num,$current_col_num,"Avg: ".$perf->[3]." Min: ".$perf->[5]." Max: ".$perf->[4]." Count: ".$perf->[2]." StdDev: ".$perf->[6]);
+                    }
+                    $current_col_num++;
                 }
 
                 $plant_num++;
@@ -267,6 +317,14 @@ sub download {
                 }
                 if(exists($treatment_stock_hash{$_})){
                     $ws->write($row_num,$current_col_num,1);
+                    $current_col_num++;
+                }
+                foreach my $t ($self->selected_trait_names){
+                    my $perf = $fieldbook_trait_hash{$t}->{$design_info{"accession_id"}};
+                    if ($perf){
+                        $ws->write($row_num,$current_col_num,"Avg: ".$perf->[3]." Min: ".$perf->[5]." Max: ".$perf->[4]." Count: ".$perf->[2]." StdDev: ".$perf->[6]);
+                    }
+                    $current_col_num++;
                 }
 
                 $subplot_num++;
@@ -312,6 +370,14 @@ sub download {
                     }
                     if(exists($treatment_stock_hash{$p})){
                         $ws->write($row_num,$current_col_num,1);
+                        $current_col_num++;
+                    }
+                    foreach my $t ($self->selected_trait_names){
+                        my $perf = $fieldbook_trait_hash{$t}->{$design_info{"accession_id"}};
+                        if ($perf){
+                            $ws->write($row_num,$current_col_num,"Avg: ".$perf->[3]." Min: ".$perf->[5]." Max: ".$perf->[4]." Count: ".$perf->[2]." StdDev: ".$perf->[6]);
+                        }
+                        $current_col_num++;
                     }
                     $plant_num++;
                     $row_num++;
