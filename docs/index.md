@@ -1,4 +1,4 @@
 ---
-title: "Documentation Testing"
-layout: doc_page
+title: "SGN Documentation"
+layout: doc_folder
 ---

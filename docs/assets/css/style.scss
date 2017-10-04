@@ -3,7 +3,19 @@
 
 @import "{{ site.theme }}";
 
-ul.nav-tree ul{
-  margin:0;
+ul#markdown-toc li, ul.nav-tree li{
+  white-space: nowrap;
+}
+
+ul#markdown-toc ul, ul.nav-tree ul{
+  margin: 0.5em 0 0.5em 0;
   padding-left: 1.25em;
+}
+
+ul.nav-tree ul ul{
+  visibility: collapse !important;
+  height:0 !important;
+  overflow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
