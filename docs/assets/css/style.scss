@@ -12,6 +12,10 @@ ul#markdown-toc ul, ul.nav-tree ul{
   padding-left: 1.25em;
 }
 
+ul#markdown-toc li a{
+  color: #1b5a87;
+}
+
 ul.nav-tree ul ul{
   visibility: collapse !important;
   height:0 !important;
