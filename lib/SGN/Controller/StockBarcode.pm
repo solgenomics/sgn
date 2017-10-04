@@ -177,7 +177,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
                 $fdata_rep_block = "block number:".$stockprop_hash{$stock_id}->{'block'}.', '."rep number:".$stockprop_hash{$stock_id}->{'replicate'}; 
                 $fdata_plot = "plot:".$stockprop_hash{$stock_id}->{'plot number'};
                 $fdata_plot_20A4 = "plot number:".$stockprop_hash{$stock_id}->{'plot number'};
-                $musa_row_col_number = "row:".$stockprop_hash{$stock_id}->{'row_number'}.' '."col:".$stockprop_hash{$stock_id}->{'col_number'};
+                $musa_row_col_number = "row number:".$stockprop_hash{$stock_id}->{'row_number'}.', '."column number:".$stockprop_hash{$stock_id}->{'col_number'};
                 
                 my $h_acc = $dbh->prepare("select stock.uniquename, stock.stock_id FROM stock join stock_relationship on (stock.stock_id = stock_relationship.object_id) where stock_relationship.subject_id =?;");
 
