@@ -561,6 +561,15 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     $c->stash->{rest} = { plots => \@data };
 }
 
+sub trial_has_subplots : Chained('trial') PathPart('has_subplots') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = $c->stash->{trial};
+    $c->stash->{rest} = { has_subplots => $trial->has_subplot_entries() };
+}
+
 sub trial_subplots : Chained('trial') PathPart('subplots') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -571,6 +580,15 @@ sub trial_subplots : Chained('trial') PathPart('subplots') Args(0) {
     my @data = $trial->get_subplots();
 
     $c->stash->{rest} = { subplots => \@data };
+}
+
+sub trial_has_plants : Chained('trial') PathPart('has_plants') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $trial = $c->stash->{trial};
+    $c->stash->{rest} = { has_plants => $trial->has_plant_entries() };
 }
 
 sub trial_plants : Chained('trial') PathPart('plants') Args(0) {
