@@ -19,6 +19,7 @@ package SGN::Controller::AJAX::Accessions;
 use Moose;
 use JSON -support_by_pp;
 use List::MoreUtils qw /any /;
+use CXGN::Stock::StockLookup;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::BreedersToolbox::AccessionsFuzzySearch;
 use CXGN::BreedersToolbox::OrganismFuzzySearch;
@@ -315,6 +316,30 @@ sub add_accession_list_POST : Args(0) {
         added => \@added_fullinfo_stocks
     };
     return;
+}
+sub possible_seedlots : Path('/ajax/accessions/possible_seedlots') : ActionClass('REST') { }
+sub possible_seedlots_GET : Args(0) {
+  my ($self, $c) = @_;
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+  
+  my $names = $c->req->params()->{'name'};
+  
+  my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
+  my $accession_manager = CXGN::BreedersToolbox::Accessions->new(schema=>$schema);
+  
+  my $synonyms = $stock_lookup->get_stock_synonyms('any_name','accession',$names);
+  
+  my @uniquenames = keys %{$synonyms};
+  
+  my $seedlots = $accession_manager->get_possible_seedlots(\@uniquenames);
+    
+  print STDERR $names;
+  $c->stash->{rest} = {
+      success => "1",
+      seedlots=> $seedlots,
+      synonyms=>$synonyms
+  };
+  return;
 }
 
 sub fuzzy_response_download : Path('/ajax/accession_list/fuzzy_download') : ActionClass('REST') { }

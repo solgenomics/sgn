@@ -1834,6 +1834,50 @@ sub get_plants_per_accession {
     return \%return;
 }
 
+=head2 get_seedlots
+
+ Usage:         my $seedlots = $trial->get_seedlots();
+ Desc:          returns a list of seedlots that are defined for the trial.
+ Ret:           an array ref of elements that contain
+                [ seedlot_name, seedlot_stock_id ]
+ Args:          none
+ Side Effects:  db access
+ Example:
+
+=cut
+
+sub get_seedlots {
+	my $self = shift;
+	my @seedlots;
+
+	my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'seedlot', 'stock_type' )->cvterm_id();
+	my $seed_transaction_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "seed transaction", "stock_relationship")->cvterm_id();
+
+	my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename
+		FROM stock as accession
+		JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id)
+		JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id)
+		JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id)
+		JOIN nd_experiment using(nd_experiment_id)
+		JOIN nd_experiment_project using(nd_experiment_id)
+		JOIN project using(project_id)
+		WHERE accession.type_id = $seedlot_cvterm_id
+		AND stock_relationship.type_id IN ($seed_transaction_cvterm_id)
+		AND project.project_id = ?
+		GROUP BY accession.stock_id
+		ORDER BY accession.stock_id;";
+
+	#Removed nd_experiment.type_id IN ($field_trial_cvterm_id, $genotyping_trial_cvterm_id) AND
+
+	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
+	$h->execute($self->get_trial_id());
+	while (my ($stock_id, $uniquename) = $h->fetchrow_array()) {
+		push @seedlots, [$stock_id, $uniquename];
+	}
+
+	return \@seedlots;
+}
+
 =head2 get_plots
 
  Usage:         my $plots = $trial->get_plots();

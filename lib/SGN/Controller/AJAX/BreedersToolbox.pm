@@ -347,6 +347,7 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
         design => $design,
         trial_name => $name,
         is_genotyping => 1,
+        operator => $c->user->get_object->get_username
     });
 
     my %message;
@@ -378,6 +379,11 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
 sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => 'You must be logged in to create a genotyping trial.' };
+        $c->detach();
+    }
 
     if (!($c->user()->check_roles('curator') || $c->user()->check_roles('submitter'))) {
         $c->stash->{rest} = { error => 'You do not have the required privileges to create a genotyping trial.' };
@@ -508,6 +514,7 @@ sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') Args(0) {
         is_genotyping => 1,
         genotyping_user_id => $meta->{user_id} || "unknown",
         genotyping_project_name => $meta->{project_name} || "unknown",
+        operator => $c->user->get_object->get_username
     });
 
     my %message;

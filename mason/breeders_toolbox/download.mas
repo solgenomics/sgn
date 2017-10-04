@@ -135,7 +135,7 @@ $(document).ready(function() {
       var token = new Date().getTime(); //use the current timestamp as the token name and value
       manage_dl_with_cookie(token, ladda);
       jQuery('#phenotype_download_token').val(token);
-      jQuery('#download_pedigree').submit();
+      jQuery('#download_form').submit();
 
 	});
 

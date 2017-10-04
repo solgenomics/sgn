@@ -438,7 +438,7 @@ CXGN.List.prototype = {
 	html += '<table class="table"><tr><td>List ID</td><td id="list_id_div">'+list_id+'</td></tr>';
 	html += '<tr><td>List name:<br/><input type="button" class="btn btn-primary btn-xs" id="updateNameButton" value="Update" /></td>';
 	html += '<td><input class="form-control" type="text" id="updateNameField" size="10" value="'+list_name+'" /></td></tr>';
-	html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" /><div id="fuzzySearchAccessionListDiv"></div><div id="synonymListButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
+	html += '<tr><td>Type:<br/><input id="list_item_dialog_validate" type="button" class="btn btn-primary btn-xs" value="Validate" onclick="javascript:validateList('+list_id+',\'type_select\')" /><div id="fuzzySearchAccessionListDiv"></div><div id="synonymListButtonDiv"></div><div id="availableSeedlotButtonDiv"></div></td><td>'+this.typesHtmlSelect(list_id, 'type_select', list_type)+'</td></tr>';
 	html += '<tr><td>Add New Items:<br/><button class="btn btn-primary btn-xs" type="button" id="dialog_add_list_item_button" value="Add">Add</button></td><td><textarea id="dialog_add_list_item" type="text" class="form-control" placeholder="Add Item To List" /></textarea></td></tr></table>';
 
 	html += '<table id="list_item_dialog_datatable" class="table table-condensed table-hover table-bordered"><thead style="display: none;"><tr><th><b>List items</b> ('+items.length+')</th><th>&nbsp;</th></tr></thead><tbody>';
@@ -459,15 +459,18 @@ CXGN.List.prototype = {
 
     if (list_type == 'accessions'){
         jQuery('#fuzzySearchAccessionListDiv').html('<br/><button id="fuzzySearchAccessionListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>');
+        jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')">See Availible Seedlots</button>');
     }
     if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants'].indexOf(list_type) >= 0){
         jQuery('#synonymListButtonDiv').html('<br/><button id="synonymListButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).synonymSearch('+list_id+')">Find Synonyms</button>');
     }
     jQuery(document).on("change", "#type_select", function(){
         if (jQuery('#type_select').val() == 'accessions'){
+            jQuery('#availableSeedlotButtonDiv').html('<br/><button id="availableSeedlotButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).seedlotSearch('+list_id+')">See Availible Seedlots</button>');
             jQuery('#fuzzySearchAccessionListDiv').html('<br/><button id="fuzzySearchAccessionListButton" class="btn btn-primary btn-xs" onclick="javascript:fuzzySearchList('+list_id+',\''+list_type+'\')" >Fuzzy Search</button>');
         } else {
             jQuery('#fuzzySearchAccessionListDiv').html('');
+            jQuery('#availableSeedlotButtonDiv').html('')
         }
 				if (['seedlots', 'plots', 'accessions', 'vector_constructs', 'crosses', 'populations', 'plants'].indexOf(jQuery('#type_select').val()) >= 0){
 		        jQuery('#synonymListButtonDiv').html('<br/><button id="synonymListButton" class="btn btn-primary btn-xs" onclick="(new CXGN.List()).synonymSearch('+list_id+')">Find Synonyms</button>');
@@ -663,7 +666,7 @@ CXGN.List.prototype = {
 
   if (refresh) {
     if (types.length > 1) { types = types.join(',') };
-	  html = '<div class="input-group">'+html+'</select><span class="input-group-btn"><button class="btn btn-default" type="button" id="'+div_name+'_list_refresh" title="Refresh lists" onclick="refreshListSelect(\''+div_name+'_list_select\',\''+types+'\',\'Options refreshed.\')"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></span></div>';
+	  html = '<div class="input-group" id="'+div_name+'_list_select_div">'+html+'</select><span class="input-group-btn"><button class="btn btn-default" type="button" id="'+div_name+'_list_refresh" title="Refresh lists" onclick="refreshListSelect(\''+div_name+'\',\''+types+'\')"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></span></div>';
     return html;
   }
   else {
@@ -751,7 +754,46 @@ CXGN.List.prototype = {
             return;
         }
     },
-		
+		seedlotSearch: function(list_id){
+			var self = this;
+			jQuery('#availible_seedlots_modal').modal('show');
+			var accessions = this.getList(list_id);
+			if (window.available_seedlots){
+				window.available_seedlots.build_table(accessions);
+			} else {
+				throw "avalilible_seedlots.mas not included";
+			}
+			jQuery('#new-list-from-seedlots').unbind('submit');
+			jQuery("#new-list-from-seedlots").submit(function(){
+				jQuery('#working_modal').modal('show');
+				try {
+					var form = jQuery(this).serializeArray().reduce(function(map,obj){
+						map[obj.name] = obj.value;
+						return map;
+					}, {});
+					console.log(form);
+					var list = new CXGN.List();
+					var names = window.available_seedlots.get_selected().map(function(d){
+						return d.name;
+					});
+					var newListID = list.newList(form["name"]);
+					if (!newListID) throw "List creation failed.";
+					list.setListType(newListID,"seedlots");
+					var count = list.addBulk(newListID, names);
+					if (!count) throw "Added nothing to list or addition failed.";
+					jQuery('#working_modal').modal('hide');
+					alert("List \""+form["name"]+"\" created with "+count+" entries.");
+					self.renderLists('list_dialog');
+				}
+				catch(err) {
+					setTimeout(function(){throw err;});
+				}
+				finally {
+					jQuery('#working_modal').modal('hide');
+					return false;
+				}
+			});
+		},
 		synonymSearch: function(list_id){
       var self = this;
 			jQuery.ajax( {
@@ -916,7 +958,7 @@ CXGN.List.prototype = {
 	      break;
 	  case "trials":
 	  case "breeding_programs":
-	      new_type = 'projects_2_project_ids';
+	      new_type = 'projects_2_project_ids'; 
 	      break;
 	  case "accessions":
 	      new_type = 'accessions_2_accession_ids';
@@ -950,7 +992,7 @@ function show_lists() {
 }
 
 /* deprecated */
-function pasteListMenu (div_name, menu_div, button_name) {
+function pasteListMenu (div_name, menu_div, button_name, list_type) {
     var lo = new CXGN.List();
 
     var html='';
@@ -958,8 +1000,11 @@ function pasteListMenu (div_name, menu_div, button_name) {
     if (button_name === undefined) {
 	button_name = 'paste';
     }
-
-    html = lo.listSelect(div_name);
+    if (list_type){
+        html = lo.listSelect(div_name, [list_type]);
+    }else {
+        html = lo.listSelect(div_name);
+    }
     html = html + '<button class="btn btn-info btn-sm" type="button" value="'+button_name+'" onclick="javascript:pasteList(\''+div_name+'\')" >'+button_name+'</button>';
 
     jQuery('#'+menu_div).html(html);
@@ -985,39 +1030,13 @@ function pasteList(div_name) {
      Parameters:
        div_name: The div_name where the select should appear
        types: a list of list types that should be listed in the menu
-       add_empty_element: text. if present, add an empty element with the
-         provided text as description
   */
 
-  function refreshListSelect(div_name, types, empty_element) {
+  function refreshListSelect(div_name, types) {
     var lo = new CXGN.List();
-    var lists = new Array();
     var types = types.split(",");
-    //console.log("types = "+types);
-    if (types.length > 0) {
-        for (var n=0; n<types.length; n++) {
-          //console.log("retrieving lists of type: "+types[n]+"\n");
-          var more = lo.availableLists(types[n]);
-          if (more) {
-            for (var i=0; i<more.length; i++) {
-              lists.push(more[i]);
-            }
-          }
-        }
-    }
-    else {
-        lists = lo.availableLists();
-    }
-
-    var html;
-    if (empty_element) {
-        html += '<option value="">'+empty_element+'</option>\n';
-          }
-    for (var n=0; n<lists.length; n++) {
-        html += '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
-    }
-    jQuery('#'+div_name).html(html);
-
+    document.getElementById(div_name).innerHTML = (lo.listSelect(div_name, types, 'Options refreshed.', 'refresh')); 
+    //console.log("List options refreshed!");
   }
 
 /*

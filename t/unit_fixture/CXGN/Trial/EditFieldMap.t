@@ -98,7 +98,7 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_location => "test_location_for_trial",
     trial_name => "new_test_trial_fieldmap_name",
     design_type => "RCBD",
-    plot_layout_format => "serpentine",
+    operator => "janedoe"
 						    }), "create trial object");
 ok($trial_create->save_trial(), "save trial");
 

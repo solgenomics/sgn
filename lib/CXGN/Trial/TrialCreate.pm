@@ -94,11 +94,12 @@ has 'trial_year' => (isa => 'Str', is => 'rw', predicate => 'has_trial_year', re
 has 'trial_description' => (isa => 'Str', is => 'rw', predicate => 'has_trial_description', required => 1,);
 has 'trial_location' => (isa => 'Str', is => 'rw', predicate => 'has_trial_location', required => 1,);
 has 'design_type' => (isa => 'Str', is => 'rw', predicate => 'has_design_type', required => 1);
-has 'design' => (isa => 'HashRef[HashRef[Str|ArrayRef|HashRef]]|Undef', is => 'rw', predicate => 'has_design', required => 1);
+has 'design' => (isa => 'HashRef[HashRef]|Undef', is => 'rw', predicate => 'has_design', required => 1);
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', required => 1);
 has 'trial_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_type', required => 0);
 has 'trial_has_plant_entries' => (isa => 'Int', is => 'rw', predicate => 'has_trial_has_plant_entries', required => 0);
 has 'trial_has_subplot_entries' => (isa => 'Int', is => 'rw', predicate => 'has_trial_has_subplot_entries', required => 0);
+has 'operator' => (isa => 'Str', is => 'rw', predicate => 'has_operator', required => 1);
 
 has 'is_genotyping' => (isa => 'Bool', is => 'rw', required => 0, default => 0, );
 has 'genotyping_user_id' => (isa => 'Str', is => 'rw');
@@ -244,6 +245,7 @@ sub save_trial {
 		is_genotyping => $self->get_is_genotyping,
 		new_treatment_has_plant_entries => $self->get_trial_has_plant_entries,
 		new_treatment_has_subplot_entries => $self->get_trial_has_subplot_entries,
+		operator => $self->get_operator
 	});
 	my $error;
 	my $validate_design_error = $trial_design_store->validate_design();

@@ -28,6 +28,7 @@ use CXGN::Location::LocationLookup;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Stock;
+use JSON;
 
 has 'schema' => (
 		 is       => 'rw',
@@ -58,6 +59,10 @@ has 'control_names' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_control
 has 'row_numbers' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_row_numbers', reader => 'get_row_numbers', writer => '_set_row_numbers');
 has 'col_numbers' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_col_numbers', reader => 'get_col_numbers', writer => '_set_col_numbers');
 
+# To verify that all plots in the trial have valid props and relationships. This means that the plots have plot_number and block_number properties. All plots have an accession associated. The plot's accession is in sync with any plant's accession, subplot's accession, and seedlot's containing accession. If verify_relationships is set to 1, then get_design will not return the design anymore, but will instead indicate if the design rels are valid.
+has 'verify_layout' => (isa => 'Bool', is => 'rw', predicate => 'has_verify_layout', reader => 'get_verify_layout');
+# verify_physical_map checks that all plot's in the trial have row and column props.
+has 'verify_physical_map' => (isa => 'Bool', is => 'rw', predicate => 'has_verify_physical_map', reader => 'get_verify_physical_map');
 
 sub _lookup_trial_id {
   #print STDERR "Check 2.1: ".localtime()."\n";
@@ -107,13 +112,6 @@ sub _lookup_trial_id {
   $self->_set_row_numbers($self->_get_plot_info_fields_from_trial("row_number") || [] );
   $self->_set_col_numbers($self->_get_plot_info_fields_from_trial("col_number") || [] );
   #$self->_set_is_a_control($self->_get_plot_info_fields_from_trial("is_a_control"));
-  ($accession_names_ref, $control_names_ref) = $self->_get_trial_accession_names_and_control_names();
-  if ($accession_names_ref) {
-    $self->_set_accession_names($accession_names_ref);
-  }
-  if ($control_names_ref) {
-    $self->_set_control_names($control_names_ref);
-  }
   #print STDERR "Check 2.5: ".localtime()."\n";
 
 }
@@ -168,6 +166,9 @@ sub _get_design_from_trial {
   my $plots_ref;
   my @plots;
   my %design;
+  my %verify_errors;
+  my %unique_accessions;
+  my %unique_controls;
 
   $plots_ref = $self->_get_plots();
   if (!$plots_ref) {
@@ -197,6 +198,16 @@ sub _get_design_from_trial {
   my $plant_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_of', 'stock_relationship' )->cvterm_id();
   my $subplot_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'subplot_of', 'stock_relationship' )->cvterm_id();
   my $plant_of_subplot_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plant_of_subplot', 'stock_relationship' )->cvterm_id();
+  my $seed_transaction_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'seed transaction', 'stock_relationship' )->cvterm_id();
+  my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'collection_of', 'stock_relationship' )->cvterm_id();
+  my $plot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'plot number', 'stock_property' )->cvterm_id();
+  my $block_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'block', 'stock_property' )->cvterm_id();
+  my $replicate_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'replicate', 'stock_property' )->cvterm_id();
+  my $range_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'range', 'stock_property' )->cvterm_id();
+  my $is_a_control_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'is a control', 'stock_property' )->cvterm_id();
+  my $row_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'row_number', 'stock_property' )->cvterm_id();
+  my $col_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->get_schema, 'col_number', 'stock_property' )->cvterm_id();
+  my $json = JSON->new();
 
   @plots = @{$plots_ref};
   foreach my $plot (@plots) {
@@ -213,18 +224,22 @@ sub _get_design_from_trial {
     }
     my $plot_name = $plot->uniquename;
     my $plot_id = $plot->stock_id;
-    my $stockprop_hash = CXGN::Chado::Stock->new($schema, $plot_id)->get_stockprop_hash();
-    #print STDERR Dumper $stockprop_hash;
-    my $plot_number_prop = $stockprop_hash->{'plot number'} ? join ',', @{$stockprop_hash->{'plot number'}} : undef;
-    my $block_number_prop = $stockprop_hash->{'block'} ? join ',', @{$stockprop_hash->{'block'}} : undef;
-    my $replicate_number_prop = $stockprop_hash->{'replicate'} ? join ',', @{$stockprop_hash->{'replicate'}} : undef;
-    my $range_number_prop = $stockprop_hash->{'range'} ? join ',', @{$stockprop_hash->{'range'}} : undef;
-    my $is_a_control_prop = $stockprop_hash->{'is a control'} ? join ',', @{$stockprop_hash->{'is a control'}} : undef;
-    my $row_number_prop = $stockprop_hash->{'row_number'} ? join ',', @{$stockprop_hash->{'row_number'}} : undef;
-    my $col_number_prop = $stockprop_hash->{'col_number'} ? join ',', @{$stockprop_hash->{'col_number'}} : undef;
+    my $plot_properties = $plot->search_related('stockprops');
+    my %stockprop_hash;
+    while (my $r = $plot_properties->next){
+        push @{$stockprop_hash{$r->type_id}}, $r->value;
+    }
+    my $plot_number_prop = $stockprop_hash{$plot_number_cvterm_id} ? join ',', @{$stockprop_hash{$plot_number_cvterm_id}} : undef;
+    my $block_number_prop = $stockprop_hash{$block_cvterm_id} ? join ',', @{$stockprop_hash{$block_cvterm_id}} : undef;
+    my $replicate_number_prop = $stockprop_hash{$replicate_cvterm_id} ? join ',', @{$stockprop_hash{$replicate_cvterm_id}} : undef;
+    my $range_number_prop = $stockprop_hash{$range_cvterm_id} ? join ',', @{$stockprop_hash{$range_cvterm_id}} : undef;
+    my $is_a_control_prop = $stockprop_hash{$is_a_control_cvterm_id} ? join ',', @{$stockprop_hash{$is_a_control_cvterm_id}} : undef;
+    my $row_number_prop = $stockprop_hash{$row_number_cvterm_id} ? join ',', @{$stockprop_hash{$row_number_cvterm_id}} : undef;
+    my $col_number_prop = $stockprop_hash{$col_number_cvterm_id} ? join ',', @{$stockprop_hash{$col_number_cvterm_id}} : undef;
     my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id() ] } })->object;
     my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm_id })->search_related('object');
 	my $subplots = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $subplot_rel_cvterm_id })->search_related('object');
+	my $seedlot_transaction = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $seed_transaction_cvterm_id });
 
     my $accession_name = $accession->uniquename;
     my $accession_id = $accession->stock_id;
@@ -256,6 +271,10 @@ sub _get_design_from_trial {
     }
     if ($is_a_control_prop) {
       $design_info{"is_a_control"}=$is_a_control_prop;
+      $unique_controls{$accession_name}=$accession_id;
+    }
+    else {
+      $unique_accessions{$accession_name}=$accession_id;
     }
     if ($accession_name) {
       $design_info{"accession_name"}=$accession_name;
@@ -263,10 +282,47 @@ sub _get_design_from_trial {
     if ($accession_id) {
       $design_info{"accession_id"}=$accession_id;
     }
+    if ($self->get_verify_layout){
+        if (!$accession_name || !$accession_id || !$plot_name || !$plot_id){
+            push @{$verify_errors{errors}->{layout_errors}}, "Plot: $plot_name does not have an accession!";
+        }
+        if (!$block_number_prop || !$plot_number_prop){
+            push @{$verify_errors{errors}->{layout_errors}}, "Plot: $plot_name does not have a block_number and/or plot_number!";
+        }
+        if (!$seedlot_transaction->first){
+            push @{$verify_errors{errors}->{seedlot_errors}}, "Plot: $plot_name does not have a seedlot linked.";
+        }
+    }
+    if ($self->get_verify_physical_map){
+        if (!$row_number_prop || !$col_number_prop){
+            push @{$verify_errors{errors}->{physical_map_errors}}, "Plot: $plot_name does not have a row_number and/or col_number!";
+        }
+    }
+
+	if ($seedlot_transaction->first()){
+        my $val = $json->decode($seedlot_transaction->first()->value());
+        my $seedlot = $seedlot_transaction->search_related('object');
+        if ($self->get_verify_layout){
+            my $seedlot_accession_check = $seedlot->search_related('stock_relationship_objects', {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id})->search_related('subject', {'subject.stock_id'=>$accession_id});
+            if (!$seedlot_accession_check->first){
+                push @{$verify_errors{errors}->{layout_errors}}, "Seedlot: ".$seedlot->first->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
+            }
+        }
+		$design_info{"seedlot_name"} = $seedlot->first->uniquename;
+		$design_info{"seedlot_stock_id"} = $seedlot->first->stock_id;
+		$design_info{"num_seed_per_plot"} = $val->{amount};
+		$design_info{"seed_transaction_operator"} = $val->{operator};
+	}
 	if ($plants) {
 		my @plant_names;
 		my @plant_ids;
 		while (my $p = $plants->next()) {
+            if ($self->get_verify_layout){
+                my $plant_accession_check = $p->search_related('stock_relationship_subjects', {'stock_relationship_subjects_2.type_id'=>$plant_rel_cvterm_id})->search_related('object', {'object_2.stock_id'=>$accession_id});
+                if (!$plant_accession_check->first){
+                    push @{$verify_errors{errors}->{layout_errors}}, "Plant: ".$p->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
+                }
+            }
 			my $plant_name = $p->uniquename();
 			my $plant_id = $p->stock_id();
 			push @plant_names, $plant_name;
@@ -280,6 +336,12 @@ sub _get_design_from_trial {
 		my @subplot_ids;
 		my %subplots_plants_hash;
 		while (my $p = $subplots->next()) {
+            if ($self->get_verify_layout){
+                my $subplot_accession_check = $p->search_related('stock_relationship_subjects', {'stock_relationship_subjects_2.type_id'=>$subplot_rel_cvterm_id})->search_related('object', {'object_2.stock_id'=>$accession_id});
+                if (!$subplot_accession_check->first){
+                    push @{$verify_errors{errors}->{layout_errors}}, "Subplot: ".$p->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
+                }
+            }
 			my $subplot_name = $p->uniquename();
 			my $subplot_id = $p->stock_id();
 			my $plants_of_subplot = $p->search_related('stock_relationship_objects', { 'me.type_id' => $plant_of_subplot_rel_cvterm_id })->search_related('subject');
@@ -297,7 +359,26 @@ sub _get_design_from_trial {
 	}
     $design{$plot_number_prop}=\%design_info;
   }
-    #print STDERR "Check 2.3.4.4: ".localtime()."\n";
+
+    if ($self->get_verify_layout || $self->get_verify_physical_map){
+        return \%verify_errors;
+    }
+
+    my @accession_names;
+    foreach my $accession_name (sort { lc($a) cmp lc($b)} keys %unique_accessions) {
+        push @accession_names, {accession_name=>$accession_name, stock_id=>$unique_accessions{$accession_name} };
+    }
+    my @control_names;
+    foreach my $control_name (sort { lc($a) cmp lc($b)} keys %unique_controls) {
+        push @control_names, {accession_name=>$control_name, stock_id=>$unique_controls{$control_name} };
+    }
+
+    if (scalar(@accession_names)>0) {
+        $self->_set_accession_names(\@accession_names);
+    }
+    if (scalar(@control_names)>0) {
+        $self->_set_control_names(\@control_names);
+    }
 
   return \%design;
 }

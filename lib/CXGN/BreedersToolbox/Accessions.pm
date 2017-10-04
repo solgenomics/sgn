@@ -20,6 +20,7 @@ CXGN::BreedersToolbox::Accessions - functions for managing accessions
 
 use strict;
 use warnings;
+use Data::Dumper;
 use Moose;
 use SGN::Model::Cvterm;
 
@@ -107,6 +108,62 @@ sub get_population_members {
         push @accessions_in_population, \%accession_info;
     }
     return \@accessions_in_population;
+}
+
+sub get_possible_seedlots {
+    my $self = shift;
+    my $accessions = shift; #array ref to list of accession unique names
+    my $schema = $self->schema();
+
+    my $collection_id = SGN::Model::Cvterm->get_cvterm_row($schema,'collection_of','stock_relationship')->cvterm_id;
+    my $current_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_count", "stock_property")->cvterm_id();
+
+    my $table_joins = {
+        join => { 
+          'stock_relationship_subjects' => {
+            'object' => [
+              {
+                'nd_experiment_stocks' => {
+                  'nd_experiment' => [ 
+                    {'nd_experiment_projects' => 'project' }, 
+                    'nd_geolocation' 
+                  ]
+                }
+            },
+            'stockprops'
+            ]
+          }
+        },
+        '+select' => ['me.uniquename','me.stock_id','stock_relationship_subjects.object_id','object.name','project.name', 'project.project_id', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id', 'stockprops.value'],
+        '+as' => ['accession_name','accession_id','seedlot_id','seedlot_name','breeding_program_name', 'breeding_program_id', 'location', 'location_id', 'current_count']
+    };
+    my $query = {
+        'me.is_obsolete' => { '!=' => 't' },
+        'stockprops.type_id' => { '=' => $current_count_cvterm_id},
+        'stock_relationship_subjects.type_id' => {'=' => $collection_id},
+        'me.uniquename' => {-in=>$accessions}
+    };
+    my $stock_rs = $schema->resultset("Stock::Stock")
+        ->search($query,$table_joins);
+    my $seedlot_hash = {};
+    while( my $row = $stock_rs->next) {
+        my $uname = $row->get_column('accession_name');
+        if (not defined $seedlot_hash->{$uname}){
+            $seedlot_hash->{$uname} = [];
+        }
+        my $seedlot_name = $row->get_column('seedlot_name');
+        my $seedlot_id = $row->get_column('seedlot_id');
+        if ($seedlot_id && $seedlot_name){
+            push @{$seedlot_hash->{$uname}}, {
+                'program'  => $row->get_column('breeding_program_name'),
+                'seedlot'  => [$seedlot_name, $seedlot_id],
+                'contents' => [$uname, $row->get_column('accession_id')],
+                'location' => $row->get_column('location'),
+                'count'    => $row->get_column('current_count')
+            };
+        }
+    }
+    return $seedlot_hash;
 }
 
 1;

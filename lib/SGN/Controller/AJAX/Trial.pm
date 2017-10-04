@@ -44,6 +44,7 @@ use CXGN::List::Transform;
 use CXGN::List::Validate;
 use SGN::Model::Cvterm;
 use JSON;
+use CXGN::BreedersToolbox::Accessions;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -79,6 +80,7 @@ sub generate_experimental_design_POST : Args(0) {
       @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
 
   }
+  my $seedlot_hash_json = $c->req->param('seedlot_hash');
   my @control_names;
   if ($c->req->param('control_list')) {
     @control_names = @{_parse_list_from_json($c->req->param('control_list'))};
@@ -109,6 +111,12 @@ sub generate_experimental_design_POST : Args(0) {
   my $plot_layout_format = $c->req->param('plot_layout_format');
   my @treatments = $c->req->param('treatments[]');
   my $num_plants_per_plot = $c->req->param('num_plants_per_plot');
+  my $num_seed_per_plot = $c->req->param('num_seed_per_plot');
+
+  #if (!$num_seed_per_plot){
+#      $c->stash->{rest} = { error => "You need to provide number of seeds per plot so that your breeding material can be tracked."};
+#      return;
+  #}
 
   if ($design_type eq 'splitplot'){
       if (scalar(@treatments)<1){
@@ -197,7 +205,7 @@ my $location_number = scalar(@locations);
     $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
     return;
   }
-  print "TOTAL PLOTS $p_rep_total_plots AND CALCULATED PLOTS $calculated_total_plot\n";
+  #print "TOTAL PLOTS $p_rep_total_plots AND CALCULATED PLOTS $calculated_total_plot\n";
   if($p_rep_total_plots != $calculated_total_plot){
       $c->stash->{rest} = {error => "Treatment repeats do not equal number of plots in design" };
       return;
@@ -242,6 +250,13 @@ my $location_number = scalar(@locations);
   } else {
     $c->stash->{rest} = {error => "No list of stocks supplied." };
     return;
+  }
+  if ($seedlot_hash_json){
+      my $json = JSON->new();
+      $trial_design->set_seedlot_hash($json->decode($seedlot_hash_json));
+  }
+  if ($num_seed_per_plot){
+      $trial_design->set_num_seed_per_plot($num_seed_per_plot);
   }
   if (@control_names) {
     $trial_design->set_control_list(\@control_names);
@@ -490,6 +505,7 @@ sub save_experimental_design_POST : Args(0) {
         trial_type => $trial_type,
         trial_has_plant_entries => $c->req->param('has_plant_entries'),
         trial_has_subplot_entries => $c->req->param('has_subplot_entries'),
+        operator => $user_name
 	  });
 
 
@@ -541,7 +557,6 @@ sub verify_stock_list_POST : Args(0) {
     my @stock_names;
     my $error;
     my %errors;
-    my $error_alert;
     if ($c->req->param('stock_list')) {
         @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
     }
@@ -560,6 +575,33 @@ sub verify_stock_list_POST : Args(0) {
     } else {
         $c->stash->{rest} = {
             success => "1",
+        };
+    }
+}
+
+sub verify_seedlot_list : Path('/ajax/trial/verify_seedlot_list') : ActionClass('REST') { }
+
+sub verify_seedlot_list_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my @stock_names;
+    my @seedlot_names;
+    if ($c->req->param('stock_list')) {
+        @stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
+    }
+    if ($c->req->param('seedlot_list')) {
+        @seedlot_names = @{_parse_list_from_json($c->req->param('seedlot_list'))};
+    }
+    my $return = CXGN::Stock::Seedlot->verify_seedlot_stock_lists($schema, \@stock_names, \@seedlot_names);
+
+    if (exists($return->{error})){
+        $c->stash->{rest} = { error => $return->{error} };
+        $c->detach();
+    }
+    if (exists($return->{success})){
+        $c->stash->{rest} = {
+            success => "1",
+            seedlot_hash => $return->{seedlot_hash}
         };
     }
 }
@@ -661,7 +703,7 @@ sub upload_trial_file_POST : Args(0) {
       archive_filename => $upload_original_name,
       timestamp => $timestamp,
       user_id => $user_id,
-      user_role => $c->user()->roles
+      user_role => $c->user->get_object->get_user_type()
   });
   $archived_filename_with_path = $uploader->archive();
   $md5 = $uploader->get_md5($archived_filename_with_path);
@@ -724,6 +766,7 @@ sub upload_trial_file_POST : Args(0) {
 	   design => $parsed_data,
 	   program => $program,
 	   upload_trial_file => $upload,
+       operator => $c->user()->get_object()->get_username()
 	  });
 
   try {
