@@ -10,19 +10,23 @@ This folder (`docs/`) can be used to build the site either via GitHUb pages or v
 
 #### Headers
 ```markdown
-Header 1
-========
+Header 1 OR
+===========
 
-Header 2
---------
+# Header 1
 
-# Header 3
+Header 2 OR
+-----------
 
-# Header 4
+## Header 2
 
-# Header 5
+### Header 3
 
-# Header 6
+#### Header 4
+
+##### Header 5
+
+###### Header 6
 ```
 You probably shouldnt use h1 headers, as the title of the page is always displayed as an h1, and using them elsewhere could be visualy confusing. 
 
