@@ -58,7 +58,8 @@ CREATE MATERIALIZED VIEW public.materialized_phenoview AS
 SELECT
   breeding_program.project_id AS breeding_program_id,
   nd_experiment.nd_geolocation_id AS location_id,
-  projectprop.value AS year_id, trial.project_id AS trial_id,
+  projectprop.value AS year_id, 
+  trial.project_id AS trial_id,
   accession.stock_id AS accession_id,
   seedlot.stock_id AS seedlot_id,
   stock.stock_id AS stock_id,
@@ -100,81 +101,130 @@ UPDATE matviews set mv_dependents = '{"accessionsXbreeding_programs","accessions
 
 DROP MATERIALIZED VIEW IF EXISTS public.seedlots CASCADE;
 CREATE MATERIALIZED VIEW public.seedlots AS
-SELECT 
+SELECT stock.stock_id AS seedlot_id,
+stock.uniquename AS seedlot_name
+FROM stock
+WHERE stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'seedlot') AND is_obsolete = 'f'
+GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX seedlots_idx ON public.seedlots(seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW seedlots OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.accessionsXseedlots AS
-SELECT
+SELECT public.materialized_phenoview.accession_id,
+    public.materialized_phenoview.seedlot_id
+   FROM public.materialized_phenoview
+  GROUP BY public.materialized_phenoview.accession_id,public.materialized_phenoview.seedlot_id
 WITH DATA;
-CREATE UNIQUE INDEX accessionsXseedlots_idx ON public.accessionsXseedlots(accession_id, trait_id) WITH (fillfactor=100);
+CREATE UNIQUE INDEX accessionsXseedlots_idx ON public.accessionsXseedlots(accession_id, seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXseedlots OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.breeding_programsXseedlots AS
-SELECT
+SELECT public.materialized_phenoview.breeding_program_id,
+    public.materialized_phenoview.seedlot_id
+   FROM public.materialized_phenoview
+  GROUP BY 1,2
 WITH DATA;
-CREATE UNIQUE INDEX breeding_programsXseedlots_idx ON public.breeding_programsXseedlots(breeding_program_id, trait_id) WITH (fillfactor=100);
+CREATE UNIQUE INDEX breeding_programsXseedlots_idx ON public.breeding_programsXseedlots(breeding_program_id, seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW breeding_programsXseedlots OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXseedlots AS
-SELECT 
+SELECT public.materialized_genoview.genotyping_protocol_id,
+    public.materialized_phenoview.seedlot_id
+   FROM public.materialized_phenoview
+   JOIN public.materialized_genoview USING(accession_id)
+  GROUP BY public.materialized_phenoview.genotyping_protocol_id,public.materialized_phenoview.seedlot_id
 WITH DATA;
-CREATE UNIQUE INDEX genotyping_protocolsXseedlots_idx ON public.genotyping_protocolsXseedlots(genotyping_protocol_id, trait_id) WITH (fillfactor=100);
+CREATE UNIQUE INDEX genotyping_protocolsXseedlots_idx ON public.genotyping_protocolsXseedlots(genotyping_protocol_id, seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXseedlots OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.locationsXseedlots AS
-SELECT 
+SELECT public.materialized_phenoview.location_id,
+    public.materialized_phenoview.seedlot_id
+   FROM public.materialized_phenoview
+  GROUP BY 1,2
 WITH DATA;
-CREATE UNIQUE INDEX locationsXseedlots_idx ON public.locationsXseedlots(location_id, trait_id) WITH (fillfactor=100);
+CREATE UNIQUE INDEX locationsXseedlots_idx ON public.locationsXseedlots(location_id, seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locationsXseedlots OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.plantsXseedlots AS
-SELECT
+SELECT public.stock.stock_id AS plant_id,
+    public.materialized_phenoview.seedlot_id
+   FROM public.materialized_phenoview
+   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plant'))
+  GROUP BY 1,2
 WITH DATA;
-CREATE UNIQUE INDEX plantsXseedlots_idx ON public.plantsXseedlots(plant_id, trait_id) WITH (fillfactor=100);
+CREATE UNIQUE INDEX plantsXseedlots_idx ON public.plantsXseedlots(plant_id, seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plantsXseedlots OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.plotsXseedlots AS
-SELECT
+SELECT public.stock.stock_id AS plot_id,
+    public.materialized_phenoview.seedlot_id
+   FROM public.materialized_phenoview
+   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plot'))
+  GROUP BY 1,2
 WITH DATA;
-CREATE UNIQUE INDEX plotsXseedlots_idx ON public.plotsXseedlots(plot_id, trait_id) WITH (fillfactor=100);
+CREATE UNIQUE INDEX plotsXseedlots_idx ON public.plotsXseedlots(plot_id, seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW plotsXseedlots OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.seedlotsXtrait_components AS
-SELECT
+SELECT public.materialized_phenoview.seedlot_id,
+trait_component.cvterm_id AS trait_component_id
+FROM public.materialized_phenoview
+JOIN cvterm trait ON(materialized_phenoview.trait_id = trait.cvterm_id)
+JOIN cvterm_relationship ON(trait.cvterm_id = cvterm_relationship.object_id AND cvterm_relationship.type_id = (SELECT cvterm_id from cvterm where name = 'contains'))
+JOIN cvterm trait_component ON(cvterm_relationship.subject_id = trait_component.cvterm_id)
+GROUP BY 1,2
 WITH DATA;
-CREATE UNIQUE INDEX seedlotsXtrait_components_idx ON public.seedlotsXtrait_components(trait_id, trial_id) WITH (fillfactor=100);
+CREATE UNIQUE INDEX seedlotsXtrait_components_idx ON public.seedlotsXtrait_components(seedlot_id, trait_component_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW seedlotsXtrait_components OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.seedlotsXtraits AS
-SELECT
+SELECT public.materialized_phenoview.seedlot_id,
+    public.materialized_phenoview.trait_id
+   FROM public.materialized_phenoview
+  GROUP BY 1,2
 WITH DATA;
-CREATE UNIQUE INDEX seedlotsXtraits_idx ON public.seedlotsXtraits(trait_id, trial_id) WITH (fillfactor=100);
+CREATE UNIQUE INDEX seedlotsXtraits_idx ON public.seedlotsXtraits(seedlot_id, trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW seedlotsXtraits OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.seedlotsXtrials AS
-SELECT
+SELECT public.materialized_phenoview.seedlot_id,
+    public.materialized_phenoview.trial_id
+   FROM public.materialized_phenoview
+  GROUP BY 1,2
 WITH DATA;
-CREATE UNIQUE INDEX seedlotsXtrials_idx ON public.seedlotsXtrials(trait_id, trial_id) WITH (fillfactor=100);
+CREATE UNIQUE INDEX seedlotsXtrials_idx ON public.seedlotsXtrials(seedlot_id, trial_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW seedlotsXtrials OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.seedlotsXtrial_designs AS
-SELECT
+SELECT public.materialized_phenoview.seedlot_id,
+    trialdesign.value AS trial_design_id
+   FROM public.materialized_phenoview
+   JOIN public.projectprop trialdesign ON materialized_phenoview.trial_id = trialdesign.project_id AND trialdesign.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'design' )
+  GROUP BY 1,2
 WITH DATA;
-CREATE UNIQUE INDEX seedlotsXtrial_designs_idx ON public.seedlotsXtrial_designs(trait_id, trial_design_id) WITH (fillfactor=100);
+CREATE UNIQUE INDEX seedlotsXtrial_designs_idx ON public.seedlotsXtrial_designs(seedlot_id, trial_design_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW seedlotsXtrial_designs OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.seedlotsXtrial_types AS
-SELECT
+SELECT public.materialized_phenoview.seedlot_id,
+    trialterm.cvterm_id AS trial_type_id
+   FROM public.materialized_phenoview
+   JOIN projectprop trialprop ON materialized_phenoview.trial_id = trialprop.project_id AND trialprop.type_id IN (SELECT cvterm_id from cvterm JOIN cv USING(cv_id) WHERE cv.name = 'project_type' )
+   JOIN cvterm trialterm ON trialprop.type_id = trialterm.cvterm_id
+  GROUP BY 1,2
 WITH DATA;
-CREATE UNIQUE INDEX seedlotsXtrial_types_idx ON public.seedlotsXtrial_types(trait_id, trial_type_id) WITH (fillfactor=100);
+CREATE UNIQUE INDEX seedlotsXtrial_types_idx ON public.seedlotsXtrial_types(seedlot_id, trial_type_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW seedlotsXtrial_types OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.seedlotsXyears AS
-SELECT
+SELECT public.materialized_phenoview.seedlot_id,
+    public.materialized_phenoview.year_id
+   FROM public.materialized_phenoview
+  GROUP BY 1,2
 WITH DATA;
-CREATE UNIQUE INDEX seedlotsXyears_idx ON public.seedlotsXyears(trait_id, year_id) WITH (fillfactor=100);
+CREATE UNIQUE INDEX seedlotsXyears_idx ON public.seedlotsXyears(seedlot_id, year_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW seedlotsXyears OWNER TO web_usr;
 
 
@@ -279,99 +329,99 @@ UPDATE public.matviews SET currently_refreshing=FALSE, last_refresh=CURRENT_TIME
 ALTER FUNCTION public.refresh_materialized_views() OWNER TO web_usr;
 
 CREATE OR REPLACE FUNCTION public.refresh_materialized_views_concurrently() RETURNS VOID AS '
-REFRESH MATERIALIZED VIEW public.materialized_phenoview;
-REFRESH MATERIALIZED VIEW public.materialized_genoview;
-REFRESH MATERIALIZED VIEW public.accessions;
-REFRESH MATERIALIZED VIEW public.breeding_programs;
-REFRESH MATERIALIZED VIEW public.genotyping_protocols;
-REFRESH MATERIALIZED VIEW public.locations;
-REFRESH MATERIALIZED VIEW public.plants;
-REFRESH MATERIALIZED VIEW public.plots;
-REFRESH MATERIALIZED VIEW public.seedlots;
-REFRESH MATERIALIZED VIEW public.trait_components;
-REFRESH MATERIALIZED VIEW public.traits;
-REFRESH MATERIALIZED VIEW public.trial_designs;
-REFRESH MATERIALIZED VIEW public.trial_types;
-REFRESH MATERIALIZED VIEW public.trials;
-REFRESH MATERIALIZED VIEW public.years;
-REFRESH MATERIALIZED VIEW public.accessionsXbreeding_programs;
-REFRESH MATERIALIZED VIEW public.accessionsXlocations;
-REFRESH MATERIALIZED VIEW public.accessionsXgenotyping_protocols;
-REFRESH MATERIALIZED VIEW public.accessionsXplants;
-REFRESH MATERIALIZED VIEW public.accessionsXplots;
-REFRESH MATERIALIZED VIEW public.accessionsXseedlots;
-REFRESH MATERIALIZED VIEW public.accessionsXtrait_components;
-REFRESH MATERIALIZED VIEW public.accessionsXtraits;
-REFRESH MATERIALIZED VIEW public.accessionsXtrial_designs;
-REFRESH MATERIALIZED VIEW public.accessionsXtrial_types;
-REFRESH MATERIALIZED VIEW public.accessionsXtrials;
-REFRESH MATERIALIZED VIEW public.accessionsXyears;
-REFRESH MATERIALIZED VIEW public.breeding_programsXlocations;
-REFRESH MATERIALIZED VIEW public.breeding_programsXgenotyping_protocols;
-REFRESH MATERIALIZED VIEW public.breeding_programsXplants;
-REFRESH MATERIALIZED VIEW public.breeding_programsXplots;
-REFRESH MATERIALIZED VIEW public.breeding_programsXseedlots;
-REFRESH MATERIALIZED VIEW public.breeding_programsXtrait_components;
-REFRESH MATERIALIZED VIEW public.breeding_programsXtraits;
-REFRESH MATERIALIZED VIEW public.breeding_programsXtrial_designs;
-REFRESH MATERIALIZED VIEW public.breeding_programsXtrial_types;
-REFRESH MATERIALIZED VIEW public.breeding_programsXtrials;
-REFRESH MATERIALIZED VIEW public.breeding_programsXyears;
-REFRESH MATERIALIZED VIEW public.genotyping_protocolsXlocations;
-REFRESH MATERIALIZED VIEW public.genotyping_protocolsXplants;
-REFRESH MATERIALIZED VIEW public.genotyping_protocolsXplots;
-REFRESH MATERIALIZED VIEW public.genotyping_protocolsXseedlots;
-REFRESH MATERIALIZED VIEW public.genotyping_protocolsXtrait_components;
-REFRESH MATERIALIZED VIEW public.genotyping_protocolsXtraits;
-REFRESH MATERIALIZED VIEW public.genotyping_protocolsXtrial_designs;
-REFRESH MATERIALIZED VIEW public.genotyping_protocolsXtrial_types;
-REFRESH MATERIALIZED VIEW public.genotyping_protocolsXtrials;
-REFRESH MATERIALIZED VIEW public.genotyping_protocolsXyears;
-REFRESH MATERIALIZED VIEW public.locationsXplants;
-REFRESH MATERIALIZED VIEW public.locationsXplots;
-REFRESH MATERIALIZED VIEW public.locationsXseedlots;
-REFRESH MATERIALIZED VIEW public.locationsXtrait_components;
-REFRESH MATERIALIZED VIEW public.locationsXtraits;
-REFRESH MATERIALIZED VIEW public.locationsXtrial_designs;
-REFRESH MATERIALIZED VIEW public.locationsXtrial_types;
-REFRESH MATERIALIZED VIEW public.locationsXtrials;
-REFRESH MATERIALIZED VIEW public.locationsXyears;
-REFRESH MATERIALIZED VIEW public.plantsXplots;
-REFRESH MATERIALIZED VIEW public.plantsXseedlots;
-REFRESH MATERIALIZED VIEW public.plantsXtrait_components;
-REFRESH MATERIALIZED VIEW public.plantsXtraits;
-REFRESH MATERIALIZED VIEW public.plantsXtrial_designs;
-REFRESH MATERIALIZED VIEW public.plantsXtrial_types;
-REFRESH MATERIALIZED VIEW public.plantsXtrials;
-REFRESH MATERIALIZED VIEW public.plantsXyears;
-REFRESH MATERIALIZED VIEW public.plotsXseedlots;
-REFRESH MATERIALIZED VIEW public.plotsXtrait_components;
-REFRESH MATERIALIZED VIEW public.plotsXtraits;
-REFRESH MATERIALIZED VIEW public.plotsXtrial_designs;
-REFRESH MATERIALIZED VIEW public.plotsXtrial_types;
-REFRESH MATERIALIZED VIEW public.plotsXtrials;
-REFRESH MATERIALIZED VIEW public.plotsXyears;
-REFRESH MATERIALIZED VIEW public.seedlotsXtrait_components;s
-REFRESH MATERIALIZED VIEW public.seedlotsXtraits;
-REFRESH MATERIALIZED VIEW public.seedlotsXtrial_designs;
-REFRESH MATERIALIZED VIEW public.seedlotsXtrial_types;
-REFRESH MATERIALIZED VIEW public.seedlotsXtrials;
-REFRESH MATERIALIZED VIEW public.seedlotsXyears;
-REFRESH MATERIALIZED VIEW public.trait_componentsXtraits;
-REFRESH MATERIALIZED VIEW public.trait_componentsXtrial_designs;
-REFRESH MATERIALIZED VIEW public.trait_componentsXtrial_types;
-REFRESH MATERIALIZED VIEW public.trait_componentsXtrials;
-REFRESH MATERIALIZED VIEW public.trait_componentsXyears;
-REFRESH MATERIALIZED VIEW public.traitsXtrial_designs;
-REFRESH MATERIALIZED VIEW public.traitsXtrial_types;
-REFRESH MATERIALIZED VIEW public.traitsXtrials;
-REFRESH MATERIALIZED VIEW public.traitsXyears;
-REFRESH MATERIALIZED VIEW public.trial_designsXtrial_types;
-REFRESH MATERIALIZED VIEW public.trial_designsXtrials;
-REFRESH MATERIALIZED VIEW public.trial_designsXyears;
-REFRESH MATERIALIZED VIEW public.trial_typesXtrials;
-REFRESH MATERIALIZED VIEW public.trial_typesXyears;
-REFRESH MATERIALIZED VIEW public.trialsXyears;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.materialized_phenoview;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.materialized_genoview;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessions;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programs;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocols;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.locations;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plants;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.seedlots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.trait_components;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.traits;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.trial_designs;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.trial_types;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.trials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.years;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXbreeding_programs;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXlocations;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXgenotyping_protocols;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXplants;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXplots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXseedlots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXtrait_components;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXtraits;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXtrial_designs;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXtrial_types;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.accessionsXyears;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXlocations;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXgenotyping_protocols;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXplants;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXplots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXseedlots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXtrait_components;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXtraits;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXtrial_designs;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXtrial_types;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.breeding_programsXyears;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXlocations;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXplants;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXplots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXseedlots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXtrait_components;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXtraits;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXtrial_designs;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXtrial_types;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.genotyping_protocolsXyears;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXplants;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXplots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXseedlots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXtrait_components;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXtraits;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXtrial_designs;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXtrial_types;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.locationsXyears;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plantsXplots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plantsXseedlots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plantsXtrait_components;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plantsXtraits;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plantsXtrial_designs;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plantsXtrial_types;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plantsXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plantsXyears;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXseedlots;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXtrait_components;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXtraits;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXtrial_designs;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXtrial_types;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.plotsXyears;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.seedlotsXtrait_components;s
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.seedlotsXtraits;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.seedlotsXtrial_designs;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.seedlotsXtrial_types;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.seedlotsXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.seedlotsXyears;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.trait_componentsXtraits;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.trait_componentsXtrial_designs;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.trait_componentsXtrial_types;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.trait_componentsXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.trait_componentsXyears;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.traitsXtrial_designs;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.traitsXtrial_types;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.traitsXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.traitsXyears;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.trial_designsXtrial_types;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.trial_designsXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.trial_designsXyears;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.trial_typesXtrials;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.trial_typesXyears;
+REFRESH MATERIALIZED VIEW CONCURRENTLY public.trialsXyears;
 UPDATE public.matviews SET currently_refreshing=FALSE, last_refresh=CURRENT_TIMESTAMP;'
     LANGUAGE SQL;
 
