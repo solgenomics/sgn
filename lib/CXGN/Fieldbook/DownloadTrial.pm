@@ -142,6 +142,7 @@ sub download {
 
     my %selected_cols = %{$self->selected_columns};
     my $selected_traits = $self->selected_trait_ids();
+    my @selected_trait_names = $self->selected_trait_names() ? @{$self->selected_trait_names} : ();
     my $summary = CXGN::Phenotypes::Summary->new({
         bcs_schema=>$schema,
         trait_list=>$selected_traits,
@@ -185,7 +186,7 @@ sub download {
         }
     }
 
-    foreach ($self->selected_trait_names){
+    foreach (@selected_trait_names){
         $ws->write(0, $current_col_num, $_);
         $current_col_num++;
     }
@@ -229,7 +230,7 @@ sub download {
                 $ws->write($row_num, $current_col_num, 1);
                 $current_col_num++;
             }
-            foreach my $t (@{$self->selected_trait_names}){
+            foreach my $t (@selected_trait_names){
                 my $perf = $fieldbook_trait_hash{$t}->{$design_info{"accession_id"}};
                 if($perf){
                     $ws->write($row_num,$current_col_num,"Avg: ".$perf->[3]." Min: ".$perf->[5]." Max: ".$perf->[4]." Count: ".$perf->[2]." StdDev: ".$perf->[6]);
@@ -273,7 +274,7 @@ sub download {
                     $ws->write($row_num,$current_col_num,1);
                     $current_col_num++;
                 }
-                foreach my $t ($self->selected_trait_names){
+                foreach my $t (@selected_trait_names){
                     my $perf = $fieldbook_trait_hash{$t}->{$design_info{"accession_id"}};
                     if ($perf){
                         $ws->write($row_num,$current_col_num,"Avg: ".$perf->[3]." Min: ".$perf->[5]." Max: ".$perf->[4]." Count: ".$perf->[2]." StdDev: ".$perf->[6]);
@@ -319,7 +320,7 @@ sub download {
                     $ws->write($row_num,$current_col_num,1);
                     $current_col_num++;
                 }
-                foreach my $t ($self->selected_trait_names){
+                foreach my $t (@selected_trait_names){
                     my $perf = $fieldbook_trait_hash{$t}->{$design_info{"accession_id"}};
                     if ($perf){
                         $ws->write($row_num,$current_col_num,"Avg: ".$perf->[3]." Min: ".$perf->[5]." Max: ".$perf->[4]." Count: ".$perf->[2]." StdDev: ".$perf->[6]);
@@ -372,7 +373,7 @@ sub download {
                         $ws->write($row_num,$current_col_num,1);
                         $current_col_num++;
                     }
-                    foreach my $t ($self->selected_trait_names){
+                    foreach my $t (@selected_trait_names){
                         my $perf = $fieldbook_trait_hash{$t}->{$design_info{"accession_id"}};
                         if ($perf){
                             $ws->write($row_num,$current_col_num,"Avg: ".$perf->[3]." Min: ".$perf->[5]." Max: ".$perf->[4]." Count: ".$perf->[2]." StdDev: ".$perf->[6]);

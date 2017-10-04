@@ -178,7 +178,9 @@ my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
     user_id => 41,
     user_name => "janedoe",
     data_level => 'plots',
-    selected_columns=> {'plot_name'=>1,'block_number'=>1,'plot_number'=>1,'rep_number'=>1,'row_number'=>1,'col_number'=>1,'accession_name'=>1,'is_a_control'=>1,'synonyms'=>1,'trial_name'=>1,'location_name'=>1,'year'=>1,'pedigree'=>1,'tier'=>1}
+    selected_columns=> {'plot_name'=>1,'block_number'=>1,'plot_number'=>1,'rep_number'=>1,'row_number'=>1,'col_number'=>1,'accession_name'=>1,'is_a_control'=>1,'synonyms'=>1,'trial_name'=>1,'location_name'=>1,'year'=>1,'pedigree'=>1,'tier'=>1},
+    selected_trait_ids=>[70666,70668],
+    selected_trait_names=>['fresh root weight|CO_334:0000012','harvest index variable|CO_334:0000015']
 });
 
 my $create_fieldbook_return = $create_fieldbook->download();
@@ -192,7 +194,7 @@ is(@contents->[0]->[0]->{'sheets'}, '1', "check that type of file is correct");
 
 my $columns = @contents->[0]->[1]->{'cell'};
 #print STDERR Dumper scalar(@$columns);
-ok(scalar(@$columns) == 15, "check number of col in created file.");
+ok(scalar(@$columns) == 17, "check number of col in created file.");
 
 #print STDERR Dumper $columns;
 is_deeply ($columns,[
@@ -417,6 +419,14 @@ is_deeply ($columns,[
             '/',
             '/',
             '/'
+          ],
+          [
+            undef,
+            'fresh root weight|CO_334:0000012'
+          ],
+          [
+            undef,
+            'harvest index variable|CO_334:0000015'
           ]
           ], "check selectable fieldbook cols");
 
