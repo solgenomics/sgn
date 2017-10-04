@@ -63,6 +63,7 @@ has 'accession_list' => (
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema;
+    print STDERR "Phenotype Summary Search ".localtime()."\n";
 
     my $accesion_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();

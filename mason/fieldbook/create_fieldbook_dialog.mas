@@ -249,7 +249,10 @@ function open_create_fieldbook_dialog() {
         },
         success: function (response) {
             jQuery("#working_modal").modal("hide");
-            if (response.error_string) {
+            if (response.error){
+                alert(response.error);
+            }
+            else if (response.error_string) {
                 alert(response.error_string);
             } else {
                 jQuery('#tablet_field_layout_get_file').html('<a href="/fieldbook/trial_download/'+response.file_id+'">'+response.file+'</a>')

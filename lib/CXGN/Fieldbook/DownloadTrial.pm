@@ -110,7 +110,7 @@ sub download {
     
     my $ws = $wb->add_worksheet();
     my $trial_layout;
-    print STDERR "\n\nTrial id: ($trial_id)\n\n";
+    print STDERR "Fieldbook for Trial id: ($trial_id) ".localtime()."\n";
     try {
         $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
     };
@@ -141,14 +141,17 @@ sub download {
     my $trial_name =  $trial_layout->get_trial_name();
 
     my %selected_cols = %{$self->selected_columns};
-    my $selected_traits = $self->selected_trait_ids();
+    my @selected_traits = $self->selected_trait_ids() ? @{$self->selected_trait_ids} : ();
     my @selected_trait_names = $self->selected_trait_names() ? @{$self->selected_trait_names} : ();
-    my $summary = CXGN::Phenotypes::Summary->new({
-        bcs_schema=>$schema,
-        trait_list=>$selected_traits,
-        accession_list=>\@accession_ids
-    });
-    my $summary_values = $summary->search();
+    my $summary_values = [];
+    if (scalar(@selected_traits)>0){
+        my $summary = CXGN::Phenotypes::Summary->new({
+            bcs_schema=>$schema,
+            trait_list=>\@selected_traits,
+            accession_list=>\@accession_ids
+        });
+        $summary_values = $summary->search();
+    }
     my %fieldbook_trait_hash;
     foreach (@$summary_values){
         $fieldbook_trait_hash{$_->[0]}->{$_->[8]} = $_;
@@ -456,6 +459,7 @@ sub download {
     unlink $tempfile;
     
     my $result = $file_row->file_id;
+    print STDERR "FIeldbook file generated $file_destination ".localtime()."\n";
     return {result => $result, file => $file_destination, file_id=>$file_row->file_id() };
 }
 
