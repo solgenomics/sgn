@@ -2,10 +2,28 @@ package CXGN::Phenotypes::Summary;
 
 =head1 NAME
 
-CXGN::Phenotypes::Summary - an object to handle searching phenotypes across database. returns summary statistics by accession.
+CXGN::Phenotypes::Summary - an object to handle searching phenotypes across database. returns summary statistics by accession. returns the performace of an accession across all recorded observations for a trait (whether plot, plant, or subplot). can provide an arrayref of trial_ids, accession_ids, or trait_ids to filter down the search results.
 
 =head1 USAGE
 
+my $summary_obj = CXGN::Phenotypes::Summary->new({
+    bcs_schema => $schema,
+    trial_list => [1,2,3],
+    accession_list => [10,11,12],
+    trait_list => [90]
+});
+my $summary_info = $summary_obj->search();
+
+$summary_info is an arrayref of arrayref where each entry is:
+[trait_name, trait_id, num_phenotypes_count, phenotypes_average, phenotypes_max, phenotypes_min, phenotypes_stddev, accession_name, accession_id]
+
+trial_list, accession_list, and trait_list are optional, so you can do something like this to get the performace of a single accession for all traits:
+
+my $summary_obj = CXGN::Phenotypes::Summary->new({
+    bcs_schema => $schema,
+    accession_list => [10]
+});
+my $summary_info = $summary_obj->search();
 
 =head1 DESCRIPTION
 
