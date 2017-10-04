@@ -1,4 +1,5 @@
 
+var CXGN;
 if (!CXGN) CXGN = function () { };
 
 CXGN.Dataset = function () {
@@ -38,11 +39,12 @@ CXGN.Dataset.prototype = {
 		    alert(response.error);
 		}
 		else {
+		    alert(JSON.stringify(response));
 		    dataset = response.dataset;
 		}
 	    },
 	    'error': function(response) {
-		alert('An error occurred. The specified dataset may not exist. Please try again.');
+		alert('An error occurred. The specified dataset may not exist. Please try again.'+JSON.stringify(response));
 	    }
 	});
 	return dataset;
@@ -50,7 +52,23 @@ CXGN.Dataset.prototype = {
     },
 
     deleteDataset: function(id) {
-
+      	var dataset;
+	jQuery.ajax( {
+	    'url' : '/ajax/dataset/delete/'+id,
+	    'async': false,
+	    'success': function(response) {
+		if (response.error) {
+		    alert('An error occurred during dataset deletion. '+response.error);
+		}
+		else {
+		    alert('The dataset has been deleted.');
+		}
+	    },
+	    'error': function(response) {
+		alert('An error occurred. The specified dataset may not exist. Please try again.'+JSON.stringify(response));
+		
+	    }
+	});
     },
 
     datasetSelect: function(div_name, empty_element, refresh) {
@@ -101,18 +119,26 @@ CXGN.Dataset.prototype = {
     renderItems: function(div, dataset_id) {
 	var dataset = this.getDataset(dataset_id);
 
-	var html = '';
+	var html = "This dataset contains the following:<br />";
+
+	var zero_count = 0;
 	for(var key in dataset.categories) {
 	    if (dataset.categories.hasOwnProperty(key)) {
 		if (dataset.categories[key]===null || dataset.categories[key].length===0) {
-		    // do nothing?
+		    zero_count++;
 		}
-		else {
-		    html += '<b>'+key+'</b>'+JSON.stringify(dataset.categories[key])+"<br />";
+		else {		   
+		    html += dataset.categories[key].length+" elements of type <b>"+key+"</b><br />";
 		}
 	    }
 	}
-	jQuery('#'+div+'_div').html(html);
+
+	if (zero_count === Object.keys(dataset.categories).length) { 
+	    jQuery('#'+div).html("This dataset does not contain any selections.");
+	}
+	else { 
+	    jQuery('#'+div).html(html);
+	}
     }
 }
 
@@ -130,9 +156,9 @@ function refreshDatasetSelect(div_name, empty_element) {
 }
 
 function setUpDatasets() {
-    jQuery("button[name='datasets_link']").click(
-	function() { show_datasets(); }
-    );
+//    jQuery("button[name='datasets_link']").click(
+//	function() { show_datasets(); }
+//    );
 }
 
 function show_datasets() {
@@ -168,7 +194,11 @@ function showDatasetItems(div, dataset_id) {
     working_modal_show();
 
     var d = new CXGN.Dataset();
+
+    jQuery('#'+div).html('hello!');
+    
     d.renderItems(div, dataset_id);
+
     jQuery('#'+div).modal("show");
 
     working_modal_hide();

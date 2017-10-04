@@ -164,6 +164,11 @@ window.onload = function initialize() {
 	alert(JSON.stringify(category_order));
 	var params =  "accessions="+JSON.stringify(accessions)+"&trials="+JSON.stringify(trials)+"&plots="+JSON.stringify(plots)+"&years="+JSON.stringify(years)+"&locations="+JSON.stringify(locations)+"&traits="+JSON.stringify(traits)+"&breeding_programs="+JSON.stringify(breeding_programs)+"&genotyping_protocols="+JSON.stringify(genotyping_protocols)+"&trial_types="+JSON.stringify(trial_types)+"&trial_designs="+JSON.stringify(trial_designs)+"&plants="+JSON.stringify(plants)+"&name="+name+"&description="+description+"&category_order="+JSON.stringify(category_order);
 
+	if (name === '' || name === undefined) { 
+	    alert('Please enter a name for the selection.');
+	    return;
+	}
+
 	jQuery.ajax( {
 	    'url': '/ajax/dataset/save?'+params,
             'method': 'POST',
@@ -174,6 +179,7 @@ window.onload = function initialize() {
 		else {
 	            alert("Successfully stored the dataset!");
 		    jQuery('#save_wizard_dataset_dialog').modal("hide");
+		    get_select_box('datasets', 'dataset_manage_select');
 		}
 
 	    },
@@ -728,9 +734,11 @@ function replay_dataset_info(dataset_id, section_number) {
     if (!dataset_id) { return; }
     var d = new CXGN.Dataset();
     var dataset = d.getDataset(dataset_id);
+    alert(JSON.stringify(dataset));
     var category_order = dataset.category_order;
     if (!category_order) {
-	     category_order = dataset.categories.keys();
+	alert(JSON.stringify(dataset.categories));
+	category_order = Object.keys(dataset.categories);
     }
     var i = section_number - 1;
     var category = category_order[i];

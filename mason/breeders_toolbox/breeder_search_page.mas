@@ -18,7 +18,7 @@ $dataset_id => undef
 
 </&>
 
-<&| /page/info_section.mas, title=>"Store Dataset for selected data" &>
+<&| /page/info_section.mas, title=>"Save current selection" &>
 
   <& /breeders_toolbox/breeder_search_dataset.mas &>
 
