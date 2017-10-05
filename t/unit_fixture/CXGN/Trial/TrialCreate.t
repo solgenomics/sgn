@@ -96,7 +96,9 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_name => "new_test_trial_name",
     design_type => "RCBD",
 						    }), "create trial object");
-ok($trial_create->save_trial(), "save trial");
+
+my $save = $trial_create->save_trial();
+ok($save->{'trial_id'}, "save trial");
 
 ok(my $trial_lookup = CXGN::Trial::TrialLookup->new({
     schema => $chado_schema,
@@ -147,7 +149,9 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     trial_name => "new_test_trial_name_single",
     design_type => "RCBD",
 						    }), "create trial object");
-ok($trial_create->save_trial(), "save trial");
+
+my $save = $trial_create->save_trial();
+ok($save->{'trial_id'}, "save trial");
 
 ok(my $trial_lookup = CXGN::Trial::TrialLookup->new({
     schema => $chado_schema,
@@ -198,8 +202,9 @@ ok(my $genotyping_trial_create = CXGN::Trial::TrialCreate->new({
     trial_name => "test_genotyping_trial_name",
     design_type => "genotyping_plate",
 							       }), "create genotyping trial");
-
-ok($genotyping_trial_create->save_trial(), "save genotyping trial");
+                                   
+my $save = $genotyping_trial_create->save_trial();
+ok($save->{'trial_id'}, "save genotyping trial");
 
 ok(my $genotyping_trial_lookup = CXGN::Trial::TrialLookup->new({
     schema => $chado_schema,

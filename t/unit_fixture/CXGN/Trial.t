@@ -341,7 +341,7 @@ my $new_trial = CXGN::Trial::TrialCreate->new(
 	design => $trial_design,
     });
 
-my $message = $new_trial->save_trial();
+my $save = $new_trial->save_trial();
 
 my $after_design_creation_count = $stock_count_rs->count();
 

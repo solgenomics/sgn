@@ -100,7 +100,9 @@ ok(my $trial_create = CXGN::Trial::TrialCreate->new({
     design_type => "RCBD",
     plot_layout_format => "serpentine",
 						    }), "create trial object");
-ok($trial_create->save_trial(), "save trial");
+                            
+my $save = $trial_create->save_trial();
+ok($save->{'trial_id'}, "save trial");
 
 ok(my $trial_lookup = CXGN::Trial::TrialLookup->new({
     schema => $chado_schema,
