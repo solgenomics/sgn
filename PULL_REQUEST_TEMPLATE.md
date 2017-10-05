@@ -1,9 +1,9 @@
 
-Description <!--- Describe your changes in detail -->
+Description <!-- Describe your changes in detail -->
 -----------------------------------------------------
 
 
-<!--- If there are relevant issues, link them here: -->
+<!-- If there are relevant issues, link them here: -->
 
 
 Checklist <!-- Put an `x` in all the boxes that apply -->
