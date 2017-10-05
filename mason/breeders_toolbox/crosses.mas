@@ -150,21 +150,6 @@ $user_id => undef
         </select>
             </div>
     </div>
-    <!--
-    <div class="form-group">
-            <label class="col-sm-2 control-label">Field Trial: </label>
-            <div class="col-sm-10">
-        <select class="form-control" id="field_trial" name="field_trial">
-        <%perl>
-    foreach my $all_trial (@all_trials) {
-      print "<option value=".'"'.@$all_trial[0].'"'.">".@$all_trial[1]."</option>";
-    }
-        </%perl>
-        </select>
-            </div>
-    </div>
-    -->
-
 	  <div class="form-group">
       	      <label class="col-sm-2 control-label">Cross Name: </label>
       	      <div class="col-sm-10">
@@ -297,17 +282,25 @@ $user_id => undef
           </select>
               </div>
       </div>
-      <div class="form-group" id="get_plots" style="display:none">
-              <label class="col-sm-2 control-label">Plot Name: </label>
+      <div class="form-group">
+              <label class="col-sm-2 control-label">Female Plot: </label>
               <div class="col-sm-10">
-          <select class="form-control" id="plots" name="plots">
-          <option value="">Select Plot</option>
-
+          <select class="form-control" id="female_plot" name="female_plot">
+          <option value="">Choose trial first</option>
           </select>
           </select>
               </div>
       </div>
-
+      <div class="form-group">
+              <label class="col-sm-2 control-label">Male Plot: </label>
+              <div class="col-sm-10">
+          <select class="form-control" id="male_plot" name="male_plot">
+          <option value="">Choose trial first</option>
+          </select>
+          </select>
+              </div>
+      </div>
+      <!--
       <tr>
         <td>
         <div class="form-group">
@@ -336,7 +329,7 @@ $user_id => undef
             </div>
             </td>
             </tr>
-        <!--
+        -->
 	      <tr>
 	        <td>
 	    	  <div class="form-group">
@@ -427,7 +420,6 @@ $user_id => undef
 	    	  </div>
 	    	</td>
 	      </tr>
-      -->
 	    </table>
 	  </form>
         </div>
@@ -805,7 +797,8 @@ jQuery(document).ready(function($) {
       data:{'field_trial':$('#field_trial').val()},
       success: function(response){
       console.log(response);
-      var html = '<select id = "plots" >';
+      var html = '<select id = "female_plot" >';
+      var html = '<select id = "male_plot" >';
       for (var i=0; i<response.data.length; i++) {
       html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][1] + "</option>";
       }
@@ -817,7 +810,10 @@ jQuery(document).ready(function($) {
         return;
     }
 
-    jQuery('#plots').html(html);
+    jQuery('#female_plot').html(html);
+
+    jQuery('#male_plot').html(html);
+
     },
     error:function(response){
     alert("An error occurred");

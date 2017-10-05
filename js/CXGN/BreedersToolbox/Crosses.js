@@ -127,9 +127,9 @@ jQuery(document).ready(function($) {
             $("#paternal_accessions").toggle($("#cross_type").val() == "multicross");
         });
 
-        $("#field_trial").change(function() {
-            $("#get_plots").toggle($("#field_trial").val());
-        });
+    //    $("#field_trial").change(function() {
+    //        $("#get_plots").toggle($("#field_trial").val());
+    //    });
 
         $('input[id*="_parent"]').autocomplete({
             source: '/ajax/stock/accession_autocomplete'
@@ -200,7 +200,8 @@ jQuery(document).ready(function($) {
 
         var visibleToRole = $("#visible_to_role").val();
         var location = $("#location").val();
-        var plot = $("#plots").val();
+        var female_plot = $("#female_plot").val();
+        var male_plot = $("#male_plot").val();
 
     //    var folder_name = $("#add_cross_folder_name").val();
     //    var folder_id;
@@ -210,7 +211,7 @@ jQuery(document).ready(function($) {
     //    else {
     //        folder_id = $("#add_cross_folder_id").val();
     //    }
-        add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location, plot);
+        add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location, female_plot, male_plot);
 
     });
 
@@ -282,7 +283,7 @@ jQuery(document).ready(function($) {
 
 
 
-    function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location, plot) {
+    function add_cross(crossType, crossName, crossing_trial_id, visibleToRole, location, female_plot, male_plot) {
 
         var progenyNumber = $("#progeny_number").val();
         var flowerNumber = $("#flower_number").val();
@@ -364,7 +365,8 @@ jQuery(document).ready(function($) {
               'visible_to_role': visibleToRole,
               'location': location,
               'crossing_trial_id': crossing_trial_id,
-              'plot': plot,
+              'female_plot': female_plot,
+              'male_plot': male_plot,
             },
             beforeSend: function() {
                 jQuery("#create_cross").modal("hide");

@@ -27,7 +27,6 @@ use Try::Tiny;
 use Bio::GeneticRelationships::Pedigree;
 use Bio::GeneticRelationships::Individual;
 use CXGN::Stock::StockLookup;
-#use CXGN::Location::LocationLookup;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial;
 use CXGN::Trial::Folder;
@@ -55,19 +54,10 @@ has 'metadata_schema' => (
 has 'dbh' => (is  => 'rw',predicate => 'has_dbh', required => 1,);
 has 'crosses' => (isa =>'ArrayRef[Pedigree]', is => 'rw', predicate => 'has_crosses', required => 1,);
 has 'location' => (isa =>'Str', is => 'rw', predicate => 'has_location', required => 1,);
-#has 'program' => (isa =>'Str', is => 'rw', predicate => 'has_program', required =>1,);
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
-#has 'parent_folder_id' => (isa => 'Str', is => 'rw', predicate => 'has_parent_folder_id', required => 0,);
 has 'crossing_trial_id' =>(isa =>'Int', is => 'rw', predicate => 'has_crossing_trial_id', required => 1,);
-has 'plot' => (isa => 'Int|Undef', is => 'rw', predicate => 'has_plot',);
-
-#sub get_crossing_trial_id {
-#  my $self = shift;
-#  my $crossing_trial_ref = $self->get_chado_schema->resultset('Project::Project')->find({name=>$self->get_crossing_trial});
-#  my $crossing_trial_id = $crossing_trial_ref->project_id();
-  #print STDERR "get_crossing_trial_id returning $crossing_trial_id";
-#  return $crossing_trial_id;
-#}
+has 'female_plot' => (isa => 'Int|Undef', is => 'rw', predicate => 'has_female_parentplot',);
+has 'male_plot' => (isa => 'Int|Undef', is => 'rw', predicate => 'has_male_plot',);
 
 sub add_crosses {
   my $self = shift;
@@ -76,18 +66,14 @@ sub add_crosses {
   my @crosses;
   my $location_lookup;
   my $geolocation;
-  #my $program;
-  #my $program_lookup;
   my $transaction_error;
   my @added_stock_ids;
   my $crossing_trial_id;
-  my $plot;
-
-	#my $parent_folder_id;
+  my $female_plot;
+  my $male_plot;
 
   #lookup user by name
   my $owner_name = $self->get_owner_name();
-  #$parent_folder_id = $self->get_parent_folder_id() || 0;
   my $dbh = $self->get_dbh();
   my $owner_sp_person_id = CXGN::People::Person->get_person_by_username($dbh, $owner_name); #add person id as an option.
 
@@ -112,18 +98,17 @@ sub add_crosses {
       #get cvterm for stock type cross
       my $cross_stock_type_cvterm  =  SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'cross', 'stock_type');
 
-      #get cvterm for plot_of
-      my $plot_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot_of', 'stock_relationship');
+      #get cvterm for female_plot_of
+      my $female_plot_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'female_plot_of', 'stock_relationship');
+
+      #get cvterm for male_plot_of
+      my $male_plot_of_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'male_plot_of', 'stock_relationship');
 
       print STDERR "\n\ncvterm from addcrosses: ".$cross_stock_type_cvterm->cvterm_id()."\n\n";
 
       #lookup location by name
       $location_lookup = CXGN::Location::LocationLookup->new({ schema => $chado_schema, location_name => $self->get_location });
       $geolocation = $location_lookup->get_geolocation();
-
-      #lookup program by name
-      #$program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema});
-      #$program = $program_lookup->get_breeding_program_by_name($self->get_program());
 
       @crosses = @{$self->get_crosses()};
 
@@ -136,11 +121,11 @@ sub add_crosses {
 	  my $female_parent;
 	  my $male_parent;
 	  my $population_stock;
-	  #my $project;
 	  my $cross_type = $pedigree->get_cross_type();
 	  my $cross_name = $pedigree->get_name();
     my $crossing_trial_id;
-    my $plot;
+    my $female_plot;
+    my $male_plot;
 
 	  if ($pedigree->has_female_parent()) {
 	      $female_parent_name = $pedigree->get_female_parent()->get_name();
@@ -159,74 +144,12 @@ sub add_crosses {
 	      $organism_id = $male_parent->organism_id();
 	  }
 
-	  #create cross project
-	  #$project = $chado_schema->resultset('Project::Project')
-	  #    ->create({
-		#  name => $cross_name,
-		#  description => $cross_name,
-		#       });
-
-	  #add error if cross name exists
-
-		#add cross to folder if one was specified
-		#if ($parent_folder_id) {
-		#	my $folder = CXGN::Trial::Folder->new(
-		#	{
-		#		bcs_schema => $chado_schema,
-		#		folder_id => $project->project_id(),
-		#	});
-
-		#	$folder->associate_parent($parent_folder_id);
-		#}
-
-	  #set projectprop so that projects corresponding to crosses can be identified
-	  #my $prop_row = $chado_schema->resultset("Project::Projectprop")
-	  #    ->create({
-		#  type_id => $cross_stock_type_cvterm->cvterm_id,
-		#  project_id => $project->project_id(),
-		#       });
-	  #$prop_row->insert();
-
 	  #create cross experiment
 	  $experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')->create(
 	      {
 		  nd_geolocation_id => $geolocation->nd_geolocation_id(),
 		  type_id => $cross_experiment_type_cvterm->cvterm_id(),
 	      } );
-
-	  #store the cross name as an experiment prop
-	  #$experiment->find_or_create_related('nd_experimentprops' , {
-	  #    nd_experiment_id => $experiment->nd_experiment_id(),
-	  #    type_id  =>  $cross_name_cvterm->cvterm_id(),
-	  #    value  =>  $cross_name,
-		#			  });
-
-	  #store the cross type as an experiment prop
-	  #$experiment->find_or_create_related('nd_experimentprops' , {
-	  #    nd_experiment_id => $experiment->nd_experiment_id(),
-	  #    type_id  =>  $cross_type_cvterm->cvterm_id(),
-	  #    value  =>  $cross_type,
-		#			      });
-
-      #link the parents to the experiment
-    #  if ($female_parent) {
-	  #$experiment->find_or_create_related('nd_experiment_stocks' , {
-	  #    stock_id => $female_parent->stock_id(),
-	  #    type_id  =>  $female_parent_cvterm->cvterm_id(),
-		#			      });
-    #  }
-    #  if ($male_parent) {
-	  #$experiment->find_or_create_related('nd_experiment_stocks' , {
-	  #    stock_id => $male_parent->stock_id(),
-	  #    type_id  =>  $male_parent_cvterm->cvterm_id(),
-		#			      });
-    #  }
-    #  if ($cross_type eq "self" && $female_parent) {
-	  #$experiment->find_or_create_related('nd_experiment_stocks' , {
-	  #    stock_id => $female_parent->stock_id(),
-	  #    type_id  =>  $male_parent_cvterm->cvterm_id(),
-		#			      });
-    #  }
 
       #create a stock of type cross
       $cross_stock = $chado_schema->resultset("Stock::Stock")->find_or_create(
@@ -269,39 +192,37 @@ sub add_crosses {
 				       } );
       }
 
-    #link cross to plot
-    $plot = $self->get_plot() || 0;
-      if ($plot) {
-    $cross_stock
-        ->find_or_create_related('stock_relationship_objects', {
-      type_id => $plot_of_cvterm->cvterm_id(),
-      object_id => $cross_stock->stock_id(),
-      subject_id => $plot,
-               } );
-      }
+    #link cross to female_plot
+    $female_plot = $self->get_female_plot() || 0;
+        if ($female_plot) {
+            $cross_stock->find_or_create_related('stock_relationship_objects', {
+                type_id => $female_plot_of_cvterm->cvterm_id(),
+                object_id => $cross_stock->stock_id(),
+                subject_id => $female_plot,
+            } );
+        }
 
+    #link cross to male_plot
+    $male_plot = $self->get_male_plot() || 0;
+        if ($male_plot) {
+            $cross_stock
+                ->find_or_create_related('stock_relationship_objects', {
+                    type_id => $male_plot_of_cvterm->cvterm_id(),
+                    object_id => $cross_stock->stock_id(),
+                    subject_id => $male_plot,
+                 } );
+        }
 
     #link the stock of type cross to the experiment
     $experiment->find_or_create_related('nd_experiment_stocks' , {
 	      stock_id => $cross_stock->stock_id(),
 	      type_id  =>  $cross_experiment_type_cvterm->cvterm_id(),
-					  });
+		});
+
       #link the experiment to the project
     $experiment->find_or_create_related('nd_experiment_projects', {
 	     project_id => $self->get_crossing_trial_id,
-					  } );
-
-      #link the cross program to the breeding program
-			#my $trial_object = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $project->project_id() });
-			#   $trial_object->set_breeding_program($program->project_id());
-
-      #add the cross type to the experiment as an experimentprop
-      #experiment
-	  #->find_or_create_related('nd_experimentprops' , {
-	  #    nd_experiment_id => $experiment->nd_experiment_id(),
-	  #    type_id  =>  $cross_type_cvterm->cvterm_id(),
-	  #    value  =>  $cross_type,
-		#		   });
+		} );
 
     }
 
@@ -345,20 +266,6 @@ sub validate_crosses {
   #my $program_lookup;
   my $geolocation = '';
 
-  #$location_lookup = CXGN::Location::LocationLookup->new({ schema => $chado_schema, location_name => $self->get_location() });
-  #$geolocation = $location_lookup->get_geolocation();
-
-  #if (!$geolocation) {
-  #  print STDERR "Location ".$self->get_location()." not found\n";
-  #  return;
-  #}
-
-  #$program_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema});
-  #$program = $program_lookup->get_breeding_program_by_name($self->get_program());
-  #if (!$program) {
-  #  print STDERR "Breeding program ". $self->get_program() ." not found\n";
-  #  return;
-  #}
 
   $crossing_trial_lookup = CXGN::BreedersToolbox::Projects->new({ schema => $chado_schema});
   $crossing_trial = $crossing_trial_lookup->get_crossing_trials($self->get_crossing_trial_id());
