@@ -3,6 +3,7 @@
 <ul class="nav-tree">
     {% assign entries = site.pages | sort: "path" %}
     {% for entry in entries %}
+        {% unless entry.tags contains 'no_toc' %}
         {% capture slug    %}{{ entry.url | split: "/"   | last                       }}{% endcapture %}
         {% capture current %}{{ entry.url | remove: slug | replace: "//", "/" }}{% endcapture %}
         {% if current==entry.url %} {% assign current = "_ROOT" %} {% endif %}
@@ -12,14 +13,15 @@
                     <a href="{{ site.baseurl }}{{ entry.url }}">{{ entry.title }}</a>
                 {% if page.url == entry.url %}</strong>{% elsif page.url contains entry.url %}</em>{% endif %}
                 {% assign ccon = entry.content | stringify%}
-                {% if ccon contains '<input type="hidden" toc="start" />' %}
-                    {% assign toc = ccon | split: '<p><input type="hidden" toc="end" /></p>' | first | split: '<p><input type="hidden" toc="start" /></p>' | last %}
+                {% if ccon contains '<!-- TOC-START -->' %}
+                    {% assign toc = ccon | split: '<!-- TOC-END -->' | first | split: '<!-- TOC-START -->' | last %}
                     {% assign link_prefix = 'href="' | append: site.baseurl | append: entry.url | append: "#" %}
                     {{toc | replace: 'href="#',  link_prefix }}
                 {% endif %}
                 {% include navigation.html context=entry.url %}
             </li>
         {% endif %}
+        {% endunless %}
     {% endfor %}
     {% if include.context == "/" %}
             </ul>

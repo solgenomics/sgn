@@ -3,10 +3,10 @@ title: "2. Searching the database"
 layout: doc_page
 ---
 
-<input type="hidden" toc="start" />
+<!-- TOC-START -->
 * TOC
 {:toc}
-<input type="hidden" toc="end" />
+<!-- TOC-END -->
 
 You can search for information on the database by using the following search options: Wizard, which uses combined criteria specified by users; Accessions and Plots; Trials; Markers; Images; People; FAQ.
 

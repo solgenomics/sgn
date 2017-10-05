@@ -2,7 +2,7 @@
 {% capture parentURL %}{{ page.url | remove: slug | replace: "//", "/" }}{% endcapture %}
 {% assign entries = site.pages | sort: "path" %}
 {% if parentURL!=page.url %}
-  <a href="{{ site.baseurl }}/">{{ site.title }}</a>&nbsp;&nbsp;
+  <a href="{{ site.baseurl }}/">Home</a>&nbsp;&nbsp;
   {% capture the_crumbs %}
   <span>
     {% for pg in entries %}

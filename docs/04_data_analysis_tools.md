@@ -3,10 +3,10 @@ title: "4. Data Analysis Tools"
 layout: doc_page
 ---
 
-<input type="hidden" toc="start" />
+<!-- TOC-START -->
 * TOC
 {:toc}
-<input type="hidden" toc="end" />
+<!-- TOC-END -->
 
 CassavaBase provides several tools for phenotype data analysis, marker-assisted selection, sequence and expression analyses, as well as ontology browser. These tools can be found in the “Analyze” menu.
 

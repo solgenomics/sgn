@@ -2,6 +2,7 @@
 ---
 
 @import "{{ site.theme }}";
+@import "{{'assets/tipuesearch/css/tipuesearch.css' | relative_url }}";
 
 ul#markdown-toc li, ul.nav-tree li{
   white-space: nowrap;

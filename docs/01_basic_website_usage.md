@@ -3,10 +3,10 @@ title: "1. Basic Website Usage"
 layout: doc_page
 ---
 
-<input type="hidden" toc="start" />
+<!-- TOC-START -->
 * TOC
 {:toc}
-<input type="hidden" toc="end" />
+<!-- TOC-END -->
 
 1.1. Creating a User Account
 ---
