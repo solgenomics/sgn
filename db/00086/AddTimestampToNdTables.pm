@@ -39,7 +39,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-Adds a column called 'create_date' to the stock, project, genotype, phenotype, and nd_protocol tables. this column is set to DEFAULT NOW() when an entry is created. This is useful for creating reports of which project, stocks, phenotypes, etc were added over different time periods.
+Adds a column called 'create_date' to the nd_experiment, stock, project, genotype, phenotype, and nd_protocol tables. this column is set to DEFAULT NOW() when an entry is created. This is useful for creating reports of which project, stocks, phenotypes, etc were added over different time periods.
 
 sub patch {
     my $self=shift;
@@ -49,6 +49,17 @@ sub patch {
     print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
 
     print STDOUT "\nExecuting the SQL commands.\n";
+
+
+    try {
+        $self->dbh->do(<<EOSQL);
+ALTER TABLE nd_experiment ADD COLUMN create_date TIMESTAMP;
+ALTER TABLE nd_experiment ALTER COLUMN create_date SET DEFAULT now();
+EOSQL
+    }
+    catch {
+        print STDOUT "nd_experiment already had create_date\n";
+    };
 
     try {
         $self->dbh->do(<<EOSQL);
