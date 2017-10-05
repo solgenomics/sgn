@@ -141,7 +141,7 @@ sub get_trials_by_breeding_program {
 	  $project_year{$id} = '';
 	  #print STDERR Dumper "Cross Trial: ".$name;
 	}
-	if ($prop == $project_year_cvterm_id) {
+	if ($prop == $project_year_cvterm_id && $propvalue) {
 	  $project_year{$id} = $propvalue;
 	}
 	if ($propvalue) {
@@ -161,9 +161,9 @@ sub get_trials_by_breeding_program {
 		if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key}) {
 			#print STDERR "$id_key RETAINED.\n";
 			push @$field_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
-		} elsif ($projects_that_are_crosses{$id_key} == 1) {
+		} elsif ($projects_that_are_crosses{$id_key}) {
 			push @$cross_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
-		} elsif ($projects_that_are_genotyping_trials{$id_key} == 1) {
+		} elsif ($projects_that_are_genotyping_trials{$id_key}) {
 			push @$genotyping_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
 		}
     }
