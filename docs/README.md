@@ -43,7 +43,9 @@ I am above the hr
 I am below the hr
 ```
 
-#### Images
+#### Images/Screenshots
+
+_For screenshots_: try to make sure that the image is of an unbranded version of the db.
 
 To insert an image, we need to tell Jekyll to generate the relative path to the file like so 
 ```markdown
@@ -51,11 +53,24 @@ To insert an image, we need to tell Jekyll to generate the relative path to the 
 ```
 
 #### Links
-To insert an link, we can use the usual markdown format:
+To insert an link to something outside of the docs, we can use the usual markdown format:
 ```markdown
-[YOUR LINK TEXT](http://your.link)
+[LINK TEXT](http://your.link)
 ```
-If you want to link to a header on a specific page, read this [documentation](https://kramdown.gettalong.org/syntax.html#specifying-a-header-id).
+If you want to link to a docs page, use this syntax. Note that we put the **path to the file** (from the `docs` directory), **not the rendered HTML page**, after `link`.):
+```markdown
+[LINK TEXT]({{ site.baseurl }}{% link your_folder/YOUR_FILE.md %})
+``` 
+If you want to link to a header on a docs page, we can extend the syntax above like so:  
+First, we assign the header we are linking to an ID:
+```markdown
+### I am the header {#your-header-id}
+```
+then, we add that ID to the link:
+```markdown
+[LINK TEXT](#your-header-id) <!-- On the same page-->
+[LINK TEXT]({{ site.baseurl }}{% link YOUR_FILE.md %}#your-header-id)
+```
 
 ### Creating New Pages
 **Every page should start with this YAML "front-matter" before anything else:**
@@ -65,10 +80,10 @@ title: "YOUR PAGE TITLE HERE"
 layout: doc_page
 ---
 ```
-**To insert a table of contents to a page with the following snippet:**
+**To insert a table of contents to a page with the following snippet (INCLUDING the comments [excluding them will cause the TOC to be indexed for search and not be readable by the TOC generator of folder pages.]):**
 ```markdown
-<input type="hidden" toc="start" />
+<!-- TOC-START -->
 * TOC
 {:toc}
-<input type="hidden" toc="end" />
+<!-- TOC-END -->
 ```
