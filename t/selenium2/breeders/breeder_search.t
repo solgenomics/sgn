@@ -123,7 +123,9 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->driver->accept_alert();
 
-    $t->find_element_ok("refresh_lists", "id", " refresh lists")->click();
+    my $refresh_lists = $t->find_element_ok("paste_list_refresh", "id", " refresh lists");
+    sleep(1);
+    $refresh_lists->click();
 
     sleep(1);
 
