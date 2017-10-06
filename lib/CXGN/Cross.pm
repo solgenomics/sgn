@@ -198,9 +198,10 @@ sub get_crosses_in_trial {
 
     my $male_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
     my $female_parent_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
-    my $plot_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "plot_of", "stock_relationship")->cvterm_id();
+    my $female_plot_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plot_of", "stock_relationship")->cvterm_id();
+    my $male_plot_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plot_of", "stock_relationship")->cvterm_id();
 
-    my $q = "SELECT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, stock3.stock_id, stock3.uniquename, stock_relationship1.value, stock4.stock_id, stock4.uniquename
+    my $q = "SELECT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, stock3.stock_id, stock3.uniquename, stock_relationship1.value, stock4.stock_id, stock4.uniquename, stock5.stock_id, stock5.uniquename
         FROM nd_experiment_project JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock AS stock1 ON (nd_experiment_stock.stock_id = stock1.stock_id)
         LEFT JOIN stock_relationship AS stock_relationship1 ON (stock1.stock_id = stock_relationship1.object_id) AND stock_relationship1.type_id = ?
@@ -209,15 +210,17 @@ sub get_crosses_in_trial {
         LEFT JOIN stock AS stock3 ON (stock_relationship2.subject_id = stock3.stock_id)
         LEFT JOIN stock_relationship AS stock_relationship3 ON (stock1.stock_id = stock_relationship3.object_id) AND stock_relationship3.type_id = ?
         LEFT JOIN stock AS stock4 ON (stock_relationship3.subject_id = stock4.stock_id)
+        LEFT JOIN stock_relationship AS stock_relationship4 ON (stock1.stock_id = stock_relationship4.object_id) AND stock_relationship4.type_id = ?
+        LEFT JOIN stock AS stock5 ON (stock_relationship4.subject_id = stock5.stock_id)
         WHERE nd_experiment_project.project_id = ?";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($female_parent_typeid, $male_parent_typeid, $plot_of_typeid, $trial_id);
+    $h->execute($female_parent_typeid, $male_parent_typeid, $female_plot_of_typeid, $male_plot_of_typeid, $trial_id);
 
     my @data =();
-    while(my($cross_id, $cross_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $plot_id, $plot_name) = $h->fetchrow_array()){
-        push @data, [$cross_id, $cross_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $plot_id, $plot_name]
+    while(my($cross_id, $cross_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name) = $h->fetchrow_array()){
+        push @data, [$cross_id, $cross_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $female_plot_id, $female_plot_name, $male_plot_id, $male_plot_name]
             }
 
     return \@data;

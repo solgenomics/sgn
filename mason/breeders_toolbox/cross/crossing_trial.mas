@@ -200,7 +200,8 @@ my $start_time = time();
   <th>Female Parent</th>
   <th>Male Parent</th>
   <th>Cross Type</th>
-  <th>Plot Name</th>
+  <th>Female Plot</th>
+  <th>Male Plot</th>
 </tr>
 </thead>
 </table>

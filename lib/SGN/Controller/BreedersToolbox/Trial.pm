@@ -114,7 +114,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $design_type = $trial->get_design_type();
     $c->stash->{design_name} = $design_type;
 
-      print STDERR "TRIAL TYPE DATA = $trial_type_data->[1]\n\n";
+    #  print STDERR "TRIAL TYPE DATA = $trial_type_data->[1]\n\n";
 
     if ($design_type eq "genotyping_plate") {
 	     if ($format eq "as_table") {
