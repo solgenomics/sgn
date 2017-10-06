@@ -1,13 +1,13 @@
 
-Description <!-- Describe your changes in detail -->
+Description <!-- Describe your changes in detail. -->
 -----------------------------------------------------
 
 
 <!-- If there are relevant issues, link them here: -->
 
 
-Checklist <!-- Put an `x` in all the boxes that apply -->
----------------------------------------------------------
+Checklist <!-- Put an `x` in all the boxes that apply, or check them once submitted.-->
+---------------------------------------------------------------------------------------
 - [ ] Documentation only
 - [ ] Bug fix
   - [ ] The relevant issue has been closed.
