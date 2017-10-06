@@ -13,7 +13,7 @@ You can search for information on the database by using the following search opt
 ![search1.png]({{'assets/images/image267.png' | relative_url }})
 
 
-2.1 The Search Wizard
+2.1 The Search Wizard {#search-wizard}
 ---------------------
 
 ![]({{"assets/images/image154.png" | relative_url }})

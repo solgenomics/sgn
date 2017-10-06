@@ -64,7 +64,7 @@ To use the genomic selection tool, on [*cassavabase.org,*](http://cassavabase.or
 
 There are three ways to build a model for a trait.
 
-#### Method 1:
+#### Method 1: {#method-1}
 
 One way to build a model is, using a trait name, to search for trials in which the trait was phenotyped and use a trial or a combination of trials to build a model for the trait. For example, if you search for 'mosaic disease severity, you will get a list of trials you can use as training populations.
 
@@ -109,7 +109,7 @@ The breeding values of the individuals used in the training population are displ
 
 ##### Estimating breeding values in a selection population
 
-If you already have a selection population (in the database), from the same model page, you can apply the model to the selection population and estimate breeding values for all the clones in the population. You can search for a selection population of clones in the database using the search interface or you can make a custom list of clones using the [*list interface*](http://cassavabase.wikispaces.com/Lists). if you click the 'search for all relevant selection populations', you will see all relevant selection populations for that model. However, this option takes long time decause of the large set of populations in the database and the filtering. Therefore, the fastest way is to search for each of your selection populations by name. If you are logged in to the website you will also see a list of your custom set of genotyped clones.
+If you already have a selection population (in the database), from the same model page, you can apply the model to the selection population and estimate breeding values for all the clones in the population. You can search for a selection population of clones in the database using the search interface or you can make a custom list of clones using the [*list interface*]({{site.baseurl}}{% link 01_basic_website_usage.md%}#working-with-lists). If you click the 'search for all relevant selection populations', you will see all relevant selection populations for that model. However, this option takes long time decause of the large set of populations in the database and the filtering. Therefore, the fastest way is to search for each of your selection populations by name. If you are logged in to the website you will also see a list of your custom set of genotyped clones.
 
 ![]({{"assets/images/image338.png" | relative_url }})
 
@@ -117,7 +117,7 @@ To apply the model to a selection population, simply click your population name 
 
 <img src='{{"assets/images/image334.png" | relative_url }}' width="512" />
 
-#### Method 2
+#### Method 2 {#method-2}
 
 Another way to build a model is by selecting a trial, instead of selecting and searching for a specific trait. This approach is useful when you know a particular trial that is relevant to the environment you are targeting to breed material for. This method allows you to build models and predict genomic estimated breeding values (GEBVs) for several traits within a single trial at once. You can also calculate selection index for your clones when GEBVs are estimated for multiple traits.
 
@@ -141,11 +141,11 @@ Below the "Training population summary" there is a tab for "Traits". Clicking on
 
 ![]({{"assets/images/image69.png" | relative_url }})
 
-Clicking on 'Build Model' will take you to a new page with the models outputs for the traits. Under the "Genomic Selection Model Output" tab you can view the model output and the model accuracy. Clicking on any of the traits will take you to a page with information about the model output on that individual trait within the trial. There you can view all of the trait information that was seen in more detail in [*Method 1*](http://cassavabase.wikispaces.com/Method+1%C2%A0).
+Clicking on 'Build Model' will take you to a new page with the models outputs for the traits. Under the "Genomic Selection Model Output" tab you can view the model output and the model accuracy. Clicking on any of the traits will take you to a page with information about the model output on that individual trait within the trial. There you can view all of the trait information that was seen in more detail in [*Method 1*](#method-1).
 
 ![]({{"assets/images/image336.png" | relative_url }})
 
-You can apply the models to simultaneously predict GEBVs for respective traits in a selection population by clicking on "Predict Now" or the name of the selection population. You can also apply the models to any set of genotyped clones that you can create using the 'lists' feature. For more information on lists, click [*here*](http://cassavabase.wikispaces.com/Lists). Follow the link to the trait name to view and download the predicted GEBVs for the trait in a selection population.
+You can apply the models to simultaneously predict GEBVs for respective traits in a selection population by clicking on "Predict Now" or the name of the selection population. You can also apply the models to any set of genotyped clones that you can create using the 'lists' feature. For more information on lists, click [*here*]({{site.baseurl}}{% link 01_basic_website_usage.md%}#working-with-lists). Follow the link to the trait name to view and download the predicted GEBVs for the trait in a selection population.
 
 <img src='{{"assets/images/image171.png" | relative_url }}' width="533" />
 
@@ -163,7 +163,7 @@ The page to use the third Method for creating a population model is the same as 
 
 ![]({{"assets/images/image138.png" | relative_url }})
 
-Once the "Create a Training Population" tab is opened you have the option to use a pre-existing list or create new one. To learn how to create a list, click [*here*](http://cassavabase.wikispaces.com/Lists). The "Make a new list of plots" link will take you directly to the Search Wizard that is usually used to create lists.
+Once the "Create a Training Population" tab is opened you have the option to use a pre-existing list or create new one. To learn how to create a list, click [*here*]({{site.baseurl}}{% link 01_basic_website_usage.md %}#working-with-lists). The "Make a new list of plots" link will take you directly to the Search Wizard that is usually used to create lists.
 
 Please note: the only lists that can be used in Method 3 to create a model are lists of plots and trials. If the pre-existing list is not of plots or trials (for example, traits, or locations) it will not show up and cannot be used as a training population. When you create you use a list of trials, the trials data will be combined to create a training data set.
 

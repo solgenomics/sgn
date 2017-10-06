@@ -27,7 +27,7 @@ Filling in all of the information, then clicking "Create Account."
 
 After you submit the information, an email will be sent to the provided email address. Checking your email and clicking on the link to activate your account.
 
-1.2. Managing your Account
+1.2. Managing your Account {#managing-your-account}
 --------------------------
 
 ### Login
@@ -144,7 +144,7 @@ In the Analyze menu, the options are:
 | Twitter               | Sol Genomics twitter page                                       |
 | Facebook              | Sol Genomics facebook page                                      |
 
-1.4. Working with Lists
+1.4. Working with Lists {#working-with-lists}
 -----------------------
 
 Lists are collections of identifiers that are stored in the database. Lists can be composed of accessions, plots, traits, locations, and trials. Lists are attached to the individual user's account, and can only be created and seen by the user while logged in. CassavaBase makes heavy use of lists in a number of tools on the website. For example, trials are created using lists of accessions.
@@ -185,7 +185,7 @@ If those items are already in the database, a message will indicate that “This
 
 Note that a list cannot contain duplicate elements. If a duplicate item is entered, the list manager will inform the user that the element is already in the list and will not add it again.
 
-Another easy way to create a list is to use the [*Search Wizard*](#nzep5nv9l7g1), which can be accessed from the Search menu.
+Another easy way to create a list is to use the [*Search Wizard*]({{ site.baseurl }}{% link 02_searching_the_database.md %}#search-wizard), which can be accessed from the Search menu.
 
 ### Viewing and editing lists
 
