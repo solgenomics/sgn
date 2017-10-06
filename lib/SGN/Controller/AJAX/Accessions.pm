@@ -70,6 +70,7 @@ sub do_fuzzy_search {
     my $c = shift;
     my $accession_list = shift;
     my $organism_list = shift;
+    print STDERR "DoFuzzySearch 1".localtime()."\n";
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $fuzzy_accession_search = CXGN::BreedersToolbox::AccessionsFuzzySearch->new({schema => $schema});
@@ -98,6 +99,7 @@ sub do_fuzzy_search {
 
     my $fuzzy_search_result = $fuzzy_accession_search->get_matches(\@accession_list, $max_distance);
     #print STDERR "\n\nAccessionFuzzyResult:\n".Data::Dumper::Dumper($fuzzy_search_result)."\n\n";
+    print STDERR "DoFuzzySearch 2".localtime()."\n";
 
     $found_accessions = $fuzzy_search_result->{'found'};
     $fuzzy_accessions = $fuzzy_search_result->{'fuzzy'};
@@ -130,7 +132,7 @@ sub do_fuzzy_search {
             }
         }
     }
-
+    print STDERR "DoFuzzySearch 3".localtime()."\n";
     #print STDERR Dumper $fuzzy_accessions;
 
     $c->stash->{rest} = {

@@ -173,7 +173,7 @@ sub _get_design_from_trial {
   $plots_ref = $self->_get_plots();
   if (!$plots_ref) {
       print STDERR "_get_design_from_trial: not plots provided... returning.\n";
-      return;
+      return { error => "Something went wrong retrieving plots for this trial. This should not happen, so please contact us." };
   }
 #print STDERR "Check 2.3.4.2: ".localtime()."\n";
   my $project = $self->get_project();
