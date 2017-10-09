@@ -130,6 +130,8 @@ project_type	Heterosis				00082
 project_type	Genetic Gain 				00082
 project_type	Health Status				00082
 project_type	Storage				00082
+project_type	genotyping_trial		00087
+project_type	phenotyping_trial	00087
 stock_property	block				00052
 stock_property	col_number				00052
 stock_property	igd_synonym				00052
@@ -199,7 +201,6 @@ trait_property	trait_details
 trait_property	trait_format
 trait_property	trait_maximum
 trait_property	trait_minimum
-trial_type	crossing_trial
 trial_type	genotyping_trial
 trial_type	phenotyping_trial
 cvterm_property	uri	From BrAPI	03/27/2017	nm529	00076
