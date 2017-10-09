@@ -5,7 +5,6 @@ $user_id => undef
 @programs => ()
 @crossing_trials => ()
 @locations => ()
-@all_trials => ()
 @roles => ()
 </%args>
 
@@ -267,69 +266,35 @@ $user_id => undef
       <br>
       <h3>Optional:</h3>
 	    <table>
-
       <div class="form-group">
-              <label class="col-sm-2 control-label">Field Trial: </label>
-              <div class="col-sm-10">
-          <select class="form-control" id="field_trial" name="field_trial">
-          <option value="">Select Trial</option>
-          <%perl>
-      foreach my $all_trial (@all_trials) {
-        print "<option value=".'"'.@$all_trial[0].'"'.">".@$all_trial[1]."</option>";
-      }
-          </%perl>
-          </select>
-          </select>
-              </div>
+        <label class="col-sm-2 control-label">Field Trial: </label>
+          <div class="col-sm-10">
+            <div class="input-group">
+              <input type ="text" class ="form-control" id ="field_trial">
+                <div class ="input-group-btn">
+                <button class = "btn btn-info" id ="search_plots"></i>Search Plots</button>
+                </div>
+            </div>
+          </div>
       </div>
       <div class="form-group">
-              <label class="col-sm-2 control-label">Female Plot: </label>
-              <div class="col-sm-10">
-          <select class="form-control" id="female_plot" name="female_plot">
-          <option value="">Choose trial first</option>
-          </select>
-          </select>
-              </div>
+        <label class="col-sm-2 control-label">Female Plot: </label>
+          <div class="col-sm-10">
+            <select class="form-control" id="female_plot" name="female_plot">
+            <option value="">Choose trial first</option>
+            </select>
+            </select>
+          </div>
       </div>
       <div class="form-group">
-              <label class="col-sm-2 control-label">Male Plot: </label>
-              <div class="col-sm-10">
-          <select class="form-control" id="male_plot" name="male_plot">
-          <option value="">Choose trial first</option>
-          </select>
-          </select>
-              </div>
+        <label class="col-sm-2 control-label">Male Plot: </label>
+          <div class="col-sm-10">
+            <select class="form-control" id="male_plot" name="male_plot">
+            <option value="">Choose trial first</option>
+            </select>
+            </select>
+          </div>
       </div>
-      <!--
-      <tr>
-        <td>
-        <div class="form-group">
-                  <label class="col-sm-9 control-label">Specify a Folder: </label>
-                  <div class="col-sm-3">
-              <input id= "use_folders_checkbox" type="checkbox" />
-                  </div>
-        </div>
-      </td>
-      </tr>
-      <tr id="folder_section" style="display: none">
-      <td><p>Put cross/crosses together in a new folder:</p><p>Or add to an existing folder:</p></td>
-      <td><div class="form-group">
-            <label class="col-sm-2 control-label">Folder Name: </label>
-            <div class="col-sm-10">
-        <input class="form-control" type="text" id="add_cross_folder_name" name="add_cross_folder_name"/>
-            </div>
-            </div>
-            <div class="form-group">
-            <label class="col-sm-2 control-label">Folder: </label>
-            <div class="col-sm-10" >
-              <div id="add_cross_folder_select_div">
-                [Loading...]
-              </div>
-            </div>
-            </div>
-            </td>
-            </tr>
-        -->
 	      <tr>
 	        <td>
 	    	  <div class="form-group">
@@ -611,8 +576,6 @@ $user_id => undef
 </div>
 
 
-
-
 <div class="modal fade" id="create_crossingtrial_dialog" name="create_crossingtrial_dialog" tabindex="-1" role="dialog" aria-labelledby="createCrossingTrialDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content ui-front">
@@ -622,92 +585,91 @@ $user_id => undef
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-
-	  <form class="form-horizontal" role="form" name="create_crossingtrial_form" id="create_crossingtrial_form">
+	       <form class="form-horizontal" role="form" name="create_crossingtrial_form" id="create_crossingtrial_form">
+          <div class="form-group">
+            <label class="col-sm-2 control-lable">Crossing Trial Name: </label>
+              <div class="col-sm-10">
+                <input class="form-control" id="crossingtrial_name" name="crossingtrial_name" type="text" />
+              </div>
+          </div>
       <div class="form-group">
-        <label class="col-sm-2 control-lable">Crossing Trial Name: </label>
+        <label class="col-sm-2 control-label">Breeding Program: </label>
           <div class="col-sm-10">
-            <input class="form-control" id="crossingtrial_name" name="crossingtrial_name" type="text" />
+            <select class="form-control" id="crossingtrial_program" name="crossingtrial_program">
+            <option value="">Select Breeding Program</option>
+            <%perl>
+                foreach my $program (@programs) {
+                    print "<option value=".'"'.@$program[0].'"'.">".@$program[1]."</option>";
+                }
+            </%perl>
+            </select>
+            </select>
           </div>
-      </div>
-      <div class="form-group">
-            <label class="col-sm-2 control-label">Breeding Program: </label>
-            <div class="col-sm-10">
-        <select class="form-control" id="crossingtrial_program" name="crossingtrial_program">
-        <option value="">Select Breeding Program</option>
-    <%perl>
-        foreach my $program (@programs) {
-          print "<option value=".'"'.@$program[0].'"'.">".@$program[1]."</option>";
-        }
-          </%perl>
-        </select>
-        </select>
-            </div>
-    </div>
-    <div class="form-group">
-            <label class="col-sm-2 control-label">Location: </label>
-            <div class="col-sm-10">
-        <select class="form-control" id="crossingtrial_location" name="crossingtrial_location">
-        <option value="">Select Location</option>
-    <%perl>
-        foreach my $location (@locations) {
-            print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
-        }
-        </%perl>
-        </select>
-        </select>
-            </div>
-    </div>
-    <div class="form-group">
-      <label class="col-sm-2 control-lable">Year:</label>
-      <div class="col-sm-10">
-        <select class="form-control" id="add_project_year" name="add_project_year" type="text"></select>
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="col-sm-2 control-label">Description:</label>
-        <div class="col-sm-10">
-          <textarea class="form-control" id="add_project_description" name="add_project_description" name="add_project_description"></textarea>
         </div>
-    </div>
-    <br>
-    <h3> Optional:</h3>
-        <table>
-    <tr>
-     <td>
-     <div class="form-group">
-          <label class="col-sm-9 control-label">Specify a Folder:</label>
-          <div class="col-sm-3">
-           <input id= "folder_checkbox" type="checkbox" />
+      <div class="form-group">
+        <label class="col-sm-2 control-label">Location: </label>
+          <div class="col-sm-10">
+            <select class="form-control" id="crossingtrial_location" name="crossingtrial_location">
+            <option value="">Select Location</option>
+            <%perl>
+                foreach my $location (@locations) {
+                    print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
+                }
+            </%perl>
+            </select>
+            </select>
           </div>
-    </div>
-    </td>
-   </tr>
-   <tr id="crossingtrial_folder_section" style="display:none">
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-lable">Year:</label>
+            <div class="col-sm-10">
+              <select class="form-control" id="add_project_year" name="add_project_year" type="text"></select>
+            </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label">Description:</label>
+            <div class="col-sm-10">
+              <textarea class="form-control" id="add_project_description" name="add_project_description" name="add_project_description"></textarea>
+            </div>
+        </div>
+      <br>
+    <h3> Optional:</h3>
+    <table>
+    <tr>
+      <td>
+        <div class="form-group">
+          <label class="col-sm-9 control-label">Specify a Folder:</label>
+            <div class="col-sm-3">
+              <input id= "folder_checkbox" type="checkbox" />
+            </div>
+        </div>
+      </td>
+    </tr>
+    <tr id="crossingtrial_folder_section" style="display:none">
     <td><p>Add crossing trial in a new folder:</p>
         <div class="form-group">
-            <label class="col-sm-2 control-label">Folder Name:</label>
+          <label class="col-sm-2 control-label">Folder Name:</label>
             <div class="col-sm-10">
                 <input class="form-control" type="text" id="crossingtrial_folder_name" name="crossingtrial_folder_name"/>
             </div>
         </div>
         <p>Or add to an existing folder:</p>
         <div class="form-group">
-            <label class="col-sm-2 control-label">Folder:</label>
-                <div class="col-sm-10">
-                    <div id="crossingtrial_folder_select_div">
-                    [Loading...]
-                    </div>
-                </div>
+          <label class="col-sm-2 control-label">Folder:</label>
+            <div class="col-sm-10">
+              <div id="crossingtrial_folder_select_div">
+                [Loading...]
+              </div>
+            </div>
          </div>
-        </td>
+      </td>
       </tr>
       </table>
 
-    <div class="modal-footer">
-      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      <button type="button" class="btn btn-primary" name="create_crossingtrial_submit" id="create_crossingtrial_submit">Create</button>
-    </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="create_crossingtrial_submit" id="create_crossingtrial_submit">Create</button>
+      </div>
    </div>
   </div>
 
@@ -790,7 +752,12 @@ jQuery(document).ready(function($) {
         }
     });
 
-    $("#field_trial").change(function(){
+    jQuery("#field_trial").autocomplete({
+      source:'/ajax/stock/project_autocomplete',
+    });
+
+    $("#search_plots").click(function(e){
+      e.preventDefault();
 
       var maternal_parent;
       if ($('#maternal_parent').val() != ''){
@@ -806,10 +773,7 @@ jQuery(document).ready(function($) {
       jQuery.ajax({
         url:'/ajax/breeders/get_accession_plots',
         data:{'field_trial':$('#field_trial').val(),
-
-            'parent_accession':maternal_parent,
-
-
+              'parent_accession':maternal_parent,
         },
         success: function(response){
         console.log(response);
@@ -829,7 +793,7 @@ jQuery(document).ready(function($) {
 
         },
         error:function(response){
-        alert("An error occurred");
+        alert("An error occurred getting female plots.");
            }
          });
 
@@ -866,7 +830,7 @@ jQuery(document).ready(function($) {
 
          },
          error:function(response){
-         alert("An error occurred");
+         alert("An error occurred getting male plots.");
                 }
               });
        });

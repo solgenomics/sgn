@@ -224,16 +224,16 @@ sub get_genotyping_trials_by_breeding_program {
 sub get_all_locations {
      my $self = shift;
      my $c = shift;
- 		 
+
      my $rs = $self->schema() -> resultset("NaturalDiversity::NdGeolocation")->search( {}, { order_by => 'description' } );
      my @locations = ();
-     
+
      foreach my $loc ($rs->all()) {
          push @locations, [ $loc->nd_geolocation_id(), $loc->description() ];
      }
-     
+
      return \@locations;
- 		 
+
  }
 
 
@@ -460,28 +460,6 @@ sub get_crossing_trials {
 
     return \@crossing_trials;
 }
-
-sub get_all_trials {
-    my $self = shift;
-
-    my $all_trials_cvterm_id = $self->get_trial_cvterm_id();
-    my $rs = $self->schema->resultset('Project::Project')->search( { 'projectprops.type_id'=>$all_trials_cvterm_id }, { join => 'projectprops' }  );
-
-    my @all_trials;
-    while (my $row = $rs->next()) {
-	push @all_trials, [ $row->project_id, $row->name, $row->description ];
-    }
-
-    return \@all_trials;
-}
-
-sub get_trial_cvterm_id {
-  my $self = shift;
-
-  my $trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'Uniform Yield Trial',  'project_type');
-  return $trial_cvterm_id->cvterm_id();
-}
-
 
 sub get_breeding_program_cvterm_id {
     my $self = shift;

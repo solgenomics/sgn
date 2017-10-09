@@ -550,6 +550,9 @@ sub get_accession_plots :Path('/ajax/breeders/get_accession_plots') Args(0) {
     my $field_layout_typeid = $c->model("Cvterm")->get_cvterm_row($schema, "field_layout", "experiment_type")->cvterm_id();
     my $dbh = $schema->storage->dbh();
 
+    my $trial = $schema->resultset("Project::Project")->find ({name => $field_trial});
+    my $trial_id = $trial->project_id();
+
     my $cross_accession = $schema->resultset("Stock::Stock")->find ({uniquename => $parent_accession});
     my $cross_accession_id = $cross_accession->stock_id();
 
@@ -561,14 +564,14 @@ sub get_accession_plots :Path('/ajax/breeders/get_accession_plots') Args(0) {
             WHERE nd_experiment_project.project_id= ? ";
 
     my $h = $dbh->prepare($q);
-    $h->execute($field_layout_typeid, $cross_accession_id, $field_trial, );
+    $h->execute($field_layout_typeid, $cross_accession_id, $trial_id, );
 
     my @plots=();
     while(my ($plot_id, $plot_name) = $h->fetchrow_array()){
 
       push @plots, [$plot_id, $plot_name];
     }
-
+    #print STDERR Dumper \@plots;
     $c->stash->{rest} = {data=>\@plots};
 
 }

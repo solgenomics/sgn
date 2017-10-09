@@ -715,11 +715,7 @@ sub project_autocomplete_GET :Args(0) {
     $term =~ s/(^\s+|\s+)$//g;
     $term =~ s/\s+/ /g;
     my @response_list;
-    my $q = "SELECT  distinct project.name FROM
-  nd_experiment_stock JOIN
-  nd_experiment_project USING (nd_experiment_id) JOIN
-  project USING (project_id)
-  WHERE project.name ilike ? ORDER BY project.name";
+    my $q = "SELECT  distinct project.name FROM project WHERE project.name ilike ? ORDER BY project.name LIMIT 100";
     my $sth = $c->dbc->dbh->prepare($q);
     $sth->execute( '%'.$term.'%');
     while  (my ($project_name) = $sth->fetchrow_array ) {

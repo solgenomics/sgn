@@ -2,7 +2,6 @@
 <%args>
 $locations
 $programs
-$all_trials
 $crossing_trials
 $roles
 $cross_populations
@@ -16,7 +15,7 @@ $user_id
 
 <&| /page/info_section.mas, title=>"Crosses" , collapsible=>1, collapsed=>0, subtitle=>'[<a id="create_crossingtrial_link" >Create Crossing Trial</a>] [<a id="create_cross_wishlist" >Create Cross Wishlist</a>] [<a id="create_cross_link" >Create New Crosses</a>] [<a id="upload_crosses_link" >Upload Crosses File</a>]' &>
 
-<& /breeders_toolbox/crosses.mas, cross_populations=>$cross_populations, user_id=>$user_id, locations=>$locations, programs=>$programs, crossing_trials=>$crossing_trials, all_trials=>$all_trials, roles=>$roles  &>
+<& /breeders_toolbox/crosses.mas, cross_populations=>$cross_populations, user_id=>$user_id, locations=>$locations, programs=>$programs, crossing_trials=>$crossing_trials, roles=>$roles  &>
 
 </&>
 
