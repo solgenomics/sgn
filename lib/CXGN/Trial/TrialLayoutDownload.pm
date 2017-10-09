@@ -152,7 +152,7 @@ sub get_layout_output {
 
     my @possible_cols = ();
     if ($self->data_level eq 'plots') {
-        @possible_cols = ('plot_name','block_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier');
+        @possible_cols = ('plot_name','block_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier','seedlot_name','seed_transaction_operator','num_seed_per_plot');
         if ($treatments){
             foreach (@treatment_trials){
                 my $treatment_units = $_ ? $_->get_plots() : [];
@@ -160,7 +160,7 @@ sub get_layout_output {
             }
         }
     } elsif ($self->data_level eq 'plants') {
-        @possible_cols = ('plant_name','plot_name','block_number','plant_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier');
+        @possible_cols = ('plant_name','plot_name','block_number','plant_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier','seedlot_name','seed_transaction_operator','num_seed_per_plot');
         if ($treatments){
             foreach (@treatment_trials){
                 my $treatment_units = $_ ? $_->get_plants() : [];
@@ -168,7 +168,7 @@ sub get_layout_output {
             }
         }
     } elsif ($self->data_level eq 'subplots') {
-        @possible_cols = ('subplot_name','plot_name','block_number','subplot_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier');
+        @possible_cols = ('subplot_name','plot_name','block_number','subplot_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier','seedlot_name','seed_transaction_operator','num_seed_per_plot');
         if ($treatments){
             foreach (@treatment_trials){
                 my $treatment_units = $_ ? $_->get_subplots() : [];
@@ -176,7 +176,7 @@ sub get_layout_output {
             }
         }
     } elsif ($self->data_level eq 'plants_subplots') {
-        @possible_cols = ('plant_name','subplot_name','plot_name','block_number','subplot_number','plant_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier');
+        @possible_cols = ('plant_name','subplot_name','plot_name','block_number','subplot_number','plant_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier','seedlot_name','seed_transaction_operator','num_seed_per_plot');
         if ($treatments){
             foreach (@treatment_trials){
                 my $treatment_units = $_ ? $_->get_plants() : [];
@@ -262,6 +262,16 @@ sub get_layout_output {
         } elsif ($self->data_level eq 'plants'){
             my $plant_names = $design_info{'plant_names'};
             my $plant_num = 1;
+            my $acc_synonyms = '';
+            if (exists($selected_cols{'synonyms'})){
+                my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
+                $acc_synonyms = join ',', @{$accession->synonyms};
+            }
+            my $acc_pedigree = '';
+            if (exists($selected_cols{'pedigree'})){
+                my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
+                $acc_pedigree = $accession->get_pedigree_string('Parents');
+            }
             foreach (sort @$plant_names) {
                 my @line;
                 foreach my $c (@possible_cols){
@@ -281,11 +291,9 @@ sub get_layout_output {
                             my $col = $design_info{"col_number"} ? $design_info{"col_number"} : '';
                             push @line, $row."/".$col;
                         } elsif ($c eq 'synonyms'){
-                            my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
-                            push @line, join ',', @{$accession->synonyms};
+                            push @line, $acc_synonyms;
                         } elsif ($c eq 'pedigree'){
-                            my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
-                            push @line, $accession->get_pedigree_string('Parents');
+                            push @line, $acc_pedigree;
                         } else {
                             push @line, $design_info{$c};
                         }
@@ -315,6 +323,16 @@ sub get_layout_output {
         } elsif ($self->data_level eq 'subplots'){
             my $subplot_names = $design_info{'subplot_names'};
             my $subplot_num = 1;
+            my $acc_synonyms = '';
+            if (exists($selected_cols{'synonyms'})){
+                my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
+                $acc_synonyms = join ',', @{$accession->synonyms};
+            }
+            my $acc_pedigree = '';
+            if (exists($selected_cols{'pedigree'})){
+                my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
+                $acc_pedigree = $accession->get_pedigree_string('Parents');
+            }
             foreach (sort @$subplot_names) {
                 my @line;
                 foreach my $c (@possible_cols){
@@ -334,11 +352,9 @@ sub get_layout_output {
                             my $col = $design_info{"col_number"} ? $design_info{"col_number"} : '';
                             push @line, $row."/".$col;
                         } elsif ($c eq 'synonyms'){
-                            my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
-                            push @line, join ',', @{$accession->synonyms};
+                            push @line, $acc_synonyms;
                         } elsif ($c eq 'pedigree'){
-                            my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
-                            push @line, $accession->get_pedigree_string('Parents');
+                            push @line, $acc_pedigree;
                         } else {
                             push @line, $design_info{$c};
                         }
@@ -368,6 +384,16 @@ sub get_layout_output {
         } elsif ($self->data_level eq 'plants_subplots'){
             my $subplot_plant_names = $design_info{'subplots_plant_names'};
             my $subplot_num = 1;
+            my $acc_synonyms = '';
+            if (exists($selected_cols{'synonyms'})){
+                my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
+                $acc_synonyms = join ',', @{$accession->synonyms};
+            }
+            my $acc_pedigree = '';
+            if (exists($selected_cols{'pedigree'})){
+                my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
+                $acc_pedigree = $accession->get_pedigree_string('Parents');
+            }
             foreach my $s (sort keys %$subplot_plant_names) {
                 my $plants = $subplot_plant_names->{$s};
                 my $plant_num = 1;
@@ -394,11 +420,9 @@ sub get_layout_output {
                                 my $col = $design_info{"col_number"} ? $design_info{"col_number"} : '';
                                 push @line, $row."/".$col;
                             } elsif ($c eq 'synonyms'){
-                                my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
-                                push @line, join ',', @{$accession->synonyms};
+                                push @line, $acc_synonyms;
                             } elsif ($c eq 'pedigree'){
-                                my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
-                                push @line, $accession->get_pedigree_string('Parents');
+                                push @line, $acc_pedigree;
                             } else {
                                 push @line, $design_info{$c};
                             }

@@ -46,10 +46,12 @@ sub download {
     #print STDERR Dumper \@predefined_columns;
     my $predefined_columns_json = $json->encode(\@predefined_columns);
 
-    my $treatment = $self->treatment_project_id() ? $self->treatment_project_id() : undef;
+    my $treatments = $self->treatment_project_ids() ? $self->treatment_project_ids() : undef;
+    my $treatment;
     my $treatment_trial;
     my $treatment_name = "";
-    if ($treatment){
+    if ($treatments){
+        $treatment = $_->[0];
         $treatment_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $treatment});
         $treatment_name = $treatment_trial->get_name();
     }
