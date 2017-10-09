@@ -39,7 +39,6 @@ CXGN.Dataset.prototype = {
 		    alert(response.error);
 		}
 		else {
-		    alert(JSON.stringify(response));
 		    dataset = response.dataset;
 		}
 	    },

@@ -38,7 +38,7 @@
 	<td>
 	  <div>
 	    <br />
-	    <button class="btn btn-primary" id="wizard_save_dataset_button" data-style="expand-right" title="To download, you must be logged in with a filter selected">Save current selection</button>
+	    <button class="btn btn-primary" id="wizard_save_dataset_button" data-style="expand-right" title="To save selections, you must be logged in with a filter selected">Save current selection</button>
 	  </div>
 	</td>
 	<td width="30">&nbsp;</td>

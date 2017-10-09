@@ -61,6 +61,22 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
+    $t->find_element_ok("wizard_save_dataset_button", "id", "save dataset")->click();
+
+    sleep(1);
+
+    $t->find_element_ok("save_wizard_dataset_name", "id", "find dataset name input box")->send_keys("another dataset");
+    
+    sleep(1);
+
+    $t->find_element_ok("wizard_save_dataset_submit_button", "id", "find wizard save dataset submit button")->click();
+
+    sleep(1);
+
+    $t->driver->accept_alert();
+    
+    sleep(1);
+
     $t->find_element_ok("select4", "id", "retrieve accessions")->send_keys('accessions');
 
     sleep(3);
