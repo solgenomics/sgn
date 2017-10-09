@@ -792,12 +792,24 @@ jQuery(document).ready(function($) {
 
     $("#field_trial").change(function(){
 
-    jQuery.ajax({
+      var maternal_parent;
+      if ($('#maternal_parent').val() != ''){
+        maternal_parent = $('#maternal_parent').val();
+      }
+
+      if ($('#selfed_parent').val() != ''){
+        maternal_parent = $('#selfed_parent').val();
+      }
+
+      console.log(maternal_parent);
+
+      jQuery.ajax({
         url:'/ajax/breeders/get_accession_plots',
         data:{'field_trial':$('#field_trial').val(),
-            'parent_accession':$('#maternal_parent').val(),
-            'parent_accession':$('#selfed_parent').val(),
-            'parent_accession':$('#open_maternal_parent').val()
+
+            'parent_accession':maternal_parent,
+
+
         },
         success: function(response){
         console.log(response);
@@ -821,11 +833,20 @@ jQuery(document).ready(function($) {
            }
          });
 
-    jQuery.ajax({
+      var paternal_parent;
+
+      if ($('#paternal_parent').val() != ''){
+        paternal_parent = $('#paternal_parent').val();
+      }
+
+      if ($('#selfed_parent').val() != ''){
+        paternal_parent = $('#selfed_parent').val();
+      }
+
+      jQuery.ajax({
         url:'/ajax/breeders/get_accession_plots',
         data:{'field_trial':$('#field_trial').val(),
-              'parent_accession':$('#paternal_parent').val(),
-              'parent_accession':$('#selfed_parent').val()
+              'parent_accession':paternal_parent,
         },
         success: function(response){
         console.log(response);
@@ -848,9 +869,6 @@ jQuery(document).ready(function($) {
          alert("An error occurred");
                 }
               });
-
-
-
        });
 
 });
