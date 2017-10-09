@@ -161,7 +161,7 @@ CREATE UNIQUE INDEX seedlots_idx ON public.seedlots(seedlot_id) WITH (fillfactor
 ALTER MATERIALIZED VIEW seedlots OWNER TO web_usr;
 
 -- add seedlots binary views and ADD BACK remaining BINARY VIEWS that were dropped during cascade
-
+DROP MATERIALIZED VIEW IF EXISTS public.accessionsXseedlots;
 CREATE MATERIALIZED VIEW public.accessionsXseedlots AS
 SELECT public.materialized_phenoview.accession_id,
     public.stock.stock_id AS seedlot_id
@@ -175,8 +175,11 @@ ALTER MATERIALIZED VIEW accessionsXseedlots OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.breeding_programsXseedlots AS
 SELECT public.materialized_phenoview.breeding_program_id,
-    public.materialized_phenoview.seedlot_id
+    public.nd_experiment_stock.stock_id AS seedlot_id
    FROM public.materialized_phenoview
+   LEFT JOIN nd_experiment_project ON materialized_phenoview.breeding_program_id = nd_experiment_project.project_id
+   LEFT JOIN nd_experiment ON nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id AND nd_experiment.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'seedlot_experiment')
+   LEFT JOIN nd_experiment_stock ON nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id
   GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX breeding_programsXseedlots_idx ON public.breeding_programsXseedlots(breeding_program_id, seedlot_id) WITH (fillfactor=100);
@@ -184,19 +187,22 @@ ALTER MATERIALIZED VIEW breeding_programsXseedlots OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.genotyping_protocolsXseedlots AS
 SELECT public.materialized_genoview.genotyping_protocol_id,
-    public.materialized_phenoview.seedlot_id
-   FROM public.materialized_phenoview
-   JOIN public.materialized_genoview USING(accession_id)
-  GROUP BY public.materialized_genoview.genotyping_protocol_id,public.materialized_phenoview.seedlot_id
+public.stock.stock_id AS seedlot_id
+FROM public.materialized_genoview
+LEFT JOIN stock_relationship seedlot_relationship ON materialized_genoview.accession_id = seedlot_relationship.subject_id AND seedlot_relationship.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'collection_of')
+LEFT JOIN stock ON seedlot_relationship.object_id = stock.stock_id AND stock.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'seedlot')
+  GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocolsXseedlots_idx ON public.genotyping_protocolsXseedlots(genotyping_protocol_id, seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXseedlots OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.locationsXseedlots AS
 SELECT public.materialized_phenoview.location_id,
-    public.materialized_phenoview.seedlot_id
-   FROM public.materialized_phenoview
-  GROUP BY 1,2
+public.nd_experiment_stock.stock_id AS seedlot_id
+FROM public.materialized_phenoview
+LEFT JOIN nd_experiment ON materialized_phenoview.location_id = nd_experiment.nd_geolocation_id AND nd_experiment.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'seedlot_experiment')
+LEFT JOIN nd_experiment_stock ON nd_experiment.nd_experiment_id = nd_experiment_stock.nd_experiment_id
+GROUP BY 1,2
 WITH DATA;
 CREATE UNIQUE INDEX locationsXseedlots_idx ON public.locationsXseedlots(location_id, seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW locationsXseedlots OWNER TO web_usr;
