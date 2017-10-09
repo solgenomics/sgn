@@ -759,18 +759,22 @@ sub trial_completion_layout_section : Chained('trial') PathPart('trial_completio
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id}, verify_layout=>1, verify_physical_map=>1});
-    my $trial_errors = $trial_layout->get_design();
-    my $has_layout_check = $trial_errors->{errors}->{layout_errors} ? 0 : 1;
-    my $has_physical_map_check = $trial_errors->{errors}->{physical_map_errors} ? 0 : 1;
-    my $has_seedlots = $trial_errors->{errors}->{seedlot_errors} ? 0 : 1;
+    my $trial_errors = $trial_layout->_get_design_from_trial();
+    my $has_layout_check = $trial_errors->{errors}->{layout_errors} || $trial_errors->{error} ? 0 : 1;
+    my $has_physical_map_check = $trial_errors->{errors}->{physical_map_errors} || $trial_errors->{error} ? 0 : 1;
+    my $has_seedlots = $trial_errors->{errors}->{seedlot_errors} || $trial_errors->{error} ? 0 : 1;
+    my $error_string = $trial_errors->{error} ? $trial_errors->{error} : '';
+    my $layout_error_string = $trial_errors->{errors}->{layout_errors} ? join ', ', @{$trial_errors->{errors}->{layout_errors}} : '';
+    my $map_error_string = $trial_errors->{errors}->{physical_map_errors} ? join ', ', @{$trial_errors->{errors}->{physical_map_errors}} : '';
+    my $seedlot_error_string = $trial_errors->{errors}->{seedlot_errors} ? join ', ', @{$trial_errors->{errors}->{seedlot_errors}} : '';
 
     $c->stash->{rest} = {
         has_layout => $has_layout_check,
-        layout_errors => $trial_errors->{errors}->{layout_errors} ? join ', ', @{$trial_errors->{errors}->{layout_errors}} : '',
+        layout_errors => $error_string." ".$layout_error_string,
         has_physical_map => $has_physical_map_check,
-        physical_map_errors => $trial_errors->{errors}->{physical_map_errors} ? join ', ', @{$trial_errors->{errors}->{physical_map_errors}} : '',
+        physical_map_errors => $error_string." ".$map_error_string,
         has_seedlots => $has_seedlots,
-        seedlot_errors => $trial_errors->{errors}->{seedlot_errors} ? join ', ', @{$trial_errors->{errors}->{seedlot_errors}} : ''
+        seedlot_errors => $error_string." ".$seedlot_error_string
     };
 }
 

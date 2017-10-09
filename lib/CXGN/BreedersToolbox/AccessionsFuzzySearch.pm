@@ -46,6 +46,7 @@ sub get_matches {
 	my @absent_accessions;
 	my @found_accessions;
 	my %results;
+	print STDERR "FuzzySearch 1".localtime()."\n";
 
 	my $synonym_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
 	my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -67,13 +68,21 @@ sub get_matches {
 	push (@stock_names, @synonym_names);
 	my %stock_names_hash = map {$_ => 1} @stock_names;
 
+	print STDERR "FuzzySearch 2".localtime()."\n";
+
   foreach my $accession_name (@accession_list) {
 	  if (exists($stock_names_hash{$accession_name})){
 		  push @found_accessions, {"matched_string" => $accession_name, "unique_name" => $accession_name};
 		  next;
 	  }
+	my @search_stock_names;
+	foreach (@stock_names){
+		if (length $_ >= length $accession_name){
+			push @search_stock_names, $_;
+		}
+	}
     my @matches;
-    my @accession_matches = @{$fuzzy_string_search->get_matches($accession_name, \@stock_names, $max_distance)};
+    my @accession_matches = @{$fuzzy_string_search->get_matches($accession_name, \@search_stock_names, $max_distance)};
     my $more_than_one_perfect_match = 0;
     my $more_than_one_unique_name_for_synonym = 0;
     my $has_one_unique_match = 0;

@@ -196,9 +196,9 @@ my $trial_create = CXGN::Trial::TrialCreate
 	   operator => "janedoe"
 	  });
 
-$trial_create->save_trial();
+my $save = $trial_create->save_trial();
 
-ok($trial_create, "check that trial_create worked");
+ok($save->{'trial_id'}, "check that trial_create worked");
 my $project_name = $c->bcs_schema()->resultset('Project::Project')->search({}, {order_by => { -desc => 'project_id' }})->first()->name();
 ok($project_name == "Trial_upload_test", "check that trial_create really worked");
 
@@ -380,9 +380,9 @@ my $trial_create = CXGN::Trial::TrialCreate
 	operator => "janedoe"
 	  });
 
-$trial_create->save_trial();
+my $save = $trial_create->save_trial();
 
-ok($trial_create, "check that trial_create worked");
+ok($save->{'trial_id'}, "check that trial_create worked");
 my $project_name = $c->bcs_schema()->resultset('Project::Project')->search({}, {order_by => { -desc => 'project_id' }})->first()->name();
 ok($project_name == "test_genotyping_trial_upload", "check that trial_create really worked for igd trial");
 
