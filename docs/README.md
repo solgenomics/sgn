@@ -1,5 +1,5 @@
 # SGN Documentation
-[**View the documentation**]()
+[**View the documentation**](http://solgenomics.github.io/sgn/)
 
 ### Syntax and Use
 The documentation is written in [kramdown-flavored](https://kramdown.gettalong.org/) markdown. It also takes advantage of the [Liquid](https://shopify.github.io/liquid/) templating system and the built-in variable in [Jekyll](https://jekyllrb.com), the static site generator that GitHub pages uses.
