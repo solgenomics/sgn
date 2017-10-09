@@ -164,9 +164,11 @@ ALTER MATERIALIZED VIEW seedlots OWNER TO web_usr;
 
 CREATE MATERIALIZED VIEW public.accessionsXseedlots AS
 SELECT public.materialized_phenoview.accession_id,
-    public.materialized_phenoview.seedlot_id
+    public.stock.stock_id AS seedlot_id
    FROM public.materialized_phenoview
-  GROUP BY public.materialized_phenoview.accession_id,public.materialized_phenoview.seedlot_id
+   LEFT JOIN stock_relationship seedlot_relationship ON materialized_phenoview.accession_id = seedlot_relationship.subject_id AND seedlot_relationship.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'collection_of')
+   LEFT JOIN stock ON seedlot_relationship.object_id = stock.stock_id AND stock.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'seedlot')
+  GROUP BY public.materialized_phenoview.accession_id,public.stock.stock_id
 WITH DATA;
 CREATE UNIQUE INDEX accessionsXseedlots_idx ON public.accessionsXseedlots(accession_id, seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW accessionsXseedlots OWNER TO web_usr;
