@@ -61,7 +61,7 @@ $trial_name => undef
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="col-sm-3 control-label">Average performance of accessions for list of traits: </label>
+                    <label class="col-sm-3 control-label">Average performance of accessions (for all measurements in database) for list of traits: </label>
                     <div class="col-sm-9" >
                         <div id="create_fieldbook_with_trait_list">
                         </div>

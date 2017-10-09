@@ -141,6 +141,7 @@ sub search {
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id) = $h->fetchrow_array()) {
         push @phenotype_data, [$trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id];
     }
+    print STDERR "Phenotype Summary Search End ".localtime()."\n";
     return \@phenotype_data;
 }
 

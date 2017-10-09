@@ -318,7 +318,7 @@ sub _get_design_from_trial {
 		my @plant_ids;
 		while (my $p = $plants->next()) {
             if ($self->get_verify_layout){
-                my $plant_accession_check = $p->search_related('stock_relationship_subjects', {'stock_relationship_subjects_2.type_id'=>$plant_rel_cvterm_id})->search_related('object', {'object_2.stock_id'=>$accession_id});
+                my $plant_accession_check = $p->search_related('stock_relationship_subjects', {'me.type_id'=>$plant_rel_cvterm_id})->search_related('object', {'object.stock_id'=>$accession_id});
                 if (!$plant_accession_check->first){
                     push @{$verify_errors{errors}->{layout_errors}}, "Plant: ".$p->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
                 }
@@ -337,7 +337,7 @@ sub _get_design_from_trial {
 		my %subplots_plants_hash;
 		while (my $p = $subplots->next()) {
             if ($self->get_verify_layout){
-                my $subplot_accession_check = $p->search_related('stock_relationship_subjects', {'stock_relationship_subjects_2.type_id'=>$subplot_rel_cvterm_id})->search_related('object', {'object_2.stock_id'=>$accession_id});
+                my $subplot_accession_check = $p->search_related('stock_relationship_subjects', {'me.type_id'=>$subplot_rel_cvterm_id})->search_related('object', {'object.stock_id'=>$accession_id});
                 if (!$subplot_accession_check->first){
                     push @{$verify_errors{errors}->{layout_errors}}, "Subplot: ".$p->uniquename." does not have the same accession: $accession_name as the plot: $plot_name.";
                 }

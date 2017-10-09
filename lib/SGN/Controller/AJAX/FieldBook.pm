@@ -125,7 +125,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         user_id => $c->user()->get_object()->get_sp_person_id(),
         user_name => $c->user()->get_object()->get_username(),
         data_level => $data_level,
-        treatment_project_id => $treatment_project_id,
+        treatment_project_ids => [$treatment_project_id],
         selected_columns => $selected_columns,
         selected_trait_ids => \@selected_traits,
         selected_trait_names => \@trait_list
