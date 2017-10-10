@@ -122,6 +122,99 @@ UPDATE matviews set mv_dependents = '{"accessionsXbreeding_programs","accessions
 
 --add seedlots view
 
+CREATE MATERIALIZED VIEW public.seedlots AS
+SELECT stock.stock_id AS seedlot_id,
+stock.uniquename AS seedlot_name
+FROM stock
+WHERE stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'seedlot') AND is_obsolete = 'f'
+GROUP BY 1,2
+WITH DATA;
+CREATE UNIQUE INDEX seedlots_idx ON public.seedlots(seedlot_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW seedlots OWNER TO web_usr;
+
+-- add other individual category views
+
+DROP MATERIALIZED VIEW IF EXISTS public.accessions CASCADE;
+CREATE MATERIALIZED VIEW public.accessions AS
+  SELECT stock.stock_id AS accession_id,
+  stock.uniquename AS accession_name
+  FROM stock
+  WHERE stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'accession') AND is_obsolete = 'f'
+  GROUP BY stock.stock_id, stock.uniquename
+  WITH DATA;
+CREATE UNIQUE INDEX accessions_idx ON public.accessions(accession_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW accessions OWNER TO web_usr;
+
+DROP MATERIALIZED VIEW IF EXISTS public.breeding_programs CASCADE;
+CREATE MATERIALIZED VIEW public.breeding_programs AS
+SELECT project.project_id AS breeding_program_id,
+    project.name AS breeding_program_name
+   FROM project join projectprop USING (project_id)
+   WHERE projectprop.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'breeding_program')
+  GROUP BY project.project_id, project.name
+WITH DATA;
+CREATE UNIQUE INDEX breeding_programs_idx ON public.breeding_programs(breeding_program_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW breeding_programs OWNER TO web_usr;
+
+DROP MATERIALIZED VIEW IF EXISTS public.genotyping_protocols CASCADE;
+CREATE MATERIALIZED VIEW public.genotyping_protocols AS
+SELECT nd_protocol.nd_protocol_id AS genotyping_protocol_id,
+    nd_protocol.name AS genotyping_protocol_name
+   FROM nd_protocol
+  GROUP BY public.nd_protocol.nd_protocol_id, public.nd_protocol.name
+WITH DATA;
+CREATE UNIQUE INDEX genotyping_protocols_idx ON public.genotyping_protocols(genotyping_protocol_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW genotyping_protocols OWNER TO web_usr;
+
+DROP MATERIALIZED VIEW IF EXISTS public.locations CASCADE;
+CREATE MATERIALIZED VIEW public.locations AS
+SELECT nd_geolocation.nd_geolocation_id AS location_id,
+  nd_geolocation.description AS location_name
+   FROM nd_geolocation
+  GROUP BY public.nd_geolocation.nd_geolocation_id, public.nd_geolocation.description
+WITH DATA;
+CREATE UNIQUE INDEX locations_idx ON public.locations(location_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW locations OWNER TO web_usr;
+
+DROP MATERIALIZED VIEW IF EXISTS public.plants CASCADE;
+CREATE MATERIALIZED VIEW public.plants AS
+SELECT stock.stock_id AS plant_id,
+    stock.uniquename AS plant_name
+   FROM stock
+   WHERE stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plant') AND is_obsolete = 'f'
+  GROUP BY public.stock.stock_id, public.stock.uniquename
+WITH DATA;
+CREATE UNIQUE INDEX plants_idx ON public.plants(plant_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW plants OWNER TO web_usr;
+
+DROP MATERIALIZED VIEW IF EXISTS public.plots CASCADE;
+CREATE MATERIALIZED VIEW public.plots AS
+SELECT stock.stock_id AS plot_id,
+    stock.uniquename AS plot_name
+   FROM stock
+   WHERE stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plot') AND is_obsolete = 'f'
+  GROUP BY public.stock.stock_id, public.stock.uniquename
+WITH DATA;
+CREATE UNIQUE INDEX plots_idx ON public.plots(plot_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW plots OWNER TO web_usr;
+
+DROP MATERIALIZED VIEW IF EXISTS public.trait_components CASCADE;
+CREATE MATERIALIZED VIEW public.trait_components AS
+SELECT cvterm.cvterm_id AS trait_component_id,
+(((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_component_name
+    FROM cv
+    JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = ANY ('{object_ontology,attribute_ontology,method_ontology,unit_ontology,time_ontology}')))
+    JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
+    JOIN dbxref USING(dbxref_id)
+    JOIN db ON(dbxref.db_id = db.db_id)
+    LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
+    LEFT JOIN cvterm_relationship is_object ON cvterm.cvterm_id = is_object.object_id
+    WHERE is_object.object_id IS NULL AND is_subject.subject_id IS NOT NULL
+    GROUP BY 2,1 ORDER BY 2,1
+WITH DATA;
+CREATE UNIQUE INDEX trait_components_idx ON public.trait_components(trait_component_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW trait_components OWNER TO web_usr;
+    
 DROP MATERIALIZED VIEW IF EXISTS public.traits CASCADE;
 CREATE MATERIALIZED VIEW public.traits AS
   SELECT cvterm.cvterm_id AS trait_id,
@@ -149,19 +242,57 @@ CREATE MATERIALIZED VIEW public.traits AS
   CREATE UNIQUE INDEX traits_idx ON public.traits(trait_id) WITH (fillfactor=100);
   ALTER MATERIALIZED VIEW traits OWNER TO web_usr;
 
-DROP MATERIALIZED VIEW IF EXISTS public.seedlots CASCADE;
-CREATE MATERIALIZED VIEW public.seedlots AS
-SELECT stock.stock_id AS seedlot_id,
-stock.uniquename AS seedlot_name
-FROM stock
-WHERE stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'seedlot') AND is_obsolete = 'f'
-GROUP BY 1,2
+DROP MATERIALIZED VIEW IF EXISTS public.trials CASCADE;
+CREATE MATERIALIZED VIEW public.trials AS
+SELECT trial.project_id AS trial_id,
+    trial.name AS trial_name
+    FROM project breeding_program
+    JOIN project_relationship ON(breeding_program.project_id = object_project_id AND project_relationship.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'breeding_program_trial_relationship'))
+    JOIN project trial ON(subject_project_id = trial.project_id)
+    JOIN projectprop on(trial.project_id = projectprop.project_id)
+    WHERE projectprop.type_id NOT IN (SELECT cvterm.cvterm_id FROM cvterm WHERE cvterm.name::text = 'cross'::text OR cvterm.name::text = 'trial_folder'::text OR cvterm.name::text = 'folder_for_trials'::text OR cvterm.name::text = 'folder_for_crosses'::text)
+    GROUP BY trial.project_id, trial.name
 WITH DATA;
-CREATE UNIQUE INDEX seedlots_idx ON public.seedlots(seedlot_id) WITH (fillfactor=100);
-ALTER MATERIALIZED VIEW seedlots OWNER TO web_usr;
+CREATE UNIQUE INDEX trials_idx ON public.trials(trial_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW trials OWNER TO web_usr;
+
+DROP MATERIALIZED VIEW IF EXISTS public.trial_designs CASCADE;
+CREATE MATERIALIZED VIEW public.trial_designs AS
+SELECT projectprop.value AS trial_design_id,
+  projectprop.value AS trial_design_name
+   FROM projectprop
+   JOIN cvterm ON(projectprop.type_id = cvterm.cvterm_id)
+   WHERE cvterm.name = 'design'
+   GROUP BY projectprop.value
+WITH DATA;
+CREATE UNIQUE INDEX trial_designs_idx ON public.trial_designs(trial_design_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW trial_designs OWNER TO web_usr;
+
+DROP MATERIALIZED VIEW IF EXISTS public.trial_types CASCADE;
+CREATE MATERIALIZED VIEW public.trial_types AS
+SELECT cvterm.cvterm_id AS trial_type_id,
+  cvterm.name AS trial_type_name
+   FROM cvterm
+   JOIN cv USING(cv_id)
+   WHERE cv.name = 'project_type'
+   GROUP BY cvterm.cvterm_id
+WITH DATA;
+CREATE UNIQUE INDEX trial_types_idx ON public.trial_types(trial_type_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW trial_types OWNER TO web_usr;
+
+DROP MATERIALIZED VIEW IF EXISTS public.years CASCADE;
+CREATE MATERIALIZED VIEW public.years AS
+SELECT projectprop.value AS year_id,
+  projectprop.value AS year_name
+   FROM projectprop
+   WHERE projectprop.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'project year')
+  GROUP BY public.projectprop.value
+WITH DATA;
+CREATE UNIQUE INDEX years_idx ON public.years(year_id) WITH (fillfactor=100);
+ALTER MATERIALIZED VIEW years OWNER TO web_usr;
 
 -- add seedlots binary views and ADD BACK remaining BINARY VIEWS that were dropped during cascade
-DROP MATERIALIZED VIEW IF EXISTS public.accessionsXseedlots;
+
 CREATE MATERIALIZED VIEW public.accessionsXseedlots AS
 SELECT public.materialized_phenoview.accession_id,
     public.stock.stock_id AS seedlot_id
@@ -196,7 +327,6 @@ WITH DATA;
 CREATE UNIQUE INDEX genotyping_protocolsXseedlots_idx ON public.genotyping_protocolsXseedlots(genotyping_protocol_id, seedlot_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW genotyping_protocolsXseedlots OWNER TO web_usr;
 
-DROP MATERIALIZED VIEW IF EXISTS public.locationsXseedlots;
 CREATE MATERIALIZED VIEW public.locationsXseedlots AS
 SELECT public.nd_experiment.nd_geolocation_id AS location_id,
 public.nd_experiment_stock.stock_id AS seedlot_id
