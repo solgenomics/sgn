@@ -82,16 +82,17 @@ has 'treatment_project_ids' => (
 has 'selected_columns' => (
     is => 'ro',
     isa => 'HashRef',
+    default => sub { {"plot_name"=>1, "plot_number"=>1} }
 );
 
 has 'selected_trait_ids'=> (
     is => 'ro',
-    isa => 'ArrayRef[Int]',
+    isa => 'ArrayRef[Int]|Undef',
 );
 
 has 'selected_trait_names'=> (
     is => 'ro',
-    isa => 'ArrayRef[Str]',
+    isa => 'ArrayRef[Str]|Undef',
 );
 
 sub download { 
@@ -110,7 +111,6 @@ sub download {
     }
 
     my $ws = $wb->add_worksheet();
-
     my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
         schema => $schema,
         trial_id => $trial_id,
