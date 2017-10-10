@@ -4,10 +4,60 @@ package CXGN::Trial::TrialLayout;
 
 CXGN::Trial::TrialLayout - Module to get layout information about a trial (i.e. a project with a "design" projectprop)
 
-=head1 USAGE
+=head1 SYNOPSIS
 
- my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
+ my $trial_layout = CXGN::Trial::TrialLayout->new({
+    schema => $schema,
+    trial_id => $trial_id}
+ );
+ my $tl = $trial_layout->get_design();
+ the return is a HashRef of HashRef where the keys are the plot_number such as:
+ 
+ {
+    '1001' => {
+        "plot_name" => "plot1",
+        "plot_number" => 1001,
+        "plot_id" => 1234,
+        "accession_name" => "accession1",
+        "accession_id" => 2345,
+        "block_number" => 1,
+        "row_number" => 2,
+        "col_number" => 3,
+        "rep_number" => 1,
+        "is_a_control" => 1,
+        "seedlot_name" => "seedlot1",
+        "seedlot_stock_id" => 3456,
+        "num_seed_per_plot" => 12,
+        "seed_transaction_operator" => "janedoe",
+        "plant_names" => ["plant1", "plant2"],
+        "plant_ids" => [3456, 3457]
+    }
+ }
+ 
+--------------------------------------------------------------------------
 
+This can also be used the verify that a layout has a physical map covering all
+plots, as well as verifying that the relationships between entities are valid
+by doing:
+
+my $trial_layout = CXGN::Trial::TrialLayout->new({
+    schema => $schema,
+    trial_id => $c->stash->{trial_id},
+    verify_layout=>1,
+    verify_physical_map=>1
+});
+my $trial_errors = $trial_layout->_get_design_from_trial();
+
+If there are errors, $trial_errors is a HashRef like:
+
+{
+    "errors" => 
+        {
+            "layout_errors" => [ "the accession between plot 1 and seedlot 1 is out of sync", "the accession between plot 1 and plant 1 is out of sync" ],
+            "seedlot_errors" => [ "plot1 does not have a seedlot linked" ],
+            "physical_map_errors" => [ "plot 1 does not have a row_number", "plot 1 does not have a col_number"]
+        }
+}
 
 =head1 DESCRIPTION
 

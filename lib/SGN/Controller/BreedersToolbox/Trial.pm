@@ -175,7 +175,7 @@ sub trial_tree : Path('/breeders/trialtree') Args(0) {
 }
 
 #For downloading trial layout in CSV and Excel, for downloading trial phenotypes in CSV and Excel, and for downloading trial phenotyping spreadsheets in Excel.
-#For phenotype download, better to use SGN::Controller::BreedersToolbox::Download->download_phenotypes_action and provide a single trial_id in the trial_list argument. This is how the phenotype download works from the wizard page, the trial tree page, and the trial detail page for phenotype download.
+#For phenotype download, better to use SGN::Controller::BreedersToolbox::Download->download_phenotypes_action and provide a single trial_id in the trial_list argument, as that is how the phenotype download works from the wizard page, the trial tree page, and the trial detail page for phenotype download.
 sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;

@@ -1,8 +1,164 @@
 
 package CXGN::Trial::Download;
 
-use Moose;
+=head1 NAME
 
+CXGN::Trial::Download
+
+=head1 SYNOPSIS
+
+This module loads one of the plugins in /CXGN/Trial/Download/Plugin/
+This module is used differently depending on the plugin.
+Example usage for all plugins is listed here.
+
+------------------------------------------------------------------
+
+For downloading a trial's xls spreadsheet for collecting phenotypes (as used
+from SGN::Controller::AJAX::PhenotypesDownload->create_phenotype_spreadsheet):
+
+my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
+my $tempfile = $c->config->{basepath}."/".$rel_file.".xls";
+my $create_spreadsheet = CXGN::Trial::Download->new({
+    bcs_schema => $schema,
+    trial_id => $trial_id,
+    trait_list => \@trait_list,
+    filename => $tempfile,
+    format => "ExcelBasic",
+    data_level => $data_level,
+    sample_number => $sample_number,
+    predefined_columns => $predefined_columns,
+    treatment_project_id => $treatment_project_id
+});
+$create_spreadsheet->download();
+$c->stash->{rest} = { filename => $urlencode{$rel_file.".xls"} };
+
+------------------------------------------------------------------
+
+For downloading phenotypes in a matrix where columns contain the phenotypes
+and rows contain the observation unit (as used from
+SGN::Controller::BreedersToolbox::Download->download_phenotypes_action which
+is used from the wizard, trial detail page, and manage trials page for
+downlading phenotypes):
+
+There a number of optional keys for filtering down the phenotypes
+(trait_list, year_list, location_list, etc). Keys can be entirely ignored
+if you don't need to filter by them.
+
+As a CSV:
+my $plugin = 'TrialPhenotypeCSV';
+
+As a xls:
+my $plugin = 'TrialPhenotypeExcel';
+
+my $download = CXGN::Trial::Download->new({
+    bcs_schema => $schema,
+    trait_list => \@trait_list_int,
+    year_list => \@year_list,
+    location_list => \@location_list_int,
+    trial_list => \@trial_list_int,
+    accession_list => \@accession_list_int,
+    plot_list => \@plot_list_int,
+    plant_list => \@plant_list_int,
+    filename => $tempfile,
+    format => $plugin,
+    data_level => $data_level,
+    include_timestamp => $timestamp_option,
+    trait_contains => \@trait_contains_list,
+    phenotype_min_value => $phenotype_min_value,
+    phenotype_max_value => $phenotype_max_value,
+    search_type=>$search_type,
+    has_header=>$has_header
+});
+my $error = $download->download();
+my $file_name = "phenotype.$format";
+$c->res->content_type('Application/'.$format);
+$c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+my $output = read_file($tempfile);
+$c->res->body($output);
+
+--------------------------------------------------------------------------
+
+For downloading a "DataCollector Spreadsheet" for collecting phenotypes (as
+used in SGN::Controller::AJAX::DataCollectorDownload->create_DataCollector_spreadsheet_POST):
+
+my $create_spreadsheet = CXGN::Trial::Download->new({
+    bcs_schema => $schema,
+    trial_id => $trial_id,
+    trait_list => \@trait_list,
+    filename => $file_path,
+    format => 'DataCollectorExcel',
+    data_level => $data_level,
+});
+my $spreadsheet_response = $create_spreadsheet->download();
+if ($spreadsheet_response->{error}) {
+    $c->stash->{rest} = { error => $spreadsheet_response->{error} };
+    return;
+}
+my $file_name = basename($file_path);
+$c->stash->{rest} = { filename => $urlencode{$tempfile.".xls"} };
+
+-------------------------------------------------------------------------------
+
+For downloading a trial's layout (as used from CXGN::Trial::Download->trial_download):
+
+A trial's layout can optionally include treatment and phenotype summary
+information, mapping to treatment_project_ids and trait_list, selected_trait_names.
+These keys can be ignored if you don't need them in the layout.
+
+As a XLS:
+my $plugin = "TrialLayoutExcel";
+
+As a CSV:
+my $plugin = "TrialLayoutCSV";
+
+my $download = CXGN::Trial::Download->new({
+    bcs_schema => $schema,
+    trial_id => $c->stash->{trial_id},
+    trait_list => \@trait_list,
+    filename => $tempfile,
+    format => $plugin,
+    data_level => $data_level,
+    treatment_project_ids => \@treatment_project_ids,
+    selected_columns => $selected_cols,
+    selected_trait_names => \@selected_trait_names,
+});
+my $error = $download->download();
+my $file_name = $trial_id . "_" . "$what" . ".$format";
+$c->res->content_type('Application/'.$format);
+$c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+my $output = read_file($tempfile);
+$c->res->body($output);
+
+------------------------------------------------------------------------------
+
+For downloading the IGD sequencing facility spreadsheet (as used from
+SGN::Controller::BreedersToolbox::Download->download_sequencing_facility_spreadsheet):
+
+my $td = CXGN::Trial::Download->new({
+    bcs_schema => $schema,
+    trial_id => $trial_id,
+    format => "IGDFacilitySpreadsheet",
+    filename => $file_path,
+    user_id => $c->user->get_object()->get_sp_person_id(),
+    trial_download_logfile => $c->config->{trial_download_logfile},
+});
+$td->download();
+my $file_name = basename($file_path);
+$c->res->content_type('Application/xls');
+$c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+my $output = read_file($file_path, binmode=>':raw');
+$c->res->body($output);
+
+
+-------------------------------------------------------------------------------
+
+
+=head1 AUTHORS
+
+=cut
+
+
+use Moose;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;
 use File::Basename qw | basename dirname|;

@@ -1,5 +1,41 @@
 package CXGN::Fieldbook::DownloadTrial;
 
+=head1 NAME
+
+CXGN::Fieldbook::DownloadTrial - an object to handle creating a Fieldbook Trial Layout xls file.
+
+=head1 SYNOPSIS
+
+this module is used to create a Fieldbook layout file that can be imported into Fieldbook App. it stores the file on fileserver and saves the file to a user, allowing them to access it later on.
+
+my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
+    bcs_schema => $schema,
+    metadata_schema => $metadata_schema,
+    phenome_schema => $phenome_schema,
+    trial_id => $trial_id,
+    tempfile => '/tmp/fieldbook_file1.xls',
+    archive_path => /archive/path/,
+    user_id => $c->user()->get_object()->get_sp_person_id(),
+    user_name => $c->user()->get_object()->get_username(),
+    data_level => 'plots',
+    treatment_project_ids => [1],
+    selected_columns => {"plot_name"=>1,"block_number"=>1,"plot_number"=>1},
+    selected_trait_ids => [2,3],
+    selected_trait_names => ["harvest index|CO:0000001", "x|CO:00000002"]
+});
+
+my $create_fieldbook_return = $create_fieldbook->download();
+my $error;
+if ($create_fieldbook_return->{'error_messages'}){
+    $error = join ',', @{$create_fieldbook_return->{'error_messages'}};
+}
+my $file_name = $create_fieldbook_return->{'file'};
+my $file_id = $create_fieldbook_return->{'file_id'};
+
+=head1 AUTHORS
+
+=cut
+
 use Moose;
 use Moose::Util::TypeConstraints;
 use Try::Tiny;

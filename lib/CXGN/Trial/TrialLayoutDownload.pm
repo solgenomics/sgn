@@ -4,26 +4,37 @@ package CXGN::Trial::TrialLayoutDownload;
 
 CXGN::Trial::TrialLayoutDownload
 
-=head1 USAGE
+=head1 SYNOPSIS
 
-    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
-        schema => $schema,
-        trial_id => $trial_id,
-        data_level => 'plots',
-        treatment_project_ids => [1,2],
-        selected_columns => {"plot_name"=>1,"plot_number"=>1,"block_number"=>1},
-        selected_trait_ids => [1,2,3],
-        selected_trait_names => ['trait1|CO:00001', 'trait2|CO:000002']
-    });
-    my $output = $trial_layout_download->get_layout_output();
-
-=head1 DESCRIPTION
-
-Module to format layout info for trial based on which columns user wants to see. Selected columns can be 'plant_name','subplot_name','plot_name','block_number','subplot_number','plant_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms', or 'tier'. This module can also include treatments into the output. This module can also include accession trait performace summaries into the output. 
+Module to format layout info for trial based on which columns user wants to see. Selected columns can be 'plant_name','subplot_name','plot_name','block_number','subplot_number','plant_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms', or 'tier'.
+This module can also optionally include treatments into the output.
+This module can also optionally include accession trait performace summaries into the output.
 
 This module is used from CXGN::Trial::Download::Plugin::TrialLayoutExcel, CXGN::Trial::Download::Plugin::TrialLayoutCSV, CXGN::Fieldbook::DownloadTrial
 
+my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+    schema => $schema,
+    trial_id => $trial_id,
+    data_level => 'plots',
+    treatment_project_ids => [1,2],
+    selected_columns => {"plot_name"=>1,"plot_number"=>1,"block_number"=>1},
+    selected_trait_ids => [1,2,3],
+    selected_trait_names => ['trait1|CO:00001', 'trait2|CO:000002']
+});
+my $output = $trial_layout_download->get_layout_output();
+
 Output is an ArrayRef or ArrayRefs where the first entry is the Header and subsequent entries are the layout entries.
+
+
+If you don't need treatments or phenotype summaries included you can ignore those keys like:
+
+my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+    schema => $schema,
+    trial_id => $trial_id,
+    data_level => 'plots',
+    selected_columns => {"plot_name"=>1,"plot_number"=>1,"block_number"=>1},
+});
+my $output = $trial_layout_download->get_layout_output();
 
 =head1 AUTHORS
 
