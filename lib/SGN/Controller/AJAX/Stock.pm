@@ -70,6 +70,7 @@ sub add_stockprop_POST {
         my $req = $c->req;
         my $stock_id = $c->req->param('stock_id');
         my $prop  = $c->req->param('prop');
+        $prop =~ s/^\s+|\s+$//g; #trim whitespace from both ends
         my $prop_type = $c->req->param('prop_type');
 
 	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );

@@ -350,27 +350,25 @@ sub genotype_trial : Path('/ajax/breeders/genotypetrial') Args(0) {
         operator => $c->user->get_object->get_username
     });
 
-    my %message;
-    my $error;
+    my $save;
     try {
-        %message = $ct->save_trial();
+        $save = $ct->save_trial();
     } catch {
-        $error = $_;
+        $save->{'error'} = $_;
     };
 
-    if ($message{'error'}) {
-        $error = $message{'error'};
-    }
-    if ($error){
-        $c->stash->{rest} = {error => "Error saving trial in the database: $error"};
-        $c->detach();
+    if ($save->{'error'}) {
+        print STDERR "Error saving trial: ".$save->{'error'};
+        $c->stash->{rest} = {error => $save->{'error'}};
+        return;
+    } elsif ($save->{'trial_id'}) {
+        $c->stash->{rest} = {
+            message => "Successfully stored the trial.",
+            trial_id => $save->{'trial_id'},
+        };
+        return;
     }
 
-    $c->stash->{rest} = {
-        message => "Successfully stored the trial.",
-        trial_id => $message{trial_id},
-    };
-    #print STDERR Dumper(%message);
 }
 
 
@@ -517,27 +515,25 @@ sub igd_genotype_trial : Path('/ajax/breeders/igdgenotypetrial') Args(0) {
         operator => $c->user->get_object->get_username
     });
 
-    my %message;
-    my $error;
+    my $save;
     try {
-        %message = $ct->save_trial();
+        $save = $ct->save_trial();
     } catch {
-        $error = $_;
+        $save->{'error'} = $_;
     };
 
-    if ($message{'error'}) {
-        $error = $message{'error'};
+    if ($save->{'error'}) {
+        print STDERR "Error saving trial: ".$save->{'error'};
+        $c->stash->{rest} = {error => $save->{'error'}};
+        return;
+    } elsif ($save->{'trial_id'}) {
+        $c->stash->{rest} = {
+            message => "Successfully stored the trial.",
+            trial_id => $save->{'trial_id'},
+        };
+        return;
     }
-    if ($error){
-        $c->stash->{rest} = {error => "Error saving trial in the database: $error"};
-        $c->detach;
-    }
-
-    $c->stash->{rest} = {
-        message => "Successfully stored the trial.",
-        trial_id => $message{trial_id},
-    };
-    #print STDERR Dumper(%message);
+    
 }
 
 sub get_accession_plots :Path('/ajax/breeders/get_accession_plots') Args(0) {

@@ -127,12 +127,15 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         return;
     }
 
+    print STDERR "UploadPedigreeCheck1".localtime()."\n";
     my $pedigrees = _get_pedigrees_from_file($c, $archived_filename_with_path);
+    print STDERR "UploadPedigreeCheck2".localtime()."\n";
 
     my $add = CXGN::Pedigree::AddPedigrees->new({ schema=>$schema, pedigrees=>$pedigrees });
     my $error;
 
     my $pedigree_check = $add->validate_pedigrees();
+    print STDERR "UploadPedigreeCheck3".localtime()."Complete\n";
     #print STDERR Dumper $pedigree_check;
     if (!$pedigree_check){
         $error = "There was a problem validating pedigrees. Pedigrees were not stored.";

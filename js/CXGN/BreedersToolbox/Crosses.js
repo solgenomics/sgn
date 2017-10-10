@@ -180,6 +180,7 @@ jQuery(document).ready(function($) {
         }
 
         var crossName = $("#cross_name").val();
+        crossName = crossName.trim();
         if (!crossName) {
             alert("A cross name is required");
             return;

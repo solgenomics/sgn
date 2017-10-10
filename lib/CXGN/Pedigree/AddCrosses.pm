@@ -127,6 +127,9 @@ sub add_crosses {
     my $female_plot;
     my $male_plot;
 
+      $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from both ends
+
+
 	  if ($pedigree->has_female_parent()) {
 	      $female_parent_name = $pedigree->get_female_parent()->get_name();
 	      $female_parent = $self->_get_accession($female_parent_name);

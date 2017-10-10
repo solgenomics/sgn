@@ -514,40 +514,37 @@ sub save_experimental_design_POST : Args(0) {
       return;
     }
 
-    my %message;
+    my $save;
     try {
-        %message = $trial_create->save_trial();
+        $save = $trial_create->save_trial();
     } catch {
-        $error = $_;
+        $save->{'error'} = $_;
     };
-    if ($message{'error'}){
-        $error = $message{'error'};
+
+    if ($save->{'error'}) {
+        print STDERR "Error saving trial: ".$save->{'error'};
+        $c->stash->{rest} = {error => $save->{'error'}};
+        return;
+    } elsif ($save->{'trial_id'}) {
+
+        $design_index++;
+
+        if ($folder_id) {
+
+          my $folder1 = CXGN::Trial::Folder->new(
+    	 		{
+    	 			bcs_schema => $chado_schema,
+    	 			folder_id => $save->{'trial_id'},
+    			});
+          $folder1->associate_parent($folder_id);
+        }
+
+        $c->stash->{rest} = {success => "1",};
+        return;
     }
-    if ($error) {
-        print STDERR "Error trialcreate save: $error\n";
-        $c->stash->{rest} = {error => "Error saving trial in the database: $error"};
-        $c->detach;
-    }
-
-    $design_index++;
-
-    if ($folder_id) {
-      $new_trial_id = $schema->resultset("Project::Project")->find({name=>$trial_name})->project_id();
-
-      my $folder1 = CXGN::Trial::Folder->new(
-	 		{
-	 			bcs_schema => $chado_schema,
-	 			folder_id => $new_trial_id,
-			});
-      $folder1->associate_parent($folder_id);
-    }
-  }
-    if ($error) {return;}
-    print STDERR "Trial saved successfully\n";
-    $c->stash->{rest} = {success => "1",};
-    return;
-
 }
+}
+
 
 sub verify_stock_list : Path('/ajax/trial/verify_stock_list') : ActionClass('REST') { }
 
@@ -769,20 +766,23 @@ sub upload_trial_file_POST : Args(0) {
        operator => $c->user()->get_object()->get_username()
 	  });
 
-  try {
-      $trial_create->save_trial();
-  } catch {
-      $c->stash->{rest} = {error => "Error saving trial in the database $_"};
-      $error = 1;
-  };
+    my $save;
+    try {
+        $save = $trial_create->save_trial();
+    } catch {
+        $save->{'error'} = $_;
+    };
 
-  print STDERR "Check 5: ".localtime()."\n";
-
-  if ($error) {return;}
-  $c->stash->{rest} = {success => "1",};
-  return;
+    #print STDERR "Check 5: ".localtime()."\n";
+    if ($save->{'error'}) {
+        print STDERR "Error saving trial: ".$save->{'error'};
+        $c->stash->{rest} = {error => $save->{'error'}};
+        return;
+    } elsif ($save->{'trial_id'}) {
+        $c->stash->{rest} = {success => "1"};
+        return;
+    }
 
 }
 
-
- 1;
+1;
