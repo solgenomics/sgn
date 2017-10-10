@@ -15,8 +15,27 @@
 
 <div class="row">
   <div class="col-md-9">
+        <div class="well">
+          <center>
+            <label>Select Label Size</label>
+            <br>
+            <select id="d3-label-size-select" class="input-sm form-control form-group">
+              <!-- <option width="520" height="200">1" x 2 5/8"</option>
+              <option width="800" height="200">1" x 4"</option>
+              <option width="800" height="265">1 1/3" x 4"</option>
+              <option width="" height="">Custom</option> -->
+            </select>
+
+            <label> Custom Width:</label>
+            <input type="text" class="form-control" id="d3-label-custom-width">
+            <label> Custom Height:</label>
+            <input type="text" class="form-control" id="d3-label-custom-height">
+            
+            <button class="btn btn-primary" id="d3-apply-label-size">Apply</button>
+          </center>
+        </div>
     <div class="well" style="padding:0;">
-      <div class="d3-draw-area"></div>
+      <div class="d3-draw-area" id="draw-area"></div>
     </div>
     <div class="well">
       <center class="add-text-container">
@@ -101,6 +120,14 @@ var barcode_types = [
   {name:"Medium QR Code (2D)",width:154,height:154,code:"BQ",size:",6"},
   {name:"Small QR Code (2D)",width:128,height:128,code:"BQ",size:",5"},
 ];
+
+var label_sizes = [
+  {name:'1" x 2 5/8"',width:520,height:200},
+  {name:'1" x 4"',width:800,height:200},
+  {name:'1 1/3" x 4"',width:800,height:265},
+  {name:'Custom'}
+];
+
 var text_placeholders = [
 {key:"{$ACCESSION_NAME}", name:"Accession Name"},
 {key:"{$PLOT_NAME}",   name:"Plot Name"},
@@ -256,15 +283,13 @@ function getTransGroupBounds(node){
 }
 
 $(document).ready(function($) {
-  var input_width = 520; //label width (pts)
-  var input_height = 200; //label height (pts)
 
-  var width = 520; //fixed svg width;
-  var height = width/input_width*input_height; //scaled height.
+  var width = 520; 
+  var height = 200; 
 
   //scales to allow for conversion between "real" pts and SVG pts
-  var _x = d3.scale.linear().domain([0,width]).range([0,input_width]);
-  var _y = d3.scale.linear().domain([0,height]).range([0,input_height]);
+  var _x = d3.scale.linear().domain([0,width]).range([0,width]);
+  var _y = d3.scale.linear().domain([0,height]).range([0,height]);
   
   get_select_box('trials', 'trial_select_div', { 'name' : 'trial_select', 'id' : 'trial_select' });
   
@@ -317,6 +342,34 @@ $(document).ready(function($) {
     updateGrid(_x.invert(this.value),width,height);
   });
   updateGrid(_x.invert(12),width,height);
+  
+  // resize draw area accorinding to selected label size
+  var label_size_select = d3.select("#d3-label-size-select");
+  label_size_select.selectAll("option")
+    .data(label_sizes)
+    .enter().append("option")
+    .text(function(d){return d.name})
+    .attr("value",function(d,i){return i});
+  label_size_select.on("input",function(){
+      var val = d3.select(this).node().value;
+      console.log("selected val ="+val);
+      var width, height;
+      if (val == 3) {
+          console.log("Retrieveing custom types");
+          width = d3.select("#d3-label-width-custom").node().value;
+          height = d3.select("#d3-label-height-custom").node().value;
+      } else {
+          width = label_sizes[val].width; //_x.invert(label_sizes[val].width);
+          height = label_sizes[val].height; //_y.invert(label_sizes[val].height);
+      }
+      console.log("Changing draw area height to "+height+" and width to "+width);
+      var svg = document.getElementById("draw-area");
+      svg.setAttribute("width", width);
+      svg.setAttribute("height", height);
+    //   var svg = d3.select(".d3-draw-area").append("svg") 
+    //     .attr("viewBox", "0 0 "+width+" "+height);
+    });
+
 
   //set up barcode and barcode select
   var barcode_select = d3.select("#d3-barcode-select");
