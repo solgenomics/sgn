@@ -596,6 +596,8 @@ sub cross_detail : Path('/cross') Args(1) {
         $cross_id = $cross->stock_id();
     }
     
+    print STDERR "Cross stock_id is $cross_id\n";
+    
     my $progeny = $c->dbic_schema("Bio::Chado::Schema")->resultset("Stock::StockRelationship") -> search( { object_id => $cross_id, 'type.name' => 'member_of'  }, { join =>  'type' } );
 
     my $progeny_count = $progeny->count();
