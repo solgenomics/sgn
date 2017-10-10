@@ -193,11 +193,12 @@ my $trial_create = CXGN::Trial::TrialCreate
 	   design => $parsed_data,
 	   program => "test",
 	   upload_trial_file => $archived_filename_with_path,
+	   operator => "janedoe"
 	  });
 
-$trial_create->save_trial();
+my $save = $trial_create->save_trial();
 
-ok($trial_create, "check that trial_create worked");
+ok($save->{'trial_id'}, "check that trial_create worked");
 my $project_name = $c->bcs_schema()->resultset('Project::Project')->search({}, {order_by => { -desc => 'project_id' }})->first()->name();
 ok($project_name == "Trial_upload_test", "check that trial_create really worked");
 
@@ -376,11 +377,12 @@ my $trial_create = CXGN::Trial::TrialCreate
 	is_genotyping => 1,
 	genotyping_user_id => $meta->{user_id} || "unknown",
 	genotyping_project_name => $meta->{project_name} || "unknown",
+	operator => "janedoe"
 	  });
 
-$trial_create->save_trial();
+my $save = $trial_create->save_trial();
 
-ok($trial_create, "check that trial_create worked");
+ok($save->{'trial_id'}, "check that trial_create worked");
 my $project_name = $c->bcs_schema()->resultset('Project::Project')->search({}, {order_by => { -desc => 'project_id' }})->first()->name();
 ok($project_name == "test_genotyping_trial_upload", "check that trial_create really worked for igd trial");
 
@@ -439,6 +441,230 @@ print STDERR "ProjectRelationship: ".$post2_project_relationship_diff."\n";
 ok($post2_project_relationship_diff == 2, "check projectrelationship table after upload igd trial");
 
 
+#############################
+# Upload a trial with seedlot info filled
+
+my %upload_metadata;
+my $file_name = 't/data/trial/trial_layout_with_seedlot_example.xls';
+my $time = DateTime->now();
+my $timestamp = $time->ymd()."_".$time->hms();
+
+#Test archive upload file
+my $uploader = CXGN::UploadFile->new({
+  tempfile => $file_name,
+  subdirectory => 'temp_trial_upload',
+  archive_path => '/tmp',
+  archive_filename => 'trial_layout_with_seedlot_example.xls',
+  timestamp => $timestamp,
+  user_id => 41, #janedoe in fixture
+  user_role => 'curator'
+});
+
+## Store uploaded temporary file in archive
+my $archived_filename_with_path = $uploader->archive();
+my $md5 = $uploader->get_md5($archived_filename_with_path);
+ok($archived_filename_with_path);
+ok($md5);
+
+$upload_metadata{'archived_file'} = $archived_filename_with_path;
+$upload_metadata{'archived_file_type'}="trial upload file";
+$upload_metadata{'user_id'}=$c->sp_person_id;
+$upload_metadata{'date'}="2014-02-14_09:10:11";
+
+
+#parse uploaded file with appropriate plugin
+$parser = CXGN::Trial::ParseUpload->new(chado_schema => $f->bcs_schema(), filename => $archived_filename_with_path);
+$parser->load_plugin('TrialExcelFormat');
+$parsed_data = $parser->parse();
+ok($parsed_data, "Check if parse validate excel file works");
+ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
+
+print STDERR Dumper $parsed_data;
+
+my $parsed_data_check = {
+          '3' => {
+                   'stock_name' => 'test_accession2',
+                   'seedlot_name' => 'test_accession2_001',
+                   'num_seed_per_plot' => '12',
+                   'plot_number' => '3',
+                   'row_number' => '3',
+                   'plot_name' => 'plot_with_seedlot_name3',
+                   'block_number' => '1',
+                   'col_number' => '1',
+                   'is_a_control' => 0,
+                   'range_number' => '1',
+                   'rep_number' => '1'
+                 },
+          '6' => {
+                   'plot_name' => 'plot_with_seedlot_name6',
+                   'row_number' => '2',
+                   'num_seed_per_plot' => '12',
+                   'plot_number' => '6',
+                   'stock_name' => 'test_accession3',
+                   'seedlot_name' => 'test_accession3_001',
+                   'rep_number' => '2',
+                   'range_number' => '2',
+                   'is_a_control' => 0,
+                   'col_number' => '2',
+                   'block_number' => '2'
+                 },
+          '8' => {
+                   'rep_number' => '2',
+                   'range_number' => '2',
+                   'is_a_control' => 0,
+                   'col_number' => '2',
+                   'block_number' => '2',
+                   'plot_name' => 'plot_with_seedlot_name8',
+                   'plot_number' => '8',
+                   'num_seed_per_plot' => '12',
+                   'row_number' => '4',
+                   'seedlot_name' => 'test_accession4_001',
+                   'stock_name' => 'test_accession4'
+                 },
+          '2' => {
+                   'rep_number' => '2',
+                   'range_number' => '1',
+                   'col_number' => '1',
+                   'is_a_control' => 0,
+                   'block_number' => '1',
+                   'plot_name' => 'plot_with_seedlot_name2',
+                   'row_number' => '2',
+                   'num_seed_per_plot' => '12',
+                   'plot_number' => '2',
+                   'stock_name' => 'test_accession1',
+                   'seedlot_name' => 'test_accession1_001'
+                 },
+          '1' => {
+                   'block_number' => '1',
+                   'is_a_control' => 0,
+                   'col_number' => '1',
+                   'range_number' => '1',
+                   'rep_number' => '1',
+                   'stock_name' => 'test_accession1',
+                   'seedlot_name' => 'test_accession1_001',
+                   'plot_number' => '1',
+                   'num_seed_per_plot' => '12',
+                   'row_number' => '1',
+                   'plot_name' => 'plot_with_seedlot_name1'
+                 },
+          '5' => {
+                   'num_seed_per_plot' => '12',
+                   'row_number' => '1',
+                   'plot_number' => '5',
+                   'plot_name' => 'plot_with_seedlot_name5',
+                   'stock_name' => 'test_accession3',
+                   'seedlot_name' => 'test_accession3_001',
+                   'range_number' => '2',
+                   'rep_number' => '1',
+                   'block_number' => '2',
+                   'col_number' => '2',
+                   'is_a_control' => 0
+                 },
+          '4' => {
+                   'rep_number' => '2',
+                   'range_number' => '1',
+                   'col_number' => '1',
+                   'is_a_control' => 0,
+                   'block_number' => '1',
+                   'plot_name' => 'plot_with_seedlot_name4',
+                   'num_seed_per_plot' => '12',
+                   'plot_number' => '4',
+                   'row_number' => '4',
+                   'seedlot_name' => 'test_accession2_001',
+                   'stock_name' => 'test_accession2'
+                 },
+          '7' => {
+                   'block_number' => '2',
+                   'is_a_control' => 0,
+                   'col_number' => '2',
+                   'range_number' => '2',
+                   'rep_number' => '1',
+                   'seedlot_name' => 'test_accession4_001',
+                   'stock_name' => 'test_accession4',
+                   'num_seed_per_plot' => '12',
+                   'plot_number' => '7',
+                   'row_number' => '3',
+                   'plot_name' => 'plot_with_seedlot_name7'
+                 }
+        };
+
+is_deeply($parsed_data, $parsed_data_check, 'check trial excel parse data' );
+
+my $trial_create = CXGN::Trial::TrialCreate
+    ->new({
+	   chado_schema => $c->bcs_schema(),
+	   dbh => $c->dbh(),
+	   trial_year => "2016",
+	   trial_description => "Trial Upload Test",
+	   trial_location => "test_location",
+	   trial_name => "Trial_upload_with_seedlot_test",
+	   user_name => "janedoe", #not implemented
+	   design_type => "RCBD",
+	   design => $parsed_data,
+	   program => "test",
+	   upload_trial_file => $archived_filename_with_path,
+	   operator => "janedoe"
+	  });
+
+$trial_create->save_trial();
+
+ok($trial_create, "check that trial_create worked");
+my $project_name = $c->bcs_schema()->resultset('Project::Project')->search({}, {order_by => { -desc => 'project_id' }})->first()->name();
+ok($project_name == "Trial_upload_test", "check that trial_create really worked");
+
+my $project_desc = $c->bcs_schema()->resultset('Project::Project')->search({}, {order_by => { -desc => 'project_id' }})->first()->description();
+ok($project_desc == "Trial Upload Test", "check that trial_create really worked");
+
+
+my $post_project_count = $c->bcs_schema->resultset('Project::Project')->search({})->count();
+my $post1_project_diff = $post_project_count - $pre_project_count;
+print STDERR "Project: ".$post1_project_diff."\n";
+ok($post1_project_diff == 3, "check project table after third upload excel trial");
+
+my $post_nd_experiment_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({})->count();
+my $post1_nd_experiment_diff = $post_nd_experiment_count - $pre_nd_experiment_count;
+print STDERR "NdExperiment: ".$post1_nd_experiment_diff."\n";
+ok($post1_nd_experiment_diff == 3, "check ndexperiment table after upload excel trial");
+
+my $post_nd_experiment_proj_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({})->count();
+my $post1_nd_experiment_proj_diff = $post_nd_experiment_proj_count - $pre_nd_experiment_proj_count;
+print STDERR "NdExperimentProject: ".$post1_nd_experiment_proj_diff."\n";
+ok($post1_nd_experiment_proj_diff == 3, "check ndexperimentproject table after upload excel trial");
+
+my $post_nd_experimentprop_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentprop')->search({})->count();
+my $post1_nd_experimentprop_diff = $post_nd_experimentprop_count - $pre_nd_experimentprop_count;
+print STDERR "NdExperimentprop: ".$post1_nd_experimentprop_diff."\n";
+ok($post1_nd_experimentprop_diff == 2, "check ndexperimentprop table after upload excel trial");
+
+my $post_project_prop_count = $c->bcs_schema->resultset('Project::Projectprop')->search({})->count();
+my $post1_project_prop_diff = $post_project_prop_count - $pre_project_prop_count;
+print STDERR "Projectprop: ".$post1_project_prop_diff."\n";
+ok($post1_project_prop_diff == 9, "check projectprop table after upload excel trial");
+
+my $post_stock_count = $c->bcs_schema->resultset('Stock::Stock')->search({})->count();
+my $post1_stock_diff = $post_stock_count - $pre_stock_count;
+print STDERR "Stock: ".$post1_stock_diff."\n";
+ok($post1_stock_diff == 22, "check stock table after upload excel trial");
+
+my $post_stock_prop_count = $c->bcs_schema->resultset('Stock::Stockprop')->search({})->count();
+my $post1_stock_prop_diff = $post_stock_prop_count - $pre_stock_prop_count;
+print STDERR "Stockprop: ".$post1_stock_prop_diff."\n";
+ok($post1_stock_prop_diff == 119, "check stockprop table after upload excel trial");
+
+my $post_stock_relationship_count = $c->bcs_schema->resultset('Stock::StockRelationship')->search({})->count();
+my $post1_stock_relationship_diff = $post_stock_relationship_count - $pre_stock_relationship_count;
+print STDERR "StockRelationship: ".$post1_stock_relationship_diff."\n";
+ok($post1_stock_relationship_diff == 30, "check stockrelationship table after upload excel trial");
+
+my $post_nd_experiment_stock_count = $c->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->search({})->count();
+my $post1_nd_experiment_stock_diff = $post_nd_experiment_stock_count - $pre_nd_experiment_stock_count;
+print STDERR "NdExperimentStock: ".$post1_nd_experiment_stock_diff."\n";
+ok($post1_nd_experiment_stock_diff == 22, "check ndexperimentstock table after upload excel trial");
+
+my $post_project_relationship_count = $c->bcs_schema->resultset('Project::ProjectRelationship')->search({})->count();
+my $post1_project_relationship_diff = $post_project_relationship_count - $pre_project_relationship_count;
+print STDERR "ProjectRelationship: ".$post1_project_relationship_diff."\n";
+ok($post1_project_relationship_diff == 3, "check projectrelationship table after upload excel trial");
 
 
 done_testing();

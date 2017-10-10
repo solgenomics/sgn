@@ -31,16 +31,126 @@ $identifier => ''
                         <div class="row">
                           <div class="col-md-10 col-lg-10">
 
-                            <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/stock/download/zpl" >
-                                
-                                <div class="form-group" style="display: none;">
-                                    <div class="col-sm-8">
-                                        <select class="form-control" id="trial_id" name="trial_id">
-                                          <option value="<% $trial_id %>">This trial</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                
+                            <form class="form-horizontal" role="form" enctype="multipart/form-data" method="post" action="/barcode/stock/download/pdf" >
+
+                             <div class="form-group form-group-sm" >
+                               <label class="col-sm-4 control-label">List of Stock Names: </label>
+                               <div class="col-sm-8" id="trial_accessions">
+                               </div>
+                             </div>
+
+                             <div class="form-group form-group-sm">
+                              <label class="col-sm-4 control-label">Barcode Type: </label>
+                              <div class="col-sm-8">
+                                  <select class="form-control" id="select_barcode_type" name="select_barcode_type">
+                                    <option value="1D">1D Barcode</option>
+                                    <option value="2D">2D Barcode</option>
+                                  </select>
+                              </div>
+                             </div>
+
+                               <div id="2D_fieldbook_option" style="display: none">
+                               <div class="form-group form-group-sm" >
+                                 <label class="col-sm-4 control-label">Enable 2D Barcode For FieldBook: </label>
+                                 <div class="col-sm-8">
+                                   <input type="checkbox" id="enable_fieldbook_2d_barcode" name="enable_fieldbook_2d_barcode" value="enable_fieldbook_2d_barcode" />
+                                 </div>
+                               </div>
+                               </div>
+
+                               <script defer="defer">
+                                jQuery(document).ready(function() {
+
+                                   jQuery(document).on('change', '#select_barcode_type', function () {
+                                       var barcode_type = jQuery("#select_barcode_type").val();
+                                       if (barcode_type == "2D") {
+                                           jQuery("#2D_fieldbook_option").show();
+                                       }
+                                       else if (barcode_type == "1D") {
+                                         jQuery("#2D_fieldbook_option").hide();
+                                       }
+                                   });
+                                   
+                                   jQuery(document).on('change', '#select_print_format', function () {
+                                       var format = jQuery("#select_print_format").val();
+                                       if (format == "32A4") {
+                                         var label_row = 10;
+                                         var label_cols = 4; 
+                                         var top_margin = 12;
+                                         var left_margin = 17;
+                                         var bottom_margin = 12;
+                                         var right_margin = 10;
+
+                                       }
+                                       else if (format == "CASS") {
+                                       var label_row = 10;
+                                       var label_cols = 2; 
+                                       var top_margin = 10;
+                                       var left_margin = 112;
+                                       var bottom_margin = 13;
+                                       var right_margin = 20;
+                                       
+                                       }
+                                       else if (format == "MUSA") {
+                                       var label_row = 10;
+                                       var label_cols = 2; 
+                                       var top_margin = 10;
+                                       var left_margin = 112;
+                                       var bottom_margin = 13;
+                                       var right_margin = 20;
+
+                                       }
+                                       else if (format == "NCSU") {
+                                       var label_row = 10;
+                                       var label_cols = 3; 
+                                       var top_margin = 12;
+                                       var left_margin = 50;
+                                       var bottom_margin = 12;
+                                       var right_margin = 12;
+
+                                       }
+                                       else if (format == "20A4") {
+                                       var label_row = 10;
+                                       var label_cols = 2; 
+                                       var top_margin = 12;
+                                       var left_margin = 10;
+                                       var bottom_margin = 12;
+                                       var right_margin = 10;
+
+                                       }
+                                       jQuery("#label_rows").empty();
+                                       jQuery("#label_rows").val(label_row);
+                                       jQuery("#label_cols").empty();
+                                       jQuery("#label_cols").val(label_cols);
+                                       jQuery("#select_barcode_type").prop('selectedIndex',1);
+                                       jQuery("#page_format").prop('selectedIndex',0);
+                                       jQuery("#top_margin").empty();
+                                       jQuery("#top_margin").val(top_margin);
+                                       jQuery("#left_margin").empty();
+                                       jQuery("#left_margin").val(left_margin);
+                                       jQuery("#bottom_margin").empty();
+                                       jQuery("#bottom_margin").val(bottom_margin);
+                                       jQuery("#right_margin").empty();
+                                       jQuery("#right_margin").val(right_margin);
+                                   });
+                                });
+                               </script>
+                               
+                               <div class="form-group form-group-sm">
+                                 <label class="col-sm-4 control-label">Printing Format (Optional): </label>
+                                 <div class="col-sm-8">
+                                     <select class="form-control" id="select_print_format" name="select_print_format">
+                                       <!--<option selected disabled>select printing format</option>-->
+                                       <option value="">select printing format</option>
+                                       <option value="CASS">CASS printing format</option>
+                                       <option value="MUSA">MUSA printing format</option>
+                                       <option value="32A4">32 label Size Sticker Paper</option>
+                                       <option value="20A4">20 label Size Sticker Paper</option>
+                                       <option value="NCSU">NCSU printing format</option>
+                                     </select>
+                                 </div>
+                               </div>
+
                                 <div class="form-group form-group-sm">
                                   <label class="col-sm-4 control-label">Label Format: </label>
                                   <div class="col-sm-8">

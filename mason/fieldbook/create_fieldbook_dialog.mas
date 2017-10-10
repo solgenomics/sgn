@@ -6,7 +6,7 @@ $trial_name => undef
 
 
 <div class="modal fade" id="create_fieldbook_dialog" name="create_fieldbook_dialog" tabindex="-1" role="dialog" aria-labelledby="createFieldbookDialog">
-  <div class="modal-dialog" role="document">
+  <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -46,6 +46,28 @@ $trial_name => undef
                         </select>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Included Columns: </label>
+                    <div class="col-sm-9" >
+                        <div id="create_fieldbook_included_columns">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Not Included Columns: </label>
+                    <div class="col-sm-9" >
+                        <div id="create_fieldbook_not_included_columns">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Average performance of accessions for list of traits: </label>
+                    <div class="col-sm-9" >
+                        <div id="create_fieldbook_with_trait_list">
+                        </div>
+                    </div>
+                </div>
+
             </form><br/>
         </div>
       </div>
@@ -70,9 +92,7 @@ $trial_name => undef
               <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
               The field book layout file was saved successfully
             </p>
-            <p>
-              <a id="tablet_layout_download_link">Go To Download File</a>
-            </p>
+            <div id="tablet_field_layout_get_file"></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -85,6 +105,9 @@ $trial_name => undef
 
 <script>
 
+var selected_columns = {};
+var not_selected_columns = {};
+
 jQuery(document).ready(function() {
 
     if(jQuery("#html_select_trial_for_create_fieldbook").length == 0) {
@@ -96,6 +119,9 @@ jQuery(document).ready(function() {
     });
 
     jQuery("[name='create_fieldbook_link']").click( function () {
+        show_available_columns('plots');
+        var lo = new CXGN.List();
+        jQuery('#create_fieldbook_with_trait_list').html(lo.listSelect('create_fieldbook_with_trait_list_select', [ 'traits' ], 'select'));
         jQuery('#create_fieldbook_dialog').modal('show');
         show_fieldbook_treatments();
     });
@@ -104,7 +130,102 @@ jQuery(document).ready(function() {
         open_create_fieldbook_dialog();
     });
 
+    jQuery('#create_fieldbook_data_level').on('change', function(){
+        var selected_trial_id = parseInt(jQuery('#html_select_trial_for_create_fieldbook').val());
+        var level = jQuery('#create_fieldbook_data_level').val();
+        var url = '';
+        if (level == 'plants'){
+            url = 'has_plants';
+        }
+        if (level == 'subplots' || level == 'plants_subplots'){
+            url = 'has_subplots';
+        }
+        if (level == 'plants' || level == 'subplots' || level == 'plants_subplots'){
+            new jQuery.ajax({
+                type: 'POST',
+                url: '/ajax/breeders/trial/'+selected_trial_id+'/'+url,
+                dataType: "json",
+                beforeSend: function() {
+                    jQuery("#working_modal").modal("show");
+                },
+                success: function (response) {
+                    //console.log(response);
+                    jQuery("#working_modal").modal("hide");
+                    if(response.has_plants == 0 || response.has_subplots == 0){
+                        alert('This trial does not have '+level);
+                        jQuery('#create_fieldbook_data_level').val('plots');
+                    } else {
+                        show_available_columns(level);
+                    }
+                },
+                error: function () {
+                    jQuery("#working_modal").modal("hide");
+                    alert('An error occurred checking trial for plants or subplots.');
+                }
+            });
+        } else {
+            show_available_columns('plots');
+        }
+    });
+
 });
+
+function show_available_columns(level){
+    not_selected_columns = {'synonyms':1,'trial_name':1,'location_name':1,'year':1,'pedigree':1,'tier':1};
+    var not_inc_html = '<h2><span class="label label-primary">synonyms &nbsp;<a onClick="include_column(\'synonyms\')"><span title="Include" class="glyphicon glyphicon-ok-sign"></span></a></span></h2><h2><span class="label label-primary">trial_name &nbsp;<a onClick="include_column(\'trial_name\')"><span title="Include" class="glyphicon glyphicon-ok-sign"></span></a></span></h2><h2><span class="label label-primary">location_name &nbsp;<a onClick="include_column(\'location_name\')"><span title="Include" class="glyphicon glyphicon-ok-sign"></span></a></span></h2><h2><span class="label label-primary">year &nbsp;<a onClick="include_column(\'year\')"><span title="Include" class="glyphicon glyphicon-ok-sign"></span></a></span></h2><h2><span class="label label-primary">pedigree &nbsp;<a onClick="include_column(\'pedigree\')"><span title="Include" class="glyphicon glyphicon-ok-sign"></span></a></span></h2><h2><span class="label label-primary">tier &nbsp;<a onClick="include_column(\'tier\')"><span title="Include" class="glyphicon glyphicon-ok-sign"></span></a></span></h2>';
+    
+    selected_columns = {};
+    var included_html = '';
+    if(level == 'plots'){
+        included_html = '<h2 id="fieldbook_columns_plot_name"><span class="label label-primary">plot_name <span title="Unique name identifier for each plot. This is a globally unique plot name in the database. If you have barcoded your plots for phenotyping, this is what is encoded in the barcode." class="glyphicon glyphicon-info-sign"></span></span></h2><h2 id="fieldbook_columns_block_number"><span class="label label-primary">block_number <span title="Field design parameter used to distinguish blocks in your field." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'block_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_plot_number"><span class="label label-primary">plot_number <span title="Number for the plot in your field design. Typically 1001, 1002, 2001, 2002, etc" class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'plot_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_rep_number"><span class="label label-primary">rep_number <span title="Field design parameter used to determine replicate number." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'rep_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_row_number"><span class="label label-primary">row_number <span title="The row number that this plot is in. If you partition the field into a grid, this would be the vertical position (y coordinate)." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'row_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_col_number"><span class="label label-primary">col_number <span title="The column number that this plot is in. If you partition the field into a grid, this would be the horizontal position (x coordinate)." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'col_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_accession_name"><span class="label label-primary">accession_name <span title="The accession name which was planted in the plot." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'accession_name\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_is_a_control"><span class="label label-primary">is_a_control <span title="This is either 1 or 0, meaning that the plot is a control in the experiment or not." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'is_a_control\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2>';
+        selected_columns = {'plot_name':1,'block_number':1,'plot_number':1,'rep_number':1,'row_number':1,'col_number':1,'accession_name':1,'is_a_control':1};
+    }
+    if(level == 'plants'){
+        included_html = '<h2 id="fieldbook_columns_plant_name"><span class="label label-primary">plant_name <span title="Unique name identifier for each plant in a plot. This is a globally unique plant name in the database. If you have barcoded your plants for phenotyping, this is what is encoded in the barcode." class="glyphicon glyphicon-info-sign"></span></span></h2><h2 id="fieldbook_columns_plot_name"><span class="label label-primary">plot_name <span title="Unique name identifier for each plot. This is a globally unique plot name in the database." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'plot_name\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_block_number"><span class="label label-primary">block_number <span title="Field design parameter used to distinguish blocks in your field." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'block_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_plant_number"><span class="label label-primary">plant_number <span title="Number for the plant in your plot in the field design. Typically 1, 2, 3, etc" class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'plant_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_plot_number"><span class="label label-primary">plot_number <span title="Number for the plot in your field design. Typically 1001, 1002, 2001, 2002, etc" class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'plot_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_rep_number"><span class="label label-primary">rep_number <span title="Field design parameter used to determine replicate number." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'rep_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_row_number"><span class="label label-primary">row_number <span title="The row number that this plot is in. If you partition the field into a grid, this would be the vertical position (y coordinate)." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'row_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_col_number"><span class="label label-primary">col_number <span title="The column number that this plot is in. If you partition the field into a grid, this would be the horizontal position (x coordinate)." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'col_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_accession_name"><span class="label label-primary">accession_name <span title="The accession name which was planted in the plot." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'accession_name\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_is_a_control"><span class="label label-primary">is_a_control <span title="This is either 1 or 0, meaning that the plot is a control in the experiment or not." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'is_a_control\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2>';
+        selected_columns = {'plant_name':1,'plot_name':1,'block_number':1,'plant_number':1,'plot_number':1,'rep_number':1,'row_number':1,'col_number':1,'accession_name':1,'is_a_control':1};
+    }
+    if(level == 'subplots'){
+        included_html = '<h2 id="fieldbook_columns_subplot_name"><span class="label label-primary">subplot_name <span title="Unique name identifier for each subplot in a plot. This is a globally unique subplot name in the database. If you have barcoded your subplots for phenotyping, this is what is encoded in the barcode." class="glyphicon glyphicon-info-sign"></span></span></h2><h2 id="fieldbook_columns_plot_name"><span class="label label-primary">plot_name <span title="Unique name identifier for each plot. This is a globally unique plot name in the database." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'plot_name\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_block_number"><span class="label label-primary">block_number <span title="Field design parameter used to distinguish blocks in your field." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'block_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_subplot_number"><span class="label label-primary">subplot_number <span title="Number for the subplot in your plot in the field design. Typically 1, 2, 3, etc" class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'subplot_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_plot_number"><span class="label label-primary">plot_number <span title="Number for the plot in your field design. Typically 1001, 1002, 2001, 2002, etc" class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'plot_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_rep_number"><span class="label label-primary">rep_number <span title="Field design parameter used to determine replicate number." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'rep_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_row_number"><span class="label label-primary">row_number <span title="The row number that this plot is in. If you partition the field into a grid, this would be the vertical position (y coordinate)." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'row_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_col_number"><span class="label label-primary">col_number <span title="The column number that this plot is in. If you partition the field into a grid, this would be the horizontal position (x coordinate)." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'col_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_accession_name"><span class="label label-primary">accession_name <span title="The accession name which was planted in the plot." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'accession_name\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_is_a_control"><span class="label label-primary">is_a_control <span title="This is either 1 or 0, meaning that the plot is a control in the experiment or not." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'is_a_control\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2>';
+        selected_columns = {'subplot_name':1,'plot_name':1,'block_number':1,'subplot_number':1,'plot_number':1,'rep_number':1,'row_number':1,'col_number':1,'accession_name':1,'is_a_control':1};
+    }
+    if(level == 'plants_subplots'){
+        included_html = '<h2 id="fieldbook_columns_plant_name"><span class="label label-primary">plant_name <span title="Unique name identifier for each plant in a subplot in a plot. This is a globally unique plant name in the database. If you have barcoded your plants for phenotyping, this is what is encoded in the barcode." class="glyphicon glyphicon-info-sign"></span></span></h2><h2 id="fieldbook_columns_subplot_name"><span class="label label-primary">subplot_name <span title="Unique name identifier for each subplot in a plot. This is a globally unique subplot name in the database." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'subplot_name\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_plot_name"><span class="label label-primary">plot_name <span title="Unique name identifier for each plot. This is a globally unique plot name in the database." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'plot_name\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_block_number"><span class="label label-primary">block_number <span title="Field design parameter used to distinguish blocks in your field." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'block_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_plant_number"><span class="label label-primary">plant_number <span title="Number for the plant in your plot in the field design. Typically 1, 2, 3, etc" class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'plant_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_subplot_number"><span class="label label-primary">subplot_number <span title="Number for the subplot in your plot in the field design. Typically 1, 2, 3, etc" class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'subplot_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_plot_number"><span class="label label-primary">plot_number <span title="Number for the plot in your field design. Typically 1001, 1002, 2001, 2002, etc" class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'plot_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_rep_number"><span class="label label-primary">rep_number <span title="Field design parameter used to determine replicate number." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'rep_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_row_number"><span class="label label-primary">row_number <span title="The row number that this plot is in. If you partition the field into a grid, this would be the vertical position (y coordinate)." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'row_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_col_number"><span class="label label-primary">col_number <span title="The column number that this plot is in. If you partition the field into a grid, this would be the horizontal position (x coordinate)." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'col_number\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_accession_name"><span class="label label-primary">accession_name <span title="The accession name which was planted in the plot." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'accession_name\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_is_a_control"><span class="label label-primary">is_a_control <span title="This is either 1 or 0, meaning that the plot is a control in the experiment or not." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'is_a_control\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2>';
+        selected_columns = {'plant_name':1,'subplot_name':1,'plot_name':1,'block_number':1,'plant_number':1,'subplot_number':1,'plot_number':1,'rep_number':1,'row_number':1,'col_number':1,'accession_name':1,'is_a_control':1};
+    }
+
+    included_html += '<h2 id="fieldbook_columns_synonyms" style="display:none"><span class="label label-primary">synonyms <span title="Accession names can have many synonyms. Synonyms are useful for capturing locally used accession names." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'synonyms\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_trial_name" style="display:none"><span class="label label-primary">trial_name <span title="The trial name that the plot is in will appear." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'trial_name\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_location_name" style="display:none"><span class="label label-primary">location_name <span title="The location that this trial is in will appear." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'location_name\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_year" style="display:none"><span class="label label-primary">year <span title="The year that this trial occured will appear." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'year\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_pedigree" style="display:none"><span class="label label-primary">pedigree <span title="The pedigree of the accession which was planted in the plot will appear." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'pedigree\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2><h2 id="fieldbook_columns_tier" style="display:none"><span class="label label-primary">tier <span title="A combined view of row_number/col_number. If the field is drawn as a grid, the row_number is the y coordinate and the col_number is the x coordinate." class="glyphicon glyphicon-info-sign"></span>&nbsp;<a onClick="do_not_include_column(\'tier\')"><span title="Do not include" class="glyphicon glyphicon-remove-sign"></span></a></span></h2>';
+
+    jQuery('#create_fieldbook_included_columns').html(included_html);
+    jQuery('#create_fieldbook_not_included_columns').html(not_inc_html);
+}
+
+function do_not_include_column(name){
+    delete selected_columns[name];
+    not_selected_columns[name] = 1;
+    var identifier = '#fieldbook_columns_'+name;
+    jQuery(identifier).hide();
+    display_not_selected_columns();
+    console.log(selected_columns);
+}
+
+function display_not_selected_columns(){
+    var html = '';
+    for (var name in not_selected_columns) {
+        if (not_selected_columns.hasOwnProperty(name)) {
+            html += '<h2><span class="label label-primary">'+name+'&nbsp;<a onClick="include_column(\''+name+'\')"><span title="Include" class="glyphicon glyphicon-ok-sign"></span></a></span></h2>';
+        }
+    }
+    jQuery('#create_fieldbook_not_included_columns').html(html);
+}
+
+function include_column(name){
+    var identifier = '#fieldbook_columns_'+name;
+    jQuery(identifier).show();
+    delete not_selected_columns[name];
+    selected_columns[name] = 1;
+    display_not_selected_columns();
+    console.log(selected_columns);
+}
 
 function show_fieldbook_treatments(){
     var selected_trial_id = parseInt(jQuery("#html_select_trial_for_create_fieldbook").val());
@@ -120,18 +241,22 @@ function open_create_fieldbook_dialog() {
             'trial_id': parseInt(jQuery('#html_select_trial_for_create_fieldbook').val()),
             'data_level': jQuery('#create_fieldbook_data_level').val(),
             'treatment_project_id': jQuery("#html_select_treatment_create_fieldbook").val(),
+            'selected_columns':JSON.stringify(selected_columns),
+            'trait_list':jQuery('#create_fieldbook_with_trait_list_select_list_select').val()
         },
         beforeSend: function() {
             jQuery("#working_modal").modal("show");
         },
         success: function (response) {
             jQuery("#working_modal").modal("hide");
-            if (response.error) {
+            if (response.error){
                 alert(response.error);
+            }
+            else if (response.error_string) {
+                alert(response.error_string);
             } else {
-                jQuery('#tablet_layout_download_link').attr('href',"/fieldbook");
+                jQuery('#tablet_field_layout_get_file').html('<a href="/fieldbook/trial_download/'+response.file_id+'">'+response.file+'</a>')
                 jQuery("#tablet_field_layout_saved_dialog_message").modal("show");
-                //alert(response.file);
                 jQuery('#create_fieldbook_dialog').modal("hide");
             }
         },

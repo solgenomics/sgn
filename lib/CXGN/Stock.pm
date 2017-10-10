@@ -133,7 +133,7 @@ has 'population_name' => (
 );
 
 has 'populations' => (
-    isa => 'Maybe[ArrayRef[Str]]',
+    isa => 'Maybe[ArrayRef[ArrayRef]]',
     is => 'rw'
 );
 
@@ -149,6 +149,7 @@ sub BUILD {
     if (defined $stock) {
         $self->stock($stock);
         $self->stock_id($stock->stock_id);
+        $self->organism_id($stock->organism_id);
         $self->name($stock->name);
         $self->uniquename($stock->uniquename);
         $self->description($stock->description() || '');
@@ -217,6 +218,7 @@ sub store {
     }
 
     if (!$stock) { #Trying to create a new stock
+        print STDERR "Storing Stock ".localtime."\n";
         if (!$exists) {
 
             my $new_row = $self->schema()->resultset("Stock::Stock")->create({
@@ -245,8 +247,8 @@ sub store {
             die "The entry ".$self->uniquename()." already exists in the database. Error: $exists\n";
         }
     }
-    else {  # entry exists, so update
-        print STDERR "EXISTS: $exists\n";
+    else {
+        print STDERR "Updating Stock ".localtime."\n";
         my $row = $self->schema()->resultset("Stock::Stock")->find({ stock_id => $self->stock_id() });
         $row->name($self->name());
         $row->uniquename($self->uniquename());
@@ -255,6 +257,12 @@ sub store {
         $row->organism_id($self->organism_id());
         $row->is_obsolete($self->is_obsolete());
         $row->update();
+        if ($self->organization_name){
+            $self->_update_stockprop('organization', $self->organization_name());
+        }
+        if ($self->population_name){
+            $self->_update_population_relationship();
+        }
     }
     return $self->stock_id();
 }
@@ -855,6 +863,18 @@ sub _store_stockprop {
     my $stored_stockprop = $self->stock->create_stockprops({ $stockprop => $value});
 }
 
+sub _update_stockprop {
+    my $self = shift;
+    my $type = shift;
+    my $value = shift;
+    my $stockprop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+    my $rs = $self->stock->search_related('stockprops', {'type_id'=>$stockprop_cvterm_id});
+    while(my $r=$rs->next){
+        $r->delete();
+    }
+    $self->_store_stockprop($type,$value);
+}
+
 sub _retrieve_stockprop {
     my $self = shift;
     my $type = shift;
@@ -928,11 +948,21 @@ sub _store_population_relationship {
         organism_id => $self->organism_id(),
         type_id => $population_cvterm_id,
     });
-    $self->stock->find_or_create_related('stock_relationship_objects', {
+    $self->stock->find_or_create_related('stock_relationship_subjects', {
         type_id => $population_member_cvterm_id,
         object_id => $population->stock_id(),
         subject_id => $self->stock_id(),
     });
+}
+
+sub _update_population_relationship {
+    my $self = shift;
+    my $population_member_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($self->schema, 'member_of','stock_relationship')->cvterm_id();
+    my $pop_rs = $self->stock->search_related('stock_relationship_subjects', {'type_id'=>$population_member_cvterm_id});
+    while (my $r=$pop_rs->next){
+        $r->delete();
+    }
+    $self->_store_population_relationship();
 }
 
 sub _retrieve_populations {
@@ -949,12 +979,15 @@ sub _retrieve_populations {
     }
     else {
         my @population_names;
+        my @population_name;
         while (my $row = $rs->next) {
             my $population = $row->object;
-            push @population_names, $population->uniquename();
+            push @population_name, $population->uniquename();
+            push @population_names, [$population->stock_id(), $population->uniquename()];
         }
+        my $pop_string = join ',', @population_name;
         $self->populations(\@population_names);
-        #print STDERR "This stock is a member of the following populations: ".Dumper($self->populations())."\n";
+        $self->population_name($pop_string);
     }
 }
 

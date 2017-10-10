@@ -149,7 +149,13 @@ if (is.null(filteredGenoData)) {
   
   #genoDataFilter::filterGenoData
   genoData <- filterGenoData(genoData, maf=0)
-  filteredGenoData   <- genoData 
+  genoData <- roundAlleleDosage(genoData)
+
+  genoData <- as.data.frame(genoData)
+  rownames(genoData) <- genoData[, 1]
+  genoData[, 1]      <- NULL
+  filteredGenoData   <- genoData
+  
 } else {
   genoData           <- as.data.frame(filteredGenoData)
   rownames(genoData) <- genoData[, 1]
@@ -199,6 +205,11 @@ if (length(filteredPredGenoFile) != 0 && file.info(filteredPredGenoFile)$size !=
   predictionData <- fread(predictionFile, na.strings = c("NA", " ", "--", "-"),)
  
   predictionData <- filterGenoData(predictionData, maf=0)
+  predictionData <- roundAlleleDosage(predictionData)
+  
+  predictionData  <- as.data.frame(predictionData)
+  rownames(predictionData) <- predictionData[, 1]
+  predictionData[, 1]      <- NULL
   filteredPredGenoData <- predictionData
 }
 

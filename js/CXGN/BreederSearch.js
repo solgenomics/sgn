@@ -2,7 +2,7 @@ window.onload = function initialize() {
 
     jQuery('#select1').change( // reset start from list if select1 changes
 	     function() {
-	        if (jQuery('#paste_list_select').val()) {
+	        if (jQuery('#paste_list_list_select').val()) {
             create_list_start('Start from a list');
 	         }
 	  });
@@ -228,8 +228,8 @@ function get_selected_categories(this_section) {
   var selected_categories = [];
   var select1 = jQuery('#select1').val();
   if (select1 === '') { // if starting category is undefined
-    if (jQuery('#paste_list_select').val()) { // check to see if paste from list was used, if so get list type
-	    select1 = jQuery('#paste_list_select').prop('title');
+    if (jQuery('#paste_list_list_select').val()) { // check to see if paste from list was used, if so get list type
+	    select1 = jQuery('#paste_list_list_select').prop('title');
       //if (window.console) console.log("select1="+select1);
     }
   }
@@ -363,9 +363,9 @@ function reset_downstream_sections(this_section) {  // clear downstream selects,
 
 function create_list_start(message) {
     var lo = new CXGN.List();
-    var listhtml = lo.listSelect('paste', '', message, 'refresh');
+    var listhtml = lo.listSelect('paste_list', '', message, 'refresh');
     jQuery('#paste_list').html(listhtml);
-    jQuery('#paste_list_select').change(
+    jQuery('#paste_list_list_select').change(
       function() {
         pasteList();
     });
@@ -375,7 +375,7 @@ function pasteList() {
   //if (window.console) console.log("pasting list . . .");
 
   jQuery('#list_message').html('');
-  var list_id = jQuery('#paste_list_select').val();
+  var list_id = jQuery('#paste_list_list_select').val();
   //var value = jQuery('#list_start_list_select').val();
   //if (window.console) console.log("list_start_list_select_val ="+value);
   if (list_id === '') {
@@ -434,7 +434,7 @@ function pasteList() {
         listType: data.type_name
       });
     }
-    jQuery('#paste_list_select').prop('title', data.type_name);  // so get_selected_categories method doesn't have to retrieve list data everytime
+    jQuery('#paste_list_list_select').prop('title', data.type_name);  // so get_selected_categories method doesn't have to retrieve list data everytime
     enable_ui();
   }
 }

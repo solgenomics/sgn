@@ -15,6 +15,9 @@ use CXGN::Trait;
 use CXGN::List::Transform;
 use CXGN::People::Person;
 use DateTime;
+use CXGN::Stock::Accession;
+use CXGN::Stock;
+use CXGN::Phenotypes::Summary;
 
 has 'bcs_schema' => (
     isa => "Bio::Chado::Schema",
@@ -75,6 +78,20 @@ has 'treatment_project_id' => (
     is => 'rw'
 );
 
+has 'selected_columns' => (
+    is => 'ro',
+    isa => 'HashRef',
+);
+
+has 'selected_trait_ids'=> (
+    is => 'ro',
+    isa => 'ArrayRef[Int]',
+);
+
+has 'selected_trait_names'=> (
+    is => 'ro',
+    isa => 'ArrayRef[Str]',
+);
 
 sub download { 
     my $self = shift;
@@ -93,7 +110,7 @@ sub download {
     
     my $ws = $wb->add_worksheet();
     my $trial_layout;
-    print STDERR "\n\nTrial id: ($trial_id)\n\n";
+    print STDERR "Fieldbook for Trial id: ($trial_id) ".localtime()."\n";
     try {
         $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $trial_id} );
     };
@@ -102,10 +119,20 @@ sub download {
         $errors{'error_messages'} = \@error_messages;
         return \%errors;
     }
-    
+
+    my $selected_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $trial_id});
+    my $location_name = $selected_trial->get_location ? $selected_trial->get_location->[1] : '';
+    my $trial_year = $selected_trial->get_year ? $selected_trial->get_year : '';
+    my $accessions = $selected_trial->get_accessions();
+    my @accession_ids;
+    foreach (@$accessions){
+        push @accession_ids, $_->{stock_id};
+    }
+
     my $treatment = $self->treatment_project_id();
     my $treatment_trial;
     my $treatment_name = "";
+    my $treatment_units;
     if ($treatment){
         $treatment_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $treatment});
         $treatment_name = $treatment_trial->get_name();
@@ -113,102 +140,105 @@ sub download {
 
     my $trial_name =  $trial_layout->get_trial_name();
 
+    my %selected_cols = %{$self->selected_columns};
+    my @selected_traits = $self->selected_trait_ids() ? @{$self->selected_trait_ids} : ();
+    my @selected_trait_names = $self->selected_trait_names() ? @{$self->selected_trait_names} : ();
+    my $summary_values = [];
+    if (scalar(@selected_traits)>0){
+        my $summary = CXGN::Phenotypes::Summary->new({
+            bcs_schema=>$schema,
+            trait_list=>\@selected_traits,
+            accession_list=>\@accession_ids
+        });
+        $summary_values = $summary->search();
+    }
+    my %fieldbook_trait_hash;
+    foreach (@$summary_values){
+        $fieldbook_trait_hash{$_->[0]}->{$_->[8]} = $_;
+    }
+    #print STDERR Dumper \%fieldbook_trait_hash;
+
     my %treatment_stock_hash;
+    my $current_col_num = 0;
+    my @possible_cols = ();
     if ($self->data_level eq 'plots') {
-        $ws->write(0, 0, 'plot_name');
-        $ws->write(0, 1, 'block_number');
-        $ws->write(0, 2, 'plot_number');
-        $ws->write(0, 3, 'rep_number');
-        $ws->write(0, 4, 'row_number');
-        $ws->write(0, 5, 'col_number');
-        $ws->write(0, 6, 'accession_name');
-        $ws->write(0, 7, 'is_a_control');
-
-        if($treatment_trial){
-            $ws->write(0, 8, "Treatment:".$treatment_name);
-            my $treatment_plots = $treatment_trial->get_plots();
-            foreach (@$treatment_plots){
-                $treatment_stock_hash{$_->[1]}++;
-            }
-        }
-
+        @possible_cols = ('plot_name','block_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier');
+        $treatment_units = $treatment ? $treatment_trial->get_plots() : [];
     } elsif ($self->data_level eq 'plants') {
-        $ws->write(0, 0, 'plant_name');
-        $ws->write(0, 1, 'plot_name');
-        $ws->write(0, 2, 'block_number');
-        $ws->write(0, 3, 'plant_number');
-        $ws->write(0, 4, 'plot_number');
-        $ws->write(0, 5, 'rep_number');
-        $ws->write(0, 6, 'row_number');
-        $ws->write(0, 7, 'col_number');
-        $ws->write(0, 8, 'accession_name');
-        $ws->write(0, 9, 'is_a_control');
-
-        if($treatment_trial){
-            $ws->write(0, 10, "Treatment:".$treatment_name);
-            my $treatment_plots = $treatment_trial->get_plants();
-            foreach (@$treatment_plots){
-                $treatment_stock_hash{$_->[1]}++;
-            }
-        }
+        @possible_cols = ('plant_name','plot_name','block_number','plant_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier');
+        $treatment_units = $treatment ? $treatment_trial->get_plants() : [];
     } elsif ($self->data_level eq 'subplots') {
-        $ws->write(0, 0, 'subplot_name');
-        $ws->write(0, 1, 'plot_name');
-        $ws->write(0, 2, 'block_number');
-        $ws->write(0, 3, 'subplot_number');
-        $ws->write(0, 4, 'plot_number');
-        $ws->write(0, 5, 'rep_number');
-        $ws->write(0, 6, 'row_number');
-        $ws->write(0, 7, 'col_number');
-        $ws->write(0, 8, 'accession_name');
-        $ws->write(0, 9, 'is_a_control');
-
-        if($treatment_trial){
-            $ws->write(0, 10, "Treatment:".$treatment_name);
-            my $treatment_subplots = $treatment_trial->get_subplots();
-            foreach (@$treatment_subplots){
-                $treatment_stock_hash{$_->[1]}++;
-            }
-        }
+        @possible_cols = ('subplot_name','plot_name','block_number','subplot_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier');
+        $treatment_units = $treatment ? $treatment_trial->get_subplots() : [];
     } elsif ($self->data_level eq 'plants_subplots') {
-        $ws->write(0, 0, 'plant_name');
-        $ws->write(0, 1, 'subplot_name');
-        $ws->write(0, 2, 'plot_name');
-        $ws->write(0, 3, 'block_number');
-        $ws->write(0, 4, 'subplot_number');
-        $ws->write(0, 5, 'plant_number');
-        $ws->write(0, 6, 'plot_number');
-        $ws->write(0, 7, 'rep_number');
-        $ws->write(0, 8, 'row_number');
-        $ws->write(0, 9, 'col_number');
-        $ws->write(0, 10, 'accession_name');
-        $ws->write(0, 11, 'is_a_control');
+        @possible_cols = ('plant_name','subplot_name','plot_name','block_number','subplot_number','plant_number','plot_number','rep_number','row_number','col_number','accession_name','is_a_control','pedigree','location_name','trial_name','year','synonyms','tier');
+        $treatment_units = $treatment ? $treatment_trial->get_plants() : [];
+    }
 
-        if($treatment_trial){
-            $ws->write(0, 12, "Treatment:".$treatment_name);
-            my $treatment_plants = $treatment_trial->get_plants();
-            foreach (@$treatment_plants){
-                $treatment_stock_hash{$_->[1]}++;
-            }
+    foreach (@possible_cols){
+        if ($selected_cols{$_}){
+            $ws->write(0, $current_col_num, $_);
+            $current_col_num++;
+        }
+    }
+    if($treatment_trial){
+        $ws->write(0, $current_col_num, "Treatment:".$treatment_name);
+        $current_col_num++;
+        foreach (@$treatment_units){
+            $treatment_stock_hash{$_->[1]}++;
         }
     }
 
-    my %design = %{$trial_layout->get_design()};
+    foreach (@selected_trait_names){
+        $ws->write(0, $current_col_num, $_);
+        $current_col_num++;
+    }
+
+    my $tl = $trial_layout->get_design();
+    if (!$tl){
+        push @error_messages, "Trial does not have valid field design. Please contact us.";
+        $errors{'error_messages'} = \@error_messages;
+        return \%errors;
+    }
+    my %design = %$tl;
     my $row_num = 1;
     foreach my $key (sort { $a <=> $b} keys %design) {
         my %design_info = %{$design{$key}};
-        if ($self->data_level eq 'plots') {
-            $ws->write($row_num,0,$design_info{'plot_name'});
-            $ws->write($row_num,1,$design_info{'block_number'});
-            $ws->write($row_num,2,$design_info{'plot_number'});
-            $ws->write($row_num,3,$design_info{'rep_number'});
-            $ws->write($row_num,4,$design_info{'row_number'});
-            $ws->write($row_num,5,$design_info{'col_number'});
-            $ws->write($row_num,6,$design_info{'accession_name'});
-            $ws->write($row_num,7,$design_info{'is_a_control'});
 
+        if ($self->data_level eq 'plots') {
+            my $current_col_num = 0;
+            foreach (@possible_cols){
+                if ($selected_cols{$_}){
+                    if ($_ eq 'location_name'){
+                        $ws->write($row_num, $current_col_num, $location_name );
+                    } elsif ($_ eq 'trial_name'){
+                        $ws->write($row_num, $current_col_num, $trial_name );
+                    } elsif ($_ eq 'year'){
+                        $ws->write($row_num, $current_col_num, $trial_year );
+                    } elsif ($_ eq 'tier'){
+                        $ws->write($row_num, $current_col_num, $design_info{"row_number"}."/".$design_info{"col_number"} );
+                    } elsif ($_ eq 'synonyms'){
+                        my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
+                        $ws->write($row_num, $current_col_num, join ',', @{$accession->synonyms} );
+                    } elsif ($_ eq 'pedigree'){
+                        my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
+                        $ws->write($row_num, $current_col_num, $accession->get_pedigree_string('Parents') );
+                    } else {
+                        $ws->write($row_num, $current_col_num, $design_info{$_} );
+                    }
+                    $current_col_num++;
+                }
+            }
             if(exists($treatment_stock_hash{$design_info{'plot_name'}})){
-                $ws->write($row_num,8,1);
+                $ws->write($row_num, $current_col_num, 1);
+                $current_col_num++;
+            }
+            foreach my $t (@selected_trait_names){
+                my $perf = $fieldbook_trait_hash{$t}->{$design_info{"accession_id"}};
+                if($perf){
+                    $ws->write($row_num,$current_col_num,"Avg: ".$perf->[3]." Min: ".$perf->[5]." Max: ".$perf->[4]." Count: ".$perf->[2]." StdDev: ".$perf->[6]);
+                }
+                $current_col_num++;
             }
 
             $row_num++;
@@ -216,19 +246,43 @@ sub download {
             my $plant_names = $design_info{'plant_names'};
             my $plant_num = 1;
             foreach (sort @$plant_names) {
-                $ws->write($row_num,0,$_);
-                $ws->write($row_num,1,$design_info{'plot_name'});
-                $ws->write($row_num,2,$design_info{'block_number'});
-                $ws->write($row_num,3,$plant_num);
-                $ws->write($row_num,4,$design_info{'plot_number'});
-                $ws->write($row_num,5,$design_info{'rep_number'});
-                $ws->write($row_num,6,$design_info{'row_number'});
-                $ws->write($row_num,7,$design_info{'col_number'});
-                $ws->write($row_num,8,$design_info{'accession_name'});
-                $ws->write($row_num,9,$design_info{'is_a_control'});
-
+                my $current_col_num = 0;
+                foreach my $c (@possible_cols){
+                    if ($selected_cols{$c}){
+                        if ($c eq 'plant_name'){
+                            $ws->write($row_num, $current_col_num, $_ );
+                        } elsif ($c eq 'plant_number'){
+                            $ws->write($row_num, $current_col_num, $plant_num );
+                        } elsif ($c eq 'location_name'){
+                            $ws->write($row_num, $current_col_num, $location_name );
+                        } elsif ($c eq 'trial_name'){
+                            $ws->write($row_num, $current_col_num, $trial_name );
+                        } elsif ($c eq 'year'){
+                            $ws->write($row_num, $current_col_num, $trial_year );
+                        } elsif ($c eq 'tier'){
+                            $ws->write($row_num, $current_col_num, $design_info{"row_number"}."/".$design_info{"col_number"} );
+                        } elsif ($c eq 'synonyms'){
+                            my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
+                            $ws->write($row_num, $current_col_num, join ',', @{$accession->synonyms} );
+                        } elsif ($c eq 'pedigree'){
+                            my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
+                            $ws->write($row_num, $current_col_num, $accession->get_pedigree_string('Parents') );
+                        } else {
+                            $ws->write($row_num, $current_col_num, $design_info{$c} );
+                        }
+                        $current_col_num++;
+                    }
+                }
                 if(exists($treatment_stock_hash{$_})){
-                    $ws->write($row_num,10,1);
+                    $ws->write($row_num,$current_col_num,1);
+                    $current_col_num++;
+                }
+                foreach my $t (@selected_trait_names){
+                    my $perf = $fieldbook_trait_hash{$t}->{$design_info{"accession_id"}};
+                    if ($perf){
+                        $ws->write($row_num,$current_col_num,"Avg: ".$perf->[3]." Min: ".$perf->[5]." Max: ".$perf->[4]." Count: ".$perf->[2]." StdDev: ".$perf->[6]);
+                    }
+                    $current_col_num++;
                 }
 
                 $plant_num++;
@@ -238,19 +292,43 @@ sub download {
             my $subplot_names = $design_info{'subplot_names'};
             my $subplot_num = 1;
             foreach (sort @$subplot_names) {
-                $ws->write($row_num,0,$_);
-                $ws->write($row_num,1,$design_info{'plot_name'});
-                $ws->write($row_num,2,$design_info{'block_number'});
-                $ws->write($row_num,3,$subplot_num);
-                $ws->write($row_num,4,$design_info{'plot_number'});
-                $ws->write($row_num,5,$design_info{'rep_number'});
-                $ws->write($row_num,6,$design_info{'row_number'});
-                $ws->write($row_num,7,$design_info{'col_number'});
-                $ws->write($row_num,8,$design_info{'accession_name'});
-                $ws->write($row_num,9,$design_info{'is_a_control'});
-
+                my $current_col_num = 0;
+                foreach my $c (@possible_cols){
+                    if ($selected_cols{$c}){
+                        if ($c eq 'subplot_name'){
+                            $ws->write($row_num, $current_col_num, $_ );
+                        } elsif ($c eq 'subplot_number'){
+                            $ws->write($row_num, $current_col_num, $subplot_num );
+                        } elsif ($c eq 'location_name'){
+                            $ws->write($row_num, $current_col_num, $location_name );
+                        } elsif ($c eq 'trial_name'){
+                            $ws->write($row_num, $current_col_num, $trial_name );
+                        } elsif ($c eq 'year'){
+                            $ws->write($row_num, $current_col_num, $trial_year );
+                        } elsif ($c eq 'tier'){
+                            $ws->write($row_num, $current_col_num, $design_info{"row_number"}."/".$design_info{"col_number"} );
+                        } elsif ($c eq 'synonyms'){
+                            my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
+                            $ws->write($row_num, $current_col_num, join ',', @{$accession->synonyms} );
+                        } elsif ($c eq 'pedigree'){
+                            my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
+                            $ws->write($row_num, $current_col_num, $accession->get_pedigree_string('Parents') );
+                        } else {
+                            $ws->write($row_num, $current_col_num, $design_info{$c} );
+                        }
+                        $current_col_num++;
+                    }
+                }
                 if(exists($treatment_stock_hash{$_})){
-                    $ws->write($row_num,10,1);
+                    $ws->write($row_num,$current_col_num,1);
+                    $current_col_num++;
+                }
+                foreach my $t (@selected_trait_names){
+                    my $perf = $fieldbook_trait_hash{$t}->{$design_info{"accession_id"}};
+                    if ($perf){
+                        $ws->write($row_num,$current_col_num,"Avg: ".$perf->[3]." Min: ".$perf->[5]." Max: ".$perf->[4]." Count: ".$perf->[2]." StdDev: ".$perf->[6]);
+                    }
+                    $current_col_num++;
                 }
 
                 $subplot_num++;
@@ -263,21 +341,47 @@ sub download {
                 my $plants = $subplot_plant_names->{$s};
                 my $plant_num = 1;
                 foreach my $p (sort @$plants){
-                    $ws->write($row_num,0,$p);
-                    $ws->write($row_num,1,$s);
-                    $ws->write($row_num,2,$design_info{'plot_name'});
-                    $ws->write($row_num,3,$design_info{'block_number'});
-                    $ws->write($row_num,4,$subplot_num);
-                    $ws->write($row_num,5,$plant_num);
-                    $ws->write($row_num,6,$design_info{'plot_number'});
-                    $ws->write($row_num,7,$design_info{'rep_number'});
-                    $ws->write($row_num,8,$design_info{'row_number'});
-                    $ws->write($row_num,9,$design_info{'col_number'});
-                    $ws->write($row_num,10,$design_info{'accession_name'});
-                    $ws->write($row_num,11,$design_info{'is_a_control'});
-
+                    my $current_col_num = 0;
+                    foreach my $c (@possible_cols){
+                        if ($selected_cols{$c}){
+                            if ($c eq 'plant_name'){
+                                $ws->write($row_num, $current_col_num, $p );
+                            } elsif ($c eq 'subplot_name'){
+                                $ws->write($row_num, $current_col_num, $s );
+                            } elsif ($c eq 'subplot_number'){
+                                $ws->write($row_num, $current_col_num, $subplot_num );
+                            } elsif ($c eq 'plant_number'){
+                                $ws->write($row_num, $current_col_num, $plant_num );
+                            } elsif ($c eq 'location_name'){
+                                $ws->write($row_num, $current_col_num, $location_name );
+                            } elsif ($c eq 'trial_name'){
+                                $ws->write($row_num, $current_col_num, $trial_name );
+                            } elsif ($c eq 'year'){
+                                $ws->write($row_num, $current_col_num, $trial_year );
+                            } elsif ($c eq 'tier'){
+                                $ws->write($row_num, $current_col_num, $design_info{"row_number"}."/".$design_info{"col_number"} );
+                            } elsif ($c eq 'synonyms'){
+                                my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
+                                $ws->write($row_num, $current_col_num, join ',', @{$accession->synonyms} );
+                            } elsif ($c eq 'pedigree'){
+                                my $accession = CXGN::Stock->new({schema=>$schema, stock_id=>$design_info{"accession_id"}});
+                                $ws->write($row_num, $current_col_num, $accession->get_pedigree_string('Parents') );
+                            } else {
+                                $ws->write($row_num, $current_col_num, $design_info{$c} );
+                            }
+                            $current_col_num++;
+                        }
+                    }
                     if(exists($treatment_stock_hash{$p})){
-                        $ws->write($row_num,12,1);
+                        $ws->write($row_num,$current_col_num,1);
+                        $current_col_num++;
+                    }
+                    foreach my $t (@selected_trait_names){
+                        my $perf = $fieldbook_trait_hash{$t}->{$design_info{"accession_id"}};
+                        if ($perf){
+                            $ws->write($row_num,$current_col_num,"Avg: ".$perf->[3]." Min: ".$perf->[5]." Max: ".$perf->[4]." Count: ".$perf->[2]." StdDev: ".$perf->[6]);
+                        }
+                        $current_col_num++;
                     }
                     $plant_num++;
                     $row_num++;
@@ -355,7 +459,8 @@ sub download {
     unlink $tempfile;
     
     my $result = $file_row->file_id;
-    return {result => $result, file => $file_destination};
+    print STDERR "FIeldbook file generated $file_destination ".localtime()."\n";
+    return {result => $result, file => $file_destination, file_id=>$file_row->file_id() };
 }
 
 1;

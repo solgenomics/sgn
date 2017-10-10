@@ -339,9 +339,10 @@ my $new_trial = CXGN::Trial::TrialCreate->new(
 	trial_location => 'test_location',
 	trial_name => "anothertrial",
 	design => $trial_design,
+    operator => 'janedoe'
     });
 
-my $message = $new_trial->save_trial();
+my $save = $new_trial->save_trial();
 
 my $after_design_creation_count = $stock_count_rs->count();
 
