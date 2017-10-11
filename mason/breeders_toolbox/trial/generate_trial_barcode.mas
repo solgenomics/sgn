@@ -70,7 +70,7 @@ $identifier => ''
                                        }
                                        else if (barcode_type == "1D") {
                                          jQuery("#2D_fieldbook_option").hide();
-                                       }
+                                       } 
                                    });
                                    
                                    jQuery(document).on('change', '#select_print_format', function () {
@@ -109,7 +109,8 @@ $identifier => ''
                                        var left_margin = 50;
                                        var bottom_margin = 12;
                                        var right_margin = 12;
-
+                                       var text = 'year,location';
+                                       
                                        }
                                        else if (format == "20A4") {
                                        var label_row = 10;
@@ -120,6 +121,8 @@ $identifier => ''
                                        var right_margin = 10;
 
                                        }
+                                       jQuery("#text_margin").empty();
+                                       jQuery("#text_margin").val(text);
                                        jQuery("#label_rows").empty();
                                        jQuery("#label_rows").val(label_row);
                                        jQuery("#label_cols").empty();
