@@ -14,29 +14,23 @@
 
 
 <div class="row">
-  <div class="col-md-9">
+  <div class="col-md-12">
         <div class="well">
           <center>
             <label>Select Label Size</label>
-            <br>
-            <select id="d3-label-size-select" class="input-sm form-control form-group">
-              <!-- <option width="520" height="200">1" x 2 5/8"</option>
-              <option width="800" height="200">1" x 4"</option>
-              <option width="800" height="265">1 1/3" x 4"</option>
-              <option width="" height="">Custom</option> -->
-            </select>
-
-            <label> Custom Width:</label>
-            <input type="text" class="form-control" id="d3-label-custom-width">
-            <label> Custom Height:</label>
-            <input type="text" class="form-control" id="d3-label-custom-height">
-            
-            <button class="btn btn-primary" id="d3-apply-label-size">Apply</button>
-          </center>
+                <select id="d3-label-size-select" class="input-sm form-control form-group"></select>
+            <div style="display:none" id="d3-label-custom-dimensions" class="form-inline">
+                <input class="form-control" placeholder="Width in mm" id="d3-label-custom-width">
+                <input class="form-control" placeholder="Height in mm" id="d3-label-custom-height">
+                <button class="btn btn-primary" id="d3-apply-custom-label-size">Apply</button>
+            </div>
+            </center>
         </div>
     <div class="well" style="padding:0;">
-      <div class="d3-draw-area" id="draw-area"></div>
+      <div class="d3-draw-area"></div>
     </div>
+    </div>
+    <div class="col-md-9">
     <div class="well">
       <center class="add-text-container">
         <label>Add Text</label>
@@ -66,11 +60,16 @@
             </select>
         </div>		                                   
     </div>
+    <div class="well">
+      <button id="d3-save-button" class="btn btn-primary">Save</button>
+      <a id="link" target="_blank" class="btn button btn-primary"> Download image</a>
+      <button id="d3-pdf-button" class="btn btn-primary">Download pdf</button>
+    </div>
   </div>
   <div class="col-md-3">
     <div class="well">
       <center>
-        <label>Barcode</label>
+        <label>Add Barcode</label>
         <br>
         <select id="d3-barcode-select" class="input-sm form-control form-group"></select>
       </center>
@@ -82,11 +81,6 @@
         <input id="d3-grid-slider" class="form-control input-sm" type="range"> 
         <input id="d3-snapping-check" type="checkbox" checked>  Snap
       </div>
-    </div>
-    <div class="well">
-      <button id="d3-save-button" class="btn btn-primary">Save</button>
-      <a id="link" target="_blank" class="btn button btn-primary"> Download image</a>
-      <button id="d3-pdf-button" class="btn btn-primary">Download pdf</button>
     </div>
   </div>
 </div>
@@ -122,10 +116,10 @@ var barcode_types = [
 ];
 
 var label_sizes = [
-  {name:'1" x 2 5/8"',width:520,height:200},
-  {name:'1" x 4"',width:800,height:200},
-  {name:'1 1/3" x 4"',width:800,height:265},
-  {name:'Custom'}
+  {name:'1" x 2 5/8"',width:520,height:200,value:30},
+  {name:'1" x 4"',width:800,height:200,value:20},
+  {name:'1 1/3" x 4"',width:800,height:265,value:14},
+  {name:'Custom',value:'Custom'}
 ];
 
 var text_placeholders = [
@@ -282,6 +276,12 @@ function getTransGroupBounds(node){
   return bb
 }
 
+function changeLabelSize(width,height,scale) {
+    d3.select(".label-template").attr("viewBox", "0 0 "+width+" "+height);
+    var grid_size = d3.select("#d3-grid-number").node().value;
+    updateGrid(scale.invert(grid_size),width,height);
+}
+
 $(document).ready(function($) {
 
   var width = 520; 
@@ -343,33 +343,36 @@ $(document).ready(function($) {
   });
   updateGrid(_x.invert(12),width,height);
   
-  // resize draw area accorinding to selected label size
+  // add select so users can resize draw area accorinding to label size
   var label_size_select = d3.select("#d3-label-size-select");
+  
   label_size_select.selectAll("option")
     .data(label_sizes)
     .enter().append("option")
     .text(function(d){return d.name})
     .attr("value",function(d,i){return i});
-  label_size_select.on("input",function(){
-      var val = d3.select(this).node().value;
-      console.log("selected val ="+val);
-      var width, height;
-      if (val == 3) {
-          console.log("Retrieveing custom types");
-          width = d3.select("#d3-label-width-custom").node().value;
-          height = d3.select("#d3-label-height-custom").node().value;
-      } else {
-          width = label_sizes[val].width; //_x.invert(label_sizes[val].width);
-          height = label_sizes[val].height; //_y.invert(label_sizes[val].height);
-      }
-      console.log("Changing draw area height to "+height+" and width to "+width);
-      var svg = document.getElementById("draw-area");
-      svg.setAttribute("width", width);
-      svg.setAttribute("height", height);
-    //   var svg = d3.select(".d3-draw-area").append("svg") 
-    //     .attr("viewBox", "0 0 "+width+" "+height);
-    });
-
+    
+    label_size_select.on("input",function(){ //adjust label size, or if custom show width and height inputs
+        var index = d3.select(this).node().value;
+        var val =  label_sizes[index].value;
+        //console.log("value is "+val);
+        if (val == 'Custom') {
+            document.getElementById("d3-label-custom-dimensions").style.display = "inline";
+        } else {
+            document.getElementById("d3-label-custom-dimensions").style.display = "none";
+            var width = label_sizes[index].width;
+            var height = label_sizes[index].height;
+            changeLabelSize(width,height,_x);
+        }
+      });
+    
+      d3.select("#d3-apply-custom-label-size").on("click",function(){ //apply custom label size
+          width = document.getElementById("d3-label-custom-width").value;
+          width = width * 8 // convert to pixels at 8dpmm  (8 dots per mm)
+          height = document.getElementById("d3-label-custom-height").value;
+          height = height * 8 // convert to pixels at 8dpmm  (8 dots per mm)
+          changeLabelSize(width,height,_x);
+        });
 
   //set up barcode and barcode select
   var barcode_select = d3.select("#d3-barcode-select");
