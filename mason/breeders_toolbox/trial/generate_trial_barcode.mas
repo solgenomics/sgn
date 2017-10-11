@@ -106,9 +106,9 @@ $identifier => ''
                                        var label_row = 10;
                                        var label_cols = 3; 
                                        var top_margin = 12;
-                                       var left_margin = 50;
+                                       var left_margin = 10;
                                        var bottom_margin = 12;
-                                       var right_margin = 12;
+                                       var right_margin = 10;
                                        var text = 'year,location';
                                        
                                        }
