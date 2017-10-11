@@ -511,7 +511,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
        }
      }
      
-     elsif ($cass_print_format eq 'NCSU' && $barcode_type eq "2D") {
+     elsif ($cass_print_format eq 'NCSU' && $barcode_type eq "2D") { 
          foreach my $label_count (1..$labels_per_row) {
            my $xposition = $left_margin + ($label_count -1) * $final_barcode_width - 50;
            my $yposition = $ypos -7;
@@ -533,7 +533,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
            $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_3, $label_text_4);
            $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_2, $label_text_5);
            $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $location_text);
-           $pages[$page_nr-1]->string($font, $label_size_stock, $xposition, $yposition_6, $label_text);
+           $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_6, $parents);
            
            $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
  
