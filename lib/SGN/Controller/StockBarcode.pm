@@ -107,7 +107,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $xlabel_margin = 8;
     # convert mm into pixels
     #
-    if ($cass_print_format eq 'NCSU') {$left_margin_mm = 50, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 12, $labels_per_page = 10, $labels_per_row = 3, $barcode_type = "2D", $page_format = "letter"; }
+    if ($cass_print_format eq 'NCSU') {$left_margin_mm = 10, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 10, $labels_per_row = 3, $barcode_type = "2D", $page_format = "letter"; }
     if ($cass_print_format eq 'CASS') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
     if ($cass_print_format eq 'MUSA') {$left_margin_mm = 112, $top_margin_mm = 10, $bottom_margin_mm =  13; }
     if ($cass_print_format eq '32A4') {$left_margin_mm = 17, $top_margin_mm = 12, $bottom_margin_mm =  12, $right_margin_mm = 10, $labels_per_page = 8, $labels_per_row = 4, $barcode_type = "2D", $page_format = "letter"; }
@@ -252,10 +252,10 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     
     ## for 10 labels per page
     my $label_height;
-    if ($cass_print_format eq 'NCSU'){
-        $label_height = 40;
-    }
-    elsif ($cass_print_format eq '32A4'){
+    # if ($cass_print_format eq 'NCSU'){
+    #     $label_height = 40;
+    # }
+    if ($cass_print_format eq '32A4'){
         $label_height = 40;
         print "LABEL HEIGHT: $label_height\n";
     }
@@ -346,9 +346,13 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
         my ($year_text, $location_text, $ypos, $label_boundary);
         if ($cass_print_format eq 'NCSU'){
             ($year_text,$location_text) = split ',', $added_text;
-            my $label_height_10_per_page = 72;
-     	    $label_boundary = $page_height - ($label_on_page * $label_height_10_per_page) - $top_margin;
-            $ypos = $label_boundary - int( ($label_height_10_per_page - $image->{height} * $scaley) /2);
+            #my $label_height_10_per_page = 72;
+     	    #$label_boundary = $page_height - ($label_on_page * $label_height_10_per_page) - $top_margin;
+            #$ypos = $label_boundary - int( ($label_height_10_per_page - $image->{height} * $scaley) /2);
+            my $xlabel_margin = 18;
+            $label_boundary = $page_height - ($label_on_page * $label_height) - $top_margin;
+            $ypos = $label_boundary - int( ($label_height - $image->{height} * $scaley) /2);
+            $final_barcode_width = ($page_width - $right_margin - $left_margin + (2 * $xlabel_margin)) / $labels_per_row;
         }
         elsif ($cass_print_format eq '32A4'){
             my $label_height_8_per_page = 90;
@@ -513,7 +517,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
      
      elsif ($cass_print_format eq 'NCSU' && $barcode_type eq "2D") { 
          foreach my $label_count (1..$labels_per_row) {
-           my $xposition = $left_margin + ($label_count -1) * $final_barcode_width - 50;
+           my $xposition = $left_margin + ($label_count -1) * $final_barcode_width;
            my $yposition = $ypos -7;
            my $label_text = $found[$i]->[1];
            my $label_size =  7;
@@ -535,7 +539,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
            $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_5, $location_text);
            $pages[$page_nr-1]->string($font, $label_size, $xposition, $yposition_6, $parents);
            
-           $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
+           $pages[$page_nr-1]->image(image=>$image, xpos=>$left_margin + 90 + ($label_count -1) * $final_barcode_width, ypos=>$ypos, xalign=>0, yalign=>2, xscale=>$scalex, yscale=>$scaley);
  
          }
      }
