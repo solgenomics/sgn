@@ -252,9 +252,6 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     
     ## for 10 labels per page
     my $label_height;
-    # if ($cass_print_format eq 'NCSU'){
-    #     $label_height = 40;
-    # }
     if ($cass_print_format eq '32A4'){
         $label_height = 40;
         print "LABEL HEIGHT: $label_height\n";
