@@ -97,13 +97,19 @@ jQuery(document).ready(function ($) {
     });
 
     $(document).on('focusout', '#select_seedlot_list_list_select', function() {
-        if ($('#select_seedlot_list_list_select').val()) {
+        if ($('#select_seedlot_list_list_select').val() != '') {
             seedlot_list_id = $('#select_seedlot_list_list_select').val();
             seedlot_list = JSON.stringify(list.getList(seedlot_list_id));
             if(stock_list && seedlot_list){
                 verify_seedlot_list(stock_list, seedlot_list);
             } else {
                 alert('Please make sure to select an accession list above!');
+            }
+        } else {
+            seedlot_list = undefined;
+            seedlot_list_verified = 1;
+            if (stock_list){
+                verify_stock_list(stock_list);
             }
         }
     });
@@ -881,7 +887,7 @@ jQuery(document).ready(function ($) {
 
 	//add lists to the list select and list of checks select dropdowns.
     document.getElementById("select_list").innerHTML = list.listSelect("select_list", [ 'accessions' ], '', 'refresh');
-    document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], '', 'refresh');
+    document.getElementById("select_seedlot_list").innerHTML = list.listSelect("select_seedlot_list", [ 'seedlots' ], 'none', 'refresh');
     document.getElementById("list_of_checks_section").innerHTML = list.listSelect("list_of_checks_section", [ 'accessions' ], '', 'refresh');
 
     //add lists to the list select and list of checks select dropdowns for CRBD.
