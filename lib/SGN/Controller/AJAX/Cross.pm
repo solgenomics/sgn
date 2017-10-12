@@ -1015,7 +1015,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                 my $storage_code = $female_accession_stock->typeOfGermplasmStorageCode;
                 my $acquisition_date = $female_accession_stock->acquisitionDate;
                 my $organization = $female_accession_stock->organization_name;
-                my $population = $female_accession_stock->population_name;
+                my $population = $female_accession_stock->population_name || '';
                 my $stock_descendant_hash = $female_accession_stock->get_descendant_hash();
                 my $descendants = $stock_descendant_hash->{descendants};
                 my @descendents_array;
@@ -1069,7 +1069,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                             my $storage_code = $male_accession_stock->typeOfGermplasmStorageCode;
                             my $acquisition_date = $male_accession_stock->acquisitionDate;
                             my $organization = $male_accession_stock->organization_name;
-                            my $population = $male_accession_stock->population_name;
+                            my $population = $male_accession_stock->population_name || '';
                             my $stock_descendant_hash = $male_accession_stock->get_descendant_hash();
                             my $descendants = $stock_descendant_hash->{descendants};
                             my @descendents_array;
@@ -1087,7 +1087,6 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             foreach (@male_segments){
                 $line .= $_;
             }
-            $line .= "\n";
             push @lines, $line;
             if ($num_males > $max_male_num){
                 $max_male_num = $num_males;
@@ -1141,9 +1140,11 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         my $header_row = <$fh>;
         my @old_header_row = split ',', $header_row;
         if (scalar(@old_header_row)>scalar(@new_header_row)){
+            chomp $header_row;
             $header = $header_row;
         }
         while ( my $row = <$fh> ){
+            chomp $row;
             push @previous_file_lines, $row;
         }
         $previously_saved_metadata_id = $previous_wishlist_md_file->comment;
@@ -1156,13 +1157,12 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     $uri2 .= '.csv';
     my %unique_female_plots;
     open(my $F, ">", $file_path2) || die "Can't open file ".$file_path2;
-        print $F $header;
-        print $F "\n";
+        print $F $header."\n";
         foreach (@previous_file_lines){
             my @line_cols = split ',', $_;
             my $female_plot_id = $line_cols[0];
             if (!exists($unique_female_plots{$female_plot_id})){
-                print $F $_;
+                print $F $_."\n";
                 $unique_female_plots{$female_plot_id}++;
             }
         }
@@ -1170,7 +1170,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             my @line_cols = split ',', $_;
             my $female_plot_id = $line_cols[0];
             if (!exists($unique_female_plots{$female_plot_id})){
-                print $F $_;
+                print $F $_."\n";
                 $unique_female_plots{$female_plot_id}++;
             }
         }
@@ -1205,6 +1205,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
             or die "Could not open file '$previous_file_path' $!";
         my $header_row = <$fh>;
         while ( my $row = <$fh> ){
+            chomp $row;
             push @previous_germplasm_info_lines, $row;
         }
         $previously_saved_germplasm_info_metadata_id = $previous_germplasm_info_md_file->comment;

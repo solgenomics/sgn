@@ -86,7 +86,7 @@
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-info" id="show_cross_wishlists_select_submits" name="show_cross_wishlists_select_submits">Previous Cross Wishlists</button>
+                <button class="btn btn-info" id="show_cross_wishlists_select_submits" name="show_cross_wishlists_select_submits">Available Cross Wishlist(s)</button>
                 <button class="btn btn-primary" id="cross_wishlist_submit" name="cross_wishlist_submits">Next</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
@@ -110,7 +110,7 @@
             </div>
 
             <div class="modal-footer">
-                <button class="btn btn-primary" id="cross_wishlist_select_submits" name="cross_wishlist_select_submits">Create Cross Wishlist</button>
+                <button class="btn btn-primary" id="cross_wishlist_select_submits" name="cross_wishlist_select_submits">Push Cross Wishlist for ODK Use</button>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
