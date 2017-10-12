@@ -2,14 +2,14 @@ package CXGN::Trial::TrialLayout;
 
 =head1 NAME
 
-CXGN::Trial::TrialLayout - Module to get layout information about a trial (i.e. a project with a "design" projectprop)
+CXGN::Trial::TrialLayout - Module to get layout information about a trial
 
 =head1 SYNOPSIS
 
  my $trial_layout = CXGN::Trial::TrialLayout->new({
     schema => $schema,
-    trial_id => $trial_id}
- );
+    trial_id => $trial_id
+ });
  my $tl = $trial_layout->get_design();
  the return is a HashRef of HashRef where the keys are the plot_number such as:
  
@@ -33,6 +33,11 @@ CXGN::Trial::TrialLayout - Module to get layout information about a trial (i.e. 
         "plant_ids" => [3456, 3457]
     }
  }
+ 
+ By using get_design(), this module attempts to get the design from a
+ projectprop called 'trial_layout_json', but if it cannot be found it calls
+ generate_and_cache_layout() to generate the design, return it, and store it
+ using that projectprop.
  
 --------------------------------------------------------------------------
 
@@ -81,25 +86,37 @@ use CXGN::Chado::Stock;
 use JSON;
 
 has 'schema' => (
-		 is       => 'rw',
-		 isa      => 'DBIx::Class::Schema',
-		 lazy_build => 1,
-		 required => 1,
-		);
-has 'trial_id' => (isa => 'Int', is => 'rw', predicate => 'has_trial_id', trigger => \&_lookup_trial_id, required => 1);
-has 'project' => (
-		  is       => 'ro',
-		  isa      => 'Bio::Chado::Schema::Result::Project::Project',
-		  reader   => 'get_project',
-		  writer   =>  '_set_project',
-		  predicate => 'has_project',
-		 );
+    is       => 'rw',
+    isa      => 'DBIx::Class::Schema',
+    required => 1,
+);
+has 'trial_id' => (
+    isa => 'Int',
+    is => 'rw',
+    predicate => 'has_trial_id',
+    trigger => \&_lookup_trial_id,
+    required => 1
+);
+has 'project' => ( is => 'ro', isa => 'Bio::Chado::Schema::Result::Project::Project', reader => 'get_project', writer => '_set_project', predicate => 'has_project');
 has 'design_type' => (isa => 'Str', is => 'ro', predicate => 'has_design_type', reader => 'get_design_type', writer => '_set_design_type');
 has 'trial_year' => (isa => 'Str', is => 'ro', predicate => 'has_trial_year', reader => 'get_trial_year', writer => '_set_trial_year');
 has 'trial_name' => (isa => 'Str', is => 'ro', predicate => 'has_trial_name', reader => 'get_trial_name', writer => '_set_trial_name');
 has 'trial_description' => (isa => 'Str', is => 'ro', predicate => 'has_trial_description', reader => 'get_trial_description', writer => '_set_trial_description');
-has 'trial_location' => (isa => 'Str', is => 'ro', predicate => 'has_trial_location', reader => 'get_trial_location', writer => '_set_trial_location');
-has 'plot_dimensions' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_plot_dimensions', reader => 'get_plot_dimensions', writer => '_set_plot_dimensions');
+
+has 'trial_location' => (
+    isa => 'Str',
+    is => 'ro',
+    predicate => 'has_trial_location', reader => 'get_trial_location', writer => '_set_trial_location',
+    lazy     => 1,
+    builder  => '_retrieve_trial_location',
+);
+has 'plot_dimensions' => (
+    isa => 'ArrayRef',
+    is => 'ro',
+    predicate => 'has_plot_dimensions', reader => 'get_plot_dimensions', writer => '_set_plot_dimensions',
+    lazy     => 1,
+    builder  => '_retrieve_plot_dimensions',
+);
 has 'design' => (isa => 'HashRef', is => 'ro', predicate => 'has_design', reader => 'get_design', writer => '_set_design');
 has 'plot_names' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_plot_names', reader => 'get_plot_names', writer => '_set_plot_names', default => sub { [] } );
 has 'block_numbers' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_block_numbers', reader => 'get_block_numbers', writer => '_set_block_numbers');
@@ -109,22 +126,21 @@ has 'control_names' => (isa => 'ArrayRef', is => 'ro', predicate => 'has_control
 has 'row_numbers' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_row_numbers', reader => 'get_row_numbers', writer => '_set_row_numbers');
 has 'col_numbers' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_col_numbers', reader => 'get_col_numbers', writer => '_set_col_numbers');
 
-# To verify that all plots in the trial have valid props and relationships. This means that the plots have plot_number and block_number properties. All plots have an accession associated. The plot's accession is in sync with any plant's accession, subplot's accession, and seedlot's containing accession. If verify_relationships is set to 1, then get_design will not return the design anymore, but will instead indicate if the design rels are valid.
+# To verify that all plots in the trial have valid props and relationships. This means that the plots have plot_number and block_number properties. All plots have an accession associated. The plot's accession is in sync with any plant's accession, subplot's accession, and seedlot's containing accession. If verify_relationships is set to 1, then get_design will not return the design anymore, but will instead indicate any errors in the stored layout.
 has 'verify_layout' => (isa => 'Bool', is => 'rw', predicate => 'has_verify_layout', reader => 'get_verify_layout');
 # verify_physical_map checks that all plot's in the trial have row and column props.
 has 'verify_physical_map' => (isa => 'Bool', is => 'rw', predicate => 'has_verify_physical_map', reader => 'get_verify_physical_map');
 
 sub _lookup_trial_id {
+    my $self = shift;
+    print STDERR "CXGN::Trial::TrialLayout ".localtime."\n";
+
   #print STDERR "Check 2.1: ".localtime()."\n";
-  my $self = shift;
   $self->_set_project_from_id();
   if (!$self->has_project()) {
       print STDERR "Trial id not found\n";
     return;
   }
-  my $accession_names_ref;
-  my $control_names_ref;
-  my $design_type_from_project;
 
   #print STDERR "Check 2.2: ".localtime()."\n";
   if (!$self->_get_trial_year_from_project()) {return;}
@@ -133,25 +149,11 @@ sub _lookup_trial_id {
   $self->_set_trial_name($self->get_project->name());
   $self->_set_trial_description($self->get_project->description());
   #print STDERR "Check 2.3: ".localtime()."\n";
-  
-  $design_type_from_project =  $self->_get_design_type_from_project();
-  if (! $design_type_from_project) {
+
+  if (!$self->_get_design_type_from_project()) {
       print STDERR "Trial has no design type... not creating layout object.\n";
       return;
   }
-  if (!$self->_get_location_from_field_layout_experiment()) {
-      print STDERR "Trial has not location... not creating layout object.\n";
-      return;
-  }
-
-  #print STDERR "Check 2.3.1: ".localtime()."\n";
-  if (!$self->_get_location_from_field_layout_experiment()) {return;}
-  $self->_set_trial_location($self->_get_location_from_field_layout_experiment());
-  #print STDERR "Check 2.3.2: ".localtime()."\n";
-  if (!$self->has_trial_location) {return;}
-
-  $self->_set_plot_dimensions($self->_get_plot_dimensions_from_trial());
-  #print STDERR "Check 2.3.3: ".localtime()."\n";
   $self->_set_design_type($self->_get_design_type_from_project());
   #print STDERR "Check 2.3.4: ".localtime()."\n";
   $self->_set_design($self->_get_design_from_trial());
@@ -162,8 +164,22 @@ sub _lookup_trial_id {
   $self->_set_row_numbers($self->_get_plot_info_fields_from_trial("row_number") || [] );
   $self->_set_col_numbers($self->_get_plot_info_fields_from_trial("col_number") || [] );
   #$self->_set_is_a_control($self->_get_plot_info_fields_from_trial("is_a_control"));
-  #print STDERR "Check 2.5: ".localtime()."\n";
+  print STDERR "Check 2.5: ".localtime()."\n";
+}
 
+sub _retrieve_trial_location {
+    my $self = shift;
+    if (!$self->_get_location_from_field_layout_experiment()) {
+        print STDERR "Trial has no location.\n";
+        return;
+    } else {
+        $self->_set_trial_location($self->_get_location_from_field_layout_experiment());
+    }
+}
+
+sub _retrieve_plot_dimensions {
+    my $self = shift;
+    $self->_set_plot_dimensions($self->_get_plot_dimensions_from_trial());
 }
 
 sub _get_control_plot_names_from_trial {
@@ -211,14 +227,32 @@ sub _get_plot_info_fields_from_trial {
 
 sub _get_design_from_trial {
     #print STDERR "Check 2.3.4.1: ".localtime()."\n";
-  my $self = shift;
-  my $schema = $self->get_schema();
-  my $plots_ref;
-  my @plots;
-  my %design;
-  my %verify_errors;
-  my %unique_accessions;
-  my %unique_controls;
+    my $self = shift;
+    my $schema = $self->get_schema();
+    my $project = $self->get_project();
+
+    #Try to retrieve layout from cached json
+    my $trial_layout_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property')->cvterm_id;
+    my $trial_layout_json = $project->projectprops->find({ 'type_id' => $trial_layout_json_cvterm_id });
+    if ($trial_layout_json) {
+        print STDERR "TrialLayout from cache ".localtime."\n";
+        return decode_json $trial_layout_json->value;
+    } else {
+        $self->generate_and_cache_layout();
+    }
+}
+
+sub generate_and_cache_layout {
+    my $self = shift;
+    print STDERR "TrialLayout generate layout ".localtime."\n";
+    my $schema = $self->get_schema();
+    my $plots_ref;
+    my @plots;
+    my %design;
+    my %verify_errors;
+    my %unique_accessions;
+    my %unique_controls;
+    my $project = $self->get_project();
 
   $plots_ref = $self->_get_plots();
   if (!$plots_ref) {
@@ -226,7 +260,6 @@ sub _get_design_from_trial {
       return { error => "Something went wrong retrieving plots for this trial. This should not happen, so please contact us." };
   }
 #print STDERR "Check 2.3.4.2: ".localtime()."\n";
-  my $project = $self->get_project();
 
   my $genotyping_user_id_row = $project
       ->search_related("nd_experiment_projects")
@@ -430,7 +463,12 @@ sub _get_design_from_trial {
         $self->_set_control_names(\@control_names);
     }
 
-  return \%design;
+    my $trial_layout_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property');
+    $project->create_projectprops({
+        $trial_layout_json_cvterm->name() => encode_json(\%design)
+    });
+
+    return \%design;
 }
 
 sub _get_field_layout_experiment_from_project {
