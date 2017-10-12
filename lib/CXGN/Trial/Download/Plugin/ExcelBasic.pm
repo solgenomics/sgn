@@ -1,5 +1,39 @@
 package CXGN::Trial::Download::Plugin::ExcelBasic;
 
+=head1 NAME
+
+CXGN::Trial::Download::Plugin::ExcelBasic
+
+=head1 SYNOPSIS
+
+This plugin module is loaded from CXGN::Trial::Download
+
+------------------------------------------------------------------
+
+For downloading a trial's xls spreadsheet for collecting phenotypes (as used
+from SGN::Controller::AJAX::PhenotypesDownload->create_phenotype_spreadsheet):
+
+my $rel_file = $c->tempfile( TEMPLATE => 'download/downloadXXXXX');
+my $tempfile = $c->config->{basepath}."/".$rel_file.".xls";
+my $create_spreadsheet = CXGN::Trial::Download->new({
+    bcs_schema => $schema,
+    trial_id => $trial_id,
+    trait_list => \@trait_list,
+    filename => $tempfile,
+    format => "ExcelBasic",
+    data_level => $data_level,
+    sample_number => $sample_number,
+    predefined_columns => $predefined_columns,
+    treatment_project_id => $treatment_project_id
+});
+$create_spreadsheet->download();
+$c->stash->{rest} = { filename => $urlencode{$rel_file.".xls"} };
+
+
+=head1 AUTHORS
+
+=cut
+
 use Moose::Role;
 use JSON;
 use Data::Dumper;
@@ -46,10 +80,12 @@ sub download {
     #print STDERR Dumper \@predefined_columns;
     my $predefined_columns_json = $json->encode(\@predefined_columns);
 
-    my $treatment = $self->treatment_project_id() ? $self->treatment_project_id() : undef;
+    my $treatments = $self->treatment_project_ids() ? $self->treatment_project_ids() : undef;
+    my $treatment;
     my $treatment_trial;
     my $treatment_name = "";
-    if ($treatment){
+    if ($treatments){
+        $treatment = $_->[0];
         $treatment_trial = CXGN::Trial->new({bcs_schema => $schema, trial_id => $treatment});
         $treatment_name = $treatment_trial->get_name();
     }
