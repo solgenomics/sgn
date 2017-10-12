@@ -275,7 +275,7 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
             'data_level': jQuery('#create_fieldbook_data_level_<% $download_type %>').val(),
             'treatment_project_id': jQuery("#html_select_treatment_create_fieldbook_<% $download_type %>").val(),
             'selected_columns':JSON.stringify(selected_columns_<% $download_type %>),
-            'trait_list':jQuery('#create_fieldbook_with_trait_list_select_list_select_<% $download_type %>').val()
+            'trait_list':jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val()
         },
         beforeSend: function() {
             jQuery("#working_modal").modal("show");
