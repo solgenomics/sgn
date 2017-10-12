@@ -892,6 +892,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $user_name = $c->user()->get_object()->get_username();
+    my $site_name = $c->config->{project_name};
 
     my $timestamp = $time->ymd()."_".$time->hms();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
@@ -1186,7 +1187,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
        tempfile => $file_path2,
        subdirectory => 'cross_wishlist',
        archive_path => $c->config->{archive_path},
-       archive_filename => 'cross_wishlist_'.$location_name.'.csv',
+       archive_filename => 'cross_wishlist_'.$site_name.'_'.$location_name.'.csv',
        timestamp => $timestamp,
        user_id => $user_id,
        user_role => $c->user()->roles,
@@ -1246,7 +1247,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
        tempfile => $file_path3,
        subdirectory => 'cross_wishlist',
        archive_path => $c->config->{archive_path},
-       archive_filename => 'germplasm_info_'.$location_name.'.csv',
+       archive_filename => 'germplasm_info_'.$site_name.'_'.$location_name.'.csv',
        timestamp => $timestamp,
        user_id => $user_id,
        user_role => $c->user()->roles,
