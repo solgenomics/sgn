@@ -227,36 +227,7 @@ my $start_time = time();
 
 </&>
 
-<& /breeders_toolbox/trial/trial_coords_spreadsheet_upload_format_info.mas &>
-
-<div id="upload_trial_coord_error_display" class="ui-widget">
-  <table>
-    <tbody></tbody>
-  </table>
-</div>
-
-<div id="trial_coord_upload_success_dialog_message" class="ui-widget">
-  The trial coord upload finished.
-</div>
-
-<div id="upload_trial_coord_dialog" title="Upload trial coordinates">
-
-  <&| /page/explanation.mas, title=>'Template information' &>
-    <p>
-      <b>File format information</b>
-      <br>
-      <a id="trial_coordinates_upload_spreadsheet_format_info">Spreadsheet format</a>
-    </p>
-  </&>
-
-  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_coordinates_form" name="upload_trial_coordinates_form">
-
-    <label for="trial_coordinates_uploaded_file" style="display: inline-block; width: 100px;">Upload trial coordinates file:</label>
-    <input type="file" name="trial_coordinates_uploaded_file" id="trial_coordinates_uploaded_file" encoding="multipart/form-data" />
-
-    </form>
-
-</div>
+<& /breeders_toolbox/trial/trial_coords_upload_dialogs.mas, trial_id => $trial_id, trial_name => $trial_name &>
 
 <!--<style>
   div.left {

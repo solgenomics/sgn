@@ -627,55 +627,13 @@ jQuery(document).ready(function ($) {
         open_upload_trial_coord_dialog();
     });
 
-    jQuery("#upload_trial_coord_dialog").dialog({
-	autoOpen: false,
-	modal: true,
-	autoResize:true,
-        width: 500,
-        position: ['top', 75],
-	buttons: {
-            "Cancel": function () {
-                jQuery('#upload_trial_coord_dialog').dialog("close");
-            },
-	    "Ok": {text: "Ok", id:"upload_trial_coords_ok_button", click:function () {
-		upload_trial_coord_file();
-                jQuery('#upload_trial_coord_dialog').dialog("close");
-	      }
-	    }
-	}
-    });
-
-
-    $("#trial_coord_upload_spreadsheet_info_dialog").dialog( {
-	autoOpen: false,
-	buttons: { "OK" :  function() { $("#trial_coord_upload_spreadsheet_info_dialog").dialog("close"); },},
-	modal: true,
-	position: ['top', 75],
-	width: 900,
-	autoResize:true
+    jQuery('#upload_trial_coords_ok_button').click(function(){
+        upload_trial_coord_file();
     });
 
      $("#trial_coordinates_upload_spreadsheet_format_info").click( function () {
-	$("#trial_coord_upload_spreadsheet_info_dialog" ).dialog("open");
-
+         $("#trial_coord_upload_spreadsheet_info_dialog" ).modal("show");
     });
-
-    $("#trial_coord_upload_success_dialog_message").dialog({
-	autoOpen: false,
-	modal: true,
-	buttons: {
-            Ok: { id: "dismiss_trial_coord_upload_dialog",
-                  click: function() {
-		      //$("#upload_trial_form").dialog("close");
-		      //$( this ).dialog( "close" );
-		      location.reload();
-                  },
-                  text: "OK"
-                }
-        }
-
-    });
-
 
      $('#upload_trial_coordinates_form').iframePostForm({
 	json: true,
@@ -692,22 +650,8 @@ jQuery(document).ready(function ($) {
             if (response.error_string) {
 		$("#upload_trial_coord_error_display tbody").html('');
 		$("#upload_trial_coord_error_display tbody").append(response.error_string);
+        jQuery('#upload_trial_coord_error_display').modal('show');
 
-
-		$(function () {
-                    $("#upload_trial_coord_error_display").dialog({
-			modal: true,
-			autoResize:true,
-			width: 650,
-			position: ['top', 250],
-			title: "Errors in uploaded file",
-			buttons: {
-                            Ok: function () {
-				$(this).dialog("close");
-                            }
-			}
-                    });
-		});
 		return;
             }
             if (response.error) {
@@ -715,7 +659,7 @@ jQuery(document).ready(function ($) {
 		return;
             }
             if (response.success) {
-		$('#trial_coord_upload_success_dialog_message').dialog("open");
+		$('#trial_coord_upload_success_dialog_message').modal("show");
 		//alert("File uploaded successfully");
             }
 	}
@@ -732,8 +676,7 @@ jQuery(document).ready(function ($) {
     }
 
     function open_upload_trial_coord_dialog() {
-	     $('#upload_trial_coord_dialog').dialog("open");
-
+	     $('#upload_trial_coord_dialog').modal("show");
     }
 
     function open_replace_trial_accession_dialog() {
