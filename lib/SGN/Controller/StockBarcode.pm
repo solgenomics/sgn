@@ -125,7 +125,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 	     my $stock_file_contents = read_file($stock_names_file->{tempname});
 	     $stock_names = $stock_names ."\n".$stock_file_contents;
     } 
-
+    
     $stock_names =~ s/\r//g;
     my @names = split /\n/, $stock_names;
 
@@ -134,6 +134,35 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     my ($row, $stockprop_name, $value, $fdata_block, $fdata_rep, $fdata_plot, $fdata, $accession_id, $accession_name, $parents, $tract_type_id, $label_text_5, $plot_name, $label_text_6, $musa_row_col_number, $label_text_7, $row_col_number, $label_text_8, $fdata_plot_20A4, $fdata_rep_block);
 
+    ## sort plot list
+    my %sort_stockprop_hash;
+    my %sorted_hash;
+    my $plot_checker = 0;
+    foreach my $stocks (@names) {
+        if (!$stocks){
+            next;
+        }
+        my $stock_gen = $schema->resultset("Stock::Stock")->find({ uniquename=>$stocks });
+        my $type_gen_id = $stock_gen->type_id();
+        my $stock_id = $stock_gen->stock_id();
+        if ($plot_cvterm_id == $type_gen_id){
+            $plot_checker = $plot_cvterm_id;
+            my $dbh = $c->dbc->dbh();
+            my $h = $dbh->prepare("select name, value from cvterm inner join stockprop on cvterm.cvterm_id = stockprop.type_id where stockprop.stock_id=?;");
+            $h->execute($stock_id);
+             while (($stockprop_name, $value) = $h->fetchrow_array) {
+               $sort_stockprop_hash{$stock_id}->{$stockprop_name} = $value;
+            }
+            my $plotno = $sort_stockprop_hash{$stock_id}->{'plot number'};
+            $sorted_hash{$stocks} = $plotno;
+        }
+    }
+    my @keys = sort { $sorted_hash{$a} <=> $sorted_hash{$b} } keys(%sorted_hash);
+    #print STDERR Dumper(\@keys);
+    if ($plot_checker == $plot_cvterm_id ){
+        @names = @keys;
+    }
+    
     foreach my $name (@names) {
 
     	# skip empty lines
