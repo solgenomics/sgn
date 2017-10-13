@@ -164,7 +164,7 @@ sub _lookup_trial_id {
   $self->_set_row_numbers($self->_get_plot_info_fields_from_trial("row_number") || [] );
   $self->_set_col_numbers($self->_get_plot_info_fields_from_trial("col_number") || [] );
   #$self->_set_is_a_control($self->_get_plot_info_fields_from_trial("is_a_control"));
-  print STDERR "Check 2.5: ".localtime()."\n";
+  #print STDERR "CXGN::Trial::TrialLayout End Build".localtime."\n";
 }
 
 sub _retrieve_trial_location {
@@ -320,8 +320,8 @@ sub generate_and_cache_layout {
     my $row_number_prop = $stockprop_hash{$row_number_cvterm_id} ? join ',', @{$stockprop_hash{$row_number_cvterm_id}} : undef;
     my $col_number_prop = $stockprop_hash{$col_number_cvterm_id} ? join ',', @{$stockprop_hash{$col_number_cvterm_id}} : undef;
     my $accession = $plot->search_related('stock_relationship_subjects')->find({ 'type_id' => {  -in => [ $plot_of_cv->cvterm_id(), $tissue_sample_of_cv->cvterm_id() ] } })->object;
-    my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm_id })->search_related('object');
-	my $subplots = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $subplot_rel_cvterm_id })->search_related('object');
+    my $plants = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $plant_rel_cvterm_id })->search_related('object', {}, {order_by=>"object.stock_id"});
+	my $subplots = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $subplot_rel_cvterm_id })->search_related('object', {}, {order_by=>"object.stock_id"});
 	my $seedlot_transaction = $plot->search_related('stock_relationship_subjects', { 'me.type_id' => $seed_transaction_cvterm_id });
 
     my $accession_name = $accession->uniquename;
@@ -464,6 +464,10 @@ sub generate_and_cache_layout {
     }
 
     my $trial_layout_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property');
+    my $trial_layout_json = $project->projectprops->find({ 'type_id' => $trial_layout_json_cvterm->cvterm_id });
+    if ($trial_layout_json) {
+        $trial_layout_json->delete();
+    }
     $project->create_projectprops({
         $trial_layout_json_cvterm->name() => encode_json(\%design)
     });
