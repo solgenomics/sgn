@@ -102,6 +102,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $type_id;
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type' )->cvterm_id();
+    my $plot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property' )->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type' )->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type' )->cvterm_id();
     my $xlabel_margin = 8;
@@ -135,57 +136,29 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my ($row, $stockprop_name, $value, $fdata_block, $fdata_rep, $fdata_plot, $fdata, $accession_id, $accession_name, $parents, $tract_type_id, $label_text_5, $plot_name, $label_text_6, $musa_row_col_number, $label_text_7, $row_col_number, $label_text_8, $fdata_plot_20A4, $fdata_rep_block);
 
     ## sort plot list
-    my %sort_stockprop_hash;
-    my %sorted_plant_hash;
-    my %sorted_plot_hash;
-    my $checker = 0;
-    foreach my $stocks (@names) {
-        if (!$stocks){
-            next;
+    my @stocks_sorted;
+    my $stock_rs = $schema->resultset("Stock::Stock")->search(
+        {
+            uniquename => {'-in' => \@names},
+            'stockprops.type_id' => $plot_number_cvterm_id
+        },
+        {
+            join => {'stockprops'},
+            '+select' => ['stockprops.value'],
+            '+as' => ['plot_number'],
+            'order_by' => { '-asc' => 'stockprops.value::INT' }
         }
-        my $stock_gen = $schema->resultset("Stock::Stock")->find({ uniquename=>$stocks });
-        my $type_gen_id = $stock_gen->type_id();
-        my $stock_id = $stock_gen->stock_id();
-        my $dbh = $c->dbc->dbh();
-        if ($type_gen_id == $plot_cvterm_id || $type_gen_id == $plant_cvterm_id){
-            if ($plot_cvterm_id == $type_gen_id){
-                $checker = $plot_cvterm_id;
-                my $h = $dbh->prepare("select name, value from cvterm inner join stockprop on cvterm.cvterm_id = stockprop.type_id where stockprop.stock_id=?;");
-                $h->execute($stock_id);
-                 while (($stockprop_name, $value) = $h->fetchrow_array) {
-                   $sort_stockprop_hash{$stock_id}->{$stockprop_name} = $value;
-                }
-                my $plotno = $sort_stockprop_hash{$stock_id}->{'plot number'};
-                $sorted_plot_hash{$stocks} = $plotno;
-            }
-            elsif ($plant_cvterm_id == $type_gen_id){
-                $checker = $plant_cvterm_id;
-                my $h = $dbh->prepare("select stock_relationship.subject_id, stock.name from stock join stock_relationship on stock.stock_id=stock_relationship.subject_id where object_id=?;");
-                $h->execute($stock_id);
-                while (my($plot_of_plant_id, $plant_plot_name) = $h->fetchrow_array) {
-                    $plot_name = $plant_plot_name;
+    );
+    while ( my $r = $stock_rs->next()){
+        my $stock_name = $r->uniquename;
+        my $stock_id = $r->stock_id;
+        my $stock_type_id = $r->type_id;
+        my $plot_number = $r->get_column('plot_number');
+        push @stocks_sorted, $stock_name
+    }
 
-                    my $dbh = $c->dbc->dbh();
-                    my $h = $dbh->prepare("select name, value from cvterm inner join stockprop on cvterm.cvterm_id = stockprop.type_id where stockprop.stock_id=?;");
-                    $h->execute($plot_of_plant_id);
-                    while (($stockprop_name, $value) = $h->fetchrow_array) {
-                       $sort_stockprop_hash{$stock_id}->{$stockprop_name} = $value;
-                    }
-                    my $plotno = $sort_stockprop_hash{$stock_id}->{'plot number'};
-                    $sorted_plant_hash{$stocks} = $plotno;
-                }
-            }
-        }    
-    }
-    
-    #print STDERR Dumper(\@keys);
-    if ($checker == $plot_cvterm_id ){
-        my @plot_keys = sort { $sorted_plot_hash{$a} <=> $sorted_plot_hash{$b} } keys(%sorted_plot_hash);
-        @names = @plot_keys;
-    }
-    elsif ($checker == $plant_cvterm_id){
-        my @plant_keys = sort { $sorted_plant_hash{$a} <=> $sorted_plant_hash{$b} } keys(%sorted_plant_hash);
-        @names = @plant_keys;
+    if (scalar(@stocks_sorted) > 0){
+        @names = @stocks_sorted;
     }
     
     foreach my $name (@names) {
