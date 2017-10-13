@@ -247,40 +247,6 @@ $list_id => undef
   </div>
 </div>
 
-<!--
-<div id="review_fuzzy_matches_dialog" class="ui-widget" title="Fuzzy matches">
-  <b>Accessions were found with similar names.</b>
-  <br><br>
-  <div id="view_fuzzy_matches">
-  </div>
-</div>
--->
-
-<!--
-<div id="review_found_matches_dialog" class="ui-widget" title="Found accessions">
-  <b>The following accessions already exist and cannot be added:</b>
-  <div id="count_of_found_accessions"></div>
-  <br>
-  <div class="left"> <b>Searched name</b> </div>
-  <div class="right"> <b>Unique name for synonym</b> </div>
-  <div id="view_found_matches">
-  </div>
-</div>
--->
-
-<!--
-<div id="review_absent_dialog" class="ui-widget" title="Accessions to be added">
-  <label for="species_name_input">Species name for added accessions</label>
-  <input type="text" id="species_name_input"></input>
-  <br><br>
-  <b>The following accessions will be added to the database:</b>
-  <div id="count_of_absent_accessions"></div>
-  <br>
-  <div id="view_absent">
-  </div>
-</div>
--->
-
 <div class="modal fade" id="upload_pedigrees_validate_display" name="upload_pedigrees_validate_display" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesValidateDialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
