@@ -5,31 +5,51 @@
 
 <div class="row">
     <div class="col-md-12">
+        
         <div class="col-md-6">
             <div class="well">
-                <center>
-                    <label>Label Size</label>
+                <div class="form-group row">
+                  <label class="col-md-2 col-form-label">Label Size</label>
+                  <div class="col-md-10">
                     <select id="d3-label-size-select" class="form-control"></select>
                     <div style="display:none" id="d3-label-custom-dimensions" class="form-inline">
                         <input class="form-control" placeholder="Width in mm" type="number" id="d3-label-custom-width">
                         <input class="form-control" placeholder="Height in mm" type="number" id="d3-label-custom-height">
                         <button class="btn btn-primary" id="d3-apply-custom-label-size">Apply</button>
                     </div>
-                </center>
+                  </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-label">Grid Size</label>
+                     <div class="col-md-10 form-inline">
+                        <input class="form-control" id="d3-grid-slider" type="range">&nbsp&nbsp
+                        <input class="form-control" id="d3-grid-number" type="number">&nbsp&nbsp
+                        <input class="form-control" id="d3-snapping-check" type="checkbox" checked> Snap
+
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col-md-6">
             <div class="well">
-                <center>
-                    <label>Grid Size</label>
-                    <div class="form-inline">
-                        <input class="form-control" id="d3-grid-slider" type="range">&nbsp&nbsp
-                        <input class="form-control" id="d3-grid-number" type="number">&nbsp&nbsp
-                        <input class="form-control" id="d3-snapping-check" type="checkbox" checked> Snap
-                    </div>
-                </center>
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-label">Trial:</label>
+                    <div id="trial_select_div" class="col-md-10"></div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-md-2 col-form-label">Labels per Plot:</label>
+                     <div class="col-md-10">
+                    <select class="form-control" id="num_labels" name="num_labels">
+                        <option value="1">One</option>
+                        <option value="2">Two</option>
+                        <option value="3">Three</option>
+                    </select>
+                </div>
+                </div>
             </div>
         </div>
+        
     </div>
 
     <div class="col-md-12">
@@ -37,55 +57,123 @@
             <div class="d3-draw-area"></div>
         </div>
     </div>
-    <div class="col-md-12">
-        <div class="col-md-6">
-            <div class="well">
-                <center>
-                    <label>Trial:</label>
-                    <div id="trial_select_div"></div>
-                </center>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="well">
-                <center>
-                    <label>Number of Labels per Plot:</label>
-                    <select class="form-control" id="num_labels" name="num_labels">
-                        <option value="1">One</option>
-                        <option value="2">Two</option>
-                        <option value="3">Three</option>
-                    </select>
-                </center>
-            </div>
-        </div>
-    </div>
 
     <div class="col-md-12">
         <div class="well">
-            <center class="add-text-container">
-                <label>Add Text</label>
-                <br>
-                <select id="d3-font-size-input" class="form-control input" min="5" max="72" style="width:15%;float:left;">
-          <option value="7">7</option>
-          <option value="14">14</option>
-          <option value="21">21</option>
-          <option value="28" selected>28</option>
-          <option value="35">35</option>
-          <option value="42">42</option>
-          <option value="49">49</option>
-          <option value="56">56</option>
-        </select>
-                <button class="btn btn-primary d3-add-custom-text" data-toggle="modal" data-target="#customTextModal">Custom</button>
+            <div style="display:none" class="form-group row form-inline">
+            <center>
+                <label>Preview:</label>&nbsp&nbsp
+                <p id="text_preview" style="font-family:courier;font-weight:bold;font-style: oblique;">Text Preview</p>
             </center>
         </div>
+            <div class="form-group row">
+                <label class="col-md-1 col-form-label">Add Text</label>
+                <div class="col-md-11 form-inline">
+                    <select id="d3-text-size-input" class="form-control">
+                    <option value="">Pick a Font Size</option>
+                      <option value="7">7</option>
+                      <option value="14">14</option>
+                      <option value="21">21</option>
+                      <option value="28">28</option>
+                      <option value="35">35</option>
+                      <option value="42">42</option>
+                      <option value="49">49</option>
+                      <option value="56">56</option>
+                    </select>&nbsp&nbsp
+                    <select id="d3-text-font-input" class="form-control">
+                        <option value="">Pick a Font Type</option>
+                        <option style="font-family:courier;" value="Courier">Courier</option>
+                        <option style="font-family:courier;font-weight:bold;" value="Courier-Bold">Courier-Bold</option>
+                        <option style="font-family:courier;font-style: oblique;" value="Courier-Oblique">Courier-Oblique</option>
+                        <option style="font-family:courier;font-weight:bold;font-style: oblique;" value="Courier-BoldOblique">Courier-BoldOblique</option>
+                        <option style="font-family:helvetica;" value="Helvetica">Helvetica</option>
+                        <option style="font-family:helvetica;font-weight:bold;" value="Helvetica-Bold">Helvetica-Bold</option>
+                        <option style="font-family:helvetica;font-style: oblique;" value="Helvetica-Oblique">Helvetica-Oblique</option>
+                        <option style="font-family:helvetica;font-weight:bold;font-style: oblique;" value="Helvetica-BoldOblique">Helvetica-BoldOblique</option>
+                        <option style="font-family:times;" value="Times">Times</option>
+                        <option style="font-family:times;font-weight:bold;" value="Times-Bold">Times-Bold</option>
+                        <option style="font-family:times;font-style: oblique;" value="Times-Oblique">Times-Oblique</option>
+                        <option style="font-family:times;font-weight:bold;font-style: oblique;" value="Times-BoldOblique">Times-BoldOblique</option>
+                    </select>&nbsp&nbsp
+                    <select id="d3-text-field-input" class="form-control">
+                        <option value="">Pick a Field</option>
+                        <option value="Custom">Custom</option>
+                        <option value="Accession">Accession</option>
+                        <option value="Plot Name">Plot Name</option>
+                        <option value="Plot #">Plot #</option>
+                        <option value="Rep #">Rep #</option>
+                        <option value="Row #">Row #</option>
+                        <option value="Col #">Col #</option>
+                        <option value="Trial Name">Trial Name</option>
+                        <option value="Year">Year</option>
+                        <option value="Pedigree String">Pedigree String</option>
+                    </select>&nbsp&nbsp
+                <button class="btn btn-primary d3-add-text">Add</button>
+            </div>
+            </div>
+        <!-- </div>
     </div>
     <div class="col-md-12">
-        <div class="well">
-            <center>
+        <div class="well"> -->
+        
+        <div style="display:none" class="form-group row form-inline">
+        <center>
+            <label>Preview:</label>&nbsp&nbsp
+            <p id="text_preview" style="font-family:courier;font-weight:bold;font-style: oblique;">Text Preview</p>
+        </center>
+    </div>
+        <div class="form-group row">
+            <label class="col-md-1 col-form-label">Add Barcode</label>
+            <div class="col-md-11 form-inline">
+                <select id="d3-barcode-size-input" class="form-control">
+                <option value="">Pick a Font Size</option>
+                  <option value="7">7</option>
+                  <option value="14">14</option>
+                  <option value="21">21</option>
+                  <option value="28">28</option>
+                  <option value="35">35</option>
+                  <option value="42">42</option>
+                  <option value="49">49</option>
+                  <option value="56">56</option>
+                </select>&nbsp&nbsp
+                <select id="d3-barcode-font-input" class="form-control">
+                    <option value="">Pick a Font Type</option>
+                    <option style="font-family:courier;" value="Courier">Courier</option>
+                    <option style="font-family:courier;font-weight:bold;" value="Courier-Bold">Courier-Bold</option>
+                    <option style="font-family:courier;font-style: oblique;" value="Courier-Oblique">Courier-Oblique</option>
+                    <option style="font-family:courier;font-weight:bold;font-style: oblique;" value="Courier-BoldOblique">Courier-BoldOblique</option>
+                    <option style="font-family:helvetica;" value="Helvetica">Helvetica</option>
+                    <option style="font-family:helvetica;font-weight:bold;" value="Helvetica-Bold">Helvetica-Bold</option>
+                    <option style="font-family:helvetica;font-style: oblique;" value="Helvetica-Oblique">Helvetica-Oblique</option>
+                    <option style="font-family:helvetica;font-weight:bold;font-style: oblique;" value="Helvetica-BoldOblique">Helvetica-BoldOblique</option>
+                    <option style="font-family:times;" value="Times">Times</option>
+                    <option style="font-family:times;font-weight:bold;" value="Times-Bold">Times-Bold</option>
+                    <option style="font-family:times;font-style: oblique;" value="Times-Oblique">Times-Oblique</option>
+                    <option style="font-family:times;font-weight:bold;font-style: oblique;" value="Times-BoldOblique">Times-BoldOblique</option>
+                </select>&nbsp&nbsp
+                <select id="d3-barcode-field-input" class="form-control">
+                    <option value="">Pick a Field</option>
+                    <option value="Custom">Custom</option>
+                    <option value="Accession">Accession</option>
+                    <option value="Plot Name">Plot Name</option>
+                    <option value="Plot #">Plot #</option>
+                    <option value="Rep #">Rep #</option>
+                    <option value="Row #">Row #</option>
+                    <option value="Col #">Col #</option>
+                    <option value="Trial Name">Trial Name</option>
+                    <option value="Year">Year</option>
+                    <option value="Pedigree String">Pedigree String</option>
+                </select>&nbsp&nbsp
+            <button class="btn btn-primary d3-add-barcode">Add</button>
+        </div>
+        </div>
+        
+        
+            <!-- <center>
                 <label>Add Barcode</label>
                 <br>
                 <select id="d3-barcode-select" class="input-sm form-control form-group"></select>
-            </center>
+            </center> -->
         </div>
     </div>
     
@@ -131,3 +219,59 @@
 </div>
 
 <div id="savingplace"></div>
+<!-- 
+
+<div class="container">
+  <form>
+    <div class="form-group row">
+      <label for="inputEmail3" class="col-sm-2 col-form-label">Email</label>
+      <div class="col-sm-10">
+        <input type="email" class="form-control" id="inputEmail3" placeholder="Email">
+      </div>
+    </div>
+    <div class="form-group row">
+      <label for="inputPassword3" class="col-sm-2 col-form-label">Password</label>
+      <div class="col-sm-10">
+        <input type="password" class="form-control" id="inputPassword3" placeholder="Password">
+      </div>
+    </div>
+    <fieldset class="form-group row">
+      <legend class="col-form-legend col-sm-2">Radios</legend>
+      <div class="col-sm-10">
+        <div class="form-check">
+          <label class="form-check-label">
+<input class="form-check-input" type="radio" name="gridRadios" id="gridRadios1" value="option1" checked>
+Option one is this and that&mdash;be sure to include why it's great
+</label>
+</div>
+<div class="form-check">
+<label class="form-check-label">
+<input class="form-check-input" type="radio" name="gridRadios" id="gridRadios2" value="option2">
+Option two can be something else and selecting it will deselect option one
+</label>
+</div>
+<div class="form-check disabled">
+<label class="form-check-label">
+<input class="form-check-input" type="radio" name="gridRadios" id="gridRadios3" value="option3" disabled>
+Option three is disabled
+</label>
+</div>
+</div>
+</fieldset>
+<div class="form-group row">
+<label class="col-sm-2">Checkbox</label>
+<div class="col-sm-10">
+<div class="form-check">
+<label class="form-check-label">
+<input class="form-check-input" type="checkbox"> Check me out
+</label>
+</div>
+</div>
+</div>
+<div class="form-group row">
+<div class="offset-sm-2 col-sm-10">
+<button type="submit" class="btn btn-primary">Sign in</button>
+</div>
+</div>
+</form>
+</div> -->
