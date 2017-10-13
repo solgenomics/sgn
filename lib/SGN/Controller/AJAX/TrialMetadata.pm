@@ -498,7 +498,7 @@ sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots
         $c->detach();
     }
 
-    eval {
+    my $upload_used_seedlots_txn = sub {
         while (my ($key, $val) = each(%$parsed_data)){
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_stock_id});
 
@@ -514,6 +514,14 @@ sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots
 
             $sl->set_current_count_property();
         }
+        my $layout = CXGN::Trial::TrialLayout->new({
+            schema => $schema,
+            trial_id => $c->stash->{trial_id}
+        });
+        $layout->generate_and_cache_layout();
+    };
+    eval {
+        $schema->txn_do($upload_used_seedlots_txn);
     };
     if ($@) {
         $c->stash->{rest} = { error => $@ };
@@ -759,7 +767,7 @@ sub trial_completion_layout_section : Chained('trial') PathPart('trial_completio
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $c->stash->{trial_id}, verify_layout=>1, verify_physical_map=>1});
-    my $trial_errors = $trial_layout->_get_design_from_trial();
+    my $trial_errors = $trial_layout->generate_and_cache_layout();
     my $has_layout_check = $trial_errors->{errors}->{layout_errors} || $trial_errors->{error} ? 0 : 1;
     my $has_physical_map_check = $trial_errors->{errors}->{physical_map_errors} || $trial_errors->{error} ? 0 : 1;
     my $has_seedlots = $trial_errors->{errors}->{seedlot_errors} || $trial_errors->{error} ? 0 : 1;

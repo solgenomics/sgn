@@ -51,7 +51,7 @@ my $trial_layout = CXGN::Trial::TrialLayout->new({
     verify_layout=>1,
     verify_physical_map=>1
 });
-my $trial_errors = $trial_layout->_get_design_from_trial();
+my $trial_errors = $trial_layout->generate_and_cache_layout();
 
 If there are errors, $trial_errors is a HashRef like:
 
