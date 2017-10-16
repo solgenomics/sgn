@@ -443,6 +443,15 @@ sub generate_and_cache_layout {
     $design{$plot_number_prop}=\%design_info;
   }
 
+    my $trial_layout_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property');
+    my $trial_layout_json_rs = $project->search_related('projectprops',{ 'type_id' => $trial_layout_json_cvterm->cvterm_id });
+    while (my $t = $trial_layout_json_rs->next) {
+        $t->delete();
+    }
+    $project->create_projectprops({
+        $trial_layout_json_cvterm->name() => encode_json(\%design)
+    });
+
     if ($self->get_verify_layout || $self->get_verify_physical_map){
         return \%verify_errors;
     }
@@ -462,15 +471,6 @@ sub generate_and_cache_layout {
     if (scalar(@control_names)>0) {
         $self->_set_control_names(\@control_names);
     }
-
-    my $trial_layout_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property');
-    my $trial_layout_json = $project->projectprops->find({ 'type_id' => $trial_layout_json_cvterm->cvterm_id });
-    if ($trial_layout_json) {
-        $trial_layout_json->delete();
-    }
-    $project->create_projectprops({
-        $trial_layout_json_cvterm->name() => encode_json(\%design)
-    });
 
     return \%design;
 }
