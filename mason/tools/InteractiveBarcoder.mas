@@ -70,6 +70,19 @@
             <div class="form-group row">
                 <label class="col-md-2 col-form-label">Add Text</label>
                 <div class="col-md-10 form-inline">
+                    <select id="d3-text-field-input" class="form-control">
+                        <option value="">Pick a Field</option>
+                        <option value="" data-target="#customTextModal">Custom</option>
+                        <option value="{$Accession}">Accession</option>
+                        <option value="{$Plot Name}">Plot Name</option>
+                        <option value="{$Plot #}">Plot #</option>
+                        <option value="{$Rep #}">Rep #</option>
+                        <option value="{$Row #}">Row #</option>
+                        <option value="{$Col #}">Col #</option>
+                        <option value="{$Trial Name}">Trial Name</option>
+                        <option value="{$Year}">Year</option>
+                        <option value="{$Pedigree String}">Pedigree String</option>
+                    </select>&nbsp&nbsp
                     <select id="d3-text-font-input" class="form-control">
                         <option value="">Pick a Font Type</option>
                         <option style="font-family:courier;" value="font-family:courier;">Courier</option>
@@ -96,19 +109,6 @@
                       <option value="49">49</option>
                       <option value="56">56</option>
                     </select>&nbsp&nbsp
-                    <select id="d3-text-field-input" class="form-control">
-                        <option value="">Pick a Field</option>
-                        <option value="Custom">Custom</option>
-                        <option value="Accession">Accession</option>
-                        <option value="Plot Name">Plot Name</option>
-                        <option value="Plot #">Plot #</option>
-                        <option value="Rep #">Rep #</option>
-                        <option value="Row #">Row #</option>
-                        <option value="Col #">Col #</option>
-                        <option value="Trial Name">Trial Name</option>
-                        <option value="Year">Year</option>
-                        <option value="Pedigree String">Pedigree String</option>
-                    </select>&nbsp&nbsp
                 <button class="btn btn-primary d3-add-text" id="d3-add-text">Add</button>
             </div>
             </div>
@@ -126,6 +126,19 @@
         <div class="form-group row">
             <label class="col-md-2 col-form-label">Add Barcode</label>
             <div class="col-md-10 form-inline">
+                <select id="d3-barcode-field-input" class="form-control">
+                    <option value="">Pick a Field</option>
+                    <option value="" data-target="#customTextModal">Custom</option>
+                    <option value="{$Accession}">Accession</option>
+                    <option value="{$Plot Name}">Plot Name</option>
+                    <option value="{$Plot #}">Plot #</option>
+                    <option value="{$Rep #}">Rep #</option>
+                    <option value="{$Row #}">Row #</option>
+                    <option value="{$Col #}">Col #</option>
+                    <option value="{$Trial Name}">Trial Name</option>
+                    <option value="{$Year}">Year</option>
+                    <option value="{$Pedigree String}">Pedigree String</option>
+                </select>&nbsp&nbsp
                 <select id="d3-barcode-font-input" class="form-control">
                     <option value="">Pick a Barcode Type</option>
                     <option value="128">Barcode 128 (1D)</option>
@@ -143,19 +156,6 @@
                   <option value="8">8</option>
                   <option value="9">9</option>
                   <option value="10">10</option>
-                </select>&nbsp&nbsp
-                <select id="d3-barcode-field-input" class="form-control">
-                    <option value="">Pick a Field</option>
-                    <option value="Custom">Custom</option>
-                    <option value="Accession">Accession</option>
-                    <option value="Plot Name">Plot Name</option>
-                    <option value="Plot #">Plot #</option>
-                    <option value="Rep #">Rep #</option>
-                    <option value="Row #">Row #</option>
-                    <option value="Col #">Col #</option>
-                    <option value="Trial Name">Trial Name</option>
-                    <option value="Year">Year</option>
-                    <option value="Pedigree String">Pedigree String</option>
                 </select>&nbsp&nbsp
             <button class="btn btn-primary d3-add-barcode">Add</button>
         </div>
@@ -192,10 +192,19 @@
                 <div type="text" style="overflow-x: scroll; padding:0px; width:100%; float:right; min-height:34px; height:auto; white-space: nowrap;">
                     <span id="d3-text-content" class="form-control d3-text-container" contenteditable="true" style="min-width:100%; padding-left:12px; white-space:pre; padding-bottom:6px; padding-top:6px; width:auto; display: inline-block;"></span>
                 </div>
-                <label>Content Variables:</label><br>
-                <div class="content-variable-container">
-                    <span class="btn btn-primary btn-sm d3-text-placeholder" value="plot" contenteditable="false" style="height: 2em; margin-top:-0.15em;display: inline-block; padding:0.2em 0.4em;">plot-number</span>
-                </div>
+                <label>Add a Variable:</label><br>
+                <select id="d3-custom-field-input" class="form-control">
+                    <option value="">Pick a Field</option>
+                    <option value="{$Accession}">Accession</option>
+                    <option value="{$Plot Name}">Plot Name</option>
+                    <option value="{$Plot #}">Plot #</option>
+                    <option value="{$Rep #}">Rep #</option>
+                    <option value="{$Row #}">Row #</option>
+                    <option value="{$Col #}">Col #</option>
+                    <option value="{$Trial Name}">Trial Name</option>
+                    <option value="{$Year}">Year</option>
+                    <option value="{$Pedigree String}">Pedigree String</option>
+                </select>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

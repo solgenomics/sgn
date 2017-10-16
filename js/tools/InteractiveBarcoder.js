@@ -321,6 +321,14 @@ $(document).ready(function($) {
   //   .text(function(d){return d.name;});
 
   //set up text options
+  
+  $('#d3-text-field-input').change(function(){
+      console.log("Change noticed, text is "+$(this).find('option:selected').text());
+    if ($(this).find('option:selected').text() == 'Custom') {
+          $('#customTextModal').modal('show');
+      }
+});
+  
   $("#d3-add-text").on("click",function() {
     var text = document.getElementById("d3-text-field-input").value;//.getAttribute("value"); 
     var fontType = document.getElementById("d3-text-font-input").value;//.getAttribute("value");  
