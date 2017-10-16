@@ -336,6 +336,10 @@ jQuery(document).ready(function ($) {
         $("#list_div").html(list.listSelect("list_div", ["accessions"] ));
     });
 
+    jQuery('#accessions_upload_spreadsheet_format_info').click(function(){
+        jQuery('#accessions_upload_spreadsheet_format_modal').modal("show");
+    });
+
     $('body').on('hidden.bs.modal', '.modal', function () {
         $(this).removeData('bs.modal');
     });
