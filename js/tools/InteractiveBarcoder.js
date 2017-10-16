@@ -307,26 +307,28 @@ $(document).ready(function($) {
     }
   });
 
-  var text_adders = d3.select(".add-text-container")
-    .selectAll(".d3-add-text")
-    .data(text_placeholders, function (d,i) { return i+"noverplap" })
-    .enter().insert("button",".d3-add-custom-text")
-    .classed({
-      "btn":true,
-      "btn-primary":true,
-      "d3-add-text":true
-    })
-    .attr("key",function(d){return d.key;})
-    .style("margin-left","1em")
-    .text(function(d){return d.name;});
+  // var text_adders = d3.select(".add-text-container")
+  //   .selectAll(".d3-add-text")
+  //   .data(text_placeholders, function (d,i) { return i+"noverplap" })
+  //   .enter().insert("button",".d3-add-custom-text")
+  //   .classed({
+  //     "btn":true,
+  //     "btn-primary":true,
+  //     "d3-add-text":true
+  //   })
+  //   .attr("key",function(d){return d.key;})
+  //   .style("margin-left","1em")
+  //   .text(function(d){return d.name;});
 
   //set up text options
-  text_adders.on("click",function(){
-    var th = d3.select(this);
-    var text = th.attr("key"); //+": <"+"%"+th.attr("key")+"%"+">";
-    var fontSize = _x.invert(d3.select("#d3-font-size-input").node().value);
-    addText(text,fontSize);
-  })
+  $("#d3-add-text").on("click",function() {
+    var text = document.getElementById("d3-text-field-input").value;//.getAttribute("value"); 
+    var fontType = document.getElementById("d3-text-font-input").value;//.getAttribute("value");  
+    var fontSize = document.getElementById("d3-text-size-input").value;//.getAttribute("value");  
+    console.log("Text add includes text: "+text+"\nfontType: "+fontType+"\nfontSize: "+fontSize);
+    fontSize = _x.invert(fontSize);
+    addText(text,fontSize,fontType);
+  })    
 
   d3.select(".d3-add-custom-text")
     .style("margin-left","1em");
@@ -372,7 +374,7 @@ $(document).ready(function($) {
     .text(function(d){return d.name;})
 });
 
-function addText(text,fontSize){
+function addText(text,fontSize,fontType){
   svg = d3.select(".d3-draw-svg");
   var newTB = svg.append("g")
     .classed("text-box",true);
@@ -380,9 +382,9 @@ function addText(text,fontSize){
     .append("text")
     .attr({
       "font-size":fontSize,
+      "style":fontType,
       "dominant-baseline": "mathematical",
       value:text,
-      type:"AA",
       size:fontSize,
       class:"label-element",
     })

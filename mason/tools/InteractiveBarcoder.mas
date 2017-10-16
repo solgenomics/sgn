@@ -60,15 +60,31 @@
 
     <div class="col-md-12">
         <div class="well">
-            <div style="display:none" class="form-group row form-inline">
+            <center>
+            <!-- <div style="display:none" class="form-group row form-inline">
             <center>
                 <label>Preview:</label>&nbsp&nbsp
                 <p id="text_preview" style="font-family:courier;font-weight:bold;font-style: oblique;">Text Preview</p>
             </center>
-        </div>
+        </div> -->
             <div class="form-group row">
-                <label class="col-md-1 col-form-label">Add Text</label>
-                <div class="col-md-11 form-inline">
+                <label class="col-md-2 col-form-label">Add Text</label>
+                <div class="col-md-10 form-inline">
+                    <select id="d3-text-font-input" class="form-control">
+                        <option value="">Pick a Font Type</option>
+                        <option style="font-family:courier;" value="font-family:courier;">Courier</option>
+                        <option style="font-family:courier;font-weight:bold;" value="font-family:courier;font-weight:bold;">Courier-Bold</option>
+                        <option style="font-family:courier;font-style: oblique;" value="font-family:courier;font-style: oblique;">Courier-Oblique</option>
+                        <option style="font-family:courier;font-weight:bold;font-style: oblique;" value="font-family:courier;font-weight:bold;font-style: oblique;">Courier-BoldOblique</option>
+                        <option style="font-family:helvetica;" value="Helvetica">Helvetica</option>
+                        <option style="font-family:helvetica;font-weight:bold;" value="Helvetica-Bold">Helvetica-Bold</option>
+                        <option style="font-family:helvetica;font-style: oblique;" value="Helvetica-Oblique">Helvetica-Oblique</option>
+                        <option style="font-family:helvetica;font-weight:bold;font-style: oblique;" value="Helvetica-BoldOblique">Helvetica-BoldOblique</option>
+                        <option style="font-family:times;" value="Times">Times</option>
+                        <option style="font-family:times;font-weight:bold;" value="Times-Bold">Times-Bold</option>
+                        <option style="font-family:times;font-style: oblique;" value="Times-Oblique">Times-Oblique</option>
+                        <option style="font-family:times;font-weight:bold;font-style: oblique;" value="Times-BoldOblique">Times-BoldOblique</option>
+                    </select>&nbsp&nbsp
                     <select id="d3-text-size-input" class="form-control">
                     <option value="">Pick a Font Size</option>
                       <option value="7">7</option>
@@ -79,21 +95,6 @@
                       <option value="42">42</option>
                       <option value="49">49</option>
                       <option value="56">56</option>
-                    </select>&nbsp&nbsp
-                    <select id="d3-text-font-input" class="form-control">
-                        <option value="">Pick a Font Type</option>
-                        <option style="font-family:courier;" value="Courier">Courier</option>
-                        <option style="font-family:courier;font-weight:bold;" value="Courier-Bold">Courier-Bold</option>
-                        <option style="font-family:courier;font-style: oblique;" value="Courier-Oblique">Courier-Oblique</option>
-                        <option style="font-family:courier;font-weight:bold;font-style: oblique;" value="Courier-BoldOblique">Courier-BoldOblique</option>
-                        <option style="font-family:helvetica;" value="Helvetica">Helvetica</option>
-                        <option style="font-family:helvetica;font-weight:bold;" value="Helvetica-Bold">Helvetica-Bold</option>
-                        <option style="font-family:helvetica;font-style: oblique;" value="Helvetica-Oblique">Helvetica-Oblique</option>
-                        <option style="font-family:helvetica;font-weight:bold;font-style: oblique;" value="Helvetica-BoldOblique">Helvetica-BoldOblique</option>
-                        <option style="font-family:times;" value="Times">Times</option>
-                        <option style="font-family:times;font-weight:bold;" value="Times-Bold">Times-Bold</option>
-                        <option style="font-family:times;font-style: oblique;" value="Times-Oblique">Times-Oblique</option>
-                        <option style="font-family:times;font-weight:bold;font-style: oblique;" value="Times-BoldOblique">Times-BoldOblique</option>
                     </select>&nbsp&nbsp
                     <select id="d3-text-field-input" class="form-control">
                         <option value="">Pick a Field</option>
@@ -108,7 +109,7 @@
                         <option value="Year">Year</option>
                         <option value="Pedigree String">Pedigree String</option>
                     </select>&nbsp&nbsp
-                <button class="btn btn-primary d3-add-text">Add</button>
+                <button class="btn btn-primary d3-add-text" id="d3-add-text">Add</button>
             </div>
             </div>
         <!-- </div>
@@ -123,33 +124,25 @@
         </center>
     </div>
         <div class="form-group row">
-            <label class="col-md-1 col-form-label">Add Barcode</label>
-            <div class="col-md-11 form-inline">
-                <select id="d3-barcode-size-input" class="form-control">
-                <option value="">Pick a Font Size</option>
-                  <option value="7">7</option>
-                  <option value="14">14</option>
-                  <option value="21">21</option>
-                  <option value="28">28</option>
-                  <option value="35">35</option>
-                  <option value="42">42</option>
-                  <option value="49">49</option>
-                  <option value="56">56</option>
-                </select>&nbsp&nbsp
+            <label class="col-md-2 col-form-label">Add Barcode</label>
+            <div class="col-md-10 form-inline">
                 <select id="d3-barcode-font-input" class="form-control">
-                    <option value="">Pick a Font Type</option>
-                    <option style="font-family:courier;" value="Courier">Courier</option>
-                    <option style="font-family:courier;font-weight:bold;" value="Courier-Bold">Courier-Bold</option>
-                    <option style="font-family:courier;font-style: oblique;" value="Courier-Oblique">Courier-Oblique</option>
-                    <option style="font-family:courier;font-weight:bold;font-style: oblique;" value="Courier-BoldOblique">Courier-BoldOblique</option>
-                    <option style="font-family:helvetica;" value="Helvetica">Helvetica</option>
-                    <option style="font-family:helvetica;font-weight:bold;" value="Helvetica-Bold">Helvetica-Bold</option>
-                    <option style="font-family:helvetica;font-style: oblique;" value="Helvetica-Oblique">Helvetica-Oblique</option>
-                    <option style="font-family:helvetica;font-weight:bold;font-style: oblique;" value="Helvetica-BoldOblique">Helvetica-BoldOblique</option>
-                    <option style="font-family:times;" value="Times">Times</option>
-                    <option style="font-family:times;font-weight:bold;" value="Times-Bold">Times-Bold</option>
-                    <option style="font-family:times;font-style: oblique;" value="Times-Oblique">Times-Oblique</option>
-                    <option style="font-family:times;font-weight:bold;font-style: oblique;" value="Times-BoldOblique">Times-BoldOblique</option>
+                    <option value="">Pick a Barcode Type</option>
+                    <option value="128">Barcode 128 (1D)</option>
+                    <option value="QR">QR Code (2D)</option>
+                </select>&nbsp&nbsp
+                <select id="d3-barcode-size-input" class="form-control">
+                <option value="">Pick a Barcode Size</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10</option>
                 </select>&nbsp&nbsp
                 <select id="d3-barcode-field-input" class="form-control">
                     <option value="">Pick a Field</option>
@@ -167,13 +160,7 @@
             <button class="btn btn-primary d3-add-barcode">Add</button>
         </div>
         </div>
-        
-        
-            <!-- <center>
-                <label>Add Barcode</label>
-                <br>
-                <select id="d3-barcode-select" class="input-sm form-control form-group"></select>
-            </center> -->
+        </center>
         </div>
     </div>
     
