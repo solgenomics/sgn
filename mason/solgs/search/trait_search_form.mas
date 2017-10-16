@@ -21,8 +21,8 @@ $gs_traits_index
 
 <&| /page/info_section.mas,
   collapsible => 1, 
-  collapsed   => 0,
-  title => "Search for a trait ",
+  collapsed   => 1,
+  title => "Or search for a trait ",
 &>
 
 <div id="gs_traits_index" class="row" style="margin: 20px 2px 60px;">

@@ -141,7 +141,7 @@ sub get_trials_by_breeding_program {
 	  $project_year{$id} = '';
 	  #print STDERR Dumper "Cross Trial: ".$name;
 	}
-	if ($prop == $project_year_cvterm_id) {
+	if ($prop == $project_year_cvterm_id && $propvalue) {
 	  $project_year{$id} = $propvalue;
 	}
 	if ($propvalue) {
@@ -161,9 +161,9 @@ sub get_trials_by_breeding_program {
 		if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key}) {
 			#print STDERR "$id_key RETAINED.\n";
 			push @$field_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
-		} elsif ($projects_that_are_crosses{$id_key} == 1) {
+		} elsif ($projects_that_are_crosses{$id_key}) {
 			push @$cross_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
-		} elsif ($projects_that_are_genotyping_trials{$id_key} == 1) {
+		} elsif ($projects_that_are_genotyping_trials{$id_key}) {
 			push @$genotyping_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
 		}
     }
@@ -222,54 +222,20 @@ sub get_genotyping_trials_by_breeding_program {
 }
 
 sub get_all_locations {
-    my $self = shift;
+     my $self = shift;
+     my $c = shift;
+ 		 
+     my $rs = $self->schema() -> resultset("NaturalDiversity::NdGeolocation")->search( {}, { order_by => 'description' } );
+     my @locations = ();
+     
+     foreach my $loc ($rs->all()) {
+         push @locations, [ $loc->nd_geolocation_id(), $loc->description() ];
+     }
+     
+     return \@locations;
+ 		 
+ }
 
-    my $project_location_type_id = $self ->schema->resultset('Cv::Cvterm')->search( { 'name' => 'project location' })->first->cvterm_id();
-
-	my $q = "SELECT geo.nd_geolocation_id,
-	geo.description,
-	abbreviation.value,
-	country_code.value,
-	breeding_program.name,
-	location_type.value,
-	latitude,
-    longitude,
-	altitude,
-    count(distinct(projectprop.project_id))
-FROM nd_geolocation AS geo
-LEFT JOIN nd_geolocationprop AS abbreviation ON (geo.nd_geolocation_id = abbreviation.nd_geolocation_id AND abbreviation.type_id = (SELECT cvterm_id from cvterm where name = 'abbreviation') )
-LEFT JOIN nd_geolocationprop AS country_code ON (geo.nd_geolocation_id = country_code.nd_geolocation_id AND country_code.type_id = (SELECT cvterm_id from cvterm where name = 'country_code') )
-LEFT JOIN nd_geolocationprop AS location_type ON (geo.nd_geolocation_id = location_type.nd_geolocation_id AND location_type.type_id = (SELECT cvterm_id from cvterm where name = 'location_type') )
-LEFT JOIN projectprop ON (projectprop.value::INT = geo.nd_geolocation_id AND projectprop.type_id=?)
-LEFT JOIN project AS trial ON (trial.project_id=projectprop.project_id)
-LEFT JOIN project_relationship ON (subject_project_id=trial.project_id)
-LEFT JOIN project breeding_program ON (breeding_program.project_id=object_project_id)
-GROUP BY 1,2,3,4,5,6
-ORDER BY 8,2";
-
-
-	my $h = $self->schema()->storage()->dbh()->prepare($q);
-	$h->execute($project_location_type_id);
-#
-    my @locations;
-    while (my ($id, $name, $abbrev, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count) = $h->fetchrow_array()) {
-        # my @location = (
-        #     Id => $id,
-        #     Name => $name,
-        #     Abbreviation => $abbrev,
-        #     Country => $country_code,
-        #     Program => $prog,
-        #     Type => $type,
-        #     Latitude => $latitude,
-        #     Longitude => $longitude,
-        #     Altitude => $altitude,
-        #     Trials => '<a href="/search/trials?nd_geolocation='.$name.'">'.$trial_count.' trials</a>'
-        # );
-         push @locations, [$id, $name, $abbrev, $country_code, $prog, $type, $latitude, $longitude, $altitude, $trial_count];
-        # push @locations, %location;
-    }
-    return \@locations;
-}
 
 sub get_location_geojson {
     my $self = shift;

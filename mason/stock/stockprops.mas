@@ -146,7 +146,7 @@ function <% $div_name %>_addPropDialog(prop, typeId) {
 function <% $div_name %>_addProp() { 
   var prop_type = jQuery('#<% $div_name %>_select').val();
   var prop = jQuery('#<% $div_name %>_prop').val();
-
+  prop = prop.trim();
   if (prop === '') { alert("Please fill in the field."); return; }
 				 
   jQuery.ajax( { 

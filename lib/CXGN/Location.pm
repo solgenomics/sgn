@@ -118,6 +118,7 @@ sub store_location {
 
     my $nd_geolocation_id = $self->nd_geolocation_id();
     my $name = $self->name();
+    $name =~ s/^\s+|\s+$//g; #trim whitespace from both ends
     my $abbreviation = $self->abbreviation();
     my $country_name = $self->country_name();
     my $country_code = $self->country_code();
@@ -212,7 +213,7 @@ sub store_location {
             return { error => $error };
         } else {
             print STDERR "Location $name added successfully\n";
-            return { success => "Location $name added successfully\n" };
+            return { success => "Location $name added successfully\n", nd_geolocation_id=>$self->location()->nd_geolocation_id() };
         }
     }
     # Edit existing location if id supplied

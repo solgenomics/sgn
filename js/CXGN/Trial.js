@@ -309,7 +309,7 @@ function trial_detail_page_setup_dialogs() {
 	},
     });
 
-    jQuery('#edit_trial_details').click(function () {
+    jQuery('#edit_trial_details').click(function () { 
         // set up inout handlers
         jQuery('#clear_planting_date').click(function() {
           planting_date_element.val('');
@@ -343,8 +343,8 @@ function trial_detail_page_setup_dialogs() {
         jQuery('#edit_trial_year').data("originalValue", default_year);
 
         var default_type = document.getElementById("edit_trial_type").getAttribute("value");
-        get_select_box('trial_types', 'edit_trial_type', { 'default' : default_type });
-        jQuery('#edit_trial_type').data("originalValue", default_type);
+        get_select_box('trial_types', 'edit_trial_type',  { 'default' : default_type });
+        jQuery('#edit_trial_type option[value="'+default_type+'"]').attr('selected','selected');
 
         //create bootstrap daterangepickers for planting and harvest dates
         var planting_date_element = jQuery("#edit_trial_planting_date");
