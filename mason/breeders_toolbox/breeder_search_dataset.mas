@@ -46,7 +46,15 @@
 	  Retrieve stored selections<br />
 	  <div id="dataset_manage_select" >
 	  </div>
-	  <script>get_select_box('datasets','dataset_manage_select');</script>
+	  <script>
+	    if (isLoggedIn()) { 
+	      get_select_box('datasets','dataset_manage_select');
+	    }
+	    else { 
+              jQuery('#dataset_manage_select').html('(Log in to use feature)');
+	    }
+
+	  </script>
 	  <button type="button" id="show_dataset_on_wizard_button" >Show on wizard</button>
 	  <button type="button" id="show_dataset_metadata_button" >View metadata</button>
 	  <button id="delete_dataset_button">Delete</button>
@@ -83,11 +91,22 @@ jQuery(document).ready(function () {
     jQuery('.modal-backdrop').remove();
   });
 
+  jQuery('#save_wizard_dataset_cancel_button').click( function() { 
+    jQuery('#save_wizard_dataset_dialog').modal("hide");
+    jQuery('.modal-backddrop').remove();
+  });
+
+  if (!isLoggedIn()) { 
+    jQuery('#show_dataset_on_wizard_button').attr('disabled', true);
+    jQuery('#delete_dataset_button').attr('disabled', true);
+    jQuery('#show_dataset_metadata_button').attr('disabled', true);
+    jQuery('#wizard_save_dataset_button').attr('disabled', true);
+  } 
+
   jQuery('#show_dataset_on_wizard_button').click(function() { 
     var d = new CXGN.Dataset();
     var dataset_id = jQuery('#dataset_manage_select').find(':selected').val();
-    replay_dataset_info(dataset_id, 1);
-    
+    replay_dataset_info(dataset_id, 1);    
   });
 
   jQuery('#delete_dataset_button').click(function() { 
