@@ -72,8 +72,13 @@ sub patch {
 
     # delete unused cvterms related to crossing experiment
 
+    my $nd_experiment_property_id = $schema->resultset("Cv::Cv")->find(
+        { name => 'nd_experiment_property'})->cv_id();
+
     my $cvterm_rs = $schema->resultset("Cv::Cvterm")->search(
-        {name => ['date_of_embryo_rescue',
+        { cv_id => $nd_experiment_property_id,
+
+          name => ['date_of_embryo_rescue',
                  'date_of_harvest',
                  'date_of_pollination',
                  'date_of_seed_extraction',
