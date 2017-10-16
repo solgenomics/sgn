@@ -44,16 +44,16 @@ __PACKAGE__->config(
        my $self = shift;
        my $c = shift;
        my $params = $c->request->parameters();
-       my $id = $params->{id};
+       my $id = $params->{id} || undef;
        my $name = $params->{name};
-       my $abbreviation =  $params->{abbreviation};
-       my $country_name =  $params->{country_name};
-       my $country_code =  $params->{country_code};
-       my $program =  $params->{program};
-       my $type =  $params->{type};
-       my $latitude    = $params->{latitude};
-       my $longitude   = $params->{longitude};
-       my $altitude    = $params->{altitude};
+       my $abbreviation =  $params->{abbreviation} || undef;
+       my $country_name =  $params->{country_name} || undef;
+       my $country_code =  $params->{country_code} || undef;
+       my $program =  $params->{program} || undef;
+       my $type =  $params->{type} || undef;
+       my $latitude    = $params->{latitude} || undef;
+       my $longitude   = $params->{longitude} || undef;
+       my $altitude    = $params->{altitude} || undef;
 
        if (! $c->user()) {
            $c->stash->{rest} = { error => 'You must be logged in to add or edit a location.' };
@@ -64,6 +64,8 @@ __PACKAGE__->config(
            $c->stash->{rest} = { error => 'You do not have the necessary privileges to add or edit locations.' };
            return;
        }
+
+       print STDERR "Creating location object\n";
 
        my $location = CXGN::Location->new( {
            bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
