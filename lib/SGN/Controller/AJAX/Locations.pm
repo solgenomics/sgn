@@ -46,11 +46,11 @@ __PACKAGE__->config(
        my $params = $c->request->parameters();
        my $id = $params->{id} || undef;
        my $name = $params->{name};
-       my $abbreviation =  $params->{abbreviation} || undef; 
-       my $country_name =  $params->{country_name} || undef;
-       my $country_code =  $params->{country_code} || undef;
-       my $program =  $params->{program} || undef;
-       my $type =  $params->{type} || undef;
+       my $abbreviation =  $params->{abbreviation}; 
+       my $country_name =  $params->{country_name};
+       my $country_code =  $params->{country_code};
+       my $program =  $params->{program};
+       my $type =  $params->{type};
        my $latitude    = $params->{latitude} || undef;
        my $longitude   = $params->{longitude} || undef;
        my $altitude    = $params->{altitude} || undef;

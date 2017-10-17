@@ -280,13 +280,11 @@ sub _update_ndgeolocationprop {
     my $type = shift;
     my $cv = shift;
     my $value = shift;
-    print STDERR "Updating prop $type\n"; 
     my $existing_prop = $self->_get_ndgeolocationprop($type, $cv);
-    print STDERR "Found existing prop $existing_prop\n"; 
+
     if ($value) {
         $self->_store_ndgeolocationprop($type, $cv, $value);
     } elsif ($existing_prop) {
-        print STDERR "Removing prop $existing_prop\n"; 
         $self->_remove_ndgeolocationprop($type, $cv, $existing_prop);
     }
 }
