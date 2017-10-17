@@ -342,7 +342,7 @@ jQuery(document).ready(function() {
       $('#add_location_dialog').modal("show");
    });
 
-   get_select_box("breeding_programs", "breeding_program", {'empty':1, 'default':'please select'});
+   get_select_box("breeding_programs", "breeding_program", {'empty':1, 'default':''});
 
    $('#store_location_submit').click( function(event) {
        event.preventDefault();

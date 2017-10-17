@@ -46,7 +46,7 @@ __PACKAGE__->config(
        my $params = $c->request->parameters();
        my $id = $params->{id} || undef;
        my $name = $params->{name};
-       my $abbreviation =  $params->{abbreviation} || undef;
+       my $abbreviation =  $params->{abbreviation} || undef; 
        my $country_name =  $params->{country_name} || undef;
        my $country_code =  $params->{country_code} || undef;
        my $program =  $params->{program} || undef;
@@ -69,7 +69,7 @@ __PACKAGE__->config(
 
        my $location = CXGN::Location->new( {
            bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
-           nd_geolocation_id => $id || undef,
+           nd_geolocation_id => $id,
            name => $name,
            abbreviation => $abbreviation,
            country_name => $country_name,
