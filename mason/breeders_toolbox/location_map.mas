@@ -358,9 +358,9 @@ jQuery(document).ready(function() {
        var latitude = $('#location_latitude').val();
        var longitude = $('#location_longitude').val();
        var altitude = $('#location_altitude').val();
-       console.log("Location program to store is "+program);
+       //console.log("Location program to store is "+program);
        //console.log("Location name to store is "+name);
-       console.log("Location country name to store is "+country_name+" and country code is "+country_code);
+       //console.log("Location country name to store is "+country_name+" and country code is "+country_code);
 
        if (name == '') { alert('A location name is required.');  return; }
 
