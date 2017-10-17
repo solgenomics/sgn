@@ -147,8 +147,8 @@ sub store_location {
     if ($country_name && $country_name =~ m/[0-9]/) {
        return { error => "Country name $country_name is not a valid ISO standard country name." };
     }
-
-    if ($country_code && ($country_code !~ m/^[^a-z]*$/) || (length($country_code) != 3 )) {
+    
+    if ($country_code && (($country_code !~ m/^[^a-z]*$/) || (length($country_code) != 3 ))) {
        return { error => "Country code $country_code is not a valid ISO Alpha-3 code." };
     }
 
@@ -291,11 +291,13 @@ sub _update_ndgeolocationprop {
     my $type = shift;
     my $cv = shift;
     my $value = shift;
+    print STDERR "Updating prop $type\n"; 
     my $existing_prop = $self->_get_ndgeolocationprop($type, $cv);
-    
-    if ($value) { 
+    print STDERR "Found existing prop $existing_prop\n"; 
+    if ($value) {
         $self->_store_ndgeolocationprop($type, $cv, $value);
-    } elsif ($existing_prop) { 
+    } elsif ($existing_prop) {
+        print STDERR "Removing prop $existing_prop\n"; 
         $self->_remove_ndgeolocationprop($type, $cv, $existing_prop);
     }
 }
