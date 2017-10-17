@@ -98,16 +98,6 @@ sub BUILD {
         $self->location( $self->location || $location );
         $self->nd_geolocation_id( $self->nd_geolocation_id || $location->nd_geolocation_id );
         $self->name( $self->name || $location->description );
-        # $self->latitude( $self->latitude || $location->latitude );
-        # $self->longitude( $self->longitude || $location->longitude );
-        # $self->altitude( $self->altitude || $location->altitude );
-        # print STDERR "Abbreviation 1 is ".$self->abbreviation."\n";
-        # $self->abbreviation( $self->abbreviation || $self->_get_ndgeolocationprop('abbreviation', 'geolocation_property') );
-        # print STDERR "Abbreviation 2 is ".$self->abbreviation."\n";
-        # $self->country_name( $self->country_name || $self->_get_ndgeolocationprop('country_name', 'geolocation_property') );
-        # $self->country_code( $self->country_code || $self->_get_ndgeolocationprop('country_code', 'geolocation_property') );
-        # $self->breeding_program( $self->breeding_program || $self->_get_ndgeolocationprop('breeding_program', 'project_property') );
-        # $self->location_type( $self->location_type || $self->_get_ndgeolocationprop('location_type', 'geolocation_property') );
     }
 
     return $self;
@@ -201,7 +191,6 @@ sub store_location {
                 $self->_store_ndgeolocationprop('country_code', 'geolocation_property', $country_code);
             }
             if ($breeding_program_id){
-                #my $id = $self->bcs_schema->resultset("Project::Project")->search({ name => $breeding_program })->first->project_id();
                 $self->_store_ndgeolocationprop('breeding_program', 'project_property', $breeding_program_id);
             }
             if ($location_type){

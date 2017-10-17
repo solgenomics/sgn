@@ -614,6 +614,10 @@ function onEachFeature(feature, layer) {
         var latlng = coordinate_string.split(',');
         latitude = latlng[0], longitude = latlng[1];
         var coordinates = [parseFloat(latitude),parseFloat(longitude)];
+        
+        
+        // removed because of mixed content restrictions. Can be uncommented once datascience toolkit can be accessed locally or over https
+        
         // var dstk = $.DSTK();
         // dstk.coordinates2statistics(coordinates, function(c2s_result) {
         // 
@@ -628,6 +632,8 @@ function onEachFeature(feature, layer) {
             // var elevation = c2s_result[0].statistics.elevation.value;
             // var code= c2p_result[0].politics[0].code.toUpperCase();
             //console.log("elevation is "+elevation+" and code is "+code);
+            
+            
             $('#location_id').val('');
             $('#location_name').val('');
             $('#location_abbreviation').val('');
@@ -656,8 +662,8 @@ function onEachFeature(feature, layer) {
            all_rows.push(data[i]);
        }
        var loc_data = all_rows.shift();
-       //console.log("Data for location to edit: "+JSON.stringify(loc_data));
-        console.log("Program for location to edit is "+loc_data.properties.Program);
+        //console.log("Data for location to edit: "+JSON.stringify(loc_data));
+        //console.log("Program for location to edit is "+loc_data.properties.Program);
         $('#location_id').val(loc_data.properties.Id);
         $('#location_name').val(loc_data.properties.Name);
         $('#location_abbreviation').val(loc_data.properties.Abbreviation);
