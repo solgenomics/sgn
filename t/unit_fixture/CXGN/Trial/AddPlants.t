@@ -142,7 +142,7 @@ $trial->create_plant_entities('2');
 
 my $tl = CXGN::Trial::TrialLayout->new({ schema => $f->bcs_schema(), trial_id => $trial_id });
 $d = $tl->get_design();
-#print STDERR Dumper($d);
+print STDERR Dumper($d);
 
 @plot_nums = ();
 @accessions = ();

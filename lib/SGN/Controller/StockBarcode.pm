@@ -102,6 +102,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
     my $type_id;
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type' )->cvterm_id();
+    my $plot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property' )->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type' )->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type' )->cvterm_id();
     my $xlabel_margin = 8;
@@ -125,7 +126,7 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 	     my $stock_file_contents = read_file($stock_names_file->{tempname});
 	     $stock_names = $stock_names ."\n".$stock_file_contents;
     } 
-
+    
     $stock_names =~ s/\r//g;
     my @names = split /\n/, $stock_names;
 
@@ -134,6 +135,32 @@ sub download_pdf_labels :Path('/barcode/stock/download/pdf') :Args(0) {
 
     my ($row, $stockprop_name, $value, $fdata_block, $fdata_rep, $fdata_plot, $fdata, $accession_id, $accession_name, $parents, $tract_type_id, $label_text_5, $plot_name, $label_text_6, $musa_row_col_number, $label_text_7, $row_col_number, $label_text_8, $fdata_plot_20A4, $fdata_rep_block);
 
+    ## sort plot list
+    my @stocks_sorted;
+    my $stock_rs = $schema->resultset("Stock::Stock")->search(
+        {
+            uniquename => {'-in' => \@names},
+            'stockprops.type_id' => $plot_number_cvterm_id
+        },
+        {
+            join => {'stockprops'},
+            '+select' => ['stockprops.value'],
+            '+as' => ['plot_number'],
+            'order_by' => { '-asc' => 'stockprops.value::INT' }
+        }
+    );
+    while ( my $r = $stock_rs->next()){
+        my $stock_name = $r->uniquename;
+        my $stock_id = $r->stock_id;
+        my $stock_type_id = $r->type_id;
+        my $plot_number = $r->get_column('plot_number');
+        push @stocks_sorted, $stock_name
+    }
+
+    if (scalar(@stocks_sorted) > 0){
+        @names = @stocks_sorted;
+    }
+    
     foreach my $name (@names) {
 
     	# skip empty lines
