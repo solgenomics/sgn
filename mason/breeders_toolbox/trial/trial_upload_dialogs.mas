@@ -137,7 +137,7 @@ $locations
                                 <td>col_number</td>
                                 <td>seedlot_name</td>
                                 <td>num_seed_per_plot</td>
-                                <td>treatment_name (e.g. inoculated)</td>
+                                <td>treatment_name (e.g. inoculated) Do Not Include if No Treatment</td>
                             </tr>
                         </tbody>
                     </table>
