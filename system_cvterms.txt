@@ -1,215 +1,202 @@
 cv name	cvterm name	definition	date	person	dbpatch #	comment
-calendar	Fertilizer Event				00052	
-calendar	Genotyping Event				00052	
-calendar	Harvest Event				00052	
-calendar	Meeting Event				00052	
-calendar	Phenotyping Event				00052	
-calendar	Planning Event				00052	
-calendar	Planting Event				00052	
-calendar	Presentation Event				00052	
-experiment_type	pedigree experiment					
-experiment_type	cross_experiment				00052	
-experiment_type	field_layout				00052	
-experiment_type	treatment_experiment				00081	
-experiment_type	genotyping_experiment				00052	
-experiment_type	genotyping_layout				00052	
-experiment_type	phenotyping_experiment				00052	
-experiment_type	seedlot_experiment				00077	
+calendar	Fertilizer Event				00052
+calendar	Genotyping Event				00052
+calendar	Harvest Event				00052
+calendar	Meeting Event				00052
+calendar	Phenotyping Event				00052
+calendar	Planning Event				00052
+calendar	Planting Event				00052
+calendar	Presentation Event				00052
+experiment_type	pedigree experiment
+experiment_type	cross_experiment				00052
+experiment_type	field_layout				00052
+experiment_type	treatment_experiment				00081
+experiment_type	genotyping_experiment				00052
+experiment_type	genotyping_layout				00052
+experiment_type	phenotyping_experiment				00052
+experiment_type	seedlot_experiment				00077
 experiment_type	grafting_experiment				00079
-genotype_property	igd number					
+genotype_property	igd number
 genotype_property	infinium array					sgn database
-genotype_property	snp genotyping					
-geolocation_property	geolocation address				00052	
-geolocation_property	geolocation year				00052	
-geolocation_property	country_name	From BrAPI	03/27/2017	nm529	00076	
-geolocation_property	country_code	From BrAPI	03/27/2017	nm529	00076	
-geolocation_property	abbreviation	From BrAPI	03/27/2017	nm529	00076	
-geolocation_property	location_type	From BrAPI	03/27/2017	nm529	00076	
-geolocation_property	annual_total_precipitation	From BrAPI	03/27/2017	nm529	00076	
-geolocation_property	continent	From BrAPI	03/27/2017	nm529	00076	
-geolocation_property	annual_mean_temperature	From BrAPI	03/27/2017	nm529	00076	
-geolocation_property	adm1	From BrAPI	03/27/2017	nm529	00076	
-geolocation_property	adm2	From BrAPI	03/27/2017	nm529	00076	
-geolocation_property	adm3	From BrAPI	03/27/2017	nm529	00076	
-geolocation_property	local_name	From BrAPI	03/27/2017	nm529	00076	
-geolocation_property	region	From BrAPI	03/27/2017	nm529	00076	
-geolocation_property	alternative_name	From BrAPI	03/27/2017	nm529	00076	
-list_types	seedlots		07/20/2017	nm529	00081	
-list_types	subplots		08/23/2017	nm529	00084	
-list_types	accessions					
-list_types	crosses				00067	
-list_types	dataset				00067	
-list_types	locations					
-list_types	locus_ids					
-list_types	numbers				00067	
-list_types	plots					
-list_types	populations				00067	
-list_types	traits					
-list_types	trials					
-list_types	unigene_ids					
-list_types	vector_constructs				00049	
-list_types	years					
-local	date					
-local	months after planting					
-local	operator					
-local	organism_sequencing_metadata					
-local	sp_person_id				00052	
-local	time					
-local	visible_to_role				00052	
-nd_experiment_property	cross_name				00052	
-nd_experiment_property	cross_type				00052	
-nd_experiment_property	date_of_embryo_rescue				00066	
-nd_experiment_property	date_of_harvest				00066	
-nd_experiment_property	date_of_pollination				00066	
-nd_experiment_property	date_of_seed_extraction				00066	
-nd_experiment_property	days_from_extraction_to_embryo_rescue				00066	
-nd_experiment_property	days_from_harvest_to_extraction				00066	
-nd_experiment_property	days_to_maturity				00066	
-nd_experiment_property	genotyping_project_name				00052	
-nd_experiment_property	genotyping_user_id				00052	
-nd_experiment_property	number_of_embryos_contaminated					
-nd_experiment_property	number_of_embryos_germinated				00066	
-nd_experiment_property	number_of_embryos_rescued				00066	
-nd_experiment_property	number_of_flowers				00052	
-nd_experiment_property	number_of_fruits					
-nd_experiment_property	number_of_nonviable_seeds				00066	
-nd_experiment_property	number_of_progeny				00066	
-nd_experiment_property	number_of_seedlings_transplanted					
-nd_experiment_property	number_of_seeds				00052	
-nd_experiment_property	number_of_seeds_extracted				00066	
-nd_experiment_property	number_of_seeds_germinated				00066	
-nd_experiment_property	number_of_seeds_planted				00066	
-nd_experiment_property	number_of_viable_seeds				00066	
+genotype_property	snp genotyping
+geolocation_property	geolocation address				00052
+geolocation_property	geolocation year				00052
+geolocation_property	country_name	From BrAPI	03/27/2017	nm529	00076
+geolocation_property	country_code	From BrAPI	03/27/2017	nm529	00076
+geolocation_property	abbreviation	From BrAPI	03/27/2017	nm529	00076
+geolocation_property	location_type	From BrAPI	03/27/2017	nm529	00076
+geolocation_property	annual_total_precipitation	From BrAPI	03/27/2017	nm529	00076
+geolocation_property	continent	From BrAPI	03/27/2017	nm529	00076
+geolocation_property	annual_mean_temperature	From BrAPI	03/27/2017	nm529	00076
+geolocation_property	adm1	From BrAPI	03/27/2017	nm529	00076
+geolocation_property	adm2	From BrAPI	03/27/2017	nm529	00076
+geolocation_property	adm3	From BrAPI	03/27/2017	nm529	00076
+geolocation_property	local_name	From BrAPI	03/27/2017	nm529	00076
+geolocation_property	region	From BrAPI	03/27/2017	nm529	00076
+geolocation_property	alternative_name	From BrAPI	03/27/2017	nm529	00076
+list_types	seedlots		07/20/2017	nm529	00081
+list_types	subplots		08/23/2017	nm529	00084
+list_types	accessions
+list_types	crosses				00067
+list_types	dataset				00067
+list_types	locations
+list_types	locus_ids
+list_types	numbers				00067
+list_types	plots
+list_types	populations				00067
+list_types	traits
+list_types	trials
+list_types	unigene_ids
+list_types	vector_constructs				00049
+list_types	years
+local	date
+local	months after planting
+local	operator
+local	organism_sequencing_metadata
+local	sp_person_id				00052
+local	time
+local	visible_to_role				00052
+nd_experiment_property	cross_name				00052
+nd_experiment_property	cross_type				00052
+nd_experiment_property	genotyping_project_name				00052
+nd_experiment_property	genotyping_user_id				00052
+nd_experiment_property	number_of_progeny				00066
 nd_experiment_property	number_of_seeds_distributed				00082
-organism_property	organism_synonym				00052	
-organism_property	species authority	From BrAPI	03/27/2017	nm529	00076	
-organism_property	subtaxa	From BrAPI	03/27/2017	nm529	00076	
-organism_property	subtaxa authority	From BrAPI	03/27/2017	nm529	00076	
-project_property	breeding_program				00051	
-project_property	data_agreement					
-project_property	design					
-project_property	genomic selection					
-project_property	project_harvest_date				00080	
-project_property	marker_count					
-project_property	project_planting_date				00080	
-project_property	population type					
-project_property	project fertilizer date					
+organism_property	organism_synonym				00052
+organism_property	species authority	From BrAPI	03/27/2017	nm529	00076
+organism_property	subtaxa	From BrAPI	03/27/2017	nm529	00076
+organism_property	subtaxa authority	From BrAPI	03/27/2017	nm529	00076
+project_property	breeding_program				00051
+project_property	data_agreement
+project_property	design
+project_property	genomic selection
+project_property	project_harvest_date				00080
+project_property	marker_count
+project_property	project_planting_date				00080
+project_property	population type
+project_property	project fertilizer date
 project_property	project first harvest date					sgn database
-project_property	project harvested plants					
+project_property	project harvested plants
 project_property	project last harvest date					sgn database
-project_property	project location					
+project_property	project location
 project_property	project sowing date					sgn database
-project_property	project sown plants					
+project_property	project sown plants
 project_property	project transplanting date					sgn database
-project_property	project year					
-project_property	project_has_plant_entries				00054	
-project_property	project_has_subplot_entries				00084	
-project_property	trial_folder					
-project_property	folder_for_trials	For determining if a folder appears on manage trials page	12/6/16	nm529	00071	
-project_property	folder_for_crosses	For determining if a folder appears on manage crosses page	12/6/16	nm529	00071	
-project_property	active	From BrAPI	03/27/2017	nm529	00076	
-project_property	breeding_program_abbreviation	From BrAPI	03/27/2017	nm529	00076	
-project_property	phenotypes_fully_uploaded	To determine when a trial has all phenotypes uploaded	06/09/2017	nm529	00078	
-project_relationship	breeding_program_trial_relationship				00051	
-project_relationship	trial_treatment_relationship				00081	
-project_type	Advanced Yeld Trials				00052	
-project_type	Advanced Yield Trial					
-project_type	Clonal Evaluation					
-project_type	Preliminary Yield Trial					
-project_type	Preliminary Yield Trials				00052	
-project_type	Regional Trials					
-project_type	Seed Multiplication					
-project_type	Seedling Nursery					
-project_type	Uniform Yield Trial				00052	
-project_type	Variety Release Trial					
+project_property	project year
+project_property	project_has_plant_entries				00054
+project_property	project_has_subplot_entries				00084
+project_property	trial_folder
+project_property	folder_for_trials	For determining if a folder appears on manage trials page	12/6/16	nm529	00071
+project_property	folder_for_crosses	For determining if a folder appears on manage crosses page	12/6/16	nm529	00071
+project_property	active	From BrAPI	03/27/2017	nm529	00076
+project_property	breeding_program_abbreviation	From BrAPI	03/27/2017	nm529	00076
+project_property	phenotypes_fully_uploaded	To determine when a trial has all phenotypes uploaded	06/09/2017	nm529	00078
+project_property	trial_layout_json	A json string holding a trial's cached layout	10/12/2017	nm529	00087
+project_relationship	breeding_program_trial_relationship				00051
+project_relationship	trial_treatment_relationship				00081
+project_type	Advanced Yeld Trials				00052
+project_type	Advanced Yield Trial
+project_type	Clonal Evaluation
+project_type	Preliminary Yield Trial
+project_type	Preliminary Yield Trials				00052
+project_type	Regional Trials
+project_type	Seed Multiplication
+project_type	Seedling Nursery
+project_type	Uniform Yield Trial				00052
+project_type	Variety Release Trial
 project_type	crossing_trial	00079
 project_type	grafting_trial	00079
 project_type	pollinating_trial	00079
 project_type	Heterosis				00082
-project_type	Genetic Gain 				00082	
-project_type	Health Status				00082	
-project_type	Storage				00082		
-stock_property	block				00052	
-stock_property	col_number				00052	
-stock_property	igd_synonym				00052	
-stock_property	is a control				00052	
-stock_property	location_code				00052	
-stock_property	organization				00052	
-stock_property	plant_index_number				00054	
-stock_property	subplot_index_number				00084	
-stock_property	plot number				00052	
-stock_property	range				00052	
-stock_property	replicate				00052	
-stock_property	row_number				00052	
-stock_property	stock_synonym				00046	
-stock_property	T1				00052	
-stock_property	T2				00052	
-stock_property	transgenic				00052	
-stock_property	variety	Found in editable_stock_props				
-stock_property	notes	Found in editable_stock_props				
-stock_property	state	Found in editable_stock_props				
-stock_property	accession number	From BrAPI	03/27/2017	nm529	00076	
-stock_property	PUI	From BrAPI	03/27/2017	nm529	00076	
-stock_property	donor	From BrAPI	03/27/2017	nm529	00076	
-stock_property	donor institute	From BrAPI	03/27/2017	nm529	00076	
-stock_property	donor PUI	From BrAPI	03/27/2017	nm529	00076	
-stock_property	seed source	From BrAPI	03/27/2017	nm529	00076	
-stock_property	institute code	From BrAPI	03/27/2017	nm529	00076	
-stock_property	institute name	From BrAPI	03/27/2017	nm529	00076	
-stock_property	biological status of accession code	From BrAPI	03/27/2017	nm529	00076	
-stock_property	country of origin	From BrAPI	03/27/2017	nm529	00076	
-stock_property	type of germplasm storage code	From BrAPI	03/27/2017	nm529	00076	
-stock_property	entry number	From BrAPI	03/27/2017	nm529	00076	
-stock_property	acquisition date	From BrAPI	03/27/2017	nm529	00076	
-stock_relationship	cross_relationship				00052	
-stock_relationship	female_parent				00052	
-stock_relationship	male_parent				00052	
-stock_relationship	member_of				00052	
-stock_relationship	offspring_of				00052	
-stock_relationship	plant_of				00052	
-stock_relationship	plot_of				00052	
-stock_relationship	subplot_of				00084	
-stock_relationship	plant_of_subplot				00084	
-stock_relationship	tissue_sample_of				00052	
-stock_relationship	collection_of				00077	
-stock_relationship	seed transaction				00077	
+project_type	Genetic Gain 				00082
+project_type	Health Status				00082
+project_type	Storage				00082
+project_type	genotyping_trial		00087
+project_type	phenotyping_trial	00087
+stock_property	block				00052
+stock_property	col_number				00052
+stock_property	igd_synonym				00052
+stock_property	is a control				00052
+stock_property	location_code				00052
+stock_property	organization				00052
+stock_property	plant_index_number				00054
+stock_property	subplot_index_number				00084
+stock_property	plot number				00052
+stock_property	range				00052
+stock_property	replicate				00052
+stock_property	row_number				00052
+stock_property	stock_synonym				00046
+stock_property	T1				00052
+stock_property	T2				00052
+stock_property	transgenic				00052
+stock_property	variety	Found in editable_stock_props
+stock_property	notes	Found in editable_stock_props
+stock_property	state	Found in editable_stock_props
+stock_property	accession number	From BrAPI	03/27/2017	nm529	00076
+stock_property	PUI	From BrAPI	03/27/2017	nm529	00076
+stock_property	donor	From BrAPI	03/27/2017	nm529	00076
+stock_property	donor institute	From BrAPI	03/27/2017	nm529	00076
+stock_property	donor PUI	From BrAPI	03/27/2017	nm529	00076
+stock_property	seed source	From BrAPI	03/27/2017	nm529	00076
+stock_property	institute code	From BrAPI	03/27/2017	nm529	00076
+stock_property	institute name	From BrAPI	03/27/2017	nm529	00076
+stock_property	biological status of accession code	From BrAPI	03/27/2017	nm529	00076
+stock_property	country of origin	From BrAPI	03/27/2017	nm529	00076
+stock_property	type of germplasm storage code	From BrAPI	03/27/2017	nm529	00076
+stock_property	entry number	From BrAPI	03/27/2017	nm529	00076
+stock_property	acquisition date	From BrAPI	03/27/2017	nm529	00076
+stock_property	current_count	For keeping current count of seedlot	09/06/2017	nm529	00086
+stock_property  crossing_metadata_json    00086
+stock_relationship	cross_relationship				00052
+stock_relationship	female_parent				00052
+stock_relationship	male_parent				00052
+stock_relationship	member_of				00052
+stock_relationship	offspring_of				00052
+stock_relationship	plant_of				00052
+stock_relationship	plot_of				00052
+stock_relationship	subplot_of				00084
+stock_relationship	plant_of_subplot				00084
+stock_relationship	tissue_sample_of				00052
+stock_relationship	collection_of				00077
+stock_relationship	seed transaction				00077
 stock_relationship	rootstock_of					00079
 stock_relationship	scion_of					00079
-stock_type	accession				00052	
-stock_type	backcross population				00052	
-stock_type	cross				00052	
-stock_type	f2 population				00052	
-stock_type	mutant population				00052	
-stock_type	plant				00052	
-stock_type	plot				00052	
-stock_type	population				00052	
-stock_type	tissue_sample				00052	
-stock_type	training population				00052	
-stock_type	vector_construct				00052	
-stock_type	seedlot				00077	
-stock_type	subplot				00084	
+stock_relationship  female_plot_of    00086
+stock_relationship  male_plot_of    00086
+stock_type	accession				00052
+stock_type	backcross population				00052
+stock_type	cross				00052
+stock_type	f2 population				00052
+stock_type	mutant population				00052
+stock_type	plant				00052
+stock_type	plot				00052
+stock_type	population				00052
+stock_type	tissue_sample				00052
+stock_type	training population				00052
+stock_type	vector_construct				00052
+stock_type	seedlot				00077
+stock_type	subplot				00084
 stock_type	grafted_accession		00079
-trait_property	trait_categories					
-trait_property	trait_default_value					
-trait_property	trait_details					
-trait_property	trait_format					
-trait_property	trait_maximum					
-trait_property	trait_minimum					
-trial_type	crossing_trial					
-trial_type	genotyping_trial					
-trial_type	phenotyping_trial					
-cvterm_property	uri	From BrAPI	03/27/2017	nm529	00076	
-cvterm_property	datatype	From BrAPI	03/27/2017	nm529	00076	
-cvterm_property	code	From BrAPI	03/27/2017	nm529	00076	
-protocol_property	published date	From BrAPI	03/27/2017	nm529	00076	
-protocol_property	protocol type	From BrAPI	03/27/2017	nm529	00076	
-protocol_property	protocol unit	From BrAPI	03/27/2017	nm529	00076	
-protocol_property	protocol comment	From BrAPI	03/27/2017	nm529	00076	
-composable_cvs	trait_ontology		05/01/2017		00073	
-composable_cvs	composed_trait_ontology		05/01/2017		00073	
-composable_cvs	object_ontology		05/01/2017		00073	
-composable_cvs	attribute_ontology		05/01/2017		00073	
-composable_cvs	method_ontology		05/01/2017		00073	
-composable_cvs	unit_ontology		05/01/2017		00073	
-composable_cvs	time_ontology		05/01/2017		00073	
+trait_property	trait_categories
+trait_property	trait_default_value
+trait_property	trait_details
+trait_property	trait_format
+trait_property	trait_maximum
+trait_property	trait_minimum
+trial_type	genotyping_trial
+trial_type	phenotyping_trial
+cvterm_property	uri	From BrAPI	03/27/2017	nm529	00076
+cvterm_property	datatype	From BrAPI	03/27/2017	nm529	00076
+cvterm_property	code	From BrAPI	03/27/2017	nm529	00076
+protocol_property	published date	From BrAPI	03/27/2017	nm529	00076
+protocol_property	protocol type	From BrAPI	03/27/2017	nm529	00076
+protocol_property	protocol unit	From BrAPI	03/27/2017	nm529	00076
+protocol_property	protocol comment	From BrAPI	03/27/2017	nm529	00076
+composable_cvs	trait_ontology		05/01/2017		00073
+composable_cvs	composed_trait_ontology		05/01/2017		00073
+composable_cvs	object_ontology		05/01/2017		00073
+composable_cvs	attribute_ontology		05/01/2017		00073
+composable_cvs	method_ontology		05/01/2017		00073
+composable_cvs	unit_ontology		05/01/2017		00073
+composable_cvs	time_ontology		05/01/2017		00073
 project_design? 						suggested to move the trial design names from projectprop.value to projectprop.type_id

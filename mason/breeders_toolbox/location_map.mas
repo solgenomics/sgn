@@ -348,6 +348,7 @@ jQuery(document).ready(function() {
        event.preventDefault();
        var id= $('#location_id').val();
        var name = $('#location_name').val();
+       name = name.trim();
        var abbreviation = $('#location_abbreviation').val();
        var country_code = $('#location_country').val();
        var country_text = $('#location_country option:selected').text();
@@ -357,7 +358,7 @@ jQuery(document).ready(function() {
        var latitude = $('#location_latitude').val();
        var longitude = $('#location_longitude').val();
        var altitude = $('#location_altitude').val();
-       console.log("Location program to store is "+program);
+       //console.log("Location program to store is "+program);
        //console.log("Location name to store is "+name);
        //console.log("Location country name to store is "+country_name+" and country code is "+country_code);
 
@@ -381,17 +382,17 @@ jQuery(document).ready(function() {
 
 });
 
-function initialize_map(id, locationJSON, table) {
+function initialize_map (id, locationJSON, table) {
 
-    var satellite = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
     });
 
-    var topomap = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+    var topomap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community'
     });
 
-    var streetmap = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+    var streetmap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012'
     });
 
@@ -613,32 +614,40 @@ function onEachFeature(feature, layer) {
         var latlng = coordinate_string.split(',');
         latitude = latlng[0], longitude = latlng[1];
         var coordinates = [parseFloat(latitude),parseFloat(longitude)];
-        var dstk = $.DSTK();
-        dstk.coordinates2statistics(coordinates, function(c2s_result) {
-
-          dstk.coordinates2politics(coordinates, function(c2p_result) {
+        
+        
+        // removed because of mixed content restrictions. Can be uncommented once datascience toolkit can be accessed locally or over https
+        
+        // var dstk = $.DSTK();
+        // dstk.coordinates2statistics(coordinates, function(c2s_result) {
+        // 
+        //   dstk.coordinates2politics(coordinates, function(c2p_result) {
             //console.log("elevation result is "+JSON.stringify(c2s_result));
             //console.log("politics result is "+JSON.stringify(c2p_result));
             //console.log("elevation result is "+c2s_result[0].statistics.elevation+" and politics result is "+c2p_result[0].politics);
-            if (!c2s_result[0].statistics.elevation || !c2p_result[0].politics) {
-                alert("Unable to add a location at these coordinates. Please make sure your new location is located on land between 60 north and south.");
-                return;
-            }
-            var elevation = c2s_result[0].statistics.elevation.value;
-            var code= c2p_result[0].politics[0].code.toUpperCase();
+            // if (!c2s_result[0].statistics.elevation || !c2p_result[0].politics) {
+            //     alert("Unable to add a location at these coordinates. Please make sure your new location is located on land between 60 north and south.");
+            //     return;
+            // }
+            // var elevation = c2s_result[0].statistics.elevation.value;
+            // var code= c2p_result[0].politics[0].code.toUpperCase();
             //console.log("elevation is "+elevation+" and code is "+code);
+            
+            
             $('#location_id').val('');
             $('#location_name').val('');
             $('#location_abbreviation').val('');
             $('#breeding_program_select').val('');
             $('#location_type').val('');
-            $('#location_country').val(code);
-            $('#location_altitude').val(elevation);
+            // $('#location_country').val(code);
+            // $('#location_altitude').val(elevation);
+            $('#location_country').val('');
+            $('#location_altitude').val('');
             $('#location_latitude').val(coordinates[0]);
             $('#location_longitude').val(coordinates[1]);
             $('#store_location_dialog').modal("show");
-          });
-        });
+        //   });
+        // });
 
     }
 
@@ -653,12 +662,14 @@ function onEachFeature(feature, layer) {
            all_rows.push(data[i]);
        }
        var loc_data = all_rows.shift();
-       //console.log("Data for location to edit: "+JSON.stringify(loc_data));
-        // console.log("Id for location to edit is "+table_data.properties.Id);
+        //console.log("Data for location to edit: "+JSON.stringify(loc_data));
+        //console.log("Program for location to edit is "+loc_data.properties.Program);
         $('#location_id').val(loc_data.properties.Id);
         $('#location_name').val(loc_data.properties.Name);
         $('#location_abbreviation').val(loc_data.properties.Abbreviation);
         $('#location_country').val(loc_data.properties.Code);
+        $('#breeding_program_select option:first').text('');
+        $('#breeding_program_select option:first').prop('selected', true);
         $("#breeding_program_select option").filter(function() {
             return this.text == loc_data.properties.Program;
         }).attr('selected', true);

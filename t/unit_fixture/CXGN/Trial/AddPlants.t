@@ -142,7 +142,7 @@ $trial->create_plant_entities('2');
 
 my $tl = CXGN::Trial::TrialLayout->new({ schema => $f->bcs_schema(), trial_id => $trial_id });
 $d = $tl->get_design();
-#print STDERR Dumper($d);
+print STDERR Dumper($d);
 
 @plot_nums = ();
 @accessions = ();
@@ -295,6 +295,7 @@ my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
     user_id => 41,
     user_name => "janedoe",
     data_level => 'plots',
+    selected_columns=> {'plot_name'=>1,'block_number'=>1,'plot_number'=>1,'rep_number'=>1,'row_number'=>1,'col_number'=>1,'accession_name'=>1,'is_a_control'=>1}
 });
 
 my $create_fieldbook_return = $create_fieldbook->download();
@@ -437,6 +438,7 @@ my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
     user_id => 41,
     user_name => "janedoe",
     data_level => 'plants',
+    selected_columns=> {'plant_name'=>1,'plot_name'=>1,'block_number'=>1,'plant_number'=>1,'plot_number'=>1,'rep_number'=>1,'row_number'=>1,'col_number'=>1,'accession_name'=>1,'is_a_control'=>1}
 });
 
 my $create_fieldbook_return = $create_fieldbook->download();

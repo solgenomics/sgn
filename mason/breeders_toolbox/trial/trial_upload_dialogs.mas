@@ -7,11 +7,11 @@ $locations
 <& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders' ] &>
 
 <div class="modal fade" id="upload_trial_dialog" name="upload_trial_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialDialog">
-    <div class="modal-dialog " role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadTrialDialog">Upload Trial</h4>
+                <h4 class="modal-title" id="uploadTrialDialog">Upload Existing Trial</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -105,7 +105,7 @@ $locations
 </div>
 
 <div class="modal fade" id="trial_upload_spreadsheet_info_dialog" name="trial_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialInfoDialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -135,7 +135,9 @@ $locations
                                 <td>range_number</td>
                                 <td>row_number</td>
                                 <td>col_number</td>
-                                <td>temperature_high</td>
+                                <td>seedlot_name</td>
+                                <td>num_seed_per_plot</td>
+                                <td>treatment_name (e.g. inoculated) Do Not Include if No Treatment</td>
                             </tr>
                         </tbody>
                     </table>
@@ -145,7 +147,7 @@ $locations
                     plot_name (must be unique)
                     <br />
                     accession_name (must exist in the database)
-                    <br />
+                    <br/>
                     plot_number
                     <br />
                     block_number
@@ -153,7 +155,7 @@ $locations
                     <br/>
                     <b>Optional fields:</b>
                     <br />
-                    is_a_control (type 1 or yes in this field if the plot is a control)
+                    is_a_control (type 1 in this field if the plot is a control)
                     <br />
                     rep_number (replicate number, numeric)
                     <br />
@@ -162,8 +164,12 @@ $locations
                     row_number (row number, numeric, required for field map generation)
                     <br />
                     col_number (column number, numeric, required for field map generation)
+                    <br />
+                    seedlot_name (the seedlot from where the planted seed originated. must exist in the database)
+                    <br />
+                    num_seed_per_plot (number seeds per plot. seed comes from seedlot_name. numeric)
                     <br/>
-                    treatment columns (additional column(s). the value for each plot should be 1 or empty.)
+                    treatment columns (additional column(s) (e.g. inoculated and drought). the value for each plot should be 1 or empty.)
                 </div>
             </div>
             <div class="modal-footer">

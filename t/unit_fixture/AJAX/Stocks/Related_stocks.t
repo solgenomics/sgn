@@ -24,7 +24,8 @@ print STDERR Dumper $response;
 is_deeply($response, {'data'=> [
 ['<a href = "/stock/38857/view">test_trial21</a>', 'plot', 'test_trial21'],
 ['<a href = "/stock/38862/view">test_trial26</a>', 'plot', 'test_trial26'],
-['<a href = "/stock/38870/view">test_trial214</a>', 'plot', 'test_trial214']
+['<a href = "/stock/38870/view">test_trial214</a>', 'plot', 'test_trial214'],
+['<a href = "/breeders/seedlot/41303">test_accession4_001</a>','seedlot','test_accession4_001']
 ]}, 'trial_related_stock');
 
 $mech->get_ok('http://localhost:3010/stock/38843/datatables/progenies');

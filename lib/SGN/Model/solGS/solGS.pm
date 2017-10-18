@@ -35,7 +35,7 @@ use Scalar::Util qw(looks_like_number);
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use Math::Round::Var;
-use CXGN::Genotype::Search;
+#use CXGN::Genotype::Search;
 use CXGN::Trial;
 use CXGN::Dataset;
 use CXGN::Phenotypes::PhenotypeMatrix;
@@ -1155,7 +1155,8 @@ sub _create_genotype_row {
 
         my $genotype =  $genotype_hash->{$marker};
 	$genotype =  $genotype_hash->{$marker};
-
+	
+	$geno_values .= $genotype;
         #$geno_values .= $self->round_allele_dosage_values($genotype);       
         $geno_values .= "\t" unless $marker eq $markers[-1];
     }

@@ -337,53 +337,55 @@ sub search {
 	}
 
 	my $stock_join;
-	if ($stock_type_search == $accession_cvterm_id){
-		$stock_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => [ 'nd_geolocation', {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}, { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects' ] } } ] }}}};
-	} else {
-		$stock_join = { nd_experiment_stocks => { nd_experiment => [ 'nd_geolocation', {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }}, { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects' ] } } ] } };
-	}
+	my $nd_experiment_joins = [];
 
-	foreach (@trait_name_array){
-		if ($_){
-			push @{$and_conditions->{ 'observable.name' }}, $_;
+	if (scalar(@trait_name_array)>0 || $minimum_phenotype_value || $maximum_phenotype_value){
+		push @$nd_experiment_joins, {'nd_experiment_phenotypes' => {'phenotype' => 'observable' }};
+		foreach (@trait_name_array){
+			if ($_){
+				push @{$and_conditions->{ 'observable.name' }}, $_;
+			}
 		}
-	}
-	if ($minimum_phenotype_value) {
-		$and_conditions->{ 'phenotype.value' }  = { '>' => $minimum_phenotype_value };
-	}
-	if ($maximum_phenotype_value) {
-		$and_conditions->{ 'phenotype.value' }  = { '<' => $maximum_phenotype_value };
-	}
-
-	foreach (@trial_name_array){
-		if ($_){
-			push @{$and_conditions->{ 'lower(project.name)' }}, { -like  => lc($_) } ;
+		if ($minimum_phenotype_value) {
+			$and_conditions->{ 'phenotype.value' }  = { '>' => $minimum_phenotype_value };
+		}
+		if ($maximum_phenotype_value) {
+			$and_conditions->{ 'phenotype.value' }  = { '<' => $maximum_phenotype_value };
 		}
 	}
 
-	foreach (@trial_id_array){
-		if ($_){
-			push @{$and_conditions->{ 'project.project_id' }}, $_ ;
+	if (scalar(@location_name_array)>0){
+		push @$nd_experiment_joins, 'nd_geolocation';
+		foreach (@location_name_array){
+			if ($_){
+				push @{$and_conditions->{ 'lower(nd_geolocation.description)' }}, { -like  => lc($_) };
+			}
 		}
 	}
 
-	foreach (@location_name_array){
-		if ($_){
-			push @{$and_conditions->{ 'lower(nd_geolocation.description)' }}, { -like  => lc($_) };
+	if (scalar(@trial_name_array)>0 || scalar(@trial_id_array)>0 || scalar(@year_array)>0 || scalar(@program_id_array)>0){
+		push @$nd_experiment_joins, { 'nd_experiment_projects' => { 'project' => ['projectprops', 'project_relationship_subject_projects' ] } };
+		foreach (@trial_name_array){
+			if ($_){
+				push @{$and_conditions->{ 'lower(project.name)' }}, { -like  => lc($_) } ;
+			}
 		}
-	}
-
-	my $year_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id;
-	foreach (@year_array){
-		if ($_){
-			$and_conditions->{ 'projectprops.type_id'} = $year_type_id;
-			push @{$and_conditions->{ 'lower(projectprops.value)' }}, { -like  => lc($_) } ;
+		foreach (@trial_id_array){
+			if ($_){
+				push @{$and_conditions->{ 'project.project_id' }}, $_ ;
+			}
 		}
-	}
-
-	foreach (@program_id_array){
-		if ($_){
-			push @{$and_conditions->{ 'project_relationship_subject_projects.object_project_id' }}, $_ ;
+		my $year_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id;
+		foreach (@year_array){
+			if ($_){
+				$and_conditions->{ 'projectprops.type_id'} = $year_type_id;
+				push @{$and_conditions->{ 'lower(projectprops.value)' }}, { -like  => lc($_) } ;
+			}
+		}
+		foreach (@program_id_array){
+			if ($_){
+				push @{$and_conditions->{ 'project_relationship_subject_projects.object_project_id' }}, $_ ;
+			}
 		}
 	}
 
@@ -428,6 +430,12 @@ sub search {
         $and_conditions->{ 'stockprops.type_id'} = $property_term_id;
         push @{$and_conditions->{ 'lower(stockprops.value)' }}, { -like  => lc($property_value) } ;
     }
+
+	if ($stock_type_search == $accession_cvterm_id){
+		$stock_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins }}}};
+	} else {
+		$stock_join = { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins } };
+	}
 
 	#$schema->storage->debug(1);
 	my $rs = $schema->resultset("Stock::Stock")->search(

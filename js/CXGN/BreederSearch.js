@@ -2,7 +2,7 @@ window.onload = function initialize() {
 
     jQuery('#select1').change( // reset start from list if select1 changes
 	     function() {
-	        if (jQuery('#paste_list_select').val()) {
+	        if (jQuery('#paste_list_list_select').val()) {
             create_list_start('Start from a list');
 	         }
 	  });
@@ -67,8 +67,9 @@ window.onload = function initialize() {
 	  switch (category)
 	  {
 	  case "accessions":
-    case "plants":
+      case "plants":
 	  case "plots":
+      case "seedlots":
 	      window.open("../../stock/"+this.value+"/view");
 	      break;
 	  case "trials":
@@ -228,8 +229,8 @@ function get_selected_categories(this_section) {
   var selected_categories = [];
   var select1 = jQuery('#select1').val();
   if (select1 === '') { // if starting category is undefined
-    if (jQuery('#paste_list_select').val()) { // check to see if paste from list was used, if so get list type
-	    select1 = jQuery('#paste_list_select').prop('title');
+    if (jQuery('#paste_list_list_select').val()) { // check to see if paste from list was used, if so get list type
+	    select1 = jQuery('#paste_list_list_select').prop('title');
       //if (window.console) console.log("select1="+select1);
     }
   }
@@ -279,7 +280,7 @@ function get_selected_genotyping_protocols () {
 function update_select_categories(this_section, selected_categories) {
     //console.log("selected_categories="+selected_categories);
     if (selected_categories === undefined) var selected_categories = get_selected_categories(this_section);
-    var categories = { '': 'please select', accessions : 'accessions', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', plants : 'plants', plots : 'plots', trait_components : 'trait_components', traits : 'traits', trials : 'trials', trial_designs : 'trial_designs', trial_types : 'trial_types', years : 'years'};
+    var categories = { '': 'please select', accessions : 'accessions', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', plants : 'plants', plots : 'plots', seedlots: 'seedlots', trait_components : 'trait_components', traits : 'traits', trials : 'trials', trial_designs : 'trial_designs', trial_types : 'trial_types', years : 'years'};
     var all_categories = copy_hash(categories);
 
     for (i=0; i < this_section; i++) {
@@ -363,9 +364,9 @@ function reset_downstream_sections(this_section) {  // clear downstream selects,
 
 function create_list_start(message) {
     var lo = new CXGN.List();
-    var listhtml = lo.listSelect('paste', '', message, 'refresh');
+    var listhtml = lo.listSelect('paste_list', '', message, 'refresh');
     jQuery('#paste_list').html(listhtml);
-    jQuery('#paste_list_select').change(
+    jQuery('#paste_list_list_select').change(
       function() {
         pasteList();
     });
@@ -375,7 +376,7 @@ function pasteList() {
   //if (window.console) console.log("pasting list . . .");
 
   jQuery('#list_message').html('');
-  var list_id = jQuery('#paste_list_select').val();
+  var list_id = jQuery('#paste_list_list_select').val();
   //var value = jQuery('#list_start_list_select').val();
   //if (window.console) console.log("list_start_list_select_val ="+value);
   if (list_id === '') {
@@ -434,7 +435,7 @@ function pasteList() {
         listType: data.type_name
       });
     }
-    jQuery('#paste_list_select').prop('title', data.type_name);  // so get_selected_categories method doesn't have to retrieve list data everytime
+    jQuery('#paste_list_list_select').prop('title', data.type_name);  // so get_selected_categories method doesn't have to retrieve list data everytime
     enable_ui();
   }
 }
@@ -542,7 +543,7 @@ function get_querytypes(this_section) {
 }
 
 function initialize_first_select() {
-  var starting_categories = { '': 'Select a starting category', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', trait_components : 'trait_components', traits : 'traits', trials : 'trials', trial_designs : 'trial_designs', trial_types : 'trial_types', years : 'years'};
+  var starting_categories = { '': 'Select a starting category', accessions: 'accessions', breeding_programs: 'breeding_programs', genotyping_protocols : 'genotyping_protocols', locations : 'locations', seedlots: 'seedlots', trait_components : 'trait_components', traits : 'traits', trials : 'trials', trial_designs : 'trial_designs', trial_types : 'trial_types', years : 'years'};
   var start = format_options(starting_categories);
   jQuery('#select1').html(start);
 }

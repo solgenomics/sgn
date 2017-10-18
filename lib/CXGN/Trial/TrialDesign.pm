@@ -31,6 +31,7 @@ use List::Util 'max';
 
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', clearer => 'clear_trial_name');
 has 'stock_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_stock_list', clearer => 'clear_stock_list');
+has 'seedlot_hash' => (isa => 'HashRef', is => 'rw', predicate => 'has_seedlot_hash', clearer => 'clear_seedlot_hash');
 has 'control_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_control_list', clearer => 'clear_control_list');
 has 'control_list_crbd' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_control_list_crbd', clearer => 'clear_control_list_crbd');
 has 'number_of_blocks' => (isa => 'Int', is => 'rw', predicate => 'has_number_of_blocks', clearer => 'clear_number_of_blocks');
@@ -53,6 +54,7 @@ has 'fieldmap_row_number' => (isa => 'Int',is => 'rw',predicate => 'has_fieldmap
 has 'plot_layout_format' => (isa => 'Str', is => 'rw', predicate => 'has_plot_layout_format', clearer => 'clear_plot_layout_format');
 has 'treatments' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_treatments', clearer => 'clear_treatments');
 has 'num_plants_per_plot' => (isa => 'Int',is => 'rw',predicate => 'has_num_plants_per_plot',clearer => 'clear_num_plants_per_plot');
+has 'num_seed_per_plot' => (isa => 'Int',is => 'rw',predicate => 'has_num_seed_per_plot',clearer => 'clear_num_seed_per_plot');
 has 'replicated_accession_no' => (isa => 'Int',is => 'rw',predicate => 'has_replicated_accession_no',clearer => 'clear_replicated_accession_no');
 has 'unreplicated_accession_no' => (isa => 'Int',is => 'rw',predicate => 'has_unreplicated_accession_no',clearer => 'clear_unreplicated_accession_no');
 has 'num_of_replicated_times' => (isa => 'Int',is => 'rw',predicate => 'has_num_of_replicated_times',clearer => 'clear_num_of_replicated_times');
@@ -359,10 +361,16 @@ sub _get_crd_design {
       @fieldmap_row_numbers = sort {$a <=> $b} @fieldmap_row_numbers;
     }
 
+    my %seedlot_hash;
+    if($self->get_seedlot_hash){
+        %seedlot_hash = %{$self->get_seedlot_hash};
+    }
     for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
         my %plot_info;
 
         $plot_info{'stock_name'} = $stock_names[$i];
+        $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
         $plot_info{'block_number'} = 1;
         $plot_info{'rep_number'} = $rep_numbers[$i];
         $plot_info{'plot_name'} = $converted_plot_numbers[$i];
@@ -509,6 +517,10 @@ sub _get_p_rep_design {
      @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
      
      my $counting = 0;
+     my %seedlot_hash;
+     if($self->get_seedlot_hash){
+         %seedlot_hash = %{$self->get_seedlot_hash};
+     }
      for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
        my %plot_info;
        $counting++;
@@ -517,6 +529,8 @@ sub _get_p_rep_design {
                $plot_info{'stock_name'} = $stock_data_hash{$key};
            }
        }
+       $plot_info{'seedlot_name'} = $seedlot_hash{$plot_info{'stock_name'}}->[0];
+       $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
        $plot_info{'block_number'} = $block_numbers[$i];
        $plot_info{'plot_name'} = $converted_plot_numbers[$i];
        $plot_info{'row_number'} = $row_numbers[$i];
@@ -654,9 +668,15 @@ sub _get_rcbd_design {
       @fieldmap_row_numbers = sort {$a <=> $b} @fieldmap_row_numbers;
     }
 
+    my %seedlot_hash;
+    if($self->get_seedlot_hash){
+        %seedlot_hash = %{$self->get_seedlot_hash};
+    }
   for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
     my %plot_info;
     $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+    $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'rep_number'} = $block_numbers[$i];
@@ -839,9 +859,15 @@ sub _get_alpha_lattice_design {
       @fieldmap_row_numbers = sort {$a <=> $b} @fieldmap_row_numbers;
     }
 
+    my %seedlot_hash;
+    if($self->get_seedlot_hash){
+        %seedlot_hash = %{$self->get_seedlot_hash};
+    }
   for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
     my %plot_info;
     $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+    $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'rep_number'} = $rep_numbers[$i];
@@ -1002,9 +1028,15 @@ sub _get_lattice_design {
       @fieldmap_row_numbers = sort {$a <=> $b} @fieldmap_row_numbers;
     }
 
+    my %seedlot_hash;
+    if($self->get_seedlot_hash){
+        %seedlot_hash = %{$self->get_seedlot_hash};
+    }
   for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
     my %plot_info;
     $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+    $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'rep_number'} = $rep_numbers[$i];
@@ -1111,9 +1143,15 @@ sub _get_augmented_design {
   @stock_names = $result_matrix->get_column("trt");
   @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
 
+  my %seedlot_hash;
+  if($self->get_seedlot_hash){
+      %seedlot_hash = %{$self->get_seedlot_hash};
+  }
   for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
     my %plot_info;
     $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+    $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'plot_name'} = $converted_plot_numbers[$i];
     $plot_info{'is_a_control'} = exists($control_names_lookup{$stock_names[$i]});
@@ -1322,6 +1360,10 @@ sub _get_madii_design {
 
   @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
 
+  my %seedlot_hash;
+  if($self->get_seedlot_hash){
+      %seedlot_hash = %{$self->get_seedlot_hash};
+  }
   for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
     my %plot_info;
 
@@ -1329,6 +1371,8 @@ sub _get_madii_design {
     $plot_info{'col_number'} =$col_numbers[$i];
     $plot_info{'check_name'} =$check_names[$i];
     $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+    $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'block_row_number'}=$block_row_numbers[$i];
     $plot_info{'block_col_number'}=$block_col_numbers[$i];
@@ -1562,6 +1606,10 @@ sub _get_madiii_design {
 
   @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
 
+  my %seedlot_hash;
+  if($self->get_seedlot_hash){
+      %seedlot_hash = %{$self->get_seedlot_hash};
+  }
   for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
     my %plot_info;
 
@@ -1569,6 +1617,8 @@ sub _get_madiii_design {
     $plot_info{'col_number'} =$col_numbers[$i];
     $plot_info{'check_name'} =$check_names[$i];
     $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+    $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'block_row_number'}=$block_row_numbers[$i];
     $plot_info{'block_col_number'}=$block_col_numbers[$i];
@@ -1802,6 +1852,10 @@ sub _get_madiv_design {
 
   @converted_plot_numbers=@{_convert_plot_numbers($self,\@plot_numbers)};
 
+  my %seedlot_hash;
+  if($self->get_seedlot_hash){
+      %seedlot_hash = %{$self->get_seedlot_hash};
+  }
   for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
     my %plot_info;
 
@@ -1809,6 +1863,8 @@ sub _get_madiv_design {
     $plot_info{'col_number'} =$col_numbers[$i];
     $plot_info{'check_name'} =$check_names[$i];
     $plot_info{'stock_name'} = $stock_names[$i];
+    $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+    $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
     $plot_info{'block_number'} = $block_numbers[$i];
     $plot_info{'block_row_number'}=$block_row_numbers[$i];
     $plot_info{'block_col_number'}=$block_col_numbers[$i];
@@ -1918,9 +1974,15 @@ sub _get_greenhouse_design {
     @num_accession_hash{@accession_list} = @num_plants;
 
     my @plot_numbers = (1..scalar(@accession_list));
+    my %seedlot_hash;
+    if($self->get_seedlot_hash){
+        %seedlot_hash = %{$self->get_seedlot_hash};
+    }
     for (my $i = 0; $i < scalar(@plot_numbers); $i++) {
         my %plot_info;
         $plot_info{'stock_name'} = $accession_list[$i];
+        $plot_info{'seedlot_name'} = $seedlot_hash{$accession_list[$i]}->[0];
+        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
         $plot_info{'block_number'} = 1;
         $plot_info{'rep_number'} = 1;
         $plot_info{'plot_name'} = $plot_numbers[$i];
@@ -2117,11 +2179,16 @@ sub _get_splitplot_design {
     my %subplot_plots;
     my %treatment_plots;
     my %treatment_subplot_hash;
-    #print STDERR Dumper \@treatments;
+    my %seedlot_hash;
+    if($self->get_seedlot_hash){
+        %seedlot_hash = %{$self->get_seedlot_hash};
+    }
     for (my $i = 0; $i < scalar(@converted_plot_numbers); $i++) {
         my %plot_info;
 
         $plot_info{'stock_name'} = $stock_names[$i];
+        $plot_info{'seedlot_name'} = $seedlot_hash{$stock_names[$i]}->[0];
+        $plot_info{'num_seed_per_plot'} = $self->get_num_seed_per_plot;
         $plot_info{'block_number'} = 1;
         $plot_info{'rep_number'} = $rep_numbers[$i];
         $plot_info{'plot_name'} = $converted_plot_numbers[$i];

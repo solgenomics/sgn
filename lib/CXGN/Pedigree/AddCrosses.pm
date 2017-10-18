@@ -140,6 +140,7 @@ sub add_crosses {
 	  my $project;
 	  my $cross_type = $pedigree->get_cross_type();
 	  my $cross_name = $pedigree->get_name();
+      $cross_name =~ s/^\s+|\s+$//g; #trim whitespace from both ends
 
 	  if ($pedigree->has_female_parent()) {
 	      $female_parent_name = $pedigree->get_female_parent()->get_name();
