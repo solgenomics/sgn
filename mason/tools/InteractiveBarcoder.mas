@@ -208,7 +208,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button id="d3-custom-text" type="button" class="btn btn-primary" data-dismiss="modal">Add Text</button>
+                <button id="d3-custom-text" type="button" class="btn btn-primary" data-dismiss="modal">Ok</button>
             </div>
         </div>
     </div>

@@ -169,7 +169,7 @@ function getTransGroupBounds(node){
 function changeLabelSize(width,height,scale) {
     d3.select(".label-template").attr("viewBox", "0 0 "+width+" "+height);
     var grid_size = d3.select("#d3-grid-number").node().value;
-    updateGrid(scale.invert(grid_size),width,height);
+    updateGrid(scale.invert(grid_size));
 }
 
 $(document).ready(function($) {
@@ -188,6 +188,7 @@ $(document).ready(function($) {
     .append('svg')
     .classed("label-template",true)
     .attr({
+        id: "d3-label-area",
       width: "100%",
       viewBox: "0 0 "+width+" "+height
     }).classed("d3-draw-svg",true);
@@ -222,16 +223,16 @@ $(document).ready(function($) {
   grid_slider.property("value",12);
   grid_slider.on("input",function(){
     grid_number.property("value",this.value)
-    updateGrid(_x.invert(this.value),width,height);
+    updateGrid(_x.invert(this.value));
   });
   grid_number.on("change",function(){
     var value = Math.max(grid_range_attrs.min,Math.min(grid_range_attrs.max,this.value));
     grid_slider.node().value=value;
     this.value = value;
     grid_number.property("value",this.value)
-    updateGrid(_x.invert(this.value),width,height);
+    updateGrid(_x.invert(this.value));
   });
-  updateGrid(_x.invert(12),width,height);
+  updateGrid(_x.invert(12));
   
   // add select so users can resize draw area accorinding to label size
   var label_size_select = d3.select("#d3-label-size-select");
@@ -328,6 +329,11 @@ $(document).ready(function($) {
           $('#customTextModal').modal('show');
       }
 });
+
+$('#d3-custom-field-input').change(function(){
+    console.log("Change noticed, text is "+$(this).find('option:selected').text());
+    $('#d3-text-content').append($(this).find('option:selected').val());
+});
   
   $("#d3-add-text").on("click",function() {
     var text = document.getElementById("d3-text-field-input").value;//.getAttribute("value"); 
@@ -342,15 +348,17 @@ $(document).ready(function($) {
     .style("margin-left","1em");
   d3.select("#d3-custom-text")
     .on("click",function(){
-    var text_content = d3.select("#d3-text-content")
-    text_content.selectAll(".d3-text-placeholder").each(function(d,i){
-      var th = d3.select(this)
-      th.html("").text(th.attr("key"))
-      
-    });
-    var text = text_content.text();
-    var fontSize = _x.invert(d3.select("#d3-font-size-input").node().value);
-    addText(text,fontSize)
+    var text_content = d3.select("#d3-text-content").text();
+    //$("#d3-text-field-input").find('option:selected').text(text_content);
+    $("#d3-text-field-input").find('option:selected').val(text_content);
+    // text_content.selectAll(".d3-text-placeholder").each(function(d,i){
+    //   var th = d3.select(this)
+    //   th.html("").text(th.attr("key"))
+    //   
+    // });
+    // var text = text_content.text();
+    // var fontSize = _x.invert(d3.select("#d3-font-size-input").node().value);
+    // addText(text,fontSize)
   })
 
   var var_adders = d3.select(".content-variable-container")
@@ -421,10 +429,13 @@ function doSnap(state,selection){
 }
 doSnap.size = 12;
 
-function updateGrid(size,width,height){
+function updateGrid(size){
   //set snapping distance
   doSnap.size = size;
   //make x-lines
+  var width = document.getElementById("d3-label-area").viewBox.baseVal.width;//.getBoundingClientRect().width();
+  var height = document.getElementById("d3-label-area").viewBox.baseVal.height;//.getBoundingClientRect().height();
+  //console.log("width is "+width+" and height is "+height);
   var x_lines = [];
   for (var x = size; x < width; x+=size) {
     x_lines.push(x);
