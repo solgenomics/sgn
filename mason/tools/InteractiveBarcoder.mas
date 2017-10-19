@@ -126,7 +126,7 @@
         <div class="form-group row">
             <label class="col-md-2 col-form-label">Add Barcode</label>
             <div class="col-md-10 form-inline">
-                <select id="d3-barcode-field-input" class="form-control">
+                <select id="d3-barcode-text-input" class="form-control">
                     <option value="">Pick a Field</option>
                     <option value="" data-target="#customTextModal">Custom</option>
                     <option value="{$Accession}">Accession</option>
@@ -139,16 +139,16 @@
                     <option value="{$Year}">Year</option>
                     <option value="{$Pedigree String}">Pedigree String</option>
                 </select>&nbsp&nbsp
-                <select id="d3-barcode-font-input" class="form-control">
+                <select id="d3-barcode-type-input" class="form-control">
                     <option value="">Pick a Barcode Type</option>
-                    <option value="128">Barcode 128 (1D)</option>
-                    <option value="QR">QR Code (2D)</option>
+                    <option value="code128png">Barcode 128 (1D)</option>
+                    <option value="qrcodepng">QR Code (2D)</option>
                 </select>&nbsp&nbsp
                 <select id="d3-barcode-size-input" class="form-control">
                 <option value="">Pick a Barcode Size</option>
-                  <option value="1">1</option>
+                  <!-- <option value="1">1</option>
                   <option value="2">2</option>
-                  <option value="3">3</option>
+                  <option value="3">3</option> -->
                   <option value="4">4</option>
                   <option value="5">5</option>
                   <option value="6">6</option>
@@ -157,7 +157,7 @@
                   <option value="9">9</option>
                   <option value="10">10</option>
                 </select>&nbsp&nbsp
-            <button class="btn btn-primary d3-add-barcode">Add</button>
+            <button class="btn btn-primary d3-add-barcode" id="d3-add-barcode">Add</button>
         </div>
         </div>
         </center>

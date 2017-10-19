@@ -266,47 +266,48 @@ $(document).ready(function($) {
         });
 
   //set up barcode and barcode select
-  var barcode_select = d3.select("#d3-barcode-select");
-  var barcode_g = svg.append("g")
-    .classed("barcode",true);
-  barcode_select.selectAll("option")
-    .data(barcode_types)
-    .enter().append("option")
-    .text(function(d){return d.name})
-    .attr("value",function(d,i){return i});
-  barcode_select.insert("option","*")
-    .attr({"selected":true,"value":-1});
-  barcode_select.on("input",function(){
-    clearSelection();
-    var val = d3.select(this).node().value;
-    if (val>=0){
-      var cur_barcode = svg.append("g")//barcode_g.html("")//.append('g')
+  // var barcode_select = d3.select("#d3-barcode-select");
+  // var barcode_g = svg.append("g")
+  //   .classed("barcode",true);
+  // barcode_select.selectAll("option")
+  //   .data(barcode_types)
+  //   .enter().append("option")
+  //   .text(function(d){return d.name})
+  //   .attr("value",function(d,i){return i});
+  // barcode_select.insert("option","*")
+  //   .attr({"selected":true,"value":-1});
+  // barcode_select.on("input",function(){
+  //   clearSelection();
+  //   var val = d3.select(this).node().value;
+  
+  //   if (val>=0){
+    //   var new_barcode = svg.append("g")//barcode_g.html("")//.append('g')
 //      cur_barcode
-      .classed("barcode",true)
-      .classed("draggable",true)
-      .classed("selectable",true)
-      .call(draggable)
-      .call(selectable,false)
-    //   .call(doTransform,function(state,selection){
+    //   .classed("barcode",true)
+    //   .classed("draggable",true)
+    //   .classed("selectable",true)
+    //   .call(draggable)
+    //   .call(selectable,false)
+    // //   .call(doTransform,function(state,selection){
     //     state.translate[0] += (width/2)-(barcode_types[val].width/2)
     //     state.translate[1] += (height/2)-(barcode_types[val].height/2)
     //   })
-      .on("mouseup", dragSnap)
-      .append('rect')
-      .attr({
-        x:0,
-        y:0,
-        width:_x.invert(barcode_types[val].width),
-        height:_y.invert(barcode_types[val].height),
-        value:"{$PLOT_NAME}",
-        type: barcode_types[val].code,
-        size: barcode_types[val].size,
-        fill:"#333",
-        class:"label-element",
-      });
+    //   .on("mouseup", dragSnap)
+    //   .append('rect')
+    //   .attr({
+    //     x:0,
+    //     y:0,
+    //     width:_x.invert(barcode_types[val].width),
+    //     height:_y.invert(barcode_types[val].height),
+    //     value:"{$PLOT_NAME}",
+    //     type: barcode_types[val].code,
+    //     size: barcode_types[val].size,
+    //     fill:"#333",
+    //     class:"label-element",
+    //   });
      // cur_barcode.call(doSnap);//doTransform,doSnap);
-    }
-  });
+  //   }
+  // });
 
   // var text_adders = d3.select(".add-text-container")
   //   .selectAll(".d3-add-text")
@@ -343,6 +344,14 @@ $('#d3-custom-field-input').change(function(){
     fontSize = _x.invert(fontSize);
     addText(text,fontSize,fontType);
   })    
+  
+  $("#d3-add-barcode").on("click",function() {
+    var barcode = document.getElementById("d3-barcode-text-input").value;//.getAttribute("value"); 
+    var barcodeType = document.getElementById("d3-barcode-type-input").value;//.getAttribute("value");  
+    var barcodeSize = document.getElementById("d3-barcode-size-input").value;//.getAttribute("value");  
+    console.log("Barcode add: "+barcode+"\nbarcodeType: "+barcodeType+"\nbarcodeSize: "+barcodeSize);
+    addBarcode(barcode, barcodeType, barcodeSize);
+  })   
 
   d3.select(".d3-add-custom-text")
     .style("margin-left","1em");
@@ -410,6 +419,50 @@ function addText(text,fontSize,fontType){
     .call(draggable)
     .call(selectable,false)
     .on("mouseup", dragSnap);
+}
+
+function addBarcode (barcode, barcodeType, barcodeSize) {
+    
+    jQuery.ajax( {
+        url: '/barcode/'+barcodeType,//+'png',
+        timeout: 60000,
+        method: 'GET',
+        data: {'identifier': barcode},
+        success: function(response) {
+            svg = d3.select(".d3-draw-svg");
+            // var width = document.getElementById("d3-label-area").viewBox.baseVal.width;
+            // var height = document.getElementById("d3-label-area").viewBox.baseVal.height;
+            var new_barcode = svg.append("g")//barcode_g.html("")//.append('g')
+        //      cur_barcode
+            .classed("barcode",true)
+            .classed("draggable",true)
+            .classed("selectable",true)
+            .call(draggable)
+            .call(selectable,false)
+            // .call(doTransform,function(state,selection){
+            //   state.translate[0] += (width/2)-(barcode_types[val].width/2)
+            //   state.translate[1] += (height/2)-(barcode_types[val].height/2)
+            // })
+            .on("mouseup", dragSnap)
+            .append('rect')
+            .attr({
+              x:0,
+              y:0,
+            //   width:_x.invert(barcode_types[val].width),
+            //   height:_y.invert(barcode_types[val].height),
+              value: barcode,
+              type: barcodeType,
+              size: barcodeSize,
+            //   fill:"#333",
+              xlink: response.filename,
+              class:"label-element",
+            });
+        },
+        error: function(request, status, err) {
+            console.log("Error producing barcode png")
+        }
+    });
+
 }
 
 function dragSnap(){
