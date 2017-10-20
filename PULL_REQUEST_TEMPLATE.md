@@ -9,11 +9,14 @@ Description <!-- Describe your changes in detail. -->
 Checklist <!-- Put an `x` in all the boxes that apply, or check them once submitted.-->
 ---------------------------------------------------------------------------------------
 - [ ] Documentation only
+- [ ] Fixture sql dump update only
 - [ ] Bug fix
   - [ ] The relevant issue has been closed.
   - [ ] Further work is required.
 - [ ] New feature
   - [ ] Relevant tests have been created and run.
+  - [ ] Data was added to the fixture
+    - [ ] Data was added via a patch in `/t/data/fixture/patches/` and the sql dump was not modifed.
   - [ ] User-Facing Change
     - [ ] The user manual in `/docs` has been updated.
   - [ ] Any new Perl has been documented using **perldoc**.

@@ -22,9 +22,9 @@ my $verbose = 0;
 my $nocleanup;
 my $noserver;
 my $noparallel = 0;
-my $fixture_path = '../fixture/cxgn_fixture.sql';
+my $fixture_path = './data/fixture/cxgn_fixture.sql';
 my $use_brapi_fixture;
-my $brapi_fixture = '../fixture/brapi_fixture.sql';
+my $brapi_fixture = './data/fixture/brapi_fixture.sql';
 
 GetOptions(
     "carpalways" => \( my $carpalways = 0 ),
@@ -89,6 +89,9 @@ my $database_fixture_dump = $ENV{DATABASE_FIXTURE_PATH} || $dump_path;
 print STDERR "# Loading database fixture... $database_fixture_dump ... ";
 system("createdb -h $config->{dbhost} -U postgres -T template0 -E SQL_ASCII --no-password $dbname");
 system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbname > /dev/null");
+
+#run fixture and db patches.
+
 
 print STDERR "Done.\n";
 
@@ -290,7 +293,7 @@ t/test_fixture.pl --carpalways -- -v -j5 t/mytest.t  t/mydiroftests/
   --noparallel   Do not run the server in parallel mode.
 
   --fixture_path specify a path to the fixture different from the default
-                 (../fixture/cxgn_fixture.pl). Note: You can also set the env
+                 (./data/fixture/cxgn_fixture.pl). Note: You can also set the env
                  variable DATABASE_FIXTURE_PATH, which will overrule this
                  option.
 
