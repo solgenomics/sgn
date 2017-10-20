@@ -11,11 +11,59 @@ use CXGN::Stock;
 use SGN::Model::Cvterm;
 use Text::Template;
 use Try::Tiny;
+use Barcode::Code128;
+use GD::Barcode::QRcode;
+use CXGN::QRcode;
 
 BEGIN { extends "Catalyst::Controller"; }
 
 use CXGN::ZPL;
 
+sub barcode_preview :Path('/barcode/preview') {
+    my $self = shift;
+    my $c = shift;
+    my $content = $c->req->param("content") || "Test text long";
+    my $type = $c->req->param("type") || '128-2';
+    print STDERR "Content is $content and type is $type\n";
+
+    our($style,$size) = split '-', $type;
+    print STDERR "Style is $style and size is $size\n";
+    
+    if ($style eq '128') {
+    
+        print STDERR "Creating barcode 128\n";
+    
+        my $barcode_object = Barcode::Code128->new();
+        $barcode_object->option("scale", $size);
+        $barcode_object->barcode($content);
+        my $barcode = $barcode_object->gd_image();
+        
+        $c->res->headers->content_type('image/png');
+        $c->res->body($barcode->png());
+
+    } elsif ($style eq 'QR') {
+        
+        print STDERR "Creating QR Code\n";
+    
+        $c->tempfiles_subdir('barcode');
+        my ($file_location, $uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+
+        my $barcode_generator = CXGN::QRcode->new();
+        my $barcode_file = $barcode_generator->get_barcode_file(
+              $file_location,
+              $content,
+              $size
+         );
+         
+         my $qrcode_path = $c->path_to($uri);
+         
+         $c->res->headers->content_type('image/jpg');
+         my $output = read_file($qrcode_path);
+         $c->res->body($output);
+        
+    }
+
+}
 
 sub download_zpl_barcodes : Path('/barcode/stock/download/zpl') {
     my $self = shift;

@@ -9,9 +9,10 @@ sub get_barcode_file {
   my $self = shift;
   my $file = shift;
   my $text = shift;
+  my $size = shift || 3;
 
   my $qrcode = Imager::QRCode->new(
-        size          => 3,
+        size          => $size,
         margin        => 5,
         version       => 1,
         level         => 'M',
