@@ -98,14 +98,6 @@ sub BUILD {
         $self->location( $self->location || $location );
         $self->nd_geolocation_id( $self->nd_geolocation_id || $location->nd_geolocation_id );
         $self->name( $self->name || $location->description );
-        $self->latitude( $self->latitude || $location->latitude );
-        $self->longitude( $self->longitude || $location->longitude );
-        $self->altitude( $self->altitude || $location->altitude );
-        $self->abbreviation( $self->abbreviation || $self->_get_ndgeolocationprop('abbreviation', 'geolocation_property') );
-        $self->country_name( $self->country_name || $self->_get_ndgeolocationprop('country_name', 'geolocation_property') );
-        $self->country_code( $self->country_code || $self->_get_ndgeolocationprop('country_code', 'geolocation_property') );
-        $self->breeding_program( $self->breeding_program || $self->_get_ndgeolocationprop('breeding_program', 'project_property') );
-        $self->location_type( $self->location_type || $self->_get_ndgeolocationprop('location_type', 'geolocation_property') );
     }
 
     return $self;
@@ -123,6 +115,7 @@ sub store_location {
     my $country_name = $self->country_name();
     my $country_code = $self->country_code();
     my $breeding_program = $self->breeding_program();
+    my $breeding_program_id;
     my $location_type = $self->location_type();
     my $latitude = $self->latitude();
     my $longitude = $self->longitude();
@@ -137,20 +130,22 @@ sub store_location {
         return { error => "The location - $name - already exists. Please choose another name, or use the existing location" };
     }
 
-    if ($abbreviation && !$self->_is_valid_abbreviation($abbreviation)) {
+    if (!$nd_geolocation_id && $abbreviation && !$self->_is_valid_abbreviation($abbreviation)) {
        return { error => "Abbreviation $abbreviation already exists in the database. Please choose another abbreviation" };
     }
 
     if ($country_name && $country_name =~ m/[0-9]/) {
        return { error => "Country name $country_name is not a valid ISO standard country name." };
     }
-
-    if ($country_code && ($country_code !~ m/^[^a-z]*$/) || (length($country_code) != 3 )) {
+    
+    if ($country_code && (($country_code !~ m/^[^a-z]*$/) || (length($country_code) != 3 ))) {
        return { error => "Country code $country_code is not a valid ISO Alpha-3 code." };
     }
 
     if ($breeding_program && !$self->_is_valid_program($breeding_program)) { # can't use a breeding program that doesn't exist
 	    return { error => "Breeding program $breeding_program doesn't exist in the database." };
+    } elsif ($breeding_program) {
+        $breeding_program_id = $self->bcs_schema->resultset("Project::Project")->search({ name => $breeding_program })->first->project_id();
     }
 
     if ($location_type && !$self->_is_valid_type($location_type)) {
@@ -195,9 +190,8 @@ sub store_location {
             if ($country_code){
                 $self->_store_ndgeolocationprop('country_code', 'geolocation_property', $country_code);
             }
-            if ($breeding_program){
-                my $id = $self->bcs_schema->resultset("Project::Project")->search({ name => $breeding_program })->first->project_id();
-                $self->_store_ndgeolocationprop('breeding_program', 'project_property', $id);
+            if ($breeding_program_id){
+                $self->_store_ndgeolocationprop('breeding_program', 'project_property', $breeding_program_id);
             }
             if ($location_type){
                 $self->_store_ndgeolocationprop('location_type', 'geolocation_property', $location_type);
@@ -226,23 +220,11 @@ sub store_location {
             $row->longitude($longitude);
             $row->altitude($altitude);
             $row->update();
-
-            if ($abbreviation){
-                $self->_store_ndgeolocationprop('abbreviation', 'geolocation_property', $abbreviation);
-            }
-            if ($country_name){
-                $self->_store_ndgeolocationprop('country_name', 'geolocation_property', $country_name);
-            }
-            if ($country_code){
-                $self->_store_ndgeolocationprop('country_code', 'geolocation_property', $country_code);
-            }
-            if ($breeding_program){
-                my $id = $self->bcs_schema->resultset("Project::Project")->search({ name => $breeding_program })->first->project_id();
-                $self->_store_ndgeolocationprop('breeding_program', 'project_property', $id);
-            }
-            if ($location_type){
-                $self->_store_ndgeolocationprop('location_type', 'geolocation_property', $location_type);
-            }
+            $self->_update_ndgeolocationprop('abbreviation', 'geolocation_property', $abbreviation);
+            $self->_update_ndgeolocationprop('country_name', 'geolocation_property', $country_name);
+            $self->_update_ndgeolocationprop('country_code', 'geolocation_property', $country_code);
+            $self->_update_ndgeolocationprop('location_type', 'geolocation_property', $location_type);
+            $self->_update_ndgeolocationprop('breeding_program', 'project_property', $breeding_program_id);
         }
         catch {
             $error =  $_;
@@ -291,6 +273,20 @@ sub _get_ndgeolocationprop {
     }
     my $res = join ',', @results;
     return $res;
+}
+
+sub _update_ndgeolocationprop {
+    my $self = shift;
+    my $type = shift;
+    my $cv = shift;
+    my $value = shift;
+    my $existing_prop = $self->_get_ndgeolocationprop($type, $cv);
+
+    if ($value) {
+        $self->_store_ndgeolocationprop($type, $cv, $value);
+    } elsif ($existing_prop) {
+        $self->_remove_ndgeolocationprop($type, $cv, $existing_prop);
+    }
 }
 
 sub _store_ndgeolocationprop {

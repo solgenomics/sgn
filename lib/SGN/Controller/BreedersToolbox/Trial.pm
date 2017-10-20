@@ -11,6 +11,10 @@ use CXGN::Trial::TrialLayout;
 use CXGN::BreedersToolbox::Projects;
 use SGN::View::Trial qw/design_layout_view design_info_view trial_detail_design_view/;
 use CXGN::Trial::Download;
+use CXGN::List::Transform;
+use CXGN::List::Validate;
+use CXGN::List;
+use JSON;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
@@ -73,6 +77,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     my $trial_type_data = $trial->get_project_type();
     $c->stash->{trial_type} = $trial_type_data->[1];
+    $c->stash->{trial_type_id} = $trial_type_data->[0];
 
     $c->stash->{planting_date} = $trial->get_planting_date();
 
@@ -171,12 +176,12 @@ sub trial_tree : Path('/breeders/trialtree') Args(0) {
 }
 
 #For downloading trial layout in CSV and Excel, for downloading trial phenotypes in CSV and Excel, and for downloading trial phenotyping spreadsheets in Excel.
-#For phenotype download, better to use SGN::Controller::BreedersToolbox::Download->download_phenotypes_action and provide a single trial_id in the trial_list argument. This is how the phenotype download works from the wizard page, the trial tree page, and the trial detail page for phenotype download.
+#For phenotype download, better to use SGN::Controller::BreedersToolbox::Download->download_phenotypes_action and provide a single trial_id in the trial_list argument, as that is how the phenotype download works from the wizard page, the trial tree page, and the trial detail page for phenotype download.
 sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $self = shift;
     my $c = shift;
     my $what = shift;
-
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $user = $c->user();
     if (!$user) {
@@ -206,7 +211,30 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         }
     }
 
+    my $selected_cols = $c->req->param('selected_columns') ? decode_json $c->req->param('selected_columns') : {};
+    my $selected_trait_list_id = $c->req->param('trait_list_id');
+    my @selected_trait_names;
     my @trait_list;
+    if ($selected_trait_list_id){
+        my $list = CXGN::List->new({ dbh => $c->dbc->dbh, list_id => $selected_trait_list_id });
+        @selected_trait_names = @{$list->elements()};
+        my $validator = CXGN::List::Validate->new();
+        my @absent_traits = @{$validator->validate($schema, 'traits', \@selected_trait_names)->{'missing'}};
+        if (scalar(@absent_traits)>0){
+            $c->stash->{template} = 'generic_message.mas';
+            $c->stash->{message} = "Trait list is not valid because of these terms: ".join ',',@absent_traits;
+            return;
+        }
+        my $lt = CXGN::List::Transform->new();
+        @trait_list = @{$lt->transform($schema, "traits_2_trait_ids", \@selected_trait_names)->{transform}};
+    }
+
+    my @treatment_project_ids;
+    my $treatments = $trial->get_treatments();
+    foreach (@$treatments){
+        push @treatment_project_ids, $_->[0];
+    }
+
     if ($trait_list && $trait_list ne 'null') {
         @trait_list = @{_parse_list_from_json($trait_list)};
     }
@@ -228,7 +256,6 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         $plugin = "BasicExcel";
     }
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial_name = $trial->get_name();
     my $trial_id = $trial->get_trial_id();
     my $dir = $c->tempfiles_subdir('download');
@@ -240,7 +267,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     print STDERR "TEMPFILE : $tempfile\n";
 
     my $download = CXGN::Trial::Download->new({
-        bcs_schema => $c->stash->{schema},
+        bcs_schema => $schema,
         trial_id => $c->stash->{trial_id},
         trait_list => \@trait_list,
         filename => $tempfile,
@@ -248,6 +275,9 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         data_level => $data_level,
         search_type => $search_type,
         include_timestamp => $timestamp_option,
+        treatment_project_ids => \@treatment_project_ids,
+        selected_columns => $selected_cols,
+        selected_trait_names => \@selected_trait_names,
     });
 
     my $error = $download->download();

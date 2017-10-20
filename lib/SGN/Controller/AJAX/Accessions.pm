@@ -320,12 +320,12 @@ sub add_accession_list_POST : Args(0) {
     return;
 }
 sub possible_seedlots : Path('/ajax/accessions/possible_seedlots') : ActionClass('REST') { }
-sub possible_seedlots_GET : Args(0) {
+sub possible_seedlots_POST : Args(0) {
   my ($self, $c) = @_;
   my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
   
-  my $names = $c->req->params()->{'name'};
-  
+  my $names = $c->req->body_data->{'names'};
+    
   my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $schema);
   my $accession_manager = CXGN::BreedersToolbox::Accessions->new(schema=>$schema);
   

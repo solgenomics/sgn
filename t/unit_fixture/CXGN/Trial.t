@@ -284,18 +284,23 @@ foreach (@project_types) {
     push @all_project_types, $_->[1];
 }
 @all_project_types = sort @all_project_types;
-#print STDERR Dumper \@all_project_types;
+print STDERR Dumper \@all_project_types;
 is_deeply(\@all_project_types, [
           'Advanced Yield Trial',
           'Clonal Evaluation',
-          'Genetic Gain',
-          'Health Status',
-          'Heterosis',
           'Preliminary Yield Trial',
           'Seedling Nursery',
-          'Storage',
           'Uniform Yield Trial',
-          'Variety Release Trial'
+          'Variety Release Trial',
+          'crossing_trial',
+          'genetic_gain_trial',
+          'genotyping_trial',
+          'grafting_trial',
+          'health_status_trial',
+          'heterosis_trial',
+          'phenotyping_trial',
+          'pollinating_trial',
+          'storage_trial'
         ], "check get_all_project_types");
 
 

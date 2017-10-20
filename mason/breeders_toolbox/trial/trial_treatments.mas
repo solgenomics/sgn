@@ -58,7 +58,7 @@ jQuery(document).ready(function () {
 
                 var html = "";
                 if(treatment_unit == 'plot'){
-                    html += "<table class='table table-hover'><thead><tr><th>plot_name</th><th>accession</th><th>plot_number</th><th>block_number</th><th>rep_number</th><th>is_a_control</th><th>row_number</th><th>col_number</th><th class='table-success'>"+treatment_name+"</th></tr></thead><tbody>";
+                    html += "<table class='table table-hover'><thead><tr><th>plot_name</th><th>accession</th><th>plot_number</th><th>block_number</th><th>rep_number</th><th>is_a_control</th><th>row_number</th><th>col_number</th><th class='table-success'>"+treatment_name+" [Select all <input type='checkbox' name='add_trial_treatment_select_all' />]</th></tr></thead><tbody>";
                     for (var key in design_hash){
                         var plot_obj = design_hash[key];
                         html += "<tr><td><a href='/stock/"+plot_obj.plot_id+"/view'>"+plot_obj.plot_name+"</a></td><td><a href='/stock/"+plot_obj.accession_id+"/view'>"+plot_obj.accession_name+"</a></td><td>"+plot_obj.plot_number+"</td><td>"+plot_obj.block_number+"</td><td>"+plot_obj.rep_number+"</td><td>"+plot_obj.is_a_control+"</td><td>"+plot_obj.row_number+"</td><td>"+plot_obj.col_number+"</td><td><input data-plot_name='"+plot_obj.plot_name+"' data-trial_treatment='"+treatment_name+"' data-plant_names='"+JSON.stringify(plot_obj.plant_names)+"' type='checkbox' name='add_trial_treatment_input'/></td></tr>";
@@ -76,6 +76,18 @@ jQuery(document).ready(function () {
             }
         });
 
+    });
+
+    jQuery(document).on('change', 'input[name="add_trial_treatment_select_all"]', function(){
+        if(jQuery(this).is(":checked")){
+            jQuery('input[name="add_trial_treatment_input"]').each(function(){
+                jQuery(this).prop("checked", true);
+            });
+        } else {
+            jQuery('input[name="add_trial_treatment_input"]').each(function(){
+                jQuery(this).prop("checked", false);
+            });
+        }
     });
 
     jQuery('#new_trial_add_treatments_submit').click(function(){
