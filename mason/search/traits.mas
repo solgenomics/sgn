@@ -56,7 +56,7 @@ jQuery(document).ready(function () {
      trait_table.rows().deselect();
      return false;
    });
-   trait_table.on( 'select', function () {
+   var selection_changed = function () {
      var selected_rows = trait_table.rows({'selected':true});
      jQuery("#trait_result_count").text(selected_rows.count());
      var name_links = selected_rows.data().map(function(row){
@@ -72,8 +72,9 @@ jQuery(document).ready(function () {
      addToListMenu('traits_to_list_menu', 'trait_result_names', {
        listType: 'traits'
      });
-
-   });
+   };
+   trait_table.on( 'deselect', selection_changed);
+   trait_table.on( 'select', selection_changed);
 
 });
 
