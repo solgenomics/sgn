@@ -478,17 +478,18 @@ jQuery(document).ready(function ($) {
       var name = jQuery('#new_multi_trial_name').val();
       var year = jQuery('#add_multi_project_year').val();
       var desc = jQuery('#add_multi_project_description').val();
-      var trial_location = jQuery('#add_multi_project_location').val();
       //var block_number = jQuery('#block_number_multi').val();
       var stock_list_id = jQuery('#select_list_multi_list_select').val();
       var control_list_id = jQuery('#list_of_checks_section_multi_list_select').val();
-      var location_list_id = jQuery('#select_list_locations_multi_list_select').val();
+      var num_plants_per_plot = 0;
+      var num_subplots_per_plot = 0;
 
-      var location_list;
+      var locations;
+      var location_list_id = jQuery('#select_list_locations_multi_list_select').val();
       if (location_list_id != "") {
-          location_list = JSON.stringify(list.getList(location_list_id));
+          locations = JSON.stringify(list.getList(location_list_id));
       } else {
-          location_list = JSON.stringify(trial_location);
+          locations = JSON.stringify(jQuery('#add_multi_project_location').val());
       }
 
       var design_type = jQuery('#select_multi-design_method').val();
@@ -534,11 +535,13 @@ jQuery(document).ready(function ($) {
               'use_same_layout': use_same_layout,
               'year': year,
               'trial_type': trial_type,
-              'trial_location': location_list,
+              'locations': locations,
               'design_type': design_type,
               'design_json': design_json,
               'breeding_program_name': breeding_program_name,
               'greenhouse_num_plants': JSON.stringify(greenhouse_num_plants),
+              'has_plant_entries': num_plants_per_plot,
+              'has_subplot_entries': num_subplots_per_plot,
           },
           success: function (response) {
               if (response.error) {
