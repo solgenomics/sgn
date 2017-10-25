@@ -22,11 +22,12 @@
     var d3 = global.d3v4;
     var ex = {};
     ex.build_table = function(accession_names){
-      var callURL = '/ajax/accessions/possible_seedlots';
-      callURL+= "?name="+accession_names.join("&name=");
       jQuery('#working_modal').modal('show');
       jQuery.ajax({
-        url: callURL,
+        type: 'POST',
+        url: '/ajax/accessions/possible_seedlots',
+        data: {'names': accession_names},
+        dataType: "json",
         success: function(response) {
           _build_table(accession_names,response.seedlots,response.synonyms);
           jQuery('#working_modal').modal('hide');

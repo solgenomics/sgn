@@ -1083,6 +1083,12 @@ sub _delete_field_layout_experiment {
 		$has_plants_prop->delete();
 	}
 
+    my $trial_layout_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'trial_layout_json', 'project_property')->cvterm_id();
+    my $has_cached_layout_prop = $self->bcs_schema->resultset("Project::Projectprop")->find({ type_id => $trial_layout_json_cvterm_id, project_id => $trial_id });
+    if ($has_cached_layout_prop){
+        $has_cached_layout_prop->delete();
+    }
+
     $q = "SELECT nd_experiment_id FROM nd_experiment JOIN nd_experiment_project USING(nd_experiment_id) WHERE nd_experiment.type_id in (?,?) AND project_id=?";
     $h = $self->bcs_schema->storage()->dbh()->prepare($q);
     $h->execute($field_layout_type_id, $genotyping_layout_type_id, $trial_id);
@@ -1602,6 +1608,8 @@ sub create_plant_entities {
                 }
 			}
 		}
+
+        $layout->generate_and_cache_layout();
 	};
 
      eval {

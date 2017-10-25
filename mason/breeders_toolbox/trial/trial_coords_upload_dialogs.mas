@@ -1,0 +1,136 @@
+<%args>
+$trial_id
+$trial_name
+</%args>
+
+<div class="modal fade" id="upload_trial_coord_dialog" name="upload_trial_coord_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialCoordDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadTrialCoordDialog">Upload Coordinates to <% $trial_name %></h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /page/explanation.mas, title=>'Template information' &>
+                <p>
+                    <b>File format information</b>
+                    <br>
+                    <a id="trial_coordinates_upload_spreadsheet_format_info">Spreadsheet format</a>
+                </p>
+            </&>
+
+            <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_coordinates_form" name="upload_trial_coordinates_form">
+                <label for="trial_coordinates_uploaded_file" style="display: inline-block; width: 100px;">Upload trial coordinates file:</label>
+                <input type="file" name="trial_coordinates_uploaded_file" id="trial_coordinates_uploaded_file" encoding="multipart/form-data" />
+                <input type="hidden" name="trial_coordinates_upload_trial_id" id="trial_coordinates_upload_trial_id" value="<% $trial_id %>" />
+            </form>
+         
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="upload_trial_coords_cancel_button" id="upload_trial_coords_cancel_button" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" name="upload_trial_coords_ok_button" id="upload_trial_coords_ok_button" title="Submit">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="upload_trial_coord_error_display" name="upload_trial_coord_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadTrialCoordErrorDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadTrialCoordErrorDialog">Upload Coordinates Error</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <table>
+              <tbody></tbody>
+            </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="upload_trial_coord_error_display_cancel" id="upload_trial_coords_cancel_button" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="trial_coord_upload_success_dialog_message" name="trial_coord_upload_success_dialog_message" tabindex="-1" role="dialog" aria-labelledby="uploadTrialCoordSuccessDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadTrialCoordSuccessDialog">Upload Coordinates Uploaded Sucessfully</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <h3>The trial coord upload finished with no errors.</h3>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="trial_coord_upload_success_dialog_message_cancel" id="trial_coord_upload_success_dialog_message_cancel" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="trial_coord_upload_spreadsheet_info_dialog" name="trial_coord_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialCoordHelpDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadTrialCoordHelpDialog">Upload Coordinates Help</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+<b>
+trial coordinates may be uploaded in tab-delimited text file format
+</b>
+<br>
+(.xls or .xlsx formats are NOT supported)
+<br><br>
+<b>
+  Header:
+</b>
+<br>
+The first row (header) should contain the following:
+<br>
+
+<table class="table table-bordered" cellspacing="1" cellpadding="2" border="1">
+  <tr>
+    <td>plot_name</td>
+    <td>row_number</td>
+    <td>col_number</td>
+  </tr>
+</table>
+
+<br>
+
+<h4>Required fields:</h4>
+<ul>
+<li>plot_name (must exist in the database for this trial)</li>
+<li>row_number (needed for the display of physical layout)</li>
+<li>col_number (needed for the display of physical layout)</li>
+</ul>
+
+
+<h4>Notes</h4>
+<ul>
+<li>Field plots will be displayed in the physical trial layout based on the coordinates you provided in the row and column number.</li>
+<li>Physical trial layout will capture serpentine, zigzag and any other planting format use.</li>
+</ul>
+
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" name="trial_coord_upload_spreadsheet_info_dialog_close" id="trial_coord_upload_spreadsheet_info_dialog_close" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

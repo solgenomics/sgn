@@ -102,7 +102,7 @@ sub validate_design {
 		$error .= "The design_type 'genotyping_plate' requires is_genotyping to be true";
 		return $error;
 	}
-	if ($design_type ne 'genotyping_plate' && $design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type && 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'p-rep' && $design_type ne 'splitplot'){
+	if ($design_type ne 'genotyping_plate' && $design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type ne 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'p-rep' && $design_type ne 'splitplot'){
 		$error .= "Design $design_type type must be either: genotyping_plate, CRD, Alpha, Augmented, RCBD, p-rep, or splitplot";
 		return $error;
 	}
@@ -652,6 +652,7 @@ sub store {
 			}
 		}
 
+        print STDERR "Design Stored ".localtime."\n";
 	};
 
 	my $transaction_error;

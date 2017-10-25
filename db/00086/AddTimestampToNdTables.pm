@@ -111,6 +111,26 @@ EOSQL
         print STDOUT "nd_protocol already had create_date\n";
     };
 
+    try {
+        $self->dbh->do(<<EOSQL);
+ALTER TABLE stock_relationship ADD COLUMN create_date TIMESTAMP;
+ALTER TABLE stock_relationship ALTER COLUMN create_date SET DEFAULT now();
+EOSQL
+    }
+    catch {
+        print STDOUT "stock_relationship already had create_date\n";
+    };
+
+    try {
+        $self->dbh->do(<<EOSQL);
+ALTER TABLE project_relationship ADD COLUMN create_date TIMESTAMP;
+ALTER TABLE project_relationship ALTER COLUMN create_date SET DEFAULT now();
+EOSQL
+    }
+    catch {
+        print STDOUT "project_relationship already had create_date\n";
+    };
+
 print "You're done!\n";
 }
 

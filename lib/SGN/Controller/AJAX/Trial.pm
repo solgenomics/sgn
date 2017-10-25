@@ -440,7 +440,7 @@ sub save_experimental_design_POST : Args(0) {
   my @locations;
   my $trial_location;
   my $multi_location;
-  my $trial_locations = $c->req->param('trial_location');
+  my $trial_locations = $c->req->param('locations');
   my $trial_name = $c->req->param('project_name');
   my $trial_type = $c->req->param('trial_type');
   my $breeding_program = $c->req->param('breeding_program_name');
@@ -538,11 +538,10 @@ sub save_experimental_design_POST : Args(0) {
     			});
           $folder1->associate_parent($folder_id);
         }
-
-        $c->stash->{rest} = {success => "1",};
-        return;
     }
 }
+$c->stash->{rest} = {success => "1",};
+return;
 }
 
 
@@ -749,27 +748,37 @@ sub upload_trial_file_POST : Args(0) {
 
   #print STDERR Dumper $parsed_data;
 
-  my $trial_create = CXGN::Trial::TrialCreate
-    ->new({
-	   chado_schema => $chado_schema,
-	   dbh => $dbh,
-	   trial_year => $trial_year,
-	   trial_description => $trial_description,
-	   trial_location => $trial_location,
-	   trial_type => $trial_type,
-	   trial_name => $trial_name,
-	   user_name => $user_name, #not implemented
-	   design_type => $trial_design_method,
-	   design => $parsed_data,
-	   program => $program,
-	   upload_trial_file => $upload,
-       operator => $c->user()->get_object()->get_username()
-	  });
 
     my $save;
-    try {
+    my $coderef = sub {
+
+        my $trial_create = CXGN::Trial::TrialCreate->new({
+            chado_schema => $chado_schema,
+            dbh => $dbh,
+            trial_year => $trial_year,
+            trial_description => $trial_description,
+            trial_location => $trial_location,
+            trial_type => $trial_type,
+            trial_name => $trial_name,
+            user_name => $user_name, #not implemented
+            design_type => $trial_design_method,
+            design => $parsed_data,
+            program => $program,
+            upload_trial_file => $upload,
+            operator => $c->user()->get_object()->get_username()
+        });
         $save = $trial_create->save_trial();
+
+        if ($save->{error}){
+            $chado_schema->txn_rollback();
+        }
+
+    };
+
+    try {
+        $chado_schema->txn_do($coderef);
     } catch {
+        print STDERR "Transaction Error: $_\n";
         $save->{'error'} = $_;
     };
 
