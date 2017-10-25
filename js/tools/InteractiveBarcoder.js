@@ -1,8 +1,16 @@
 
 var barcode_types = [
-  {name:"Large QR Code (2D)",width:180,height:180,code:"BQ",size:",7"},
-  {name:"Medium QR Code (2D)",width:154,height:154,code:"BQ",size:",6"},
-  {name:"Small QR Code (2D)",width:128,height:128,code:"BQ",size:",5"},
+    { name:"Code 128 (1D) Size 1", type: "128", size: "1"},
+    { name:"Code 128 (1D) Size 2", type: "128", size: "2"},
+    { name:"Code 128 (1D) Size 3", type: "128", size: "3"},
+    { name:"Code 128 (1D) Size 4", type: "128", size: "4"},
+    { name:"QR Code (2D) Size 4", type: "QR", size: "4"},
+    { name:"QR Code (2D) Size 5", type: "QR", size: "5"},
+    { name:"QR Code (2D) Size 6", type: "QR", size: "6"},
+    { name:"QR Code (2D) Size 7", type: "QR", size: "7"},
+    { name:"QR Code (2D) Size 8", type: "QR", size: "8"},
+    { name:"QR Code (2D) Size 9", type: "QR", size: "9"},
+    { name:"QR Code (2D) Size 10", type: "QR", size: "10"}
 ];
 
 var label_sizes = [
@@ -13,16 +21,17 @@ var label_sizes = [
 ];
 
 var text_placeholders = [
-{key:"{$ACCESSION_NAME}", name:"Accession Name"},
-{key:"{$PLOT_NAME}",   name:"Plot Name"},
-{key:"{$PLOT_NUMBER}",     name:"Plot Number"},
-{key:"{$REP_NUMBER}", name:"Rep Number"},
-{key:"{$ROW_NUMBER}", name:"Row Number"},
-{key:"{$COL_NUMBER}", name:"Col Number"},
-{key:"{$TRIAL_NAME}", name:"Trial Name"},
-{key:"{$YEAR}", name:"Year"},
-{key:"{$PEDIGREE}", name:"Pedigree"}
-]
+    { value: "", name: "Custom" },
+    { value: "{$Accession}", name: "Accession" },
+    { value: "{$Plot Name}", name: "Plot Name" },
+    { value: "{$Plot #}", name: "Plot #" },
+    { value: "{$Rep #}", name: "Rep #" },
+    { value: "{$Row #}", name: "Row #" },
+    { value: "{$Col #}", name: "Col #" },
+    { value: "{$Trial Name}", name: "Trial Name" },
+    { value: "{$Year}", name: "Year" },
+    { value: "{$Pedigree String}", name: "Pedigree String" },
+];
 
 //set up drag behaviour
 var drag_behaviour = d3.behavior.drag().on(
@@ -442,7 +451,7 @@ function addBarcode (_x, _y, barcode, barcodeType) {
        .attr('y',0)
     //    .attr('width', _x.invert(100))
     //    .attr('height', _x.invert(100))
-       .attr("xlink:href","/barcode/preview?content="+barcode+"&type="+barcodeType)
+       .attr("xlink:href","/barcode/preview?content="+encodeURIComponent(barcode)+"&type="+encodeURIComponent(barcodeType))
        .attr("class","label_element");
     // .attr({
     //   x:0,

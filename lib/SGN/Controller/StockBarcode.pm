@@ -12,8 +12,8 @@ use SGN::Model::Cvterm;
 use Text::Template;
 use Try::Tiny;
 use Barcode::Code128;
-use GD::Barcode::QRcode;
 use CXGN::QRcode;
+use URI::Encode qw(uri_encode uri_decode);
 
 BEGIN { extends "Catalyst::Controller"; }
 
@@ -22,8 +22,9 @@ use CXGN::ZPL;
 sub barcode_preview :Path('/barcode/preview') {
     my $self = shift;
     my $c = shift;
-    my $content = $c->req->param("content") || "Test text long";
-    my $type = $c->req->param("type") || '128-2';
+    my $uri     = URI::Encode->new( { encode_reserved => 0 } );
+    my $content =  $uri->decode($c->req->param("content"));
+    my $type = $uri->decode($c->req->param("type"));
     print STDERR "Content is $content and type is $type\n";
 
     our($style,$size) = split '-', $type;
@@ -35,6 +36,8 @@ sub barcode_preview :Path('/barcode/preview') {
     
         my $barcode_object = Barcode::Code128->new();
         $barcode_object->option("scale", $size);
+        $barcode_object->option("font_align", "center");
+        $barcode_object->option("padding", 5);
         $barcode_object->barcode($content);
         my $barcode = $barcode_object->gd_image();
         

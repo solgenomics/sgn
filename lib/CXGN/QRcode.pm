@@ -13,9 +13,9 @@ sub get_barcode_file {
 
   my $qrcode = Imager::QRCode->new(
         size          => $size,
-        margin        => 5,
-        version       => 1,
-        level         => 'M',
+        margin        => 2,
+        version       => 0,
+        level         => 'L',
         casesensitive => 1,
         lightcolor    => Imager::Color->new(255, 255, 255),
         darkcolor     => Imager::Color->new(0, 0, 0),
