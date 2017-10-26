@@ -768,6 +768,10 @@ jQuery(document).ready(function($) {
         maternal_parent = $('#selfed_parent').val();
       }
 
+      if ($('#open_maternal_parent').val() != ''){
+        maternal_parent = $('#open_maternal_parent').val();
+      }
+
       console.log(maternal_parent);
 
       jQuery.ajax({
@@ -807,6 +811,7 @@ jQuery(document).ready(function($) {
         paternal_parent = $('#selfed_parent').val();
       }
 
+
       jQuery.ajax({
         url:'/ajax/breeders/get_accession_plots',
         data:{'field_trial':$('#field_trial').val(),
@@ -829,12 +834,8 @@ jQuery(document).ready(function($) {
          jQuery('#male_plot').html(html);
 
          },
-         error:function(response){
-         alert("An error occurred getting male plots.");
-                }
-              });
-       });
-
+      });
+    });
 });
 
 </script>
