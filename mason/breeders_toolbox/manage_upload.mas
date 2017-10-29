@@ -1,0 +1,66 @@
+<%args>
+$locations
+$breeding_programs
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.AddMultipleTrial','CXGN.BreedersToolbox.GenotypingTrial' ] &>
+
+<& /page/page_title.mas, title=>"Upload Data" &>
+
+<div class="container-fluid">
+
+<div class="well well-sm">
+<h4>Request A New Trait</h4>
+<a href="http://submit.rtbbase.org"><p>Go To Request Form</p></a>
+</div>
+
+<div class="well well-sm">
+<h4>Add Field Trial</h4>
+<a id="upload_trial_link"><p>Upload Existing Trial</p></a>
+<a id="add_project_link"><p>Design New Trial</p></a>
+<a id="add_multiloc_project_link"><p>Design New Multi-location Trial</p></a>
+</div>
+<& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => $locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => $locations, breeding_programs => $breeding_programs &>
+<& /breeders_toolbox/trial/trial_create_multiloc_dialogs.mas, locations => $locations, breeding_programs => $breeding_programs &>
+
+<div class="well well-sm">
+<h4>Add Genotyping Trial</h4>
+<a id="create_igd_genotyping_trial_link"><p>Create IGD Genotyping Trial</p></a>
+</div>
+<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas &>
+
+<div class="well well-sm">
+<h4>Upload Locations</h4>
+<a id="upload_locations_link"><p>Upload New Locations</p></a>
+</div>
+<& /breeders_toolbox/upload_locations_dialogs.mas &>
+
+
+<div class="well well-sm">
+<h4>Add Accessions</h4>
+
+</div>
+
+<div class="well well-sm">
+<h4>Upload Seedlots</h4>
+
+</div>
+
+<div class="well well-sm">
+<h4>Upload Pedigrees</h4>
+
+</div>
+
+<div class="well well-sm">
+<h4>Upload Crosses</h4>
+
+</div>
+
+<div class="well well-sm">
+<h4>Upload Phenotypes</h4>
+
+</div>
+
+
+</div>
