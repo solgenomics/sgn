@@ -1,0 +1,213 @@
+<%args>
+@programs => ()
+@locations => ()
+</%args>
+
+<div class="modal fade" id="upload_crosses_dialog" name="upload_crosses_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadCrossesDialog">Upload Crosses</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <&| /page/explanation.mas, title=>'Template Information' &>
+    	    <p>
+      	    <b>File Format Information</b>
+      	    <br>
+      	    <a id="cross_upload_spreadsheet_format_info">Spreadsheet Format</a>
+      	    <br>
+      	    <a id="cross_upload_barcode_format_info" style = "display: none">Barcode format (Not currently supported)</a>
+    	    </p>
+  	  </&>
+	  <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_crosses_form" name="upload_crosses_form">
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Breeding Program: </label>
+      	      <div class="col-sm-10">
+	        <select class="form-control" id="cross_upload_breeding_program" name="cross_upload_breeding_program">
+      		<%perl>
+        	  foreach my $program (@programs) {
+        	    print "<option value=".@$program[0].">".@$program[1]."</option>";
+        	  }
+      		</%perl>
+    		</select>
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Location: </label>
+      	      <div class="col-sm-10">
+	        <select class="form-control" id="cross_upload_location" name="cross_upload_location">
+      		<%perl>
+		  foreach my $location (@locations) {
+		    print "<option value=".'"'.@$location[1].'"'.">".@$location[1]."</option>";
+		  }
+      		</%perl>
+    		</select>
+              </div>
+	    </div>
+      <div class="form-group">
+      	      <label class="col-sm-2 control-label">Upload File: </label>
+      	      <div class="col-sm-10">
+	        <input type="file" name="crosses_upload_file" id="crosses_upload_file" encoding="multipart/form-data" />
+              </div>
+	    </div>
+	    <hr>
+      <h3>Additional options:</h3>
+      <p>Group Crosses together in a new folder:</p>
+      <div class="form-group">
+            <label class="col-sm-2 control-label">Folder Name: </label>
+            <div class="col-sm-10">
+        <input class="form-control" type="text" id="upload_folder_name" name="upload_folder_name"/>
+            </div>
+      </div>
+      <p>Or add crosses to an existing folder:</p>
+      <div class="form-group">
+          <label class="col-sm-2 control-label">Folder: </label>
+          <div class="col-sm-10" >
+            <div id="cross_folder_select_div">
+              [Loading...]
+            </div>
+          </div>
+      </div>
+	    <p>Progeny naming: <i>If generating progeny, use cross name and:</i></p>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Prefix: </label>
+      	      <div class="col-sm-10">
+	        <input class="form-control" id="upload_prefix" name="upload_prefix" value="P" />
+              </div>
+	    </div>
+	    <div class="form-group">
+      	      <label class="col-sm-2 control-label">Suffix: </label>
+      	      <div class="col-sm-10">
+	        <input class="form-control" id="upload_suffix" name="upload_suffix" />
+              </div>
+	    </div>
+    	  </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	<button type="button" class="btn btn-primary" name="upload_crosses_submit" id="upload_crosses_submit">Upload File</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="upload_cross_error_display" name="upload_cross_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesErrorDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadCrossesErrorDialog">Upload Crosses File Error</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+	  <table>
+    	  <tbody></tbody>
+  	  </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="cross_upload_spreadsheet_info_dialog" name="cross_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadCrossesInfoDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="uploadCrossesInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <b>
+            Crosses may be uploaded in an Excel file (.xls)
+            </b>
+            <br>
+            (.xlsx format not supported)
+            <br><br>
+            <b>
+              Header:
+            </b>
+            <br>
+            The first row (header) must contain the following:
+            <br>
+
+            <table class="table table-bordered table-hover">
+              <tbody>
+              <tr>
+                <td>cross_name</td>
+                <td>cross_type</td>
+                <td>female_parent</td>
+                <td>male_parent</td>
+              </tr>
+              </tbody>
+            </table>
+
+            <b>
+              Required columns:
+            </b>
+            <br>
+            cross_name (must not conflict with an existing cross name)
+            <br>
+            cross_type (must be one of the following: biparental, self, open, bulk, bulk_self, bulk_open, or doubled_haploid)
+            <br>
+            female_parent (must exist in the database)
+            <br>
+            male_parent (required in the header, but value may be left blank for most cross types. Must be specified for biparental and bulk crosses. When specified, must exist in the database)
+            <br>
+            <br>
+
+            <b>
+              Optional columns (dates must be in the format YYYY-MM-DD):
+            </b>
+            <br>
+            number_of_flowers
+            <br>
+            date_of_pollination
+            <br>
+            date_of_harvest
+            <br>
+            number_of_seeds_harvested
+            <br>
+            days_to_maturity
+            <br>
+            date_of_seed_extraction
+            <br>
+            number_of_seeds_extracted
+            <br>
+            number_of_viable_seeds
+            <br>
+            number_of_nonviable_seeds
+            <br>
+            days_from_harvest_to_extraction
+            <br>
+            date_of_embryo_rescue
+            <br>
+            number_of_embryos_rescued
+            <br>
+            days_from_extraction_to_embryo_rescue
+            <br>
+            number_of_embryos_germinated
+            <br>
+            number_of_embryos_contaminated
+            <br>
+            number_of_seeds_planted
+            <br>
+            number_of_seeds_germinated
+            <br>
+            number_of_progeny
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
