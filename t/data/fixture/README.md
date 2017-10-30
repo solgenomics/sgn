@@ -7,7 +7,7 @@ Fixture patches should never be run on test or production databases, ONLY on fix
 Fixture patches should be written based on the same template as db patches, as available from sgn/db/template/.
 
 In order to play nicely with db patches, fixture patches should abide by the following directory structure:
-`sgn/t/data/fixture/patches/$LAST_DB_PATCH/$DDDDD/$PATCHNAME.pm` where `$LAST_DB_PATCH` is the name of the most recent db patch folder in `sgn/db/`, and `$DDDDD` is a sequential five-digit ID for your patch folder. For example if the last patch folder in sgn/db/ is 00085/ then your patch would be located at `sgn/t/data/fixture/patches/00085/00001/$PATCHNAME.pm`. It is important this is correct as both `update_fixture_dump.pl` and `sgn/t/test_fixture.pl` rely on this structure to determine in what order patches need to be applied.
+`sgn/t/data/fixture/patches/$LAST_DB_PATCH/$DDDDD/$PATCHNAME.pm` where `$LAST_DB_PATCH` is the name of the most recent db patch folder in `sgn/db/`, and `$DDDDD` is a sequential five-digit ID for your patch folder. For example if the last patch folder in sgn/db/ is 00085/ then your patch would be located at `sgn/t/data/fixture/patches/00085/00001/$PATCHNAME.pm`. It is important this is correct as `sgn/t/test_fixture.pl` and `sgn/t/data/fixture/patches/run_fixture_and_db_patches.pl` rely on this structure to determine in what order the db and fixture patches need to be applied.
 <!-- ********************************************* -->
 <!-- ********************************************* -->
 ## _**DO NOT REPLACE OR MODIFY THE FIXTURE SQL DUMP**_
