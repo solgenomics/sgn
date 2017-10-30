@@ -236,6 +236,7 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
     my $breeding_programs = $projects->get_breeding_programs();
     $c->stash->{locations} = $projects->get_all_locations();
     $c->stash->{breeding_programs} = $breeding_programs;
+    $c->stash->{timestamp} = localtime;
     $c->stash->{template} = '/breeders_toolbox/manage_upload.mas';
 }
 
