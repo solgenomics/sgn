@@ -5,7 +5,7 @@ $timestamp
 $preferred_species => ""
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.AddMultipleTrial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses' ] &>
+<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.AddMultipleTrial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial' ] &>
 
 <& /page/page_title.mas, title=>"Upload Data" &>
 
@@ -237,9 +237,36 @@ $preferred_species => ""
 <& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>$breeding_programs, locations=>$locations &>
 
 <div class="well well-sm">
-<h4>Upload Phenotypes</h4>
-
+<h1>Phenotypes</h1><br/>
+<table class="table table-bordered">
+<thead>
+<tr><th>Collection</th><th>Add</th><th>Manage</th><th>Search</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a name="create_fieldbook_link"><p>Create Fieldbook Layout File</p></a>
+<a id="create_new_trait_file_link"><p>Create Fieldbook Trait File</p></a>
+<a name="create_spreadsheet_link"><p>Create Phenotyping Spreadsheet</p></a>
+</td>
+<td>
+<a id="upload_fieldbook_phenotypes_link"><p>Upload Fieldbook Database File</p></a>
+<a id="upload_spreadsheet_phenotypes_link"><p>Upload Phenotyping Spreadsheet</p></a>
+</td>
+<td>
+<a href="/breeders/phenotyping"><p>Go To Manage Phenotypes Page</p></a>
+</td>
+<td>
+<a href="/breeders/search"><p>Go To Search Wizard</p></a>
+</td>
+</tr>
+</tbody>
+</table>
 </div>
-
+<& /fieldbook/create_fieldbook_dialog.mas &>
+<& /fieldbook/create_trait_file_dialog.mas &>
+<& /fieldbook/upload_phenotype_fieldbook.mas &>
+<& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
+<& /breeders_toolbox/trial/create_spreadsheet_dialog.mas &>
 
 </div>
