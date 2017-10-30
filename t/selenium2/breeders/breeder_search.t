@@ -121,6 +121,10 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->driver->accept_alert();
 
+    $t->driver->move_to( element => "paste_list_select");
+
+    sleep(1);
+
     $t->find_element_ok("paste_list_select", "id", "paste test acc list")->send_keys('test_list');
 
     sleep(2);
@@ -139,10 +143,17 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->driver->accept_alert();
 
+    $t->driver()->move_to( element => "paste_list_refresh");
+
+    sleep(1);
+
     my $refresh_lists = $t->find_element_ok("paste_list_refresh", "id", " refresh lists");
     sleep(1);
     $refresh_lists->click();
 
+    sleep(1);
+    
+    $t->driver()->move_to( element => "paste_list_select");
     sleep(1);
 
     $t->find_element_ok("paste_list_select", "id", "paste test acc list")->send_keys('acc_list');
