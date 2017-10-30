@@ -14,6 +14,7 @@ $list_id => undef
 <&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=>'[<a id="add_accessions_link">Add Accessions</a>] [<a id="upload_pedigrees_link">Upload Pedigree File</a>]' &>
 
 <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
+<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species &>
 
 <div>
   </br>
@@ -130,156 +131,6 @@ $list_id => undef
     </div>
 </div>
 
-<div class="modal fade" id="add_accessions_dialog" name="add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsDialog" data-backdrop="static" data-keyboard="false">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addAccessionsDialog">Add Accessions</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <form class="form-horizontal" role="form" name="new_accessions_form" id="new_accessions_form">
-	    <div class="form-group">
-      	      <label class="col-sm-6 control-label">Choose a List of Accessions to Add: </label>
-      	      <div class="col-sm-6" id="list_div" name="list_div">
-              </div>
-	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-6 control-label"></label>
-      	      <div class="col-sm-6">
-	        <button name="lists_link" class="btn btn-info btn-sm" style="margin:6px 0px 0px 0px" type="button" >Manage Lists</button>
-              </div>
-	    </div>
-	    <!--div class="form-group">
-      	      <label class="col-sm-6 control-label">Use Fuzzy Search: </label>
-      	      <div class="col-sm-6">
-	        <input type="checkbox" id="fuzzy_check" name="fuzzy_check"></input>
-		<br/>
-		<small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search.</small>
-              </div>
-	    </div-->
-        <input type="hidden" id="fuzzy_check" name="fuzzy_check" value="true" checked></input>
-	  </form>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="new_accessions_submit" id="new_accessions_submit">Continue</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="review_absent_dialog" name="review_absent_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewAbsentDialog" data-backdrop="static" data-keyboard="false">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content ui-front">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="reviewAbsentDialog">Accessions to be Added</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-    	  <label for="species_name_input">Species name for added accessions</label>
-  	  <input class="form-control" type="text" id="species_name_input" value="<% $preferred_species %>"></input>
-  	  <br><br>
-    	  <label for="population_name_input">Population name for added accessions (optional)</label>
-  	  <input class="form-control" type="text" id="population_name_input"></input>
-  	  <br><br>
-          <label for="organization_name_input">Organization name for added accessions (optional)</label>
-      <input class="form-control" type="text" id="organization_name_input"></input>
-      <br><br>
-  	  <b>The following accessions will be added to the database:</b>
-  	  <div id="count_of_absent_accessions"></div>
-  	  <br>
-  	  <div id="view_absent"></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	<button type="button" class="btn btn-primary" name="review_absent_accessions_submit" id="review_absent_accessions_submit">Add Accessions</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="review_fuzzy_matches_dialog" name="review_fuzzy_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFuzzyDialog" data-backdrop="static" data-keyboard="false">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="reviewFuzzyDialog">Fuzzy Matches</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-    	  <b>Accessions were found with similar names.</b>
-  	  <br/><br/>
-  	  <div id="view_fuzzy_matches"></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" name="review_fuzzy_matches_download" id="review_fuzzy_matches_download">Download Fuzzy Matches</button>
-        <button type="button" class="btn btn-primary" name="review_fuzzy_matches_continue" id="review_fuzzy_matches_continue" data-dismiss="modal">Make Changes and Continue</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="review_found_matches_dialog" name="review_found_matches_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewFoundDialog" data-backdrop="static" data-keyboard="false">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="reviewFoundDialog">Found Accessions</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-    	  <b>The following accessions already exist and cannot be added:</b>
-  	  <div id="count_of_found_accessions"></div>
-  	  <br/>
-  	  <div id="view_found_matches"></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" name="review_found_matches_hide" id="review_found_matches_hide" data-dismiss="modal">Continue</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!--
-<div id="review_fuzzy_matches_dialog" class="ui-widget" title="Fuzzy matches">
-  <b>Accessions were found with similar names.</b>
-  <br><br>
-  <div id="view_fuzzy_matches">
-  </div>
-</div>
--->
-
-<!--
-<div id="review_found_matches_dialog" class="ui-widget" title="Found accessions">
-  <b>The following accessions already exist and cannot be added:</b>
-  <div id="count_of_found_accessions"></div>
-  <br>
-  <div class="left"> <b>Searched name</b> </div>
-  <div class="right"> <b>Unique name for synonym</b> </div>
-  <div id="view_found_matches">
-  </div>
-</div>
--->
-
-<!--
-<div id="review_absent_dialog" class="ui-widget" title="Accessions to be added">
-  <label for="species_name_input">Species name for added accessions</label>
-  <input type="text" id="species_name_input"></input>
-  <br><br>
-  <b>The following accessions will be added to the database:</b>
-  <div id="count_of_absent_accessions"></div>
-  <br>
-  <div id="view_absent">
-  </div>
-</div>
--->
 
 <div class="modal fade" id="upload_pedigrees_validate_display" name="upload_pedigrees_validate_display" tabindex="-1" role="dialog" aria-labelledby="uploadPedigreesValidateDialog">
   <div class="modal-dialog" role="document">
@@ -355,26 +206,6 @@ $list_id => undef
   </div>
 </div>
 
-
-<div class="modal fade" id="add_accessions_saved_message_modal" name="add_accessions_saved_message_modal" tabindex="-1" role="dialog" aria-labelledby="addAccessionsSavedDialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addAccessionsSavedDialog">Accessions Saved</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <div id="add_accessions_saved_message"></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="close_add_accessions_saved_message_modal" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <style>
   div.left {
     float: left;
@@ -396,13 +227,9 @@ $list_id => undef
 </style>
 
 <script>
-
 jQuery(document).ready(function (){
-
 %  if ($list_id){
     verify_accession_list(<% $list_id %>);
 %  }
-
 });
-
 </script>
