@@ -138,6 +138,10 @@ $preferred_species => ""
     </div>
 </div>
 
+<form id="add_accession_fuzzy_match_download" method="post" action="/ajax/accession_list/fuzzy_download" target="TheWindow">
+    <input type="hidden" name="fuzzy_response" value="" />
+</form>
+
 <style>
 .ui-autocomplete {
   max-height: 100px;

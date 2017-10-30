@@ -5,7 +5,7 @@ $timestamp
 $preferred_species => ""
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.AddMultipleTrial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees' ] &>
+<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.AddMultipleTrial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses' ] &>
 
 <& /page/page_title.mas, title=>"Upload Data" &>
 
@@ -136,27 +136,105 @@ $preferred_species => ""
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species &>
 
 <div class="well well-sm">
-<h4>Add Accessions</h4>
-<a href="/breeders/accessions"><p>Please Use Manage Accessions Page</p></a>
+<h1>Populations</h1><br/>
+<table class="table table-bordered">
+<thead>
+<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a id="manage_accessions_populations_new"><p>Add New Population</p></a>
+</td>
+<td>
+<a href="/breeders/accessions"><p>Go To Manage Accessions Page</p></a>
+</td>
+<td>
+<a href="/search/stocks"><p>Go To Stock Search</p></a>
+</td>
+</tr>
+</tbody>
+</table>
 </div>
+<& /breeders_toolbox/manage_populations_dialogs.mas &>
+
 
 <div class="well well-sm">
-<h4>Upload Seedlots</h4>
+<h1>Seedlots</h1><br/>
+<table class="table table-bordered">
+<thead>
+<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>
 <a id="seedlot_bulk_upload"><p>Upload Many Seedlots</p></a>
 <a id="add_seedlot_button"><p>Add A Seedlot</p></a>
+</td>
+<td>
+<a href="/breeders/seedlots"><p>Go To Manage Seedlots Page</p></a>
+</td>
+<td>
+<a href="/breeders/seedlots"><p>Go To Manage Seedlots Page</p></a>
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 <& /breeders_toolbox/upload_seedlots_dialogs.mas &>
 <& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
 
 <div class="well well-sm">
-<h4>Upload Pedigrees</h4>
-
+<h1>Pedigrees</h1><br/>
+<table class="table table-bordered">
+<thead>
+<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a id="upload_pedigrees_link"><p>Upload Many Pedigrees</p></a>
+</td>
+<td>
+<a href="/breeders/accessions"><p>Go To Manage Accessions Page</p></a>
+</td>
+<td>
+<a href="/search/cross"><p>Go To Search Crosses</p></a>
+</td>
+</tr>
+</tbody>
+</table>
 </div>
+<& /breeders_toolbox/upload_pedigrees_dialogs.mas &>
 
 <div class="well well-sm">
-<h4>Upload Crosses</h4>
-
+<h1>Crosses</h1><br/>
+<table class="table table-bordered">
+<thead>
+<tr><th>Plan</th><th>Add</th><th>Manage</th><th>Search</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a id="create_cross_wishlist" >Create Cross Wishlist</a>
+</td>
+<td>
+<a id="upload_crosses_link"><p>Upload Many Crosses</p></a>
+<a id="create_cross_link"><p>Add A Cross</p></a>
+</td>
+<td>
+<a href="/breeders/crosses"><p>Go To Manage Crosses Page</p></a>
+</td>
+<td>
+<a href="/search/cross"><p>Go To Search Crosses</p></a>
+</td>
+</tr>
+</tbody>
+</table>
 </div>
+<& /breeders_toolbox/cross_wishlist.mas &>
+<& /breeders_toolbox/add_cross_dialogs.mas, programs=>$breeding_programs, locations=>$locations &>
+<& /breeders_toolbox/upload_crosses_dialogs.mas, programs=>$breeding_programs, locations=>$locations &>
 
 <div class="well well-sm">
 <h4>Upload Phenotypes</h4>
