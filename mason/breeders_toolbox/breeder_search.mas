@@ -1,6 +1,6 @@
 
 <%args>
-
+$dataset_id => undef;
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.cookie', 'CXGN.BreederSearch', 'CXGN.List', 'CXGN.BreedersToolbox.HTMLSelect' ] &>
@@ -12,7 +12,9 @@
   <div class="form-group" id="paste_list"></div>
   <p style="margin: 0; padding: 0;" align="center"><i>or</i></p>
 </td>
-<td id ="list_message">
+<td style="white-space:nowrap;">
+  <div class="form-group" id="paste_dataset"></div>
+  <p style="margin: 0; padding: 0;" align="center"><i>or</i></p>
 </td>
 <td></td>
 <td id="wizard_refresh"></td>
@@ -112,6 +114,7 @@ jQuery(document).ready(function() {
 
     if (!isLoggedIn()) {
       create_list_start('Login to start from a list');
+      create_dataset_start('Login to start from a dataset');
       var login_message = '<div class="well well-sm">Login to use lists</div>';
 
       jQuery('#c1_to_list_menu').html(login_message);
@@ -121,7 +124,9 @@ jQuery(document).ready(function() {
 
     } else {
       create_list_start('Start from a list');
+      create_dataset_start('Start from a dataset');
       add_data_refresh();
+      //replay_dataset_info('<% $dataset_id %>');
     }
     addToggleIds();
 });
