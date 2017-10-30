@@ -1,9 +1,8 @@
-# Say Hello to the Fixtures's New Home!
+# Say Hello to the Fixture's New Home!
 In order to keep testing data up to date with written tests, the fixture sql dump has been merged into the sgn repo! This means no more git-pulling your local fixture repo before running tests. Instead, fixture changes will be controlled by adding and removing patches from `sgn/t/data/fixture/patches/`.
 # Instructions for Modifying the Fixture
 
-## _**IMPORTANT: do not replace or modify the fixture sql dump!**_ 
-### ([ read why ](#))
+## _**IMPORTANT: do not replace or modify the fixture sql dump!**_
 
 Fixture-specific patches are used to modify data stored in the fixture. These are different from db patches (in the sgn/db/ dir), which change the database structure. **A fixture-specific patch should never change the databse structure (e.g. adding tables or adding a column).**
 

@@ -29,7 +29,9 @@ GetOptions(
 );
 
 my $fxtr_patch_path = dirname(abs_path($0));
+chdir($fxtr_patch_path);
 my $db_patch_path = abs_path('../../../../db/');
+print STDERR "\nDIR: ".$db_patch_path."\n";
 
 chdir($db_patch_path);
 my @dbfolders = grep /[0-9]{5}/, (split "\n", `ls -d */`);
@@ -38,9 +40,12 @@ my @fxtrfolders = grep /[0-9]{5}/, (split "\n", `ls -d */`);
 
 my $dbindex = 0;
 
+# run each fixture patch
 for (my $i = 0; $i < (scalar @fxtrfolders); $i++) {
     if (($fxtrfolders[$i]=~s/\/$//r)>=$startfrom){
-        while (($dbfolders[$dbindex]=~s/\/$//r) <= ($fxtrfolders[$i]=~s/\/$//r)){
+        # run any db patches which come before the number of the fixture patch folder
+        while ($dbindex < (scalar @dbfolders)
+                && ($dbfolders[$dbindex]=~s/\/$//r) <= ($fxtrfolders[$i]=~s/\/$//r)){
             if (($dbfolders[$dbindex]=~s/\/$//r)>=$startfrom){
                 chdir($db_patch_path);
                 chdir($dbfolders[$dbindex]);
@@ -48,6 +53,7 @@ for (my $i = 0; $i < (scalar @fxtrfolders); $i++) {
             }
             $dbindex += 1;
         }
+        #run patches in each sub-folder within the fixture patch folder
         chdir($fxtr_patch_path);
         chdir($fxtrfolders[$i]);
         my @sub_folders = grep /[0-9]{5}/, (split "\n", `ls -d */`);
@@ -58,6 +64,13 @@ for (my $i = 0; $i < (scalar @fxtrfolders); $i++) {
             run_patches();
         }
     }
+}
+
+#run any remaining db patches
+for (my $i = $dbindex; $i < (scalar @dbfolders); $i++) {
+    chdir($db_patch_path);
+    chdir($dbfolders[$i]);
+    run_patches();
 }
 
 sub run_patches {

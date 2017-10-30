@@ -13,6 +13,9 @@ use Getopt::Long;
 use File::Slurp;
 use Config::Any;
 
+use File::Basename qw(dirname);
+use Cwd qw(abs_path);
+
 use Catalyst::ScriptRunner;
 
 use lib 'lib';
@@ -22,8 +25,9 @@ my $verbose = 0;
 my $nocleanup;
 my $noserver;
 my $noparallel = 0;
-my $fixture_path = 't/data/fixture/cxgn_fixture.sql';
 my $use_brapi_fixture;
+# relative to `sgn/ (or parent of wherever this script is located)
+my $fixture_path = 't/data/fixture/cxgn_fixture.sql';
 my $brapi_fixture = 't/data/fixture/brapi_fixture.sql';
 
 GetOptions(
@@ -39,12 +43,21 @@ GetOptions(
 require Carp::Always if $carpalways;
 
 my @prove_args = @ARGV;
+if(@prove_args){
+    @prove_args = map {abs_path($_)} @prove_args;
+}
+
+#Change cwd to `sgn/` (or parent of wherever this script is located)
+my $sgn_dir = abs_path(dirname(abs_path($0))."/../");
+print STDERR "####### ".$sgn_dir." #######";
+chdir($sgn_dir);
 @prove_args = ( 't' ) unless @prove_args;
 
 #my $parallel = (grep /^-j\d*$/, @ARGV) ? 1 : 0;
 
 $ENV{SGN_CONFIG_LOCAL_SUFFIX} = 'fixture';
 #my $conf_file_base = 'sgn_local.conf'; # which conf file the sgn_fixture.conf should be based on
+# relative to `sgn/`
 my $conf_file_base = 'sgn_local.conf';
 my $template_file = 'sgn_fixture_template.conf';
 # get some defaults from sgn_local.conf
@@ -91,7 +104,8 @@ system("createdb -h $config->{dbhost} -U postgres -T template0 -E SQL_ASCII --no
 system("cat $database_fixture_dump | psql -h $config->{dbhost} -U postgres $dbname > /dev/null");
 
 #run fixture and db patches.
-
+system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p postgres -h $config->{dbhost} -d $dbname -e janedoe");
+return;
 
 print STDERR "Done.\n";
 
@@ -162,6 +176,8 @@ else {
 	sleep 1 until !kill(0, $server_pid) || get "http://localhost:$catalyst_server_port";
     }
 }
+
+print STDERR "\n Got here \n";
 
 my $prove_pid = fork;
 unless( $prove_pid ) {
