@@ -1,16 +1,16 @@
 
 var barcode_types = [
-    { name:"Code 128 (1D) Size 1", type: "128", size: "1"},
-    { name:"Code 128 (1D) Size 2", type: "128", size: "2"},
-    { name:"Code 128 (1D) Size 3", type: "128", size: "3"},
-    { name:"Code 128 (1D) Size 4", type: "128", size: "4"},
-    { name:"QR Code (2D) Size 4", type: "QR", size: "4"},
-    { name:"QR Code (2D) Size 5", type: "QR", size: "5"},
-    { name:"QR Code (2D) Size 6", type: "QR", size: "6"},
-    { name:"QR Code (2D) Size 7", type: "QR", size: "7"},
-    { name:"QR Code (2D) Size 8", type: "QR", size: "8"},
-    { name:"QR Code (2D) Size 9", type: "QR", size: "9"},
-    { name:"QR Code (2D) Size 10", type: "QR", size: "10"}
+    { name:"Code 128 (1D) Size 1", type: "128_1"},
+    { name:"Code 128 (1D) Size 2", type: "128_2"},
+    { name:"Code 128 (1D) Size 3", type: "128_3"},
+    { name:"Code 128 (1D) Size 4", type: "128_4"},
+    { name:"QR Code (2D) Size 4", type: "QR_4"},
+    { name:"QR Code (2D) Size 5", type: "QR_5"},
+    { name:"QR Code (2D) Size 6", type: "QR_6"},
+    { name:"QR Code (2D) Size 7", type: "QR_7"},
+    { name:"QR Code (2D) Size 8", type: "QR_8"},
+    { name:"QR Code (2D) Size 9", type: "QR_9"},
+    { name:"QR Code (2D) Size 10", type: "QR_10"}
 ];
 
 var label_sizes = [
@@ -20,7 +20,7 @@ var label_sizes = [
   {name:'Custom',value:'Custom'}
 ];
 
-var text_placeholders = [
+var text_fields = [
     { value: "", name: "Custom" },
     { value: "{$Accession}", name: "Accession" },
     { value: "{$Plot Name}", name: "Plot Name" },
@@ -274,7 +274,32 @@ $(document).ready(function($) {
           changeLabelSize(width,height,_x);
         });
 
-  //set up barcode and barcode select
+  //set up text and barcode select
+  var text_field_select = d3.select("#d3-text-field-input");
+  text_field_select.selectAll("option")
+    .data(text_fields)
+    .enter().append("option")
+    .text(function(d){return d.name})
+    .attr("value",function(d){return d.value});
+    
+    var barcode_text_select = d3.select("#d3-barcode-text-input");
+    barcode_text_select.selectAll("option")
+      .data(text_fields)
+      .enter().append("option")
+      .text(function(d){return d.name})
+      .attr("value",function(d){return d.value});
+      
+      var barcode_type_select = d3.select("#d3-barcode-type-input");
+      barcode_type_select.selectAll("option")
+        .data(barcode_types)
+        .enter().append("option")
+        .text(function(d){return d.name})
+        .attr("type",function(d){return d.type})
+        .attr("size",function(d){return d.size});
+      
+  
+  
+  
   // var barcode_select = d3.select("#d3-barcode-select");
   // var barcode_g = svg.append("g")
   //   .classed("barcode",true);
@@ -346,21 +371,25 @@ $('#d3-custom-field-input').change(function(){
 });
   
   $("#d3-add-text").on("click",function() {
-    var text = document.getElementById("d3-text-field-input").value;//.getAttribute("value"); 
-    var fontType = document.getElementById("d3-text-font-input").value;//.getAttribute("value");  
+    var text = document.getElementById("d3-text-field-input").value;//.getAttribute("value");
+    var font_select = document.getElementById("d3-text-font-input");
+    var selected_font = font_select.options[font_select.selectedIndex];
+    var fontName = selected_font.text;
+    var style = selected_font.getAttribute("value");
     var fontSize = document.getElementById("d3-text-size-input").value;//.getAttribute("value");  
-    console.log("Text add includes text: "+text+"\nfontType: "+fontType+"\nfontSize: "+fontSize);
+    console.log("Text add includes text: "+text+"\nfontName: "+fontName+"\nfontSize: "+fontSize);
     fontSize = _x.invert(fontSize);
-    addText(text,fontSize,fontType);
-  })    
+    addText(text,style,fontName,fontSize);
+});    
   
   $("#d3-add-barcode").on("click",function() {
-    var barcode = document.getElementById("d3-barcode-text-input").value;//.getAttribute("value"); 
-    var barcodeType = document.getElementById("d3-barcode-type-input").value;//.getAttribute("value");  
-    // var barcodeSize = document.getElementById("d3-barcode-size-input").value;//.getAttribute("value");  
-    console.log("Barcode add: "+barcode+"\nbarcodeType: "+barcodeType);
-    addBarcode(_x, _y, barcode, barcodeType);
-  })   
+    var barcode = document.getElementById("d3-barcode-text-input").value;
+    var type_select = document.getElementById("d3-barcode-type-input");
+    var selected_type = type_select.options[type_select.selectedIndex];
+    var type = selected_type.getAttribute("type");  
+    console.log("Barcode add: "+barcode+"\ntype: "+type);
+    addBarcode(barcode,type);
+});   
 
   d3.select(".d3-add-custom-text")
     .style("margin-left","1em");
@@ -377,38 +406,38 @@ $('#d3-custom-field-input').change(function(){
     // var text = text_content.text();
     // var fontSize = _x.invert(d3.select("#d3-font-size-input").node().value);
     // addText(text,fontSize)
-  })
-
-  var var_adders = d3.select(".content-variable-container")
-    .selectAll(".d3-text-variable")
-    .data(text_placeholders, function (d,i) { return i+"noverlap1";})
-    .enter()
-    .append("span").classed("d3-text-variable",true)
-    .style("margin-left","1em")
-    .on("click",function(d,i){
-      var current_content = d3.select("#d3-text-content").html()
-      d3.select("#d3-text-content").html(current_content+d3.select(this).html())
-      $("#d3-text-content").focus().blur()
-    })
-    .append("button")
-    .classed({
-      "btn":true,
-      "btn-primary":true,
-      "btn-sm":true,
-      "d3-text-placeholder":true
-    })
-    .attr("contenteditable",false)
-    .style({
-      height: "2em",
-      "margin-top":"-0.15em",
-      display: "inline-block",
-      padding:"0.2em 0.4em"
-    })
-    .attr("key",function(d){return d.key;})
-    .text(function(d){return d.name;})
 });
 
-function addText(text,fontSize,fontType){
+//   var var_adders = d3.select(".content-variable-container")
+//     .selectAll(".d3-text-variable")
+//     .data(text_placeholders, function (d,i) { return i+"noverlap1";})
+//     .enter()
+//     .append("span").classed("d3-text-variable",true)
+//     .style("margin-left","1em")
+//     .on("click",function(d,i){
+//       var current_content = d3.select("#d3-text-content").html()
+//       d3.select("#d3-text-content").html(current_content+d3.select(this).html())
+//       $("#d3-text-content").focus().blur()
+//     })
+//     .append("button")
+//     .classed({
+//       "btn":true,
+//       "btn-primary":true,
+//       "btn-sm":true,
+//       "d3-text-placeholder":true
+//     })
+//     .attr("contenteditable",false)
+//     .style({
+//       height: "2em",
+//       "margin-top":"-0.15em",
+//       display: "inline-block",
+//       padding:"0.2em 0.4em"
+//     })
+//     .attr("key",function(d){return d.key;})
+//     .text(function(d){return d.name;})
+// });
+
+function addText(text,style,fontName,fontSize){
   svg = d3.select(".d3-draw-svg");
   var newTB = svg.append("g")
     .classed("text-box",true);
@@ -416,10 +445,10 @@ function addText(text,fontSize,fontType){
     .append("text")
     .attr({
       "font-size":fontSize,
-      "style":fontType,
+      "style":style,
       "dominant-baseline": "mathematical",
       value:text,
-      size:fontSize,
+      size:fontName+"_"+fontSize,
       class:"label-element",
     })
     .text(text);
@@ -430,8 +459,8 @@ function addText(text,fontSize,fontType){
     .on("mouseup", dragSnap);
 }
 
-function addBarcode (_x, _y, barcode, barcodeType) {
-    
+function addBarcode (barcode,type) {
+    console.log("type is "+type);
     svg = d3.select(".d3-draw-svg");
     var width = document.getElementById("d3-label-area").viewBox.baseVal.width;
     var height = document.getElementById("d3-label-area").viewBox.baseVal.height;
@@ -447,24 +476,14 @@ function addBarcode (_x, _y, barcode, barcodeType) {
     })
     .on("mouseup", dragSnap)
     .append("svg:image")
-    .attr('x',0)
-       .attr('y',0)
-    //    .attr('width', _x.invert(100))
-    //    .attr('height', _x.invert(100))
-       .attr("xlink:href","/barcode/preview?content="+encodeURIComponent(barcode)+"&type="+encodeURIComponent(barcodeType))
-       .attr("class","label_element");
-    // .attr({
-    //   x:0,
-    //   y:0,
-    //   width:_x.invert(100),
-    //   height:_x.invert(100),
-    //   value: barcode,
-    //   type: barcodeType,
-    // //   size: barcodeSize,
-    // //  fill:"#333",
-    //    xlink: href='bin/code128.png',
-    //   class:"label-element",
-    // });
+    .attr({
+        x: 0,
+        y: 0,
+        class: "label-element",
+        value: barcode,
+        size: type
+    })
+    .attr("xlink:href","/barcode/preview?content="+encodeURIComponent(barcode)+"&type="+encodeURIComponent(type));
 
 }
 
@@ -563,39 +582,61 @@ console.log("SVG is "+source);
   img.remove();
 });
 
+function getLabelDetails(element, index) {
+    var transform = element.parentNode.getAttribute('transform');
+    var coords = transform.split(')')[0].substring(10, transform.length).split(','); // extract x,y coords from translate(10,10)rotate(0)skewX(0)scale(1,1) format
+    console.log("X is "+coords[0]+" and y is "+coords[1]);
+    var format = element.getAttribute("size").split('_'); //get size and type from size attribute
+    // var value = element.getAttribute("value");
+    // var type = element.getAttribute("type");
+    // var size = element.getAttribute("size");
+    return { 
+        x: coords[0], 
+        y: coords[1], 
+        value: element.getAttribute("value"),
+        type: format[0],
+        size: format[1]
+    };
+}
+
 $("#d3-pdf-button").on("click",function(event) {
     console.log("You clicked the download pdf button.");
 
-    var zpl_template = '^LH{ $X },{ $Y }';
+    // var zpl_template = '^LH{ $X },{ $Y }';
     var label_elements = document.getElementsByClassName('label-element');
-    //console.log("Selected "+label_elements.length+" label elements");
-    
-    for (var i = 0; i < label_elements.length; i++) {
-        element = label_elements[i];
-        var transform = element.parentNode.getAttribute('transform');
-        var coords = transform.split(')')[0].substring(10, transform.length); // extract x,y coords from translate(10,10)rotate(0)skewX(0)scale(1,1) format
-        var value = element.getAttribute("value");
-        var type = element.getAttribute("type");
-        var size = element.getAttribute("size");
-        console.log("Label element #" + i + " has attributes:\ncoords:" + coords + "\nvalue: " + value + "\ntype: " + type + "\nsize: " + size);
-        var zpl = '^FO'+coords+'^'+type+','+size+'^FD'+value+'^FS';
-        zpl_template = zpl_template + zpl;
-    }
+    label_elements = Array.prototype.slice.call(label_elements); // convert to array
+    console.log("Selected "+label_elements.length+" label elements");
+    var element_objects = label_elements.map(getLabelDetails);
+    console.log("Element objects are "+ element_objects);
+    var label_json = JSON.stringify(element_objects);
+    console.log("Label json is "+ label_json);
+// var myJSON = JSON.stringify(obj);
+//     for (var i = 0; i < label_elements.length; i++) {
+//         element = label_elements[i];
+//         var transform = element.parentNode.getAttribute('transform');
+//         var coords = transform.split(')')[0].substring(10, transform.length); // extract x,y coords from translate(10,10)rotate(0)skewX(0)scale(1,1) format
+//         var value = element.getAttribute("value");
+//         var type = element.getAttribute("type");
+//         var size = element.getAttribute("size");
+//         console.log("Label element #" + i + " has attributes:\ncoords:" + coords + "\nvalue: " + value + "\ntype: " + type + "\nsize: " + size);
+//         // var zpl = '^FO'+coords+'^'+type+','+size+'^FD'+value+'^FS';
+//         // zpl_template = zpl_template + zpl;
+//     }
     
     //Get additional Params
     
     var trial_id = document.getElementById("trial_select").value;
     var num_labels = document.getElementById("num_labels").value;
     
-    console.log("zpl is:\n "+zpl_template+"\ntrial_id is: "+trial_id+"\nnum_labels is: "+num_labels);
+    // console.log("zpl is:\n "+zpl_template+"\ntrial_id is: "+trial_id+"\nnum_labels is: "+num_labels);
     
     //send to server to build pdf file
 
     jQuery.ajax( {
-        url: '/barcode/download/zpl',
+        url: '/barcode/download/pdf',
         timeout: 60000,
         method: 'POST',
-        data: {'trial_id': trial_id, 'num_labels': num_labels, 'zpl_template': zpl_template},
+        data: {'trial_id': trial_id, 'num_labels': num_labels, 'label_json': label_json},
         success: function(response) {
             if (response.error) {
             } else {
@@ -606,5 +647,5 @@ $("#d3-pdf-button").on("click",function(event) {
         
         }
     });
-    
-});
+});    
+ });

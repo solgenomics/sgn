@@ -71,7 +71,7 @@
                 <label class="col-md-2 col-form-label">Add Text</label>
                 <div class="col-md-10 form-inline">
                     <select id="d3-text-field-input" class="form-control">
-                        <option value="">Pick a Field</option>
+                        <!-- <option value="">Pick a Field</option>
                         <option value="" data-target="#customTextModal">Custom</option>
                         <option value="{$Accession}">Accession</option>
                         <option value="{$Plot Name}">Plot Name</option>
@@ -81,7 +81,7 @@
                         <option value="{$Col #}">Col #</option>
                         <option value="{$Trial Name}">Trial Name</option>
                         <option value="{$Year}">Year</option>
-                        <option value="{$Pedigree String}">Pedigree String</option>
+                        <option value="{$Pedigree String}">Pedigree String</option> -->
                     </select>&nbsp&nbsp
                     <select id="d3-text-font-input" class="form-control">
                         <option value="">Pick a Font Type</option>
@@ -127,7 +127,7 @@
             <label class="col-md-2 col-form-label">Add Barcode</label>
             <div class="col-md-10 form-inline">
                 <select id="d3-barcode-text-input" class="form-control">
-                    <option value="">Pick a Field</option>
+                    <!-- <option value="">Pick a Field</option>
                     <option value="" data-target="#customTextModal">Custom</option>
                     <option value="{$Accession}">Accession</option>
                     <option value="{$Plot Name}">Plot Name</option>
@@ -137,10 +137,10 @@
                     <option value="{$Col #}">Col #</option>
                     <option value="{$Trial Name}">Trial Name</option>
                     <option value="{$Year}">Year</option>
-                    <option value="{$Pedigree String}">Pedigree String</option>
+                    <option value="{$Pedigree String}">Pedigree String</option> -->
                 </select>&nbsp&nbsp
                 <select id="d3-barcode-type-input" class="form-control">
-                    <option value="">Pick a Barcode Type</option>
+                    <!-- <option value="">Pick a Barcode Type</option>
                     <option value="128-1">Code 128 (1D) Size 1</option>
                     <option value="128-2">Code 128 (1D) Size 2</option>
                     <option value="128-3">Code 128 (1D) Size 3</option>
@@ -151,7 +151,7 @@
                     <option value="QR-7">QR Code (2D) Size 7</option>
                     <option value="QR-8">QR Code (2D) Size 8</option>
                     <option value="QR-9">QR Code (2D) Size 9</option>
-                    <option value="QR-10">QR Code (2D) Size 10</option>
+                    <option value="QR-10">QR Code (2D) Size 10</option> -->
                 </select>&nbsp&nbsp
                 <!-- <select id="d3-barcode-size-input" class="form-control">
                 <option value="">Pick a Barcode Size</option>
