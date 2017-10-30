@@ -1,11 +1,18 @@
 <%args>
 $locations
 $breeding_programs
+$timestamp
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.AddMultipleTrial','CXGN.BreedersToolbox.GenotypingTrial' ] &>
 
 <& /page/page_title.mas, title=>"Upload Data" &>
+
+<style>
+.ui-autocomplete {
+    z-index: 5000;
+}
+</style>
 
 <div class="container-fluid">
 
@@ -16,8 +23,8 @@ $breeding_programs
 
 <div class="well well-sm">
 <h4>Add Field Trial</h4>
-<a id="upload_trial_link"><p>Upload Existing Trial</p></a>
-<a id="add_project_link"><p>Design New Trial</p></a>
+<a id="upload_trial_link"><p>Upload An Existing Trial</p></a>
+<a id="add_project_link"><p>Design A New Trial</p></a>
 <a id="add_multiloc_project_link"><p>Design New Multi-location Trial</p></a>
 </div>
 <& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => $locations, breeding_programs => $breeding_programs &>
@@ -26,26 +33,29 @@ $breeding_programs
 
 <div class="well well-sm">
 <h4>Add Genotyping Trial</h4>
-<a id="create_igd_genotyping_trial_link"><p>Create IGD Genotyping Trial</p></a>
+<a id="create_igd_genotyping_trial_link"><p>Create An IGD Genotyping Trial</p></a>
 </div>
 <& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas &>
 
 <div class="well well-sm">
 <h4>Upload Locations</h4>
-<a id="upload_locations_link"><p>Upload New Locations</p></a>
+<a id="upload_locations_link"><p>Upload Many New Locations</p></a>
 </div>
 <& /breeders_toolbox/upload_locations_dialogs.mas &>
 
 
 <div class="well well-sm">
 <h4>Add Accessions</h4>
-
+<a href="/breeders/accessions"><p>Please Use Manage Accessions Page</p></a>
 </div>
 
 <div class="well well-sm">
 <h4>Upload Seedlots</h4>
-
+<a id="seedlot_bulk_upload"><p>Upload Many Seedlots</p></a>
+<a id="add_seedlot_button"><p>Add A Seedlot</p></a>
 </div>
+<& /breeders_toolbox/upload_seedlots_dialogs.mas &>
+<& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
 
 <div class="well well-sm">
 <h4>Upload Pedigrees</h4>
