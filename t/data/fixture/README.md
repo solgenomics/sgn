@@ -1,5 +1,5 @@
 # Say Hello to the Fixture's New Home!
-In order to keep testing data up to date with written tests, the fixture sql dump has been merged into the sgn repo! This means no more git-pulling your local fixture repo before running tests. Instead, fixture changes will be controlled by adding and removing patches from `sgn/t/data/fixture/patches/`.
+In order to keep testing data up to date with written tests, the fixture sql dump has been merged into the sgn repo! This means no more git-pulling your local fixture repo before running tests. Instead, fixture changes will be controlled by adding patches to `sgn/t/data/fixture/patches/`.
 # Instructions for Modifying the Fixture
 
 ## _**IMPORTANT: do not replace or modify the fixture sql dump!**_
