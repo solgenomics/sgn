@@ -4,6 +4,7 @@ var barcode_types = [
     { name:"Code 128 (1D) Size 2", type: "128_2"},
     { name:"Code 128 (1D) Size 3", type: "128_3"},
     { name:"Code 128 (1D) Size 4", type: "128_4"},
+    { name:"QR Code (2D) Size 3", type: "QR_3"},
     { name:"QR Code (2D) Size 4", type: "QR_4"},
     { name:"QR Code (2D) Size 5", type: "QR_5"},
     { name:"QR Code (2D) Size 6", type: "QR_6"},
@@ -14,7 +15,7 @@ var barcode_types = [
 ];
 
 var label_sizes = [
-  {name:'1" x 2 5/8"',width:520,height:200,value:30},
+  {name:'1" x 2 5/8"',width:186.4,height:71.6,value:30},
   {name:'1" x 4"',width:800,height:200,value:20},
   {name:'1 1/3" x 4"',width:800,height:265,value:14},
   {name:'Custom',value:'Custom'}
@@ -23,14 +24,14 @@ var label_sizes = [
 var text_fields = [
     { value: "", name: "Custom" },
     { value: "{$Accession}", name: "Accession" },
-    { value: "{$Plot Name}", name: "Plot Name" },
-    { value: "{$Plot #}", name: "Plot #" },
-    { value: "{$Rep #}", name: "Rep #" },
-    { value: "{$Row #}", name: "Row #" },
-    { value: "{$Col #}", name: "Col #" },
-    { value: "{$Trial Name}", name: "Trial Name" },
+    { value: "{$Plot_Name}", name: "Plot Name" },
+    { value: "{$Plot_#}", name: "Plot #" },
+    { value: "{$Rep_#}", name: "Rep #" },
+    { value: "{$Row_#}", name: "Row #" },
+    { value: "{$Col_#}", name: "Col #" },
+    { value: "{$Trial_Name}", name: "Trial Name" },
     { value: "{$Year}", name: "Year" },
-    { value: "{$Pedigree String}", name: "Pedigree String" },
+    { value: "{$Pedigree_String}", name: "Pedigree String" },
 ];
 
 //set up drag behaviour
@@ -183,8 +184,8 @@ function changeLabelSize(width,height,scale) {
 
 $(document).ready(function($) {
 
-  var width = 520; 
-  var height = 200; 
+  var width = 186.4; 
+  var height = 71.6; 
 
   //scales to allow for conversion between "real" pts and SVG pts
   var _x = d3.scale.linear().domain([0,width]).range([0,width]);
@@ -198,7 +199,7 @@ $(document).ready(function($) {
     .classed("label-template",true)
     .attr({
         id: "d3-label-area",
-      width: "100%",
+    //  width: "100%",
       viewBox: "0 0 "+width+" "+height
     }).classed("d3-draw-svg",true);
 
@@ -268,9 +269,9 @@ $(document).ready(function($) {
     
       d3.select("#d3-apply-custom-label-size").on("click",function(){ //apply custom label size
           width = document.getElementById("d3-label-custom-width").value;
-          width = width * 8 // convert to pixels at 8dpmm  (8 dots per mm)
+          width = width * 2.83 // convert to pixels at 8dpmm  (8 dots per mm)
           height = document.getElementById("d3-label-custom-height").value;
-          height = height * 8 // convert to pixels at 8dpmm  (8 dots per mm)
+          height = height * 2.83 // convert to pixels at 8dpmm  (8 dots per mm)
           changeLabelSize(width,height,_x);
         });
 
@@ -371,7 +372,10 @@ $('#d3-custom-field-input').change(function(){
 });
   
   $("#d3-add-text").on("click",function() {
-    var text = document.getElementById("d3-text-field-input").value;//.getAttribute("value");
+    var text_value = document.getElementById("d3-text-field-input").value;
+    var text_select = document.getElementById("d3-text-field-input");//.getAttribute("value");
+    var selected_text = text_select.options[text_select.selectedIndex];
+    var text = selected_text.text;
     var font_select = document.getElementById("d3-text-font-input");
     var selected_font = font_select.options[font_select.selectedIndex];
     var fontName = selected_font.text;
@@ -379,7 +383,7 @@ $('#d3-custom-field-input').change(function(){
     var fontSize = document.getElementById("d3-text-size-input").value;//.getAttribute("value");  
     console.log("Text add includes text: "+text+"\nfontName: "+fontName+"\nfontSize: "+fontSize);
     fontSize = _x.invert(fontSize);
-    addText(text,style,fontName,fontSize);
+    addText(text,text_value,style,fontName,fontSize);
 });    
   
   $("#d3-add-barcode").on("click",function() {
@@ -437,7 +441,7 @@ $('#d3-custom-field-input').change(function(){
 //     .text(function(d){return d.name;})
 // });
 
-function addText(text,style,fontName,fontSize){
+function addText(text,text_value,style,fontName,fontSize){
   svg = d3.select(".d3-draw-svg");
   var newTB = svg.append("g")
     .classed("text-box",true);
@@ -447,7 +451,8 @@ function addText(text,style,fontName,fontSize){
       "font-size":fontSize,
       "style":style,
       "dominant-baseline": "mathematical",
-      value:text,
+      text:text,
+      value:text_value,
       size:fontName+"_"+fontSize,
       class:"label-element",
     })
@@ -462,18 +467,18 @@ function addText(text,style,fontName,fontSize){
 function addBarcode (barcode,type) {
     console.log("type is "+type);
     svg = d3.select(".d3-draw-svg");
-    var width = document.getElementById("d3-label-area").viewBox.baseVal.width;
-    var height = document.getElementById("d3-label-area").viewBox.baseVal.height;
+    // var width = document.getElementById("d3-label-area").viewBox.baseVal.width;
+    // var height = document.getElementById("d3-label-area").viewBox.baseVal.height;
     var new_barcode = svg.append("g")
     .classed("barcode",true)
     .classed("draggable",true)
     .classed("selectable",true)
     .call(draggable)
     .call(selectable,false)
-    .call(doTransform,function(state,selection){
-      state.translate[0] += (width/2)-(100/2)
-      state.translate[1] += (height/2)-(100/2)
-    })
+    // .call(doTransform,function(state,selection){
+    //   state.translate[0] += (width/2)-(100/2)
+    //   state.translate[1] += (height/2)-(100/2)
+    // })
     .on("mouseup", dragSnap)
     .append("svg:image")
     .attr({
@@ -590,9 +595,16 @@ function getLabelDetails(element, index) {
     // var value = element.getAttribute("value");
     // var type = element.getAttribute("type");
     // var size = element.getAttribute("size");
+    var rect = element.getBoundingClientRect(); // get the bounding rectangle
+
+    console.log( rect.width );
+    console.log( rect.height);
+    //console.log("Element height is"+element.getAttribute("height"));
     return { 
         x: coords[0], 
-        y: coords[1], 
+        y: coords[1],
+        height: rect.height, //element.getAttribute("height"),
+        width: rect.width, //element.getAttribute("width"),
         value: element.getAttribute("value"),
         type: format[0],
         size: format[1]

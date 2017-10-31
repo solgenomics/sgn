@@ -41,18 +41,19 @@ __PACKAGE__->config(
        my $trial_id = $c->req->param("trial_id");
        my $labels_per_stock = $c->req->param("num_labels");# || 1;
        my $label_param_json = $c->req->param("label_json");
-       my $starting_x = 20;
-       my $starting_y = 60;
-       my $x_increment = 590;
-       my $y_increment = 213;
+       my $starting_x = 5;
+       my $starting_y = 775;
+       my $x_increment = 210;
+       my $y_increment = -75;
        my $number_of_columns = 2; #zero index
        my $number_of_rows = 9; #zero index
        
-    #    print STDERR "trial id is $trial_id\n num labels is $labels_per_stock";
-    #    my $label_template = Text::Template->new(
-    #        type => 'STRING',
-    #        source => $label_param_json,
-    #    );
+       #decode json
+       my $json = new JSON;
+       my $decoded_params =  $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($label_param_json);
+       my @label_params = @{$decoded_params};
+       
+    #    print STDERR "Label params are @label_params\n";
        
        my $trial_rs = $schema->resultset("Project::Project")->search({ project_id => $trial_id });
        if (!$trial_rs) {
@@ -86,50 +87,50 @@ __PACKAGE__->config(
        my $pdf = PDF::API2->new();
        my $page = $pdf->page();    
                 
-                
         # loop through plot data, creating and saving labels to pdf
        my $col_num = 0;
        my $row_num = 0;
+       
        foreach my $key (sort { $a <=> $b} keys %design) {
            print STDERR "Design key is $key\n";
            my %design_info = %{$design{$key}};
            my $pedigree = CXGN::Stock->new ( schema => $schema, stock_id => $design_info{'accession_id'} )->get_pedigree_string('Parents');
-           print STDERR "Pedigree for ".$design_info{'accession_name'}." is $pedigree\n";
+        #    print STDERR "Pedigree for ".$design_info{'accession_name'}." is $pedigree\n";
            
-        #    my $filled_label_json = $label_template->fill_in(
-        #            hash => {
-        #                'Accession' => $design_info{'accession_name'},
-        #                'Plot Name' => $design_info{'plot_name'},
-        #                'Plot #' => $design_info{'plot_number'},
-        #                'Rep #' => $design_info{'rep_number'},
-        #                'Row #' => $design_info{'row_number'},
-        #                'Col #' =>$design_info{'col_number'},
-        #                'Trial Name' => $trial_name,
-        #                'Year' => $year,  
-        #                'Pedigree String' => $pedigree,
-        #            },
-        #        );
-               
-           #decode json
-           my $json = new JSON;
-           my $decoded_params =  $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($label_param_json);
-           my @label_params = @{$decoded_params};
-           
-           for (my $i=0; $i <= $labels_per_stock; $i++) {
+           for (my $i=0; $i < $labels_per_stock; $i++) {
                #print STDERR "Working on label num $i\n";     
                my $x = $starting_x + ($col_num * $x_increment);
                my $y = $starting_y + ($row_num * $y_increment);
-               
-              #add to pdf here
+
               foreach my $element (@label_params) {
                   my %element = %$element;
-                  my $elementx = $element{'x'} + $x;
-                  my $elementy = $element{'y'} + $y;
+                  my $elementx = $x + $element{'x'}; # / 2.83;
+                  my $elementy = $y - $element{'y'}; # / 2.83;
+                  print STDERR "Element ".$element{'type'}."_".$element{'size'}." value is ".$element{'value'}." and coords are $elementx and $elementy\n";
                   
-                  if ( $element{'type'} == 128 || $element{'type'} eq "QR" ) {
-
-                       if ( $element{'type'} == 128 ) {
-
+                  my $label_template = Text::Template->new(
+                      type => 'STRING',
+                      source => $element{'value'},
+                  );
+               
+               my $filled_value = $label_template->fill_in(
+                       hash => {
+                           'Accession' => $design_info{'accession_name'},
+                           'Plot_Name' => $design_info{'plot_name'},
+                           'Plot_#' => $key,
+                           'Rep_#' => $design_info{'rep_number'},
+                           'Row_#' => $design_info{'row_number'},
+                           'Col_#' => $design_info{'col_number'},
+                           'Trial_Name' => $trial_name,
+                           'Year' => $year,  
+                           'Pedigree_String' => $pedigree,
+                       },
+                   );
+                  
+                  if ( $element{'type'} eq "128" || $element{'type'} eq "QR" ) {
+       
+                       if ( $element{'type'} eq "128" ) {
+       
                           my $barcode_object = Barcode::Code128->new();
                           $c->tempfiles_subdir('barcode');
                           my ($png_location, $png_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.png');
@@ -139,47 +140,48 @@ __PACKAGE__->config(
                           $barcode_object->option("scale", $element{'size'});
                           $barcode_object->option("font_align", "center");
                           $barcode_object->option("padding", 5);
-                          $barcode_object->barcode($element{'value'});
+                          $barcode_object->barcode($filled_value);
                           my $barcode = $barcode_object->gd_image();
                           
                           print PNG $barcode->png();
                           close(PNG);
-
+       
                            my $gfx = $page->gfx;
                            my $image = $pdf->image_png($png_location);
-                           # add the image to the graphic object - x, y, width, height  
+                           # add the image to the graphic object - x, y, width, height 
+                           my $elementy = $elementy - ( $element{'height'} / 3 ); #adjust y
                            $gfx->image($image, $elementx, $elementy);
-
+       
                        
                      } else {
                          $c->tempfiles_subdir('barcode');
                          my ($jpeg_location, $jpeg_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
-
+       
                          my $barcode_generator = CXGN::QRcode->new();
                          my $barcode_file = $barcode_generator->get_barcode_file(
                                $jpeg_location,
-                               $element{'value'},
+                               $filled_value,
                                $element{'size'}
                           );
                           
                           my $gfx = $page->gfx;
                           my $image = $pdf->image_jpeg($jpeg_location);
                           # add the image to the graphic object - x, y, width, height  
+                          my $elementy = $elementy - ( $element{'height'} / 3 ); #adjust y
                           $gfx->image($image, $elementx, $elementy);
-
+       
                      }
                   } 
                   else { #text
-                       print STDERR "Working on text\n";
                        # Add a built-in font to the PDF
                        my $font = $pdf->corefont($element{'type'});
-
+       
                        # Add text to the page
                        my $text = $page->text();
                        $text->font($font, $element{'size'});
                        $text->translate($elementx, $elementy);
-                       $text->text($element{'value'});
-
+                       $text->text($filled_value);
+       
                   }
                   
               }
@@ -198,7 +200,7 @@ __PACKAGE__->config(
                }
            }
        }
-
+    
        # Save the PDF
        $pdf->saveas($FH);
 
@@ -206,19 +208,6 @@ __PACKAGE__->config(
 
    }
 
-   # sub _parse_list_from_json {
-   #   my $list_json = shift;
-   #   my $json = new JSON;
-   #   if ($list_json) {
-   #     my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
-   #     #my $decoded_list = decode_json($list_json);
-   #     my @array_of_list_items = @{$decoded_list};
-   #     return \@array_of_list_items;
-   #   }
-   #   else {
-   #     return;
-   #   }
-   # }
 
 # sub download_zpl_barcodes : Path('/barcode/download/zpl') : ActionClass('REST') { }
 # 
