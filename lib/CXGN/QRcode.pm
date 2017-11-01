@@ -13,7 +13,7 @@ sub get_barcode_file {
 
   my $qrcode = Imager::QRCode->new(
         size          => $size,
-        margin        => 2,
+        margin        => 0,
         version       => 0,
         level         => 'L',
         casesensitive => 1,

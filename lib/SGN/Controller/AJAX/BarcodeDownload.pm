@@ -41,10 +41,11 @@ __PACKAGE__->config(
        my $trial_id = $c->req->param("trial_id");
        my $labels_per_stock = $c->req->param("num_labels");# || 1;
        my $label_param_json = $c->req->param("label_json");
-       my $starting_x = 5;
-       my $starting_y = 775;
-       my $x_increment = 210;
-       my $y_increment = -75;
+       
+       my $starting_x = 13.68; # points for .19 inches at 72 pts per inch
+       my $starting_y = 760; # 842 - points for .5 inches at 72 pts per inch
+       my $x_increment = 198; # points for 2.75 inches at 72 pts per inch
+       my $y_increment = -72; # points for 1 inch at 72 pts per inch
        my $number_of_columns = 2; #zero index
        my $number_of_rows = 9; #zero index
        
@@ -84,7 +85,11 @@ __PACKAGE__->config(
        my $dir = $c->tempfiles_subdir('labels');
        my ($FH, $filename) = $c->tempfile(TEMPLATE=>"labels/$trial_name-XXXXX", SUFFIX=>".pdf", UNLINK=>0);
        
-       my $pdf = PDF::API2->new();
+    #    my $pdf = PDF::API2->new();
+       my $pdf = PDF::API2->new(
+   width  => 595,    # A4 dimensions in point
+   height => 842,    # 1 point = 1/72 inch
+);
        my $page = $pdf->page();    
                 
         # loop through plot data, creating and saving labels to pdf
@@ -117,10 +122,10 @@ __PACKAGE__->config(
                        hash => {
                            'Accession' => $design_info{'accession_name'},
                            'Plot_Name' => $design_info{'plot_name'},
-                           'Plot_#' => $key,
-                           'Rep_#' => $design_info{'rep_number'},
-                           'Row_#' => $design_info{'row_number'},
-                           'Col_#' => $design_info{'col_number'},
+                           'Plot_Number' => $design_info{'plot_number'},
+                           'Rep_Number' => $design_info{'rep_number'},
+                           'Row_Number' => $design_info{'row_number'},
+                           'Col_Number' => $design_info{'col_number'},
                            'Trial_Name' => $trial_name,
                            'Year' => $year,  
                            'Pedigree_String' => $pedigree,
@@ -149,8 +154,10 @@ __PACKAGE__->config(
                            my $gfx = $page->gfx;
                            my $image = $pdf->image_png($png_location);
                            # add the image to the graphic object - x, y, width, height 
-                           my $elementy = $elementy - ( $element{'height'} / 3 ); #adjust y
-                           $gfx->image($image, $elementx, $elementy);
+                           my $height = $element{'height'} /4.2;
+                           my $width = $element{'width'} /4.2;
+                           my $elementy = $elementy - $element{'height'} /4.68; # adjust for img position sarting at bottom
+                           $gfx->image($image, $elementx, $elementy, $width, $height);
        
                        
                      } else {
@@ -167,8 +174,11 @@ __PACKAGE__->config(
                           my $gfx = $page->gfx;
                           my $image = $pdf->image_jpeg($jpeg_location);
                           # add the image to the graphic object - x, y, width, height  
-                          my $elementy = $elementy - ( $element{'height'} / 3 ); #adjust y
-                          $gfx->image($image, $elementx, $elementy);
+                          my $height = $element{'height'} /4.3; # scale to 72 pts per inch
+                          my $width = $element{'width'} /4.3; # scale to 72 pts per inch
+                          my $elementy = $elementy - $element{'height'} /4.68; # adjust for img position sarting at bottom
+                          #print STDERR "New elementy is $elementy\n";
+                          $gfx->image($image, $elementx, $elementy, $width, $height);
        
                      }
                   } 

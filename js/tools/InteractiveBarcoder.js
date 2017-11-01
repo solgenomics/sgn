@@ -4,7 +4,6 @@ var barcode_types = [
     { name:"Code 128 (1D) Size 2", type: "128_2"},
     { name:"Code 128 (1D) Size 3", type: "128_3"},
     { name:"Code 128 (1D) Size 4", type: "128_4"},
-    { name:"QR Code (2D) Size 3", type: "QR_3"},
     { name:"QR Code (2D) Size 4", type: "QR_4"},
     { name:"QR Code (2D) Size 5", type: "QR_5"},
     { name:"QR Code (2D) Size 6", type: "QR_6"},
@@ -15,9 +14,9 @@ var barcode_types = [
 ];
 
 var label_sizes = [
-  {name:'1" x 2 5/8"',width:186.4,height:71.6,value:30},
-  {name:'1" x 4"',width:800,height:200,value:20},
-  {name:'1 1/3" x 4"',width:800,height:265,value:14},
+  {name:'1" x 2 5/8"',width:189,height:72,value:30},
+  {name:'1" x 4"',width:288,height:72,value:20},
+  {name:'1 1/3" x 4"',width:288,height:96,value:14},
   {name:'Custom',value:'Custom'}
 ];
 
@@ -25,10 +24,10 @@ var text_fields = [
     { value: "", name: "Custom" },
     { value: "{$Accession}", name: "Accession" },
     { value: "{$Plot_Name}", name: "Plot Name" },
-    { value: "{$Plot_#}", name: "Plot #" },
-    { value: "{$Rep_#}", name: "Rep #" },
-    { value: "{$Row_#}", name: "Row #" },
-    { value: "{$Col_#}", name: "Col #" },
+    { value: "{$Plot_Number}", name: "Plot #" },
+    { value: "{$Rep_Number}", name: "Rep #" },
+    { value: "{$Row_Number}", name: "Row #" },
+    { value: "{$Col_Number}", name: "Col #" },
     { value: "{$Trial_Name}", name: "Trial Name" },
     { value: "{$Year}", name: "Year" },
     { value: "{$Pedigree_String}", name: "Pedigree String" },
@@ -182,6 +181,17 @@ function changeLabelSize(width,height,scale) {
     updateGrid(scale.invert(grid_size));
 }
 
+function doSnap(state,selection){
+  var bb = getTransGroupBounds(selection.node());
+  var left_snap_d = (Math.round(bb.x/doSnap.size))*doSnap.size-bb.x
+  var right_snap_d = (Math.round((bb.x+bb.width)/doSnap.size)*doSnap.size-bb.width)-bb.x
+  var top_snap_d = (Math.round(bb.y/doSnap.size))*doSnap.size-bb.y
+  var bottom_snap_d = (Math.round((bb.y+bb.height)/doSnap.size)*doSnap.size-bb.height)-bb.y
+  state.translate[0] += Math.abs(left_snap_d) < Math.abs(right_snap_d) ? left_snap_d: right_snap_d
+  state.translate[1] += Math.abs(top_snap_d) < Math.abs(bottom_snap_d) ? top_snap_d: bottom_snap_d
+}
+doSnap.size = 12;
+
 $(document).ready(function($) {
 
   var width = 186.4; 
@@ -223,7 +233,7 @@ $(document).ready(function($) {
   var grid_number = d3.select("#d3-grid-number");
   var grid_max = 0.5*(height<width ? height : width)
   var grid_range_attrs = {
-    min: 5,
+    min: 2,
     max: Math.round(_x(grid_max)),
     step: 1
   }
@@ -269,10 +279,9 @@ $(document).ready(function($) {
     
       d3.select("#d3-apply-custom-label-size").on("click",function(){ //apply custom label size
           width = document.getElementById("d3-label-custom-width").value;
-          width = width * 2.83 // convert to pixels at 8dpmm  (8 dots per mm)
+          width = width * 2.835 // convert to pixels at 72 / inch
           height = document.getElementById("d3-label-custom-height").value;
-          height = height * 2.83 // convert to pixels at 8dpmm  (8 dots per mm)
-          changeLabelSize(width,height,_x);
+          height = height * 2.835 // convert to pixels at 72 / inch
         });
 
   //set up text and barcode select
@@ -282,6 +291,24 @@ $(document).ready(function($) {
     .enter().append("option")
     .text(function(d){return d.name})
     .attr("value",function(d){return d.value});
+    
+    var size_slider = d3.select("#d3-text-size-slider");
+    var size_input= d3.select("#d3-text-size-input");
+    var size_range = {
+      min: 1,
+      max: 72,
+      step: 1
+  };
+    size_slider.attr(size_range);
+    size_input.attr(size_range);
+    size_slider.property("value",12);
+    size_input.property("value",12);
+    size_slider.on("input",function(){
+      size_input.property("value",this.value)
+    });
+    size_input.on("change",function(){
+      grid_slider.node().value = this.value;
+    });
     
     var barcode_text_select = d3.select("#d3-barcode-text-input");
     barcode_text_select.selectAll("option")
@@ -297,65 +324,6 @@ $(document).ready(function($) {
         .text(function(d){return d.name})
         .attr("type",function(d){return d.type})
         .attr("size",function(d){return d.size});
-      
-  
-  
-  
-  // var barcode_select = d3.select("#d3-barcode-select");
-  // var barcode_g = svg.append("g")
-  //   .classed("barcode",true);
-  // barcode_select.selectAll("option")
-  //   .data(barcode_types)
-  //   .enter().append("option")
-  //   .text(function(d){return d.name})
-  //   .attr("value",function(d,i){return i});
-  // barcode_select.insert("option","*")
-  //   .attr({"selected":true,"value":-1});
-  // barcode_select.on("input",function(){
-  //   clearSelection();
-  //   var val = d3.select(this).node().value;
-  
-  //   if (val>=0){
-    //   var new_barcode = svg.append("g")//barcode_g.html("")//.append('g')
-//      cur_barcode
-    //   .classed("barcode",true)
-    //   .classed("draggable",true)
-    //   .classed("selectable",true)
-    //   .call(draggable)
-    //   .call(selectable,false)
-    // //   .call(doTransform,function(state,selection){
-    //     state.translate[0] += (width/2)-(barcode_types[val].width/2)
-    //     state.translate[1] += (height/2)-(barcode_types[val].height/2)
-    //   })
-    //   .on("mouseup", dragSnap)
-    //   .append('rect')
-    //   .attr({
-    //     x:0,
-    //     y:0,
-    //     width:_x.invert(barcode_types[val].width),
-    //     height:_y.invert(barcode_types[val].height),
-    //     value:"{$PLOT_NAME}",
-    //     type: barcode_types[val].code,
-    //     size: barcode_types[val].size,
-    //     fill:"#333",
-    //     class:"label-element",
-    //   });
-     // cur_barcode.call(doSnap);//doTransform,doSnap);
-  //   }
-  // });
-
-  // var text_adders = d3.select(".add-text-container")
-  //   .selectAll(".d3-add-text")
-  //   .data(text_placeholders, function (d,i) { return i+"noverplap" })
-  //   .enter().insert("button",".d3-add-custom-text")
-  //   .classed({
-  //     "btn":true,
-  //     "btn-primary":true,
-  //     "d3-add-text":true
-  //   })
-  //   .attr("key",function(d){return d.key;})
-  //   .style("margin-left","1em")
-  //   .text(function(d){return d.name;});
 
   //set up text options
   
@@ -389,10 +357,7 @@ $('#d3-custom-field-input').change(function(){
   $("#d3-add-barcode").on("click",function() {
     var barcode = document.getElementById("d3-barcode-text-input").value;
     var type_select = document.getElementById("d3-barcode-type-input");
-    var selected_type = type_select.options[type_select.selectedIndex];
-    var type = selected_type.getAttribute("type");  
-    console.log("Barcode add: "+barcode+"\ntype: "+type);
-    addBarcode(barcode,type);
+    addBarcode(barcode, type_select.selectedIndex);
 });   
 
   d3.select(".d3-add-custom-text")
@@ -411,35 +376,6 @@ $('#d3-custom-field-input').change(function(){
     // var fontSize = _x.invert(d3.select("#d3-font-size-input").node().value);
     // addText(text,fontSize)
 });
-
-//   var var_adders = d3.select(".content-variable-container")
-//     .selectAll(".d3-text-variable")
-//     .data(text_placeholders, function (d,i) { return i+"noverlap1";})
-//     .enter()
-//     .append("span").classed("d3-text-variable",true)
-//     .style("margin-left","1em")
-//     .on("click",function(d,i){
-//       var current_content = d3.select("#d3-text-content").html()
-//       d3.select("#d3-text-content").html(current_content+d3.select(this).html())
-//       $("#d3-text-content").focus().blur()
-//     })
-//     .append("button")
-//     .classed({
-//       "btn":true,
-//       "btn-primary":true,
-//       "btn-sm":true,
-//       "d3-text-placeholder":true
-//     })
-//     .attr("contenteditable",false)
-//     .style({
-//       height: "2em",
-//       "margin-top":"-0.15em",
-//       display: "inline-block",
-//       padding:"0.2em 0.4em"
-//     })
-//     .attr("key",function(d){return d.key;})
-//     .text(function(d){return d.name;})
-// });
 
 function addText(text,text_value,style,fontName,fontSize){
   svg = d3.select(".d3-draw-svg");
@@ -464,8 +400,8 @@ function addText(text,text_value,style,fontName,fontSize){
     .on("mouseup", dragSnap);
 }
 
-function addBarcode (barcode,type) {
-    console.log("type is "+type);
+function addBarcode (barcode, index) {
+    // console.log("type is "+type);
     svg = d3.select(".d3-draw-svg");
     // var width = document.getElementById("d3-label-area").viewBox.baseVal.width;
     // var height = document.getElementById("d3-label-area").viewBox.baseVal.height;
@@ -474,22 +410,24 @@ function addBarcode (barcode,type) {
     .classed("draggable",true)
     .classed("selectable",true)
     .call(draggable)
-    .call(selectable,false)
-    // .call(doTransform,function(state,selection){
-    //   state.translate[0] += (width/2)-(100/2)
-    //   state.translate[1] += (height/2)-(100/2)
-    // })
+    .call(selectable,true)
+    .call(doTransform,function(state,selection){
+      state.translate[0] += (width/2)-(100/2)
+      state.translate[1] += (height/2)-(100/2)
+    })
     .on("mouseup", dragSnap)
     .append("svg:image")
     .attr({
         x: 0,
         y: 0,
+        // width:_x.invert(barcode_types[index].width),
+        // height:_y.invert(barcode_types[index].height),
         class: "label-element",
         value: barcode,
-        size: type
+        size: barcode_types[index].type
     })
-    .attr("xlink:href","/barcode/preview?content="+encodeURIComponent(barcode)+"&type="+encodeURIComponent(type));
-
+    .attr("xlink:href","/barcode/preview?content="+encodeURIComponent(barcode)+"&type="+encodeURIComponent(barcode_types[index].type));
+    new_barcode.call(doTransform,doSnap);
 }
 
 function dragSnap(){
@@ -497,17 +435,6 @@ function dragSnap(){
     d3.select(this).call(doTransform,doSnap);
   }
 }
-
-function doSnap(state,selection){
-  var bb = getTransGroupBounds(selection.node());
-  var left_snap_d = (Math.round(bb.x/doSnap.size))*doSnap.size-bb.x
-  var right_snap_d = (Math.round((bb.x+bb.width)/doSnap.size)*doSnap.size-bb.width)-bb.x
-  var top_snap_d = (Math.round(bb.y/doSnap.size))*doSnap.size-bb.y
-  var bottom_snap_d = (Math.round((bb.y+bb.height)/doSnap.size)*doSnap.size-bb.height)-bb.y
-  state.translate[0] += Math.abs(left_snap_d) < Math.abs(right_snap_d) ? left_snap_d: right_snap_d
-  state.translate[1] += Math.abs(top_snap_d) < Math.abs(bottom_snap_d) ? top_snap_d: bottom_snap_d
-}
-doSnap.size = 12;
 
 function updateGrid(size){
   //set snapping distance
@@ -588,18 +515,13 @@ console.log("SVG is "+source);
 });
 
 function getLabelDetails(element, index) {
+    
     var transform = element.parentNode.getAttribute('transform');
     var coords = transform.split(')')[0].substring(10, transform.length).split(','); // extract x,y coords from translate(10,10)rotate(0)skewX(0)scale(1,1) format
     console.log("X is "+coords[0]+" and y is "+coords[1]);
     var format = element.getAttribute("size").split('_'); //get size and type from size attribute
-    // var value = element.getAttribute("value");
-    // var type = element.getAttribute("type");
-    // var size = element.getAttribute("size");
     var rect = element.getBoundingClientRect(); // get the bounding rectangle
 
-    console.log( rect.width );
-    console.log( rect.height);
-    //console.log("Element height is"+element.getAttribute("height"));
     return { 
         x: coords[0], 
         y: coords[1],
@@ -614,36 +536,16 @@ function getLabelDetails(element, index) {
 $("#d3-pdf-button").on("click",function(event) {
     console.log("You clicked the download pdf button.");
 
-    // var zpl_template = '^LH{ $X },{ $Y }';
     var label_elements = document.getElementsByClassName('label-element');
     label_elements = Array.prototype.slice.call(label_elements); // convert to array
-    console.log("Selected "+label_elements.length+" label elements");
     var element_objects = label_elements.map(getLabelDetails);
-    console.log("Element objects are "+ element_objects);
     var label_json = JSON.stringify(element_objects);
-    console.log("Label json is "+ label_json);
-// var myJSON = JSON.stringify(obj);
-//     for (var i = 0; i < label_elements.length; i++) {
-//         element = label_elements[i];
-//         var transform = element.parentNode.getAttribute('transform');
-//         var coords = transform.split(')')[0].substring(10, transform.length); // extract x,y coords from translate(10,10)rotate(0)skewX(0)scale(1,1) format
-//         var value = element.getAttribute("value");
-//         var type = element.getAttribute("type");
-//         var size = element.getAttribute("size");
-//         console.log("Label element #" + i + " has attributes:\ncoords:" + coords + "\nvalue: " + value + "\ntype: " + type + "\nsize: " + size);
-//         // var zpl = '^FO'+coords+'^'+type+','+size+'^FD'+value+'^FS';
-//         // zpl_template = zpl_template + zpl;
-//     }
-    
+
     //Get additional Params
-    
     var trial_id = document.getElementById("trial_select").value;
     var num_labels = document.getElementById("num_labels").value;
-    
-    // console.log("zpl is:\n "+zpl_template+"\ntrial_id is: "+trial_id+"\nnum_labels is: "+num_labels);
-    
-    //send to server to build pdf file
 
+    //send to server to build pdf file
     jQuery.ajax( {
         url: '/barcode/download/pdf',
         timeout: 60000,
