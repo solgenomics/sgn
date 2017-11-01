@@ -144,32 +144,32 @@ $locations
 
                     <b>Required fields:</b>
                     <br/>
-                    plot_name (must be unique)
+                    plot_name (must be unique across entire database)
                     <br />
                     accession_name (must exist in the database)
                     <br/>
-                    plot_number
+                    plot_number (a sequential number for the plot in the field (e.g. 1001, 1002, 2001, 2002))
                     <br />
-                    block_number
+                    block_number (a design parameter indicating which block the plot is in)
                     <br />
                     <br/>
                     <b>Optional fields:</b>
                     <br />
-                    is_a_control (type 1 in this field if the plot is a control)
+                    is_a_control (type 1 in this field if the plot is a control, otherwise leave blank)
                     <br />
                     rep_number (replicate number, numeric)
                     <br />
-                    range_number (range number, numeric)
+                    range_number (range number. often synonymous with col_number, numeric)
                     <br />
-                    row_number (row number, numeric, required for field map generation)
+                    row_number (row number. if the field is a grid, this represents the y coordinate, numeric, required for field map generation)
                     <br />
-                    col_number (column number, numeric, required for field map generation)
+                    col_number (column number. if the field is a grid, this represents the x coordinate. sometimes called range_number, numeric, required for field map generation)
                     <br />
                     seedlot_name (the seedlot from where the planted seed originated. must exist in the database)
                     <br />
-                    num_seed_per_plot (number seeds per plot. seed comes from seedlot_name. numeric)
+                    num_seed_per_plot (number seeds per plot. seed comes from seedlot. numeric)
                     <br/>
-                    treatment columns (additional column(s) (e.g. inoculated and drought). the value for each plot should be 1 or empty.)
+                    treatment columns (additional column(s) that specify the name of a treatment (e.g. inoculated, drought, etc). the value for each plot should be 1 if the treatment was applied or empty.)
                 </div>
             </div>
             <div class="modal-footer">

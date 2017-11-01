@@ -483,8 +483,12 @@ jQuery(document).ready(function ($) {
       var stock_list_id = jQuery('#select_list_multi_list_select').val();
       var control_list_id = jQuery('#list_of_checks_section_multi_list_select').val();
       var location_list_id = jQuery('#select_list_locations_multi_list_select').val();
-
       var location_list;
+      var num_plants_per_plot = 0;
+      var num_subplots_per_plot = 0;
+
+      var locations;
+      var location_list_id = jQuery('#select_list_locations_multi_list_select').val();
       if (location_list_id != "") {
           location_list = JSON.stringify(list.getList(location_list_id));
       } else {
@@ -539,6 +543,8 @@ jQuery(document).ready(function ($) {
               'design_json': design_json,
               'breeding_program_name': breeding_program_name,
               'greenhouse_num_plants': JSON.stringify(greenhouse_num_plants),
+              'has_plant_entries': num_plants_per_plot,
+              'has_subplot_entries': num_subplots_per_plot,
           },
           success: function (response) {
               if (response.error) {
