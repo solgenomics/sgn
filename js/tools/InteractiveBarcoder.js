@@ -14,9 +14,12 @@ var barcode_types = [
 ];
 
 var label_sizes = [
-  {name:'1" x 2 5/8"',width:189,height:72,value:30},
-  {name:'1" x 4"',width:288,height:72,value:20},
-  {name:'1 1/3" x 4"',width:288,height:96,value:14},
+  // {name:'1" x 2 5/8"',width:189,height:72,value:30},
+  // {name:'1" x 4"',width:288,height:72,value:20},
+  // {name:'1 1/3" x 4"',width:288,height:96,value:14},
+  {name:'1" x 2 5/8"',width:533.4,height:203.2,value:30},
+  {name:'1" x 4"',width:812.8,height:203.2,value:20},
+  {name:'1 1/3" x 4"',width:812.8,height:270.93,value:14},
   {name:'Custom',value:'Custom'}
 ];
 
@@ -194,8 +197,8 @@ doSnap.size = 12;
 
 $(document).ready(function($) {
 
-  var width = 186.4; 
-  var height = 71.6; 
+  var width = 533.4; 
+  var height = 203.2; 
 
   //scales to allow for conversion between "real" pts and SVG pts
   var _x = d3.scale.linear().domain([0,width]).range([0,width]);
@@ -279,9 +282,10 @@ $(document).ready(function($) {
     
       d3.select("#d3-apply-custom-label-size").on("click",function(){ //apply custom label size
           width = document.getElementById("d3-label-custom-width").value;
-          width = width * 2.835 // convert to pixels at 72 / inch
+          width = width * 8; //2.835 // convert to pixels at 72 / inch
           height = document.getElementById("d3-label-custom-height").value;
-          height = height * 2.835 // convert to pixels at 72 / inch
+          height = height * 8; //2.835 // convert to pixels at 72 / inch
+          changeLabelSize(width,height,_x);
         });
 
   //set up text and barcode select
@@ -418,8 +422,8 @@ function addBarcode (barcode, index) {
     .on("mouseup", dragSnap)
     .append("svg:image")
     .attr({
-        x: 0,
-        y: 0,
+        x:0,
+        y:0,
         // width:_x.invert(barcode_types[index].width),
         // height:_y.invert(barcode_types[index].height),
         class: "label-element",
@@ -520,7 +524,8 @@ function getLabelDetails(element, index) {
     var coords = transform.split(')')[0].substring(10, transform.length).split(','); // extract x,y coords from translate(10,10)rotate(0)skewX(0)scale(1,1) format
     console.log("X is "+coords[0]+" and y is "+coords[1]);
     var format = element.getAttribute("size").split('_'); //get size and type from size attribute
-    var rect = element.getBoundingClientRect(); // get the bounding rectangle
+    var rect = element.getBBox();//getBoundingClientRect(); // get the bounding rectangle
+    console.log("Width is "+rect.width+" and height is "+rect.height);
 
     return { 
         x: coords[0], 

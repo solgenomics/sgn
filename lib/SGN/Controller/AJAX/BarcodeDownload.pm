@@ -43,11 +43,12 @@ __PACKAGE__->config(
        my $label_param_json = $c->req->param("label_json");
        
        my $starting_x = 13.68; # points for .19 inches at 72 pts per inch
-       my $starting_y = 760; # 842 - points for .5 inches at 72 pts per inch
+       my $starting_y = 750; # 842 - points for .5 inches at 72 pts per inch
        my $x_increment = 198; # points for 2.75 inches at 72 pts per inch
        my $y_increment = -72; # points for 1 inch at 72 pts per inch
        my $number_of_columns = 2; #zero index
        my $number_of_rows = 9; #zero index
+       my $conversion_factor = 2.83; # for converting from 8 dots per mmm to 72 per inch
        
        #decode json
        my $json = new JSON;
@@ -85,11 +86,11 @@ __PACKAGE__->config(
        my $dir = $c->tempfiles_subdir('labels');
        my ($FH, $filename) = $c->tempfile(TEMPLATE=>"labels/$trial_name-XXXXX", SUFFIX=>".pdf", UNLINK=>0);
        
-    #    my $pdf = PDF::API2->new();
-       my $pdf = PDF::API2->new(
-   width  => 595,    # A4 dimensions in point
-   height => 842,    # 1 point = 1/72 inch
-);
+       my $pdf = PDF::API2->new();
+#        my $pdf = PDF::API2->new(
+#    width  => 595,    # A4 dimensions in point
+#    height => 842,    # 1 point = 1/72 inch
+# );
        my $page = $pdf->page();    
                 
         # loop through plot data, creating and saving labels to pdf
@@ -109,8 +110,8 @@ __PACKAGE__->config(
 
               foreach my $element (@label_params) {
                   my %element = %$element;
-                  my $elementx = $x + $element{'x'}; # / 2.83;
-                  my $elementy = $y - $element{'y'}; # / 2.83;
+                  my $elementx = $x + ( $element{'x'} / $conversion_factor ); # / 2.83;
+                  my $elementy = $y - ( $element{'y'} / $conversion_factor ); # / 2.83;
                   print STDERR "Element ".$element{'type'}."_".$element{'size'}." value is ".$element{'value'}." and coords are $elementx and $elementy\n";
                   
                   my $label_template = Text::Template->new(
@@ -154,8 +155,8 @@ __PACKAGE__->config(
                            my $gfx = $page->gfx;
                            my $image = $pdf->image_png($png_location);
                            # add the image to the graphic object - x, y, width, height 
-                           my $height = $element{'height'} /4.2;
-                           my $width = $element{'width'} /4.2;
+                           my $height = $element{'height'} /4.3;
+                           my $width = $element{'width'} /4.3;
                            my $elementy = $elementy - $element{'height'} /4.68; # adjust for img position sarting at bottom
                            $gfx->image($image, $elementx, $elementy, $width, $height);
        
@@ -174,9 +175,10 @@ __PACKAGE__->config(
                           my $gfx = $page->gfx;
                           my $image = $pdf->image_jpeg($jpeg_location);
                           # add the image to the graphic object - x, y, width, height  
-                          my $height = $element{'height'} /4.3; # scale to 72 pts per inch
-                          my $width = $element{'width'} /4.3; # scale to 72 pts per inch
-                          my $elementy = $elementy - $element{'height'} /4.68; # adjust for img position sarting at bottom
+                          #print STDERR "Unadjusted element height is ".$element{'height'}."and width is ".$element{'width'}."\n";
+                          my $height = $element{'height'} / $conversion_factor; # scale to 72 pts per inch
+                          my $width = $element{'width'} / $conversion_factor; # scale to 72 pts per inch
+                          my $elementy = $elementy - $height; # adjust for img position sarting at bottom
                           #print STDERR "New elementy is $elementy\n";
                           $gfx->image($image, $elementx, $elementy, $width, $height);
        
@@ -188,7 +190,8 @@ __PACKAGE__->config(
        
                        # Add text to the page
                        my $text = $page->text();
-                       $text->font($font, $element{'size'});
+                       my $adjusted_size = $element{'size'} / 2.83 ;
+                       $text->font($font, $adjusted_size);
                        $text->translate($elementx, $elementy);
                        $text->text($filled_value);
        
