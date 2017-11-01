@@ -2,6 +2,8 @@
 
 #`./run_all_patches.pl -u postgres -p postgres -h localhost -d fixture -e janedoe -s 00085 -t`
 
+# need to add previously_run check : `psql -t fixture postgres -c "select patch_name from Metadata.md_dbversion"`
+
 use strict;
 use warnings;
 
