@@ -149,6 +149,7 @@ $identifier => ''
                                        <option value="32A4">32 label Size Sticker Paper</option>
                                        <option value="20A4">20 label Size Sticker Paper</option>
                                        <option value="NCSU">NCSU printing format</option>
+                                       <option value="IITA-3">IITA-3-barcode</option>
                                      </select>
                                  </div>
                                </div>
