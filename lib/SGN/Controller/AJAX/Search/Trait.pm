@@ -39,6 +39,7 @@ sub search : Path('/ajax/search/traits') Args(0) {
 	my $trait_accession = $db_name .":". $accession ;
 	push @result,
 	[
+     '',
 	 "<a href=\"/cvterm/$_->{trait_id}/view\">$trait_accession</a>",
 	 "<a href=\"/cvterm/$_->{trait_id}/view\">$_->{trait_name}</a>",
 	 $_->{trait_definition},
@@ -47,5 +48,3 @@ sub search : Path('/ajax/search/traits') Args(0) {
     #print STDERR Dumper \@result;
     $c->stash->{rest} = { data => \@result };
 }
-
-

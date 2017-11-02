@@ -3,7 +3,7 @@
 $trait_cv_name
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min' ] &>
 
 <& /page/page_title.mas, title => "Trait Search" &>
 
@@ -11,6 +11,7 @@ $trait_cv_name
 <table id="trait_search_results" width="100%" class="table table-hover table-striped">
 <thead>
   <tr>
+    <th></th>
     <th>Trait ID</th>
     <th>Trait Name</th>
     <th>Definition</th>
@@ -18,29 +19,51 @@ $trait_cv_name
 </thead>
 </table>
 
+<button type="button" class="selectAll-dt">Select All</button>
+<button type="button" class="deselectAll-dt">Deselect All</button>
 
 <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
+<link rel="stylesheet" type="text/css" href="/documents/inc/datatables/custom_datatable_select_styles.css">
 <br><br>
-<&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the trait names currently showing in the search results table to a new or exisiting list</i>'&>
+<&| /page/info_section.mas, title => 'Copy Selected Results to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the trait names currently selected in the search results table to a new or exisiting list</i>'&>
 <br>
+<p><em><span id="trait_result_count">0</span> trait(s) selected.</em></p>
 <div style="text-align:right" id="traits_to_list_menu"></div>
 <div id="trait_result_names" style="display: none;"></div>
 </&>
-
-
 
 <script>
 
 jQuery(document).ready(function () {
 
    var trait_table = jQuery('#trait_search_results').DataTable( {
-       'ajax': '/ajax/search/traits?trait_cv_name=<% $trait_cv_name %>'
+        'columnDefs': [ {
+          'orderable': false,
+          'className': 'select-checkbox',
+          'targets':   0
+        } ],
+        'select': {
+          'style':    'multi'
+        },
+        'ajax': '/ajax/search/traits?trait_cv_name=<% $trait_cv_name %>',
+        "order": [[ 1, "asc" ]]
    });
- 
-   jQuery('#trait_search_results').on( 'draw.dt', function () {
-     var name_links = trait_table.column( 0, {page:'current'} ).data();
-     var names = [];
+   jQuery('.selectAll-dt').click(function(){
+     trait_table.rows().select();
+     return false;
+   });
+   jQuery('.deselectAll-dt').click(function(){
+     trait_table.rows().deselect();
+     return false;
+   });
+   var selection_changed = function () {
+     var selected_rows = trait_table.rows({'selected':true});
+     jQuery("#trait_result_count").text(selected_rows.count());
+     var name_links = selected_rows.data().map(function(row){
+       return row[1];
+     });
 
+     var names = [];     
      for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
        names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
      }
@@ -49,8 +72,9 @@ jQuery(document).ready(function () {
      addToListMenu('traits_to_list_menu', 'trait_result_names', {
        listType: 'traits'
      });
-
-   });
+   };
+   trait_table.on( 'deselect', selection_changed);
+   trait_table.on( 'select', selection_changed);
 
 });
 

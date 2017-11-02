@@ -119,3 +119,9 @@ You can add other information, such as synonyms, descendants, images, literature
 Trials on the database can be searched based on trial name, description, breeding program, year, location, or trial type.
 
 ![]({{"assets/images/image315.png" | relative_url }})
+
+2.4 Trait Search
+-----------------
+
+On the Trait Search page (menu item `Search > Traits`), traits in the database can be searched by ID, name, or descripiton. Selecting traits in the results of the search allows one to add the selected results to a trait list, or create a new trait list from the select results.
+![]({{"assets/images/trait-search.png" | relative_url }})
