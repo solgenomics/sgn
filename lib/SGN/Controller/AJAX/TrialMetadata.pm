@@ -158,7 +158,8 @@ sub trial_details_POST  {
 
     my $trial_id = $c->stash->{trial_id};
     my $trial = $c->stash->{trial};
-    my $program_ref = $trial->get_breeding_programs();
+    my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $c->stash->{schema} });
+    my $program_ref = $program_object->get_breeding_programs_by_trial($trial_id);
 
     my $program_array = @$program_ref[0];
     my $breeding_program_name = @$program_array[1];
